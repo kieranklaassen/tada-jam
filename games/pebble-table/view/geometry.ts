@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 
-// Shared geometry. Styles change materials and detail level, never shapes,
-// so the same silhouettes read in every style.
+// Primitive and lathe shapes for Pebble Table's props, cached by key. Big,
+// simple silhouettes are part of the jam quality bar (docs/art-direction.md).
 
 const cache = new Map<string, THREE.BufferGeometry>()
 

@@ -484,7 +484,7 @@ function speciesShapes(species: Species): GuestShapes {
   return cached
 }
 
-/** Build every mat's and character's geometry once, early, so nothing is built mid-play. */
+/** Build the bag, the scale, and every character's geometry early, so they are not built mid-play. */
 function prewarm(): void {
   once('bag', bagGeometry)
   for (const species of ['rabbit', 'bear', 'hedgehog'] as const) speciesShapes(species)
