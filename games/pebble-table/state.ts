@@ -124,7 +124,8 @@ export function deserialize(raw: unknown, childAge: number | null): TableState {
   }
   repairTotal(state)
   const maxId = Math.max(0, ...allPieces(state).map((piece) => piece.id))
-  state.nextId = Math.max(finite(raw.nextId, 1), maxId + 1)
+  const savedNext = Math.floor(finite(raw.nextId, 1))
+  state.nextId = Math.max(savedNext > 0 && savedNext < 1_000_000_000 ? savedNext : 1, maxId + 1)
   return state
 }
 

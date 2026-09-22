@@ -94,6 +94,12 @@ export class GestureTracker {
     return []
   }
 
+  /** Forget every finger, e.g. when the table is put away mid-touch and the lift never arrives. */
+  reset(): void {
+    this.tracks.clear()
+    this.resting = false
+  }
+
   cancel(pointerId: number): Intent[] {
     const track = this.tracks.get(pointerId)
     this.tracks.delete(pointerId)

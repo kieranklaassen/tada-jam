@@ -51,7 +51,9 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 
 ## Games
 
-None yet. Pebble Table is the first one in progress.
+| Game | Folder | Ages | What it is |
+| --- | --- | --- | --- |
+| Pebble Table | `games/pebble-table/` | 3–7 | A quiet table, a bag of ten clay stones, and mats (Honest Scale, Fair Feeding) where quantity is felt through play. Plan: `docs/plans/2026-09-22-001-feat-pebble-table-plan.md`. |
 
 ## License
 

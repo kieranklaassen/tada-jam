@@ -96,6 +96,13 @@ describe('deserialize', () => {
     expect(deserialize(raw, 4).nextId).toBe(10)
   })
 
+  it('sanitizes a corrupt next id', () => {
+    const pieces = [{ id: 3, q: 4, x: 500, y: 500 }]
+    expect(deserialize({ ...defaultTable(4), pieces, nextId: 1.5 }, 4).nextId).toBe(4)
+    expect(deserialize({ ...defaultTable(4), pieces, nextId: 1e308 }, 4).nextId).toBe(4)
+    expect(deserialize({ ...defaultTable(4), pieces, nextId: 12.7 }, 4).nextId).toBe(12)
+  })
+
   it('stays small: ten stones on the table serialize under 2 KB', () => {
     const state = defaultTable(4)
     tipBag(state)

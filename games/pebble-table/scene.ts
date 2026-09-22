@@ -39,7 +39,9 @@ type FlightAnim = {
   t0: number
   duration: number
   arc: number
-  land: (() => void) | null
+  /** True while the piece is still in the table state and drawn by the flight instead. */
+  carriesPiece: boolean
+  land: () => void
 }
 
 type PendingVoice = { groups: () => number[][]; deadline: number }
@@ -116,7 +118,10 @@ export class PebbleScene {
 
   setAttended(attended: boolean): void {
     this.attended = attended
-    if (!attended) this.cadence.settle(performance.now())
+    if (!attended) {
+      this.dropEverything()
+      this.cadence.settle(performance.now())
+    }
     this.updateRunning()
   }
 
@@ -141,7 +146,10 @@ export class PebbleScene {
 
   private readonly onVisibility = () => {
     this.hidden = document.visibilityState === 'hidden'
-    if (this.hidden) this.cadence.settle(performance.now())
+    if (this.hidden) {
+      this.dropEverything()
+      this.cadence.settle(performance.now())
+    }
     this.updateRunning()
   }
 
@@ -271,7 +279,7 @@ export class PebbleScene {
       const flight = this.flights[i]
       if (now - flight.t0 < flight.duration) continue
       this.flights.splice(i, 1)
-      flight.land?.()
+      flight.land()
     }
   }
 
@@ -299,7 +307,7 @@ export class PebbleScene {
 
   private model(): RenderModel {
     const now = this.now()
-    const flying = new Set(this.flights.filter((f) => f.land).map((f) => f.id))
+    const flying = this.carriedIds()
     const drops = panDrops(this.beam.angle)
     const heldIds = new Set(this.held.values())
     const view = this.feedingView ?? viewFeeding(this.restingPieces(), this.state.seats)
@@ -345,8 +353,12 @@ export class PebbleScene {
 
   private restingPieces(): Piece[] {
     const heldIds = new Set(this.held.values())
-    const flying = new Set(this.flights.filter((f) => f.land).map((f) => f.id))
+    const flying = this.carriedIds()
     return this.state.pieces.filter((piece) => !heldIds.has(piece.id) && !flying.has(piece.id))
+  }
+
+  private carriedIds(): Set<number> {
+    return new Set(this.flights.filter((flight) => flight.carriesPiece).map((flight) => flight.id))
   }
 
   private addBody(piece: Piece, velocity: Point = { x: 0, y: 0 }): Body {
@@ -384,12 +396,12 @@ export class PebbleScene {
       t0: now,
       duration: 0.45,
       arc: 120,
-      land: null,
+      carriesPiece: false,
+      land: () => {
+        this.audio.clatter(1)
+        this.puffs.push({ x: BAG.x, y: BAG.y - 30, t: this.now() })
+      },
     })
-    setTimeout(() => {
-      this.audio.clatter(1)
-      this.puffs.push({ x: BAG.x, y: BAG.y - 30, t: this.now() })
-    }, 430)
     this.cadence.change(performance.now(), true)
   }
 
@@ -452,11 +464,31 @@ export class PebbleScene {
   }
 
   private readonly onPointerUp = (event: PointerEvent) => {
+    this.audio.unlock()
     this.apply(this.tracker.up(event.pointerId, this.toWorldPoint(event), event.timeStamp))
+    this.letGo(event.pointerId)
   }
 
   private readonly onPointerCancel = (event: PointerEvent) => {
     this.apply(this.tracker.cancel(event.pointerId))
+    this.letGo(event.pointerId)
+  }
+
+  /** A finger lifted without a tap or drag (a long still press): the stone settles where it is. */
+  private letGo(pointerId: number): void {
+    if (this.held.has(pointerId)) this.release(pointerId, null, { x: 0, y: 0 }, false)
+  }
+
+  /** Put away or hidden mid-touch: every gesture ends where it is, because the lift may never arrive. */
+  private dropEverything(): void {
+    this.tracker.reset()
+    for (const pointerId of [...this.held.keys()]) this.release(pointerId, null, { x: 0, y: 0 }, false)
+    this.brooms.clear()
+    this.shelfDrag = null
+    this.guestDrag = null
+    this.knife.pointerId = null
+    this.pendingVoice = null
+    this.munchAt = null
   }
 
   private hitTest(at: Point): Target {
@@ -497,7 +529,7 @@ export class PebbleScene {
       case 'press':
         return this.press(intent.pointerId, intent.target)
       case 'tap':
-        return this.tap(intent.pointerId, intent.target, intent.at)
+        return this.tap(intent.pointerId, intent.target)
       case 'dragStart':
         return this.dragStart(intent.pointerId, intent.target, intent.at)
       case 'dragMove':
@@ -529,12 +561,12 @@ export class PebbleScene {
     this.audio.touch(target.kind === 'bag' ? 0.8 : 1.2)
   }
 
-  private tap(pointerId: number, target: Target, at: Point): void {
+  private tap(pointerId: number, target: Target): void {
     switch (target.kind) {
       case 'piece': {
         const piece = this.pieceById(target.id)
         const dealing = this.state.liveMat === 'feeding' && piece !== undefined && inBowl(piece)
-        this.release(pointerId, dealing ? null : at, { x: 0, y: 0 })
+        this.release(pointerId, null, { x: 0, y: 0 })
         if (dealing) this.hopFromBowl(target.id)
         return
       }
@@ -642,7 +674,7 @@ export class PebbleScene {
 
   private cancelAll(pointerIds: number[]): void {
     for (const pointerId of pointerIds) {
-      if (this.held.has(pointerId)) this.release(pointerId, null, { x: 0, y: 0 })
+      if (this.held.has(pointerId)) this.release(pointerId, null, { x: 0, y: 0 }, false)
       this.brooms.delete(pointerId)
     }
     this.shelfDrag = null
@@ -650,7 +682,7 @@ export class PebbleScene {
     this.knife.pointerId = null
   }
 
-  private release(pointerId: number, at: Point | null, velocity: Point): void {
+  private release(pointerId: number, at: Point | null, velocity: Point, speak = true): void {
     const id = this.held.get(pointerId)
     this.held.delete(pointerId)
     if (id === undefined) return
@@ -671,7 +703,7 @@ export class PebbleScene {
     }
     body.vx = velocity.x * 0.85
     body.vy = velocity.y * 0.85
-    this.pendingVoice = { groups: this.voiceFor(id), deadline: this.now() + 2.5 }
+    if (speak) this.pendingVoice = { groups: this.voiceFor(id), deadline: this.now() + 2.5 }
     this.cadence.change(performance.now(), true)
   }
 
@@ -701,7 +733,10 @@ export class PebbleScene {
 
   private bringOut(mat: MatKey): void {
     if (mat === this.state.liveMat) return
-    for (const pointerId of [...this.held.keys()]) this.release(pointerId, null, { x: 0, y: 0 })
+    for (const pointerId of [...this.held.keys()]) this.release(pointerId, null, { x: 0, y: 0 }, false)
+    for (const flight of this.flights.splice(0)) flight.land()
+    this.knife.pointerId = null
+    this.guestDrag = null
     swapMat(this.state, mat)
     const present = new Set(this.state.pieces.map((piece) => piece.id))
     for (const id of [...this.bodies.keys()]) if (!present.has(id)) this.bodies.delete(id)
@@ -746,7 +781,9 @@ export class PebbleScene {
       t0: this.now(),
       duration: 0.38,
       arc: 90,
+      carriesPiece: true,
       land: () => {
+        if (!this.pieceById(id)) return
         piece.x = spot.x
         piece.y = spot.y
         this.addBody(piece)
@@ -759,6 +796,7 @@ export class PebbleScene {
 
   private dropKnife(at: Point): void {
     this.knife.pointerId = null
+    if (this.state.liveMat !== 'feeding') return
     const candidates = this.restingPieces().map((piece) => ({ id: piece.id, x: piece.x, y: piece.y, r: RADIUS_BY_QUARTERS[piece.q] }))
     const hit = pickPiece(candidates, at, 30)
     this.knife.x = FEEDING.knifeRest.x

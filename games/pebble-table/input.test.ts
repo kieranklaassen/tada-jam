@@ -66,6 +66,16 @@ describe('GestureTracker', () => {
     expect(tracker.move(2, { x: 430, y: 230 }, 16)[0]).toMatchObject({ target: { kind: 'piece', id: 2 } })
   })
 
+  it('reset forgets stale fingers so the next touch is not a fourth finger', () => {
+    const tracker = new GestureTracker(hitTest)
+    tracker.down(1, { x: 200, y: 200 }, 0)
+    tracker.down(2, { x: 350, y: 200 }, 0)
+    tracker.down(3, { x: 800, y: 200 }, 0)
+    tracker.reset()
+    expect(tracker.activeCount).toBe(0)
+    expect(types(tracker.down(4, { x: 200, y: 200 }, 10))).toEqual(['press'])
+  })
+
   it('ignores a long still press (reserved for asking a number)', () => {
     const tracker = new GestureTracker(hitTest)
     tracker.down(1, { x: 200, y: 200 }, 0)

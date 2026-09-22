@@ -17,13 +17,16 @@ function PebbleTableMount({ ctx }: { ctx: CartridgeContext }) {
 
   useEffect(() => {
     let disposed = false
-    void storage.load<unknown>().then((saved) => {
-      const canvas = canvasRef.current
-      if (disposed || !canvas) return
-      const scene = new PebbleScene(canvas, { state: deserialize(saved, childAge), save: (state) => storage.save(state) })
-      scene.setAttended(attendedRef.current)
-      sceneRef.current = scene
-    })
+    void storage
+      .load<unknown>()
+      .catch(() => null)
+      .then((saved) => {
+        const canvas = canvasRef.current
+        if (disposed || !canvas) return
+        const scene = new PebbleScene(canvas, { state: deserialize(saved, childAge), save: (state) => storage.save(state) })
+        scene.setAttended(attendedRef.current)
+        sceneRef.current = scene
+      })
     return () => {
       disposed = true
       sceneRef.current?.dispose()
