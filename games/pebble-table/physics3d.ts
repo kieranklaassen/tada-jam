@@ -183,7 +183,7 @@ export class TablePhysics {
     const p = to3(at, options.y ?? h / 2)
     body.position.set(p.x, p.y, p.z)
     if (options.velocity) body.velocity.set(options.velocity.x, options.velocity.y, options.velocity.z)
-    if (options.spin) body.angularVelocity.set(options.spin * 0.6, options.spin, -options.spin * 0.4)
+    if (options.spin) body.angularVelocity.set(0, options.spin, 0)
     body.addEventListener('collide', (event: { contact: CANNON.ContactEquation }) => {
       const speed = Math.abs(event.contact.getImpactVelocityAlongNormal())
       if (speed > 25) this.impacts.push(speed)
@@ -282,6 +282,22 @@ export class TablePhysics {
     for (const pointerId of [...this.brooms.keys()]) this.setBroom(pointerId, null)
   }
 
+  /** Clay pebbles are not wheels: a stone rolling on its rim loses speed and spin fast, so it tips flat instead of rolling away. */
+  private resistRolling(): void {
+    const up = new CANNON.Vec3()
+    for (const { body } of this.stones.values()) {
+      if (body.type !== CANNON.Body.DYNAMIC || body.sleepState === CANNON.Body.SLEEPING) continue
+      body.quaternion.vmult(CANNON.Vec3.UNIT_Y, up)
+      const onRim = 1 - Math.abs(up.y)
+      if (onRim < 0.35 || body.position.y > 6) continue
+      const keep = 1 - onRim * 0.06
+      body.angularVelocity.x *= keep
+      body.angularVelocity.z *= keep
+      body.velocity.x *= 1 - onRim * 0.03
+      body.velocity.z *= 1 - onRim * 0.03
+    }
+  }
+
   step(elapsed: number): StepReport {
     this.accumulator = Math.min(this.accumulator + elapsed, STEP * MAX_SUBSTEPS)
     while (this.accumulator >= STEP) {
@@ -289,6 +305,7 @@ export class TablePhysics {
         body.velocity.set((target.x - body.position.x) / STEP, (target.y - body.position.y) / STEP, (target.z - body.position.z) / STEP)
       }
       this.world.step(STEP)
+      this.resistRolling()
       this.accumulator -= STEP
     }
     for (const [body, target] of this.targets) {

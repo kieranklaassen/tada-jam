@@ -50,6 +50,17 @@ describe('TableController', () => {
     expect(save).toHaveBeenCalled()
   })
 
+  it('keeps every spilled stone on the table across many random spills', () => {
+    let lost = 0
+    for (let n = 0; n < 40; n++) {
+      const { table } = makeTable()
+      tap(table, { x: BAG.x, y: BAG.y })
+      run(table, 3)
+      lost += 10 - table.physics.stoneIds().length
+    }
+    expect(lost).toBe(0)
+  })
+
   it('pulls a stone from the bag and drops it into a pan, which tips the beam', () => {
     const { table } = makeTable(6)
     const pan = SCALE.pans[1]
