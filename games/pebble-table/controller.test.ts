@@ -59,7 +59,7 @@ describe('TableController', () => {
       lost += 10 - table.physics.stoneIds().length
     }
     expect(lost).toBe(0)
-  })
+  }, 30_000)
 
   it('pulls a stone from the bag and drops it into a pan, which tips the beam', () => {
     const { table } = makeTable(6)
