@@ -1,0 +1,192 @@
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: #1f1a16;
+  color: #f4efe6;
+  overscroll-behavior: none;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+.jam-list {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.jam-list ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+}
+
+.jam-list li button {
+  width: 100%;
+  min-height: 8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 1rem 1.25rem;
+  border: 0;
+  border-radius: 1rem;
+  background: #3a2f27;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.jam-emoji {
+  font-size: 2.5rem;
+}
+
+.jam-name {
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.jam-age {
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+.jam-shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background-image: var(--wallpaper);
+}
+
+.jam-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 0.85rem;
+}
+
+.jam-toolbar button,
+.jam-toolbar select {
+  min-height: 2.25rem;
+  border-radius: var(--radius-chip);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+  background: transparent;
+  color: inherit;
+  padding: 0 0.6rem;
+}
+
+.jam-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.jam-spacer {
+  flex: 1;
+}
+
+.jam-chrome-dot {
+  position: fixed;
+  top: 6px;
+  right: 6px;
+  z-index: 40;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.jam-surface {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+.jam-mount {
+  position: absolute;
+  inset: 0;
+}
+
+.jam-loading {
+  position: absolute;
+  inset: 0;
+  background: var(--color-surface);
+  animation: jam-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes jam-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.jam-error,
+.jam-plank {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+}
+
+.jam-error button,
+.jam-plank button {
+  min-height: 3rem;
+  padding: 0 1.5rem;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: var(--color-accent);
+  color: white;
+  font-size: 1.1rem;
+}
+
+.jam-portrait {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background: var(--color-surface);
+  background-image: var(--wallpaper);
+  color: var(--color-ink);
+}
+
+.jam-portrait-device {
+  width: 5rem;
+  height: 8rem;
+  border: 0.6rem solid var(--color-ink);
+  border-radius: 1rem;
+  animation: jam-turn 2.4s ease-in-out infinite;
+}
+
+.jam-portrait-arrow {
+  font-size: 4rem;
+}
+
+@keyframes jam-turn {
+  0%,
+  30% {
+    transform: rotate(0deg);
+  }
+  60%,
+  100% {
+    transform: rotate(-90deg);
+  }
+}

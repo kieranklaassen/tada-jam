@@ -1,0 +1,48 @@
+# Tada Jam — agent rules
+
+This repo is a jam space for experimental kids' games that stay **Tada-cartridge compatible**. Every game lives in `games/<key>/` and must be portable into the Tada kid shell (`kieranklaassen/tada.computer`, `app/frontend/cartridges/<key>/`) without touching shell or contract code.
+
+The authority for cartridge mechanics is Tada's `docs/cartridges.md`. This file restates the rules that apply here and names the four allowances the jam grants on top of them. If this file and the Tada contract disagree on anything not listed under "Jam allowances", the Tada contract wins.
+
+## Verify
+
+- `npm run check` runs TypeScript, vitest, and the source egress scan. CI also builds and scans the built assets (`npm run build && npm run egress:built`).
+- `npm run dev` starts the jam shell. Open the printed URL, pick a game. Add `?chrome=0` to hide the grown-up control strip.
+
+## Shape of a game
+
+- `games/<key>/manifest.ts` — the manifest const. No JSX, React imports, or Vite globals (it must stay Node-importable, like Tada's `manifests.ts`).
+- `games/<key>/<key>.tsx` — the Mount and the exported `Cartridge` object.
+- `games/<key>/index.ts` — jam-only: `export const game: JamGame = { cartridge, emoji }`. Deleted at port time.
+- Pure logic in its own modules with `*.test.ts` beside it; saved state goes through a defensive `deserialize`.
+- Contract types come from `../types` only (that path is `app/frontend/cartridges/types.ts` in Tada).
+
+## Rules that still apply (from the Tada contract)
+
+- **Contract surface only.** A game reaches the child, age, language, persistence, and attention through `ctx` alone. Never import from `harness/` or from another game. The egress check enforces this.
+- **Manifest.** Kebab-case `key` equal to the folder name, non-blank `name`, valid `ageBand`, `permissions` from the closed set, `iconIdentity` required. Declare `'storage'` if you persist.
+- **Persistence only through `ctx.storage`.** No `fetch`, `localStorage`, `sessionStorage`, `IndexedDB`, or invented endpoints. Call `save()` on every meaningful change; it is debounced, and the shell flushes on put-away. Saved state is small plain JSON under 64 KB, versioned, and read defensively (older or corrupt shapes must not crash).
+- **Lossless exit.** Put-away can happen at any instant. No confirm dialogs, no "are you sure", nothing lost.
+- **Attention.** Pause animation loops, physics, and audio while `ctx.attention.attended` is false or `document.hidden` is true. A parked game stays mounted (`display: none`); unmount cleanups do not run on park.
+- **Resize.** The shell can resize the surface without a `window` resize event. Canvas games watch their own element with a `ResizeObserver` and ignore `0×0` measurements. No hard-coded pixel geometry.
+- **Zero egress (Tada R20).** No external URLs, CDN fonts, remote textures or audio, analytics, or third-party requests. Assets are procedural or repo-committed. System fonts only.
+- **No engagement mechanics (Tada R15).** No scores, XP, streaks, timers pushing continuation, daily mechanics, counters dangled at the child, or punishment for leaving.
+- **Age is a hint (Tada R8).** `ctx.childAge` (whole years or `null`) may set defaults; it never gates content. Handle `null`, and keep top and bottom buckets open-ended.
+- **Language.** `ctx.language` picks a content pack with a silent fallback to the default pack. Kid-facing UI strings are avoided; any shell-facing string would go through Tada's `t()` at port time.
+- **Sound.** Synthesized with tone.js or raw Web Audio. Start audio inside the child's first real tap, dispose nodes on cleanup, and stay silent while unattended.
+- **Tech menu.** React 19, canvas 2D / SVG / pixi.js, three.js (raw), matter.js or rapier, tone.js, gsap, zustand. Anything else is a proposal in the PR description and must be egress-free, bundled, and license-clean (no AGPL/copyleft). The allowed package list lives in `scripts/egress-check.ts`.
+- **Touch-first.** No hover-only behavior; hit targets around 48 px or larger.
+- **Fidelity bar.** Alive at idle, motion and sound on every touch, its own palette, and something a kid would screenshot. Say in the PR how the game answers these four.
+
+## Jam allowances (proposed Tada contract deltas)
+
+These come from the Pebble Table plan (`docs/plans/`) and are proposed upstream as clarifications (Δ1, Δ2, Δ4) and one amendment (Δ3). Games here may use them now. Each has a fallback that keeps the game shippable under the contract as written.
+
+- **Δ1 — Calendar mirrors and hidden finds.** A world may mirror the real calendar or weather in how it looks, and may hide things a child finds by playing, provided nothing becomes available or unavailable by date, nothing counts days or finds, and nothing is dangled at the child.
+- **Δ2 — World-time events.** A creature that wanders, naps, or nibbles while the child watches is allowed when it neither rewards presence nor punishes absence, pauses while unattended, and moves nothing the child cannot get back with one tap.
+- **Δ3 — Spoken words.** Sound is synthesized by default. Short repo-committed clips may play from a same-origin URL when synthesis cannot make the sound (recorded number words are the worked case). On-device `speechSynthesis` is permitted for the same purpose. Remote URLs stay forbidden. Fallback if refused upstream: `speechSynthesis` only.
+- **Δ4 — Grown-up corner.** A game may keep a grown-up corner behind a deliberate hold gesture for settings a parent tunes in the moment. Its state lives in `ctx.storage`, and it never shows the child a score, log, or verdict.
+
+## Licensing
+
+- The repo is under the O'Saasy license (same as Tada). Never copy code from Tada's pre-rebuild git history (AGPL). The jam shell in `harness/` is an independent re-implementation of the contract's behavior, not a copy of Tada's shim.

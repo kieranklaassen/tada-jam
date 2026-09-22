@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: TypeScript
+        run: npm run typecheck
+      - name: Vitest
+        run: npm test
+      - name: Egress check (source)
+        run: npm run egress:check
+      - name: Build
+        run: npm run build
+      - name: Egress check (built assets)
+        run: npm run egress:built
