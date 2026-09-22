@@ -19,6 +19,10 @@ Open the printed URL (Vite binds to your LAN too, so an iPad on the same network
 
 Saved state lives in the browser's `localStorage` under `tada-jam:slot:<key>`, with the same 2-second debounce, flush-on-park, flush-on-hide, and 64 KB cap the Tada server enforces. Turning the device to portrait covers the game with a wordless "turn sideways" picture.
 
+## Look
+
+Every jam game shares the claymation art direction and iPad budget in [`docs/art-direction.md`](docs/art-direction.md).
+
 ## Checks
 
 ```bash
@@ -53,7 +57,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 
 | Game | Folder | Ages | What it is |
 | --- | --- | --- | --- |
-| Pebble Table | `games/pebble-table/` | 3–7 | A quiet table, a bag of ten clay stones, and mats (Honest Scale, Fair Feeding) where quantity is felt through play. Plan: `docs/plans/2026-09-22-001-feat-pebble-table-plan.md`. |
+| Pebble Table | `games/pebble-table/` | 3–7 | A claymation table in 3D: a bag of ten clay stones, the Honest Scale, and Fair Feeding with clay guests, where quantity is felt through play. Plan: `docs/plans/2026-09-22-001-feat-pebble-table-plan.md`. |
 
 ## License
 

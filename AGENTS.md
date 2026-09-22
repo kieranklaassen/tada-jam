@@ -33,6 +33,7 @@ The authority for cartridge mechanics is Tada's `docs/cartridges.md`. This file 
 - **Tech menu.** React 19, canvas 2D / SVG / pixi.js, three.js (raw), matter.js or rapier, tone.js, gsap, zustand. Anything else is a proposal in the PR description and must be egress-free, bundled, and license-clean (no AGPL/copyleft). The allowed package list lives in `scripts/egress-check.ts`.
 - **Touch-first.** No hover-only behavior; hit targets around 48 px or larger.
 - **Fidelity bar.** Alive at idle, motion and sound on every touch, its own palette, and something a kid would screenshot. Say in the PR how the game answers these four.
+- **Art direction.** Jam games share the claymation look and its iPad budget: see `docs/art-direction.md`.
 
 ## Jam allowances (proposed Tada contract deltas)
 
@@ -41,6 +42,7 @@ These come from the Pebble Table plan (`docs/plans/`) and are proposed upstream 
 - **Δ1 — Calendar mirrors and hidden finds.** A world may mirror the real calendar or weather in how it looks, and may hide things a child finds by playing, provided nothing becomes available or unavailable by date, nothing counts days or finds, and nothing is dangled at the child.
 - **Δ2 — World-time events.** A creature that wanders, naps, or nibbles while the child watches is allowed when it neither rewards presence nor punishes absence, pauses while unattended, and moves nothing the child cannot get back with one tap.
 - **Δ3 — Spoken words.** Sound is synthesized by default. Short repo-committed clips may play from a same-origin URL when synthesis cannot make the sound (recorded number words are the worked case). On-device `speechSynthesis` is permitted for the same purpose. Remote URLs stay forbidden. Fallback if refused upstream: `speechSynthesis` only.
+- **Jam stack — react-three-fiber, @react-three/postprocessing, and cannon-es.** Tada's tech menu asks for raw three.js and matter.js or rapier. The jam allows react-three-fiber (plus its postprocessing wrapper) and cannon-es so 3D games can iterate fast; they are egress-free, bundled, and MIT-licensed. Porting such a game means either proposing these libraries in the Tada PR or rewriting the view layer on raw three.js (the game rules, physics wrapper, and guidance are framework-free). The allowed package list lives in `scripts/egress-check.ts`.
 - **Δ4 — Grown-up corner.** A game may keep a grown-up corner behind a deliberate hold gesture for settings a parent tunes in the moment. Its state lives in `ctx.storage`, and it never shows the child a score, log, or verdict.
 
 ## Licensing
