@@ -32,8 +32,8 @@ The authority for cartridge mechanics is Tada's `docs/cartridges.md`. This file 
 - **Sound.** Synthesized with tone.js or raw Web Audio. Start audio inside the child's first real tap, dispose nodes on cleanup, and stay silent while unattended.
 - **Tech menu.** React 19, canvas 2D / SVG / pixi.js, three.js (raw), matter.js or rapier, tone.js, gsap, zustand. Anything else is a proposal in the PR description and must be egress-free, bundled, and license-clean (no AGPL/copyleft). The allowed package list lives in `scripts/egress-check.ts`.
 - **Touch-first.** No hover-only behavior; hit targets around 48 px or larger.
-- **Fidelity bar.** Alive at idle, motion and sound on every touch, its own palette, and something a kid would screenshot. Say in the PR how the game answers these four.
-- **Art direction.** Jam games share the claymation look and its iPad budget: see `docs/art-direction.md`.
+- **Quality bar.** Every game meets the shared bar in `docs/art-direction.md`: alive at idle; motion and sound on every touch; weight, squash, and follow-through; kid-clear silhouettes and tappables; wordless idle guidance; 60 fps on a mid-range iPad (DPR cap 2, under about 80 draw calls, no shadow maps, at most one post pass); procedural or committed assets only. Say in the PR how the game meets each line, with a measured frame rate.
+- **A distinct look per game.** Games must not look alike. Before building visuals, pick a style nobody has claimed in the registry in `docs/art-direction.md`, spike it (screenshot at 1180×820 and measure fps at DPR 2), and register it there in the same PR with a link to the game's own art guide (`games/<key>/ART.md`). Claymation belongs to Pebble Table. Sharing techniques is fine; sharing a look is not.
 
 ## Jam allowances (proposed Tada contract deltas)
 

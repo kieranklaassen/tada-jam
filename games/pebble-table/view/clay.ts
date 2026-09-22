@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
-// The claymation look (docs/art-direction.md): everything is plasticine.
+// Pebble Table's claymation look (games/pebble-table/ART.md): everything is plasticine.
 // One shared clay material with vertex colours and a tiling thumbprint
 // normal map covers nearly every object, so a whole character or prop is one
 // merged mesh and one draw call. Lumps are pushed into the geometry, contact

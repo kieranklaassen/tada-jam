@@ -1,59 +1,57 @@
-# Art direction: claymation
+# Art direction: one quality bar, a different look for every game
 
-Tada Jam games share one look: a plasticine tabletop set, shot like a stop-motion film, running at 60 fps on an iPad. Pebble Table is the reference build (`games/pebble-table/view/`). New games should reuse its clay kit rather than invent a second style.
+Every Tada Jam game must meet the same **quality bar**, and every game must **look different**. Claymation is Pebble Table's style, not the jam's. A new game picks an unclaimed visual direction, spikes it, and registers it below before building.
 
-## The bar
+## 1. The shared quality bar
 
-- **Everything is clay.** Soft matte surfaces with thumbprints and tool drags, shapes that are round and slightly lumpy, never CAD-perfect. If a prop would be wood or metal in real life, it is clay painted that colour.
-- **A kid can read it at a glance.** Big, distinct silhouettes; few objects; uncluttered backdrop; strong figure-ground contrast. Countable things (stones) are one clear colour on a surface of a contrasting temperature: terracotta stones on a cool sage-teal table.
-- **Motion carries the charm.** Real physics weight, squash on landing, stretch on pickup, springs that overshoot and settle, characters that anticipate and follow through. A still frame should look good; a moving one should feel alive.
-- **Calm, not busy.** Idle life breathes and blinks; nothing flashes, beckons, or nags. Guidance is a gentle glow and a ghost hand that appear only when the child is idle.
+A game ships only when it meets every line. The bar is style-independent: a paper-craft game and a claymation game are held to the same standard.
 
-## Palette
+- **Alive at idle.** Something breathes, blinks, sways, or drifts while the child just watches. It never asks, flashes, or beckons, and it stops when the game is unattended or hidden.
+- **Motion and sound on every touch.** Nothing the child does lands in silence on a still screen. Sound is synthesized (or a repo-committed clip under the Δ3 allowance).
+- **Weight, squash, and follow-through.** Objects have physical weight. They squash on landing, stretch on pickup, and springs overshoot and settle. Characters anticipate before they act and follow through after.
+- **Kid-clear.** Big, distinct silhouettes; few objects; an uncluttered background; strong figure-ground contrast. Countable pieces sit on a surface of a contrasting hue and temperature. What can be touched looks touchable.
+- **Wordless guidance.** When the child is idle, the game shows (never tells) one possible next act: a glow on touchable things, a ghost hand demonstration, an inviting wiggle. It backs off, stops after a few tries, and vanishes on any touch. No text, no voice instructions, no verdicts.
+- **60 fps on a mid-range iPad.** Target an A12-to-M1-class iPad in Safari WebGL2 at DPR 2:
+  - Cap DPR at 2.
+  - Keep draw calls under about 80: merge rigid props, instance anything that repeats.
+  - No real-time shadow maps: use blob or baked contact shadows.
+  - At most one full-screen post pass.
+  - Build geometry once, not on every mount.
+  - Pause the render loop when unattended.
+  - Measure it with a scripted walkthrough: about 60 fps average and no frame over 25 ms in normal play.
+- **Procedural or committed assets only.** No external URLs, CDNs, remote fonts, textures, HDRIs, or models (Tada R20). Prefer procedural textures drawn at runtime; compress anything committed.
+- **Its own art direction.** A screenshot must be recognisably this game, and something a kid would screenshot.
 
-Warm set, cool stage. The backdrop and props are warm; the play surface is cool so the warm pieces pop.
+Say in the PR how the game meets each line, with a measured frame rate.
 
-| Role | Colour | Notes |
+## 2. Each game picks its own style
+
+1. Pick a direction nobody has claimed (the registry below).
+2. Spike it: render the game's real scene in that style, screenshot it at 1180×820, and measure the frame rate at DPR 2.
+3. Register it here in the same PR, with a link to the game's own art guide (for example `games/<key>/ART.md`).
+
+Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidance) but not a look. Two games should never be mistakable for each other in a screenshot.
+
+## 3. Claimed styles
+
+| Game | Style | Art guide |
 | --- | --- | --- |
-| Backdrop / floor | `#f2e2c6` / `#e9d4b3` | Warm cream, fog to the same colour |
-| Table slab | `#7fa4a6` | Cool sage-teal; never rust or orange under rust pieces |
-| Stones | `#c9683d` | Terracotta clay, identical by design |
-| Bag | `#dcaa3c` with cream cord `#efe1c3` | Mustard |
-| Scale | wood-clay `#9a5a38`, pans ochre `#d8a54c` | |
-| Rug, bowl | `#e8d7b6`, `#f0dec2` | Cream |
-| Plates | `#3f9a8e` | Teal |
-| Characters | rabbit `#e6d3b2`, bear cub `#a0613d`, hedgehog `#efd8b0` with spikes `#6b4a33` | Black bead eyes with a white shine, pink cheeks |
+| Pebble Table | Claymation 3D: plasticine with thumbprints, stop-motion lighting, terracotta on cool sage-teal | [`games/pebble-table/ART.md`](../games/pebble-table/ART.md) |
 
-All colours live in `PALETTE` in `view/clay.ts`.
+## 4. Menu of unclaimed directions
 
-## How it is built (and why it stays at 60 fps)
+These came out of Pebble Table's 10-style concept exploration, scored for kid clarity (1–5), artistry (1–5), and iPad performance risk. Claymation is taken; the rest are open. Each note says what makes it read and how to keep it at 60 fps.
 
-- **One shared clay material** (`MeshStandardMaterial`, vertex colours, roughness about 0.6, double-sided) with a procedural thumbprint normal map drawn on a canvas at startup. Nothing is fetched or committed as an image.
-- **Merged meshes.** Each rigid prop (bag, scale post, beam, bowl, knife, shelf rack) and each character part is built from primitives with `piece()` (lump, place, paint) and merged into one geometry: one draw call each. Characters are six parts (body, head, eyes, mouth, two arms) so they can animate.
-- **Lumps are geometry, not shaders.** `lump()` pushes vertices along their normals with 3D noise once, at build time.
-- **Contact occlusion is baked** into vertex colours (`paint()` darkens vertices near the surface they sit on). No AO pass.
-- **Blob shadows, no shadow maps.** One instanced mesh of soft radial blobs; height above the ground widens and fades each blob. The same trick, in warm light, draws guidance glows.
-- **Instanced stones.** All stones are one draw, with per-instance squash matrices and brightness.
-- **One post pass.** A single merged effect: gentle tilt-shift depth of field (the near and far table edges soften), a warm grade, a soft vignette, then ACES tone mapping. DPR is capped at 2; MSAA is off at DPR 2.
-- **Budget.** About 45 draw calls in a full Fair Feeding scene (target under 80), one full-screen pass, zero network requests. The render loop stops whenever the game is unattended or hidden.
-- **Geometry is built once per page** (`once()` in `view/models.tsx`), so swapping mats never stalls a frame.
+| Style | Kid clarity | Artistry | iPad risk | What it is, and how to build it cheaply |
+| --- | --- | --- | --- | --- |
+| Picture-book gouache | 5 | 5 | Low–Med | Storybook look: opaque gouache colour fields, dry brush, a loose ink line around everything. Ramp shader with 2–3 painted bands, inverted-hull outlines, one paper-grain pass with no depth read. Best combined clarity and artistry in the set. |
+| Rainbow wood | 5 | 4 | Low | Grimm's-style stained beech toys, a colour per character. Plain PBR, one tiling grain texture tinted per object, lathe and capsule primitives, baked contact shadows. The cheapest good-looking option. |
+| Paper-craft diorama | 5 | 4 | Low | Layered cut paper on folded stands. Extruded SVG cards with paper grain, offset shadow cards instead of real shadows. Top clarity; objects feel light rather than weighty. |
+| Painterly, Ghibli-like | 4 | 5 | Low–Med | Sunlit farmhouse table, painted light. Hand-painted albedo rendered unlit for static props, half-Lambert on moving ones. Heavy on painting time and texture memory (atlas at most 2k, compressed). |
+| Soft pastel toon | 5 | 3 | Low | Sunny pastels, squat round characters. Toon material with a 2–3 step ramp, optional outlines, blob shadows. Very readable, but the most generic "kids' app" look. |
+| Geometric (Monument Valley) | 3 | 4 | Low | Faceted low-poly on a stepped plinth under a dusk gradient. Flat shading, no textures. Needs a strong hue split so countable pieces don't blend into the palette. |
+| Knitted / crochet yarn | 3 | 4 | Low–Med | Amigurumi characters on a knitted blanket. Tiling knit normal and AO maps, clean UVs. Keep the play surface plain: stitch texture everywhere is noise behind counting. |
+| Felted wool | 4 | 5 | Med–High | Needle-felted nature table. Fresnel rim plus fibre-noise normal and a fuzz shell on a few hero objects only (real multi-shell fur is 8–16× overdraw). |
+| Glass and light table | 3 | 5 | High | Glowing sea-glass pieces on a light table. Fake the glass (matcap, fresnel, emissive core), never real transmission. Bloom and transparency sorting are the iPad frame-time killers; weak figure-ground. |
 
-## Motion rules
-
-- **Stones** are cannon-es rigid bodies. Landing drives a squash spring (`springStep`, stiffness about 330, damping about 11); pickup stretches; a held stone follows the finger with a little lag, which reads as weight, and passes through other stones instead of shoving them.
-- **The beam** is a spring toward an honest tilt, slightly underdamped: it overshoots once and settles. It is silent when level.
-- **Characters** breathe and blink out of phase with each other, turn their heads toward what matters (clamped so a child still sees their face), hop when a stone lands on their plate (anticipation squash, jump, landing squash, wobble), munch together (lean back, three chomps, follow-through), and pop in with an overshoot.
-- **The bag** anticipates before it tips, lurches, then wobbles back; it slumps as it empties; on first open it wiggles and a stone peeks out.
-- **Stop-motion boil** (per-frame surface jitter) is allowed only if it costs nothing in smoothness. It is off by default and not built yet.
-
-## Guidance (style-independent)
-
-`guidance.ts` decides what to demonstrate; the view only draws it. After 3 seconds of idle, touchable things glow; after 5 seconds a big cartoon ghost hand (a camera-facing sprite, identical in every scene) shows one next act and carries a translucent stone for drags. Demonstrations back off (5, 10, 20, 40 seconds) and stop after four per idle stretch. Any touch fades everything at once. No text, no voice instructions, no verdicts.
-
-## Checklist for a new jam game
-
-1. Use `view/clay.ts` (palette, material, `piece`, `merge`, textures) and the `Stage` pattern from `view/stage.tsx`.
-2. Keep the countable pieces warm on a cool surface (or the reverse), and never the same temperature.
-3. Stay under 80 draw calls: merge rigid props, instance repeats, no shadow maps, one post pass.
-4. Give every touch a squash, a spring, or a hop, and every idle character a breath and a blink.
-5. Measure: 60 fps at 1180×820, DPR 2, with the scripted walkthrough; no frame over 25 ms in normal play.
+Where a style scores low on clarity, the fix is usually palette (split the hue of countable pieces from the surface) and outline (give every piece a hard silhouette).
