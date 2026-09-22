@@ -1,13 +1,12 @@
+import { inBowl, plateOf } from './feeding'
+import { panOf } from './scale'
 import {
   BAG_MOUTH,
   clampToTable,
   FEEDING,
-  insideRect,
-  MAT,
   MAT_CENTER,
   MAT_KEYS,
   RADIUS_BY_QUARTERS,
-  TABLE,
   type MatKey,
   type Quarters,
 } from './layout'
@@ -214,24 +213,21 @@ export function cutPiece(state: TableState, id: number): Piece[] {
   return halves
 }
 
-export function onMat(piece: Piece): boolean {
-  return insideRect(piece, MAT)
+/** Whether a piece is part of a mat's arrangement: on a pan, or on a plate or in the bowl. */
+export function onMatParts(mat: MatKey, piece: Piece): boolean {
+  return mat === 'scale' ? panOf(piece) !== null : inBowl(piece) || plateOf(piece) !== null
 }
 
-/** Put the live mat away with whatever lies on it, and bring `next` out with its own arrangement. */
+/** Put the live mat away with its arrangement, and bring `next` out with its own. Loose stones stay on the table. */
 export function swapMat(state: TableState, next: MatKey): void {
   if (next === state.liveMat) return
   const outgoing = state.liveMat
   const staying: Piece[] = []
   for (const piece of state.pieces) {
-    if (onMat(piece)) state.parked[outgoing].push(piece)
+    if (onMatParts(outgoing, piece)) state.parked[outgoing].push(piece)
     else staying.push(piece)
   }
   state.pieces = [...staying, ...state.parked[next]]
   state.parked[next] = []
   state.liveMat = next
-}
-
-export function isInsideTable(piece: Piece): boolean {
-  return insideRect(piece, TABLE)
 }

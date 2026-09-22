@@ -1,4 +1,4 @@
-import { insideRect, type Rect } from './layout'
+import { insideRect, type Circle, type Rect } from './layout'
 
 // Top-down clay-on-wood physics (KTD2): no gravity, exponential friction,
 // circle collisions, and a table edge that stones fall off. Fixed substeps
@@ -108,14 +108,78 @@ function push(bodies: Body[], pushers: readonly Pusher[]): void {
   }
 }
 
-/** Advance `elapsed` seconds in fixed substeps. Bodies whose centers leave `table` are reported as fallen. */
-export function stepWorld(bodies: Body[], elapsed: number, table: Rect, pushers: readonly Pusher[] = []): StepReport {
+function bounce(bodies: Body[], fixtures: readonly Circle[], impacts: StepReport['impacts']): void {
+  for (const fixture of fixtures) {
+    for (const body of bodies) {
+      if (body.kinematic) continue
+      const dx = body.x - fixture.x
+      const dy = body.y - fixture.y
+      const distance = Math.hypot(dx, dy)
+      const overlap = fixture.r + body.r - distance
+      if (overlap <= 0) continue
+      const nx = distance > 1e-6 ? dx / distance : 1
+      const ny = distance > 1e-6 ? dy / distance : 0
+      body.x += nx * overlap
+      body.y += ny * overlap
+      const closing = -(body.vx * nx + body.vy * ny)
+      if (closing <= 0) continue
+      body.vx += (1 + RESTITUTION) * closing * nx
+      body.vy += (1 + RESTITUTION) * closing * ny
+      if (closing > CLACK_SPEED) impacts.push({ speed: closing, x: body.x, y: body.y })
+    }
+  }
+}
+
+/** Walled zones (the bowl, the pans): a loose stone whose center is inside stays inside. */
+function contain(bodies: Body[], containers: readonly Circle[], inside: Map<number, number>): void {
+  for (const body of bodies) {
+    if (body.kinematic) continue
+    const index = inside.get(body.id)
+    if (index === undefined) continue
+    const wall = containers[index]
+    const dx = body.x - wall.x
+    const dy = body.y - wall.y
+    const distance = Math.hypot(dx, dy)
+    const limit = Math.max(0, wall.r - body.r * 0.35)
+    if (distance <= limit) continue
+    const nx = dx / distance
+    const ny = dy / distance
+    body.x = wall.x + nx * limit
+    body.y = wall.y + ny * limit
+    const outward = body.vx * nx + body.vy * ny
+    if (outward > 0) {
+      body.vx -= (1 + RESTITUTION) * outward * nx
+      body.vy -= (1 + RESTITUTION) * outward * ny
+    }
+  }
+}
+
+/**
+ * Advance `elapsed` seconds in fixed substeps. Fixtures (guests, the bag) are immovable circles;
+ * containers (the bowl, the pans) keep in whatever starts the step inside them.
+ * Bodies whose centers leave `table` are reported as fallen.
+ */
+export function stepWorld(
+  bodies: Body[],
+  elapsed: number,
+  table: Rect,
+  pushers: readonly Pusher[] = [],
+  fixtures: readonly Circle[] = [],
+  containers: readonly Circle[] = [],
+): StepReport {
+  const inside = new Map<number, number>()
+  for (const body of bodies) {
+    const index = containers.findIndex((wall) => Math.hypot(body.x - wall.x, body.y - wall.y) <= wall.r)
+    if (index >= 0) inside.set(body.id, index)
+  }
   const impacts: StepReport['impacts'] = []
   const steps = Math.min(MAX_SUBSTEPS, Math.max(1, Math.round(elapsed / STEP)))
   for (let i = 0; i < steps; i++) {
     push(bodies, pushers)
     integrate(bodies, STEP)
     collide(bodies, impacts)
+    bounce(bodies, fixtures, impacts)
+    contain(bodies, containers, inside)
   }
   const fallen = bodies.filter((body) => !body.kinematic && !insideRect(body, table)).map((body) => body.id)
   const moving = bodies.some((body) => !body.kinematic && speed(body) > 0)

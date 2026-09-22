@@ -41,7 +41,7 @@ const SEAT_DIRECTIONS: readonly Point[] = [
 
 /** Seats in clockwise dealing order: top, right, bottom-right, bottom-left, left. */
 export const FEEDING = {
-  bowl: { x: MAT_CENTER.x, y: MAT_CENTER.y, r: 92 },
+  bowl: { x: MAT_CENTER.x, y: MAT_CENTER.y, r: 105 },
   knifeRest: { x: MAT_CENTER.x + 150, y: MAT_CENTER.y - 85 },
   plateRadius: 78,
   seats: SEAT_DIRECTIONS.map((d) => {

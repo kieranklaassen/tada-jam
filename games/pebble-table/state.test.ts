@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MAT, MAT_CENTER, MAT_KEYS, TABLE } from './layout'
+import { FEEDING, MAT, MAT_CENTER, MAT_KEYS, SCALE, TABLE } from './layout'
 import {
   accountedTotal,
   cutPiece,
@@ -171,25 +171,37 @@ describe('cutPiece', () => {
 })
 
 describe('swapMat', () => {
-  it('parks the arrangement on the mat and brings it back exactly', () => {
+  const pan = SCALE.pans[0]
+  const plate = FEEDING.seats[1].plate
+
+  it('parks the arrangement on the pans and brings it back exactly', () => {
     const state = defaultTable(6)
-    const onMat = pullFromBag(state, { x: MAT.x + 100, y: MAT.y + 120 })!
+    const onPan = pullFromBag(state, { x: pan.x + 10, y: pan.y - 20 })!
     swapMat(state, 'feeding')
-    expect(state.pieces.find((p) => p.id === onMat.id)).toBeUndefined()
+    expect(state.pieces.find((p) => p.id === onPan.id)).toBeUndefined()
     swapMat(state, 'scale')
-    expect(state.pieces.find((p) => p.id === onMat.id)).toMatchObject({ x: MAT.x + 100, y: MAT.y + 120 })
+    expect(state.pieces.find((p) => p.id === onPan.id)).toMatchObject({ x: pan.x + 10, y: pan.y - 20 })
   })
 
-  it('leaves pieces off the mat on the table', () => {
+  it('parks plates and bowl with Fair Feeding', () => {
+    const state = defaultTable(4)
+    const onPlate = pullFromBag(state, plate)!
+    const inBowl = pullFromBag(state, FEEDING.bowl)!
+    swapMat(state, 'scale')
+    expect(state.parked.feeding.map((p) => p.id).sort()).toEqual([onPlate.id, inBowl.id].sort())
+  })
+
+  it('leaves loose stones on the table, even over the mat', () => {
     const state = defaultTable(6)
+    const loose = pullFromBag(state, { x: MAT.x + 60, y: MAT.y + 60 })!
     const offMat = pullFromBag(state, { x: MAT.x - 60, y: MAT.y + 120 })!
     swapMat(state, 'feeding')
-    expect(state.pieces.find((p) => p.id === offMat.id)).toBeDefined()
+    expect(state.pieces.map((p) => p.id).sort()).toEqual([loose.id, offMat.id].sort())
   })
 
   it('is a no-op for the live mat', () => {
     const state = defaultTable(6)
-    pullFromBag(state, { x: MAT.x + 100, y: MAT.y + 120 })
+    pullFromBag(state, { x: pan.x, y: pan.y })
     const before = serialize(state)
     swapMat(state, 'scale')
     expect(serialize(state)).toEqual(before)

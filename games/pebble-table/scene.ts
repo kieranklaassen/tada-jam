@@ -1,5 +1,5 @@
 import { TableAudio } from './audio'
-import { freeSpotOnPlate, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, type FeedingView } from './feeding'
+import { freeSpotOnPlate, gazeTarget, GUEST_RADIUS, inBowl, nextSeat, plateOf, viewFeeding, type FeedingView } from './feeding'
 import { GestureTracker, pickPiece, type Intent, type Target } from './input'
 import {
   BAG,
@@ -7,10 +7,12 @@ import {
   fitWorld,
   insideCircle,
   RADIUS_BY_QUARTERS,
+  SCALE,
   SHELF,
   shelfSlot,
   TABLE,
   toWorld,
+  type Circle,
   type Fit,
   type MatKey,
   type Point,
@@ -52,6 +54,7 @@ const ZONE_FRICTION = 7.5
 const BROOM_RADIUS = 46
 const PIECE_SLOP = 22
 const MUNCH_DELAY = 0.9
+const BAG_BODY: Circle = { x: BAG.x, y: BAG.y + 10, r: 80 }
 
 export class PebbleScene {
   private readonly canvas: HTMLCanvasElement
@@ -187,7 +190,7 @@ export class PebbleScene {
     const now = this.now()
     const bodies = [...this.bodies.values()]
     for (const body of bodies) body.friction = this.frictionAt(body)
-    const report = stepWorld(bodies, dt, TABLE, [...this.brooms.values()])
+    const report = stepWorld(bodies, dt, TABLE, [...this.brooms.values()], this.fixtures(), this.containers())
     for (const id of report.fallen) this.sendHome(id)
     for (const impact of report.impacts.slice(0, 2)) this.audio.clack(impact.speed / 900)
     if (report.moving) this.cadence.markDirty()
@@ -222,6 +225,21 @@ export class PebbleScene {
       this.speak(groups)
     }
     if (calm) this.cadence.settle(performance.now())
+  }
+
+  /** Things stones bump into but cannot move: the bag, and guests sitting at the table. */
+  private fixtures(): Circle[] {
+    const fixtures: Circle[] = [BAG_BODY]
+    if (this.state.liveMat === 'feeding') {
+      FEEDING.seats.forEach((seat, index) => {
+        if (this.state.seats[index] && this.guestDrag?.seat !== index) fixtures.push({ ...seat.guest, r: GUEST_RADIUS })
+      })
+    }
+    return fixtures
+  }
+
+  private containers(): readonly Circle[] {
+    return this.state.liveMat === 'scale' ? SCALE.pans : [FEEDING.bowl]
   }
 
   private frictionAt(body: Body): number {
@@ -513,8 +531,13 @@ export class PebbleScene {
 
   private tap(pointerId: number, target: Target, at: Point): void {
     switch (target.kind) {
-      case 'piece':
-        return this.release(pointerId, at, { x: 0, y: 0 })
+      case 'piece': {
+        const piece = this.pieceById(target.id)
+        const dealing = this.state.liveMat === 'feeding' && piece !== undefined && inBowl(piece)
+        this.release(pointerId, dealing ? null : at, { x: 0, y: 0 })
+        if (dealing) this.hopFromBowl(target.id)
+        return
+      }
       case 'bag':
         return this.tipBag()
       case 'shelf':
@@ -634,6 +657,8 @@ export class PebbleScene {
     const body = this.bodies.get(id)
     const piece = this.pieceById(id)
     if (!body || !piece) return
+    body.kinematic = false
+    if (at && insideCircle(at, BAG)) return this.sendHome(id)
     if (at && this.state.liveMat === 'scale') {
       const drops = panDrops(this.beam.angle)
       for (const side of [0, 1] as const) {
@@ -644,7 +669,6 @@ export class PebbleScene {
         }
       }
     }
-    body.kinematic = false
     body.vx = velocity.x * 0.85
     body.vy = velocity.y * 0.85
     this.pendingVoice = { groups: this.voiceFor(id), deadline: this.now() + 2.5 }
@@ -700,9 +724,9 @@ export class PebbleScene {
     this.cadence.change(performance.now(), true)
   }
 
-  private hopFromBowl(): void {
+  private hopFromBowl(chosen?: number): void {
     const view = viewFeeding(this.restingPieces(), this.state.seats)
-    const id = view.bowlIds[0]
+    const id = chosen ?? view.bowlIds[0]
     const seat = nextSeat(this.state.seats, this.dealCursor)
     if (id === undefined || seat === null) {
       this.audio.touch(1.1)

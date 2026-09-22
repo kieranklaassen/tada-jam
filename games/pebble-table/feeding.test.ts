@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { freeSpotOnPlate, gazeTarget, nextSeat, plateOf, viewFeeding } from './feeding'
+import { freeSpotOnPlate, gazeTarget, GUEST_RADIUS, nextSeat, plateOf, viewFeeding } from './feeding'
 import { FEEDING } from './layout'
 import type { Piece } from './state'
 
@@ -69,5 +69,15 @@ describe('Fair Feeding', () => {
     const second = freeSpotOnPlate(1, [first], 30)
     expect(Math.hypot(first.x - second.x, first.y - second.y)).toBeGreaterThan(55)
     expect(plateOf(second)).toBe(1)
+  })
+
+  it('never puts a dealt stone where the guest would push it off the plate', () => {
+    const occupied: { x: number; y: number }[] = []
+    for (let i = 0; i < 6; i++) {
+      const spot = freeSpotOnPlate(1, occupied, 30)
+      const guest = FEEDING.seats[1].guest
+      expect(Math.hypot(spot.x - guest.x, spot.y - guest.y)).toBeGreaterThanOrEqual(GUEST_RADIUS + 30)
+      occupied.push(spot)
+    }
   })
 })

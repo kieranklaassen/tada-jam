@@ -311,29 +311,7 @@ function stoneSpeckles(): Point[] {
 }
 const SPECKLES = stoneSpeckles()
 
-/** One clay stone (or a half or quarter of one). Identical by design; only the light differs. */
-export function drawStone(g: CanvasRenderingContext2D, q: Quarters, x: number, y: number, id: number, lift = 0, glow = 0): void {
-  const r = RADIUS_BY_QUARTERS[q]
-  g.save()
-  g.translate(x, y)
-  g.fillStyle = `rgba(30,10,0,${0.32 - lift * 0.12})`
-  g.beginPath()
-  g.ellipse(4 + lift * 6, 7 + lift * 10, r * (1 + lift * 0.1), r * 0.92, 0, 0, Math.PI * 2)
-  g.fill()
-  if (glow > 0) {
-    g.fillStyle = `rgba(255,236,190,${glow * 0.55})`
-    g.beginPath()
-    g.arc(0, 0, r * (1.25 + glow * 0.35), 0, Math.PI * 2)
-    g.fill()
-  }
-  const scale = 1 + lift * 0.08 + glow * 0.12
-  g.scale(scale, scale)
-  g.rotate((id * 1.7) % (Math.PI * 2))
-  const clay = g.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r * 1.05)
-  clay.addColorStop(0, PALETTE.clayLight)
-  clay.addColorStop(0.55, PALETTE.clay)
-  clay.addColorStop(1, PALETTE.clayDark)
-  g.fillStyle = clay
+function stonePath(g: CanvasRenderingContext2D, q: Quarters, r: number): void {
   g.beginPath()
   if (q === 4) g.ellipse(0, 0, r, r * 0.94, 0, 0, Math.PI * 2)
   else if (q === 2) {
@@ -346,7 +324,39 @@ export function drawStone(g: CanvasRenderingContext2D, q: Quarters, x: number, y
     g.quadraticCurveTo(r * 0.9, -r * 0.8, r * 0.9, r * 0.6)
     g.closePath()
   }
+}
+
+/** One clay stone (or a half or quarter of one). Identical by design; only the light differs. */
+export function drawStone(g: CanvasRenderingContext2D, q: Quarters, x: number, y: number, id: number, lift = 0, glow = 0): void {
+  const r = RADIUS_BY_QUARTERS[q]
+  const turn = (id * 1.7) % (Math.PI * 2)
+  g.save()
+  g.translate(x, y)
+  g.save()
+  g.translate(4 + lift * 6, 7 + lift * 10)
+  g.rotate(turn)
+  g.fillStyle = `rgba(30,10,0,${0.32 - lift * 0.12})`
+  stonePath(g, q, r * (1 + lift * 0.1))
   g.fill()
+  g.restore()
+  if (glow > 0) {
+    g.fillStyle = `rgba(255,236,190,${glow * 0.55})`
+    g.beginPath()
+    g.arc(0, 0, r * (1.25 + glow * 0.35), 0, Math.PI * 2)
+    g.fill()
+  }
+  const scale = 1 + lift * 0.08 + glow * 0.12
+  g.scale(scale, scale)
+  g.rotate(turn)
+  const clay = g.createRadialGradient(-r * 0.35, -r * 0.4, r * 0.1, 0, 0, r * 1.05)
+  clay.addColorStop(0, PALETTE.clayLight)
+  clay.addColorStop(0.55, PALETTE.clay)
+  clay.addColorStop(1, PALETTE.clayDark)
+  g.fillStyle = clay
+  stonePath(g, q, r)
+  g.fill()
+  g.save()
+  g.clip()
   g.fillStyle = 'rgba(110,50,25,0.35)'
   for (const speck of SPECKLES) {
     g.beginPath()
@@ -357,6 +367,7 @@ export function drawStone(g: CanvasRenderingContext2D, q: Quarters, x: number, y
   g.beginPath()
   g.ellipse(-r * 0.35, -r * 0.42, r * 0.28, r * 0.16, -0.6, 0, Math.PI * 2)
   g.fill()
+  g.restore()
   g.restore()
 }
 
@@ -496,12 +507,12 @@ function drawFeedingMat(g: CanvasRenderingContext2D, model: RenderModel, feeding
   g.shadowBlur = 18
   g.shadowOffsetY = 6
   g.beginPath()
-  const scallops = 36
-  for (let i = 0; i <= scallops; i++) {
-    const a = (i / scallops) * Math.PI * 2
-    const wobble = 1 + Math.sin(i * 2.0) * 0.012
-    const x = cx + Math.cos(a) * (MAT.w / 2) * wobble
-    const y = cy + Math.sin(a) * (MAT.h / 2) * wobble
+  const points = 160
+  for (let i = 0; i <= points; i++) {
+    const a = (i / points) * Math.PI * 2
+    const scallop = 1 + Math.abs(Math.sin(a * 14)) * 0.018
+    const x = cx + Math.cos(a) * (MAT.w / 2) * scallop
+    const y = cy + Math.sin(a) * (MAT.h / 2) * scallop
     if (i === 0) g.moveTo(x, y)
     else g.lineTo(x, y)
   }

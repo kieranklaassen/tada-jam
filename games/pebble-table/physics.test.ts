@@ -65,4 +65,24 @@ describe('stepWorld', () => {
     expect(stone.vx).toBeGreaterThan(0)
     expect(report.moving).toBe(true)
   })
+
+  it('bounces stones off fixtures like guests and the bag', () => {
+    const stone = body({ x: 640, vx: 600, friction: 0 })
+    stepWorld([stone], STEP * 8, TABLE, [], [{ x: 720, y: 500, r: 50 }])
+    expect(stone.vx).toBeLessThan(0)
+    expect(Math.hypot(stone.x - 720, stone.y - 500)).toBeGreaterThanOrEqual(79.9)
+  })
+
+  it('keeps stones inside a walled bowl, even when crowded', () => {
+    const wall = { x: 700, y: 500, r: 105 }
+    const stones = Array.from({ length: 5 }, (_, i) => body({ id: i + 1, x: 690 + i * 5, y: 500 + (i % 2) * 5 }))
+    for (let i = 0; i < 240; i++) stepWorld(stones, STEP, TABLE, [], [], [wall])
+    for (const stone of stones) expect(Math.hypot(stone.x - wall.x, stone.y - wall.y)).toBeLessThanOrEqual(wall.r)
+  })
+
+  it('lets a stone outside a container roll in freely', () => {
+    const stone = body({ x: 500, vx: 800, friction: 0 })
+    for (let i = 0; i < 30; i++) stepWorld([stone], STEP, TABLE, [], [], [{ x: 700, y: 500, r: 105 }])
+    expect(stone.x).toBeGreaterThan(600)
+  })
 })

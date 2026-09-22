@@ -72,14 +72,17 @@ export function gazeTarget(view: FeedingView, seat: number): number | null {
   return view.plates[seat] < view.plates[fullest] ? fullest : null
 }
 
-/** A free spot on a plate, spiralling out from the center. */
+export const GUEST_RADIUS = 46
+
+/** A free spot on a plate, spiralling out from the center and keeping clear of the guest. */
 export function freeSpotOnPlate(seat: number, occupied: readonly Point[], radius: number): Point {
-  const center = FEEDING.seats[seat].plate
+  const { plate: center, guest } = FEEDING.seats[seat]
   for (let ring = 0; ring < 4; ring++) {
     const count = ring === 0 ? 1 : ring * 6
     for (let k = 0; k < count; k++) {
       const angle = (k / count) * Math.PI * 2 + ring * 0.4
       const spot = { x: center.x + Math.cos(angle) * ring * radius * 2, y: center.y + Math.sin(angle) * ring * radius * 2 }
+      if (Math.hypot(guest.x - spot.x, guest.y - spot.y) < GUEST_RADIUS + radius) continue
       if (occupied.every((p) => Math.hypot(p.x - spot.x, p.y - spot.y) > radius * 1.9)) return spot
     }
   }
