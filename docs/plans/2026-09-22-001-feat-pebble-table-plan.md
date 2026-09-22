@@ -440,3 +440,414 @@ None.
 - Tada repo: `docs/cartridges.md` (contract: manifest, `CartridgeContext`, storage semantics, attention, fidelity bar, §4 rules, sound rule), `app/frontend/cartridges/types.ts`, `app/frontend/kid/PortraitOverlay.tsx` (KTD-8 landscape lock), `.claude/skills/cartridge-creator/SKILL.md` and `shim/README.md` (fake shell: faithful vs fake list), `docs/native.md` (iPhone-only blocker).
 - Evidence dossiers from the ideation run (`evidence-return-pull.md`, `evidence-montessori-waldorf.md`, `evidence-us-curriculum.md`, `external-research.md`) — Nicholson 1971; TIMPANI; Dauch 2018; Toca Boca and Sago Mini design statements; ScratchJr analytics; Loewenstein 1994; Kidd 2012 / Cubit 2021 / Poli 2020; Schulz & Bonawitz 2007; Bonawitz 2011; Cooney Center 2010 and 2018; Marsh 2018; HBET 2025; Lillard 2012 and eight principles; AMI and WECAN screen positions; Steiner on rhythm and whole-first; ELOF, Texas 2022, California 2024, Common Core K.
 - Platform facts verified against Apple, WebKit, MDN, and caniuse for this plan: no Vibration API in Safari (caniuse.com/vibration); `ScreenOrientation.lock()` unsupported in Safari (MDN browser-compat-data); four- and five-finger gestures are a system setting (support.apple.com/en-us/125309) or Guided Access (support.apple.com/en-us/111795); Web Audio contexts start suspended until a user gesture (webkit.org/blog/6784). Kept for the standalone shim: Home Screen web apps are exempt from Safari's seven-day storage deletion (webkit.org/blog/10218) and run standalone with service workers (webkit.org/blog/13878); App Store guidelines 3.2.2(i), 4.7, and 1.3 govern any future native wrapper of a hosted games collection (developer.apple.com/app-store/review/guidelines).
+
+---
+
+## Planning Contract
+
+### Assumptions
+
+Pipeline run with no owner available; each bet below is the recommended default, tagged `assumed default`.
+
+- The jam shell (`harness/JamShell.tsx`) is the standalone host the Cartridge Mapping calls for: `localStorage` slot adapter, age and language controls, attention toggle, park, portrait overlay, crash containment. `assumed default`.
+- Until Knock-Knock (U11) lands, guests arrive at Fair Feeding by tapping an empty chair and leave by being dragged off an empty plate. `assumed default` — an interim door that U11 replaces with knocking (F3).
+- The knife cuts a clay stone. Halves and quarters are honest fractions everywhere: they weigh 0.5 and 0.25 on the scale, count as 0.5 and 0.25 on a plate, and merge back into whole stones in the bag. `assumed default`.
+- Guests "eat" by munching in place; stones are clay, so nothing on a plate disappears. `assumed default` (keeps the material conserved and every table losslessly restorable, R19).
+- Default live mat on first open: Fair Feeding for ages 4 and under or unknown (F1), Honest Scale from 5. `assumed default` under R20.
+- Spoken number words (R16) use on-device `speechSynthesis` (the Δ3 fallback) so no audio clips are committed in v1. `assumed default`.
+
+### Key Technical Decisions
+
+- KTD1. **Canvas 2D with procedural art, no rendering library.** One `<canvas>` owned by a scene class, like Tada's fishing `scene.ts`. Forty-odd circles, a beam, plates, and creatures do not need pixi or three; zero dependencies keeps the port trivial and the bundle small. The wood grain is pre-rendered to an offscreen canvas on each resize.
+- KTD2. **A small custom top-down physics step instead of matter.js.** Seen from above there is no gravity: stones are circles with velocity, exponential friction, circle-circle collisions, and a table edge. Pans, plates, and the bowl are zones, not bodies. A fixed 1/120 s step makes the step deterministic and unit-testable under Node. matter.js stays on the menu for Cubes (U13) if stacking needs it.
+- KTD3. **World units, not pixels.** The world is 1600 × 1000 units; the scene fits it into whatever box the `ResizeObserver` reports (letterboxed, DPR capped at 2) and inverts the transform for touches. Saved positions are world units, so a resized window or a different iPad restores the same table (R47, R19).
+- KTD4. **One versioned, compact state shape.** `v`, `bag` (amount in quarter-stones), `pieces` (id, size, integer x/y), `liveMat`, `shelf` order, per-mat parked pieces, and Fair Feeding seats. `deserialize` clamps every number, drops unknown kinds and duplicate ids, repairs the total so stones are conserved, and falls back to the age-default table on anything unreadable. Twenty album tables at this shape stay far under 64 KB (R45).
+- KTD5. **Mats are pure modules over the shared piece list.** `scale.ts` computes pan membership, honest weights, target tilt, and the spring-damped beam; `feeding.ts` computes plate totals, the bowl leftover, the fair-share-complete condition, and knife cuts. The scene only renders and routes input, so every mat rule is testable without a DOM.
+- KTD6. **Number voice = spatial clusters, chunked by five.** The set acted on is clustered by single-linkage (gap under ~2.6 stone radii); clusters larger than five are chunked 5 + remainder, so ten spilled stones sound as five-and-five (F1). Each chunk plays rising pentatonic beats with a gap between chunks, and each piece pulses on its beat, so muted play still carries the count (R14, R39, AE9).
+- KTD7. **Raw Web Audio synthesis, no tone.js.** A handful of voices — tap blip, stone clack, bag clatter, beam creak with tilt-following pitch, pentatonic beat, settle chord, munch, guest hop — built from oscillators and a shared noise buffer. The context is created and resumed inside the first pointerdown, suspended while unattended or hidden, and rebuilt if WebKit reports `interrupted` or `closed` (R39, R46).
+- KTD8. **Pointer Events with a three-finger cap.** `touch-action: none`; up to three tracked pointers. A pointer on a piece drags it and flicks on release; a pointer on the bag pulls one stone out (drag) or tips the bag (tap); a pointer on empty table is a broom that pushes pieces it passes. A fourth simultaneous touch cancels every gesture and is treated as a resting hand (R38, AE8). Pieces that cross the table edge fly back into the bag with a clatter (R21).
+- KTD9. **One live mat; the shelf parks arrangements.** Dragging a picture off the shelf onto the table swaps mats: pieces on the outgoing mat park with it in state and come back exactly placed when it returns (R5, R19). Stones are conserved across bag, table, and parked mats.
+- KTD10. **Saves follow the child's hand.** Save on every settled change, on pointer up, throttled during drags (so a stone mid-drag is saved where the finger is), and when attention drops. The storage layer's debounce and the shell's flush-on-park do the rest (R19, R30, AE5).
+- KTD11. **Age sets first-open defaults only.** `childAge` ≤ 3 gives a bag of five; 4, higher, or `null` gives ten. It also picks the default live mat and shelf order (see Assumptions). Once a table is saved, the saved table wins (R20, AE10).
+
+### High-Level Technical Design
+
+Module topology inside `games/pebble-table/`: the Mount is thin, the scene owns the loop, and all game rules are pure.
+
+```mermaid
+flowchart LR
+  Mount[pebble-table.tsx Mount] -->|ctx.storage load/save, attended, childAge| Scene[scene.ts]
+  Scene --> Input[input.ts gestures]
+  Scene --> Physics[physics.ts step]
+  Scene --> Render[render.ts art]
+  Scene --> Audio[audio.ts synth]
+  Input --> State[(state.ts TableState)]
+  Physics --> State
+  State --> Scale[scale.ts]
+  State --> Feeding[feeding.ts]
+  State --> Voice[voice.ts clusters and beats]
+  Voice --> Audio
+  Voice --> Render
+  Scale --> Render
+  Feeding --> Render
+  Layout[layout.ts world geometry] --> Render
+  Layout --> Input
+  Layout --> Scale
+  Layout --> Feeding
+```
+
+Piece lifecycle — every stone is always in exactly one place, which is what makes the table conserved and restorable:
+
+```mermaid
+stateDiagram-v2
+  [*] --> InBag
+  InBag --> OnTable: tip bag / pull one out
+  OnTable --> Dragged: finger down
+  Dragged --> OnTable: release (flick velocity)
+  OnTable --> Flying: crosses table edge
+  Flying --> InBag: lands with clatter
+  OnTable --> ParkedWithMat: live mat put away
+  ParkedWithMat --> OnTable: mat returns
+  OnTable --> OnTable: knife cut (1 to 2 halves, half to 2 quarters)
+```
+
+Beam behavior (U7): target tilt is a saturating function of the weight difference, `tilt* = maxTilt · tanh((R − L) / 2)`, and the beam follows it with a damped spring. Level (`R == L`) settles silent; creak gain follows angular speed and pitch follows the angle.
+
+### Sequencing
+
+```mermaid
+flowchart TB
+  subgraph A[Phase A: playable slice]
+    U1 --> U2 --> U4
+    U1 --> U3
+    U2 --> U5
+    U3 --> U8
+    U4 --> U5 --> U8
+    U6 --> U8
+    U7 --> U8
+  end
+  subgraph B[Phase B: Fair Feeding and shelf]
+    U8 --> U9
+    U8 --> U10
+  end
+  subgraph C[Phase C: follow-up PRs]
+    U10 --> U11 & U12 & U13 & U14 & U15 & U16 & U17 & U18 & U19
+  end
+```
+
+---
+
+## Output Structure
+
+```text
+games/pebble-table/
+  manifest.ts          manifest const (Node-importable)
+  index.ts             jam registration (deleted on port)
+  pebble-table.tsx     Mount + Cartridge
+  layout.ts            world geometry: table, bag, mats, shelf, pans, plates
+  state.ts             TableState, defaults by age, deserialize, conservation
+  physics.ts           fixed-step top-down circle physics
+  scale.ts             Honest Scale rules
+  feeding.ts           Fair Feeding rules
+  voice.ts             clusters, chunks, beat schedule
+  audio.ts             Web Audio voices
+  input.ts             pointer gestures and hit tests
+  render.ts            procedural art
+  scene.ts             loop, attention, resize, save cadence
+  *.test.ts            beside each pure module
+```
+
+---
+
+## Implementation Units
+
+### U1. Table state, defaults, and persistence shape
+
+**Goal:** The single source of truth for what is on the table, readable from any saved shape without crashing.
+**Requirements:** R3, R19, R20, R45; KTD4, KTD11; AE5, AE10.
+**Dependencies:** none.
+**Files:** `games/pebble-table/state.ts`, `games/pebble-table/state.test.ts`, `games/pebble-table/layout.ts`, `games/pebble-table/manifest.ts`, `games/pebble-table/index.ts`.
+**Approach:**
+1. Define piece sizes (whole, half, quarter) with amounts in quarter-stone units, and the table state per KTD4.
+2. `defaultTable(childAge)` builds the first-open table: all stones in the bag, live mat and shelf order by age.
+3. `deserialize(unknown, childAge)` validates and repairs; `serialize` rounds positions to integers.
+4. A repair step keeps bag + pieces + parked equal to the bag size.
+**Test scenarios:**
+- Age 3 gives a bag of five (20 quarters); ages 4, 7, 12, and `null` give ten.
+- Covers AE10. Age 3 still lists every built mat on the shelf.
+- A round trip through `serialize` and `deserialize` returns the same table.
+- `null`, a string, an array, and `{ v: 99 }` all fall back to the default table.
+- Negative, NaN, and out-of-world coordinates are clamped into the table.
+- Duplicate piece ids and unknown sizes are dropped, and the total is repaired so no stone is created or lost.
+- A table with ten whole stones serializes well under 2 KB.
+**Verification:** Tests pass; the state module imports nothing from the DOM.
+
+### U2. Top-down physics step
+
+**Goal:** Stones scatter, roll, collide, and slow like clay on wood.
+**Requirements:** R3, R4, R21; KTD2.
+**Dependencies:** U1.
+**Files:** `games/pebble-table/physics.ts`, `games/pebble-table/physics.test.ts`.
+**Approach:** Fixed 1/120 s substeps over bodies (id, x, y, vx, vy, r). Exponential friction with a rest threshold, pairwise circle separation with restitution, and a report of pieces whose centers left the table rectangle. Dragged pieces are kinematic. Collision impacts are returned so audio can clack.
+**Test scenarios:**
+- A moving stone comes to rest in finite steps and never reverses direction from friction alone.
+- Two overlapping stones are separated after one step.
+- A head-on collision conserves momentum within tolerance.
+- A kinematic (dragged) body pushes others but is not pushed.
+- A stone crossing the table edge is reported as fallen.
+- Impacts above the clack threshold are reported with their speed; resting contact reports nothing.
+**Verification:** Tests pass deterministically with no timers.
+
+### U3. Procedural art and layout
+
+**Goal:** A warm walnut table, a linen bag, clay stones, felt mats, and a shelf that a kid would screenshot.
+**Requirements:** R2, R5, R17, R47; KTD1, KTD3; fidelity bar.
+**Dependencies:** U1.
+**Files:** `games/pebble-table/render.ts`, `games/pebble-table/layout.ts`, `games/pebble-table/layout.test.ts`.
+**Approach:** `layout.ts` owns world geometry and the world↔screen fit. `render.ts` draws, in order: frame, table with pre-rendered grain, live mat, pieces with shadow and speckle, bag, shelf pictures, and transient effects (pulses, dust puffs). No text anywhere on the kid side (R17).
+**Test scenarios:**
+- The fit keeps the 16:10 world whole inside 4:3, 16:10, and ultra-wide boxes and centers it.
+- `toWorld(toScreen(p))` returns `p` for any box.
+- A `0 × 0` box is reported as unusable so the scene skips it.
+- Every mat's live area sits inside the table and clear of the bag and shelf.
+**Verification:** Tests pass; a screenshot at iPad landscape shows no text and its own palette.
+
+### U4. Touch gestures
+
+**Goal:** Direct touch for everything: drag, flick, pull from bag, tap to tip, sweep with a broom finger, three-finger cap.
+**Requirements:** R4, R21, R38; KTD8; AE8.
+**Dependencies:** U1, U2, U3.
+**Files:** `games/pebble-table/input.ts`, `games/pebble-table/input.test.ts`.
+**Approach:** A gesture tracker keyed by pointer id classifies each pointer on down (piece, bag, knife, shelf picture, chair, or broom) and emits intents the scene applies. Hit tests use rendered positions (pan offsets included) with a generous finger slop. Flick velocity comes from the last ~80 ms of samples.
+**Test scenarios:**
+- Down on a stone then up without movement is a tap on that stone; with movement it is a drag ending in a flick carrying recent velocity.
+- Down on the bag and up within the tap window tips the bag; dragging out of the bag pulls exactly one stone.
+- Down on empty table becomes a broom that follows the finger.
+- Covers AE8. A fourth simultaneous pointer cancels all active gestures, and no intent fires until every finger lifts.
+- Two fingers can drag two stones independently.
+- A tap slightly outside a stone's radius but inside the slop still hits it; the topmost stone wins overlaps.
+**Verification:** Tests pass on synthetic pointer sequences.
+
+### U5. Bag, spill, and sweep back
+
+**Goal:** Tip the bag and ten stones scatter; sweep them off the edge and they clatter home.
+**Requirements:** R3, R21; F1, F5 (sweep half).
+**Dependencies:** U2, U4.
+**Files:** `games/pebble-table/state.ts`, `games/pebble-table/scene.ts`, `games/pebble-table/state.test.ts`.
+**Approach:** `tipBag` turns the bag amount into pieces at the bag mouth with fanned velocities (whole stones first, then leftover fractions). `returnToBag` removes a fallen piece and merges its amount; the scene animates it into the bag. Pulling one stone moves one whole stone (or the largest fraction) into the finger.
+**Test scenarios:**
+- Tipping a bag of ten produces ten whole pieces and an empty bag.
+- Tipping an empty bag does nothing.
+- Returning two halves then tipping again produces one whole stone from them.
+- Pulling from a bag holding 1.5 stones yields a whole stone first, then a half.
+- The total is conserved across any sequence of tip, pull, and return.
+**Verification:** Tests pass; in the browser a tap spills and a broom sweep returns stones with a clatter.
+
+### U6. Number voice and sound
+
+**Goal:** Every act answers with sound; quantity sounds as grouped pentatonic beats with matching pulses.
+**Requirements:** R14, R15, R39, R46; KTD6, KTD7; AE9.
+**Dependencies:** none (consumed by U8).
+**Files:** `games/pebble-table/voice.ts`, `games/pebble-table/voice.test.ts`, `games/pebble-table/audio.ts`.
+**Approach:** `voice.ts` is pure: cluster a set of pieces, chunk by five, and return a beat schedule (time, pitch index, piece ids). `audio.ts` owns the AudioContext and voices and plays schedules. The scene triggers the voice only after an act by the child settles (R15), never on an unchanged table.
+**Test scenarios:**
+- Ten stones in one heap schedule as 5 + 5; three in a row as 3; two heaps of 2 and 1 as 2 + 1.
+- Seven touching stones chunk as 5 + 2.
+- Halves count as pieces for beats (the voice counts objects, the scale weighs amounts).
+- Beat times rise within a chunk and leave a longer gap between chunks.
+- Every piece id in the set appears on exactly one beat.
+- An empty set produces no schedule.
+**Verification:** Tests pass; in the browser, spilling the bag plays five-and-five with pulses, and muting leaves the pulses.
+
+### U7. Honest Scale mat
+
+**Goal:** A two-pan beam that tilts toward the heavier pan with a creak and settles level in silence when the pans match.
+**Requirements:** R8, R23, R35; KTD5; F4; AE4.
+**Dependencies:** U1, U2.
+**Files:** `games/pebble-table/scale.ts`, `games/pebble-table/scale.test.ts`.
+**Approach:** Pan membership by piece center inside the pan's rest circle; weight = summed amounts. The beam integrates a damped spring toward the target tilt from the High-Level Technical Design and reports angle, angular speed, and a `settledLevel` edge. Pieces on a pan render with the pan's vertical offset so the lower pan visibly drops.
+**Test scenarios:**
+- Empty pans target level.
+- Three stones left and none right tilts left; the tilt is larger for 5 : 0 than for 1 : 0 and never exceeds the maximum.
+- Covers AE4. Three left and three right targets level, and the beam reaches rest with zero creak gain and a single `settledLevel` event.
+- Two halves on one pan balance one whole stone on the other.
+- A stone straddling the pan edge counts only when its center is inside.
+- The spring does not oscillate forever: angular speed falls under the rest threshold within two seconds of simulated time.
+**Verification:** Tests pass; in the browser the beam creaks while moving and falls silent when level.
+
+### U8. Mount and scene wiring
+
+**Goal:** The playable slice inside the jam shell: load, play, save, pause, resize.
+**Requirements:** R1, R19, R30, R37, R40, R41, R43, R44, R46, R47; KTD3, KTD10; F6; AE5.
+**Dependencies:** U3, U4, U5, U6, U7.
+**Files:** `games/pebble-table/pebble-table.tsx`, `games/pebble-table/scene.ts`, `games/pebble-table/saveCadence.ts`, `games/pebble-table/saveCadence.test.ts`.
+**Approach:** The Mount loads state from `ctx.storage` (already cached by the host), creates the scene with the canvas, forwards `attended`, and disposes on unmount. The scene runs the rAF loop only while attended and visible, watches its canvas with a `ResizeObserver` (skipping `0 × 0`), and saves per KTD10 through a small pure save-cadence helper. Idle life: the beam sways faintly and the bag breathes, paused when unattended (R31 slice).
+**Test scenarios:**
+- Covers AE5. Loading a saved table with a piece at a given position restores that position exactly.
+- The save cadence emits a save after a drag ends and when attention drops, throttles during a drag, and never saves while nothing changed.
+**Verification:** Tests pass; in the jam shell, spill, weigh, park, reload, and find the table unchanged; toggling Attended stops and restarts the loop.
+
+### U9. Fair Feeding mat
+
+**Goal:** Guests at plates, dealing by hand or by tapping the bowl, calm looks toward fuller plates, eating together when shares match, an honest leftover, and a knife that cuts it.
+**Requirements:** R9, R29, R34, R35; KTD5; F2; AE1.
+**Dependencies:** U8.
+**Files:** `games/pebble-table/feeding.ts`, `games/pebble-table/feeding.test.ts`, `games/pebble-table/render.ts`, `games/pebble-table/scene.ts`.
+**Approach:**
+1. Five chair slots around the bowl; seated guests default to two; an empty chair tap seats a guest, and dragging a guest off an empty plate stands them up (interim door, see Assumptions).
+2. Plate totals and bowl contents by zone; tapping the bowl hops one piece onto the next plate in seat order.
+3. Fair-share complete = every seated plate equal and above zero, and the bowl holding less than one piece per guest; after a short calm the guests munch together and a soft chord plays (R35).
+4. Leftover = bowl non-empty while the share is complete; the knife lies beside the bowl only then (R34), and dropping it on a piece cuts whole → two halves → two quarters.
+5. A guest whose plate holds less than another's looks toward the fullest plate.
+**Test scenarios:**
+- Covers AE1. Five stones, two guests, two dealt to each: share complete, one leftover, knife present; seating a third guest and dealing the fifth stone to them removes the knife.
+- Bowl taps deal round-robin in seat order and skip empty chairs.
+- Plates of 2 and 2 with an empty bowl complete; 2 and 1 do not.
+- Plates of 1 and 1 with three in the bowl are not complete (another round is possible).
+- Cutting a whole gives two halves at the same spot; cutting a half gives two quarters; a quarter cannot be cut.
+- Two halves on one plate match one whole on the other.
+- The guest with fewer looks toward the fullest plate; equal plates look ahead.
+**Verification:** Tests pass; in the browser the AE1 story plays end to end.
+
+### U10. Shelf and one live mat
+
+**Goal:** Put a mat away and bring another out, with every arrangement kept.
+**Requirements:** R5, R7, R19, R20; KTD9; AE10.
+**Dependencies:** U8.
+**Files:** `games/pebble-table/state.ts`, `games/pebble-table/state.test.ts`, `games/pebble-table/scene.ts`.
+**Approach:** `swapMat(state, key)` parks pieces lying on the outgoing mat's area with it and restores the incoming mat's parked pieces; pieces off-mat stay on the table. The shelf shows every built mat that is not live, in age-default order; mats not built yet (Phase C) are not shown.
+**Test scenarios:**
+- Swapping scale → feeding → scale restores the scale's pieces at the same coordinates.
+- Pieces off the mat area stay on the table across a swap.
+- Swapping to the live mat is a no-op.
+- Totals are conserved across any sequence of swaps.
+**Verification:** Tests pass; in the browser dragging a shelf picture onto the table swaps mats.
+
+### U11. Knock-Knock mat (Phase C)
+
+**Goal:** Knock N, hear N echoed in groups, meet N creatures who stay; the house knocks first in reverse and the door always opens.
+**Requirements:** R10, R29, R32; F3; AE3. Replaces the interim chair door in U9.
+**Dependencies:** U10.
+**Files:** `games/pebble-table/knock.ts`, `games/pebble-table/knock.test.ts`.
+**Approach:** Knock taps collected until a pause; count → grouped rhythm via `voice.ts`; creatures step out in those groups and join the table (and fill Fair Feeding chairs). Chalk marks show a gap, never a verdict.
+**Test scenarios:**
+- Three knocks yield a 2 + 1 echo and three creatures.
+- Covers AE3. House knocks five, child knocks three: the door opens on five with two chalk circles and no wrong-sound.
+- Knock ten yields ten mice; one knock yields the elephant.
+**Verification:** Tests pass; AE3 plays in the browser.
+
+### U12. Loom mat (Phase C)
+
+**Goal:** A twelve-slot ring where a repeating unit closes with a click when it divides twelve and leaves a knot when it does not.
+**Requirements:** R11, R34.
+**Dependencies:** U10.
+**Files:** `games/pebble-table/loom.ts`, `games/pebble-table/loom.test.ts`.
+**Approach:** Unit detection from the first laid beads; shuttle repeats; ghost bead shows the next slot; second row appears when the first fills (R34).
+**Test scenarios:**
+- Units of 1, 2, 3, 4, and 6 close; 5 and 7 leave a knot of the remainder.
+- The ghost bead index advances with each bead.
+- The second row appears only when the first is full.
+**Verification:** Tests pass.
+
+### U13. Cubes mat (Phase C)
+
+**Goal:** Eight wooden cubes on an isometric grid that stack, slide, and mirror, voiced by count and shape.
+**Requirements:** R12.
+**Dependencies:** U10.
+**Files:** `games/pebble-table/cubes.ts`, `games/pebble-table/cubes.test.ts`.
+**Approach:** Grid cells with heights; mirror across a line; count voiced through `voice.ts`; never cleared by the game.
+**Test scenarios:**
+- Stacking raises height.
+- Mirroring maps cells across the line.
+- The count of eight is conserved through any move.
+**Verification:** Tests pass.
+
+### U14. Sticker shelf and spoken words (Phase C)
+
+**Goal:** Numerals 0–10 as peelable stickers that sing their number when stuck to a set and flutter home when the set changes; words only on request.
+**Requirements:** R13, R16, R17, R18; AE2.
+**Dependencies:** U10.
+**Files:** `games/pebble-table/stickers.ts`, `games/pebble-table/stickers.test.ts`, `games/pebble-table/content.ts`.
+**Approach:** A sticker binds to a set snapshot; a change detaches it. Spoken words via `speechSynthesis` keyed by `ctx.language` with English fallback (Δ3 fallback).
+**Test scenarios:**
+- Covers AE2. A ring of four shells loses one: the sticker returns silently; tapping "4" speaks "vier" for `nl`.
+- An unknown language falls back to English.
+- Off by default at age 3 and still reachable (AE10).
+**Verification:** Tests pass.
+
+### U15. Sideboard jars and seasons (Phase C)
+
+**Goal:** Stoppered jars of loose parts with new attributes, and a season-mirroring décor and jar.
+**Requirements:** R6, R7, R36; F5; AE6; Δ1.
+**Dependencies:** U10.
+**Files:** `games/pebble-table/jars.ts`, `games/pebble-table/season.ts`, `games/pebble-table/jars.test.ts`, `games/pebble-table/season.test.ts`.
+**Approach:** New piece kinds (acorn, shell, stick, boulder weighing five, big stone, seasonal part); season from device month; kinds return to their own jar on sweep.
+**Test scenarios:**
+- Covers AE6. October → March changes décor and the seasonal jar only.
+- The boulder balances five stones.
+- A sweep sorts parts back to their own jars.
+**Verification:** Tests pass.
+
+### U16. Album of past tables (Phase C)
+
+**Goal:** A scrapbook shelf of up to twenty past tables the child can set back.
+**Requirements:** R22, R45.
+**Dependencies:** U10.
+**Files:** `games/pebble-table/album.ts`, `games/pebble-table/album.test.ts`.
+**Approach:** Snapshot on session start when the table changed since the last card; bounded to twenty; no counts or slots.
+**Test scenarios:**
+- The twenty-first card drops the oldest.
+- Restoring a card conserves stones.
+- Twenty cards stay under 40 KB.
+**Verification:** Tests pass.
+
+### U17. Question card (Phase C)
+
+**Goal:** A face-down card that shows one open question for the grown-up, keyed to the live mat and `ctx.language`.
+**Requirements:** R18, R23, R24; F7.
+**Dependencies:** U10.
+**Files:** `games/pebble-table/content.ts`, `games/pebble-table/content.test.ts`.
+**Approach:** About thirty questions per language as a content pack; English fallback.
+**Test scenarios:**
+- The `nl` and `en` packs have questions for every built mat.
+- `fr` falls back to English.
+**Verification:** Tests pass.
+
+### U18. Grown-up corner (Phase C)
+
+**Goal:** A three-second hold on the sideboard opens the provocation switch; it adds a mat or jar and never removes one.
+**Requirements:** R25, R33; F8; AE7, AE12; Δ4.
+**Dependencies:** U15.
+**Files:** `games/pebble-table/corner.ts`, `games/pebble-table/corner.test.ts`.
+**Approach:** Hold detector ignoring taps and swipes; switch state in `ctx.storage`.
+**Test scenarios:**
+- Covers AE12. No open under three seconds of held touch.
+- Covers AE7. Adding cubes keeps every existing mat and jar.
+**Verification:** Tests pass.
+
+### U19. The mouse and idle life (Phase C)
+
+**Goal:** Guests nap and wander, and a mouse borrows a long-ignored leftover while the child watches and returns it on a tap.
+**Requirements:** R31, R32, R46; AE11; Δ2.
+**Dependencies:** U9.
+**Files:** `games/pebble-table/mouse.ts`, `games/pebble-table/mouse.test.ts`.
+**Approach:** World time advances only while attended; after ten attended seconds of an untouched leftover the mouse drags it under the table; one tap returns it.
+**Test scenarios:**
+- Covers AE11. The mouse moves only while attended; a tap restores the piece; nothing is lost.
+**Verification:** Tests pass.
+
+---
+
+## Verification Contract
+
+- `npm run check` — TypeScript (`tsc --noEmit`), vitest (all `*.test.ts` beside the game plus `test/`), and the source egress scan. Must pass on every commit.
+- `npm run build && npm run egress:built` — production build and built-asset egress scan, as CI runs them.
+- CI (`.github/workflows/ci.yml`) green on the PR.
+- Browser smoke in the jam shell at iPad landscape sizes (1180 × 820 and 1024 × 768, touch emulation): first open shows the table with no text; tapping the bag spills; a broom sweep returns stones; Honest Scale tilts and levels; Fair Feeding plays AE1; park + reload restores the table; portrait shows the overlay. Screenshots or a short recording are the evidence.
+- Fidelity bar walked in the PR description (alive at idle, motion and sound on every touch, own palette, screenshot-worthy).
+
+## Definition of Done
+
+- **Global (this PR):** Phase A and Phase B units (U1–U10) are implemented with their test scenarios passing; the Verification Contract holds; `games/pebble-table/` imports only `../types`, its own modules, and React; no text on the kid side; no score, timer, streak, verdict, or dialog anywhere (R26–R30); nothing outside `games/pebble-table/` changes except the README games table and this plan, so the Tada port stays the four touchpoints (R42); no dead-end or experimental code left in the diff.
+- **Per unit:** each unit's Verification line holds and its tests live beside the module.
+- **Phase C:** each follow-up PR meets the same global bar for its unit and keeps every earlier AE passing.
