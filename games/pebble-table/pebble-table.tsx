@@ -1,59 +1,56 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
+import { TableAudio } from './audio'
+import { TableController } from './controller'
 import { pebbleTableManifest } from './manifest'
-import { PebbleScene } from './scene'
 import { deserialize } from './state'
+import { PALETTE } from './view/clay'
+import { GameView } from './view/game'
 
-// A thin Mount: load the saved table, hand the canvas to the scene, forward
-// attention, and let go on unmount. The table itself is the whole UI.
+// A thin Mount: load the saved table, build the controller, render the 3D
+// view, and forward attention. The table itself is the whole UI.
+
+function useHidden(): boolean {
+  const [hidden, setHidden] = useState(() => document.visibilityState === 'hidden')
+  useEffect(() => {
+    const update = () => setHidden(document.visibilityState === 'hidden')
+    document.addEventListener('visibilitychange', update)
+    return () => document.removeEventListener('visibilitychange', update)
+  }, [])
+  return hidden
+}
 
 function PebbleTableMount({ ctx }: { ctx: CartridgeContext }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const sceneRef = useRef<PebbleScene | null>(null)
-  const attendedRef = useRef(ctx.attention.attended)
-  attendedRef.current = ctx.attention.attended
-
   const { storage, childAge } = ctx
+  const [table, setTable] = useState<TableController | null>(null)
+  const hidden = useHidden()
+  const running = ctx.attention.attended && !hidden
 
   useEffect(() => {
     let disposed = false
+    let created: TableController | null = null
     void storage
       .load<unknown>()
       .catch(() => null)
       .then((saved) => {
-        const canvas = canvasRef.current
-        if (disposed || !canvas) return
-        const scene = new PebbleScene(canvas, { state: deserialize(saved, childAge), save: (state) => storage.save(state) })
-        scene.setAttended(attendedRef.current)
-        sceneRef.current = scene
+        if (disposed) return
+        created = new TableController(deserialize(saved, childAge), { save: (state) => storage.save(state), sound: new TableAudio() })
+        setTable(created)
       })
     return () => {
       disposed = true
-      sceneRef.current?.dispose()
-      sceneRef.current = null
+      created?.dispose()
     }
   }, [storage, childAge])
 
   useEffect(() => {
-    sceneRef.current?.setAttended(ctx.attention.attended)
-  }, [ctx.attention.attended])
+    table?.setRunning(running)
+  }, [table, running])
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        display: 'block',
-        touchAction: 'none',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        WebkitTouchCallout: 'none',
-        background: '#231b16',
-      }}
-    />
+    <div style={{ position: 'absolute', inset: 0, background: PALETTE.backdrop }}>
+      {table && <GameView table={table} running={running} />}
+    </div>
   )
 }
 

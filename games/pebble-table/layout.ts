@@ -54,6 +54,13 @@ export const FEEDING = {
 export const MAT_KEYS = ['feeding', 'scale'] as const
 export type MatKey = (typeof MAT_KEYS)[number]
 
+/** The low rack at the table's right end where put-away mats rest, tilted toward the child. */
+export const SHELF_RACK = { x: SHELF.x + SHELF.w / 2, firstY: 240, spacing: 190, height: 3.5 } as const
+
+export function shelfTile(index: number): Point & { height: number } {
+  return { x: SHELF_RACK.x, y: SHELF_RACK.firstY + index * SHELF_RACK.spacing, height: SHELF_RACK.height }
+}
+
 export function shelfSlot(index: number): Rect {
   return { x: SHELF.x + 12, y: SHELF.y + 40 + index * 150, w: SHELF.w - 24, h: 110 }
 }

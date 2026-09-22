@@ -40,6 +40,12 @@ describe('egress scanner', () => {
     expect(rules).toEqual(['import-outside-game', 'no-shell-import', 'import-outside-game', 'package-not-on-menu'])
   })
 
+  it('allows imports between a game\'s own subfolders', () => {
+    const source = ["import { a } from '../layout'", "import type { T } from '../../types'"].join('\n')
+    expect(scanGameSource(source, 'games/x/view/scene.tsx')).toEqual([])
+    expect(scanGameSource("import { b } from '../../y/b'", 'games/x/view/scene.tsx').map((f) => f.rule)).toEqual(['import-outside-game'])
+  })
+
   it('allows on-device speech synthesis (jam allowance for spoken number words)', () => {
     expect(scanGameSource('window.speechSynthesis.speak(utterance)', 'games/x/x.ts')).toEqual([])
   })

@@ -8,8 +8,8 @@ import type { Piece } from './state'
 export type Side = 0 | 1
 export type Beam = { angle: number; velocity: number; settledLevel: boolean }
 
-const STIFFNESS = 38
-const DAMPING = 9
+const STIFFNESS = 44
+const DAMPING = 6.4
 const REST_VELOCITY = 0.01
 const REST_ANGLE = 0.002
 
