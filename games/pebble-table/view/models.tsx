@@ -15,6 +15,10 @@ const ClayContext = createContext<ClayMaterials | null>(null)
 export function ClayProvider({ children }: { children: ReactNode }) {
   const materials = useMemo(() => createClayMaterials(), [])
   useEffect(() => () => materials.dispose(), [materials])
+  useEffect(() => {
+    const timer = setTimeout(prewarm, 400)
+    return () => clearTimeout(timer)
+  }, [])
   return <ClayContext.Provider value={materials}>{children}</ClayContext.Provider>
 }
 
@@ -471,6 +475,27 @@ function guestShapes(species: Species): GuestShapes {
 
 const shapeCache = new Map<Species, GuestShapes>()
 
+function speciesShapes(species: Species): GuestShapes {
+  let cached = shapeCache.get(species)
+  if (!cached) {
+    cached = guestShapes(species)
+    shapeCache.set(species, cached)
+  }
+  return cached
+}
+
+/** Build every mat's and character's geometry once, early, so nothing is built mid-play. */
+function prewarm(): void {
+  once('bag', bagGeometry)
+  for (const species of ['rabbit', 'bear', 'hedgehog'] as const) speciesShapes(species)
+  once('scale', () => ({
+    post: postGeometry(),
+    beam: beamGeometry(SCALE.beamHalf * UNIT),
+    pans: SCALE.pans.map((pan) => panGeometry(pan.r * UNIT)),
+    chain: merge([piece(geo.cylinder(6), PALETTE.pan, { position: [0, 0.5, 0] }, { ground: null })]),
+  }))
+}
+
 const GUEST_SIZE = 1.32
 
 function easeOutBack(t: number): number {
@@ -487,14 +512,7 @@ function easeOutBack(t: number): number {
 export function Guest({ seat, at, read }: { seat: number; at: Point; read: () => GuestPose }) {
   const { clay } = useClay()
   const species = SEAT_SPECIES[seat % SEAT_SPECIES.length]
-  const shapes = useMemo(() => {
-    let cached = shapeCache.get(species)
-    if (!cached) {
-      cached = guestShapes(species)
-      shapeCache.set(species, cached)
-    }
-    return cached
-  }, [species])
+  const shapes = speciesShapes(species)
   const root = useRef<THREE.Group>(null)
   const head = useRef<THREE.Group>(null)
   const eyes = useRef<THREE.Mesh>(null)
