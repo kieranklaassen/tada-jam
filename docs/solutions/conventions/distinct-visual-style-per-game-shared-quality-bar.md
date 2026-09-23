@@ -2,6 +2,7 @@
 title: Every jam game picks its own visual style; all games meet one shared quality bar
 date: 2026-09-22
 last_refreshed: 2026-09-22
+last_updated: 2026-09-22
 category: conventions
 module: art-direction
 problem_type: convention
@@ -10,8 +11,8 @@ severity: medium
 related_components:
   - development_workflow
 applies_when:
-  - Adding a new game under games/ in tada-jam
-  - Choosing or changing a game's visual style or art direction
+  - Starting a new game under games/ in tada-jam, before building gameplay or visuals
+  - Choosing, exploring, or changing a game's visual style or art direction
   - Writing jam-wide art or quality guidance that could be mistaken for one game's look
   - Building a 3D kid game that must hold 60 fps on a mid-range iPad
   - Reviewing a game PR against the shared quality bar
@@ -56,6 +57,18 @@ From `docs/art-direction.md` (section 2) and the "A distinct look per game" rule
 Techniques may be shared across games (merged meshes, blob shadows, the ghost-hand guidance). A look may not. The test is whether two games could be mistaken for each other in a screenshot (`docs/art-direction.md`).
 
 When writing guidance, put style-specific details (palette, material, surface texture, lighting mood) in `games/<key>/ART.md`. Put style-independent requirements in `docs/art-direction.md`. If a sentence would be wrong for a paper-craft game, it does not belong in the shared doc.
+
+### Explore the look before building gameplay
+
+Decide the look first, then build the game inside it. A first slice that is playable but plain is not a first slice: the owner judges the game by its first screenshot, and a plain renderer gets thrown away.
+
+1. Before writing any gameplay, build the game's real scene (its table, props, and one character) in several candidate styles from the unclaimed menu in `docs/art-direction.md`.
+2. For each candidate, take a screenshot at 1180x820 and record a measured fps. Put the screenshots on one contact sheet with the numbers.
+3. Show the contact sheet to the owner and get a pick. Register it as the existing rule describes.
+4. Hold the slice to the full quality bar from its first screenshot, not after the mechanics work.
+5. Write game rules (state, scoring, fairness, timing, save cadence) as pure modules with no renderer or physics imports, each with its own tests, so a later look change costs only the view.
+
+Evidence from Pebble Table: the first slice was 2D canvas, the owner called it "ugly", and after the 3D exploration the rebuild in PR #1 deleted `render.ts`, `scene.ts`, `physics.ts`, and `physics.test.ts` outright, while `state`, `scale`, `feeding`, `voice`, `input`, `layout`, and `saveCadence` and all their tests carried over with at most a few lines changed (plan "Revision 3" in `docs/plans/2026-09-22-001-feat-pebble-table-plan.md`; "History" in `games/pebble-table/ART.md`).
 
 ### The shared quality bar
 
@@ -110,6 +123,7 @@ These lessons came from building the claymation style, but most of them are tech
 - **Mixing the two layers causes drift.** The first art-direction doc showed what happens when a style decision is written into jam-wide guidance: later agents read it as a rule and copy the look. Keeping style in `games/<key>/ART.md` and the bar in `docs/art-direction.md` makes the boundary visible.
 - **Claiming a style early prevents collisions.** The registry plus a spike on the real scene makes the choice concrete (a screenshot and a number) before any visuals are built. Two parallel agents can't silently pick the same look, and a style that can't hit 60 fps is caught before the build starts.
 - **The performance techniques are hard-won and reusable.** Merging, instancing, blob shadows, baked AO, one post pass, and the DPR cap are what keep Pebble Table at about 48 draw calls. A new game in a different style can reuse all of them without borrowing the clay look.
+- **Gameplay-first costs a rewrite.** Pebble Table's 2D renderer and 2D physics were deleted wholesale once the owner saw the slice and asked for 3D; the pure rule modules and their tests carried over almost untouched. Exploring the look first, with rules kept renderer-free, turns that rewrite into a view swap.
 
 ## When to Apply
 
@@ -118,6 +132,9 @@ These lessons came from building the claymation style, but most of them are tech
 - Reviewing a game PR. Check that the style is registered and unclaimed by another game, that the PR says how each quality-bar line is met, and that it includes a measured frame rate.
 - Reworking an existing game's look. Update its registry row and its `ART.md` in the same PR.
 - Building any 3D kids' game in the jam. The clarity and performance techniques apply regardless of style.
+- Before the first gameplay commit of a new game. The style exploration and the owner's pick come first; a gameplay-first slice on a placeholder renderer is the pattern to avoid.
+- Structuring a new game's modules. Keep rules pure and renderer-free (no three.js, canvas, or physics imports) so a look change never touches them.
+- When an owner reacts to a slice with "looks plain" or "looks ugly". Stop adding mechanics and run the multi-style exploration on the real scene before continuing.
 
 This does not stop games from sharing code-level techniques or the style-independent guidance logic. Only the look must differ.
 
