@@ -83,9 +83,16 @@ export const TO_HOME_SECONDS = 0.5
 export const SETTLE_SECONDS = 1.6
 export const WAKE_SECONDS = 1.9
 export const EXIT_SECONDS = 1.0
+/** How long an animal stops and looks at its home after the child knocks on it. */
+export const ANSWER_SECONDS = 2
 const GRAVITY = 340
 /** How high a carried animal's feet ride above the ground. */
 export const CARRY_LIFT = 9
+/**
+ * The view looks down at 30 degrees (tan 30° ≈ 0.58), so someone standing nearer the child covers whoever is behind
+ * them up to about 1.7 times their own height back.
+ */
+const VIEW_SLOPE = 0.58
 
 type V = { x: number; y: number; z: number }
 
@@ -166,6 +173,8 @@ export class Creature {
   private arcSeconds = 1
   private arcHeight = 0
   private readonly target: Point = { x: 0, z: 0 }
+  /** Seconds this walk may take before the animal gives up on it (a neighbour may be standing on the spot). */
+  private walkBudget = 0
   private idleFor = 1
   private nextYawn = 6
   private trickAfterLanding = false
@@ -173,6 +182,12 @@ export class Creature {
   stirredAt = -1
   /** A wordless invitation yawn toward the child (first open). */
   inviting = false
+  /** Seconds left looking at its home because the child knocked on it. */
+  answering = 0
+  /** Which of its two tricks is playing. They alternate, so a second tap never gets the same answer as the first. */
+  trickVariant = 1
+  /** This walk is a few steps out from behind someone, so it goes on even while everyone gazes home. */
+  private sidestep = false
   /** Its own clock, for breathing and blinking. */
   clock = 0
   private lastBreath = 0
@@ -184,7 +199,8 @@ export class Creature {
     this.motion = MOTION[key]
     this.clock = seed * 1.7
     this.nextYawn = 5 + seed * 2.3
-    this.idleFor = 0.6 + seed * 0.5
+    // The forest opens calm: everyone stands where the child can see them, then they amble off one at a time.
+    this.idleFor = 2.5 + seed * 6
   }
 
   // --- queries ----------------------------------------------------------------
@@ -207,6 +223,19 @@ export class Creature {
   pickable(playful: boolean): boolean {
     if (!playful) return false
     return this.roaming || this.mode === 'fall' || this.mode === 'asleep' || this.mode === 'settle'
+  }
+
+  /** Someone up and about who stands nearer the child and hides most of this animal from view, or null. */
+  hiddenBy(creatures: readonly Creature[]): Creature | null {
+    for (const other of creatures) {
+      if (other === this || !other.roaming) continue
+      const dz = other.z - this.z
+      if (dz <= 0) continue
+      const overlap = 1 - Math.abs(other.x - this.x) / (this.spec.radius + other.spec.radius)
+      const covered = (other.spec.size - dz * VIEW_SLOPE) / this.spec.size
+      if (overlap > 0.3 && covered > 0.5) return other
+    }
+    return null
   }
 
   /** Is it certainly on its way to bed (so a save should call it asleep)? */
@@ -256,16 +285,17 @@ export class Creature {
     this.squashV -= 3.4
     this.trickAfterLanding = false
     this.inviting = false
+    this.answering = 0
     this.reaction = null
     this.visiting = null
     this.setMode('held')
   }
 
   /** The finger's point on the ground; the animal hangs below it at carry height. */
-  setGrab(x: number, z: number): void {
+  setGrab(x: number, z: number, y = this.spec.hang + CARRY_LIFT): void {
     this.grabX = x
     this.grabZ = z
-    this.grabY = this.spec.hang + CARRY_LIFT
+    this.grabY = y
   }
 
   /** Let go over open ground. A quick tap lands and then plays its trick. */
@@ -302,13 +332,31 @@ export class Creature {
     if (this.mode === 'asleep' || this.mode === 'settle') this.setMode('wake')
   }
 
+  /**
+   * The child knocked on its home while it was up and about: it perks up and looks at it at once. A yawn or a trick
+   * plays out (cutting it short would snap the pose) while its head turns, and the look holds after it.
+   */
+  answer(): boolean {
+    if (!this.roaming) return false
+    const busy = this.mode === 'yawn' ? this.motion.yawn : this.mode === 'trick' ? this.motion.trick : 0
+    this.answering = ANSWER_SECONDS + Math.max(0, busy - this.modeT)
+    this.squashV -= 1.8
+    if (this.mode === 'walk') {
+      this.idleFor = 0.8
+      this.setMode('idle')
+    }
+    return true
+  }
+
   // --- the step ---------------------------------------------------------------
 
   step(dt: number, world: BrainWorld): void {
     this.modeT += dt
     this.clock += dt
     this.stepSquash(dt)
-    const wantLook = (world.gazeHome && (this.mode === 'idle' || this.mode === 'walk')) || (world.leanWhenHeld && this.mode === 'held') ? 1 : 0
+    this.answering = Math.max(0, this.answering - dt)
+    const up = this.mode === 'idle' || this.mode === 'walk'
+    const wantLook = (up && world.gazeHome) || (this.roaming && this.answering > 0) || (world.leanWhenHeld && this.mode === 'held') ? 1 : 0
     this.look += (wantLook - this.look) * (1 - Math.exp(-dt * 3))
     const home = HOMES[this.spec.home].mouth
     this.lookYaw = yawToward(this.x, this.z, home.x, home.z)
@@ -381,6 +429,7 @@ export class Creature {
     this.mode = mode
     this.modeT = 0
     this.stage = 0
+    this.sidestep = false
   }
 
   private stepSquash(dt: number): void {
@@ -404,7 +453,10 @@ export class Creature {
     // Idle animals turn their faces to the child; gazing ones turn toward home.
     const faceYaw = this.look > 0.3 ? this.lookYaw * 0.8 : Math.max(-0.7, Math.min(0.7, this.yaw))
     this.faceToward(faceYaw, dt)
-    if (world.gazeHome) return
+    // Nobody spends the evening where the child can't see them.
+    const hider = this.modeT > 0.4 ? this.hiddenBy(world.creatures) : null
+    if (hider) return this.stepAside(hider)
+    if (world.gazeHome || this.answering > 0) return
     this.nextYawn -= dt
     if (this.nextYawn <= 0) {
       this.nextYawn = between(world.rng, 9, 17) * (1 - 0.35 * this.sleepiness)
@@ -412,8 +464,18 @@ export class Creature {
       this.setMode('yawn')
       return
     }
+    if (this.crowded(world)) this.idleFor = Math.min(this.idleFor, 0.5)
     this.idleFor -= dt
     if (this.idleFor <= 0) this.pickTarget(world)
+  }
+
+  /** A neighbour is standing close enough that this animal would rather walk somewhere roomier. */
+  private crowded(world: BrainWorld): boolean {
+    for (const other of world.creatures) {
+      if (other === this || !other.roaming) continue
+      if (Math.hypot(this.x - other.x, this.z - other.z) < (this.spec.radius + other.spec.radius) * 1.5) return true
+    }
+    return false
   }
 
   private endPause(world: BrainWorld): void {
@@ -422,34 +484,87 @@ export class Creature {
     this.setMode('idle')
   }
 
+  /** A spot across the clearing with room around it, away from where the others stand or are heading. */
   private pickTarget(world: BrainWorld): void {
-    for (let attempt = 0; attempt < 6; attempt++) {
+    let best = -Infinity
+    let bestX = this.x
+    let bestZ = this.z
+    for (let attempt = 0; attempt < 8; attempt++) {
       const angle = world.rng() * Math.PI * 2
       const r = Math.sqrt(world.rng()) * 0.9
       const tx = CLEARING.x + Math.cos(angle) * CLEARING.rx * r
       const tz = CLEARING.z + Math.sin(angle) * CLEARING.rz * r
-      this.target.x = tx
-      this.target.z = tz
-      if (Math.hypot(tx - this.x, tz - this.z) > 14) break
+      if (Math.hypot(tx - this.x, tz - this.z) < 14) continue
+      let room = Infinity
+      for (const other of world.creatures) {
+        if (other === this || !other.roaming) continue
+        const ox = other.mode === 'walk' ? other.target.x : other.x
+        const oz = other.mode === 'walk' ? other.target.z : other.z
+        room = Math.min(room, Math.hypot(tx - ox, tz - oz) - other.spec.radius)
+      }
+      if (room > best) {
+        best = room
+        bestX = tx
+        bestZ = tz
+      }
     }
+    this.target.x = bestX
+    this.target.z = bestZ
+    this.walkBudget = 2 + (2 * Math.hypot(this.target.x - this.x, this.target.z - this.z)) / this.spec.walkSpeed
     this.setMode('walk')
   }
 
+  /** A few steps sideways, out from behind whoever is hiding it, toward whichever side has room. */
+  private stepAside(hider: Creature): void {
+    const gap = (this.spec.radius + hider.spec.radius) * 1.3
+    let side = this.x > hider.x || (this.x === hider.x && this.index % 2 === 0) ? 1 : -1
+    scratch.x = hider.x + side * gap
+    scratch.z = this.z
+    clampToClearing(scratch, 2)
+    if (Math.abs(scratch.x - (hider.x + side * gap)) > 1) {
+      side = -side
+      scratch.x = hider.x + side * gap
+      scratch.z = this.z
+      clampToClearing(scratch, 2)
+    }
+    this.target.x = scratch.x
+    this.target.z = scratch.z
+    this.walkBudget = 3
+    this.setMode('walk')
+    this.sidestep = true
+  }
+
   private stepWalk(dt: number, world: BrainWorld): void {
-    if (world.gazeHome) {
+    if (world.gazeHome && !this.sidestep) {
       this.setMode('idle')
       return
     }
     const dx = this.target.x - this.x
     const dz = this.target.z - this.z
     const distance = Math.hypot(dx, dz)
-    if (distance < 1.5) {
+    if (distance < 1.5 || this.modeT > this.walkBudget || this.nextYawn <= 0) {
       this.idleFor = between(world.rng, 1.2, 4)
       this.setMode('idle')
       return
     }
-    this.faceToward(Math.atan2(dx, dz), dt)
-    const heading = wrapAngle(Math.atan2(dx, dz) - this.yaw)
+    // Curve around anyone in the way rather than shouldering through them.
+    let ax = dx / distance
+    let az = dz / distance
+    for (const other of world.creatures) {
+      if (other === this || !other.roaming) continue
+      const ox = this.x - other.x
+      const oz = this.z - other.z
+      const d = Math.hypot(ox, oz)
+      const room = (this.spec.radius + other.spec.radius) * 1.7
+      if (d < room && d > 0.001) {
+        const push = ((room - d) / room) * 1.6
+        ax += (ox / d) * push
+        az += (oz / d) * push
+      }
+    }
+    const want = Math.atan2(ax, az)
+    this.faceToward(want, dt)
+    const heading = wrapAngle(want - this.yaw)
     const aligned = Math.max(0, Math.cos(heading))
     const targetSpeed = this.spec.walkSpeed * (1 - 0.3 * this.sleepiness) * aligned * Math.min(1, distance / 6)
     this.speed += (targetSpeed - this.speed) * (1 - Math.exp(-dt * 5))
@@ -469,7 +584,9 @@ export class Creature {
     const creatures = world.creatures
     for (let i = 0; i < creatures.length; i++) {
       const other = creatures[i]
-      if (other === this || !(other.roaming || other.mode === 'fall')) continue
+      // Someone who just tumbled out of a home lands solid, so a bystander shuffles aside.
+      const landed = other.mode === 'react' && other.stage === 2
+      if (other === this || !(other.roaming || other.mode === 'fall' || landed)) continue
       const dx = this.x - other.x
       const dz = this.z - other.z
       const min = this.spec.radius + other.spec.radius
@@ -541,6 +658,7 @@ export class Creature {
     world.emit('land', this)
     if (this.trickAfterLanding) {
       this.trickAfterLanding = false
+      this.trickVariant = 1 - this.trickVariant
       world.emit('trick', this)
       this.setMode('trick')
     } else {

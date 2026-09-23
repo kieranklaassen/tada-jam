@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Creature, MOTION, type BrainEvent, type BrainWorld } from './brain'
-import { ANIMAL_KEYS, ANIMALS, HOME_KEYS, HOMES, inClearing, type AnimalKey } from './layout'
+import { ANIMAL_KEYS, ANIMALS, HOME_KEYS, HOMES, inClearing, START, type AnimalKey } from './layout'
 import { createRng } from './rng'
 
 function world(creatures: Creature[], events: string[] = [], options: Partial<Pick<BrainWorld, 'gazeHome' | 'leanWhenHeld'>> = {}): BrainWorld {
@@ -45,6 +45,56 @@ describe('wandering', () => {
     }
     expect(walked).toBeGreaterThan(100)
     for (const key of ANIMAL_KEYS) expect(events).toContain(`${key}:yawn`)
+  })
+
+  it('a second tap gets the other trick: every animal takes its two tricks in turns', () => {
+    for (const key of ANIMAL_KEYS) {
+      const c = one(key)
+      const w = world([c])
+      const played: number[] = []
+      for (let tap = 0; tap < 4; tap++) {
+        c.pickUp()
+        c.drop(true)
+        for (let t = 0; t < 1 && c.mode !== 'trick'; t += 1 / 60) c.step(1 / 60, w)
+        expect(c.mode).toBe('trick')
+        played.push(c.trickVariant)
+        run([c], w, MOTION[key].trick + 0.1)
+      }
+      expect(played, key).toEqual([0, 1, 0, 1])
+    }
+  })
+
+  it('an animal hidden behind a bigger one steps out into view, even while everyone stands gazing home', () => {
+    const fox = one('fox', 0, 12)
+    const bird = one('songbird', 1, -6)
+    const creatures = [fox, bird]
+    expect(bird.hiddenBy(creatures)).toBe(fox)
+    run(creatures, world(creatures, [], { gazeHome: true }), 2.5)
+    expect(bird.hiddenBy(creatures)).toBeNull()
+    expect(bird.mode).toBe('idle')
+    expect(Math.hypot(fox.x, fox.z - 12)).toBeLessThan(0.5)
+    // A big animal behind a small one can still be seen over it.
+    expect(one('bear', 0, 2).hiddenBy([one('songbird', 0, 12)])).toBeNull()
+  })
+
+  it('animals spread out across the clearing instead of bunching up', () => {
+    const creatures = ANIMAL_KEYS.map((key) => one(key, START[key].x, START[key].z))
+    const w = world(creatures)
+    let gaps = 0
+    let samples = 0
+    let touching = 0
+    for (let t = 0; t < 300; t += 1 / 30) {
+      for (const c of creatures) c.step(1 / 30, w)
+      for (const a of creatures) {
+        let nearest = Infinity
+        for (const b of creatures) if (a !== b) nearest = Math.min(nearest, Math.hypot(a.x - b.x, a.z - b.z) - a.spec.radius - b.spec.radius)
+        gaps += nearest
+        samples += 1
+        if (nearest < 1) touching += 1
+      }
+    }
+    expect(gaps / samples).toBeGreaterThan(4)
+    expect(touching / samples).toBeLessThan(0.45)
   })
 
   it('idle gaze stops the walking and turns every face toward its home', () => {
