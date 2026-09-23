@@ -32,6 +32,10 @@ export interface Critique {
   id: string
   verdict: 'keep' | 'cut'
   reason: string
+  // How much repeat-play depth the loop promises, 1 (thin) to 5 (rich).
+  depth?: 1 | 2 | 3 | 4 | 5
+  // How hard it is to build as a pure deterministic sim in a couple of hours.
+  risk?: 'low' | 'medium' | 'high'
 }
 
 export interface Decision {
