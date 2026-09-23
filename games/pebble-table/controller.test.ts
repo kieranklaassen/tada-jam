@@ -1,0 +1,372 @@
+import { describe, expect, it, vi } from 'vitest'
+import * as CANNON from 'cannon-es'
+import { silentSound, TableController, type Projector } from './controller'
+import { IDLE_BEFORE_HINT } from './guidance'
+import { albumSlot, BAG, DOOR, FEEDING, SCALE, shelfTile } from './layout'
+import { JARS, PART_COUNTS } from './parts'
+import { toWorld2 } from './physics3d'
+import { panOf } from './scale'
+import { plateOf } from './feeding'
+import { accountedTotal, defaultTable } from './state'
+
+// A straight-down orthographic "camera": screen pixels are world units.
+const topDown: Projector = {
+  toScreen: (v) => toWorld2(v),
+  toPlane: (screen) => screen,
+}
+
+function makeTable(age: number | null = 4) {
+  const save = vi.fn()
+  const table = new TableController(defaultTable(age), { save })
+  table.setProjector(topDown)
+  return { table, save }
+}
+
+const run = (table: TableController, seconds: number) => {
+  for (let t = 0; t < seconds; t += 1 / 60) table.step(1 / 60)
+}
+
+let clock = 0
+const tap = (table: TableController, at: { x: number; y: number }) => {
+  table.pointerDown(1, at, (clock += 10))
+  table.pointerUp(1, at, (clock += 80))
+}
+const drag = (table: TableController, from: { x: number; y: number }, to: { x: number; y: number }) => {
+  table.pointerDown(2, from, (clock += 10))
+  for (let i = 1; i <= 10; i++) {
+    table.pointerMove(2, { x: from.x + ((to.x - from.x) * i) / 10, y: from.y + ((to.y - from.y) * i) / 10 }, (clock += 16))
+    table.step(1 / 60)
+  }
+  run(table, 0.2)
+  table.pointerUp(2, to, (clock += 150))
+}
+
+describe('TableController', () => {
+  it('tapping the bag spills every stone onto the table, conserving the total', () => {
+    const { table, save } = makeTable()
+    tap(table, { x: BAG.x, y: BAG.y })
+    expect(table.state.bag).toBe(0)
+    expect(table.state.pieces).toHaveLength(10)
+    run(table, 3)
+    expect(accountedTotal(table.state)).toBe(40)
+    expect(table.physics.stoneIds()).toHaveLength(10)
+    expect(save).toHaveBeenCalled()
+  })
+
+  it('keeps every spilled stone on the table across many random spills', () => {
+    let lost = 0
+    for (let n = 0; n < 40; n++) {
+      const { table } = makeTable()
+      tap(table, { x: BAG.x, y: BAG.y })
+      run(table, 3)
+      lost += 10 - table.physics.stoneIds().length
+    }
+    expect(lost).toBe(0)
+  }, 30_000)
+
+  it('invites on an empty scale with one stone on a pan, and a stone on the other pan levels it', () => {
+    const { table } = makeTable(6)
+    run(table, 2.5)
+    expect(table.state.pieces.filter((piece) => panOf(piece) === 0)).toHaveLength(1)
+    expect(table.beam.angle).toBeLessThan(-0.05)
+    drag(table, { x: BAG.x, y: BAG.y }, SCALE.pans[1])
+    run(table, 3)
+    expect(table.state.pieces.filter((piece) => panOf(piece) === 1)).toHaveLength(1)
+    expect(Math.abs(table.beam.angle)).toBeLessThan(0.02)
+  })
+
+  it('lets go of a stone after a long still press', () => {
+    const { table } = makeTable(6)
+    drag(table, { x: BAG.x, y: BAG.y }, { x: 700, y: 850 })
+    run(table, 1.5)
+    const [piece] = table.state.pieces
+    table.pointerDown(3, piece, (clock += 10))
+    run(table, 0.8)
+    table.pointerUp(3, piece, (clock += 800))
+    expect(table.isHeld(piece.id)).toBe(false)
+  })
+
+  it('shows a ghost hand only after the child has been idle, and a touch hides it', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 900 })
+    run(table, IDLE_BEFORE_HINT + 1)
+    expect(table.guidance.hand).not.toBeNull()
+    expect(table.guidance.hint?.kind).toBe('tapBag')
+    table.pointerDown(4, { x: 1000, y: 900 }, (clock += 10))
+    table.step(1 / 60)
+    expect(table.guidance.hand).toBeNull()
+    expect(table.guidance.glow).toBe(0)
+  })
+
+  it('wiggles the bag on first open when nobody is seated yet, and stops after the first touch', () => {
+    const save = vi.fn()
+    const table = new TableController({ ...defaultTable(4), seats: [false, false, false, false, false] }, { save })
+    table.setProjector(topDown)
+    run(table, 1.6)
+    expect(table.guidance.peek).not.toBeNull()
+    tap(table, { x: 1000, y: 900 })
+    run(table, 6.5)
+    expect(table.guidance.peek).toBeNull()
+  })
+})
+
+describe('first open story beat', () => {
+  it('rolls one stone out toward the hungry guest and the ghost hand carries it to that plate', () => {
+    const { table } = makeTable()
+    const hungry = table.wanting
+    expect(hungry).not.toBeNull()
+    run(table, 3)
+    expect(table.guidance.hand).not.toBeNull()
+    run(table, 3)
+    expect(table.state.pieces).toHaveLength(1)
+    expect(plateOf(table.state.pieces[0])).toBe(hungry)
+    expect(table.state.bag).toBe(table.state.total - 4)
+    expect(table.wanting).not.toBe(hungry)
+  })
+
+  it('ends at once when the child touches, and the stone lands where it was going', () => {
+    const { table } = makeTable()
+    run(table, 1.6)
+    table.pointerDown(5, { x: 1000, y: 900 }, (clock += 10))
+    table.step(1 / 60)
+    expect(table.guidance.hand).toBeNull()
+    expect(table.state.pieces).toHaveLength(1)
+    expect(table.physics.stoneIds()).toHaveLength(1)
+  })
+
+  it('plays only on a brand-new table', () => {
+    const { table } = makeTable()
+    tap(table, { x: BAG.x, y: BAG.y })
+    run(table, 6)
+    expect(table.state.pieces).toHaveLength(10)
+  })
+})
+
+describe('one obvious want', () => {
+  it('has exactly one guest asking, and it faces the child', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 900 })
+    run(table, 0.5)
+    const asking = [0, 1, 2, 3, 4].filter((seat) => table.asking(seat) > 0)
+    expect(asking).toEqual([table.wanting])
+  })
+
+  it('rumbles the hungry tummy while the child is idle, backing off, at most three times', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 900 })
+    run(table, 2)
+    expect(table.rumbles.size).toBe(0)
+    run(table, 60)
+    expect(table.rumbles.size).toBe(1)
+  })
+
+  it('keeps empty stools hidden until the first shared meal', () => {
+    const { table } = makeTable()
+    expect(table.stoolsShown).toBe(false)
+    tap(table, { x: 1000, y: 900 })
+    for (const seat of [1, 4]) {
+      drag(table, { x: BAG.x, y: BAG.y }, FEEDING.seats[seat].plate)
+      run(table, 1)
+    }
+    run(table, 3)
+    expect(table.stoolsShown).toBe(true)
+  })
+})
+
+describe('Knock-Knock', () => {
+  const doorTable = () => {
+    const table = new TableController({ ...defaultTable(4), liveMat: 'door', shelf: ['door', 'feeding', 'scale'] }, { save: vi.fn() })
+    table.setProjector(topDown)
+    return table
+  }
+  const knock = (table: TableController, times: number) => {
+    for (let i = 0; i < times; i++) {
+      tap(table, DOOR.door)
+      run(table, 0.3)
+    }
+  }
+  const out = (table: TableController) => table.door.visitors.filter((v) => v.leaveAt === null)
+
+  it('answers three knocks with three visitors standing in groups in the yard', () => {
+    const table = doorTable()
+    knock(table, 3)
+    run(table, 4)
+    expect(out(table)).toHaveLength(3)
+    knock(table, 5)
+    run(table, 6)
+    const sizes = [0, 1].map((g) => out(table).filter((v) => v.group === g).length)
+    expect(sizes).toEqual([3, 2])
+    const spots = out(table).map((v) => `${v.home.x},${v.home.y}`)
+    expect(new Set(spots).size).toBe(5)
+    expect(table.door.openAt).not.toBeNull()
+  })
+
+  it('sends the visitors home when the child knocks again, then answers the new count', () => {
+    const table = doorTable()
+    knock(table, 2)
+    run(table, 4)
+    knock(table, 5)
+    run(table, 6)
+    expect(out(table)).toHaveLength(5)
+  })
+
+  it('never lets more than ten out', () => {
+    const table = doorTable()
+    knock(table, 14)
+    run(table, 8)
+    expect(out(table)).toHaveLength(DOOR.maxVisitors)
+  })
+
+  it('peeks from the window while nobody is out, at most three times per idle stretch', () => {
+    const table = doorTable()
+    let peeks = 0
+    let was = false
+    for (let t = 0; t < 90; t += 1 / 30) {
+      table.step(1 / 30)
+      const now = table.doorPeek() !== null
+      if (now && !was) peeks += 1
+      was = now
+    }
+    expect(peeks).toBe(3)
+  })
+})
+
+describe('jars of loose parts', () => {
+  const scaleTable = () => {
+    const state = { ...defaultTable(6), bag: 40, total: 40 }
+    const table = new TableController(state, { save: vi.fn() })
+    table.setProjector(topDown)
+    tap(table, { x: 1000, y: 950 })
+    run(table, 2)
+    return table
+  }
+
+  it('tips everything out of a jar and an empty jar only wobbles', () => {
+    const table = scaleTable()
+    tap(table, JARS.acorn)
+    run(table, 2)
+    expect(table.state.parts.filter((p) => p.kind === 'acorn')).toHaveLength(PART_COUNTS.acorn)
+    tap(table, JARS.acorn)
+    run(table, 1)
+    expect(table.state.parts.filter((p) => p.kind === 'acorn')).toHaveLength(PART_COUNTS.acorn)
+  })
+
+  it('weighs the boulder honestly: it balances three stones', () => {
+    const table = scaleTable()
+    for (const piece of [...table.state.pieces]) drag(table, piece, { x: 700, y: 880 })
+    drag(table, JARS.boulder, SCALE.pans[0])
+    for (let i = 0; i < 3; i++) {
+      drag(table, { x: BAG.x, y: BAG.y }, { x: SCALE.pans[1].x - 30 + i * 30, y: SCALE.pans[1].y })
+      run(table, 0.6)
+    }
+    run(table, 4)
+    expect(Math.abs(table.beam.angle)).toBeLessThan(0.02)
+  })
+
+  it('lets every tipped-out part come to rest, so physics goes quiet', () => {
+    for (let trial = 0; trial < 4; trial++) {
+      const table = scaleTable()
+      for (const kind of Object.keys(JARS) as (keyof typeof JARS)[]) tap(table, JARS[kind])
+      run(table, 10)
+      const awake = table.state.parts.filter((part) => table.physics.body(part.id)?.sleepState !== CANNON.Body.SLEEPING)
+      expect(awake.map((part) => part.kind)).toEqual([])
+    }
+  }, 30_000)
+
+  it('sends every part home when the scale is put away', () => {
+    const table = scaleTable()
+    tap(table, JARS.shell)
+    run(table, 2)
+    expect(table.state.parts.length).toBeGreaterThan(0)
+    tap(table, shelfTile(0))
+    run(table, 1)
+    expect(table.state.liveMat).not.toBe('scale')
+    expect(table.state.parts).toHaveLength(0)
+  })
+})
+
+describe('album of past tables', () => {
+  it('keeps an arrangement when the child tips the bag again, and sets it back when the album is tapped', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 950 })
+    const spots = [0, 1, 4].map((seat) => FEEDING.seats[seat].plate)
+    for (const spot of spots) {
+      drag(table, { x: BAG.x, y: BAG.y }, spot)
+      run(table, 0.8)
+    }
+    run(table, 1)
+    tap(table, { x: BAG.x, y: BAG.y })
+    run(table, 3)
+    expect(table.state.album).toHaveLength(1)
+    tap(table, albumSlot())
+    run(table, 3)
+    expect(table.state.pieces).toHaveLength(3)
+    const near = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y) < 40
+    for (const piece of table.state.pieces) expect(spots.some((spot) => near(piece, spot))).toBe(true)
+    expect(table.state.album).toHaveLength(1)
+  })
+})
+
+describe('hidden delights', () => {
+  const withSounds = () => {
+    const sound = { ...silentSound, ding: vi.fn(), sigh: vi.fn(), squeak: vi.fn() }
+    const table = new TableController(defaultTable(4), { save: vi.fn(), sound })
+    table.setProjector(topDown)
+    return { table, sound }
+  }
+  const knockOff = (table: TableController, id: number) => {
+    const body = table.physics.body(id)
+    if (!body) throw new Error('no body')
+    body.position.set(body.position.x, -20, body.position.z)
+    table.step(1 / 60)
+  }
+
+  it('sends every other fallen stone home on a scurrying mouse, and nothing is lost', () => {
+    const { table, sound } = withSounds()
+    tap(table, { x: BAG.x, y: BAG.y })
+    run(table, 3)
+    const [first, second] = table.physics.stoneIds()
+    knockOff(table, first)
+    expect(table.flightViews().filter((f) => f.mouse)).toHaveLength(0)
+    knockOff(table, second)
+    const carried = table.flightViews().filter((f) => f.mouse)
+    expect(carried).toHaveLength(1)
+    expect(sound.squeak).toHaveBeenCalled()
+    run(table, 5)
+    expect(table.flightViews()).toHaveLength(0)
+    expect(table.state.bag).toBe(8)
+    expect(accountedTotal(table.state)).toBe(40)
+  })
+
+  it('chimes and wobbles the empty bowl when tapped', () => {
+    const { table, sound } = withSounds()
+    tap(table, FEEDING.bowl)
+    expect(sound.ding).toHaveBeenCalledTimes(1)
+    expect(table.bowlDingAt).not.toBeNull()
+  })
+
+  it('sighs when the empty bag is tapped', () => {
+    const { table, sound } = withSounds()
+    tap(table, { x: BAG.x, y: BAG.y })
+    run(table, 3)
+    tap(table, { x: BAG.x, y: BAG.y })
+    expect(sound.sigh).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('forgiving drops', () => {
+  it('lets the asking guest catch a stone dropped just short of its plate', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 950 })
+    run(table, 1)
+    const seat = table.wanting
+    expect(seat).not.toBeNull()
+    const plate = FEEDING.seats[seat!].plate
+    const away = Math.hypot(plate.x - 780, plate.y - 470)
+    const short = { x: plate.x + ((plate.x - 780) / away) * FEEDING.plateRadius * 1.35, y: plate.y + ((plate.y - 470) / away) * FEEDING.plateRadius * 1.35 }
+    expect(plateOf(short)).toBeNull()
+    drag(table, { x: BAG.x, y: BAG.y }, short)
+    run(table, 2)
+    expect(table.state.pieces.filter((piece) => plateOf(piece) === seat)).toHaveLength(1)
+  })
+})

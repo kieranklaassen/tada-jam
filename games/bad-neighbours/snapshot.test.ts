@@ -41,4 +41,21 @@ describe('snapshot', () => {
     expect(json.length).toBeLessThan(16 * 1024)
     expect(deserialize(JSON.parse(json))?.pieces.length).toBe(MAX_DELIVERIES)
   })
+
+  it('keeps scaffolds, and renumbers them when a damaged piece is dropped', () => {
+    const result = deserialize({
+      v: SAVE_VERSION,
+      pieces: [{ shape: 'O', x: 0, y: 488, angle: 0 }, { shape: 'Q', x: 0, y: 0, angle: 0 }, { shape: 'I', x: 0, y: 440, angle: 0 }],
+      bonds: [[-1, 0], [0, 2], [1, 2], [2, 2], 'x', [0.5, 1]],
+      next: ['O', 'T', 'L'],
+    })
+    expect(result?.pieces.length).toBe(2)
+    expect(result?.bonds).toEqual([[-1, 0], [0, 1]])
+  })
+
+  it('still reads version 1 slots, which had no scaffolds', () => {
+    const result = deserialize({ v: 1, pieces: [{ shape: 'O', x: 0, y: 488, angle: 0, secured: true }], next: ['O', 'T', 'L'] })
+    expect(result?.pieces.length).toBe(1)
+    expect(result?.bonds).toEqual([])
+  })
 })

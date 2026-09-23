@@ -15,11 +15,19 @@
     "test": "vitest run",
     "egress:check": "node scripts/egress-check.ts",
     "egress:built": "node scripts/egress-check.ts --built",
-    "check": "npm run typecheck && npm run test && npm run egress:check"
+    "wordless:check": "node scripts/wordless-check.ts",
+    "serve:lan": "vite build && vite preview --host 0.0.0.0 --port 4173 --strictPort",
+    "perf:pebble": "node scripts/pebble-perf.mjs",
+    "perf:jam": "node scripts/jam-perf.mjs",
+    "check": "npm run typecheck && npm run test && npm run egress:check && npm run wordless:check"
   },
   "dependencies": {
     "@fontsource/albert-sans": "^5.3.0",
+    "@react-three/fiber": "^9.8.0",
+    "@react-three/postprocessing": "^3.1.2",
+    "cannon-es": "^0.20.0",
     "matter-js": "0.20.0",
+    "postprocessing": "^6.39.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "three": "^0.186.0"
@@ -33,6 +41,7 @@
     "@types/three": "^0.186.0",
     "@vitejs/plugin-react": "^6.1.1",
     "jsdom": "^30.1.1",
+    "playwright": "1.63.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"

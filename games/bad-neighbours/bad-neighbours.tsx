@@ -45,7 +45,7 @@ function BadNeighbours({ ctx }: { ctx: CartridgeContext }) {
     const seed = () => Math.floor(Math.random() * 2 ** 30) + 1
     let game: Game | null = null, disposed = false, softDrop = false, frame = 0, last = 0, awake = true
 
-    const save = () => { if (game) ctxRef.current.storage.save(serialize(game.snapshot(), game.next)) }
+    const save = () => { if (game) ctxRef.current.storage.save(serialize(game.snapshot(), game.queue(), game.bondPairs())) }
     const onEvent = (event: GameEvent) => {
       const piece = event.piece
       if (event.type === 'rotate' && piece) { sound.play('rattle'); if (!renderer.reduced) renderer.neighbourhood.spill(piece, 3, true) }
@@ -60,12 +60,12 @@ function BadNeighbours({ ctx }: { ctx: CartridgeContext }) {
       }
       if (event.type === 'secure') { sound.play('secure'); save() }
       if (event.type === 'lost') { sound.play('lost'); if (piece && !renderer.reduced) renderer.neighbourhood.rescue(piece); save() }
-      if (event.type === 'glue') { sound.play('glue'); game?.pieces.filter(p => p.glued).slice(-8).forEach(p => renderer.burst(p.body.position.x, p.body.position.y, '#e8bb59')) }
+      if (event.type === 'glue') { sound.play('glue'); game?.pieces.filter(p => p.glued).slice(-8).forEach(p => renderer.burst(p.body.position.x, p.body.position.y, '#e8bb59')); save() }
     }
     const start = (restore?: ReturnType<typeof deserialize>) => {
       game?.dispose()
       renderer.camera = 0; renderer.particles = []; renderer.neighbourhood.reset()
-      game = new Game(seed(), onEvent, { pace: paceForAge(ctxRef.current.childAge), restore: restore?.pieces, next: restore?.next })
+      game = new Game(seed(), onEvent, { pace: paceForAge(ctxRef.current.childAge), restore: restore?.pieces, bonds: restore?.bonds, next: restore?.next })
     }
 
     const act = (action: ControlAction) => {

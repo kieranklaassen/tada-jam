@@ -118,6 +118,8 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
     const root = rootRef.current!, canvas = canvasRef.current!, windowCanvas = windowRef.current!
     const windowCtx = windowCanvas.getContext('2d')!
     const orrery = new Orrery(canvas), sound = new Sound()
+    // Tablets and phones start on the light pipeline (bloom only); desktops get the full grade.
+    if (window.matchMedia('(pointer: coarse)').matches) orrery.fancy = false
     let width = 0, height = 0, dpr = 1, frame = 0, last = 0, awake = false, disposed = false
     // Nothing is saved until the slot has been read, so an early unmount can't overwrite it.
     let loaded = false
@@ -356,6 +358,12 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
 
   useEffect(() => { api.current?.awake(ctx.attention.attended) }, [ctx.attention.attended])
 
+  // Class names and labels are worked out here, outside the JSX, so nothing
+  // resembling on-screen text sits among the elements.
+  const curtainClass = ready ? 'mp-curtain is-open' : 'mp-curtain'
+  const halvesClass = halves ? 'mp-round is-on' : 'mp-round'
+  const phaseLabels = Array.from({ length: PHASE_COUNT }, (_, i) => `Phase ${i + 1} of ${PHASE_COUNT}`)
+
   return (
     <div ref={rootRef} className="mp-root">
       <canvas ref={canvasRef} className="mp-world" aria-label="A model of the sun, Earth and moon" />
@@ -367,14 +375,14 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
           </div>
         ))}
       </div>
-      <div className={`mp-curtain${ready ? ' is-open' : ''}`} aria-hidden />
+      <div className={curtainClass} aria-hidden />
 
       <div className="mp-toolbar mp-glass">
         <div className="mp-segmented" role="group" aria-label="Point of view">
           <button type="button" className={pov ? '' : 'is-on'} aria-pressed={!pov} aria-label="Look at the model" onClick={() => api.current?.setPov(false)}><ModelIcon /></button>
           <button type="button" className={pov ? 'is-on' : ''} aria-pressed={pov} aria-label="Stand on Earth" onClick={() => api.current?.setPov(true)}><EyeIcon /></button>
         </div>
-        <button type="button" className={`mp-round ${halves ? 'is-on' : ''}`} aria-pressed={halves} aria-label="Show the two halves" onClick={() => api.current?.setHalves(!halves)}>
+        <button type="button" className={halvesClass} aria-pressed={halves} aria-label="Show the two halves" onClick={() => api.current?.setHalves(!halves)}>
           <HalvesIcon />
         </button>
       </div>
@@ -396,7 +404,7 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
 
       <div className="mp-strip mp-glass" role="group" aria-label="Moon phases">
         {Array.from({ length: PHASE_COUNT }, (_, i) => (
-          <button key={i} type="button" className={i === phase ? 'is-on' : ''} aria-label={`Phase ${i + 1} of ${PHASE_COUNT}`} onClick={() => api.current?.goTo(i)}>
+          <button key={i} type="button" className={i === phase ? 'is-on' : ''} aria-label={phaseLabels[i]} onClick={() => api.current?.goTo(i)}>
             <MoonIcon elongation={phaseAngle(i)} size={40} />
           </button>
         ))}

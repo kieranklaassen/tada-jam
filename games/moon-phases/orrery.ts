@@ -143,7 +143,7 @@ export class Orrery {
   hours = 21
   /** 0 → 1 while the opening camera flight plays. */
   intro = 0
-  /** Set to false to drop depth of field on slower devices. */
+  /** False drops depth of field and the film grade, leaving bloom as the one post effect. */
   fancy = true
   moon: THREE.Mesh
   medallions: THREE.Mesh[] = []
@@ -734,6 +734,8 @@ export class Orrery {
     uniforms.aperture.value = 0.00055
     // Standing on Earth the whole sky is far away: no miniature blur there.
     this.bokeh.enabled = this.fancy && k < 0.5
+    // The film grade is a second full-screen pass: only when there is budget for depth of field too.
+    this.grade.enabled = this.fancy
     this.grade.uniforms.time.value = this.time
     this.composer.render()
   }

@@ -203,3 +203,42 @@ describe('saving the street', () => {
     again.dispose()
   })
 })
+
+describe('put-away keeps everything the child did', () => {
+  it('a building still being steered comes back first after reopening', () => {
+    const game = new Game(5)
+    const steering = game.active!.shape
+    expect(game.queue()[0]).toBe(steering)
+    const again = new Game(6, undefined, { restore: game.snapshot(), next: game.queue() })
+    expect(again.active?.shape).toBe(steering)
+    game.dispose(); again.dispose()
+  })
+
+  it('scaffolding is saved and restored with the buildings it holds', () => {
+    const { game, first } = firstLanding()
+    expect(game.glue()).toBe(true)
+    expect(first.glued).toBe(true)
+    const pairs = game.bondPairs()
+    expect(pairs).toContainEqual([-1, 0])
+    const again = new Game(2, undefined, { restore: game.snapshot(), bonds: pairs })
+    expect(Matter.Composite.allConstraints(again.engine.world).length).toBe(2)
+    expect(again.pieces[0].glued).toBe(true)
+    expect(again.bonds).toBe(1)
+    game.dispose(); again.dispose()
+  })
+
+  it('braced buildings that fall together give their scaffold budget back', () => {
+    // Two buildings braced to each other, beside the slab with nothing under them.
+    const game = new Game(4, undefined, {
+      restore: [{ shape: 'O', x: 300, y: 300, angle: 0, secured: false }, { shape: 'O', x: 300, y: 236, angle: 0, secured: false }],
+      bonds: [[0, 1]],
+    })
+    expect(game.bonds).toBe(1)
+    game.pieces.slice(0, 2).forEach(p => Matter.Sleeping.set(p.body, false))
+    run(game, 2500)
+    expect(game.pieces.filter(p => p.scored).length).toBe(0)
+    expect(game.bonds).toBe(0)
+    expect(Matter.Composite.allConstraints(game.engine.world).length).toBe(0)
+    game.dispose()
+  })
+})

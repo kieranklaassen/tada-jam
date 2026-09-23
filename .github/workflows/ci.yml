@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
 
 jobs:
@@ -21,6 +21,14 @@ jobs:
         run: npm test
       - name: Egress check (source)
         run: npm run egress:check
+      - name: Wordless check (no text on the kid side)
+        run: npm run wordless:check
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      # compound-cli pinned to a commit on main until it is on npm; audit needs no key.
+      - name: Compound docs audit (docs/solutions frontmatter)
+        run: bunx --bun github:kieranklaassen/compound-cli#5a030ae4fa263b9a5189a39ca9d5567ef77dead2 audit --strict
       - name: Build
         run: npm run build
       - name: Egress check (built assets)

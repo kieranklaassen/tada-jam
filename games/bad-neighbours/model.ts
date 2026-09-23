@@ -64,7 +64,9 @@ export interface Piece { body: Matter.Body; shape: Shape; landed: boolean; score
 export type GameEvent = { type: 'land' | 'impact' | 'rotate' | 'lost' | 'glue' | 'spawn' | 'secure'; piece?: Piece; level?: boolean }
 /** A settled building as saved between sessions. */
 export type SavedPiece = { shape: Shape; x: number; y: number; angle: number; secured: boolean }
-export type GameOptions = { pace?: number; restore?: readonly SavedPiece[]; next?: readonly Shape[] }
+/** A scaffold between two saved buildings, by index into the saved list; −1 is the slab. */
+export type SavedBond = readonly [number, number]
+export type GameOptions = { pace?: number; restore?: readonly SavedPiece[]; bonds?: readonly SavedBond[]; next?: readonly Shape[] }
 
 function buildingBody(shape: Shape, label: string) {
   // The renderer fills these same square cells: no invisible rounded corners.
@@ -101,7 +103,8 @@ export class Game {
   spawnAt = 0
   onEvent: (event: GameEvent) => void
   private accumulator = 0
-  private bonds = 0
+  /** Scaffold pairs in the world; capped so a child can't pile up thousands of constraints. */
+  bonds = 0
   private foundationTicks = 0
   constructor(seed: number, onEvent: (event: GameEvent) => void = () => {}, options: GameOptions = {}) {
     this.random = seededRandom(seed); this.onEvent = onEvent; this.pace = options.pace ?? 1
@@ -129,6 +132,14 @@ export class Game {
       }
     })
     for (const saved of options.restore ?? []) this.restorePiece(saved)
+    // Scaffolding comes back with the buildings it held, so a braced tower stays braced.
+    const restored = this.pieces.map(p => p.body)
+    for (const [i, j] of options.bonds ?? []) {
+      const a = i === -1 ? this.platform : restored[i], b = j === -1 ? this.platform : restored[j]
+      if (!a || !b || a === b || (a.isStatic && b.isStatic)) continue
+      this.brace(a, b)
+      this.bonds++
+    }
     this.next = options.next?.length === 3 ? [...options.next] : [this.takeShape(), this.takeShape(), this.takeShape()]
     this.spawn()
   }
@@ -148,6 +159,27 @@ export class Game {
     if (saved.secured) { Body.setStatic(body, true); Sleeping.set(body, true); clearSolverState(body); piece.securedAt = -1; this.secured++ }
     else Sleeping.set(body, true)
     Composite.add(this.engine.world, body); this.pieces.push(piece); this.spawned++; this.placed++
+  }
+  /**
+   * The next three deliveries as they should be saved. A building the child is
+   * still steering is not settled, so it goes back to the front of the queue and
+   * comes down again after put-away instead of being lost.
+   */
+  queue(): Shape[] {
+    return (this.active ? [this.active.shape, ...this.next] : this.next).slice(0, 3)
+  }
+  /** Scaffolds between settled buildings (and the slab), indexed like `snapshot()`. */
+  bondPairs(): [number, number][] {
+    const index = new Map<Matter.Body, number>([[this.platform, -1]])
+    this.pieces.filter(p => p.scored).forEach((p, i) => index.set(p.body, i))
+    const pairs = new Map<string, [number, number]>()
+    for (const bond of Composite.allConstraints(this.engine.world)) {
+      const i = bond.bodyA && index.get(bond.bodyA), j = bond.bodyB && index.get(bond.bodyB)
+      if (i === undefined || j === undefined || i === null || j === null) continue
+      const pair: [number, number] = i < j ? [i, j] : [j, i]
+      pairs.set(pair.join(':'), pair)
+    }
+    return [...pairs.values()]
   }
   /** Settled buildings in a form that survives put-away. The falling one is left out. */
   snapshot(): SavedPiece[] {
@@ -209,17 +241,21 @@ export class Game {
       if (a.isStatic && b.isStatic) continue
       const key = [a.id, b.id].sort().join(':'); if (seen.has(key)) continue; seen.add(key)
       if (a.plugin.bonded?.includes(b.id)) continue
-      const anchor = { x: (a.position.x + b.position.x) / 2, y: (a.position.y + b.position.y) / 2 }
-      for (const dx of [-10, 10]) {
-        const p = { x: anchor.x + dx, y: anchor.y }
-        Composite.add(this.engine.world, Constraint.create({ bodyA: a, bodyB: b, pointA: Vector.sub(p, a.position), pointB: Vector.sub(p, b.position), length: 0, stiffness: 0.75, damping: 0.12 }))
-      }
-      a.plugin.bonded = [...a.plugin.bonded || [], b.id]
-      this.pieces.filter(p => p.body === a || p.body === b).forEach(p => p.glued = true)
+      this.brace(a, b)
       added++; if (added >= 10) break
     }
     if (!added) return false
     this.bonds += added; this.onEvent({ type: 'glue' }); return true
+  }
+  /** Two zero-length ties between a pair of bodies, pinned where they meet. */
+  private brace(a: Matter.Body, b: Matter.Body) {
+    const anchor = { x: (a.position.x + b.position.x) / 2, y: (a.position.y + b.position.y) / 2 }
+    for (const dx of [-10, 10]) {
+      const p = { x: anchor.x + dx, y: anchor.y }
+      Composite.add(this.engine.world, Constraint.create({ bodyA: a, bodyB: b, pointA: Vector.sub(p, a.position), pointB: Vector.sub(p, b.position), length: 0, stiffness: 0.75, damping: 0.12 }))
+    }
+    a.plugin.bonded = [...a.plugin.bonded || [], b.id]
+    this.pieces.filter(p => p.body === a || p.body === b).forEach(p => p.glued = true)
   }
   advance(delta: number, softDrop = false) {
     this.accumulator += Math.min(100, Math.max(0, delta))
@@ -310,7 +346,10 @@ export class Game {
     for (const piece of [...this.pieces]) {
       const body = piece.body
       if (body.position.y > FLOOR + 190 || Math.abs(body.position.x) > 450) {
-        for (const bond of Composite.allConstraints(this.engine.world)) if (bond.bodyA === body || bond.bodyB === body) Composite.remove(this.engine.world, bond)
+        // Its scaffolds go with it, and give their share of the budget back.
+        let removed = 0
+        for (const bond of Composite.allConstraints(this.engine.world)) if (bond.bodyA === body || bond.bodyB === body) { Composite.remove(this.engine.world, bond); removed++ }
+        this.bonds = Math.max(0, this.bonds - removed / 2)
         Composite.remove(this.engine.world, body); this.pieces.splice(this.pieces.indexOf(piece), 1)
         if (this.active === piece) { this.active = null; this.hardDropping = false; this.spawnAt = this.time + 500 }
         if (piece.scored) this.placed--
