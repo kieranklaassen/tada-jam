@@ -100,6 +100,18 @@ function average(times: readonly number[]): number {
   return times.reduce((a, b) => a + b, 0) / times.length
 }
 
+/**
+ * Each frame's cost in its quickest run. The runs replay the same touches in a
+ * seeded world, so a genuinely heavy frame (a solve, a path search) is heavy at
+ * the same index in every run, while a frame that a shared CI runner preempted
+ * or paused for garbage collection is slow in one run only.
+ */
+function quickestFrames(runs: readonly Run[]): number[] {
+  const out = [...runs[0].times]
+  for (const run of runs) for (let i = 0; i < out.length; i++) out[i] = Math.min(out[i], run.times[i])
+  return out
+}
+
 describe('frame budget', () => {
   it('sets up all five dioramas at mount in a few milliseconds (their solver caches fill a little each frame)', () => {
     const state = () => deserialize({ v: 1, current: ROOMS[0].key, rooms: {} }, rooms)
@@ -117,10 +129,13 @@ describe('frame budget', () => {
     for (const spec of ROOMS) play(spec.key)
     for (const spec of ROOMS) {
       const runs = Array.from({ length: 5 }, () => play(spec.key))
-      for (const run of runs) expect(run.reachedDoor, spec.key).toBe(true)
+      for (const run of runs) {
+        expect(run.reachedDoor, spec.key).toBe(true)
+        expect(run.times.length, spec.key).toBe(runs[0].times.length)
+      }
       const best = Math.min(...runs.map((run) => average(run.times)))
-      const worst = Math.min(...runs.map((run) => Math.max(...run.times)))
-      process.stdout.write(`${spec.key}: ${runs[0].times.length} frames, best average ${best.toFixed(3)} ms, best worst frame ${worst.toFixed(2)} ms\n`)
+      const worst = Math.max(...quickestFrames(runs))
+      process.stdout.write(`${spec.key}: ${runs[0].times.length} frames, best average ${best.toFixed(3)} ms, worst frame ${worst.toFixed(2)} ms\n`)
       expect(best, spec.key).toBeLessThan(0.1)
       expect(worst, spec.key).toBeLessThan(3)
     }
