@@ -1,6 +1,6 @@
 # Felt Meadow: thirty refinement passes
 
-**Progress:** pass 30 done, all thirty logged. Next: the owner's checklist, media, and the PR body.
+**Progress:** all thirty passes done and published; the owner's checklist is met, the media (hero, four iteration stills, a 49 s walkthrough) are in the Project store, and the PR body is handed off. Nothing is pending.
 
 The brief asked for thirty passes that make a needle-felted nature table read clearly to a four-year-old and stay cheap on an old iPad. Each pass: screenshot → honest critique → one focused set of fixes → re-screenshot → perf re-measure.
 
@@ -47,6 +47,7 @@ Screenshots are in the Project store under `media/jam-10-games/felt-meadow/` (`i
 What thirty passes did not fix, plainly:
 
 - **No physical iPad was measured.** Every number here comes from Chromium and WebKit with software rendering on a 4-core cloud VM. The CPU budget holds with room to spare, but frame rate on a real tablet GPU, the iOS audio unlock on the lift of a touch, and the first-touch cost are unverified on hardware.
+- **The top tier is heavy in software rendering.** Pinned to tier 0, WebKit on this VM runs the meadow at 7 fps, below Pebble Table's 13 on its own automatic quality; the automatic tier leaves tier 0 within seconds and then runs 22 to 23 fps. Tier 0's costs (DPR 2, the blur, a multisampled post target, three fuzz shells) are fill, which a tile GPU handles far better, but that is unmeasured.
 - **Edges below the top tier.** Tier 1 keeps the post pass without multisampling, so its horizon still steps a little (pass 30).
 - **Tier 2 buys little over tier 1** in software rendering (pass 16); on a tile GPU it should buy more, but that is a guess until it runs on one.
 - **The first touch costs about 175 ms at 20× throttle** (about 17 ms unthrottled): creating the audio context must happen inside the gesture (pass 19).

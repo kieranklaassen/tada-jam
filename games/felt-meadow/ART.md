@@ -68,6 +68,6 @@ Measured on the production build at 1180×820, DPR 2, touch, with the shared per
 | Shadow maps | none | none (blob shadows) |
 | DPR | at most 2 | 2, 1.5, 1.25, 1 by tier |
 | Network requests | none | none (textures and sounds are made in code; `egress:built` passes) |
-| WebKit, same session as Pebble Table | — | 23 fps against Pebble Table's 17 (software rendering, pass 25) |
+| WebKit, same session as Pebble Table | at or above Pebble Table | 22 to 23 fps on the automatic tier against Pebble Table's 12 to 13 (software rendering, final build); 7 fps pinned to the top tier, which the tier controller leaves within seconds on this VM |
 
 The passes and their measurements are in [`REFINEMENT.md`](REFINEMENT.md).
