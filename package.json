@@ -20,6 +20,16 @@
     "perf:pebble": "node scripts/pebble-perf.mjs",
     "perf:jam": "node scripts/jam-perf.mjs",
     "check:intersections": "node scripts/jam-intersections.mjs",
+    "lab:dev": "vite --config lab/vite.config.ts",
+    "lab:typecheck": "tsc --noEmit -p lab/tsconfig.json",
+    "lab:test": "vitest run --config lab/vitest.config.ts",
+    "lab:build": "vite build --config lab/vite.config.ts",
+    "lab:serve": "vite build --config lab/vite.config.ts && vite preview --config lab/vite.config.ts --host 0.0.0.0 --port 4174 --strictPort",
+    "lab:check": "npm run lab:typecheck && npm run lab:test",
+    "lab:catalog": "node lab/ideas/render.ts",
+    "lab:panel": "node lab/panel/run.ts",
+    "lab:report": "node lab/panel/report.ts",
+    "lab:smoke": "node lab/smoke.mjs",
     "check": "npm run typecheck && npm run test && npm run egress:check && npm run wordless:check"
   },
   "dependencies": {
