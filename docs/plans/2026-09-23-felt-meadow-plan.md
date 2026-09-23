@@ -45,7 +45,7 @@ A felted hillside on a nature table: three bare molehills, a cream felt seed pou
 
 **Clarity and guidance (youngest age 4, row 3–4 of the cue table)**
 - R11. No words or numerals on the kid side; no voice.
-- R12. Guidance ladder: on first open the pouch wiggles and its seeds bounce (at most three times). After 3 s idle, a glow ring breathes on the one next act (a seed and its target molehill). After 5 s a ghost hand demonstrates that one move; demonstrations back off (10, 20, 40 s gaps) and stop after four. Any touch clears it.
+- R12. Guidance ladder: on first open the pouch wiggles and its seeds bounce (at most three times). After 3 s idle, a glow ring breathes on the one next act (a seed and its target molehill). After 5 s a ghost hand demonstrates that one move; demonstrations back off (10, 20, 40 s gaps) and stop after four; something the child is watching (a bloom, the bee's seed) delays the next one without restarting the ladder. Any touch clears it.
 - R13. The next act is chosen from state: plant a loose seed, else plant a pouch seed, else tap a flower the bee has not visited, else pick a flower to make room.
 - R14. While idle with an empty molehill, the bee hovers over it (points with its body).
 - R15. Age is a dial: at 4 the bee visits on its own more often; at 6–7 it waits longer, so tapping flowers (planning a cross) matters more. Nothing is gated.
