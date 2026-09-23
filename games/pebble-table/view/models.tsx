@@ -108,27 +108,33 @@ export type StoneState = {
 
 type Squash = Spring & { lastVy: number; wasHeld: boolean }
 
-const STONE_SHAPE: Record<Quarters, V3> = { 4: [1, 1, 1], 2: [1.1, 1.05, 0.72], 1: [1, 1.1, 0.8] }
 const MAX_STONES = 64
 
-/** All stones in one instanced draw: physics pose plus squash on landing and stretch on pickup. */
+const PIECE_SIZES: readonly Quarters[] = [4, 2, 1]
+
+/** Stones in three instanced draws (whole, half, quarter): physics pose plus squash on landing and stretch on pickup. */
 export function StonesModel({ read }: { read: () => StoneState[] }) {
   const { stones } = useClay()
-  const mesh = useRef<THREE.InstancedMesh>(null)
+  const meshes = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)]
   const squash = useRef(new Map<number, Squash>())
-  const geometry = useMemo(() => geo.pebble(28), [])
+  const geometries = useMemo(() => [geo.pebble(28), geo.cutPebble(28, 'half'), geo.cutPebble(28, 'quarter')], [])
   useEffect(() => {
-    const instanced = mesh.current
-    if (!instanced) return
-    instanced.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
-    for (let i = 0; i < MAX_STONES; i++) instanced.setColorAt(i, scratch.c.set('#ffffff'))
+    for (const ref of meshes) {
+      const instanced = ref.current
+      if (!instanced) continue
+      instanced.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+      for (let i = 0; i < MAX_STONES; i++) instanced.setColorAt(i, scratch.c.set('#ffffff'))
+    }
   }, [])
   useFrame((_, dt) => {
-    const instanced = mesh.current
-    if (!instanced) return
     const list = read()
     const seen = new Set<number>()
-    list.slice(0, MAX_STONES).forEach((stone, i) => {
+    const counts = [0, 0, 0]
+    for (const stone of list) {
+      const slot = PIECE_SIZES.indexOf(stone.q)
+      const instanced = meshes[slot].current
+      if (!instanced || counts[slot] >= MAX_STONES) continue
+      const i = counts[slot]++
       seen.add(stone.id)
       let s = squash.current.get(stone.id)
       if (!s) {
@@ -140,24 +146,33 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
       s.wasHeld = stone.held
       s.lastVy = stone.velocityY
       const amount = THREE.MathUtils.clamp(springStep(s, stone.held ? -0.07 : 0, dt, 330, 11), -0.3, 0.35)
-      const r = stoneRadius3(stone.q)
-      const shape = STONE_SHAPE[stone.q]
+      const r = stoneRadius3(4)
       const pop = 1 + stone.pulse * 0.22 + stone.glow * 0.06
       const rotation = new THREE.Matrix4().makeRotationFromQuaternion(scratch.q.set(...stone.quaternion))
-      const shapeScale = new THREE.Matrix4().makeScale(r * shape[0] * pop, r * shape[1] * pop, r * shape[2] * pop)
+      const shapeScale = new THREE.Matrix4().makeScale(r * pop, r * pop, r * pop)
       const squashScale = new THREE.Matrix4().makeScale(1 + amount * 0.6, 1 - amount, 1 + amount * 0.6)
       const lift = amount > 0 ? -amount * r * 0.35 : 0
       scratch.m.makeTranslation(stone.position.x, stone.position.y + lift, stone.position.z).multiply(squashScale).multiply(rotation).multiply(shapeScale)
       instanced.setMatrixAt(i, scratch.m)
       const bright = 1 + stone.pulse * 0.28 + stone.glow * 0.18
       instanced.setColorAt(i, scratch.c.setRGB(bright, bright, bright))
-    })
+    }
     for (const id of squash.current.keys()) if (!seen.has(id)) squash.current.delete(id)
-    instanced.count = Math.min(list.length, MAX_STONES)
-    instanced.instanceMatrix.needsUpdate = true
-    if (instanced.instanceColor) instanced.instanceColor.needsUpdate = true
+    meshes.forEach((ref, slot) => {
+      const instanced = ref.current
+      if (!instanced) return
+      instanced.count = counts[slot]
+      instanced.instanceMatrix.needsUpdate = true
+      if (instanced.instanceColor) instanced.instanceColor.needsUpdate = true
+    })
   })
-  return <instancedMesh ref={mesh} args={[geometry, stones, MAX_STONES]} frustumCulled={false} />
+  return (
+    <>
+      {geometries.map((geometry, slot) => (
+        <instancedMesh key={slot} ref={meshes[slot]} args={[geometry, stones, MAX_STONES]} frustumCulled={false} />
+      ))}
+    </>
+  )
 }
 
 // --- blob shadows and glows ----------------------------------------------------
@@ -361,7 +376,7 @@ export function FeedingSetting({ seats }: { seats: readonly boolean[] }) {
   const bowl = to3(FEEDING.bowl)
   const shapes = once('feeding', () => ({
       rug: geo.cloth(40),
-      bowl: merge([piece(geo.bowl(44), PALETTE.bowl, { scale: FEEDING.bowl.r * UNIT }, { lump: 0.2, frequency: 0.4, seed: 8 })]),
+      bowl: merge([piece(geo.bowl(48), PALETTE.bowl, { scale: FEEDING.bowl.r * UNIT }, { lump: 0.22, frequency: 0.4, seed: 8, occlusion: 0.42 })]),
       plate: merge([piece(geo.plate(36), PALETTE.plate, { scale: [FEEDING.plateRadius * UNIT, 5, FEEDING.plateRadius * UNIT] }, { lump: 0.15, frequency: 0.5, seed: 3, occlusion: 0.15 })]),
       stool: merge([piece(geo.cylinder(28, 0.9, 1), PALETTE.stool, { position: [0, 1.4, 0], scale: [4.2, 2.8, 4.2] }, { lump: 0.25, frequency: 0.6, seed: 6 })]),
     }))

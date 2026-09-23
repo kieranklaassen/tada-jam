@@ -71,23 +71,40 @@ function lathe(key: string, points: [number, number][], segments: number): THREE
   })
 }
 
-/** Bowl, unit radius at the rim, height 0.32 of the radius, open at the top. */
+/** Bowl: a deep flared body with a rolled lip, unit radius at the inner rim, open at the top. */
 export function bowl(segments: number): THREE.BufferGeometry {
   return lathe(
-    'bowl',
+    'bowl-deep',
     [
-      [0, 0.02],
-      [0.8, 0.02],
-      [0.98, 0.1],
-      [1.08, 0.3],
-      [1.1, 0.34],
-      [1.02, 0.34],
-      [0.96, 0.26],
-      [0.84, 0.12],
-      [0, 0.1],
+      [0, 0.0],
+      [0.62, 0.0],
+      [0.82, 0.05],
+      [0.98, 0.2],
+      [1.1, 0.4],
+      [1.17, 0.47],
+      [1.13, 0.52],
+      [1.05, 0.5],
+      [0.99, 0.42],
+      [0.88, 0.22],
+      [0.72, 0.08],
+      [0, 0.06],
     ],
     segments,
   )
+}
+
+/** A pebble cut in half (keep = 'half') or in quarters: the cut faces are flat, so the piece reads as part of a stone. */
+export function cutPebble(segments: number, keep: 'half' | 'quarter'): THREE.BufferGeometry {
+  return cached(`cut:${keep}:${segments}`, () => {
+    const geometry = pebble(segments).clone()
+    const position = geometry.attributes.position
+    for (let i = 0; i < position.count; i++) {
+      position.setX(i, Math.min(position.getX(i), 0) + (keep === 'half' ? 0.22 : 0.18))
+      if (keep === 'quarter') position.setZ(i, Math.min(position.getZ(i), 0) + 0.18)
+    }
+    geometry.computeVertexNormals()
+    return geometry
+  })
 }
 
 /** A shallow scale pan with a lip, unit radius. */
