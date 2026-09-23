@@ -237,10 +237,10 @@ export class WorkshopAudio implements Sound {
     this.hiss(t, 0.05, 0.08, 'lowpass', 900, 300)
   }
 
-  snore(pitch: number): void {
+  snore(pitch: number, size: number): void {
     const t = this.now
-    this.hiss(t, 1.1, 0.05, 'lowpass', 380, 700, 0.8, 0.5)
-    this.tone('triangle', 82 * pitch, 74 * pitch, t + 0.1, 1, 0.06, 300)
+    this.hiss(t, 0.5 + 0.5 * size, 0.05 * size, 'lowpass', 380, 700, 0.8, 0.5)
+    this.tone('triangle', (92 - 12 * size) * pitch, (82 - 10 * size) * pitch, t + 0.1, 0.4 + 0.5 * size, 0.06 * size, 300)
   }
 
   spin(speed: number): void {
@@ -253,6 +253,21 @@ export class WorkshopAudio implements Sound {
     const t = this.now
     this.tone('triangle', 190 * pitch, 170 * pitch, t, 0.16, 0.08, 700)
     this.tone('triangle', 175 * pitch, 150 * pitch, t + 0.2, 0.22, 0.07, 650)
+  }
+
+  sniff(pitch: number): void {
+    const t = this.now
+    for (const [at, f] of [
+      [0, 1700],
+      [0.13, 2100],
+    ] as const) {
+      this.hiss(t + at, 0.07, 0.05, 'bandpass', f * pitch, f * 1.35 * pitch, 4, 0.02)
+    }
+  }
+
+  shake(pitch: number): void {
+    const t = this.now
+    for (let i = 0; i < 6; i++) this.hiss(t + i * 0.075, 0.05, 0.05 * (1 - i / 7), 'bandpass', 950 * pitch, 650 * pitch, 2, 0.01)
   }
 
   thud(level: number): void {

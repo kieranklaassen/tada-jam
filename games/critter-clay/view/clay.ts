@@ -64,7 +64,29 @@ export function lump(geometry: THREE.BufferGeometry, amount: number, frequency =
     )
   }
   geometry.computeVertexNormals()
+  if (geometry.userData.weld) weldNormals(geometry)
   return geometry
+}
+
+/** Average the normals of vertices that share a position, so UV seams on a tube shade as one smooth surface. */
+function weldNormals(geometry: THREE.BufferGeometry): void {
+  const position = geometry.attributes.position
+  const normal = geometry.attributes.normal
+  const key = (i: number) => `${position.getX(i).toFixed(4)},${position.getY(i).toFixed(4)},${position.getZ(i).toFixed(4)}`
+  const sums = new Map<string, THREE.Vector3>()
+  for (let i = 0; i < position.count; i++) {
+    const k = key(i)
+    let sum = sums.get(k)
+    if (!sum) sums.set(k, (sum = new THREE.Vector3()))
+    sum.x += normal.getX(i)
+    sum.y += normal.getY(i)
+    sum.z += normal.getZ(i)
+  }
+  for (let i = 0; i < position.count; i++) {
+    const sum = sums.get(key(i))!
+    const l = sum.length() || 1
+    normal.setXYZ(i, sum.x / l, sum.y / l, sum.z / l)
+  }
 }
 
 export type Placement = { at?: [number, number, number]; rotate?: [number, number, number]; scale?: number | [number, number, number] }
@@ -87,9 +109,13 @@ export type Paint = {
   crease?: number
   /** Darken vertices whose normal faces down (the underside, near the ground). */
   underside?: number
+  /** Darken soft kneaded patches: the clay cue that stays when the thumbprint normal map is off (tier 0). */
+  mottle?: number
   /** Scale UVs so the thumbprint texture keeps its size on large props. */
   uvScale?: number
 }
+
+const MOTTLE_FREQUENCY = 0.45
 
 /** Colour a piece: vertex colour is the paint (or white, to be tinted) times baked occlusion; `tint` marks hue-coloured vertices. */
 export function paint(geometry: THREE.BufferGeometry, options: Paint): THREE.BufferGeometry {
@@ -107,6 +133,10 @@ export function paint(geometry: THREE.BufferGeometry, options: Paint): THREE.Buf
       shade *= 1 - (options.crease ?? 0.35) * (1 - k)
     }
     if (options.underside) shade *= 1 - options.underside * Math.max(0, -normal.getY(i)) ** 1.5
+    if (options.mottle) {
+      const n = noise(position.getX(i) * MOTTLE_FREQUENCY, position.getY(i) * MOTTLE_FREQUENCY, position.getZ(i) * MOTTLE_FREQUENCY, 7)
+      shade *= 1 - options.mottle * THREE.MathUtils.smoothstep(n, 0.4, 0.8)
+    }
     colors[i * 3] = base.r * shade
     colors[i * 3 + 1] = base.g * shade
     colors[i * 3 + 2] = base.b * shade
@@ -167,12 +197,15 @@ export function taperedTube(curve: THREE.Curve<THREE.Vector3>, segments: number,
   const base = new THREE.SphereGeometry(r0, radial, Math.max(4, radial / 2))
   const start = curve.getPointAt(0)
   base.translate(start.x, start.y, start.z)
-  const merged = mergeGeometries([tube.toNonIndexed(), tip.toNonIndexed(), base.toNonIndexed()], false)
+  // kept indexed: normals computed on a triangle soup come out flat, and the clay would look faceted
+  const merged = mergeGeometries([tube, tip, base], false)
   tube.dispose()
   tip.dispose()
   base.dispose()
   if (!merged) throw new Error('clay: could not build tube')
+  merged.userData.weld = true
   merged.computeVertexNormals()
+  weldNormals(merged)
   return merged
 }
 
@@ -404,7 +437,8 @@ function shadowMaterial(): THREE.ShaderMaterial {
         float a;
         vec3 color = uColor;
         if ( vParams.y < 0.5 ) {
-          a = pow( 1.0 - smoothstep( 0.0, 1.0, d ), 1.7 ) * 0.6;
+          // a plateau, not a peak: from the camera the body hides the middle, so the outer half has to carry the weight
+          a = ( 1.0 - smoothstep( 0.45, 1.0, d ) ) * 0.5 + ( 1.0 - smoothstep( 0.0, 0.5, d ) ) * 0.25;
         } else {
           float ridges = 0.5 + 0.5 * sin( d * 34.0 + vUv.x * 3.0 );
           a = ( 0.28 * ( 1.0 - d ) + 0.22 * ridges * ( 1.0 - d * d ) ) * smoothstep( 1.0, 0.7, d );
@@ -495,7 +529,7 @@ function overlayMaterial(boilStep: { value: number }): THREE.ShaderMaterial {
         float vignette = smoothstep( 0.45, 1.05, length( c ) );
         float g = grain( floor( gl_FragCoord.xy / 2.0 ) ) - 0.5;
         vec3 color = g > 0.0 ? vec3( 1.0 ) : vec3( 0.05, 0.07, 0.13 );
-        float a = abs( g ) * 0.07;
+        float a = abs( g ) * 0.032;
         color = mix( color, vec3( 0.07, 0.1, 0.18 ), vignette );
         a = max( a, vignette * 0.34 );
         gl_FragColor = vec4( color, a );
@@ -518,7 +552,8 @@ export function createClayMaterials(): ClayMaterials {
   clayShader(props, boilStep)
   const critters = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.56, metalness: 0, normalMap, normalScale: new THREE.Vector2(1.6, 1.6) })
   clayShader(critters, boilStep)
-  const ghost = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: new THREE.Color('#9cc7ff'), emissiveIntensity: 0.35, transparent: true, opacity: 0.5, depthWrite: false, roughness: 0.4 })
+  // drawn through the body: the demonstration part settles into sockets the body hides (a leg under the belly)
+  const ghost = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: new THREE.Color('#9cc7ff'), emissiveIntensity: 0.14, transparent: true, opacity: 0.8, depthWrite: false, depthTest: false, roughness: 0.5 })
   const shadow = shadowMaterial()
   const glow = glowMaterial()
   const overlay = overlayMaterial(boilStep)
