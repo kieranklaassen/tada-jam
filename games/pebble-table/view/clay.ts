@@ -69,18 +69,38 @@ function noise3(x: number, y: number, z: number): number {
 
 // --- geometry helpers --------------------------------------------------------
 
-/** Push vertices in and out along their normals: hand-pressed, never perfect. */
-export function lump(geometry: THREE.BufferGeometry, amount: number, frequency = 2.2, seed = 0): THREE.BufferGeometry {
+/** Which points of a shape `lump` must keep: 'level' ones (a base that stands on something) move only sideways, 'fixed' ones (a floor or wall that pieces rest against) not at all. */
+export type Hold = (x: number, y: number, z: number) => 'level' | 'fixed' | null
+
+/**
+ * Push vertices in and out along their normals: hand-pressed, never perfect.
+ * Copies of one point (a seam, a pole, a cap's rim) move along their shared
+ * normal, or the lumped surface would tear open there.
+ */
+export function lump(geometry: THREE.BufferGeometry, amount: number, frequency = 2.2, seed = 0, hold?: Hold): THREE.BufferGeometry {
   const g = geometry.clone()
   g.computeVertexNormals()
   const position = g.attributes.position
   const normal = g.attributes.normal
+  const key = (i: number) => `${position.getX(i).toFixed(5)},${position.getY(i).toFixed(5)},${position.getZ(i).toFixed(5)}`
+  const shared = new Map<string, THREE.Vector3>()
+  for (let i = 0; i < position.count; i++) {
+    const k = key(i)
+    const sum = shared.get(k) ?? shared.set(k, new THREE.Vector3()).get(k)!
+    sum.x += normal.getX(i)
+    sum.y += normal.getY(i)
+    sum.z += normal.getZ(i)
+  }
+  for (const sum of shared.values()) sum.normalize()
   for (let i = 0; i < position.count; i++) {
     const x = position.getX(i)
     const y = position.getY(i)
     const z = position.getZ(i)
+    const along = shared.get(key(i))!
+    const kept = hold?.(x, y, z) ?? null
+    if (kept === 'fixed') continue
     const n = noise3(x * frequency + seed, y * frequency + seed * 1.7, z * frequency - seed) - 0.5
-    position.setXYZ(i, x + normal.getX(i) * n * amount, y + normal.getY(i) * n * amount, z + normal.getZ(i) * n * amount)
+    position.setXYZ(i, x + along.x * n * amount, kept === 'level' ? y : y + along.y * n * amount, z + along.z * n * amount)
   }
   g.computeVertexNormals()
   return g
@@ -140,9 +160,9 @@ export function piece(
   geometry: THREE.BufferGeometry,
   color: string,
   placement: Placement,
-  options: { lump?: number; frequency?: number; seed?: number; ground?: number | null; occlusion?: number } = {},
+  options: { lump?: number; frequency?: number; seed?: number; ground?: number | null; occlusion?: number; hold?: Hold } = {},
 ): THREE.BufferGeometry {
-  const lumped = options.lump ? lump(geometry, options.lump, options.frequency, options.seed) : geometry
+  const lumped = options.lump ? lump(geometry, options.lump, options.frequency, options.seed, options.hold) : geometry
   return paint(place(lumped, placement), color, options.ground === undefined ? 0 : options.ground, options.occlusion)
 }
 
@@ -316,9 +336,9 @@ export type ClayMaterials = {
   dispose(): void
 }
 
-/** Instanced soft overlays: the instance colour's red channel is the opacity. */
+/** Instanced soft overlays: the instance colour's red channel is the opacity. They sit almost on their surface and are pulled toward the camera in depth, so they never flicker against it. */
 function overlayMaterial(color: string, blending: THREE.Blending, map: THREE.Texture = blobTexture()): THREE.MeshBasicMaterial {
-  const material = new THREE.MeshBasicMaterial({ color, map, transparent: true, depthWrite: false, blending, toneMapped: false })
+  const material = new THREE.MeshBasicMaterial({ color, map, transparent: true, depthWrite: false, blending, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })
   material.onBeforeCompile = (shader) => {
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <color_fragment>',
