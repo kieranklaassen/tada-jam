@@ -1,0 +1,179 @@
+import { describe, expect, it } from 'vitest'
+import { Creature, MOTION, type BrainEvent, type BrainWorld } from './brain'
+import { ANIMAL_KEYS, ANIMALS, HOME_KEYS, HOMES, inClearing, type AnimalKey } from './layout'
+import { createRng } from './rng'
+
+function world(creatures: Creature[], events: string[] = [], options: Partial<Pick<BrainWorld, 'gazeHome' | 'leanWhenHeld'>> = {}): BrainWorld {
+  return {
+    rng: createRng(7),
+    creatures,
+    gazeHome: options.gazeHome ?? false,
+    leanWhenHeld: options.leanWhenHeld ?? true,
+    occupied: () => false,
+    emit: (event: BrainEvent, creature: Creature) => events.push(`${creature.key}:${event}`),
+  }
+}
+
+function run(creatures: Creature[], w: BrainWorld, seconds: number, dt = 1 / 60): void {
+  for (let t = 0; t < seconds; t += dt) for (const c of creatures) c.step(dt, w)
+}
+
+function one(key: AnimalKey, x = 0, z = 0): Creature {
+  const c = new Creature(key, ANIMAL_KEYS.indexOf(key), 0.3)
+  c.placeAt(x, z)
+  return c
+}
+
+describe('animals and homes', () => {
+  it('each animal shares its home’s index, so the controller can map one to the other', () => {
+    ANIMAL_KEYS.forEach((key, index) => expect(ANIMALS[key].home).toBe(HOME_KEYS[index]))
+  })
+})
+
+describe('wandering', () => {
+  it('everyone wanders, yawns, and stays inside the clearing', () => {
+    const creatures = ANIMAL_KEYS.map((key, i) => one(key, -40 + i * 16, 0))
+    const events: string[] = []
+    const w = world(creatures, events)
+    let walked = 0
+    for (let t = 0; t < 120; t += 1 / 30) {
+      for (const c of creatures) {
+        c.step(1 / 30, w)
+        expect(inClearing(c, -2)).toBe(true)
+        if (c.mode === 'walk') walked += 1
+      }
+    }
+    expect(walked).toBeGreaterThan(100)
+    for (const key of ANIMAL_KEYS) expect(events).toContain(`${key}:yawn`)
+  })
+
+  it('idle gaze stops the walking and turns every face toward its home', () => {
+    const creatures = ANIMAL_KEYS.map((key, i) => one(key, -40 + i * 16, 0))
+    const w = world(creatures, [], { gazeHome: true })
+    run(creatures, w, 3)
+    for (const c of creatures) {
+      expect(c.mode).toBe('idle')
+      expect(c.look).toBeGreaterThan(0.9)
+    }
+  })
+})
+
+describe('carrying', () => {
+  it('a carried animal hangs below the finger and swings when the finger moves', () => {
+    const fox = one('fox')
+    const w = world([fox])
+    fox.pickUp()
+    fox.setGrab(0, 0)
+    run([fox], w, 0.6)
+    expect(fox.mode).toBe('held')
+    expect(fox.y).toBeGreaterThan(5)
+    fox.setGrab(40, 0)
+    let most = 0
+    for (let t = 0; t < 0.8; t += 1 / 60) {
+      fox.step(1 / 60, w)
+      most = Math.max(most, Math.abs(fox.swingX))
+    }
+    expect(most).toBeGreaterThan(0.05)
+  })
+
+  it('the bear swings wider and slower than the songbird for the same move', () => {
+    const measure = (key: AnimalKey) => {
+      const c = one(key)
+      const w = world([c])
+      c.pickUp()
+      c.setGrab(0, 0)
+      run([c], w, 1)
+      c.setGrab(30, 0)
+      let most = 0
+      for (let t = 0; t < 1.5; t += 1 / 60) {
+        c.step(1 / 60, w)
+        most = Math.max(most, Math.abs(c.swingX))
+      }
+      return most
+    }
+    expect(measure('bear')).toBeGreaterThan(measure('songbird') * 1.5)
+  })
+
+  it('a quick tap-release lands and then plays its trick', () => {
+    const rabbit = one('rabbit', 10, 0)
+    const events: string[] = []
+    const w = world([rabbit], events)
+    rabbit.pickUp()
+    run([rabbit], w, 0.15)
+    rabbit.drop(true)
+    run([rabbit], w, 1)
+    expect(events).toContain('rabbit:land')
+    expect(events).toContain('rabbit:trick')
+  })
+})
+
+describe('homes', () => {
+  it('carried to its own home, an animal settles and then snores', () => {
+    for (const key of ANIMAL_KEYS) {
+      const c = one(key, 0, 0)
+      const events: string[] = []
+      const w = world([c], events)
+      c.pickUp()
+      run([c], w, 0.2)
+      c.sendTo(ANIMALS[key].home)
+      run([c], w, 2.5)
+      expect(c.mode).toBe('asleep')
+      expect(c.homeBound).toBe(true)
+      run([c], w, MOTION[key].breath * 2 + 0.1)
+      expect(events).toContain(`${key}:settle`)
+      expect(events.filter((e) => e === `${key}:snore`).length).toBeGreaterThanOrEqual(2)
+    }
+  })
+
+  it('the bear bumps out of the burrow and is back on the grass, awake', () => {
+    const bear = one('bear')
+    const events: string[] = []
+    const w = world([bear], events)
+    bear.pickUp()
+    bear.sendTo('burrow')
+    run([bear], w, 3.5)
+    expect(events).toContain('bear:bumped')
+    expect(bear.roaming).toBe(true)
+    expect(bear.homeBound).toBe(false)
+    expect(inClearing(bear, -30)).toBe(true)
+  })
+
+  it('the fish flops out of the nest and wriggles back to the pond', () => {
+    const fish = one('fish', 30, 0)
+    const events: string[] = []
+    const w = world([fish], events)
+    fish.pickUp()
+    fish.sendTo('nest')
+    run([fish], w, 1.2)
+    expect(events).toContain('fish:flop')
+    expect(fish.homeBound).toBe(true)
+    run([fish], w, 8)
+    expect(fish.mode).toBe('asleep')
+    expect(events).toContain('fish:plop')
+    expect(Math.hypot(fish.x - HOMES.pond.bed.x, fish.z - HOMES.pond.bed.z)).toBeLessThan(1)
+  })
+
+  it('the owl hops out of the burrow and flies to its hollow', () => {
+    const owl = one('owl')
+    const events: string[] = []
+    const w = world([owl], events)
+    owl.pickUp()
+    owl.sendTo('burrow')
+    run([owl], w, 6)
+    expect(events).toContain('owl:flap')
+    expect(owl.mode).toBe('asleep')
+    expect(owl.y).toBeCloseTo(HOMES.hollow.bed.y, 0)
+  })
+
+  it('wakes, comes out, and wanders again', () => {
+    const fox = one('fox')
+    fox.sleepAtHome()
+    const events: string[] = []
+    const w = world([fox], events)
+    fox.wake()
+    run([fox], w, 4)
+    expect(events).toContain('fox:exit')
+    expect(fox.roaming).toBe(true)
+    expect(inClearing(fox)).toBe(true)
+  })
+})
