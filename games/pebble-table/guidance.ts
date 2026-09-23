@@ -120,6 +120,11 @@ export class HintScheduler {
     return now - this.idleSince
   }
 
+  /** Restart the idle clock without counting a touch (the table itself just did something). */
+  restart(now: number): void {
+    this.idleSince = now
+  }
+
   /** Start times of this idle stretch's demonstrations: 5 s idle, then 10 s, 20 s, 40 s gaps. */
   private scheduledStarts(): number[] {
     const starts: number[] = []

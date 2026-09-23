@@ -220,6 +220,17 @@ export class TableAudio {
   }
 
   /** A springy boing: up, overshoot, settle. */
+  /** A hungry tummy, in the guest's own register: a soft low rumble, never a nag. */
+  rumble(species: Species): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    const base = species === 'bear' ? 70 : species === 'rabbit' ? 115 : 150
+    this.tone(base, 'sine', 0.12, 0.08, 0.35, now, base * 0.8)
+    this.tone(base * 1.1, 'sine', 0.09, 0.06, 0.3, now + 0.28, base * 0.75)
+    this.noiseBurst(300, 1, 0.05, 0.4, now, 'lowpass')
+  }
+
   /** A guest being poked, in its own voice: a squeaky giggle, a low happy hum, or a tiny sniff-squeak. */
   poke(species: Species): void {
     const context = this.ready()

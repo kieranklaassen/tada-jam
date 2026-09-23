@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import { TableController, type Projector } from './controller'
 import { IDLE_BEFORE_HINT } from './guidance'
-import { BAG, SCALE } from './layout'
+import { BAG, FEEDING, SCALE } from './layout'
 import { toWorld2 } from './physics3d'
 import { panOf } from './scale'
+import { plateOf } from './feeding'
 import { accountedTotal, defaultTable } from './state'
 
 // A straight-down orthographic "camera": screen pixels are world units.
@@ -61,14 +62,15 @@ describe('TableController', () => {
     expect(lost).toBe(0)
   }, 30_000)
 
-  it('pulls a stone from the bag and drops it into a pan, which tips the beam', () => {
+  it('invites on an empty scale with one stone on a pan, and a stone on the other pan levels it', () => {
     const { table } = makeTable(6)
-    const pan = SCALE.pans[1]
-    drag(table, { x: BAG.x, y: BAG.y }, pan)
     run(table, 2.5)
-    const [piece] = table.state.pieces
-    expect(panOf(piece)).toBe(1)
-    expect(table.beam.angle).toBeGreaterThan(0.05)
+    expect(table.state.pieces.filter((piece) => panOf(piece) === 0)).toHaveLength(1)
+    expect(table.beam.angle).toBeLessThan(-0.05)
+    drag(table, { x: BAG.x, y: BAG.y }, SCALE.pans[1])
+    run(table, 3)
+    expect(table.state.pieces.filter((piece) => panOf(piece) === 1)).toHaveLength(1)
+    expect(Math.abs(table.beam.angle)).toBeLessThan(0.02)
   })
 
   it('lets go of a stone after a long still press', () => {
@@ -84,6 +86,7 @@ describe('TableController', () => {
 
   it('shows a ghost hand only after the child has been idle, and a touch hides it', () => {
     const { table } = makeTable()
+    tap(table, { x: 1000, y: 900 })
     run(table, IDLE_BEFORE_HINT + 1)
     expect(table.guidance.hand).not.toBeNull()
     expect(table.guidance.hint?.kind).toBe('tapBag')
@@ -93,12 +96,77 @@ describe('TableController', () => {
     expect(table.guidance.glow).toBe(0)
   })
 
-  it('wiggles the bag on first open and stops after the first touch', () => {
-    const { table } = makeTable()
+  it('wiggles the bag on first open when nobody is seated yet, and stops after the first touch', () => {
+    const save = vi.fn()
+    const table = new TableController({ ...defaultTable(4), seats: [false, false, false, false, false] }, { save })
+    table.setProjector(topDown)
     run(table, 1.6)
     expect(table.guidance.peek).not.toBeNull()
     tap(table, { x: 1000, y: 900 })
     run(table, 6.5)
     expect(table.guidance.peek).toBeNull()
+  })
+})
+
+describe('first open story beat', () => {
+  it('rolls one stone out toward the hungry guest and the ghost hand carries it to that plate', () => {
+    const { table } = makeTable()
+    const hungry = table.wanting
+    expect(hungry).not.toBeNull()
+    run(table, 3)
+    expect(table.guidance.hand).not.toBeNull()
+    run(table, 3)
+    expect(table.state.pieces).toHaveLength(1)
+    expect(plateOf(table.state.pieces[0])).toBe(hungry)
+    expect(table.state.bag).toBe(table.state.total - 4)
+    expect(table.wanting).not.toBe(hungry)
+  })
+
+  it('ends at once when the child touches, and the stone lands where it was going', () => {
+    const { table } = makeTable()
+    run(table, 1.6)
+    table.pointerDown(5, { x: 1000, y: 900 }, (clock += 10))
+    table.step(1 / 60)
+    expect(table.guidance.hand).toBeNull()
+    expect(table.state.pieces).toHaveLength(1)
+    expect(table.physics.stoneIds()).toHaveLength(1)
+  })
+
+  it('plays only on a brand-new table', () => {
+    const { table } = makeTable()
+    tap(table, { x: BAG.x, y: BAG.y })
+    run(table, 6)
+    expect(table.state.pieces).toHaveLength(10)
+  })
+})
+
+describe('one obvious want', () => {
+  it('has exactly one guest asking, and it faces the child', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 900 })
+    run(table, 0.5)
+    const asking = [0, 1, 2, 3, 4].filter((seat) => table.asking(seat) > 0)
+    expect(asking).toEqual([table.wanting])
+  })
+
+  it('rumbles the hungry tummy while the child is idle, backing off, at most three times', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 900 })
+    run(table, 2)
+    expect(table.rumbles.size).toBe(0)
+    run(table, 60)
+    expect(table.rumbles.size).toBe(1)
+  })
+
+  it('keeps empty stools hidden until the first shared meal', () => {
+    const { table } = makeTable()
+    expect(table.stoolsShown).toBe(false)
+    tap(table, { x: 1000, y: 900 })
+    for (const seat of [1, 4]) {
+      drag(table, { x: BAG.x, y: BAG.y }, FEEDING.seats[seat].plate)
+      run(table, 1)
+    }
+    run(table, 3)
+    expect(table.stoolsShown).toBe(true)
   })
 })

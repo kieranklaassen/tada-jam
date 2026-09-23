@@ -1,9 +1,9 @@
 import type { TableAudio } from './audio'
-import { freeSpotOnPlate, GUEST_RADIUS, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, type FeedingView } from './feeding'
+import { freeSpotOnPlate, GUEST_RADIUS, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, wantingSeat, type FeedingView } from './feeding'
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
-import { BAG, BAG_MOUTH, FEEDING, SHELF, shelfTile, type MatKey, type Point, type Quarters } from './layout'
-import { HOLD_HEIGHT, stoneHeight3, stoneRadius3, TablePhysics, to3, UNIT, type Vec3 } from './physics3d'
+import { BAG, BAG_MOUTH, FEEDING, SCALE, SHELF, shelfTile, type MatKey, type Point, type Quarters } from './layout'
+import { HOLD_HEIGHT, stoneHeight3, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
 import { SaveCadence } from './saveCadence'
 import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
 import { cutPiece, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
@@ -16,7 +16,7 @@ import { SEAT_SPECIES } from './motion'
 
 export type Sound = Pick<
   TableAudio,
-  'unlock' | 'setActive' | 'touch' | 'clack' | 'rustle' | 'clatter' | 'creak' | 'beat' | 'chord' | 'munch' | 'hop' | 'poke' | 'whoosh' | 'snick' | 'dispose'
+  'unlock' | 'setActive' | 'touch' | 'clack' | 'rustle' | 'clatter' | 'creak' | 'beat' | 'chord' | 'munch' | 'hop' | 'poke' | 'rumble' | 'whoosh' | 'snick' | 'dispose'
 >
 
 export const silentSound: Sound = {
@@ -32,6 +32,7 @@ export const silentSound: Sound = {
   munch() {},
   hop() {},
   poke() {},
+  rumble() {},
   whoosh() {},
   snick() {},
   dispose() {},
@@ -43,6 +44,16 @@ export type Projector = {
   /** The world point under a screen point, on the horizontal plane at `height` (cm). */
   toPlane(screen: Point, height: number): Point | null
 }
+
+const STORY_START = 1.2
+const STORY_REST = 1.6
+const STORY_CARRY = 1.3
+const STORY_FADE = 0.7
+const RUMBLE_AFTER = 2.5
+const RUMBLE_GAP = 8
+const MAX_RUMBLES = 3
+
+type Story = { phase: 'waiting' | 'rolling' | 'resting' | 'carrying' | 'done'; at: number; stoneId: number | null; from: Point | null; spot: Point | null; seat?: number }
 
 type Flight = { id: number; q: Quarters; from: Vec3; to: Vec3; t0: number; duration: number; arc: number; carriesPiece: boolean; land: () => void }
 
@@ -101,6 +112,15 @@ export class TableController {
   private shareWasComplete = false
   private munchAt: number | null = null
   private demoHint: Hint | null = null
+  /** The one guest who visibly wants a stone (see `wantingSeat`), or null. */
+  wanting: number | null = null
+  /** When each guest's tummy last rumbled. */
+  readonly rumbles = new Map<number, number>()
+  private rumbleStretch = { lastIdle: 0, count: 0, next: RUMBLE_AFTER }
+  /** Empty stools stay hidden until the first shared meal, so a first-time child sees only who is hungry. */
+  stoolsShown: boolean
+  /** The first-open story beat: a stone rolls out toward the hungry guest and the ghost hand carries it to the plate. */
+  private story: Story | null = null
 
   constructor(state: TableState, options: { save: (state: TableState) => void; sound?: Sound }) {
     this.state = state
@@ -112,6 +132,18 @@ export class TableController {
     this.enterMat()
     for (const piece of this.state.pieces) this.addPieceBody(piece)
     this.feeding = viewFeeding(this.state.pieces, this.state.seats)
+    this.stoolsShown = this.state.seats.filter(Boolean).length > 2
+    if (this.untouchedTable() && this.state.liveMat === 'feeding' && this.state.seats.some(Boolean)) {
+      this.story = { phase: 'waiting', at: 0, stoneId: null, from: null, spot: null }
+      // The story feeds the hungry guest nearest the bag, so the stone's roll stays short and in view.
+      const nearest = FEEDING.seats
+        .map((seat, index) => ({ index, distance: Math.hypot(seat.plate.x - BAG.x, seat.plate.y - BAG.y) }))
+        .filter(({ index }) => this.state.seats[index])
+        .sort((a, b) => a.distance - b.distance)[0]
+      if (nearest) this.dealCursor = (nearest.index - 1 + FEEDING.seats.length) % FEEDING.seats.length
+    }
+    this.inviteOnScale()
+    this.updateWanting()
     this.guidance = this.computeGuidance()
   }
 
@@ -183,6 +215,9 @@ export class TableController {
     const resting = this.restingPieces()
     this.feeding = viewFeeding(resting, this.state.seats)
     if (this.state.liveMat === 'feeding') this.updateFeeding(now)
+    this.updateStory(now)
+    this.updateWanting()
+    this.updateRumble(now)
 
     const calm = !report.moving && this.held.size === 0 && this.brooms.size === 0 && this.flights.every((f) => !f.carriesPiece)
     if (calm) this.calmSince ??= now
@@ -214,6 +249,11 @@ export class TableController {
       this.munchStart = now
       this.sound.munch()
       this.sound.chord()
+      if (!this.stoolsShown) {
+        this.stoolsShown = true
+        this.syncGuests()
+        this.changed()
+      }
     }
     this.shareWasComplete = view.shareComplete
     if (this.knife.pointerId === null && !view.leftover) this.knife.at = { ...FEEDING.knifeRest }
@@ -270,10 +310,225 @@ export class TableController {
     return this.state.shelf.filter((mat) => mat !== this.state.liveMat)
   }
 
+  /**
+   * Where a guest looks. The wanting guest faces the child most of the time and
+   * glances at where stones are (a loose stone, the bowl, or the bag); a guest
+   * with less looks at a fuller plate; everyone else looks at the child.
+   */
   gaze(seat: number): Point | null {
-    if (this.guidance.guestsReach) return FEEDING.bowl
+    if (seat === this.wanting) {
+      const glancing = (this.t + seat * 0.9) % 4.2 > 2.9
+      return glancing ? this.stoneSource(seat) : null
+    }
     const target = gazeTarget(this.feeding, seat)
     return target === null ? null : FEEDING.seats[target].plate
+  }
+
+  /** How strongly a guest asks for a stone right now (0..1): the wanting guest asks, gently at first and fully once the child is idle. */
+  asking(seat: number): number {
+    if (seat !== this.wanting || this.story) return 0
+    return 0.55 + 0.45 * this.guidance.glow
+  }
+
+  private stoneSource(seat: number): Point | null {
+    const plate = FEEDING.seats[seat].plate
+    const summary = this.summary()
+    let best: Point | null = null
+    let distance = Infinity
+    for (const stone of summary.loose) {
+      const d = Math.hypot(stone.x - plate.x, stone.y - plate.y)
+      if (d < distance) {
+        best = stone
+        distance = d
+      }
+    }
+    if (best) return best
+    if (summary.bowl.length > 0) return FEEDING.bowl
+    return this.state.bag > 0 ? BAG : null
+  }
+
+  private updateWanting(): void {
+    const available = this.state.bag > 0 || this.state.pieces.length > 0
+    this.wanting = this.state.liveMat === 'feeding' ? wantingSeat(this.feeding, available, this.dealCursor) : null
+  }
+
+  /** A hungry tummy rumbles while the child is idle: first after a few seconds, then with growing gaps, at most three times per idle stretch. */
+  private updateRumble(now: number): void {
+    const idle = this.scheduler.idleFor(now)
+    const stretch = this.rumbleStretch
+    if (idle < stretch.lastIdle) {
+      stretch.count = 0
+      stretch.next = RUMBLE_AFTER
+    }
+    stretch.lastIdle = idle
+    if (this.wanting === null || this.story || this.guidance.hand || stretch.count >= MAX_RUMBLES || idle < stretch.next) return
+    this.rumbles.set(this.wanting, now)
+    this.sound.rumble(SEAT_SPECIES[this.wanting % SEAT_SPECIES.length])
+    stretch.count += 1
+    stretch.next = idle + RUMBLE_GAP * 2 ** (stretch.count - 1)
+  }
+
+  // --- the first-open story beat ---------------------------------------------
+
+  private updateStory(now: number): void {
+    const story = this.story
+    if (!story) return
+    const age = now - story.at
+    switch (story.phase) {
+      case 'waiting': {
+        if (now < STORY_START) return
+        const seat = wantingSeat(this.feeding, true, this.dealCursor)
+        const piece = seat === null ? null : pullFromBag(this.state, BAG_MOUTH)
+        if (seat === null || !piece) {
+          this.story = null
+          return
+        }
+        const plate = FEEDING.seats[seat].plate
+        const away = Math.hypot(BAG_MOUTH.x - plate.x, BAG_MOUTH.y - plate.y) || 1
+        const rest = { x: plate.x + ((BAG_MOUTH.x - plate.x) / away) * 120, y: plate.y + ((BAG_MOUTH.y - plate.y) / away) * 120 }
+        this.bagTipStart = now
+        this.sound.rustle()
+        Object.assign(story, { phase: 'rolling', at: now, stoneId: piece.id, from: rest, seat })
+        this.flights.push({
+          id: piece.id,
+          q: piece.q,
+          from: to3(BAG_MOUTH, 4),
+          to: to3(rest, stoneHeight3(piece.q) / 2 + 0.2),
+          t0: now,
+          duration: 0.95,
+          arc: 5,
+          carriesPiece: true,
+          land: () => {
+            if (!this.pieceById(piece.id)) return
+            piece.x = rest.x
+            piece.y = rest.y
+            this.addPieceBody(piece, { y: stoneHeight3(piece.q) / 2 + 0.2 })
+            this.sound.clack(0.4)
+            if (this.story?.phase === 'rolling') Object.assign(this.story, { phase: 'resting', at: this.t })
+          },
+        })
+        this.changed()
+        this.cadence.change(performance.now(), true)
+        return
+      }
+      case 'rolling':
+        return
+      case 'resting': {
+        if (age < STORY_REST) return
+        const piece = story.stoneId === null ? undefined : this.pieceById(story.stoneId)
+        const seat = story.seat ?? null
+        if (!piece || seat === null) {
+          this.story = null
+          return
+        }
+        const onPlate = this.restingPieces().filter((p) => plateOf(p) === seat && p.id !== piece.id)
+        const spot = freeSpotOnPlate(seat, onPlate, stoneRadius3(piece.q) / UNIT)
+        const body = this.physics.body(piece.id)
+        const from = body ? { x: body.position.x, y: body.position.y, z: body.position.z } : to3(piece, 1)
+        this.physics.removeStone(piece.id)
+        Object.assign(story, { phase: 'carrying', at: now, spot })
+        this.flights.push({
+          id: piece.id,
+          q: piece.q,
+          from,
+          to: to3(spot, stoneHeight3(piece.q) / 2 + 0.6),
+          t0: now,
+          duration: STORY_CARRY,
+          arc: 4,
+          carriesPiece: true,
+          land: () => {
+            if (!this.pieceById(piece.id)) return
+            piece.x = spot.x
+            piece.y = spot.y
+            this.addPieceBody(piece, { y: stoneHeight3(piece.q) / 2 + 0.6 })
+            this.dealCursor = seat
+            this.sound.touch(1)
+            this.pendingVoice = { groups: this.voiceFor(piece.id), deadline: this.t + 1 }
+            this.cadence.change(performance.now(), true)
+            if (this.story?.phase === 'carrying') Object.assign(this.story, { phase: 'done', at: this.t })
+          },
+        })
+        return
+      }
+      case 'carrying':
+        return
+      case 'done':
+        if (age > STORY_FADE) {
+          this.story = null
+          this.scheduler.restart(now)
+        }
+        return
+      default: {
+        const unreachable: never = story.phase
+        return unreachable
+      }
+    }
+  }
+
+  /** The ghost hand during the story: it arrives over the resting stone, presses, carries it to the plate, and lifts away. */
+  private storyHand(): HandPose | null {
+    const story = this.story
+    if (!story || story.from === null) return null
+    const age = this.t - story.at
+    switch (story.phase) {
+      case 'waiting':
+      case 'rolling':
+        return null
+      case 'resting': {
+        const k = Math.min(1, age / STORY_REST)
+        return { at: story.from, press: Math.max(0, (k - 0.55) / 0.45), opacity: Math.min(1, k * 2.5) }
+      }
+      case 'carrying': {
+        const view = this.flightViews().find((flight) => flight.id === story.stoneId)
+        const at = view ? toWorld2(view.position) : story.from
+        return { at, press: 1, opacity: 1 }
+      }
+      case 'done': {
+        const k = Math.min(1, age / STORY_FADE)
+        return { at: story.spot ?? story.from, press: Math.max(0, 1 - k * 2), opacity: 1 - k }
+      }
+      default: {
+        const unreachable: never = story.phase
+        return unreachable
+      }
+    }
+  }
+
+  /** Any touch ends the story at once: whatever was moving lands where it was going. */
+  private endStory(): void {
+    if (!this.story) return
+    this.story = null
+    const moving = this.flights.filter((flight) => flight.carriesPiece)
+    this.flights = this.flights.filter((flight) => !flight.carriesPiece)
+    for (const flight of moving) flight.land()
+  }
+
+  /** On an empty scale, the world asks the question: one stone drops onto a pan and the beam waits, tilted, for a partner. */
+  private inviteOnScale(): void {
+    if (this.state.liveMat !== 'scale' || this.state.bag <= 0) return
+    if (this.state.pieces.some((piece) => panOf(piece) !== null)) return
+    const pan = SCALE.pans[0]
+    const piece = pullFromBag(this.state, pan)
+    if (!piece) return
+    this.flights.push({
+      id: piece.id,
+      q: piece.q,
+      from: to3(BAG_MOUTH, 4),
+      to: to3(pan, 12),
+      t0: this.t + 0.5,
+      duration: 0.8,
+      arc: 16,
+      carriesPiece: true,
+      land: () => {
+        if (!this.pieceById(piece.id) || this.state.liveMat !== 'scale') return
+        piece.x = pan.x
+        piece.y = pan.y
+        this.addPieceBody(piece, { y: this.restHeight(piece) + 3 })
+        this.sound.clack(0.5)
+        this.cadence.change(performance.now(), true)
+      },
+    })
+    this.changed()
   }
 
   // --- guidance ------------------------------------------------------------
@@ -303,6 +558,9 @@ export class TableController {
   }
 
   private computeGuidance(): GuidanceView {
+    if (this.story) {
+      return { hint: null, hand: this.storyHand(), glow: 0, glowStones: new Set(), glowBag: false, glowKnife: false, glowShelf: false, peek: null, guestsReach: false }
+    }
     const timing = this.scheduler.state(this.t, this.untouchedTable())
     const summary = this.summary()
     if (timing.demo === null) this.demoHint = null
@@ -362,7 +620,8 @@ export class TableController {
       const key = `guest-${index}`
       if (this.state.liveMat !== 'feeding') this.physics.removeFixture(key)
       else if (this.state.seats[index] && this.guestDrag?.seat !== index) this.physics.setFixture(key, { ...seat.guest, r: GUEST_RADIUS }, 10)
-      else if (!this.state.seats[index]) this.physics.setFixture(key, { ...seat.guest, r: 42 }, 3)
+      else if (!this.state.seats[index] && this.stoolsShown) this.physics.setFixture(key, { ...seat.guest, r: 42 }, 3)
+      else if (!this.state.seats[index]) this.physics.removeFixture(key)
       else this.physics.removeFixture(key)
     })
   }
@@ -427,6 +686,7 @@ export class TableController {
   pointerDown(pointerId: number, screen: Point, timeMs: number): void {
     this.sound.unlock()
     this.scheduler.touch(this.t)
+    this.endStory()
     this.screens.set(pointerId, screen)
     this.apply(this.tracker.down(pointerId, this.planePoint(screen), timeMs))
   }
@@ -481,7 +741,7 @@ export class TableController {
     const mats = this.shelfMats()
     for (let i = 0; i < mats.length; i++) {
       const tile = shelfTile(i)
-      if (within(to3(tile, tile.height + 1), 7) < Infinity) return { kind: 'shelf', mat: mats[i] }
+      if (within(to3(tile, tile.height + 3), 10) < Infinity) return { kind: 'shelf', mat: mats[i] }
     }
     if (this.state.liveMat === 'feeding' && this.feeding.leftover && within(to3(this.knife.at, 1), 6) < Infinity) return { kind: 'knife' }
 
@@ -497,6 +757,7 @@ export class TableController {
     if (this.state.liveMat === 'feeding') {
       for (let seat = 0; seat < FEEDING.seats.length; seat++) {
         const guest = FEEDING.seats[seat].guest
+        if (!this.state.seats[seat] && !this.stoolsShown) continue
         if (within(to3(guest, 5), 5.5) < Infinity) return this.state.seats[seat] ? { kind: 'guest', seat } : { kind: 'chair', seat }
       }
       if (within(to3(FEEDING.bowl, 1), FEEDING.bowl.r * UNIT, 0) < Infinity) return { kind: 'bowl' }
@@ -635,7 +896,8 @@ export class TableController {
     if (this.shelfDrag?.pointerId === pointerId) {
       const mat = this.shelfDrag.mat
       this.shelfDrag = null
-      if (at.x < SHELF.x - 20) this.bringOut(mat)
+      const slot = shelfTile(Math.max(0, this.shelfMats().indexOf(mat)))
+      if (Math.hypot(at.x - slot.x, at.y - slot.y) > 120) this.bringOut(mat)
       return
     }
     if (this.knife.pointerId === pointerId) return this.dropKnife()
@@ -724,6 +986,7 @@ export class TableController {
     this.munchStart = null
     this.pendingVoice = null
     this.sound.whoosh()
+    this.inviteOnScale()
     this.changed()
     this.cadence.change(performance.now(), true)
   }

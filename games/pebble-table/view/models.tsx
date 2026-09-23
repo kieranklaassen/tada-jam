@@ -456,7 +456,7 @@ function ellipseRope(rx: number, rz: number): THREE.BufferGeometry {
   return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 240, 0.42, 8, true)
 }
 
-export function FeedingSetting({ seats }: { seats: readonly boolean[] }) {
+export function FeedingSetting({ seats, showStools }: { seats: readonly boolean[]; showStools: boolean }) {
   const { clay, rug } = useClay()
   const center = to3({ x: 780, y: 470 })
   const bowl = to3(FEEDING.bowl)
@@ -473,29 +473,45 @@ export function FeedingSetting({ seats }: { seats: readonly boolean[] }) {
     }))
   const plates = useRef<THREE.InstancedMesh>(null)
   const stools = useRef<THREE.InstancedMesh>(null)
-  useEffect(() => {
-    let plateCount = 0
+  const seatKey = seats.map(Number).join('')
+  const reveal = useRef<{ at: number | null; shown: boolean }>({ at: null, shown: showStools })
+  const placeStools = (scale: number) => {
     let stoolCount = 0
     FEEDING.seats.forEach((seat, index) => {
-      if (seats[index]) {
-        const p = to3(seat.plate, 0.12)
-        scratch.m.makeTranslation(p.x, p.y, p.z)
-        plates.current?.setMatrixAt(plateCount++, scratch.m)
-      } else {
-        const p = to3(seat.guest)
-        scratch.m.makeTranslation(p.x, 0, p.z)
-        stools.current?.setMatrixAt(stoolCount++, scratch.m)
-      }
+      if (seats[index] || !showStools) return
+      const p = to3(seat.guest)
+      scratch.m.makeTranslation(p.x, 0, p.z).multiply(scratch.m2.makeScale(scale, scale, scale))
+      stools.current?.setMatrixAt(stoolCount++, scratch.m)
+    })
+    if (stools.current) {
+      stools.current.count = stoolCount
+      stools.current.instanceMatrix.needsUpdate = true
+    }
+  }
+  useEffect(() => {
+    let plateCount = 0
+    FEEDING.seats.forEach((seat, index) => {
+      if (!seats[index]) return
+      const p = to3(seat.plate, 0.12)
+      scratch.m.makeTranslation(p.x, p.y, p.z)
+      plates.current?.setMatrixAt(plateCount++, scratch.m)
     })
     if (plates.current) {
       plates.current.count = plateCount
       plates.current.instanceMatrix.needsUpdate = true
     }
-    if (stools.current) {
-      stools.current.count = stoolCount
-      stools.current.instanceMatrix.needsUpdate = true
-    }
-  }, [seats])
+    if (showStools && !reveal.current.shown) reveal.current.at = performance.now()
+    reveal.current.shown = showStools
+    placeStools(reveal.current.at === null ? 1 : 0.01)
+    // seatKey stands in for `seats`, which the controller mutates in place.
+  }, [seatKey, showStools])
+  useFrame(() => {
+    const at = reveal.current.at
+    if (at === null) return
+    const k = Math.min(1, (performance.now() - at) / 650)
+    placeStools(Math.max(0.01, easeOutBack(k)))
+    if (k >= 1) reveal.current.at = null
+  })
   return (
     <group>
       <mesh geometry={shapes.rug} material={rug} position={[center.x, 0.04, center.z]} scale={[42, 4, 30]} />
@@ -518,6 +534,8 @@ export type GuestPose = {
   hopAt: number | null
   /** The child tapped this guest. */
   pokeAt: number | null
+  /** This guest's hungry tummy rumbled. */
+  rumbleAt: number | null
   arriveAt: number | null
   now: number
 }
@@ -715,6 +733,14 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
     springStep(s.yaw, lookYaw, dt, personality.look.stiffness, personality.look.damping)
     springStep(s.pitch, pose.look ? 0.18 : 0, dt, personality.look.stiffness * 1.4, personality.look.damping)
 
+    const rumbleAge = pose.rumbleAt === null ? Infinity : now - pose.rumbleAt
+    if (rumbleAge < 0.9) {
+      const k = Math.exp(-rumbleAge * 4)
+      m.squash += Math.sin(rumbleAge * 42) * 0.06 * k
+      m.headPitch += 0.22 * Math.sin(Math.min(1, rumbleAge / 0.9) * Math.PI)
+      m.armForward[0] += 0.5 * k
+      m.armForward[1] += 0.5 * k
+    }
     const arrive = pose.arriveAt === null ? 1 : THREE.MathUtils.clamp((now - pose.arriveAt) / 0.4, 0, 1)
     const pop = pose.arriveAt === null || arrive >= 1 ? 1 : Math.max(0.01, easeOutBack(arrive))
     const vertical = 1 - m.squash
@@ -819,39 +845,43 @@ export function KnifeModel({ read }: { read: () => { at: Point; visible: boolean
   )
 }
 
-function tileGeometry(mat: MatKey): THREE.BufferGeometry {
-  const parts = [piece(geo.roundedBox(10, 0.14), PALETTE.tile, { scale: [9.5, 1.2, 12] }, { lump: 0.12, frequency: 0.4, ground: null })]
-  if (mat === 'scale') {
-    parts.push(piece(geo.cylinder(8), PALETTE.scaleWood, { position: [0, 0.9, 0], scale: [0.5, 0.8, 5.6], rotation: [0, 0, 0] }, { ground: null }))
-    parts.push(piece(geo.capsule(8), PALETTE.scaleWood, { position: [0, 0.9, -2.8], rotation: [0, 0, Math.PI / 2], scale: [0.45, 6, 0.45] }, { ground: null }))
-    for (const side of [-1, 1]) parts.push(piece(geo.dish(16), PALETTE.pan, { position: [side * 3, 0.8, 1.2], scale: [1.7, 4, 1.7] }, { ground: null }))
-  } else {
-    parts.push(piece(geo.bowl(16), PALETTE.bowl, { position: [0, 0.6, 0], scale: 1.8 }, { ground: null }))
-    for (const [x, z] of [
-      [-3, -3.4],
-      [3, -3.4],
-      [0, 3.8],
-    ]) {
-      parts.push(piece(geo.plate(16), PALETTE.plate, { position: [x, 0.65, z], scale: [1.4, 2, 1.4] }, { ground: null }))
+/** A big clay token for an activity: a cushion to sit on, with a small model of the activity on top. */
+function chooserGeometry(mat: MatKey): THREE.BufferGeometry {
+  const parts = [
+    piece(geo.sphere(28), PALETTE.tile, { position: [0, 1.2, 0], scale: [7.2, 1.6, 7.2] }, { lump: 0.25, frequency: 0.5, seed: 11 }),
+    piece(geo.torus(32, 0.12), PALETTE.shelf, { position: [0, 1.25, 0], rotation: [Math.PI / 2, 0, 0], scale: 7.1 }, { lump: 0.05, ground: null }),
+  ]
+  const stone = (x: number, y: number, z: number) => piece(geo.pebble(14), PALETTE.stone, { position: [x, y, z], scale: 1.2 }, { ground: null })
+  switch (mat) {
+    case 'scale':
+      parts.push(piece(geo.cylinder(10), PALETTE.scaleWood, { position: [0, 4.6, 0], scale: [0.7, 5.4, 0.7] }, { ground: null }))
+      parts.push(piece(geo.capsule(10), PALETTE.scaleWood, { position: [0, 7.3, 0], rotation: [0, 0, Math.PI / 2 + 0.22], scale: [0.6, 7.4, 0.6] }, { ground: null }))
+      parts.push(piece(geo.dish(18), PALETTE.pan, { position: [-3.4, 5.4, 0], scale: [2.4, 5, 2.4] }, { ground: null }))
+      parts.push(piece(geo.dish(18), PALETTE.pan, { position: [3.4, 3.8, 0], scale: [2.4, 5, 2.4] }, { ground: null }))
+      parts.push(stone(3.4, 4.5, 0))
+      break
+    case 'feeding':
+      parts.push(piece(geo.plate(24), PALETTE.plate, { position: [0, 2.9, 0], scale: [5, 3, 5] }, { ground: null }))
+      parts.push(piece(geo.bowl(20), PALETTE.bowl, { position: [0, 3.2, 0], scale: 2.6 }, { ground: null }))
+      parts.push(stone(-0.8, 4, 0.3), stone(0.9, 4.1, -0.4))
+      break
+    default: {
+      const unknown: never = mat
+      return unknown
     }
   }
   return merge(parts)
 }
 
+const CHOOSER_SCALE = 1.35
+
+/** The activity choosers: big tokens on the table's right margin that bob when the guidance points at them; tap or drag one onto the table to switch. */
 export function ShelfModel({ read }: { read: () => { mats: MatKey[]; drag: { mat: MatKey; at: Point } | null; glow: number; now: number } }) {
   const { clay } = useClay()
-  const refs = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
   const mats: MatKey[] = ['scale', 'feeding']
-  const tiles = once('tiles', () => mats.map(tileGeometry))
-  const rack = once('rack', () => {
-    const center = shelfTile(0)
-    const p = to3({ x: center.x, y: center.y + 95 })
-    return merge([
-      piece(geo.roundedBox(12, 0.2), PALETTE.shelf, { position: [p.x, 0.8, p.z], scale: [12, 1.6, 42] }, { lump: 0.2, frequency: 0.3 }),
-      piece(geo.roundedBox(12, 0.3), PALETTE.shelf, { position: [p.x + 5.5, 3, p.z], scale: [2, 6, 42] }, { lump: 0.2, frequency: 0.3 }),
-    ])
-  })
-  const hover = useRef([{ x: 0, v: 0 }, { x: 0, v: 0 }])
+  const refs = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
+  const tokens = once('choosers', () => mats.map(chooserGeometry))
+  const hover = useRef(mats.map(() => ({ x: 0, v: 0 })))
   useFrame((_, dt) => {
     const pose = read()
     mats.forEach((mat, i) => {
@@ -863,24 +893,23 @@ export function ShelfModel({ read }: { read: () => { mats: MatKey[]; drag: { mat
       if (pose.drag?.mat === mat) {
         const p = to3(pose.drag.at, 5)
         group.position.set(p.x, p.y, p.z)
-        group.rotation.set(0, 0, 0)
-        group.scale.setScalar(1.25)
+        group.rotation.set(0, -0.4, 0)
+        group.scale.setScalar(CHOOSER_SCALE * 1.15)
         return
       }
       const tile = shelfTile(index)
-      const bob = springStep(hover.current[i], pose.glow * (0.8 + 0.6 * Math.sin(pose.now * 3)), dt, 80, 10)
-      const p = to3(tile, tile.height + bob)
+      const lift = springStep(hover.current[i], pose.glow * (1.2 + 0.8 * Math.sin(pose.now * 3)), dt, 80, 10)
+      const p = to3(tile, tile.height + Math.max(0, lift))
       group.position.set(p.x, p.y, p.z)
-      group.rotation.set(0, 0, 0.5)
-      group.scale.setScalar(1)
+      group.rotation.set(0, -0.4 + Math.sin(pose.now * 0.7 + i) * 0.06, Math.sin(pose.now * 1.1 + i * 2) * 0.03)
+      group.scale.setScalar(CHOOSER_SCALE)
     })
   })
   return (
     <group>
-      <mesh geometry={rack} material={clay} />
       {mats.map((mat, i) => (
         <group key={mat} ref={refs[i]}>
-          <mesh geometry={tiles[i]} material={clay} />
+          <mesh geometry={tokens[i]} material={clay} />
         </group>
       ))}
     </group>

@@ -71,7 +71,7 @@ function shadows(table: TableController): Blob[] {
       if (table.state.seats[index]) {
         blobs.push({ at: seat.plate, ground: 0, radius: 8.8, strength: 0.22, stretch: 0.3 })
         blobs.push({ at: table.guestDrag?.seat === index ? table.guestDrag.at : seat.guest, ground: 0, radius: 9, strength: 0.75, stretch: 2.5 })
-      } else blobs.push({ at: seat.guest, ground: 0, radius: 5.2, strength: 0.4, stretch: 1.5 })
+      } else if (table.stoolsShown) blobs.push({ at: seat.guest, ground: 0, radius: 5.2, strength: 0.4, stretch: 1.5 })
     })
     if (table.feeding.leftover || table.knife.pointerId !== null) blobs.push({ at: table.knife.at, ground: 0, radius: 5.5, strength: 0.4, stretch: table.knife.pointerId !== null ? 5 : 0.5 })
   }
@@ -89,7 +89,7 @@ function glows(table: TableController): Blob[] {
   }
   if (g.glowBag && g.glow > 0) blobs.push({ at: { x: BAG.x + 20, y: BAG.y - 15 }, ground: 0, radius: 14, strength: g.glow * 0.8 })
   if (g.glowKnife && g.glow > 0) blobs.push({ at: table.knife.at, ground: 0, radius: 7 + 0.5 * Math.sin(table.t * 3), strength: g.glow })
-  if (g.glowShelf && g.glow > 0) blobs.push({ at: shelfTile(0), ground: 3.5, radius: 9, strength: g.glow })
+  if (g.glowShelf && g.glow > 0) blobs.push({ at: shelfTile(0), ground: 0.3, radius: 10, strength: g.glow })
   if (g.hand && g.hand.press > 0.3) blobs.push({ at: g.hand.at, ground: 0, radius: 4.5, strength: g.hand.press * g.hand.opacity * 0.7 })
   return blobs
 }
@@ -110,7 +110,8 @@ function World({ table }: { table: TableController }) {
   const guestPose = (seat: number): GuestPose => {
     return {
       look: table.gaze(seat),
-      reach: table.guidance.guestsReach ? table.guidance.glow : 0,
+      reach: table.asking(seat),
+      rumbleAt: table.rumbles.get(seat) ?? null,
       munchAt: table.munchStart,
       hopAt: hops.current.get(seat) ?? null,
       pokeAt: table.nudges.get(seat) ?? null,
@@ -136,7 +137,7 @@ function World({ table }: { table: TableController }) {
         <ScaleModel read={() => ({ angle: table.beam.angle, panY: [table.physics.panTop(0), table.physics.panTop(1)], now: table.t })} />
       ) : (
         <>
-          <FeedingSetting seats={table.state.seats} />
+          <FeedingSetting seats={table.state.seats} showStools={table.stoolsShown} />
           {FEEDING.seats.map((seat, index) =>
             table.state.seats[index] ? (
               <Guest key={index} seat={index} at={table.guestDrag?.seat === index ? table.guestDrag.at : seat.guest} read={() => guestPose(index)} />
