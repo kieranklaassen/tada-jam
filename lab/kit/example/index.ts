@@ -1,0 +1,10 @@
+// What the shell imports. Exports `proto` and nothing else. The panel does not
+// load this file (or view.ts): it reads meta.ts and sim.ts only.
+
+import type { Proto } from '../proto.ts'
+import { meta } from './meta.ts'
+import { createSim } from './sim.ts'
+import type { ExampleSnapshot } from './sim.ts'
+import { draw } from './view.ts'
+
+export const proto: Proto<ExampleSnapshot> = { meta, createSim, draw }
