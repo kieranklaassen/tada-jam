@@ -40,6 +40,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Pebble Table | Claymation 3D: plasticine with thumbprints, stop-motion lighting, terracotta on cool sage-teal | [`games/pebble-table/ART.md`](../games/pebble-table/ART.md) |
 | Felt Meadow | Felted wool 3D: a needle-felted nature table, heathered dyes, soft fuzzy halos on a few hero objects, light and saturated pieces on a mid-dark sage hill | [`games/felt-meadow/ART.md`](../games/felt-meadow/ART.md) |
 | Light Garden | Glass and light table 3D: frosted sea-glass creatures and glass tools on a milky light table in a dim teal room, beams of additive primary light | [`games/light-garden/ART.md`](../games/light-garden/ART.md) |
+| Frog Choir | Dusk-pastel toon 3D: three-step cel shading, plum ink outlines, a firefly that lights in stepped bands, coral-to-butter frogs on lilac pads over mint water under a peach sky | [`games/frog-choir/ART.md`](../games/frog-choir/ART.md) |
 
 ## 4. Menu of unclaimed directions
 
