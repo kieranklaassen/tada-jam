@@ -12,6 +12,7 @@ export type Target =
   | { kind: 'bee' }
   | { kind: 'snail' }
   | { kind: 'mouse' }
+  | { kind: 'burrow' }
   | { kind: 'grass' }
 
 export type GestureHandler = {

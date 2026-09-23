@@ -42,8 +42,8 @@ export type SeasonLook = {
 }
 
 export const SEASON_LOOKS: Readonly<Record<Season, SeasonLook>> = {
-  spring: { grass: '#6f8a5c', grassFleck: '#9fb77f', sky: '#f1e6d2', sun: '#f2c65a', scatter: 'blossom', scatterColors: ['#f3d3dc', '#fbf3ea', '#f6e3a8'] },
-  summer: { grass: '#76885a', grassFleck: '#b4b36c', sky: '#f3e3c6', sun: '#f0b43c', scatter: 'none', scatterColors: [] },
-  autumn: { grass: '#7a8458', grassFleck: '#b08a54', sky: '#efdcc4', sun: '#e59a4a', scatter: 'leaves', scatterColors: ['#b8542e', '#c98a33', '#8f4a2a'] },
-  winter: { grass: '#7d8e79', grassFleck: '#d9ddd2', sky: '#e8e6e0', sun: '#f1dfa8', scatter: 'snow', scatterColors: ['#f7f5ef', '#eeede8'] },
+  spring: { grass: '#5b714b', grassFleck: '#8ca170', sky: '#f1e6d2', sun: '#f2c65a', scatter: 'blossom', scatterColors: ['#f3d3dc', '#fbf3ea', '#f6e3a8'] },
+  summer: { grass: '#61704a', grassFleck: '#9e9d5f', sky: '#f3e3c6', sun: '#f0b43c', scatter: 'none', scatterColors: [] },
+  autumn: { grass: '#646c48', grassFleck: '#8f8a55', sky: '#efdcc4', sun: '#e59a4a', scatter: 'leaves', scatterColors: ['#b8542e', '#c98a33', '#8f4a2a'] },
+  winter: { grass: '#6a7a67', grassFleck: '#d9ddd2', sky: '#e8e6e0', sun: '#f1dfa8', scatter: 'snow', scatterColors: ['#f7f5ef', '#eeede8'] },
 }

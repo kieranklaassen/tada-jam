@@ -1,3 +1,5 @@
+import { smoothstep } from './math'
+
 // The hillside in world units (about a centimetre each): x runs right, z runs
 // toward the child, y is up. The hill rises gently away from the child to a
 // crest near the back, so the whole slope faces the camera. Everything that
@@ -18,7 +20,7 @@ export const PLOTS: readonly Point[] = [
 export const PLOT_RADIUS = 8.5
 export const MOLEHILL_HEIGHT = 4.2
 /** Height of a bloomed flower head above the molehill top. */
-export const STEM_HEIGHT = 13
+export const STEM_HEIGHT = 15.5
 
 export const POUCH: Point = { x: -62, z: 19 }
 export const POUCH_HEIGHT = 12
@@ -32,12 +34,10 @@ export const POUCH_SLOTS: readonly Point[] = [
 export const SEED_RADIUS = 2.8
 
 export const SNAIL_PATH = { left: 14, right: 72, z: 27 }
-export const BURROW: Point = { x: 62, z: -34 }
-
-function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)))
-  return t * t * (3 - 2 * t)
-}
+/** Right of the meadow, level with the molehills, so the mouse's outings happen where the child looks. */
+export const BURROW: Point = { x: 66, z: -6 }
+/** Where the child sits, under the camera, for characters that turn to look at her. */
+export const CHILD: Point = { x: 0, z: 210 }
 
 /** Height of the felt hill at (x, z): a slope that rises to a rounded crest, with soft swells. */
 export function groundY(x: number, z: number): number {

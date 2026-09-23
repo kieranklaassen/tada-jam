@@ -1,31 +1,23 @@
 import { RED, type Hue } from './colors'
 import { PLOTS, plotTop, STEM_HEIGHT } from './layout'
+import { smoothstep, stiffSpring, type Spring } from './math'
 
 // One molehill's flower, as springs. Planting runs a short timeline: the
 // soil takes the seed, the stem shoots up past its height and settles, the
 // leaves unfurl, the bud swells after a small squeeze (anticipation), and the
 // petals open one after another with overshoot. A bloomed flower sways in a
 // breeze, droops under the bee and springs back past rest when it leaves,
-// and wobbles on a tap. Picking it pulls it up and folds it into a seed.
+// and wobbles on a tap. Picking it pulls it up: the stem slips out of the
+// soil, the petals close around the seed, and the closed bud shrinks into it.
 
 export const PETALS = 6
 export const BLOOM_AT = 1.45
 export const GROWN_AT = 2.8
-export const PLUCK_SECONDS = 0.3
+/** How long a new flower stays new once it has finished opening. */
+export const NEW_SECONDS = 1
+export const PLUCK_SECONDS = 0.55
 
 export type FlowerPhase = 'empty' | 'growing' | 'bloom' | 'plucked'
-
-type Spring = { x: number; v: number }
-
-function spring(s: Spring, target: number, dt: number, stiffness: number, damping: number): number {
-  const steps = Math.max(1, Math.ceil(dt / (1 / 240)))
-  const h = dt / steps
-  for (let i = 0; i < steps; i++) {
-    s.v += (stiffness * (target - s.x) - damping * s.v) * h
-    s.x += s.v * h
-  }
-  return s.x
-}
 
 export class Flower {
   readonly plot: number
@@ -96,15 +88,35 @@ export class Flower {
     this.droop.v -= 12
   }
 
+  /** While picked: 0..1 how far the petals have closed around the seed. */
+  pluckClose(): number {
+    return this.phase === 'plucked' ? smoothstep(0, 0.3, this.pluckT) : 0
+  }
+
+  /** While picked: 1..0 how much of the closed bud is left as it shrinks into the seed. */
+  pluckKeep(): number {
+    return this.phase === 'plucked' ? 1 - smoothstep(0.22, PLUCK_SECONDS, this.pluckT) : 1
+  }
+
+  /** While picked: 1..0 how much of the stem still trails from the soil. */
+  pluckStem(): number {
+    return this.phase === 'plucked' ? 1 - smoothstep(0, 0.25, this.pluckT) : 1
+  }
+
   bloomed(): boolean {
     return this.phase === 'bloom' || (this.phase === 'growing' && this.age > BLOOM_AT + 0.3)
+  }
+
+  /** Still opening, or only just open: the moment the child planted it for. */
+  isNew(): boolean {
+    return this.phase === 'growing' || (this.phase === 'bloom' && this.age < GROWN_AT + NEW_SECONDS)
   }
 
   /** True during the frame the petals start to open (for the bloom note). */
   step(dt: number, t: number): boolean {
     const before = this.age
     this.age += dt
-    spring(this.soil, 0, dt, 160, 9)
+    stiffSpring(this.soil, 0, dt, 160, 9)
     if (this.phase === 'empty') return false
     if (this.phase === 'plucked') {
       this.pluckT += dt
@@ -112,17 +124,17 @@ export class Flower {
       return false
     }
     const age = this.age
-    spring(this.stem, age > 0.3 ? 1 : 0, dt, 95, 8.5)
-    spring(this.leaves, age > 0.68 ? 1 : 0, dt, 130, 8)
-    spring(this.bud, age > 1.0 ? 1 : 0, dt, 110, 10)
+    stiffSpring(this.stem, age > 0.3 ? 1 : 0, dt, 95, 8.5)
+    stiffSpring(this.leaves, age > 0.68 ? 1 : 0, dt, 130, 8)
+    stiffSpring(this.bud, age > 1.0 ? 1 : 0, dt, 110, 10)
     this.budSqueeze = age > 1.25 && age < BLOOM_AT ? Math.sin(((age - 1.25) / (BLOOM_AT - 1.25)) * Math.PI) : 0
-    for (let i = 0; i < PETALS; i++) spring(this.petals[i], age > BLOOM_AT + i * 0.05 ? 1 : 0, dt, 170, 7.5)
+    for (let i = 0; i < PETALS; i++) stiffSpring(this.petals[i], age > BLOOM_AT + i * 0.05 ? 1 : 0, dt, 170, 7.5)
     if (this.phase === 'growing' && age >= GROWN_AT) this.phase = 'bloom'
 
     const breeze = Math.sin(t * 0.9 + this.phaseOffset) * 0.5 + Math.sin(t * 2.3 + this.phaseOffset * 1.7) * 0.18
-    spring(this.bendX, breeze + (this.beeOn ? 0.6 : 0), dt, 42, 3.4)
-    spring(this.bendZ, Math.sin(t * 0.7 + this.phaseOffset * 0.6) * 0.3, dt, 42, 3.4)
-    spring(this.droop, this.beeOn ? 1.9 : 0, dt, 60, 4.2)
+    stiffSpring(this.bendX, breeze + (this.beeOn ? 0.6 : 0), dt, 42, 3.4)
+    stiffSpring(this.bendZ, Math.sin(t * 0.7 + this.phaseOffset * 0.6) * 0.3, dt, 42, 3.4)
+    stiffSpring(this.droop, this.beeOn ? 1.9 : 0, dt, 60, 4.2)
     return before < BLOOM_AT && age >= BLOOM_AT
   }
 

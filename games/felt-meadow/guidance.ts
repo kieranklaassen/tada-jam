@@ -6,7 +6,10 @@ import { PLOTS, POUCH_SLOTS, type Point } from './layout'
 // plant a loose seed, else plant a seed from the pouch, else tap a flower so
 // the bee visits it, else pick a flower to make room. A glow ring breathes on
 // that act first; a little later a felt hand shows it once. Demonstrations
-// back off and stop after four, and any touch clears everything at once.
+// back off and stop after four, then the glow fades too and the meadow goes
+// quiet. The bee beckons (looks at the child, then at the molehill) only
+// around the glow's first rise and each demonstration, so between them it
+// lives its own life. Any touch clears everything at once.
 
 export type HintKind = 'plantLoose' | 'plantPouch' | 'callBee' | 'pick'
 
@@ -93,7 +96,20 @@ export type GuidanceTiming = {
   invite: number
   /** Seconds since the last touch. */
   idle: number
+  /** True while a character may point the child toward the hint with its body. */
+  beckon: boolean
 }
+
+/** How long the glow takes to fade once the last demonstration is over. */
+export const QUIET_FADE = 2.5
+/** A character starts beckoning this long before a demonstration and keeps on this long after it. */
+export const BECKON_MARGIN = 1.2
+/** After something the child is watching, no demonstration starts for this long. */
+export const SETTLE_HOLD = IDLE_BEFORE_DEMO - (IDLE_BEFORE_GLOW - 1)
+
+/** Idle seconds at which each demonstration starts: after IDLE_BEFORE_DEMO, then with doubling gaps. */
+const DEMO_STARTS: readonly number[] = Array.from({ length: MAX_DEMOS }, (_, i) => IDLE_BEFORE_DEMO + i * DEMO_SECONDS + IDLE_BEFORE_DEMO * 2 * (2 ** i - 1))
+const LAST_DEMO_END = DEMO_STARTS[MAX_DEMOS - 1] + DEMO_SECONDS
 
 /** When to guide. Time is seconds of attended play; any touch resets the idle clock. */
 export class GuidanceClock {
@@ -111,23 +127,38 @@ export class GuidanceClock {
     this.touched = true
   }
 
-  /** Something happened in the meadow that the child is watching (a bloom, the bee's seed): hold off hints. */
+  /**
+   * Something happened in the meadow that the child is watching (a bloom, the
+   * bee's seed): no demonstration starts for SETTLE_HOLD. Before the first one
+   * the glow waits too. Later it only pushes back the demonstration that is
+   * due (rewinding one in progress), so the back-off carries on and a busy bee
+   * cannot start the demonstrations over.
+   */
   settle(now: number): void {
-    if (now - this.idleSince > IDLE_BEFORE_GLOW - 1) this.idleSince = now - (IDLE_BEFORE_GLOW - 1)
+    const idle = now - this.idleSince
+    if (idle < IDLE_BEFORE_DEMO) {
+      if (idle > IDLE_BEFORE_GLOW - 1) this.idleSince = now - (IDLE_BEFORE_GLOW - 1)
+      return
+    }
+    for (const start of DEMO_STARTS) {
+      if (idle >= start + DEMO_SECONDS) continue
+      if (idle > start - SETTLE_HOLD) this.idleSince = now - (start - SETTLE_HOLD)
+      return
+    }
   }
 
   timing(now: number, untouchedMeadow: boolean, out: GuidanceTiming): GuidanceTiming {
     const idle = now - this.idleSince
     out.idle = idle
-    out.glow = idle < IDLE_BEFORE_GLOW ? 0 : Math.min(1, (idle - IDLE_BEFORE_GLOW) / 1.2) * (0.6 + 0.4 * Math.sin(now * 2.2))
     out.demo = -1
-    let start = IDLE_BEFORE_DEMO
-    let gap = IDLE_BEFORE_DEMO * 2
-    for (let i = 0; i < MAX_DEMOS; i++) {
+    out.beckon = idle >= IDLE_BEFORE_GLOW && idle < IDLE_BEFORE_DEMO
+    for (const start of DEMO_STARTS) {
       if (idle >= start && idle < start + DEMO_SECONDS) out.demo = (idle - start) / DEMO_SECONDS
-      start += DEMO_SECONDS + gap
-      gap *= 2
+      if (idle >= start - BECKON_MARGIN && idle < start + DEMO_SECONDS + BECKON_MARGIN) out.beckon = true
     }
+    const rise = Math.min(1, Math.max(0, (idle - IDLE_BEFORE_GLOW) / 1.2))
+    const fade = 1 - Math.min(1, Math.max(0, (idle - LAST_DEMO_END) / QUIET_FADE))
+    out.glow = idle < IDLE_BEFORE_GLOW ? 0 : rise * fade * (0.6 + 0.4 * Math.sin(now * 2.2))
     out.invite = -1
     if (!this.touched && untouchedMeadow) {
       const since = now - this.openedAt - INVITE_DELAY

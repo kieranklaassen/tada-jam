@@ -2,7 +2,9 @@
 // tier: a slow second drops one tier (two when it is very slow); a long run
 // at the display's full rate tries the next tier up. A tier that has failed
 // twice becomes a ceiling for the rest of the session, so the game never
-// oscillates. `?tier=N` pins a tier for testing.
+// oscillates. Stalls and paced frames are skipped, and touch devices start
+// one tier down.
+// `?tier=N` pins a tier for testing.
 
 export type Tier = {
   dpr: number
@@ -27,6 +29,17 @@ export const VERY_SLOW_MS = 34
 export const FULL_RATE_MS = 18
 export const UPGRADE_AFTER_SECONDS = 8
 export const SETTLE_SECONDS = 0.6
+/** A gap this long is a stall (a paused debugger, a tab switch the loop missed), not a slow device. */
+export const STALL_MS = 1000
+
+/**
+ * Touch devices (tablets) start one tier down, so the first seconds never lag
+ * while the controller learns; a fast one earns the top tier after
+ * UPGRADE_AFTER_SECONDS at full rate.
+ */
+export function startingTier(coarsePointer: boolean): number {
+  return coarsePointer ? 1 : 0
+}
 
 export class TierController {
   tier: number
@@ -39,9 +52,9 @@ export class TierController {
   private goodSince = 0
   private settleUntil = 0
 
-  constructor(pinnedTier: number | null, now = 0) {
+  constructor(pinnedTier: number | null, now = 0, start = 0) {
     this.pinned = pinnedTier !== null
-    this.tier = pinnedTier === null ? 0 : Math.min(TIERS.length - 1, Math.max(0, Math.round(pinnedTier)))
+    this.tier = Math.min(TIERS.length - 1, Math.max(0, Math.round(pinnedTier ?? start)))
     this.windowStart = now
     this.goodSince = now
   }
@@ -53,11 +66,8 @@ export class TierController {
   /** Feed one frame interval (ms) at time `now` (s). Returns true when the tier changed. */
   frame(intervalMs: number, now: number): boolean {
     if (this.pinned) return false
-    if (now < this.settleUntil) {
-      this.windowStart = now
-      this.goodSince = now
-      this.sum = 0
-      this.frames = 0
+    if (now < this.settleUntil || intervalMs > STALL_MS) {
+      this.skip(now)
       return false
     }
     this.sum += intervalMs
@@ -75,6 +85,17 @@ export class TierController {
     if (average > FULL_RATE_MS) this.goodSince = now
     else if (now - this.goodSince >= UPGRADE_AFTER_SECONDS && this.tier > this.ceiling) return this.set(this.tier - 1, now)
     return false
+  }
+
+  /**
+   * An interval that says nothing about the device (a stall, or one spanning a
+   * frame deliberately skipped while the meadow rests): start the measurement over.
+   */
+  skip(now: number): void {
+    this.windowStart = now
+    this.goodSince = now
+    this.sum = 0
+    this.frames = 0
   }
 
   private set(tier: number, now: number): boolean {

@@ -22,6 +22,7 @@ import {
   type Side,
 } from 'three'
 import { BLUE, BROWN, GREEN, ORANGE, PURPLE, RED, YELLOW, type Hue } from '../colors'
+import { seeded } from '../math'
 
 // Felt, procedurally. Colours are authored as the values they should show on
 // screen and pass through untouched (the renderer outputs them as-is, with no
@@ -41,24 +42,27 @@ export function hexCss(hex: number): string {
 }
 
 export const HUE_HEX: Readonly<Record<Hue, number>> = {
-  [RED]: 0xcf4636,
-  [ORANGE]: 0xec8434,
+  [RED]: 0xdb5140,
+  [ORANGE]: 0xef8c3c,
   [YELLOW]: 0xf6cb3c,
-  [GREEN]: 0x8cc653,
-  [BLUE]: 0x3e72d0,
-  [PURPLE]: 0x9656c0,
-  [BROWN]: 0xa8693c,
+  [GREEN]: 0x93cc5a,
+  [BLUE]: 0x5086de,
+  [PURPLE]: 0xa468ce,
+  [BROWN]: 0xb07446,
 }
 
-/** Petals are the seed's dye, a touch lighter, so a bloom reads as the same colour grown up. */
+/**
+ * Petals are the seed's dye, a touch lighter, so a bloom reads as the same colour grown up.
+ * Every dye sits clearly lighter than the moss ground, so flowers and seeds separate by value, not only by hue.
+ */
 export const PETAL_HEX: Readonly<Record<Hue, number>> = {
-  [RED]: 0xdc5443,
-  [ORANGE]: 0xf49445,
-  [YELLOW]: 0xfad75a,
-  [GREEN]: 0x9dd467,
-  [BLUE]: 0x5a88dc,
-  [PURPLE]: 0xa76ccc,
-  [BROWN]: 0xb97b4c,
+  [RED]: 0xe8604e,
+  [ORANGE]: 0xf69a4c,
+  [YELLOW]: 0xfbd95e,
+  [GREEN]: 0xa3d86d,
+  [BLUE]: 0x6897e8,
+  [PURPLE]: 0xb27cd8,
+  [BROWN]: 0xc0875a,
 }
 
 export const CENTRE_HEX: Readonly<Record<Hue, number>> = {
@@ -104,17 +108,6 @@ export const PALETTE = {
   cloud: 0xfbf8f2,
   hand: 0xfbf4e6,
   glow: 0xfff1c9,
-}
-
-function seeded(seed: number): () => number {
-  let a = seed >>> 0
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0
-    let t = a
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
 }
 
 const SIZE = 256
