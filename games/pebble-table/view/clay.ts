@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { furMaterial, quillMaterial, tuftTexture } from './fur'
 
 // Pebble Table's claymation look (games/pebble-table/ART.md): everything is plasticine.
 // One shared clay material with vertex colours and a tiling thumbprint
@@ -293,6 +294,10 @@ export type ClayMaterials = {
   rug: THREE.MeshStandardMaterial
   shadow: THREE.MeshBasicMaterial
   glow: THREE.MeshBasicMaterial
+  /** Instanced clay-tuft shells over furry guests. */
+  fur: THREE.MeshStandardMaterial
+  /** Instanced hedgehog quills that sway. */
+  quill: THREE.MeshStandardMaterial
   dispose(): void
 }
 
@@ -319,6 +324,9 @@ export function createClayMaterials(): ClayMaterials {
   const stones = new THREE.MeshStandardMaterial({ color: PALETTE.stone, roughness: 0.55, normalMap, normalScale: new THREE.Vector2(1.1, 1.1) })
   const rope = ropeTextures()
   const rug = new THREE.MeshStandardMaterial({ map: rope.map, normalMap: rope.normal, roughness: 0.95 })
+  const tufts = tuftTexture()
+  const fur = furMaterial(clay, tufts, 0.55)
+  const quill = quillMaterial(clay)
   const shadow = overlayMaterial('#3b2a22', THREE.NormalBlending)
   const glow = overlayMaterial(PALETTE.glow, THREE.NormalBlending)
   return {
@@ -327,8 +335,11 @@ export function createClayMaterials(): ClayMaterials {
     rug,
     shadow,
     glow,
+    fur,
+    quill,
     dispose() {
-      for (const material of [clay, stones, rug, shadow, glow]) material.dispose()
+      for (const material of [clay, stones, rug, shadow, glow, fur, quill]) material.dispose()
+      tufts.dispose()
       normalMap.dispose()
       rope.map.dispose()
       rope.normal.dispose()

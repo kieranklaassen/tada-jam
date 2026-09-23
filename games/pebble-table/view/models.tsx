@@ -1,9 +1,10 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
 import { BAG, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
 import { createClayMaterials, merge, PALETTE, piece, type ClayMaterials } from './clay'
+import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
 import * as geo from './geometry'
 
 // Claymation models. Rigid props are merged into one mesh each (one draw
@@ -19,6 +20,9 @@ export function ClayProvider({ children }: { children: ReactNode }) {
     const timer = setTimeout(prewarm, 400)
     return () => clearTimeout(timer)
   }, [])
+  useFrame((state) => {
+    furTime.value = state.clock.elapsedTime
+  })
   return <ClayContext.Provider value={materials}>{children}</ClayContext.Provider>
 }
 
@@ -412,23 +416,20 @@ export type GuestPose = {
 
 const NECK_Y = 7.4
 
-function spikes(count: number, center: V3, radius: number, from: number, to: number, seed: number, length = 1.6): THREE.BufferGeometry[] {
-  const parts: THREE.BufferGeometry[] = []
-  const cone = geo.cylinder(6, 0, 1)
-  for (let i = 0; i < count; i++) {
-    const t = (i + 0.5) / count
-    const theta = i * 2.39996 + seed
-    const phi = from + (to - from) * t
-    const dir = new THREE.Vector3(Math.sin(phi) * Math.sin(theta), Math.cos(phi), -Math.abs(Math.sin(phi) * Math.cos(theta)) * 0.9 - 0.25).normalize()
-    const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir)
-    const euler = new THREE.Euler().setFromQuaternion(quaternion)
-    const base: V3 = [center[0] + dir.x * radius, center[1] + dir.y * radius, center[2] + dir.z * radius]
-    parts.push(piece(cone, PALETTE.spikes, { position: [base[0] + dir.x * length * 0.4, base[1] + dir.y * length * 0.4, base[2] + dir.z * length * 0.4], rotation: [euler.x, euler.y, euler.z], scale: [0.55, length, 0.55] }, { ground: null }))
-  }
-  return parts
+type GuestShapes = {
+  body: THREE.BufferGeometry
+  head: THREE.BufferGeometry
+  eyes: THREE.BufferGeometry
+  mouth: THREE.BufferGeometry
+  arm: THREE.BufferGeometry
+  /** Shell geometry for clay-tuft fur (rabbit, bear), or null. */
+  furBody: THREE.BufferGeometry | null
+  furHead: THREE.BufferGeometry | null
+  /** Hedgehog quills: one shared quill and where each instance sits, for the body and the head. */
+  quill: THREE.BufferGeometry | null
+  quillsBody: THREE.Matrix4[]
+  quillsHead: THREE.Matrix4[]
 }
-
-type GuestShapes = { body: THREE.BufferGeometry; head: THREE.BufferGeometry; eyes: THREE.BufferGeometry; mouth: THREE.BufferGeometry; arm: THREE.BufferGeometry }
 
 function guestShapes(species: Species): GuestShapes {
   const fur = species === 'rabbit' ? PALETTE.rabbit : species === 'bear' ? PALETTE.bear : PALETTE.hedgehog
@@ -441,7 +442,7 @@ function guestShapes(species: Species): GuestShapes {
     piece(sphere, fur, { position: [2, 0.6, 2.2], scale: [1.5, 0.8, 1.9] }, { lump: 0.1 }),
   ]
   if (species === 'rabbit') body.push(piece(sphere, '#fbf4e8', { position: [0, 2.2, -3.8], scale: 1.4 }, { lump: 0.2 }))
-  if (species === 'hedgehog') body.push(...spikes(46, [0, 4.2, 0], 3.7, 0.15, 1.75, 1))
+
   const headSphere: V3 = [0, 3.1, 0.2]
   const head = [piece(sphere, fur, { position: headSphere, scale: species === 'hedgehog' ? [3.4, 3.1, 3.3] : [3.5, 3.3, 3.3] }, { lump: 0.22, frequency: 0.7, seed: 3, ground: null })]
   const muzzle = species === 'hedgehog' ? { position: [0, 2.3, 3.4] as V3, scale: [1.5, 1.3, 1.9] as V3 } : { position: [0, 2.3, 2.9] as V3, scale: [1.8, 1.3, 1.1] as V3 }
@@ -459,7 +460,7 @@ function guestShapes(species: Species): GuestShapes {
       head.push(piece(sphere, fur, { position: [side * 2.4, 5.2, 0.2], scale: [0.8, 0.8, 0.5] }, { ground: null }))
     }
   }
-  if (species === 'hedgehog') head.push(...spikes(22, headSphere, 3.0, 0.2, 1.1, 5, 1.4))
+
   const eyes = [-1, 1].flatMap((side) => [
     piece(sphere, PALETTE.eye, { position: [side * 1.35, 0, 2.95], scale: [0.62, 0.72, 0.5] }, { ground: null }),
     piece(sphere, PALETTE.shine, { position: [side * 1.35 + 0.2, 0.25, 3.35], scale: 0.18 }, { ground: null }),
@@ -470,6 +471,11 @@ function guestShapes(species: Species): GuestShapes {
     eyes: merge(eyes),
     mouth: merge([piece(geo.capsule(10), PALETTE.mouth, { rotation: [0, 0, Math.PI / 2], scale: [0.3, 0.7, 0.3] }, { ground: null })]),
     arm: merge([piece(geo.capsule(12), fur, { position: [0, -1.5, 0], scale: [1.2, 1.6, 1.2] }, { lump: 0.08, ground: null })]),
+    furBody: species === 'hedgehog' ? null : withShells(piece(sphere, fur, { position: [0, 4, 0], scale: [4.4, 4.1, 4.1] }, { lump: 0.3, frequency: 0.55, seed: 1 })),
+    furHead: species === 'hedgehog' ? null : withShells(piece(sphere, fur, { position: headSphere, scale: [3.5, 3.3, 3.3] }, { lump: 0.22, frequency: 0.7, seed: 3, ground: null })),
+    quill: species === 'hedgehog' ? quillGeometry(PALETTE.spikes, '#c9a27a') : null,
+    quillsBody: species === 'hedgehog' ? quillLayout(70, [0, 4.2, 0], 4.0, 1, 0.12, 1.8) : [],
+    quillsHead: species === 'hedgehog' ? quillLayout(26, headSphere, 3.2, 5, 0.15, 1.15) : [],
   }
 }
 
@@ -510,7 +516,12 @@ function easeOutBack(t: number): number {
  * and pops in with an overshoot when seated.
  */
 export function Guest({ seat, at, read }: { seat: number; at: Point; read: () => GuestPose }) {
-  const { clay } = useClay()
+  const { clay, fur, quill } = useClay()
+  const camera = useThree((state) => state.camera)
+  const viewport = useThree((state) => state.size)
+  const dpr = useThree((state) => state.viewport.dpr)
+  const furParts = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)]
+  const quillParts = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)]
   const species = SEAT_SPECIES[seat % SEAT_SPECIES.length]
   const shapes = speciesShapes(species)
   const root = useRef<THREE.Group>(null)
@@ -525,10 +536,31 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
   const p = to3(at)
   const phase = seat * 1.37
 
+  useEffect(() => {
+    ;[shapes.quillsBody, shapes.quillsHead].forEach((matrices, i) => {
+      const instanced = quillParts[i].current
+      if (!instanced) return
+      matrices.forEach((matrix, k) => {
+        instanced.setMatrixAt(k, matrix)
+        const tint = 0.9 + ((k * 37) % 17) / 17 * 0.2
+        instanced.setColorAt(k, scratch.c.setRGB(tint, tint, tint))
+      })
+      instanced.instanceMatrix.needsUpdate = true
+      if (instanced.instanceColor) instanced.instanceColor.needsUpdate = true
+    })
+  }, [shapes])
+
   useFrame((_, dt) => {
     const pose = read()
     const s = springs.current
     const now = pose.now
+
+    // Shell LOD: more shells only when the guest is big on screen.
+    const a = new THREE.Vector3(p.x, 6, p.z).project(camera)
+    const b = new THREE.Vector3(p.x + 6 * GUEST_SIZE, 6, p.z).project(camera)
+    const pixels = (Math.abs(b.x - a.x) / 2) * viewport.width * dpr
+    const shells = THREE.MathUtils.clamp(Math.round(pixels / 12), 3, MAX_SHELLS)
+    for (const ref of furParts) if (ref.current) ref.current.count = shells
 
     let lookYaw = Math.sin(now * 0.5 + phase) * 0.12
     if (pose.look) {
@@ -593,6 +625,8 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
     <group position={[p.x, 0, p.z]} rotation={[0, yaw, 0]}>
       <group ref={root}>
         <mesh geometry={shapes.body} material={clay} />
+        {shapes.furBody && <instancedMesh ref={furParts[0]} args={[shapes.furBody, fur, MAX_SHELLS]} frustumCulled={false} />}
+        {shapes.quill && <instancedMesh ref={quillParts[0]} args={[shapes.quill, quill, shapes.quillsBody.length]} frustumCulled={false} />}
         {[-1, 1].map((side, i) => (
           <group key={side} ref={arms[i]} position={[side * 3.9, 4.7, 0.9]}>
             <mesh geometry={shapes.arm} material={clay} />
@@ -600,6 +634,8 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
         ))}
         <group ref={head} position={[0, NECK_Y, 0]}>
           <mesh geometry={shapes.head} material={clay} />
+          {shapes.furHead && <instancedMesh ref={furParts[1]} args={[shapes.furHead, fur, MAX_SHELLS]} frustumCulled={false} />}
+          {shapes.quill && <instancedMesh ref={quillParts[1]} args={[shapes.quill, quill, shapes.quillsHead.length]} frustumCulled={false} />}
           <mesh ref={eyes} geometry={shapes.eyes} material={clay} position={[0, 3.7, 0]} />
           <mesh ref={mouth} geometry={shapes.mouth} material={clay} position={[0, 1.65, species === 'hedgehog' ? 4.9 : 3.85]} />
         </group>
