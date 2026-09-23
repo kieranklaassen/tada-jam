@@ -3,7 +3,7 @@ import { bestHint, CoverageMeter, stirLevel, TAP_TURN, wakeRuleForAge, wakes, ty
 import { buildCreature, CREATURE_ORDER, type CreatureKind } from './creatures'
 import { STAGE } from './projection'
 import { SHAPE_KINDS } from './shapes'
-import { defaultShapes } from './state'
+import { defaultShapes, INVITE_SHAPE } from './state'
 
 function rack(): Placed[] {
   return defaultShapes().map((s) => ({ kind: s.kind, pose: { x: s.x, z: s.z, angle: s.angle, yaw: 0, lift: 0 } }))
@@ -30,11 +30,13 @@ function solveByHints(kind: CreatureKind, placed: Placed[], rule = wakeRuleForAg
 }
 
 describe('coverage', () => {
-  it('the shapes at rest in their racks leave the screen clean', () => {
+  it('at rest every outline is empty, and only the shape standing out on its own casts a shadow on the screen', () => {
     for (const kind of CREATURE_ORDER) {
       const result = measure(kind, rack())
       expect(result.fill, kind).toBe(0)
-      expect(result.spill, kind).toBe(0)
+      expect(result.spill, kind).toBeGreaterThan(0.02)
+      const racked = rack().filter((placed) => placed.kind !== INVITE_SHAPE)
+      expect(measure(kind, racked).spill, `${kind} without the ${INVITE_SHAPE}`).toBe(0)
     }
   })
 
@@ -105,6 +107,28 @@ describe('coverage', () => {
     while (!meter.continueSearch(1, () => (clock += 0.05))) slices++
     expect(slices).toBeGreaterThan(1)
     expect(meter.best).toEqual(whole)
+  })
+
+  it('a search slice ends within a few candidates of its budget, so a slow tablet never gets a long frame', () => {
+    const meter = new CoverageMeter(buildCreature('bird'))
+    const placed = rack()
+    bestHint(meter, placed)
+    const t0 = performance.now()
+    bestHint(meter, placed)
+    // An upper bound on candidates, so this is a floor on what one costs.
+    const candidate = (performance.now() - t0) / (3 * 7 * 16 * placed.length)
+    const budget = 0.3
+    const overruns = Array.from({ length: 3 }, () => {
+      meter.beginSearch(placed)
+      const slices: number[] = []
+      for (let done = false; !done; ) {
+        const start = performance.now()
+        done = meter.continueSearch(budget)
+        slices.push(performance.now() - start - budget)
+      }
+      return slices.sort((a, b) => a - b)[Math.floor(slices.length * 0.9)]
+    })
+    expect(Math.min(...overruns) / candidate).toBeLessThan(4)
   })
 
   it('measuring allocates nothing that grows with use', () => {
