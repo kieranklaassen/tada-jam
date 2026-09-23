@@ -10,6 +10,7 @@ import { PALETTE, type RGB } from './palette'
 // toward the child, y up; the panel's surface is y = 0.
 
 const WHITE: RGB = [1, 1, 1]
+const BRASS: RGB = [0.95, 0.74, 0.4]
 
 class Builder {
   private positions: number[] = []
@@ -99,25 +100,31 @@ function addKnob(builder: Builder, kind: PieceKind): void {
   const knob = KNOB[kind]
   const dx = Math.cos(knob.angle)
   const dz = Math.sin(knob.angle)
-  const start = kind === 'lamp' ? 3.2 : kind === 'prism' ? 3.1 : 1.2
+  const start = kind === 'lamp' ? 3.2 : kind === 'prism' ? 3.1 : 1.5
   const length = knob.distance - start - 0.9
   const mid = start + length / 2
   const yaw = -Math.atan2(dz, dx)
-  builder.add(roundedBox(length, 0.45, 0.6, 0.2, 1), at(dx * mid, 0.55, dz * mid, 0, yaw, 0), [0.86, 0.93, 0.92], PART.knob)
-  builder.add(new THREE.SphereGeometry(1.3, 16, 10), at(dx * knob.distance, 1.05, dz * knob.distance, 0, 0, 0, 1, 0.78, 1), [0.97, 1, 0.99], PART.knob, 0.16)
-  builder.add(new THREE.TorusGeometry(1.35, 0.22, 6, 20), at(dx * knob.distance, 0.45, dz * knob.distance, Math.PI / 2), [0.8, 0.9, 0.9], PART.knob)
+  // A frosted bead in the piece's own glass on a slim darker arm: plainly a handle, and plainly whose, without shouting.
+  builder.add(roundedBox(length, 0.4, 0.55, 0.18, 1), at(dx * mid, 0.5, dz * mid, 0, yaw, 0), [0.62, 0.7, 0.7], PART.knob)
+  builder.add(new THREE.SphereGeometry(1.3, 16, 10), at(dx * knob.distance, 1.05, dz * knob.distance, 0, 0, 0, 1, 0.78, 1), [0.86, 0.88, 0.88], PART.knob, 0.05)
+  builder.add(new THREE.TorusGeometry(1.35, 0.22, 6, 20), at(dx * knob.distance, 0.45, dz * knob.distance, Math.PI / 2), BRASS, PART.knob)
 }
 
 function lamp(): THREE.BufferGeometry {
   const b = new Builder()
-  const brass: RGB = [0.95, 0.74, 0.4]
+  // A little glass lighthouse: a squat tower, a glowing lantern room behind brass bars, a pointed roof.
   b.add(new THREE.CylinderGeometry(3.4, 3.6, 0.9, 24), at(0, 0.45, 0), scale(WHITE, 0.72))
-  b.add(new THREE.CylinderGeometry(2.8, 3.2, 2.3, 24), at(0, 2.0, 0))
-  b.add(new THREE.TorusGeometry(2.85, 0.28, 8, 28), at(0, 3.1, 0, Math.PI / 2), brass)
-  // The lantern dome glows softly: this is where the light comes from.
-  b.add(new THREE.SphereGeometry(2.55, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), at(0, 3.15, 0, 0, 0, 0, 1, 0.72, 1), [1, 0.97, 0.9], PART.rigid, 0.55)
-  b.add(new THREE.SphereGeometry(0.55, 12, 8), at(0, 5.05, 0), brass)
-  b.add(new THREE.CylinderGeometry(1.35, 1.2, 2.3, 20), at(3.3, 1.9, 0, 0, 0, -Math.PI / 2), brass)
+  b.add(new THREE.CylinderGeometry(2.3, 2.9, 1.9, 24), at(0, 1.85, 0))
+  b.add(new THREE.TorusGeometry(2.4, 0.26, 8, 28), at(0, 2.8, 0, Math.PI / 2), BRASS)
+  b.add(new THREE.CylinderGeometry(2.0, 2.0, 2.4, 20), at(0, 4.0, 0), [1, 0.97, 0.9], PART.rigid, 0.7)
+  for (let i = 0; i < 4; i++) {
+    const a = Math.PI / 4 + (i * Math.PI) / 2
+    b.add(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 6), at(Math.cos(a) * 2.05, 4.0, Math.sin(a) * 2.05), BRASS)
+  }
+  b.add(new THREE.CylinderGeometry(0.2, 1.7, 1.1, 20), at(0, 5.75, 0), scale(WHITE, 1.05))
+  b.add(new THREE.TorusGeometry(1.75, 0.2, 6, 24), at(0, 5.2, 0, Math.PI / 2), BRASS)
+  b.add(new THREE.SphereGeometry(0.45, 12, 8), at(0, 6.4, 0), BRASS)
+  b.add(new THREE.CylinderGeometry(1.35, 1.2, 2.3, 20), at(3.3, 1.9, 0, 0, 0, -Math.PI / 2), BRASS)
   b.add(new THREE.CircleGeometry(1.12, 20), at(4.46, 1.9, 0, 0, Math.PI / 2, 0), [1, 0.98, 0.92], PART.rigid, 1.2)
   addKnob(b, 'lamp')
   return b.build()
@@ -126,11 +133,11 @@ function lamp(): THREE.BufferGeometry {
 function mirror(): THREE.BufferGeometry {
   const b = new Builder()
   const length = MIRROR_HALF * 2
-  const foot: RGB = [0.72, 0.86, 0.84]
-  b.add(roundedBox(length + 0.6, 0.9, 2.4, 0.4), at(0, 0.45, 0), foot)
-  b.add(new THREE.BoxGeometry(length, 3.4, 0.62, 1, 1, 1), at(0, 2.5, 0), [0.92, 0.96, 1], PART.mirrorFace)
-  b.add(roundedBox(length + 0.4, 0.42, 0.9, 0.18), at(0, 4.25, 0), foot)
-  for (const end of [-1, 1]) b.add(new THREE.CylinderGeometry(0.5, 0.5, 3.9, 12), at(end * (MIRROR_HALF + 0.1), 2.45, 0), [0.9, 1, 0.98])
+  // A silvered pane in a brass frame, like a hand mirror; the brass matches the lamps.
+  b.add(roundedBox(length + 0.6, 0.9, 2.4, 0.4), at(0, 0.45, 0), [0.86, 0.9, 0.88])
+  b.add(new THREE.BoxGeometry(length, 3.4, 0.62, 1, 1, 1), at(0, 2.5, 0), WHITE, PART.mirrorFace)
+  b.add(roundedBox(length + 0.4, 0.42, 0.9, 0.18), at(0, 4.25, 0), BRASS)
+  for (const end of [-1, 1]) b.add(new THREE.CylinderGeometry(0.5, 0.5, 3.9, 12), at(end * (MIRROR_HALF + 0.1), 2.45, 0), BRASS)
   addKnob(b, 'mirror')
   return b.build()
 }
@@ -138,11 +145,10 @@ function mirror(): THREE.BufferGeometry {
 function filterPane(): THREE.BufferGeometry {
   const b = new Builder()
   const length = FILTER_HALF * 2
-  const frame: RGB = [1, 1, 1]
-  b.add(roundedBox(length + 0.8, 0.9, 2.2, 0.4), at(0, 0.45, 0), [0.62, 0.64, 0.64])
-  b.add(roundedBox(length, 3.8, 0.7, 0.25), at(0, 2.7, 0))
-  b.add(roundedBox(length + 0.5, 0.4, 0.95, 0.18), at(0, 4.7, 0), scale(frame, 1.25))
-  for (const end of [-1, 1]) b.add(new THREE.CylinderGeometry(0.45, 0.45, 4.2, 10), at(end * (FILTER_HALF + 0.15), 2.6, 0), scale(frame, 1.25))
+  // A chunky slab of coloured glass: seen from above its broad top face carries the colour, not a thin edge.
+  b.add(roundedBox(length + 0.8, 0.7, 3.2, 0.3), at(0, 0.35, 0), [0.62, 0.64, 0.64])
+  b.add(roundedBox(length, 2.6, 2.3, 0.7, 2), at(0, 1.95, 0))
+  b.add(roundedBox(length - 1.6, 0.3, 1.1, 0.15), at(0, 3.2, 0), [1.15, 1.15, 1.15])
   addKnob(b, 'filter')
   return b.build()
 }
@@ -151,6 +157,8 @@ function prism(): THREE.BufferGeometry {
   const b = new Builder()
   // Three segments starting at +x put a vertex where the optics expects its first one.
   b.add(faceted(new THREE.CylinderGeometry(PRISM_RADIUS, PRISM_RADIUS, 3.4, 3, 1, false, Math.PI / 2)), at(0, 1.95, 0), WHITE, PART.prismGlass)
+  // A bevelled top: the slanted facets catch the rim light and outline the triangle from above.
+  b.add(faceted(new THREE.CylinderGeometry(PRISM_RADIUS - 1.6, PRISM_RADIUS, 0.7, 3, 1, false, Math.PI / 2)), at(0, 4.0, 0), WHITE, PART.prismGlass)
   b.add(faceted(new THREE.CylinderGeometry(PRISM_RADIUS + 0.35, PRISM_RADIUS + 0.35, 0.3, 3, 1, false, Math.PI / 2)), at(0, 0.15, 0), [0.8, 0.9, 0.92], PART.prismGlass)
   addKnob(b, 'prism')
   return b.build()
@@ -175,19 +183,53 @@ export function pieceGeometry(kind: PieceKind): THREE.BufferGeometry {
 
 // --- creatures ---------------------------------------------------------------
 
+/** A thin rounded glass slab in the table plane from an outline (x along the body, v outward). */
+function wing(outline: readonly (readonly [number, number])[], side: number): THREE.BufferGeometry {
+  const shape = new THREE.Shape()
+  const point = (i: number) => outline[i % outline.length]
+  const mid = (i: number) => [(point(i)[0] + point(i + 1)[0]) / 2, (point(i)[1] + point(i + 1)[1]) / 2] as const
+  shape.moveTo(mid(0)[0], mid(0)[1] * side)
+  for (let i = 1; i <= outline.length; i++) shape.quadraticCurveTo(point(i)[0], point(i)[1] * side, mid(i)[0], mid(i)[1] * side)
+  const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.12, bevelEnabled: true, bevelThickness: 0.14, bevelSize: 0.22, bevelSegments: 2, curveSegments: 6 })
+  geometry.rotateX(Math.PI / 2)
+  return geometry
+}
+
+const FOREWING = [
+  [1.5, 0.5],
+  [2.3, 2.6],
+  [1.7, 5.2],
+  [-0.4, 4.6],
+  [-1.1, 2.2],
+  [-0.5, 0.5],
+] as const
+const HINDWING = [
+  [-0.3, 0.4],
+  [-0.7, 3.1],
+  [-2.9, 3.3],
+  [-3.2, 1.2],
+  [-1.6, 0.3],
+] as const
+
 function moth(): THREE.BufferGeometry {
   const b = new Builder()
-  const fuzz: RGB = [1, 0.97, 0.92]
-  b.add(new THREE.CapsuleGeometry(1.0, 2.6, 6, 14), at(-0.3, 2.3, 0, 0, 0, Math.PI / 2), fuzz)
-  b.add(new THREE.SphereGeometry(1.15, 16, 12), at(2.1, 2.55, 0), fuzz)
+  // A plump fuzzy body in warm cream bands, so it reads apart from the pale wings.
+  const fuzz: RGB = [1, 0.9, 0.74]
+  for (let i = 0; i < 3; i++) b.add(new THREE.SphereGeometry(1, 14, 10), at(-2.0 + i * 0.95, 2.3, 0, 0, 0, 0, 0.78, 0.82 + i * 0.08, 0.82 + i * 0.08), scale(fuzz, i % 2 ? 1.06 : 0.94))
+  b.add(new THREE.SphereGeometry(1.3, 16, 12), at(1.2, 2.5, 0), scale(fuzz, 1.08))
+  b.add(new THREE.SphereGeometry(1.0, 16, 12), at(2.5, 2.6, 0), fuzz)
   for (const side of [1, -1]) {
     const part = side > 0 ? PART.a : PART.b
-    b.add(new THREE.SphereGeometry(1, 20, 10), at(0.7, 2.45, side * 2.35, 0, side * 0.35, 0, 2.2, 0.16, 1.9), WHITE, part)
-    b.add(new THREE.SphereGeometry(1, 16, 8), at(-1.3, 2.4, side * 1.85, 0, -side * 0.5, 0, 1.6, 0.15, 1.35), scale(WHITE, 0.95), part)
-    // Eyespots glow in the moth's light once it is awake.
-    b.add(new THREE.SphereGeometry(0.62, 12, 6), at(0.9, 2.62, side * 2.7, 0, 0, 0, 1, 0.3, 1), [0.86, 0.8, 1], part, 0.4)
-    b.add(new THREE.CapsuleGeometry(0.1, 2.0, 2, 6), at(2.9, 3.6, side * 0.45, side * 0.35, 0, -0.55), fuzz, PART.c)
-    b.add(new THREE.SphereGeometry(0.28, 8, 6), at(3.5, 4.5, side * 0.8), [1, 0.95, 0.85], PART.c, 0.3)
+    // Pastel wings (lilac fore, rose hind) so they keep their colour in bright light instead of turning paper white.
+    b.add(wing(FOREWING, side), at(0, 2.62, 0), [0.84, 0.78, 1], part)
+    b.add(wing(HINDWING, side), at(0, 2.48, 0), [0.98, 0.8, 0.9], part)
+    // Eyespots: a deep violet ring with a cream pupil that glows once the moth is awake.
+    b.add(new THREE.SphereGeometry(0.85, 16, 6), at(0.6, 2.68, side * 3.3, 0, 0, 0, 1, 0.22, 1), [0.4, 0.28, 0.82], part)
+    b.add(new THREE.SphereGeometry(0.4, 12, 6), at(0.6, 2.8, side * 3.3, 0, 0, 0, 1, 0.22, 1), [1, 0.94, 0.8], part, 0.5)
+    b.add(new THREE.SphereGeometry(0.5, 12, 6), at(-1.9, 2.55, side * 2.0, 0, 0, 0, 1, 0.22, 1), [0.56, 0.4, 0.86], part)
+    // Feathery antennae: a stalk and a slim fern leaf splayed forward and out.
+    b.add(new THREE.CapsuleGeometry(0.1, 1.6, 2, 6), at(3.1, 3.35, side * 0.5, side * 0.45, 0, -0.7), fuzz, PART.c)
+    b.add(new THREE.SphereGeometry(1, 12, 6), at(3.9, 3.95, side * 1.25, 0, -side * 0.75, 0, 1.25, 0.1, 0.3), [1, 0.82, 0.55], PART.c, 0.3)
   }
   return b.build()
 }
@@ -206,7 +248,8 @@ function fish(): THREE.BufferGeometry {
 
 function snail(): THREE.BufferGeometry {
   const b = new Builder()
-  const body: RGB = [0.98, 0.95, 0.8]
+  // A pale cream body against the amber coil, so the two still read apart when waking light fills the body.
+  const body: RGB = [0.88, 1.1, 1.95]
   const shell: RGB = [1, 1, 1]
   // The foot and head (they slide out of the shell together).
   b.add(new THREE.CapsuleGeometry(0.85, 5.2, 6, 14), at(0.2, 0.85, 0, 0, 0, Math.PI / 2, 1, 1, 1.25), body, PART.a)
@@ -276,7 +319,7 @@ export function tableGeometry(): THREE.BufferGeometry {
   const outer = { minX: PANEL.minX - 8, maxX: PANEL.maxX + 8, minZ: PANEL.minY - 8, maxZ: TRAY.maxY + 5 }
   const box = (minX: number, maxX: number, minY: number, maxY: number, minZ: number, maxZ: number, colour: RGB, glow = 0) =>
     b.add(new THREE.BoxGeometry(maxX - minX, maxY - minY, maxZ - minZ), at((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2), colour, PART.rigid, glow)
-  // Rails around the panel (the frame is darker than the glowing top so the play area reads).
+  // A dark teal slab around the panel: the darker margin is what makes the glowing play area read.
   box(outer.minX, outer.maxX, bottom, top, outer.minZ, PANEL.minY - 0.6, PALETTE.frame)
   box(outer.minX, PANEL.minX - 0.6, bottom, top, PANEL.minY - 0.6, PANEL.maxY + 0.6, PALETTE.frame)
   box(PANEL.maxX + 0.6, outer.maxX, bottom, top, PANEL.minY - 0.6, PANEL.maxY + 0.6, PALETTE.frame)
@@ -290,14 +333,15 @@ export function tableGeometry(): THREE.BufferGeometry {
     const p = slotPoint(slot)
     b.add(new THREE.CylinderGeometry(6.3, 6.3, 0.06, 32), at(p.x, 0.13, p.y), PALETTE.feltSlot)
   }
-  // The acrylic edge of the light panel glows where it meets the frame.
-  const edge = scale(PALETTE.panelRim, 0.7)
-  box(PANEL.minX - 0.6, PANEL.maxX + 0.6, -0.4, 0.25, PANEL.minY - 0.6, PANEL.minY, edge, 0.12)
-  box(PANEL.minX - 0.6, PANEL.maxX + 0.6, -0.4, 0.25, PANEL.maxY, PANEL.maxY + 0.6, edge, 0.12)
-  box(PANEL.minX - 0.6, PANEL.minX, -0.4, 0.25, PANEL.minY, PANEL.maxY, edge, 0.12)
-  box(PANEL.maxX, PANEL.maxX + 0.6, -0.4, 0.25, PANEL.minY, PANEL.maxY, edge, 0.12)
-  // Rounded top edges catch the light: thin lighter strips along the rails.
-  box(outer.minX, outer.maxX, top - 0.02, top + 0.04, outer.maxZ - 0.8, outer.maxZ, PALETTE.frameTop)
+  // The thick frosted edge of the light panel carries its light: a glowing glass lip where it meets the slab.
+  const edge = scale(PALETTE.panelRim, 0.8)
+  const lip = 1.1
+  box(PANEL.minX - lip, PANEL.maxX + lip, -0.4, 0.4, PANEL.minY - lip, PANEL.minY, edge, 0.3)
+  box(PANEL.minX - lip, PANEL.maxX + lip, -0.4, 0.4, PANEL.maxY, PANEL.maxY + lip, edge, 0.3)
+  box(PANEL.minX - lip, PANEL.minX, -0.4, 0.4, PANEL.minY, PANEL.maxY, edge, 0.3)
+  box(PANEL.maxX, PANEL.maxX + lip, -0.4, 0.4, PANEL.minY, PANEL.maxY, edge, 0.3)
+  // The slab's near edge pipes a thin line of the same light, like the edge of a sheet of glass.
+  box(outer.minX, outer.maxX, top - 0.02, top + 0.04, outer.maxZ - 0.7, outer.maxZ, PALETTE.frameTop, 0.2)
   // The front and sides of the table drop into the dark.
   box(outer.minX - 0.01, outer.maxX + 0.01, bottom, top - 0.2, outer.maxZ, outer.maxZ + 0.01, PALETTE.frameSide)
   return b.build()

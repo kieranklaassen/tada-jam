@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { PANEL } from '../layout'
+import { GLOW_PASS } from './glow'
 import { PALETTE, type GlassLook, type RGB } from './palette'
 
 // Hand-written shaders, all authored in display space and written straight to
@@ -82,11 +83,11 @@ void deform(inout vec3 p, inout vec3 n) {
     float sweep = (1.0 - uAnim.x) * 0.62;
     vec3 pivot = vec3(0.4, 2.35, 0.0);
     if (part == 1) {
-      p = rotX(rotY(p - pivot, sweep), -angle) + pivot;
-      n = rotX(rotY(n, sweep), -angle);
+      p = rotX(rotY(p - pivot, -sweep), -angle) + pivot;
+      n = rotX(rotY(n, -sweep), -angle);
     } else if (part == 2) {
-      p = rotX(rotY(p - pivot, -sweep), angle) + pivot;
-      n = rotX(rotY(n, -sweep), angle);
+      p = rotX(rotY(p - pivot, sweep), angle) + pivot;
+      n = rotX(rotY(n, sweep), angle);
     } else if (part == 3) {
       vec3 head = vec3(2.6, 2.8, 0.0);
       float lift = (uAnim.z - 0.5) * 0.8;
@@ -147,6 +148,7 @@ uniform float uGlow;
 uniform float uDim;
 uniform float uUnder;
 uniform float uTime;
+uniform float uKind;
 uniform vec3 uRoom;
 uniform vec3 uPanel;
 varying vec3 vWorldNormal;
@@ -175,24 +177,41 @@ void main() {
   float glint = pow(lr, 80.0) * 0.95;
 
   vec3 tint = uTint * vColor;
-  vec3 col = tint * (0.4 + 0.42 * ndv) * uDim;
+  vec3 col = tint * (0.54 + 0.38 * ndv) * uDim;
+  // Frosted glass scatters the panel's light through its whole body, strongest near the panel.
   float under = exp(-max(vWorldPos.y, 0.0) * 0.5) * uUnder;
-  col += tint * under * 0.32;
+  col += tint * (under * 0.32 + 0.1 * uUnder);
   col += env * 0.12;
-  col += uCore * uLit * (0.22 + 0.78 * ndv * ndv);
+  int part = int(vPart + 0.5);
+  // A snail's coil is pigment: waking light fills its soft body and stalks, and the shell keeps its amber and creases.
+  float shell = int(uKind + 0.5) == 3 && part == 0 ? 1.0 : 0.0;
+  // Light fills a filter slab with its colour; a prism only splits it, so its clear glass lights more gently.
+  col += uCore * uLit * (part == 6 ? 0.4 : 1.0) * (1.0 - 0.7 * shell) * (0.22 + 0.78 * ndv * ndv);
   col += uCore * vGlow * (0.75 + 0.35 * uLit);
 
-  int part = int(vPart + 0.5);
+  float rimWeight = 0.82;
   if (part == 5) {
-    // Silvered mirror face: mostly environment, with a bright sliding streak.
-    float streak = smoothstep(0.35, 0.0, abs(fract(dot(vWorldPos.xz, vec2(0.05, 0.03)) + R.x * 0.25) - 0.5) - 0.12);
-    col = mix(vec3(0.5, 0.58, 0.6), env * 1.15, 0.72) + streak * 0.18 + uCore * uLit * 0.25;
+    // Silvered mirror face: a cool dark silver holding the room, with a bright streak sliding across as it turns.
+    // Its reflection already shows the angle, so the glassy rim would only wash it white.
+    float streak = smoothstep(0.3, 0.0, abs(fract(dot(vWorldPos.xz, vec2(0.05, 0.03)) + R.x * 0.35) - 0.5) - 0.1);
+    col = mix(vec3(0.3, 0.38, 0.41), env, 0.45) + streak * 0.45 + uCore * uLit * 0.18;
+    rimWeight = 0.15;
   } else if (part == 6) {
+    // Clear glass: the broad top stays a cool pale tint so the rainbow edges and facets carry it, not a white slab.
+    float top = smoothstep(0.75, 0.98, N.y);
+    col = mix(col, tint * (0.62 + 0.18 * uUnder) + env * 0.1, top * 0.8);
     col += hue(fres * 1.3 + dot(vWorldPos.xz, vec2(0.04, 0.02)) + uTime * 0.03) * fres * (0.22 + 0.5 * uLit);
+    col += hue(dot(vWorldPos.xz, vec2(0.11, 0.06)) - uTime * 0.04) * top * uLit * 0.16;
+    rimWeight = 0.62;
+  } else if (part == 9) {
+    // The knob is a handle, not glass the light passes through: no core glow or panel scatter, and a lighter rim
+    // (a small bead is nearly all rim from above), so it keeps the piece's colour instead of burning white.
+    col = tint * (0.5 + 0.32 * ndv) + env * 0.1 + uCore * vGlow * 0.6;
+    rimWeight = 0.35;
   }
 
-  col = mix(col, uRim, smoothstep(0.32, 0.95, fres) * 0.82);
-  col += uRim * uGlow * (0.14 + 0.4 * fres);
+  col = mix(col, uRim, smoothstep(0.32, 0.95, fres) * rimWeight);
+  col += uRim * uGlow * (0.14 + 0.4 * fres) * (1.0 - 0.55 * shell);
   col += vec3(1.0, 0.98, 0.94) * (soft + glint);
   gl_FragColor = vec4(col, 1.0);
 }
@@ -253,7 +272,6 @@ void main() {
 const MATTE_FRAGMENT = /* glsl */ `
 uniform vec4 uPanelRect;
 uniform vec3 uSpill;
-uniform float uGrain;
 varying vec3 vWorldNormal;
 varying vec3 vWorldPos;
 varying vec3 vColor;
@@ -262,16 +280,14 @@ ${HASH}
 void main() {
   vec3 N = normalize(vWorldNormal);
   float key = max(dot(N, normalize(vec3(-0.4, 0.8, 0.5))), 0.0);
-  // Dark oiled wood: long soft grain along each rail.
-  vec2 g = abs(N.y) > 0.5 ? (abs(vWorldPos.x) > 60.0 && abs(vWorldPos.z) < 42.0 ? vWorldPos.zx : vWorldPos.xz) : vec2(vWorldPos.x + vWorldPos.z, vWorldPos.y);
-  float grain = sin(g.y * 2.1 + sin(g.x * 0.13) * 3.0 + sin(g.x * 0.041 + g.y * 0.3) * 5.0) * 0.5 + 0.5;
-  vec3 col = vColor * (0.62 + 0.38 * key) * (0.9 + 0.16 * grain * uGrain * step(vColor.b, vColor.r));
-  // The panel lights the wood around it; the light falls off into the room.
+  vec3 col = vColor * (0.62 + 0.38 * key);
+  // The panel lights the slab around it; the light falls off into the room.
   vec2 d = max(max(uPanelRect.xy - vWorldPos.xz, vWorldPos.xz - uPanelRect.zw), 0.0);
   float spill = exp(-length(d) * 0.16) * (0.35 + 0.65 * max(N.y, 0.0));
-  col += uSpill * spill * 0.55;
+  col += uSpill * spill * 0.4;
   col += vColor * vGlow;
-  col += (hash12(floor(vWorldPos.xz * 3.0)) - 0.5) * 0.012;
+  // A fine frosted speckle, so the slab reads as matte glass rather than flat paint.
+  col *= 0.97 + 0.06 * hash12(floor(vWorldPos.xz * 6.0 + vWorldPos.y * 3.0));
   gl_FragColor = vec4(col, 1.0);
 }
 `
@@ -280,7 +296,7 @@ const PANEL_RECT = () => new THREE.Vector4(PANEL.minX, PANEL.minY, PANEL.maxX, P
 
 export function matteMaterial(): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
-    uniforms: { uPanelRect: { value: PANEL_RECT() }, uSpill: { value: vec3(PALETTE.panelCentre) }, uGrain: { value: 1 } },
+    uniforms: { uPanelRect: { value: PANEL_RECT() }, uSpill: { value: vec3(PALETTE.panelCentre) } },
     vertexShader: MATTE_VERTEX,
     fragmentShader: MATTE_FRAGMENT,
   })
@@ -400,6 +416,7 @@ void main() {
 
 const SPRITE_FRAGMENT = /* glsl */ `
 uniform float uTime;
+uniform float uGlowPass;
 varying vec2 vUv;
 varying vec4 vColour;
 varying vec4 vShape;
@@ -433,6 +450,8 @@ void main() {
   } else if (shape == 6) {
     a = exp(-r * r * 9.0);
   }
+  float bloom = shape == 2 || shape == 6 ? 1.0 : shape == 4 ? 0.6 : shape == 0 ? 0.3 : 0.0;
+  a *= mix(1.0, bloom, uGlowPass);
   gl_FragColor = vec4(col * vColour.a * a, 1.0);
 }
 `
@@ -465,7 +484,7 @@ void main() {
 
 export function spriteMaterial(additive: boolean): THREE.ShaderMaterial & { uniforms: { uTime: { value: number } } } {
   return new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 } },
+    uniforms: { uTime: { value: 0 }, uGlowPass: GLOW_PASS },
     vertexShader: SPRITE_VERTEX,
     fragmentShader: additive ? SPRITE_FRAGMENT : SHADE_FRAGMENT,
     transparent: true,
@@ -491,7 +510,7 @@ varying vec4 vColour;
 void main() {
   vec3 p = position;
   float kind = aSide.y;
-  float width = kind < 0.5 ? 1.0 : kind < 1.5 ? 5.2 : 0.9;
+  float width = kind < 0.5 ? 1.0 : kind < 1.5 ? 7.0 : 0.9;
   vec3 perp;
   if (kind < 0.5) {
     vec3 toCamera = normalize(cameraPosition - p);
@@ -510,6 +529,7 @@ void main() {
 
 const BEAM_FRAGMENT = /* glsl */ `
 uniform float uTime;
+uniform float uGlowPass;
 varying float vSide;
 varying float vKind;
 varying vec2 vAlong;
@@ -521,23 +541,25 @@ void main() {
   float a;
   vec3 col = vColour.rgb;
   if (vKind < 0.5) {
-    float hot = exp(-s * s * 36.0);
-    a = exp(-s * s * 4.5) * 0.7 + hot * 0.8;
-    col = mix(col, vec3(1.0), hot * 0.55);
+    // A slim core with a soft sheath; most of the light lands as a wide wash on the frosted panel below.
+    float hot = exp(-s * s * 40.0);
+    a = exp(-s * s * 6.0) * 0.5 + hot * 0.65;
+    col = mix(col, vec3(1.0), hot * 0.35);
   } else if (vKind < 1.5) {
-    a = exp(-s * s * 3.2) * 0.34;
+    a = exp(-s * s * 4.0) * 0.4 + exp(-s * s * 18.0) * 0.14;
   } else {
     float hot = exp(-s * s * 20.0);
     a = exp(-s * s * 6.0) * 0.7 + hot * 0.5;
     col = mix(col, vec3(1.0), hot * 0.4);
   }
+  a *= mix(1.0, vKind < 0.5 ? 1.0 : vKind < 1.5 ? 0.5 : 0.0, uGlowPass);
   gl_FragColor = vec4(col * a * flow * vColour.a, 1.0);
 }
 `
 
 export function beamMaterial(): THREE.ShaderMaterial & { uniforms: { uTime: { value: number } } } {
   return new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 } },
+    uniforms: { uTime: { value: 0 }, uGlowPass: GLOW_PASS },
     vertexShader: BEAM_VERTEX,
     fragmentShader: BEAM_FRAGMENT,
     transparent: true,
