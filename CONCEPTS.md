@@ -53,6 +53,15 @@ Any touch clears the ladder at once and restarts the idle clock. A demonstration
 ### State-revealed affordance
 A tool or action that appears only when the current state makes it meaningful, so the child never faces an option that does nothing yet.
 
+### Scene want
+The one thing in a scene that visibly wants something from the child (a hungry guest holding out an empty plate, a scale pan waiting tilted for a partner), which gives the child a reason to act before any mechanic is understood.
+*Avoid:* goal, objective, task
+
+The Guidance ladder shows how to act; the want gives why. A want resolves visibly (a munch, a happy wiggle, a guest turning to the child), never with a score or a verdict, and each scene has only one.
+
+### Cold playtest proxy
+A stand-in for a first-time child, run by the builder before the owner sees a build: load it cold, touch nothing for a few seconds and note what the scene invites, then play the first minute as a newcomer and list every moment the purpose is not obvious.
+
 ### Control of error
 Feedback that comes from the material's own physical response (a beam that levels, plates that visibly match, a leftover that stays put) rather than from a judgment such as a tick, a cross, a score, or a sad face.
 *Avoid:* verdict, right/wrong feedback
