@@ -321,7 +321,10 @@ export function crossings(a: Piece, b: Piece, limit = MAX_SEGMENTS): number[] {
         const d = Math.max(Math.abs(na.dot(v1.subVectors(t2.a, t1.a))), Math.abs(na.dot(v1.subVectors(t2.b, t1.a))), Math.abs(na.dot(v1.subVectors(t2.c, t1.a))))
         if (d < Math.max(a.scale, b.scale) * 1e-4) return false
       }
-      if (t1.intersectsTriangle(t2, line) && line.distance() > 0) {
+      // The third argument (suppressLog, missing from the typings) keeps
+      // near-coplanar pairs that slip past the check above from logging.
+      const intersects = (t1.intersectsTriangle as (other: ExtendedTriangle, target: Line3, suppressLog: boolean) => boolean).call(t1, t2, line, true)
+      if (intersects && line.distance() > 0) {
         segs.push(line.start.x, line.start.y, line.start.z, line.end.x, line.end.y, line.end.z)
         if (segs.length >= limit * 6) return true
       }

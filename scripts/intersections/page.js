@@ -166,6 +166,15 @@
     camera.updateMatrixWorld()
     const ignore = compile(options.ignore)
     const objectRules = (options.objects ?? []).map((r) => ({ re: new RegExp(r.match), as: r.as }))
+    const instanceRules = (options.instances ?? []).map((r) => ({ re: new RegExp(r.match), per: Math.max(1, r.per) }))
+    // Instances are separate objects unless the mesh names each instance's
+    // object (userData.jamInstanceObjects) or a rule packs every `per` in a row.
+    const instanceObject = (m, object, i) => {
+      const tags = m.o.userData && m.o.userData.jamInstanceObjects
+      if (tags && tags[i] != null) return 'tag:' + tags[i]
+      for (const r of instanceRules) if (r.re.test(m.path) || r.re.test(m.label)) return object + '#' + Math.floor(i / r.per)
+      return object + '#' + i
+    }
     const cam = cameraInfo(camera, renderer)
     const cache = new Map()
     const meshes = []
@@ -291,7 +300,7 @@
             w[c * 4 + r] = e[r] * l[c * 4] + e[4 + r] * l[c * 4 + 1] + e[8 + r] * l[c * 4 + 2] + e[12 + r] * l[c * 4 + 3]
           }
           if (Math.abs(w[0]) + Math.abs(w[5]) + Math.abs(w[10]) < 1e-9) continue
-          emit(m.path + '#' + i, object + '#' + i, w)
+          emit(m.path + '#' + i, instanceObject(m, object, i), w)
         }
       } else {
         emit(m.path, object, Array.from(e))
