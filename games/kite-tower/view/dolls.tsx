@@ -444,6 +444,8 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
     let squash = 1
     let lift = 0
     let raise = 0.18 + hero.reach * 2.75
+    let raiseL = 0
+    let raiseR = 0
     let forward = 0
     let yawGoal = hero.facing * 0.55
     let expression: Expression = OPEN
@@ -466,6 +468,15 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
           const hop = Math.max(0, Math.sin(t * 7.5))
           lift = hop * hop * 0.14 * hero.reach
           squash = 1 + hop * 0.05 - (1 - hop) * 0.03
+          // Short peg arms raised straight up end at the top of the head and read as holding it at play
+          // size. The arm on the kite's side stretches up and out toward it, clear of the head, the other
+          // stays out for balance (both up would be a cheer), and the doll leans in a little; she keeps facing the child.
+          const side = Math.max(-1, Math.min(1, (goal.x - hero.x) / 1.6))
+          const toward = (0.3 + 0.1 * Math.abs(side)) * hero.reach
+          const away = (0.3 + 1.4 * Math.abs(side)) * hero.reach
+          raiseL -= side <= 0 ? toward : away
+          raiseR -= side <= 0 ? away : toward
+          roll -= side * 0.08 * hero.reach
         }
         raise += Math.sin(t * 3.1) * 0.08 * hero.reach
         break
@@ -607,7 +618,7 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
     }
     if (hero.mode !== 'tumble' || age >= 0.55 + Math.min(0.5, Math.max(0, hero.y) * 0.12)) rig.lean.position.set(0, 0, 0)
     rig.lean.scale.set(1 / Math.sqrt(squash), squash, 1 / Math.sqrt(squash))
-    rig.arms(raise + pose.raiseL, raise + pose.raiseR, forward + pose.forwardL, forward + pose.forwardR)
+    rig.arms(raise + raiseL + pose.raiseL, raise + raiseR + pose.raiseR, forward + pose.forwardL, forward + pose.forwardR)
     scratch.from.x = x
     scratch.from.y = y + 1.7
     rig.look(hero.look, scratch.from, scratch.yaw, hero.mode === 'fly' ? 0.3 : 1, cues.director.personality.lookRate, dt, pose)
