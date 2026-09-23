@@ -1,4 +1,5 @@
 import type { KiteTarget } from './climb'
+import { LAMP, SHELF } from './layout'
 
 // Where the kite can get stuck. Each perch is a real place in the playroom
 // (a shelf board, the shelf top, the picture hook, the window sill, the lamp
@@ -17,13 +18,14 @@ export type Perch = {
 }
 
 // A kite resting on a ledge leans back so its bottom tip sits just past the
-// front edge and the tail and line fall in front of it.
+// front edge and the tail and line fall in front of it. One caught on the
+// lamp hangs just in front of the shade's rim.
 export const PERCHES: readonly Perch[] = [
-  { place: 'shelfBoard', x: 5.3, grabY: 3.95, kite: { x: 5.3, y: 4.86, z: -1.2, tilt: 0.22, lean: -0.3 } },
+  { place: 'shelfBoard', x: 5.3, grabY: 3.95, kite: { x: 5.3, y: 4.86, z: SHELF.front - 0.2, tilt: 0.22, lean: -0.3 } },
   { place: 'hook', x: -1.4, grabY: 5.3, kite: { x: -1.4, y: 6.25, z: -2.05, tilt: -0.12, lean: 0 } },
-  { place: 'shelfTop', x: 5.6, grabY: 6.65, kite: { x: 5.6, y: 7.56, z: -1.12, tilt: -0.3, lean: -0.3 } },
+  { place: 'shelfTop', x: 5.6, grabY: 6.65, kite: { x: 5.6, y: 7.56, z: SHELF.front - 0.12, tilt: -0.3, lean: -0.3 } },
   { place: 'sill', x: -5.5, grabY: 4.6, kite: { x: -5.5, y: 5.48, z: -1.9, tilt: 0.28, lean: -0.3 } },
-  { place: 'lamp', x: -3.3, grabY: 6.05, kite: { x: -3.3, y: 7.0, z: -0.95, tilt: 0.1, lean: 0 } },
+  { place: 'lamp', x: -3.3, grabY: 6.05, kite: { x: -3.3, y: 7.0, z: LAMP.z + LAMP.shade + 0.16, tilt: 0.1, lean: 0 } },
 ]
 
 export function perchIndex(value: unknown): number {

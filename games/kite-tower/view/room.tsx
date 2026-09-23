@@ -77,57 +77,60 @@ function shelf(): THREE.BufferGeometry[] {
   const mz = (front + back) / 2
   const parts: THREE.BufferGeometry[] = []
   const add = (g: THREE.BufferGeometry, color: string) => parts.push(stained(g, color))
-  add(woodBox(side, top - 0.16, depth, { x: x0 + side / 2, y: (top - 0.16) / 2, z: mz }, 'y', { offset: { x: 0.4, y: 0.1 } }), STAIN.shelf)
-  add(woodBox(side, top - 0.16, depth, { x: x1 - side / 2, y: (top - 0.16) / 2, z: mz }, 'y', { offset: { x: 1.3, y: 0.3 } }), STAIN.shelf)
+  const tall = top - 0.16 - FLOOR_Y
+  add(woodBox(side, tall, depth, { x: x0 + side / 2, y: FLOOR_Y + tall / 2, z: mz }, 'y', { offset: { x: 0.4, y: 0.1 } }), STAIN.shelf)
+  add(woodBox(side, tall, depth, { x: x1 - side / 2, y: FLOOR_Y + tall / 2, z: mz }, 'y', { offset: { x: 1.3, y: 0.3 } }), STAIN.shelf)
   boards.forEach((y, i) => add(woodBox(x1 - x0 - side * 2 + 0.02, board, depth - 0.06, { x: cx, y: y - board / 2, z: mz + 0.02 }, 'x', { offset: { x: i * 0.7, y: 0.2 } }), STAIN.shelf))
   add(woodBox(x1 - x0 + 0.14, 0.16, depth + 0.1, { x: cx, y: top - 0.08, z: mz + 0.03 }, 'x', { offset: { x: 0.2, y: 0.4 } }), STAIN.shelf)
   add(woodBox(x1 - x0 - side * 2 + 0.04, top - 0.3, 0.05, { x: cx, y: (top - 0.3) / 2 + 0.1, z: back + 0.04 }, 'y', { bevel: 0.015, segments: 1 }), STAIN.back)
   // A ring stacker and books on the bottom board, a house and a ball on the next, a jar above, a little
   // tree on top. The stacker sits right behind Pip's head, so it is pale and cool: a saturated arch there
   // read as one of her blocks and cut into her silhouette.
+  // Every toy fits between the back board and the shelf's front edge.
   const stackX = x0 + 1.0
-  const stackZ = mz + 0.1
+  const stackZ = mz + 0.03
   const stackBase = woodLathe(
     [
       { x: 0, y: 0 },
-      { x: 0.46, y: 0 },
-      { x: 0.5, y: 0.04 },
-      { x: 0.48, y: 0.1 },
-      { x: 0, y: 0.1 },
+      { x: 0.285, y: 0 },
+      { x: 0.31, y: 0.035 },
+      { x: 0.3, y: 0.09 },
+      { x: 0, y: 0.09 },
     ],
     24,
   )
   stackBase.translate(stackX, boards[0], stackZ)
   add(stackBase, STAIN.lamp)
   const rings: [number, string][] = [
-    [0.44, '#9cc3dc'],
-    [0.38, '#8ec5b4'],
-    [0.32, '#b3a4d6'],
-    [0.26, '#a9cde8'],
+    [0.29, '#9cc3dc'],
+    [0.255, '#8ec5b4'],
+    [0.22, '#b3a4d6'],
+    [0.185, '#a9cde8'],
   ]
-  const RING_HEIGHT = 0.19
+  const RING_HEIGHT = 0.15
+  const PEG_R = 0.055
   rings.forEach(([outer, color], i) => {
     const r = RING_HEIGHT / 2
-    const profile: Vec2[] = [{ x: 0.08, y: 0 }]
+    const profile: Vec2[] = [{ x: PEG_R, y: 0 }]
     for (let k = 0; k <= 8; k++) {
       const a = -Math.PI / 2 + (Math.PI * k) / 8
       profile.push({ x: outer - r + Math.cos(a) * r, y: r + Math.sin(a) * r })
     }
-    profile.push({ x: 0.08, y: RING_HEIGHT })
+    profile.push({ x: PEG_R, y: RING_HEIGHT })
     const ring = woodLathe(profile, 24)
-    ring.translate(stackX, boards[0] + 0.1 + i * RING_HEIGHT, stackZ)
+    ring.translate(stackX, boards[0] + 0.09 + i * RING_HEIGHT, stackZ)
     add(ring, color)
   })
-  const pegTop = 0.1 + rings.length * RING_HEIGHT
+  const pegTop = 0.09 + rings.length * RING_HEIGHT
   const stackPeg = woodLathe(
     [
-      { x: 0, y: 0.1 },
-      { x: 0.08, y: 0.1 },
-      { x: 0.08, y: pegTop },
-      { x: 0.1, y: pegTop + 0.03 },
-      { x: 0.1, y: pegTop + 0.1 },
-      { x: 0.06, y: pegTop + 0.15 },
-      { x: 0, y: pegTop + 0.16 },
+      { x: 0, y: 0.09 },
+      { x: PEG_R, y: 0.09 },
+      { x: PEG_R, y: pegTop },
+      { x: 0.075, y: pegTop + 0.025 },
+      { x: 0.075, y: pegTop + 0.085 },
+      { x: 0.045, y: pegTop + 0.125 },
+      { x: 0, y: pegTop + 0.135 },
     ],
     16,
   )
@@ -141,10 +144,10 @@ function shelf(): THREE.BufferGeometry[] {
   ]
   let bx = x1 - side - 0.2
   for (const [w, h, color] of books) {
-    add(woodBox(w, h, 0.85, { x: bx - w / 2, y: boards[0] + h / 2, z: mz + 0.05 }, 'y', { bevel: 0.025, segments: 2 }), color)
+    add(woodBox(w, h, 0.6, { x: bx - w / 2, y: boards[0] + h / 2, z: mz + 0.02 }, 'y', { bevel: 0.025, segments: 2 }), color)
     bx -= w + 0.03
   }
-  const house = woodBox(0.7, 0.6, 0.6, { x: x0 + 0.75, y: boards[1] + 0.3, z: mz }, 'y', { bevel: 0.03 })
+  const house = woodBox(0.7, 0.6, 0.52, { x: x0 + 0.75, y: boards[1] + 0.3, z: mz }, 'y', { bevel: 0.03 })
   add(house, '#f2c230')
   const roof = woodSlab(
     [
@@ -152,7 +155,7 @@ function shelf(): THREE.BufferGeometry[] {
       { x: 0.45, y: 0 },
       { x: 0, y: 0.42 },
     ],
-    0.62,
+    0.56,
     'x',
     { bevel: 0.03 },
   )
@@ -161,20 +164,20 @@ function shelf(): THREE.BufferGeometry[] {
   const ball = woodLathe(
     Array.from({ length: 13 }, (_, i) => {
       const a = -Math.PI / 2 + (Math.PI * i) / 12
-      return { x: Math.max(0, Math.cos(a) * 0.36), y: 0.36 + Math.sin(a) * 0.36 }
+      return { x: Math.max(0, Math.cos(a) * 0.3), y: 0.3 + Math.sin(a) * 0.3 }
     }),
     24,
   )
-  ball.translate(x1 - 0.7, boards[1], mz + 0.1)
+  ball.translate(x1 - 0.7, boards[1], mz + 0.02)
   add(ball, '#5fae4f')
   const jar = woodLathe(
     [
       { x: 0, y: 0 },
-      { x: 0.3, y: 0 },
-      { x: 0.34, y: 0.08 },
-      { x: 0.34, y: 0.62 },
-      { x: 0.26, y: 0.7 },
-      { x: 0.26, y: 0.8 },
+      { x: 0.265, y: 0 },
+      { x: 0.3, y: 0.08 },
+      { x: 0.3, y: 0.62 },
+      { x: 0.23, y: 0.7 },
+      { x: 0.23, y: 0.8 },
       { x: 0, y: 0.8 },
     ],
     24,
@@ -184,17 +187,17 @@ function shelf(): THREE.BufferGeometry[] {
   const tree = woodLathe(
     [
       { x: 0, y: 0 },
-      { x: 0.1, y: 0 },
-      { x: 0.1, y: 0.3 },
-      { x: 0.42, y: 0.34 },
-      { x: 0.36, y: 0.6 },
-      { x: 0.2, y: 0.95 },
+      { x: 0.09, y: 0 },
+      { x: 0.09, y: 0.3 },
+      { x: 0.36, y: 0.34 },
+      { x: 0.31, y: 0.6 },
+      { x: 0.17, y: 0.95 },
       { x: 0.02, y: 1.12 },
       { x: 0, y: 1.12 },
     ],
     20,
   )
-  tree.translate(x0 + 0.55, top, mz)
+  tree.translate(x0 + 0.55, top, mz + 0.06)
   add(tree, '#7fb069')
   return parts
 }
@@ -206,13 +209,19 @@ function windowFrame(): THREE.BufferGeometry[] {
   const z = WALL_Z + deep / 2 - 0.04
   const cx = (x0 + x1) / 2
   const cy = (y0 + y1) / 2
+  // The upright meets the crossbar from above and below rather than running through it,
+  // so their fronts never share a plane.
+  const crossY = y0 + (y1 - y0) * 0.62
+  const lower = crossY - 0.05 - y0
+  const upper = y1 - crossY - 0.05
   const parts = [
     woodBox(x1 - x0 + bar * 2, bar, deep, { x: cx, y: y1 + bar / 2, z }, 'x'),
     woodBox(x1 - x0 + bar * 2, bar, deep, { x: cx, y: y0 - bar / 2, z }, 'x'),
     woodBox(bar, y1 - y0, deep, { x: x0 - bar / 2, y: cy, z }, 'y'),
     woodBox(bar, y1 - y0, deep, { x: x1 + bar / 2, y: cy, z }, 'y'),
-    woodBox(0.1, y1 - y0, 0.1, { x: cx, y: cy, z: WALL_Z - 0.1 }, 'y', { bevel: 0.02, segments: 2 }),
-    woodBox(x1 - x0, 0.1, 0.1, { x: cx, y: y0 + (y1 - y0) * 0.62, z: WALL_Z - 0.1 }, 'x', { bevel: 0.02, segments: 2 }),
+    woodBox(0.1, lower, 0.1, { x: cx, y: y0 + lower / 2, z: WALL_Z - 0.1 }, 'y', { bevel: 0.02, segments: 2 }),
+    woodBox(0.1, upper, 0.1, { x: cx, y: y1 - upper / 2, z: WALL_Z - 0.1 }, 'y', { bevel: 0.02, segments: 2 }),
+    woodBox(x1 - x0, 0.1, 0.1, { x: cx, y: crossY, z: WALL_Z - 0.1 }, 'x', { bevel: 0.02, segments: 2 }),
     woodBox(x1 - x0 + 0.7, 0.12, 0.72, { x: cx, y: sill - 0.06, z: WALL_Z + 0.36 }, 'x', { offset: { x: 0.5, y: 0.1 } }),
   ]
   return parts.map((g) => stained(g, STAIN.paint))
@@ -222,9 +231,9 @@ function lamp(): THREE.BufferGeometry[] {
   const base = woodLathe(
     [
       { x: 0, y: 0 },
-      { x: 0.6, y: 0 },
-      { x: 0.65, y: 0.04 },
-      { x: 0.62, y: 0.12 },
+      { x: LAMP.base - 0.05, y: 0 },
+      { x: LAMP.base, y: 0.04 },
+      { x: LAMP.base - 0.03, y: 0.12 },
       { x: 0.22, y: 0.17 },
       { x: 0.08, y: 0.24 },
       { x: 0, y: 0.24 },
@@ -248,8 +257,8 @@ function lamp(): THREE.BufferGeometry[] {
 }
 
 function pegRail(): THREE.BufferGeometry[] {
-  const { x0, x1, y } = PEG_RAIL
-  const parts = [stained(woodBox(x1 - x0, 0.34, 0.12, { x: (x0 + x1) / 2, y, z: WALL_Z + 0.06 }, 'x', { bevel: 0.03 }), STAIN.paint)]
+  const { x0, x1, y, depth } = PEG_RAIL
+  const parts = [stained(woodBox(x1 - x0, 0.34, depth, { x: (x0 + x1) / 2, y, z: WALL_Z + depth / 2 }, 'x', { bevel: 0.03 }), STAIN.paint)]
   for (const px of [-1.4, -0.2, 1.0, 2.0]) {
     const peg = woodLathe(
       [
@@ -264,7 +273,7 @@ function pegRail(): THREE.BufferGeometry[] {
       16,
     )
     peg.rotateX(Math.PI / 2)
-    peg.translate(px, y - 0.02, WALL_Z + 0.12)
+    peg.translate(px, y - 0.02, WALL_Z + depth)
     parts.push(stained(peg, STAIN.lamp))
   }
   const ring = new THREE.TorusGeometry(0.36, 0.07, 10, 36)
@@ -284,8 +293,9 @@ function tray(): THREE.BufferGeometry[] {
   const wall = 0.14
   const outerX = halfX + wall
   const outerZ = halfZ + wall
+  // The bed stops a hair inside the walls' outer faces so the two never share a plane.
   const local = [
-    woodBox(outerX * 2, 0.14, outerZ * 2, { x: 0, y: -0.07, z: 0 }, 'x', { offset: { x: 0.3, y: 0.05 } }),
+    woodBox(outerX * 2 - 0.02, 0.14, outerZ * 2 - 0.02, { x: 0, y: -0.07, z: 0 }, 'x', { offset: { x: 0.3, y: 0.05 } }),
     woodBox(outerX * 2, rim + 0.14, wall, { x: 0, y: (rim - 0.14) / 2, z: -halfZ - wall / 2 }, 'x', { offset: { x: 1.1, y: 0.2 } }),
     woodBox(outerX * 2, rim + 0.14, wall, { x: 0, y: (rim - 0.14) / 2, z: halfZ + wall / 2 }, 'x', { offset: { x: 0.6, y: 0.5 } }),
     woodBox(wall, rim + 0.14, halfZ * 2, { x: -halfX - wall / 2, y: (rim - 0.14) / 2, z: 0 }, 'z', { offset: { x: 0.2, y: 0.3 } }),
@@ -335,9 +345,10 @@ function wallGeometry(): THREE.BufferGeometry {
   wall.translate(0, 0, WALL_Z)
   const w = WINDOW.x1 - WINDOW.x0
   const h = WINDOW.y1 - WINDOW.y0
+  // The reveals line the window opening and stop just behind the wall's face.
   const reveal = (sx: number, sy: number, x: number, y: number) => {
     const g = new THREE.BoxGeometry(sx, sy, 0.3)
-    g.translate(x, y, WALL_Z - 0.15)
+    g.translate(x, y, WALL_Z - 0.16)
     return g
   }
   const reveals = [
@@ -706,16 +717,17 @@ export function Room() {
     const skyPlane = new THREE.PlaneGeometry(WINDOW.x1 - WINDOW.x0 + 0.4, WINDOW.y1 - WINDOW.y0 + 0.4)
     skyPlane.translate((WINDOW.x0 + WINDOW.x1) / 2, (WINDOW.y0 + WINDOW.y1) / 2, WALL_Z - 0.32)
     const sky = new THREE.Mesh(skyPlane, new THREE.MeshBasicMaterial({ map: skyTexture(), toneMapped: false }))
+    const rim = LAMP.shade
     const shadeGeometry = new THREE.LatheGeometry(
       [
-        new THREE.Vector2(0.9, 0),
-        new THREE.Vector2(0.88, 0.05),
-        new THREE.Vector2(0.62, 0.98),
-        new THREE.Vector2(0.6, 1.02),
+        new THREE.Vector2(rim, 0),
+        new THREE.Vector2(rim * 0.978, 0.04),
+        new THREE.Vector2(rim * 0.689, 0.784),
+        new THREE.Vector2(rim * 0.667, 0.816),
       ],
       40,
     )
-    shadeGeometry.translate(LAMP.x, LAMP.shadeY - 0.5, LAMP.z)
+    shadeGeometry.translate(LAMP.x, LAMP.shadeY - 0.4, LAMP.z)
     const shade = new THREE.Mesh(
       shadeGeometry,
       new THREE.MeshStandardMaterial({ color: '#f7ebd6', emissive: '#ffcf8f', emissiveIntensity: 0.32, roughness: 1, side: THREE.DoubleSide }),
