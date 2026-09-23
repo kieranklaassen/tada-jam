@@ -275,7 +275,7 @@ export class CosyScene {
     const info = this.renderer.info.render
     this.perf.record(cpu, interval, this.tiers.tier, info.calls, info.triangles)
     // A paced interval spans two display frames: it says nothing about how fast the device is.
-    if (!this.paced && this.tiers.sample(interval, now / 1000) >= 0) this.applyTier()
+    if (!this.paced && this.tiers.sample(interval, now / 1000, cpu) >= 0) this.applyTier()
     this.paced = false
   }
 

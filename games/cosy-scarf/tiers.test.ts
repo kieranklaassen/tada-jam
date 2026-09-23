@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { COOLDOWN_S, DROP_AFTER_S, forcedTier, RISE_AFTER_S, TierController, TIERS } from './tiers'
+import { COOLDOWN_S, DROP_AFTER_S, forcedTier, LIGHT_WORK_MS, RISE_AFTER_S, TierController, TIERS } from './tiers'
 
-function run(controller: TierController, frameMs: number, from: number, seconds: number): number[] {
+function run(controller: TierController, frameMs: number, from: number, seconds: number, workMs = 2): number[] {
   const changes: number[] = []
   for (let t = from; t < from + seconds; t += frameMs / 1000) {
-    const changed = controller.sample(frameMs, t)
+    const changed = controller.sample(frameMs, t, workMs)
     if (changed >= 0) changes.push(changed)
   }
   return changes
@@ -33,14 +33,35 @@ describe('TierController', () => {
     expect(c.tier).toBe(0)
   })
 
-  it('climbs back only after a long fast stretch', () => {
-    const c = new TierController(0)
-    run(c, 40, 0, DROP_AFTER_S + 0.6)
-    expect(c.tier).toBe(1)
-    run(c, 10, 10, RISE_AFTER_S - 1)
-    expect(c.tier).toBe(1)
-    run(c, 10, 10 + RISE_AFTER_S - 1, 2)
+  it('climbs back only after a long on-time stretch, at 60 Hz as well as 120 Hz', () => {
+    for (const frameMs of [16.7, 8.3]) {
+      const c = new TierController(0)
+      run(c, 40, 0, DROP_AFTER_S + 0.6)
+      expect(c.tier).toBe(1)
+      run(c, frameMs, 10, RISE_AFTER_S - 1)
+      expect(c.tier).toBe(1)
+      run(c, frameMs, 10 + RISE_AFTER_S - 1, 2)
+      expect(c.tier).toBe(0)
+    }
+  })
+
+  it('starts a touch device one tier down and lets it earn the top tier on a 60 Hz screen, but only with CPU headroom', () => {
+    const light = new TierController(1)
+    run(light, 16.7, 0, RISE_AFTER_S + 2)
+    expect(light.tier).toBe(0)
+    const busy = new TierController(1)
+    run(busy, 16.7, 0, RISE_AFTER_S * 4, LIGHT_WORK_MS + 2)
+    expect(busy.tier).toBe(1)
+  })
+
+  it('never retries an upgrade that failed right away', () => {
+    const c = new TierController(1)
+    run(c, 16.7, 0, RISE_AFTER_S + 1)
     expect(c.tier).toBe(0)
+    run(c, 40, RISE_AFTER_S + 1, COOLDOWN_S + DROP_AFTER_S + 0.5)
+    expect(c.tier).toBe(1)
+    run(c, 16.7, 20, 120)
+    expect(c.tier).toBe(1)
   })
 
   it('stops retrying a tier it had to leave twice', () => {

@@ -1,8 +1,10 @@
 // Adaptive quality. The frame interval (not just CPU time, so GPU-bound
 // frames count too) is smoothed and compared against two thresholds with
-// hysteresis: a sustained slow stretch drops one tier, only a long fast
-// stretch climbs back, and a tier that had to be dropped twice is not tried
-// again. `?tier=N` pins a tier for testing.
+// hysteresis: a sustained slow stretch drops one tier, and only a long
+// stretch of on-time frames with light CPU work climbs back (a 60 Hz display
+// caps the interval at 16.7 ms, so only the work shows spare time). A tier
+// that fails soon after being climbed into, or that had to be dropped twice,
+// is not tried again. `?tier=N` pins a tier for testing.
 
 export type Tier = {
   dpr: number
@@ -24,7 +26,12 @@ export const TIERS: readonly Tier[] = [
 ]
 
 export const SLOW_MS = 21
-export const FAST_MS = 14.5
+/** On time for a 60 Hz display (16.7 ms); climbing back also needs CPU work under LIGHT_WORK_MS. */
+export const ON_TIME_MS = 18
+/** CPU work per frame (update plus draw submission) must stay under this to climb back. */
+export const LIGHT_WORK_MS = 8
+/** A tier dropped within this long of being climbed into failed its upgrade and is not tried again. */
+export const PROBATION_S = 5
 export const DROP_AFTER_S = 1.5
 export const RISE_AFTER_S = 8
 export const COOLDOWN_S = 2
@@ -35,6 +42,8 @@ export class TierController {
   tier: number
   readonly forced: boolean
   private smoothed = 1000 / 60
+  private smoothedWork = 0
+  private climbedAt = -Infinity
   private slowSince: number | null = null
   private fastSince: number | null = null
   private lastChange = -Infinity
@@ -49,23 +58,30 @@ export class TierController {
     return this.smoothed
   }
 
-  /** Feed one frame interval (ms) at time `now` (s). Returns the new tier when it changes, otherwise -1. */
-  sample(frameMs: number, now: number): number {
+  /**
+   * Feed one frame interval (ms) at time `now` (s), with that frame's CPU work
+   * (ms). Returns the new tier when it changes, otherwise -1.
+   */
+  sample(frameMs: number, now: number, workMs = 0): number {
     if (this.forced || frameMs <= 0 || frameMs > IGNORE_OVER_MS) return -1
     this.smoothed += (frameMs - this.smoothed) * SMOOTHING
+    this.smoothedWork += (workMs - this.smoothedWork) * SMOOTHING
     if (now - this.lastChange < COOLDOWN_S) return -1
     if (this.smoothed > SLOW_MS) {
       this.fastSince = null
       this.slowSince ??= now
       if (now - this.slowSince >= DROP_AFTER_S && this.tier < TIERS.length - 1) {
-        this.drops[this.tier]++
+        this.drops[this.tier] = now - this.climbedAt < PROBATION_S ? 2 : this.drops[this.tier] + 1
         return this.change(this.tier + 1, now)
       }
-    } else if (this.smoothed < FAST_MS) {
+    } else if (this.smoothed < ON_TIME_MS && this.smoothedWork < LIGHT_WORK_MS) {
       this.slowSince = null
       this.fastSince ??= now
       const up = this.tier - 1
-      if (now - this.fastSince >= RISE_AFTER_S && up >= 0 && this.drops[up] < 2) return this.change(up, now)
+      if (now - this.fastSince >= RISE_AFTER_S && up >= 0 && this.drops[up] < 2) {
+        this.climbedAt = now
+        return this.change(up, now)
+      }
     } else {
       this.slowSince = null
       this.fastSince = null
