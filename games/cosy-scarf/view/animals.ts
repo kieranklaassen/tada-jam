@@ -50,17 +50,26 @@ function turn(current: number, target: number, rate: number, dt: number): number
   return current + d * (1 - Math.exp(-rate * dt))
 }
 
+/** Where lumps of snow slide over the cap's rim: [angle round the head, size, how far down]. */
+const DRIPS: [number, number, number][] = [
+  [-0.75, 0.3, 0.22],
+  [0.4, 0.26, 0.3],
+  [1.5, 0.22, 0.12],
+  [-2.2, 0.24, 0.16],
+]
+
+/** A heap of crocheted snow, lumpy with drips over its rim: a smooth even disc reads as a beret. */
 const snowCap = (radius: number) =>
-  once(`snow-cap-${radius}`, () => {
-    const snow = new THREE.Color(PALETTE.snow)
-    const shade = new THREE.Color(PALETTE.snowShade)
-    const colour: ColorFn = (p) => (p.y < radius * 0.12 ? shade : snow)
-    return merge([
-      part(ball(radius, 0.8, 14), { color: colour, scale: [1, 0.5, 0.9], underside: 0.1 }),
-      part(ball(radius * 0.55, 0.8, 10), { color: snow, at: [radius * 0.35, radius * 0.35, radius * 0.1] }),
-      part(ball(radius * 0.4, 0.8, 10), { color: snow, at: [-radius * 0.45, radius * 0.25, -radius * 0.2] }),
-    ])
-  })
+  once(`snow-cap-${radius}`, () =>
+    merge([
+      part(ball(radius, 0.8, 14), { color: PALETTE.snow, scale: [1, 0.55, 0.95], underside: 0.06 }),
+      part(ball(radius * 0.58, 0.8, 10), { color: PALETTE.snow, at: [radius * 0.3, radius * 0.38, radius * 0.1] }),
+      part(ball(radius * 0.42, 0.8, 10), { color: PALETTE.snow, at: [-radius * 0.42, radius * 0.28, -radius * 0.15] }),
+      ...DRIPS.map(([angle, size, drop]) =>
+        part(ball(radius * size, 0.8, 8), { color: PALETTE.snow, at: [Math.sin(angle) * radius * 0.88, -radius * drop, Math.cos(angle) * radius * 0.82], underside: 0.06 }),
+      ),
+    ]),
+  )
 
 /** Two bead eyes centred on y = 0, so scaling the mesh in y closes them. */
 const eyes = (key: string, x: number, z: number, radius: number) =>
@@ -79,6 +88,8 @@ abstract class Amigurumi {
   protected abstract readonly breathEvery: number
   protected abstract readonly director: MotionDirector
   protected readonly material: THREE.MeshStandardMaterial
+  /** The snow cap is not the animal: it keeps its own white, untouched by the cold tint. */
+  private readonly snow: THREE.MeshStandardMaterial
   protected readonly warmth: WarmthUniforms
   protected readonly pose: Pose = emptyPose()
   protected shownYaw = 0
@@ -99,6 +110,7 @@ abstract class Amigurumi {
   constructor(materials: YarnMaterials) {
     const { material, warmth } = materials.animal()
     this.material = material
+    this.snow = materials.crochet
     this.warmth = warmth
     this.root.add(this.body)
     this.body.add(this.neck)
@@ -113,7 +125,7 @@ abstract class Amigurumi {
   /** The eyes (their own mesh, so they can blink), a lump of snow on the head, and where the breath leaves the mouth. */
   protected face(head: THREE.Object3D, eyeGeometry: THREE.BufferGeometry, eyeY: number, capY: number, capRadius: number, mouth: [number, number, number]): void {
     this.eyeMesh = this.piece(eyeGeometry, head, 0, eyeY, 0)
-    this.cap = this.piece(snowCap(capRadius), head, 0, capY, -0.4)
+    this.cap = this.piece(snowCap(capRadius), head, 0, capY, -0.4, this.snow)
     this.capY = capY
     this.mouthAt.set(...mouth)
   }
@@ -161,8 +173,8 @@ abstract class Amigurumi {
     m.puff(this.scratch.x, this.scratch.y, this.scratch.z + 1, 0.4 + 0.25 * cold)
   }
 
-  protected piece(geometry: THREE.BufferGeometry, parent: THREE.Object3D, x: number, y: number, z: number): THREE.Mesh {
-    const mesh = new THREE.Mesh(geometry, this.material)
+  protected piece(geometry: THREE.BufferGeometry, parent: THREE.Object3D, x: number, y: number, z: number, material: THREE.Material = this.material): THREE.Mesh {
+    const mesh = new THREE.Mesh(geometry, material)
     mesh.position.set(x, y, z)
     parent.add(mesh)
     return mesh
