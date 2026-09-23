@@ -394,6 +394,44 @@ function groupOffset(group: GroupDef): Vec3 {
   return group.kind === 'turn' ? group.pivot : [0, 0, 0]
 }
 
+/** A cream coping around a rectangle's top edge: it sits proud of the sides and a little above the top. */
+function coping(builder: Builder, y: number, x0: number, x1: number, z0: number, z1: number): void {
+  const out = 0.035
+  const inset = 0.12
+  const below = y - 0.09
+  const above = y + 0.035
+  box(builder, [x0 - out, below, z1 - inset], [x1 + out, above, z1 + out], TRIM)
+  box(builder, [x0 - out, below, z0 - out], [x1 + out, above, z0 + inset], TRIM)
+  box(builder, [x1 - inset, below, z0 + inset], [x1 + out, above, z1 - inset], TRIM)
+  box(builder, [x0 - out, below, z0 + inset], [x0 + inset, above, z1 - inset], TRIM)
+}
+
+/**
+ * The lowest slab becomes a stepped plinth like the reference: a coping on its
+ * edge and a wider step around its lower half. It stays within the slab's own
+ * height so it never reaches down into the ring.
+ */
+function plinth(builder: Builder, cells: readonly CellDef[]): void {
+  let floor = Infinity
+  for (const cell of cells) floor = Math.min(floor, cell.at[1])
+  let x0 = Infinity
+  let x1 = -Infinity
+  let z0 = Infinity
+  let z1 = -Infinity
+  for (const cell of cells) {
+    if (cell.at[1] !== floor) continue
+    x0 = Math.min(x0, cell.at[0])
+    x1 = Math.max(x1, cell.at[0] + 1)
+    z0 = Math.min(z0, cell.at[2])
+    z1 = Math.max(z1, cell.at[2] + 1)
+  }
+  const step = 0.42
+  const ledge = floor + 0.45
+  coping(builder, floor + 1, x0, x1, z0, z1)
+  box(builder, [x0 - step, floor, z0 - step], [x1 + step, ledge, z1 + step], TONES.plinth)
+  coping(builder, ledge, x0 - step, x1 + step, z0 - step, z1 + step)
+}
+
 export type RoomGeometry = {
   static: THREE.BufferGeometry
   /** One per group; null for the bird (it is drawn as itself). */
@@ -406,6 +444,7 @@ export function buildRoomGeometry(info: RoomInfo): RoomGeometry {
   for (const cell of spec.cells) staticSolid.add(pack(cell.at[0], cell.at[1], cell.at[2]))
   const builder = new Builder()
   greedyCells(builder, spec.cells, staticSolid, [0, 2, 4], [0, 0, 0])
+  plinth(builder, spec.cells)
   for (const cell of spec.cells) for (const face of cell.paths ?? []) paver(builder, cell.at, face, [0, 0, 0])
   spec.decor.forEach((item, index) => {
     if (decorGroup(item) === undefined) decor(builder, item, [0, 0, 0], index)
@@ -483,24 +522,4 @@ export function buildDoorGeometry(): DoorGeometry {
     return b.geometry()
   }
   return { frame: frame.geometry(), leafLeft: leaf(1), leafRight: leaf(-1) }
-}
-
-/** Distant faceted spires in the dusk: depth for free, one draw call. */
-export function buildSilhouettes(): THREE.BufferGeometry {
-  const builder = new Builder()
-  const color = hex('#f2c3c6')
-  const spots: [number, number, number, number][] = [
-    [-15, -10, 0.9, 5],
-    [-10, -16, 0.7, 3.5],
-    [9, -17, 0.8, 6],
-    [15, -9, 1.1, 4],
-    [-19, 2, 0.8, 3.8],
-    [18, 4, 0.7, 5],
-  ]
-  for (const [x, z, r, h] of spots) {
-    box(builder, [x - r, -12, z - r], [x + r, h - 2.2, z + r], color)
-    box(builder, [x - r * 0.7, h - 2.2, z - r * 0.7], [x + r * 0.7, h - 1, z + r * 0.7], color)
-    cone(builder, [x, h - 1, z], r * 0.6, 1.8, color)
-  }
-  return builder.geometry()
 }

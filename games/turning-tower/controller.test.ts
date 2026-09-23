@@ -9,10 +9,10 @@ const rooms = ROOMS.map(resolveRoom)
 
 type Harness = { tower: TowerController; saves: SavedState[]; now: () => number; run: (seconds: number) => void; sounds: string[] }
 
-function harness(state: SavedState = defaultState(rooms)): Harness {
+function harness(state: SavedState = defaultState(rooms), heard: Sound = SILENT): Harness {
   const saves: SavedState[] = []
   const sounds: string[] = []
-  const sound = new Proxy(SILENT, {
+  const sound = new Proxy(heard, {
     get(target, key: keyof Sound) {
       const fn = target[key]
       return (...args: unknown[]) => {
@@ -89,6 +89,29 @@ describe('turning tower controller', () => {
     expect(h.sounds).toContain('wonder')
   })
 
+  it('remembers the door it could not reach and sets off on its own once a turn opens the way', () => {
+    const h = harness()
+    tap(h, [6.5, 3, 2.5])
+    h.run(3)
+    dragGroup(h, 0, [3.5, 3, 3.5], 1, 2.05)
+    h.run(0.2)
+    expect(h.tower.isWalking).toBe(false)
+    h.run(10)
+    expect(h.tower.currentRoom.spec.key).toBe('ferry')
+  })
+
+  it('forgets that wish when the child sends the wanderer somewhere else', () => {
+    const h = harness()
+    tap(h, [6.5, 3, 2.5])
+    h.run(3)
+    tap(h, [0.5, 3, 2.5])
+    h.run(2)
+    dragGroup(h, 0, [3.5, 3, 3.5], 1, 2.05)
+    h.run(10)
+    expect(h.tower.currentRoom.spec.key).toBe('first-turn')
+    expect(h.tower.walkerTile).toBe(tileAt(0, [0, 2, 2]))
+  })
+
   it('turns the bridge with a drag, settles on a quarter, saves, and opens the way', () => {
     const h = harness()
     dragGroup(h, 0, [3.5, 3, 3.5], 1, 2.05)
@@ -135,11 +158,42 @@ describe('turning tower controller', () => {
     const h = harness(deserialize({ v: 1, current: 'ferry', rooms: { ferry: { groups: [0], walker: raftTile } } }, rooms))
     h.run(0.5)
     const before = h.tower.frame.walker.z
-    dragGroup(h, 0, [4.02, 2.5, 0.5], 0, 4.1)
+    dragGroup(h, 0, [3.5, 2.5, 1.02], 0, 4.1)
     h.run(2)
     expect(h.tower.arrangementNow).toEqual([4])
     expect(h.tower.frame.walker.z - before).toBeCloseTo(4, 1)
     expect(h.tower.walkerTile).toBe(raftTile)
+  })
+
+  it('answers the ferry grip where it peeks out under the door tower', () => {
+    const h = harness(deserialize({ v: 1, current: 'ferry', rooms: { ferry: { groups: [3], walker: rooms[1].startTile } } }, rooms))
+    h.run(0.5)
+    dragGroup(h, 0, [3.5, 2.5, 1.02], 3, 1.92)
+    h.run(1.5)
+    expect(h.tower.arrangementNow).toEqual([2])
+  })
+
+  it('lands a released segment with weight: it sinks, bobs back, and carries the wanderer with it', () => {
+    const ferry = rooms[1]
+    const raftTile = tileId(ferry.cells.findIndex((c) => c.group === 0), UP)
+    const h = harness(deserialize({ v: 1, current: 'ferry', rooms: { ferry: { groups: [0], walker: raftTile } } }, rooms))
+    h.run(0.5)
+    const restY = h.tower.frame.walker.y
+    dragGroup(h, 0, [3.5, 2.5, 1.02], 0, 3.7)
+    let deepest = 0
+    let walkerLowest = restY
+    for (let i = 0; i < 90; i++) {
+      h.run(1 / 60)
+      deepest = Math.min(deepest, h.tower.frame.dips[0])
+      walkerLowest = Math.min(walkerLowest, h.tower.frame.walker.y)
+    }
+    expect(h.sounds).toContain('settle')
+    expect(deepest).toBeLessThan(-0.02)
+    expect(deepest).toBeGreaterThan(-0.2)
+    expect(walkerLowest).toBeLessThan(restY - 0.015)
+    h.run(2)
+    expect(h.tower.frame.dips[0]).toBe(0)
+    expect(h.tower.frame.walker.y).toBeCloseTo(restY, 3)
   })
 
   it('hops the bird one stop at a time and will not hop with the wanderer on its back', () => {
@@ -195,6 +249,76 @@ describe('turning tower controller', () => {
     h.run(0.05)
     expect(h.tower.frame.hand.visible).toBe(false)
     expect(h.tower.frame.glow.strength).toBe(0)
+  })
+
+  it('answers a touch on the empty sky with a sound, a ripple, and a glance from the bird', () => {
+    const h = harness()
+    h.run(0.5)
+    const yaw = h.tower.frame.bird.headYaw
+    h.tower.pointerDown(1, 1100, 120, h.now() * 1000)
+    h.tower.pointerUp(1, 1100, 120, h.now() * 1000 + 50)
+    h.run(0.3)
+    expect(h.sounds).toContain('air')
+    expect(h.tower.frame.ripples.some((r) => r.age < 0.5)).toBe(true)
+    expect(Math.abs(h.tower.frame.bird.headYaw - yaw)).toBeGreaterThan(0.05)
+  })
+
+  it('answers each poke with the sound of the reaction it picked, never the same one twice running', () => {
+    const answers: string[] = []
+    const h = harness(defaultState(rooms), { ...SILENT, poke: (kind) => answers.push(`bird ${kind}`), greet: (kind) => answers.push(`wanderer ${kind}`) })
+    h.run(1)
+    for (let i = 0; i < 4; i++) {
+      const b = h.tower.frame.bird
+      tap(h, [b.x, b.y + 0.3, b.z])
+      h.run(1.2)
+    }
+    const walker = h.tower.walkerTile
+    for (let i = 0; i < 4; i++) {
+      const w = h.tower.frame.walker
+      tap(h, [w.x, w.y + 0.4, w.z])
+      h.run(1.5)
+    }
+    expect(h.tower.walkerTile).toBe(walker)
+    expect(answers.slice(0, 4).every((a) => a.startsWith('bird'))).toBe(true)
+    expect(answers.slice(4).every((a) => a.startsWith('wanderer'))).toBe(true)
+    expect(answers).toHaveLength(8)
+    expect(answers[0]).toBe('bird ruffle')
+    expect(answers[4]).toBe('wanderer look-out')
+    for (let i = 1; i < answers.length; i++) expect(answers[i]).not.toBe(answers[i - 1])
+    expect(h.sounds).not.toContain('tock')
+  })
+
+  it('the bird follows the wanderer in through the door instead of staying behind', () => {
+    const h = harness(deserialize({ v: 1, current: 'first-turn', rooms: { 'first-turn': { groups: [2] } } }, rooms))
+    h.run(0.5)
+    const door = h.tower.currentRoom.door
+    const away = (p: { x: number; z: number }) => Math.hypot(p.x - door[0], p.z - door[2])
+    const perch = away(h.tower.frame.bird)
+    tap(h, [6.5, 3, 2.5])
+    for (let t = 0; t < 10 && h.tower.frame.phase !== 'enter'; t += 1 / 60) h.run(1 / 60)
+    expect(h.tower.frame.phase).toBe('enter')
+    h.sounds.length = 0
+    h.run(1.2)
+    const mid = h.tower.frame.bird
+    expect(away(mid)).toBeLessThan(perch * 0.6)
+    expect(mid.alpha).toBeGreaterThan(0.5)
+    expect(h.sounds).toContain('chirp')
+    h.run(0.34)
+    expect(h.tower.frame.bird.alpha).toBeLessThan(0.05)
+    h.run(0.3)
+    expect(h.tower.frame.phase).toBe('leave')
+    expect(h.tower.frame.bird.alpha).toBe(0)
+  })
+
+  it('rests once the guidance has gone quiet, and wakes on the next touch', () => {
+    const h = harness()
+    h.run(60)
+    expect(h.tower.isResting).toBe(false)
+    h.run(35)
+    expect(h.tower.isResting).toBe(true)
+    expect(h.tower.frame.hand.visible).toBe(false)
+    h.tower.pointerDown(1, 1100, 120, h.now() * 1000)
+    expect(h.tower.isResting).toBe(false)
   })
 
   it('ignores a resting hand', () => {

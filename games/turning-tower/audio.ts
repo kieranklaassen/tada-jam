@@ -1,12 +1,14 @@
 import type { ChirpKind, Sound } from './controller'
+import { LANTERN_HALF_SWING, type Greet, type Poke } from './motion'
 
 // Every sound is synthesized with raw Web Audio (R14): stone grinding under
 // the finger, detent ticks, a heavy settle with a small bell, slide scrapes,
 // soft footsteps, a glassy shimmer when an impossible join appears, a warm
-// chord at the door, the bird's quick chirps and wing beats, and a lantern
-// chime. The context is only created inside the child's first touch, is
-// suspended while the game is unattended or hidden, and is rebuilt if WebKit
-// leaves it interrupted or closed.
+// chord at the door, the bird's quick chirps and wing beats, and each
+// character's own answer to a poke (bird chirps, lantern chimes). The context
+// is only created inside the child's first touch, is suspended while the game
+// is unattended or hidden, and is rebuilt if WebKit leaves it interrupted or
+// closed.
 
 type ExtendedState = AudioContextState | 'interrupted'
 
@@ -14,7 +16,25 @@ type ExtendedState = AudioContextState | 'interrupted'
 const BELLS = [587.33, 659.25, 739.99, 880, 987.77, 1174.66]
 const RING = [440, 493.88, 587.33, 659.25, 739.99]
 
+/** Noise is drawn at mount, not inside the first touch; a looping buffer plays at any context rate. */
+const PREPARED_RATE = 48000
+const NOISE_SECONDS = 2
+/** Mutually prime comb delays (seconds) and their feedback: the tail falls 60 dB in about 1.2 seconds, darker as it fades. */
+const HALL_TAPS: readonly (readonly [number, number])[] = [
+  [0.0297, 0.75],
+  [0.0371, 0.77],
+  [0.0411, 0.78],
+  [0.0437, 0.79],
+]
+
+function noiseSamples(length: number): Float32Array {
+  const data = new Float32Array(length)
+  for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1
+  return data
+}
+
 export class TowerAudio implements Sound {
+  private readonly preparedNoise = noiseSamples(PREPARED_RATE * NOISE_SECONDS)
   private context: AudioContext | null = null
   private master: GainNode | null = null
   private noise: AudioBuffer | null = null
@@ -59,25 +79,39 @@ export class TowerAudio implements Sound {
     master.gain.value = 0.62
     const compressor = context.createDynamicsCompressor()
     master.connect(compressor).connect(context.destination)
-    const noise = context.createBuffer(1, context.sampleRate * 2, context.sampleRate)
-    const data = noise.getChannelData(0)
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
+    const noise = context.createBuffer(1, this.preparedNoise.length, PREPARED_RATE)
+    noise.getChannelData(0).set(this.preparedNoise)
 
-    // A stone hall: a longer, darker procedural tail than a room.
-    const length = Math.round(context.sampleRate * 1.6)
-    const impulse = context.createBuffer(2, length, context.sampleRate)
-    for (let channel = 0; channel < 2; channel++) {
-      const samples = impulse.getChannelData(channel)
-      for (let i = 0; i < length; i++) samples[i] = (Math.random() * 2 - 1) * (1 - i / length) ** 4
-    }
-    const convolver = context.createConvolver()
-    convolver.buffer = impulse
+    // A stone hall from damped feedback delays, run on the audio thread. A
+    // convolver's impulse would be built on the main thread inside the first
+    // touch: over 100 ms on a slow tablet, exactly when the child first reaches out.
     const dark = context.createBiquadFilter()
     dark.type = 'lowpass'
     dark.frequency.value = 1800
+    // The grinding rumble stays out of the combs, which would ring at their low harmonics.
+    const clear = context.createBiquadFilter()
+    clear.type = 'highpass'
+    clear.frequency.value = 240
     const hall = context.createGain()
     hall.gain.value = 0.22
-    master.connect(hall).connect(dark).connect(convolver).connect(compressor)
+    const tail = context.createGain()
+    tail.gain.value = 0.09
+    master.connect(hall).connect(clear).connect(dark)
+    tail.connect(compressor)
+    for (const [seconds, feedback] of HALL_TAPS) {
+      const delay = context.createDelay(0.1)
+      delay.delayTime.value = seconds
+      const damp = context.createBiquadFilter()
+      damp.type = 'lowpass'
+      damp.frequency.value = 2200
+      // Q is in dB here: anything above −3 peaks above unity at the cutoff, and the loop would grow.
+      damp.Q.value = -3
+      const echo = context.createGain()
+      echo.gain.value = feedback
+      dark.connect(delay)
+      delay.connect(damp).connect(echo).connect(delay)
+      damp.connect(tail)
+    }
 
     const loop = (gainValue: number) => {
       const source = context.createBufferSource()
@@ -219,7 +253,11 @@ export class TowerAudio implements Sound {
     const context = this.ready()
     if (!context) return
     const now = context.currentTime
-    this.tone(74, 'sine', 0.2 + weight * 0.25, 0.006, 0.42, now, 44)
+    // Tablet speakers barely play below 200 Hz, so the weight is carried by a
+    // knock whose harmonics they can play; the deep sine is only for headphones,
+    // kept low so it cannot pump the compressor and duck the bell.
+    this.tone(74, 'sine', 0.08 + weight * 0.08, 0.006, 0.42, now, 44)
+    this.tone(180, 'triangle', 0.07 + weight * 0.08, 0.004, 0.22, now, 120)
     this.burst(520, 1.2, 0.08 + weight * 0.14, 0.09, now, 'lowpass')
     const bell = BELLS[this.bell % BELLS.length]
     this.bell += 2
@@ -299,10 +337,6 @@ export class TowerAudio implements Sound {
     if (!context) return
     const now = context.currentTime
     switch (kind) {
-      case 'greet':
-        this.tone(2300, 'sine', 0.05, 0.004, 0.06, now, 3300)
-        this.tone(2600, 'sine', 0.045, 0.004, 0.07, now + 0.09, 3500)
-        return
       case 'hop':
         this.tone(2700, 'sine', 0.045, 0.003, 0.05, now, 3700)
         return
@@ -330,12 +364,58 @@ export class TowerAudio implements Sound {
     this.burst(760, 0.8, 0.04, 0.05, now)
   }
 
-  lantern(): void {
+  poke(kind: Poke): void {
     const context = this.ready()
     if (!context) return
     const now = context.currentTime
-    this.tone(1760, 'sine', 0.06, 0.003, 0.9, now)
-    this.tone(2637, 'sine', 0.025, 0.003, 0.6, now + 0.01)
+    switch (kind) {
+      case 'ruffle':
+        // A scolding double chirp over a rustle of feathers.
+        this.tone(2700, 'sine', 0.05, 0.003, 0.05, now, 2000)
+        this.tone(2500, 'sine', 0.045, 0.003, 0.05, now + 0.07, 1850)
+        this.burst(3200, 1.2, 0.02, 0.07, now)
+        return
+      case 'puff':
+        // A low rolling trill as the chest swells.
+        for (let i = 0; i < 5; i++) this.tone(1250 - i * 40, 'triangle', 0.035 - i * 0.005, 0.004, 0.03, now + i * 0.034)
+        this.burst(1400, 0.8, 0.015, 0.12, now + 0.02, 'lowpass')
+        return
+      case 'bob':
+        // One rising pip for each of the two flaps.
+        this.tone(2300, 'sine', 0.045, 0.003, 0.04, now + 0.09, 3000)
+        this.tone(2700, 'sine', 0.045, 0.003, 0.04, now + 0.22, 3400)
+        return
+      default: {
+        const unreachable: never = kind
+        return unreachable
+      }
+    }
+  }
+
+  greet(kind: Greet): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    switch (kind) {
+      case 'look-out':
+        this.tone(1760, 'sine', 0.06, 0.003, 0.9, now)
+        this.tone(2637, 'sine', 0.025, 0.003, 0.6, now + 0.01)
+        return
+      case 'bow':
+        // A soft falling pair, slow in and slow out.
+        this.tone(1318.51, 'sine', 0.045, 0.03, 0.9, now)
+        this.tone(880, 'sine', 0.05, 0.04, 1.2, now + 0.3)
+        return
+      case 'swing':
+        // The lantern rings once each way, half a pendulum swing apart.
+        this.tone(1760, 'sine', 0.05, 0.003, 0.7, now)
+        this.tone(1975.53, 'sine', 0.035, 0.003, 0.7, now + LANTERN_HALF_SWING)
+        return
+      default: {
+        const unreachable: never = kind
+        return unreachable
+      }
+    }
   }
 
   wonder(): void {
