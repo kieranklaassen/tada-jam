@@ -13,11 +13,11 @@ import { ClayProvider } from './models'
 // warm key light with a cool bounce from the table, no shadow maps (blob
 // shadows do that job), and one post pass. DPR is capped at 2.
 
-const TARGET = new THREE.Vector3(1, 0, 4)
-const PITCH = (56 * Math.PI) / 180
-const FOV = 30
+const TARGET = new THREE.Vector3(1, 0, 2)
+const PITCH = (46 * Math.PI) / 180
+const FOV = 27
 const HALF_WIDTH = 82
-const HALF_DEPTH = 54
+const HALF_DEPTH = 46
 
 function CameraRig() {
   const camera = useThree((state) => state.camera) as THREE.PerspectiveCamera
