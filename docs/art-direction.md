@@ -44,6 +44,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Shadow Lantern | Paper-craft diorama: layered cut paper on deep indigo, a brass lamp throwing geometric shadows onto a lit paper screen, offset dark shadow cards | [`games/shadow-lantern/ART.md`](../games/shadow-lantern/ART.md) |
 | Bedtime Forest | Picture-book gouache 3D: opaque pigment in 2–3 painted tone bands, dry brush, a loose brown ink line, paper grain; warm animals in blue-green woods under an apricot-to-violet dusk | [`games/bedtime-forest/ART.md`](../games/bedtime-forest/ART.md) |
 | Turning Tower | Geometric (Monument Valley): faceted flat-shaded towers on stepped plinths under a peach-to-lavender dusk, orthographic, with a hard hue split (mint paths, sunflower handles, indigo wanderer) | [`games/turning-tower/ART.md`](../games/turning-tower/ART.md) |
+| Critter Clay | Claymation 3D, second entry (owner-approved): a clay workshop bench in cool daylight, cobalt, lemon, and bubblegum-pink plasticine on a slate-blue board, 12 fps boil only while moving | [`games/critter-clay/ART.md`](../games/critter-clay/ART.md) |
 
 ## 4. Menu of unclaimed directions
 
