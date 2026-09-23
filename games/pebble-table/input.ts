@@ -1,4 +1,5 @@
 import type { MatKey, Point } from './layout'
+import type { PartKind } from './parts'
 
 // Direct-touch gestures (R4, R38, KTD8). The tracker turns raw pointer
 // events into intents; the scene decides what an intent does. At most three
@@ -14,6 +15,8 @@ export type Target =
   | { kind: 'guest'; seat: number }
   | { kind: 'bowl' }
   | { kind: 'door' }
+  | { kind: 'part'; id: number }
+  | { kind: 'jar'; part: PartKind }
   | { kind: 'visitor'; index: number }
   | { kind: 'broom' }
 

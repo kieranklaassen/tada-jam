@@ -214,3 +214,17 @@ describe('swapMat', () => {
     expect(serialize(state)).toEqual(before)
   })
 })
+
+describe('loose parts in saved state', () => {
+  it('keeps known parts on the scale, drops unknown kinds and extras, and assigns fresh ids', () => {
+    const raw = { ...serialize({ ...defaultTable(6), liveMat: 'scale' }), parts: [{ kind: 'boulder', x: 500, y: 500 }, { kind: 'boulder', x: 600, y: 500 }, { kind: 'dragon', x: 1, y: 1 }, { kind: 'acorn', x: 99999, y: 500 }] }
+    const state = deserialize(JSON.parse(JSON.stringify(raw)), 6)
+    expect(state.parts.map((p) => p.kind)).toEqual(['boulder', 'acorn'])
+    expect(new Set(state.parts.map((p) => p.id)).size).toBe(2)
+    expect(state.parts[1].x).toBeLessThan(1500)
+  })
+  it('keeps no parts out when the scale is not the live mat', () => {
+    const raw = { ...serialize(defaultTable(4)), parts: [{ kind: 'shell', x: 500, y: 500 }] }
+    expect(deserialize(JSON.parse(JSON.stringify(raw)), 4).parts).toEqual([])
+  })
+})

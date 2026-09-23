@@ -1,4 +1,5 @@
 import * as CANNON from 'cannon-es'
+import { JARS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 
 // Real stone physics (cannon-es) under the same world coordinates the game
@@ -122,6 +123,7 @@ export class TablePhysics {
     this.world.removeBody(bowl)
     this.removeFixture('post')
     this.removeFixture('house')
+    for (const kind of ['acorn', 'shell', 'stick'] as const) this.removeFixture(`jar-${kind}`)
     if (mat === 'door') {
       this.setFixture('house', { ...DOOR.house, r: 130 * DOOR.houseScale }, 34)
       return
@@ -140,6 +142,7 @@ export class TablePhysics {
       this.pans.push(body)
     }
     this.setFixture('post', { ...SCALE.post, r: 18 }, 30)
+    for (const kind of ['acorn', 'shell', 'stick'] as const) this.setFixture(`jar-${kind}`, { ...JARS[kind], r: 48 }, 16)
     this.panDrops = [0, 0]
   }
 
@@ -202,6 +205,39 @@ export class TablePhysics {
     })
     this.world.addBody(body)
     this.stones.set(id, { body, q })
+  }
+
+  /** A loose part (acorn, shell, stick, boulder) with its own shape and weight; it moves, holds, and falls like a stone. */
+  addPart(id: number, kind: PartKind, at: Point, options: { y?: number; velocity?: Vec3; spin?: number } = {}): void {
+    this.removeStone(id)
+    const shape: { body: CANNON.Shape; mass: number; half: number; damping: number } = (() => {
+      switch (kind) {
+        case 'acorn':
+          return { body: new CANNON.Cylinder(1.3, 1.3, 1.9, STONE_SIDES), mass: 2, half: 0.95, damping: 0.4 }
+        case 'shell':
+          return { body: new CANNON.Cylinder(2, 1.65, 0.7, STONE_SIDES), mass: 1, half: 0.35, damping: 0.45 }
+        case 'stick':
+          return { body: new CANNON.Box(new CANNON.Vec3(3.6, 0.45, 0.45)), mass: 4, half: 0.45, damping: 0.45 }
+        case 'boulder':
+          return { body: new CANNON.Cylinder(3.7, 3.7, 3.4, STONE_SIDES), mass: 12, half: 1.7, damping: 0.65 }
+        default: {
+          const unknown: never = kind
+          return unknown
+        }
+      }
+    })()
+    const body = new CANNON.Body({ mass: shape.mass, material: this.stoneMaterial, linearDamping: shape.damping, angularDamping: 0.8, sleepSpeedLimit: 1.2, sleepTimeLimit: 0.4 })
+    body.addShape(shape.body)
+    const p = to3(at, options.y ?? shape.half)
+    body.position.set(p.x, p.y, p.z)
+    if (options.velocity) body.velocity.set(options.velocity.x, options.velocity.y, options.velocity.z)
+    if (options.spin) body.angularVelocity.set(0, options.spin, 0)
+    body.addEventListener('collide', (event: { contact: CANNON.ContactEquation }) => {
+      const speed = Math.abs(event.contact.getImpactVelocityAlongNormal())
+      if (speed > 25) this.impacts.push(speed)
+    })
+    this.world.addBody(body)
+    this.stones.set(id, { body, q: 4 })
   }
 
   removeStone(id: number): void {

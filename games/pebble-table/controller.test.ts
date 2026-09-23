@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { TableController, type Projector } from './controller'
 import { IDLE_BEFORE_HINT } from './guidance'
-import { BAG, DOOR, FEEDING, SCALE } from './layout'
+import { BAG, DOOR, FEEDING, SCALE, shelfTile } from './layout'
+import { JARS, PART_COUNTS } from './parts'
 import { toWorld2 } from './physics3d'
 import { panOf } from './scale'
 import { plateOf } from './feeding'
@@ -226,5 +227,49 @@ describe('Knock-Knock', () => {
       was = now
     }
     expect(peeks).toBe(3)
+  })
+})
+
+describe('jars of loose parts', () => {
+  const scaleTable = () => {
+    const state = { ...defaultTable(6), bag: 40, total: 40 }
+    const table = new TableController(state, { save: vi.fn() })
+    table.setProjector(topDown)
+    tap(table, { x: 1000, y: 950 })
+    run(table, 2)
+    return table
+  }
+
+  it('tips everything out of a jar and an empty jar only wobbles', () => {
+    const table = scaleTable()
+    tap(table, JARS.acorn)
+    run(table, 2)
+    expect(table.state.parts.filter((p) => p.kind === 'acorn')).toHaveLength(PART_COUNTS.acorn)
+    tap(table, JARS.acorn)
+    run(table, 1)
+    expect(table.state.parts.filter((p) => p.kind === 'acorn')).toHaveLength(PART_COUNTS.acorn)
+  })
+
+  it('weighs the boulder honestly: it balances three stones', () => {
+    const table = scaleTable()
+    for (const piece of [...table.state.pieces]) drag(table, piece, { x: 700, y: 880 })
+    drag(table, JARS.boulder, SCALE.pans[0])
+    for (let i = 0; i < 3; i++) {
+      drag(table, { x: BAG.x, y: BAG.y }, { x: SCALE.pans[1].x - 30 + i * 30, y: SCALE.pans[1].y })
+      run(table, 0.6)
+    }
+    run(table, 4)
+    expect(Math.abs(table.beam.angle)).toBeLessThan(0.02)
+  })
+
+  it('sends every part home when the scale is put away', () => {
+    const table = scaleTable()
+    tap(table, JARS.shell)
+    run(table, 2)
+    expect(table.state.parts.length).toBeGreaterThan(0)
+    tap(table, shelfTile(0))
+    run(table, 1)
+    expect(table.state.liveMat).not.toBe('scale')
+    expect(table.state.parts).toHaveLength(0)
   })
 })

@@ -6,7 +6,8 @@ import { inBowl } from '../feeding'
 import { BAG, DOOR, FEEDING, SCALE, shelfTile, type Point } from '../layout'
 import { stoneHeight3, stoneRadius3, toWorld2 } from '../physics3d'
 import { panOf } from '../scale'
-import { BagModel, DoorModel, FeedingSetting, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, StonesModel, TableModel, type Blob, type GuestPose, type StoneState } from './models'
+import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
+import { BagModel, DoorModel, FeedingSetting, JarsModel, PartsModel, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, StonesModel, TableModel, type Blob, type GuestPose, type PartState, type StoneState } from './models'
 import { GrownUpOverlay } from './overlay'
 import { ProjectorBridge, Stage, type ProjectorHandle } from './stage'
 
@@ -44,6 +45,26 @@ function stoneStates(table: TableController): StoneState[] {
   return states
 }
 
+function partStates(table: TableController): PartState[] {
+  const states: PartState[] = []
+  for (const part of table.state.parts) {
+    const body = table.physics.body(part.id)
+    if (!body) continue
+    states.push({
+      id: part.id,
+      kind: part.kind,
+      position: { x: body.position.x, y: body.position.y, z: body.position.z },
+      quaternion: [body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w],
+      held: table.isHeld(part.id),
+    })
+  }
+  return states
+}
+
+function jarCounts(table: TableController): Record<PartKind, number> {
+  return { acorn: inJar(table.state.parts, 'acorn'), shell: inJar(table.state.parts, 'shell'), stick: inJar(table.state.parts, 'stick'), boulder: inJar(table.state.parts, 'boulder') }
+}
+
 function groundUnder(table: TableController, at: Point): number {
   if (table.state.liveMat === 'scale') {
     const side = panOf(at)
@@ -67,6 +88,12 @@ function shadows(table: TableController): Blob[] {
     for (const visitor of table.door.visitors) if (visitor.leaveAt === null && table.t > visitor.outAt + 0.6) blobs.push({ at: visitor.home, ground: 0, radius: 5.5, strength: 0.45, stretch: 1 })
   } else if (table.state.liveMat === 'scale') {
     blobs.push({ at: SCALE.post, ground: 0, radius: 8.5, strength: 0.55, stretch: 2 })
+    for (const kind of Object.keys(JARS) as PartKind[]) blobs.push({ at: JARS[kind], ground: 0, radius: 8, strength: 0.45, stretch: 2 })
+    for (const part of partStates(table)) {
+      const at = toWorld2(part.position)
+      const ground = groundUnder(table, at)
+      blobs.push({ at, ground, radius: (PART_RADIUS[part.kind] / 10) * 1.1, strength: 0.7, stretch: 0.5 + Math.max(0, part.position.y - ground - 1) })
+    }
     SCALE.pans.forEach((pan, side) => blobs.push({ at: pan, ground: 0, radius: 15, strength: 0.32, stretch: table.physics.panTop(side as 0 | 1) }))
   } else {
     blobs.push({ at: FEEDING.bowl, ground: 0, radius: 12.5, strength: 0.4, stretch: 1 })
@@ -150,7 +177,11 @@ function World({ table }: { table: TableController }) {
           })}
         />
       ) : live === 'scale' ? (
-        <ScaleModel read={() => ({ angle: table.beam.angle, panY: [table.physics.panTop(0), table.physics.panTop(1)], now: table.t })} />
+        <>
+          <ScaleModel read={() => ({ angle: table.beam.angle, panY: [table.physics.panTop(0), table.physics.panTop(1)], now: table.t })} />
+          <JarsModel read={() => ({ tips: table.jarTips, full: jarCounts(table), glow: table.state.parts.length === 0 ? table.guidance.glow : 0, now: table.t })} />
+          <PartsModel read={() => partStates(table)} />
+        </>
       ) : (
         <>
           <FeedingSetting seats={table.state.seats} showStools={table.stoolsShown} />

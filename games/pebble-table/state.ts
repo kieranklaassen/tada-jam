@@ -1,4 +1,5 @@
 import { inBowl, plateOf } from './feeding'
+import { readParts, type Part } from './parts'
 import { panOf } from './scale'
 import {
   BAG_MOUTH,
@@ -30,6 +31,8 @@ export type TableState = {
   parked: Record<MatKey, Piece[]>
   seats: boolean[]
   nextId: number
+  /** Loose parts out of their jars; only while the scale is out. */
+  parts: Part[]
 }
 
 export function bagStonesForAge(childAge: number | null): number {
@@ -53,6 +56,7 @@ export function defaultTable(childAge: number | null): TableState {
     parked: { feeding: [], scale: [], door: [] },
     seats: FEEDING.seats.map((_, index) => index === 1 || index === 4),
     nextId: 1,
+    parts: [],
   }
 }
 
@@ -117,6 +121,7 @@ export function deserialize(raw: unknown, childAge: number | null): TableState {
     parked,
     seats,
     nextId: 1,
+    parts: [],
   }
   if (parked[liveMat].length > 0) {
     state.pieces.push(...parked[liveMat])
@@ -126,6 +131,7 @@ export function deserialize(raw: unknown, childAge: number | null): TableState {
   const maxId = Math.max(0, ...allPieces(state).map((piece) => piece.id))
   const savedNext = Math.floor(finite(raw.nextId, 1))
   state.nextId = Math.max(savedNext > 0 && savedNext < 1_000_000_000 ? savedNext : 1, maxId + 1)
+  state.parts = liveMat === 'scale' ? readParts(raw.parts, () => state.nextId++) : []
   return state
 }
 
@@ -153,6 +159,7 @@ export function serialize(state: TableState): TableState {
     parked: { feeding: round(state.parked.feeding), scale: round(state.parked.scale), door: round(state.parked.door) },
     shelf: [...state.shelf],
     seats: [...state.seats],
+    parts: state.parts.map((part) => ({ id: part.id, kind: part.kind, x: Math.round(part.x), y: Math.round(part.y) })),
   }
 }
 
@@ -234,6 +241,7 @@ export function onMatParts(mat: MatKey, piece: Piece): boolean {
 export function swapMat(state: TableState, next: MatKey): void {
   if (next === state.liveMat) return
   const outgoing = state.liveMat
+  if (outgoing === 'scale') state.parts = []
   const staying: Piece[] = []
   for (const piece of state.pieces) {
     if (onMatParts(outgoing, piece)) state.parked[outgoing].push(piece)

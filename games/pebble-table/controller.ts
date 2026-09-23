@@ -9,6 +9,7 @@ import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, 
 import { cutPiece, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
 import { chunk, clusterPieces, groupsFor, schedule } from './voice'
 import { SEAT_SPECIES } from './motion'
+import { inJar, jarAt, JARS, PART_RADIUS, PART_WEIGHT, spillFrom, type Part, type PartKind } from './parts'
 
 // The table while it is on screen: game rules, real physics, touch, sound,
 // saving, and guidance. It knows nothing about rendering; the 3D view reads
@@ -154,6 +155,8 @@ export class TableController {
   stoolsShown: boolean
   /** The first-open story beat: a stone rolls out toward the hungry guest and the ghost hand carries it to the plate. */
   private story: Story | null = null
+  /** When each jar was last tipped or touched, for its wobble. */
+  readonly jarTips = new Map<PartKind, number>()
   /** Knock-Knock: the child's knocks waiting for an answer, the house's answer, and the visitors in the yard. */
   readonly door: DoorState = { knocks: [], knockAt: null, answer: null, openAt: null, closeAt: null, visitors: [], peekStretch: { lastIdle: 0, count: 0, next: PEEK_AFTER, at: null } }
 
@@ -166,6 +169,7 @@ export class TableController {
     this.physics.addBag()
     this.enterMat()
     for (const piece of this.state.pieces) this.addPieceBody(piece)
+    for (const part of this.state.parts) this.physics.addPart(part.id, part.kind, part)
     this.feeding = viewFeeding(this.state.pieces, this.state.seats)
     this.stoolsShown = this.state.seats.filter(Boolean).length > 2
     if (this.untouchedTable() && this.state.liveMat === 'feeding' && this.state.seats.some(Boolean)) {
@@ -228,20 +232,23 @@ export class TableController {
       if (at) this.physics.setBroom(pointerId, at)
     }
     if (this.state.liveMat === 'scale') {
-      this.beam = stepBeam(this.beam, targetTilt(panWeights(this.restingPieces())), dt)
+      this.beam = stepBeam(this.beam, targetTilt(this.panLoad()), dt)
       this.physics.setPanDrops(panDrops(this.beam.angle))
       const sound = creak(this.beam)
       this.sound.creak(sound.gain, sound.pitch)
     }
     const report = this.physics.step(dt)
-    for (const id of report.fallen) this.sendHome(id)
+    for (const id of report.fallen) {
+      if (this.partById(id)) this.sendPartHome(id)
+      else this.sendHome(id)
+    }
     for (const speed of report.impacts.slice(0, 2)) this.sound.clack(speed / 180)
     if (report.moving) this.cadence.markDirty()
-    for (const piece of this.state.pieces) {
-      const at = this.physics.position2(piece.id)
+    for (const item of [...this.state.pieces, ...this.state.parts]) {
+      const at = this.physics.position2(item.id)
       if (at) {
-        piece.x = at.x
-        piece.y = at.y
+        item.x = at.x
+        item.y = at.y
       }
     }
     this.updateFlights(now)
@@ -539,6 +546,74 @@ export class TableController {
     for (const flight of moving) flight.land()
   }
 
+  // --- loose parts --------------------------------------------------------------
+
+  private partById(id: number): Part | undefined {
+    return this.state.parts.find((part) => part.id === id)
+  }
+
+  /** What each pan carries, in quarter-stones: stones by size, parts by their own weight. */
+  private panLoad(): [number, number] {
+    const weights = panWeights(this.restingPieces())
+    const held = new Set(this.held.values())
+    for (const part of this.state.parts) {
+      if (held.has(part.id)) continue
+      const side = panOf(part)
+      if (side !== null) weights[side] += PART_WEIGHT[part.kind]
+    }
+    return weights
+  }
+
+  private newPart(kind: PartKind, at: Point): Part {
+    const part = { id: this.state.nextId, kind, x: at.x, y: at.y }
+    this.state.nextId += 1
+    this.state.parts.push(part)
+    return part
+  }
+
+  /** Tip a jar: everything still in it tumbles out toward the middle of the mat. An empty jar just wobbles. */
+  private tipJar(kind: PartKind): void {
+    this.jarTips.set(kind, this.t)
+    const count = inJar(this.state.parts, kind)
+    if (count === 0) {
+      this.sound.touch(0.9)
+      return
+    }
+    this.sound.rustle()
+    for (let i = 0; i < count; i++) {
+      const { at, direction } = spillFrom(kind, i, count)
+      const part = this.newPart(kind, at)
+      const speed = kind === 'boulder' ? 45 : 60 + Math.random() * 30
+      this.physics.addPart(part.id, kind, at, { y: 5 + i * 1.5, velocity: { x: direction.x * speed, y: 18 + Math.random() * 12, z: direction.y * speed }, spin: (Math.random() - 0.5) * 8 })
+    }
+    this.changed()
+    this.cadence.change(performance.now(), true)
+  }
+
+  private pullFromJar(kind: PartKind, at: Point): Part | null {
+    if (inJar(this.state.parts, kind) === 0) return null
+    this.jarTips.set(kind, this.t)
+    const part = this.newPart(kind, at)
+    this.physics.addPart(part.id, kind, at, { y: HOLD_HEIGHT })
+    this.physics.hold(part.id)
+    this.sound.touch(1.1)
+    this.changed()
+    this.cadence.change(performance.now(), true)
+    return part
+  }
+
+  /** A part goes back into its jar (dropped on it, or fallen off the table); the jar wobbles to take it. */
+  private sendPartHome(id: number): void {
+    const part = this.partById(id)
+    if (!part) return
+    this.physics.removeStone(id)
+    this.state.parts = this.state.parts.filter((p) => p.id !== id)
+    this.jarTips.set(part.kind, this.t)
+    this.sound.clatter(1)
+    this.changed()
+    this.cadence.change(performance.now(), true)
+  }
+
   // --- Knock-Knock --------------------------------------------------------------
 
   /** A knock on the little house. Knocks gather until the child pauses; knocking again sends the last visitors home first. */
@@ -664,7 +739,7 @@ export class TableController {
       liveMat: this.state.liveMat,
       bag: this.state.bag,
       loose: resting.filter((piece) => !zone(piece)).map(({ id, x, y }) => ({ id, x, y })),
-      panWeights: panWeights(resting),
+      panWeights: this.panLoad(),
       bowl: this.state.liveMat === 'feeding' ? resting.filter((piece) => inBowl(piece)).map(({ id, x, y }) => ({ id, x, y })) : [],
       plates: this.feeding.plates,
       seats: this.state.seats,
@@ -875,6 +950,19 @@ export class TableController {
       if (within(to3(DOOR.door, 6), DOOR.doorRadius * UNIT) < Infinity) return { kind: 'door' }
     }
 
+    if (this.state.liveMat === 'scale') {
+      let part: { id: number; distance: number } | null = null
+      for (const candidate of this.state.parts) {
+        const body = this.physics.body(candidate.id)
+        if (!body || this.isHeld(candidate.id)) continue
+        const distance = within({ x: body.position.x, y: body.position.y, z: body.position.z }, PART_RADIUS[candidate.kind] * UNIT)
+        if (distance < (part?.distance ?? Infinity)) part = { id: candidate.id, distance }
+      }
+      if (part) return { kind: 'part', id: part.id }
+      for (const kind of Object.keys(JARS) as PartKind[]) {
+        if (within(to3(JARS[kind], 3), JARS[kind].r * UNIT) < Infinity) return { kind: 'jar', part: kind }
+      }
+    }
     let best: { id: number; distance: number } | null = null
     for (const piece of this.restingPieces()) {
       const body = this.physics.body(piece.id)
@@ -929,6 +1017,12 @@ export class TableController {
       this.sound.touch(piece.q === 4 ? 1 : 1.4)
       return
     }
+    if (target.kind === 'part') {
+      this.held.set(pointerId, target.id)
+      this.physics.hold(target.id)
+      this.sound.touch(1.2)
+      return
+    }
     if (target.kind !== 'broom') this.sound.touch(target.kind === 'bag' ? 0.8 : 1.2)
   }
 
@@ -955,6 +1049,10 @@ export class TableController {
         return this.hopFromBowl()
       case 'door':
         return this.knock()
+      case 'part':
+        return this.release(pointerId, { x: 0, y: 0 })
+      case 'jar':
+        return this.tipJar(target.part)
       case 'visitor': {
         const visitor = this.door.visitors[target.index]
         if (visitor) visitor.pokeAt = this.t
@@ -1002,7 +1100,14 @@ export class TableController {
           this.syncGuests()
         }
         return
+      case 'jar': {
+        const at = (screen && this.projector?.toPlane(screen, HOLD_HEIGHT)) ?? JARS[target.part]
+        const part = this.pullFromJar(target.part, at)
+        if (part) this.held.set(pointerId, part.id)
+        return
+      }
       case 'piece':
+      case 'part':
       case 'chair':
       case 'bowl':
       case 'door':
@@ -1069,7 +1174,16 @@ export class TableController {
   private release(pointerId: number, velocity: Point, speak = true): void {
     const id = this.held.get(pointerId)
     this.held.delete(pointerId)
-    if (id === undefined || !this.pieceById(id)) return
+    if (id === undefined) return
+    const part = this.partById(id)
+    if (part) {
+      const dropped = this.physics.position2(id)
+      this.physics.release(id, velocity)
+      if (dropped && jarAt(dropped) === part.kind) this.sendPartHome(id)
+      this.cadence.change(performance.now(), true)
+      return
+    }
+    if (!this.pieceById(id)) return
     const at = this.physics.position2(id)
     if (at && Math.hypot(at.x - BAG.x, at.y - BAG.y) < BAG.r * 0.8) {
       this.physics.release(id, { x: 0, y: 0 })

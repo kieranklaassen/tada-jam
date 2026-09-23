@@ -7,6 +7,7 @@ import { createClayMaterials, merge, PALETTE, piece, type ClayMaterials } from '
 import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
 import { useQuality } from './quality'
 import { MotionDirector, PERSONALITIES, SEAT_SPECIES, type Species } from '../motion'
+import { JAR_SCALE, JARS, PART_COUNTS, PART_KINDS, type PartKind } from '../parts'
 import * as geo from './geometry'
 
 // Claymation models. Rigid props are merged into one mesh each (one draw
@@ -842,6 +843,149 @@ export function KnifeModel({ read }: { read: () => { at: Point; visible: boolean
     <group ref={ref}>
       <mesh geometry={geometry} material={clay} />
     </group>
+  )
+}
+
+// --- loose parts and their jars ---------------------------------------------------
+
+const PARTS = { nut: '#a8703d', cap: '#6e4a2c', shell: '#f4d3c0', rib: '#e3a98f', bark: '#7a5238', twig: '#8f6644', rock: '#8d8176' }
+/** Part meshes are modelled small; drawn at this size they match their colliders. */
+const PART_DRAW_SCALE = 1.45
+const JAR_COLORS: Record<PartKind, string> = { acorn: '#d9a441', shell: '#5f9fb8', stick: '#5d8a5a', boulder: '#d8b36a' }
+
+function partGeometry(kind: PartKind): THREE.BufferGeometry {
+  const sphere = geo.sphere(16)
+  switch (kind) {
+    case 'acorn':
+      return merge([
+        piece(sphere, PARTS.nut, { position: [0, -0.15, 0], scale: [0.85, 1.0, 0.85] }, { lump: 0.06, ground: null }),
+        piece(sphere, PARTS.cap, { position: [0, 0.45, 0], scale: [0.98, 0.5, 0.98] }, { lump: 0.1, ground: null }),
+        piece(geo.capsule(6), PARTS.cap, { position: [0, 0.95, 0], scale: [0.14, 0.35, 0.14] }, { ground: null }),
+      ])
+    case 'shell':
+      return merge([
+        piece(sphere, PARTS.shell, { scale: [1.35, 0.32, 1.15] }, { lump: 0.05, ground: null }),
+        ...[-0.5, 0, 0.5].map((angle) => piece(geo.capsule(6), PARTS.rib, { position: [Math.sin(angle) * 0.55, 0.22, Math.cos(angle) * 0.35], rotation: [Math.PI / 2, angle, 0], scale: [0.12, 1.2, 0.12] }, { ground: null })),
+      ])
+    case 'stick':
+      return merge([
+        piece(geo.capsule(8), PARTS.bark, { rotation: [0, 0, Math.PI / 2], scale: [0.62, 5, 0.62] }, { lump: 0.1, frequency: 1.2, ground: null }),
+        piece(geo.capsule(6), PARTS.twig, { position: [0.8, 0.35, 0.4], rotation: [0.6, 0, 0.9], scale: [0.3, 1.4, 0.3] }, { ground: null }),
+      ])
+    case 'boulder':
+      return merge([piece(sphere, PARTS.rock, { scale: [3.3, 1.9, 3.1] }, { lump: 0.35, frequency: 0.8, seed: 41, ground: null })])
+    default: {
+      const unknown: never = kind
+      return unknown
+    }
+  }
+}
+
+function jarGeometry(kind: PartKind): { body: THREE.BufferGeometry; lid: THREE.BufferGeometry } {
+  const sphere = geo.sphere(24)
+  const color = JAR_COLORS[kind]
+  if (kind === 'boulder') {
+    return {
+      body: merge([
+        piece(geo.torus(28, 0.35), color, { position: [0, 0.9, 0], rotation: [Math.PI / 2, 0, 0], scale: 4.6 }, { lump: 0.3, frequency: 1.4, seed: 44 }),
+        piece(sphere, '#c9a45c', { position: [0, 0.3, 0], scale: [4.4, 0.5, 4.4] }, { lump: 0.2, frequency: 1.2 }),
+      ]),
+      lid: merge([piece(sphere, color, { scale: 0.01 }, { ground: null })]),
+    }
+  }
+  const label = partGeometry(kind)
+  const labelPiece = label.clone().applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(0, 4.2, 3.4), new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2 - 0.3, 0, kind === 'stick' ? 0.4 : 0)), new THREE.Vector3(0.8, 0.8, 0.8)))
+  return {
+    body: merge([
+      piece(sphere, color, { position: [0, 3.8, 0], scale: [3.6, 3.9, 3.6] }, { lump: 0.18, frequency: 0.6, seed: 45 }),
+      piece(geo.cylinder(20), color, { position: [0, 7.6, 0], scale: [2.3, 1.2, 2.3] }, { lump: 0.08, ground: null }),
+      labelPiece,
+    ]),
+    lid: merge([
+      piece(geo.cylinder(20), '#fbe7cf', { scale: [2.7, 0.6, 2.7] }, { lump: 0.08, ground: null }),
+      piece(sphere, '#fbe7cf', { position: [0, 0.6, 0], scale: 0.7 }, { ground: null }),
+    ]),
+  }
+}
+
+export type PartState = { id: number; kind: PartKind; position: Vec3; quaternion: [number, number, number, number]; held: boolean }
+
+/** Loose parts in one instanced draw per kind, posed from physics, lifted a little while held. */
+export function PartsModel({ read }: { read: () => PartState[] }) {
+  const { clay } = useClay()
+  const refs = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)]
+  const geometries = once('parts', () => PART_KINDS.map(partGeometry))
+  useFrame(() => {
+    const counts = [0, 0, 0, 0]
+    for (const part of read()) {
+      const slot = PART_KINDS.indexOf(part.kind)
+      const instanced = refs[slot].current
+      if (!instanced) continue
+      scratch.q.set(...part.quaternion)
+      const grow = (part.held ? 1.12 : 1) * PART_DRAW_SCALE
+      scratch.m.compose(scratch.p.set(part.position.x, part.position.y, part.position.z), scratch.q, scratch.s.set(grow, grow, grow))
+      instanced.setMatrixAt(counts[slot]++, scratch.m)
+    }
+    refs.forEach((ref, slot) => {
+      if (!ref.current) return
+      ref.current.count = counts[slot]
+      ref.current.instanceMatrix.needsUpdate = true
+    })
+  })
+  return (
+    <>
+      {PART_KINDS.map((kind, slot) => (
+        <instancedMesh key={kind} ref={refs[slot]} args={[geometries[slot], clay, PART_COUNTS[kind]]} frustumCulled={false} />
+      ))}
+    </>
+  )
+}
+
+/** The jars on the scale mat's back row: each wobbles when tipped or when a part comes home, and its lid lies open once it is empty. */
+export function JarsModel({ read }: { read: () => { tips: ReadonlyMap<PartKind, number>; full: Record<PartKind, number>; glow: number; now: number } }) {
+  const { clay } = useClay()
+  const shapes = once('jars', () => PART_KINDS.map(jarGeometry))
+  const refs = [useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
+  const lids = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
+  const wobble = useRef(PART_KINDS.map(() => ({ x: 0, v: 0 }) as Spring))
+  const seen = useRef(new Map<PartKind, number>())
+  useFrame((_, dt) => {
+    const pose = read()
+    PART_KINDS.forEach((kind, i) => {
+      const tipped = pose.tips.get(kind)
+      if (tipped !== undefined && tipped !== seen.current.get(kind)) {
+        wobble.current[i].v += 7
+        seen.current.set(kind, tipped)
+      }
+      const w = springStep(wobble.current[i], 0, dt, 70, 5)
+      const group = refs[i].current
+      if (group) {
+        const hop = pose.full[kind] > 0 ? pose.glow * Math.max(0, Math.sin(pose.now * 3 + i)) * 0.6 : 0
+        group.rotation.set(w * 0.05, 0, w * 0.08)
+        group.position.y = hop
+      }
+      const lid = lids[i].current
+      if (lid) {
+        const open = pose.full[kind] === 0
+        lid.position.set(open ? 4.2 : 0, open ? 0.4 : 8.4 + Math.abs(w) * 0.05, open ? 1.5 : 0)
+        lid.rotation.set(open ? 0.3 : 0, 0, open ? 1.3 : 0)
+      }
+    })
+  })
+  return (
+    <>
+      {PART_KINDS.map((kind, i) => {
+        const at = to3(JARS[kind])
+        return (
+          <group key={kind} position={[at.x, 0, at.z]} scale={JAR_SCALE}>
+            <group ref={refs[i]}>
+              <mesh geometry={shapes[i].body} material={clay} />
+            </group>
+            {kind !== 'boulder' && <mesh ref={lids[i]} geometry={shapes[i].lid} material={clay} />}
+          </group>
+        )
+      })}
+    </>
   )
 }
 
