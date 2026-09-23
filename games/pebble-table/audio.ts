@@ -1,9 +1,12 @@
 import type { Species } from './motion'
 // Every sound on the table is synthesized with raw Web Audio (KTD7): clay
 // clacks, a cloth rustle, the beam's creak, and the pentatonic number voice.
-// The context is only created inside the child's first real tap, is
-// suspended while the table is unattended or hidden, and is rebuilt if
-// WebKit leaves it `interrupted` or `closed` after backgrounding.
+// The graph is built shortly after load in a suspended context (`prepare`),
+// because creating an AudioContext and its reverb can take a long frame
+// (Chrome: over 100 ms at 6x CPU throttle). It only starts inside the
+// child's first real tap, is suspended while the table is unattended or
+// hidden, and is rebuilt if WebKit leaves it `interrupted` or `closed` after
+// backgrounding.
 
 const PENTATONIC = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66]
 
@@ -17,10 +20,19 @@ export class TableAudio {
   private creakFilter: BiquadFilterNode | null = null
   private creakGain: GainNode | null = null
   private active = true
+  private unlocked = false
   private lastClack = 0
+
+  /** Build the graph ahead of the first tap, suspended, so that tap only has to resume it. */
+  prepare(): void {
+    if (this.context) return
+    const context = this.build()
+    if (!this.unlocked || !this.active) void context?.suspend()
+  }
 
   /** Call from inside a pointerdown: creates or revives the context. */
   unlock(): void {
+    this.unlocked = true
     const state = this.context?.state as ExtendedState | undefined
     if (this.context && (state === 'closed' || state === 'interrupted')) this.teardown()
     if (!this.context) this.build()
@@ -41,9 +53,9 @@ export class TableAudio {
     this.teardown()
   }
 
-  private build(): void {
+  private build(): AudioContext | null {
     const AudioCtor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-    if (!AudioCtor) return
+    if (!AudioCtor) return null
     const context = new AudioCtor()
     const master = context.createGain()
     master.gain.value = 0.7
@@ -82,6 +94,7 @@ export class TableAudio {
     creakOsc.start()
 
     Object.assign(this, { context, master, noise, creakOsc, creakFilter, creakGain })
+    return context
   }
 
   private teardown(): void {
