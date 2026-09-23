@@ -1,10 +1,10 @@
 import * as THREE from 'three'
 import { CARRY_HEIGHT, Critter, findGreetings, type CritterSound, type WorldView } from './critter'
-import { snoreBubble } from './gait'
-import { chooseHint, friendsCheer, handPose, HintScheduler, type GuidanceTiming, type HandPose, type Hint, type WorkshopSummary } from './guidance'
+import { SLEEP_BREATH, snoreBubble, WAKE_HOP_LATEST } from './gait'
+import { chooseHint, friendsCheer, handPose, HintScheduler, PARTS_BEFORE_NOSE, partToShow, type GuidanceTiming, type HandPose, type Hint, type WorkshopSummary } from './guidance'
 import { GestureTracker, type Intent, type Screen } from './input'
 import { onTurntable, TRAY, traySlot, TRAY_SLOT_RADIUS, TURNTABLE, type Point } from './layout'
-import { PART_KINDS, type Part, type PartKind } from './parts'
+import { PART_KINDS, type Hue, type Part, type PartKind } from './parts'
 import { displayBase, GLOW_SHAPE, Rig, SHADOW_SHAPE } from './rig'
 import { SaveCadence } from './saveCadence'
 import { attach, detach, putToSleep, serialize, takeFromTray, turntableFree, wake, type CritterSave, type WorkshopState } from './state'
@@ -27,7 +27,8 @@ export type Sound = CritterSound & {
   boing(): void
   whoosh(): void
   plop(): void
-  snore(pitch: number): void
+  /** `size` follows the sleeper's snore bubble: a big sprawling snore or a small shy one. */
+  snore(pitch: number, size: number): void
   spin(speed: number): void
   mumble(pitch: number): void
 }
@@ -49,6 +50,8 @@ export const silentSound: Sound = {
   step() {},
   voice() {},
   thud() {},
+  sniff() {},
+  shake() {},
 }
 
 /** How the view maps between the screen and the bench. */
@@ -95,15 +98,30 @@ export type GuidanceView = {
   hand: (HandPose & { y: number }) | null
   glow: number
   invite: number | null
-  /** A translucent part carried by the ghost hand. */
+  /** A translucent part carried by the ghost hand, in the colour it has in the tray. */
   ghost: PartKind | null
+  ghostHue: Hue
+  /** 0..1 as the ghost part, let go on top of the lump, settles into the place it will take. */
+  ghostSettle: number
 }
+
+/** Where the demonstration lets go of a part: high on the lump, over its body and well clear of the nose. */
+const DEMO_DROP_HEIGHT = 0.8
 
 export const DRAG_HEIGHT = 11
 const POP_PX = 58
 const MIN_HIT_PX = 22
+/** A finger this close to a part's centre (share of its hit radius) takes the part even over a belly. */
+const SURE_PART = 0.5
+/** The middle of an awake critter's belly (share of its hit radius) lifts it, so a well-decorated one can still be carried. */
+const BELLY_CORE = 0.6
 const TRAY_GROW_SECONDS = 0.45
 const FLIGHT_SECONDS = 0.6
+/** A tapped lump answers with what it wants: the tray part hops, or its own nose glows, once it has turned to look. */
+const CALL_DELAY = 0.35
+const CALL_SECONDS = 0.7
+
+type CallOut = { t0: number } & ({ at: 'tray'; kind: PartKind } | { at: 'nose'; critterId: number })
 const DENT_SECONDS = 2.4
 const PART_HIT: Record<PartKind, number> = { legStub: 2.2, legLong: 2.4, eye: 1.9, earRound: 2.2, earPoint: 2.2, earFlop: 2.4, tailCurl: 2.4, tailLong: 2.8, head: 4.6, horn: 1.9 }
 
@@ -125,22 +143,27 @@ export class WorkshopController {
   private readonly traySquash: Record<PartKind, number>
   private readonly traySquashV: Record<PartKind, number>
   private pendingLump: { save: CritterSave; at: number } | null = null
+  /** What a tapped lump points at: the tray part it wants hops once, or its nose glows. */
+  private callOut: CallOut | null = null
   /** Seconds of attended play; stands still while the workshop is put away. */
   t = 0
   turntableAngle = 0.25
   private spinVelocity = 0
-  guidance: GuidanceView = { hint: null, hand: null, glow: 0, invite: null, ghost: null }
+  guidance: GuidanceView = { hint: null, hand: null, glow: 0, invite: null, ghost: null, ghostHue: 0, ghostSettle: 0 }
   private readonly timing: GuidanceTiming = { demo: null, glow: 0, invite: null }
-  private readonly handOut: HandPose & { y: number } = { x: 0, y: 0, z: 0, height: 0, press: 0, opacity: 0, carry: false }
+  private readonly handOut: HandPose & { y: number } = { x: 0, y: 0, z: 0, height: 0, press: 0, opacity: 0, carry: false, release: 0 }
   private hint: Hint | null = null
   private hintStale = true
   private sleeperMode: string | null = null
   private readonly handFrom: Point = { x: 0, z: 0 }
   private readonly world: WorldView
   private readonly offerPoint: Point = { x: 0, z: 0 }
+  private readonly shownPoint: Point = { x: 0, z: 0 }
   private readonly cheerPoint: Point = { x: 0, z: 0 }
   private lastSnore = 0
   readonly ghostMatrix = new THREE.Matrix4()
+  private readonly ghostSocket = new THREE.Matrix4()
+  private readonly demoDrop = new THREE.Vector3()
   private readonly m = new THREE.Matrix4()
   private readonly m2 = new THREE.Matrix4()
   private readonly v = new THREE.Vector3()
@@ -179,7 +202,7 @@ export class WorkshopController {
     }
     if (state.sleeper) this.critters.push(new Critter(state.sleeper, 'sleeping'))
     for (const save of state.awake) this.critters.push(new Critter(save, 'idling'))
-    this.world = { t: 0, awake: this.awake, offer: null, cheer: null, turntableAngle: this.turntableAngle, sound: this.sound }
+    this.world = { t: 0, awake: this.awake, offer: null, shown: null, cheer: null, turntableAngle: this.turntableAngle, sound: this.sound }
     this.refreshAwake()
     this.step(0)
   }
@@ -243,6 +266,7 @@ export class WorkshopController {
   step(dt: number): void {
     this.t += dt
     const now = this.t
+    if (this.callOut && now >= this.callOut.t0 + CALL_SECONDS) this.callOut = null
     this.spinTurntable(dt)
     this.updateDrags(dt)
     if (this.pendingLump && now >= this.pendingLump.at) {
@@ -274,6 +298,13 @@ export class WorkshopController {
       world.offer = this.offerPoint
       break
     }
+    const shown = this.guidance.hand
+    world.shown = null
+    if (shown && this.guidance.ghost) {
+      this.shownPoint.x = shown.x
+      this.shownPoint.z = shown.z
+      world.shown = this.shownPoint
+    }
     const sleeper = this.sleeper
     world.cheer = null
     if (sleeper && sleeper.mode === 'sleeping' && friendsCheer(this.summaryScratch(sleeper), timing.glow)) {
@@ -298,8 +329,8 @@ export class WorkshopController {
     }
     findGreetings(this.awake, MEET_RADIUS, this.greet)
     if (sleeper && sleeper.mode === 'sleeping') {
-      const bubble = snoreBubble(sleeper.age)
-      if (bubble > 0 && this.lastSnore === 0) this.sound.snore(sleeper.profile.voice)
+      const bubble = snoreBubble(sleeper.profile.temperament, sleeper.age)
+      if (bubble > 0 && this.lastSnore === 0 && sleeper.sniff < 0.2) this.sound.snore(sleeper.profile.voice, SLEEP_BREATH[sleeper.profile.temperament].bubble)
       this.lastSnore = bubble
     }
     this.updateTray(dt)
@@ -461,15 +492,32 @@ export class WorkshopController {
         best = target
       }
     }
+    let asleep = false
     for (const critter of this.critters) {
       if (critter.gone || critter.mode === 'waking' || critter.mode === 'plopping' || critter.mode === 'squashing') continue
       const w = critter.world
+      const before: Target | null = best
       consider(w.nose[0], w.nose[1], w.nose[2], 2.4, { kind: 'nose', critterId: critter.save.id }, critter.sleeping ? 34 : MIN_HIT_PX)
       for (let i = 0; i < critter.save.parts.length; i++) {
         consider(w.parts[i * 3], w.parts[i * 3 + 1], w.parts[i * 3 + 2], PART_HIT[critter.save.parts[i].kind], { kind: 'part', critterId: critter.save.id, index: i })
       }
+      if (best !== before) asleep = !critter.awake
+    }
+    if (best && (asleep || bestScore < SURE_PART)) return best
+    const feature = best
+    const featureScore = bestScore
+    best = null
+    bestScore = BELLY_CORE
+    for (const critter of this.critters) {
+      if (critter.gone || !critter.awake) continue
+      const w = critter.world
+      consider(w.body[0], w.body[1], w.body[2], w.bodyR, { kind: 'body', critterId: critter.save.id }, 30)
     }
     if (best) return best
+    best = feature
+    bestScore = featureScore
+    if (best) return best
+    bestScore = 1
     for (const critter of this.critters) {
       if (critter.gone || critter.mode === 'waking' || critter.mode === 'plopping' || critter.mode === 'squashing') continue
       const w = critter.world
@@ -516,12 +564,14 @@ export class WorkshopController {
       case 'nose': {
         const critter = this.critterById(target.critterId)
         if (!critter) return
-        if (critter.mode === 'sleeping' && critter.save.id === this.state.sleeper?.id) this.wakeSleeper(critter)
-        else if (critter.awake) {
+        if (critter.mode === 'sleeping' && critter.save.id === this.state.sleeper?.id) {
+          if (critter.save.parts.length === 0) this.peekAtTray(critter)
+          else this.wakeSleeper(critter)
+        } else if (critter.onFeet) {
           critter.react()
           critter.kick(0.4)
           this.sound.voice(critter, 'tap')
-        } else critter.nudge()
+        } else if (!critter.awake) critter.nudge()
         return
       }
       case 'part': {
@@ -529,10 +579,10 @@ export class WorkshopController {
         if (!critter) return
         critter.poke = { index: target.index, t: 0 }
         this.sound.boing()
-        if (critter.awake) {
+        if (critter.onFeet) {
           critter.react()
           this.sound.voice(critter, 'tap')
-        } else {
+        } else if (!critter.awake) {
           critter.nudge()
           this.sound.mumble(critter.profile.voice)
         }
@@ -541,13 +591,14 @@ export class WorkshopController {
       case 'body': {
         const critter = this.critterById(target.critterId)
         if (!critter) return
-        if (critter.awake) {
+        if (critter.onFeet) {
           critter.react()
           critter.kick(0.5)
           this.sound.voice(critter, 'tap')
-        } else {
+        } else if (!critter.awake) {
           critter.nudge()
           this.sound.mumble(critter.profile.voice)
+          if (critter.mode === 'sleeping' && critter.save.id === this.state.sleeper?.id) this.callOutWant(critter)
         }
         return
       }
@@ -581,7 +632,7 @@ export class WorkshopController {
       case 'nose': {
         const critter = this.critterById(target.critterId)
         if (!critter) return
-        if (critter.awake && critter.mode !== 'carried' && critter.mode !== 'landing') {
+        if (critter.onFeet) {
           critter.pickUp()
           this.setDrag({ type: 'carry', pointerId, critter, screen })
           this.sound.voice(critter, 'carry')
@@ -674,7 +725,13 @@ export class WorkshopController {
       if (!this.rig.socket(critter, drag.part.kind, this.m)) continue
       this.v.setFromMatrixPosition(this.m)
       if (!projector.toScreen(this.v.x, this.v.y, this.v.z, this.screen)) continue
-      const d = Math.hypot(this.screen.x - drag.screen.x, this.screen.y - drag.screen.y)
+      let d = Math.hypot(this.screen.x - drag.screen.x, this.screen.y - drag.screen.y)
+      // anywhere over the body takes the part too, however far its socket is from the finger
+      const w = critter.world
+      if (projector.toScreen(w.body[0], w.body[1], w.body[2], this.screen)) {
+        const over = Math.hypot(this.screen.x - drag.screen.x, this.screen.y - drag.screen.y)
+        if (over < projector.scaleAt(w.body[0], w.body[1], w.body[2]) * w.bodyR) d = Math.min(d, over * 0.5)
+      }
       if (d < bestD) {
         bestD = d
         best = critter
@@ -764,12 +821,34 @@ export class WorkshopController {
     }
   }
 
+  /** A bare lump is not ready to wake: it peeks at the tray, and the part it wants hops to answer. */
+  private peekAtTray(critter: Critter): void {
+    critter.peek()
+    this.sound.mumble(critter.profile.voice)
+    this.callOut = { at: 'tray', kind: partToShow(critter.save.parts, this.childAge), t0: this.t + CALL_DELAY }
+  }
+
+  /** A tap on the sleeper's body points at what it wants next: a part from the tray, or its nose once it could wake. */
+  private callOutWant(critter: Critter): void {
+    this.callOut =
+      critter.save.parts.length < PARTS_BEFORE_NOSE
+        ? { at: 'tray', kind: partToShow(critter.save.parts, this.childAge), t0: this.t + CALL_DELAY }
+        : { at: 'nose', critterId: critter.save.id, t0: this.t + CALL_DELAY }
+  }
+
+  /** 0..1 through the call-out, or null before it starts and after it ends. */
+  private callOutProgress(): number | null {
+    const call = this.callOut
+    if (!call) return null
+    const k = (this.t - call.t0) / CALL_SECONDS
+    return k > 0 && k < 1 ? k : null
+  }
+
   private wakeSleeper(critter: Critter): void {
     const woken = wake(this.state)
     if (!woken) return
     critter.wake()
-    this.sound.voice(critter, 'wake')
-    if (this.state.sleeper) this.pendingLump = { save: this.state.sleeper, at: this.t + 1.75 }
+    if (this.state.sleeper) this.pendingLump = { save: this.state.sleeper, at: this.t + WAKE_HOP_LATEST + 0.3 }
     this.cadence.now(performance.now())
     this.hintStale = true
   }
@@ -791,10 +870,12 @@ export class WorkshopController {
     switch (hint.kind) {
       case 'givePart': {
         const sleeper = this.sleeper
-        if (!sleeper || !this.rig.socket(sleeper, hint.part, this.m)) return g
+        if (!sleeper || !this.rig.socket(sleeper, hint.part, this.ghostSocket)) return g
+        const body = sleeper.world.body
+        to.set(body[0], body[1] + sleeper.world.bodyR * DEMO_DROP_HEIGHT, body[2])
+        this.demoDrop.copy(to)
         const slot = traySlot(hint.part)
         from.set(slot.x, TRAY.height + displayBase(hint.part), slot.z)
-        to.setFromMatrixPosition(this.m)
         break
       }
       case 'tapNose': {
@@ -826,7 +907,12 @@ export class WorkshopController {
     const travelled = hasTo && span > 0 ? Math.min(1, Math.hypot(hand.x - from.x, hand.z - from.z) / span) : 0
     hand.y = from.y + (to.y - from.y) * (hasTo ? travelled : 0) + hand.height
     g.hand = hand
-    if (hint.kind === 'givePart' && hand.carry) g.ghost = hint.part
+    g.ghostSettle = 0
+    if (hint.kind === 'givePart' && (hand.carry || hand.release > 0)) {
+      g.ghost = hint.part
+      g.ghostHue = this.state.tray[hint.part]
+      g.ghostSettle = hand.release
+    }
     return g
   }
 
@@ -839,13 +925,9 @@ export class WorkshopController {
     if (hint && strength > 0.01) {
       switch (hint.kind) {
         case 'givePart': {
-          const slot = traySlot(hint.part)
-          rig.glow(slot.x, TRAY.height + displayBase(hint.part) * 0.7, slot.z, TRAY_SLOT_RADIUS * 2.3, strength)
+          this.trayGlow(hint.part, strength)
           const sleeper = this.sleeper
-          if (sleeper && rig.socket(sleeper, hint.part, this.m)) {
-            this.v.setFromMatrixPosition(this.m)
-            rig.glow(this.v.x, this.v.y, this.v.z, 5.5, strength)
-          }
+          if (sleeper && rig.socketMark(sleeper, hint.part, this.v)) rig.glow(this.v.x, this.v.y, this.v.z, 5.5, strength)
           break
         }
         case 'tapNose': {
@@ -865,10 +947,31 @@ export class WorkshopController {
         }
       }
     }
-    if (g.invite !== null && hint?.kind === 'givePart') {
-      const slot = traySlot(hint.part)
-      rig.glow(slot.x, TRAY.height + displayBase(hint.part) * 0.7, slot.z, TRAY_SLOT_RADIUS * 2.3, Math.sin(Math.PI * g.invite))
+    if (g.invite !== null && hint?.kind === 'givePart') this.trayGlow(hint.part, Math.sin(Math.PI * g.invite))
+    const call = this.callOutProgress()
+    const callOut = this.callOut
+    if (call !== null && callOut) {
+      const strength = Math.sin(Math.PI * call)
+      switch (callOut.at) {
+        case 'tray':
+          this.trayGlow(callOut.kind, strength)
+          break
+        case 'nose': {
+          const critter = this.critterById(callOut.critterId)
+          if (critter) rig.glow(critter.world.nose[0], critter.world.nose[1], critter.world.nose[2], 6.5, strength)
+          break
+        }
+        default: {
+          const unreachable: never = callOut
+          return unreachable
+        }
+      }
     }
+  }
+
+  private trayGlow(kind: PartKind, strength: number): void {
+    const slot = traySlot(kind)
+    this.rig.glow(slot.x, TRAY.height + displayBase(kind) * 0.7, slot.z, TRAY_SLOT_RADIUS * 2.3, strength)
   }
 
   // --- layout ------------------------------------------------------------------------
@@ -883,12 +986,15 @@ export class WorkshopController {
     // the tray
     const invite = this.guidance.invite
     const invitePart = invite !== null && this.hint?.kind === 'givePart' ? this.hint.part : null
+    const call = this.callOutProgress()
+    const callPart = call !== null && this.callOut?.at === 'tray' ? this.callOut.kind : null
     for (const kind of PART_KINDS) {
       const grow = this.trayGrow[kind]
       if (grow <= 0) continue
       const g = grow >= 1 ? 1 : 1 + 0.18 * Math.sin(grow * Math.PI * 1.5) * (1 - grow) - (1 - grow) * (1 - grow)
-      const hop = kind === invitePart && invite !== null ? 3.2 * Math.sin(Math.PI * invite) : 0
-      const squash = this.traySquash[kind] + (kind === invitePart && invite !== null ? 0.12 * Math.sin(Math.PI * 2 * invite) : 0)
+      const hopping = kind === invitePart && invite !== null ? invite : kind === callPart ? call : null
+      const hop = hopping !== null ? 3.2 * Math.sin(Math.PI * hopping) : 0
+      const squash = this.traySquash[kind] + (hopping !== null ? 0.12 * Math.sin(Math.PI * 2 * hopping) : 0)
       rig.trayPart(kind, this.state.tray[kind], Math.max(0.01, g), hop, squash, hop > 0 || grow < 1 ? 1 : 0)
       const slot = traySlot(kind)
       rig.shadow(slot.x, TRAY.height, slot.z, 3.2 * g, 0.34 / (1 + hop * 0.3))
@@ -902,8 +1008,7 @@ export class WorkshopController {
       // every body with room shows where this part would go
       for (const critter of this.critters) {
         if (critter.gone || critter.mode === 'carried' || critter.mode === 'waking' || critter.mode === 'plopping' || critter.mode === 'squashing') continue
-        if (!rig.socket(critter, drag.part.kind, this.m2)) continue
-        this.v.setFromMatrixPosition(this.m2)
+        if (!rig.socketMark(critter, drag.part.kind, this.v)) continue
         const near = critter === drag.magnet ? 1 : 0.55
         rig.glow(this.v.x, this.v.y, this.v.z, 4.5 + 1.5 * near + 0.5 * Math.sin(this.t * 7), near)
       }
@@ -926,7 +1031,14 @@ export class WorkshopController {
     // the ghost part in the demonstration hand
     const hand = this.guidance.hand
     if (hand && this.guidance.ghost) {
-      this.ghostMatrix.makeTranslation(hand.x, hand.y - 3.2, hand.z).multiply(rig.display[this.guidance.ghost])
+      const settle = this.guidance.ghostSettle
+      if (settle > 0) {
+        // let go on top of the lump, it slides down into the socket it will really take
+        this.v.setFromMatrixPosition(this.ghostSocket)
+        const k = 1 - settle
+        const drop = this.demoDrop
+        this.ghostMatrix.makeTranslation((drop.x - this.v.x) * k, (drop.y - this.v.y) * k, (drop.z - this.v.z) * k).multiply(this.ghostSocket)
+      } else this.ghostMatrix.makeTranslation(hand.x, hand.y - 1.6, hand.z).multiply(rig.display[this.guidance.ghost])
     }
     if (hand) rig.shadow(hand.x, 0, hand.z, 2.2 + (1 - hand.press) * 1.2, 0.22 * hand.opacity)
     // thumbprint dents where the bench was patted
@@ -938,8 +1050,9 @@ export class WorkshopController {
     // the sleeper's snore bubble
     const sleeper = this.sleeper
     if (sleeper && sleeper.mode === 'sleeping') {
-      const size = snoreBubble(sleeper.age)
-      if (size > 0) {
+      // the bubble holds while it sniffs, so the socket glow is the only ring on its face
+      const size = snoreBubble(sleeper.profile.temperament, sleeper.age) * (1 - sleeper.sniff)
+      if (size > 0.02) {
         const n = sleeper.world.nose
         const heading = sleeper.mover.heading
         const out = 1.6 + size * 1.8
@@ -947,7 +1060,7 @@ export class WorkshopController {
       }
     }
     // the turntable's own soft contact shadow
-    rig.shadow(TURNTABLE.x, 0, TURNTABLE.z, TURNTABLE.r * 1.2, 0.34)
+    rig.shadow(TURNTABLE.x + 0.6, 0, TURNTABLE.z, TURNTABLE.r * 1.3, 0.55)
   }
 
   private critterShadow(critter: Critter): void {
@@ -957,10 +1070,11 @@ export class WorkshopController {
     const onTable = critter.sleeping || critter.mode === 'lyingDown' || (critter.mode === 'waking' && critter.ground > 0.2)
     const ground = onTable ? critter.ground : 0
     const lifted = w.body[1] - ground
-    this.rig.shadow(w.body[0], ground, w.body[2], w.bodyR * (1.05 + lifted * 0.02), 0.62 / (1 + height * 0.18), SHADOW_SHAPE.blob, 1.15)
+    // leans away from the key light (upper left, in front) so it peeks out beside the body instead of hiding under it
+    this.rig.shadow(w.body[0] + lifted * 0.22, ground, w.body[2] - lifted * 0.12, w.bodyR * (1.15 + lifted * 0.02), 0.7 / (1 + height * 0.18), SHADOW_SHAPE.blob, 1.15)
     for (let i = 0; i < w.feetCount; i++) {
       const fy = w.feet[i * 3 + 1] - ground
-      this.rig.shadow(w.feet[i * 3], ground, w.feet[i * 3 + 2], 1.4, 0.55 / (1 + Math.max(0, fy) * 0.8))
+      this.rig.shadow(w.feet[i * 3] + 0.3, ground, w.feet[i * 3 + 2], 2.1, 0.7 / (1 + Math.max(0, fy) * 0.8))
     }
   }
 
