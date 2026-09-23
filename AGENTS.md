@@ -9,6 +9,11 @@ The authority for cartridge mechanics is Tada's `docs/cartridges.md`. This file 
 - `npm run check` runs TypeScript, vitest, and the source egress scan. CI also builds and scans the built assets (`npm run build && npm run egress:built`).
 - `npm run dev` starts the jam shell. Open the printed URL, pick a game. Add `?chrome=0` to hide the grown-up control strip.
 
+## Documented knowledge
+
+- `docs/solutions/` — documented solutions and conventions from past work, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Check it before implementing or debugging in a documented area.
+- `CONCEPTS.md` — shared domain vocabulary for the jam (terms like quality bar and claimed style).
+
 ## Shape of a game
 
 - `games/<key>/manifest.ts` — the manifest const. No JSX, React imports, or Vite globals (it must stay Node-importable, like Tada's `manifests.ts`).
