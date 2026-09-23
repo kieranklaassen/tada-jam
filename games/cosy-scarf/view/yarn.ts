@@ -31,7 +31,9 @@ export const PALETTE = {
   blanketRib: '#285a62',
   loom: '#c9955a',
   loomDark: '#a8763f',
-  backboard: '#433d4f',
+  backboard: '#554a63',
+  backboardLow: '#3f374c',
+  stitch: '#b9aa98',
   needle: '#d9b27a',
   bead: '#f0dcc0',
   basket: '#9b6a3e',
@@ -423,6 +425,12 @@ export type YarnMaterials = {
   textures: YarnTextures
   /** Crochet for props (loom, basket, butterfly): vertex colours, beads. */
   crochet: THREE.MeshStandardMaterial
+  /**
+   * The same crochet for instanced meshes (the pines). A material drawn both
+   * instanced and plain makes three.js re-pick its program for every switch,
+   * which rebuilt the program parameters (and allocated) every frame.
+   */
+  crochetInstanced: THREE.MeshStandardMaterial
   /** Fine, faint knit for the hillside. */
   land: THREE.MeshStandardMaterial
   /** The sky: a ribbed knit wall, unfogged so its blue stays even. */
@@ -450,8 +458,13 @@ export function createMaterials(): YarnMaterials {
     return material
   }
 
-  const crochet = own(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, normalMap: textures.crochetNormal, normalScale: new THREE.Vector2(0.9, 0.9) }))
-  patchYarn(crochet, { shade: textures.crochetShade, shadeAmount: 0.8, rim: 0.35, beads: true })
+  const makeCrochet = () => {
+    const material = own(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, normalMap: textures.crochetNormal, normalScale: new THREE.Vector2(0.9, 0.9) }))
+    patchYarn(material, { shade: textures.crochetShade, shadeAmount: 0.8, rim: 0.35, beads: true })
+    return material
+  }
+  const crochet = makeCrochet()
+  const crochetInstanced = makeCrochet()
 
   const land = own(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, normalMap: textures.knitNormal, normalScale: new THREE.Vector2(0.7, 0.7) }))
   patchYarn(land, { shade: textures.knitShade, shadeAmount: 0.34, rim: 0.12 })
@@ -462,7 +475,7 @@ export function createMaterials(): YarnMaterials {
   const blanket = own(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, normalMap: textures.knitNormal, normalScale: new THREE.Vector2(0.55, 0.55) }))
   patchYarn(blanket, { shade: textures.knitShade, shadeAmount: 0.45, rim: 0.18 })
 
-  const felt = own(new THREE.MeshStandardMaterial({ color: PALETTE.backboard, roughness: 1 }))
+  const felt = own(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }))
 
   const balls = own(new THREE.MeshStandardMaterial({ roughness: 0.9, normalMap: textures.ballNormal, normalScale: new THREE.Vector2(1.1, 1.1) }))
   patchYarn(balls, { shade: textures.crochetShade, shadeAmount: 0, rim: 0.4 })
@@ -478,6 +491,7 @@ export function createMaterials(): YarnMaterials {
   return {
     textures,
     crochet,
+    crochetInstanced,
     land,
     sky,
     blanket,

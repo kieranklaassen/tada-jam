@@ -177,7 +177,8 @@ function blanketGeometry(): THREE.BufferGeometry {
     const inner = shape(-146, -76, 146, 11, 6)
     const border = new THREE.Shape(outer.getPoints(12))
     border.holes.push(new THREE.Path(inner.getPoints(12).reverse()))
-    return merge([flat(new THREE.ShapeGeometry(inner, 12), PALETTE.blanket, 0.2, 2.6, 1.9), flat(new THREE.ShapeGeometry(border, 12), PALETTE.blanketRib, 0.32, 1.2, 2.4)])
+    // The base runs under the rib border too: the border is raised, and a gap between them shows the snow.
+    return merge([flat(new THREE.ShapeGeometry(outer, 12), PALETTE.blanket, 0.2, 2.6, 1.9), flat(new THREE.ShapeGeometry(border, 12), PALETTE.blanketRib, 0.32, 1.2, 2.4)])
   })
 }
 
@@ -216,9 +217,29 @@ function backboardGeometry(): THREE.BufferGeometry {
     s.quadraticCurveTo(x0, top, x0, top - r)
     s.lineTo(x0, bottom + r)
     s.quadraticCurveTo(x0, bottom, x0 + r, bottom)
-    const g = new THREE.ShapeGeometry(s, 8)
-    g.translate(0, 0, -0.2)
-    return g
+
+    // A hanging felt cloth, not a doorway: a shade lighter where it hangs, a
+    // quiet running stitch round its edge, and two felt loops over the rod.
+    const high = new THREE.Color(PALETTE.backboard)
+    const low = new THREE.Color(PALETTE.backboardLow)
+    const c = new THREE.Color()
+    const parts = [part(new THREE.ShapeGeometry(s, 8), { color: (p) => c.copy(low).lerp(high, THREE.MathUtils.smoothstep(p.y, bottom, top)), at: [0, 0, -0.2], underside: 0 })]
+    const inset = 1.3
+    const dash = (x: number, y: number, across: boolean) => part(new THREE.BoxGeometry(across ? 1.3 : 0.36, across ? 0.36 : 1.3, 0.2), { color: PALETTE.stitch, at: [x, y, -0.08], underside: 0 })
+    const runX = w - 2 * r
+    const runY = top - bottom - 2 * r
+    const dashesX = Math.round(runX / 2.3)
+    const dashesY = Math.round(runY / 2.3)
+    for (let i = 0; i <= dashesX; i++) {
+      const x = -runX / 2 + (i * runX) / dashesX
+      parts.push(dash(x, bottom + inset, true), dash(x, top - inset, true))
+    }
+    for (let i = 0; i <= dashesY; i++) {
+      const y = bottom + r + (i * runY) / dashesY
+      parts.push(dash(x0 + inset, y, false), dash(x1 - inset, y, false))
+    }
+    for (const side of [-1, 1]) parts.push(part(torus(1.9, 0.6, 0.8), { color: PALETTE.backboard, at: [side * (w / 2 - 1.6), LOOM.rodY, SCARF.z - LOOM.z], rot: [0, Math.PI / 2, 0], underside: 0 }))
+    return merge(parts)
   })
 }
 
@@ -269,7 +290,7 @@ export function buildWorld(materials: YarnMaterials): World {
   sky.renderOrder = -1
   group.add(land, sky)
 
-  const pines = new THREE.InstancedMesh(pineGeometry(), materials.crochet, PINES.length)
+  const pines = new THREE.InstancedMesh(pineGeometry(), materials.crochetInstanced, PINES.length)
   const m = new THREE.Matrix4()
   const q = new THREE.Quaternion()
   const tint = new THREE.Color()

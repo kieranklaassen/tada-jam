@@ -78,6 +78,10 @@ export class Props {
   private readonly strandMaterial: THREE.MeshStandardMaterial
   private readonly strandUniforms = { uFrom: { value: new THREE.Vector3() }, uMid: { value: new THREE.Vector3() }, uTo: { value: new THREE.Vector3() }, uRadius: { value: 0.45 } }
   private readonly needles: THREE.Mesh
+  private readonly loops: THREE.InstancedMesh
+  private readonly loopFrames: THREE.Matrix4[] = []
+  private loopsFor = -1
+  private readonly cream = new THREE.Color(PALETTE.thread)
   private readonly butterfly = new THREE.Group()
   private readonly wingL: THREE.Mesh
   private readonly wingR: THREE.Mesh
@@ -91,6 +95,7 @@ export class Props {
   private readonly hand: THREE.Sprite
   private readonly owned: { dispose(): void }[] = []
   private readonly m = new THREE.Matrix4()
+  private readonly n = new THREE.Matrix4()
   private readonly p = new THREE.Vector3()
   private readonly q = new THREE.Quaternion()
   private readonly s = new THREE.Vector3()
@@ -130,7 +135,7 @@ export class Props {
 
     const needleGeometry = merge([
       ...[-1, 1].flatMap((side) => {
-        const tilt = side * 0.13
+        const tilt = side * 0.05
         const dz = side * 0.7
         const dx = Math.cos(tilt)
         const dy = Math.sin(tilt)
@@ -145,6 +150,20 @@ export class Props {
     this.needles.matrixAutoUpdate = false
     this.owned.push(needleGeometry)
     this.group.add(this.needles)
+
+    // The live stitches riding on the needles: cream cast-on loops on an empty loom, then the last row's colours.
+    const loopGeometry = new THREE.TorusGeometry(1.2, 0.5, 6, 14)
+    this.loops = new THREE.InstancedMesh(loopGeometry, materials.balls, WIDTH)
+    this.loops.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    this.loops.frustumCulled = false
+    for (let i = 0; i < WIDTH; i++) {
+      this.e.set(0.55, 0, 0)
+      this.q.setFromEuler(this.e)
+      this.loopFrames.push(new THREE.Matrix4().compose(new THREE.Vector3((i + 0.5 - WIDTH / 2) * CELL_W, -1.05, 0), this.q, new THREE.Vector3(1, 1.2, 1)))
+      this.loops.setColorAt(i, this.cream)
+    }
+    this.owned.push(loopGeometry)
+    this.group.add(this.loops)
 
     const bodyGeometry = merge([
       part(capsule(1.05, 6.5, 0.7), { color: PALETTE.butterflyBody }),
@@ -314,6 +333,21 @@ export class Props {
     this.s.setScalar(scale < 1 ? smooth(scale) : 1)
     this.m.compose(this.p, this.q, this.s).premultiply(loomHang)
     this.needles.matrix.copy(this.m)
+    this.updateLoops(game, castOff >= 0.9)
+  }
+
+  private updateLoops(game: ScarfController, on: boolean): void {
+    this.loops.visible = on && this.needles.visible
+    if (!this.loops.visible) return
+    for (let i = 0; i < WIDTH; i++) this.loops.setMatrixAt(i, this.n.multiplyMatrices(this.needles.matrix, this.loopFrames[i]))
+    this.loops.instanceMatrix.needsUpdate = true
+    const rows = game.loom.rows
+    const shown = Math.min(rows.length, Math.floor(game.loom.reveal / WIDTH + 1e-6))
+    const key = (game.loom.id * 4096 + game.loom.version) * 32 + shown
+    if (key === this.loopsFor) return
+    this.loopsFor = key
+    for (let i = 0; i < WIDTH; i++) this.loops.setColorAt(i, shown > 0 ? (this.yarn[rows[shown - 1][i]] ?? this.cream) : this.cream)
+    if (this.loops.instanceColor) this.loops.instanceColor.needsUpdate = true
   }
 
   private updateButterfly(game: ScarfController, t: number): void {
