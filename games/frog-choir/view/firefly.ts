@@ -52,8 +52,8 @@ const AMBIENT_VERTEX = /* glsl */ `
     vec3 p = position + vec3(sin(t * 0.31) * 0.7, sin(t * 0.53 + aPhase * 3.0) * 0.28, cos(t * 0.27 + aPhase) * 0.5);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
-    float blink = pow(0.5 + 0.5 * sin(t * 1.1 + aPhase * 7.0), 4.0);
-    vFade = 0.25 + 0.75 * blink;
+    float blink = pow(0.5 + 0.5 * sin(t * 1.1 + aPhase * 7.0), 2.0);
+    vFade = 0.4 + 0.6 * blink;
     gl_PointSize = uSize * (0.55 + 0.45 * blink) * uScale / -mv.z;
   }
 `
@@ -150,17 +150,19 @@ export function buildFirefly(shared: SharedUniforms, gradient: THREE.Texture): F
     seed = (seed * 16807) % 2147483647
     return seed / 2147483647
   }
+  // Two in three drift in front of the far bank, the rest by the side reeds,
+  // all inside the frame, so even the few kept on the lowest tier are seen.
   for (let i = 0; i < MAX_AMBIENT; i++) {
     const side = i % 2 === 0 ? -1 : 1
-    const alongBank = i % 3 === 0
-    ambientPositions[i * 3] = alongBank ? (random() - 0.5) * 20 : side * (POND.maxX + 0.4 + random() * 2.2)
-    ambientPositions[i * 3 + 1] = 0.6 + random() * 1.6
-    ambientPositions[i * 3 + 2] = alongBank ? BANK_Z + random() * 0.8 : POND.farZ + random() * (POND.nearZ - POND.farZ)
+    const alongBank = i % 3 !== 0
+    ambientPositions[i * 3] = alongBank ? POND.minX + 0.5 + random() * (POND.maxX - POND.minX - 1) : side * (POND.maxX - 0.6 + random() * 0.6)
+    ambientPositions[i * 3 + 1] = 0.6 + random() * 1.3
+    ambientPositions[i * 3 + 2] = alongBank ? BANK_Z + 1.3 + random() * 0.6 : POND.farZ + random() * (POND.nearZ - POND.farZ) * 0.7
     phases[i] = random()
   }
   ambientGeometry.setAttribute('position', new THREE.BufferAttribute(ambientPositions, 3))
   ambientGeometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1))
-  const ambientUniforms = { uTime: shared.uTime, uSize: { value: 0.09 }, uScale: trailUniforms.uScale, uColor: { value: new THREE.Color(PALETTE.glow) } }
+  const ambientUniforms = { uTime: shared.uTime, uSize: { value: 0.13 }, uScale: trailUniforms.uScale, uColor: { value: new THREE.Color(PALETTE.glow) } }
   const ambient = new THREE.Points(
     ambientGeometry,
     new THREE.ShaderMaterial({
@@ -208,9 +210,10 @@ export function buildFirefly(shared: SharedUniforms, gradient: THREE.Texture): F
       wings[1].rotation.z = flap
       body.position.y = Math.sin(time * 3.1) * 0.03
       const pulse = 0.94 + 0.06 * Math.sin(time * 4.2)
-      halo.scale.setScalar(1.8 * look.halo * pulse * (1 + 0.35 * flare))
+      halo.scale.setScalar(1.8 * look.halo * pulse * (1 + 0.5 * flare))
       shared.uFirePos.value.set(position.x, position.y, position.z)
-      shared.uFireStrength.value = 0.85 + 0.15 * pulse + 0.4 * flare
+      // On each note the light pool on the singer brightens by about one band.
+      shared.uFireStrength.value = 0.85 + 0.15 * pulse + 0.9 * flare
 
       sinceEmit += dt
       const count = look.trail

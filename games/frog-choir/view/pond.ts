@@ -19,6 +19,8 @@ export type PondSet = {
   pads: THREE.InstancedMesh
   padOutlines: THREE.InstancedMesh
   padRings: THREE.InstancedMesh
+  /** Each pad's resting tint; the view warms it briefly when the pad is struck. */
+  padTints: THREE.Color[]
   backdrop: THREE.Mesh
   water: THREE.Mesh
   reeds: THREE.Mesh
@@ -67,7 +69,7 @@ function bank(shared: SharedUniforms, gradient: THREE.Texture): [THREE.Mesh, THR
     [6.6, BANK_Z + 0.7, 0.36],
     [7.1, BANK_Z + 0.95, 0.18],
   ] as const) {
-    parts.push(part(shapes.sphere(1), stone, { position: [x, 0.04, z], scale: [s * 1.3, s * 0.7, s] }))
+    parts.push(part(shapes.sphere(0), stone, { position: [x, 0.04, z], scale: [s * 1.3, s * 0.7, s] }))
   }
   const geometry = mergeParts(parts)
   const mesh = new THREE.Mesh(geometry, toonMaterial(shared, gradient))
@@ -154,11 +156,11 @@ const WATER_FRAGMENT = /* glsl */ `
     float wobble = sin(vWorld.x * 0.8 + uTime * 0.5) * 0.03 + sin(vWorld.x * 2.1 - uTime * 0.37) * 0.012;
     float band = floor((depth + wobble) * 4.0 + 0.5) / 4.0;
     vec3 color = mix(uFar, uNear, clamp(band, 0.0, 1.0));
-    color = mix(color, uDusk, step(depth + wobble, 0.1) * 0.6);
-    float column = 1.0 - smoothstep(0.2, 1.6 + depth * 1.5, abs(vWorld.x - uSunX));
-    float dash = step(0.86, fract(vWorld.z * 2.2 + sin(vWorld.x * 3.0 + uTime * 0.9) * 0.18));
-    dash *= step(0.45, fract(vWorld.x * 0.9 + vWorld.z * 0.7 + uTime * 0.12));
-    color = mix(color, uGlint, column * dash * (1.0 - depth * 0.7) * 0.85);
+    color = mix(color, uDusk, step(depth + wobble, 0.14) * 0.45 + step(depth + wobble, 0.3) * 0.2);
+    float column = 1.0 - smoothstep(0.1, 0.7 + depth * 1.1, abs(vWorld.x - uSunX));
+    float dash = step(0.9, fract(vWorld.z * 1.7 + sin(vWorld.x * 1.3 + uTime * 0.6) * 0.12));
+    dash *= step(0.55, fract(vWorld.x * 0.45 + vWorld.z * 0.3 + uTime * 0.08));
+    color = mix(color, uGlint, column * dash * (1.0 - depth * 0.6) * 0.7);
     float fireD = distance(vWorld.xz, uFirePos.xz) + max(0.0, uFirePos.y - 1.0) * 0.45;
     color += uFireColor * fireBands(fireD) * uFireStrength * 0.32;
     gl_FragColor = vec4(color, 1.0);
@@ -200,7 +202,7 @@ function padGeometry(): THREE.BufferGeometry {
   shape.lineTo(Math.cos(notch), Math.sin(notch))
   shape.absarc(0, 0, 1, notch, Math.PI * 2 - notch, false)
   shape.lineTo(0, 0)
-  const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.035, bevelSegments: 2, curveSegments: 40 })
+  const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.035, bevelSegments: 2, curveSegments: 20 })
   geometry.rotateX(-Math.PI / 2)
   geometry.translate(0, PAD_TOP - 0.08, 0)
   geometry.computeVertexNormals()
@@ -222,7 +224,8 @@ function padGeometry(): THREE.BufferGeometry {
   return geometry
 }
 
-const PAD_TINTS = ['#ffffff', '#f6eeff', '#fff4fb', '#f1eaff']
+/** By row, low note to high: the near, low pads are a cooler, deeper lilac and the far, high ones warm toward pink. */
+const ROW_TINTS = ['#d8ccf6', '#e6d9fb', '#f3e6ff', '#fdebf8', '#ffeff1']
 
 export function buildPond(shared: SharedUniforms, gradient: THREE.Texture): PondSet {
   const group = new THREE.Group()
@@ -251,8 +254,8 @@ export function buildPond(shared: SharedUniforms, gradient: THREE.Texture): Pond
   ringGeometry.rotateX(-Math.PI / 2)
   const padRings = new THREE.InstancedMesh(ringGeometry, ringMaterial, PADS.length)
   padRings.renderOrder = 1
-  const tint = new THREE.Color()
-  for (let i = 0; i < PADS.length; i++) pads.setColorAt(i, tint.set(PAD_TINTS[i % PAD_TINTS.length]))
+  const padTints = PADS.map((pad) => new THREE.Color(ROW_TINTS[pad.row]))
+  for (let i = 0; i < PADS.length; i++) pads.setColorAt(i, padTints[i])
   for (const mesh of [pads, padOutlines, padRings]) {
     mesh.frustumCulled = false
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
@@ -263,7 +266,7 @@ export function buildPond(shared: SharedUniforms, gradient: THREE.Texture): Pond
     mesh.matrixAutoUpdate = false
     mesh.updateMatrix()
   }
-  return { group, pads, padOutlines, padRings, backdrop, water: waterMesh, reeds: reedMesh, reedOutlines: reedHull }
+  return { group, pads, padOutlines, padRings, padTints, backdrop, water: waterMesh, reeds: reedMesh, reedOutlines: reedHull }
 }
 
 const ray = new THREE.Vector3()
