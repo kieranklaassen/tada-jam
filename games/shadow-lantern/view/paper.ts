@@ -219,6 +219,26 @@ export function withInstanceAlpha(material: THREE.Material, mesh: THREE.Instance
   return alpha
 }
 
+/** A guidance ring: a faint centre, a bright band near the rim, a soft fade outside. */
+export function glowRingTexture(): THREE.CanvasTexture {
+  const size = 128
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const g = canvas.getContext('2d')!
+  const ring = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+  ring.addColorStop(0, 'rgba(255,255,255,0.12)')
+  ring.addColorStop(0.5, 'rgba(255,255,255,0.3)')
+  ring.addColorStop(0.7, 'rgba(255,255,255,1)')
+  ring.addColorStop(0.84, 'rgba(255,255,255,0.4)')
+  ring.addColorStop(1, 'rgba(255,255,255,0)')
+  g.fillStyle = ring
+  g.fillRect(0, 0, size, size)
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  return texture
+}
+
 /** A soft round spot (white centre to clear edge) for halos, glows and contact shadows. */
 export function softSpotTexture(): THREE.CanvasTexture {
   const size = 128
