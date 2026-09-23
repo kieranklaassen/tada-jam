@@ -38,6 +38,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Game | Style | Art guide |
 | --- | --- | --- |
 | Pebble Table | Claymation 3D: plasticine with thumbprints, stop-motion lighting, terracotta on cool sage-teal | [`games/pebble-table/ART.md`](../games/pebble-table/ART.md) |
+| Cosy Scarf | Knitted and crocheted yarn 3D: amigurumi animals, a chunky striped scarf on a honey-wood loom with a plain felt backboard, faint knitted snow hills under a ribbed knit sky | [`games/cosy-scarf/ART.md`](../games/cosy-scarf/ART.md) |
 
 ## 4. Menu of unclaimed directions
 
