@@ -110,6 +110,40 @@ describe('PlayPhysics', () => {
     }
   })
 
+  it('a straight tower with the doll on top settles, falls asleep and stops creeping', () => {
+    const physics = new PlayPhysics()
+    const tower = [CUBE, CUBE_B, 3, 8]
+    tower.forEach((id, i) => physics.add(id, { x: 2, y: i + cubeRest + i * 0.01, angle: 0 }))
+    run(physics, 2)
+    physics.setLoad(8, physics.body(8)!.position.x + 0.05, 4)
+    let t = 0
+    while (!physics.isResting && t < 10) {
+      physics.step(STEP)
+      t += STEP
+    }
+    expect(physics.isResting, 'the loaded tower falls asleep').toBe(true)
+    const before = tower.map((id) => ({ x: physics.body(id)!.position.x, y: physics.body(id)!.position.y }))
+    run(physics, 4)
+    tower.forEach((id, i) => {
+      const body = physics.body(id)!
+      expect(Math.hypot(body.position.x - before[i].x, body.position.y - before[i].y), `cube ${id} creep over 4 s`).toBeLessThan(0.005)
+    })
+    expect(physics.isResting).toBe(true)
+  })
+
+  it('a plank bridges two cubes and holds the doll', () => {
+    const physics = new PlayPhysics()
+    physics.add(CUBE, { x: -1, y: cubeRest, angle: 0 })
+    physics.add(CUBE_B, { x: 1, y: cubeRest, angle: 0 })
+    const plankRest = -SHAPES.plank.parts[0][0].y
+    physics.add(PLANK, { x: 0, y: 1 + plankRest + 0.01, angle: 0 })
+    run(physics, 2)
+    physics.setLoad(PLANK, 0.2, 1 + 2 * plankRest)
+    run(physics, 3)
+    expect(Math.abs(angleOf(physics.body(PLANK)!))).toBeLessThan(0.03)
+    expect(physics.body(PLANK)!.position.y).toBeCloseTo(1 + plankRest, 1)
+  })
+
   it('removing a support lets what rested on it fall', () => {
     const physics = new PlayPhysics()
     physics.add(CUBE, { x: 0, y: cubeRest, angle: 0 })

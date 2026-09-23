@@ -151,32 +151,52 @@ export function woodMaterial(
     color: options.color ?? '#ffffff',
     vertexColors: options.vertexColors ?? false,
     map,
-    roughnessMap: map,
     roughness: options.roughness ?? 0.95,
     metalness: 0,
-    bumpMap: map,
-    bumpScale: options.bump ?? 0.9,
   })
+  const bump = options.bump ?? 0.9
   const instanced = options.instanced ?? false
+  // One atlas read per pixel: software GL and small tablet GPUs pay for every
+  // texture tap, so roughness is that texel's green and the grain relief is the
+  // screen-space slope of its red (the same one-pixel difference a bump map
+  // takes with three extra reads).
   material.onBeforeCompile = (shader) => {
+    shader.uniforms.woodBump = { value: bump }
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>\nattribute vec2 wear;\nvarying vec2 vWear;${instanced ? '\nattribute float grainShift;' : ''}`)
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWear = wear;')
-    if (instanced) {
-      shader.vertexShader = shader.vertexShader.replace(
-        '#include <uv_vertex>',
-        '#include <uv_vertex>\nvMapUv.x += grainShift;\nvRoughnessMapUv.x += grainShift;\nvBumpMapUv.x += grainShift;',
+    if (instanced) shader.vertexShader = shader.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\nvMapUv.x += grainShift;')
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+varying vec2 vWear;
+uniform float woodBump;
+vec3 woodRelief( vec3 surfPos, vec3 surfNorm, vec2 dHdxy, float faceDirection ) {
+  vec3 sigmaX = normalize( dFdx( surfPos ) );
+  vec3 sigmaY = normalize( dFdy( surfPos ) );
+  vec3 r1 = cross( sigmaY, surfNorm );
+  vec3 r2 = cross( surfNorm, sigmaX );
+  float det = dot( sigmaX, r1 ) * faceDirection;
+  vec3 grad = sign( det ) * ( dHdxy.x * r1 + dHdxy.y * r2 );
+  return normalize( abs( det ) * surfNorm - grad );
+}`,
       )
-    }
-    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vWear;').replace(
-      '#include <color_fragment>',
-      `#if defined( USE_COLOR ) || defined( USE_COLOR_ALPHA )
+      .replace(
+        '#include <color_fragment>',
+        `#if defined( USE_COLOR ) || defined( USE_COLOR_ALPHA )
   diffuseColor.rgb *= mix( vColor.rgb, vec3( 1.0 ), vWear.x * 0.42 );
 #else
   diffuseColor.rgb *= mix( diffuse, vec3( 1.0 ), vWear.x * 0.42 ) / max( diffuse, vec3( 0.001 ) );
 #endif
   diffuseColor.rgb *= vWear.y;`,
-    )
+      )
+      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = roughness * sampledDiffuseColor.g;')
+      .replace(
+        '#include <normal_fragment_maps>',
+        `float woodHeight = woodBump * sampledDiffuseColor.r;
+  normal = woodRelief( - vViewPosition, normal, vec2( dFdx( woodHeight ), dFdy( woodHeight ) ), faceDirection );`,
+      )
   }
   material.customProgramCacheKey = () => (instanced ? 'kite-wood-instanced' : 'kite-wood')
   return material

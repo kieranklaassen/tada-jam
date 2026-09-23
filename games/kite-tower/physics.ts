@@ -16,6 +16,8 @@ const IMPACT_SPEED = 0.9
 const STILL_SPEED = 0.12
 const SETTLE_SECONDS = 0.3
 const LOST_Y = -3
+/** Below this speed a body may fall asleep. Cannon's 0.1 never lets a straight tower sleep: it creeps a hair a frame and keeps the solver running (and the doll on top rides the creep). */
+const SLEEP_SPEED = 0.4
 
 export type StepReport = {
   /** How many new contacts this step were hard enough to hear; ids and speeds are in `impactIds` and `impactSpeeds`. */
@@ -49,12 +51,23 @@ function extrude(parts: readonly { x: number; y: number }[], depth: number): CAN
   return new CANNON.ConvexPolyhedron({ vertices, faces })
 }
 
-/** The shared hull of each piece kind, built once. */
-const hulls = new Map<PieceShape, CANNON.ConvexPolyhedron[]>()
-function hullOf(shape: PieceShape): CANNON.ConvexPolyhedron[] {
+type Hull = { hull: CANNON.ConvexPolyhedron; offset: CANNON.Vec3 }
+
+/**
+ * The shared hulls of each piece kind, built once. Each convex part is
+ * extruded around its own centre and attached at an offset: cannon checks
+ * face normals against the hull's origin, and an arch's or half-moon's centre
+ * of mass lies outside most of its segments.
+ */
+const hulls = new Map<PieceShape, Hull[]>()
+function hullOf(shape: PieceShape): Hull[] {
   let parts = hulls.get(shape)
   if (!parts) {
-    parts = shape.parts.map((part) => extrude(part, shape.depth))
+    parts = shape.parts.map((part) => {
+      const cx = part.reduce((sum, p) => sum + p.x, 0) / part.length
+      const cy = part.reduce((sum, p) => sum + p.y, 0) / part.length
+      return { hull: extrude(part.map((p) => ({ x: p.x - cx, y: p.y - cy })), shape.depth), offset: new CANNON.Vec3(cx, cy, 0) }
+    })
     hulls.set(shape, parts)
   }
   return parts
@@ -138,10 +151,10 @@ export class PlayPhysics {
       angularFactor: new CANNON.Vec3(0, 0, 1),
       linearDamping: 0.04,
       angularDamping: 0.12,
-      sleepSpeedLimit: 0.1,
+      sleepSpeedLimit: SLEEP_SPEED,
       sleepTimeLimit: 0.35,
     })
-    for (const hull of hullOf(shape)) body.addShape(hull)
+    for (const { hull, offset } of hullOf(shape)) body.addShape(hull, offset)
     body.position.set(pose.x, pose.y, 0)
     body.quaternion.setFromAxisAngle(CANNON.Vec3.UNIT_Z, pose.angle)
     body.addEventListener('collide', (event: { body: CANNON.Body; contact: CANNON.ContactEquation }) => {
