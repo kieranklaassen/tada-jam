@@ -5,9 +5,9 @@
 
 export type JamPerf = {
   readonly cpuMs: number[]
-  tier: number
-  drawCalls: number
-  triangles: number
+  readonly tier: number
+  readonly drawCalls: number
+  readonly triangles: number
   reset(): void
 }
 
@@ -30,6 +30,9 @@ export class PerfMeter {
   private overlay: CanvasRenderingContext2D | null = null
   private overlayCanvas: HTMLCanvasElement | null = null
   private sinceDraw = 0
+  private tier = 0
+  private drawCalls = 0
+  private triangles = 0
   readonly api: JamPerf
 
   constructor() {
@@ -38,9 +41,15 @@ export class PerfMeter {
       get cpuMs() {
         return meter.samples()
       },
-      tier: 0,
-      drawCalls: 0,
-      triangles: 0,
+      get tier() {
+        return meter.tier
+      },
+      get drawCalls() {
+        return meter.drawCalls
+      },
+      get triangles() {
+        return meter.triangles
+      },
       reset() {
         meter.head = 0
         meter.count = 0
@@ -78,9 +87,9 @@ export class PerfMeter {
     this.intervals[this.barHead] = intervalMs
     this.cpuBars[this.barHead] = cpuMs
     this.barHead = (this.barHead + 1) % BARS
-    this.api.tier = tier
-    this.api.drawCalls = drawCalls
-    this.api.triangles = triangles
+    this.tier = tier
+    this.drawCalls = drawCalls
+    this.triangles = triangles
     if (this.overlay && ++this.sinceDraw >= 6) {
       this.sinceDraw = 0
       this.draw(this.overlay)

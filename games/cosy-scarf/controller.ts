@@ -1,5 +1,5 @@
 import { chooseHint, handPose, HintScheduler, type GuidanceFrame, type HandPose, type Hint, type Point3 } from './guidance'
-import { GestureTracker, TAP_SLOP, type Intent, type Point } from './input'
+import { GestureTracker, type Intent, type Point } from './input'
 import { canOffer, give, isFull, knitRow, paintStitch, summonIfReady, unravelRow } from './knitting'
 import { BALL_RADIUS, BASKET, BODY, BUTTERFLY, CELL_H, ENTRY, HILL_SPOTS, LOOM, LOOM_SPOT, SCARF, ballRest, cellAt, cellCentre, groundY, needlesY, type Spot } from './layout'
 import { completedRepeat, stripeColours, suggestColour } from './pattern'
@@ -20,6 +20,10 @@ export type Sound = {
   /** A row finished: that colour's note. */
   row(colour: number): void
   hop(colour: number): void
+  /** A ball lifted out of the basket by a finger. */
+  lift(colour: number): void
+  /** A carried ball back in the basket. */
+  settle(colour: number): void
   unravel(): void
   paint(colour: number): void
   flutter(open: boolean): void
@@ -27,6 +31,8 @@ export type Sound = {
   hum(unit: readonly number[]): void
   /** The scarf is long enough to give. */
   offer(): void
+  /** The needles let go of the given scarf as it lifts off the loom. */
+  castOff(): void
   swish(): void
   warm(animal: AnimalKey): void
   shiver(animal: AnimalKey): void
@@ -47,11 +53,14 @@ export const silentSound: Sound = {
   stitch() {},
   row() {},
   hop() {},
+  lift() {},
+  settle() {},
   unravel() {},
   paint() {},
   flutter() {},
   hum() {},
   offer() {},
+  castOff() {},
   swish() {},
   warm() {},
   shiver() {},
@@ -103,6 +112,7 @@ export const DANCE_START = 2.35
 export const HUM_LEAD_S = 0.08
 export const HUM_STEP_S = 0.2
 const NEXT_ARRIVES_AFTER = 0.7
+const WINDOW_SAMPLES = 40
 
 const KNIT_CELLS_PER_S = 10
 const KNIT_FAST_CELLS_PER_S = 24
@@ -115,6 +125,8 @@ const CARRY_Z = SCARF.z + 6
 const CARRY_STIFFNESS = 700
 const CARRY_DAMPING = 30
 const RETURN_SECONDS = 0.5
+/** Yarn let go over the animal waiting at the loom flies into the loom and is knitted there, then goes home. */
+const TO_LOOM_SECONDS = 0.45
 const GRAVITY = 260
 /** A loom tap's answer: the wanted ball hops a little lower than a tapped ball, just after the loom starts to sway. */
 const ASK_HOP_SPEED = 46
@@ -128,7 +140,6 @@ const SNOW_STEP = 6
 const SKY_PUFF_Z = -300
 /** A touch puff's size on screen, the same near the blanket or far up the slope, where a fixed world size shrinks to a speck. */
 const TOUCH_PUFF_PX = 24
-const GIVE_REACH_PX = 170
 
 export type BallView = {
   readonly colour: number
@@ -144,9 +155,11 @@ export type BallView = {
   held: number | null
   /** The carry's springy follow of the finger; its velocity (easing to rest once let go) stretches the ball along its path. */
   readonly carry: { x: Spring; y: Spring; z: Spring }
-  /** 0..1 through the arc home, or -1. */
+  /** 0..1 through the arc home (or into the loom first), or -1. */
   returning: number
   readonly returnFrom: Point3
+  /** The arc runs into the loom, which knits a row of this ball before it flies home. */
+  toLoom: boolean
   launchAt: number
   launchV: number
   airborne: boolean
@@ -275,6 +288,7 @@ export class ScarfController {
   private readonly handTo: Point3 = { x: 0, y: 0, z: 0 }
   private readonly scratch: Point3 = { x: 0, y: 0, z: 0 }
   private readonly scratch2: Point3 = { x: 0, y: 0, z: 0 }
+  private readonly entry: Point3 = { x: 0, y: 0, z: 0 }
   private readonly screen: Point = { x: 0, y: 0 }
 
   constructor(state: GameState, options: { save: (state: GameState) => void; sound?: Sound; childAge: number | null }) {
@@ -304,6 +318,7 @@ export class ScarfController {
         carry: { x: spring(rest.x), y: spring(rest.y), z: spring(rest.z) },
         returning: -1,
         returnFrom: { ...rest },
+        toLoom: false,
         launchAt: -Infinity,
         launchV: 0,
         airborne: false,
@@ -655,6 +670,7 @@ export class ScarfController {
         if (ball.held !== null) return
         ball.held = id
         ball.returning = -1
+        ball.toLoom = false
         ball.airborne = false
         ball.hopY = 0
         ball.hopV = 0
@@ -664,6 +680,7 @@ export class ScarfController {
         ball.carry.z.x = ball.pos.z
         ball.carry.x.v = ball.carry.y.v = ball.carry.z.v = 0
         this.drags.set(id, { kind: 'ball', index: target.index, screen: { x: at.x, y: at.y }, painted: false, cellRow: -1, cellColumn: -1, cellSince: 0 })
+        this.sound.lift(ball.colour)
         return
       }
       case 'needles': {
@@ -679,13 +696,16 @@ export class ScarfController {
         const drag: Drag = { kind: 'scarf', screen: { x: at.x, y: at.y }, start: { x: at.x, y: at.y } }
         this.scarfDrag = drag
         this.drags.set(id, drag)
+        this.sound.lift(this.loom.rows[this.loom.rows.length - 1][0])
         return
       }
+      // Nothing here follows a finger, so a stroke answers like a tap where it began: no touch lands in silence.
       case 'loom':
       case 'animal':
       case 'butterfly':
       case 'basket':
       case 'snow':
+        this.tap(target, at)
         return
       default: {
         const never: never = target
@@ -702,26 +722,34 @@ export class ScarfController {
       case 'ball': {
         const ball = this.balls[drag.index]
         ball.held = null
-        if (commit && at && !drag.painted && this.overLoom(at)) {
+        const drop = commit && at && !drag.painted
+        const onLoom = drop && this.overLoom(at)
+        if (onLoom) {
           this.sound.hop(ball.colour)
           this.knit(ball.colour)
         }
         if (drag.painted) this.cadence.settle(this.t * 1000)
         this.sendHome(ball)
+        // A newcomer offers the yarn to the cold animal itself: the ball shows the way by flying into the loom.
+        if (drop && !onLoom && this.overWaiting(at)) {
+          ball.toLoom = true
+          this.sound.hop(ball.colour)
+        }
         return
       }
       case 'needles':
         this.needles.held = false
         this.needlesDrag = null
+        // A stroke that unravels nothing (down, sideways, or too short) answers like a tap on the knitting.
         if (drag.pulled > 0) this.cadence.change(this.t * 1000, true)
-        else if (commit && at && Math.hypot(at.x - drag.grab.x, at.y - drag.grab.y) < TAP_SLOP) this.tap(SCARF_TARGET, at)
+        else if (commit && at) this.tap(SCARF_TARGET, at)
         return
       case 'scarf': {
         this.scarfDrag = null
-        const near = commit && at && this.offered && this.nearRecipient(at, drag.start)
         this.loom.pull.x = 0
         this.loom.pull.y = 0
-        if (near) this.startGift()
+        // Let go short of the animal, the scarf answers like a tap: an offered scarf is given all the same.
+        if (commit && at) this.tap(SCARF_TARGET, at)
         else this.loom.swing.v += 0.4
         return
       }
@@ -738,17 +766,14 @@ export class ScarfController {
     return Math.abs(this.scratch.x - LOOM.x) < LOOM.postX + 3 && this.scratch.y > -2 && this.scratch.y < LOOM.rodY + 5
   }
 
-  private nearRecipient(at: Point, start: Point): boolean {
+  /** Over the cold animal at the loom (or on its way there), waiting for its scarf. */
+  private overWaiting(at: Point): boolean {
     const animal = this.state.atLoom
     const p = this.projector
     if (!animal || !p) return false
     const actor = this.actors[animal]
-    this.scratch.x = actor.x
-    this.scratch.y = groundY(actor.x, actor.z) + BODY[animal].neck
-    this.scratch.z = actor.z
-    if (!p.toScreen(this.scratch, this.screen)) return false
-    const toward = Math.hypot(this.screen.x - start.x, this.screen.y - start.y) - Math.hypot(this.screen.x - at.x, this.screen.y - at.y)
-    return Math.hypot(this.screen.x - at.x, this.screen.y - at.y) < GIVE_REACH_PX || toward > 90
+    if (!actor.visible || actor.destination !== 'loom') return false
+    return this.near(p, at, actor.x, groundY(actor.x, actor.z) + BODY[animal].height * 0.48, actor.z, BODY[animal].height * 0.55)
   }
 
   private pullNeedles(drag: Extract<Drag, { kind: 'needles' }>): void {
@@ -806,6 +831,7 @@ export class ScarfController {
 
     const actor = this.actors[gift.to]
     actor.reach.v += 2
+    this.sound.castOff()
     this.after(FLY_END + 0.05, () => this.sound.swish())
     this.after(WRAP_END, () => {
       actor.warmAt = this.t
@@ -820,8 +846,40 @@ export class ScarfController {
     this.after(DANCE_START + DANCE_SECONDS[gift.to] + 0.2, () => {
       if (this.state.atLoom !== gift.to) this.walkTo(actor, HILL_SPOTS[gift.to], 'hill', 0)
       const next = this.state.atLoom
-      if (next && next !== gift.to) this.walkTo(this.actors[next], LOOM_SPOT, 'loom', NEXT_ARRIVES_AFTER)
+      if (!next || next === gift.to) return
+      // The next cold animal arrives as the friend walking home behind the loom leaves its window, so its first rows are knitted over plain snow.
+      const walkIn = Math.hypot(LOOM_SPOT.x - ENTRY.x, LOOM_SPOT.z - ENTRY.z) / WALK_SPEED[next]
+      this.walkTo(this.actors[next], LOOM_SPOT, 'loom', Math.max(NEXT_ARRIVES_AFTER, this.inWindowUntil(actor) - walkIn))
     })
+  }
+
+  /** Seconds from now until a walking animal last shows through the loom's open window (0 if it never does). */
+  private inWindowUntil(actor: ActorView): number {
+    const p = this.projector
+    if (!p || !actor.walking) return 0
+    this.scratch.x = LOOM.x - LOOM.postX
+    this.scratch.y = LOOM.rodY
+    this.scratch.z = LOOM.z
+    if (!p.toScreen(this.scratch, this.screen)) return 0
+    const left = this.screen.x
+    const top = this.screen.y
+    this.scratch.x = LOOM.x + LOOM.postX
+    this.scratch.y = LOOM.footY
+    if (!p.toScreen(this.scratch, this.screen)) return 0
+    const right = this.screen.x
+    const bottom = this.screen.y
+    let last = 0
+    for (let i = 0; i <= WINDOW_SAMPLES; i++) {
+      const s = i / WINDOW_SAMPLES
+      const x = actor.walkFrom.x + (actor.walkTo.x - actor.walkFrom.x) * s
+      const z = actor.walkFrom.z + (actor.walkTo.z - actor.walkFrom.z) * s
+      if (z > LOOM.z) continue
+      this.scratch.x = x
+      this.scratch.y = groundY(x, z) + BODY[actor.animal].height * 0.5
+      this.scratch.z = z
+      if (p.toScreen(this.scratch, this.screen) && this.screen.x > left && this.screen.x < right && this.screen.y > top && this.screen.y < bottom) last = Math.min(1, s + 1 / WINDOW_SAMPLES)
+    }
+    return last > 0 ? actor.walkT0 - this.t + last * actor.walkDuration : 0
   }
 
   private after(delay: number, run: () => void): void {
@@ -835,6 +893,14 @@ export class ScarfController {
     ball.launchAt = this.t + delay
     ball.launchV = speed
     ball.squash.v += 5
+  }
+
+  /** Just under the needles, in front of the scarf: where a row is knitted. */
+  private needlesEntry(): Point3 {
+    this.entry.x = SCARF.x
+    this.entry.y = needlesY(this.loom.reveal / WIDTH) - CELL_H
+    this.entry.z = CARRY_Z
+    return this.entry
   }
 
   private sendHome(ball: BallView): void {
@@ -858,16 +924,23 @@ export class ScarfController {
           this.paintUnder(ball, drag)
         }
       } else if (ball.returning >= 0) {
-        ball.returning = Math.min(1, ball.returning + dt / RETURN_SECONDS)
+        const to = ball.toLoom ? this.needlesEntry() : ball.rest
+        ball.returning = Math.min(1, ball.returning + dt / (ball.toLoom ? TO_LOOM_SECONDS : RETURN_SECONDS))
         const k = smooth(ball.returning)
         const arc = Math.sin(ball.returning * Math.PI) * 9
-        ball.pos.x = ball.returnFrom.x + (ball.rest.x - ball.returnFrom.x) * k
-        ball.pos.y = ball.returnFrom.y + (ball.rest.y - ball.returnFrom.y) * k + arc
-        ball.pos.z = ball.returnFrom.z + (ball.rest.z - ball.returnFrom.z) * k
-        if (ball.returning >= 1) {
+        ball.pos.x = ball.returnFrom.x + (to.x - ball.returnFrom.x) * k
+        ball.pos.y = ball.returnFrom.y + (to.y - ball.returnFrom.y) * k + arc
+        ball.pos.z = ball.returnFrom.z + (to.z - ball.returnFrom.z) * k
+        if (ball.returning >= 1 && ball.toLoom) {
+          ball.toLoom = false
+          ball.squash.v += 6
+          this.knit(ball.colour)
+          this.sendHome(ball)
+        } else if (ball.returning >= 1) {
           ball.returning = -1
           ball.squash.v += 9
           ball.spinV += 4
+          this.sound.settle(ball.colour)
         }
       } else {
         if (!ball.airborne && this.t >= ball.launchAt && ball.launchV > 0) {

@@ -207,6 +207,24 @@ export class ScarfAudio implements Sound {
     this.tone(note(colour) / 2, 'triangle', 0.07, 0.01, 0.16, now + 0.02, note(colour) * 0.75)
   }
 
+  lift(colour: number): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    this.hiss(900, 0.8, 0.05, 0.07, now, 'lowpass', 1600)
+    this.tone(note(colour) / 2, 'sine', 0.06, 0.008, 0.12, now, note(colour) * 0.7)
+  }
+
+  settle(colour: number): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    this.tone(125, 'sine', 0.13, 0.005, 0.12, now, 88)
+    this.hiss(420, 0.9, 0.05, 0.07, now, 'lowpass')
+    this.hiss(2400, 6, 0.02, 0.02, now + 0.03, 'bandpass')
+    this.tone(note(colour) / 4, 'triangle', 0.03, 0.01, 0.1, now + 0.01)
+  }
+
   unravel(): void {
     const context = this.ready()
     if (!context) return
@@ -251,6 +269,15 @@ export class ScarfAudio implements Sound {
     this.tone(NOTES[3] * 2, 'sine', 0.07, 0.004, 0.9, now)
     this.tone(NOTES[5] * 2, 'sine', 0.05, 0.004, 1.1, now + 0.12)
     this.tone(NOTES[5] * 5.4, 'sine', 0.01, 0.002, 0.3, now + 0.12)
+  }
+
+  castOff(): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    for (let i = 0; i < 2; i++) this.hiss(3400 - i * 600, 6, 0.08, 0.03, now + i * 0.07, 'bandpass')
+    this.hiss(480, 1.1, 0.1, 0.4, now + 0.1, 'bandpass', 1500)
+    this.tone(NOTES[0] * 2, 'sine', 0.04, 0.01, 0.35, now + 0.1, NOTES[3] * 2)
   }
 
   swish(): void {
