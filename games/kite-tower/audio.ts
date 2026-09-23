@@ -28,6 +28,7 @@ export interface KiteSound {
   whee(): void
   boop(doll: Doll): void
   flutter(): void
+  miss(): void
   wind(on: boolean): void
   freed(): void
   land(): void
@@ -349,6 +350,13 @@ export class KiteAudio implements KiteSound {
   flutter(): void {
     const at = this.now()
     for (let i = 0; i < 5; i++) this.burst(at + i * 0.05, 0.05, 2200 + i * 150, 1.2, 0.06)
+  }
+
+  /** A finger that finds nothing: a soft felt "poff" off the rug, quieter than anything wooden. */
+  miss(): void {
+    const at = this.now()
+    this.burst(at, 0.09, 340, 0.9, 0.05, 'lowpass')
+    this.tone(196, at, 0.11, 0.045, 'sine', 148)
   }
 
   wind(on: boolean): void {

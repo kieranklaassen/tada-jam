@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import type { KiteController, Projector } from '../controller'
+import { MISS_SECONDS, type KiteController, type Projector } from '../controller'
 import { TRAY, TRAY_SLOTS, trayToWorld, WATCHERS, type Vec3 } from '../layout'
 import { PIECES, SHAPES } from '../pieces'
 import { PerfRing, TierGovernor, tierOverride, type Tier } from '../quality'
@@ -92,6 +92,12 @@ function World({ controller }: { controller: KiteController }) {
   const glows = useCallback(
     (add: BlobAdd) => {
       const g = controller.guidance
+      const missAge = controller.t - controller.miss.at
+      if (missAge < MISS_SECONDS) {
+        const k = missAge / MISS_SECONDS
+        const size = 1.2 + k * 1.9
+        add(controller.miss.x, controller.miss.y, 0.35, size, size, (1 - k) * 0.85, Math.PI / 2)
+      }
       const hint = g.hint
       if (!hint || g.glow <= 0) return
       if (hint.kind === 'fromTray') {
@@ -131,7 +137,11 @@ function Input({ controller }: { controller: KiteController }) {
       }
       const down = (event: PointerEvent) => {
         event.preventDefault()
-        element.setPointerCapture?.(event.pointerId)
+        try {
+          element.setPointerCapture?.(event.pointerId)
+        } catch {
+          // WebKit can refuse the capture; the window listeners carry the press anyway.
+        }
         controller.pointerDown(event.pointerId, local(event), event.timeStamp)
       }
       const move = (event: PointerEvent) => controller.pointerMove(event.pointerId, local(event))
@@ -139,15 +149,19 @@ function Input({ controller }: { controller: KiteController }) {
       const cancel = (event: PointerEvent) => controller.pointerCancel(event.pointerId)
       const menu = (event: Event) => event.preventDefault()
       element.addEventListener('pointerdown', down)
-      element.addEventListener('pointermove', move)
-      element.addEventListener('pointerup', up)
-      element.addEventListener('pointercancel', cancel)
+      // The rest of the press is followed on the window: a capture WebKit refuses, or revokes
+      // for a system gesture, would otherwise keep the move and the lift away from the canvas
+      // and leave the piece hanging. Fingers that never pressed here are unknown to the
+      // gestures and ignored.
+      window.addEventListener('pointermove', move)
+      window.addEventListener('pointerup', up)
+      window.addEventListener('pointercancel', cancel)
       element.addEventListener('contextmenu', menu)
       cleanup.current = () => {
         element.removeEventListener('pointerdown', down)
-        element.removeEventListener('pointermove', move)
-        element.removeEventListener('pointerup', up)
-        element.removeEventListener('pointercancel', cancel)
+        window.removeEventListener('pointermove', move)
+        window.removeEventListener('pointerup', up)
+        window.removeEventListener('pointercancel', cancel)
         element.removeEventListener('contextmenu', menu)
       }
     },

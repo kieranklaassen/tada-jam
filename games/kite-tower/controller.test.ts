@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { KiteSound } from './audio'
-import { KiteController, slotWorld, type Projector } from './controller'
+import { KiteController, MISS_SECONDS, slotWorld, type Projector } from './controller'
 import { TRAY_SLOTS } from './layout'
 import { PERCHES } from './perches'
 import { defaultState, type KiteState, type SavedPiece } from './state'
@@ -40,6 +40,7 @@ function fakeSound(): KiteSound & { calls: string[] } {
     whee: record('whee'),
     boop: record('boop'),
     flutter: record('flutter'),
+    miss: record('miss'),
     wind: record('wind'),
     freed: record('freed'),
     land: record('land'),
@@ -195,6 +196,16 @@ describe('KiteController', () => {
     const body = game.physics.body(0)!
     expect(Math.abs(body.position.x - game.hero.x)).toBeLessThan(1.6)
     expect(body.position.y).toBeCloseTo(0.5, 1)
+  })
+
+  it('a tap that finds nothing still answers: a ring where the finger landed and a poff', () => {
+    const { game, sound } = make(defaultState(5))
+    run(game, 0.2)
+    game.pointerDown(1, { x: 1.2, y: 80 }, 0)
+    game.pointerUp(1, { x: 1.2, y: 80 }, 100)
+    expect(sound.calls).toContain('miss')
+    expect(game.miss.x).toBeCloseTo(1.2, 2)
+    expect(game.t - game.miss.at).toBeLessThan(MISS_SECONDS)
   })
 
   it('a block that comes down across the doll’s walk stops her short, and she climbs it instead of walking through it', () => {

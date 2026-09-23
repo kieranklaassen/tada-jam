@@ -115,6 +115,10 @@ const LANDING_TRIES = 6
 const HIDDEN_BY = 1.1
 const HIDE_SAMPLES = [-0.4, 0, 0.4]
 const ASIDE_STEPS = 8
+/** How long the ring left by a touch that found nothing takes to spread and fade. */
+export const MISS_SECONDS = 0.45
+/** A ring on the rug itself would sink into it, so a low touch rings a little above the floor. */
+const MISS_FLOOR = 0.12
 
 type Drag = { pointer: number; id: number; offset: Vec2; goal: Vec2; at: Vec2; lastX: number; vx: number }
 type Turn = { id: number; start: number; from: number; to: number }
@@ -192,6 +196,8 @@ export class KiteController {
   /** When something last toppled or crashed loudly enough for everyone to react. */
   toppleAt = -Infinity
   readonly guidance: GuidanceView = { glow: 0, hint: null, hand: null, peek: null, buildAt: { x: 0, y: 0 } }
+  /** Where a touch last found nothing, and when: the view rings that spot while it fades. */
+  readonly miss: { x: number; y: number; at: number } = { x: 0, y: 0, at: -Infinity }
 
   private readonly deps: ControllerDeps
   private readonly sound: KiteSound | null
@@ -452,7 +458,7 @@ export class KiteController {
           this.clearDemo()
           break
         case 'tap':
-          this.onTap(intent.target)
+          this.onTap(intent.target, intent.at)
           break
         case 'dragStart':
           this.onDragStart(intent.pointer, intent.target, intent.at)
@@ -474,7 +480,7 @@ export class KiteController {
     }
   }
 
-  private onTap(target: Target): void {
+  private onTap(target: Target, at: Vec2): void {
     switch (target.kind) {
       case 'piece':
         this.startTurn(target.id)
@@ -494,8 +500,17 @@ export class KiteController {
         this.kite.flutterAt = this.t
         this.sound?.flutter()
         break
-      case 'none':
+      case 'none': {
+        // A finger that finds nothing still gets an answer: a ring where it landed and a soft poff.
+        const p = this.planeAt(at)
+        if (p) {
+          this.miss.x = p.x
+          this.miss.y = Math.max(p.y, MISS_FLOOR)
+          this.miss.at = this.t
+        }
+        this.sound?.miss()
         break
+      }
       default: {
         const never: never = target
         throw new Error(`unknown target ${String(never)}`)
@@ -1289,15 +1304,10 @@ export class KiteController {
     this.hintSearch = { shape: this.hintShape(), candidates, index: 0, best: { x: goal.x - Math.sign(goal.x) * 0.6, y: 0 }, bestScore: -Infinity }
   }
 
-  /** The piece the ghost hand will carry (the rule in `chooseHint`: the first cube left in the tray, else the first piece), so the search tries that shape. */
+  /** The piece the ghost hand will carry, asked of `chooseHint` itself so the search tries that shape whether it comes from the tray or off the rug. The search also runs mid-flight, when no hint shows, so it asks as if the kite were perched. */
   private hintShape(): PieceShape {
-    let first = -1
-    for (const piece of PIECES) {
-      if (!this.trayed[piece.id]) continue
-      if (piece.kind === 'cube') return SHAPES.cube
-      if (first < 0) first = piece.id
-    }
-    return first >= 0 ? pieceShape(first) : SHAPES.cube
+    const hint = chooseHint({ ...this.summary(), flying: false })
+    return hint ? pieceShape(hint.id) : SHAPES.cube
   }
 
   private stepHintSearch(): void {
