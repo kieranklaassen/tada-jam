@@ -1,6 +1,7 @@
 import { CELL, FLOOR, PLATFORM_WIDTH, SECURE_DELAY, cellsFor, outlineCenter, type Shape, type Game } from './model'
 import { buildingSprite, drawResidents, pixelPerson, silhouetteFor, type Context } from './buildings'
 import { Neighbourhood, type StreetProp } from './neighbourhood'
+import { TIERS, type Tier } from './quality'
 
 // Canvas scene for the street. Wordless: no bubbles, metres or labels.
 
@@ -9,9 +10,9 @@ function line(ctx: Context, x: number, y: number, xx: number, yy: number, color:
 function cloud(ctx: Context, x: number, y: number, size: number) {
   ctx.save(); ctx.translate(x, y); ctx.scale(size, size); ctx.fillStyle = '#e9f1e6'; ctx.beginPath(); ctx.roundRect(-42, 0, 100, 12, 6); ctx.fill(); ctx.beginPath(); ctx.roundRect(-16, -13, 49, 25, 12); ctx.fill(); ctx.restore()
 }
-export function canvasDensity(width: number, height: number, deviceRatio: number) {
+export function canvasDensity(width: number, height: number, deviceRatio: number, cap = 2) {
   // Keep phones sharp while bounding full-screen raster work on large tablets.
-  return Math.max(1, Math.min(deviceRatio || 1, 2, Math.sqrt(2_000_000 / Math.max(1, width * height))))
+  return Math.max(1, Math.min(deviceRatio || 1, cap, Math.sqrt(2_000_000 / Math.max(1, width * height))))
 }
 type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number }
 
@@ -23,6 +24,9 @@ export class Renderer {
   particles: Particle[] = []
   neighbourhood = new Neighbourhood()
   reduced: boolean
+  /** Sprites and figures drawn in the last frame, for the grown-up perf handle. */
+  draws = 0
+  private tier: Tier = TIERS[0]
   private clock = 0
   private game: Game | null = null
   private observer: ResizeObserver
@@ -37,11 +41,18 @@ export class Renderer {
     this.observer = new ResizeObserver(() => this.resize()); this.observer.observe(canvas); this.resize()
   }
   dispose() { this.observer.disconnect(); this.media.removeEventListener('change', this.onMotion) }
+  /** Applies a quality tier: pixel ratio, how many figures move, and how much flies about. */
+  setTier(tier: Tier) {
+    this.tier = tier
+    this.neighbourhood.maxProps = tier.props
+    if (this.particles.length > tier.particles) this.particles.length = tier.particles
+    this.resize()
+  }
   resize() {
     const width = this.canvas.clientWidth, height = this.canvas.clientHeight
     // A parked surface measures 0×0; keep the last good size.
     if (width <= 0 || height <= 0) return
-    const dpr = canvasDensity(width, height, window.devicePixelRatio)
+    const dpr = canvasDensity(width, height, window.devicePixelRatio, this.tier.dpr)
     if (width === this.width && height === this.height && dpr === this.dpr) return
     this.width = width; this.height = height; this.dpr = dpr
     this.canvas.width = Math.round(width * dpr); this.canvas.height = Math.round(height * dpr)
@@ -96,7 +107,7 @@ export class Renderer {
   worldX(clientX: number) { return (clientX - this.canvas.getBoundingClientRect().left - this.cx) / this.scale }
   burst(x: number, y: number, color: string, big = false) {
     if (this.reduced) return
-    for (let i = 0; i < (big ? 18 : 7) && this.particles.length < 64; i++) this.particles.push({ x, y, vx: (Math.random() - 0.5) * 55, vy: -15 - Math.random() * 45, life: 1, color, size: 1 + Math.random() * 2 })
+    for (let i = 0; i < (big ? 18 : 7) && this.particles.length < this.tier.particles; i++) this.particles.push({ x, y, vx: (Math.random() - 0.5) * 55, vy: -15 - Math.random() * 45, life: 1, color, size: 1 + Math.random() * 2 })
   }
   private prop(p: StreetProp, x: number, y: number, scale: number) {
     const ctx = this.ctx
@@ -128,8 +139,9 @@ export class Renderer {
     const ctx = this.ctx, w = this.width, h = this.height
     this.clock += Math.min(50, delta) / 1000; const t = this.reduced ? 0 : this.clock
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(this.bg, 0, 0); ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
-    const walkers = w < 700 ? 4 : 9
+    const walkers = Math.min(w < 700 ? 4 : 9, this.tier.walkers)
     for (let i = 0; i < walkers; i++) { const xx = ((i * 173 + t * (i % 2 ? -8 : 11)) % (w + 60) + w + 60) % (w + 60) - 30; pixelPerson(ctx, xx, h - 36, t * 4 + i, ['#eec46c', '#bc6c51', '#e9e2cc'][i % 3], false, 1.1) }
+    this.draws = 1 + walkers
     if (!game) return
     // Keep the slab above the control dock; short screens put the controls in the corners instead.
     const reserve = h <= 500 ? 20 : 100
@@ -144,10 +156,14 @@ export class Renderer {
       const piece = game.active, xx = this.cx + outlineCenter(piece.body).x * this.scale
       ctx.save(); ctx.setLineDash([3, 6]); line(ctx, xx, sy(piece.body.bounds.max.y) + 8, xx, sy(FLOOR) - 3, '#304f6630'); ctx.restore()
     }
-    for (const piece of game.pieces) {
+    // Residents move in the newest buildings, which sit at the top where the child is looking.
+    const livelyFrom = game.pieces.length - this.tier.livelyBuildings
+    for (const [index, piece] of game.pieces.entries()) {
       const yy = sy(piece.body.position.y); if (yy < -110 * this.scale || yy > h + 100 * this.scale) continue
       const xx = this.cx + piece.body.position.x * this.scale
-      this.drawBuilding(piece.shape, xx, yy, piece.body.angle, this.scale, t, piece.body.id, this.neighbourhood.reactions.get(piece.body.id) || 0)
+      const lively = index >= livelyFrom || piece === game.active
+      this.drawBuilding(piece.shape, xx, yy, piece.body.angle, this.scale, lively ? t : undefined, piece.body.id, this.neighbourhood.reactions.get(piece.body.id) || 0)
+      this.draws += lively ? 5 : 1
       if (piece.scored) {
         // A small in-shape tick shows when a building has become a solid foundation.
         ctx.save(); ctx.translate(xx, yy); ctx.rotate(piece.body.angle); ctx.scale(this.scale, this.scale); ctx.clip(silhouetteFor(piece.shape))
@@ -169,6 +185,7 @@ export class Renderer {
       }
     }
     for (const p of this.neighbourhood.props) this.prop(p, this.cx + p.x * this.scale, sy(p.y), this.scale)
+    this.draws += this.neighbourhood.props.length + this.particles.length
     const dt = Math.min(delta, 50) / 1000
     for (const p of this.particles) { p.life -= dt * 1.8; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 90 * dt; ctx.globalAlpha = Math.max(0, p.life) * 0.6; rect(ctx, this.cx + p.x * this.scale, sy(p.y), p.size * this.scale, p.size * this.scale, p.color) }
     ctx.globalAlpha = 1; this.particles = this.particles.filter(p => p.life > 0)

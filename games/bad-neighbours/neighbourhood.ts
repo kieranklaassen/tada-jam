@@ -5,6 +5,8 @@ export interface StreetProp { kind: PropKind; x: number; y: number; vx: number; 
 export const MAX_PROPS = 72;
 export class Neighbourhood {
   props: StreetProp[] = [];
+  /** Lowered by the quality tier on slower devices. */
+  maxProps = MAX_PROPS;
   reactions = new Map<number, number>();
   private previousAngles = new Map<number, number>();
   private shedAt = new Map<number, number>();
@@ -16,14 +18,14 @@ export class Neighbourhood {
     if (this.time - (this.shedAt.get(piece.body.id) ?? -10) < .3) return;
     this.shedAt.set(piece.body.id, this.time);
     const body = piece.body, cells = cellsFor(piece.shape), c = Math.cos(body.angle), s = Math.sin(body.angle);
-    for (let i = 0; i < amount && this.props.length < MAX_PROPS; i++) {
+    for (let i = 0; i < amount && this.props.length < this.maxProps; i++) {
       const cell = cells[(i + Math.floor(this.time)) % cells.length];
       const localX = cell.x + (i % 2 ? 8 : -8), localY = cell.y;
       this.props.push({ kind: (['book', 'plant', 'sock', 'paper'] as PropKind[])[(i + body.id) % 4], x: body.position.x + localX * c - localY * s, y: body.position.y + localX * s + localY * c, vx: (i % 2 ? 1 : -1) * (25 + i * 9) + body.velocity.x * 25, vy: -45 - i * 12, angle: body.angle, spin: (i % 2 ? 1 : -1) * (2 + i), age: 0, lifetime: 3.5 + i * .12, bounces: 0, color: ['#d76749', '#e6bb62', '#e4e6d6', '#4b7190'][i % 4] });
     }
   }
   rescue(piece: Piece) {
-    if (this.props.length >= MAX_PROPS) return;
+    if (this.props.length >= this.maxProps) return;
     this.props.push({ kind: 'resident', x: piece.body.position.x, y: Math.min(piece.body.position.y - 50, FLOOR - 100), vx: piece.body.position.x > 0 ? 30 : -30, vy: 13, angle: 0, spin: 0, age: 0, lifetime: 6, bounces: 0, color: '#e8b657' });
   }
   update(delta: number, pieces: Piece[], platformWidth: number, reduced = false) {

@@ -257,9 +257,19 @@ export class Game {
     a.plugin.bonded = [...a.plugin.bonded || [], b.id]
     this.pieces.filter(p => p.body === a || p.body === b).forEach(p => p.glued = true)
   }
-  advance(delta: number, softDrop = false) {
+  /** Physics steps the last `advance` ran. */
+  lastSteps = 0
+  /**
+   * Runs the fixed 120 Hz steps a display frame owes. At most `maxSteps` catch up in one frame: a slow frame
+   * slows game time a little instead of asking the next frame for even more steps.
+   */
+  advance(delta: number, softDrop = false, maxSteps = 12) {
     this.accumulator += Math.min(100, Math.max(0, delta))
-    while (this.accumulator >= STEP) { this.tick(softDrop); this.accumulator -= STEP }
+    // The epsilon keeps floating-point drift from losing a step that is owed exactly.
+    const steps = Math.min(maxSteps, Math.floor(this.accumulator / STEP + 1e-6))
+    for (let i = 0; i < steps; i++) this.tick(softDrop)
+    this.accumulator = Math.min(STEP, Math.max(0, this.accumulator - steps * STEP))
+    this.lastSteps = steps
   }
   private prepareLanding(body: Matter.Body, speed: number) {
     // Check the next physics step with the actual compound shape. Slowing only

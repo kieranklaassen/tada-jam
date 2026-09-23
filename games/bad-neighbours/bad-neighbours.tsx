@@ -4,6 +4,8 @@ import { Sound } from './audio'
 import { bindGameControls, DragGesture, type ControlAction } from './input'
 import { badNeighboursManifest } from './manifest'
 import { Game, paceForAge, type GameEvent } from './model'
+import { installJamPerf } from './perf'
+import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { Renderer } from './renderer'
 import { deserialize, serialize } from './snapshot'
 import './bad-neighbours.css'
@@ -42,6 +44,11 @@ function BadNeighbours({ ctx }: { ctx: CartridgeContext }) {
   useEffect(() => {
     const root = rootRef.current!, canvas = canvasRef.current!, clearButton = clearRef.current!
     const renderer = new Renderer(canvas), sound = new Sound(), gesture = new DragGesture()
+    const pinned = tierOverride(window.location.search)
+    const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
+    const work = new PerfRing()
+    renderer.setTier(governor.settings)
+    const uninstallPerf = installJamPerf(work, () => governor.tier, () => renderer.draws)
     const seed = () => Math.floor(Math.random() * 2 ** 30) + 1
     let game: Game | null = null, disposed = false, softDrop = false, frame = 0, last = 0, awake = true
 
@@ -119,11 +126,16 @@ function BadNeighbours({ ctx }: { ctx: CartridgeContext }) {
     const tick = (now: number) => {
       frame = 0
       if (!awake || disposed) return
-      const delta = last ? Math.min(100, now - last) : 0
+      const interval = last ? now - last : 0
+      const delta = Math.min(100, interval)
       last = now
+      const start = performance.now()
       controls.advance(now)
-      game?.advance(delta, softDrop)
+      game?.advance(delta, softDrop, governor.settings.maxSteps)
       renderer.render(delta, game)
+      const spent = performance.now() - start
+      work.push(spent)
+      if (interval > 0 && governor.sample(interval, spent)) renderer.setTier(governor.settings)
       frame = requestAnimationFrame(tick)
     }
     // Everything stops while unattended or hidden: physics, animation and sound.
@@ -160,6 +172,7 @@ function BadNeighbours({ ctx }: { ctx: CartridgeContext }) {
       clearButton.removeEventListener('pointerdown', onClearDown)
       window.clearTimeout(clearTimer)
       controls.clear()
+      uninstallPerf()
       renderer.dispose()
       sound.dispose()
       game?.dispose()
