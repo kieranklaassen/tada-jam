@@ -1,15 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { FAST_SECONDS, HOLD_SECONDS, LOWEST_TIER, PERF_FRAMES, PerfRing, TierGovernor, tierOverride, TIERS } from './quality'
+import { GOOD_WINDOWS_TO_RAISE, LOWEST_TIER, PERF_FRAMES, PerfRing, STALL_MS, TierGovernor, tierOverride, TIERS, WINDOW, WINDOW_SECONDS } from './quality'
 
-/** Feed frames of one interval for `seconds`, returning the game time reached. */
-function feed(governor: TierGovernor, from: number, seconds: number, intervalMs: number, workMs = 2): number {
-  let now = from
-  const end = from + seconds
-  while (now < end) {
-    now += intervalMs / 1000
-    governor.sample(intervalMs, workMs, now)
-  }
-  return now
+/** Feed `frames` frames of one interval. */
+function feed(governor: TierGovernor, frames: number, intervalMs: number, workMs = 2): void {
+  for (let i = 0; i < frames; i++) governor.sample(intervalMs, workMs)
 }
 
 describe('tiers', () => {
@@ -30,55 +24,77 @@ describe('tiers', () => {
 })
 
 describe('TierGovernor', () => {
-  it('drops a tier after sustained slow frames, not after a short spike', () => {
+  it('drops a tier after two bad windows, not after a short spike', () => {
     const governor = new TierGovernor(0)
-    let now = feed(governor, 0, 2, 16.7)
-    now = feed(governor, now, 0.3, 60)
-    now = feed(governor, now, 1, 16.7)
+    feed(governor, WINDOW * 2, 16.7)
+    feed(governor, 3, 60)
+    feed(governor, WINDOW * 2, 16.7)
     expect(governor.tier).toBe(0)
-    feed(governor, now, 3, 40)
+    feed(governor, WINDOW * 2, 22)
     expect(governor.tier).toBe(1)
   })
 
-  it('holds after a drop before dropping again', () => {
+  it('one window averaging over 26 ms drops at once', () => {
     const governor = new TierGovernor(0)
-    let now = 0
-    while (governor.tier === 0 && now < 10) now = feed(governor, now, 0.04, 40)
+    feed(governor, WINDOW, 16.7)
+    feed(governor, WINDOW, 30)
     expect(governor.tier).toBe(1)
-    now = feed(governor, now, HOLD_SECONDS - 0.2, 40)
+  })
+
+  it('skips the first window after a change before judging again', () => {
+    const governor = new TierGovernor(0)
+    feed(governor, WINDOW, 16.7)
+    feed(governor, WINDOW, 30)
     expect(governor.tier).toBe(1)
-    feed(governor, now, 2, 40)
+    feed(governor, WINDOW, 30)
+    expect(governor.tier).toBe(1)
+    feed(governor, WINDOW, 30)
     expect(governor.tier).toBe(2)
   })
 
-  it('raises only after a long fast stretch within the CPU budget', () => {
+  it('a device under 20 fps is judged in seconds: a window closes after 2 s of frames', () => {
+    const governor = new TierGovernor(0)
+    let changedAt = -1
+    let elapsed = 0
+    for (let i = 0; i < 40 && changedAt < 0; i++) {
+      elapsed += 400
+      if (governor.sample(400, 3)) changedAt = elapsed
+    }
+    expect(governor.tier).toBe(1)
+    expect(changedAt).toBeLessThanOrEqual(2 * WINDOW_SECONDS * 1000 + 400)
+  })
+
+  it('steps up after six clean windows within the CPU budget, not when the CPU is busy', () => {
     const governor = new TierGovernor(2)
-    let now = feed(governor, 0, FAST_SECONDS - 1, 10)
+    feed(governor, WINDOW * GOOD_WINDOWS_TO_RAISE, 10)
     expect(governor.tier).toBe(2)
-    now = feed(governor, now, 3, 10)
+    feed(governor, WINDOW, 10)
     expect(governor.tier).toBe(1)
     const busy = new TierGovernor(2)
-    feed(busy, 0, 20, 10, 12)
+    feed(busy, WINDOW * 40, 10, 12)
     expect(busy.tier).toBe(2)
   })
 
-  it('stops raising after a raise that did not hold', () => {
+  it('a step up that fails doubles the clean stretch needed next time', () => {
     const governor = new TierGovernor(1)
-    let now = feed(governor, 0, 8, 10)
+    feed(governor, WINDOW * (GOOD_WINDOWS_TO_RAISE + 1), 10)
     expect(governor.tier).toBe(0)
-    now = feed(governor, now, 3, 40)
+    feed(governor, WINDOW * 2, 30)
     expect(governor.tier).toBe(1)
-    feed(governor, now, 30, 10)
+    feed(governor, WINDOW * (GOOD_WINDOWS_TO_RAISE + 1), 10)
     expect(governor.tier).toBe(1)
+    feed(governor, WINDOW * GOOD_WINDOWS_TO_RAISE, 10)
+    expect(governor.tier).toBe(0)
   })
 
   it('a pinned tier never changes and stalls are ignored', () => {
     const pinned = new TierGovernor(3, true)
-    feed(pinned, 0, 20, 8)
+    feed(pinned, WINDOW * 20, 8)
     expect(pinned.tier).toBe(3)
     const governor = new TierGovernor(0)
-    expect(governor.sample(5000, 1, 1)).toBe(false)
-    expect(governor.frameMs).toBeCloseTo(16.7, 5)
+    expect(governor.sample(STALL_MS + 1, 1)).toBe(false)
+    feed(governor, WINDOW * 4, STALL_MS + 1)
+    expect(governor.tier).toBe(0)
   })
 })
 

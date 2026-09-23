@@ -135,7 +135,7 @@ function FrameLoop({ perf, running, restingFor, onTier }: { perf: PerfHandle; ru
     const now = performance.now()
     const f = frame.current
     if (f.skip > 0) f.skip -= 1
-    else if (f.last > 0 && perf.governor.sample(now - f.last, f.work, now / 1000)) onTier(perf.governor.tier)
+    else if (f.last > 0 && perf.governor.sample(now - f.last, f.work)) onTier(perf.governor.tier)
     f.last = now
     f.start = now
   }, -3)
@@ -218,7 +218,7 @@ export function Stage({
     <Canvas
       dpr={Math.min(typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1, TIERS[perf.governor.tier].dpr)}
       frameloop={running ? 'demand' : 'never'}
-      gl={{ antialias: true, powerPreference: 'high-performance', stencil: false }}
+      gl={{ antialias: false, powerPreference: 'high-performance', stencil: false }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.NeutralToneMapping
         gl.toneMappingExposure = 1.02

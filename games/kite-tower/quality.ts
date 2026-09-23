@@ -1,9 +1,10 @@
 // Adaptive quality (R13). Software GL on a build machine and an iPad GPU at
 // DPR 2 differ by an order of magnitude, so the playroom watches its own
 // frame intervals and steps down until frames fit, then cautiously back up.
-// A smoothed interval must stay slow for a while before a drop and fast for
-// much longer before a raise; a raise that is followed by a quick drop locks
-// raising, so the tier never flickers.
+// The thresholds are Pebble Table's: frames are judged in windows of 40, a
+// window with more than one frame in ten over 20 ms is bad, two bad windows
+// in a row (or one averaging over 26 ms) step down, and six clean windows
+// within the CPU budget step up, twice as many after a step up that failed.
 
 export type Tier = {
   name: string
@@ -27,16 +28,22 @@ export const TIERS: readonly Tier[] = [
 ]
 export const LOWEST_TIER = TIERS.length - 1
 
-export const SLOW_MS = 20
-export const FAST_MS = 13.5
+/** A frame interval above this counts as a dropped frame (a 60 Hz frame is 16.7 ms). */
+export const DROPPED_FRAME_MS = 20
+/** CPU work per frame (controller plus draw submission) must stay under this to step back up. */
 export const WORK_BUDGET_MS = 8
-export const SLOW_SECONDS = 1.5
-export const FAST_SECONDS = 5
-export const HOLD_SECONDS = 3
-/** A drop this soon after a raise means the raise failed. */
-const FAILED_RAISE_SECONDS = 8
-const STALL_MS = 250
-const SMOOTHING = 0.08
+export const WINDOW = 40
+/** A window also closes after this much frame time once it holds a few frames, so a device under 20 fps is judged in seconds, not minutes. */
+export const WINDOW_SECONDS = 2
+const MIN_WINDOW_FRAMES = 4
+const BAD_DROP_RATIO = 0.1
+const TERRIBLE_AVERAGE_MS = 26
+export const GOOD_WINDOWS_TO_RAISE = 6
+const MAX_GOOD_WINDOWS_TO_RAISE = 48
+/** A step up followed by a step down within this many windows failed. */
+const FAILED_RAISE_WINDOWS = 8
+/** Intervals this long mean the tab stalled or was hidden, not that rendering is slow. */
+export const STALL_MS = 1000
 
 export function clampTier(tier: number): number {
   return Math.max(0, Math.min(LOWEST_TIER, Math.round(tier)))
@@ -52,13 +59,17 @@ export function tierOverride(search: string): number | null {
 export class TierGovernor {
   tier: number
   forced: boolean
-  private interval = 16.7
-  private work = 1
-  private slowFor = 0
-  private fastFor = 0
-  private holdUntil = 0
+  private frames = 0
+  private elapsed = 0
+  private workSum = 0
+  private dropped = 0
+  private badWindows = 0
+  private goodWindows = 0
+  private goodNeeded = GOOD_WINDOWS_TO_RAISE
+  private settle = 1
+  private windows = 0
   private lastRaise = -Infinity
-  private raiseLocked = false
+  private average = 16.7
 
   constructor(start: number, forced = false) {
     this.tier = clampTier(start)
@@ -69,45 +80,66 @@ export class TierGovernor {
     return TIERS[this.tier]
   }
 
-  /** Smoothed frame interval, ms. */
+  /** Average frame interval of the last judged window, ms. */
   get frameMs(): number {
-    return this.interval
+    return this.average
   }
 
-  /** Record one frame at game time `now` (seconds). Returns true when the tier changed. */
-  sample(intervalMs: number, workMs: number, now: number): boolean {
+  /** Record one frame: its interval and its CPU work, in ms. Returns true when the tier changed. */
+  sample(intervalMs: number, workMs: number): boolean {
     if (!(intervalMs > 0) || intervalMs > STALL_MS) return false
-    this.interval += (intervalMs - this.interval) * SMOOTHING
-    this.work += (workMs - this.work) * SMOOTHING
+    this.frames += 1
+    this.elapsed += intervalMs
+    this.workSum += workMs
+    if (intervalMs > DROPPED_FRAME_MS) this.dropped += 1
+    if (this.frames < WINDOW && !(this.frames >= MIN_WINDOW_FRAMES && this.elapsed >= WINDOW_SECONDS * 1000)) return false
+    return this.judge()
+  }
+
+  private judge(): boolean {
+    const average = this.elapsed / this.frames
+    const bad = this.dropped / this.frames > BAD_DROP_RATIO
+    const clean = this.dropped === 0 && this.workSum / this.frames < WORK_BUDGET_MS
+    this.average = average
+    this.clear()
+    this.windows += 1
     if (this.forced) return false
-    const dt = intervalMs / 1000
-    if (this.interval > SLOW_MS) {
-      this.fastFor = 0
-      this.slowFor += dt
-      if (this.slowFor >= SLOW_SECONDS && now >= this.holdUntil && this.tier < LOWEST_TIER) {
-        if (now - this.lastRaise < FAILED_RAISE_SECONDS) this.raiseLocked = true
-        return this.change(this.tier + 1, now)
+    if (this.settle > 0) {
+      this.settle -= 1
+      return false
+    }
+    if (bad) {
+      this.goodWindows = 0
+      this.badWindows += 1
+      if ((this.badWindows >= 2 || average > TERRIBLE_AVERAGE_MS) && this.tier < LOWEST_TIER) {
+        if (this.windows - this.lastRaise <= FAILED_RAISE_WINDOWS) this.goodNeeded = Math.min(this.goodNeeded * 2, MAX_GOOD_WINDOWS_TO_RAISE)
+        return this.change(this.tier + 1)
       }
       return false
     }
-    this.slowFor = Math.max(0, this.slowFor - dt)
-    if (this.interval < FAST_MS && this.work < WORK_BUDGET_MS && !this.raiseLocked) {
-      this.fastFor += dt
-      if (this.fastFor >= FAST_SECONDS && now >= this.holdUntil && this.tier > 0) {
-        this.lastRaise = now
-        return this.change(this.tier - 1, now)
-      }
-    } else this.fastFor = 0
+    this.badWindows = 0
+    this.goodWindows = clean ? this.goodWindows + 1 : 0
+    if (this.goodWindows >= this.goodNeeded && this.tier > 0) {
+      this.lastRaise = this.windows
+      return this.change(this.tier - 1)
+    }
     return false
   }
 
-  private change(tier: number, now: number): boolean {
+  private clear(): void {
+    this.frames = 0
+    this.elapsed = 0
+    this.workSum = 0
+    this.dropped = 0
+  }
+
+  private change(tier: number): boolean {
     this.tier = tier
-    this.slowFor = 0
-    this.fastFor = 0
-    this.holdUntil = now + HOLD_SECONDS
-    // The first frames at a new tier pay for resized buffers; start the average fresh.
-    this.interval = 16.7
+    this.clear()
+    this.badWindows = 0
+    this.goodWindows = 0
+    // The first window at a new tier pays for shader compiles and resized buffers.
+    this.settle = 1
     return true
   }
 }
