@@ -57,6 +57,14 @@ A tool or action that appears only when the current state makes it meaningful, s
 Feedback that comes from the material's own physical response (a beam that levels, plates that visibly match, a leftover that stays put) rather than from a judgment such as a tick, a cross, a score, or a sad face.
 *Avoid:* verdict, right/wrong feedback
 
+## Process
+
+### Refinement pass
+One cycle of improving how a game looks: screenshot a fixed, seeded scene at iPad-landscape size on a fixed timer, critique it honestly from a young child's point of view, make one focused set of fixes, re-screenshot, and check the frame rate, reverting any fix that hurts.
+*Avoid:* iteration, polish round
+
+Passes are logged in order with their critique, change, and frame rate, so the next game can see what moved readability and what was reverted.
+
 ## Flagged ambiguities
 
 - "Art direction" had been used for both one game's look and the jam-wide standard. These are distinct: a game's look is its Claimed style, described in its Art guide; the jam-wide standard is the Quality bar.
