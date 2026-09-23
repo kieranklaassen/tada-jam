@@ -309,15 +309,40 @@ function postGeometry(): THREE.BufferGeometry {
 }
 
 function beamGeometry(half: number): THREE.BufferGeometry {
+  const collars = [-0.72, -0.4, 0.4, 0.72].map((t) =>
+    piece(geo.torus(20, 0.45), PALETTE.pan, { position: [t * half, 0, 0], rotation: [0, Math.PI / 2, 0], scale: 1.25 }, { lump: 0.06, ground: null }),
+  )
   return merge([
-    piece(geo.capsule(16), PALETTE.scaleWood, { rotation: [0, 0, Math.PI / 2], scale: [1.4, half, 1.4] }, { lump: 0.12, frequency: 0.8, ground: null }),
-    piece(geo.sphere(16), PALETTE.scaleWood, { position: [-half, 0, 0], scale: 1.5 }, { lump: 0.1, ground: null }),
-    piece(geo.sphere(16), PALETTE.scaleWood, { position: [half, 0, 0], scale: 1.5 }, { lump: 0.1, ground: null }),
+    piece(geo.capsule(18), PALETTE.scaleWood, { rotation: [0, 0, Math.PI / 2], scale: [2.5, half, 2.5] }, { lump: 0.18, frequency: 0.7, ground: null }),
+    piece(geo.sphere(18), PALETTE.scaleWood, { position: [-half, 0, 0], scale: 2.1 }, { lump: 0.12, ground: null }),
+    piece(geo.sphere(18), PALETTE.scaleWood, { position: [half, 0, 0], scale: 2.1 }, { lump: 0.12, ground: null }),
+    ...collars,
   ])
 }
 
+/** A twisted clay rope, unit length along +y, for the pan hangers. */
+function coilGeometry(): THREE.BufferGeometry {
+  const geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 10, 48)
+  geometry.translate(0, 0.5, 0)
+  const position = geometry.attributes.position
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i)
+    const z = position.getZ(i)
+    const y = position.getY(i)
+    const angle = Math.atan2(z, x)
+    const twist = 1 + 0.28 * Math.sin(angle * 2 + y * 44)
+    position.setX(i, x * twist)
+    position.setZ(i, z * twist)
+  }
+  geometry.computeVertexNormals()
+  return merge([piece(geometry, PALETTE.pan, {}, { ground: null })])
+}
+
 function panGeometry(radius: number): THREE.BufferGeometry {
-  return merge([piece(geo.dish(40), PALETTE.pan, { scale: [radius, 14, radius] }, { lump: 0.25, frequency: 0.35, seed: 5, ground: null })])
+  return merge([
+    piece(geo.dish(40), PALETTE.pan, { scale: [radius, 13, radius] }, { lump: 0.3, frequency: 0.35, seed: 5, ground: null }),
+    piece(geo.torus(40, 0.08), PALETTE.pan, { position: [0, 1.6, 0], rotation: [Math.PI / 2, 0, 0], scale: radius * 1.03 }, { lump: 0.12, frequency: 0.5, ground: null }),
+  ])
 }
 
 export function ScaleModel({ read }: { read: () => ScalePose }) {
@@ -331,7 +356,7 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
     post: postGeometry(),
     beam: beamGeometry(half),
     pans: SCALE.pans.map((pan) => panGeometry(pan.r * UNIT)),
-    chain: merge([piece(geo.cylinder(6), PALETTE.pan, { position: [0, 0.5, 0] }, { ground: null })]),
+    chain: coilGeometry(),
   }))
   useFrame(() => {
     const pose = read()
@@ -345,10 +370,10 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
       const end = new THREE.Vector3(post.x + Math.cos(angle) * half * sign, PIVOT_Y - Math.sin(angle) * half * sign, post.z)
       for (let k = 0; k < 3; k++) {
         const a = (k / 3) * Math.PI * 2 + 0.5
-        const rim = new THREE.Vector3(center.x + Math.cos(a) * pan.r * UNIT * 0.93, center.y + 1.4, center.z + Math.sin(a) * pan.r * UNIT * 0.93)
+        const rim = new THREE.Vector3(center.x + Math.cos(a) * pan.r * UNIT * 0.96, center.y + 1.6, center.z + Math.sin(a) * pan.r * UNIT * 0.96)
         const dir = rim.clone().sub(end)
         const length = dir.length()
-        scratch.m.compose(end, scratch.q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()), scratch.s.set(0.22, length, 0.22))
+        scratch.m.compose(end, scratch.q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()), scratch.s.set(0.95, length, 0.95))
         instanced?.setMatrixAt(side * 3 + k, scratch.m)
       }
     })
@@ -514,7 +539,7 @@ function prewarm(): void {
     post: postGeometry(),
     beam: beamGeometry(SCALE.beamHalf * UNIT),
     pans: SCALE.pans.map((pan) => panGeometry(pan.r * UNIT)),
-    chain: merge([piece(geo.cylinder(6), PALETTE.pan, { position: [0, 0.5, 0] }, { ground: null })]),
+    chain: coilGeometry(),
   }))
 }
 
