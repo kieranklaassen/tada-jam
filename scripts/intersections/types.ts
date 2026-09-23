@@ -51,6 +51,11 @@ export type GameAudit = {
   // ancestor that is still small next to the view; `userData.jamObject` on
   // any ancestor overrides both.
   objects?: Array<{ match: string; as: string }>
+  // Instances of an InstancedMesh are separate objects by default. Group them:
+  // instance i of a matching mesh belongs to object floor(i / per). A mesh can
+  // instead name each instance's object with userData.jamInstanceObjects
+  // (one key per instance; a key equal to a group's jamObject joins that group).
+  instances?: Array<{ match: string; per: number }>
   // Merged meshes holding many separate things: split into connected parts,
   // each its own object.
   split?: string[]
