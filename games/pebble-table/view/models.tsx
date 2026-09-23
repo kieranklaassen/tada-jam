@@ -97,8 +97,8 @@ export function TableModel() {
   }, [clay])
   return (
     <>
-      <mesh geometry={slab} material={tableClay} />
-      <mesh material={floor} position={[0, -SLAB_THICKNESS - 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh name="table-top" geometry={slab} material={tableClay} />
+      <mesh name="floor" material={floor} position={[0, -SLAB_THICKNESS - 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[600, 48]} />
       </mesh>
     </>
@@ -136,6 +136,7 @@ const rockTurn = new THREE.Quaternion()
 const MAX_STONES = 64
 
 const PIECE_SIZES: readonly Quarters[] = [4, 2, 1]
+const STONE_NAMES = ['stone-whole', 'stone-half', 'stone-quarter'] as const
 
 /** Stones in three instanced draws (whole, half, quarter): physics pose plus squash on landing and stretch on pickup. */
 export function StonesModel({ read }: { read: () => StoneState[] }) {
@@ -201,7 +202,7 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
   return (
     <>
       {geometries.map((geometry, slot) => (
-        <instancedMesh key={slot} ref={meshes[slot]} args={[geometry, stones, MAX_STONES]} frustumCulled={false} />
+        <instancedMesh key={slot} name={STONE_NAMES[slot]} ref={meshes[slot]} args={[geometry, stones, MAX_STONES]} frustumCulled={false} />
       ))}
     </>
   )
@@ -244,7 +245,7 @@ export function Overlays({ kind, read, capacity }: { kind: 'shadow' | 'glow'; re
     if (instanced.instanceColor) instanced.instanceColor.needsUpdate = true
   })
   const plane = useMemo(() => new THREE.PlaneGeometry(1, 1), [])
-  return <instancedMesh ref={mesh} args={[plane, kind === 'shadow' ? shadow : glow, capacity]} frustumCulled={false} renderOrder={kind === 'shadow' ? 1 : 3} />
+  return <instancedMesh name={kind === 'shadow' ? 'shadow-decals' : 'glow-rings'} ref={mesh} args={[plane, kind === 'shadow' ? shadow : glow, capacity]} frustumCulled={false} renderOrder={kind === 'shadow' ? 1 : 3} />
 }
 
 // --- bag ---------------------------------------------------------------------
@@ -308,10 +309,10 @@ export function BagModel({ read }: { read: () => BagPose }) {
   })
   return (
     <group position={[p.x, 0, p.z]} rotation={[0, 0.82, 0]}>
-      <group ref={body}>
-        <mesh geometry={geometry} material={clay} />
+      <group ref={body} userData={{ jamObject: 'bag' }}>
+        <mesh name="bag" geometry={geometry} material={clay} />
       </group>
-      <mesh ref={peek} geometry={pebble} material={stones} scale={stoneRadius3(4)} />
+      <mesh name="bag-peek-stone" ref={peek} geometry={pebble} material={stones} scale={stoneRadius3(4)} />
     </group>
   )
 }
@@ -319,6 +320,9 @@ export function BagModel({ read }: { read: () => BagPose }) {
 // --- scale -------------------------------------------------------------------
 
 export type ScalePose = { angle: number; panY: [number, number]; now: number }
+
+/** The pan ropes are part of the scale they hang from (for the intersection audit). */
+const ROPE_OBJECTS = Array.from({ length: 6 }, () => 'scale')
 
 const PIVOT_Y = 25
 
@@ -424,15 +428,15 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
     if (instanced) instanced.instanceMatrix.needsUpdate = true
   })
   return (
-    <group>
-      <mesh geometry={shapes.post} material={clay} position={[post.x, 0, post.z]} />
+    <group userData={{ jamObject: 'scale' }}>
+      <mesh name="scale-post" geometry={shapes.post} material={clay} position={[post.x, 0, post.z]} />
       <group ref={beam} position={[post.x, PIVOT_Y, post.z]}>
-        <mesh geometry={shapes.beam} material={clay} />
+        <mesh name="scale-beam" geometry={shapes.beam} material={clay} />
       </group>
       {shapes.pans.map((geometry, side) => (
-        <mesh key={side} ref={pans[side]} geometry={geometry} material={clay} />
+        <mesh key={side} name={side === 0 ? 'scale-pan-left' : 'scale-pan-right'} ref={pans[side]} geometry={geometry} material={clay} />
       ))}
-      <instancedMesh ref={chains} args={[shapes.chain, clay, 6]} frustumCulled={false} />
+      <instancedMesh name="scale-ropes" ref={chains} args={[shapes.chain, clay, 6]} frustumCulled={false} userData={{ jamInstanceObjects: ROPE_OBJECTS }} />
     </group>
   )
 }
@@ -519,11 +523,11 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
   })
   return (
     <group>
-      <mesh geometry={shapes.rug} material={rug} position={[center.x, 0.04, center.z]} scale={[42, 4, 30]} />
-      <mesh geometry={shapes.rugRope} material={clay} position={[center.x, 0.3, center.z]} />
-      <mesh ref={bowlMesh} geometry={shapes.bowl} material={clay} position={[bowl.x, 0, bowl.z]} />
-      <instancedMesh ref={plates} args={[shapes.plate, clay, 5]} frustumCulled={false} />
-      <instancedMesh ref={stools} args={[shapes.stool, clay, 5]} frustumCulled={false} />
+      <mesh name="rug" geometry={shapes.rug} material={rug} position={[center.x, 0.04, center.z]} scale={[42, 4, 30]} />
+      <mesh name="rug-rope" geometry={shapes.rugRope} material={clay} position={[center.x, 0.3, center.z]} />
+      <mesh name="bowl" ref={bowlMesh} geometry={shapes.bowl} material={clay} position={[bowl.x, 0, bowl.z]} />
+      <instancedMesh name="plates" ref={plates} args={[shapes.plate, clay, 5]} frustumCulled={false} />
+      <instancedMesh name="stools" ref={stools} args={[shapes.stool, clay, 5]} frustumCulled={false} />
     </group>
   )
 }
@@ -877,27 +881,27 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
   })
 
   return (
-    <group position={[p.x, 0, p.z]} rotation={[0, yaw, 0]}>
+    <group position={[p.x, 0, p.z]} rotation={[0, yaw, 0]} userData={{ jamObject: `guest-${species}-${seat}` }}>
       <group ref={root}>
-        <mesh geometry={shapes.body} material={clay} />
-        {shapes.furBody && <instancedMesh ref={furParts[0]} args={[shapes.furBody, fur, MAX_SHELLS]} frustumCulled={false} />}
-        {shapes.quill && <instancedMesh ref={quillParts[0]} args={[shapes.quill, quill, shapes.quillsBody.length]} frustumCulled={false} />}
+        <mesh name="guest-body" geometry={shapes.body} material={clay} />
+        {shapes.furBody && <instancedMesh name="guest-fur-body" ref={furParts[0]} args={[shapes.furBody, fur, MAX_SHELLS]} frustumCulled={false} />}
+        {shapes.quill && <instancedMesh name="guest-quills-body" ref={quillParts[0]} args={[shapes.quill, quill, shapes.quillsBody.length]} frustumCulled={false} />}
         {[-1, 1].map((side, i) => (
           <group key={side} ref={arms[i]} position={[side * 3.9, 4.7, 0.9]}>
-            <mesh geometry={shapes.arm} material={clay} />
+            <mesh name={side < 0 ? 'guest-arm-left' : 'guest-arm-right'} geometry={shapes.arm} material={clay} />
           </group>
         ))}
         <group ref={head} position={[0, NECK_Y, 0]}>
-          <mesh geometry={shapes.head} material={clay} />
-          {shapes.furHead && <instancedMesh ref={furParts[1]} args={[shapes.furHead, fur, MAX_SHELLS]} frustumCulled={false} />}
-          {shapes.quill && <instancedMesh ref={quillParts[1]} args={[shapes.quill, quill, shapes.quillsHead.length]} frustumCulled={false} />}
-          <mesh ref={eyes} geometry={shapes.eyes} material={clay} position={[0, 3.7, 0]} />
-          <mesh ref={mouth} geometry={shapes.mouth} material={clay} position={[0, 1.65, species === 'hedgehog' ? 4.9 : 3.85]} />
-          <mesh ref={nose} geometry={shapes.nose} material={clay} position={shapes.noseAt} />
-          <mesh ref={cheeks} geometry={shapes.cheeks} material={clay} position={[0, 2.3, 2.5]} />
+          <mesh name="guest-head" geometry={shapes.head} material={clay} />
+          {shapes.furHead && <instancedMesh name="guest-fur-head" ref={furParts[1]} args={[shapes.furHead, fur, MAX_SHELLS]} frustumCulled={false} />}
+          {shapes.quill && <instancedMesh name="guest-quills-head" ref={quillParts[1]} args={[shapes.quill, quill, shapes.quillsHead.length]} frustumCulled={false} />}
+          <mesh name="guest-eyes" ref={eyes} geometry={shapes.eyes} material={clay} position={[0, 3.7, 0]} />
+          <mesh name="guest-mouth" ref={mouth} geometry={shapes.mouth} material={clay} position={[0, 1.65, species === 'hedgehog' ? 4.9 : 3.85]} />
+          <mesh name="guest-nose" ref={nose} geometry={shapes.nose} material={clay} position={shapes.noseAt} />
+          <mesh name="guest-cheeks" ref={cheeks} geometry={shapes.cheeks} material={clay} position={[0, 2.3, 2.5]} />
           {shapes.ears?.map((geometry, i) => (
             <group key={i} ref={ears[i]} position={[(i === 0 ? -1 : 1) * 1.4, 5.6, -0.3]}>
-              <mesh geometry={geometry} material={clay} />
+              <mesh name={i === 0 ? 'guest-ear-left' : 'guest-ear-right'} geometry={geometry} material={clay} />
             </group>
           ))}
         </group>
@@ -945,7 +949,7 @@ export function KnifeModel({ read }: { read: () => { at: Point; visible: boolean
   })
   return (
     <group ref={ref}>
-      <mesh geometry={geometry} material={clay} />
+      <mesh name="knife" geometry={geometry} material={clay} />
     </group>
   )
 }
@@ -1052,9 +1056,9 @@ export function AlbumModel({ read }: { read: () => { pages: readonly AlbumPage[]
     g.rotation.set(0, -0.35 + Math.sin(pose.now * 0.8) * 0.04, 0)
   })
   return (
-    <group ref={group} visible={false}>
-      <mesh geometry={book} material={clay} />
-      <mesh material={cover.material} position={[0.5, 2.45, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+    <group ref={group} visible={false} userData={{ jamObject: 'album' }}>
+      <mesh name="album" geometry={book} material={clay} />
+      <mesh name="album-cover" material={cover.material} position={[0.5, 2.45, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[9.6, 11.8]} />
       </mesh>
     </group>
@@ -1153,7 +1157,7 @@ export function PartsModel({ read }: { read: () => PartState[] }) {
   return (
     <>
       {PART_KINDS.map((kind, slot) => (
-        <instancedMesh key={kind} ref={refs[slot]} args={[geometries[slot], clay, PART_COUNTS[kind]]} frustumCulled={false} />
+        <instancedMesh key={kind} name={`part-${kind}`} ref={refs[slot]} args={[geometries[slot], clay, PART_COUNTS[kind]]} frustumCulled={false} />
       ))}
     </>
   )
@@ -1195,11 +1199,11 @@ export function JarsModel({ read }: { read: () => { tips: ReadonlyMap<PartKind, 
       {PART_KINDS.map((kind, i) => {
         const at = to3(JARS[kind])
         return (
-          <group key={kind} position={[at.x, 0, at.z]} scale={JAR_SCALE}>
+          <group key={kind} position={[at.x, 0, at.z]} scale={JAR_SCALE} userData={{ jamObject: `jar-${kind}` }}>
             <group ref={refs[i]}>
-              <mesh geometry={shapes[i].body} material={clay} />
+              <mesh name={kind === 'boulder' ? 'boulder-nest' : `jar-${kind}`} geometry={shapes[i].body} material={clay} />
             </group>
-            {kind !== 'boulder' && <mesh ref={lids[i]} geometry={shapes[i].lid} material={clay} />}
+            {kind !== 'boulder' && <mesh name={`jar-lid-${kind}`} ref={lids[i]} geometry={shapes[i].lid} material={clay} />}
           </group>
         )
       })}
@@ -1325,14 +1329,14 @@ export function DoorModel({ read }: { read: () => DoorPose }) {
   })
   return (
     <group>
-      <group position={[p.x, 0, p.z]} scale={DOOR.houseScale}>
-        <mesh geometry={house} material={clay} />
+      <group position={[p.x, 0, p.z]} scale={DOOR.houseScale} userData={{ jamObject: 'house' }}>
+        <mesh name="house" geometry={house} material={clay} />
         <group ref={leaf} position={[-3, 0, 9.9]}>
-          <mesh geometry={doorLeaf} material={clay} />
+          <mesh name="house-door" geometry={doorLeaf} material={clay} />
         </group>
-        <mesh ref={face} geometry={mouse} material={clay} scale={0.9} visible={false} />
+        <mesh name="window-mouse" ref={face} geometry={mouse} material={clay} scale={0.9} visible={false} />
       </group>
-      <instancedMesh ref={mice} args={[mouse, clay, 10]} frustumCulled={false} />
+      <instancedMesh name="visitor-mice" ref={mice} args={[mouse, clay, 10]} frustumCulled={false} />
     </group>
   )
 }
@@ -1356,7 +1360,7 @@ export function CarrierMice({ read }: { read: () => CarrierMouse[] }) {
     instanced.count = count
     instanced.instanceMatrix.needsUpdate = true
   })
-  return <instancedMesh ref={mice} args={[mouse, clay, 2]} frustumCulled={false} />
+  return <instancedMesh name="carrier-mice" ref={mice} args={[mouse, clay, 2]} frustumCulled={false} />
 }
 
 /** A big clay token for an activity: a cushion to sit on, with a small model of the activity on top. */
@@ -1426,7 +1430,7 @@ export function ShelfModel({ read }: { read: () => { mats: MatKey[]; drag: { mat
     <group>
       {mats.map((mat, i) => (
         <group key={mat} ref={refs[i]}>
-          <mesh geometry={tokens[i]} material={clay} />
+          <mesh name={`chooser-${mat}`} geometry={tokens[i]} material={clay} />
         </group>
       ))}
     </group>
@@ -1511,8 +1515,8 @@ export function GhostHand({ read, carry }: { read: () => { at: Point; press: num
   })
   return (
     <>
-      <mesh ref={stone} geometry={pebble} material={ghost} scale={stoneRadius3(4)} renderOrder={9} />
-      <sprite ref={sprite} material={material} center={[0.5, 0.02]} scale={[15, 18.75, 1]} renderOrder={10} />
+      <mesh name="ghost-stone" ref={stone} geometry={pebble} material={ghost} scale={stoneRadius3(4)} renderOrder={9} />
+      <sprite name="ghost-hand" ref={sprite} material={material} center={[0.5, 0.02]} scale={[15, 18.75, 1]} renderOrder={10} />
     </>
   )
 }
