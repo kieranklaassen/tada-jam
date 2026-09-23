@@ -1,4 +1,5 @@
 import type { CreatureKind } from './creatures'
+import { clearOfProscenium, PROSCENIUM } from './projection'
 
 // Six motion personalities. Every creature has its own hand-written routine
 // for each moment of its life (asleep on the screen, the stir before it
@@ -32,6 +33,10 @@ function bump(t: number, a: number, b: number): number {
 }
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
+}
+/** 0 at both ends of a reaction, 1 in between with soft shoulders: how much it takes over from the idle. */
+function envelope(k: number, edge = 0.15): number {
+  return smooth(k / edge) * smooth((1 - k) / edge)
 }
 /** A blink: eyes shut briefly once per `period` seconds. */
 function blink(t: number, period: number, offset: number, length = 0.14): number {
@@ -192,7 +197,7 @@ const bird: Personality = {
     o.roll += TAU * u
     o.x += Math.sin(TAU * u) * 2.5 * Math.sign(o.facing || 1)
     o.y += (1 - Math.cos(TAU * u)) * 2.5
-    o.part = Math.sin(k * TAU * 6) * 0.6
+    o.part = lerp(o.part, Math.sin(k * TAU * 6) * 0.6, envelope(k))
     return false
   },
 }
@@ -264,12 +269,11 @@ const fish: Personality = {
   react(k, o) {
     // Darts forward, then glides back.
     const f = Math.sign(o.facing || 1)
-    if (k < 0.2) {
-      o.x += f * 8 * easeOutCubic(k / 0.2)
-      o.sx *= 1.25
-      o.sy *= 0.85
-    } else o.x += f * 8 * (1 - smooth((k - 0.2) / 0.8))
-    o.part = Math.sin(k * TAU * 7) * 0.5 * (1 - k)
+    o.x += f * 8 * (k < 0.2 ? easeOutCubic(k / 0.2) : 1 - smooth((k - 0.2) / 0.8))
+    const dash = bump(k, 0, 0.35)
+    o.sx *= 1 + 0.25 * dash
+    o.sy *= 1 - 0.15 * dash
+    o.part = lerp(o.part, Math.sin(k * TAU * 7) * 0.5 * (1 - k), envelope(k))
     return false
   },
 }
@@ -337,7 +341,7 @@ const snail: Personality = {
     const hide = k < 0.12 ? smooth(k / 0.12) : 1 - easeOutCubic((k - 0.45) / 0.55)
     o.sx *= 1 - 0.45 * hide
     o.sy *= 1 - 0.25 * hide
-    o.part = Math.sin(k * TAU * 3) * 0.25 * (1 - k)
+    o.part = lerp(o.part, Math.sin(k * TAU * 3) * 0.25 * (1 - k), envelope(k))
     return false
   },
 }
@@ -409,7 +413,7 @@ const whale: Personality = {
     // A slow breach and a fluke slap on the way down.
     o.y += Math.sin(k * Math.PI) * 5
     o.roll += Math.sin(k * Math.PI) * 0.35
-    o.part = -0.2 * Math.sin(k * Math.PI) - 0.6 * bump(k, 0.7, 0.9)
+    o.part += -0.2 * Math.sin(k * Math.PI) - 0.6 * bump(k, 0.7, 0.9)
     return false
   },
 }
@@ -481,15 +485,14 @@ const fox: Personality = {
   },
   reactSeconds: 1,
   react(k, o) {
-    // Crouch, leap, and turn round in the air.
-    if (k < 0.25) {
-      o.sy *= 1 - 0.18 * bump(k, 0, 0.5)
-      o.sx *= 1 + 0.1 * bump(k, 0, 0.5)
-    } else {
+    // Crouch, spring up stretched, turn round in the air, and land with a squash.
+    const s = 1 - 0.18 * bump(k, 0, 0.3) + 0.1 * bump(k, 0.2, 0.6) - 0.15 * bump(k, 0.86, 1)
+    o.sy *= s
+    o.sx /= Math.sqrt(s)
+    if (k > 0.25) {
       const f = (k - 0.25) / 0.75
       o.y += Math.sin(f * Math.PI) * 6
-      o.sy *= f > 0.85 ? 1 - bump(f, 0.85, 1) * 0.15 : 1.1
-      o.part = 0.4 * Math.sin(f * Math.PI)
+      o.part += 0.4 * Math.sin(f * Math.PI)
     }
     return k >= 0.5
   },
@@ -574,26 +577,67 @@ const dragon: Personality = {
     // A barrel roll and a proud puff.
     o.spin += TAU * easeInOutSine(k)
     o.y += Math.sin(k * Math.PI) * 2
-    o.part = wingBeat((k * 3) % 1)
+    o.part = lerp(o.part, wingBeat((k * 3) % 1), envelope(k))
     return false
   },
 }
 
 export const PERSONALITIES: Record<CreatureKind, Personality> = { bird, fish, snail, whale, fox, dragon }
 
-/** Homes in the paper sky (world cm, on the sky layer), one per sky slot. */
+/**
+ * Homes in the paper sky (world cm, on the sky layer), one per sky slot.
+ * Placed by their projection: clear of the moon's halo, each other, the pine
+ * tops and the top edge, and (in the screen plane, not just on screen) of the
+ * proscenium, even at the whale's size: a creature that only perspective
+ * lifts clear would still pass behind the valance on its way back.
+ */
 export const SKY_HOMES: readonly { x: number; y: number }[] = [
-  { x: -22, y: 56 },
-  { x: 22, y: 57 },
-  { x: -50, y: 50 },
-  { x: 46, y: 44 },
-  { x: -66, y: 38 },
-  { x: 68, y: 34 },
-  { x: -44, y: 38 },
-  { x: 4, y: 60 },
+  { x: -24, y: 55.5 },
+  { x: 26, y: 55.5 },
+  { x: -46, y: 55 },
+  { x: 60, y: 35 },
+  { x: -61, y: 41 },
+  { x: 0, y: 59.5 },
+  { x: -66, y: 28 },
+  { x: 62, y: 25.5 },
 ]
 export const SKY_Z = -12
-export const SKY_SCALE = 0.36
+export const SKY_SCALE = 0.33
+
+/** Each slot sits a hair nearer than the last, so companions drifting across each other never flicker. */
+export function skyDepth(slot: number): number {
+  return SKY_Z + slot * 0.2
+}
+
+/** Size in the sky relative to SKY_SCALE: the whale is huge, the snail small. */
+const SKY_SIZE: Record<CreatureKind, number> = { bird: 1, fish: 0.95, snail: 0.8, whale: 1.15, fox: 0.95, dragon: 0.95 }
+
+export function skyScale(kind: CreatureKind): number {
+  return SKY_SCALE * SKY_SIZE[kind]
+}
+
+/**
+ * A waking creature's size at gait progress k: at its sky size by 60% of the
+ * trip, so it crosses the curtains and valance small rather than covering them.
+ */
+export function flightScale(kind: CreatureKind, k: number): number {
+  return 1 + (skyScale(kind) - 1) * smooth(k * 1.6)
+}
+
+/** Just in front of the proscenium's nearest face, allowing for the creature card's own thickness. */
+export const FLIGHT_Z = PROSCENIUM.front + 0.9
+
+/**
+ * How deep a waking creature flies at gait progress k, with its centre at
+ * (x, y) and radius r: where the peel left it, in front of the screen and
+ * its proscenium, while over them (behind, the paper would hide it); easing
+ * back to its sky depth once clear of them, and on it by arrival whatever
+ * the path.
+ */
+export function flightDepth(k: number, x: number, y: number, r: number, skyZ = SKY_Z): number {
+  const back = Math.max(smooth(clearOfProscenium(x, y, r) / 10), smooth((k - 0.86) / 0.14))
+  return FLIGHT_Z + (skyZ - FLIGHT_Z) * back
+}
 
 /** The shared peel: the dark card lifts off the screen like a page turning about its tail edge. */
 export function peelPose(k: number, hingeOffset: number, out: CreaturePose): CreaturePose {
@@ -601,6 +645,7 @@ export function peelPose(k: number, hingeOffset: number, out: CreaturePose): Cre
   out.spin = u * Math.PI
   out.hinge = hingeOffset
   out.dark = u < 0.5 ? 1 : 0
-  out.z = 0.3 + Math.sin(u * Math.PI) * 3
+  // Lifting off as it turns: a big creature lands partly beyond the screen's edge, so it lands in front of the frame.
+  out.z = 0.3 + (FLIGHT_Z - 0.3) * u + Math.sin(u * Math.PI) * 3
   return out
 }
