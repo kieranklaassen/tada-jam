@@ -1,8 +1,8 @@
 import { isAwake, makeCreature, moveBed, pickBed, seededRandom, stepCreature, type Creature, type CreatureEvent } from './creatures'
-import { chooseHint, handPose, HintScheduler, type GardenSummary, type GuidanceTiming, type HandPose, type Hint, type Placed } from './guidance'
+import { chooseHint, handPose, HintScheduler, type GardenSummary, type GuidanceTiming, type HandPose, type Hint, type Placed, type Spot } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
 import { clampToPanel, CREATURES, KNOB, onPanel, overTray, PANEL, PIECES, slotPoint, trayAngle, TURN_STEP, type CreatureKind, type PieceKind, type PieceSpec, type PiecePose, type Point } from './layout'
-import { CATCH_HEIGHT, makePose, poseCreature, type Pose } from './motion'
+import { CATCH_HEIGHT, makePose, poke, poseCreature, type Carry, type Pose } from './motion'
 import { BeamBuffer, lightAt, OpticsScene, trace, WHITE, type Mask } from './optics'
 import { SaveCadence } from './saveCadence'
 import { buildScene, makeSources, PIECE_OWNER, type OpticCreature, type OpticPiece } from './scene'
@@ -22,7 +22,8 @@ export type Sound = {
   tick(): void
   home(): void
   ripple(): void
-  creature(kind: CreatureKind, event: CreatureEvent | 'poke' | 'nudge' | 'lift'): void
+  creature(kind: CreatureKind, event: CreatureEvent | 'nudge' | 'lift' | 'set'): void
+  poke(kind: CreatureKind, variant: number): void
   garden(): void
 }
 
@@ -37,6 +38,7 @@ const silent: Sound = {
   home() {},
   ripple() {},
   creature() {},
+  poke() {},
   garden() {},
 }
 
@@ -77,7 +79,6 @@ export type PieceSim = {
   grabX: number
   grabY: number
   knobBy: number | null
-  knobGrab: number
   lastTick: number
   /** Seconds left flying home to the tray. */
   flying: number
@@ -99,9 +100,13 @@ export type CreatureSim = {
   grabX: number
   grabY: number
   lift: Spring
+  /** Eased sidestep (cm) that keeps a moving creature from flying through another. */
+  apartX: number
+  apartY: number
   /** Light the creature is catching where it is now. */
   caught: Mask
-  pokeAt: number
+  /** Carried state and how strongly it is the scene's want, handed to its motion each frame. */
+  readonly carry: Carry
 }
 
 export type Ripple = { x: number; y: number; t0: number; mask: Mask; size: number }
@@ -120,6 +125,17 @@ const BODY_SLOP_PX = 14
 const HOME_SECONDS = 0.55
 const NUDGE_EVERY = 7
 const RIPPLES = 10
+/** Displayed centres closer than this (cm) ease apart; about the width of one drawn creature. */
+const CREATURE_GAP = 14
+const APART_RATE = 5
+/** How quickly the want passes from one sleeper to the next. */
+const WANT_RATE = 1.6
+
+/** How far `value` lies outside [min, max] (signed), or 0 inside. */
+const excess = (value: number, min: number, max: number) => (value < min ? value - min : value > max ? value - max : 0)
+
+const movesAside = (creature: CreatureSim) =>
+  creature.heldBy === null && (creature.c.phase === 'awake' || creature.c.phase === 'drowsy' || creature.c.phase === 'wandering')
 
 export class GardenController {
   readonly state: GardenState
@@ -132,6 +148,9 @@ export class GardenController {
   t = 0
   /** When all four were last awake together, or -Infinity. */
   gardenAt = -Infinity
+  /** The sleeper the next act is for (the scene's one obvious want), or -1. */
+  wantIndex = -1
+  private wantStale = false
   private rippleCursor = 0
   private readonly sound: Sound
   private readonly cadence: SaveCadence
@@ -148,6 +167,7 @@ export class GardenController {
   private allAwake = false
   private peekWasOn = false
   private hintTried = false
+  private ghostPressed = false
   private readonly finger: Point = { x: 0, y: 0 }
   private readonly chooseBed = (c: Creature) =>
     pickBed(
@@ -185,7 +205,6 @@ export class GardenController {
         grabX: 0,
         grabY: 0,
         knobBy: null,
-        knobGrab: 0,
         lastTick: pose.angle,
         flying: 0,
         fromX: 0,
@@ -206,13 +225,17 @@ export class GardenController {
         grabX: 0,
         grabY: 0,
         lift: { x: 0, v: 0 },
+        apartX: 0,
+        apartY: 0,
         caught: 0,
-        pokeAt: -Infinity,
+        carry: { held: false, heldFor: 0, want: 0 },
       }
     })
     this.opticPieces = this.pieces.map((piece) => ({ id: piece.spec.id, x: 0, y: 0, angle: 0, active: false }))
     this.opticCreatures = this.creatures.map((creature) => ({ x: 0, y: 0, r: creature.c.radius, absorbs: true }))
     this.traceNow()
+    this.chooseWant()
+    if (this.wantIndex >= 0) this.creatures[this.wantIndex].carry.want = 1
   }
 
   setProjector(projector: Projector): void {
@@ -252,7 +275,28 @@ export class GardenController {
     this.stepCreatures(dt)
     this.traceNow()
     this.stepLife(dt, now)
+    if (this.wantStale && !this.holding() && this.guide.hint === null) this.chooseWant()
     this.stepGuidance(timing)
+  }
+
+  /** Seconds the garden has rested: untouched, nothing held or flying home, no demonstration or peek, nobody waking. */
+  restingFor(): number {
+    if (this.timing.demo !== null || this.timing.peek !== null || this.holding()) return 0
+    for (const piece of this.pieces) if (piece.flying > 0) return 0
+    for (const creature of this.creatures) if (creature.c.phase === 'waking') return 0
+    return this.scheduler.idleFor(this.t)
+  }
+
+  private holding(): boolean {
+    for (const piece of this.pieces) if (piece.heldBy !== null || piece.knobBy !== null) return true
+    for (const creature of this.creatures) if (creature.heldBy !== null) return true
+    return false
+  }
+
+  /** Only when the table has changed: the summary allocates. */
+  private chooseWant(): void {
+    this.wantStale = false
+    this.wantIndex = chooseHint(this.summary())?.sleeper ?? -1
   }
 
   private stepPieces(dt: number, peek: number | null): void {
@@ -278,6 +322,7 @@ export class GardenController {
         if (piece.flying === 0) {
           piece.squash.v -= 2.2
           this.sound.home()
+          this.wantStale = true
         }
       } else {
         piece.x = pose.x
@@ -293,7 +338,7 @@ export class GardenController {
       springStep(piece.hop, 0, dt, 300, 14)
       springStep(piece.squash, 0, dt, 420, 11)
     }
-    if (peek !== null && !this.peekWasOn) this.creatures[0].c.stirAt = this.t + 0.45
+    if (peek !== null && !this.peekWasOn && this.wantIndex >= 0) this.creatures[this.wantIndex].c.stirAt = this.t + 0.45
     this.peekWasOn = peek !== null
     if (peek !== null) {
       const lamp = this.pieces[0]
@@ -316,10 +361,57 @@ export class GardenController {
         }
       }
       springStep(creature.lift, creature.heldBy !== null ? 6 : 0, dt, 200, 14)
-      poseCreature(c, this.t, { held: creature.heldBy !== null, heldFor: creature.heldFor }, creature.pose)
-      const r = c.radius
-      creature.x = Math.min(PANEL.maxX - r, Math.max(PANEL.minX + r, c.bed.x + creature.pose.dx))
-      creature.y = Math.min(PANEL.maxY - r, Math.max(PANEL.minY + r, c.bed.y + creature.pose.dy))
+      const carry = creature.carry
+      const wanting = c.index === this.wantIndex && c.phase === 'asleep' && creature.heldBy === null ? 1 : 0
+      carry.want += (wanting - carry.want) * (1 - Math.exp(-dt * WANT_RATE))
+      carry.held = creature.heldBy !== null
+      carry.heldFor = creature.heldFor
+      poseCreature(c, this.t, carry, creature.pose)
+    }
+    this.keepApart(dt)
+    for (const creature of this.creatures) {
+      const r = creature.c.radius
+      creature.x = Math.min(PANEL.maxX - r, Math.max(PANEL.minX + r, creature.c.bed.x + creature.pose.dx + creature.apartX))
+      creature.y = Math.min(PANEL.maxY - r, Math.max(PANEL.minY + r, creature.c.bed.y + creature.pose.dy + creature.apartY))
+    }
+  }
+
+  /**
+   * Moving creatures (awake, drowsy, or off to a new bed) ease around each other instead of flying through,
+   * so two silhouettes never merge into one. Sleeping and carried ones hold still and are simply avoided.
+   */
+  private keepApart(dt: number): void {
+    const ease = 1 - Math.exp(-dt * APART_RATE)
+    const creatures = this.creatures
+    for (let i = 0; i < creatures.length; i++) {
+      const a = creatures[i]
+      let pushX = 0
+      let pushY = 0
+      if (movesAside(a)) {
+        const ax = a.c.bed.x + a.pose.dx
+        const ay = a.c.bed.y + a.pose.dy
+        for (let j = 0; j < creatures.length; j++) {
+          if (j === i) continue
+          const b = creatures[j]
+          const dx = ax - (b.c.bed.x + b.pose.dx)
+          const dy = ay - (b.c.bed.y + b.pose.dy)
+          const distance = Math.hypot(dx, dy)
+          if (distance >= CREATURE_GAP) continue
+          // Two movers split the sidestep; a mover passing a still creature takes all of it.
+          const share = movesAside(b) ? 0.5 : 1
+          const need = (CREATURE_GAP - distance) * share
+          pushX += (distance > 0.01 ? dx / distance : i < j ? -1 : 1) * need
+          pushY += distance > 0.01 ? (dy / distance) * need : 0
+        }
+        // Against the panel's edge, slide along it instead of pushing into it.
+        const r = a.c.radius
+        const lostX = excess(ax + pushX, PANEL.minX + r, PANEL.maxX - r)
+        const lostY = excess(ay + pushY, PANEL.minY + r, PANEL.maxY - r)
+        pushX += (pushX < 0 ? -1 : 1) * Math.abs(lostY) - lostX
+        pushY += (pushY < 0 ? -1 : 1) * Math.abs(lostX) - lostY
+      }
+      a.apartX += (pushX - a.apartX) * ease
+      a.apartY += (pushY - a.apartY) * ease
     }
   }
 
@@ -376,6 +468,7 @@ export class GardenController {
 
   private onCreatureEvent(creature: CreatureSim, event: CreatureEvent): void {
     this.sound.creature(creature.c.kind, event)
+    if (event === 'wake' || event === 'nap') this.wantStale = true
     if (event === 'wake') this.addRipple(creature.x, creature.y, creature.c.wants, 1.4)
   }
 
@@ -453,11 +546,14 @@ export class GardenController {
       guide.hint = null
       guide.handVisible = false
       this.hintTried = false
+      this.ghostPressed = false
       return
     }
     if (!this.hintTried) {
       this.hintTried = true
       guide.hint = chooseHint(this.summary())
+      // The sleeper facing the child is the one the ghost hand is about to help.
+      if (guide.hint) this.wantIndex = guide.hint.sleeper
     }
     if (!guide.hint) {
       guide.handVisible = false
@@ -465,20 +561,72 @@ export class GardenController {
     }
     handPose(guide.hint, timing.demo, guide.hand)
     guide.handVisible = guide.hand.opacity > 0.01
+    const pressed = guide.hand.press > 0.6
+    if (pressed && !this.ghostPressed) this.answerGhostPress(guide.hint)
+    this.ghostPressed = pressed
+  }
+
+  /** A ghost press gets a small, silent answer, so a demonstration shows what the move does without doing it. */
+  private answerGhostPress(hint: Hint): void {
+    let piece: PieceSim | null = null
+    for (const p of this.pieces) if (p.spec.id === hint.piece) piece = p
+    switch (hint.kind) {
+      case 'tapLamp':
+      case 'tapPiece':
+        // Part of a turn and back: its beam swings toward the next step, then settles where it was.
+        if (!piece) return
+        piece.wobbleK = 55
+        piece.wobbleD = 7
+        piece.wobble.v += 2.4
+        return
+      case 'bringPiece':
+        if (piece) piece.hop.v += 12
+        return
+      case 'carrySleeper':
+        this.creatures[hint.sleeper].c.stirAt = this.t
+        return
+      default: {
+        const never: never = hint.kind
+        return never
+      }
+    }
   }
 
   summary(): GardenSummary {
     const onPanelPieces = this.pieces.filter((p) => !p.pose.inTray && p.heldBy === null)
     const placed = (p: PieceSim): Placed => ({ id: p.spec.id, x: p.pose.x, y: p.pose.y })
+    const sleeping = this.creatures.filter((cr) => cr.c.phase === 'asleep' && cr.heldBy === null)
     return {
-      sleepers: this.creatures.filter((cr) => cr.c.phase === 'asleep' && cr.heldBy === null).map((cr) => ({ index: cr.c.index, x: cr.c.bed.x, y: cr.c.bed.y, wants: cr.c.wants })),
+      sleepers: sleeping.map((cr) => ({ index: cr.c.index, x: cr.c.bed.x, y: cr.c.bed.y, wants: cr.c.wants })),
       lamps: onPanelPieces.filter((p) => p.spec.kind === 'lamp').map(placed),
       tray: this.pieces.filter((p) => p.pose.inTray && p.flying === 0).map((p) => ({ id: p.spec.id, ...slotPoint(p.spec.slot) })),
       whiteBeam: this.beamSpot(true),
       colourBeam: this.beamSpot(false),
+      spots: sleeping.flatMap((cr) => this.ownLightSpot(cr) ?? []),
       lit: onPanelPieces.filter((p) => p.spec.kind !== 'lamp' && p.lit !== 0).map(placed),
       open: this.openSpot(),
     }
+  }
+
+  /** The open spot nearest a sleeper's bed where exactly its colour of light lands, if any. */
+  private ownLightSpot(creature: CreatureSim): Spot | null {
+    const c = creature.c
+    const b = this.beams
+    let best: Spot | null = null
+    let bestDistance = Infinity
+    for (let i = 0; i < b.count; i++) {
+      if (b.inside[i] || (b.mask[i] & c.wants) === 0) continue
+      for (const k of [0.25, 0.4, 0.55, 0.7, 0.85]) {
+        const at = { x: b.ax[i] + (b.bx[i] - b.ax[i]) * k, y: b.ay[i] + (b.by[i] - b.ay[i]) * k }
+        if (!onPanel(at, c.radius + 2) || lightAt(b, at.x, at.y, c.radius) !== c.wants || this.roomAt(at, c.index) < c.radius + 3) continue
+        const distance = Math.hypot(at.x - c.bed.x, at.y - c.bed.y)
+        if (distance < bestDistance) {
+          bestDistance = distance
+          best = { index: c.index, x: at.x, y: at.y }
+        }
+      }
+    }
+    return best
   }
 
   /** A clear spot along the longest beam of the kind asked for. */
@@ -535,6 +683,7 @@ export class GardenController {
 
   pointerUp(pointerId: number, screen: Point, timeMs: number): void {
     this.scheduler.touch(this.t)
+    this.wantStale = true
     if (this.screens.has(pointerId)) this.screens.set(pointerId, screen)
     this.apply(this.tracker.up(pointerId, this.planePoint(screen), timeMs))
     this.screens.delete(pointerId)
@@ -652,10 +801,7 @@ export class GardenController {
     }
     if (target.kind === 'creature') {
       const creature = this.creatures[target.index]
-      creature.pokeAt = this.t
-      if (creature.c.phase === 'asleep') creature.c.stirAt = this.t
-      else creature.c.nudgeAt = this.t
-      this.sound.creature(creature.c.kind, 'poke')
+      this.sound.poke(creature.c.kind, poke(creature.c, this.t))
       return
     }
     if (target.kind === 'panel') {
@@ -668,7 +814,6 @@ export class GardenController {
     const piece = this.pieceOf(target)
     if (piece && target.kind === 'knob') {
       piece.knobBy = pointerId
-      piece.knobGrab = this.fingerAngle(piece, at) - piece.pose.angle
       piece.lastTick = piece.pose.angle
       return
     }
@@ -768,7 +913,7 @@ export class GardenController {
     creature.heldBy = null
     const spot = this.clearSpot(creature.c.bed, creature.c.radius, null, creature)
     moveBed(creature.c, spot)
-    this.sound.creature(creature.c.kind, 'poke')
+    this.sound.creature(creature.c.kind, 'set')
     this.cadence.change(performance.now(), true)
   }
 
@@ -795,14 +940,11 @@ export class GardenController {
     return spot
   }
 
-  private fingerAngle(piece: PieceSim, at: Point): number {
-    return Math.atan2(at.y - piece.y, at.x - piece.x) - KNOB[piece.spec.kind].angle
-  }
-
   private followKnob(piece: PieceSim): void {
     const screen = piece.knobBy !== null ? this.screens.get(piece.knobBy) : undefined
     const at = screen && this.projector?.toPlane(screen, 2.4, this.finger)
     if (!at) return
+    // The knob points at the finger: absolute, so it never drifts from under it.
     const raw = Math.atan2(at.y - piece.y, at.x - piece.x) - KNOB[piece.spec.kind].angle
     // Continue from the current angle so a knob dragged round and round never jumps.
     const turn = Math.PI * 2
