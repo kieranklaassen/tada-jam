@@ -1,10 +1,10 @@
 # Kite Tower: thirty refinement passes
 
-> Progress: pass 30 done (nobody behind the build). All thirty passes are logged; the final numbers are in the table below.
+> Progress: pass 30 done (nobody behind the build). All thirty passes are logged; the final numbers are below, with a re-measure on the merged build.
 
 **How each pass was measured.** The refinement still is a fixed busy playroom seeded into storage (perch 0 on the shelf board, two cubes side by side with a third on top, an orange arch alone on the far side of the rug). It is taken at 1180×820, DPR 2, 6.4 seconds of game time after load. The page clock is frozen and stepped 33 ms at a time, so game time matches wall time on a 60 fps tablet however slowly this VM's software GL renders; the glow and the ghost hand are in frame. Perf is the shared jam probe (`perf-probe.mjs`) against the production build in Chromium with CDP CPU throttling at 6× (and 4× for the final table), 1180×820, DPR 2, touch, twelve taps across the screen. The VM has no GPU, so frame rate is software-GL fill rate. The CPU numbers (`cpuP50Ms`, `cpuP95Ms`: update plus render submit) and the renderer's draw calls are the proxies that carry over to a real iPad. Motion was reviewed on clock-driven recordings stitched at 30 fps, not on stills.
 
-**A reset, and a redo.** The first run did passes 0–25 on this VM, and the VM was reset before they were published. Only the playable build from before the passes survived on the remote branch. Every pass below was then re-implemented on that branch and re-measured. The critiques come from the first run's screenshots, recordings and profiles, and each one was re-checked on the redone build before its fix went in.
+**A reset, and a redo.** The first run did passes 0–25 on a cloud VM, and the VM was reset before they were published. Only the playable build from before the passes survived on the remote branch. Every pass below was then re-implemented on that branch and re-measured. The critiques come from the first run's screenshots, recordings and profiles, and each one was re-checked on the redone build before its fix went in.
 
 | Pass | Critique (what reads badly, looks cheap, is unclear at 5, or is slow) | Change | Perf (6× cpu p50 / p95 · draws) |
 | --- | --- | --- | --- |
@@ -44,7 +44,7 @@
 
 ## Final numbers
 
-Pass 30's production build (`vite build`, served by `vite preview` on port 4173), all runs in one session on this VM. Everything uses the shared jam probe (`perf-probe.mjs`): 1180×820, DPR 2, touch, twelve taps across the screen, then a six-second sample after a five-second warm-up. Chromium runs with CDP CPU throttling. WebKit (Playwright) cannot be throttled, so it runs interleaved with Pebble Table in the same session. The VM has no GPU: Chromium draws with SwiftShader and WebKit with its own software GL, so fps here measures software fill rate. The numbers that carry over to an iPad are frame CPU (update plus render submit, p50 and p95) and draw calls. **No physical iPad was measured.**
+Pass 30's production build (`vite build`, served by `vite preview` on port 4173), all runs in one session on the VM that ran the passes. Everything uses the shared jam probe (`perf-probe.mjs`): 1180×820, DPR 2, touch, twelve taps across the screen, then a six-second sample after a five-second warm-up. Chromium runs with CDP CPU throttling. WebKit (Playwright) cannot be throttled, so it runs interleaved with Pebble Table in the same session. The VM has no GPU: Chromium draws with SwiftShader and WebKit with its own software GL, so fps here measures software fill rate. The numbers that carry over to an iPad are frame CPU (update plus render submit, p50 and p95) and draw calls. **No physical iPad was measured.**
 
 | Browser | Tier | cpu p50 / p95 (ms) | Draws | fps (software GL) |
 | --- | --- | --- | --- | --- |
@@ -62,13 +62,39 @@ Pass 30's production build (`vite build`, served by `vite preview` on port 4173)
 
 Three runs per Chromium row at 4× and 6×, two at 20×, and two WebKit rounds; WebKit reports whole milliseconds.
 
-- **Budget.** Frame CPU p95 stays at or under 8 ms at 6× on auto and at the minimal tier, and under 8 ms at 4× on every tier except the full one, where one run read 9.0. The full tier pinned at 6× misses on this VM. SwiftShader draws DPR 2 at 1.7 fps, each of those frames runs the tier's three catch-up physics substeps, and a run holds only 10–11 frames, so its p95 is close to its worst frame.
+- **Budget.** Frame CPU p95 stays at or under 8 ms at 6× on auto and at the minimal tier, and under 8 ms at 4× on every tier except the full one, where one run read 9.0. The full tier pinned at 6× misses on that VM. SwiftShader draws DPR 2 at 1.7 fps, each of those frames runs the tier's three catch-up physics substeps, and a run holds only 10–11 frames, so its p95 is close to its worst frame.
 - **WebKit.** Kite Tower on auto runs at 1.06× Pebble Table, and 1.23× at the minimal tier. With the full tier pinned it runs 0.53×. That is DPR-2 fill in software GL: pass 29 swapped the two biggest surfaces to a cheaper material and it changed nothing. It is the same gap other games show with their top tier pinned, so the full tier belongs in the true-GPU pass on a Mac.
 - **Draws and passes.** 38–39 draw calls. No post-processing pass: the grade is one full-screen triangle multiplied over the frame, with no render target. No shadow maps (contact shadows are baked). DPR at most 2 (full 2, balanced 1.5, lean 1.25, minimal 1).
 - **The lowest tier still looks like the game.** Minimal keeps the grade, the beech atlas, every doll and the ghost hand. It drops only the sunbeam's dust motes, and the kite's tail has 8 links instead of 14.
 - **A slow device.** The governor steps down after two bad windows (a window is bad when more than 10 % of its frames go over 20 ms), and in every probe above it reaches minimal on its own.
 
+### The merged build, on a new VM
+
+A second VM reset moved the work to a new VM before the walkthrough was recorded, so the numbers were taken again there: the production build of the branch with `main` merged (all ten games in one build), one session, the same probe and settings. Kite Tower runs the same code as in pass 30; the commits since changed only tests and docs.
+
+| Browser | Tier | cpu p50 / p95 (ms) | Draws | fps (software GL) |
+| --- | --- | --- | --- | --- |
+| Chromium 6× | auto (settles at minimal) | 5.8–6.3 / 8.9–11.3 | 38 | 3.9–4.0 |
+| Chromium 6× | minimal pinned | 5.4–5.9 / 9.7–10.8 | 38 | 5.1–5.5 |
+| Chromium 6× | full pinned | 6.3–6.4 / 10.2–13.4 (10 frames a run) | 39 | 1.5–1.6 |
+| Chromium 6× | Pebble Table | not exposed | – | 2.1 |
+| Chromium 4× | auto | 3.8–4.0 / 6.5–7.0 | 38 | 4.4 |
+| Chromium 4× | minimal pinned | 3.5–3.7 / 6.4–7.9 | 38 | 5.6–5.8 |
+| Chromium 4× | full pinned | 4.3–4.7 / 6.6–9.0 | 39 | 1.6 |
+| Chromium 4× | Pebble Table | not exposed | – | 2.1–2.2 |
+| WebKit | auto | 5–6 / 11–12 | 38 | 16.0–16.6 (one run 13.2, see below) |
+| WebKit | minimal pinned | 5 / 10–12 | 38 | 19.3–19.4 |
+| WebKit | full pinned | 6–7 / 11 | 39 | 8.4–8.6 |
+| WebKit | Pebble Table | not exposed | – | 12.7–14.6 |
+
+Six runs for Chromium 6× auto, three for each other Kite Tower row in Chromium, two for Pebble Table there. WebKit ran two interleaved rounds (Kite Tower auto, Pebble Table, full, Pebble Table, minimal) and two more auto runs in the A/B below.
+
+- **The same code on a slower VM.** To tell the merge from the VM, the same `games/kite-tower` was also built on the branch's pre-merge tree (`99ac8ef`, only Pebble Table and Kite Tower) and run interleaved with the merged build. Chromium 6× auto read 5.7–6.4 / 9.7–10.8 ms against the merged build's 6.1–6.3 / 9.7–11.3, and WebKit 16.0–16.3 fps against 16.0–16.4, so the merge costs nothing. The same code is slower on the new VM than in pass 30's session: WebKit auto 16.0–16.6 fps against 18.7–19.1, and Chromium 6× auto p50 5.8–6.3 ms against 3.5–3.8.
+- **Budget on the new VM.** At 4× frame CPU p95 stays under 8 ms on auto and at minimal; one full-tier run read 9.0, as in pass 30. At 6× it reads 8.9–11.3 ms on auto and 9.7–10.8 at minimal, 1–3 ms over the 8 ms target, where pass 30's session read 7.4–7.5 and 6.4–8.0.
+- **Against Pebble Table in the same session.** WebKit round two: auto 1.19× (16.6 fps against 13.6–14.2), minimal 1.40×, full pinned 0.60×. Round one: minimal 1.41×, full 0.63×, auto 0.97×; that auto run overlapped a large file copy on the VM and was still on the lean tier when sampled. In Chromium, at 6× and at 4×, Kite Tower on auto runs about 1.8–1.9× Pebble Table's frame rate, and pinned to full about 0.7–0.75×.
+
 ## Still weak
 
+- **No margin at 6×.** On the VM that took the merged build's numbers, frame CPU p95 at 6× reads 8.9–11.3 ms on auto and 9.7–10.8 at minimal, over the 8 ms target; the same code read 7.4–7.5 and 6.4–8.0 on the earlier VM. At 4× it holds. Stepping down saves little frame CPU (p50 5.4–5.9 ms at minimal against 6.3–6.4 at full) because the tiers mostly trade fill, so getting under 8 ms at 6× means cutting update or submit work, which has not been profiled there.
 - **A full collapse on a slow device.** All twelve pieces tumbling from a leaning column, Chromium at 6× with SwiftShader: frame CPU runs p50 8–10 ms and peaks at 19–20 ms for the second or two it lasts, because every slow software-GL frame runs the tier's two or three catch-up physics substeps. In Node one collapse step is p95 0.21 ms and worst 1.0–1.4 ms, so a 60 Hz tablet running one substep a frame should stay near its normal budget. That is an inference; no physical iPad was measured.
 - **A heap no single block helps.** The newcomer script copies every demonstration sloppily (it drops each piece from 1.3 above the spot, sometimes mid-swing). In one of its two timings that heaps six pieces under the window sill with no climbable side. From where Pip stands no single block can help, so the hand's one-block search falls back to its tie-breaks and keeps pointing at the heap's top; the sill took about 200 game-seconds to free (after pass 29; 430 before). Both timings now free all five perches, and in the other one every perch fell within nine demonstrations. A two-block look-ahead would fix it; it would cost about fifteen more route searches spread over frames, and was left for after the jam.
