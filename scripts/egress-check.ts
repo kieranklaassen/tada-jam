@@ -11,18 +11,41 @@
 // test/egress.test.ts can prove it flags what it claims to flag.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { dirname, extname, join, relative, resolve } from 'node:path'
+import { dirname, extname, join, posix, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export type Finding = { file: string; line: number; rule: string; match: string }
 
 export const LOCAL_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 export const NAMESPACE_HOSTS = ['www.w3.org']
-// Hosts that appear only as text inside bundled libraries (error-message links,
-// license notes, and paper citations in three.js shader comments), never fetched.
-export const BUILT_BENIGN_HOSTS = ['react.dev', 'github.com', 'reactjs.org', 'fb.me', 'opensource.org', 'jcgt.org']
+// Documentation strings inside bundled vendor code; never requested. Built assets only.
+export const BUILT_BENIGN_HOSTS = [
+  'react.dev',
+  'github.com',
+  'reactjs.org',
+  'fb.me',
+  'opensource.org',
+  'jcgt.org', // paper citation in a three.js shader comment
+  'opencollective.com', // react-three-fiber's bundled package.json metadata
+  'docs.pmnd.rs', // react-three-fiber error-message link
+]
 
-export const ALLOWED_GAME_PACKAGES = ['react', 'react-dom', 'tone', 'matter-js', 'three', 'pixi.js', 'gsap', 'zustand', 'vitest']
+export const ALLOWED_GAME_PACKAGES = [
+  'react',
+  'react-dom',
+  'tone',
+  'matter-js',
+  'three',
+  'pixi.js',
+  'gsap',
+  'zustand',
+  'vitest',
+  // Jam-only (outside Tada's menu, which asks for raw three.js): see AGENTS.md "Jam allowances".
+  '@react-three/fiber',
+  '@react-three/postprocessing',
+  'postprocessing',
+  'cannon-es',
+]
 
 const URL_PATTERN = /(?:https?|wss?):\/\/[a-zA-Z0-9][a-zA-Z0-9.-]*/g
 const PROTOCOL_RELATIVE = /(?:src|href|url)\s*[=(]\s*['"]?\/\/[a-zA-Z0-9]/g
@@ -72,10 +95,11 @@ export function scanGameSource(text: string, file: string): Finding[] {
     }
     for (const match of code.matchAll(/(?:from\s+|import\s*\(\s*|import\s+)['"]([^'"]+)['"]/g)) {
       const specifier = match[1]
-      if (specifier.startsWith('./')) continue
-      if (specifier === '../types') continue
       if (specifier.startsWith('.')) {
-        findings.push({ file, line: index + 1, rule: 'import-outside-game', match: specifier })
+        const gameRoot = file.split('/').slice(0, 2).join('/')
+        const target = posix.normalize(posix.join(posix.dirname(file), specifier))
+        const insideGame = target.startsWith(`${gameRoot}/`)
+        if (!insideGame && target !== 'games/types') findings.push({ file, line: index + 1, rule: 'import-outside-game', match: specifier })
         continue
       }
       const pkg = specifier.startsWith('@') ? specifier.split('/').slice(0, 2).join('/') : specifier.split('/')[0]
