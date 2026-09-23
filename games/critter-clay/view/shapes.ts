@@ -22,8 +22,9 @@ function shape(geometry: THREE.BufferGeometry, { paint: paintWith, at, lump: lum
   return paint(geometry, paintWith)
 }
 
-const HUE: Paint = { color: null }
-const hue = (extra: Omit<Paint, 'color'> = {}): Paint => ({ color: null, ...extra })
+const PLASTICINE_MOTTLE = 0.1
+const HUE: Paint = { color: null, mottle: PLASTICINE_MOTTLE }
+const hue = (extra: Omit<Paint, 'color'> = {}): Paint => ({ color: null, mottle: PLASTICINE_MOTTLE, ...extra })
 /** A pale version of the plasticine hue (inner ears, tufts). */
 function pale(geometry: THREE.BufferGeometry, amount: number): THREE.BufferGeometry {
   const tint = geometry.attributes.tint
@@ -133,10 +134,10 @@ function earPoint(): THREE.BufferGeometry {
 
 function earFlop(): THREE.BufferGeometry {
   const reach = PART_REACH.earFlop
-  const spoon = taperedTube(curve([0, 0, 0], [0, reach * 0.35, 0.35], [0, reach * 0.7, 0.3], [0, reach - 1.2, 0]), 14, 14, 0.85, 1.25)
-  spoon.scale(1.25, 1, 0.5)
+  const spoon = taperedTube(curve([0, 0, 0], [0, reach * 0.35, 0.35], [0, reach * 0.7, 0.3], [0, reach - 1.3, 0]), 14, 14, 0.8, 1.45)
+  spoon.scale(1.6, 1, 0.42)
+  // no collar: the ear hangs at a steep angle, so a collar would poke out of the head like a pipe
   return merge([
-    shape(collar(0.9, 0.5, 1.5, 14), { paint: HUE, at: { scale: [1.3, 1, 0.8] } }),
     shape(spoon, { paint: hue({ uvScale: 0.5 }), lump: [0.08, 1, 18] }),
     pale(shape(new THREE.SphereGeometry(1, 14, 10), { paint: hue({ uvScale: 0.3 }), at: { at: [0, reach * 0.62, 0.42], scale: [0.9, 1.6, 0.25] } }), 0.34),
   ])
@@ -256,25 +257,87 @@ function slab(outline: THREE.Shape, thickness: number, top: number, bevel: numbe
   return g
 }
 
-/** Wood grain drawn into the vertex colours of a finely divided bench top. */
-function benchTop(): THREE.BufferGeometry {
-  const width = 300
-  const depth = 170
-  const g = new THREE.PlaneGeometry(width, depth, 90, 48)
-  g.rotateX(-Math.PI / 2)
-  g.translate(-4, -1.6, -8)
-  paint(g, { color: PALETTE.bench, uvScale: 6 })
+/** Multiply each painted vertex colour by `shade(x, y, z)`. */
+function shadeVertices(g: THREE.BufferGeometry, shade: (x: number, y: number, z: number) => number): THREE.BufferGeometry {
   const position = g.attributes.position
   const color = g.attributes.color
   for (let i = 0; i < position.count; i++) {
-    const x = position.getX(i)
-    const z = position.getZ(i)
-    const grain = noise(x * 0.02, z * 0.35, 0, 31) * 0.7 + noise(x * 0.08, z * 1.1, 0, 32) * 0.3
-    const plank = Math.abs(((z + 200) % 28) - 14) < 0.35 ? 0.82 : 1
-    const shade = (0.9 + 0.16 * grain) * plank
-    color.setXYZ(i, color.getX(i) * shade, color.getY(i) * shade, color.getZ(i) * shade)
+    const k = shade(position.getX(i), position.getY(i), position.getZ(i))
+    color.setXYZ(i, color.getX(i) * k, color.getY(i) * k, color.getZ(i) * k)
   }
   return g
+}
+
+/** A copy of `source` with only the triangles `keep` accepts, by the index of their first vertex and their centre. */
+function keepTriangles(source: THREE.BufferGeometry, keep: (first: number, x: number, z: number) => boolean): THREE.BufferGeometry {
+  const g = source.index ? source.toNonIndexed() : source
+  const position = g.attributes.position
+  const kept: number[] = []
+  for (let i = 0; i < position.count; i += 3) {
+    const x = (position.getX(i) + position.getX(i + 1) + position.getX(i + 2)) / 3
+    const z = (position.getZ(i) + position.getZ(i + 1) + position.getZ(i + 2)) / 3
+    if (keep(i, x, z)) kept.push(i)
+  }
+  const out = new THREE.BufferGeometry()
+  for (const [name, attribute] of Object.entries(g.attributes)) {
+    const size = attribute.itemSize
+    const from = attribute.array as Float32Array
+    const array = new Float32Array(kept.length * 3 * size)
+    kept.forEach((first, t) => array.set(from.subarray(first * size, (first + 3) * size), t * 3 * size))
+    out.setAttribute(name, new THREE.BufferAttribute(array, size))
+  }
+  return out
+}
+
+/** Whether a bench point lies on the slate board, at least `inset` in from its rounded edge. */
+function onBoard(x: number, z: number, inset: number): boolean {
+  const cx = Math.max(0, Math.abs(x - BOARD.x) - (BOARD.halfWidth - BOARD_CORNER))
+  const cz = Math.max(0, Math.abs(z - BOARD.z) - (BOARD.halfDepth - BOARD_CORNER))
+  return Math.hypot(cx, cz) < BOARD_CORNER - inset
+}
+
+/** Wood grain drawn into the vertex colours of a finely divided bench top. */
+function benchTop(): THREE.BufferGeometry {
+  const g = new THREE.PlaneGeometry(300, 170, 90, 48)
+  g.rotateX(-Math.PI / 2)
+  g.translate(-4, -1.6, -8)
+  paint(g, { color: PALETTE.bench, uvScale: 6 })
+  shadeVertices(g, (x, _y, z) => {
+    const grain = noise(x * 0.02, z * 0.35, 0, 31) * 0.7 + noise(x * 0.08, z * 1.1, 0, 32) * 0.3
+    const plank = Math.abs(((z + 200) % 28) - 14) < 0.35 ? 0.82 : 1
+    return (0.93 + 0.1 * grain) * plank
+  })
+  // the board hides the bench under it: leave that out rather than shade it and paint over it
+  return keepTriangles(g, (_first, x, z) => !onBoard(x, z, 2))
+}
+
+const BOARD_CORNER = 7
+
+/**
+ * The slate board's top, finely divided (corners pulled in onto the rounded outline) so a faint kneaded
+ * mottle lives in its vertex colours: the board still reads as a made thing on the lowest tier, which has
+ * no thumbprint normal map or grain overlay.
+ */
+function boardTop(): THREE.BufferGeometry {
+  const w = BOARD.halfWidth
+  const d = BOARD.halfDepth
+  const r = BOARD_CORNER
+  const g = new THREE.PlaneGeometry(w * 2, d * 2, 54, 31)
+  g.rotateX(-Math.PI / 2)
+  const position = g.attributes.position
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i)
+    const z = position.getZ(i)
+    const cx = Math.max(0, Math.abs(x) - (w - r))
+    const cz = Math.max(0, Math.abs(z) - (d - r))
+    const out = Math.hypot(cx, cz)
+    if (out <= r) continue
+    position.setX(i, Math.sign(x) * (w - r + (cx * r) / out))
+    position.setZ(i, Math.sign(z) * (d - r + (cz * r) / out))
+  }
+  g.translate(BOARD.x, 0, BOARD.z)
+  paint(g, { color: PALETTE.board, uvScale: 1 / 26 })
+  return shadeVertices(g, (x, _y, z) => 0.93 + 0.14 * noise(x * 0.07, z * 0.07, 0, 53))
 }
 
 function propLumps(): THREE.BufferGeometry[] {
@@ -329,34 +392,37 @@ function toolJar(): THREE.BufferGeometry[] {
   return pieces
 }
 
-/** Everything that never moves, merged into one draw: bench, wall, slate board, parts tray, turntable foot, and the props at the back. */
+/**
+ * Everything that never moves, merged into one draw: bench, wall, slate board, parts tray, turntable foot,
+ * and the props at the back. Pieces go in top-most first, so what lies underneath (the slab under the board
+ * top, the bench under everything) fails the depth test before it is shaded instead of being painted over.
+ */
 export function buildBench(): THREE.BufferGeometry {
   const pieces: THREE.BufferGeometry[] = []
-  pieces.push(benchTop())
-  pieces.push(shape(new THREE.BoxGeometry(300, 12, 3, 1, 1, 1), { paint: { color: PALETTE.benchEdge, uvScale: 4 }, at: { at: [-4, -7.6, 77] } }))
-  const wall = new THREE.PlaneGeometry(300, 140, 1, 12)
-  wall.translate(-4, 68.4, -93)
-  paint(wall, { color: PALETTE.wall, uvScale: 5 })
-  const wallPos = wall.attributes.position
-  const wallColor = wall.attributes.color
-  for (let i = 0; i < wallPos.count; i++) {
-    const k = 1 - 0.1 * Math.exp(-(wallPos.getY(i) + 1.6) / 10)
-    wallColor.setXYZ(i, wallColor.getX(i) * k, wallColor.getY(i) * k, wallColor.getZ(i) * k)
-  }
-  pieces.push(wall)
-  pieces.push(paint(slab(roundedRect(BOARD.halfWidth, BOARD.halfDepth, 7), 1.2, 0, 0.4, BOARD.x, BOARD.z), { color: PALETTE.board, creaseBelow: -0.2, creaseDepth: 1.2, crease: 0.32, uvScale: 1 / 26 }))
   // the parts tray, with a dimple for each kind of part
-  pieces.push(paint(slab(roundedRect(TRAY.halfWidth, TRAY.halfDepth, 4), 0.8, TRAY.height, 0.3, TRAY.x, TRAY.z), { color: PALETTE.tray, creaseBelow: 0.4, creaseDepth: 0.8, crease: 0.3, uvScale: 1 / 12 }))
-  const rim = roundedRect(TRAY.halfWidth + 0.2, TRAY.halfDepth + 0.2, 4.2)
-  rim.holes.push(roundedRect(TRAY.halfWidth - 1.3, TRAY.halfDepth - 1.3, 3))
-  pieces.push(paint(slab(rim, 0.7, TRAY.height + 0.9, 0.2, TRAY.x, TRAY.z), { color: PALETTE.trayRim, creaseBelow: TRAY.height + 0.2, creaseDepth: 0.6, crease: 0.2, uvScale: 1 / 12 }))
   for (const kind of PART_KINDS) {
     const slot = traySlot(kind)
     pieces.push(shape(new THREE.CylinderGeometry(TRAY_SLOT_RADIUS, TRAY_SLOT_RADIUS * 0.94, 0.16, 28), { paint: { color: PALETTE.slot, uvScale: 0.4 }, at: { at: [slot.x, TRAY.height + 0.04, slot.z] } }))
   }
+  const rim = roundedRect(TRAY.halfWidth + 0.2, TRAY.halfDepth + 0.2, 4.2)
+  rim.holes.push(roundedRect(TRAY.halfWidth - 1.3, TRAY.halfDepth - 1.3, 3))
+  pieces.push(paint(slab(rim, 0.7, TRAY.height + 0.9, 0.2, TRAY.x, TRAY.z), { color: PALETTE.trayRim, creaseBelow: TRAY.height + 0.2, creaseDepth: 0.6, crease: 0.2, uvScale: 1 / 12 }))
+  pieces.push(paint(slab(roundedRect(TRAY.halfWidth, TRAY.halfDepth, 4), 0.8, TRAY.height, 0.3, TRAY.x, TRAY.z), { color: PALETTE.tray, creaseBelow: 0.4, creaseDepth: 0.8, crease: 0.3, uvScale: 1 / 12 }))
   // turntable foot
   pieces.push(shape(new THREE.CylinderGeometry(5.2, 6.4, 0.9, 32), { paint: { color: PALETTE.turntableFoot, creaseBelow: 0.2, creaseDepth: 0.4, crease: 0.25 }, at: { at: [TURNTABLE.x, 0.45, TURNTABLE.z] } }))
+  pieces.push(boardTop())
+  // only the board's rounded sides: its divided top covers the rest
+  const boardSlab = slab(roundedRect(BOARD.halfWidth, BOARD.halfDepth, BOARD_CORNER), 1.2, 0, 0.4, BOARD.x, BOARD.z)
+  const caps = boardSlab.groups[0].count
+  pieces.push(paint(keepTriangles(boardSlab, (first) => first >= caps), { color: PALETTE.board, creaseBelow: -0.2, creaseDepth: 1.2, crease: 0.32, uvScale: 1 / 26 }))
   pieces.push(...propLumps(), ...rollingPin(), ...toolJar())
+  pieces.push(benchTop())
+  pieces.push(shape(new THREE.BoxGeometry(300, 12, 3, 1, 1, 1), { paint: { color: PALETTE.benchEdge, uvScale: 4 }, at: { at: [-4, -7.6, 77] } }))
+  const wall = new THREE.PlaneGeometry(300, 140, 30, 12)
+  wall.translate(-4, 68.4, -93)
+  paint(wall, { color: PALETTE.wall, uvScale: 5 })
+  // darker where it meets the bench, and a faint plaster mottle
+  pieces.push(shadeVertices(wall, (x, y) => (1 - 0.1 * Math.exp(-(y + 1.6) / 10)) * (0.97 + 0.05 * noise(x * 0.05, y * 0.05, 0, 55))))
   return merge(pieces)
 }
 

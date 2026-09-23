@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import type { WorkshopController } from '../controller'
 import { TURNTABLE } from '../layout'
-import { PALETTE } from '../palette'
+import { HUE_HEX, PALETTE } from '../palette'
 import { BATCH_KEYS, type Batch, type BatchKey, type OverlayBatch, type Rig } from '../rig'
 import type { ClayMaterials } from './clay'
 import { buildBench, buildPartShapes, buildTurntableTop } from './shapes'
@@ -9,17 +9,19 @@ import { buildBench, buildPartShapes, buildTurntableTop } from './shapes'
 // The workshop's meshes, built once and fed every frame without React: one
 // instanced draw per clay shape reads the rig's typed arrays as its
 // instance buffers, the soft shadows and glows are two more instanced
-// draws, and the bench is one merged mesh. Only the used range of each
-// buffer is uploaded, and empty batches are skipped.
+// draws, and the bench is one merged mesh. Empty batches are skipped.
 
-const RENDER_ORDER = { shadows: 1, ghost: 2, glows: 5, hand: 6, overlay: 10 } as const
+// the ghost part draws over the hand, so the part it brings is never hidden behind the glove
+const RENDER_ORDER = { shadows: 1, glows: 5, hand: 6, ghost: 7, overlay: 10 } as const
+const GHOST_COLORS = ([0, 1, 2] as const).map((hue) => new THREE.Color(HUE_HEX[hue]).lerp(new THREE.Color('#ffffff'), 0.15))
 
 type Linked = { mesh: THREE.InstancedMesh; batch: Batch; boil: THREE.InstancedBufferAttribute }
 type LinkedOverlay = { mesh: THREE.InstancedMesh; batch: OverlayBatch }
 
-function upload(attribute: THREE.BufferAttribute, count: number): void {
-  attribute.clearUpdateRanges()
-  attribute.addUpdateRange(0, count * attribute.itemSize)
+// Whole buffers go up every frame: the largest is under 3 KB, and an update
+// range costs three a fresh range object, sort closure, and sort buffer per
+// attribute per frame, which was the scene's biggest source of garbage.
+function upload(attribute: THREE.BufferAttribute): void {
   attribute.needsUpdate = true
 }
 
@@ -182,7 +184,8 @@ export class WorkshopScene {
       this.ghost.geometry = this.shapes[ghost]
       this.ghost.matrix.copy(controller.ghostMatrix)
       this.ghost.matrixWorldNeedsUpdate = true
-      this.materials.ghost.opacity = 0.55 * hand.opacity
+      this.materials.ghost.color.copy(GHOST_COLORS[guidance.ghostHue])
+      this.materials.ghost.opacity = 0.8 * hand.opacity
     }
   }
 
@@ -190,9 +193,9 @@ export class WorkshopScene {
     mesh.count = count
     mesh.visible = count > 0
     if (count === 0) return
-    upload(mesh.instanceMatrix, count)
-    if (mesh.instanceColor) upload(mesh.instanceColor, count)
-    if (boil) upload(boil, count)
+    upload(mesh.instanceMatrix)
+    if (mesh.instanceColor) upload(mesh.instanceColor)
+    if (boil) upload(boil)
   }
 
   setOverlay(on: boolean): void {
