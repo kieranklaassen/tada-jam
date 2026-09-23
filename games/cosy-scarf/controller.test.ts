@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DANCE_SECONDS, DANCE_START, PAINT_DWELL_S, ScarfController, silentSound, type Projector } from './controller'
 import type { Point } from './input'
-import { CELL_H, HILL_SPOTS, LOOM_SPOT, SCARF, cellCentre, needlesY } from './layout'
+import { CELL_H, HILL_SPOTS, LOOM_SPOT, SCARF, cellCentre, groundY, needlesY } from './layout'
 import { ANIMALS, initialState, WIDTH, type GameState, type Row } from './state'
 
 const PPU = 10
@@ -78,6 +78,32 @@ describe('ScarfController', () => {
     expect(game.loom.reveal).toBe(WIDTH)
   })
 
+  it('tells the waiting animal each time a row is finished for it, so it can answer every row', () => {
+    const { game } = setup()
+    run(game, 4)
+    expect(game.state.atLoom).toBe('bunny')
+    expect(game.actors.bunny.rowAt).toBe(-Infinity)
+    tap(game, ballAt(game, 0))
+    run(game, 1.2)
+    const first = game.actors.bunny.rowAt
+    expect(first).toBeGreaterThan(0)
+    tap(game, ballAt(game, 1))
+    run(game, 1.2)
+    expect(game.actors.bunny.rowAt).toBeGreaterThan(first)
+  })
+
+  it('answers a tap on a warm animal without starting a dance (its director plays a pet instead)', () => {
+    const state = initialState()
+    state.scarves.bunny = [[row(0), row(1)]]
+    const { game } = setup(state)
+    run(game, 1)
+    const bunny = game.actors.bunny
+    expect(bunny.warm).toBe(1)
+    tap(game, screenOf(bunny.x, groundY(bunny.x, bunny.z) + 8))
+    expect(bunny.tapAt).toBeCloseTo(game.t, 1)
+    expect(bunny.danceAt).toBe(-Infinity)
+  })
+
   it('knits when a ball is carried to the loom and let go', () => {
     const { game } = setup()
     const loom = cellCentre(2, 2)
@@ -130,7 +156,8 @@ describe('ScarfController', () => {
     expect(saves.at(-1)?.scarves.bunny).toHaveLength(1)
     run(game, DANCE_START + 0.1)
     expect(game.actors.bunny.warm).toBeGreaterThan(0)
-    expect(game.actors.bunny.danceFull).toBe(true)
+    expect(game.actors.bunny.danceAt).toBeLessThanOrEqual(game.t)
+    expect(game.actors.bunny.danceLength).toBe(DANCE_SECONDS.bunny)
     run(game, DANCE_SECONDS.bunny + 12)
     expect(game.actors.bunny.x).toBeCloseTo(HILL_SPOTS.bunny.x)
     expect(game.actors.bunny.warm).toBe(1)

@@ -86,7 +86,6 @@ export type Target =
 
 export const WALK_SPEED: Record<AnimalKey, number> = { bunny: 30, penguin: 15, fox: 36, bear: 18 }
 export const DANCE_SECONDS: Record<AnimalKey, number> = { bunny: 3.1, penguin: 3.6, fox: 3.3, bear: 4.2 }
-export const MINI_DANCE_SECONDS = 1.5
 
 // --- gift timeline (seconds after the child hands the scarf over) --------------
 
@@ -171,11 +170,11 @@ export type ActorView = {
   warm: number
   warmAt: number
   tapAt: number
+  /** When the last row knitted for this animal (while it waits at the loom) was finished. */
+  rowAt: number
   danceAt: number
   danceLength: number
-  danceFull: boolean
   reach: Spring
-  bobAt: number
 }
 
 export type Puff = { x: number; y: number; z: number; t0: number; size: number; colour: number }
@@ -336,6 +335,11 @@ export class ScarfController {
     }
   }
 
+  /** A white puff the view asks for: frosty breath, or snow shaken off a warmed head. */
+  frostPuff(x: number, y: number, z: number, size: number): void {
+    this.puff(x, y, z, size, -1)
+  }
+
   // --- opening ------------------------------------------------------------------
 
   private newScarf(rows: Scarf, holder: AnimalKey | null): ScarfView {
@@ -375,10 +379,9 @@ export class ScarfController {
       warmAt: -Infinity,
       tapAt: -Infinity,
       danceAt: -Infinity,
+      rowAt: -Infinity,
       danceLength: 0,
-      danceFull: false,
       reach: spring(0),
-      bobAt: -Infinity,
     }
   }
 
@@ -552,16 +555,8 @@ export class ScarfController {
       return
     }
     actor.tapAt = this.t
-    if (actor.warm < 0.5) {
-      this.sound.shiver(animal)
-      return
-    }
-    this.sound.happy(animal)
-    if (!actor.walking && this.t > actor.danceAt + actor.danceLength) {
-      actor.danceAt = this.t + 0.12
-      actor.danceLength = MINI_DANCE_SECONDS
-      actor.danceFull = false
-    }
+    if (actor.warm < 0.5) this.sound.shiver(animal)
+    else this.sound.happy(animal)
   }
 
   private toggleMirror(): void {
@@ -733,7 +728,6 @@ export class ScarfController {
     this.after(DANCE_START, () => {
       actor.danceAt = this.t
       actor.danceLength = DANCE_SECONDS[gift.to]
-      actor.danceFull = true
       this.sound.dance(gift.to, colours)
     })
     this.after(DANCE_START + DANCE_SECONDS[gift.to] + 0.2, () => {
@@ -1020,13 +1014,14 @@ export class ScarfController {
     if (within !== WIDTH - 1) return
     this.sound.row(colour)
     loom.swing.v += 0.22
+    const waiting = this.state.atLoom
+    if (waiting) this.actors[waiting].rowAt = this.t
     const unit = completedRepeat(stripeColours(loom.rows.slice(0, row + 1)))
     if (unit && row - this.lastHumRow >= unit.length) {
       this.lastHumRow = row
       this.humAt = this.t
       this.loomRock.v += 1.4
       this.sound.hum(unit)
-      for (const animal of ANIMALS) if (this.actors[animal].warm > 0.5) this.actors[animal].bobAt = this.t + 0.1 + ANIMALS.indexOf(animal) * 0.08
     }
   }
 
