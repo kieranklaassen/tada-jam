@@ -1,11 +1,11 @@
 import * as THREE from 'three'
-import type { ScarfController } from '../controller'
+import { POWDER_PUFF, type ScarfController } from '../controller'
 import { BALL_RADIUS, BASKET, BUTTERFLY, CELL_H, CELL_W, groundY, LOOM } from '../layout'
 import { clamp01, smooth } from '../springs'
 import { ANIMALS, WIDTH } from '../state'
 import type { Tier } from '../tiers'
 import { ball, beadEye, capsule, cone, cylinder, merge, part } from './shapes'
-import { PALETTE, YARN, type YarnMaterials } from './yarn'
+import { PALETTE, YARN, type BallGlow, type YarnMaterials } from './yarn'
 
 // Everything that moves but is not an animal or a scarf: the yarn balls,
 // the strand feeding the needles, the needles, the butterfly that opens the
@@ -18,6 +18,8 @@ const GLOWS = 10
 const PUFFS = 32
 const FLAKES = 220
 const THREAD_BEADS = 40
+/** How far behind a yarn ball its glow ring sits: just past the basket's back row (`ballRest`). */
+const GLOW_BACK = BALL_RADIUS * 2.2
 
 /** A per-instance fade (`aFade`) multiplied into alpha: one draw call, many opacities. */
 function withFade(material: THREE.MeshBasicMaterial, key: string): void {
@@ -74,6 +76,7 @@ function butterflyWing(): THREE.BufferGeometry {
 export class Props {
   readonly group = new THREE.Group()
   private readonly balls: THREE.InstancedMesh
+  private readonly ballGlow: BallGlow
   private readonly strand: THREE.Mesh
   private readonly strandMaterial: THREE.MeshStandardMaterial
   private readonly strandUniforms = { uFrom: { value: new THREE.Vector3() }, uMid: { value: new THREE.Vector3() }, uTo: { value: new THREE.Vector3() }, uRadius: { value: 0.45 } }
@@ -104,15 +107,15 @@ export class Props {
   private readonly colour = new THREE.Color()
   private readonly yarn = YARN.map((hex) => new THREE.Color(hex))
   private readonly white = new THREE.Color('#ffffff')
+  private readonly powder = new THREE.Color(PALETTE.powder)
 
   constructor(materials: YarnMaterials, ballCount: number) {
     const ballGeometry = new THREE.SphereGeometry(BALL_RADIUS, 26, 18)
-    const uv = ballGeometry.attributes.uv
-    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 2, uv.getY(i))
     this.balls = new THREE.InstancedMesh(ballGeometry, materials.balls, ballCount)
     this.balls.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
     this.balls.frustumCulled = false
     for (let i = 0; i < ballCount; i++) this.balls.setColorAt(i, this.yarn[i])
+    this.ballGlow = materials.ballGlow
     this.owned.push(ballGeometry)
     this.group.add(this.balls)
 
@@ -153,7 +156,7 @@ export class Props {
 
     // The live stitches riding on the needles: cream cast-on loops on an empty loom, then the last row's colours.
     const loopGeometry = new THREE.TorusGeometry(1.2, 0.5, 6, 14)
-    this.loops = new THREE.InstancedMesh(loopGeometry, materials.balls, WIDTH)
+    this.loops = new THREE.InstancedMesh(loopGeometry, materials.stitches, WIDTH)
     this.loops.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
     this.loops.frustumCulled = false
     for (let i = 0; i < WIDTH; i++) {
@@ -277,10 +280,17 @@ export class Props {
   }
 
   private updateBalls(game: ScarfController): void {
+    const g = game.guidance
+    this.ballGlow.index.value = -1
+    this.ballGlow.strength.value = g.glowBalls ? g.frame.glow : 0
     for (let i = 0; i < game.balls.length; i++) {
       const ball = game.balls[i]
       const squash = Math.max(-0.8, Math.min(1.2, ball.squash.x))
-      this.s.set(1 + squash * 0.12, 1 - squash * 0.2, 1 + squash * 0.12)
+      // The suggested ball swells and lights its rim with the glow's breath: the cue is on the ball itself, not only on its ring.
+      const suggested = g.glowBalls && ball.colour === g.glowBall
+      if (suggested) this.ballGlow.index.value = i
+      const swell = suggested ? 1 + 0.08 * g.frame.glow : 1
+      this.s.set((1 + squash * 0.12) * swell, (1 - squash * 0.2) * swell, (1 + squash * 0.12) * swell)
       this.e.set(ball.spin, i * 1.3, i * 0.7)
       this.q.setFromEuler(this.e)
       this.p.set(ball.pos.x, ball.pos.y - squash * BALL_RADIUS * 0.2, ball.pos.z)
@@ -431,7 +441,12 @@ export class Props {
       if (g.glowBalls) {
         for (const ball of game.balls) {
           const suggested = ball.colour === g.glowBall
-          n = this.billboard(this.glows, n, camera, ball.pos.x, ball.pos.y, ball.pos.z - BALL_RADIUS * 0.4, BALL_RADIUS * (suggested ? 3.4 : 2.7), strength * (suggested ? 0.95 : 0.4))
+          // Straight behind the ball as the camera sees it and behind its neighbours, so no ring is drawn across the ball next to it.
+          const toward = this.v.set(ball.pos.x, ball.pos.y, ball.pos.z).sub(camera.position)
+          const distance = toward.length()
+          const back = (distance + GLOW_BACK) / distance
+          toward.multiplyScalar(back).add(camera.position)
+          n = this.billboard(this.glows, n, camera, toward.x, toward.y, toward.z, BALL_RADIUS * (suggested ? 3.4 : 2.7) * back, strength * (suggested ? 0.95 : 0.4))
         }
       }
       if (g.glowScarf && n < GLOWS - 1) {
@@ -458,12 +473,18 @@ export class Props {
       if (age < 0 || age >= 1) continue
       const k = smooth(age)
       n = this.billboard(this.puffs, n, camera, puff.x, puff.y + k * 2.5 * puff.size, puff.z, puff.size * (2.2 + k * 5), (1 - age) * (1 - age) * 0.85)
-      puffMesh.setColorAt(n - 1, puff.colour >= 0 ? this.colour.copy(this.yarn[puff.colour] ?? this.white).lerp(this.white, 0.25) : this.white)
+      puffMesh.setColorAt(n - 1, this.puffColour(puff.colour))
     }
     puffMesh.count = n
     puffMesh.instanceMatrix.needsUpdate = true
     if (puffMesh.instanceColor) puffMesh.instanceColor.needsUpdate = true
     this.puffs.fade.needsUpdate = true
+  }
+
+  private puffColour(colour: number): THREE.Color {
+    if (colour === POWDER_PUFF) return this.powder
+    if (colour < 0) return this.white
+    return this.colour.copy(this.yarn[colour] ?? this.white).lerp(this.white, 0.25)
   }
 
   private updateHand(game: ScarfController): void {
