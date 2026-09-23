@@ -176,7 +176,17 @@ async function auditGame(browser, base, game, opts) {
   await page.goto(`${base}/?chrome=0${query ? '&' + query : ''}#/play/${game}`)
   for (let i = 0; ; i++) {
     if (await page.evaluate(() => (window.__jamAudit?.main()?.calls ?? 0) > 0)) break
-    if (i > 120) throw new Error(`${game}: no frame drawn after 4 s of game time`)
+    if (i > 120) {
+      // A canvas-2D, SVG or DOM game has no three.js scene to read: say so
+      // and leave it to its own tests, rather than failing every CI run.
+      const renderers = await page.evaluate(() => window.__jamAudit?.renderers.length ?? 0)
+      if (renderers > 0) throw new Error(`${game}: no frame drawn after 4 s of game time`)
+      await context.close()
+      const result = { game, enforce: !!config.enforce, notAudited: 'no three.js scene', skipped: [], counts: { reportable: 0, open: 0, allowed: 0, hidden: 0 }, samples: 0, pieces: 0, seconds: 0, errors, findings: [], moments: [] }
+      writeFileSync(join(out, 'report.json'), JSON.stringify(result, null, 1))
+      writeFileSync(join(out, 'report.md'), `# Intersection audit: ${game}\n\nSkipped: the game drew no three.js scene within 4 s of game time (a canvas-2D, SVG, or DOM game). Cover its overlaps with tests on its own model.\n`)
+      return result
+    }
     await page.clock.runFor(STEP)
   }
 
@@ -211,7 +221,7 @@ async function auditGame(browser, base, game, opts) {
   }
 
   const sample = async () => {
-    const snap = await page.evaluate((o) => window.__jamAudit.snapshot(o), { ignore: config.ignore ?? [], objects: config.objects ?? [], objectFraction: config.objectFraction })
+    const snap = await page.evaluate((o) => window.__jamAudit.snapshot(o), { ignore: config.ignore ?? [], objects: config.objects ?? [], instances: config.instances ?? [], objectFraction: config.objectFraction })
     if (!snap) return
     samples++
     lastSampleAt = t
@@ -265,10 +275,15 @@ async function auditGame(browser, base, game, opts) {
       const entry = { ...f, segments: undefined, severity: sev, reportable: rep, moment, at: +(t / 1000).toFixed(2), seen: prev?.seen ?? [+(t / 1000).toFixed(2)], shot: prev?.shot ?? null }
       entry.allowedBy = allowedBy(entry, allow)?.reason ?? null
       findings.set(key, entry)
-      if (rep && opts.shots) {
-        const n = prev?.file ?? `${String(findings.size).padStart(3, '0')}-${f.kind}-${slug(f.labelA)}--${slug(f.labelB)}`
-        entry.file = n
-        entry.shot = await shoot(f, n)
+      entry.file = prev?.file
+      entry.shotSeverity = prev?.shotSeverity ?? 0
+      // Rendering is most of a run's cost, so a finding is photographed again
+      // only when it gets clearly worse; CI photographs only what fails it.
+      const growth = opts.ci ? 1.5 : 1.25
+      if (rep && opts.shots && !(opts.ci && entry.allowedBy) && (!entry.shot || sev > entry.shotSeverity * growth)) {
+        entry.file ??= `${String(findings.size).padStart(3, '0')}-${f.kind}-${slug(f.labelA)}--${slug(f.labelB)}`
+        entry.shot = await shoot(f, entry.file)
+        entry.shotSeverity = sev
       }
     }
     for (const target of replayTargets) {
@@ -481,58 +496,67 @@ function sheetTiles(r, out) {
   return tiles
 }
 
-// Grid of images with captions, drawn in a blank page.
-export async function composeSheet(browser, tiles, file, title, { cols = 4, tileW = 472 } = {}) {
+// Grid of images with captions, drawn in a blank page one tile at a time, so a
+// sheet of any length never holds more than one full-size picture in flight.
+// A sheet is a picture for people: failing to draw one never fails the audit.
+export async function composeSheet(browser, tiles, file, title, { cols = 4, tileW = 472, maxTiles = 120 } = {}) {
+  tiles = tiles.slice(0, maxTiles)
   if (!tiles.length) return
-  const images = tiles.map((t) => ({ src: 'data:image/png;base64,' + readFileSync(t.file).toString('base64'), caption: t.caption, tone: t.tone }))
   const page = await browser.newPage()
-  const png = await page.evaluate(async ({ images, cols, tileW, title }) => {
-    const load = (src) => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src })
-    const imgs = await Promise.all(images.map((i) => load(i.src)))
-    const tileH = Math.round(tileW * (imgs[0].height / imgs[0].width))
-    const capH = 34
-    const head = title ? 44 : 0
-    const rows = Math.ceil(imgs.length / cols)
-    const c = document.createElement('canvas')
-    c.width = cols * tileW + (cols + 1) * 8
-    c.height = head + rows * (tileH + capH + 8) + 8
-    const g = c.getContext('2d')
-    g.fillStyle = '#1d1d22'
-    g.fillRect(0, 0, c.width, c.height)
-    if (title) {
-      g.fillStyle = '#fff'
-      g.font = 'bold 22px sans-serif'
-      g.fillText(title, 12, 30)
-    }
-    imgs.forEach((img, i) => {
-      const x = 8 + (i % cols) * (tileW + 8)
-      const y = head + 8 + Math.floor(i / cols) * (tileH + capH + 8)
-      const s = Math.min(tileW / img.width, tileH / img.height)
-      g.drawImage(img, x, y, img.width * s, img.height * s)
-      const tone = images[i].tone
-      g.fillStyle = tone === 'bad' ? '#7a1830' : tone === 'ok' ? '#1f5a36' : tone === 'before' ? '#6b3b12' : tone === 'after' ? '#174a6b' : '#33333b'
-      g.fillRect(x, y + tileH, tileW, capH)
-      g.fillStyle = '#fff'
-      g.font = '13px sans-serif'
-      const text = images[i].caption
-      const words = text.split(' ')
-      let line = ''
-      let ly = y + tileH + 14
-      for (const w of words) {
-        if (g.measureText(line + w).width > tileW - 10 && line) {
-          g.fillText(line, x + 5, ly)
-          line = ''
-          ly += 15
-          if (ly > y + tileH + capH) break
-        }
-        line += w + ' '
+  try {
+    const first = 'data:image/png;base64,' + readFileSync(tiles[0].file).toString('base64')
+    await page.evaluate(async ({ first, count, cols, tileW, title }) => {
+      const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = first })
+      const tileH = Math.round(tileW * (img.height / img.width))
+      const capH = 34
+      const head = title ? 44 : 0
+      const c = document.createElement('canvas')
+      c.width = cols * tileW + (cols + 1) * 8
+      c.height = head + Math.ceil(count / cols) * (tileH + capH + 8) + 8
+      const g = c.getContext('2d')
+      g.fillStyle = '#1d1d22'
+      g.fillRect(0, 0, c.width, c.height)
+      if (title) {
+        g.fillStyle = '#fff'
+        g.font = 'bold 22px sans-serif'
+        g.fillText(title, 12, 30)
       }
-      if (ly <= y + tileH + capH) g.fillText(line, x + 5, ly)
-    })
-    return c.toDataURL('image/png').split(',')[1]
-  }, { images, cols, tileW, title })
-  await page.close()
-  writeFileSync(file, Buffer.from(png, 'base64'))
+      window.__sheet = { c, g, tileH, capH, head, cols, tileW }
+    }, { first, count: tiles.length, cols, tileW, title })
+    for (let i = 0; i < tiles.length; i++) {
+      const src = 'data:image/png;base64,' + readFileSync(tiles[i].file).toString('base64')
+      await page.evaluate(async ({ src, i, caption, tone }) => {
+        const { g, tileH, capH, head, cols, tileW } = window.__sheet
+        const img = await new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src })
+        const x = 8 + (i % cols) * (tileW + 8)
+        const y = head + 8 + Math.floor(i / cols) * (tileH + capH + 8)
+        const s = Math.min(tileW / img.width, tileH / img.height)
+        g.drawImage(img, x, y, img.width * s, img.height * s)
+        g.fillStyle = tone === 'bad' ? '#7a1830' : tone === 'ok' ? '#1f5a36' : tone === 'before' ? '#6b3b12' : tone === 'after' ? '#174a6b' : '#33333b'
+        g.fillRect(x, y + tileH, tileW, capH)
+        g.fillStyle = '#fff'
+        g.font = '13px sans-serif'
+        let line = ''
+        let ly = y + tileH + 14
+        for (const w of caption.split(' ')) {
+          if (g.measureText(line + w).width > tileW - 10 && line) {
+            g.fillText(line, x + 5, ly)
+            line = ''
+            ly += 15
+            if (ly > y + tileH + capH) break
+          }
+          line += w + ' '
+        }
+        if (ly <= y + tileH + capH) g.fillText(line, x + 5, ly)
+      }, { src, i, caption: tiles[i].caption, tone: tiles[i].tone })
+    }
+    const png = await page.evaluate(() => window.__sheet.c.toDataURL('image/png').split(',')[1])
+    writeFileSync(file, Buffer.from(png, 'base64'))
+  } catch (e) {
+    console.log(`  (could not draw ${file}: ${String(e).split('\n')[0]})`)
+  } finally {
+    await page.close().catch(() => {})
+  }
 }
 
 async function startPreview() {
@@ -572,6 +596,10 @@ async function main() {
     try {
       const r = await auditGame(browser, base, game, opts)
       results.push(r)
+      if (r.notAudited) {
+        console.log(`${game}: not audited - ${r.notAudited}`)
+        continue
+      }
       const verdict = r.counts.open === 0 ? 'clean' : r.enforce ? 'FAIL' : 'open (not enforced)'
       if (r.counts.open && r.enforce) failed = true
       console.log(`${game}: ${verdict} - ${r.counts.open} open, ${r.counts.allowed} allowed, ${r.counts.hidden} hidden; ${r.samples} samples, ${r.pieces} pieces, ${r.seconds} s${r.errors.length ? `; ${r.errors.length} page errors` : ''}`)
@@ -579,9 +607,11 @@ async function main() {
         console.log(`  ${f.kind}${f.support ? ' (sinks)' : ''} ${f.kind === 'zfight' ? Math.round(f.pixels) + ' px²' : pct(f.relative)}  ${f.labelA}  x  ${f.labelB}  [${f.moment} @ ${f.at}s]`)
       }
     } catch (e) {
-      failed = true
-      console.log(`${game}: ERROR ${e.stack ?? e}`)
-      results.push({ game, error: String(e) })
+      // A crash fails CI only for a game that has promised to stay clean.
+      const enforce = !!(await loadConfig(game).catch(() => ({}))).enforce
+      if (enforce) failed = true
+      console.log(`${game}: ERROR${enforce ? '' : ' (not enforced)'} ${e.stack ?? e}`)
+      results.push({ game, enforce, error: String(e) })
     }
   }
   writeFileSync(join(opts.out, 'summary.json'), JSON.stringify(results.map((r) => ({ game: r.game, error: r.error, enforce: r.enforce, counts: r.counts, samples: r.samples, seconds: r.seconds })), null, 1))
