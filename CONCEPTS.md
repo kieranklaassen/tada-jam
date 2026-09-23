@@ -85,10 +85,16 @@ Variants of an action are picked without repeating back to back, with randomized
 ## Performance
 
 ### Quality tier
-One of a few rendering levels a game steps between at runtime, each trading look for rendering cost (pixel density, fur, the post pass, physics catch-up), chosen by the game's own measurements of its frame intervals and Frame work rather than by guessing the device.
+One of a few rendering levels a game steps between at runtime, each trading look for rendering cost (pixel density, fur, the post pass, physics catch-up), chosen by the game's Governor rather than by guessing the device.
 *Avoid:* graphics preset, LOD level
 
-Stepping down is quick after sustained dropped frames; stepping up needs a long clean stretch and backs off after a failed attempt, so tiers never flicker. A grown-up overlay can pin a tier to judge it on a device. On a machine that renders in software, a working game settles at its lowest tier, so a measurement there describes the lowest look unless a tier is pinned.
+The lowest tier must still look like the game. A grown-up overlay can pin a tier to judge it on a device. On a machine that renders in software, a working Governor settles at the lowest tier, so a measurement there describes the lowest look unless a tier is pinned.
+
+### Governor
+The part of a game that watches its own frame intervals and Frame work and moves between Quality tiers to fit whatever device it runs on.
+*Avoid:* tier controller, tier monitor, quality monitor
+
+Stepping down follows missed frames counted over short windows rather than an average, so steady judder is caught and one long frame is not mistaken for a slow device; a window far off the pace drops two tiers at once. Stepping up needs a long clean stretch with Frame work to spare, because the interval cannot show spare time, and an upgrade that fails is not retried soon (a longer wait each time, or a ceiling for the session), so tiers never flicker. Touch devices start one tier down while it learns.
 
 ### Frame work
 The CPU time a frame spends on the game's own work, advancing the game and submitting the draw, as distinct from the frame interval, the time from one displayed frame to the next.
