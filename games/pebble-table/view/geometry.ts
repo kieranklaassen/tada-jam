@@ -42,13 +42,20 @@ export function pebble(segments: number): THREE.BufferGeometry {
     const position = geometry.attributes.position
     for (let i = 0; i < position.count; i++) {
       const y = position.getY(i)
-      const flatten = y < 0 ? 0.29 : 0.36
+      const flatten = y < 0 ? 0.3 : 0.47
       position.setY(i, y * flatten)
-      const wobble = 1 + Math.sin(position.getX(i) * 3.1 + position.getZ(i) * 2.3) * 0.025
+      const wobble = 1 + Math.sin(position.getX(i) * 3.1 + position.getZ(i) * 2.3) * 0.03 + Math.sin(position.getZ(i) * 5.7 + y * 4) * 0.012
       position.setX(i, position.getX(i) * wobble)
-      position.setZ(i, position.getZ(i) * 0.95 * wobble)
+      position.setZ(i, position.getZ(i) * 0.94 * wobble)
     }
     geometry.computeVertexNormals()
+    const colors = new Float32Array(position.count * 3)
+    for (let i = 0; i < position.count; i++) {
+      const y = position.getY(i)
+      const shade = y < 0 ? 0.72 + (y + 0.3) * 0.6 : 0.9 + y * 0.28
+      colors.set([shade, shade * 0.98, shade * 0.96], i * 3)
+    }
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
     return geometry
   })
 }

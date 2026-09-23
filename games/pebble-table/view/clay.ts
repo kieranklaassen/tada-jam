@@ -321,7 +321,7 @@ export function createClayMaterials(): ClayMaterials {
   const clayLike = (extra: THREE.MeshStandardMaterialParameters = {}) =>
     new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0, normalMap, normalScale: new THREE.Vector2(1.3, 1.3), side: THREE.DoubleSide, ...extra })
   const clay = clayLike()
-  const stones = new THREE.MeshStandardMaterial({ color: PALETTE.stone, roughness: 0.55, normalMap, normalScale: new THREE.Vector2(1.1, 1.1) })
+  const stones = new THREE.MeshStandardMaterial({ color: PALETTE.stone, vertexColors: true, roughness: 0.42, normalMap, normalScale: new THREE.Vector2(1.2, 1.2) })
   const rope = ropeTextures()
   const rug = new THREE.MeshStandardMaterial({ map: rope.map, normalMap: rope.normal, roughness: 0.95 })
   const tufts = tuftTexture()

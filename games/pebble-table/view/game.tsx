@@ -57,7 +57,7 @@ function shadows(table: TableController): Blob[] {
     const ground = stone.id > 0 ? groundUnder(table, at) : 0
     const height = Math.max(0, stone.position.y - ground - stoneHeight3(stone.q) / 2)
     const r = stoneRadius3(stone.q)
-    blobs.push({ at, ground, radius: r * (1.25 + height * 0.06), strength: 0.8 / (1 + height * 0.18), stretch: 0.6 + height })
+    blobs.push({ at, ground, radius: r * (1.12 + height * 0.07), strength: 0.95 / (1 + height * 0.2), stretch: 0.5 + height })
   }
   blobs.push({ at: { x: BAG.x + 25, y: BAG.y - 20 }, ground: 0, radius: 12, strength: 0.5, stretch: 3 })
   if (table.state.liveMat === 'scale') {
