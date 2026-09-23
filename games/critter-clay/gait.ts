@@ -337,6 +337,78 @@ function blend(pose: Pose, amount: number): void {
   pose.headTilt *= k
 }
 
+// --- wind-up (before the first step from a standstill) -------------------------------
+
+export const WIND_UP_SECONDS: Record<Routine, number> = { inch: 0.55, pogo: 0.5, waddle: 0.45, lope: 0.5, trot: 0.34, scuttle: 0.42 }
+
+/** Gathering itself to set off, `t` seconds in: every gait winds up its own way and ends back at rest, where the walk takes over. */
+export function windUpPose(profile: GaitProfile, t: number, pose: Pose): Pose {
+  resetPose(pose)
+  const k = clamp01(t / WIND_UP_SECONDS[profile.routine])
+  const env = Math.sin(Math.PI * k)
+  switch (profile.routine) {
+    case 'inch': {
+      // Pulls its back end in, bunching up tall, before the first stretch.
+      pose.sz = 1 - 0.22 * env
+      pose.sy = 1 + 0.2 * env
+      pose.pitch = 0.1 * env
+      pose.tail = 0.4 * env
+      break
+    }
+    case 'pogo': {
+      // Two bounces on the spot, the second one deeper.
+      const bounce = Math.abs(Math.sin(k * TAU))
+      const depth = k < 0.5 ? 0.1 : 0.22
+      pose.sy = 1 - depth * bounce
+      pose.sx = pose.sz = 1 + depth * 0.55 * bounce
+      pose.legBend[0] = bounce
+      pose.ear = 0.8 * bounce
+      break
+    }
+    case 'waddle': {
+      // Rocks back on its heels, then tips forward onto the first foot.
+      pose.pitch = k < 0.7 ? -0.16 * Math.sin(Math.PI * (k / 0.7)) : 0.08 * Math.sin(Math.PI * ((k - 0.7) / 0.3))
+      pose.roll = 0.1 * Math.sin(k * TAU)
+      pose.legSwing[0] = pose.legSwing[1] = -0.2 * env
+      break
+    }
+    case 'lope': {
+      // Rears up like a hobby horse, the front leg lifting, then drops into the lunge.
+      pose.pitch = -0.24 * env
+      pose.lift = 1.2 * env
+      pose.legSwing[0] = 0.5 * env
+      pose.legBend[0] = env
+      pose.tail = -0.6 * env
+      break
+    }
+    case 'trot': {
+      // A front foot taps twice, impatient.
+      const tap = Math.max(0, Math.sin(k * TAU * 2))
+      pose.legSwing[0] = 0.45 * tap
+      pose.legBend[0] = tap
+      pose.headNod = -0.12 * env
+      pose.tail = 0.5 * Math.sin(k * TAU * 2)
+      break
+    }
+    case 'scuttle': {
+      // Drops low and revs: every leg jitters in place, faster and faster.
+      pose.sy = 1 - 0.12 * env
+      pose.sx = 1 + 0.06 * env
+      for (let i = 0; i < profile.legs; i++) {
+        const leg = Math.sin(k * k * TAU * 6 + i * 1.3)
+        pose.legSwing[i] = 0.18 * leg * env
+        pose.legBend[i] = Math.max(0, leg) * env
+      }
+      break
+    }
+    default: {
+      const unreachable: never = profile.routine
+      return unreachable
+    }
+  }
+  return pose
+}
+
 // --- idle routines (added on top of a standing pose) ----------------------------
 
 /** Seconds of one idle routine before the critter walks on. */
@@ -509,87 +581,417 @@ export function reactPose(temperament: Temperament, t: number, pose: Pose): Pose
 
 // --- sleeping, waking, carried -------------------------------------------------------
 
-export const WAKE_SECONDS = 2.1
-/** When, in the waking sequence, the critter leaves the turntable. */
-export const WAKE_HOP_AT = 1.45
+/** Each temperament wakes its own way; `hopAt` is when it leaves the turntable, `seconds` when it lands. */
+export const WAKE_TIMING: Record<Temperament, { hopAt: number; seconds: number }> = {
+  shy: { hopAt: 1.8, seconds: 2.45 },
+  curious: { hopAt: 1.4, seconds: 2 },
+  bouncy: { hopAt: 1.25, seconds: 2.05 },
+  bold: { hopAt: 1.7, seconds: 2.25 },
+}
+/** What a waking critter says or does out loud: its voice, a sniff, a yawn, a bounce landing, or a shake. */
+export type WakeCue = 'peep' | 'call' | 'ask' | 'sniff' | 'yawn' | 'bounce' | 'shake'
+/**
+ * Each wake's sounds, at seconds after the tap, on the beats of its own motion: shy's startled peep and a small
+ * call before it dares hop, curious's call, sniffs, and questioning rise, bouncy's call and two landing bumps,
+ * bold's long yawn and dog-shake flutter. The first cue answers the tap at once.
+ */
+export const WAKE_CUES: Record<Temperament, readonly (readonly [number, WakeCue])[]> = {
+  shy: [
+    [0.12, 'peep'],
+    [1.62, 'call'],
+  ],
+  curious: [
+    [0.04, 'call'],
+    [0.3, 'sniff'],
+    [0.9, 'ask'],
+  ],
+  bouncy: [
+    [0.08, 'call'],
+    [0.825, 'bounce'],
+    [1.25, 'bounce'],
+  ],
+  bold: [
+    [0.05, 'yawn'],
+    [1, 'shake'],
+  ],
+}
+/** The longest wake: the next lump waits for the turntable to be clear. */
+export const WAKE_HOP_LATEST = Math.max(...Object.values(WAKE_TIMING).map((w) => w.hopAt))
 
-/** Asleep on the turntable: slow deep breaths, legs folded out, eyes shut, head drooping. */
-export function sleepPose(t: number, pose: Pose): Pose {
+/** Seconds per sleeping breath, and how big a snore bubble each blows on the out-breath. */
+export const SLEEP_BREATH: Record<Temperament, { seconds: number; bubble: number }> = {
+  shy: { seconds: 2.8, bubble: 0.6 },
+  curious: { seconds: 3.4, bubble: 0.85 },
+  bouncy: { seconds: 2.3, bubble: 0.75 },
+  bold: { seconds: 4.4, bubble: 1.3 },
+}
+
+/** Asleep on the turntable, legs folded out and eyes shut, each temperament its own way. */
+export function sleepPose(temperament: Temperament, t: number, pose: Pose): Pose {
   resetPose(pose)
-  const breath = Math.sin((t / 3.4) * TAU)
-  pose.sy = 0.93 + 0.05 * breath
-  pose.sx = 1.04 - 0.02 * breath
-  pose.sz = 1.03 - 0.015 * breath
-  pose.roll = 0.03 * Math.sin((t / 6.8) * TAU)
+  const breath = Math.sin((t / SLEEP_BREATH[temperament].seconds) * TAU)
   pose.legSplay = 1
-  pose.headNod = 0.2 + 0.04 * breath
   pose.lids = 0
-  pose.mouth = 0.12 + 0.1 * Math.max(0, breath)
-  pose.ear = 0.3 * breath
+  switch (temperament) {
+    case 'shy': {
+      // curled up small and tight, ears flat, quick shallow breaths, and now and then a dream twitch
+      pose.sy = 0.86 + 0.03 * breath
+      pose.sx = pose.sz = 0.95 - 0.01 * breath
+      pose.headNod = 0.34
+      pose.ear = -0.7
+      pose.tailLift = -0.5
+      pose.mouth = 0.04
+      const twitch = t % 7.3
+      if (twitch < 0.7) pose.roll = 0.035 * Math.sin(twitch * 55) * Math.sin((Math.PI * twitch) / 0.7)
+      break
+    }
+    case 'curious': {
+      // head tilted as if listening, one ear flicking at something in its dream
+      pose.sy = 0.93 + 0.05 * breath
+      pose.sx = 1.04 - 0.02 * breath
+      pose.sz = 1.03 - 0.015 * breath
+      pose.headTilt = 0.26
+      pose.roll = 0.07
+      pose.headNod = 0.18 + 0.03 * breath
+      const flick = t % 4.7
+      pose.ear = 0.3 * breath + (flick < 0.3 ? 1.5 * Math.sin((Math.PI * flick) / 0.3) : 0)
+      pose.mouth = 0.1 + 0.06 * Math.max(0, breath)
+      break
+    }
+    case 'bouncy': {
+      // light quick breaths with a little smile, rocking gently, and every few breaths its legs paddle in a dream
+      pose.sy = 0.95 + 0.04 * breath
+      pose.sx = pose.sz = 1.02 - 0.02 * breath
+      pose.roll = 0.05 * Math.sin((t / 4.6) * TAU)
+      pose.headNod = 0.14
+      pose.mouth = 0.3
+      pose.ear = 0.2 * breath
+      const dream = t % 6.1
+      if (dream < 1.1) {
+        const k = Math.sin((Math.PI * dream) / 1.1)
+        for (let i = 0; i < MAX_LEGS; i++) pose.legSwing[i] = 0.45 * k * Math.sin(t * 15 + i * 1.7)
+        pose.ear += 0.5 * k * Math.sin(t * 11)
+      }
+      break
+    }
+    case 'bold': {
+      // sprawled wide and leaning back, deep slow breaths, mouth falling open on every out-breath
+      pose.sy = 0.87 + 0.07 * breath
+      pose.sx = pose.sz = 1.13 - 0.03 * breath
+      pose.pitch = -0.1
+      pose.headNod = 0.05
+      pose.mouth = 0.2 + 0.45 * Math.max(0, breath)
+      pose.ear = 0.4 * breath
+      pose.tail = 0.3 * Math.sin((t / 8.8) * TAU)
+      break
+    }
+    default: {
+      const unreachable: never = temperament
+      return unreachable
+    }
+  }
   return pose
 }
 
-/** Snore bubble size for a sleeper: grows on the out-breath and pops at its peak. */
-export function snoreBubble(t: number): number {
-  const phase = ((t / 3.4) % 1 + 1) % 1
+/** Snore bubble size for a sleeper: grows on the out-breath and pops at its peak, in time with its own breathing. */
+export function snoreBubble(temperament: Temperament, t: number): number {
+  const { seconds, bubble } = SLEEP_BREATH[temperament]
+  const phase = ((t / seconds) % 1 + 1) % 1
   if (phase < 0.08 || phase > 0.62) return 0
-  return Math.sin(((phase - 0.08) / 0.54) * Math.PI * 0.5)
+  return bubble * Math.sin(((phase - 0.08) / 0.54) * Math.PI * 0.5)
 }
 
-/** The waking sequence, `t` seconds after the nose was tapped: inhale, yawn with eyes opening, shake, then a hop off the turntable. */
-export function wakePose(t: number, pose: Pose): Pose {
+/** The waking sequence, `t` seconds after the nose was tapped: each temperament comes round in its own way, then hops off the turntable. */
+export function wakePose(temperament: Temperament, t: number, pose: Pose): Pose {
   resetPose(pose)
-  if (t < 0.4) {
-    const k = smooth(t / 0.4)
-    pose.sy = 0.93 + 0.2 * k
-    pose.sx = 1.04 - 0.1 * k
-    pose.sz = 1.03 - 0.08 * k
-    pose.legSplay = 1
-    pose.lids = 0
-    pose.headNod = 0.2 - 0.35 * k
-  } else if (t < 1.0) {
-    const k = (t - 0.4) / 0.6
-    pose.sy = 1.13 - 0.1 * smooth(k)
-    pose.sx = 0.94 + 0.06 * smooth(k)
-    pose.legSplay = 1 - smooth(k)
-    pose.lids = smooth((k - 0.35) / 0.4)
-    pose.mouth = Math.sin(Math.PI * Math.min(1, k * 1.2))
-    pose.headNod = -0.15 - 0.1 * Math.sin(Math.PI * k)
-    pose.ear = 1.2 * smooth(k)
-  } else if (t < WAKE_HOP_AT) {
-    const k = (t - 1.0) / (WAKE_HOP_AT - 1.0)
-    pose.roll = 0.3 * Math.sin(k * TAU * 3) * (1 - k)
-    pose.ear = 2 * Math.sin(k * TAU * 3) * (1 - k)
-    pose.lids = 1
-    pose.sy = 1 - 0.12 * Math.sin(k * Math.PI)
-    pose.sx = 1 + 0.08 * Math.sin(k * Math.PI)
-  } else {
-    const k = clamp01((t - WAKE_HOP_AT) / (WAKE_SECONDS - WAKE_HOP_AT))
-    pose.lift = 7 * Math.sin(Math.PI * Math.min(1, k * 1.25))
-    pose.sy = k < 0.8 ? 1 + 0.12 * (1 - k) : 1 - 0.2 * Math.sin(((k - 0.8) / 0.2) * Math.PI)
-    pose.sx = pose.sz = k < 0.8 ? 1 - 0.05 * (1 - k) : 1 + 0.12 * Math.sin(((k - 0.8) / 0.2) * Math.PI)
-    pose.pitch = 0.15 * Math.sin(Math.PI * k)
-    pose.lids = 1
-    pose.mouth = 0.4
+  const { hopAt, seconds } = WAKE_TIMING[temperament]
+  if (t >= hopAt) return hopOff(temperament, clamp01((t - hopAt) / (seconds - hopAt)), pose)
+  pose.legSplay = 1 - smooth((t - hopAt + 0.5) / 0.4)
+  switch (temperament) {
+    case 'shy': {
+      // One peek and it hides again, then it opens up properly and checks left and right before it dares.
+      const peek = Math.sin(Math.PI * clamp01((t - 0.15) / 0.55))
+      const open = smooth((t - 0.85) / 0.3)
+      pose.lids = Math.max(0.5 * peek, open)
+      pose.sy = 1 - 0.1 * smooth((t - 0.5) / 0.2) * (1 - open) - 0.05 * open
+      pose.sx = 1 + 0.06 * (1 - open) * smooth((t - 0.5) / 0.2)
+      pose.headNod = 0.25 - 0.2 * open
+      pose.ear = -0.6 * smooth((t - 0.5) / 0.3)
+      const look = clamp01((t - 1.05) / 0.6)
+      pose.yaw = 0.38 * Math.sin(look * TAU)
+      pose.lookX = Math.sin(look * TAU)
+      break
+    }
+    case 'curious': {
+      // Eyes pop wide at once, a lean and three sniffs at the air, then a tilt of the head one way and the other.
+      pose.lids = 1.2 * smooth(t / 0.12)
+      const lean = smooth((t - 0.1) / 0.2) * (1 - smooth((t - 0.8) / 0.2))
+      pose.pitch = 0.2 * lean
+      pose.headNod = -0.05 + 0.1 * lean * Math.abs(Math.sin(t * 17))
+      pose.sz = 1 + 0.07 * lean
+      pose.ear = 0.8 * lean
+      const tilt = clamp01((t - 0.85) / 0.5)
+      pose.headTilt = 0.35 * Math.sin(tilt * TAU)
+      pose.roll = 0.12 * Math.sin(tilt * TAU)
+      pose.mouth = 0.3 * lean
+      break
+    }
+    case 'bouncy': {
+      // Stretch up tall, then two springy bounces right there on the turntable.
+      const stretch = smooth(t / 0.3) * (1 - smooth((t - 0.3) / 0.1))
+      pose.lids = smooth((t - 0.1) / 0.15) * 1.1
+      pose.sy = 1 + 0.25 * stretch
+      pose.sx = pose.sz = 1 - 0.1 * stretch
+      const b = clamp01((t - 0.4) / 0.85)
+      if (b > 0 && b < 1) {
+        const phase = (b * 2) % 1
+        pose.lift = 3.2 * Math.sin(Math.PI * phase)
+        const contact = Math.max(0, 1 - phase / 0.18) + Math.max(0, (phase - 0.82) / 0.18)
+        pose.sy -= 0.18 * contact
+        pose.sx += 0.1 * contact
+        pose.sz += 0.1 * contact
+        pose.ear = 1.4 * Math.sin(Math.PI * phase)
+      }
+      pose.mouth = 0.5 * smooth((t - 0.3) / 0.2)
+      break
+    }
+    case 'bold': {
+      // A huge slow yawn with its chin up, then a big dog shake from side to side.
+      const yawn = Math.sin(Math.PI * clamp01(t / 0.95))
+      pose.mouth = 1.3 * yawn
+      pose.sy = 1 + 0.15 * yawn
+      pose.sx = 1 + 0.06 * yawn
+      pose.headNod = -0.3 * yawn
+      // leaning back turns the open mouth, under the nose, up toward the camera
+      pose.pitch = -0.3 * yawn
+      pose.lids = smooth((t - 0.75) / 0.2)
+      const shake = clamp01((t - 0.95) / 0.55)
+      const sway = Math.sin(shake * TAU * 3.5) * Math.sin(Math.PI * shake)
+      pose.roll = 0.34 * sway
+      pose.yaw = -0.12 * sway
+      pose.ear = 1.8 * sway
+      pose.tail = 1.2 * sway
+      if (t > 1.5) pose.pitch = -0.1 * smooth((t - 1.5) / 0.2)
+      break
+    }
+    default: {
+      const unreachable: never = temperament
+      return unreachable
+    }
   }
   return pose
 }
 
-/** Lifted by a finger: legs paddle in the air, the body dangles and sways, the tail wags. */
-export function carriedPose(t: number, pose: Pose): Pose {
-  resetPose(pose)
-  for (let i = 0; i < MAX_LEGS; i++) {
-    const s = Math.sin(t * 16 + i * 1.7)
-    pose.legSwing[i] = 0.55 * s
-    pose.legBend[i] = 0.4 * Math.max(0, s)
+/** Off the turntable: a tiny hop with ears flat, a forward dive, a high spinning leap, or a heavy stomp. */
+function hopOff(temperament: Temperament, k: number, pose: Pose): Pose {
+  pose.lids = 1
+  const air = Math.sin(Math.PI * Math.min(1, k * 1.25))
+  const land = k < 0.8 ? 0 : Math.sin(((k - 0.8) / 0.2) * Math.PI)
+  switch (temperament) {
+    case 'shy':
+      pose.lift = 3.6 * air
+      pose.ear = -0.9
+      pose.sy = 1 - 0.1 * land
+      pose.headNod = 0.12
+      break
+    case 'curious':
+      pose.lift = 7 * air
+      pose.pitch = 0.3 * Math.sin(Math.PI * k)
+      pose.sz = 1 + 0.12 * air
+      pose.sy = 1 - 0.16 * land
+      pose.ear = 1.2 * air
+      break
+    case 'bouncy':
+      pose.lift = 10 * air
+      pose.yaw = TAU * smooth(k / 0.8)
+      pose.sy = k < 0.8 ? 1 + 0.14 * (1 - k) : 1 - 0.24 * land
+      pose.sx = pose.sz = k < 0.8 ? 1 - 0.06 * (1 - k) : 1 + 0.14 * land
+      pose.mouth = 0.6
+      break
+    case 'bold':
+      pose.lift = 4.5 * air
+      pose.pitch = -0.08 * air
+      pose.sy = 1 - 0.3 * land
+      pose.sx = pose.sz = 1 + 0.18 * land
+      pose.mouth = 0.4
+      break
+    default: {
+      const unreachable: never = temperament
+      return unreachable
+    }
   }
-  pose.roll = 0.12 * Math.sin(t * 3.1)
-  pose.pitch = 0.1 * Math.sin(t * 2.3) - 0.08
-  pose.sy = 1.08
-  pose.sx = pose.sz = 0.96
-  pose.tail = 0.9 * Math.sin(t * 11)
-  pose.ear = 0.8 * Math.sin(t * 7)
-  pose.lids = 1.2
-  pose.mouth = 0.35
+  return pose
+}
+
+/** Lifted by a finger, each in its own way: shy curls up, curious peers down, bouncy paddles, bold spreads out and swings. */
+export function carriedPose(temperament: Temperament, t: number, pose: Pose): Pose {
+  resetPose(pose)
+  switch (temperament) {
+    case 'shy': {
+      // a tight ball with eyes squeezed shut, trembling, one quick peek now and then
+      for (let i = 0; i < MAX_LEGS; i++) {
+        pose.legSwing[i] = -0.35
+        pose.legBend[i] = 1
+      }
+      pose.sy = 0.9
+      pose.sx = pose.sz = 1.05
+      pose.roll = 0.04 * Math.sin(t * 52)
+      pose.headNod = 0.3
+      pose.ear = -0.9
+      pose.tailLift = -0.6
+      const peek = (t % 1.6) / 1.6
+      pose.lids = peek > 0.7 && peek < 0.85 ? 0.6 : 0.05
+      pose.mouth = 0.1
+      break
+    }
+    case 'curious': {
+      // leans out over the bench and looks all around it, legs reaching slowly for the ground
+      for (let i = 0; i < MAX_LEGS; i++) {
+        const s = Math.sin(t * 4 + i * 2.1)
+        pose.legSwing[i] = 0.25 * s
+        pose.legBend[i] = 0.15 * Math.max(0, s)
+      }
+      pose.pitch = 0.2
+      pose.headNod = 0.25
+      pose.lookY = -1
+      pose.lookX = Math.sin(t * 1.9)
+      pose.headTilt = 0.25 * Math.sin(t * 1.3)
+      pose.ear = 0.9
+      pose.lids = 1.15
+      pose.mouth = 0.3
+      pose.sy = 1.05
+      break
+    }
+    case 'bouncy': {
+      // paddles fast with a big grin, bobbing in the hand
+      for (let i = 0; i < MAX_LEGS; i++) {
+        const s = Math.sin(t * 20 + i * 1.7)
+        pose.legSwing[i] = 0.6 * s
+        pose.legBend[i] = 0.45 * Math.max(0, s)
+      }
+      pose.lift = 0.9 * Math.abs(Math.sin(t * 9))
+      pose.sy = 1.08 + 0.06 * Math.sin(t * 18)
+      pose.sx = pose.sz = 0.96
+      pose.tail = 1.1 * Math.sin(t * 16)
+      pose.ear = 1.2 * Math.sin(t * 9)
+      pose.lids = 1.25
+      pose.mouth = 0.8
+      break
+    }
+    case 'bold': {
+      // legs flung wide like a plane, a slow big swing from side to side, ears streaming back
+      for (let i = 0; i < MAX_LEGS; i++) {
+        pose.legSwing[i] = i % 2 ? 0.7 : -0.7
+        pose.legBend[i] = 0
+      }
+      pose.roll = 0.28 * Math.sin(t * 2.2)
+      pose.yaw = 0.15 * Math.sin(t * 2.2 - 0.6)
+      pose.pitch = -0.12
+      pose.sz = 1.06
+      pose.ear = -0.5 + 0.2 * Math.sin(t * 6)
+      pose.tail = 0.5 * Math.sin(t * 2.2)
+      pose.lids = 1.1
+      pose.mouth = 0.6
+      break
+    }
+    default: {
+      const unreachable: never = temperament
+      return unreachable
+    }
+  }
+  return pose
+}
+
+/**
+ * Set down from a finger: `touches` are the seconds it meets the bench (the first ends the drop, bouncy
+ * rebounds for the rest), `seconds` is when it has settled, `weight` how hard it lands.
+ */
+export const LAND_TIMING: Record<Temperament, { touches: readonly number[]; seconds: number; weight: number }> = {
+  shy: { touches: [0.5], seconds: 1.55, weight: 0.45 },
+  curious: { touches: [0.46], seconds: 1.5, weight: 0.65 },
+  bouncy: { touches: [0.38, 0.84, 1.1], seconds: 1.25, weight: 0.85 },
+  bold: { touches: [0.32], seconds: 1.15, weight: 1.2 },
+}
+
+/**
+ * The set-down, `t` seconds after the finger let go. The drop itself is the caller's; this is how each
+ * temperament falls and comes round: shy stays curled, lands flat, and dares one peek before it unfolds;
+ * curious reaches for the bench and sniffs where it landed; bouncy rebounds twice; bold stomps down wide
+ * and shakes it off.
+ */
+export function landPose(temperament: Temperament, t: number, pose: Pose): Pose {
+  resetPose(pose)
+  const { touches } = LAND_TIMING[temperament]
+  const fall = clamp01(t / touches[0])
+  const s = t - touches[0]
+  const thump = s < 0 ? 0 : Math.sin(Math.PI * clamp01(s / 0.2))
+  switch (temperament) {
+    case 'shy': {
+      const unfold = smooth((s - 0.6) / 0.4)
+      const curl = 1 - unfold
+      for (let i = 0; i < MAX_LEGS; i++) {
+        pose.legSwing[i] = -0.35 * curl
+        pose.legBend[i] = curl
+      }
+      pose.sy = 1 - 0.12 * curl - 0.1 * thump
+      pose.sx = pose.sz = 1 + 0.06 * curl + 0.06 * thump
+      pose.headNod = 0.3 * curl
+      pose.ear = -0.9 * curl
+      pose.lids = s < 0.25 ? 0.05 : 0.05 + 0.95 * smooth((s - 0.25) / 0.35)
+      const glance = clamp01((s - 0.3) / 0.5)
+      pose.lookX = 0.8 * Math.sin(glance * TAU) * curl
+      pose.yaw = 0.12 * Math.sin(glance * TAU) * curl
+      pose.mouth = 0.1
+      break
+    }
+    case 'curious': {
+      const reach = s < 0 ? smooth(fall / 0.6) : 1 - smooth(s / 0.15)
+      for (let i = 0; i < MAX_LEGS; i++) pose.legSwing[i] = 0.4 * reach
+      const sniff = smooth(s / 0.2) * (1 - smooth((s - 0.75) / 0.2))
+      const up = smooth((s - 0.8) / 0.15) * (1 - smooth((s - 0.95) / 0.1))
+      pose.pitch = 0.3 * sniff + 0.1 * reach
+      pose.headNod = 0.28 * sniff + 0.08 * sniff * Math.abs(Math.sin(s * 18)) - 0.18 * up
+      pose.lookY = -0.9 * sniff - 0.5 * reach + 0.6 * up
+      pose.sy = 1 - 0.12 * thump
+      pose.sx = pose.sz = 1 + 0.06 * thump
+      pose.ear = 0.8
+      pose.lids = 1.15
+      pose.mouth = 0.3 * sniff
+      break
+    }
+    case 'bouncy': {
+      const [, second, third] = touches
+      pose.lift = s < 0 ? 0 : s < second - touches[0] ? 4.2 * Math.sin((Math.PI * s) / (second - touches[0])) : 1.4 * Math.sin(Math.PI * clamp01((t - second) / (third - second)))
+      let contact = 0
+      for (const at of touches) contact = Math.max(contact, 1 - Math.abs(t - at) / 0.09)
+      pose.sy = 1 + 0.1 * (s < 0 ? fall : 0) - 0.22 * contact
+      pose.sx = pose.sz = 1 + 0.12 * contact
+      for (let i = 0; i < MAX_LEGS; i++) pose.legSwing[i] = (i % 2 ? 0.5 : -0.5) * (s < 0 ? 1 : pose.lift / 4.2)
+      pose.ear = 1.3 * (s < 0 ? 1 : pose.lift / 4.2) - 0.4 * contact
+      pose.lids = 1.2
+      pose.mouth = 0.75
+      break
+    }
+    case 'bold': {
+      const stomp = s < 0 ? 0 : Math.sin(Math.PI * clamp01(s / 0.34))
+      const plant = s < 0 ? 0.3 * fall : 1 - smooth((s - 0.3) / 0.3)
+      for (let i = 0; i < MAX_LEGS; i++) pose.legSwing[i] = (i % 2 ? 0.55 : -0.55) * plant
+      pose.sy = 1 - 0.24 * stomp
+      pose.sx = pose.sz = 1 + 0.16 * stomp
+      pose.pitch = s < 0 ? -0.1 * fall : -0.16 * smooth((s - 0.1) / 0.15) * (1 - smooth((s - 0.72) / 0.1))
+      const shake = clamp01((s - 0.3) / 0.45)
+      const sway = Math.sin(shake * TAU * 2.5) * Math.sin(Math.PI * shake)
+      pose.roll = 0.2 * sway
+      pose.ear = -0.5 * (1 - shake) + 1.5 * sway
+      pose.tail = sway
+      pose.lids = 1.05
+      pose.mouth = 0.45 * stomp + 0.3
+      break
+    }
+    default: {
+      const unreachable: never = temperament
+      return unreachable
+    }
+  }
   return pose
 }
