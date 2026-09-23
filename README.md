@@ -41,7 +41,10 @@ Every game looks different, and every game meets the same quality bar. [`docs/ar
 ```bash
 npm run check   # TypeScript + vitest + egress scan + wordless check
 npm run build && npm run egress:built   # CI also scans the built bundle
+npm run build && npm run check:intersections -- <key>   # pieces passing through each other
 ```
+
+The intersection audit (`scripts/jam-intersections.mjs`, needs `npx playwright install chromium`) plays a game's production build headless on a paused, stepped clock and reads its live three.js scene every 250 ms of game time: two things crossing by more than a few percent of the smaller one, a piece sinking into what it rests on or hidden inside another, a limb or prop swinging through its own body, coplanar faces the depth buffer cannot separate (z-fighting), and anything cut by the camera's near plane. Each game scripts its moments and names its intended contacts in `scripts/intersections/games/<key>.ts`; the report, a close-up of every finding, and a contact sheet land in `test-results/intersections/<key>/`. CI runs it on every game and fails a game marked `enforce: true` on any finding it does not allow.
 
 The egress scan (`scripts/egress-check.ts`) fails on any external URL, CDN font, network or browser-storage API, sample player that loads URLs, import from `harness/` or another game, or package outside the Tada tech menu.
 
