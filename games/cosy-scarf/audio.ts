@@ -16,21 +16,23 @@ function note(colour: number): number {
   return NOTES[((colour % NOTES.length) + NOTES.length) % NOTES.length]
 }
 
+/** iPads usually run audio at 48 kHz; other rates (44.1 kHz with some headphones) remake the samples on the first tap. */
 const RATE = 48000
 
 type Samples = Float32Array<ArrayBuffer>
+type SampleSet = { rate: number; noise: Samples; impulse: [Samples, Samples] }
 
 /** The noise and the woolly room's impulse, made once at mount so the first tap only copies them. */
-function samples(): { noise: Samples; impulse: [Samples, Samples] } {
-  const noise = new Float32Array(RATE)
+function samples(rate: number): SampleSet {
+  const noise = new Float32Array(rate)
   for (let i = 0; i < noise.length; i++) noise[i] = Math.random() * 2 - 1
-  const length = Math.round(RATE * 0.9)
+  const length = Math.round(rate * 0.9)
   const channel = (): Samples => {
     const data = new Float32Array(length)
     for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length) ** 4
     return data
   }
-  return { noise, impulse: [channel(), channel()] }
+  return { rate, noise, impulse: [channel(), channel()] }
 }
 
 export class ScarfAudio implements Sound {
@@ -40,12 +42,21 @@ export class ScarfAudio implements Sound {
   private active = true
   private lastStitch = 0
   private lastStep = 0
-  private readonly samples = samples()
+  private samples = samples(RATE)
+  private failed = false
 
   unlock(): void {
     const state = this.context?.state as ExtendedState | undefined
     if (this.context && (state === 'closed' || state === 'interrupted')) this.teardown()
-    if (!this.context) this.build()
+    // Unlock runs inside the touch handler: a sound that cannot start must never stop the touch.
+    if (!this.context && !this.failed) {
+      try {
+        this.build()
+      } catch {
+        this.failed = true
+        this.teardown()
+      }
+    }
     if (this.active && this.context?.state === 'suspended') void this.context.resume()
   }
 
@@ -64,16 +75,20 @@ export class ScarfAudio implements Sound {
     const AudioCtor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!AudioCtor) return
     const context = new AudioCtor()
+    this.context = context
     const master = context.createGain()
     master.gain.value = 0.62
     const compressor = context.createDynamicsCompressor()
     compressor.threshold.value = -18
     master.connect(compressor).connect(context.destination)
-    const noise = context.createBuffer(1, RATE, RATE)
+    // A convolver refuses an impulse at any rate but its context's own.
+    if (this.samples.rate !== context.sampleRate) this.samples = samples(context.sampleRate)
+    const rate = this.samples.rate
+    const noise = context.createBuffer(1, this.samples.noise.length, rate)
     noise.copyToChannel(this.samples.noise, 0)
 
     // A soft, woolly room: a short procedural impulse, darker than the direct sound.
-    const impulse = context.createBuffer(2, this.samples.impulse[0].length, RATE)
+    const impulse = context.createBuffer(2, this.samples.impulse[0].length, rate)
     impulse.copyToChannel(this.samples.impulse[0], 0)
     impulse.copyToChannel(this.samples.impulse[1], 1)
     const convolver = context.createConvolver()
@@ -84,7 +99,6 @@ export class ScarfAudio implements Sound {
     const room = context.createGain()
     room.gain.value = 0.22
     master.connect(room).connect(dark).connect(convolver).connect(compressor)
-    this.context = context
     this.master = master
     this.noise = noise
   }
