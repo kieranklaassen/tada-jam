@@ -1,13 +1,14 @@
 // Egress and boundary scan for the jam (Tada R20 plus the persistence rule).
 //
-//   node scripts/egress-check.ts          scan games/ and harness/ source
+//   node scripts/egress-check.ts          scan games/, harness/ and showcase/ source
 //   node scripts/egress-check.ts --built  scan the built dist/ assets too
 //
 // Games may talk to nothing: no absolute URL to a foreign host, no CDN font,
 // no fetch/XHR/WebSocket/beacon, no localStorage/IndexedDB, no sample players
 // that load URLs, and no imports outside their own folder, ../types, and the
-// allowed package list. The harness gets the URL rule only (it owns the fake
-// server, so it may use localStorage). The scanner core is exported so
+// allowed package list. The harness and showcase wrappers get the URL rule
+// only (the harness owns the fake server, so it may use localStorage; a
+// showcase is an owner-approved non-cartridge). The scanner core is exported so
 // test/egress.test.ts can prove it flags what it claims to flag.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
@@ -130,9 +131,13 @@ export function scanTree(root: string, options: { built: boolean }): Finding[] {
     const isGameCode = /\.(?:ts|tsx|js|jsx|css)$/.test(path) && !isTestFile(path) && relative(gamesDir, path).includes('/')
     findings.push(...(isGameCode ? scanGameSource(text, file) : scanUrls(text, file, [])))
   }
-  for (const path of walk(join(root, 'harness'))) {
-    if (!TEXT_EXTENSIONS.has(extname(path))) continue
-    findings.push(...scanUrls(readFileSync(path, 'utf8'), relative(root, path), []))
+  // Showcases (showcase/<key>/) are owner-approved non-cartridges: exempt from the cartridge rules, never from
+  // the egress rule. Their wrappers are scanned here and their prebuilt bundles in dist/ by the built scan.
+  for (const dir of ['harness', 'showcase']) {
+    for (const path of walk(join(root, dir))) {
+      if (!TEXT_EXTENSIONS.has(extname(path))) continue
+      findings.push(...scanUrls(readFileSync(path, 'utf8'), relative(root, path), []))
+    }
   }
   if (options.built) {
     const dist = join(root, 'dist')

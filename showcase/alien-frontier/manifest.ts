@@ -1,4 +1,4 @@
-import type { CartridgeManifest } from '../types'
+import type { CartridgeManifest } from '../../harness/contract'
 
 export const alienFrontierManifest = {
   key: 'alien-frontier',

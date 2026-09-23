@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { Cartridge, CartridgeContext } from '../types'
+import type { Cartridge, CartridgeContext } from '../../harness/contract'
 import { alienFrontierManifest } from './manifest'
 
 // SHOWCASE ONLY: Alien Frontier is a standalone keyboard-and-mouse space western
