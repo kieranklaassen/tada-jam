@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { bestHint, CoverageMeter, stirLevel, TAP_TURN, wakeRuleForAge, wakes, type CoverageResult, type Placed } from './coverage'
 import { buildCreature, CREATURE_ORDER, type CreatureKind } from './creatures'
 import { STAGE } from './projection'
@@ -109,26 +109,23 @@ describe('coverage', () => {
     expect(meter.best).toEqual(whole)
   })
 
-  it('a search slice ends within a few candidates of its budget, so a slow tablet never gets a long frame', () => {
+  it('a search slice stops at the first scored candidate once its budget is spent, so a slow tablet never gets a long frame', () => {
     const meter = new CoverageMeter(buildCreature('bird'))
     const placed = rack()
-    bestHint(meter, placed)
-    const t0 = performance.now()
-    bestHint(meter, placed)
-    // An upper bound on candidates, so this is a floor on what one costs.
-    const candidate = (performance.now() - t0) / (3 * 7 * 16 * placed.length)
-    const budget = 0.3
-    const overruns = Array.from({ length: 3 }, () => {
-      meter.beginSearch(placed)
-      const slices: number[] = []
-      for (let done = false; !done; ) {
-        const start = performance.now()
-        done = meter.continueSearch(budget)
-        slices.push(performance.now() - start - budget)
-      }
-      return slices.sort((a, b) => a - b)[Math.floor(slices.length * 0.9)]
-    })
-    expect(Math.min(...overruns) / candidate).toBeLessThan(4)
+    // soloScore runs once per scored candidate (and once per shape for its baseline), so counting calls counts work without timing it.
+    const scoring = vi.spyOn(meter as unknown as { soloScore: (...args: unknown[]) => number }, 'soloScore')
+    let reads = 0
+    const spentAfterStart = () => (reads++ === 0 ? 0 : Infinity)
+    meter.beginSearch(placed)
+    const perSlice: number[] = []
+    for (let done = false; !done; ) {
+      reads = 0
+      const before = scoring.mock.calls.length
+      done = meter.continueSearch(0.3, spentAfterStart)
+      if (!done) perSlice.push(scoring.mock.calls.length - before)
+    }
+    expect(perSlice.length).toBeGreaterThan(1)
+    expect(Math.max(...perSlice)).toBeLessThanOrEqual(2)
   })
 
   it('measuring allocates nothing that grows with use', () => {
