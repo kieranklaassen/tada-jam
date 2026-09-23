@@ -2,7 +2,7 @@ import type { TableAudio } from './audio'
 import { freeSpotOnPlate, GUEST_RADIUS, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, wantingSeat, type FeedingView } from './feeding'
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
-import { BAG, BAG_MOUTH, FEEDING, SCALE, SHELF, shelfTile, type MatKey, type Point, type Quarters } from './layout'
+import { BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, type MatKey, type Point, type Quarters } from './layout'
 import { HOLD_HEIGHT, stoneHeight3, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
 import { SaveCadence } from './saveCadence'
 import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
@@ -16,7 +16,7 @@ import { SEAT_SPECIES } from './motion'
 
 export type Sound = Pick<
   TableAudio,
-  'unlock' | 'setActive' | 'touch' | 'clack' | 'rustle' | 'clatter' | 'creak' | 'beat' | 'chord' | 'munch' | 'hop' | 'poke' | 'rumble' | 'whoosh' | 'snick' | 'dispose'
+  'unlock' | 'setActive' | 'touch' | 'clack' | 'rustle' | 'clatter' | 'creak' | 'beat' | 'chord' | 'munch' | 'hop' | 'poke' | 'rumble' | 'knock' | 'squeak' | 'whoosh' | 'snick' | 'dispose'
 >
 
 export const silentSound: Sound = {
@@ -33,6 +33,8 @@ export const silentSound: Sound = {
   hop() {},
   poke() {},
   rumble() {},
+  knock() {},
+  squeak() {},
   whoosh() {},
   snick() {},
   dispose() {},
@@ -52,6 +54,37 @@ const STORY_FADE = 0.7
 const RUMBLE_AFTER = 2.5
 const RUMBLE_GAP = 8
 const MAX_RUMBLES = 3
+
+const KNOCK_PAUSE = 1.1
+const VISITOR_WALK = 0.6
+const PEEK_AFTER = 2
+const PEEK_GAP = 7
+const PEEK_LENGTH = 1.8
+const MAX_PEEKS = 3
+
+export type Visitor = { home: Point; outAt: number; leaveAt: number | null; pokeAt: number | null; group: number }
+
+type DoorState = {
+  knocks: number[]
+  knockAt: number | null
+  answer: { times: number[]; groups: number[][]; openAt: number } | null
+  openAt: number | null
+  closeAt: number | null
+  visitors: Visitor[]
+  peekStretch: { lastIdle: number; count: number; next: number; at: number | null }
+}
+
+/** Where visitors stand: each group a small cluster, groups side by side in the yard, so the number reads at a glance. */
+export function yardSpots(groups: readonly (readonly number[])[]): (Point & { group: number })[] {
+  const spots: (Point & { group: number })[] = []
+  const width = 230
+  groups.forEach((group, g) => {
+    const cx = DOOR.yard.x + (g - (groups.length - 1) / 2) * width
+    const cluster = group.length === 1 ? [[0, 0]] : group.length === 2 ? [[-48, 0], [48, 0]] : [[-52, 30], [52, 30], [0, -50]]
+    for (let i = 0; i < group.length; i++) spots.push({ x: cx + cluster[i % cluster.length][0], y: DOOR.yard.y + cluster[i % cluster.length][1], group: g })
+  })
+  return spots
+}
 
 type Story = { phase: 'waiting' | 'rolling' | 'resting' | 'carrying' | 'done'; at: number; stoneId: number | null; from: Point | null; spot: Point | null; seat?: number }
 
@@ -121,6 +154,8 @@ export class TableController {
   stoolsShown: boolean
   /** The first-open story beat: a stone rolls out toward the hungry guest and the ghost hand carries it to the plate. */
   private story: Story | null = null
+  /** Knock-Knock: the child's knocks waiting for an answer, the house's answer, and the visitors in the yard. */
+  readonly door: DoorState = { knocks: [], knockAt: null, answer: null, openAt: null, closeAt: null, visitors: [], peekStretch: { lastIdle: 0, count: 0, next: PEEK_AFTER, at: null } }
 
   constructor(state: TableState, options: { save: (state: TableState) => void; sound?: Sound }) {
     this.state = state
@@ -216,6 +251,7 @@ export class TableController {
     this.feeding = viewFeeding(resting, this.state.seats)
     if (this.state.liveMat === 'feeding') this.updateFeeding(now)
     this.updateStory(now)
+    if (this.state.liveMat === 'door') this.updateDoor(now)
     this.updateWanting()
     this.updateRumble(now)
 
@@ -503,6 +539,92 @@ export class TableController {
     for (const flight of moving) flight.land()
   }
 
+  // --- Knock-Knock --------------------------------------------------------------
+
+  /** A knock on the little house. Knocks gather until the child pauses; knocking again sends the last visitors home first. */
+  private knock(): void {
+    if (this.door.answer) return
+    const home = this.door.visitors.filter((visitor) => visitor.leaveAt === null)
+    if (home.length > 0) {
+      for (const visitor of home) visitor.leaveAt = this.t + Math.random() * 0.15
+      this.door.closeAt = this.t + VISITOR_WALK + 0.2
+    }
+    this.door.knocks.push(this.t)
+    this.door.knockAt = this.t
+    this.sound.knock(false)
+  }
+
+  private updateDoor(now: number): void {
+    const door = this.door
+    door.visitors = door.visitors.filter((visitor) => visitor.leaveAt === null || now - visitor.leaveAt < VISITOR_WALK)
+    if (door.closeAt !== null && now >= door.closeAt && door.visitors.length === 0) {
+      door.openAt = null
+      door.closeAt = null
+    }
+    const last = door.knocks[door.knocks.length - 1]
+    if (last !== undefined && !door.answer && now - last > KNOCK_PAUSE && door.visitors.length === 0) {
+      const count = Math.min(door.knocks.length, DOOR.maxVisitors)
+      door.knocks = []
+      const groups = chunk(Array.from({ length: count }, (_, i) => i), 3)
+      const times: number[] = []
+      let cursor = now + 0.4
+      for (const group of groups) {
+        for (let i = 0; i < group.length; i++) {
+          times.push(cursor)
+          this.sound.knock(true, cursor - now)
+          cursor += 0.27
+        }
+        cursor += 0.24
+      }
+      const openAt = cursor + 0.2
+      door.answer = { times, groups, openAt }
+    }
+    const answer = door.answer
+    if (answer && now >= answer.openAt) {
+      door.answer = null
+      door.openAt = now
+      door.closeAt = null
+      this.sound.whoosh()
+      const spots = yardSpots(answer.groups)
+      spots.forEach((home, i) => door.visitors.push({ home, outAt: now + 0.25 + i * 0.2, leaveAt: null, pokeAt: null, group: home.group }))
+    }
+    this.updateDoorPeek(now)
+  }
+
+  /** While nobody is out, a face peeks from the window and taps the glass: someone is home. It backs off and stops after three peeks per idle stretch. */
+  private updateDoorPeek(now: number): void {
+    const stretch = this.door.peekStretch
+    const idle = this.scheduler.idleFor(now)
+    if (idle < stretch.lastIdle) {
+      stretch.count = 0
+      stretch.next = PEEK_AFTER
+    }
+    stretch.lastIdle = idle
+    if (stretch.at !== null && now - stretch.at > PEEK_LENGTH) stretch.at = null
+    const quiet = this.door.visitors.length === 0 && !this.door.answer && this.door.knocks.length === 0
+    if (!quiet || stretch.count >= MAX_PEEKS || idle < stretch.next || this.guidance.hand) return
+    stretch.at = now
+    stretch.count += 1
+    stretch.next = idle + PEEK_GAP * 2 ** (stretch.count - 1)
+    this.sound.knock(true, 0.5)
+    this.sound.knock(true, 0.72)
+  }
+
+  /** 0..1 progress of the window peek, or null. */
+  doorPeek(): number | null {
+    const at = this.door.peekStretch.at
+    return at === null ? null : Math.min(1, (this.t - at) / PEEK_LENGTH)
+  }
+
+  private resetDoor(): void {
+    this.door.knocks = []
+    this.door.answer = null
+    this.door.visitors = []
+    this.door.openAt = null
+    this.door.closeAt = null
+    this.door.peekStretch.at = null
+  }
+
   /** On an empty scale, the world asks the question: one stone drops onto a pan and the beam waits, tilted, for a partner. */
   private inviteOnScale(): void {
     if (this.state.liveMat !== 'scale' || this.state.bag <= 0) return
@@ -550,11 +672,12 @@ export class TableController {
       leftover: this.state.liveMat === 'feeding' && this.feeding.leftover,
       knife: FEEDING.knifeRest,
       shelf: this.shelfMats().length > 0 ? { x: tile.x, y: tile.y } : null,
+      visitors: this.door.visitors.filter((visitor) => visitor.leaveAt === null).length,
     }
   }
 
   private untouchedTable(): boolean {
-    return this.state.pieces.length === 0 && this.state.bag === this.state.total && this.state.parked.feeding.length === 0 && this.state.parked.scale.length === 0
+    return this.state.pieces.length === 0 && this.state.bag === this.state.total && MAT_KEYS.every((key) => this.state.parked[key].length === 0)
   }
 
   private computeGuidance(): GuidanceView {
@@ -573,7 +696,7 @@ export class TableController {
       hand: hint && timing.demo !== null ? handPose(hint, timing.demo) : null,
       glow: timing.glow,
       glowStones,
-      glowBag: this.state.bag > 0 && (summary.loose.length === 0 || hint?.from.x === BAG.x),
+      glowBag: this.state.liveMat !== 'door' && this.state.bag > 0 && (summary.loose.length === 0 || hint?.from.x === BAG.x),
       glowKnife: summary.leftover,
       glowShelf: hint?.kind === 'swapMat',
       peek: timing.peek,
@@ -744,6 +867,13 @@ export class TableController {
       if (within(to3(tile, tile.height + 3), 10) < Infinity) return { kind: 'shelf', mat: mats[i] }
     }
     if (this.state.liveMat === 'feeding' && this.feeding.leftover && within(to3(this.knife.at, 1), 6) < Infinity) return { kind: 'knife' }
+    if (this.state.liveMat === 'door') {
+      for (let index = 0; index < this.door.visitors.length; index++) {
+        const visitor = this.door.visitors[index]
+        if (visitor.leaveAt === null && this.t > visitor.outAt + VISITOR_WALK && within(to3(visitor.home, 4), 5) < Infinity) return { kind: 'visitor', index }
+      }
+      if (within(to3(DOOR.door, 6), DOOR.doorRadius * UNIT) < Infinity) return { kind: 'door' }
+    }
 
     let best: { id: number; distance: number } | null = null
     for (const piece of this.restingPieces()) {
@@ -823,6 +953,14 @@ export class TableController {
         return
       case 'bowl':
         return this.hopFromBowl()
+      case 'door':
+        return this.knock()
+      case 'visitor': {
+        const visitor = this.door.visitors[target.index]
+        if (visitor) visitor.pokeAt = this.t
+        this.sound.squeak()
+        return
+      }
       case 'knife':
       case 'broom':
         return
@@ -867,6 +1005,8 @@ export class TableController {
       case 'piece':
       case 'chair':
       case 'bowl':
+      case 'door':
+      case 'visitor':
         return
       default: {
         const unreachable: never = target
@@ -974,6 +1114,7 @@ export class TableController {
     for (const flight of landing) flight.land()
     this.knife.pointerId = null
     this.guestDrag = null
+    this.resetDoor()
     swapMat(this.state, mat)
     for (const id of this.physics.stoneIds()) this.physics.removeStone(id)
     this.beam = restingBeam()

@@ -1,4 +1,4 @@
-import { BAG, FEEDING, SCALE, type MatKey, type Point } from './layout'
+import { BAG, DOOR, FEEDING, SCALE, type MatKey, type Point } from './layout'
 
 // Wordless guidance for a four-year-old: no text, no voice, no verdicts.
 // When the child has been idle for a while, a ghost hand shows one possible
@@ -7,7 +7,7 @@ import { BAG, FEEDING, SCALE, type MatKey, type Point } from './layout'
 // at once. Hints back off within an idle stretch and stop after a few
 // demonstrations, so an idle table goes quiet instead of nagging.
 
-export type HintKind = 'tapBag' | 'toPan' | 'dealFromBowl' | 'toGuest' | 'useKnife' | 'swapMat'
+export type HintKind = 'tapBag' | 'toPan' | 'dealFromBowl' | 'toGuest' | 'useKnife' | 'swapMat' | 'knock'
 
 export type Hint = {
   kind: HintKind
@@ -30,6 +30,8 @@ export type TableSummary = {
   leftover: boolean
   knife: Point
   shelf: Point | null
+  /** Visitors standing in the Knock-Knock yard. */
+  visitors: number
 }
 
 function nearest<T extends Point>(items: readonly T[], to: Point): T | null {
@@ -49,6 +51,9 @@ const bagTap: Point = { x: BAG.x, y: BAG.y - 20 }
 
 /** The one next act worth demonstrating, given what is on the table. */
 export function chooseHint(table: TableSummary): Hint | null {
+  if (table.liveMat === 'door') {
+    return table.visitors === 0 ? { kind: 'knock', from: DOOR.door, to: null, stoneIds: [] } : table.shelf ? { kind: 'swapMat', from: table.shelf, to: null, stoneIds: [] } : null
+  }
   const onTable = table.loose.length + table.bowl.length
   if (table.bag > 0 && onTable === 0 && table.panWeights[0] + table.panWeights[1] === 0 && table.plates.every((p) => p === 0)) {
     return { kind: 'tapBag', from: bagTap, to: null, stoneIds: [] }

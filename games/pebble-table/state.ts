@@ -50,7 +50,7 @@ export function defaultTable(childAge: number | null): TableState {
     pieces: [],
     liveMat,
     shelf: [liveMat, ...MAT_KEYS.filter((key) => key !== liveMat)],
-    parked: { feeding: [], scale: [] },
+    parked: { feeding: [], scale: [], door: [] },
     seats: FEEDING.seats.map((_, index) => index === 1 || index === 4),
     nextId: 1,
   }
@@ -100,7 +100,7 @@ export function deserialize(raw: unknown, childAge: number | null): TableState {
   const seen = new Set<number>()
   const pieces = readPieces(raw.pieces, seen)
   const parkedRaw = isRecord(raw.parked) ? raw.parked : {}
-  const parked = { feeding: readPieces(parkedRaw.feeding, seen), scale: readPieces(parkedRaw.scale, seen) }
+  const parked = { feeding: readPieces(parkedRaw.feeding, seen), scale: readPieces(parkedRaw.scale, seen), door: readPieces(parkedRaw.door, seen) }
 
   const liveMat = (MAT_KEYS as readonly unknown[]).includes(raw.liveMat) ? (raw.liveMat as MatKey) : fallback.liveMat
   const shelfRaw = Array.isArray(raw.shelf) ? raw.shelf.filter((key): key is MatKey => (MAT_KEYS as readonly unknown[]).includes(key)) : []
@@ -150,7 +150,7 @@ export function serialize(state: TableState): TableState {
   return {
     ...state,
     pieces: round(state.pieces),
-    parked: { feeding: round(state.parked.feeding), scale: round(state.parked.scale) },
+    parked: { feeding: round(state.parked.feeding), scale: round(state.parked.scale), door: round(state.parked.door) },
     shelf: [...state.shelf],
     seats: [...state.seats],
   }
@@ -216,7 +216,18 @@ export function cutPiece(state: TableState, id: number): Piece[] {
 
 /** Whether a piece is part of a mat's arrangement: on a pan, or on a plate or in the bowl. */
 export function onMatParts(mat: MatKey, piece: Piece): boolean {
-  return mat === 'scale' ? panOf(piece) !== null : inBowl(piece) || plateOf(piece) !== null
+  switch (mat) {
+    case 'scale':
+      return panOf(piece) !== null
+    case 'feeding':
+      return inBowl(piece) || plateOf(piece) !== null
+    case 'door':
+      return false
+    default: {
+      const unknown: never = mat
+      return unknown
+    }
+  }
 }
 
 /** Put the live mat away with its arrangement, and bring `next` out with its own. Loose stones stay on the table. */

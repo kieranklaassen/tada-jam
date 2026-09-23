@@ -13,6 +13,8 @@ export type Target =
   | { kind: 'chair'; seat: number }
   | { kind: 'guest'; seat: number }
   | { kind: 'bowl' }
+  | { kind: 'door' }
+  | { kind: 'visitor'; index: number }
   | { kind: 'broom' }
 
 export type Intent =

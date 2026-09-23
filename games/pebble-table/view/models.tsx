@@ -1,7 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
-import { BAG, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
+import { BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
 import { createClayMaterials, merge, PALETTE, piece, type ClayMaterials } from './clay'
 import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
@@ -845,6 +845,128 @@ export function KnifeModel({ read }: { read: () => { at: Point; visible: boolean
   )
 }
 
+// --- Knock-Knock ----------------------------------------------------------------
+
+const HOUSE = { walls: '#efc39c', roof: '#6d8db5', door: '#9a5a38', frame: '#fbe7cf', glass: '#ffe39a', chimney: '#c98f6a' }
+const MOUSE = { fur: '#f3e8d8', ear: '#f2a7a0', eye: '#2b2220', nose: '#e0837c' }
+
+/** The cottage without its door, scaled and placed for the mat (scale 1) or a chooser token. */
+function houseParts(scale: number, offset: V3): THREE.BufferGeometry[] {
+  const at = (x: number, y: number, z: number): V3 => [offset[0] + x * scale, offset[1] + y * scale, offset[2] + z * scale]
+  const size = (x: number, y: number, z: number): V3 => [x * scale, y * scale, z * scale]
+  return [
+    piece(geo.roundedBox(12, 0.12), HOUSE.walls, { position: at(0, 7, 0), scale: size(26, 14, 19) }, { lump: 0.18, frequency: 0.25, seed: 21 }),
+    piece(geo.cylinder(4, 0, 1), HOUSE.roof, { position: at(0, 18.5, 0), rotation: [0, Math.PI / 4, 0], scale: size(21, 9, 17) }, { lump: 0.12, frequency: 0.3, seed: 22, ground: null }),
+    piece(geo.roundedBox(8, 0.2), HOUSE.chimney, { position: at(7, 20, -3), scale: size(3.2, 7, 3.2) }, { lump: 0.1, ground: null }),
+    piece(geo.roundedBox(8, 0.2), HOUSE.frame, { position: at(0, 5, 9.6), scale: size(8, 11, 0.8) }, { lump: 0.08, ground: null }),
+    piece(geo.roundedBox(8, 0.25), HOUSE.frame, { position: at(8.5, 8.5, 9.6), scale: size(6, 5.4, 0.8) }, { lump: 0.06, ground: null }),
+    piece(geo.roundedBox(8, 0.25), HOUSE.glass, { position: at(8.5, 8.5, 9.85), scale: size(4.6, 4, 0.5) }, { ground: null }),
+  ]
+}
+
+function mouseGeometry(): THREE.BufferGeometry {
+  const sphere = geo.sphere(16)
+  return merge([
+    piece(sphere, MOUSE.fur, { position: [0, 1.4, 0], scale: [1.7, 1.45, 2.1] }, { lump: 0.12, seed: 31 }),
+    piece(sphere, MOUSE.fur, { position: [0, 2.2, 1.9], scale: [1.15, 1.05, 1.25] }, { lump: 0.08, ground: null }),
+    ...[-1, 1].flatMap((side) => [
+      piece(sphere, MOUSE.fur, { position: [side * 0.95, 3.25, 1.5], scale: [0.72, 0.72, 0.25] }, { ground: null }),
+      piece(sphere, MOUSE.ear, { position: [side * 0.95, 3.25, 1.6], scale: [0.48, 0.48, 0.18] }, { ground: null }),
+      piece(sphere, MOUSE.eye, { position: [side * 0.45, 2.45, 2.95], scale: 0.24 }, { ground: null }),
+    ]),
+    piece(sphere, MOUSE.nose, { position: [0, 2.05, 3.15], scale: 0.22 }, { ground: null }),
+    piece(geo.capsule(8), MOUSE.ear, { position: [0, 0.9, -2.6], rotation: [1.1, 0, 0], scale: [0.18, 1.6, 0.18] }, { ground: null }),
+  ])
+}
+
+export type DoorPose = {
+  visitors: readonly { home: Point; outAt: number; leaveAt: number | null; pokeAt: number | null }[]
+  openAt: number | null
+  closeAt: number | null
+  knockAt: number | null
+  answerTimes: readonly number[]
+  peek: number | null
+  now: number
+}
+
+const DOOR_OPEN = -1.75
+const MOUSE_SCALE = 2.2
+const VISITOR_WALK_TIME = 0.6
+
+/**
+ * The Knock-Knock house. Knocks shake the door; the house's answer shakes it
+ * from inside; then it swings open and visitors hop out to their spots in the
+ * yard and wiggle there, hopping when poked. While nobody is out, a face
+ * peeks from the lit window.
+ */
+export function DoorModel({ read }: { read: () => DoorPose }) {
+  const { clay } = useClay()
+  const house = once('house', () => merge(houseParts(1, [0, 0, 0])))
+  const doorLeaf = once('door-leaf', () => merge([piece(geo.roundedBox(8, 0.18), HOUSE.door, { position: [3, 4.8, 0], scale: [6, 9.6, 0.9] }, { lump: 0.1, ground: null }), piece(geo.sphere(10), HOUSE.frame, { position: [5.2, 4.8, 0.6], scale: 0.45 }, { ground: null })]))
+  const mouse = once('mouse', mouseGeometry)
+  const leaf = useRef<THREE.Group>(null)
+  const face = useRef<THREE.Mesh>(null)
+  const mice = useRef<THREE.InstancedMesh>(null)
+  const swing = useRef<Spring>({ x: 0, v: 0 })
+  const lastKnock = useRef<number | null>(null)
+  const p = to3(DOOR.house)
+  const threshold = to3(DOOR.door)
+  useFrame((_, dt) => {
+    const pose = read()
+    const now = pose.now
+    if (pose.knockAt !== null && pose.knockAt !== lastKnock.current) {
+      swing.current.v -= 3
+      lastKnock.current = pose.knockAt
+    }
+    const answering = pose.answerTimes.some((t) => now >= t && now - t < 0.05)
+    if (answering) swing.current.v += 2.4
+    const open = pose.openAt !== null && (pose.closeAt === null || now < pose.closeAt - 0.3) ? DOOR_OPEN : 0
+    const angle = springStep(swing.current, open, dt, 60, 8)
+    if (leaf.current) leaf.current.rotation.y = angle
+    if (face.current) {
+      const k = pose.peek === null ? 0 : Math.sin(pose.peek * Math.PI)
+      face.current.visible = k > 0.02
+      face.current.position.set(8.5, 4.6 + k * 1.6, 10.4)
+      face.current.rotation.set(0, 0, Math.sin(now * 9) * 0.12 * k)
+    }
+    const instanced = mice.current
+    if (!instanced) return
+    let count = 0
+    for (const visitor of pose.visitors) {
+      const out = (now - visitor.outAt) / VISITOR_WALK_TIME
+      if (out < 0) continue
+      const back = visitor.leaveAt === null ? 0 : Math.min(1, (now - visitor.leaveAt) / VISITOR_WALK_TIME)
+      const k = Math.min(1, out) * (1 - back)
+      const home = to3(visitor.home)
+      const x = threshold.x + (home.x - threshold.x) * k
+      const z = threshold.z + 2 + (home.z - threshold.z - 2) * k
+      const walking = (out < 1 || back > 0) && k > 0 && k < 1
+      const hop = walking ? Math.abs(Math.sin(k * Math.PI * 3)) * 3 : 0
+      const pokeAge = visitor.pokeAt === null ? Infinity : now - visitor.pokeAt
+      const poke = pokeAge < 0.5 ? Math.sin((pokeAge / 0.5) * Math.PI) * 4 : 0
+      const wiggle = walking ? 0 : Math.sin(now * 5 + count * 1.7) * 0.12
+      const facing = walking && back > 0 ? Math.atan2(threshold.x - home.x, threshold.z - home.z) : 0
+      scratch.q.setFromEuler(scratch.e.set(0, facing + wiggle, 0))
+      scratch.m.compose(scratch.p.set(x, hop + poke, z), scratch.q, scratch.s.set(MOUSE_SCALE, MOUSE_SCALE * (1 - poke * 0.02), MOUSE_SCALE))
+      instanced.setMatrixAt(count++, scratch.m)
+    }
+    instanced.count = count
+    instanced.instanceMatrix.needsUpdate = true
+  })
+  return (
+    <group>
+      <group position={[p.x, 0, p.z]} scale={DOOR.houseScale}>
+        <mesh geometry={house} material={clay} />
+        <group ref={leaf} position={[-3, 0, 9.9]}>
+          <mesh geometry={doorLeaf} material={clay} />
+        </group>
+        <mesh ref={face} geometry={mouse} material={clay} scale={0.9} visible={false} />
+      </group>
+      <instancedMesh ref={mice} args={[mouse, clay, 10]} frustumCulled={false} />
+    </group>
+  )
+}
+
 /** A big clay token for an activity: a cushion to sit on, with a small model of the activity on top. */
 function chooserGeometry(mat: MatKey): THREE.BufferGeometry {
   const parts = [
@@ -859,6 +981,9 @@ function chooserGeometry(mat: MatKey): THREE.BufferGeometry {
       parts.push(piece(geo.dish(18), PALETTE.pan, { position: [-3.4, 5.4, 0], scale: [2.4, 5, 2.4] }, { ground: null }))
       parts.push(piece(geo.dish(18), PALETTE.pan, { position: [3.4, 3.8, 0], scale: [2.4, 5, 2.4] }, { ground: null }))
       parts.push(stone(3.4, 4.5, 0))
+      break
+    case 'door':
+      parts.push(...houseParts(0.34, [0, 2.4, 0]))
       break
     case 'feeding':
       parts.push(piece(geo.plate(24), PALETTE.plate, { position: [0, 2.9, 0], scale: [5, 3, 5] }, { ground: null }))
@@ -878,8 +1003,8 @@ const CHOOSER_SCALE = 1.35
 /** The activity choosers: big tokens on the table's right margin that bob when the guidance points at them; tap or drag one onto the table to switch. */
 export function ShelfModel({ read }: { read: () => { mats: MatKey[]; drag: { mat: MatKey; at: Point } | null; glow: number; now: number } }) {
   const { clay } = useClay()
-  const mats: MatKey[] = ['scale', 'feeding']
-  const refs = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
+  const mats: MatKey[] = ['scale', 'feeding', 'door']
+  const refs = [useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
   const tokens = once('choosers', () => mats.map(chooserGeometry))
   const hover = useRef(mats.map(() => ({ x: 0, v: 0 })))
   useFrame((_, dt) => {

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { TableController, type Projector } from './controller'
 import { IDLE_BEFORE_HINT } from './guidance'
-import { BAG, FEEDING, SCALE } from './layout'
+import { BAG, DOOR, FEEDING, SCALE } from './layout'
 import { toWorld2 } from './physics3d'
 import { panOf } from './scale'
 import { plateOf } from './feeding'
@@ -168,5 +168,63 @@ describe('one obvious want', () => {
     }
     run(table, 3)
     expect(table.stoolsShown).toBe(true)
+  })
+})
+
+describe('Knock-Knock', () => {
+  const doorTable = () => {
+    const table = new TableController({ ...defaultTable(4), liveMat: 'door', shelf: ['door', 'feeding', 'scale'] }, { save: vi.fn() })
+    table.setProjector(topDown)
+    return table
+  }
+  const knock = (table: TableController, times: number) => {
+    for (let i = 0; i < times; i++) {
+      tap(table, DOOR.door)
+      run(table, 0.3)
+    }
+  }
+  const out = (table: TableController) => table.door.visitors.filter((v) => v.leaveAt === null)
+
+  it('answers three knocks with three visitors standing in groups in the yard', () => {
+    const table = doorTable()
+    knock(table, 3)
+    run(table, 4)
+    expect(out(table)).toHaveLength(3)
+    knock(table, 5)
+    run(table, 6)
+    const sizes = [0, 1].map((g) => out(table).filter((v) => v.group === g).length)
+    expect(sizes).toEqual([3, 2])
+    const spots = out(table).map((v) => `${v.home.x},${v.home.y}`)
+    expect(new Set(spots).size).toBe(5)
+    expect(table.door.openAt).not.toBeNull()
+  })
+
+  it('sends the visitors home when the child knocks again, then answers the new count', () => {
+    const table = doorTable()
+    knock(table, 2)
+    run(table, 4)
+    knock(table, 5)
+    run(table, 6)
+    expect(out(table)).toHaveLength(5)
+  })
+
+  it('never lets more than ten out', () => {
+    const table = doorTable()
+    knock(table, 14)
+    run(table, 8)
+    expect(out(table)).toHaveLength(DOOR.maxVisitors)
+  })
+
+  it('peeks from the window while nobody is out, at most three times per idle stretch', () => {
+    const table = doorTable()
+    let peeks = 0
+    let was = false
+    for (let t = 0; t < 90; t += 1 / 30) {
+      table.step(1 / 30)
+      const now = table.doorPeek() !== null
+      if (now && !was) peeks += 1
+      was = now
+    }
+    expect(peeks).toBe(3)
   })
 })

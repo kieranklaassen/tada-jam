@@ -1,5 +1,5 @@
 import * as CANNON from 'cannon-es'
-import { BAG, FEEDING, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type Point, type Quarters } from './layout'
+import { BAG, DOOR, FEEDING, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 
 // Real stone physics (cannon-es) under the same world coordinates the game
 // rules use. One 3D unit is one centimetre and ten world units; the table
@@ -112,7 +112,7 @@ export class TablePhysics {
   }
 
   /** The scale's pans and post exist only while the scale is the live mat; the bowl only with Fair Feeding. */
-  setMat(mat: 'scale' | 'feeding'): void {
+  setMat(mat: MatKey): void {
     const bowl = this.fixtures.get('bowl')!
     for (const pan of this.pans) {
       this.world.removeBody(pan)
@@ -121,6 +121,11 @@ export class TablePhysics {
     this.pans.length = 0
     this.world.removeBody(bowl)
     this.removeFixture('post')
+    this.removeFixture('house')
+    if (mat === 'door') {
+      this.setFixture('house', { ...DOOR.house, r: 130 * DOOR.houseScale }, 34)
+      return
+    }
     if (mat === 'feeding') {
       this.world.addBody(bowl)
       return

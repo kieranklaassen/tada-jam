@@ -220,6 +220,23 @@ export class TableAudio {
   }
 
   /** A springy boing: up, overshoot, settle. */
+  /** A knock on the little house's door: the child's is bright and close, the house's answer deeper, from inside. */
+  knock(fromHouse: boolean, delay = 0): void {
+    const context = this.ready()
+    if (!context) return
+    const at = context.currentTime + delay
+    this.noiseBurst(fromHouse ? 520 : 900, 3, fromHouse ? 0.22 : 0.3, 0.06, at)
+    this.tone(fromHouse ? 150 : 210, 'sine', fromHouse ? 0.2 : 0.16, 0.003, 0.09, at, fromHouse ? 110 : 160)
+  }
+
+  /** A visitor squeaks when poked. */
+  squeak(): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    this.tone(1300 + Math.random() * 300, 'sine', 0.08, 0.004, 0.08, now, 1900)
+  }
+
   /** A hungry tummy, in the guest's own register: a soft low rumble, never a nag. */
   rumble(species: Species): void {
     const context = this.ready()
