@@ -38,6 +38,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Game | Style | Art guide |
 | --- | --- | --- |
 | Pebble Table | Claymation 3D: plasticine with thumbprints, stop-motion lighting, terracotta on cool sage-teal | [`games/pebble-table/ART.md`](../games/pebble-table/ART.md) |
+| Light Garden | Glass and light table 3D: frosted sea-glass creatures and glass tools on a milky light table in a dim teal room, beams of additive primary light | [`games/light-garden/ART.md`](../games/light-garden/ART.md) |
 
 ## 4. Menu of unclaimed directions
 

@@ -17,7 +17,7 @@ target_repo: kieranklaassen/tada-jam (game in games/light-garden/)
 
 - **Objective:** Ship Light Garden, a wordless light-table toy for children aged 7 to 10. Sleeping sea-glass creatures (a jellyfish, a moth, a snail, a fish) each wake when light of their own colour reaches them. The child places and turns lamps, mirrors, a prism, and colour filters to steer beams, and learns reflection angles and additive colour mixing by seeing them.
 - **Style:** Glass and light table 3D, the jam's highest-perf-risk style, built so it stays cheap: fake glass only, additive ribbons for beams, at most one half-resolution glow pass in the top tier.
-- **Authority:** `AGENTS.md`, `docs/art-direction.md`, `docs/solutions/**`, `CONCEPTS.md`, `.claude/skills/jam-game-creator/SKILL.md`, and the shared worker brief (boundaries, perf method, 30 iterations). `games/pebble-table/` is the reference implementation for structure: guidance ladder, input with at most three fingers, attention pause, `ResizeObserver`, defensive `deserialize`, save cadence, and synthesized audio.
+- **Authority:** `AGENTS.md` (including its "Before you show the owner" checklist), `docs/art-direction.md`, `docs/solutions/**` (the workflow lives in `docs/solutions/conventions/building-a-jam-game.md`), `CONCEPTS.md`, and the shared worker brief (boundaries, perf method, 30 iterations). `games/pebble-table/` is the reference implementation for structure: guidance ladder, input with at most three fingers, attention pause, `ResizeObserver`, defensive `deserialize`, save cadence, and synthesized audio.
 - **Stop conditions:** Stop and report instead of guessing if the work would need a new dependency, a change outside `games/light-garden/**` (apart from one registry row in `docs/art-direction.md` and this plan), or any engagement mechanic.
 - **Tail ownership:** LFG (simplify, review, PR, CI). Publishing goes through the GitHub MCP when `git push` returns 403.
 - **Product Contract preservation:** new plan, bootstrapped from the brief.
@@ -117,8 +117,8 @@ U1 to U5 (pure modules with tests), then U6 (controller), U7 (view spike and sty
 - **Approach:** A synthesized glass palette and a procedural room reverb; the context unlocks in a touch, suspends while unattended, and is disposed on unmount.
 
 ### U9. Perf instrumentation
-- **Files:** `games/light-garden/view/perf.tsx`, `stage.tsx`
-- **Approach:** `window.__jamPerf` (a 600-frame ring of CPU ms, tier, draw calls, triangles, and `reset`), the `?fps=1` bar overlay, and the governor wired to `setDpr` and the effect switches.
+- **Files:** `games/light-garden/view/perf.tsx`, `stage.tsx`, `view/overlay.tsx`, `perf.test.ts`
+- **Approach:** `window.__jamPerf` (a 600-frame ring of CPU ms, tier, draw calls, triangles, and `reset`), the `?fps=1` bar overlay, and the governor wired to `setDpr` and the effect switches. Added in refinement against the compound docs: half-rate rendering after 20 s of rest (the governor ignores paced frames), a triple-tap grown-up overlay with frame stats and tier pinning, and a frame-budget test in CI.
 
 ### U10. Docs and refinement
 - **Files:** `games/light-garden/ART.md`, `games/light-garden/REFINEMENT.md`, one row in `docs/art-direction.md`
@@ -132,4 +132,4 @@ U1 to U5 (pure modules with tests), then U6 (controller), U7 (view spike and sty
 
 ## Definition of Done
 
-- Every requirement R1 to R11 is met; all checks are green locally and in CI; the draft PR against `cursor/pebble-table-cceb` states each quality-bar line, the age cues, the perf table, and the iteration summary.
+- Every requirement R1 to R11 is met; all checks are green locally and in CI, including `compound audit --strict`; the PR against `cursor/pebble-table-cceb` states each quality-bar line, the age cues, the perf table and method, and the iteration summary.
