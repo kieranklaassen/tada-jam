@@ -72,9 +72,9 @@ export function buildingSprite(shape: Shape): HTMLCanvasElement {
       if (dy === 1) { ctx.fillStyle = palette.dark; ctx.fillRect(x, y + 30, 32, 2); ctx.fillStyle = palette.light; ctx.fillRect(x, y + 29, 32, 1); }
       if (dx) { ctx.fillStyle = palette.dark; ctx.fillRect(p.x + dx * 16 - (dx > 0 ? 1 : 0), y, 1, 32); }
     }
-    // A little address plaque on every module: wordless, so dots rather than a number.
-    ctx.fillStyle = '#263c4b'; ctx.fillRect(x + 2, y + 6, 3.5, 4.5); ctx.fillStyle = '#eedfc2';
-    for (let dot = 0; dot <= index; dot++) ctx.fillRect(x + 2.6 + (dot % 2) * 1.4, y + 6.7 + Math.floor(dot / 2) * 1.4, 0.9, 0.9);
+    // The same little wall lamp by every window: a home marker that counts nothing.
+    ctx.fillStyle = '#263c4b'; ctx.fillRect(x + 2.5, y + 6, 0.8, 3); ctx.fillRect(x + 2.5, y + 6, 2.5, 0.8);
+    ctx.fillStyle = '#f3cf7d'; ctx.fillRect(x + 3.6, y + 6.8, 2, 2.6);
   });
   ctx.restore(); return canvas;
 }
