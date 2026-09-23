@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { TableController, type Projector } from './controller'
+import { silentSound, TableController, type Projector } from './controller'
 import { IDLE_BEFORE_HINT } from './guidance'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, shelfTile } from './layout'
 import { JARS, PART_COUNTS } from './parts'
@@ -293,5 +293,52 @@ describe('album of past tables', () => {
     const near = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y) < 40
     for (const piece of table.state.pieces) expect(spots.some((spot) => near(piece, spot))).toBe(true)
     expect(table.state.album).toHaveLength(1)
+  })
+})
+
+describe('hidden delights', () => {
+  const withSounds = () => {
+    const sound = { ...silentSound, ding: vi.fn(), sigh: vi.fn(), squeak: vi.fn() }
+    const table = new TableController(defaultTable(4), { save: vi.fn(), sound })
+    table.setProjector(topDown)
+    return { table, sound }
+  }
+  const knockOff = (table: TableController, id: number) => {
+    const body = table.physics.body(id)
+    if (!body) throw new Error('no body')
+    body.position.set(body.position.x, -20, body.position.z)
+    table.step(1 / 60)
+  }
+
+  it('sends every other fallen stone home on a scurrying mouse, and nothing is lost', () => {
+    const { table, sound } = withSounds()
+    tap(table, { x: BAG.x, y: BAG.y })
+    run(table, 3)
+    const [first, second] = table.physics.stoneIds()
+    knockOff(table, first)
+    expect(table.flightViews().filter((f) => f.mouse)).toHaveLength(0)
+    knockOff(table, second)
+    const carried = table.flightViews().filter((f) => f.mouse)
+    expect(carried).toHaveLength(1)
+    expect(sound.squeak).toHaveBeenCalled()
+    run(table, 5)
+    expect(table.flightViews()).toHaveLength(0)
+    expect(table.state.bag).toBe(8)
+    expect(accountedTotal(table.state)).toBe(40)
+  })
+
+  it('chimes and wobbles the empty bowl when tapped', () => {
+    const { table, sound } = withSounds()
+    tap(table, FEEDING.bowl)
+    expect(sound.ding).toHaveBeenCalledTimes(1)
+    expect(table.bowlDingAt).not.toBeNull()
+  })
+
+  it('sighs when the empty bag is tapped', () => {
+    const { table, sound } = withSounds()
+    tap(table, { x: BAG.x, y: BAG.y })
+    run(table, 3)
+    tap(table, { x: BAG.x, y: BAG.y })
+    expect(sound.sigh).toHaveBeenCalledTimes(1)
   })
 })

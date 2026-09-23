@@ -458,7 +458,7 @@ function ellipseRope(rx: number, rz: number): THREE.BufferGeometry {
   return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 240, 0.42, 8, true)
 }
 
-export function FeedingSetting({ seats, showStools }: { seats: readonly boolean[]; showStools: boolean }) {
+export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonly boolean[]; showStools: boolean; readBowl: () => { dingAt: number | null; now: number } }) {
   const { clay, rug } = useClay()
   const center = to3({ x: 780, y: 470 })
   const bowl = to3(FEEDING.bowl)
@@ -475,6 +475,7 @@ export function FeedingSetting({ seats, showStools }: { seats: readonly boolean[
     }))
   const plates = useRef<THREE.InstancedMesh>(null)
   const stools = useRef<THREE.InstancedMesh>(null)
+  const bowlMesh = useRef<THREE.Mesh>(null)
   const seatKey = seats.map(Number).join('')
   const reveal = useRef<{ at: number | null; shown: boolean }>({ at: null, shown: showStools })
   const placeStools = (scale: number) => {
@@ -508,6 +509,12 @@ export function FeedingSetting({ seats, showStools }: { seats: readonly boolean[
     // seatKey stands in for `seats`, which the controller mutates in place.
   }, [seatKey, showStools])
   useFrame(() => {
+    const ding = readBowl()
+    const age = ding.dingAt === null ? Infinity : ding.now - ding.dingAt
+    if (bowlMesh.current) {
+      const wobble = age < 1.4 ? Math.sin(age * 22) * 0.07 * Math.exp(-age * 3) : 0
+      bowlMesh.current.rotation.set(wobble * 0.6, 0, wobble)
+    }
     const at = reveal.current.at
     if (at === null) return
     const k = Math.min(1, (performance.now() - at) / 650)
@@ -518,7 +525,7 @@ export function FeedingSetting({ seats, showStools }: { seats: readonly boolean[
     <group>
       <mesh geometry={shapes.rug} material={rug} position={[center.x, 0.04, center.z]} scale={[42, 4, 30]} />
       <mesh geometry={shapes.rugRope} material={clay} position={[center.x, 0.3, center.z]} />
-      <mesh geometry={shapes.bowl} material={clay} position={[bowl.x, 0, bowl.z]} />
+      <mesh ref={bowlMesh} geometry={shapes.bowl} material={clay} position={[bowl.x, 0, bowl.z]} />
       <instancedMesh ref={plates} args={[shapes.plate, clay, 5]} frustumCulled={false} />
       <instancedMesh ref={stools} args={[shapes.stool, clay, 5]} frustumCulled={false} />
     </group>
@@ -1221,6 +1228,28 @@ export function DoorModel({ read }: { read: () => DoorPose }) {
       <instancedMesh ref={mice} args={[mouse, clay, 10]} frustumCulled={false} />
     </group>
   )
+}
+
+export type CarrierMouse = { x: number; z: number; heading: number; hop: number }
+
+/** The hidden-delight mice that scurry a fallen stone back to the bag, nudging it along from behind. */
+export function CarrierMice({ read }: { read: () => CarrierMouse[] }) {
+  const { clay } = useClay()
+  const mouse = once('mouse', mouseGeometry)
+  const mice = useRef<THREE.InstancedMesh>(null)
+  useFrame(() => {
+    const instanced = mice.current
+    if (!instanced) return
+    let count = 0
+    for (const carrier of read().slice(0, 2)) {
+      scratch.q.setFromEuler(scratch.e.set(0.12 * carrier.hop, carrier.heading, 0))
+      scratch.m.compose(scratch.p.set(carrier.x, carrier.hop * 1.6, carrier.z), scratch.q, scratch.s.set(MOUSE_SCALE, MOUSE_SCALE, MOUSE_SCALE))
+      instanced.setMatrixAt(count++, scratch.m)
+    }
+    instanced.count = count
+    instanced.instanceMatrix.needsUpdate = true
+  })
+  return <instancedMesh ref={mice} args={[mouse, clay, 2]} frustumCulled={false} />
 }
 
 /** A big clay token for an activity: a cushion to sit on, with a small model of the activity on top. */

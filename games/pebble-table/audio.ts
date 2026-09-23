@@ -229,6 +229,25 @@ export class TableAudio {
     this.tone(fromHouse ? 150 : 210, 'sine', fromHouse ? 0.2 : 0.16, 0.003, 0.09, at, fromHouse ? 110 : 160)
   }
 
+  /** The empty bowl, tapped: a soft clay chime. */
+  ding(): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    this.tone(784, 'sine', 0.16, 0.004, 0.9, now)
+    this.tone(1568, 'sine', 0.04, 0.004, 0.5, now)
+    this.tone(1175, 'triangle', 0.03, 0.01, 0.6, now + 0.02)
+  }
+
+  /** The empty bag, tapped: a small deflating sigh. */
+  sigh(): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    this.noiseBurst(700, 0.8, 0.12, 0.45, now, 'lowpass')
+    this.tone(260, 'sine', 0.06, 0.05, 0.4, now, 170)
+  }
+
   /** A visitor squeaks when poked. */
   squeak(): void {
     const context = this.ready()

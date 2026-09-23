@@ -2,7 +2,7 @@ import type { TableAudio } from './audio'
 import { freeSpotOnPlate, GUEST_RADIUS, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, wantingSeat, type FeedingView } from './feeding'
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
-import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, type MatKey, type Point, type Quarters } from './layout'
+import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
 import { HOLD_HEIGHT, PAN_REST_HEIGHT, stoneHeight3, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
 import { SaveCadence } from './saveCadence'
 import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
@@ -18,7 +18,7 @@ import { inJar, jarAt, JARS, PART_RADIUS, PART_WEIGHT, spillFrom, type Part, typ
 
 export type Sound = Pick<
   TableAudio,
-  'unlock' | 'setActive' | 'touch' | 'clack' | 'rustle' | 'clatter' | 'creak' | 'beat' | 'chord' | 'munch' | 'hop' | 'poke' | 'rumble' | 'knock' | 'squeak' | 'whoosh' | 'snick' | 'dispose'
+  'unlock' | 'setActive' | 'touch' | 'clack' | 'rustle' | 'clatter' | 'creak' | 'beat' | 'chord' | 'munch' | 'hop' | 'poke' | 'rumble' | 'knock' | 'squeak' | 'ding' | 'sigh' | 'whoosh' | 'snick' | 'dispose'
 >
 
 export const silentSound: Sound = {
@@ -37,6 +37,8 @@ export const silentSound: Sound = {
   rumble() {},
   knock() {},
   squeak() {},
+  ding() {},
+  sigh() {},
   whoosh() {},
   snick() {},
   dispose() {},
@@ -90,9 +92,9 @@ export function yardSpots(groups: readonly (readonly number[])[]): (Point & { gr
 
 type Story = { phase: 'waiting' | 'rolling' | 'resting' | 'carrying' | 'done'; at: number; stoneId: number | null; from: Point | null; spot: Point | null; seat?: number }
 
-type Flight = { id: number; q: Quarters; from: Vec3; to: Vec3; t0: number; duration: number; arc: number; carriesPiece: boolean; land: () => void }
+type Flight = { id: number; q: Quarters; from: Vec3; to: Vec3; t0: number; duration: number; arc: number; carriesPiece: boolean; land: () => void; mouse?: boolean }
 
-export type FlightView = { id: number; q: Quarters; position: Vec3; spin: number }
+export type FlightView = { id: number; q: Quarters; position: Vec3; spin: number; mouse: { heading: number; hop: number } | null }
 
 export type GuidanceView = {
   hint: Hint | null
@@ -147,6 +149,9 @@ export class TableController {
   private shareWasComplete = false
   private munchAt: number | null = null
   private demoHint: Hint | null = null
+  private falls = 0
+  /** When the empty bowl was last tapped, for its chime and wobble. */
+  bowlDingAt: number | null = null
   /** The one guest who visibly wants a stone (see `wantingSeat`), or null. */
   wanting: number | null = null
   /** When each guest's tummy last rumbled. */
@@ -244,6 +249,7 @@ export class TableController {
     const report = this.physics.step(dt)
     for (const id of report.fallen) {
       if (this.partById(id)) this.sendPartHome(id)
+      else if (this.falls++ % 2 === 1 && this.flights.filter((flight) => flight.mouse).length < 2) this.mouseBringsBack(id)
       else this.sendHome(id)
     }
     for (const speed of report.impacts.slice(0, 2)) this.sound.clack(speed / 180)
@@ -317,7 +323,7 @@ export class TableController {
   flightViews(): FlightView[] {
     return this.flights.map((flight) => {
       const k = Math.min(1, Math.max(0, (this.t - flight.t0) / flight.duration))
-      const ease = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2
+      const ease = flight.mouse ? k : k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2
       return {
         id: flight.id,
         q: flight.q,
@@ -326,7 +332,8 @@ export class TableController {
           y: flight.from.y + (flight.to.y - flight.from.y) * ease + Math.sin(k * Math.PI) * flight.arc,
           z: flight.from.z + (flight.to.z - flight.from.z) * ease,
         },
-        spin: k * Math.PI * 2,
+        spin: flight.mouse ? 0 : k * Math.PI * 2,
+        mouse: flight.mouse ? { heading: Math.atan2(flight.to.x - flight.from.x, flight.to.z - flight.from.z), hop: Math.abs(Math.sin(k * Math.PI * 14)) } : null,
       }
     })
   }
@@ -880,6 +887,37 @@ export class TableController {
     this.version += 1
   }
 
+  /** A hidden delight: sometimes a mouse scurries out from under the table edge and carries a fallen stone back to the bag. */
+  private mouseBringsBack(id: number): void {
+    const piece = this.pieceById(id)
+    const body = this.physics.body(id)
+    if (!piece || !body) return
+    const fell = toWorld2({ x: body.position.x, z: body.position.z })
+    const edge = { x: Math.min(TABLE.x + TABLE.w - 30, Math.max(TABLE.x + 30, fell.x)), y: Math.min(TABLE.y + TABLE.h - 30, Math.max(TABLE.y + 30, fell.y)) }
+    this.physics.removeStone(id)
+    returnToBag(this.state, id)
+    this.changed()
+    const half = stoneHeight3(piece.q) / 2
+    const distance = Math.hypot(edge.x - BAG.x, edge.y - BAG.y)
+    this.sound.squeak()
+    this.flights.push({
+      id,
+      q: piece.q,
+      from: to3(edge, half + 1.2),
+      to: to3(BAG_MOUTH, half + 1.2),
+      t0: this.t + 0.4,
+      duration: Math.max(1.4, distance / 420),
+      arc: 0,
+      carriesPiece: false,
+      mouse: true,
+      land: () => {
+        this.sound.clatter(1)
+        this.sound.squeak()
+      },
+    })
+    this.cadence.change(performance.now(), true)
+  }
+
   private sendHome(id: number): void {
     const piece = this.pieceById(id)
     const body = this.physics.body(id)
@@ -1258,7 +1296,7 @@ export class TableController {
     const spilled = tipBag(this.state)
     this.bagTipStart = this.t
     if (spilled.length === 0) {
-      this.sound.touch(0.7)
+      this.sound.sigh()
       return
     }
     this.sound.rustle()
@@ -1321,7 +1359,10 @@ export class TableController {
     const seat = nextSeat(this.state.seats, this.dealCursor)
     const piece = id === undefined ? undefined : this.pieceById(id)
     if (!piece || seat === null) {
-      this.sound.touch(1.1)
+      if (!piece && chosen === undefined) {
+        this.bowlDingAt = this.t
+        this.sound.ding()
+      } else this.sound.touch(1.1)
       return
     }
     const body = this.physics.body(piece.id)
