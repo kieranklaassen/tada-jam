@@ -1,12 +1,14 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
-import { BAG, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
+import { albumSlot, BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
 import { createClayMaterials, merge, PALETTE, piece, type ClayMaterials } from './clay'
 import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
 import { useQuality } from './quality'
 import { MotionDirector, PERSONALITIES, SEAT_SPECIES, type Species } from '../motion'
+import { JAR_SCALE, JARS, PART_COUNTS, PART_KINDS, type PartKind } from '../parts'
+import type { AlbumPage } from '../album'
 import * as geo from './geometry'
 
 // Claymation models. Rigid props are merged into one mesh each (one draw
@@ -456,7 +458,7 @@ function ellipseRope(rx: number, rz: number): THREE.BufferGeometry {
   return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 240, 0.42, 8, true)
 }
 
-export function FeedingSetting({ seats }: { seats: readonly boolean[] }) {
+export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonly boolean[]; showStools: boolean; readBowl: () => { dingAt: number | null; now: number } }) {
   const { clay, rug } = useClay()
   const center = to3({ x: 780, y: 470 })
   const bowl = to3(FEEDING.bowl)
@@ -473,34 +475,57 @@ export function FeedingSetting({ seats }: { seats: readonly boolean[] }) {
     }))
   const plates = useRef<THREE.InstancedMesh>(null)
   const stools = useRef<THREE.InstancedMesh>(null)
-  useEffect(() => {
-    let plateCount = 0
+  const bowlMesh = useRef<THREE.Mesh>(null)
+  const seatKey = seats.map(Number).join('')
+  const reveal = useRef<{ at: number | null; shown: boolean }>({ at: null, shown: showStools })
+  const placeStools = (scale: number) => {
     let stoolCount = 0
     FEEDING.seats.forEach((seat, index) => {
-      if (seats[index]) {
-        const p = to3(seat.plate, 0.12)
-        scratch.m.makeTranslation(p.x, p.y, p.z)
-        plates.current?.setMatrixAt(plateCount++, scratch.m)
-      } else {
-        const p = to3(seat.guest)
-        scratch.m.makeTranslation(p.x, 0, p.z)
-        stools.current?.setMatrixAt(stoolCount++, scratch.m)
-      }
+      if (seats[index] || !showStools) return
+      const p = to3(seat.guest)
+      scratch.m.makeTranslation(p.x, 0, p.z).multiply(scratch.m2.makeScale(scale, scale, scale))
+      stools.current?.setMatrixAt(stoolCount++, scratch.m)
+    })
+    if (stools.current) {
+      stools.current.count = stoolCount
+      stools.current.instanceMatrix.needsUpdate = true
+    }
+  }
+  useEffect(() => {
+    let plateCount = 0
+    FEEDING.seats.forEach((seat, index) => {
+      if (!seats[index]) return
+      const p = to3(seat.plate, 0.12)
+      scratch.m.makeTranslation(p.x, p.y, p.z)
+      plates.current?.setMatrixAt(plateCount++, scratch.m)
     })
     if (plates.current) {
       plates.current.count = plateCount
       plates.current.instanceMatrix.needsUpdate = true
     }
-    if (stools.current) {
-      stools.current.count = stoolCount
-      stools.current.instanceMatrix.needsUpdate = true
+    if (showStools && !reveal.current.shown) reveal.current.at = performance.now()
+    reveal.current.shown = showStools
+    placeStools(reveal.current.at === null ? 1 : 0.01)
+    // seatKey stands in for `seats`, which the controller mutates in place.
+  }, [seatKey, showStools])
+  useFrame(() => {
+    const ding = readBowl()
+    const age = ding.dingAt === null ? Infinity : ding.now - ding.dingAt
+    if (bowlMesh.current) {
+      const wobble = age < 1.4 ? Math.sin(age * 22) * 0.07 * Math.exp(-age * 3) : 0
+      bowlMesh.current.rotation.set(wobble * 0.6, 0, wobble)
     }
-  }, [seats])
+    const at = reveal.current.at
+    if (at === null) return
+    const k = Math.min(1, (performance.now() - at) / 650)
+    placeStools(Math.max(0.01, easeOutBack(k)))
+    if (k >= 1) reveal.current.at = null
+  })
   return (
     <group>
       <mesh geometry={shapes.rug} material={rug} position={[center.x, 0.04, center.z]} scale={[42, 4, 30]} />
       <mesh geometry={shapes.rugRope} material={clay} position={[center.x, 0.3, center.z]} />
-      <mesh geometry={shapes.bowl} material={clay} position={[bowl.x, 0, bowl.z]} />
+      <mesh ref={bowlMesh} geometry={shapes.bowl} material={clay} position={[bowl.x, 0, bowl.z]} />
       <instancedMesh ref={plates} args={[shapes.plate, clay, 5]} frustumCulled={false} />
       <instancedMesh ref={stools} args={[shapes.stool, clay, 5]} frustumCulled={false} />
     </group>
@@ -518,6 +543,8 @@ export type GuestPose = {
   hopAt: number | null
   /** The child tapped this guest. */
   pokeAt: number | null
+  /** This guest's hungry tummy rumbled. */
+  rumbleAt: number | null
   arriveAt: number | null
   now: number
 }
@@ -715,6 +742,14 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
     springStep(s.yaw, lookYaw, dt, personality.look.stiffness, personality.look.damping)
     springStep(s.pitch, pose.look ? 0.18 : 0, dt, personality.look.stiffness * 1.4, personality.look.damping)
 
+    const rumbleAge = pose.rumbleAt === null ? Infinity : now - pose.rumbleAt
+    if (rumbleAge < 0.9) {
+      const k = Math.exp(-rumbleAge * 4)
+      m.squash += Math.sin(rumbleAge * 42) * 0.06 * k
+      m.headPitch += 0.22 * Math.sin(Math.min(1, rumbleAge / 0.9) * Math.PI)
+      m.armForward[0] += 0.5 * k
+      m.armForward[1] += 0.5 * k
+    }
     const arrive = pose.arriveAt === null ? 1 : THREE.MathUtils.clamp((now - pose.arriveAt) / 0.4, 0, 1)
     const pop = pose.arriveAt === null || arrive >= 1 ? 1 : Math.max(0.01, easeOutBack(arrive))
     const vertical = 1 - m.squash
@@ -819,39 +854,444 @@ export function KnifeModel({ read }: { read: () => { at: Point; visible: boolean
   )
 }
 
-function tileGeometry(mat: MatKey): THREE.BufferGeometry {
-  const parts = [piece(geo.roundedBox(10, 0.14), PALETTE.tile, { scale: [9.5, 1.2, 12] }, { lump: 0.12, frequency: 0.4, ground: null })]
-  if (mat === 'scale') {
-    parts.push(piece(geo.cylinder(8), PALETTE.scaleWood, { position: [0, 0.9, 0], scale: [0.5, 0.8, 5.6], rotation: [0, 0, 0] }, { ground: null }))
-    parts.push(piece(geo.capsule(8), PALETTE.scaleWood, { position: [0, 0.9, -2.8], rotation: [0, 0, Math.PI / 2], scale: [0.45, 6, 0.45] }, { ground: null }))
-    for (const side of [-1, 1]) parts.push(piece(geo.dish(16), PALETTE.pan, { position: [side * 3, 0.8, 1.2], scale: [1.7, 4, 1.7] }, { ground: null }))
-  } else {
-    parts.push(piece(geo.bowl(16), PALETTE.bowl, { position: [0, 0.6, 0], scale: 1.8 }, { ground: null }))
-    for (const [x, z] of [
-      [-3, -3.4],
-      [3, -3.4],
-      [0, 3.8],
-    ]) {
-      parts.push(piece(geo.plate(16), PALETTE.plate, { position: [x, 0.65, z], scale: [1.4, 2, 1.4] }, { ground: null }))
+// --- the album ---------------------------------------------------------------------
+
+/** A page's arrangement as a little dot map: the activity's zones faintly, the stones as terracotta dots. No words or numbers. */
+function drawPageMap(canvas: HTMLCanvasElement, page: AlbumPage | null): void {
+  const g = canvas.getContext('2d')!
+  const w = canvas.width
+  const h = canvas.height
+  g.fillStyle = '#fbf1de'
+  g.fillRect(0, 0, w, h)
+  if (!page) return
+  const sx = w / (TABLE.w + 60)
+  const sy = h / (TABLE.h + 60)
+  const at = (x: number, y: number) => [(x - TABLE.x + 30) * sx, (y - TABLE.y + 30) * sy] as const
+  g.fillStyle = 'rgba(110,154,155,0.35)'
+  const zone = (x: number, y: number, r: number) => {
+    const [cx, cy] = at(x, y)
+    g.beginPath()
+    g.ellipse(cx, cy, r * sx, r * sy, 0, 0, Math.PI * 2)
+    g.fill()
+  }
+  switch (page.mat) {
+    case 'feeding':
+      zone(FEEDING.bowl.x, FEEDING.bowl.y, FEEDING.bowl.r)
+      for (const seat of FEEDING.seats) zone(seat.plate.x, seat.plate.y, FEEDING.plateRadius)
+      break
+    case 'scale':
+      for (const pan of SCALE.pans) zone(pan.x, pan.y, pan.r)
+      break
+    case 'door':
+      zone(DOOR.house.x, DOOR.house.y, 150)
+      break
+    default: {
+      const unknown: never = page.mat
+      return unknown
+    }
+  }
+  g.fillStyle = PALETTE.stone
+  for (const stone of page.stones) {
+    const [cx, cy] = at(stone.x, stone.y)
+    g.beginPath()
+    g.arc(cx, cy, (stone.q === 4 ? 30 : stone.q === 2 ? 22 : 16) * sx * 1.4, 0, Math.PI * 2)
+    g.fill()
+  }
+}
+
+/**
+ * The album: a clay photo book below the activity choosers, there only once a
+ * page exists. Its cover shows the newest page as a dot map; tapping it sets
+ * that table back. It hops whenever a page is kept or turned.
+ */
+export function AlbumModel({ read }: { read: () => { pages: readonly AlbumPage[]; at: number | null; now: number } }) {
+  const { clay } = useClay()
+  const book = once('album', () =>
+    merge([
+      piece(geo.roundedBox(10, 0.15), '#3f7d8c', { position: [0, 1.2, 0], scale: [11, 2.4, 13] }, { lump: 0.12, frequency: 0.5, seed: 51 }),
+      piece(geo.roundedBox(8, 0.1), '#fbf1de', { position: [0.5, 1.2, 0], scale: [10.2, 1.8, 12.4] }, { lump: 0.05, ground: null }),
+      piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, 3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
+      piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, -3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
+    ]),
+  )
+  const cover = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 128
+    canvas.height = 96
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.colorSpace = THREE.SRGBColorSpace
+    return { canvas, texture, material: new THREE.MeshStandardMaterial({ map: texture, roughness: 0.8 }) }
+  }, [])
+  useEffect(() => () => {
+    cover.texture.dispose()
+    cover.material.dispose()
+  }, [cover])
+  const group = useRef<THREE.Group>(null)
+  const drawn = useRef<string>('')
+  const shown = useRef<number | null>(null)
+  const slot = albumSlot()
+  const p = to3(slot)
+  useFrame(() => {
+    const pose = read()
+    const g = group.current
+    if (!g) return
+    const newest = pose.pages[pose.pages.length - 1] ?? null
+    g.visible = newest !== null
+    if (!newest) {
+      shown.current = null
+      return
+    }
+    shown.current ??= pose.now
+    const key = `${pose.pages.length}:${pose.at}`
+    if (key !== drawn.current) {
+      drawPageMap(cover.canvas, newest)
+      cover.texture.needsUpdate = true
+      drawn.current = key
+    }
+    const appear = Math.min(1, (pose.now - shown.current) / 0.6)
+    const hopAge = pose.at === null ? Infinity : pose.now - pose.at
+    const hop = hopAge < 0.6 ? Math.sin((hopAge / 0.6) * Math.PI) * 3 : 0
+    g.position.set(p.x, hop, p.z)
+    g.scale.setScalar(Math.max(0.01, easeOutBack(appear)) * 1.1)
+    g.rotation.set(0, -0.35 + Math.sin(pose.now * 0.8) * 0.04, 0)
+  })
+  return (
+    <group ref={group} visible={false}>
+      <mesh geometry={book} material={clay} />
+      <mesh material={cover.material} position={[0.5, 2.45, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[9.6, 11.8]} />
+      </mesh>
+    </group>
+  )
+}
+
+// --- loose parts and their jars ---------------------------------------------------
+
+const PARTS = { nut: '#a8703d', cap: '#6e4a2c', shell: '#f4d3c0', rib: '#e3a98f', bark: '#7a5238', twig: '#8f6644', rock: '#8d8176' }
+/** Part meshes are modelled small; drawn at this size they match their colliders. */
+const PART_DRAW_SCALE = 1.45
+const JAR_COLORS: Record<PartKind, string> = { acorn: '#d9a441', shell: '#5f9fb8', stick: '#5d8a5a', boulder: '#d8b36a' }
+
+function partGeometry(kind: PartKind): THREE.BufferGeometry {
+  const sphere = geo.sphere(16)
+  switch (kind) {
+    case 'acorn':
+      return merge([
+        piece(sphere, PARTS.nut, { position: [0, -0.15, 0], scale: [0.85, 1.0, 0.85] }, { lump: 0.06, ground: null }),
+        piece(sphere, PARTS.cap, { position: [0, 0.45, 0], scale: [0.98, 0.5, 0.98] }, { lump: 0.1, ground: null }),
+        piece(geo.capsule(6), PARTS.cap, { position: [0, 0.95, 0], scale: [0.14, 0.35, 0.14] }, { ground: null }),
+      ])
+    case 'shell':
+      return merge([
+        piece(sphere, PARTS.shell, { scale: [1.35, 0.32, 1.15] }, { lump: 0.05, ground: null }),
+        ...[-0.5, 0, 0.5].map((angle) => piece(geo.capsule(6), PARTS.rib, { position: [Math.sin(angle) * 0.55, 0.22, Math.cos(angle) * 0.35], rotation: [Math.PI / 2, angle, 0], scale: [0.12, 1.2, 0.12] }, { ground: null })),
+      ])
+    case 'stick':
+      return merge([
+        piece(geo.capsule(8), PARTS.bark, { rotation: [0, 0, Math.PI / 2], scale: [0.62, 5, 0.62] }, { lump: 0.1, frequency: 1.2, ground: null }),
+        piece(geo.capsule(6), PARTS.twig, { position: [0.8, 0.35, 0.4], rotation: [0.6, 0, 0.9], scale: [0.3, 1.4, 0.3] }, { ground: null }),
+      ])
+    case 'boulder':
+      return merge([piece(sphere, PARTS.rock, { scale: [3.3, 1.9, 3.1] }, { lump: 0.35, frequency: 0.8, seed: 41, ground: null })])
+    default: {
+      const unknown: never = kind
+      return unknown
+    }
+  }
+}
+
+function jarGeometry(kind: PartKind): { body: THREE.BufferGeometry; lid: THREE.BufferGeometry } {
+  const sphere = geo.sphere(24)
+  const color = JAR_COLORS[kind]
+  if (kind === 'boulder') {
+    return {
+      body: merge([
+        piece(geo.torus(28, 0.35), color, { position: [0, 0.9, 0], rotation: [Math.PI / 2, 0, 0], scale: 4.6 }, { lump: 0.3, frequency: 1.4, seed: 44 }),
+        piece(sphere, '#c9a45c', { position: [0, 0.3, 0], scale: [4.4, 0.5, 4.4] }, { lump: 0.2, frequency: 1.2 }),
+      ]),
+      lid: merge([piece(sphere, color, { scale: 0.01 }, { ground: null })]),
+    }
+  }
+  const label = partGeometry(kind)
+  const labelPiece = label.clone().applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(0, 4.2, 3.4), new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2 - 0.3, 0, kind === 'stick' ? 0.4 : 0)), new THREE.Vector3(0.8, 0.8, 0.8)))
+  return {
+    body: merge([
+      piece(sphere, color, { position: [0, 3.8, 0], scale: [3.6, 3.9, 3.6] }, { lump: 0.18, frequency: 0.6, seed: 45 }),
+      piece(geo.cylinder(20), color, { position: [0, 7.6, 0], scale: [2.3, 1.2, 2.3] }, { lump: 0.08, ground: null }),
+      labelPiece,
+    ]),
+    lid: merge([
+      piece(geo.cylinder(20), '#fbe7cf', { scale: [2.7, 0.6, 2.7] }, { lump: 0.08, ground: null }),
+      piece(sphere, '#fbe7cf', { position: [0, 0.6, 0], scale: 0.7 }, { ground: null }),
+    ]),
+  }
+}
+
+export type PartState = { id: number; kind: PartKind; position: Vec3; quaternion: [number, number, number, number]; held: boolean }
+
+/** Loose parts in one instanced draw per kind, posed from physics, lifted a little while held. */
+export function PartsModel({ read }: { read: () => PartState[] }) {
+  const { clay } = useClay()
+  const refs = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)]
+  const geometries = once('parts', () => PART_KINDS.map(partGeometry))
+  useFrame(() => {
+    const counts = [0, 0, 0, 0]
+    for (const part of read()) {
+      const slot = PART_KINDS.indexOf(part.kind)
+      const instanced = refs[slot].current
+      if (!instanced) continue
+      scratch.q.set(...part.quaternion)
+      const grow = (part.held ? 1.12 : 1) * PART_DRAW_SCALE
+      scratch.m.compose(scratch.p.set(part.position.x, part.position.y, part.position.z), scratch.q, scratch.s.set(grow, grow, grow))
+      instanced.setMatrixAt(counts[slot]++, scratch.m)
+    }
+    refs.forEach((ref, slot) => {
+      if (!ref.current) return
+      ref.current.count = counts[slot]
+      ref.current.instanceMatrix.needsUpdate = true
+    })
+  })
+  return (
+    <>
+      {PART_KINDS.map((kind, slot) => (
+        <instancedMesh key={kind} ref={refs[slot]} args={[geometries[slot], clay, PART_COUNTS[kind]]} frustumCulled={false} />
+      ))}
+    </>
+  )
+}
+
+/** The jars on the scale mat's back row: each wobbles when tipped or when a part comes home, and its lid lies open once it is empty. */
+export function JarsModel({ read }: { read: () => { tips: ReadonlyMap<PartKind, number>; full: Record<PartKind, number>; glow: number; now: number } }) {
+  const { clay } = useClay()
+  const shapes = once('jars', () => PART_KINDS.map(jarGeometry))
+  const refs = [useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
+  const lids = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
+  const wobble = useRef(PART_KINDS.map(() => ({ x: 0, v: 0 }) as Spring))
+  const seen = useRef(new Map<PartKind, number>())
+  useFrame((_, dt) => {
+    const pose = read()
+    PART_KINDS.forEach((kind, i) => {
+      const tipped = pose.tips.get(kind)
+      if (tipped !== undefined && tipped !== seen.current.get(kind)) {
+        wobble.current[i].v += 7
+        seen.current.set(kind, tipped)
+      }
+      const w = springStep(wobble.current[i], 0, dt, 70, 5)
+      const group = refs[i].current
+      if (group) {
+        const hop = pose.full[kind] > 0 ? pose.glow * Math.max(0, Math.sin(pose.now * 3 + i)) * 0.6 : 0
+        group.rotation.set(w * 0.05, 0, w * 0.08)
+        group.position.y = hop
+      }
+      const lid = lids[i].current
+      if (lid) {
+        const open = pose.full[kind] === 0
+        lid.position.set(open ? 4.2 : 0, open ? 0.4 : 8.4 + Math.abs(w) * 0.05, open ? 1.5 : 0)
+        lid.rotation.set(open ? 0.3 : 0, 0, open ? 1.3 : 0)
+      }
+    })
+  })
+  return (
+    <>
+      {PART_KINDS.map((kind, i) => {
+        const at = to3(JARS[kind])
+        return (
+          <group key={kind} position={[at.x, 0, at.z]} scale={JAR_SCALE}>
+            <group ref={refs[i]}>
+              <mesh geometry={shapes[i].body} material={clay} />
+            </group>
+            {kind !== 'boulder' && <mesh ref={lids[i]} geometry={shapes[i].lid} material={clay} />}
+          </group>
+        )
+      })}
+    </>
+  )
+}
+
+// --- Knock-Knock ----------------------------------------------------------------
+
+const HOUSE = { walls: '#efc39c', roof: '#6d8db5', door: '#9a5a38', frame: '#fbe7cf', glass: '#ffe39a', chimney: '#c98f6a' }
+const MOUSE = { fur: '#f3e8d8', ear: '#f2a7a0', eye: '#2b2220', nose: '#e0837c' }
+
+/** The cottage without its door, scaled and placed for the mat (scale 1) or a chooser token. */
+function houseParts(scale: number, offset: V3): THREE.BufferGeometry[] {
+  const at = (x: number, y: number, z: number): V3 => [offset[0] + x * scale, offset[1] + y * scale, offset[2] + z * scale]
+  const size = (x: number, y: number, z: number): V3 => [x * scale, y * scale, z * scale]
+  return [
+    piece(geo.roundedBox(12, 0.12), HOUSE.walls, { position: at(0, 7, 0), scale: size(26, 14, 19) }, { lump: 0.18, frequency: 0.25, seed: 21 }),
+    piece(geo.cylinder(4, 0, 1), HOUSE.roof, { position: at(0, 18.5, 0), rotation: [0, Math.PI / 4, 0], scale: size(21, 9, 17) }, { lump: 0.12, frequency: 0.3, seed: 22, ground: null }),
+    piece(geo.roundedBox(8, 0.2), HOUSE.chimney, { position: at(7, 20, -3), scale: size(3.2, 7, 3.2) }, { lump: 0.1, ground: null }),
+    piece(geo.roundedBox(8, 0.2), HOUSE.frame, { position: at(0, 5, 9.6), scale: size(8, 11, 0.8) }, { lump: 0.08, ground: null }),
+    piece(geo.roundedBox(8, 0.25), HOUSE.frame, { position: at(8.5, 8.5, 9.6), scale: size(6, 5.4, 0.8) }, { lump: 0.06, ground: null }),
+    piece(geo.roundedBox(8, 0.25), HOUSE.glass, { position: at(8.5, 8.5, 9.85), scale: size(4.6, 4, 0.5) }, { ground: null }),
+  ]
+}
+
+function mouseGeometry(): THREE.BufferGeometry {
+  const sphere = geo.sphere(16)
+  return merge([
+    piece(sphere, MOUSE.fur, { position: [0, 1.4, 0], scale: [1.7, 1.45, 2.1] }, { lump: 0.12, seed: 31 }),
+    piece(sphere, MOUSE.fur, { position: [0, 2.2, 1.9], scale: [1.15, 1.05, 1.25] }, { lump: 0.08, ground: null }),
+    ...[-1, 1].flatMap((side) => [
+      piece(sphere, MOUSE.fur, { position: [side * 0.95, 3.25, 1.5], scale: [0.72, 0.72, 0.25] }, { ground: null }),
+      piece(sphere, MOUSE.ear, { position: [side * 0.95, 3.25, 1.6], scale: [0.48, 0.48, 0.18] }, { ground: null }),
+      piece(sphere, MOUSE.eye, { position: [side * 0.45, 2.45, 2.95], scale: 0.24 }, { ground: null }),
+    ]),
+    piece(sphere, MOUSE.nose, { position: [0, 2.05, 3.15], scale: 0.22 }, { ground: null }),
+    piece(geo.capsule(8), MOUSE.ear, { position: [0, 0.9, -2.6], rotation: [1.1, 0, 0], scale: [0.18, 1.6, 0.18] }, { ground: null }),
+  ])
+}
+
+export type DoorPose = {
+  visitors: readonly { home: Point; outAt: number; leaveAt: number | null; pokeAt: number | null }[]
+  openAt: number | null
+  closeAt: number | null
+  knockAt: number | null
+  answerTimes: readonly number[]
+  peek: number | null
+  now: number
+}
+
+const DOOR_OPEN = -1.75
+const MOUSE_SCALE = 2.2
+const VISITOR_WALK_TIME = 0.6
+
+/**
+ * The Knock-Knock house. Knocks shake the door; the house's answer shakes it
+ * from inside; then it swings open and visitors hop out to their spots in the
+ * yard and wiggle there, hopping when poked. While nobody is out, a face
+ * peeks from the lit window.
+ */
+export function DoorModel({ read }: { read: () => DoorPose }) {
+  const { clay } = useClay()
+  const house = once('house', () => merge(houseParts(1, [0, 0, 0])))
+  const doorLeaf = once('door-leaf', () => merge([piece(geo.roundedBox(8, 0.18), HOUSE.door, { position: [3, 4.8, 0], scale: [6, 9.6, 0.9] }, { lump: 0.1, ground: null }), piece(geo.sphere(10), HOUSE.frame, { position: [5.2, 4.8, 0.6], scale: 0.45 }, { ground: null })]))
+  const mouse = once('mouse', mouseGeometry)
+  const leaf = useRef<THREE.Group>(null)
+  const face = useRef<THREE.Mesh>(null)
+  const mice = useRef<THREE.InstancedMesh>(null)
+  const swing = useRef<Spring>({ x: 0, v: 0 })
+  const lastKnock = useRef<number | null>(null)
+  const p = to3(DOOR.house)
+  const threshold = to3(DOOR.door)
+  useFrame((_, dt) => {
+    const pose = read()
+    const now = pose.now
+    if (pose.knockAt !== null && pose.knockAt !== lastKnock.current) {
+      swing.current.v -= 3
+      lastKnock.current = pose.knockAt
+    }
+    const answering = pose.answerTimes.some((t) => now >= t && now - t < 0.05)
+    if (answering) swing.current.v += 2.4
+    const open = pose.openAt !== null && (pose.closeAt === null || now < pose.closeAt - 0.3) ? DOOR_OPEN : 0
+    const angle = springStep(swing.current, open, dt, 60, 8)
+    if (leaf.current) leaf.current.rotation.y = angle
+    if (face.current) {
+      const k = pose.peek === null ? 0 : Math.sin(pose.peek * Math.PI)
+      face.current.visible = k > 0.02
+      face.current.position.set(8.5, 4.6 + k * 1.6, 10.4)
+      face.current.rotation.set(0, 0, Math.sin(now * 9) * 0.12 * k)
+    }
+    const instanced = mice.current
+    if (!instanced) return
+    let count = 0
+    for (const visitor of pose.visitors) {
+      const out = (now - visitor.outAt) / VISITOR_WALK_TIME
+      if (out < 0) continue
+      const back = visitor.leaveAt === null ? 0 : Math.min(1, (now - visitor.leaveAt) / VISITOR_WALK_TIME)
+      const k = Math.min(1, out) * (1 - back)
+      const home = to3(visitor.home)
+      const x = threshold.x + (home.x - threshold.x) * k
+      const z = threshold.z + 2 + (home.z - threshold.z - 2) * k
+      const walking = (out < 1 || back > 0) && k > 0 && k < 1
+      const hop = walking ? Math.abs(Math.sin(k * Math.PI * 3)) * 3 : 0
+      const pokeAge = visitor.pokeAt === null ? Infinity : now - visitor.pokeAt
+      const poke = pokeAge < 0.5 ? Math.sin((pokeAge / 0.5) * Math.PI) * 4 : 0
+      const wiggle = walking ? 0 : Math.sin(now * 5 + count * 1.7) * 0.12
+      const facing = walking && back > 0 ? Math.atan2(threshold.x - home.x, threshold.z - home.z) : 0
+      scratch.q.setFromEuler(scratch.e.set(0, facing + wiggle, 0))
+      scratch.m.compose(scratch.p.set(x, hop + poke, z), scratch.q, scratch.s.set(MOUSE_SCALE, MOUSE_SCALE * (1 - poke * 0.02), MOUSE_SCALE))
+      instanced.setMatrixAt(count++, scratch.m)
+    }
+    instanced.count = count
+    instanced.instanceMatrix.needsUpdate = true
+  })
+  return (
+    <group>
+      <group position={[p.x, 0, p.z]} scale={DOOR.houseScale}>
+        <mesh geometry={house} material={clay} />
+        <group ref={leaf} position={[-3, 0, 9.9]}>
+          <mesh geometry={doorLeaf} material={clay} />
+        </group>
+        <mesh ref={face} geometry={mouse} material={clay} scale={0.9} visible={false} />
+      </group>
+      <instancedMesh ref={mice} args={[mouse, clay, 10]} frustumCulled={false} />
+    </group>
+  )
+}
+
+export type CarrierMouse = { x: number; z: number; heading: number; hop: number }
+
+/** The hidden-delight mice that scurry a fallen stone back to the bag, nudging it along from behind. */
+export function CarrierMice({ read }: { read: () => CarrierMouse[] }) {
+  const { clay } = useClay()
+  const mouse = once('mouse', mouseGeometry)
+  const mice = useRef<THREE.InstancedMesh>(null)
+  useFrame(() => {
+    const instanced = mice.current
+    if (!instanced) return
+    let count = 0
+    for (const carrier of read().slice(0, 2)) {
+      scratch.q.setFromEuler(scratch.e.set(0.12 * carrier.hop, carrier.heading, 0))
+      scratch.m.compose(scratch.p.set(carrier.x, carrier.hop * 1.6, carrier.z), scratch.q, scratch.s.set(MOUSE_SCALE, MOUSE_SCALE, MOUSE_SCALE))
+      instanced.setMatrixAt(count++, scratch.m)
+    }
+    instanced.count = count
+    instanced.instanceMatrix.needsUpdate = true
+  })
+  return <instancedMesh ref={mice} args={[mouse, clay, 2]} frustumCulled={false} />
+}
+
+/** A big clay token for an activity: a cushion to sit on, with a small model of the activity on top. */
+function chooserGeometry(mat: MatKey): THREE.BufferGeometry {
+  const parts = [
+    piece(geo.sphere(28), PALETTE.tile, { position: [0, 1.2, 0], scale: [7.2, 1.6, 7.2] }, { lump: 0.25, frequency: 0.5, seed: 11 }),
+    piece(geo.torus(32, 0.12), PALETTE.shelf, { position: [0, 1.25, 0], rotation: [Math.PI / 2, 0, 0], scale: 7.1 }, { lump: 0.05, ground: null }),
+  ]
+  const stone = (x: number, y: number, z: number) => piece(geo.pebble(14), PALETTE.stone, { position: [x, y, z], scale: 1.2 }, { ground: null })
+  switch (mat) {
+    case 'scale':
+      parts.push(piece(geo.cylinder(10), PALETTE.scaleWood, { position: [0, 4.6, 0], scale: [0.7, 5.4, 0.7] }, { ground: null }))
+      parts.push(piece(geo.capsule(10), PALETTE.scaleWood, { position: [0, 7.3, 0], rotation: [0, 0, Math.PI / 2 + 0.22], scale: [0.6, 7.4, 0.6] }, { ground: null }))
+      parts.push(piece(geo.dish(18), PALETTE.pan, { position: [-3.4, 5.4, 0], scale: [2.4, 5, 2.4] }, { ground: null }))
+      parts.push(piece(geo.dish(18), PALETTE.pan, { position: [3.4, 3.8, 0], scale: [2.4, 5, 2.4] }, { ground: null }))
+      parts.push(stone(3.4, 4.5, 0))
+      break
+    case 'door':
+      parts.push(...houseParts(0.34, [0, 2.4, 0]))
+      break
+    case 'feeding':
+      parts.push(piece(geo.plate(24), PALETTE.plate, { position: [0, 2.9, 0], scale: [5, 3, 5] }, { ground: null }))
+      parts.push(piece(geo.bowl(20), PALETTE.bowl, { position: [0, 3.2, 0], scale: 2.6 }, { ground: null }))
+      parts.push(stone(-0.8, 4, 0.3), stone(0.9, 4.1, -0.4))
+      break
+    default: {
+      const unknown: never = mat
+      return unknown
     }
   }
   return merge(parts)
 }
 
+const CHOOSER_SCALE = 1.35
+
+/** The activity choosers: big tokens on the table's right margin that bob when the guidance points at them; tap or drag one onto the table to switch. */
 export function ShelfModel({ read }: { read: () => { mats: MatKey[]; drag: { mat: MatKey; at: Point } | null; glow: number; now: number } }) {
   const { clay } = useClay()
-  const refs = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
-  const mats: MatKey[] = ['scale', 'feeding']
-  const tiles = once('tiles', () => mats.map(tileGeometry))
-  const rack = once('rack', () => {
-    const center = shelfTile(0)
-    const p = to3({ x: center.x, y: center.y + 95 })
-    return merge([
-      piece(geo.roundedBox(12, 0.2), PALETTE.shelf, { position: [p.x, 0.8, p.z], scale: [12, 1.6, 42] }, { lump: 0.2, frequency: 0.3 }),
-      piece(geo.roundedBox(12, 0.3), PALETTE.shelf, { position: [p.x + 5.5, 3, p.z], scale: [2, 6, 42] }, { lump: 0.2, frequency: 0.3 }),
-    ])
-  })
-  const hover = useRef([{ x: 0, v: 0 }, { x: 0, v: 0 }])
+  const mats: MatKey[] = ['scale', 'feeding', 'door']
+  const refs = [useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
+  const tokens = once('choosers', () => mats.map(chooserGeometry))
+  const hover = useRef(mats.map(() => ({ x: 0, v: 0 })))
   useFrame((_, dt) => {
     const pose = read()
     mats.forEach((mat, i) => {
@@ -863,24 +1303,23 @@ export function ShelfModel({ read }: { read: () => { mats: MatKey[]; drag: { mat
       if (pose.drag?.mat === mat) {
         const p = to3(pose.drag.at, 5)
         group.position.set(p.x, p.y, p.z)
-        group.rotation.set(0, 0, 0)
-        group.scale.setScalar(1.25)
+        group.rotation.set(0, -0.4, 0)
+        group.scale.setScalar(CHOOSER_SCALE * 1.15)
         return
       }
       const tile = shelfTile(index)
-      const bob = springStep(hover.current[i], pose.glow * (0.8 + 0.6 * Math.sin(pose.now * 3)), dt, 80, 10)
-      const p = to3(tile, tile.height + bob)
+      const lift = springStep(hover.current[i], pose.glow * (1.2 + 0.8 * Math.sin(pose.now * 3)), dt, 80, 10)
+      const p = to3(tile, tile.height + Math.max(0, lift))
       group.position.set(p.x, p.y, p.z)
-      group.rotation.set(0, 0, 0.5)
-      group.scale.setScalar(1)
+      group.rotation.set(0, -0.4 + Math.sin(pose.now * 0.7 + i) * 0.06, Math.sin(pose.now * 1.1 + i * 2) * 0.03)
+      group.scale.setScalar(CHOOSER_SCALE)
     })
   })
   return (
     <group>
-      <mesh geometry={rack} material={clay} />
       {mats.map((mat, i) => (
         <group key={mat} ref={refs[i]}>
-          <mesh geometry={tiles[i]} material={clay} />
+          <mesh geometry={tokens[i]} material={clay} />
         </group>
       ))}
     </group>

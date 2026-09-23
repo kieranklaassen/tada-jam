@@ -220,6 +220,53 @@ export class TableAudio {
   }
 
   /** A springy boing: up, overshoot, settle. */
+  /** A knock on the little house's door: the child's is bright and close, the house's answer deeper, from inside. */
+  knock(fromHouse: boolean, delay = 0): void {
+    const context = this.ready()
+    if (!context) return
+    const at = context.currentTime + delay
+    this.noiseBurst(fromHouse ? 520 : 900, 3, fromHouse ? 0.22 : 0.3, 0.06, at)
+    this.tone(fromHouse ? 150 : 210, 'sine', fromHouse ? 0.2 : 0.16, 0.003, 0.09, at, fromHouse ? 110 : 160)
+  }
+
+  /** The empty bowl, tapped: a soft clay chime. */
+  ding(): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    this.tone(784, 'sine', 0.16, 0.004, 0.9, now)
+    this.tone(1568, 'sine', 0.04, 0.004, 0.5, now)
+    this.tone(1175, 'triangle', 0.03, 0.01, 0.6, now + 0.02)
+  }
+
+  /** The empty bag, tapped: a small deflating sigh. */
+  sigh(): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    this.noiseBurst(700, 0.8, 0.12, 0.45, now, 'lowpass')
+    this.tone(260, 'sine', 0.06, 0.05, 0.4, now, 170)
+  }
+
+  /** A visitor squeaks when poked. */
+  squeak(): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    this.tone(1300 + Math.random() * 300, 'sine', 0.08, 0.004, 0.08, now, 1900)
+  }
+
+  /** A hungry tummy, in the guest's own register: a soft low rumble, never a nag. */
+  rumble(species: Species): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    const base = species === 'bear' ? 70 : species === 'rabbit' ? 115 : 150
+    this.tone(base, 'sine', 0.12, 0.08, 0.35, now, base * 0.8)
+    this.tone(base * 1.1, 'sine', 0.09, 0.06, 0.3, now + 0.28, base * 0.75)
+    this.noiseBurst(300, 1, 0.05, 0.4, now, 'lowpass')
+  }
+
   /** A guest being poked, in its own voice: a squeaky giggle, a low happy hum, or a tiny sniff-squeak. */
   poke(species: Species): void {
     const context = this.ready()

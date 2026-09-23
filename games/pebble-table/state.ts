@@ -1,4 +1,6 @@
 import { inBowl, plateOf } from './feeding'
+import { readAlbum, type AlbumPage } from './album'
+import { readParts, type Part } from './parts'
 import { panOf } from './scale'
 import {
   BAG_MOUTH,
@@ -30,6 +32,10 @@ export type TableState = {
   parked: Record<MatKey, Piece[]>
   seats: boolean[]
   nextId: number
+  /** Loose parts out of their jars; only while the scale is out. */
+  parts: Part[]
+  /** Past tables the child can set back, newest last. */
+  album: AlbumPage[]
 }
 
 export function bagStonesForAge(childAge: number | null): number {
@@ -50,9 +56,11 @@ export function defaultTable(childAge: number | null): TableState {
     pieces: [],
     liveMat,
     shelf: [liveMat, ...MAT_KEYS.filter((key) => key !== liveMat)],
-    parked: { feeding: [], scale: [] },
+    parked: { feeding: [], scale: [], door: [] },
     seats: FEEDING.seats.map((_, index) => index === 1 || index === 4),
     nextId: 1,
+    parts: [],
+    album: [],
   }
 }
 
@@ -100,7 +108,7 @@ export function deserialize(raw: unknown, childAge: number | null): TableState {
   const seen = new Set<number>()
   const pieces = readPieces(raw.pieces, seen)
   const parkedRaw = isRecord(raw.parked) ? raw.parked : {}
-  const parked = { feeding: readPieces(parkedRaw.feeding, seen), scale: readPieces(parkedRaw.scale, seen) }
+  const parked = { feeding: readPieces(parkedRaw.feeding, seen), scale: readPieces(parkedRaw.scale, seen), door: readPieces(parkedRaw.door, seen) }
 
   const liveMat = (MAT_KEYS as readonly unknown[]).includes(raw.liveMat) ? (raw.liveMat as MatKey) : fallback.liveMat
   const shelfRaw = Array.isArray(raw.shelf) ? raw.shelf.filter((key): key is MatKey => (MAT_KEYS as readonly unknown[]).includes(key)) : []
@@ -117,6 +125,8 @@ export function deserialize(raw: unknown, childAge: number | null): TableState {
     parked,
     seats,
     nextId: 1,
+    parts: [],
+    album: readAlbum(raw.album, total),
   }
   if (parked[liveMat].length > 0) {
     state.pieces.push(...parked[liveMat])
@@ -126,6 +136,7 @@ export function deserialize(raw: unknown, childAge: number | null): TableState {
   const maxId = Math.max(0, ...allPieces(state).map((piece) => piece.id))
   const savedNext = Math.floor(finite(raw.nextId, 1))
   state.nextId = Math.max(savedNext > 0 && savedNext < 1_000_000_000 ? savedNext : 1, maxId + 1)
+  state.parts = liveMat === 'scale' ? readParts(raw.parts, () => state.nextId++) : []
   return state
 }
 
@@ -150,9 +161,11 @@ export function serialize(state: TableState): TableState {
   return {
     ...state,
     pieces: round(state.pieces),
-    parked: { feeding: round(state.parked.feeding), scale: round(state.parked.scale) },
+    parked: { feeding: round(state.parked.feeding), scale: round(state.parked.scale), door: round(state.parked.door) },
     shelf: [...state.shelf],
     seats: [...state.seats],
+    parts: state.parts.map((part) => ({ id: part.id, kind: part.kind, x: Math.round(part.x), y: Math.round(part.y) })),
+    album: state.album.map((page) => ({ mat: page.mat, stones: page.stones.map((stone) => ({ ...stone })) })),
   }
 }
 
@@ -193,6 +206,15 @@ export function pullFromBag(state: TableState, at: { x: number; y: number }): Pi
   return piece
 }
 
+/** Take a stone of exactly `q` quarters out of the bag at `at`, or null when the bag holds less than that. */
+export function placeFromBag(state: TableState, q: Quarters, at: { x: number; y: number }): Piece | null {
+  if (state.bag < q) return null
+  const piece = newPiece(state, q, at.x, at.y)
+  state.bag -= q
+  state.pieces.push(piece)
+  return piece
+}
+
 export function returnToBag(state: TableState, id: number): boolean {
   const index = state.pieces.findIndex((piece) => piece.id === id)
   if (index < 0) return false
@@ -216,13 +238,25 @@ export function cutPiece(state: TableState, id: number): Piece[] {
 
 /** Whether a piece is part of a mat's arrangement: on a pan, or on a plate or in the bowl. */
 export function onMatParts(mat: MatKey, piece: Piece): boolean {
-  return mat === 'scale' ? panOf(piece) !== null : inBowl(piece) || plateOf(piece) !== null
+  switch (mat) {
+    case 'scale':
+      return panOf(piece) !== null
+    case 'feeding':
+      return inBowl(piece) || plateOf(piece) !== null
+    case 'door':
+      return false
+    default: {
+      const unknown: never = mat
+      return unknown
+    }
+  }
 }
 
 /** Put the live mat away with its arrangement, and bring `next` out with its own. Loose stones stay on the table. */
 export function swapMat(state: TableState, next: MatKey): void {
   if (next === state.liveMat) return
   const outgoing = state.liveMat
+  if (outgoing === 'scale') state.parts = []
   const staying: Piece[] = []
   for (const piece of state.pieces) {
     if (onMatParts(outgoing, piece)) state.parked[outgoing].push(piece)

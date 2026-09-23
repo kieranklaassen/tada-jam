@@ -27,9 +27,17 @@ const base: TableSummary = {
   leftover: false,
   knife: FEEDING.knifeRest,
   shelf: { x: 1515, y: 155 },
+  visitors: 0,
 }
 
 describe('chooseHint', () => {
+  it('on Knock-Knock, shows knocking on the door while nobody is out', () => {
+    const hint = chooseHint({ ...base, liveMat: 'door' })!
+    expect(hint.kind).toBe('knock')
+    expect(hint.to).toBeNull()
+    expect(chooseHint({ ...base, liveMat: 'door', visitors: 3 })?.kind).toBe('swapMat')
+  })
+
   it('shows tapping the bag on an empty table', () => {
     const hint = chooseHint(base)!
     expect(hint.kind).toBe('tapBag')
