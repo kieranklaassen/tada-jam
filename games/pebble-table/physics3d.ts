@@ -1,5 +1,6 @@
 import * as CANNON from 'cannon-es'
-import { BAG, FEEDING, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type Point, type Quarters } from './layout'
+import { JARS, type PartKind } from './parts'
+import { BAG, DOOR, FEEDING, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 
 // Real stone physics (cannon-es) under the same world coordinates the game
 // rules use. One 3D unit is one centimetre and ten world units; the table
@@ -24,6 +25,16 @@ export const DEFAULT_MAX_SUBSTEPS = 3
 const STONE_SIDES = 8
 const FIXTURE_SIDES = 10
 const FALL_LIMIT = -12
+/** A loose part slower than this (units/s, spin included) for `LOOSE_CALM_SECONDS` is put to sleep: parts in a pile can nudge each other just above cannon's own sleep limit for a long time. */
+const LOOSE_CALM_SPEED = 4
+const LOOSE_CALM_SECONDS = 1
+/** Radius of the small balls that shells and sticks collide as: thin convex shapes stacked on each other jitter without end in cannon, clusters of balls settle. */
+const SHELL_BALL = 0.55
+const STICK_BALL = 0.45
+const SHELL_BALLS = [...[0, 1, 2].map((i) => new CANNON.Vec3(Math.cos((i * 2 * Math.PI) / 3) * 1.25, 0, Math.sin((i * 2 * Math.PI) / 3) * 1.25)), new CANNON.Vec3(0, 0, 0)]
+const STICK_BALLS = [-2, -1, 0, 1, 2].map((i) => new CANNON.Vec3(i * 1.6, 0, 0))
+
+type PartShape = { shapes: [CANNON.Shape, CANNON.Vec3?][]; mass: number; half: number; damping: number }
 
 export type Vec3 = { x: number; y: number; z: number }
 
@@ -61,6 +72,8 @@ export class TablePhysics {
   private readonly brooms = new Map<number, CANNON.Body>()
   private panDrops: [number, number] = [0, 0]
   private readonly targets = new Map<CANNON.Body, Vec3>()
+  /** Loose parts, with how long each has been calm. */
+  private readonly calm = new Map<CANNON.Body, number>()
   private impacts: number[] = []
   private accumulator = 0
   maxSubsteps = DEFAULT_MAX_SUBSTEPS
@@ -112,7 +125,7 @@ export class TablePhysics {
   }
 
   /** The scale's pans and post exist only while the scale is the live mat; the bowl only with Fair Feeding. */
-  setMat(mat: 'scale' | 'feeding'): void {
+  setMat(mat: MatKey): void {
     const bowl = this.fixtures.get('bowl')!
     for (const pan of this.pans) {
       this.world.removeBody(pan)
@@ -121,6 +134,12 @@ export class TablePhysics {
     this.pans.length = 0
     this.world.removeBody(bowl)
     this.removeFixture('post')
+    this.removeFixture('house')
+    for (const kind of ['acorn', 'shell', 'stick'] as const) this.removeFixture(`jar-${kind}`)
+    if (mat === 'door') {
+      this.setFixture('house', { ...DOOR.house, r: 130 * DOOR.houseScale }, 34)
+      return
+    }
     if (mat === 'feeding') {
       this.world.addBody(bowl)
       return
@@ -135,6 +154,7 @@ export class TablePhysics {
       this.pans.push(body)
     }
     this.setFixture('post', { ...SCALE.post, r: 18 }, 30)
+    for (const kind of ['acorn', 'shell', 'stick'] as const) this.setFixture(`jar-${kind}`, { ...JARS[kind], r: 48 }, 16)
     this.panDrops = [0, 0]
   }
 
@@ -199,10 +219,45 @@ export class TablePhysics {
     this.stones.set(id, { body, q })
   }
 
+  /** A loose part (acorn, shell, stick, boulder) with its own shape and weight; it moves, holds, and falls like a stone. */
+  addPart(id: number, kind: PartKind, at: Point, options: { y?: number; velocity?: Vec3; spin?: number } = {}): void {
+    this.removeStone(id)
+    const shape: PartShape = (() => {
+      switch (kind) {
+        case 'acorn':
+          return { shapes: [[new CANNON.Cylinder(1.3, 1.3, 1.9, STONE_SIDES)]], mass: 2, half: 0.95, damping: 0.4 }
+        case 'shell':
+          return { shapes: SHELL_BALLS.map((offset) => [new CANNON.Sphere(SHELL_BALL), offset]), mass: 1, half: SHELL_BALL, damping: 0.5 }
+        case 'stick':
+          return { shapes: STICK_BALLS.map((offset) => [new CANNON.Sphere(STICK_BALL), offset]), mass: 4, half: STICK_BALL, damping: 0.45 }
+        case 'boulder':
+          return { shapes: [[new CANNON.Cylinder(3.7, 3.7, 3.4, STONE_SIDES)]], mass: 12, half: 1.7, damping: 0.65 }
+        default: {
+          const unknown: never = kind
+          return unknown
+        }
+      }
+    })()
+    const body = new CANNON.Body({ mass: shape.mass, material: this.stoneMaterial, linearDamping: shape.damping, angularDamping: 0.9, sleepSpeedLimit: 2, sleepTimeLimit: 0.3 })
+    for (const [collider, offset] of shape.shapes) body.addShape(collider, offset)
+    const p = to3(at, options.y ?? shape.half)
+    body.position.set(p.x, p.y, p.z)
+    if (options.velocity) body.velocity.set(options.velocity.x, options.velocity.y, options.velocity.z)
+    if (options.spin) body.angularVelocity.set(0, options.spin, 0)
+    body.addEventListener('collide', (event: { contact: CANNON.ContactEquation }) => {
+      const speed = Math.abs(event.contact.getImpactVelocityAlongNormal())
+      if (speed > 25) this.impacts.push(speed)
+    })
+    this.world.addBody(body)
+    this.stones.set(id, { body, q: 4 })
+    this.calm.set(body, 0)
+  }
+
   removeStone(id: number): void {
     const entry = this.stones.get(id)
     if (!entry) return
     this.targets.delete(entry.body)
+    this.calm.delete(entry.body)
     this.world.removeBody(entry.body)
     this.stones.delete(id)
   }
@@ -305,6 +360,16 @@ export class TablePhysics {
     }
   }
 
+  private settleLooseParts(): void {
+    for (const [body, seconds] of this.calm) {
+      if (body.type !== CANNON.Body.DYNAMIC || body.sleepState === CANNON.Body.SLEEPING) continue
+      const speedSquared = body.velocity.lengthSquared() + body.angularVelocity.lengthSquared()
+      const calm = speedSquared < LOOSE_CALM_SPEED ** 2 ? seconds + STEP : 0
+      this.calm.set(body, calm >= LOOSE_CALM_SECONDS ? 0 : calm)
+      if (calm >= LOOSE_CALM_SECONDS) body.sleep()
+    }
+  }
+
   step(elapsed: number): StepReport {
     this.accumulator = Math.min(this.accumulator + elapsed, STEP * this.maxSubsteps)
     while (this.accumulator >= STEP) {
@@ -313,6 +378,7 @@ export class TablePhysics {
       }
       this.world.step(STEP)
       this.resistRolling()
+      this.settleLooseParts()
       this.accumulator -= STEP
     }
     for (const [body, target] of this.targets) {

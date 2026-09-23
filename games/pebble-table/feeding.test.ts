@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { freeSpotOnPlate, gazeTarget, GUEST_RADIUS, nextSeat, plateOf, viewFeeding } from './feeding'
+import { freeSpotOnPlate, gazeTarget, GUEST_RADIUS, nextSeat, plateOf, viewFeeding, wantingSeat } from './feeding'
 import { FEEDING } from './layout'
 import type { Piece } from './state'
 
@@ -79,5 +79,27 @@ describe('Fair Feeding', () => {
       expect(Math.hypot(spot.x - guest.x, spot.y - guest.y)).toBeGreaterThanOrEqual(GUEST_RADIUS + 30)
       occupied.push(spot)
     }
+  })
+})
+
+describe('wantingSeat', () => {
+  const seats = [true, true, false, false, true]
+  it('picks the seated guest with the least, the next one dealt on a tie', () => {
+    const view = viewFeeding([], seats)
+    expect(wantingSeat(view, true, null)).toBe(0)
+    expect(wantingSeat(view, true, 0)).toBe(1)
+    expect(wantingSeat(view, true, 1)).toBe(4)
+  })
+  it('moves to whoever has less once a guest is fed', () => {
+    const fed = viewFeeding([{ id: 1, q: 4, x: FEEDING.seats[0].plate.x, y: FEEDING.seats[0].plate.y }], seats)
+    expect(wantingSeat(fed, true, 0)).toBe(1)
+  })
+  it('wants nothing when the round is shared or nothing is left to give', () => {
+    const shared = viewFeeding(
+      [0, 1, 4].map((seat, i) => ({ id: i + 1, q: 4 as const, x: FEEDING.seats[seat].plate.x, y: FEEDING.seats[seat].plate.y })),
+      seats,
+    )
+    expect(wantingSeat(shared, true, null)).toBeNull()
+    expect(wantingSeat(viewFeeding([], seats), false, null)).toBeNull()
   })
 })
