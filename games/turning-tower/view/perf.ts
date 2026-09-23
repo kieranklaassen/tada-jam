@@ -1,10 +1,40 @@
 // Grown-up measurement only. `window.__jamPerf` exposes the CPU cost of each
 // frame (controller update plus the render submit) so the jam's perf probe
-// can compare games; `?fps=1` adds a tiny bar graph of frame intervals in the
-// corner. Neither shows a word or a numeral.
+// can compare games; `?fps=1`, or three quick taps in the top-left corner,
+// shows a tiny bar graph of frame intervals there. Neither shows a word or a
+// numeral.
 
 const SAMPLES = 600
 const BARS = 90
+
+export const CORNER_PX = 72
+const TRIPLE_TAP_MS = 700
+/** Fingers of one resting hand land within a few milliseconds; separate taps do not. */
+const TAP_GAP_MS = 50
+
+/** Three taps on the empty corner within 700 ms: the grown-up's way to the bar graph on a device with no address bar. */
+export class CornerTaps {
+  private first = 0
+  private last = 0
+  private count = 0
+
+  tap(x: number, y: number, t: number): boolean {
+    if (x > CORNER_PX || y > CORNER_PX) {
+      this.count = 0
+      return false
+    }
+    if (this.count > 0 && t - this.last < TAP_GAP_MS) return false
+    if (this.count === 0 || t - this.first > TRIPLE_TAP_MS) {
+      this.first = t
+      this.count = 0
+    }
+    this.last = t
+    this.count += 1
+    if (this.count < 3) return false
+    this.count = 0
+    return true
+  }
+}
 
 export type JamPerf = {
   readonly cpuMs: number[]
@@ -80,7 +110,7 @@ export class PerfMonitor {
     }
   }
 
-  /** The `?fps=1` bar graph: one bar per frame interval, a line at 60 Hz, one dot per quality tier step. */
+  /** The bar graph: one bar per frame interval, a line at 60 Hz, one dot per quality tier step. */
   attachOverlay(parent: HTMLElement): () => void {
     const canvas = document.createElement('canvas')
     const ratio = Math.min(2, window.devicePixelRatio || 1)

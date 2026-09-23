@@ -26,7 +26,7 @@ export const FACE_NORMALS: readonly Vec3[] = [
 ]
 export const UP = 2
 
-export type Tone = 'stone' | 'rose' | 'lilac' | 'trim' | 'rail' | 'handle'
+export type Tone = 'stone' | 'rose' | 'plinth' | 'trim' | 'rail' | 'handle'
 
 export type CellDef = {
   at: Vec3

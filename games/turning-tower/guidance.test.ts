@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEMO_SECONDS, handPose, HintScheduler, INVITE_DELAY, MAX_DEMOS, MAX_INVITES, timingFor, type HandPose } from './guidance'
+import { DEMO_SECONDS, handPose, HintScheduler, INVITE_DELAY, MAX_DEMOS, MAX_INVITES, quietAfter, timingFor, type HandPose } from './guidance'
 
 function demoStarts(scheduler: HintScheduler, from: number, seconds: number): number[] {
   const starts: number[] = []
@@ -41,6 +41,17 @@ describe('guidance ladder', () => {
     expect(state.demo).toBeNull()
     expect(state.glow).toBe(0)
     expect(demoStarts(scheduler, 6, 30)[0]).toBeCloseTo(5, 1)
+  })
+
+  it('goes quiet a little after the last demonstration, at every age', () => {
+    for (const age of [7, 8, 10]) {
+      const scheduler = new HintScheduler(0, timingFor(age))
+      const starts = demoStarts(scheduler, 0, 600)
+      const quiet = quietAfter(timingFor(age))
+      expect(quiet).toBeGreaterThan(starts.at(-1)! + DEMO_SECONDS)
+      expect(quiet).toBeLessThan(starts.at(-1)! + DEMO_SECONDS + 10)
+    }
+    expect(quietAfter(timingFor(7))).toBeCloseTo(89.4, 5)
   })
 
   it('holds the idle clock while the world is busy', () => {

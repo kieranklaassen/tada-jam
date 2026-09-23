@@ -8,30 +8,35 @@ export type Tier = {
   dpr: number
   /** Drifting dusk motes. */
   motes: number
-  /** Distant faceted spires in the sky. */
-  silhouettes: boolean
   /** Dither in the sky gradient against banding. */
   dither: boolean
-  /** Soft halos around the lantern and the door. */
-  halos: boolean
 }
 
+// The door's halo is the scene's want and the lantern's is the wanderer's
+// identity: both stay at every tier, since each is one small quad.
 export const TIERS: readonly Tier[] = [
-  { dpr: 2, motes: 48, silhouettes: true, dither: true, halos: true },
-  { dpr: 1.5, motes: 24, silhouettes: true, dither: true, halos: true },
-  { dpr: 1.25, motes: 0, silhouettes: false, dither: false, halos: true },
-  { dpr: 1, motes: 0, silhouettes: false, dither: false, halos: false },
+  { dpr: 2, motes: 48, dither: true },
+  { dpr: 1.5, motes: 24, dither: true },
+  { dpr: 1.25, motes: 0, dither: false },
+  { dpr: 1, motes: 0, dither: false },
 ]
 
 export const LOWEST = TIERS.length - 1
 export const WINDOW = 90
+/** A window also closes after this long, so a slow device is judged in a second and a half, not after ninety of its frames. */
+export const WINDOW_MS = 1500
+const MIN_WINDOW = 12
+/** Page load is noisy, so the first stretch is not judged. */
+export const START_SETTLE_MS = 1500
+/** After a change only the resize hitch is skipped, so a device that is slow at every tier reaches the lowest in seconds. */
+export const CHANGE_SETTLE_MS = 500
 export const SLOW_MEDIAN_MS = 19
 const CALM_MEDIAN_MS = 17.6
 const CALM_CPU_MS = 6
 const FIRST_CALM_WINDOWS = 4
 const MAX_CALM_WINDOWS = 32
-/** Intervals this long mean the tab stalled or was hidden, not that drawing is slow. */
-const STALL_MS = 250
+/** Intervals this long mean the tab stalled or was hidden, not that drawing is slow. A software-rendered device can take 300 ms a frame, and that must still count. */
+export const STALL_MS = 1000
 
 export function clampTier(tier: number): number {
   return Math.max(0, Math.min(LOWEST, Math.round(tier)))
@@ -50,7 +55,8 @@ export class TierGovernor {
   private readonly work = new Float32Array(WINDOW)
   private readonly scratch = new Float32Array(WINDOW)
   private count = 0
-  private settle = 1
+  private elapsed = 0
+  private settleMs = START_SETTLE_MS
   private calmWindows = 0
   private calmNeeded = FIRST_CALM_WINDOWS
 
@@ -66,17 +72,20 @@ export class TierGovernor {
   /** One frame: the interval since the last frame and this frame's CPU work. True when the tier changed. */
   sample(intervalMs: number, workMs: number): boolean {
     if (this.pinned || !(intervalMs > 0) || intervalMs > STALL_MS) return false
+    if (this.settleMs > 0) {
+      this.settleMs -= intervalMs
+      return false
+    }
     this.intervals[this.count] = intervalMs
     this.work[this.count] = workMs
     this.count += 1
-    if (this.count < WINDOW) return false
+    this.elapsed += intervalMs
+    if (this.count < WINDOW && (this.elapsed < WINDOW_MS || this.count < MIN_WINDOW)) return false
+    const n = this.count
     this.count = 0
-    if (this.settle > 0) {
-      this.settle -= 1
-      return false
-    }
-    const median = this.quantile(this.intervals, 0.5)
-    const cpu = this.quantile(this.work, 0.9)
+    this.elapsed = 0
+    const median = this.quantile(this.intervals, n, 0.5)
+    const cpu = this.quantile(this.work, n, 0.9)
     if (median > SLOW_MEDIAN_MS && this.tier < LOWEST) {
       this.calmNeeded = Math.min(MAX_CALM_WINDOWS, this.calmNeeded * 2)
       return this.change(this.tier + 1)
@@ -87,17 +96,25 @@ export class TierGovernor {
     return false
   }
 
-  private quantile(values: Float32Array, q: number): number {
-    this.scratch.set(values)
-    this.scratch.sort()
-    return this.scratch[Math.min(WINDOW - 1, Math.floor(WINDOW * q))]
+  /** Insertion sort into the scratch buffer: at most WINDOW values, and no allocation. */
+  private quantile(values: Float32Array, n: number, q: number): number {
+    const sorted = this.scratch
+    for (let i = 0; i < n; i++) {
+      const value = values[i]
+      let j = i - 1
+      while (j >= 0 && sorted[j] > value) {
+        sorted[j + 1] = sorted[j]
+        j -= 1
+      }
+      sorted[j + 1] = value
+    }
+    return sorted[Math.min(n - 1, Math.floor(n * q))]
   }
 
   private change(tier: number): boolean {
     this.tier = tier
     this.calmWindows = 0
-    // The window after a change pays for resized buffers.
-    this.settle = 1
+    this.settleMs = CHANGE_SETTLE_MS
     return true
   }
 }

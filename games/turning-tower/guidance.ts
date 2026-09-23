@@ -19,6 +19,18 @@ export function timingFor(age: number | null): Timing {
 
 export const DEMO_SECONDS = 2.6
 export const MAX_DEMOS = 4
+const REST_MARGIN = 4
+
+/** Idle seconds after which the last demonstration is over and only the glow breathes: the scene can rest. */
+export function quietAfter(timing: Timing): number {
+  let start = timing.demo
+  let gap = timing.demo * 2
+  for (let i = 1; i < MAX_DEMOS; i++) {
+    start += DEMO_SECONDS + gap
+    gap *= 2
+  }
+  return start + DEMO_SECONDS + REST_MARGIN
+}
 export const INVITE_DELAY = 1.1
 export const INVITE_SECONDS = 2.4
 export const INVITE_EVERY = 6.5
@@ -111,14 +123,17 @@ function smooth(t: number): number {
   return t * t * (3 - 2 * t)
 }
 
+function pulse(progress: number, a: number, b: number): number {
+  return Math.sin(span(progress, a, b) * Math.PI)
+}
+
 /** Where the ghost hand is during a demonstration. Writes into `out` so the frame loop allocates nothing. */
 export function handPose(path: DemoPath, progress: number, out: HandPose): HandPose {
   out.opacity = Math.min(span(progress, 0, 0.12), 1 - span(progress, 0.86, 1))
   if (path.kind === 'tap') {
     out.x = path.at.x
     out.y = path.at.y
-    const tap = (a: number, b: number) => Math.sin(span(progress, a, b) * Math.PI)
-    out.press = Math.max(tap(0.22, 0.42), tap(0.5, 0.7))
+    out.press = Math.max(pulse(progress, 0.22, 0.42), pulse(progress, 0.5, 0.7))
     return out
   }
   const points = path.points
