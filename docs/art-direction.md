@@ -38,6 +38,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Game | Style | Art guide |
 | --- | --- | --- |
 | Pebble Table | Claymation 3D: plasticine with thumbprints, stop-motion lighting, terracotta on cool sage-teal | [`games/pebble-table/ART.md`](../games/pebble-table/ART.md) |
+| Frog Choir | Dusk-pastel toon 3D: three-step cel shading, plum ink outlines, a firefly that lights in stepped bands, coral-to-butter frogs on lilac pads over mint water under a peach sky | [`games/frog-choir/ART.md`](../games/frog-choir/ART.md) |
 
 ## 4. Menu of unclaimed directions
 
