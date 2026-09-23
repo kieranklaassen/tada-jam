@@ -42,6 +42,11 @@ export function clampTier(tier: number): number {
   return Math.max(0, Math.min(LOWEST, Math.round(tier)))
 }
 
+/** Touch devices (tablets) start one tier down, so the first seconds on an iPad never lag while the governor learns; a fast one earns the top tier. */
+export function startingTier(coarsePointer: boolean): number {
+  return coarsePointer ? 1 : 0
+}
+
 /** `?tier=N` from a query string, or null. */
 export function pinnedTier(search: string): number | null {
   const match = /[?&]tier=(\d)/.exec(search)

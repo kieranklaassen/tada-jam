@@ -1,6 +1,7 @@
 ---
 title: Refine a young child's 3D scene in fixed-seed screenshot passes, one honest critique and one focused fix set per pass, reverting fixes that hurt
 date: 2026-09-22
+last_updated: 2026-09-23
 category: workflow-issues
 module: art-direction
 problem_type: workflow_issue
@@ -30,7 +31,7 @@ tags: [visual-refinement, screenshot-loop, kids-games, react-three-fiber, clayma
 
 ## Context
 
-Pebble Table (`games/pebble-table/`, in PR #1, unmerged as of writing) is a claymation 3D math toy (react-three-fiber plus cannon-es) for a 4-year-old on an iPad. After the claymation style was picked, the owner said the fur "looks a little bad" and asked for shader fur plus ten iterations "to make it even more refined."
+Pebble Table (`games/pebble-table/`, merged to `main` in PR #1) is a claymation 3D math toy (react-three-fiber plus cannon-es) for a 4-year-old on an iPad. After the claymation style was picked, the owner said the fur "looks a little bad" and asked for shader fur plus ten iterations "to make it even more refined."
 
 Asking for "more refined" invites a vague, sprawling rewrite. What worked instead was a fixed loop: screenshot a seeded scene, critique it honestly from a small child's point of view, make one focused set of fixes, re-screenshot, check fps. Each pass is logged as a row in `games/pebble-table/REFINEMENT.md` (critique, change, fps). Before and after screenshots and a walkthrough video live outside the repo in the Project store under `media/pebble-table-v3/`, not in the repo.
 
@@ -48,7 +49,7 @@ One caveat: every pass logged 60 fps, but those numbers came from headless Chrom
 ### The loop
 
 1. **Freeze the scene.** Seed one representative, busy game state into storage before load so every pass looks at the same table. Pebble Table seeded a Fair Feeding table with three guests, two stones each, a leftover in the bowl (so the knife is out), loose whole stones and two halves. The committed perf harness `scripts/pebble-perf.mjs` shows the same pattern: it writes the state to `localStorage` under `tada-jam:slot:pebble-table` (plus prefs with `childAge: 4`), then reloads `/?chrome=0#/play/pebble-table`. If a pass changes a different screen, seed that screen for that pass (pass 7 used an Honest Scale table because it changed the scale).
-2. **Shoot at a fixed size and a fixed delay.** 1180×820 at DPR 2, taken 6.4 s after load. The delay matters: guidance glows start at 3 s idle and the ghost hand at 5 s, so a 6.4 s shot always includes the idle guidance, which is the part a child relies on most.
+2. **Shoot at a fixed size and a fixed delay.** 1180×820 at DPR 2, taken 6.4 s after load. The delay matters: guidance glows start at 3 s idle and the ghost hand at 5 s, so a 6.4 s shot always includes the idle guidance, which is the part a child relies on most. Pebble Table's 6.4 s was wall time on a machine with a GPU, where wall time and game time stay close. On software GL, or wherever frames are slow, a wall-clock delay lands on a different moment each run; there, install and pause Playwright's clock before load and step it to 6.4 s of game time, as in [record a deterministic walkthrough on software GL](record-a-deterministic-walkthrough-on-software-gl-with-a-paused-clock.md).
 3. **Critique in writing, as the child.** Write down what reads badly or looks cheap at play distance: can she tell what each thing is, does each guest have a face, can she see the stones, is the "touch here" cue visible on this surface? Put the critique in the log before changing code.
 4. **Make one focused set of fixes.** One theme per pass (camera, guests, colour and light, stones, bowl and halves, scale, glow, handmade detail, sound). Mixing themes makes it impossible to tell which change caused a regression.
 5. **Re-screenshot and compare side by side with the previous pass.** If a fix hurts readability, revert or ease it back in the same pass and log it. Do not carry a regression forward hoping a later pass fixes it.

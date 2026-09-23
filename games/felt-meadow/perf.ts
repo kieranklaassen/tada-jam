@@ -58,6 +58,7 @@ export class TierController {
   private ceiling = 0
   private readonly failures = new Array<number>(TIERS.length).fill(0)
   private sum = 0
+  private longest = 0
   private work = 0
   private frames = 0
   private windowStart = 0
@@ -87,13 +88,17 @@ export class TierController {
       return false
     }
     this.sum += intervalMs
+    this.longest = Math.max(this.longest, intervalMs)
     this.work += workMs
     this.frames += 1
     const onProbation = now < this.probationUntil
     if (now - this.windowStart < (onProbation ? PROBATION_WINDOW_SECONDS : WINDOW_SECONDS)) return false
-    const average = this.sum / this.frames
+    // One isolated long frame (a first-time build, a GC pause) says nothing about the device, so each window's
+    // longest frame is left out; two or more still count.
+    const average = this.frames > 1 ? (this.sum - this.longest) / (this.frames - 1) : this.sum
     const work = this.work / this.frames
     this.sum = 0
+    this.longest = 0
     this.work = 0
     this.frames = 0
     this.windowStart = now
@@ -119,6 +124,7 @@ export class TierController {
     this.windowStart = now
     this.goodSince = now
     this.sum = 0
+    this.longest = 0
     this.work = 0
     this.frames = 0
   }

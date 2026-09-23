@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import type { ForestController } from '../controller'
 import type { ScreenPoint } from '../input'
 import { HOMES, type HomeKey } from '../layout'
-import { FrameGovernor, perfOptions, Ring, TIERS, TOP_TIER } from '../perf'
+import { FrameGovernor, perfOptions, Ring, startingTier, TIERS, TOP_TIER } from '../perf'
 import { ForestWorld } from './world'
 
 // The canvas and its one frame hook. Each frame: tilt the camera, step the
@@ -168,7 +168,7 @@ function FrameGraph({ stats }: { stats: PerfStats }) {
 
 export function ForestStage({ forest, running }: { forest: ForestController; running: boolean }) {
   const options = useMemo(() => perfOptions(typeof window === 'undefined' ? '' : window.location.search), [])
-  const governor = useMemo(() => new FrameGovernor(options.tier ?? TOP_TIER, options.tier !== null), [options])
+  const governor = useMemo(() => new FrameGovernor(options.tier ?? startingTier(window.matchMedia?.('(pointer: coarse)').matches ?? false), options.tier !== null), [options])
   const stats = useMemo<PerfStats>(() => ({ cpu: new Ring(600), frames: new Ring(600), tier: governor.tier, drawCalls: 0, triangles: 0 }), [governor])
 
   useEffect(() => {

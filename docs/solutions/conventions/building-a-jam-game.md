@@ -1,6 +1,7 @@
 ---
 title: Build a new jam game from idea to a green PR by following the compounded conventions in order, and run the before-you-show-the-owner checklist
 date: 2026-09-22
+last_updated: 2026-09-23
 category: conventions
 module: game-creation
 problem_type: convention
@@ -62,7 +63,7 @@ Paths are relative to this file (`docs/solutions/conventions/`).
 
 **10. Share a production build.** Run `npm run serve:lan` (build plus `vite preview` on port 4173 with `--strictPort`) in its own tmux session, separate from `npm run dev`, and rebuild before every re-share. Send `http://<LAN IP>:4173/?chrome=0#/play/<key>` and say in the message which URL is the production build to judge and which is the dev server to ignore. Detail: [share a production build](../workflow-issues/share-a-production-build-not-the-dev-server.md).
 
-**11. Checks, push, PR hand-off.** Run `npm run check` (typecheck, vitest, egress scan, wordless check), then `npm run build && npm run egress:built`, then `compound audit --strict` if you touched `docs/solutions/`; CI runs all of these (`.github/workflows/ci.yml`). Push with `git push -u origin <branch>` and read status with `gh run list --branch <branch>`. Write the PR body to the Project store's `internal/` for the coordinator, saying how each quality-bar line is met, with engine, throttle, DPR, and build for every fps number. Detail: [agent delivery](../workflow-issues/agent-delivery-push-branches-and-keep-secrets-out.md).
+**11. Checks, push, PR hand-off.** Run `npm run check` (typecheck, vitest, egress scan, wordless check), then `npm run build && npm run egress:built`, then `compound audit --strict` if you touched `docs/solutions/`; CI runs all of these (`.github/workflows/ci.yml`). Push with `git push -u origin <branch>` and read status with `gh run list --branch <branch>`. If `git push` returns 403 from a cloud VM, publish through the GitHub MCP instead, as in [deliver from a cloud VM through the GitHub MCP](../workflow-issues/deliver-from-a-cloud-vm-through-the-github-mcp-when-git-push-is-refused.md). Write the PR body to the Project store's `internal/` for the coordinator, saying how each quality-bar line is met, with engine, throttle, DPR, and build for every fps number. Detail: [agent delivery](../workflow-issues/agent-delivery-push-branches-and-keep-secrets-out.md).
 
 **12. Compound what you learned.** For each durable learning run `ce-compound`, one learning per run ([`AGENTS.md`](../../../AGENTS.md) "Documented knowledge"). Before writing a new doc, check it against the existing ones with `compound find --overlap --doc <draft>` and extend an existing doc when they overlap. Add new terms to [`CONCEPTS.md`](../../../CONCEPTS.md), then run `compound audit --strict` so the `applies_when` field required by `.compound-engineering/config.yaml` is present.
 

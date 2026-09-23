@@ -38,7 +38,7 @@ All colours live in `PALETTE` in [`view/palette.ts`](view/palette.ts). Colours a
 - **No lights, no shadow maps, no tone mapping.** Light is in the shader; shadows are blobs.
 - **Budget.** 19 draw calls at full quality, 20 while the ghost hand shows (target under 80); about 173k triangles; one full-screen pass; zero network requests; geometry built once. The render loop stops whenever the forest is unattended or hidden.
 - **No hitches.** Every shader is compiled before the first frame, hidden ones too (the ghost hand). The canvas outputs linear because the shaders paint display sRGB themselves, which also gives the screen and the paper pass's target one shared set of programs, so a tier change that drops the pass never recompiles the scene.
-- **Adaptive quality** ([`perf.ts`](perf.ts)). Four tiers chosen from measured frame intervals with hysteresis: full (DPR 2, paper pass, 12 fireflies), DPR 1.5, DPR 1.25 with 6 fireflies, and minimal (DPR 1, no paper pass, half the particles, no fireflies). `?tier=N` pins a tier; `?fps=1` shows a wordless bar graph of frame times.
+- **Adaptive quality** ([`perf.ts`](perf.ts)). Four tiers chosen from measured frame intervals with hysteresis: full (DPR 2, paper pass, 12 fireflies), DPR 1.5, DPR 1.25 with 6 fireflies, and minimal (DPR 1, no paper pass, half the particles, no fireflies). Touch devices start one tier down (DPR 1.5) and earn the top tier. `?tier=N` pins a tier; `?fps=1` shows a wordless bar graph of frame times.
 
 ## Motion rules
 

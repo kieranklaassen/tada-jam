@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { RIPPLES, type RoomInfo, type TowerController } from '../controller'
 import { SCREEN_RIGHT, SCREEN_UP, TOWARD_CAMERA, type MutableVec3 } from '../projection'
-import { pinnedTier, TierGovernor, type Tier } from '../tiers'
+import { pinnedTier, startingTier, TierGovernor, type Tier } from '../tiers'
 import { axisVector } from '../world'
 import { buildDoorGeometry, buildRoomGeometry, DOOR } from './build'
 import { buildBird, buildWanderer, WANDERER_SCALE, type BirdRig, type WandererRig } from './characters'
@@ -152,7 +152,7 @@ export class TowerView {
   constructor(host: HTMLElement, controller: TowerController, search: string) {
     this.host = host
     this.controller = controller
-    this.governor = new TierGovernor(0, pinnedTier(search))
+    this.governor = new TierGovernor(startingTier(window.matchMedia?.('(pointer: coarse)').matches ?? false), pinnedTier(search))
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'default' })
     // Every shader here writes display-space colour directly.
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace

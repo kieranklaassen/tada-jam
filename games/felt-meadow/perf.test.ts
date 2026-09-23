@@ -79,6 +79,23 @@ describe('TierController', () => {
     expect(light.tier).toBe(0)
   })
 
+  it('ignores one isolated long frame in a window, but not two', () => {
+    const once = new TierController(null)
+    let now = feed(once, 0, 1.5, 16.7)
+    now += 0.3
+    once.frame(300, now, 2)
+    feed(once, now, 3, 16.7)
+    expect(once.tier).toBe(0)
+    const twice = new TierController(null)
+    now = feed(twice, 0, 1.5, 16.7)
+    for (let i = 0; i < 2; i++) {
+      now += 0.3
+      twice.frame(300, now, 2)
+    }
+    feed(twice, now, 3, 16.7)
+    expect(twice.tier).toBe(1)
+  })
+
   it('never goes below the lowest tier', () => {
     const tiers = new TierController(null)
     feed(tiers, 0, 20, 90)
