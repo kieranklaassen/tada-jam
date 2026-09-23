@@ -79,6 +79,27 @@ describe('ScarfController', () => {
     expect(game.loom.reveal).toBe(WIDTH)
   })
 
+  it('carries a ball with weight: it trails the finger, swings past where the finger stops, then settles under it', () => {
+    const { game } = setup()
+    const ball = game.balls[0]
+    const fingerX = ball.rest.x - 30
+    const finger = screenOf(fingerX, ball.rest.y + 10)
+    carry(game, ballAt(game, 0), finger, 0, false)
+    expect(ball.pos.x).toBeGreaterThan(fingerX + 1)
+    expect(ball.carry.x.v).toBeLessThan(0)
+    let furthest = ball.pos.x
+    for (let i = 0; i < 30; i++) {
+      game.step(1 / 60)
+      furthest = Math.min(furthest, ball.pos.x)
+    }
+    expect(furthest).toBeLessThan(fingerX - 0.5)
+    run(game, 0.5)
+    expect(ball.pos.x).toBeCloseTo(fingerX, 1)
+    game.pointerUp(1, finger, clock)
+    run(game, 1)
+    expect(Math.abs(ball.carry.x.v)).toBeLessThan(0.01)
+  })
+
   it('tells the waiting animal each time a row is finished for it, so it can answer every row', () => {
     const { game } = setup()
     run(game, 4)
@@ -115,6 +136,24 @@ describe('ScarfController', () => {
     expect(game.balls[wanted].hopY).toBeGreaterThan(0)
     for (const [i, ball] of game.balls.entries()) if (i !== wanted) expect(ball.hopY).toBe(0)
     expect(game.state.loom).toEqual([])
+  })
+
+  it('hums a finished repeat over both its copies at once, and a tap on the knitted loom hums every row in turn', () => {
+    const { game } = setup()
+    for (const ball of [0, 1, 0]) {
+      tap(game, ballAt(game, ball))
+      run(game, 1.2)
+      expect(game.song.at).toBe(-Infinity)
+    }
+    tap(game, ballAt(game, 1))
+    run(game, 1.2)
+    expect(game.song.at).toBeGreaterThan(0)
+    expect(game.song).toMatchObject({ first: 0, period: 2, copies: 2 })
+    run(game, 0.5)
+    const frame = cellCentre(4, 1)
+    tap(game, screenOf(frame.x, frame.y))
+    expect(game.song).toMatchObject({ at: game.t, first: 0, period: 4, copies: 1 })
+    expect(game.state.loom).toHaveLength(4)
   })
 
   it('puffs snow where a touch meets the slope, and flurries in the sky above the hill', () => {
@@ -239,6 +278,17 @@ describe('ScarfController', () => {
     game.step(1 / 60)
     expect(game.guidance.handVisible).toBe(false)
     expect(game.guidance.frame.glow).toBe(0)
+  })
+
+  it('counts idleness from when a long carry is let go, not from when it began', () => {
+    const { game } = setup()
+    run(game, 1)
+    carry(game, ballAt(game, 1), screenOf(-60, 40), 4.5)
+    run(game, 1)
+    expect(game.guidance.handVisible).toBe(false)
+    expect(game.guidance.frame.glow).toBe(0)
+    run(game, 4.4)
+    expect(game.guidance.handVisible).toBe(true)
   })
 
   it('keeps a stroke of painting when the game is put away mid-carry', () => {

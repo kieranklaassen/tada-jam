@@ -59,6 +59,14 @@ describe('HintScheduler', () => {
     expect(after.glow).toBe(0)
   })
 
+  it('starts the idle clock over while held, without counting as the first touch', () => {
+    const s = new HintScheduler(0)
+    s.hold(4)
+    expect(s.frame(IDLE_BEFORE_DEMO + 1, frame()).demo).toBe(-1)
+    expect(s.frame(4 + IDLE_BEFORE_DEMO + 0.1, frame()).demo).toBeGreaterThanOrEqual(0)
+    expect(s.touched).toBe(false)
+  })
+
   it('peeks a ball out of the basket a few times on first open only', () => {
     const s = new HintScheduler(0)
     let peeks = 0
