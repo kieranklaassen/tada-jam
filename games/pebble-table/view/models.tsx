@@ -20,10 +20,7 @@ const ClayContext = createContext<ClayMaterials | null>(null)
 export function ClayProvider({ children }: { children: ReactNode }) {
   const materials = useMemo(() => createClayMaterials(), [])
   useEffect(() => () => materials.dispose(), [materials])
-  useEffect(() => {
-    const timer = setTimeout(prewarm, 400)
-    return () => clearTimeout(timer)
-  }, [])
+  useWarmup(materials)
   useFrame((state) => {
     furTime.value = state.clock.elapsedTime
   })
@@ -396,12 +393,7 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
   const chains = useRef<THREE.InstancedMesh>(null)
   const half = SCALE.beamHalf * UNIT
   const post = to3(SCALE.post)
-  const shapes = once('scale', () => ({
-    post: postGeometry(),
-    beam: beamGeometry(half),
-    pans: SCALE.pans.map((pan) => panGeometry(pan.r * UNIT)),
-    chain: coilGeometry(),
-  }))
+  const shapes = once('scale', scaleShapes)
   const swing = useRef({ last: 0, pans: [{ x: 0, v: 0 }, { x: 0, v: 0 }] as Spring[] })
   useFrame((_, dt) => {
     const pose = read()
@@ -458,21 +450,25 @@ function ellipseRope(rx: number, rz: number): THREE.BufferGeometry {
   return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 240, 0.42, 8, true)
 }
 
+function feedingShapes() {
+  return {
+    rug: geo.cloth(40),
+    bowl: merge([piece(geo.bowl(48), PALETTE.bowl, { scale: FEEDING.bowl.r * UNIT }, { lump: 0.22, frequency: 0.4, seed: 8, occlusion: 0.42 })]),
+    plate: merge([piece(geo.plate(36), PALETTE.plate, { scale: [FEEDING.plateRadius * UNIT, 5, FEEDING.plateRadius * UNIT] }, { lump: 0.15, frequency: 0.5, seed: 3, occlusion: 0.15 })]),
+    stool: merge([
+      piece(geo.sphere(28), PALETTE.stool, { position: [0, 1.5, 0], scale: [4.5, 1.7, 4.5] }, { lump: 0.3, frequency: 0.6, seed: 6 }),
+      piece(geo.sphere(14), '#c79a45', { position: [0, 3.05, 0], scale: [0.9, 0.35, 0.9] }, { ground: null }),
+      piece(geo.torus(32, 0.16), '#c79a45', { position: [0, 1.55, 0], rotation: [Math.PI / 2, 0, 0], scale: 4.35 }, { lump: 0.05, ground: null }),
+    ]),
+    rugRope: merge([piece(ellipseRope(42, 30), '#d8c39c', {}, { lump: 0.12, frequency: 0.5, ground: null })]),
+  }
+}
+
 export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonly boolean[]; showStools: boolean; readBowl: () => { dingAt: number | null; now: number } }) {
   const { clay, rug } = useClay()
   const center = to3({ x: 780, y: 470 })
   const bowl = to3(FEEDING.bowl)
-  const shapes = once('feeding', () => ({
-      rug: geo.cloth(40),
-      bowl: merge([piece(geo.bowl(48), PALETTE.bowl, { scale: FEEDING.bowl.r * UNIT }, { lump: 0.22, frequency: 0.4, seed: 8, occlusion: 0.42 })]),
-      plate: merge([piece(geo.plate(36), PALETTE.plate, { scale: [FEEDING.plateRadius * UNIT, 5, FEEDING.plateRadius * UNIT] }, { lump: 0.15, frequency: 0.5, seed: 3, occlusion: 0.15 })]),
-      stool: merge([
-        piece(geo.sphere(28), PALETTE.stool, { position: [0, 1.5, 0], scale: [4.5, 1.7, 4.5] }, { lump: 0.3, frequency: 0.6, seed: 6 }),
-        piece(geo.sphere(14), '#c79a45', { position: [0, 3.05, 0], scale: [0.9, 0.35, 0.9] }, { ground: null }),
-        piece(geo.torus(32, 0.16), '#c79a45', { position: [0, 1.55, 0], rotation: [Math.PI / 2, 0, 0], scale: 4.35 }, { lump: 0.05, ground: null }),
-      ]),
-      rugRope: merge([piece(ellipseRope(42, 30), '#d8c39c', {}, { lump: 0.12, frequency: 0.5, ground: null })]),
-    }))
+  const shapes = once('feeding', feedingShapes)
   const plates = useRef<THREE.InstancedMesh>(null)
   const stools = useRef<THREE.InstancedMesh>(null)
   const bowlMesh = useRef<THREE.Mesh>(null)
@@ -641,16 +637,114 @@ function speciesShapes(species: Species): GuestShapes {
   return cached
 }
 
-/** Build the bag, the scale, and every character's geometry early, so they are not built mid-play. */
-function prewarm(): void {
-  once('bag', bagGeometry)
-  for (const species of ['rabbit', 'bear', 'hedgehog'] as const) speciesShapes(species)
-  once('scale', () => ({
+function scaleShapes() {
+  return {
     post: postGeometry(),
     beam: beamGeometry(SCALE.beamHalf * UNIT),
     pans: SCALE.pans.map((pan) => panGeometry(pan.r * UNIT)),
     chain: coilGeometry(),
-  }))
+  }
+}
+
+/**
+ * Everything a child can bring out later, built one small piece at a time
+ * after load (WebKit has no requestIdleCallback, so each task gets its own
+ * timer slot), then its shaders are compiled against the live scene's
+ * lights. Opening an activity for the first time then costs no long frame.
+ */
+const WARMUP: readonly (() => unknown)[] = [
+  () => once('bag', bagGeometry),
+  () => once('feeding', feedingShapes),
+  ...(['rabbit', 'bear', 'hedgehog'] as const).map((species) => () => speciesShapes(species)),
+  () => once('scale', scaleShapes),
+  ...PART_KINDS.map((kind) => () => jarShapes(kind)),
+  ...PART_KINDS.map((kind) => () => partShapes(kind)),
+  () => once('house', houseGeometry),
+  () => once('door-leaf', doorLeafGeometry),
+  () => once('mouse', mouseGeometry),
+  () => once('knife', knifeGeometry),
+]
+const WARMUP_START_MS = 400
+const WARMUP_GAP_MS = 60
+
+/** One object per material and variant the activities draw, for compiling their shaders against the real scene's lights. */
+function warmupScene(materials: ClayMaterials): THREE.Scene {
+  const scene = new THREE.Scene()
+  const rabbit = speciesShapes('rabbit')
+  const hedgehog = speciesShapes('hedgehog')
+  const feeding = once('feeding', feedingShapes)
+  const objects: THREE.Object3D[] = [
+    new THREE.Mesh(feeding.bowl, materials.clay),
+    new THREE.InstancedMesh(feeding.plate, materials.clay, 1),
+    new THREE.Mesh(feeding.rug, materials.rug),
+    new THREE.InstancedMesh(once('mouse', mouseGeometry), materials.clay, 1),
+  ]
+  if (rabbit.furBody) objects.push(new THREE.InstancedMesh(rabbit.furBody, materials.fur, 1))
+  if (hedgehog.quill) {
+    const quills = new THREE.InstancedMesh(hedgehog.quill, materials.quill, 1)
+    quills.setColorAt(0, new THREE.Color('#ffffff'))
+    objects.push(quills)
+  }
+  for (const object of objects) {
+    object.frustumCulled = false
+    scene.add(object)
+  }
+  return scene
+}
+
+/**
+ * Compile for the screen (the tiers without a post pass) and for an offscreen target (the post pass renders the
+ * scene into one, and three.js builds a different variant there: no tone mapping, linear output).
+ */
+function compileBothWays(gl: THREE.WebGLRenderer, warm: THREE.Scene, camera: THREE.Camera, scene: THREE.Scene): void {
+  const previous = gl.getRenderTarget()
+  gl.setRenderTarget(null)
+  void gl.compileAsync(warm, camera, scene).catch(() => {})
+  const target = new THREE.WebGLRenderTarget(1, 1)
+  gl.setRenderTarget(target)
+  void gl
+    .compileAsync(warm, camera, scene)
+    .catch(() => {})
+    .finally(() => target.dispose())
+  gl.setRenderTarget(previous)
+}
+
+/**
+ * Draw the warm-up objects once inside the live scene, into a 1x1 target like the post pass's (half float, no
+ * multisampling): WebKit finishes a shader's GPU pipeline only at its first real draw, which a compile cannot reach.
+ */
+function drawOnce(gl: THREE.WebGLRenderer, warm: THREE.Scene, camera: THREE.Camera, scene: THREE.Scene): void {
+  const group = new THREE.Group()
+  group.add(...warm.children)
+  scene.add(group)
+  const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType })
+  const previous = gl.getRenderTarget()
+  gl.setRenderTarget(target)
+  gl.render(scene, camera)
+  gl.setRenderTarget(previous)
+  scene.remove(group)
+  target.dispose()
+}
+
+function useWarmup(materials: ClayMaterials): void {
+  const gl = useThree((state) => state.gl)
+  const camera = useThree((state) => state.camera)
+  const scene = useThree((state) => state.scene)
+  useEffect(() => {
+    let next = 0
+    let timer = setTimeout(function step() {
+      const task = WARMUP[next++]
+      if (task) {
+        task()
+        timer = setTimeout(step, WARMUP_GAP_MS)
+      } else {
+        const warm = warmupScene(materials)
+        compileBothWays(gl, warm, camera, scene)
+        timer = setTimeout(() => drawOnce(gl, warm, camera, scene), WARMUP_GAP_MS)
+      }
+    }, WARMUP_START_MS)
+    return () => clearTimeout(timer)
+  }, [gl, camera, scene, materials])
 }
 
 const GUEST_SIZE = 1.5
@@ -814,15 +908,17 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
 
 // --- knife, shelf, hand ---------------------------------------------------------
 
+function knifeGeometry(): THREE.BufferGeometry {
+  return merge([
+    piece(geo.blade(), PALETTE.knifeBlade, { scale: 1.3 }, { lump: 0.05, ground: null }),
+    piece(geo.capsule(16), PALETTE.knifeHandle, { position: [-3.2, 0.5, 0], rotation: [0, 0, Math.PI / 2], scale: [1.3, 2.2, 1.3] }, { lump: 0.1, ground: null }),
+  ])
+}
+
 export function KnifeModel({ read }: { read: () => { at: Point; visible: boolean; held: boolean; now: number } }) {
   const { clay } = useClay()
   const ref = useRef<THREE.Group>(null)
-  const geometry = once('knife', () =>
-    merge([
-      piece(geo.blade(), PALETTE.knifeBlade, { scale: 1.3 }, { lump: 0.05, ground: null }),
-      piece(geo.capsule(16), PALETTE.knifeHandle, { position: [-3.2, 0.5, 0], rotation: [0, 0, Math.PI / 2], scale: [1.3, 2.2, 1.3] }, { lump: 0.1, ground: null }),
-    ]),
-  )
+  const geometry = once('knife', knifeGeometry)
   const lift = useRef<Spring>({ x: 0, v: 0 })
   const feel = useRef({ pop: { x: 0, v: 0 } as Spring, lean: { x: 0, v: 0 } as Spring, chop: { x: 0, v: 0 } as Spring, wasVisible: false, wasHeld: false, lastX: 0 })
   useFrame((_, dt) => {
@@ -1029,11 +1125,14 @@ function jarGeometry(kind: PartKind): { body: THREE.BufferGeometry; lid: THREE.B
 
 export type PartState = { id: number; kind: PartKind; position: Vec3; quaternion: [number, number, number, number]; held: boolean }
 
+const partShapes = (kind: PartKind) => once(`part-${kind}`, () => partGeometry(kind))
+const jarShapes = (kind: PartKind) => once(`jar-${kind}`, () => jarGeometry(kind))
+
 /** Loose parts in one instanced draw per kind, posed from physics, lifted a little while held. */
 export function PartsModel({ read }: { read: () => PartState[] }) {
   const { clay } = useClay()
   const refs = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)]
-  const geometries = once('parts', () => PART_KINDS.map(partGeometry))
+  const geometries = PART_KINDS.map(partShapes)
   useFrame(() => {
     const counts = [0, 0, 0, 0]
     for (const part of read()) {
@@ -1063,7 +1162,7 @@ export function PartsModel({ read }: { read: () => PartState[] }) {
 /** The jars on the scale mat's back row: each wobbles when tipped or when a part comes home, and its lid lies open once it is empty. */
 export function JarsModel({ read }: { read: () => { tips: ReadonlyMap<PartKind, number>; full: Record<PartKind, number>; glow: number; now: number } }) {
   const { clay } = useClay()
-  const shapes = once('jars', () => PART_KINDS.map(jarGeometry))
+  const shapes = PART_KINDS.map(jarShapes)
   const refs = [useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
   const lids = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
   const wobble = useRef(PART_KINDS.map(() => ({ x: 0, v: 0 }) as Spring))
@@ -1142,6 +1241,14 @@ function mouseGeometry(): THREE.BufferGeometry {
   ])
 }
 
+function houseGeometry(): THREE.BufferGeometry {
+  return merge(houseParts(1, [0, 0, 0]))
+}
+
+function doorLeafGeometry(): THREE.BufferGeometry {
+  return merge([piece(geo.roundedBox(8, 0.18), HOUSE.door, { position: [3, 4.8, 0], scale: [6, 9.6, 0.9] }, { lump: 0.1, ground: null }), piece(geo.sphere(10), HOUSE.frame, { position: [5.2, 4.8, 0.6], scale: 0.45 }, { ground: null })])
+}
+
 export type DoorPose = {
   visitors: readonly { home: Point; outAt: number; leaveAt: number | null; pokeAt: number | null }[]
   openAt: number | null
@@ -1164,8 +1271,8 @@ const VISITOR_WALK_TIME = 0.6
  */
 export function DoorModel({ read }: { read: () => DoorPose }) {
   const { clay } = useClay()
-  const house = once('house', () => merge(houseParts(1, [0, 0, 0])))
-  const doorLeaf = once('door-leaf', () => merge([piece(geo.roundedBox(8, 0.18), HOUSE.door, { position: [3, 4.8, 0], scale: [6, 9.6, 0.9] }, { lump: 0.1, ground: null }), piece(geo.sphere(10), HOUSE.frame, { position: [5.2, 4.8, 0.6], scale: 0.45 }, { ground: null })]))
+  const house = once('house', houseGeometry)
+  const doorLeaf = once('door-leaf', doorLeafGeometry)
   const mouse = once('mouse', mouseGeometry)
   const leaf = useRef<THREE.Group>(null)
   const face = useRef<THREE.Mesh>(null)

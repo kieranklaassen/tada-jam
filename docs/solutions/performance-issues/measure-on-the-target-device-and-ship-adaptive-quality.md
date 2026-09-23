@@ -115,6 +115,22 @@ Arguments are `[chrome|webkit|swift] [cpuThrottle=1] [base=http://localhost:4173
 
 After the later animation work, Chrome at 20x held 60 idle, 52 spill, 60 drag with the governor at balanced, and draw calls were 48. Not yet measured on a physical iPad.
 
+**Jam-wide follow-up: one probe for every game, a fill stress test, and warm-up.** The ten-game workers measured on GPU-less cloud VMs, so their numbers were stand-ins. Re-measured on the Mac mini's M4, every game held 60 at iPad size, including the three flagged "slow at full quality". Two problems only showed up once the test was made harder:
+
+- **A GPU that is only fast enough at iPad size.** The M4's GPU is several times stronger than a mid-range iPad's. Running each game in WebKit at full quality with four times the pixels (a 2360x1640 viewport at DPR 2) separated the games with GPU margin from the one without. Eight held 60; Felt Meadow fell to 39. Its automatic tier then retried full quality every 8 s, dropping to 38 to 43 fps each time.
+  - **The cause:** the top tier's multisampled post target. Trying variants one at a time, pinned at 4x pixels, gave 38 fps with it and 60 without. The tilt-shift blur and a fuzz shell made no difference.
+  - **The governor fix:** a fresh upgrade is judged on short windows, a failed upgrade becomes a ceiling at once, and stepping up needs CPU work under 8 ms (`games/felt-meadow/perf.ts`).
+- **A long frame the first time an activity opens.** Pebble Table built the scale, jars, parts and house geometry on first mount, compiled their shaders on the first draw, and created its AudioContext inside the first tap. That added up to one frame of about 100 ms in WebKit and 350 ms at 20x, which knocked the tier down. The fix, in `useWarmup` in `games/pebble-table/view/models.tsx` and `TableAudio.prepare`:
+  - build every model a child can bring out later after load, one small task per timer slot (WebKit has no `requestIdleCallback`);
+  - compile their shaders with `renderer.compileAsync(warmScene, camera, liveScene)`, so the live scene's lights are used. Do it twice: once for the screen and once with an offscreen target bound, because the post pass renders into one and three.js builds a different variant there (no tone mapping, linear output). The warm objects must match the real ones' variants, including per-instance colour; the hedgehog's quills were missed until `setColorAt` was added;
+  - draw the warm objects once, inside the live scene, into a 1x1 half-float target;
+  - build the audio graph suspended ahead of the first tap;
+  - have the governor leave out each window's single longest frame.
+
+  Afterwards the first scale visit's worst frame was 27 ms in WebKit and 17 ms at 6x, and the tier held even at 20x. One 60 ms WebKit frame remains the first time the feeding table opens.
+
+The shared probe is `npm run perf:jam -- <game> [webkit|chrome] [cpuThrottle] [auto|full|tierN] [base]` (`scripts/jam-perf.mjs`). It runs a scripted play-through of about 40 s and reports average fps, the worst one-second window, p99 frame time, frames over 25 ms, draw calls, and the tiers visited. `SIZE=2` quadruples the pixels. The per-game results and before/after numbers are in the Project store (`docs/jam-games-perf.md`).
+
 ## Why This Works
 
 The lag had two causes that a fast desktop hides in different ways. Fill and shader cost (DPR 2, fur shells, a blur pass) scale with the GPU, and only a weak GPU, or SwiftShader standing in for one, makes them visible. Collision cost scales with the CPU, and only shows up once a frame is slow enough to trigger catch-up substeps, which is why 6x throttle looked fine and 20x did not. Measuring against both kinds of slowness found both problems; measuring on the M4 found neither.
@@ -131,12 +147,14 @@ Day one of the next game, before building gameplay:
   - WebKit (`node scripts/pebble-perf.mjs webkit`) for Safari engine behaviour.
   - Chrome at 6x and 20x CPU throttle (`node scripts/pebble-perf.mjs chrome 20`) for CPU cost and spirals.
   - Chrome on SwiftShader (`node scripts/pebble-perf.mjs swift`) as a weak-GPU proxy; the automatic governor should step down and the lowest tier should still look like the game.
+  - WebKit at full quality with four times the pixels (`SIZE=2 npm run perf:jam -- <game> webkit 1 full`) as a fill stress test on a strong GPU. A game with margin holds 60 there; one that doesn't will likely lag on an iPad.
   - A real iPad whenever one is available, read through the overlay.
-  - Copy `scripts/pebble-perf.mjs` and adapt the seeded state and gestures to the new game.
+  - The shared probe (`npm run perf:jam -- <game> ...`) runs every configuration above on any jam game that exposes `window.__jamPerf`. Adapt `scripts/pebble-perf.mjs` only when a game needs seeded state or game-specific gestures.
 - [ ] **Profile before fixing.** Capture a CPU profile of the heaviest moment under 20x throttle and fix the top of it. Do not guess at rendering when the profile says physics, or the reverse.
 - [ ] **Check that piles go to sleep.** After adding a new kind of body, pile a lot of them up headlessly and count awake bodies after 10 s over several trials. Thin, light, or cone-shaped colliders are the usual jitterers. Add a test that asserts they sleep.
+- [ ] **Warm up lazily built scenes during idle.** Anything built or compiled the first time it appears (merged geometry, shader variants, audio graphs) costs a long frame at the worst moment: a child's first tap on something new. After load, build it one small task per timer slot, compile its shaders against the live scene for every render target it will use, and draw it once offscreen. Then check that no new shader programs link on the first visit: hook `linkProgram` in a Playwright init script.
 - [ ] **Cap physics catch-up.** Clamp the accumulator to `STEP * maxSubsteps` with a cap of 3 or less, and keep physics colliders simpler than the drawn meshes (low side counts for cylinders).
-- [ ] **Ship adaptive quality from the start.** Tiers that step down DPR, per-object detail (fur, particles), the post pass, and physics substeps. Start from `QualityGovernor` in `games/pebble-table/quality.ts` with its current thresholds: windows of 40 frames, dropped frame over 20 ms, bad window over 10% dropped, step down after two bad windows or one window averaging over 26 ms, step up after 6 clean windows with CPU work under 8 ms, doubling up to 48 after a failed upgrade, stalls over 1000 ms ignored, one settle window after a change, touch devices start one tier down.
+- [ ] **Ship adaptive quality from the start.** Tiers that step down DPR, per-object detail (fur, particles), the post pass, and physics substeps. Start from `QualityGovernor` in `games/pebble-table/quality.ts` with its current thresholds: windows of 40 frames, dropped frame over 20 ms, bad window over 10% dropped, step down after two bad windows or one window averaging over 26 ms, step up after 6 clean windows with CPU work under 8 ms, doubling up to 48 after a failed upgrade, stalls over 1000 ms ignored, one settle window after a change, touch devices start one tier down. Leave out each window's single longest frame, so a one-off build or GC pause never changes the tier. Make a failed upgrade a ceiling at once rather than retrying it on a timer; every retry is a visible dip.
 - [ ] **Keep the look at the lowest tier.** If the grade lives in a post pass, also run it in materials (three's `CustomToneMapping`, as `installClayToneMapping` does) so turning the pass off does not wash the scene out.
 - [ ] **Pace idle frames.** Render on demand, drop to half rate after a stretch of rest, stop when unattended or hidden.
 - [ ] **Add the grown-up overlay** (triple-tap a corner): fps, frame ms, CPU ms, dropped frames, tier, DPR, draws, triangles, and tier pinning.

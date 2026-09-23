@@ -97,10 +97,15 @@ export class QualityGovernor {
 
   private evaluate(): boolean {
     const intervals = this.intervals
-    const average = intervals.reduce((a, b) => a + b, 0) / intervals.length
-    const dropped = intervals.filter((ms) => ms > DROPPED_FRAME_MS).length
+    // One isolated long frame (a first-time build, a GC pause) says nothing about the device, so the window's
+    // single longest frame is left out; two or more still count.
+    const total = intervals.reduce((a, b) => a + b, 0)
+    const longest = intervals.reduce((a, b) => Math.max(a, b), 0)
+    const allDropped = intervals.filter((ms) => ms > DROPPED_FRAME_MS).length
+    const average = (total - longest) / (intervals.length - 1)
+    const dropped = allDropped - (longest > DROPPED_FRAME_MS ? 1 : 0)
     const work = this.work.reduce((a, b) => a + b, 0) / this.work.length
-    this.last = { tier: this.tier, forced: this.forced, fps: 1000 / average, frameMs: average, workMs: work, dropped }
+    this.last = { tier: this.tier, forced: this.forced, fps: (1000 * intervals.length) / total, frameMs: total / intervals.length, workMs: work, dropped: allDropped }
     this.intervals = []
     this.work = []
     this.windows += 1
