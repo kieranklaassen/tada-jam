@@ -19,6 +19,17 @@ Open the printed URL (Vite binds to your LAN too, so an iPad on the same network
 
 Saved state lives in the browser's `localStorage` under `tada-jam:slot:<key>`, with the same 2-second debounce, flush-on-park, flush-on-hide, and 64 KB cap the Tada server enforces. Turning the device to portrait covers the game with a wordless "turn sideways" picture.
 
+## Deploy
+
+The jam is a static Vite site; `vercel.json` holds the build settings. From the repo root:
+
+```bash
+vercel          # preview deployment
+vercel --prod   # production
+```
+
+Routes are hash-based (`#/play/<key>`), so no rewrites are needed.
+
 ## Checks
 
 ```bash
