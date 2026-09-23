@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { CLEARING, HOME_KEYS, HOMES, POND_RADIUS, type HomeKey } from '../layout'
 import { between, createRng, type Rng } from '../rng'
 import { ShapeBuilder, shapes } from './geometry'
-import { PALETTE } from './palette'
+import { PALETTE, rgb } from './palette'
 
 // The storybook clearing: a painted meadow, a ring of round-crowned trees
 // and firs, mushrooms and flowers, and the six homes. Everything static is
@@ -17,11 +17,15 @@ function ground(): THREE.BufferGeometry {
   geometry.rotateX(-Math.PI / 2)
   const position = geometry.getAttribute('position')
   const tint: number[] = []
-  const grass = new THREE.Color(PALETTE.grass)
-  const edge = new THREE.Color(PALETTE.grassEdge)
-  const moss = new THREE.Color(PALETTE.moss)
-  const path = new THREE.Color(PALETTE.path)
-  const c = new THREE.Color()
+  // Raw display-space values: THREE.Color would linearize hex input, and the gouache shader paints display values as they are.
+  const grass = rgb(PALETTE.grass)
+  const edge = rgb(PALETTE.grassEdge)
+  const moss = rgb(PALETTE.moss)
+  const path = rgb(PALETTE.path)
+  const c: [number, number, number] = [0, 0, 0]
+  const mixInto = (to: readonly number[], k: number) => {
+    for (let j = 0; j < 3; j++) c[j] += (to[j] - c[j]) * k
+  }
   for (let i = 0; i < position.count; i++) {
     const x = position.getX(i)
     const z = position.getZ(i) - 10
@@ -29,13 +33,16 @@ function ground(): THREE.BufferGeometry {
     const dz = (z - CLEARING.z) / (CLEARING.rz + (z > CLEARING.z ? 58 : 26))
     const d = Math.hypot(dx, dz)
     const wobble = Math.sin(x * 0.07) * 0.08 + Math.cos(z * 0.09 + x * 0.02) * 0.08
-    // Display-space mixing: THREE.Color stores what we give it, so no conversion happens here.
-    c.copy(grass).lerp(edge, Math.min(1, Math.max(0, (d + wobble - 0.8) / 0.5)))
-    c.lerp(moss, Math.min(1, Math.max(0, (d + wobble - 1.4) / 0.6)))
-    const meander = Math.abs(x - 14 - Math.sin(z * 0.045) * 16) / 10
-    const trail = z > 24 ? Math.max(0, 1 - meander) * Math.min(1, (z - 24) / 16) * 0.55 : 0
-    c.lerp(path, trail)
-    tint.push(c.r, c.g, c.b)
+    c[0] = grass[0]
+    c[1] = grass[1]
+    c[2] = grass[2]
+    mixInto(edge, Math.min(1, Math.max(0, (d + wobble - 0.8) / 0.5)))
+    mixInto(moss, Math.min(1, Math.max(0, (d + wobble - 1.4) / 0.6)))
+    // A winding sandy path from the child's edge of the page into the clearing.
+    const meander = Math.abs(x - 14 - Math.sin(z * 0.045) * 16) / (9 + (z - 24) * 0.08)
+    const trail = z > 22 ? Math.min(1, Math.max(0, 1.35 - meander * 1.35)) * Math.min(1, (z - 22) / 18) * 0.85 : 0
+    mixInto(path, trail)
+    tint.push(c[0], c[1], c[2])
   }
   const result = new THREE.BufferGeometry()
   result.setAttribute('position', position)
@@ -54,10 +61,10 @@ function roundTree(b: ShapeBuilder, rng: Rng, x: number, z: number, height: numb
   b.add(s.taper, { at: [x, 0, z], scale: [trunkR, height * 0.62, trunkR], color: PALETTE.trunk, part, ink: 0.9 })
   const crown = height * 0.3
   const tones = [PALETTE.leaf, PALETTE.leafDark, PALETTE.leafLight]
-  b.add(s.sphere, { at: [x, height * 0.72, z], scale: [crown * 1.05, crown * 0.95, crown], color: tones[Math.floor(rng() * 2)], part, ink: 1.1 })
+  b.add(s.crown, { at: [x, height * 0.72, z], scale: [crown * 1.05, crown * 0.95, crown], color: tones[Math.floor(rng() * 2)], part, ink: 1.1 })
   for (let i = 0; i < 3; i++) {
     const a = rng() * Math.PI * 2
-    b.add(s.sphere, {
+    b.add(s.crown, {
       at: [x + Math.cos(a) * crown * 0.7, height * (0.62 + rng() * 0.25), z + Math.sin(a) * crown * 0.5],
       scale: crown * between(rng, 0.55, 0.75),
       color: tones[Math.floor(rng() * 3)],
@@ -236,17 +243,21 @@ function nestTree(b: ShapeBuilder): void {
   const { x, z } = home.at
   b.add(s.taper, { at: [x, 0, z], scale: [7, 46, 7], color: PALETTE.trunk, part, ink: 1.1 })
   const m = home.mouth
-  b.add(s.cylinder, { at: [x, m.y - 3, z + 2], rot: [Math.PI / 2 - 0.25, 0, 0], scale: [1.4, 10, 1.4], color: PALETTE.bark, part, ink: 0.9 })
-  b.add(s.torus, { at: [m.x, m.y - 2, m.z], rot: [Math.PI / 2, 0, 0], scale: [7.4, 7.4, 4.4], color: PALETTE.nest, part, ink: 1.2 })
-  b.add(s.disc, { at: [m.x, m.y - 1.2, m.z], rot: [-Math.PI / 2, 0, 0], scale: [5.6, 5.6, 1], color: PALETTE.nestDark, part, kind: 1, ink: 0 })
-  b.add(s.dome, { at: [m.x, m.y - 2.6, m.z], rot: [Math.PI, 0, 0], scale: [7, 4.4, 7], color: PALETTE.nestDark, part, ink: 1 })
-  for (let i = 0; i < 7; i++) {
-    const a = i * 0.9 + 0.3
+  // The nest sits out on its own branch, clear of the trunk, so it reads as a nest and not a collar.
+  const reach = Math.hypot(x - m.x, z - m.z)
+  const heading = Math.atan2(m.x - x, m.z - z)
+  const rise = 6
+  b.add(s.taper, { at: [x, m.y - 3 - rise, z], rot: [Math.PI / 2 - Math.atan2(rise, reach), heading, 0], scale: [1.5, Math.hypot(reach, rise) - 1, 1.5], color: PALETTE.bark, part, ink: 1 })
+  b.add(s.dome, { at: [m.x, m.y - 2.4, m.z], rot: [Math.PI, 0, 0], scale: [6.6, 4.2, 6.6], color: PALETTE.nest, part, ink: 1.1 })
+  b.add(s.torus, { at: [m.x, m.y - 1.4, m.z], rot: [Math.PI / 2, 0, 0], scale: [6.8, 6.8, 5.2], color: PALETTE.straw, part, ink: 1.2 })
+  b.add(s.disc, { at: [m.x, m.y - 1.0, m.z], rot: [-Math.PI / 2, 0, 0], scale: [5, 5, 1], color: PALETTE.nestDark, part, kind: 1, ink: 0 })
+  for (let i = 0; i < 9; i++) {
+    const a = i * 0.7 + 0.3
     b.add(s.cylinder, {
-      at: [m.x + Math.cos(a) * 7.4, m.y - 1.6, m.z + Math.sin(a) * 7.4],
-      rot: [Math.PI / 2, -a + Math.PI / 2, 0.5],
-      scale: [0.35, 4, 0.35],
-      color: PALETTE.nest,
+      at: [m.x + Math.cos(a) * 6.6, m.y - 1.6 + (i % 3) * 0.5, m.z + Math.sin(a) * 6.6],
+      rot: [Math.PI / 2, -a + Math.PI / 2, 0.55 * (i % 2 ? 1 : -1)],
+      scale: [0.35, 4.6, 0.35],
+      color: i % 2 ? PALETTE.nest : PALETTE.straw,
       part,
       ink: 0.5,
     })
@@ -259,7 +270,8 @@ function nestTree(b: ShapeBuilder): void {
   for (const [dx, y, dz, r, color] of crowns) b.add(s.sphere, { at: [x + dx, y, z + dz], scale: [r, r * 0.9, r * 0.9], color, part, ink: 1.2 })
 }
 
-export function buildScenery(): { ground: THREE.BufferGeometry; fill: THREE.BufferGeometry; ink: THREE.BufferGeometry } {
+/** `view` is the camera's forward direction: the merged pieces are drawn nearest first. */
+export function buildScenery(view: THREE.Vector3): { ground: THREE.BufferGeometry; fill: THREE.BufferGeometry; ink: THREE.BufferGeometry } {
   const rng = createRng(9001)
   const b = new ShapeBuilder(0.12)
 
@@ -267,13 +279,13 @@ export function buildScenery(): { ground: THREE.BufferGeometry; fill: THREE.Buff
   for (let i = 0; i < 17; i++) {
     const x = -200 + i * 25 + between(rng, -6, 6)
     const z = -118 + between(rng, -8, 8) - Math.abs(x) * 0.08
-    if (i % 3 === 1) fir(b, rng, x, z - 10, between(rng, 70, 92))
-    else roundTree(b, rng, x, z, between(rng, 58, 78))
+    if (i % 3 === 1) fir(b, rng, x, z - 10, between(rng, 52, 68))
+    else roundTree(b, rng, x, z, between(rng, 42, 56))
   }
   for (let i = 0; i < 9; i++) {
     const x = -165 + i * 42 + between(rng, -8, 8)
     if (Math.abs(x - HOMES.cave.at.x) < 30) continue
-    roundTree(b, rng, x, -92 + between(rng, -6, 6), between(rng, 48, 60))
+    roundTree(b, rng, x, -92 + between(rng, -6, 6), between(rng, 40, 50))
   }
   for (const side of [-1, 1]) {
     for (let i = 0; i < 4; i++) {
@@ -303,8 +315,8 @@ export function buildScenery(): { ground: THREE.BufferGeometry; fill: THREE.Buff
   for (let i = 0; i < 26; i++) {
     const a = rng() * Math.PI * 2
     const r = between(rng, 1.12, 1.5)
-    const x = CLEARING.x + Math.cos(a) * (CLEARING.rx + 8) * r
-    const z = CLEARING.z + Math.sin(a) * (CLEARING.rz + 10) * r
+    const x = CLEARING.x + Math.cos(a) * (CLEARING.rx + 2) * r
+    const z = CLEARING.z + Math.sin(a) * (CLEARING.rz + 5) * r
     if (Math.hypot(x - HOMES.pond.at.x, z - HOMES.pond.at.z) < POND_RADIUS + 6) continue
     if (i % 3 === 0) tuft(b, rng, x, z, between(rng, 3, 5))
     else flower(b, rng, x, z)
@@ -331,6 +343,6 @@ export function buildScenery(): { ground: THREE.BufferGeometry; fill: THREE.Buff
   ] as const)
     tuft(b, rng, x, z, 6)
 
-  const { fill, ink } = b.build()
+  const { fill, ink } = b.build(view)
   return { ground: ground(), fill, ink }
 }

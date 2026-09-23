@@ -85,6 +85,10 @@ export class ForestAudio implements Sound {
       case 'trick':
         if (this.throttle('voice', now, 0.18)) this.voice(animal, now, 1, 1.25)
         return
+      case 'answer':
+        // Just after the knock, a little lower than its pickup call: "that's mine".
+        if (this.throttle('voice', now, 0.18)) this.voice(animal, now + 0.2, strength * 0.85, 1)
+        return
       case 'yawn':
       case 'invite':
         if (this.throttle('yawn', now, 0.8)) this.yawn(animal, now, cue === 'invite' ? 1 : 0.7)
@@ -99,8 +103,9 @@ export class ForestAudio implements Sound {
         if (this.throttle('snore', now, 1.1)) this.snore(animal, now)
         return
       case 'bumped':
-        this.tone(260, 'sine', 0.22, 0.004, 0.25, now, 150)
-        this.thud(now + 0.02, 0.8)
+        // A soft pillowy boing, kept well under the settle chime: a wrong fit is never the loudest moment.
+        this.tone(230, 'sine', 0.1, 0.018, 0.3, now, 175)
+        this.noiseBurst(320, 0.8, 0.07, 0.12, now + 0.02, 'lowpass')
         return
       case 'shiver':
         for (let i = 0; i < 6; i++) this.noiseBurst(1800, 1.2, 0.05, 0.05, now + i * 0.07)
@@ -118,8 +123,9 @@ export class ForestAudio implements Sound {
         this.tone(900, 'sine', 0.1, 0.02, 0.5, now, 300)
         return
       case 'tipped':
-        this.noiseBurst(700, 5, 0.25, 0.08, now)
-        this.noiseBurst(620, 5, 0.18, 0.08, now + 0.18)
+        this.tone(340, 'triangle', 0.07, 0.03, 0.35, now, 250)
+        this.noiseBurst(2200, 0.9, 0.12, 0.12, now + 0.05)
+        this.noiseBurst(1800, 0.9, 0.09, 0.1, now + 0.2)
         return
       case 'flop':
         this.noiseBurst(900, 1.5, 0.22, 0.09, now)
@@ -130,7 +136,7 @@ export class ForestAudio implements Sound {
         this.noiseBurst(1600, 1, 0.08, 0.2, now + 0.03)
         return
       case 'flap':
-        for (let i = 0; i < 4; i++) this.noiseBurst(500, 0.7, 0.12, 0.09, now + i * 0.13, 'lowpass')
+        for (let i = 0; i < 4; i++) this.noiseBurst(1100, 0.6, 0.2, 0.09, now + i * 0.13, 'lowpass')
         return
       case 'wake':
         this.yawn(animal, now, 0.8)
@@ -169,9 +175,13 @@ export class ForestAudio implements Sound {
     const now = context.currentTime
     switch (home) {
       case 'hollow':
+        this.knockWood(now, 520, 0.26)
+        this.knockWood(now + 0.14, 470, 0.2)
+        return
       case 'nest':
-        this.noiseBurst(760, 6, 0.3, 0.07, now)
-        this.noiseBurst(700, 6, 0.22, 0.07, now + 0.14)
+        this.noiseBurst(2600, 0.9, 0.28, 0.08, now)
+        this.knockWood(now + 0.02, 880, 0.12)
+        this.noiseBurst(2200, 0.9, 0.2, 0.08, now + 0.12)
         return
       case 'den':
       case 'burrow':
@@ -220,8 +230,8 @@ export class ForestAudio implements Sound {
     const s = 0.6 + 0.4 * Math.min(1, strength)
     switch (animal) {
       case 'owl':
-        this.tone(392 * lift, 'sine', 0.2 * s, 0.05, 0.32, at, 360 * lift)
-        this.tone(370 * lift, 'sine', 0.18 * s, 0.05, 0.42, at + 0.4, 330 * lift)
+        this.tone(392 * lift, 'sine', 0.15 * s, 0.05, 0.32, at, 360 * lift)
+        this.tone(370 * lift, 'sine', 0.135 * s, 0.05, 0.42, at + 0.4, 330 * lift)
         return
       case 'fox':
         this.tone(760 * lift, 'triangle', 0.14 * s, 0.01, 0.12, at, 1250 * lift)
@@ -332,10 +342,16 @@ export class ForestAudio implements Sound {
     this.tone(f, 'sine', peak, 0.008, 0.07, at, f * 1.35)
   }
 
+  /** Even the bear's landing stays a little under the settle chime: getting into bed is the loudest moment. */
   private thud(at: number, weight: number): void {
     const w = Math.min(1.2, weight)
-    this.tone(150 - w * 80, 'sine', 0.18 + w * 0.22, 0.004, 0.14 + w * 0.12, at, 50)
-    this.noiseBurst(420 - w * 200, 0.8, 0.08 + w * 0.1, 0.1 + w * 0.06, at, 'lowpass')
+    this.tone(150 - w * 80, 'sine', 0.14 + w * 0.16, 0.004, 0.14 + w * 0.12, at, 50)
+    this.noiseBurst(420 - w * 200, 0.8, 0.06 + w * 0.075, 0.1 + w * 0.06, at, 'lowpass')
+  }
+
+  private knockWood(at: number, pitch: number, peak: number): void {
+    this.tone(pitch, 'sine', peak, 0.002, 0.07, at, pitch * 0.8)
+    this.noiseBurst(pitch * 3, 1.5, peak * 0.5, 0.025, at)
   }
 
   private musicBox(frequency: number, at: number, peak: number): void {
