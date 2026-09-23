@@ -5,7 +5,10 @@ import { Sound } from './audio'
 import { homeForCountry } from './geo'
 import { moonPhasesManifest } from './manifest'
 import { Orrery } from './orrery'
+import { installJamPerf } from './perf'
 import { PHASE_COUNT, TAU, elongationAt, litPath, phaseAngle, phaseIndex, shortestTurn, wrap } from './phase'
+import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
+import type { Porthole } from './scene'
 import { deserialize, serialize } from './snapshot'
 import './moon-phases.css'
 
@@ -102,7 +105,7 @@ function HalvesIcon() {
 function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const windowRef = useRef<HTMLCanvasElement>(null)
+  const windowRef = useRef<HTMLButtonElement>(null)
   const pinRefs = useRef<(HTMLDivElement | null)[]>([])
   const dialRef = useRef<HTMLDivElement>(null)
   const knobRef = useRef<HTMLDivElement>(null)
@@ -115,19 +118,27 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
   const [phase, setPhase] = useState(0)
 
   useEffect(() => {
-    const root = rootRef.current!, canvas = canvasRef.current!, windowCanvas = windowRef.current!
-    const windowCtx = windowCanvas.getContext('2d')!
+    const root = rootRef.current!, canvas = canvasRef.current!, porthole = windowRef.current!
     const orrery = new Orrery(canvas), sound = new Sound()
-    // Tablets and phones start on the light pipeline (bloom only); desktops get the full grade.
-    if (window.matchMedia('(pointer: coarse)').matches) orrery.fancy = false
-    let width = 0, height = 0, dpr = 1, frame = 0, last = 0, awake = false, disposed = false
+    const pinned = tierOverride(window.location.search)
+    const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
+    const work = new PerfRing()
+    const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, drawCalls: orrery.drawCalls, triangles: orrery.triangles }))
+    let width = 0, height = 0, dpr = 1, frame = 0, last = 0, awake = false, disposed = false, frameCount = 0, warmed = false
     // Nothing is saved until the slot has been read, so an early unmount can't overwrite it.
     let loaded = false
     let povTarget = 0, lastTouch = -Infinity, autoBlend = 1, currentPhase = -1
     // One finger at a time: dragging the moon, turning the model, or tapping a phase.
     let dragging: { id: number; mode: 'moon' | 'look' | 'spin' | 'phase' | 'earth'; x: number; y: number; moved: boolean; phase?: number; point?: THREE.Vector3 } | null = null
-    let shown = false, maxDpr = 2
-    const slow = { sum: 0, frames: 0 }
+    let shown = false, windowSettled = false
+    let windowBox: Porthole | null = null
+    const applyTier = () => {
+      const tier = governor.settings
+      orrery.setPost(tier.post)
+      root.dataset.frosted = String(tier.frosted)
+      width = 0
+      resize()
+    }
     let tween: { from: number; turn: number; start: number; duration: number } | null = null
 
     const save = () => loaded && ctxRef.current.storage.save(serialize(orrery.elongation, povTarget === 1, orrery.showHalves, orrery.home, orrery.hours))
@@ -150,28 +161,35 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
       const w = root.clientWidth, h = root.clientHeight
       if (w <= 0 || h <= 0) return
       // Sharp on phones, bounded on big tablets.
-      const ratio = Math.max(1, Math.min(window.devicePixelRatio || 1, maxDpr, Math.sqrt(2_400_000 / (w * h))))
+      const ratio = Math.max(1, Math.min(window.devicePixelRatio || 1, governor.settings.dpr, Math.sqrt(2_400_000 / (w * h))))
       if (w === width && h === height && ratio === dpr) return
       width = w; height = h; dpr = ratio
       orrery.resize(w, h, dpr)
-      const size = Math.round(windowCanvas.clientWidth * dpr)
-      windowCanvas.width = windowCanvas.height = size
+      windowSettled = false
       draw()
     }
-    const draw = () => {
+    // The round window is a brass ring over the canvas; its view is drawn into the canvas beneath it, following
+    // the ring's pop-in (scale from the rect, fade from the opacity). It is measured while that entrance runs and
+    // after a resize, not every frame.
+    const measureWindow = () => {
+      const box = porthole.getBoundingClientRect(), area = root.getBoundingClientRect()
+      const entering = typeof porthole.getAnimations === 'function' && porthole.getAnimations().length > 0
+      windowBox = { x: box.left - area.left, y: box.top - area.top, size: box.width, opacity: entering ? Number(getComputedStyle(porthole).opacity) : 1 }
+      return !entering
+    }
+    const draw = (refreshWindow = true) => {
       if (!width) return
-      const inset = Math.round(windowCanvas.clientWidth)
-      orrery.render(width, height, inset, (source, size) => {
-        const px = Math.round(size * dpr)
-        windowCtx.drawImage(source, 0, source.height - px, px, px, 0, 0, windowCanvas.width, windowCanvas.height)
-      })
+      if (!windowSettled) windowSettled = measureWindow()
+      orrery.render(width, height, windowBox, refreshWindow)
     }
 
     const tick = (now: number) => {
       frame = 0
       if (!awake || disposed) return
-      const dt = last ? Math.min(0.1, (now - last) / 1000) : 0
+      const interval = last ? now - last : 0
+      const dt = Math.min(0.1, interval / 1000)
       last = now
+      const start = performance.now()
       // The moon keeps going on its own, easing back in after the child lets go.
       if (tween) {
         const k = Math.min(1, (now - tween.start) / tween.duration), e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2
@@ -193,7 +211,10 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
         currentPhase = index; setPhase(index)
       }
       orrery.update(dt)
-      draw()
+      // Every program a tier could need is linked once, behind the opening curtain.
+      if (!warmed && width) { warmed = true; orrery.prewarm(width, height) }
+      frameCount += 1
+      draw(frameCount % governor.settings.windowEvery === 0)
       if (!shown) { shown = true; setReady(true) }
       // Pins ride along with the sun, Earth and moon.
       orrery.pins(width, height).forEach((pin, i) => {
@@ -202,17 +223,9 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
         el.style.transform = `translate3d(${pin.x}px, ${pin.y}px, 0) translate(-50%, -100%)`
         el.classList.toggle('is-visible', pin.visible)
       })
-      // Slower devices first lose depth of field, then drop to one pixel per point.
-      if (orrery.intro >= 1 && dt > 0) {
-        slow.sum += dt; slow.frames++
-        if (slow.frames === 90) {
-          if (slow.sum / slow.frames > 0.026) {
-            if (orrery.fancy) orrery.fancy = false
-            else if (dpr > 1) { maxDpr = 1; width = 0; resize() }
-          }
-          slow.sum = 0; slow.frames = 0
-        }
-      }
+      const spent = performance.now() - start
+      work.push(spent)
+      if (interval > 0 && governor.sample(interval, spent)) applyTier()
       frame = requestAnimationFrame(tick)
     }
 
@@ -315,7 +328,7 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
     document.addEventListener('visibilitychange', onVisibility)
 
     api.current = { setPov, setHalves, goTo, awake: setAwake }
-    resize()
+    applyTier()
     ctxRef.current.storage.load<unknown>().then(
       (value) => {
         if (disposed) return
@@ -351,18 +364,13 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
       dial.removeEventListener('pointerup', onDialUp)
       dial.removeEventListener('pointercancel', onDialUp)
       api.current = null
+      uninstallPerf()
       sound.dispose()
       orrery.dispose()
     }
   }, [])
 
   useEffect(() => { api.current?.awake(ctx.attention.attended) }, [ctx.attention.attended])
-
-  // Class names and labels are worked out here, outside the JSX, so nothing
-  // resembling on-screen text sits among the elements.
-  const curtainClass = ready ? 'mp-curtain is-open' : 'mp-curtain'
-  const halvesClass = halves ? 'mp-round is-on' : 'mp-round'
-  const phaseLabels = Array.from({ length: PHASE_COUNT }, (_, i) => `Phase ${i + 1} of ${PHASE_COUNT}`)
 
   return (
     <div ref={rootRef} className="mp-root">
@@ -375,20 +383,19 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
           </div>
         ))}
       </div>
-      <div className={curtainClass} aria-hidden />
+      <div className={`mp-curtain${ready ? ' is-open' : ''}`} aria-hidden />
 
       <div className="mp-toolbar mp-glass">
         <div className="mp-segmented" role="group" aria-label="Point of view">
           <button type="button" className={pov ? '' : 'is-on'} aria-pressed={!pov} aria-label="Look at the model" onClick={() => api.current?.setPov(false)}><ModelIcon /></button>
           <button type="button" className={pov ? 'is-on' : ''} aria-pressed={pov} aria-label="Stand on Earth" onClick={() => api.current?.setPov(true)}><EyeIcon /></button>
         </div>
-        <button type="button" className={halvesClass} aria-pressed={halves} aria-label="Show the two halves" onClick={() => api.current?.setHalves(!halves)}>
+        <button type="button" className={`mp-round${halves ? ' is-on' : ''}`} aria-pressed={halves} aria-label="Show the two halves" onClick={() => api.current?.setHalves(!halves)}>
           <HalvesIcon />
         </button>
       </div>
 
-      <button type="button" className="mp-window" aria-label={pov ? 'Look at the model' : 'Stand on Earth'} onClick={() => api.current?.setPov(!pov)}>
-        <canvas ref={windowRef} />
+      <button ref={windowRef} type="button" className="mp-window" aria-label={pov ? 'Look at the model' : 'Stand on Earth'} onClick={() => api.current?.setPov(!pov)}>
         <span className="mp-window-badge">{pov ? <ModelIcon /> : <EyeIcon />}</span>
       </button>
 
@@ -404,7 +411,7 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
 
       <div className="mp-strip mp-glass" role="group" aria-label="Moon phases">
         {Array.from({ length: PHASE_COUNT }, (_, i) => (
-          <button key={i} type="button" className={i === phase ? 'is-on' : ''} aria-label={phaseLabels[i]} onClick={() => api.current?.goTo(i)}>
+          <button key={i} type="button" className={i === phase ? 'is-on' : ''} aria-label={`Phase ${i + 1} of ${PHASE_COUNT}`} onClick={() => api.current?.goTo(i)}>
             <MoonIcon elongation={phaseAngle(i)} size={40} />
           </button>
         ))}
