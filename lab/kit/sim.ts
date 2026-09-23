@@ -27,7 +27,9 @@ export interface PointerInput {
 export type AffordanceKind = 'tap' | 'drag' | 'hold'
 
 // What a child could be drawn to right now. Personas use it to choose where
-// to aim; it never replaces the sim's hit-test.
+// to aim; it never replaces the sim's hit-test. The rectangle is anchored at
+// its TOP-LEFT corner like canvas fillRect: (x, y) is the corner and the
+// centre is (x + w / 2, y + h / 2). Prototypes must report affordances this way.
 export interface Affordance {
   x: number
   y: number
