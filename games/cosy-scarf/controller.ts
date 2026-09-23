@@ -1,0 +1,1143 @@
+import { chooseHint, handPose, HintScheduler, type GuidanceFrame, type HandPose, type Hint, type Point3 } from './guidance'
+import { GestureTracker, TAP_SLOP, type Intent, type Point } from './input'
+import { canOffer, give, isFull, knitRow, paintStitch, summonIfReady, unravelRow } from './knitting'
+import { BALL_RADIUS, BASKET, BODY, BUTTERFLY, CELL_H, ENTRY, HILL_SPOTS, LOOM, LOOM_SPOT, SCARF, ballRest, cellAt, cellCentre, groundY, needlesY, type Spot } from './layout'
+import { completedRepeat, stripeColours } from './pattern'
+import { SaveCadence } from './saveCadence'
+import { clamp01, smooth, spring, springStep, type Spring } from './springs'
+import { ANIMALS, ballsForAge, offerRowsForAge, WIDTH, type AnimalKey, type GameState, type Scarf } from './state'
+
+// Cosy Scarf while it is on screen: touch, the knitting rules, the gift
+// sequence, the animals' comings and goings, guidance, sound cues and
+// saving. It knows nothing about three.js; the view reads its public fields
+// every frame (without allocating) and hands it a projector for hit tests.
+
+export type Sound = {
+  unlock(): void
+  setActive(active: boolean): void
+  /** One stitch slipping off the needle. */
+  stitch(colour: number): void
+  /** A row finished: that colour's note. */
+  row(colour: number): void
+  hop(colour: number): void
+  unravel(): void
+  paint(colour: number): void
+  flutter(open: boolean): void
+  /** The newest rows repeated a unit: the loom hums it back. */
+  hum(unit: readonly number[]): void
+  /** The scarf is long enough to give. */
+  offer(): void
+  swish(): void
+  warm(animal: AnimalKey): void
+  shiver(animal: AnimalKey): void
+  happy(animal: AnimalKey): void
+  /** The warm animal's own dance tune, played on the scarf's stripes. */
+  dance(animal: AnimalKey, colours: readonly number[]): void
+  crunch(): void
+  basket(): void
+  footstep(animal: AnimalKey, weight: number): void
+  dispose(): void
+}
+
+export const silentSound: Sound = {
+  unlock() {},
+  setActive() {},
+  stitch() {},
+  row() {},
+  hop() {},
+  unravel() {},
+  paint() {},
+  flutter() {},
+  hum() {},
+  offer() {},
+  swish() {},
+  warm() {},
+  shiver() {},
+  happy() {},
+  dance() {},
+  crunch() {},
+  basket() {},
+  footstep() {},
+  dispose() {},
+}
+
+/** How the view maps between the screen (CSS pixels) and the world. */
+export type Projector = {
+  /** Writes the screen point of `p`; false when it is behind the camera. */
+  toScreen(p: Point3, out: Point): boolean
+  /** The world point under a screen point on the plane z = `z`. */
+  toPlaneZ(screen: Point, z: number, out: Point3): boolean
+  /** The world point under a screen point on the snow (plane y = `y`). */
+  toPlaneY(screen: Point, y: number, out: Point3): boolean
+  /** Screen pixels per world unit around `p`. */
+  pixelsPerUnit(p: Point3): number
+}
+
+export type Target =
+  | { kind: 'ball'; index: number }
+  | { kind: 'animal'; animal: AnimalKey }
+  | { kind: 'needles' }
+  | { kind: 'scarf' }
+  | { kind: 'butterfly' }
+  | { kind: 'basket' }
+  | { kind: 'snow' }
+
+// --- per-animal timing: each walks and dances at its own pace -----------------
+
+export const WALK_SPEED: Record<AnimalKey, number> = { bunny: 30, penguin: 15, fox: 36, bear: 18 }
+export const DANCE_SECONDS: Record<AnimalKey, number> = { bunny: 3.1, penguin: 3.6, fox: 3.3, bear: 4.2 }
+export const MINI_DANCE_SECONDS = 1.5
+
+// --- gift timeline (seconds after the child hands the scarf over) --------------
+
+export const CAST_OFF = 0.35
+export const FLY_END = 1.25
+export const WRAP_END = 2.05
+export const DANCE_START = 2.35
+const NEXT_ARRIVES_AFTER = 0.7
+
+const KNIT_CELLS_PER_S = 10
+const KNIT_FAST_CELLS_PER_S = 24
+const UNRAVEL_CELLS_PER_S = 30
+/** Painting starts only after the ball rests on one stitch this long, so a carry to the loom never paints. */
+export const PAINT_DWELL_S = 0.4
+/** The ball is carried on this plane, just in front of the scarf. */
+const CARRY_Z = SCARF.z + 6
+const RETURN_SECONDS = 0.5
+const GRAVITY = 260
+const HIT_SLOP_PX = 16
+const GIVE_REACH_PX = 170
+
+export type BallView = {
+  readonly colour: number
+  readonly rest: Point3
+  /** Where the ball is drawn (rest plus hop, or under the finger). */
+  readonly pos: Point3
+  hopY: number
+  hopV: number
+  /** 0 round; positive squashed flat, negative stretched tall. */
+  squash: Spring
+  spin: number
+  spinV: number
+  held: number | null
+  /** 0..1 through the arc home, or -1. */
+  returning: number
+  readonly returnFrom: Point3
+  launchAt: number
+  launchV: number
+  airborne: boolean
+}
+
+export type ScarfView = {
+  readonly id: number
+  rows: Scarf
+  /** null while it hangs on the loom. */
+  holder: AnimalKey | null
+  /** 0 is the scarf nearest the neck. */
+  stack: number
+  /** Bumps whenever `rows` changes; the view rewrites its colour texture then. */
+  version: number
+  /** Stitches shown, in knitting order (the reveal runs a little behind the rules). */
+  reveal: number
+  fringe: number
+  fly: number
+  wrap: number
+  /** Seconds since the gift, or -1 once it is fully on. */
+  giftAt: number
+  /** Time the scarf started folding away (a fourth scarf), or -1. */
+  leavingAt: number
+  swing: Spring
+  /** How far the offered scarf lifts off the rod. */
+  lift: Spring
+  /** Offset toward a finger tugging the scarf (world units). */
+  readonly pull: Point3
+}
+
+export type ActorView = {
+  readonly animal: AnimalKey
+  visible: boolean
+  x: number
+  z: number
+  yaw: number
+  walking: boolean
+  readonly walkFrom: Spot
+  readonly walkTo: Spot
+  walkT0: number
+  walkDuration: number
+  /** 0..1 linear progress along the current walk (each gait eases it its own way). */
+  walkProgress: number
+  destination: 'loom' | 'hill' | null
+  /** 0 shivering cold, 1 cosy. */
+  warm: number
+  warmAt: number
+  tapAt: number
+  danceAt: number
+  danceLength: number
+  danceFull: boolean
+  reach: Spring
+  bobAt: number
+}
+
+export type Puff = { x: number; y: number; z: number; t0: number; size: number; colour: number }
+
+export type Strand = { alpha: number; colour: number; ball: number; row: number; column: number }
+
+export type Guidance = {
+  hint: Hint | null
+  frame: GuidanceFrame
+  hand: HandPose
+  handVisible: boolean
+  /** The demonstration is a carry (drag), not a tap. */
+  handCarries: boolean
+  glowBalls: boolean
+  glowBall: number
+  glowScarf: boolean
+}
+
+const PUFFS = 32
+
+type Drag =
+  | { kind: 'ball'; index: number; screen: Point; painted: boolean; cellRow: number; cellColumn: number; cellSince: number }
+  | { kind: 'needles'; screen: Point; grab: Point; pulled: number }
+  | { kind: 'scarf'; screen: Point; start: Point }
+
+type Timer = { at: number; run: () => void }
+
+export class ScarfController {
+  readonly state: GameState
+  readonly balls: BallView[]
+  readonly actors: Record<AnimalKey, ActorView>
+  readonly worn: ScarfView[] = []
+  loom: ScarfView
+  readonly strand: Strand = { alpha: 0, colour: 0, ball: -1, row: 0, column: 0 }
+  readonly needles = { pull: spring(0), castOffAt: -Infinity, held: false }
+  readonly butterfly = { show: spring(0), open: spring(0), flapAt: -Infinity }
+  readonly loomRock: Spring = spring(0)
+  readonly puffs: Puff[] = Array.from({ length: PUFFS }, () => ({ x: 0, y: 0, z: 0, t0: -Infinity, size: 1, colour: -1 }))
+  readonly guidance: Guidance
+  basketAt = -Infinity
+  humAt = -Infinity
+  /** Seconds of attended play. */
+  t = 0
+  /** The loom's scarf is long enough and its animal is standing there. */
+  offered = false
+  readonly offerRows: number
+
+  private readonly sound: Sound
+  private readonly cadence: SaveCadence
+  private readonly tracker: GestureTracker<Target>
+  private readonly scheduler: HintScheduler
+  private projector: Projector | null = null
+  private readonly drags = new Map<number, Drag>()
+  private needlesDrag: Extract<Drag, { kind: 'needles' }> | null = null
+  private scarfDrag: Extract<Drag, { kind: 'scarf' }> | null = null
+  private timers: Timer[] = []
+  private nextScarfId = 1
+  private puffCursor = 0
+  private lastHumRow = -1
+  private hintVersion = -1
+  private hintBusy = false
+  private peekStep = -1
+  private readonly ballTargets: Target[]
+  private readonly animalTargets: Record<AnimalKey, Target>
+  private readonly handFrom: Point3 = { x: 0, y: 0, z: 0 }
+  private readonly handTo: Point3 = { x: 0, y: 0, z: 0 }
+  private readonly scratch: Point3 = { x: 0, y: 0, z: 0 }
+  private readonly scratch2: Point3 = { x: 0, y: 0, z: 0 }
+  private readonly screen: Point = { x: 0, y: 0 }
+
+  constructor(state: GameState, options: { save: (state: GameState) => void; sound?: Sound; childAge: number | null }) {
+    this.state = state
+    this.sound = options.sound ?? silentSound
+    this.offerRows = offerRowsForAge(options.childAge)
+    this.cadence = new SaveCadence(() => options.save(JSON.parse(JSON.stringify(this.state)) as GameState))
+    this.tracker = new GestureTracker<Target>(
+      (at) => this.hitTest(at),
+      (target) => target.kind === 'needles',
+    )
+    this.scheduler = new HintScheduler(0)
+
+    const count = ballsForAge(options.childAge)
+    this.balls = Array.from({ length: count }, (_, colour) => {
+      const rest = ballRest(colour, count)
+      return {
+        colour,
+        rest,
+        pos: { ...rest },
+        hopY: 0,
+        hopV: 0,
+        squash: spring(0),
+        spin: colour * 1.7,
+        spinV: 0,
+        held: null,
+        returning: -1,
+        returnFrom: { ...rest },
+        launchAt: -Infinity,
+        launchV: 0,
+        airborne: false,
+      }
+    })
+    this.ballTargets = this.balls.map((_, index) => ({ kind: 'ball', index }))
+    this.animalTargets = { bunny: { kind: 'animal', animal: 'bunny' }, penguin: { kind: 'animal', animal: 'penguin' }, fox: { kind: 'animal', animal: 'fox' }, bear: { kind: 'animal', animal: 'bear' } }
+
+    this.loom = this.newScarf(state.loom, null)
+    this.loom.reveal = state.loom.length * WIDTH
+    this.actors = {} as Record<AnimalKey, ActorView>
+    for (const animal of ANIMALS) this.actors[animal] = this.newActor(animal)
+    for (const animal of ANIMALS) {
+      const worn = state.scarves[animal]
+      worn.forEach((scarf, stack) => {
+        const view = this.newScarf(scarf, animal)
+        view.stack = stack
+        view.reveal = scarf.length * WIDTH
+        view.fringe = 1
+        view.fly = 1
+        view.wrap = 1
+        this.worn.push(view)
+      })
+    }
+    this.butterfly.show.x = this.butterflyWanted() ? 1 : 0
+    this.butterfly.open.x = state.mirror ? 1 : 0
+    this.placeActorsOnOpen()
+
+    this.guidance = {
+      hint: null,
+      frame: { demo: -1, glow: 0, peek: -1, idle: 0 },
+      hand: { x: 0, y: 0, z: 0, press: 0, opacity: 0 },
+      handVisible: false,
+      handCarries: false,
+      glowBalls: false,
+      glowBall: -1,
+      glowScarf: false,
+    }
+  }
+
+  setProjector(projector: Projector): void {
+    this.projector = projector
+  }
+
+  /** Attended and visible: sound and time run. Otherwise everything pauses where it is. */
+  setRunning(running: boolean): void {
+    this.sound.setActive(running)
+    if (!running) this.pause()
+  }
+
+  dispose(): void {
+    this.cadence.settle(this.t * 1000)
+    this.sound.dispose()
+  }
+
+  /** Forwarded by the view's gaits so each foot lands with its own weight. */
+  footstep(animal: AnimalKey, weight: number): void {
+    this.sound.footstep(animal, weight)
+    if (weight > 0.6) {
+      const actor = this.actors[animal]
+      this.puff(actor.x, groundY(actor.x, actor.z) + 0.5, actor.z + 3, 0.8 + weight, -1)
+    }
+  }
+
+  // --- opening ------------------------------------------------------------------
+
+  private newScarf(rows: Scarf, holder: AnimalKey | null): ScarfView {
+    return {
+      id: this.nextScarfId++,
+      rows,
+      holder,
+      stack: 0,
+      version: 0,
+      reveal: 0,
+      fringe: 0,
+      fly: 0,
+      wrap: 0,
+      giftAt: -1,
+      leavingAt: -1,
+      swing: spring(0),
+      lift: spring(0),
+      pull: { x: 0, y: 0, z: 0 },
+    }
+  }
+
+  private newActor(animal: AnimalKey): ActorView {
+    return {
+      animal,
+      visible: false,
+      x: ENTRY.x,
+      z: ENTRY.z,
+      yaw: ENTRY.yaw,
+      walking: false,
+      walkFrom: { ...ENTRY },
+      walkTo: { ...ENTRY },
+      walkT0: 0,
+      walkDuration: 1,
+      walkProgress: 0,
+      destination: null,
+      warm: 0,
+      warmAt: -Infinity,
+      tapAt: -Infinity,
+      danceAt: -Infinity,
+      danceLength: 0,
+      danceFull: false,
+      reach: spring(0),
+      bobAt: -Infinity,
+    }
+  }
+
+  private placeActorsOnOpen(): void {
+    for (const animal of ANIMALS) {
+      const actor = this.actors[animal]
+      if (this.state.scarves[animal].length === 0) continue
+      const home = HILL_SPOTS[animal]
+      actor.visible = true
+      actor.x = home.x
+      actor.z = home.z
+      actor.yaw = home.yaw
+      actor.warm = 1
+      actor.warmAt = -10
+      actor.destination = 'hill'
+    }
+    const atLoom = this.state.atLoom
+    if (atLoom) this.walkTo(this.actors[atLoom], LOOM_SPOT, 'loom', 0.6)
+    else if (summonIfReady(this.state, this.offerRows)) this.walkTo(this.actors[this.state.atLoom!], LOOM_SPOT, 'loom', 0.6)
+  }
+
+  private walkTo(actor: ActorView, spot: Spot, destination: 'loom' | 'hill', delay: number): void {
+    if (destination === 'loom' && actor.destination === 'loom' && actor.visible) return
+    if (!actor.visible) {
+      actor.visible = true
+      actor.x = ENTRY.x
+      actor.z = ENTRY.z
+      actor.yaw = ENTRY.yaw
+    }
+    actor.walkFrom.x = actor.x
+    actor.walkFrom.z = actor.z
+    actor.walkFrom.yaw = actor.yaw
+    actor.walkTo.x = spot.x
+    actor.walkTo.z = spot.z
+    actor.walkTo.yaw = spot.yaw
+    actor.walkT0 = this.t + delay
+    actor.walkDuration = Math.max(0.6, Math.hypot(spot.x - actor.x, spot.z - actor.z) / WALK_SPEED[actor.animal])
+    actor.walkProgress = 0
+    actor.walking = true
+    actor.destination = destination
+  }
+
+  // --- touch ----------------------------------------------------------------------
+
+  pointerDown(id: number, at: Point, time: number): void {
+    this.sound.unlock()
+    for (const intent of this.tracker.down(id, at, time)) this.handle(intent)
+  }
+
+  pointerMove(id: number, at: Point, time: number): void {
+    const drag = this.drags.get(id)
+    if (drag) {
+      drag.screen.x = at.x
+      drag.screen.y = at.y
+    }
+    for (const intent of this.tracker.move(id, at, time)) this.handle(intent)
+  }
+
+  pointerUp(id: number, at: Point, time: number): void {
+    for (const intent of this.tracker.up(id, at, time)) this.handle(intent)
+  }
+
+  pointerCancel(id: number): void {
+    for (const intent of this.tracker.cancel(id)) this.handle(intent)
+  }
+
+  private handle(intent: Intent<Target>): void {
+    switch (intent.type) {
+      case 'press':
+        this.scheduler.touch(this.t)
+        this.press(intent.target)
+        return
+      case 'tap':
+        this.tap(intent.target, intent.at)
+        return
+      case 'dragStart':
+        this.dragStart(intent.id, intent.target, intent.at)
+        return
+      case 'dragMove': {
+        const drag = this.drags.get(intent.id)
+        if (drag) {
+          drag.screen.x = intent.at.x
+          drag.screen.y = intent.at.y
+          if (drag.kind === 'needles') this.pullNeedles(drag)
+        }
+        return
+      }
+      case 'dragEnd':
+        this.dragEnd(intent.id, intent.at, true)
+        return
+      case 'cancelAll':
+        for (const id of intent.ids) this.dragEnd(id, null, false)
+        return
+      default: {
+        const never: never = intent
+        return never
+      }
+    }
+  }
+
+  private press(target: Target): void {
+    if (target.kind === 'ball') this.balls[target.index].squash.v += 3
+  }
+
+  private tap(target: Target, at: Point): void {
+    switch (target.kind) {
+      case 'ball':
+        this.tapBall(target.index)
+        return
+      case 'animal':
+        this.tapAnimal(target.animal)
+        return
+      case 'needles':
+      case 'scarf':
+        if (this.offered) this.startGift()
+        else {
+          this.loom.swing.v += 0.5
+          if (this.loom.rows.length > 0) this.sound.hum(stripeColours(this.loom.rows))
+        }
+        return
+      case 'butterfly':
+        this.toggleMirror()
+        return
+      case 'basket':
+        this.basketAt = this.t
+        this.sound.basket()
+        for (const ball of this.balls) if (ball.held === null && ball.returning < 0) this.launch(ball, 22 + ball.colour * 3, 0.02 * ball.colour)
+        return
+      case 'snow': {
+        const p = this.projector
+        if (p && p.toPlaneY(at, 0, this.scratch)) this.puff(this.scratch.x, 0.6, this.scratch.z, 1.6, -1)
+        this.sound.crunch()
+        return
+      }
+      default: {
+        const never: never = target
+        return never
+      }
+    }
+  }
+
+  private tapBall(index: number): void {
+    const ball = this.balls[index]
+    this.launch(ball, 58, 0.05)
+    this.sound.hop(ball.colour)
+    this.knit(ball.colour)
+  }
+
+  private knit(colour: number): void {
+    if (isFull(this.state)) {
+      this.loom.swing.v += 0.25
+      return
+    }
+    knitRow(this.state, colour)
+    this.loom.version++
+    this.cadence.change(this.t * 1000, true)
+    this.afterKnitChange()
+  }
+
+  private afterKnitChange(): void {
+    if (this.state.atLoom === null && summonIfReady(this.state, this.offerRows)) {
+      this.walkTo(this.actors[this.state.atLoom!], LOOM_SPOT, 'loom', 0.3)
+      this.cadence.change(this.t * 1000, true)
+    }
+  }
+
+  private tapAnimal(animal: AnimalKey): void {
+    const actor = this.actors[animal]
+    if (this.offered && this.state.atLoom === animal) {
+      this.startGift()
+      return
+    }
+    actor.tapAt = this.t
+    if (actor.warm < 0.5) {
+      this.sound.shiver(animal)
+      return
+    }
+    this.sound.happy(animal)
+    if (!actor.walking && this.t > actor.danceAt + actor.danceLength) {
+      actor.danceAt = this.t + 0.12
+      actor.danceLength = MINI_DANCE_SECONDS
+      actor.danceFull = false
+    }
+  }
+
+  private toggleMirror(): void {
+    this.state.mirror = !this.state.mirror
+    this.butterfly.flapAt = this.t
+    this.sound.flutter(this.state.mirror)
+    this.cadence.change(this.t * 1000, true)
+  }
+
+  private dragStart(id: number, target: Target, at: Point): void {
+    switch (target.kind) {
+      case 'ball': {
+        const ball = this.balls[target.index]
+        if (ball.held !== null) return
+        ball.held = id
+        ball.returning = -1
+        ball.airborne = false
+        ball.hopY = 0
+        ball.hopV = 0
+        ball.squash.v -= 4
+        this.drags.set(id, { kind: 'ball', index: target.index, screen: { x: at.x, y: at.y }, painted: false, cellRow: -1, cellColumn: -1, cellSince: 0 })
+        return
+      }
+      case 'needles': {
+        if (this.needlesDrag || this.loom.rows.length === 0) return
+        this.needles.held = true
+        const drag: Drag = { kind: 'needles', screen: { x: at.x, y: at.y }, grab: { x: at.x, y: at.y }, pulled: 0 }
+        this.needlesDrag = drag
+        this.drags.set(id, drag)
+        return
+      }
+      case 'scarf': {
+        if (this.scarfDrag || this.loom.rows.length === 0) return
+        const drag: Drag = { kind: 'scarf', screen: { x: at.x, y: at.y }, start: { x: at.x, y: at.y } }
+        this.scarfDrag = drag
+        this.drags.set(id, drag)
+        return
+      }
+      case 'animal':
+      case 'butterfly':
+      case 'basket':
+      case 'snow':
+        return
+      default: {
+        const never: never = target
+        return never
+      }
+    }
+  }
+
+  private dragEnd(id: number, at: Point | null, commit: boolean): void {
+    const drag = this.drags.get(id)
+    if (!drag) return
+    this.drags.delete(id)
+    switch (drag.kind) {
+      case 'ball': {
+        const ball = this.balls[drag.index]
+        ball.held = null
+        if (commit && at && !drag.painted && this.overLoom(at)) {
+          this.sound.hop(ball.colour)
+          this.knit(ball.colour)
+        }
+        if (drag.painted) this.cadence.settle(this.t * 1000)
+        this.sendHome(ball)
+        return
+      }
+      case 'needles':
+        this.needles.held = false
+        this.needlesDrag = null
+        if (drag.pulled > 0) this.cadence.change(this.t * 1000, true)
+        else if (commit && at && Math.hypot(at.x - drag.grab.x, at.y - drag.grab.y) < TAP_SLOP) this.tap(SCARF_TARGET, at)
+        return
+      case 'scarf': {
+        this.scarfDrag = null
+        const near = commit && at && this.offered && this.nearRecipient(at, drag.start)
+        this.loom.pull.x = 0
+        this.loom.pull.y = 0
+        if (near) this.startGift()
+        else this.loom.swing.v += 0.4
+        return
+      }
+      default: {
+        const never: never = drag
+        return never
+      }
+    }
+  }
+
+  private overLoom(at: Point): boolean {
+    const p = this.projector
+    if (!p || !p.toPlaneZ(at, SCARF.z, this.scratch)) return false
+    return Math.abs(this.scratch.x - LOOM.x) < LOOM.postX + 3 && this.scratch.y > -2 && this.scratch.y < LOOM.rodY + 5
+  }
+
+  private nearRecipient(at: Point, start: Point): boolean {
+    const animal = this.state.atLoom
+    const p = this.projector
+    if (!animal || !p) return false
+    const actor = this.actors[animal]
+    this.scratch.x = actor.x
+    this.scratch.y = groundY(actor.x, actor.z) + BODY[animal].neck
+    this.scratch.z = actor.z
+    if (!p.toScreen(this.scratch, this.screen)) return false
+    const toward = Math.hypot(this.screen.x - start.x, this.screen.y - start.y) - Math.hypot(this.screen.x - at.x, this.screen.y - at.y)
+    return Math.hypot(this.screen.x - at.x, this.screen.y - at.y) < GIVE_REACH_PX || toward > 90
+  }
+
+  private pullNeedles(drag: Extract<Drag, { kind: 'needles' }>): void {
+    const p = this.projector
+    if (!p) return
+    this.scratch.x = SCARF.x
+    this.scratch.y = needlesY(this.loom.rows.length)
+    this.scratch.z = SCARF.z
+    const rowPx = CELL_H * p.pixelsPerUnit(this.scratch)
+    const up = drag.grab.y - drag.screen.y
+    const want = Math.max(0, Math.floor(up / rowPx))
+    while (drag.pulled < want && this.loom.rows.length > 0) {
+      const row = unravelRow(this.state)
+      if (!row) break
+      drag.pulled++
+      this.loom.version++
+      this.loom.swing.v -= 0.2
+      this.sound.unravel()
+      const ball = this.balls[row[0]]
+      if (ball && ball.held === null) {
+        this.launch(ball, 30, 0)
+        ball.spinV -= 9
+      }
+      this.puff(SCARF.x, needlesY(this.loom.rows.length), SCARF.z + 2, 1.4, row[0])
+    }
+    this.lastHumRow = Math.min(this.lastHumRow, this.loom.rows.length - 1)
+  }
+
+  // --- the gift -----------------------------------------------------------------------
+
+  private startGift(): void {
+    if (!this.offered) return
+    const colours = stripeColours(this.state.loom)
+    const gift = give(this.state, this.offerRows)
+    if (!gift) return
+    const view = this.loom
+    view.holder = gift.to
+    view.giftAt = 0
+    view.reveal = view.rows.length * WIDTH
+    view.pull.x = 0
+    view.pull.y = 0
+    if (gift.folded) {
+      const oldest = this.worn.find((w) => w.holder === gift.to && w.rows === gift.folded && w.leavingAt < 0)
+      if (oldest) oldest.leavingAt = this.t
+    }
+    const stays = this.worn.filter((w) => w.holder === gift.to && w.leavingAt < 0)
+    stays.forEach((w, i) => (w.stack = i))
+    view.stack = stays.length
+    this.worn.push(view)
+    this.loom = this.newScarf(this.state.loom, null)
+    this.needles.castOffAt = this.t
+    this.lastHumRow = -1
+    this.offered = false
+    this.cadence.change(this.t * 1000, true)
+
+    const actor = this.actors[gift.to]
+    actor.reach.v += 2
+    this.after(FLY_END + 0.05, () => this.sound.swish())
+    this.after(WRAP_END, () => {
+      actor.warmAt = this.t
+      this.sound.warm(gift.to)
+      this.puff(actor.x, groundY(actor.x, actor.z) + BODY[gift.to].neck, actor.z + 4, 2.2, colours[0] ?? 0)
+    })
+    this.after(DANCE_START, () => {
+      actor.danceAt = this.t
+      actor.danceLength = DANCE_SECONDS[gift.to]
+      actor.danceFull = true
+      this.sound.dance(gift.to, colours)
+    })
+    this.after(DANCE_START + DANCE_SECONDS[gift.to] + 0.2, () => {
+      if (this.state.atLoom !== gift.to) this.walkTo(actor, HILL_SPOTS[gift.to], 'hill', 0)
+      const next = this.state.atLoom
+      if (next && next !== gift.to) this.walkTo(this.actors[next], LOOM_SPOT, 'loom', NEXT_ARRIVES_AFTER)
+    })
+  }
+
+  private after(delay: number, run: () => void): void {
+    this.timers.push({ at: this.t + delay, run })
+  }
+
+  // --- balls ------------------------------------------------------------------------------
+
+  private launch(ball: BallView, speed: number, delay: number): void {
+    if (ball.held !== null) return
+    ball.launchAt = this.t + delay
+    ball.launchV = speed
+    ball.squash.v += 5
+  }
+
+  private sendHome(ball: BallView): void {
+    ball.returnFrom.x = ball.pos.x
+    ball.returnFrom.y = ball.pos.y
+    ball.returnFrom.z = ball.pos.z
+    ball.returning = 0
+  }
+
+  private stepBalls(dt: number): void {
+    const p = this.projector
+    const knittingColour = this.strand.alpha > 0.5 ? this.strand.colour : -1
+    for (const ball of this.balls) {
+      if (ball.held !== null) {
+        const drag = this.drags.get(ball.held)
+        if (drag && drag.kind === 'ball' && p && p.toPlaneZ(drag.screen, CARRY_Z, this.scratch)) {
+          const k = 1 - Math.exp(-dt * 26)
+          ball.pos.x += (this.scratch.x - ball.pos.x) * k
+          ball.pos.y += (Math.max(BALL_RADIUS, this.scratch.y) - ball.pos.y) * k
+          ball.pos.z += (CARRY_Z - ball.pos.z) * k
+          this.paintUnder(ball, drag)
+        }
+      } else if (ball.returning >= 0) {
+        ball.returning = Math.min(1, ball.returning + dt / RETURN_SECONDS)
+        const k = smooth(ball.returning)
+        const arc = Math.sin(ball.returning * Math.PI) * 9
+        ball.pos.x = ball.returnFrom.x + (ball.rest.x - ball.returnFrom.x) * k
+        ball.pos.y = ball.returnFrom.y + (ball.rest.y - ball.returnFrom.y) * k + arc
+        ball.pos.z = ball.returnFrom.z + (ball.rest.z - ball.returnFrom.z) * k
+        if (ball.returning >= 1) {
+          ball.returning = -1
+          ball.squash.v += 9
+          ball.spinV += 4
+        }
+      } else {
+        if (!ball.airborne && this.t >= ball.launchAt && ball.launchV > 0) {
+          ball.airborne = true
+          ball.hopV = ball.launchV
+          ball.launchV = 0
+          ball.squash.v -= 6
+        }
+        if (ball.airborne) {
+          ball.hopV -= GRAVITY * dt
+          ball.hopY += ball.hopV * dt
+          if (ball.hopY <= 0) {
+            ball.hopY = 0
+            ball.airborne = false
+            ball.squash.v += Math.min(14, 4 + Math.abs(ball.hopV) * 0.12)
+            ball.hopV = 0
+          }
+        }
+        ball.pos.x = ball.rest.x
+        ball.pos.y = ball.rest.y + ball.hopY
+        ball.pos.z = ball.rest.z
+      }
+      if (ball.colour === knittingColour) ball.spinV += (7 - ball.spinV) * Math.min(1, dt * 6)
+      else ball.spinV *= Math.exp(-dt * 2.5)
+      ball.spin += ball.spinV * dt
+      springStep(ball.squash, 0, dt, 320, 13)
+    }
+  }
+
+  private paintUnder(ball: BallView, drag: Extract<Drag, { kind: 'ball' }>): void {
+    const p = this.projector
+    if (!p || !p.toPlaneZ(drag.screen, SCARF.z, this.scratch2)) return
+    const shown = Math.min(this.loom.rows.length, Math.floor(this.loom.reveal / WIDTH + 1e-6))
+    const cell = cellAt(this.scratch2.x, this.scratch2.y, shown)
+    if (!cell) {
+      drag.cellRow = -1
+      return
+    }
+    if (cell.row !== drag.cellRow || cell.column !== drag.cellColumn) {
+      drag.cellRow = cell.row
+      drag.cellColumn = cell.column
+      drag.cellSince = this.t
+      if (!drag.painted) return
+    } else if (!drag.painted && this.t - drag.cellSince < PAINT_DWELL_S) return
+    else if (drag.painted) return
+    const changed = paintStitch(this.state, cell.row, cell.column, ball.colour)
+    drag.painted = true
+    if (changed.length === 0) return
+    this.loom.version++
+    this.sound.paint(ball.colour)
+    ball.squash.v += 6
+    for (const [row, column] of changed) {
+      const c = cellCentre(row, column)
+      this.puff(c.x, c.y, SCARF.z + 1.5, 1, ball.colour)
+    }
+    this.cadence.change(this.t * 1000)
+  }
+
+  // --- hit testing ---------------------------------------------------------------------
+
+  private hitTest(at: Point): Target {
+    const p = this.projector
+    if (!p) return SNOW
+    if (this.butterfly.show.x > 0.5 && this.near(p, at, BUTTERFLY.x, BUTTERFLY.y, BUTTERFLY.z, 6.5)) return BUTTERFLY_TARGET
+    const rows = this.loom.rows.length
+    const freeEdge = needlesY(this.loom.reveal / WIDTH)
+    if (rows > 0) {
+      this.scratch.x = SCARF.x
+      this.scratch.y = freeEdge
+      this.scratch.z = SCARF.z
+      if (p.toScreen(this.scratch, this.screen)) {
+        const ppu = p.pixelsPerUnit(this.scratch)
+        if (Math.abs(at.y - this.screen.y) < Math.max(18, 1.6 * ppu) && Math.abs(at.x - this.screen.x) < (SCARF.halfWidth + 5) * ppu) return NEEDLES
+      }
+    }
+    let best = -1
+    let bestDistance = Infinity
+    for (let i = 0; i < this.balls.length; i++) {
+      const ball = this.balls[i]
+      if (!p.toScreen(ball.pos, this.screen)) continue
+      const d = Math.hypot(at.x - this.screen.x, at.y - this.screen.y)
+      if (d < BALL_RADIUS * 1.15 * p.pixelsPerUnit(ball.pos) + HIT_SLOP_PX && d < bestDistance) {
+        best = i
+        bestDistance = d
+      }
+    }
+    if (best >= 0) return this.ballTargets[best]
+    if (rows > 0 && p.toPlaneZ(at, SCARF.z, this.scratch)) {
+      const x = this.scratch.x - SCARF.x - this.loom.pull.x
+      if (Math.abs(x) < SCARF.halfWidth + 1.5 && this.scratch.y < SCARF.top + 1.5 && this.scratch.y > freeEdge - 1) return SCARF_TARGET
+    }
+    for (const animal of ANIMALS) {
+      const actor = this.actors[animal]
+      if (!actor.visible) continue
+      if (this.near(p, at, actor.x, groundY(actor.x, actor.z) + BODY[animal].height * 0.48, actor.z, BODY[animal].height * 0.55)) return this.animalTargets[animal]
+    }
+    if (this.near(p, at, BASKET.x, BASKET.rimY * 0.6, BASKET.z, BASKET.radius)) return BASKET_TARGET
+    return SNOW
+  }
+
+  private near(p: Projector, at: Point, x: number, y: number, z: number, radius: number): boolean {
+    this.scratch.x = x
+    this.scratch.y = y
+    this.scratch.z = z
+    if (!p.toScreen(this.scratch, this.screen)) return false
+    return Math.hypot(at.x - this.screen.x, at.y - this.screen.y) < radius * p.pixelsPerUnit(this.scratch) + HIT_SLOP_PX
+  }
+
+  // --- lifecycle -----------------------------------------------------------------------
+
+  /** Put away, faded, or hidden mid-anything: every gesture ends where it is and nothing is lost. */
+  pause(): void {
+    this.tracker.reset()
+    for (const id of [...this.drags.keys()]) this.dragEnd(id, null, false)
+    this.cadence.settle(this.t * 1000)
+  }
+
+  step(dt: number): void {
+    const h = Math.min(Math.max(dt, 0), 0.1)
+    this.t += h
+    this.runTimers()
+    this.stepActors(h)
+    this.stepBalls(h)
+    this.stepLoom(h)
+    this.stepWorn(h)
+    this.stepGuidance()
+  }
+
+  private runTimers(): void {
+    if (this.timers.length === 0) return
+    for (let i = 0; i < this.timers.length; ) {
+      const timer = this.timers[i]
+      if (this.t >= timer.at) {
+        this.timers.splice(i, 1)
+        timer.run()
+      } else i++
+    }
+  }
+
+  private stepActors(dt: number): void {
+    const atLoom = this.state.atLoom
+    for (const animal of ANIMALS) {
+      const actor = this.actors[animal]
+      if (actor.walking) {
+        const progress = clamp01((this.t - actor.walkT0) / actor.walkDuration)
+        actor.walkProgress = progress
+        actor.x = actor.walkFrom.x + (actor.walkTo.x - actor.walkFrom.x) * progress
+        actor.z = actor.walkFrom.z + (actor.walkTo.z - actor.walkFrom.z) * progress
+        if (progress > 0) actor.yaw = Math.atan2(actor.walkTo.x - actor.walkFrom.x, actor.walkTo.z - actor.walkFrom.z)
+        if (progress >= 1) {
+          actor.walking = false
+          actor.yaw = actor.walkTo.yaw
+        }
+      }
+      if (actor.warmAt > -Infinity) actor.warm = Math.max(actor.warm, clamp01((this.t - actor.warmAt) / 1.2))
+      const reaching = this.offered && animal === atLoom
+      springStep(actor.reach, reaching ? 1 : 0, dt, 40, 9)
+    }
+  }
+
+  private recipientReady(): boolean {
+    const animal = this.state.atLoom
+    if (!animal) return false
+    const actor = this.actors[animal]
+    return !actor.walking && actor.destination === 'loom' && this.t > actor.danceAt + actor.danceLength
+  }
+
+  private stepLoom(dt: number): void {
+    const loom = this.loom
+    const target = loom.rows.length * WIDTH
+    if (loom.reveal < target) {
+      const before = loom.reveal
+      const speed = target - before > WIDTH + 0.5 ? KNIT_FAST_CELLS_PER_S : KNIT_CELLS_PER_S
+      loom.reveal = Math.min(target, before + speed * dt)
+      for (let k = Math.floor(before) + 1; k <= Math.floor(loom.reveal + 1e-6); k++) this.stitched(k - 1)
+    } else if (loom.reveal > target) loom.reveal = Math.max(target, loom.reveal - UNRAVEL_CELLS_PER_S * dt)
+
+    const knitting = loom.reveal < target
+    const cell = Math.min(Math.floor(loom.reveal), Math.max(0, target - 1))
+    if (knitting) {
+      const row = Math.floor(cell / WIDTH)
+      const within = cell % WIDTH
+      this.strand.row = row
+      this.strand.column = row % 2 === 0 ? within : WIDTH - 1 - within
+      this.strand.colour = loom.rows[row]?.[this.strand.column] ?? 0
+      this.strand.ball = this.strand.colour < this.balls.length ? this.strand.colour : -1
+    }
+    this.strand.alpha += ((knitting ? 1 : 0) - this.strand.alpha) * Math.min(1, dt * (knitting ? 14 : 5))
+
+    const wasOffered = this.offered
+    this.offered = canOffer(this.state, this.offerRows) && this.recipientReady() && !knitting
+    if (this.offered && !wasOffered) this.sound.offer()
+    springStep(loom.lift, this.offered ? 1 : 0, dt, 30, 7)
+    springStep(loom.swing, 0, dt, 9, 1.3)
+    const scarfDrag = this.scarfDrag
+    if (scarfDrag && this.projector && this.projector.toPlaneZ(scarfDrag.screen, SCARF.z, this.scratch) && this.projector.toPlaneZ(scarfDrag.start, SCARF.z, this.scratch2)) {
+      const reach = this.offered ? 16 : 3
+      loom.pull.x = Math.max(-reach, Math.min(reach, this.scratch.x - this.scratch2.x))
+      loom.pull.y = Math.max(-reach * 0.5, Math.min(reach * 0.5, this.scratch.y - this.scratch2.y))
+    }
+    const needlesTarget = this.needlesDragLift()
+    springStep(this.needles.pull, needlesTarget, dt, 180, 16)
+    springStep(this.loomRock, 0, dt, 60, 5)
+    springStep(this.butterfly.show, this.butterflyWanted() ? 1 : 0, dt, 40, 8)
+    springStep(this.butterfly.open, this.state.mirror ? 1 : 0, dt, 70, 9)
+  }
+
+  private needlesDragLift(): number {
+    const p = this.projector
+    const drag = this.needlesDrag
+    if (!p || !drag) return 0
+    this.scratch.x = SCARF.x
+    this.scratch.y = needlesY(this.loom.rows.length)
+    this.scratch.z = SCARF.z
+    const lift = (drag.grab.y - drag.screen.y) / p.pixelsPerUnit(this.scratch) - drag.pulled * CELL_H
+    return Math.max(-1.5, Math.min(CELL_H * 0.9, lift))
+  }
+
+  private butterflyWanted(): boolean {
+    return this.state.mirror || this.loom.rows.length >= 4 || this.worn.length > 0
+  }
+
+  /** A stitch slipped off the needle; at the end of a row, the row rings and patterns are heard. */
+  private stitched(index: number): void {
+    const loom = this.loom
+    const row = Math.floor(index / WIDTH)
+    const within = index % WIDTH
+    const column = row % 2 === 0 ? within : WIDTH - 1 - within
+    const colour = loom.rows[row]?.[column] ?? 0
+    this.sound.stitch(colour)
+    if (within !== WIDTH - 1) return
+    this.sound.row(colour)
+    loom.swing.v += 0.22
+    const unit = completedRepeat(stripeColours(loom.rows.slice(0, row + 1)))
+    if (unit && row - this.lastHumRow >= unit.length) {
+      this.lastHumRow = row
+      this.humAt = this.t
+      this.loomRock.v += 1.4
+      this.sound.hum(unit)
+      for (const animal of ANIMALS) if (this.actors[animal].warm > 0.5) this.actors[animal].bobAt = this.t + 0.1 + ANIMALS.indexOf(animal) * 0.08
+    }
+  }
+
+  private stepWorn(dt: number): void {
+    for (let i = this.worn.length - 1; i >= 0; i--) {
+      const view = this.worn[i]
+      springStep(view.swing, 0, dt, 14, 2.2)
+      if (view.leavingAt >= 0 && this.t - view.leavingAt > 0.9) {
+        this.worn.splice(i, 1)
+        continue
+      }
+      if (view.giftAt < 0) continue
+      view.giftAt += dt
+      const g = view.giftAt
+      view.fringe = clamp01(g / CAST_OFF)
+      view.fly = smooth((g - CAST_OFF) / (FLY_END - CAST_OFF))
+      view.wrap = clamp01((g - FLY_END) / (WRAP_END - FLY_END))
+      if (g >= WRAP_END) {
+        view.giftAt = -1
+        view.swing.v += 1.2
+      }
+    }
+  }
+
+  private giftInProgress(): boolean {
+    for (const view of this.worn) if (view.giftAt >= 0) return true
+    return this.timers.length > 0
+  }
+
+  private stepGuidance(): void {
+    const g = this.guidance
+    const frame = this.scheduler.frame(this.t, g.frame)
+    let walking = false
+    for (const animal of ANIMALS) walking ||= this.actors[animal].walking
+    const busy = walking || this.giftInProgress() || this.loom.reveal < this.loom.rows.length * WIDTH || this.drags.size > 0
+    if (this.loom.version !== this.hintVersion || busy !== this.hintBusy || (g.hint?.kind === 'give') !== this.offered) {
+      this.hintVersion = this.loom.version
+      this.hintBusy = busy
+      g.hint = chooseHint({
+        colours: stripeColours(this.loom.rows),
+        balls: this.balls.length,
+        canOffer: this.offered,
+        full: isFull(this.state),
+        recipient: this.recipientReady(),
+        busy,
+      })
+    }
+    const hint = g.hint
+    g.glowBalls = hint?.kind === 'knit'
+    g.glowBall = hint?.kind === 'knit' ? hint.colour : -1
+    g.glowScarf = hint?.kind === 'give'
+    g.handVisible = false
+    g.handCarries = false
+    if (hint && frame.demo >= 0) {
+      if (hint.kind === 'knit') {
+        const ball = this.balls[hint.colour]
+        if (ball) {
+          this.handFrom.x = ball.rest.x
+          this.handFrom.y = ball.rest.y + BALL_RADIUS * 0.6
+          this.handFrom.z = ball.rest.z + BALL_RADIUS
+          handPose(g.hand, this.handFrom, null, frame.demo)
+          g.handVisible = true
+        }
+      } else {
+        const animal = this.state.atLoom
+        if (animal) {
+          const rows = this.loom.rows.length
+          const middle = cellCentre(Math.floor(rows * 0.55), 2)
+          this.handFrom.x = middle.x
+          this.handFrom.y = middle.y
+          this.handFrom.z = SCARF.z + 3
+          const actor = this.actors[animal]
+          this.handTo.x = actor.x + 4
+          this.handTo.y = groundY(actor.x, actor.z) + BODY[animal].neck
+          this.handTo.z = actor.z + 6
+          handPose(g.hand, this.handFrom, this.handTo, frame.demo)
+          g.handVisible = true
+          g.handCarries = true
+        }
+      }
+    }
+    if (frame.peek >= 0) {
+      const step = Math.floor(frame.peek * (this.balls.length + 1))
+      if (step !== this.peekStep && step < this.balls.length) {
+        this.peekStep = step
+        this.launch(this.balls[step], 26, 0)
+      }
+    } else this.peekStep = -1
+  }
+
+  private puff(x: number, y: number, z: number, size: number, colour: number): void {
+    const puff = this.puffs[this.puffCursor]
+    this.puffCursor = (this.puffCursor + 1) % PUFFS
+    puff.x = x
+    puff.y = y
+    puff.z = z
+    puff.size = size
+    puff.colour = colour
+    puff.t0 = this.t
+  }
+
+  /** Worn scarves of one animal, innermost first (the view stacks them). */
+  wornBy(animal: AnimalKey): number {
+    let count = 0
+    for (const view of this.worn) if (view.holder === animal && view.leavingAt < 0) count++
+    return count
+  }
+}
+
+const SNOW: Target = { kind: 'snow' }
+const NEEDLES: Target = { kind: 'needles' }
+const SCARF_TARGET: Target = { kind: 'scarf' }
+const BUTTERFLY_TARGET: Target = { kind: 'butterfly' }
+const BASKET_TARGET: Target = { kind: 'basket' }
