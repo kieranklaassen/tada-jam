@@ -7,7 +7,7 @@ import { BAG, DOOR, FEEDING, SCALE, shelfTile, type Point } from '../layout'
 import { stoneHeight3, stoneRadius3, toWorld2 } from '../physics3d'
 import { panOf } from '../scale'
 import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
-import { BagModel, DoorModel, FeedingSetting, JarsModel, PartsModel, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, StonesModel, TableModel, type Blob, type GuestPose, type PartState, type StoneState } from './models'
+import { AlbumModel, BagModel, DoorModel, FeedingSetting, JarsModel, PartsModel, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, StonesModel, TableModel, type Blob, type GuestPose, type PartState, type StoneState } from './models'
 import { GrownUpOverlay } from './overlay'
 import { ProjectorBridge, Stage, type ProjectorHandle } from './stage'
 
@@ -195,6 +195,7 @@ function World({ table }: { table: TableController }) {
       )}
       <StonesModel read={() => stoneStates(table)} />
       <ShelfModel read={() => ({ mats: table.shelfMats(), drag: table.shelfDrag, glow: table.guidance.glowShelf ? table.guidance.glow : 0, now: table.t })} />
+      <AlbumModel read={() => ({ pages: table.state.album, at: table.albumAt, now: table.t })} />
       <Overlays kind="glow" capacity={32} read={() => glows(table)} />
       <GhostHand read={() => table.guidance.hand} carry={() => table.guidance.hint?.kind === 'toPan' || table.guidance.hint?.kind === 'toGuest'} />
     </>

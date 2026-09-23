@@ -15,6 +15,7 @@ export type Target =
   | { kind: 'guest'; seat: number }
   | { kind: 'bowl' }
   | { kind: 'door' }
+  | { kind: 'album' }
   | { kind: 'part'; id: number }
   | { kind: 'jar'; part: PartKind }
   | { kind: 'visitor'; index: number }

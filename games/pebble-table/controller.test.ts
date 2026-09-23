@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { TableController, type Projector } from './controller'
 import { IDLE_BEFORE_HINT } from './guidance'
-import { BAG, DOOR, FEEDING, SCALE, shelfTile } from './layout'
+import { albumSlot, BAG, DOOR, FEEDING, SCALE, shelfTile } from './layout'
 import { JARS, PART_COUNTS } from './parts'
 import { toWorld2 } from './physics3d'
 import { panOf } from './scale'
@@ -271,5 +271,27 @@ describe('jars of loose parts', () => {
     run(table, 1)
     expect(table.state.liveMat).not.toBe('scale')
     expect(table.state.parts).toHaveLength(0)
+  })
+})
+
+describe('album of past tables', () => {
+  it('keeps an arrangement when the child tips the bag again, and sets it back when the album is tapped', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 950 })
+    const spots = [0, 1, 4].map((seat) => FEEDING.seats[seat].plate)
+    for (const spot of spots) {
+      drag(table, { x: BAG.x, y: BAG.y }, spot)
+      run(table, 0.8)
+    }
+    run(table, 1)
+    tap(table, { x: BAG.x, y: BAG.y })
+    run(table, 3)
+    expect(table.state.album).toHaveLength(1)
+    tap(table, albumSlot())
+    run(table, 3)
+    expect(table.state.pieces).toHaveLength(3)
+    const near = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y) < 40
+    for (const piece of table.state.pieces) expect(spots.some((spot) => near(piece, spot))).toBe(true)
+    expect(table.state.album).toHaveLength(1)
   })
 })

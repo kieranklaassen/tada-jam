@@ -72,6 +72,11 @@ export const DOOR = {
 /** Activity choosers stand on the table's right margin, big enough to read as things to touch. */
 export const SHELF_RACK = { x: 1352, firstY: 250, spacing: 185, height: 0 } as const
 
+/** The album sits below the activity choosers. */
+export function albumSlot(): Point & { height: number } {
+  return shelfTile(2)
+}
+
 export function shelfTile(index: number): Point & { height: number } {
   return { x: SHELF_RACK.x, y: SHELF_RACK.firstY + index * SHELF_RACK.spacing, height: SHELF_RACK.height }
 }

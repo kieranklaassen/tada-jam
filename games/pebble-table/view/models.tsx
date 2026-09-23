@@ -1,13 +1,14 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
-import { BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
+import { albumSlot, BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
 import { createClayMaterials, merge, PALETTE, piece, type ClayMaterials } from './clay'
 import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
 import { useQuality } from './quality'
 import { MotionDirector, PERSONALITIES, SEAT_SPECIES, type Species } from '../motion'
 import { JAR_SCALE, JARS, PART_COUNTS, PART_KINDS, type PartKind } from '../parts'
+import type { AlbumPage } from '../album'
 import * as geo from './geometry'
 
 // Claymation models. Rigid props are merged into one mesh each (one draw
@@ -842,6 +843,117 @@ export function KnifeModel({ read }: { read: () => { at: Point; visible: boolean
   return (
     <group ref={ref}>
       <mesh geometry={geometry} material={clay} />
+    </group>
+  )
+}
+
+// --- the album ---------------------------------------------------------------------
+
+/** A page's arrangement as a little dot map: the activity's zones faintly, the stones as terracotta dots. No words or numbers. */
+function drawPageMap(canvas: HTMLCanvasElement, page: AlbumPage | null): void {
+  const g = canvas.getContext('2d')!
+  const w = canvas.width
+  const h = canvas.height
+  g.fillStyle = '#fbf1de'
+  g.fillRect(0, 0, w, h)
+  if (!page) return
+  const sx = w / (TABLE.w + 60)
+  const sy = h / (TABLE.h + 60)
+  const at = (x: number, y: number) => [(x - TABLE.x + 30) * sx, (y - TABLE.y + 30) * sy] as const
+  g.fillStyle = 'rgba(110,154,155,0.35)'
+  const zone = (x: number, y: number, r: number) => {
+    const [cx, cy] = at(x, y)
+    g.beginPath()
+    g.ellipse(cx, cy, r * sx, r * sy, 0, 0, Math.PI * 2)
+    g.fill()
+  }
+  switch (page.mat) {
+    case 'feeding':
+      zone(FEEDING.bowl.x, FEEDING.bowl.y, FEEDING.bowl.r)
+      for (const seat of FEEDING.seats) zone(seat.plate.x, seat.plate.y, FEEDING.plateRadius)
+      break
+    case 'scale':
+      for (const pan of SCALE.pans) zone(pan.x, pan.y, pan.r)
+      break
+    case 'door':
+      zone(DOOR.house.x, DOOR.house.y, 150)
+      break
+    default: {
+      const unknown: never = page.mat
+      return unknown
+    }
+  }
+  g.fillStyle = PALETTE.stone
+  for (const stone of page.stones) {
+    const [cx, cy] = at(stone.x, stone.y)
+    g.beginPath()
+    g.arc(cx, cy, (stone.q === 4 ? 30 : stone.q === 2 ? 22 : 16) * sx * 1.4, 0, Math.PI * 2)
+    g.fill()
+  }
+}
+
+/**
+ * The album: a clay photo book below the activity choosers, there only once a
+ * page exists. Its cover shows the newest page as a dot map; tapping it sets
+ * that table back. It hops whenever a page is kept or turned.
+ */
+export function AlbumModel({ read }: { read: () => { pages: readonly AlbumPage[]; at: number | null; now: number } }) {
+  const { clay } = useClay()
+  const book = once('album', () =>
+    merge([
+      piece(geo.roundedBox(10, 0.15), '#3f7d8c', { position: [0, 1.2, 0], scale: [11, 2.4, 13] }, { lump: 0.12, frequency: 0.5, seed: 51 }),
+      piece(geo.roundedBox(8, 0.1), '#fbf1de', { position: [0.5, 1.2, 0], scale: [10.2, 1.8, 12.4] }, { lump: 0.05, ground: null }),
+      piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, 3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
+      piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, -3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
+    ]),
+  )
+  const cover = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 128
+    canvas.height = 96
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.colorSpace = THREE.SRGBColorSpace
+    return { canvas, texture, material: new THREE.MeshStandardMaterial({ map: texture, roughness: 0.8 }) }
+  }, [])
+  useEffect(() => () => {
+    cover.texture.dispose()
+    cover.material.dispose()
+  }, [cover])
+  const group = useRef<THREE.Group>(null)
+  const drawn = useRef<string>('')
+  const shown = useRef<number | null>(null)
+  const slot = albumSlot()
+  const p = to3(slot)
+  useFrame(() => {
+    const pose = read()
+    const g = group.current
+    if (!g) return
+    const newest = pose.pages[pose.pages.length - 1] ?? null
+    g.visible = newest !== null
+    if (!newest) {
+      shown.current = null
+      return
+    }
+    shown.current ??= pose.now
+    const key = `${pose.pages.length}:${pose.at}`
+    if (key !== drawn.current) {
+      drawPageMap(cover.canvas, newest)
+      cover.texture.needsUpdate = true
+      drawn.current = key
+    }
+    const appear = Math.min(1, (pose.now - shown.current) / 0.6)
+    const hopAge = pose.at === null ? Infinity : pose.now - pose.at
+    const hop = hopAge < 0.6 ? Math.sin((hopAge / 0.6) * Math.PI) * 3 : 0
+    g.position.set(p.x, hop, p.z)
+    g.scale.setScalar(Math.max(0.01, easeOutBack(appear)) * 1.1)
+    g.rotation.set(0, -0.35 + Math.sin(pose.now * 0.8) * 0.04, 0)
+  })
+  return (
+    <group ref={group} visible={false}>
+      <mesh geometry={book} material={clay} />
+      <mesh material={cover.material} position={[0.5, 2.45, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[9.6, 11.8]} />
+      </mesh>
     </group>
   )
 }

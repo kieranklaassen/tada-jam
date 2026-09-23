@@ -1,4 +1,5 @@
 import { inBowl, plateOf } from './feeding'
+import { readAlbum, type AlbumPage } from './album'
 import { readParts, type Part } from './parts'
 import { panOf } from './scale'
 import {
@@ -33,6 +34,8 @@ export type TableState = {
   nextId: number
   /** Loose parts out of their jars; only while the scale is out. */
   parts: Part[]
+  /** Past tables the child can set back, newest last. */
+  album: AlbumPage[]
 }
 
 export function bagStonesForAge(childAge: number | null): number {
@@ -57,6 +60,7 @@ export function defaultTable(childAge: number | null): TableState {
     seats: FEEDING.seats.map((_, index) => index === 1 || index === 4),
     nextId: 1,
     parts: [],
+    album: [],
   }
 }
 
@@ -122,6 +126,7 @@ export function deserialize(raw: unknown, childAge: number | null): TableState {
     seats,
     nextId: 1,
     parts: [],
+    album: readAlbum(raw.album, total),
   }
   if (parked[liveMat].length > 0) {
     state.pieces.push(...parked[liveMat])
@@ -160,6 +165,7 @@ export function serialize(state: TableState): TableState {
     shelf: [...state.shelf],
     seats: [...state.seats],
     parts: state.parts.map((part) => ({ id: part.id, kind: part.kind, x: Math.round(part.x), y: Math.round(part.y) })),
+    album: state.album.map((page) => ({ mat: page.mat, stones: page.stones.map((stone) => ({ ...stone })) })),
   }
 }
 
@@ -194,6 +200,15 @@ export function tipBag(state: TableState): Piece[] {
 export function pullFromBag(state: TableState, at: { x: number; y: number }): Piece | null {
   const q = largestAvailable(state.bag)
   if (q === null) return null
+  const piece = newPiece(state, q, at.x, at.y)
+  state.bag -= q
+  state.pieces.push(piece)
+  return piece
+}
+
+/** Take a stone of exactly `q` quarters out of the bag at `at`, or null when the bag holds less than that. */
+export function placeFromBag(state: TableState, q: Quarters, at: { x: number; y: number }): Piece | null {
+  if (state.bag < q) return null
   const piece = newPiece(state, q, at.x, at.y)
   state.bag -= q
   state.pieces.push(piece)

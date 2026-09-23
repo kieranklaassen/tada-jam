@@ -2,13 +2,14 @@ import type { TableAudio } from './audio'
 import { freeSpotOnPlate, GUEST_RADIUS, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, wantingSeat, type FeedingView } from './feeding'
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
-import { BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, type MatKey, type Point, type Quarters } from './layout'
-import { HOLD_HEIGHT, stoneHeight3, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
+import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, type MatKey, type Point, type Quarters } from './layout'
+import { HOLD_HEIGHT, PAN_REST_HEIGHT, stoneHeight3, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
 import { SaveCadence } from './saveCadence'
 import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
-import { cutPiece, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
+import { cutPiece, placeFromBag, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
 import { chunk, clusterPieces, groupsFor, schedule } from './voice'
 import { SEAT_SPECIES } from './motion'
+import { keepPage, pageOf, turnPage } from './album'
 import { inJar, jarAt, JARS, PART_RADIUS, PART_WEIGHT, spillFrom, type Part, type PartKind } from './parts'
 
 // The table while it is on screen: game rules, real physics, touch, sound,
@@ -157,6 +158,9 @@ export class TableController {
   private story: Story | null = null
   /** When each jar was last tipped or touched, for its wobble. */
   readonly jarTips = new Map<PartKind, number>()
+  /** When a page was last kept or turned, for the album's hop. */
+  albumAt: number | null = null
+  private restoring = false
   /** Knock-Knock: the child's knocks waiting for an answer, the house's answer, and the visitors in the yard. */
   readonly door: DoorState = { knocks: [], knockAt: null, answer: null, openAt: null, closeAt: null, visitors: [], peekStretch: { lastIdle: 0, count: 0, next: PEEK_AFTER, at: null } }
 
@@ -544,6 +548,54 @@ export class TableController {
     const moving = this.flights.filter((flight) => flight.carriesPiece)
     this.flights = this.flights.filter((flight) => !flight.carriesPiece)
     for (const flight of moving) flight.land()
+  }
+
+  // --- the album ------------------------------------------------------------------
+
+  /** The child is starting over: keep what is on the table as a page, if it is a creation. */
+  private keepPage(): void {
+    if (keepPage(this.state.album, pageOf(this.state.liveMat, this.restingPieces()))) {
+      this.albumAt = this.t
+      this.changed()
+    }
+  }
+
+  /** Set the newest page back on the table: today's stones go home to the bag, then fly out to where they were. */
+  private restorePage(): void {
+    const page = turnPage(this.state.album, pageOf(this.state.liveMat, this.restingPieces()))
+    if (!page) return
+    this.albumAt = this.t
+    if (page.mat !== this.state.liveMat) {
+      this.restoring = true
+      this.bringOut(page.mat)
+      this.restoring = false
+    }
+    for (const piece of [...this.restingPieces()]) this.sendHome(piece.id)
+    page.stones.forEach((stone, index) => {
+      const piece = placeFromBag(this.state, stone.q, stone)
+      if (!piece) return
+      const rest = stoneHeight3(piece.q) / 2 + 0.6
+      this.flights.push({
+        id: piece.id,
+        q: piece.q,
+        from: to3(BAG, BAG_TOP),
+        to: to3(stone, rest + (this.state.liveMat === 'scale' && panOf(stone) !== null ? PAN_REST_HEIGHT : 0)),
+        t0: this.t + 0.45 + index * 0.09,
+        duration: 0.55,
+        arc: 14,
+        carriesPiece: true,
+        land: () => {
+          if (!this.pieceById(piece.id)) return
+          piece.x = stone.x
+          piece.y = stone.y
+          this.addPieceBody(piece, { y: this.restHeight(piece) + 0.4 })
+          this.sound.clack(0.3)
+        },
+      })
+    })
+    this.sound.whoosh()
+    this.changed()
+    this.cadence.change(performance.now(), true)
   }
 
   // --- loose parts --------------------------------------------------------------
@@ -936,6 +988,10 @@ export class TableController {
       return distance <= projected.r + slop ? distance : Infinity
     }
 
+    if (this.state.album.length > 0) {
+      const slot = albumSlot()
+      if (within(to3(slot, slot.height + 3), 9) < Infinity) return { kind: 'album' }
+    }
     const mats = this.shelfMats()
     for (let i = 0; i < mats.length; i++) {
       const tile = shelfTile(i)
@@ -1049,6 +1105,8 @@ export class TableController {
         return this.hopFromBowl()
       case 'door':
         return this.knock()
+      case 'album':
+        return this.restorePage()
       case 'part':
         return this.release(pointerId, { x: 0, y: 0 })
       case 'jar':
@@ -1108,6 +1166,7 @@ export class TableController {
       }
       case 'piece':
       case 'part':
+      case 'album':
       case 'chair':
       case 'bowl':
       case 'door':
@@ -1195,6 +1254,7 @@ export class TableController {
   }
 
   private tipBag(): void {
+    this.keepPage()
     const spilled = tipBag(this.state)
     this.bagTipStart = this.t
     if (spilled.length === 0) {
@@ -1222,6 +1282,7 @@ export class TableController {
 
   private bringOut(mat: MatKey): void {
     if (mat === this.state.liveMat) return
+    if (!this.restoring) this.keepPage()
     for (const pointerId of [...this.held.keys()]) this.release(pointerId, { x: 0, y: 0 }, false)
     const landing = this.flights.filter((flight) => flight.carriesPiece)
     this.flights = this.flights.filter((flight) => !flight.carriesPiece)
@@ -1241,7 +1302,7 @@ export class TableController {
     this.munchStart = null
     this.pendingVoice = null
     this.sound.whoosh()
-    this.inviteOnScale()
+    if (!this.restoring) this.inviteOnScale()
     this.changed()
     this.cadence.change(performance.now(), true)
   }
