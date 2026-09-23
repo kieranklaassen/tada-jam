@@ -38,6 +38,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Game | Style | Art guide |
 | --- | --- | --- |
 | Pebble Table | Claymation 3D: plasticine with thumbprints, stop-motion lighting, terracotta on cool sage-teal | [`games/pebble-table/ART.md`](../games/pebble-table/ART.md) |
+| Critter Clay | Claymation 3D, second entry (owner-approved): a clay workshop bench in cool daylight, cobalt, lemon, and bubblegum-pink plasticine on a slate-blue board, 12 fps boil only while moving | [`games/critter-clay/ART.md`](../games/critter-clay/ART.md) |
 
 ## 4. Menu of unclaimed directions
 
