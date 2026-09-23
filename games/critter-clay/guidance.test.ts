@@ -21,7 +21,7 @@ import type { Part, PartKind } from './parts'
 
 const parts = (...kinds: PartKind[]): Part[] => kinds.map((kind) => ({ kind, hue: 1 }))
 const timing = (): GuidanceTiming => ({ demo: null, glow: 0, invite: null })
-const hand = (): HandPose => ({ x: 0, z: 0, height: 0, press: 0, opacity: 0, carry: false })
+const hand = (): HandPose => ({ x: 0, z: 0, height: 0, press: 0, opacity: 0, carry: false, release: 0 })
 
 describe('chooseHint', () => {
   const summary = (sleeper: Part[] | null, awake: WorkshopSummary['awake'] = [], childAge: number | null = 4): WorkshopSummary => ({
@@ -134,6 +134,17 @@ describe('handPose', () => {
     expect(out.carry).toBe(true)
     expect(handPose(from, to, 0.8, out).x).toBeCloseTo(to.x)
     expect(handPose(from, to, 1, out).opacity).toBe(0)
+  })
+
+  it('lets go at the lump and lifts clear while it is still visible', () => {
+    const out = hand()
+    const carrying = handPose(from, to, 0.74, out).height
+    expect(out.release).toBe(0)
+    handPose(from, to, 0.88, out)
+    expect(out.carry).toBe(false)
+    expect(out.release).toBeGreaterThan(0.9)
+    expect(out.opacity).toBeGreaterThan(0.9)
+    expect(out.height).toBeGreaterThan(carrying + 4)
   })
 
   it('taps twice in place for the nose', () => {

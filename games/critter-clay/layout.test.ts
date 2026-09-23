@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clampWalk, insideWalk, onTurntable, TRAY, traySlot, TRAY_SLOT_RADIUS, TURNTABLE, WAKE_LANDING, WALK } from './layout'
+import { blocksTurntable, clampWalk, insideWalk, onTurntable, TRAY, traySlot, TRAY_SLOT_RADIUS, TURNTABLE, WAKE_LANDING, WALK } from './layout'
 import { PART_KINDS } from './parts'
 
 describe('layout', () => {
@@ -25,8 +25,16 @@ describe('layout', () => {
     }
   })
 
-  it('lands a woken critter on the bench, off the turntable', () => {
+  it('lands a woken critter on the bench, off the turntable, and out of the view of the next lump', () => {
     expect(insideWalk(WAKE_LANDING, 2)).toBe(true)
     expect(onTurntable(WAKE_LANDING)).toBe(false)
+    expect(blocksTurntable(WAKE_LANDING)).toBe(false)
+  })
+
+  it('keeps clear the strip between the camera and the turntable, not the sides or the back', () => {
+    expect(blocksTurntable({ x: TURNTABLE.x, z: TURNTABLE.z + 19 })).toBe(true)
+    expect(blocksTurntable({ x: TURNTABLE.x + 10, z: TURNTABLE.z + 25 })).toBe(true)
+    expect(blocksTurntable({ x: TURNTABLE.x - 22, z: TURNTABLE.z + 19 })).toBe(false)
+    expect(blocksTurntable({ x: TURNTABLE.x, z: TURNTABLE.z - 17 })).toBe(false)
   })
 })

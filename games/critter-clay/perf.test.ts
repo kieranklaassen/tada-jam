@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { jamPerf, PerfMonitor, Ring, RING_SIZE, TierController, tierFeatures, tierOverride, TOP_TIER } from './perf'
+import { jamPerf, PerfMonitor, Ring, RING_SIZE, startingTier, TierController, tierFeatures, tierOverride, TOP_TIER } from './perf'
 
-function feed(controller: TierController, ms: number, seconds: number): number {
+function feed(controller: TierController, ms: number, seconds: number, workMs = 3): number {
   let changes = 0
-  for (let t = 0; t < seconds * 1000; t += ms) if (controller.frame(ms)) changes++
+  for (let t = 0; t < seconds * 1000; t += ms) if (controller.frame(ms, workMs)) changes++
   return changes
 }
 
@@ -57,6 +57,16 @@ describe('TierController', () => {
     expect(controller.tier).toBe(2)
     feed(controller, 10, 2)
     expect(controller.tier).toBe(3)
+  })
+
+  it('starts touch devices one tier down, and a 60 Hz display steps up when the work is light', () => {
+    expect(startingTier(false)).toBe(TOP_TIER)
+    const controller = new TierController(startingTier(true))
+    expect(controller.tier).toBe(TOP_TIER - 1)
+    feed(controller, 16.7, 8, 12)
+    expect(controller.tier).toBe(TOP_TIER - 1)
+    feed(controller, 16.7, 7)
+    expect(controller.tier).toBe(TOP_TIER)
   })
 
   it('stays where a ?tier override pins it', () => {

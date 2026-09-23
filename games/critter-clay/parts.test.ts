@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { CAMERA } from './layout'
 import { BODY, bodyLift, canTake, ellipsoidPoint, familyCount, legsOf, nextHue, nextSocket, socketFor, tiltForward, type Part, type PartKind, type Vec3 } from './parts'
 
 const parts = (...kinds: PartKind[]): Part[] => kinds.map((kind) => ({ kind, hue: 0 }))
@@ -58,6 +59,31 @@ describe('parts', () => {
     expect(bodyLift([])).toBeLessThan(BODY.ry)
     expect(bodyLift(parts('legLong', 'legLong'))).toBeGreaterThan(bodyLift(parts('legStub', 'legStub')))
     expect(legsOf(parts('eye', 'legLong', 'legStub'))).toEqual(['legLong', 'legStub'])
+  })
+
+  it('stands a lone stub leg tall enough that its shin shows under the belly from the camera', () => {
+    const lone = parts('legStub')
+    const centre = bodyLift(lone)
+    const socket = { p: [0, 0, 0] as Vec3, n: [0, 0, 0] as Vec3 }
+    ellipsoidPoint(socketFor(lone, 0).dir, BODY.rx, BODY.ry, BODY.rz, socket)
+    const up = Math.sin(CAMERA.pitch)
+    const level = Math.cos(CAMERA.pitch)
+    // the camera seen from the critter when it faces the child, and when it stands side on
+    const views: Vec3[] = [
+      [0, up, level],
+      [level, up, 0],
+    ]
+    let nearest = Infinity
+    for (const view of views) {
+      for (let t = 0; t < 30; t += 0.1) {
+        const x = socket.p[0] + view[0] * t
+        const y = 1 + view[1] * t - centre
+        const z = socket.p[2] + view[2] * t
+        nearest = Math.min(nearest, (x / BODY.rx) ** 2 + (y / BODY.ry) ** 2 + (z / BODY.rz) ** 2)
+      }
+    }
+    expect(nearest).toBeGreaterThan(1)
+    expect(bodyLift(parts('legLong'))).toBeGreaterThan(centre)
   })
 
   it('finds points on the body surface', () => {

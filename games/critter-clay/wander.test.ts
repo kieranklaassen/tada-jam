@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { insideWalk, TURNTABLE } from './layout'
+import { blocksTurntable, insideWalk, TURNTABLE } from './layout'
 import { advance, arrived, BODY_CLEARANCE, headingTo, meeting, pickTarget, random, steer, type Mover } from './wander'
 
 describe('pickTarget', () => {
@@ -10,6 +10,7 @@ describe('pickTarget', () => {
       const from = { x: -40 + (i % 9) * 8, z: -20 + (i % 5) * 10 }
       pickTarget(from, rand, out)
       expect(insideWalk(out, 4)).toBe(true)
+      expect(blocksTurntable(out)).toBe(false)
     }
   })
 
