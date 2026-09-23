@@ -385,6 +385,15 @@ export class ScarfAudio implements Sound {
     for (let i = 0; i < 5; i++) this.hiss(1800 + Math.random() * 2400, 1.6, 0.07, 0.025, now + i * 0.022 + Math.random() * 0.01, 'bandpass')
   }
 
+  flurry(): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    this.hiss(1400, 0.7, 0.05, 0.45, now, 'lowpass', 500)
+    this.tone(1760, 'sine', 0.018, 0.01, 0.35, now + 0.05)
+    this.tone(2637, 'sine', 0.012, 0.01, 0.3, now + 0.16)
+  }
+
   basket(): void {
     const context = this.ready()
     if (!context) return

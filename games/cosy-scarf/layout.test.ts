@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { BALL_RADIUS, ballRest, BASKET, cellAt, cellCentre, needlesY, SCARF } from './layout'
-import { WIDTH } from './state'
+import { BALL_RADIUS, ballRest, BASKET, cellAt, cellCentre, FELT, feltBottom, LOOM, needlesY, SCARF } from './layout'
+import { MAX_ROWS, WIDTH } from './state'
 
 describe('layout', () => {
   it('finds the cell back from its centre', () => {
@@ -22,6 +22,15 @@ describe('layout', () => {
 
   it('moves the needles down as the scarf grows', () => {
     expect(needlesY(4)).toBeLessThan(needlesY(3))
+  })
+
+  it('unrolls the felt just past the needles, down to the loom foot for the longest scarf', () => {
+    for (let rows = 0; rows < MAX_ROWS; rows++) {
+      expect(feltBottom(rows + 1)).toBeLessThanOrEqual(feltBottom(rows))
+      expect(feltBottom(rows)).toBeLessThan(needlesY(rows) - FELT.roll)
+    }
+    expect(feltBottom(0)).toBeGreaterThan(LOOM.rodY - 12)
+    expect(feltBottom(MAX_ROWS)).toBe(FELT.bottom)
   })
 
   it('keeps balls apart and inside the basket for every basket size', () => {

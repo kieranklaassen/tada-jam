@@ -17,6 +17,9 @@ export const LOOM = { x: 1, z: -3, rodY: 55.5, postX: 14.5, footY: 0.4 }
 /** Where the scarf hangs: its top edge under the rod, centred on the loom. */
 export const SCARF = { x: LOOM.x, top: 54, z: LOOM.z + 1.4, halfWidth: (WIDTH * CELL_W) / 2 }
 
+/** The loom's felt cloth: its roll's lowest place and radius, and how much felt it keeps below the needles. */
+export const FELT = { bottom: 2.6, roll: 1.4, below: 6 }
+
 export const BASKET = { x: 34, z: 9, radius: 13.5, rimY: 8.5 }
 export const BALL_RADIUS = 4.6
 
@@ -25,10 +28,14 @@ export const BUTTERFLY = { x: LOOM.x + 9.5, y: LOOM.rodY + 3.2, z: LOOM.z + 1.2 
 export const LOOM_SPOT: Spot = { x: -32, z: 7, yaw: 0.32 }
 export const ENTRY: Spot = { x: -104, z: 16, yaw: Math.PI / 2 }
 
-/** Each animal's own place on the slope once it is cosy. */
+/**
+ * Each animal's own place on the slope once it is cosy. None stands (or walks
+ * home) straight up the slope from the loom spot, where it would poke out
+ * behind the next cold animal's head.
+ */
 export const HILL_SPOTS: Record<AnimalKey, Spot> = {
   bunny: { x: -74, z: -64, yaw: 0.45 },
-  penguin: { x: -46, z: -92, yaw: 0.25 },
+  penguin: { x: 38, z: -80, yaw: -0.2 },
   fox: { x: 64, z: -72, yaw: -0.35 },
   bear: { x: 90, z: -98, yaw: -0.5 },
 }
@@ -75,4 +82,9 @@ export function cellAt(x: number, y: number, rows: number): { row: number; colum
 /** The needles sit at the scarf's free edge. */
 export function needlesY(rows: number): number {
   return SCARF.top - rows * CELL_H - 0.4
+}
+
+/** Where the felt's rolled edge sits for a scarf showing `rows` rows: unrolled just past the needles, never below the loom's foot. */
+export function feltBottom(rows: number): number {
+  return Math.max(FELT.bottom, needlesY(rows) - FELT.below)
 }
