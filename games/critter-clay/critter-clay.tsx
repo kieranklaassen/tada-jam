@@ -4,7 +4,7 @@ import { WorkshopAudio } from './audio'
 import { WorkshopController } from './controller'
 import { critterClayManifest } from './manifest'
 import { PALETTE } from './palette'
-import { PerfMonitor, TierController, tierOverride, TOP_TIER } from './perf'
+import { PerfMonitor, startingTier, TierController, tierOverride } from './perf'
 import { deserialize } from './state'
 import { FpsOverlay, wantsFpsOverlay } from './view/fpsOverlay'
 import { Stage } from './view/stage'
@@ -29,7 +29,8 @@ function CritterClayMount({ ctx }: { ctx: CartridgeContext }) {
   const running = ctx.attention.attended && !hidden
   const monitor = useMemo(() => {
     const pinned = tierOverride(window.location.search)
-    return new PerfMonitor(new TierController(pinned ?? TOP_TIER, pinned !== null))
+    const coarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches
+    return new PerfMonitor(new TierController(pinned ?? startingTier(coarse), pinned !== null))
   }, [])
   const showFps = useMemo(() => wantsFpsOverlay(window.location.search), [])
 

@@ -237,7 +237,11 @@ function Input({ controller }: { controller: WorkshopController }) {
 function Loop({ controller, scene, materials, monitor, running }: { controller: WorkshopController; scene: WorkshopScene; materials: ClayMaterials; monitor: PerfMonitor; running: boolean }) {
   const setDpr = useThree((state) => state.setDpr)
   const size = useThree((state) => state.size)
+  const gl = useThree((state) => state.gl)
+  const root = useThree((state) => state.scene)
+  const camera = useThree((state) => state.camera)
   const last = useRef(0)
+  const lastWork = useRef(0)
 
   const apply = useCallback(() => {
     const features = tierFeatures(monitor.tiers.tier, window.devicePixelRatio || 1)
@@ -247,6 +251,16 @@ function Loop({ controller, scene, materials, monitor, running }: { controller: 
   }, [monitor, setDpr, scene, materials])
 
   useEffect(() => apply(), [apply])
+
+  // Compile every program up front, both clay variants, hidden meshes included: otherwise the first
+  // ghost hand, glow, or tier change stalls a frame on a shader compile.
+  useEffect(() => {
+    const normalMap = tierFeatures(monitor.tiers.tier, window.devicePixelRatio || 1).normalMap
+    materials.setNormalMaps(!normalMap)
+    gl.compile(root, camera)
+    materials.setNormalMaps(normalMap)
+    gl.compile(root, camera)
+  }, [gl, root, camera, materials, monitor])
 
   useEffect(() => {
     last.current = 0
@@ -270,14 +284,15 @@ function Loop({ controller, scene, materials, monitor, running }: { controller: 
     if (last.current > 0) {
       const interval = start - last.current
       monitor.intervals.push(interval)
-      if (monitor.tiers.frame(interval)) apply()
+      if (monitor.tiers.frame(interval, lastWork.current)) apply()
     }
     last.current = start
     controller.step(Math.min(dt, 1 / 20))
     scene.sync(controller)
     materials.boilStep.value = Math.floor(controller.t * BOIL_FPS)
     state.gl.render(state.scene, state.camera)
-    monitor.cpu.push(performance.now() - start)
+    lastWork.current = performance.now() - start
+    monitor.cpu.push(lastWork.current)
     monitor.drawCalls = state.gl.info.render.calls
     monitor.triangles = state.gl.info.render.triangles
   }, 1)
