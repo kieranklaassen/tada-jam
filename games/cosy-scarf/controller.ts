@@ -99,6 +99,9 @@ export const FLY_END = 1.25
 export const WRAP_START = 0.95
 export const WRAP_END = 2.05
 export const DANCE_START = 2.35
+/** The hum's rhythm: its first note after this lead, then one note per row this far apart. The scarf lights each row on its note. */
+export const HUM_LEAD_S = 0.08
+export const HUM_STEP_S = 0.2
 const NEXT_ARRIVES_AFTER = 0.7
 
 const KNIT_CELLS_PER_S = 10
@@ -108,6 +111,9 @@ const UNRAVEL_CELLS_PER_S = 30
 export const PAINT_DWELL_S = 0.4
 /** The ball is carried on this plane, just in front of the scarf. */
 const CARRY_Z = SCARF.z + 6
+/** A carried ball trails the finger a touch and overshoots when it stops: it has weight in the hand. */
+const CARRY_STIFFNESS = 700
+const CARRY_DAMPING = 30
 const RETURN_SECONDS = 0.5
 const GRAVITY = 260
 /** A loom tap's answer: the wanted ball hops a little lower than a tapped ball, just after the loom starts to sway. */
@@ -136,6 +142,8 @@ export type BallView = {
   spin: number
   spinV: number
   held: number | null
+  /** The carry's springy follow of the finger; its velocity (easing to rest once let go) stretches the ball along its path. */
+  readonly carry: { x: Spring; y: Spring; z: Spring }
   /** 0..1 through the arc home, or -1. */
   returning: number
   readonly returnFrom: Point3
@@ -201,6 +209,9 @@ export const POWDER_PUFF = -2
 
 export type Strand = { alpha: number; colour: number; ball: number; row: number; column: number }
 
+/** The loom's rows being hummed from `at`: `period` rows, one note each, from row `first`, `copies` times over (the copies sound and light together). */
+export type Song = { at: number; first: number; period: number; copies: number }
+
 export type Guidance = {
   hint: Hint | null
   frame: GuidanceFrame
@@ -236,6 +247,7 @@ export class ScarfController {
   readonly guidance: Guidance
   basketAt = -Infinity
   humAt = -Infinity
+  readonly song: Song = { at: -Infinity, first: 0, period: 1, copies: 0 }
   /** Seconds of attended play. */
   t = 0
   /** The loom's scarf is long enough and its animal is standing there. */
@@ -289,6 +301,7 @@ export class ScarfController {
         spin: colour * 1.7,
         spinV: 0,
         held: null,
+        carry: { x: spring(rest.x), y: spring(rest.y), z: spring(rest.z) },
         returning: -1,
         returnFrom: { ...rest },
         launchAt: -Infinity,
@@ -541,7 +554,7 @@ export class ScarfController {
   /** A loom that has nothing to give yet sways, and the ball it would like next hops in the basket. */
   private askForYarn(): void {
     this.loom.swing.v += 0.5
-    if (this.loom.rows.length > 0) this.sound.hum(stripeColours(this.loom.rows))
+    if (this.loom.rows.length > 0) this.sing(stripeColours(this.loom.rows), 0, 1)
     if (isFull(this.state)) return
     const ball = this.balls[suggestColour(stripeColours(this.loom.rows), this.balls.length)]
     if (!ball || ball.held !== null || ball.returning >= 0 || ball.airborne) return
@@ -646,6 +659,10 @@ export class ScarfController {
         ball.hopY = 0
         ball.hopV = 0
         ball.squash.v -= 4
+        ball.carry.x.x = ball.pos.x
+        ball.carry.y.x = ball.pos.y
+        ball.carry.z.x = ball.pos.z
+        ball.carry.x.v = ball.carry.y.v = ball.carry.z.v = 0
         this.drags.set(id, { kind: 'ball', index: target.index, screen: { x: at.x, y: at.y }, painted: false, cellRow: -1, cellColumn: -1, cellSince: 0 })
         return
       }
@@ -830,14 +847,14 @@ export class ScarfController {
   private stepBalls(dt: number): void {
     const p = this.projector
     const knittingColour = this.strand.alpha > 0.5 ? this.strand.colour : -1
+    const letGo = Math.exp(-dt * 10)
     for (const ball of this.balls) {
       if (ball.held !== null) {
         const drag = this.drags.get(ball.held)
         if (drag && drag.kind === 'ball' && p && p.toPlaneZ(drag.screen, CARRY_Z, this.scratch)) {
-          const k = 1 - Math.exp(-dt * 26)
-          ball.pos.x += (this.scratch.x - ball.pos.x) * k
-          ball.pos.y += (Math.max(BALL_RADIUS, this.scratch.y) - ball.pos.y) * k
-          ball.pos.z += (CARRY_Z - ball.pos.z) * k
+          ball.pos.x = springStep(ball.carry.x, this.scratch.x, dt, CARRY_STIFFNESS, CARRY_DAMPING)
+          ball.pos.y = springStep(ball.carry.y, Math.max(BALL_RADIUS, this.scratch.y), dt, CARRY_STIFFNESS, CARRY_DAMPING)
+          ball.pos.z = springStep(ball.carry.z, CARRY_Z, dt, CARRY_STIFFNESS, CARRY_DAMPING)
           this.paintUnder(ball, drag)
         }
       } else if (ball.returning >= 0) {
@@ -872,6 +889,11 @@ export class ScarfController {
         ball.pos.x = ball.rest.x
         ball.pos.y = ball.rest.y + ball.hopY
         ball.pos.z = ball.rest.z
+      }
+      if (ball.held === null) {
+        ball.carry.x.v *= letGo
+        ball.carry.y.v *= letGo
+        ball.carry.z.v *= letGo
       }
       if (ball.colour === knittingColour) ball.spinV += (7 - ball.spinV) * Math.min(1, dt * 6)
       else ball.spinV *= Math.exp(-dt * 2.5)
@@ -1096,8 +1118,17 @@ export class ScarfController {
       this.lastHumRow = row
       this.humAt = this.t
       this.loomRock.v += 1.4
-      this.sound.hum(unit)
+      this.sing(unit, row + 1 - 2 * unit.length, 2)
     }
+  }
+
+  /** Hum `unit`, lighting its rows on the loom note by note, from row `first`, `copies` times over. */
+  private sing(unit: readonly number[], first: number, copies: number): void {
+    this.song.at = this.t
+    this.song.first = first
+    this.song.period = unit.length
+    this.song.copies = copies
+    this.sound.hum(unit)
   }
 
   private stepWorn(dt: number): void {
@@ -1128,10 +1159,12 @@ export class ScarfController {
 
   private stepGuidance(): void {
     const g = this.guidance
+    const held = this.drags.size > 0 || this.giftInProgress()
+    if (held) this.scheduler.hold(this.t)
     const frame = this.scheduler.frame(this.t, g.frame)
     let walking = false
     for (const animal of ANIMALS) walking ||= this.actors[animal].walking
-    const busy = walking || this.giftInProgress() || this.loom.reveal < this.loom.rows.length * WIDTH || this.drags.size > 0
+    const busy = walking || held || this.loom.reveal < this.loom.rows.length * WIDTH
     if (this.loom.version !== this.hintVersion || busy !== this.hintBusy || (g.hint?.kind === 'give') !== this.offered) {
       this.hintVersion = this.loom.version
       this.hintBusy = busy

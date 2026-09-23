@@ -62,8 +62,13 @@ export class HintScheduler {
   }
 
   touch(now: number): void {
-    this.idleSince = now
     this.everTouched = true
+    this.hold(now)
+  }
+
+  /** Not idle yet (a finger is still down, or a gift is still playing): the idle clock starts over from here. */
+  hold(now: number): void {
+    this.idleSince = now
     this.plan()
   }
 

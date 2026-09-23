@@ -1,4 +1,4 @@
-import { DANCE_SECONDS, type Sound } from './controller'
+import { DANCE_SECONDS, HUM_LEAD_S, HUM_STEP_S, type Sound } from './controller'
 import type { AnimalKey } from './state'
 
 // Every sound in Cosy Scarf is synthesized with raw Web Audio: wooden needle
@@ -236,9 +236,9 @@ export class ScarfAudio implements Sound {
   hum(unit: readonly number[]): void {
     const context = this.ready()
     if (!context) return
-    const now = context.currentTime + 0.08
+    const now = context.currentTime + HUM_LEAD_S
     unit.forEach((colour, i) => {
-      const at = now + i * 0.2
+      const at = now + i * HUM_STEP_S
       this.tone(note(colour) / 2, 'sine', 0.1, 0.05, 0.3, at)
       this.tone(note(colour), 'triangle', 0.025, 0.05, 0.22, at)
     })
