@@ -3,10 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { TableController } from '../controller'
 import { QualityGovernor, startingTier, type QualitySettings } from '../quality'
 import { inBowl } from '../feeding'
-import { BAG, FEEDING, SCALE, shelfTile, type Point } from '../layout'
+import { BAG, DOOR, FEEDING, SCALE, shelfTile, type Point } from '../layout'
 import { stoneHeight3, stoneRadius3, toWorld2 } from '../physics3d'
 import { panOf } from '../scale'
-import { BagModel, FeedingSetting, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, StonesModel, TableModel, type Blob, type GuestPose, type StoneState } from './models'
+import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
+import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type StoneState } from './models'
 import { GrownUpOverlay } from './overlay'
 import { ProjectorBridge, Stage, type ProjectorHandle } from './stage'
 
@@ -44,6 +45,37 @@ function stoneStates(table: TableController): StoneState[] {
   return states
 }
 
+function carrierMice(table: TableController): CarrierMouse[] {
+  const carriers: CarrierMouse[] = []
+  for (const flight of table.flightViews()) {
+    if (!flight.mouse) continue
+    const behind = stoneRadius3(flight.q) + 3.2
+    const { heading, hop } = flight.mouse
+    carriers.push({ x: flight.position.x - Math.sin(heading) * behind, z: flight.position.z - Math.cos(heading) * behind, heading, hop })
+  }
+  return carriers
+}
+
+function partStates(table: TableController): PartState[] {
+  const states: PartState[] = []
+  for (const part of table.state.parts) {
+    const body = table.physics.body(part.id)
+    if (!body) continue
+    states.push({
+      id: part.id,
+      kind: part.kind,
+      position: { x: body.position.x, y: body.position.y, z: body.position.z },
+      quaternion: [body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w],
+      held: table.isHeld(part.id),
+    })
+  }
+  return states
+}
+
+function jarCounts(table: TableController): Record<PartKind, number> {
+  return { acorn: inJar(table.state.parts, 'acorn'), shell: inJar(table.state.parts, 'shell'), stick: inJar(table.state.parts, 'stick'), boulder: inJar(table.state.parts, 'boulder') }
+}
+
 function groundUnder(table: TableController, at: Point): number {
   if (table.state.liveMat === 'scale') {
     const side = panOf(at)
@@ -62,8 +94,17 @@ function shadows(table: TableController): Blob[] {
     blobs.push({ at, ground, radius: r * (1.12 + height * 0.07), strength: 0.95 / (1 + height * 0.2), stretch: 0.5 + height })
   }
   blobs.push({ at: { x: BAG.x + 25, y: BAG.y - 20 }, ground: 0, radius: 12, strength: 0.5, stretch: 3 })
-  if (table.state.liveMat === 'scale') {
+  if (table.state.liveMat === 'door') {
+    blobs.push({ at: DOOR.house, ground: 0, radius: 17 * DOOR.houseScale, strength: 0.45, stretch: 1.5 })
+    for (const visitor of table.door.visitors) if (visitor.leaveAt === null && table.t > visitor.outAt + 0.6) blobs.push({ at: visitor.home, ground: 0, radius: 5.5, strength: 0.45, stretch: 1 })
+  } else if (table.state.liveMat === 'scale') {
     blobs.push({ at: SCALE.post, ground: 0, radius: 8.5, strength: 0.55, stretch: 2 })
+    for (const kind of Object.keys(JARS) as PartKind[]) blobs.push({ at: JARS[kind], ground: 0, radius: 8, strength: 0.45, stretch: 2 })
+    for (const part of partStates(table)) {
+      const at = toWorld2(part.position)
+      const ground = groundUnder(table, at)
+      blobs.push({ at, ground, radius: (PART_RADIUS[part.kind] / 10) * 1.1, strength: 0.7, stretch: 0.5 + Math.max(0, part.position.y - ground - 1) })
+    }
     SCALE.pans.forEach((pan, side) => blobs.push({ at: pan, ground: 0, radius: 15, strength: 0.32, stretch: table.physics.panTop(side as 0 | 1) }))
   } else {
     blobs.push({ at: FEEDING.bowl, ground: 0, radius: 12.5, strength: 0.4, stretch: 1 })
@@ -71,10 +112,11 @@ function shadows(table: TableController): Blob[] {
       if (table.state.seats[index]) {
         blobs.push({ at: seat.plate, ground: 0, radius: 8.8, strength: 0.22, stretch: 0.3 })
         blobs.push({ at: table.guestDrag?.seat === index ? table.guestDrag.at : seat.guest, ground: 0, radius: 9, strength: 0.75, stretch: 2.5 })
-      } else blobs.push({ at: seat.guest, ground: 0, radius: 5.2, strength: 0.4, stretch: 1.5 })
+      } else if (table.stoolsShown) blobs.push({ at: seat.guest, ground: 0, radius: 5.2, strength: 0.4, stretch: 1.5 })
     })
     if (table.feeding.leftover || table.knife.pointerId !== null) blobs.push({ at: table.knife.at, ground: 0, radius: 5.5, strength: 0.4, stretch: table.knife.pointerId !== null ? 5 : 0.5 })
   }
+  for (const carrier of carrierMice(table)) blobs.push({ at: toWorld2(carrier), ground: 0, radius: 5, strength: 0.45, stretch: 1 + carrier.hop * 1.6 })
   const hand = table.guidance.hand
   if (hand) blobs.push({ at: hand.at, ground: 0, radius: 2.4 + (1 - hand.press) * 1.6, strength: 0.28 * hand.opacity, stretch: (1 - hand.press) * 5 })
   return blobs
@@ -89,7 +131,8 @@ function glows(table: TableController): Blob[] {
   }
   if (g.glowBag && g.glow > 0) blobs.push({ at: { x: BAG.x + 20, y: BAG.y - 15 }, ground: 0, radius: 14, strength: g.glow * 0.8 })
   if (g.glowKnife && g.glow > 0) blobs.push({ at: table.knife.at, ground: 0, radius: 7 + 0.5 * Math.sin(table.t * 3), strength: g.glow })
-  if (g.glowShelf && g.glow > 0) blobs.push({ at: shelfTile(0), ground: 3.5, radius: 9, strength: g.glow })
+  if (table.state.liveMat === 'door' && g.glow > 0 && table.door.visitors.length === 0) blobs.push({ at: DOOR.door, ground: 0.3, radius: 10, strength: g.glow })
+  if (g.glowShelf && g.glow > 0) blobs.push({ at: shelfTile(0), ground: 0.3, radius: 10, strength: g.glow })
   if (g.hand && g.hand.press > 0.3) blobs.push({ at: g.hand.at, ground: 0, radius: 4.5, strength: g.hand.press * g.hand.opacity * 0.7 })
   return blobs
 }
@@ -110,7 +153,8 @@ function World({ table }: { table: TableController }) {
   const guestPose = (seat: number): GuestPose => {
     return {
       look: table.gaze(seat),
-      reach: table.guidance.guestsReach ? table.guidance.glow : 0,
+      reach: table.asking(seat),
+      rumbleAt: table.rumbles.get(seat) ?? null,
       munchAt: table.munchStart,
       hopAt: hops.current.get(seat) ?? null,
       pokeAt: table.nudges.get(seat) ?? null,
@@ -132,11 +176,27 @@ function World({ table }: { table: TableController }) {
           now: table.t,
         })}
       />
-      {live === 'scale' ? (
-        <ScaleModel read={() => ({ angle: table.beam.angle, panY: [table.physics.panTop(0), table.physics.panTop(1)], now: table.t })} />
+      {live === 'door' ? (
+        <DoorModel
+          read={() => ({
+            visitors: table.door.visitors,
+            openAt: table.door.openAt,
+            closeAt: table.door.closeAt,
+            knockAt: table.door.knockAt,
+            answerTimes: table.door.answer?.times ?? [],
+            peek: table.doorPeek(),
+            now: table.t,
+          })}
+        />
+      ) : live === 'scale' ? (
+        <>
+          <ScaleModel read={() => ({ angle: table.beam.angle, panY: [table.physics.panTop(0), table.physics.panTop(1)], now: table.t })} />
+          <JarsModel read={() => ({ tips: table.jarTips, full: jarCounts(table), glow: table.state.parts.length === 0 ? table.guidance.glow : 0, now: table.t })} />
+          <PartsModel read={() => partStates(table)} />
+        </>
       ) : (
         <>
-          <FeedingSetting seats={table.state.seats} />
+          <FeedingSetting seats={table.state.seats} showStools={table.stoolsShown} readBowl={() => ({ dingAt: table.bowlDingAt, now: table.t })} />
           {FEEDING.seats.map((seat, index) =>
             table.state.seats[index] ? (
               <Guest key={index} seat={index} at={table.guestDrag?.seat === index ? table.guestDrag.at : seat.guest} read={() => guestPose(index)} />
@@ -146,7 +206,9 @@ function World({ table }: { table: TableController }) {
         </>
       )}
       <StonesModel read={() => stoneStates(table)} />
+      <CarrierMice read={() => carrierMice(table)} />
       <ShelfModel read={() => ({ mats: table.shelfMats(), drag: table.shelfDrag, glow: table.guidance.glowShelf ? table.guidance.glow : 0, now: table.t })} />
+      <AlbumModel read={() => ({ pages: table.state.album, at: table.albumAt, now: table.t })} />
       <Overlays kind="glow" capacity={32} read={() => glows(table)} />
       <GhostHand read={() => table.guidance.hand} carry={() => table.guidance.hint?.kind === 'toPan' || table.guidance.hint?.kind === 'toGuest'} />
     </>

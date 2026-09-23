@@ -51,11 +51,31 @@ export const FEEDING = {
   }),
 } as const
 
-export const MAT_KEYS = ['feeding', 'scale'] as const
+export const MAT_KEYS = ['feeding', 'scale', 'door'] as const
 export type MatKey = (typeof MAT_KEYS)[number]
 
 /** The low rack at the table's right end where put-away mats rest, tilted toward the child. */
-export const SHELF_RACK = { x: SHELF.x + SHELF.w / 2, firstY: 240, spacing: 190, height: 3.5 } as const
+/**
+ * Knock-Knock: a little clay house at the back of the mat. Knock on its door
+ * and it knocks back the same number, then that many visitors come out and
+ * stand in small groups in the yard in front of it.
+ */
+export const DOOR = {
+  house: { x: MAT_CENTER.x, y: MAT_CENTER.y - 110 },
+  door: { x: MAT_CENTER.x, y: MAT_CENTER.y + 40 },
+  doorRadius: 95,
+  yard: { x: MAT_CENTER.x, y: MAT_CENTER.y + 220 },
+  houseScale: 1.5,
+  maxVisitors: 10,
+} as const
+
+/** Activity choosers stand on the table's right margin, big enough to read as things to touch. */
+export const SHELF_RACK = { x: 1352, firstY: 250, spacing: 185, height: 0 } as const
+
+/** The album sits below the activity choosers. */
+export function albumSlot(): Point & { height: number } {
+  return shelfTile(2)
+}
 
 export function shelfTile(index: number): Point & { height: number } {
   return { x: SHELF_RACK.x, y: SHELF_RACK.firstY + index * SHELF_RACK.spacing, height: SHELF_RACK.height }

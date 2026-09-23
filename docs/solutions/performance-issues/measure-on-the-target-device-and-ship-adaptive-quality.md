@@ -1,6 +1,7 @@
 ---
 title: Judge a 3D kid game's performance on a production build in WebKit, throttled Chrome, and a software-GPU proxy, profile the real hot spot, and ship adaptive quality with a grown-up fps overlay from day one
 date: 2026-09-22
+last_updated: 2026-09-23
 category: performance-issues
 module: performance
 problem_type: performance_issue
@@ -18,7 +19,7 @@ applies_when:
 symptoms:
   - Every refinement pass reported 60 fps in headless Chrome on an Apple M4, yet the owner saw heavy lag on a real device
   - Chrome at 6x CPU throttling still held 60 fps, hiding GPU and fill-rate cost the iPad could not absorb
-  - Chrome at 20x CPU throttling fell to 14 fps during a ten-stone spill as catch-up physics substeps spiralled
+  - Chrome at 20x CPU throttling fell to 14 fps during a ten-stone spill as catch-up physics substeps spiralled, and later to 21 fps on a scale of loose parts whose thin shells never fell asleep
   - A CPU profile showed more than half of spill frame time in cannon-es convex-convex collision on 12-sided stone cylinders
   - The adaptive quality governor never stepped down on a very slow device because frames over 250 ms were filtered out as stalls
 root_cause: missing_workflow_step
@@ -58,6 +59,7 @@ Pebble Table (`games/pebble-table/`, in PR #1, unmerged as of writing) is a clay
 
 - `STONE_SIDES = 8` for stone colliders and `FIXTURE_SIDES = 10` for fixtures such as guests and stools (scale pans use 12). Convex-convex cost grows with faces times edges, and a spill is nearly all stone-on-stone contacts. The drawn pebbles are separate round meshes, so nothing visible changed.
 - `DEFAULT_MAX_SUBSTEPS = 3`. `step` clamps the accumulator to `STEP * maxSubsteps`, so an overloaded frame slows game time slightly instead of spiralling. The cap follows the quality tier: `games/pebble-table/view/game.tsx` sets `table.physics.maxSubsteps = settings.physicsSubsteps` in its `onSettings` callback.
+- Resting bodies must fall asleep. The jars of loose parts (stacked branch `cursor/pebble-table-explore-cceb`) first modelled shells as thin cones (`Cylinder(2, 1.65, 0.7)`, mass 1). Six of them piled together kept nudging each other awake, so in 2 of 8 headless trials some parts were still moving 20 s after the tip and physics cost about 1 ms a step on the M4 indefinitely. Flat discs of equal radii plus firmer sleep settings (`angularDamping: 0.9`, `sleepSpeedLimit: 2`, `sleepTimeLimit: 0.3` in `addPart`) settled most trials, with steps under 0.2 ms, and took the scene from 21 to 49 fps at 20x. But the controller test "lets every tipped-out part come to rest" still failed about once in 13 runs: shells or sticks stacked on each other kept bouncing at up to 6 units/s, the convex-on-convex stacking jitter cannon is known for. Two more changes made it reliable (0 failures in 320 trials). Shells and sticks now collide as clusters of small spheres (`SHELL_BALLS`, `STICK_BALLS`), which stack stably and are cheap to test. And a calm timer (`settleLooseParts`) puts any loose part to sleep once it has moved slower than 4 units/s for a second, so parts nudging each other just above cannon's sleep limit still go quiet. Run a new rest test in a loop (dozens of runs) before trusting it; a single green run proved nothing here.
 
 **Adaptive quality** (`QualityGovernor` and `TIERS` in `games/pebble-table/quality.ts`). The game watches its own frame intervals and CPU time and steps between four tiers:
 
@@ -132,6 +134,7 @@ Day one of the next game, before building gameplay:
   - A real iPad whenever one is available, read through the overlay.
   - Copy `scripts/pebble-perf.mjs` and adapt the seeded state and gestures to the new game.
 - [ ] **Profile before fixing.** Capture a CPU profile of the heaviest moment under 20x throttle and fix the top of it. Do not guess at rendering when the profile says physics, or the reverse.
+- [ ] **Check that piles go to sleep.** After adding a new kind of body, pile a lot of them up headlessly and count awake bodies after 10 s over several trials. Thin, light, or cone-shaped colliders are the usual jitterers. Add a test that asserts they sleep.
 - [ ] **Cap physics catch-up.** Clamp the accumulator to `STEP * maxSubsteps` with a cap of 3 or less, and keep physics colliders simpler than the drawn meshes (low side counts for cylinders).
 - [ ] **Ship adaptive quality from the start.** Tiers that step down DPR, per-object detail (fur, particles), the post pass, and physics substeps. Start from `QualityGovernor` in `games/pebble-table/quality.ts` with its current thresholds: windows of 40 frames, dropped frame over 20 ms, bad window over 10% dropped, step down after two bad windows or one window averaging over 26 ms, step up after 6 clean windows with CPU work under 8 ms, doubling up to 48 after a failed upgrade, stalls over 1000 ms ignored, one settle window after a change, touch devices start one tier down.
 - [ ] **Keep the look at the lowest tier.** If the grade lives in a post pass, also run it in materials (three's `CustomToneMapping`, as `installClayToneMapping` does) so turning the pass off does not wash the scene out.

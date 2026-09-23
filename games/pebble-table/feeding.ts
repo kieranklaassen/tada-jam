@@ -72,6 +72,24 @@ export function gazeTarget(view: FeedingView, seat: number): number | null {
   return view.plates[seat] < view.plates[fullest] ? fullest : null
 }
 
+/**
+ * The one guest who visibly wants a stone right now: the seated guest with
+ * the least on its plate, ties going to whoever is dealt next after
+ * `lastDealt`. Nobody wants anything once the round is shared, when nobody
+ * is seated, or when there are no stones anywhere to give.
+ */
+export function wantingSeat(view: FeedingView, stonesAvailable: boolean, lastDealt: number | null): number | null {
+  if (view.shareComplete || view.seated.length === 0 || !stonesAvailable) return null
+  const least = Math.min(...view.seated.map((index) => view.plates[index]))
+  const count = view.plates.length
+  const start = lastDealt === null ? 0 : lastDealt + 1
+  for (let i = 0; i < count; i++) {
+    const index = (start + i) % count
+    if (view.seated.includes(index) && view.plates[index] === least) return index
+  }
+  return null
+}
+
 export const GUEST_RADIUS = 64
 
 /** A free spot on a plate, spiralling out from the center and keeping clear of the guest. */

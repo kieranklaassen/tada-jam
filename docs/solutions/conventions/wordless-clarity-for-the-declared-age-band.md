@@ -1,7 +1,7 @@
 ---
 title: Every jam game is understandable at the youngest age in its declared age band, through wordless cues alone
 date: 2026-09-22
-last_updated: 2026-09-22
+last_updated: 2026-09-23
 category: conventions
 module: game-design
 problem_type: convention
@@ -35,7 +35,7 @@ Jam games are for children who may not read yet. The first playable slice of Peb
 
 A follow-up voice note set the rule for every game, not just this one: "The game should be understandable for the age where it's playing: cues and clarity, not text. It should be super clear for the ages, so make that in the solution as well, that you know what age it is."
 
-The owner said "not clear" twice. The first time ("it's not super clear what to do") came after the first slice, which had no guidance; the ladder was added afterward. The second time ("make it super clear for her to play; now it's not super clear what's even needed") came with the ladder already in place. The table showed things on it but gave a 4-year-old no reason to act. At the time of writing, the "one want per scene" changes and the cold playtest proxy are being built next for Pebble Table and are not done; the rules below are adopted from the owner's feedback, not yet proven by a build.
+The owner said "not clear" twice. The first time ("it's not super clear what to do") came after the first slice, which had no guidance; the ladder was added afterward. The second time ("make it super clear for her to play; now it's not super clear what's even needed") came with the ladder already in place. The table showed things on it but gave a 4-year-old no reason to act. The "one want per scene" rules and the cold playtest proxy below came from that feedback and were then built for Pebble Table on the stacked branch `cursor/pebble-table-explore-cceb` (unmerged as of writing); the before and after proxy notes live in the Project store (`media/pebble-table-v4/playtest-before-after.md`).
 
 So the convention has two halves:
 
@@ -52,9 +52,15 @@ Design for the youngest age in `ageBand`. If a 3-year-old is in the band, a 3-ye
 
 ### Give every scene one obvious want
 
-The guidance ladder shows HOW to act, not WHY. In Pebble Table, `chooseHint` (`games/pebble-table/guidance.ts`) picks a correct act and the ghost hand performs it, yet the owner still found it "not super clear what's even needed." At rest nothing wants anything: `gazeTarget` (`feeding.ts`) returns null while plates are empty, so guests look straight ahead; `guestsShouldReach` turns them toward the bowl, not the child, only after 3 s idle (`TableController.gaze`); the munch waits for `shareComplete`, the end of a round. Empty scale pans rest level, which reads as "done."
+The guidance ladder shows HOW to act, not WHY. In Pebble Table, `chooseHint` (`games/pebble-table/guidance.ts`) picked a correct act and the ghost hand performed it, yet the owner still found it "not super clear what's even needed." At rest nothing wanted anything: guests looked straight ahead at empty plates, turned toward the bowl (not the child) only after 3 s idle, and the munch waited for the end of a round. Empty scale pans rested level, which read as "done."
 
-The rule: from the first frame, one thing visibly wants something, and the want resolves visibly. A hungry guest turns to the child holding out an empty plate; a pan holds a stone and waits tilted for a partner. Each stone given already makes its guest react (a hop or thump from its motion personality, triggered when a plate total rises in `games/pebble-table/view/game.tsx`); what is missing is the guest turning to the child and a hunger that visibly shrinks. Keep few things live so the want is the focal point, as the knife already does by existing only while a leftover does.
+The rule: from the first frame, one thing visibly wants something, and the want resolves visibly. Pebble Table now does this:
+
+- One guest asks at a time. `wantingSeat` (`games/pebble-table/feeding.ts`) picks the seated guest with the least; `TableController.asking` turns it to the child with its hands out, it glances at the stones, and its tummy rumbles while the child is idle, backing off (2.5 s, then 8 s gaps, at most three).
+- The first open tells a story. The bag wobbles, one stone rolls out toward the hungry guest nearest the bag, and the ghost hand carries it onto that plate (`updateStory` in `games/pebble-table/controller.ts`); any touch ends it at once.
+- The scale arrives already asking: one stone sits on a pan and the beam waits tilted for a partner (`inviteOnScale`).
+- Tools and furniture wait until they mean something: empty stools appear only after the first shared meal (`stoolsShown`), as the knife already exists only while a leftover does.
+- Small hands miss, so a stone dropped just short of the asking guest's plate hops onto it (`catcher`, within 1.7 plate radii). Without this the first cold run showed the want failing on a near miss.
 
 Checklist:
 - With no touch, one thing visibly asks for something, facing the child.
@@ -66,7 +72,11 @@ Checklist:
 
 Item 12's idle screenshot and scripted walkthrough judge how a scene looks, not whether a newcomer knows what it is for. Pebble Table passed them (shots 6.4 s after load, `games/pebble-table/REFINEMENT.md`) and the owner still said "not clear" twice. The proxy is a cheap stand-in for a child that the agent runs before any build reaches the owner.
 
-Load the production build cold, with fresh state. Touch nothing for 10 s and write down what the scene invites: what draws the eye, what seems to want something, where the glow and peek point. Then play the first 60 s as someone who has never seen it and list every moment the purpose is not obvious ("why tap this," "what is this for," "did that work"). When fixing, rerun and compare before and after; a fix counts only if a listed moment disappears without a new one appearing. Not yet run for Pebble Table at the time of writing.
+Load the production build cold, with fresh state. Touch nothing for 10 s and write down what the scene invites: what draws the eye, what seems to want something, where the glow and peek point. Then play the first 60 s as someone who has never seen it and list every moment the purpose is not obvious ("why tap this," "what is this for," "did that work"). When fixing, rerun and compare before and after; a fix counts only if a listed moment disappears without a new one appearing.
+
+Pebble Table's run found twelve unclear moments before the change (nothing moves or wants for the first 3 s, empty stools read as coins, the scale rests level and reads as done, after 60 s the table is a pile with no goal). After the change, the want is visible from about 1 s and the story beat resolves by 5.5 s. The after run surfaced one new moment, a stone dropped just short of the asking guest's plate that the guest ignored, and that led to the forgiving catch above.
+
+Script drags at the height the game holds things, not at the table surface. Pebble Table maps a finger to the plane at `HOLD_HEIGHT` (11 units) and a released stone falls straight down, so a script that aims at the table surface lands about 95 table units toward the viewer and reports misses that a child, who sees the stone and its shadow over the target, would not make.
 
 Checklist:
 - Cold load: production build, fresh state.
@@ -91,8 +101,8 @@ Work through this in order when building a game. Each item says whether a check 
 10. **At most three fingers act.** A fourth finger means a resting hand: cancel every gesture until the whole hand lifts (`games/pebble-table/input.ts`, `MAX_FINGERS = 3`). iPadOS reserves four- and five-finger gestures.
 11. **Age is a dial, never a gate.** Read `ctx.childAge` to set defaults (how much material, which activity opens first), but keep everything reachable for every child. Pebble Table: `bagStonesForAge` gives 5 stones per bag at age 3 or under and 10 otherwise, `defaultMatForAge` opens the scale at 5 or older and feeding otherwise (`games/pebble-table/state.ts`), and both mats always sit on the shelf (`games/pebble-table/state.ts`, restored defensively).
 12. **Prove it is understandable.** The checks cannot tell whether a cue works. Take an idle screenshot and a scripted walkthrough that includes an idle stretch long enough for the glow and a demonstration to play (Pebble Table's refinement shots were taken 6.4 s after load for this reason, `games/pebble-table/REFINEMENT.md`). Playtest with a child at the youngest age when you can. In the PR, say how the game meets "Wordless clarity for the declared age" (`docs/art-direction.md`).
-13. **One obvious want per scene.** From the first frame, one thing in the scene visibly wants something (a guest holding out an empty plate, a pan that holds a stone and waits tilted), and each step toward it resolves visibly (munch, wiggle, a turn to the child). Guidance shows how; the want gives the reason. Ship the want and the guidance ladder together in the first slice. Documented only. Pebble Table falls short today: guests look straight ahead at rest (`gazeTarget` in `games/pebble-table/feeding.ts`), turn toward the bowl only after 3 s idle (`guestsShouldReach` in `games/pebble-table/guidance.ts`), and, although each stone already sets off a small reaction, only the finished round ends in a munch (`updateFeeding` in `games/pebble-table/controller.ts`); nothing turns to the child or visibly gets less hungry.
-14. **Cold playtest proxy before the owner sees it.** Load the build cold, touch nothing for 10 s and record what the scene invites, then play the first 60 s as a newcomer and list every moment the purpose is not obvious, recording the screen next to the notes. Rerun after each fix and compare the lists. Documented only.
+13. **One obvious want per scene.** From the first frame, one thing in the scene visibly wants something (a guest holding out an empty plate, a pan that holds a stone and waits tilted), and each step toward it resolves visibly (munch, wiggle, a turn to the child). Guidance shows how; the want gives the reason. Ship the want and the guidance ladder together in the first slice. Every added activity needs its own want too (Pebble Table's house glows at its door and a mouse peeks from the window while nobody is out; the jars sit closed and full). Documented only; Pebble Table's worked example is "Give every scene one obvious want" above, with controller tests for one asking guest, the rumble backoff, the story beat, and the scale invitation (`games/pebble-table/controller.test.ts`).
+14. **Cold playtest proxy before the owner sees it.** Load the build cold, touch nothing for 10 s and record what the scene invites, then play the first 60 s as a newcomer and list every moment the purpose is not obvious, recording the screen next to the notes. Rerun after each fix and compare the lists. Documented only; drive it with a script against the production build and aim drags at the game's hold height (see "Run a cold playtest proxy" above).
 
 ### Age-band cue table
 
@@ -168,7 +178,7 @@ The enforcement makes the easy failure impossible to merge (a stray label or a n
 
 **After (Pebble Table).** Declared `ageBand: [3, 7]` (`games/pebble-table/manifest.ts`). Nothing on screen is a word or numeral. What the child sees instead:
 
-- On first open, the bag wiggles and a stone peeks out (`games/pebble-table/guidance.ts`).
+- On first open, the bag wobbles, one stone rolls out toward the hungry guest nearest the bag, and the ghost hand carries it onto that plate (`updateStory` in `games/pebble-table/controller.ts`). After that, one guest at a time turns to the child and asks.
 - After 3 s of idleness, whatever can be touched breathes with a golden ring (ring texture at `games/pebble-table/view/clay.ts`).
 - After 5 s, a ghost hand shows one move, such as a stone traveling to the lighter pan (`games/pebble-table/guidance.ts`).
 - The scale answers with a tilt, and stillness when level (`games/pebble-table/scale.ts`).
