@@ -1,9 +1,10 @@
 // Adaptive quality. Frame intervals from requestAnimationFrame decide the
 // tier: a slow second drops one tier (two when it is very slow); a long run
-// at the display's full rate tries the next tier up. A tier that has failed
-// twice becomes a ceiling for the rest of the session, so the game never
-// oscillates. Stalls and paced frames are skipped, and touch devices start
-// one tier down.
+// at the display's full rate with light CPU work tries the next tier up. A
+// freshly upgraded tier is judged on half-second windows, and if it fails it
+// becomes a ceiling for the rest of the session at once; any other tier
+// becomes one after failing twice. So the game never oscillates. Stalls and
+// paced frames are skipped, and touch devices start one tier down.
 // `?tier=N` pins a tier for testing.
 
 export type Tier = {
@@ -12,21 +13,15 @@ export type Tier = {
   blur: boolean
   /** The single full-screen pass (grade, vignette, blur). */
   post: boolean
-  /**
-   * The post pass draws the scene into a multisampled target, so its edges are
-   * as smooth as the canvas's own (which is always multisampled). Top tier only:
-   * on top of the canvas's samples it is a second multisampled surface.
-   */
-  msaa: boolean
   /** Fuzz shells: 3 bee + flowers + molehills, 2 bee + flowers, 1 bee, 0 none. */
   fuzz: 0 | 1 | 2 | 3
 }
 
 export const TIERS: readonly Tier[] = [
-  { dpr: 2, blur: true, post: true, msaa: true, fuzz: 3 },
-  { dpr: 1.5, blur: false, post: true, msaa: false, fuzz: 2 },
-  { dpr: 1.25, blur: false, post: false, msaa: false, fuzz: 1 },
-  { dpr: 1, blur: false, post: false, msaa: false, fuzz: 0 },
+  { dpr: 2, blur: true, post: true, fuzz: 3 },
+  { dpr: 1.5, blur: false, post: true, fuzz: 2 },
+  { dpr: 1.25, blur: false, post: false, fuzz: 1 },
+  { dpr: 1, blur: false, post: false, fuzz: 0 },
 ]
 
 export const WINDOW_SECONDS = 1
@@ -35,6 +30,16 @@ export const VERY_SLOW_MS = 34
 export const FULL_RATE_MS = 18
 export const UPGRADE_AFTER_SECONDS = 8
 export const SETTLE_SECONDS = 0.6
+/**
+ * CPU work per frame (update plus draw submission) must average under this to try a tier up. The display caps
+ * the interval at 16.7 ms, so only the work shows spare time.
+ */
+export const LIGHT_WORK_MS = 8
+/** After an upgrade, the new tier is on probation this long, judged on PROBATION_WINDOW_SECONDS windows. */
+export const PROBATION_SECONDS = 3
+export const PROBATION_WINDOW_SECONDS = 0.3
+/** An upgrade settles this long (not SETTLE_SECONDS) before probation judges it, so a failed one is short. */
+export const PROBATION_SETTLE_SECONDS = 0.2
 /** A gap this long is a stall (a paused debugger, a tab switch the loop missed), not a slow device. */
 export const STALL_MS = 1000
 
@@ -53,10 +58,12 @@ export class TierController {
   private ceiling = 0
   private readonly failures = new Array<number>(TIERS.length).fill(0)
   private sum = 0
+  private work = 0
   private frames = 0
   private windowStart = 0
   private goodSince = 0
   private settleUntil = 0
+  private probationUntil = -Infinity
 
   constructor(pinnedTier: number | null, now = 0, start = 0) {
     this.pinned = pinnedTier !== null
@@ -69,27 +76,38 @@ export class TierController {
     return TIERS[this.tier]
   }
 
-  /** Feed one frame interval (ms) at time `now` (s). Returns true when the tier changed. */
-  frame(intervalMs: number, now: number): boolean {
+  /**
+   * Feed one frame interval (ms) at time `now` (s), with the CPU work (ms) of
+   * the frame before it. Returns true when the tier changed.
+   */
+  frame(intervalMs: number, now: number, workMs = 0): boolean {
     if (this.pinned) return false
     if (now < this.settleUntil || intervalMs > STALL_MS) {
       this.skip(now)
       return false
     }
     this.sum += intervalMs
+    this.work += workMs
     this.frames += 1
-    if (now - this.windowStart < WINDOW_SECONDS) return false
+    const onProbation = now < this.probationUntil
+    if (now - this.windowStart < (onProbation ? PROBATION_WINDOW_SECONDS : WINDOW_SECONDS)) return false
     const average = this.sum / this.frames
+    const work = this.work / this.frames
     this.sum = 0
+    this.work = 0
     this.frames = 0
     this.windowStart = now
     if (average > SLOW_MS && this.tier < TIERS.length - 1) {
       this.failures[this.tier] += 1
-      if (this.failures[this.tier] >= 2) this.ceiling = Math.max(this.ceiling, this.tier + 1)
+      if (onProbation || this.failures[this.tier] >= 2) this.ceiling = Math.max(this.ceiling, this.tier + 1)
+      this.probationUntil = -Infinity
       return this.set(Math.min(TIERS.length - 1, this.tier + (average > VERY_SLOW_MS ? 2 : 1)), now)
     }
-    if (average > FULL_RATE_MS) this.goodSince = now
-    else if (now - this.goodSince >= UPGRADE_AFTER_SECONDS && this.tier > this.ceiling) return this.set(this.tier - 1, now)
+    if (average > FULL_RATE_MS || work >= LIGHT_WORK_MS) this.goodSince = now
+    else if (now - this.goodSince >= UPGRADE_AFTER_SECONDS && this.tier > this.ceiling) {
+      this.probationUntil = now + PROBATION_SECONDS
+      return this.set(this.tier - 1, now, PROBATION_SETTLE_SECONDS)
+    }
     return false
   }
 
@@ -101,13 +119,14 @@ export class TierController {
     this.windowStart = now
     this.goodSince = now
     this.sum = 0
+    this.work = 0
     this.frames = 0
   }
 
-  private set(tier: number, now: number): boolean {
+  private set(tier: number, now: number, settle = SETTLE_SECONDS): boolean {
     if (tier === this.tier) return false
     this.tier = tier
-    this.settleUntil = now + SETTLE_SECONDS
+    this.settleUntil = now + settle
     this.goodSince = now
     return true
   }

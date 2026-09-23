@@ -69,13 +69,6 @@ export class PostPass {
     this.material.uniforms.uTexel.value.set(1 / width, 1 / height)
   }
 
-  /** Multisample the scene target (0 for none). three.js sets a target up once, so a change rebuilds it on its next use. */
-  setSamples(samples: number): void {
-    if (this.target.samples === samples) return
-    this.target.samples = samples
-    this.target.dispose()
-  }
-
   render(renderer: WebGLRenderer, scene: Scene, camera: Camera, blur: boolean): void {
     renderer.setRenderTarget(this.target)
     renderer.render(scene, camera)
