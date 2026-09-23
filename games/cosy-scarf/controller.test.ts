@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { DANCE_SECONDS, DANCE_START, PAINT_DWELL_S, ScarfController, silentSound, type Projector } from './controller'
+import { DANCE_SECONDS, DANCE_START, PAINT_DWELL_S, POWDER_PUFF, ScarfController, silentSound, type Projector } from './controller'
 import type { Point } from './input'
 import { CELL_H, HILL_SPOTS, LOOM_SPOT, SCARF, cellCentre, groundY, needlesY } from './layout'
+import { suggestColour } from './pattern'
 import { ANIMALS, initialState, WIDTH, type GameState, type Row } from './state'
 
 const PPU = 10
@@ -104,6 +105,34 @@ describe('ScarfController', () => {
     expect(bunny.danceAt).toBe(-Infinity)
   })
 
+  it('answers a tap on the empty loom with a hop from the ball it would like next, and knits nothing', () => {
+    const { game } = setup()
+    run(game, 0.5)
+    const wanted = suggestColour([], game.balls.length)
+    const frame = cellCentre(4, 1)
+    tap(game, screenOf(frame.x, frame.y))
+    run(game, 0.3)
+    expect(game.balls[wanted].hopY).toBeGreaterThan(0)
+    for (const [i, ball] of game.balls.entries()) if (i !== wanted) expect(ball.hopY).toBe(0)
+    expect(game.state.loom).toEqual([])
+  })
+
+  it('puffs snow where a touch meets the slope, and flurries in the sky above the hill', () => {
+    const { game } = setup()
+    tap(game, screenOf(-60, 5))
+    const [onSlope, ...spray] = game.puffs.filter((puff) => puff.t0 === game.t)
+    expect(onSlope.z).toBeLessThan(-16)
+    expect(spray).toHaveLength(2)
+    expect([onSlope, ...spray].every((puff) => puff.colour === POWDER_PUFF)).toBe(true)
+    expect(onSlope.y - onSlope.size * 0.6).toBeCloseTo(groundY(onSlope.x, onSlope.z), 1)
+    expect(groundY(onSlope.x, onSlope.z)).toBeCloseTo(5, 0)
+    tap(game, screenOf(-60, 40))
+    const inSky = game.puffs.filter((puff) => puff.t0 === game.t && puff !== onSlope && !spray.includes(puff))
+    expect(inSky).toHaveLength(1)
+    expect(inSky[0].y).toBeCloseTo(40)
+    expect(inSky[0].z).toBeLessThan(-250)
+  })
+
   it('knits when a ball is carried to the loom and let go', () => {
     const { game } = setup()
     const loom = cellCentre(2, 2)
@@ -120,6 +149,15 @@ describe('ScarfController', () => {
     carry(game, ballAt(game, 3), screenOf(stitch.x, stitch.y), PAINT_DWELL_S + 0.15)
     expect(game.state.loom).toEqual([[0, 3, 0, 3, 0], row(0)])
     expect(saves.at(-1)?.loom[0]).toEqual([0, 3, 0, 3, 0])
+  })
+
+  it('still knits when a ball rests on a stitch of its own colour, where painting changes nothing', () => {
+    const state = initialState()
+    state.loom = [row(0), row(3)]
+    const { game } = setup(state)
+    const stitch = cellCentre(1, 2)
+    carry(game, ballAt(game, 3), screenOf(stitch.x, stitch.y), PAINT_DWELL_S + 0.3)
+    expect(game.state.loom).toEqual([row(0), row(3), row(3)])
   })
 
   it('does not paint on the way past: a quick carry over the scarf only knits', () => {

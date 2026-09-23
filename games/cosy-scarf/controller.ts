@@ -2,7 +2,7 @@ import { chooseHint, handPose, HintScheduler, type GuidanceFrame, type HandPose,
 import { GestureTracker, TAP_SLOP, type Intent, type Point } from './input'
 import { canOffer, give, isFull, knitRow, paintStitch, summonIfReady, unravelRow } from './knitting'
 import { BALL_RADIUS, BASKET, BODY, BUTTERFLY, CELL_H, ENTRY, HILL_SPOTS, LOOM, LOOM_SPOT, SCARF, ballRest, cellAt, cellCentre, groundY, needlesY, type Spot } from './layout'
-import { completedRepeat, stripeColours } from './pattern'
+import { completedRepeat, stripeColours, suggestColour } from './pattern'
 import { SaveCadence } from './saveCadence'
 import { clamp01, smooth, spring, springStep, type Spring } from './springs'
 import { ANIMALS, ballsForAge, offerRowsForAge, WIDTH, type AnimalKey, type GameState, type Scarf } from './state'
@@ -34,6 +34,8 @@ export type Sound = {
   /** The warm animal's own dance tune, played on the scarf's stripes. */
   dance(animal: AnimalKey, colours: readonly number[]): void
   crunch(): void
+  /** A touch on the sky: a soft flurry. */
+  flurry(): void
   basket(): void
   footstep(animal: AnimalKey, weight: number): void
   dispose(): void
@@ -56,6 +58,7 @@ export const silentSound: Sound = {
   happy() {},
   dance() {},
   crunch() {},
+  flurry() {},
   basket() {},
   footstep() {},
   dispose() {},
@@ -78,6 +81,7 @@ export type Target =
   | { kind: 'animal'; animal: AnimalKey }
   | { kind: 'needles' }
   | { kind: 'scarf' }
+  | { kind: 'loom' }
   | { kind: 'butterfly' }
   | { kind: 'basket' }
   | { kind: 'snow' }
@@ -91,6 +95,8 @@ export const DANCE_SECONDS: Record<AnimalKey, number> = { bunny: 3.1, penguin: 3
 
 export const CAST_OFF = 0.35
 export const FLY_END = 1.25
+/** The middle starts round the neck while the scarf is still landing, so it never rests there as a flat bar. */
+export const WRAP_START = 0.95
 export const WRAP_END = 2.05
 export const DANCE_START = 2.35
 const NEXT_ARRIVES_AFTER = 0.7
@@ -104,7 +110,18 @@ export const PAINT_DWELL_S = 0.4
 const CARRY_Z = SCARF.z + 6
 const RETURN_SECONDS = 0.5
 const GRAVITY = 260
+/** A loom tap's answer: the wanted ball hops a little lower than a tapped ball, just after the loom starts to sway. */
+const ASK_HOP_SPEED = 46
+const ASK_HOP_DELAY = 0.15
 const HIT_SLOP_PX = 16
+/** A touch on the snow is traced from in front of the blanket to the hill's far edge; beyond it is sky. */
+const SNOW_NEAR_Z = 60
+const SNOW_FAR_Z = -300
+const SNOW_STEP = 6
+/** A sky flurry sits on the hill's far edge. */
+const SKY_PUFF_Z = -300
+/** A touch puff's size on screen, the same near the blanket or far up the slope, where a fixed world size shrinks to a speck. */
+const TOUCH_PUFF_PX = 24
 const GIVE_REACH_PX = 170
 
 export type BallView = {
@@ -177,7 +194,10 @@ export type ActorView = {
   reach: Spring
 }
 
+/** A yarn index, WHITE_PUFF (breath, snow off a head, the sky) or POWDER_PUFF (kicked-up snow, which white would vanish into). */
 export type Puff = { x: number; y: number; z: number; t0: number; size: number; colour: number }
+export const WHITE_PUFF = -1
+export const POWDER_PUFF = -2
 
 export type Strand = { alpha: number; colour: number; ball: number; row: number; column: number }
 
@@ -212,7 +232,7 @@ export class ScarfController {
   readonly needles = { pull: spring(0), castOffAt: -Infinity, held: false }
   readonly butterfly = { show: spring(0), open: spring(0), flapAt: -Infinity }
   readonly loomRock: Spring = spring(0)
-  readonly puffs: Puff[] = Array.from({ length: PUFFS }, () => ({ x: 0, y: 0, z: 0, t0: -Infinity, size: 1, colour: -1 }))
+  readonly puffs: Puff[] = Array.from({ length: PUFFS }, () => ({ x: 0, y: 0, z: 0, t0: -Infinity, size: 1, colour: WHITE_PUFF }))
   readonly guidance: Guidance
   basketAt = -Infinity
   humAt = -Infinity
@@ -331,13 +351,13 @@ export class ScarfController {
     this.sound.footstep(animal, weight)
     if (weight > 0.6) {
       const actor = this.actors[animal]
-      this.puff(actor.x, groundY(actor.x, actor.z) + 0.5, actor.z + 3, 0.8 + weight, -1)
+      this.puff(actor.x, groundY(actor.x, actor.z) + 0.5, actor.z + 3, 0.8 + weight, POWDER_PUFF)
     }
   }
 
   /** A white puff the view asks for: frosty breath, or snow shaken off a warmed head. */
   frostPuff(x: number, y: number, z: number, size: number): void {
-    this.puff(x, y, z, size, -1)
+    this.puff(x, y, z, size, WHITE_PUFF)
   }
 
   // --- opening ------------------------------------------------------------------
@@ -496,11 +516,9 @@ export class ScarfController {
         return
       case 'needles':
       case 'scarf':
+      case 'loom':
         if (this.offered) this.startGift()
-        else {
-          this.loom.swing.v += 0.5
-          if (this.loom.rows.length > 0) this.sound.hum(stripeColours(this.loom.rows))
-        }
+        else this.askForYarn()
         return
       case 'butterfly':
         this.toggleMirror()
@@ -510,17 +528,68 @@ export class ScarfController {
         this.sound.basket()
         for (const ball of this.balls) if (ball.held === null && ball.returning < 0) this.launch(ball, 22 + ball.colour * 3, 0.02 * ball.colour)
         return
-      case 'snow': {
-        const p = this.projector
-        if (p && p.toPlaneY(at, 0, this.scratch)) this.puff(this.scratch.x, 0.6, this.scratch.z, 1.6, -1)
-        this.sound.crunch()
+      case 'snow':
+        this.touchSnow(at)
         return
-      }
       default: {
         const never: never = target
         return never
       }
     }
+  }
+
+  /** A loom that has nothing to give yet sways, and the ball it would like next hops in the basket. */
+  private askForYarn(): void {
+    this.loom.swing.v += 0.5
+    if (this.loom.rows.length > 0) this.sound.hum(stripeColours(this.loom.rows))
+    if (isFull(this.state)) return
+    const ball = this.balls[suggestColour(stripeColours(this.loom.rows), this.balls.length)]
+    if (!ball || ball.held !== null || ball.returning >= 0 || ball.airborne) return
+    this.launch(ball, ASK_HOP_SPEED, ASK_HOP_DELAY)
+    this.sound.hop(ball.colour)
+  }
+
+  /** A puff where the touch meets the snow, on the blanket or up the slope; above the hill, a flurry in the sky. */
+  private touchSnow(at: Point): void {
+    const p = this.projector
+    if (!p) return
+    const s = this.scratch
+    if (this.snowUnder(p, at, s)) {
+      const size = TOUCH_PUFF_PX / p.pixelsPerUnit(s)
+      this.puff(s.x, s.y + size * 0.6, s.z, size, POWDER_PUFF)
+      this.puff(s.x - size * 0.9, s.y + size * 0.4, s.z, size * 0.7, POWDER_PUFF)
+      this.puff(s.x + size * 0.9, s.y + size * 0.5, s.z, size * 0.75, POWDER_PUFF)
+      this.sound.crunch()
+    } else if (p.toPlaneZ(at, SKY_PUFF_Z, s)) {
+      this.puff(s.x, s.y, SKY_PUFF_Z, TOUCH_PUFF_PX / p.pixelsPerUnit(s), WHITE_PUFF)
+      this.sound.flurry()
+    }
+  }
+
+  /**
+   * Where the touch's ray first dips under the snow: marched from the front of
+   * the blanket to the far edge of the hill, then narrowed by halving. (The
+   * slope is steeper than rays near the horizon, so settling onto the ground's
+   * height from the flat plane would not converge.)
+   */
+  private snowUnder(p: Projector, at: Point, out: Point3): boolean {
+    let near = SNOW_NEAR_Z
+    for (let z = SNOW_NEAR_Z; z >= SNOW_FAR_Z; z -= SNOW_STEP) {
+      if (!p.toPlaneZ(at, z, out)) return false
+      if (out.y <= groundY(out.x, z)) {
+        let far = z
+        for (let i = 0; i < 6; i++) {
+          const mid = (near + far) / 2
+          if (p.toPlaneZ(at, mid, out) && out.y <= groundY(out.x, mid)) far = mid
+          else near = mid
+        }
+        p.toPlaneZ(at, far, out)
+        out.y = groundY(out.x, far)
+        return true
+      }
+      near = z
+    }
+    return false
   }
 
   private tapBall(index: number): void {
@@ -595,6 +664,7 @@ export class ScarfController {
         this.drags.set(id, drag)
         return
       }
+      case 'loom':
       case 'animal':
       case 'butterfly':
       case 'basket':
@@ -827,8 +897,12 @@ export class ScarfController {
     } else if (!drag.painted && this.t - drag.cellSince < PAINT_DWELL_S) return
     else if (drag.painted) return
     const changed = paintStitch(this.state, cell.row, cell.column, ball.colour)
+    if (changed.length === 0) {
+      // Resting on a stitch that is already this colour must not turn the carry into a paint, or the drop knits nothing.
+      if (!drag.painted) drag.cellSince = Number.POSITIVE_INFINITY
+      return
+    }
     drag.painted = true
-    if (changed.length === 0) return
     this.loom.version++
     this.sound.paint(ball.colour)
     ball.squash.v += 6
@@ -878,6 +952,7 @@ export class ScarfController {
       if (this.near(p, at, actor.x, groundY(actor.x, actor.z) + BODY[animal].height * 0.48, actor.z, BODY[animal].height * 0.55)) return this.animalTargets[animal]
     }
     if (this.near(p, at, BASKET.x, BASKET.rimY * 0.6, BASKET.z, BASKET.radius)) return BASKET_TARGET
+    if (this.overLoom(at)) return LOOM_TARGET
     return SNOW
   }
 
@@ -1038,7 +1113,7 @@ export class ScarfController {
       const g = view.giftAt
       view.fringe = clamp01(g / CAST_OFF)
       view.fly = smooth((g - CAST_OFF) / (FLY_END - CAST_OFF))
-      view.wrap = clamp01((g - FLY_END) / (WRAP_END - FLY_END))
+      view.wrap = clamp01((g - WRAP_START) / (WRAP_END - WRAP_START))
       if (g >= WRAP_END) {
         view.giftAt = -1
         view.swing.v += 1.2
@@ -1134,5 +1209,6 @@ export class ScarfController {
 const SNOW: Target = { kind: 'snow' }
 const NEEDLES: Target = { kind: 'needles' }
 const SCARF_TARGET: Target = { kind: 'scarf' }
+const LOOM_TARGET: Target = { kind: 'loom' }
 const BUTTERFLY_TARGET: Target = { kind: 'butterfly' }
 const BASKET_TARGET: Target = { kind: 'basket' }
