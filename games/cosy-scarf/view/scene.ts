@@ -7,7 +7,7 @@ import { CELL_H, CELL_W, LOOM, SCARF } from '../layout'
 import { PerfMeter } from '../perf'
 import { clamp01, smooth } from '../springs'
 import { ANIMALS, WIDTH, type AnimalKey } from '../state'
-import { forcedTier, TierController, TIERS } from '../tiers'
+import { forcedTier, TierController, TIERS, type Tier } from '../tiers'
 import { buildAnimals, type Animal, type Moment } from './animals'
 import { KnitFinishEffect } from './finish'
 import { Props } from './props'
@@ -121,7 +121,8 @@ export class CosyScene {
     if (new URLSearchParams(options.search).get('fps') === '1') this.perf.showOverlay(host)
 
     const step = (animal: AnimalKey, weight: number) => game.footstep(animal, weight)
-    this.moment = { t: 0, dt: 0, knitting: 0, hoping: false, focus: new THREE.Vector3(), step }
+    const puff = (x: number, y: number, z: number, size: number) => game.frostPuff(x, y, z, size)
+    this.moment = { t: 0, dt: 0, knitting: 0, hoping: false, focus: new THREE.Vector3(), progress: 0, humAt: Number.NEGATIVE_INFINITY, step, puff }
 
     game.setProjector(this.projector)
     this.cleanupInput = this.bindInput(canvas)
@@ -193,8 +194,9 @@ export class CosyScene {
 
   /**
    * Compile every program now, while the game opens, so the first scarf, puff
-   * or strand never stalls a frame: the current tier's variant synchronously,
-   * the other (with or without the post pass) in the background.
+   * or strand never stalls a frame, and neither does a tier change (which
+   * happens exactly when the device is struggling): the current tier's
+   * variants synchronously, every other tier's in the background.
    */
   private prewarm(): void {
     const hidden: THREE.Object3D[] = []
@@ -203,16 +205,23 @@ export class CosyScene {
       hidden.push(object)
       object.visible = true
     })
-    const post = TIERS[this.tiers.tier].post
+    const current = TIERS[this.tiers.tier]
     const toneMapping = this.renderer.toneMapping
-    this.renderer.setRenderTarget(post ? this.composer.inputBuffer : null)
-    this.renderer.compile(this.scene, this.camera)
-    this.renderer.setRenderTarget(post ? null : this.composer.inputBuffer)
-    this.renderer.toneMapping = post ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping
-    void this.renderer.compileAsync(this.scene, this.camera).catch(() => {})
+    this.compileFor(current, false)
+    for (const tier of TIERS) if (tier !== current) this.compileFor(tier, true)
+    this.materials.setHillRelief(current.hillRelief)
     this.renderer.toneMapping = toneMapping
     this.renderer.setRenderTarget(null)
     for (const object of hidden) object.visible = false
+  }
+
+  /** Programs are created synchronously even by `compileAsync`, so the tier's state can be undone right after. */
+  private compileFor(tier: Tier, background: boolean): void {
+    this.materials.setHillRelief(tier.hillRelief)
+    this.renderer.setRenderTarget(tier.post ? this.composer.inputBuffer : null)
+    this.renderer.toneMapping = tier.post ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping
+    if (background) void this.renderer.compileAsync(this.scene, this.camera).catch(() => {})
+    else this.renderer.compile(this.scene, this.camera)
   }
 
   // --- the loop --------------------------------------------------------------------
@@ -245,6 +254,7 @@ export class CosyScene {
     this.moment.t = t
     this.moment.dt = dt
     this.moment.knitting = game.strand.alpha
+    this.moment.humAt = game.humAt
 
     this.hangFrame(game.loom, true, this.loomHang)
     this.world.loom.rotation.z = game.loomRock.x * 0.022
@@ -254,7 +264,8 @@ export class CosyScene {
     for (const animal of ANIMALS) {
       const actor = game.actors[animal]
       const rig = this.animals[animal]
-      rig.sync(actor)
+      this.moment.progress = game.state.atLoom === animal ? clamp01(game.loom.reveal / (WIDTH * game.offerRows)) : 0
+      rig.sync(actor, this.moment)
       if (!actor.visible) continue
       this.moment.hoping = game.offered && game.state.atLoom === animal
       this.focusFor(animal, this.moment.focus)
