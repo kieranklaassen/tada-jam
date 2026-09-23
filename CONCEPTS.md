@@ -102,8 +102,15 @@ The CPU time a frame spends on the game's own work, advancing the game and submi
 
 Frame work is what performance budgets are written in and what carries over between machines. The interval is paced by the display, so on a device that already meets its refresh rate it cannot show how much time is spare. A software renderer that rasterizes inside the draw calls can fold its raster time into Frame work, which then stops being comparable.
 
+### Frame-budget test
+A headless test that runs in CI and drives a game's heaviest moment through its real game logic, failing when the Frame work spent advancing the game exceeds a budget; the cost of drawing is left to measurement in a browser.
+*Avoid:* perf test
+
+It has to hold on a shared, busy machine that adds time to random frames. Where the code exposes the work that sets the cost (physics steps, contacts, candidates scored), it counts that work; otherwise it replays the same seeded input several times and keeps each frame's quickest run, never the slowest frame of any one run. It also checks that the heavy moment happened, so a run that skipped it cannot pass.
+
 ## Flagged ambiguities
 
 - "Art direction" had been used for both one game's look and the jam-wide standard. These are distinct: a game's look is its Claimed style, described in its Art guide; the jam-wide standard is the Quality bar.
 - "Frame time" had been used both for the interval between displayed frames and for the CPU work inside one. These are distinct: the work is Frame work; the interval is the display's pacing.
+- "Perf test" had named both a game's Frame-budget test and its tests of the Governor and Quality tiers. These are distinct: the Frame-budget test bounds Frame work; the Governor's tests feed it synthetic frames and check which tier it picks.
 - "Wordless guidance" had been used both for the idle hints and for the rule that a game needs no words at all. These are distinct: the idle hints are the Guidance ladder; understanding every interaction without words at the youngest age of the Age band is Wordless clarity.
