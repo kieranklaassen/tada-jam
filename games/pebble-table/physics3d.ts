@@ -289,12 +289,12 @@ export class TablePhysics {
       if (body.type !== CANNON.Body.DYNAMIC || body.sleepState === CANNON.Body.SLEEPING) continue
       body.quaternion.vmult(CANNON.Vec3.UNIT_Y, up)
       const onRim = 1 - Math.abs(up.y)
-      if (onRim < 0.35 || body.position.y > 6) continue
-      const keep = 1 - onRim * 0.06
+      if (onRim < 0.25 || body.position.y > 6) continue
+      const keep = 1 - onRim * 0.15
       body.angularVelocity.x *= keep
       body.angularVelocity.z *= keep
-      body.velocity.x *= 1 - onRim * 0.03
-      body.velocity.z *= 1 - onRim * 0.03
+      body.velocity.x *= 1 - onRim * 0.08
+      body.velocity.z *= 1 - onRim * 0.08
     }
   }
 
