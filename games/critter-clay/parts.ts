@@ -193,18 +193,24 @@ export function legsOf(parts: readonly Part[]): ('legStub' | 'legLong')[] {
   return legs
 }
 
-/** Height of the body centre above the bench: resting on its belly with no legs, raised by the average leg otherwise. */
+/** How far a lone leg holds the body up, at least: from the 40° camera a lone stub under the belly is hidden unless the body rides high on it. */
+const LONE_LEG_REACH = 5.6
+
+/** Height of the body centre above the bench: resting on its belly with no legs, raised by the average leg otherwise, and stood tall on a lone leg like a pogo stick. */
 export function bodyLift(parts: readonly Part[]): number {
   const legs = legsOf(parts)
   if (legs.length === 0) return BODY.ry * 0.9
   let total = 0
   for (const leg of legs) total += LEG_LENGTH[leg]
-  return BODY.ry * 0.82 + total / legs.length - SINK
+  const reach = legs.length === 1 ? Math.max(total, LONE_LEG_REACH) : total / legs.length
+  return BODY.ry * 0.82 + reach - SINK
 }
 
 /** A point on an axis-aligned ellipsoid's surface along `dir` from its centre, and the surface normal there. */
 export function ellipsoidPoint(dir: Vec3, rx: number, ry: number, rz: number, out: { p: Vec3; n: Vec3 }): { p: Vec3; n: Vec3 } {
-  const [dx, dy, dz] = dir
+  const dx = dir[0]
+  const dy = dir[1]
+  const dz = dir[2]
   const k = 1 / Math.sqrt((dx / rx) ** 2 + (dy / ry) ** 2 + (dz / rz) ** 2)
   const px = dx * k
   const py = dy * k
@@ -212,7 +218,7 @@ export function ellipsoidPoint(dir: Vec3, rx: number, ry: number, rz: number, ou
   const nx = px / (rx * rx)
   const ny = py / (ry * ry)
   const nz = pz / (rz * rz)
-  const nl = Math.hypot(nx, ny, nz)
+  const nl = Math.sqrt(nx * nx + ny * ny + nz * nz)
   out.p[0] = px
   out.p[1] = py
   out.p[2] = pz

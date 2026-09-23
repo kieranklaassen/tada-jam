@@ -1,10 +1,10 @@
 // Frame-time measurement and adaptive quality. The frame loop records the
 // main-thread cost of each frame (update plus render submit) into a rolling
 // buffer, and the tier controller watches whole-frame intervals: sustained
-// slow frames step down a tier, a long run of fast frames steps back up, and
-// each step down makes stepping up again more patient so tiers don't
-// flicker. Tier 3 is the full look at DPR 2; tier 0 is DPR 1 with the
-// overlay pass and the clay normal map off.
+// slow frames step down a tier, a long run of on-time frames with light work
+// steps back up, and each step down makes stepping up again more patient so
+// tiers don't flicker. Tier 3 is the full look at DPR 2; tier 0 is DPR 1 with
+// the overlay pass and the clay normal map off.
 
 export const TIER_COUNT = 4
 export const TOP_TIER = TIER_COUNT - 1
@@ -63,9 +63,17 @@ export class Ring {
 
 /** Frames slower than this (about 48 fps) count against the tier. */
 export const SLOW_FRAME_MS = 21
-/** Frames faster than this (about 66 fps headroom) count toward stepping up. */
-export const FAST_FRAME_MS = 15
+/**
+ * An on-time frame whose own work took less than this counts toward stepping up. Headroom is read from
+ * the work, not the interval: the display caps the interval (16.7 ms at 60 Hz), so it never shows spare time.
+ */
+export const LIGHT_WORK_MS = 8
 export const WINDOW_SECONDS = 1.5
+
+/** Touch devices start one tier down, so the first seconds on a tablet don't lag while the controller learns. */
+export function startingTier(coarsePointer: boolean): number {
+  return coarsePointer ? TOP_TIER - 1 : TOP_TIER
+}
 
 export class TierController {
   tier: number
@@ -84,8 +92,8 @@ export class TierController {
     this.pinned = pinned
   }
 
-  /** Feed one whole-frame interval in ms. Returns true when the tier changed. */
-  frame(intervalMs: number): boolean {
+  /** Feed one whole-frame interval and the work done in it, in ms. Returns true when the tier changed. */
+  frame(intervalMs: number, workMs: number): boolean {
     if (this.pinned || !(intervalMs > 0)) return false
     const seconds = Math.min(intervalMs, 250) / 1000
     this.clock += seconds
@@ -93,7 +101,7 @@ export class TierController {
     this.windowTime += seconds
     this.windowFrames++
     if (intervalMs > SLOW_FRAME_MS) this.windowSlow++
-    this.fastTime = intervalMs < FAST_FRAME_MS ? this.fastTime + seconds : 0
+    this.fastTime = intervalMs <= SLOW_FRAME_MS && workMs < LIGHT_WORK_MS ? this.fastTime + seconds : 0
     if (this.windowTime >= WINDOW_SECONDS) {
       const slowShare = this.windowSlow / this.windowFrames
       this.slowWindows = slowShare > 0.5 ? this.slowWindows + 1 : 0

@@ -62,13 +62,17 @@ export function clampWalk(at: Point, margin = 0, out: Point = { x: 0, z: 0 }): P
   return out
 }
 
-/** Where a freshly woken critter lands when it hops off the turntable. */
-export const WAKE_LANDING: Point = { x: TURNTABLE.x + 5, z: TURNTABLE.z + 19 }
+/**
+ * The strip between the camera and the turntable. The camera is low (40 degrees), so a critter standing
+ * here covers the sleeper's face, nose, and sockets: critters pass through it but never stop in it.
+ */
+export function blocksTurntable(at: Point): boolean {
+  return at.z - TURNTABLE.z > 4 && Math.abs(at.x - TURNTABLE.x) < TURNTABLE.r + 6
+}
+
+/** Where a freshly woken critter lands when it hops off the turntable: front left, clear of the lump and of the tray side. */
+export const WAKE_LANDING: Point = { x: TURNTABLE.x - 20, z: TURNTABLE.z + 12 }
 
 export function onTurntable(at: Point, slop = 0): boolean {
   return Math.hypot(at.x - TURNTABLE.x, at.z - TURNTABLE.z) <= TURNTABLE.r + slop
-}
-
-export function overTray(at: Point): boolean {
-  return Math.abs(at.x - TRAY.x) <= TRAY.halfWidth + 2 && Math.abs(at.z - TRAY.z) <= TRAY.halfDepth + 2
 }

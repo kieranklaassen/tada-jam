@@ -89,13 +89,7 @@ export class GestureTracker<T> {
   }
 
   up(pointerId: number, at: Screen, t: number): Intent<T>[] {
-    if (this.resting) {
-      this.restingIds.delete(pointerId)
-      if (this.restingIds.size === 0) this.resting = false
-      return []
-    }
-    const track = this.tracks.get(pointerId)
-    this.tracks.delete(pointerId)
+    const track = this.release(pointerId)
     if (!track) return []
     sample(track, at, t)
     if (track.dragging) return [{ type: 'dragEnd', pointerId, target: track.target, at, velocity: { x: track.vx, y: track.vy } }]
@@ -104,15 +98,21 @@ export class GestureTracker<T> {
   }
 
   cancel(pointerId: number): Intent<T>[] {
+    const track = this.release(pointerId)
+    if (track?.dragging) return [{ type: 'dragEnd', pointerId, target: track.target, at: { x: track.lastX, y: track.lastY }, velocity: { x: 0, y: 0 } }]
+    return []
+  }
+
+  /** Forget a lifted finger and return its track; while a hand rests there is none, and the rest ends with its last finger. */
+  private release(pointerId: number): Track<T> | undefined {
     if (this.resting) {
       this.restingIds.delete(pointerId)
       if (this.restingIds.size === 0) this.resting = false
-      return []
+      return undefined
     }
     const track = this.tracks.get(pointerId)
     this.tracks.delete(pointerId)
-    if (track?.dragging) return [{ type: 'dragEnd', pointerId, target: track.target, at: { x: track.lastX, y: track.lastY }, velocity: { x: 0, y: 0 } }]
-    return []
+    return track
   }
 
   /** Forget every finger, e.g. when the game is put away mid-touch and the lift never arrives. */
