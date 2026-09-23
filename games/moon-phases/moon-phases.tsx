@@ -130,7 +130,8 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
     let povTarget = 0, lastTouch = -Infinity, autoBlend = 1, currentPhase = -1
     // One finger at a time: dragging the moon, turning the model, or tapping a phase.
     let dragging: { id: number; mode: 'moon' | 'look' | 'spin' | 'phase' | 'earth'; x: number; y: number; moved: boolean; phase?: number; point?: THREE.Vector3 } | null = null
-    let shown = false, windowSettled = false
+    let shown = false, windowSettled = false, knobTurn = Infinity
+    const pinAt = [0, 1, 2].map(() => ({ x: NaN, y: NaN }))
     let windowBox: Porthole | null = null
     const applyTier = () => {
       const tier = governor.settings
@@ -173,7 +174,8 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
     // after a resize, not every frame.
     const measureWindow = () => {
       const box = porthole.getBoundingClientRect(), area = root.getBoundingClientRect()
-      const entering = typeof porthole.getAnimations === 'function' && porthole.getAnimations().length > 0
+      // A finished animation with fill-mode `both` is still listed, so only one still playing counts.
+      const entering = typeof porthole.getAnimations === 'function' && porthole.getAnimations().some(animation => animation.playState !== 'finished')
       windowBox = { x: box.left - area.left, y: box.top - area.top, size: box.width, opacity: entering ? Number(getComputedStyle(porthole).opacity) : 1 }
       return !entering
     }
@@ -200,10 +202,14 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
         orrery.setMoon(wrap(orrery.elongation + AUTO_SPEED * autoBlend * dt))
         if (!dialDrag) orrery.hours = (orrery.hours + (24 / DAY_SECONDS) * autoBlend * dt) % 24
       }
-      // The dial's knob follows the clock: midnight at the bottom, noon at the top.
+      // The dial's knob follows the clock: midnight at the bottom, noon at the top. Each style write costs a style
+      // pass, so it is written only once it has turned by a visible amount.
       const turn = (orrery.hours / 24) * TAU
-      knobRef.current?.style.setProperty('transform', `rotate(${turn}rad)`)
-      knobRef.current?.classList.toggle('is-day', orrery.hours >= 6 && orrery.hours < 18)
+      if (Math.abs(turn - knobTurn) > 0.01) {
+        knobTurn = turn
+        knobRef.current?.style.setProperty('transform', `rotate(${turn}rad)`)
+        knobRef.current?.classList.toggle('is-day', orrery.hours >= 6 && orrery.hours < 18)
+      }
       orrery.pov += Math.sign(povTarget - orrery.pov) * Math.min(Math.abs(povTarget - orrery.pov), dt / POV_SECONDS)
       const index = phaseIndex(orrery.elongation)
       if (index !== currentPhase) {
@@ -216,12 +222,15 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
       frameCount += 1
       draw(frameCount % governor.settings.windowEvery === 0)
       if (!shown) { shown = true; setReady(true) }
-      // Pins ride along with the sun, Earth and moon.
+      // Pins ride along with the sun, Earth and moon, moved only when they have moved by half a pixel.
       orrery.pins(width, height).forEach((pin, i) => {
         const el = pinRefs.current[i]
         if (!el) return
-        el.style.transform = `translate3d(${pin.x}px, ${pin.y}px, 0) translate(-50%, -100%)`
         el.classList.toggle('is-visible', pin.visible)
+        const x = Math.round(pin.x * 2) / 2, y = Math.round(pin.y * 2) / 2, at = pinAt[i]
+        if (!pin.visible || (at.x === x && at.y === y)) return
+        at.x = x; at.y = y
+        el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`
       })
       const spent = performance.now() - start
       work.push(spent)
@@ -328,6 +337,8 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
     document.addEventListener('visibilitychange', onVisibility)
 
     api.current = { setPov, setHalves, goTo, awake: setAwake }
+    // Audio is built during the opening flight, not inside the child's first tap.
+    const prepareTimer = window.setTimeout(() => sound.prepare(), 1500)
     applyTier()
     ctxRef.current.storage.load<unknown>().then(
       (value) => {
@@ -349,6 +360,7 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
+      window.clearTimeout(prepareTimer)
       save()
       cancelAnimationFrame(frame)
       observer.disconnect()

@@ -157,9 +157,11 @@ function BadNeighbours({ ctx }: { ctx: CartridgeContext }) {
     )
     awake = false
     setAwake(ctxRef.current.attention.attended)
+    const prepareTimer = window.setTimeout(() => sound.prepare(), 1000)
 
     return () => {
       disposed = true
+      window.clearTimeout(prepareTimer)
       save()
       cancelAnimationFrame(frame)
       window.removeEventListener('keydown', onKeyDown)

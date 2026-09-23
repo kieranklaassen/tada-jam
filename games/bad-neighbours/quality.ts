@@ -4,8 +4,9 @@
 // a window holds a few), leaving out each window's single longest frame so a
 // one-off pause never moves the tier; two bad windows, or one averaging over
 // 26 ms, drop a tier, and a window far off the pace drops two. Stepping up
-// needs six clean windows whose per-frame work (the game's own CPU time, not
-// the interval, which a 60 Hz display pins at 16.7 ms) is under 8 ms, and an
+// needs six clean windows in which nine frames in ten did under 8 ms of work
+// (the game's own CPU time, not the interval, which a 60 Hz display pins at
+// 16.7 ms; the browser's own style and compositing come on top), and an
 // upgrade that fails within a few windows becomes a ceiling for the session.
 // Touch devices start one tier down while it learns. `?tier=N` pins a tier.
 
@@ -45,7 +46,7 @@ const BAD_DROP_RATIO = 0.1
 const TERRIBLE_AVERAGE_MS = 26
 /** A window averaging over this is far off the pace and drops two tiers. */
 const FAR_OFF_AVERAGE_MS = 34
-/** Average per-frame work a clean window must stay under to count towards a step up. */
+/** Per-frame work that nine frames in ten of a clean window must stay under to count towards a step up. */
 export const WORK_BUDGET_MS = 8
 export const GOOD_WINDOWS_TO_RAISE = 6
 /** A step down within this many windows of a step up means the upgrade failed. */
@@ -76,10 +77,9 @@ export class TierGovernor {
   ceiling = 0
   private frames = 0
   private elapsed = 0
-  private work = 0
+  private readonly work = new Float64Array(WINDOW)
   private dropped = 0
   private longest = 0
-  private longestWork = 0
   private badWindows = 0
   private goodWindows = 0
   private settling = true
@@ -108,12 +108,9 @@ export class TierGovernor {
     if (!(intervalMs > 0) || intervalMs > STALL_MS) return false
     this.frames += 1
     this.elapsed += intervalMs
-    this.work += workMs
+    this.work[this.frames - 1] = workMs
     if (intervalMs > DROPPED_FRAME_MS) this.dropped += 1
-    if (intervalMs > this.longest) {
-      this.longest = intervalMs
-      this.longestWork = workMs
-    }
+    if (intervalMs > this.longest) this.longest = intervalMs
     if (this.settling) {
       if (this.frames >= SETTLE_FRAMES || this.elapsed >= SETTLE_MS) {
         this.settling = false
@@ -130,7 +127,9 @@ export class TierGovernor {
     const frames = this.frames - 1
     const average = (this.elapsed - this.longest) / frames
     const dropped = this.dropped - (this.longest > DROPPED_FRAME_MS ? 1 : 0)
-    const work = (this.work - this.longestWork) / frames
+    // Per-frame work, judged frame by frame: the 90th percentile, so a few heavy frames block a step up the way
+    // they would block the next tier.
+    const work = this.work.subarray(0, this.frames).sort()[Math.floor(this.frames * 0.9)]
     this.clear()
     this.windows += 1
     if (this.forced) return false
@@ -155,10 +154,8 @@ export class TierGovernor {
   private clear(): void {
     this.frames = 0
     this.elapsed = 0
-    this.work = 0
     this.dropped = 0
     this.longest = 0
-    this.longestWork = 0
   }
 
   private change(tier: number): boolean {

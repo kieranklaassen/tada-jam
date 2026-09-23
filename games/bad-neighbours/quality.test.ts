@@ -48,6 +48,12 @@ describe('TierGovernor', () => {
     expect(heavy.tier).toBe(1)
   })
 
+  it('a few heavy frames in every window block the climb, even when the average is light', () => {
+    const governor = new TierGovernor(1)
+    for (let i = 0; i < WINDOW * 40; i++) governor.sample(FRAME, i % 5 === 4 ? 12 : 3)
+    expect(governor.tier).toBe(1)
+  })
+
   it('steady judder (one frame in five at 33 ms) steps down', () => {
     const governor = new TierGovernor(0)
     for (let i = 0; i < WINDOW * 4; i++) governor.sample(i % 5 === 4 ? FRAME * 2 : FRAME, 3)

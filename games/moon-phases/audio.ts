@@ -8,6 +8,20 @@ export class Sound {
   private context: AudioContext | null = null
   private awake = true
   private noise: AudioBuffer | null = null
+  /**
+   * Builds the audio context (suspended until a tap) and the whoosh's noise ahead of time, so the child's first
+   * tap and first change of view do not pay for them in a long frame.
+   */
+  prepare() {
+    try {
+      this.context ||= new AudioContext()
+      if (!this.noise) {
+        this.noise = this.context.createBuffer(1, this.context.sampleRate, this.context.sampleRate)
+        const data = this.noise.getChannelData(0)
+        for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
+      }
+    } catch { /* Audio is optional. */ }
+  }
   unlock() {
     if (!this.awake) return
     try {

@@ -18,6 +18,12 @@ const NOTES: Record<SoundKind, number[]> = {
 export class Sound {
   private context: AudioContext | null = null
   private awake = true
+  /** Builds the context ahead of time (it stays suspended until a tap), so the first tap is not a long frame. */
+  prepare() {
+    try {
+      this.context ||= new AudioContext()
+    } catch { /* Audio is optional on older browsers. */ }
+  }
   unlock() {
     if (!this.awake) return
     try {

@@ -21,19 +21,26 @@ function canvasTexture(canvas: HTMLCanvasElement, color = true) {
   return texture
 }
 
-function phaseMedallion(index: number) {
+/** The eight phase medallions' enamel pictures in one atlas, four across and two down, 256 px each. */
+function medallionAtlas() {
   const size = 256, r = 78
   const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = size
+  canvas.width = size * 4; canvas.height = size * 2
   const ctx = canvas.getContext('2d')!
-  ctx.translate(size / 2, size / 2)
-  const enamel = ctx.createRadialGradient(-30, -40, 10, 0, 0, 128)
-  enamel.addColorStop(0, '#2a3a78'); enamel.addColorStop(1, '#0f1640')
-  ctx.fillStyle = enamel; ctx.beginPath(); ctx.arc(0, 0, 128, 0, TAU); ctx.fill()
-  ctx.fillStyle = '#3a4466'; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill()
-  const path = litPath(phaseAngle(index), r)
-  if (path) { ctx.fillStyle = '#fff1c9'; ctx.fill(new Path2D(path)) }
-  ctx.strokeStyle = '#e6be72'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, r + 8, 0, TAU); ctx.stroke()
+  for (let index = 0; index < PHASE_COUNT; index++) {
+    ctx.save()
+    ctx.translate((index % 4) * size + size / 2, Math.floor(index / 4) * size + size / 2)
+    // The enamel fills the cell to its edges, so neighbouring cells blur into the same colour.
+    ctx.fillStyle = '#0f1640'; ctx.fillRect(-size / 2, -size / 2, size, size)
+    const enamel = ctx.createRadialGradient(-30, -40, 10, 0, 0, 128)
+    enamel.addColorStop(0, '#2a3a78'); enamel.addColorStop(1, '#0f1640')
+    ctx.fillStyle = enamel; ctx.beginPath(); ctx.arc(0, 0, 128, 0, TAU); ctx.fill()
+    ctx.fillStyle = '#3a4466'; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill()
+    const path = litPath(phaseAngle(index), r)
+    if (path) { ctx.fillStyle = '#fff1c9'; ctx.fill(new Path2D(path)) }
+    ctx.strokeStyle = '#e6be72'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, r + 8, 0, TAU); ctx.stroke()
+    ctx.restore()
+  }
   return canvasTexture(canvas)
 }
 
@@ -57,7 +64,7 @@ function paintAssets(renderer: THREE.WebGLRenderer): OrreryAssets {
     envMap,
     wood: canvasTexture(woodCanvas()),
     scale: canvasTexture(scaleCanvas(2048, SCALE_INNER, SCALE_OUTER)),
-    medallions: Array.from({ length: PHASE_COUNT }, (_, i) => phaseMedallion(i)),
+    medallions: medallionAtlas(),
     earthColor: canvasTexture(earth.color),
     earthRough: canvasTexture(earth.rough, false),
     earthLights: canvasTexture(earth.lights),
@@ -72,8 +79,8 @@ function paintAssets(renderer: THREE.WebGLRenderer): OrreryAssets {
 }
 
 function assetTextures(assets: OrreryAssets): THREE.Texture[] {
-  const { envMap, medallions, ...rest } = assets
-  return [...(envMap ? [envMap] : []), ...medallions, ...Object.values(rest)]
+  const { envMap, ...rest } = assets
+  return [...(envMap ? [envMap] : []), ...Object.values(rest)]
 }
 
 // Vignette, a whisper of chromatic fringing and animated grain, applied after tone mapping.

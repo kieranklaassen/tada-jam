@@ -20,7 +20,7 @@ const PASS_DRAW = 1
 function blankAssets(): OrreryAssets {
   const texture = () => new THREE.Texture()
   return {
-    envMap: null, wood: texture(), scale: texture(), medallions: Array.from({ length: PHASE_COUNT }, texture),
+    envMap: null, wood: texture(), scale: texture(), medallions: texture(),
     earthColor: texture(), earthRough: texture(), earthLights: texture(), clouds: texture(), moonColor: texture(),
     moonBump: texture(), ring: texture(), sun: texture(), glow: texture(), shadow: texture(),
   }
@@ -110,17 +110,18 @@ describe('frame budget', () => {
   it('each view submits a small, bounded number of draws', () => {
     const main = Math.max(...run.frames.map((f) => f.main))
     const window = Math.max(...run.frames.map((f) => f.window))
-    expect(main, 'most draws in the main view').toBeLessThanOrEqual(44)
-    expect(window, 'most draws in the round window').toBeLessThanOrEqual(44)
+    expect(main, 'most draws in the main view').toBeLessThanOrEqual(28)
+    expect(window, 'most draws in the round window').toBeLessThanOrEqual(27)
     // The window mostly shows the sky from home, which is a handful of draws.
     const skyFrames = run.frames.filter((f) => f.standing === 0)
     expect(Math.max(...skyFrames.map((f) => f.window)), 'draws for the sky in the window').toBeLessThanOrEqual(10)
   })
 
   it('every tier fits its budget, and each tier down submits less', () => {
-    // Measured at the time of writing: averages of 87, 53, 40 and 38, worst frames of 96, 61, 48 and 48.
-    const budgets = [95, 60, 46, 44]
-    const worstBudgets = [104, 68, 56, 56]
+    // Measured at the time of writing: averages of 59, 39, 26 and 25, worst frames of 64, 45, 32 and 32 (before
+    // the medallions, metalwork, arm, pinion and child were merged, the main view alone was 68 draws).
+    const budgets = [64, 43, 30, 29]
+    const worstBudgets = [70, 50, 36, 36]
     const averages = TIERS.map((tier) => run.frames.reduce((sum, frame, i) => sum + frameDraws(frame, tier, i), 0) / run.frames.length)
     const worst = TIERS.map((tier) => Math.max(...run.frames.map((frame, i) => frameDraws(frame, tier, i))))
     TIERS.forEach((tier, i) => {

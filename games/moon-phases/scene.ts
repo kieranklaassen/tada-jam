@@ -60,7 +60,8 @@ export type OrreryAssets = {
   envMap: THREE.Texture | null
   wood: THREE.Texture
   scale: THREE.Texture
-  medallions: readonly THREE.Texture[]
+  /** The eight phase pictures, four across and two down. */
+  medallions: THREE.Texture
   earthColor: THREE.Texture
   earthRough: THREE.Texture
   earthLights: THREE.Texture
@@ -132,8 +133,10 @@ export class OrreryScene {
   /** 0 → 1 while the opening camera flight plays. */
   intro = 0
   moon: THREE.Mesh
-  medallions: THREE.Mesh[] = []
+  private medallionPoses: THREE.Object3D[] = []
   private medallionBodies: THREE.InstancedMesh
+  private medallionFaces: THREE.InstancedMesh
+  private medallionGlow = new THREE.InstancedBufferAttribute(new Float32Array(PHASE_COUNT), 1).setUsage(THREE.DynamicDrawUsage)
   private current = { azimuth: 0.2, elevation: 0.46, distance: 15.5 }
   private earth: THREE.Mesh
   protected clouds: THREE.Mesh
@@ -177,9 +180,10 @@ export class OrreryScene {
     // night side and make every phase look nearly full.
     const envMap = assets.envMap
 
-    const brass = track(new THREE.MeshPhysicalMaterial({ color: '#d4a456', metalness: 1, roughness: 0.28, envMap, envMapIntensity: 0.56, clearcoat: 0.4, clearcoatRoughness: 0.2 }))
-    const darkBrass = track(new THREE.MeshStandardMaterial({ color: '#8f6530', metalness: 1, roughness: 0.38, envMap, envMapIntensity: 0.455 }))
-    const blackened = track(new THREE.MeshStandardMaterial({ color: '#1c1a1f', metalness: 0.6, roughness: 0.45, envMap, envMapIntensity: 0.35 }))
+    // All the metalwork (bright brass, dark brass, blackened steel) is one lacquered material coloured per part.
+    // Every distinct material costs a full uniform upload each frame, which on a slow device outweighs the draws.
+    const metal = track(new THREE.MeshPhysicalMaterial({ vertexColors: true, metalness: 1, roughness: 0.3, envMap, envMapIntensity: 0.52, clearcoat: 0.4, clearcoatRoughness: 0.2 }))
+    const BRASS = '#d4a456', DARK_BRASS = '#8f6530', BLACKENED = '#1c1a1f'
 
     // Light: parallel sunlight and the lamp's warm pool on the table. Nothing
     // else may light the moon, or its phases would lie; the room's own glow
@@ -217,8 +221,9 @@ export class OrreryScene {
     const table = new THREE.Mesh(tableGeometry, [side, top])
     table.position.y = -0.25
     this.scene.add(inModel(table))
-    // Brass that never moves (the table's band, Earth's stand, the lamp's stand) is one draw; the stands join below.
-    const fixedBrass: THREE.BufferGeometry[] = [new THREE.CylinderGeometry(TABLE_R + 0.012, TABLE_R + 0.012, 0.12, 160, 1, true).translate(0, -0.1, 0)]
+    // Metal that never moves (the table's band, Earth's plinth and stand, the lamp's stand and cup) is one draw;
+    // the rest of it joins below.
+    const fixedMetal: THREE.BufferGeometry[] = [tinted(new THREE.CylinderGeometry(TABLE_R + 0.012, TABLE_R + 0.012, 0.12, 160, 1, true).translate(0, -0.1, 0), BRASS)]
 
     // An engraved brass scale under the moon's path, with the eight phases set in enamel.
     const scaleInner = SCALE_INNER, scaleOuter = SCALE_OUTER
@@ -229,52 +234,69 @@ export class OrreryScene {
     const scale = new THREE.Mesh(scaleGeometry, track(new THREE.MeshStandardMaterial({ map: scaleMap, metalness: 1, roughness: 0.32, envMap, envMapIntensity: 0.525 })))
     scale.rotation.x = -Math.PI / 2; scale.position.y = 0.006
     this.scene.add(inModel(scale))
-    // Each medallion draws only its enamel top; all eight bodies (dark brass side, bright rim) are one instanced draw.
-    const medallionGeometry = track(new THREE.CylinderGeometry(0.5, 0.52, 0.06, 64))
-    medallionGeometry.groups = medallionGeometry.groups.filter(group => group.materialIndex === 1)
+    // All eight medallion bodies (dark brass side, bright rim) are one instanced draw, and all eight enamel faces
+    // are another: the pictures share an atlas, and each instance reads its own cell and glows by its own amount.
     this.medallionBodies = new THREE.InstancedMesh(
       track(merged([
-        tinted(new THREE.CylinderGeometry(0.5, 0.52, 0.06, 64, 1, true), '#8f6530'),
-        tinted(new THREE.TorusGeometry(0.51, 0.035, 10, 64).rotateX(Math.PI / 2).translate(0, 0.03, 0), '#d4a456'),
+        tinted(new THREE.CylinderGeometry(0.5, 0.52, 0.06, 64, 1, true), DARK_BRASS),
+        tinted(new THREE.TorusGeometry(0.51, 0.035, 10, 64).rotateX(Math.PI / 2).translate(0, 0.03, 0), BRASS),
       ])),
-      track(new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 1, roughness: 0.32, envMap, envMapIntensity: 0.5 })),
+      // Its own copy: instancing is a different program, and one material switching programs costs more.
+      track(metal.clone()),
       PHASE_COUNT,
     )
-    this.medallionBodies.frustumCulled = false
-    this.scene.add(inModel(this.medallionBodies))
+    const faceGeometry = track(new THREE.CylinderGeometry(0.5, 0.52, 0.06, 64))
+    const enamelTop = faceGeometry.groups.find(group => group.materialIndex === 1)!
+    faceGeometry.setIndex(Array.from(faceGeometry.index!.array.slice(enamelTop.start, enamelTop.start + enamelTop.count)))
+    faceGeometry.clearGroups()
+    const tiles = new Float32Array(PHASE_COUNT * 2)
+    for (let i = 0; i < PHASE_COUNT; i++) { tiles[i * 2] = (i % 4) * 0.25; tiles[i * 2 + 1] = (1 - Math.floor(i / 4)) * 0.5 }
+    faceGeometry.setAttribute('tile', new THREE.InstancedBufferAttribute(tiles, 2))
+    faceGeometry.setAttribute('glow', this.medallionGlow)
+    const faceMaterial = track(new THREE.MeshPhysicalMaterial({ map: assets.medallions, emissiveMap: assets.medallions, emissive: '#ffffff', emissiveIntensity: 1, roughness: 0.4, clearcoat: 0.6, clearcoatRoughness: 0.12, envMap, envMapIntensity: 0.105 }))
+    faceMaterial.onBeforeCompile = shader => {
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nattribute vec2 tile;\nattribute float glow;\nvarying float vGlow;')
+        .replace('#include <uv_vertex>', '#include <uv_vertex>\nvMapUv = vMapUv * vec2(0.25, 0.5) + tile;\nvEmissiveMapUv = vEmissiveMapUv * vec2(0.25, 0.5) + tile;\nvGlow = glow;')
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying float vGlow;')
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance *= vGlow;')
+    }
+    this.medallionFaces = new THREE.InstancedMesh(faceGeometry, faceMaterial, PHASE_COUNT)
+    for (const instanced of [this.medallionBodies, this.medallionFaces]) {
+      instanced.frustumCulled = false
+      this.scene.add(inModel(instanced))
+    }
     for (let i = 0; i < PHASE_COUNT; i++) {
       const angle = Math.PI + phaseAngle(i), reach = ORBIT_R + 1.05
-      const face = track(new THREE.MeshPhysicalMaterial({ map: assets.medallions[i], roughness: 0.4, clearcoat: 0.6, clearcoatRoughness: 0.12, emissive: '#ffffff', emissiveIntensity: 0, envMap, envMapIntensity: 0.105 }))
-      face.emissiveMap = face.map
-      const medallion = new THREE.Mesh(medallionGeometry, [darkBrass, face, darkBrass])
+      const medallion = new THREE.Object3D()
       // Picture top points away from Earth: read from the middle, it matches what the child sees.
       medallion.rotation.set(0, angle - Math.PI / 2, 0)
       medallion.position.set(reach * Math.cos(angle), 0.03, -reach * Math.sin(angle))
       medallion.updateMatrix()
       this.medallionBodies.setMatrixAt(i, medallion.matrix)
-      medallion.userData.phase = i
-      this.medallions.push(medallion); this.scene.add(inModel(medallion))
+      this.medallionFaces.setMatrixAt(i, medallion.matrix)
+      this.medallionGlow.setX(i, 0.18)
+      this.medallionPoses.push(medallion)
     }
 
     // Clockwork under Earth: a big gear turns with the moon's arm and drives a pinion and its crank.
-    this.bigGear = new THREE.Mesh(track(gearGeometry(64, 1.25, 0.1, 0.1)), brass)
+    this.bigGear = new THREE.Mesh(track(tinted(gearGeometry(64, 1.25, 0.1, 0.1), BRASS)), metal)
     this.bigGear.position.y = 0.16
+    // The pinion, its crank, knob and knurled grip turn together: one draw, coloured per part.
     this.pinion = new THREE.Group()
-    const pinionGear = new THREE.Mesh(track(gearGeometry(20, 0.42, 0.1, 0.05)), darkBrass)
-    const crank = new THREE.Mesh(track(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 12)), brass)
-    crank.position.y = 0.3
-    const knob = new THREE.Mesh(track(new THREE.CylinderGeometry(0.12, 0.12, 0.16, 32)), blackened)
-    knob.position.y = 0.58
-    const knurl = new THREE.Mesh(track(new THREE.CylinderGeometry(0.125, 0.125, 0.1, 32, 1, true)), darkBrass)
-    knurl.position.y = 0.58
-    this.pinion.add(pinionGear, crank, knob, knurl)
+    this.pinion.add(new THREE.Mesh(track(merged([
+      tinted(gearGeometry(20, 0.42, 0.1, 0.05), DARK_BRASS),
+      tinted(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 12).toNonIndexed().translate(0, 0.3, 0), BRASS),
+      tinted(new THREE.CylinderGeometry(0.12, 0.12, 0.16, 32).toNonIndexed().translate(0, 0.58, 0), BLACKENED),
+      tinted(new THREE.CylinderGeometry(0.125, 0.125, 0.1, 32, 1, true).toNonIndexed().translate(0, 0.58, 0), DARK_BRASS),
+    ])), metal))
     const mesh = 1.25 * 0.95 + 0.42 * 0.95
     this.pinion.position.set(Math.cos(-0.7) * mesh, 0.16, Math.sin(-0.7) * mesh)
-    const plinth = new THREE.Mesh(track(new THREE.CylinderGeometry(1.45, 1.55, 0.14, 96)), blackened)
-    plinth.position.y = 0.07
+    fixedMetal.push(tinted(new THREE.CylinderGeometry(1.45, 1.55, 0.14, 96).translate(0, 0.07, 0), BLACKENED))
     const standHeight = PLANE_Y - EARTH_R - 0.2
-    fixedBrass.push(latheStand(standHeight, 0.5).translate(0, 0.26, 0))
-    this.scene.add(inModel(plinth), inModel(this.bigGear), inModel(this.pinion))
+    fixedMetal.push(tinted(latheStand(standHeight, 0.5).translate(0, 0.26, 0), BRASS))
+    this.scene.add(inModel(this.bigGear), inModel(this.pinion))
 
     // Earth: shiny oceans, matte land, drifting clouds, a thin blue atmosphere,
     // and town lights that come on only on the night side.
@@ -321,20 +343,17 @@ export class OrreryScene {
     }
     this.moon.position.set(ORBIT_R, PLANE_Y, 0)
     const armHeight = 0.62
-    // The arm turns as one piece, so its beam and riser are one draw and its cradle and collar another.
-    const armBrass = new THREE.Mesh(track(merged([
-      new THREE.CylinderGeometry(0.04, 0.04, ORBIT_R + 0.9, 20).rotateZ(Math.PI / 2).translate((ORBIT_R - 0.9) / 2, armHeight, 0),
-      new THREE.CylinderGeometry(0.028, 0.034, PLANE_Y - MOON_R - armHeight, 20).translate(ORBIT_R, (PLANE_Y - MOON_R + armHeight) / 2, 0),
-    ])), brass)
-    const armDarkBrass = new THREE.Mesh(track(merged([
-      new THREE.SphereGeometry(MOON_R * 0.55, 32, 12, 0, TAU, Math.PI * 0.65, Math.PI * 0.35).translate(ORBIT_R, PLANE_Y - MOON_R * 0.6, 0),
-      new THREE.CylinderGeometry(0.15, 0.15, 0.14, 32).translate(0, armHeight, 0),
-    ])), darkBrass)
-    const counterweight = new THREE.Mesh(track(new THREE.SphereGeometry(0.16, 32, 24)), blackened)
-    counterweight.position.set(-0.9, armHeight, 0)
+    // The arm turns as one piece: beam, riser, cradle, collar and counterweight are one draw.
+    const armMetal = new THREE.Mesh(track(merged([
+      tinted(new THREE.CylinderGeometry(0.04, 0.04, ORBIT_R + 0.9, 20).rotateZ(Math.PI / 2).translate((ORBIT_R - 0.9) / 2, armHeight, 0), BRASS),
+      tinted(new THREE.CylinderGeometry(0.028, 0.034, PLANE_Y - MOON_R - armHeight, 20).translate(ORBIT_R, (PLANE_Y - MOON_R + armHeight) / 2, 0), BRASS),
+      tinted(new THREE.SphereGeometry(MOON_R * 0.55, 32, 12, 0, TAU, Math.PI * 0.65, Math.PI * 0.35).translate(ORBIT_R, PLANE_Y - MOON_R * 0.6, 0), DARK_BRASS),
+      tinted(new THREE.CylinderGeometry(0.15, 0.15, 0.14, 32).translate(0, armHeight, 0), DARK_BRASS),
+      tinted(new THREE.SphereGeometry(0.16, 32, 24).translate(-0.9, armHeight, 0), BLACKENED),
+    ])), metal)
     this.hint = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: assets.ring, transparent: true, depthWrite: false })))
     this.hint.position.copy(this.moon.position)
-    this.arm.add(this.moon, inModel(armBrass), inModel(armDarkBrass), inModel(counterweight), inModel(this.hint))
+    this.arm.add(this.moon, inModel(armMetal), inModel(this.hint))
     this.scene.add(this.arm)
 
     // The sun lamp: a bulb bright enough to bloom, on a turned brass stand.
@@ -349,10 +368,9 @@ export class OrreryScene {
       glow.layers.set(layer)
       this.sunGlow.push(glow); this.scene.add(glow)
     }
-    fixedBrass.push(latheStand(PLANE_Y - 0.72, 0.62).translate(SUN_X, 0, 0))
-    const cup = new THREE.Mesh(track(new THREE.SphereGeometry(0.52, 48, 16, 0, TAU, Math.PI * 0.6, Math.PI * 0.4)), darkBrass)
-    cup.position.set(SUN_X, PLANE_Y - 0.26, 0)
-    this.scene.add(this.sun, inModel(cup), inModel(new THREE.Mesh(track(merged(fixedBrass)), brass)))
+    fixedMetal.push(tinted(latheStand(PLANE_Y - 0.72, 0.62).translate(SUN_X, 0, 0), BRASS))
+    fixedMetal.push(tinted(new THREE.SphereGeometry(0.52, 48, 16, 0, TAU, Math.PI * 0.6, Math.PI * 0.4).translate(SUN_X, PLANE_Y - 0.26, 0), DARK_BRASS))
+    this.scene.add(this.sun, inModel(new THREE.Mesh(track(merged(fixedMetal)), metal)))
 
     // Soft contact shadows, since the lamp's light skims the tabletop: both blobs in one draw.
     const shadowTexture = assets.shadow
@@ -419,22 +437,22 @@ export class OrreryScene {
     }
 
     // A small child on Earth, pointing at the moon.
-    const coat = track(new THREE.MeshStandardMaterial({ color: '#e0553d', roughness: 0.6, emissive: '#e0553d', emissiveIntensity: 0.3 }))
-    const skin = track(new THREE.MeshStandardMaterial({ color: '#f0c29a', roughness: 0.7, emissive: '#f0c29a', emissiveIntensity: 0.3 }))
-    const hat = track(new THREE.MeshStandardMaterial({ color: '#f2c14e', roughness: 0.6, emissive: '#f2c14e', emissiveIntensity: 0.3 }))
-    const body = new THREE.Mesh(track(new THREE.CapsuleGeometry(0.045, 0.07, 6, 12)), coat)
-    body.position.y = 0.085
-    const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.042, 20, 14)), skin)
-    head.position.y = 0.19
-    const beanie = new THREE.Mesh(track(merged([
-      new THREE.SphereGeometry(0.045, 20, 10, 0, TAU, 0, Math.PI / 2).translate(0, 0.2, 0),
-      new THREE.SphereGeometry(0.016, 10, 8).translate(0, 0.25, 0),
-    ])), hat)
+    // Coat, face and hat are one draw coloured per part, and the pointing arm another; each part glows a little
+    // in its own colour so the child reads on the night side too.
+    const clothes = track(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, emissive: '#ffffff', emissiveIntensity: 0.3 }))
+    clothes.onBeforeCompile = shader => {
+      shader.fragmentShader = shader.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance *= vColor.rgb;')
+    }
+    const body = new THREE.Mesh(track(merged([
+      tinted(new THREE.CapsuleGeometry(0.045, 0.07, 6, 12).translate(0, 0.085, 0), '#e0553d'),
+      tinted(new THREE.SphereGeometry(0.042, 20, 14).translate(0, 0.19, 0), '#f0c29a'),
+      tinted(new THREE.SphereGeometry(0.045, 20, 10, 0, TAU, 0, Math.PI / 2).translate(0, 0.2, 0), '#f2c14e'),
+      tinted(new THREE.SphereGeometry(0.016, 10, 8).translate(0, 0.25, 0), '#f2c14e'),
+    ])), clothes)
     this.kidArm = new THREE.Group()
-    const sleeve = new THREE.Mesh(track(new THREE.CapsuleGeometry(0.014, 0.08, 4, 8)), coat)
-    sleeve.position.y = 0.055
+    const sleeve = new THREE.Mesh(track(tinted(new THREE.CapsuleGeometry(0.014, 0.08, 4, 8).translate(0, 0.055, 0), '#e0553d')), clothes)
     this.kidArm.add(sleeve); this.kidArm.position.set(0.04, 0.13, 0)
-    this.kid.add(body, head, beanie, this.kidArm)
+    this.kid.add(body, this.kidArm)
     this.kid.scale.setScalar(1.7)
     this.scene.add(inModel(this.kid))
 
@@ -623,16 +641,26 @@ export class OrreryScene {
 
     // Medallions: the current phase rises out of the table and its enamel glows.
     const current = Math.round(this.elongation / (TAU / PHASE_COUNT)) % PHASE_COUNT
-    this.medallions.forEach((m, i) => {
-      const lift = (m.userData.lift ?? 0) + ((i === current ? 1 : 0) - (m.userData.lift ?? 0)) * Math.min(1, dt * 8)
+    let rising = false
+    this.medallionPoses.forEach((m, i) => {
+      const was = m.userData.lift ?? 0
+      const lift = was + ((i === current ? 1 : 0) - was) * Math.min(1, dt * 8)
+      // Settled medallions are left alone, so nothing is uploaded while the moon rests on a phase.
+      if (Math.abs(lift - was) < 1e-4) return
+      rising = true
       m.userData.lift = lift
       m.position.y = 0.03 + lift * 0.1
       m.scale.setScalar(1 + lift * 0.18)
       m.updateMatrix()
       this.medallionBodies.setMatrixAt(i, m.matrix)
-      ;((m.material as THREE.Material[])[1] as THREE.MeshPhysicalMaterial).emissiveIntensity = 0.18 + lift * 0.22
+      this.medallionFaces.setMatrixAt(i, m.matrix)
+      this.medallionGlow.setX(i, 0.18 + lift * 0.22)
     })
-    this.medallionBodies.instanceMatrix.needsUpdate = true
+    if (rising) {
+      this.medallionBodies.instanceMatrix.needsUpdate = true
+      this.medallionFaces.instanceMatrix.needsUpdate = true
+      this.medallionGlow.needsUpdate = true
+    }
   }
 
   /** Screen positions (CSS px) for the little pins that mark each body. */
@@ -654,16 +682,17 @@ export class OrreryScene {
     const ray = new THREE.Raycaster()
     ray.layers.enableAll()
     ray.setFromCamera(ndc, this.camera)
-    const moonHit = ray.intersectObject(this.moon, false)[0]
+    // Earth and the moon are spheres, so they are hit-tested exactly as spheres: testing their 24,000-triangle
+    // meshes cost a dropped frame per touch on a slow device.
+    const moonCentre = this.moonWorld(new THREE.Vector3())
+    const moonHit = ray.ray.intersectsSphere(new THREE.Sphere(moonCentre, MOON_R))
     // The moon is small on a phone; accept touches near it too.
-    const moonScreen = this.moonWorld(new THREE.Vector3()).project(this.camera)
+    const moonScreen = moonCentre.clone().project(this.camera)
     if (moonHit || Math.hypot((moonScreen.x - ndc.x) * this.camera.aspect, moonScreen.y - ndc.y) < 0.14) return { kind: 'moon' }
-    const earthHit = ray.intersectObject(this.earth, false)[0]
-    if (earthHit) return { kind: 'earth', point: earthHit.point }
-    const hit = ray.intersectObjects(this.medallions, true)[0]
-    let object: THREE.Object3D | null = hit?.object ?? null
-    while (object && object.userData.phase === undefined) object = object.parent
-    if (object) return { kind: 'phase', index: object.userData.phase as number }
+    const earthPoint = ray.ray.intersectSphere(new THREE.Sphere(new THREE.Vector3(0, PLANE_Y, 0), EARTH_R), new THREE.Vector3())
+    if (earthPoint) return { kind: 'earth', point: earthPoint }
+    const face = ray.intersectObject(this.medallionFaces, false)[0]
+    if (face?.instanceId !== undefined) return { kind: 'phase', index: face.instanceId }
     return null
   }
 
