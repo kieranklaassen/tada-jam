@@ -84,11 +84,6 @@ export function detach(critter: CritterSave, index: number): Part | null {
   return critter.parts.splice(index, 1)[0]
 }
 
-export function findCritter(state: WorkshopState, id: number): CritterSave | null {
-  if (state.sleeper?.id === id) return state.sleeper
-  return state.awake.find((critter) => critter.id === id) ?? null
-}
-
 /** The sleeper wakes and hops off; a new blank lump takes its place while fewer than four critters are awake. */
 export function wake(state: WorkshopState): CritterSave | null {
   const woken = state.sleeper
@@ -117,10 +112,6 @@ export function putToSleep(state: WorkshopState, id: number): boolean {
   critter.heading = 0
   state.sleeper = critter
   return true
-}
-
-export function isBlank(critter: CritterSave | null): boolean {
-  return critter !== null && critter.parts.length === 0
 }
 
 // --- saving -------------------------------------------------------------------

@@ -122,7 +122,16 @@ export class HintScheduler {
   }
 }
 
-export type HandPose = { x: number; z: number; height: number; press: number; opacity: number; carry: boolean }
+export type HandPose = {
+  x: number
+  z: number
+  height: number
+  press: number
+  opacity: number
+  carry: boolean
+  /** 0..1 after the hand lets go of what it carried: the part settles into place while the hand lifts clear. */
+  release: number
+}
 
 function ease(t: number): number {
   const k = Math.min(1, Math.max(0, t))
@@ -133,7 +142,7 @@ function window01(t: number, start: number, end: number): number {
   return Math.min(1, Math.max(0, (t - start) / (end - start)))
 }
 
-/** The ghost hand through one demonstration: fade in, press, drag from `from` to `to` (or tap twice when `to` is null), lift, fade out. */
+/** The ghost hand through one demonstration: fade in, press, drag from `from` to `to` (or tap twice when `to` is null), let go and lift clear, fade out. */
 export function handPose(from: Point, to: Point | null, progress: number, out: HandPose): HandPose {
   out.opacity = Math.min(window01(progress, 0, 0.1), 1 - window01(progress, 0.88, 1))
   if (!to) {
@@ -142,13 +151,16 @@ export function handPose(from: Point, to: Point | null, progress: number, out: H
     out.press = Math.max(Math.sin(window01(progress, 0.22, 0.4) * Math.PI), Math.sin(window01(progress, 0.5, 0.68) * Math.PI))
     out.height = (1 - out.press) * 4
     out.carry = false
+    out.release = 0
     return out
   }
   out.press = progress < 0.14 ? 0 : progress < 0.22 ? window01(progress, 0.14, 0.22) : progress < 0.76 ? 1 : 1 - window01(progress, 0.76, 0.84)
   const travel = ease(window01(progress, 0.24, 0.72))
   out.x = from.x + (to.x - from.x) * travel
   out.z = from.z + (to.z - from.z) * travel
-  out.height = (1 - out.press) * 4 + Math.sin(travel * Math.PI) * 5
-  out.carry = progress >= 0.18 && progress < 0.8
+  out.carry = progress >= 0.18 && progress < 0.78
+  out.release = ease(window01(progress, 0.78, 0.9))
+  // once it lets go the hand rises well clear, so the last picture is the part on the lump, not a finger on it
+  out.height = (1 - out.press) * 4 + Math.sin(travel * Math.PI) * 5 + out.release * 5
   return out
 }

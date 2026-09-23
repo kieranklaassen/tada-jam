@@ -1,4 +1,4 @@
-import { clampWalk, insideWalk, TURNTABLE, WALK, type Point } from './layout'
+import { blocksTurntable, clampWalk, insideWalk, TURNTABLE, WALK, type Point } from './layout'
 
 // How awake critters get around the bench: pick a spot inside the walkable
 // area, turn toward it at a limited rate while keeping clear of friends,
@@ -21,19 +21,21 @@ export const BODY_CLEARANCE = 9
 export const MEET_RADIUS = 21
 export const ARRIVE_RADIUS = 3
 
-/** A new place to walk to: inside the walkable area, a comfortable distance away. */
+/** A new place to walk to: inside the walkable area, a comfortable distance away, not in front of the turntable. */
 export function pickTarget(from: Point, rand: Random, out: Point): Point {
   for (let attempt = 0; attempt < 12; attempt++) {
     const x = WALK.minX + 6 + random(rand) * (WALK.maxX - WALK.minX - 12)
     const z = WALK.minZ + 5 + random(rand) * (WALK.maxZ - WALK.minZ - 10)
     const d = Math.hypot(x - from.x, z - from.z)
-    if (d > 14 && d < 55 && insideWalk({ x, z }, 5)) {
+    if (d > 14 && d < 55 && insideWalk({ x, z }, 5) && !blocksTurntable({ x, z })) {
       out.x = x
       out.z = z
       return out
     }
   }
-  return clampWalk({ x: from.x + 20, z: from.z }, 6, out)
+  clampWalk({ x: from.x + 20, z: from.z }, 6, out)
+  if (blocksTurntable(out)) clampWalk({ x: TURNTABLE.x - TURNTABLE.r - 11, z: out.z }, 6, out)
+  return out
 }
 
 export type Mover = { x: number; z: number; heading: number }
