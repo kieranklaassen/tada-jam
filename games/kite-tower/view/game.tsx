@@ -99,7 +99,9 @@ function World({ controller }: { controller: KiteController }) {
         const at = TRAY_GLOW[hint.id]
         add(at.x, at.y, at.z, slot.halfX * 2 + 1.1, slot.halfZ * 2 + 1.0, g.glow * 0.85, TRAY.tilt)
       } else add(hint.from.x, 0.014, 0, 2.2, 1.4, g.glow * 0.8)
-      add(g.buildAt.x, g.buildAt.y + 0.014, 0, 1.5, 1.3, g.glow * 0.6)
+      // On a block's top the ring fits the block instead of hanging off its edges in mid-air.
+      if (g.buildAt.y > 0.05) add(g.buildAt.x, g.buildAt.y + 0.014, 0, 1.05, 1.0, g.glow * 0.6)
+      else add(g.buildAt.x, g.buildAt.y + 0.014, 0, 1.5, 1.3, g.glow * 0.6)
     },
     [controller],
   )

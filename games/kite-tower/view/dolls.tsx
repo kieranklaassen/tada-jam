@@ -432,7 +432,7 @@ function smooth(t: number): number {
 function HeroDoll({ controller, wood, faces }: { controller: KiteController; wood: THREE.Material; faces: THREE.Texture }) {
   const rig = useRig(HERO, wood, faces)
   const cues = useDirector('pip', 1)
-  const scratch = useMemo(() => ({ rock: { angle: 0, pivot: 0 } as Rock, from: { x: 0, y: 0 }, yaw: 0 }), [])
+  const scratch = useMemo(() => ({ rock: { angle: 0, pivot: 0 } as Rock, from: { x: 0, y: 0 }, yaw: 0, reachSide: 1 }), [])
   useFrame((_, dt) => {
     const c = controller
     const hero: Hero = c.hero
@@ -447,6 +447,8 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
     let raiseL = 0
     let raiseR = 0
     let forward = 0
+    let forwardL = 0
+    let forwardR = 0
     let yawGoal = hero.facing * 0.55
     let expression: Expression = OPEN
     if (hero.boopAt !== cues.boopAt) {
@@ -470,13 +472,21 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
           squash = 1 + hop * 0.05 - (1 - hop) * 0.03
           // Short peg arms raised straight up end at the top of the head and read as holding it at play
           // size. The arm on the kite's side stretches up and out toward it, clear of the head, the other
-          // stays out for balance (both up would be a cheer), and the doll leans in a little; she keeps facing the child.
-          const side = Math.max(-1, Math.min(1, (goal.x - hero.x) / 1.6))
-          const toward = (0.3 + 0.1 * Math.abs(side)) * hero.reach
-          const away = (0.3 + 1.4 * Math.abs(side)) * hero.reach
-          raiseL -= side <= 0 ? toward : away
-          raiseR -= side <= 0 ? away : toward
-          roll -= side * 0.08 * hero.reach
+          // stays out for balance (both up would be a cheer, even with the kite straight overhead), and the
+          // doll leans in a little. She turns square to the child and brings the reaching arm a little
+          // forward: turned toward the kite, that arm swung behind her and behind any block beside her.
+          const dx = goal.x - hero.x
+          if (Math.abs(dx) > 0.25) scratch.reachSide = Math.sign(dx)
+          const lean = Math.min(1, Math.abs(dx) / 1.6)
+          const toward = (0.3 + 0.1 * lean) * hero.reach
+          const away = (0.3 + 1.4 * Math.max(0.6, lean)) * hero.reach
+          const left = scratch.reachSide < 0
+          raiseL -= left ? toward : away
+          raiseR -= left ? away : toward
+          forwardL += left ? 0.35 * hero.reach : 0
+          forwardR += left ? 0 : 0.35 * hero.reach
+          roll -= scratch.reachSide * (0.03 + 0.05 * lean) * hero.reach
+          yawGoal *= 1 - 0.75 * hero.reach
         }
         raise += Math.sin(t * 3.1) * 0.08 * hero.reach
         break
@@ -618,7 +628,7 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
     }
     if (hero.mode !== 'tumble' || age >= 0.55 + Math.min(0.5, Math.max(0, hero.y) * 0.12)) rig.lean.position.set(0, 0, 0)
     rig.lean.scale.set(1 / Math.sqrt(squash), squash, 1 / Math.sqrt(squash))
-    rig.arms(raise + raiseL + pose.raiseL, raise + raiseR + pose.raiseR, forward + pose.forwardL, forward + pose.forwardR)
+    rig.arms(raise + raiseL + pose.raiseL, raise + raiseR + pose.raiseR, forward + forwardL + pose.forwardL, forward + forwardR + pose.forwardR)
     scratch.from.x = x
     scratch.from.y = y + 1.7
     rig.look(hero.look, scratch.from, scratch.yaw, hero.mode === 'fly' ? 0.3 : 1, cues.director.personality.lookRate, dt, pose)
