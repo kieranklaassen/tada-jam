@@ -18,7 +18,9 @@ export type Finding = { file: string; line: number; rule: string; match: string 
 
 export const LOCAL_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 export const NAMESPACE_HOSTS = ['www.w3.org']
-export const BUILT_BENIGN_HOSTS = ['react.dev', 'github.com', 'reactjs.org', 'fb.me', 'opensource.org']
+// Hosts that appear only as text inside bundled libraries (error-message links,
+// license notes, and paper citations in three.js shader comments), never fetched.
+export const BUILT_BENIGN_HOSTS = ['react.dev', 'github.com', 'reactjs.org', 'fb.me', 'opensource.org', 'jcgt.org']
 
 export const ALLOWED_GAME_PACKAGES = ['react', 'react-dom', 'tone', 'matter-js', 'three', 'pixi.js', 'gsap', 'zustand', 'vitest']
 
