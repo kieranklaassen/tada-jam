@@ -1,6 +1,6 @@
-import { DEMO_SECONDS, handPose, HintScheduler, timingFor, type DemoPath, type HandPose } from './guidance'
+import { DEMO_SECONDS, handPose, HintScheduler, INVITE_SECONDS, quietAfter, timingFor, type DemoPath, type HandPose } from './guidance'
 import { GestureTracker, type Intent, type Point } from './input'
-import { BirdMotion, Spring, WandererMotion } from './motion'
+import { BirdMotion, Spring, WandererMotion, type Greet, type Poke } from './motion'
 import {
   castRay,
   fitRoom,
@@ -40,7 +40,7 @@ import {
 // every animation frame and forwards pointer events; tests drive it with
 // plain numbers. Everything the frame loop touches is preallocated.
 
-export type ChirpKind = 'greet' | 'hop' | 'huff' | 'peep'
+export type ChirpKind = 'hop' | 'huff' | 'peep'
 
 export type Sound = {
   unlock(): void
@@ -63,7 +63,10 @@ export type Sound = {
   arrive(): void
   chirp(kind: ChirpKind): void
   flap(): void
-  lantern(): void
+  /** The bird's answer to a poke, in time with the reaction it picked. */
+  poke(kind: Poke): void
+  /** The wanderer's answer to a poke: its lantern chimes the way it moves. */
+  greet(kind: Greet): void
   wonder(): void
 }
 
@@ -83,14 +86,31 @@ export const MAX_GROUPS = 3
 export const RIPPLES = 4
 export const WALK_SPEED = 1.6
 const ANTICIPATION = 0.14
+/** Once a landing opens the way to a tile the child asked for, the wanderer looks at it this long before setting off, so the landing reads first. */
+export const WISH_BEAT = 0.45
+/** How far into the invitation the bird stops watching the wanderer and follows its lantern to the door. */
+const BIRD_FOLLOWS = 0.4
 const TURN_DETENT = 0.3
 const SLIDE_DETENT = 0.16
 const RUBBER = 0.3
+/** Landing dip: an underdamped spring kicked downward when a segment first reaches its stop. */
+const DIP_STIFFNESS = 300
+const DIP_DAMPING = 11
+const DIP_KICK = 2.4
+/**
+ * How far (world units along the view ray) a slide grip may sit behind the
+ * first solid the touch meets and still win it: a grip peeking out under a
+ * tower's edge must still answer the finger the ghost hand showed.
+ */
+const GRIP_REACH = 0.8
 const HOP_CROUCH = 0.09
 const HOP_SECONDS = 0.34
 const ENTER_SECONDS = 1.55
 const LEAVE_SECONDS = 0.6
 const ARRIVE_SECONDS = 0.95
+/** The bird takes off as the wanderer steps through the door and follows it in. */
+const FOLLOW_FROM = 0.9
+const FOLLOW_TO = 1.5
 
 export type RoomInfo = {
   spec: RoomSpec
@@ -115,6 +135,8 @@ export type Frame = {
   /** Vertical drift of the whole diorama during travel (world units). */
   drop: number
   values: Float64Array
+  /** How far each group has sunk under its own weight after landing (world units, negative is down). */
+  dips: Float64Array
   walker: WandererMotion['pose']
   bird: BirdMotion['pose']
   door: { open: number; glow: number }
@@ -219,9 +241,12 @@ export class TowerController {
   private readonly sound: Sound
   private readonly save: (state: SavedState) => void
   private readonly scheduler: HintScheduler
+  private readonly restAfter: number
   private readonly wanderer = new WandererMotion()
   private readonly bird = new BirdMotion()
   private readonly springs: Spring[] = []
+  /** A heavy segment sinks a little when it lands and bobs back: weight without a verdict. */
+  private readonly dips: Spring[] = []
   private readonly settling: boolean[] = [false, false, false]
   private readonly impact: boolean[] = [false, false, false]
   private readonly notchAt: number[] = [0, 0, 0]
@@ -235,6 +260,9 @@ export class TowerController {
   private walk: Walk | null = null
   private pendingGoal: { tile: number; wonder: Vec3 | null } | null = null
   private queuedGoal: { tile: number; wonder: Vec3 | null } | null = null
+  /** A tile the child asked for that the wanderer could not reach yet. It survives drags; any other tile tap replaces it. */
+  private wish: number | null = null
+  private wishOpenAt = -1
   private drag: Drag | null = null
   private hop = { active: false, from: 0, to: 0, t: 0, wait: 0, goal: 0 }
   private hint: Hint | null = null
@@ -242,6 +270,7 @@ export class TowerController {
   private demoPath: DemoPath | null = null
   private demoWas = false
   private inviteWas = false
+  private inviteFollowed = true
   private phase: Phase = 'play'
   private phaseT = 0
   private nextRoom = 0
@@ -270,8 +299,13 @@ export class TowerController {
     this.save = options.save
     this.now = options.now ?? 0
     this.rooms = ROOMS.map(buildRoomInfo)
-    this.scheduler = new HintScheduler(this.now, timingFor(options.childAge))
-    for (let i = 0; i < MAX_GROUPS; i++) this.springs.push(new Spring(0, 260, 30))
+    const timing = timingFor(options.childAge)
+    this.scheduler = new HintScheduler(this.now, timing)
+    this.restAfter = quietAfter(timing)
+    for (let i = 0; i < MAX_GROUPS; i++) {
+      this.springs.push(new Spring(0, 260, 30))
+      this.dips.push(new Spring(0, DIP_STIFFNESS, DIP_DAMPING))
+    }
     const ripples: Ripple[] = []
     for (let i = 0; i < RIPPLES; i++) ripples.push({ x: 0, y: 0, age: 99, strong: false })
     this.frame = {
@@ -280,6 +314,7 @@ export class TowerController {
       fade: 0,
       drop: 0,
       values: new Float64Array(MAX_GROUPS),
+      dips: new Float64Array(MAX_GROUPS),
       walker: this.wanderer.pose,
       bird: this.bird.pose,
       door: { open: 0, glow: 1 },
@@ -325,6 +360,11 @@ export class TowerController {
 
   get isBusy(): boolean {
     return this.walk !== null || this.drag !== null || this.phase !== 'play' || this.hop.active || this.settling.some(Boolean)
+  }
+
+  /** Nobody has touched anything since the last demonstration ended: only slow breathing is left on screen. */
+  get isResting(): boolean {
+    return !this.isBusy && this.scheduler.idleFor(this.now) > this.restAfter
   }
 
   /** Settled group values of any diorama (for the little models on the ring). */
@@ -482,7 +522,7 @@ export class TowerController {
     placePoint(def, this.springs[group].value, hx, hy, hz, this.scratch)
     this.projector.toScreen(this.scratch[0], this.scratch[1], this.scratch[2], this.screen)
     if (Math.hypot(at.x - this.screen.x, at.y - this.screen.y) > Math.max(32, this.projector.scale * 0.4)) return null
-    return (this.scratch[0] - origin[0] + this.scratch[1] - origin[1] + this.scratch[2] - origin[2]) / 3 + 0.3
+    return (this.scratch[0] - origin[0] + this.scratch[1] - origin[1] + this.scratch[2] - origin[2]) / 3 + GRIP_REACH
   }
 
   private cellAt(x: number, y: number, z: number): number {
@@ -554,10 +594,8 @@ export class TowerController {
         else this.sound.tock()
         return
       case 'wanderer':
-        this.sound.lantern()
-        return
       case 'bird':
-        this.sound.chirp('greet')
+        // They answer on release, each with the sound of the reaction it picks.
         return
       case 'door':
       case 'tile':
@@ -582,18 +620,17 @@ export class TowerController {
         else this.travel(target.room, false)
         return
       case 'wanderer':
-        this.wanderer.greet(now)
+        this.sound.greet(this.wanderer.greet(now))
         this.bird.lookAt(this.wanderer.pose.x, this.wanderer.pose.y + 0.4, this.wanderer.pose.z, now)
         return
       case 'bird':
-        this.bird.ruffle(now)
+        this.sound.poke(this.bird.poke(now))
         this.bird.lookAt(this.bird.pose.x + 3, this.bird.pose.y + 3, this.bird.pose.z + 3, now, 0.9)
         this.wanderer.aim(this.bird.pose.x, this.bird.pose.y + 0.4, this.bird.pose.z, now, 0.9)
         return
       case 'group':
         if (target.group === this.info.birdGroup) {
-          this.bird.ruffle(now)
-          this.bird.flap(now, 0.25)
+          this.sound.poke(this.bird.poke(now))
           return
         }
         if (target.tile !== null && !target.handle) {
@@ -618,9 +655,9 @@ export class TowerController {
         this.goTo(target.tile, null)
         return
       case 'stone':
-        this.ripple(at, false)
-        return
       case 'sky':
+        this.ripple(at, false)
+        this.birdGlance(at)
         return
       default: {
         const unreachable: never = target
@@ -636,6 +673,14 @@ export class TowerController {
     ripple.y = at.y
     ripple.age = 0
     ripple.strong = strong
+  }
+
+  /** The bird turns its head to where a touch landed on nothing in particular: it is curious, not a verdict. */
+  private birdGlance(at: Point): void {
+    const o = this.projector.rayOrigin(at.x, at.y, this.scratch2)
+    const b = this.bird.pose
+    const s = (o[0] - b.x + (o[1] - b.y) + (o[2] - b.z)) / 3
+    this.bird.lookAt(o[0] - s, o[1] - s, o[2] - s, this.now, 0.8)
   }
 
   private doorAim(): Vec3 {
@@ -672,14 +717,16 @@ export class TowerController {
     let goal = to
     let curious = wonder
     if (!connected(layout, from, to)) {
+      this.wish = to
       const target = this.tileById(layout, to)
       const aim: Vec3 = curious ?? (target ? [target.x + 0.5, target.top, target.z + 0.5] : this.doorAim())
       const nearest = nearestReachable(layout, from, aim)
       if (nearest === null) return
       goal = nearest
       curious = aim
-    } else if (to === this.info.room.doorTile) {
-      curious = null
+    } else {
+      this.wish = null
+      if (to === this.info.room.doorTile) curious = null
     }
     const path = findPath(layout, from, goal)
     if (!path) return
@@ -691,6 +738,24 @@ export class TowerController {
     this.walk = { path, index: 0, u: 0, delay: anticipate ? ANTICIPATION : 0, layout, wonder: curious }
     if (anticipate) this.wanderer.anticipate(this.now)
     this.faceStep(path[0], path[1])
+  }
+
+  /** The way to the child's wish has opened: the wanderer notices, then goes on its own. */
+  private followWish(): void {
+    const wish = this.wish
+    if (wish === null || this.walk || this.phase !== 'play' || !this.groupsSettled() || !connected(this.layout, this.walker, wish)) {
+      this.wishOpenAt = -1
+      return
+    }
+    if (this.wishOpenAt < 0) {
+      this.wishOpenAt = this.now
+      const tile = this.tileById(this.layout, wish)
+      if (tile) this.wanderer.aim(tile.x + 0.5, tile.top + 0.6, tile.z + 0.5, this.now, WISH_BEAT + 0.3)
+      return
+    }
+    if (this.now - this.wishOpenAt < WISH_BEAT) return
+    this.wishOpenAt = -1
+    this.startWalk(this.walker, wish, null, true)
   }
 
   private wonderAt(target: Vec3): void {
@@ -752,6 +817,7 @@ export class TowerController {
     const group = cell.group >= 0 ? this.info.spec.groups[cell.group] : null
     const value = cell.group >= 0 ? this.springs[cell.group].value : 0
     placePoint(group, value, at[0] + 0.5 + n[0] * 0.5, at[1] + 0.5 + n[1] * 0.5, at[2] + 0.5 + n[2] * 0.5, out)
+    if (cell.group >= 0) out[1] += this.dips[cell.group].value
     if (cell.group === this.info.birdGroup && this.hop.active) out[1] += this.hopHeight()
     return out
   }
@@ -1048,7 +1114,9 @@ export class TowerController {
       if (this.settling[g]) {
         if (this.impact[g] && (before - target) * (spring.value - target) <= 0 && Math.abs(before - spring.value) > 1e-5) {
           this.impact[g] = false
-          this.sound.settle(Math.min(1, 0.35 + speed / 3))
+          const weight = Math.min(1, 0.35 + speed / 3)
+          this.sound.settle(weight)
+          this.dips[g].velocity -= DIP_KICK * weight
         }
         if (Math.abs(spring.value - target) < 0.003 && speed < 0.03) {
           spring.snap(target)
@@ -1057,6 +1125,12 @@ export class TowerController {
         }
       }
       this.frame.values[g] = spring.value
+      const dip = this.dips[g]
+      if (dip.value !== 0 || dip.velocity !== 0) {
+        dip.step(dt)
+        if (Math.abs(dip.value) < 1e-4 && Math.abs(dip.velocity) < 1e-3) dip.snap(0)
+      }
+      this.frame.dips[g] = dip.value
     }
     this.sound.grind(grind)
     this.sound.scrape(scrape)
@@ -1146,6 +1220,7 @@ export class TowerController {
     this.walk = null
     this.pendingGoal = null
     this.queuedGoal = null
+    this.wish = null
     this.viaDoor = viaDoor
     this.nextRoom = room
     this.phase = 'leave'
@@ -1182,6 +1257,8 @@ export class TowerController {
       this.impact[g] = false
       this.notchAt[g] = Math.round(value)
       this.frame.values[g] = value
+      this.dips[g].snap(0)
+      this.frame.dips[g] = 0
     }
     this.doorOpen.snap(0)
     this.hint = null
@@ -1406,8 +1483,15 @@ export class TowerController {
     const invite = state.invite
     if (invite !== null && !this.inviteWas && this.phase === 'play' && !this.walk) {
       const d = this.doorAim()
-      this.wanderer.aim(d[0], d[1], d[2], now, 2.2)
-      this.bird.lookAt(d[0], d[1], d[2], now, 2)
+      const w = this.wanderer.pose
+      this.wanderer.invite(d[0], d[1], d[2], now)
+      this.bird.lookAt(w.x, w.y + 0.5, w.z, now, BIRD_FOLLOWS * INVITE_SECONDS)
+      this.inviteFollowed = false
+    }
+    if (invite !== null && invite >= BIRD_FOLLOWS && !this.inviteFollowed) {
+      const d = this.doorAim()
+      this.bird.lookAt(d[0], d[1], d[2], now, 1.4)
+      this.inviteFollowed = true
     }
     this.inviteWas = invite !== null
   }
@@ -1493,7 +1577,19 @@ export class TowerController {
       heading = Math.atan2(w.x - x, w.z - z) * 0.5 + Math.PI / 8
       if (this.walk && !this.bird.isLooking(now)) this.bird.lookAt(w.x, w.y + 0.4, w.z, now, 0.6)
     }
-    const alpha = this.phase === 'leave' ? 1 - this.frame.fade : this.phase === 'arrive' ? smoothstep(0.2, 0.7, this.phaseT) : 1
+    let alpha = this.phase === 'leave' ? 1 - this.frame.fade : this.phase === 'arrive' ? smoothstep(0.2, 0.7, this.phaseT) : 1
+    const following = this.phase === 'enter' || (this.phase === 'leave' && this.viaDoor)
+    const s = !following ? 0 : this.phase === 'leave' ? 1 : smoothstep(FOLLOW_FROM, FOLLOW_TO, this.phaseT)
+    if (s > 0) {
+      const d = info.door
+      heading = Math.atan2(d[0] - x, d[2] - z)
+      x += (d[0] - x) * s
+      y += (d[1] + 0.2 - y) * s + Math.sin(Math.PI * s) * 0.9
+      z += (d[2] - z) * s
+      hovering = s < 1
+      alpha = this.phase === 'leave' ? 0 : 1 - smoothstep(FOLLOW_TO - 0.2, FOLLOW_TO, this.phaseT)
+      if (this.phase === 'enter' && this.phaseT - dt < FOLLOW_FROM) this.sound.chirp('hop')
+    }
     if (this.phase === 'arrive') y += 0.6 * (1 - smoothstep(0.2, 0.7, this.phaseT))
     this.bird.update(dt, now, x, y, z, heading, hovering || (this.phase === 'arrive' && this.phaseT < 0.7))
     this.bird.pose.alpha = alpha
@@ -1518,6 +1614,7 @@ export class TowerController {
       this.queuedGoal = null
       this.goTo(goal.tile, goal.wonder)
     }
+    this.followWish()
     this.updatePhase(step)
     this.updateGuidance()
     this.updateWanderer(step)
@@ -1568,6 +1665,7 @@ export const SILENT: Sound = {
   arrive() {},
   chirp() {},
   flap() {},
-  lantern() {},
+  poke() {},
+  greet() {},
   wonder() {},
 }
