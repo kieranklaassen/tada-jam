@@ -105,7 +105,7 @@ export type PerfHandle = { ring: PerfRing; governor: TierGovernor; render: { cal
 function FrameLoop({ perf, running, restingFor, onTier }: { perf: PerfHandle; running: boolean; restingFor: () => number; onTier: (tier: number) => void }) {
   const gl = useThree((state) => state.gl)
   const invalidate = useThree((state) => state.invalidate)
-  const frame = useRef({ start: 0, last: 0, work: 0, skip: 2 })
+  const frame = useRef({ start: 0, last: 0, work: 0, skip: 2, tier: perf.governor.tier })
 
   useEffect(() => {
     if (!running) return
@@ -135,7 +135,12 @@ function FrameLoop({ perf, running, restingFor, onTier }: { perf: PerfHandle; ru
     const now = performance.now()
     const f = frame.current
     if (f.skip > 0) f.skip -= 1
-    else if (f.last > 0 && perf.governor.sample(now - f.last, f.work)) onTier(perf.governor.tier)
+    else if (f.last > 0) perf.governor.sample(now - f.last, f.work)
+    // The governor or the grown-up overlay may have changed it.
+    if (perf.governor.tier !== f.tier) {
+      f.tier = perf.governor.tier
+      onTier(f.tier)
+    }
     f.last = now
     f.start = now
   }, -3)

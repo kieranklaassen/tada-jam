@@ -6,7 +6,7 @@ import { PIECES, SHAPES } from '../pieces'
 import { PerfRing, TierGovernor, tierOverride, type Tier } from '../quality'
 import { Dolls } from './dolls'
 import { Kite } from './kite'
-import { PerfOverlay } from './perf'
+import { GrownUpOverlay } from './perf'
 import { Blobs, GhostHand, pieceGeometries, Pieces, type BlobAdd } from './pieces'
 import { Room } from './room'
 import { ProjectorBridge, Stage, type PerfHandle } from './stage'
@@ -202,7 +202,7 @@ export function GameView({ controller, running }: { controller: KiteController; 
         <Input controller={controller} />
         <World controller={controller} />
       </Stage>
-      {showPerf && <PerfOverlay perf={perf} governor={perf.governor} />}
+      <GrownUpOverlay perf={perf} governor={perf.governor} startOpen={showPerf} />
     </>
   )
 }

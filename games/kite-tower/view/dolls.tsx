@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { Hero, KiteController, Watcher } from '../controller'
 import { WATCHERS } from '../layout'
+import { MotionDirector, type Activity, type Face, type PoseDelta } from '../motion'
 import { swayAngle, type Rock } from '../sway'
 import { merge, stained, woodLathe } from './shapes'
 import { atlasUv, woodMaterial } from './wood'
@@ -10,10 +11,11 @@ import { atlasUv, woodMaterial } from './wood'
 // Three peg dolls, each a lathed beech body with painted clothes, a round
 // head with painted hair or a hat, a face painted on a thin shell (four
 // expressions in one atlas, swapped by texture offset), and two little arms.
-// Each has its own way of moving: the hero hops on both feet, climbs with a
-// crouch, a pull and a knee-over, and dangles from the kite kicking its
-// feet; Moss, tall and slow, waddles and peeks through his hands; Bean,
-// small and quick, scoots on a buzz, startles with a jump, and spins.
+// The hero's route gait lives here (she hops on both feet, climbs with a
+// crouch, a pull and a knee-over, and dangles from the kite kicking her
+// feet); everything a doll does as itself (idle life, blinks, reactions,
+// cheers, pokes, delights) comes from its director in motion.ts, and this
+// file only maps the pose onto the rig.
 
 type Expression = 0 | 1 | 2 | 3
 const OPEN: Expression = 0
@@ -313,6 +315,8 @@ class DollRig {
   readonly texture: THREE.Texture
   private readonly geometries: THREE.BufferGeometry[] = []
   private expression = -1
+  private followYaw = 0
+  private followPitch = 0
   readonly spec: DollSpec
 
   constructor(spec: DollSpec, wood: THREE.Material, faces: THREE.Texture) {
@@ -364,14 +368,19 @@ class DollRig {
     this.armR.rotation.set(forwardR, 0, raiseR)
   }
 
-  /** Turn the head toward a room point (yaw across, pitch up and down), limited like a neck. */
-  look(target: { x: number; y: number }, from: { x: number; y: number }, bodyYaw: number, amount = 1): void {
+  /**
+   * Turn the head toward a room point (yaw across, pitch up and down), limited like a neck, following at
+   * the doll's own rate per second; the pose's head offsets go on top unsmoothed, so quick nods stay quick.
+   */
+  look(target: { x: number; y: number }, from: { x: number; y: number }, bodyYaw: number, amount: number, rate: number, dt: number, pose: PoseDelta): void {
     const dx = target.x - from.x
     const dy = target.y - from.y
     const yaw = Math.max(-0.7, Math.min(0.7, Math.atan2(dx, 3.2))) - bodyYaw * 0.6
     const pitch = Math.max(-0.5, Math.min(0.35, -Math.atan2(dy, Math.abs(dx) + 1.4) * 0.8))
-    this.head.rotation.y += (yaw * amount - this.head.rotation.y) * 0.15
-    this.head.rotation.x += (pitch * amount - this.head.rotation.x) * 0.15
+    const blend = 1 - Math.exp(-rate * dt)
+    this.followYaw += (yaw * amount - this.followYaw) * blend
+    this.followPitch += (pitch * amount - this.followPitch) * blend
+    this.head.rotation.set(this.followPitch + pose.headPitch, this.followYaw + pose.headYaw, pose.headRoll)
   }
 
   dispose(): void {
@@ -386,9 +395,31 @@ function useRig(spec: DollSpec, wood: THREE.Material, faces: THREE.Texture): Dol
   return rig
 }
 
-function blinkAt(t: number, seed: number): boolean {
-  const period = 3.1 + (seed % 1.7)
-  return (t + seed) % period < 0.13
+function faceOf(face: Face | null): Expression {
+  switch (face) {
+    case null:
+    case 'open':
+      return OPEN
+    case 'blink':
+      return BLINK
+    case 'happy':
+      return HAPPY
+    case 'surprised':
+      return SURPRISED
+    default: {
+      const never: never = face
+      throw new Error(`unknown face ${String(never)}`)
+    }
+  }
+}
+
+/** A doll's director and the last cues it has heard (pokes, topples, reactions). */
+function useDirector(doll: 'pip' | 'moss' | 'bean', seed: number) {
+  return useMemo(() => ({ director: new MotionDirector(doll, seed), boopAt: -Infinity, cueAt: -Infinity }), [doll, seed])
+}
+
+function activityOf(mode: Watcher['mode']): Activity {
+  return mode === 'walk' ? 'walk' : mode === 'idle' ? 'idle' : 'busy'
 }
 
 function smooth(t: number): number {
@@ -400,6 +431,7 @@ function smooth(t: number): number {
 
 function HeroDoll({ controller, wood, faces }: { controller: KiteController; wood: THREE.Material; faces: THREE.Texture }) {
   const rig = useRig(HERO, wood, faces)
+  const cues = useDirector('pip', 1)
   const scratch = useMemo(() => ({ rock: { angle: 0, pivot: 0 } as Rock, from: { x: 0, y: 0 }, yaw: 0 }), [])
   useFrame((_, dt) => {
     const c = controller
@@ -414,12 +446,19 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
     let raise = 0.18 + hero.reach * 2.75
     let forward = 0
     let yawGoal = hero.facing * 0.55
-    let expression: Expression = blinkAt(t, 0.4) ? BLINK : OPEN
-    const boop = t - hero.boopAt
+    let expression: Expression = OPEN
+    if (hero.boopAt !== cues.boopAt) {
+      cues.boopAt = hero.boopAt
+      cues.director.trigger('poke', t)
+    }
+    if (c.toppleAt !== cues.cueAt) {
+      cues.cueAt = c.toppleAt
+      if (hero.mode === 'stand') cues.director.trigger('react', t)
+    }
+    const calm = hero.mode === 'stand' && hero.reach < 0.3 && c.kite.mode === 'perched' && c.held.length === 0
+    const pose = cues.director.sample(t, calm ? 'idle' : 'busy')
     switch (hero.mode) {
       case 'stand': {
-        const breathe = Math.sin(t * 2.4)
-        squash = 1 + breathe * 0.012
         const goal = c.kiteGoal
         const near = Math.abs(hero.x - goal.x) < 2.4 && c.kite.mode === 'perched'
         if (near && hero.reach > 0.6) {
@@ -427,7 +466,6 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
           const hop = Math.max(0, Math.sin(t * 7.5))
           lift = hop * hop * 0.14 * hero.reach
           squash = 1 + hop * 0.05 - (1 - hop) * 0.03
-          expression = blinkAt(t, 0.4) ? BLINK : OPEN
         }
         raise += Math.sin(t * 3.1) * 0.08 * hero.reach
         break
@@ -533,12 +571,11 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
         throw new Error(`unknown hero mode ${String(never)}`)
       }
     }
-    let spin = 0
-    if (boop < 0.7) {
-      spin = smooth(boop / 0.7) * Math.PI * 2
-      lift += Math.sin((boop / 0.7) * Math.PI) * 0.18
-      expression = HAPPY
-    }
+    lift += pose.lift
+    roll += pose.roll
+    squash += pose.squash
+    yawGoal += pose.twist
+    if (expression === OPEN) expression = faceOf(pose.face)
     // Ride the sway of whatever the doll stands on.
     if (hero.mode === 'stand' && hero.on !== null) {
       const stack = c.pieceStack[hero.on]
@@ -554,7 +591,7 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
     }
     scratch.yaw += (yawGoal - scratch.yaw) * Math.min(1, dt * 8)
     rig.root.position.set(x, y + lift, hero.z)
-    rig.root.rotation.set(0, scratch.yaw + spin, 0)
+    rig.root.rotation.set(0, scratch.yaw + pose.spin, 0)
     if (hero.mode === 'fly') {
       rig.root.rotation.set(0, 0, roll)
       rig.lean.rotation.set(0, scratch.yaw, 0)
@@ -566,14 +603,14 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
       rig.lean.rotation.set(0, 0, 0)
     } else {
       rig.lean.position.set(0, 0, 0)
-      rig.lean.rotation.set(0, 0, roll)
+      rig.lean.rotation.set(pose.bow, 0, roll)
     }
     if (hero.mode !== 'tumble' || age >= 0.55 + Math.min(0.5, Math.max(0, hero.y) * 0.12)) rig.lean.position.set(0, 0, 0)
     rig.lean.scale.set(1 / Math.sqrt(squash), squash, 1 / Math.sqrt(squash))
-    rig.arms(raise, raise, forward, forward)
+    rig.arms(raise + pose.raiseL, raise + pose.raiseR, forward + pose.forwardL, forward + pose.forwardR)
     scratch.from.x = x
     scratch.from.y = y + 1.7
-    rig.look(hero.look, scratch.from, scratch.yaw, hero.mode === 'fly' ? 0.3 : 1)
+    rig.look(hero.look, scratch.from, scratch.yaw, hero.mode === 'fly' ? 0.3 : 1, cues.director.personality.lookRate, dt, pose)
     rig.setExpression(expression)
   })
   return <primitive object={rig.root} />
@@ -583,82 +620,34 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
 
 function MossDoll({ controller, wood, faces }: { controller: KiteController; wood: THREE.Material; faces: THREE.Texture }) {
   const rig = useRig(MOSS, wood, faces)
+  const cues = useDirector('moss', 2)
   const scratch = useMemo(() => ({ from: { x: 0, y: 0 }, yaw: 0.4 }), [])
   useFrame((_, dt) => {
-    const c = controller
-    const w: Watcher = c.watchers[0]
-    const t = c.t
-    const age = t - w.since
-    let lift = 0
-    let roll = 0
-    let squash = 1 + Math.sin(t * 1.5) * 0.012
-    let raiseL = 0.12
-    let raiseR = 0.12
-    let forwardL = 0
-    let forwardR = 0
-    let yaw = w.facing * 0.45
-    let expression: Expression = blinkAt(t, 1.3) ? BLINK : OPEN
-    let lookAmount = 1
-    switch (w.mode) {
-      case 'idle':
-        break
-      case 'walk': {
-        // A waddle: each step swings the whole body round a little and rocks it over.
-        const step = (t / 0.62) * Math.PI
-        yaw += Math.sin(step) * 0.28
-        roll = Math.sin(step) * 0.07
-        lift = Math.abs(Math.sin(step)) * 0.035
-        forwardL = Math.sin(step) * 0.35
-        forwardR = -Math.sin(step) * 0.35
-        break
-      }
-      case 'react': {
-        // Hands over the eyes, then one hand drops for a peek.
-        const cover = smooth(age / 0.3)
-        const peek = smooth((age - 1.2) / 0.4)
-        raiseL = 0.12 + 1.9 * cover
-        raiseR = 0.12 + 1.9 * cover * (1 - peek)
-        forwardL = -1.5 * cover
-        forwardR = -1.5 * cover * (1 - peek)
-        expression = peek > 0.5 ? SURPRISED : BLINK
-        lookAmount = 0.3
-        break
-      }
-      case 'cheer': {
-        // Slow arms-up V, rocking side to side.
-        const rock = Math.sin(t * 3.4)
-        raiseL = 2.5 + rock * 0.15
-        raiseR = 2.5 - rock * 0.15
-        roll = rock * 0.1
-        lift = Math.max(0, Math.sin(t * 6.8)) * 0.05
-        expression = HAPPY
-        break
-      }
-      default: {
-        const never: never = w.mode
-        throw new Error(`unknown watcher mode ${String(never)}`)
-      }
+    const w: Watcher = controller.watchers[0]
+    const t = controller.t
+    const director = cues.director
+    if (w.boopAt !== cues.boopAt) {
+      cues.boopAt = w.boopAt
+      director.trigger('poke', t)
     }
-    const boop = t - w.boopAt
-    let bow = 0
-    if (boop < 1.4) {
-      // Tips his cap: a slow bow with a hand to the brim.
-      const k = boop / 1.4
-      bow = Math.sin(k * Math.PI) * 0.35
-      raiseR = 0.12 + 2.3 * Math.sin(k * Math.PI)
-      forwardR = -1.1 * Math.sin(k * Math.PI)
-      expression = HAPPY
+    if (w.mode === 'react' && w.since !== cues.cueAt) {
+      cues.cueAt = w.since
+      director.trigger('react', t)
     }
-    scratch.yaw += (yaw - scratch.yaw) * Math.min(1, dt * 4)
-    rig.root.position.set(w.x, lift, WATCHERS[0].z)
-    rig.root.rotation.set(0, scratch.yaw, 0)
-    rig.lean.rotation.set(bow, 0, roll)
+    director.setCheering(w.mode === 'cheer', t)
+    const pose = director.sample(t, activityOf(w.mode))
+    scratch.yaw += (w.facing * 0.45 + pose.twist - scratch.yaw) * Math.min(1, dt * 4)
+    rig.root.position.set(w.x + pose.shift, pose.lift, WATCHERS[0].z)
+    rig.root.rotation.set(0, scratch.yaw + pose.spin, 0)
+    rig.lean.rotation.set(pose.bow, 0, pose.roll)
+    const squash = 1 + pose.squash
     rig.lean.scale.set(1 / Math.sqrt(squash), squash, 1 / Math.sqrt(squash))
-    rig.arms(raiseL, raiseR, forwardL, forwardR)
+    rig.arms(0.12 + pose.raiseL, 0.12 + pose.raiseR, pose.forwardL, pose.forwardR)
     scratch.from.x = w.x
     scratch.from.y = 1.9
-    rig.look(w.look, scratch.from, scratch.yaw, lookAmount)
-    rig.setExpression(expression)
+    // Hands over his eyes means he is not watching.
+    rig.look(w.look, scratch.from, scratch.yaw, director.isPlaying('react', t) ? 0.3 : 1, director.personality.lookRate, dt, pose)
+    rig.setExpression(faceOf(pose.face))
   })
   return <primitive object={rig.root} />
 }
@@ -667,94 +656,59 @@ function MossDoll({ controller, wood, faces }: { controller: KiteController; woo
 
 function BeanDoll({ controller, wood, faces }: { controller: KiteController; wood: THREE.Material; faces: THREE.Texture }) {
   const rig = useRig(BEAN, wood, faces)
-  const scratch = useMemo(() => ({ from: { x: 0, y: 0 }, yaw: -0.4, pom: 0, pomV: 0, prevX: 0, prevLift: 0 }), [])
+  const cues = useDirector('bean', 3)
+  const scratch = useMemo(() => ({ from: { x: 0, y: 0 }, yaw: -0.4, pom: 0, pomV: 0, pomZ: 0, pomZV: 0, prevX: 0, prevLift: 0, prevRoll: 0, prevPitch: 0 }), [])
   useFrame((_, dt) => {
-    const c = controller
-    const w: Watcher = c.watchers[1]
-    const t = c.t
-    const age = t - w.since
-    let lift = 0
-    let roll = 0
-    let jitter = 0
-    let squash = 1 + Math.sin(t * 7) * 0.015
-    let raiseL = 0.25
-    let raiseR = 0.25
-    let yaw = w.facing * 0.5
-    let spin = 0
-    let expression: Expression = blinkAt(t, 2.2) ? BLINK : OPEN
-    switch (w.mode) {
-      case 'idle': {
-        // Can't keep still: a little bounce every few seconds.
-        const hop = (t * 0.45) % 1
-        if (hop < 0.12) lift = Math.sin((hop / 0.12) * Math.PI) * 0.12
-        break
-      }
-      case 'walk': {
-        // A wind-up scoot: a fast buzz, leaning into the direction of travel.
-        jitter = Math.sin(t * Math.PI * 18) * 0.018
-        roll = -w.facing * 0.16 + Math.sin(t * Math.PI * 18) * 0.05
-        lift = Math.abs(Math.sin(t * Math.PI * 9)) * 0.03
-        raiseL = 0.6
-        raiseR = 0.6
-        break
-      }
-      case 'react': {
-        // Startle: a straight-up jump with arms flung out.
-        const k = Math.min(1, age / 0.5)
-        lift = Math.sin(k * Math.PI) * 0.5
-        squash = 1 + Math.sin(k * Math.PI) * 0.12
-        raiseL = 1.5
-        raiseR = 1.5
-        expression = SURPRISED
-        break
-      }
-      case 'cheer': {
-        // Spin and bounce.
-        spin = (t * 5.2) % (Math.PI * 2)
-        lift = Math.abs(Math.sin(t * 6.5)) * 0.3
-        squash = 0.92 + Math.abs(Math.sin(t * 6.5)) * 0.14
-        raiseL = 2.7
-        raiseR = 2.7
-        expression = HAPPY
-        break
-      }
-      default: {
-        const never: never = w.mode
-        throw new Error(`unknown watcher mode ${String(never)}`)
-      }
+    const w: Watcher = controller.watchers[1]
+    const t = controller.t
+    const director = cues.director
+    if (w.boopAt !== cues.boopAt) {
+      cues.boopAt = w.boopAt
+      director.trigger('poke', t)
+      scratch.pomV += 9
     }
-    const boop = t - w.boopAt
-    if (boop < 0.9) {
-      // A giggly wiggle; the pom-pom boings.
-      roll += Math.sin(boop * 30) * 0.12 * (1 - boop / 0.9)
-      expression = HAPPY
-      if (boop < dt * 1.5) scratch.pomV += 9
+    if (w.mode === 'react' && w.since !== cues.cueAt) {
+      cues.cueAt = w.since
+      director.trigger('react', t)
     }
-    scratch.yaw += (yaw - scratch.yaw) * Math.min(1, dt * 10)
-    rig.root.position.set(w.x + jitter, lift, WATCHERS[1].z)
-    rig.root.rotation.set(0, scratch.yaw + spin, 0)
-    rig.lean.rotation.set(0, 0, roll)
+    director.setCheering(w.mode === 'cheer', t)
+    const pose = director.sample(t, activityOf(w.mode))
+    // He leans into a scoot.
+    const roll = pose.roll + (w.mode === 'walk' ? -w.facing * 0.16 : 0)
+    scratch.yaw += (w.facing * 0.5 + pose.twist - scratch.yaw) * Math.min(1, dt * 10)
+    const x = w.x + pose.shift
+    rig.root.position.set(x, pose.lift, WATCHERS[1].z)
+    rig.root.rotation.set(0, scratch.yaw + pose.spin, 0)
+    rig.lean.rotation.set(pose.bow, 0, roll)
+    const squash = 1 + pose.squash
     rig.lean.scale.set(1 / Math.sqrt(squash), squash, 1 / Math.sqrt(squash))
-    rig.arms(raiseL, raiseR, 0, 0)
-    // The pom-pom on a spring, pushed by the body's motion.
+    rig.arms(0.25 + pose.raiseL, 0.25 + pose.raiseR, pose.forwardL, pose.forwardR)
+    // The pom-pom on two springs, flung by the body's motion and the head's shakes and nods.
     if (dt > 0) {
-      const vx = (w.x - scratch.prevX) / dt
-      const vy = (lift - scratch.prevLift) / dt
-      scratch.pomV += (-vx * 0.8 - vy * 0.5) * dt * 10
+      const vx = (x - scratch.prevX) / dt
+      const vy = (pose.lift - scratch.prevLift) / dt
+      const vRoll = (roll + pose.headRoll - scratch.prevRoll) / dt
+      const vPitch = (pose.bow + pose.headPitch - scratch.prevPitch) / dt
+      scratch.pomV += (-vx * 0.8 - vy * 0.5 - vRoll * 0.5) * dt * 10
+      scratch.pomZV += -vPitch * 0.5 * dt * 10
+      scratch.pomV += (-scratch.pom * 90 - scratch.pomV * 7) * dt
+      scratch.pomZV += (-scratch.pomZ * 90 - scratch.pomZV * 7) * dt
+      scratch.pom = Math.max(-0.6, Math.min(0.6, scratch.pom + scratch.pomV * dt))
+      scratch.pomZ = Math.max(-0.6, Math.min(0.6, scratch.pomZ + scratch.pomZV * dt))
     }
-    scratch.prevX = w.x
-    scratch.prevLift = lift
-    scratch.pomV += (-scratch.pom * 90 - scratch.pomV * 7) * dt
-    scratch.pom += scratch.pomV * dt
-    scratch.pom = Math.max(-0.6, Math.min(0.6, scratch.pom))
+    scratch.prevX = x
+    scratch.prevLift = pose.lift
+    scratch.prevRoll = roll + pose.headRoll
+    scratch.prevPitch = pose.bow + pose.headPitch
     if (rig.pom) {
       rig.pom.position.x = Math.sin(scratch.pom) * 0.12
-      rig.pom.position.y = HEAD_R * 2 + 0.05 - Math.abs(scratch.pom) * 0.04
+      rig.pom.position.z = Math.sin(scratch.pomZ) * 0.12
+      rig.pom.position.y = HEAD_R * 2 + 0.05 - (Math.abs(scratch.pom) + Math.abs(scratch.pomZ)) * 0.04
     }
     scratch.from.x = w.x
     scratch.from.y = 1.4
-    rig.look(w.look, scratch.from, scratch.yaw, 1)
-    rig.setExpression(expression)
+    rig.look(w.look, scratch.from, scratch.yaw, 1, director.personality.lookRate, dt, pose)
+    rig.setExpression(faceOf(pose.face))
   })
   return <primitive object={rig.root} />
 }
