@@ -11,9 +11,21 @@ The authority for cartridge mechanics is Tada's `docs/cartridges.md`. This file 
 
 ## Documented knowledge
 
-- `docs/solutions/` — documented solutions and conventions from past work, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Check it before implementing or debugging in a documented area.
-- `CONCEPTS.md` — shared domain vocabulary for the jam (terms like quality bar and claimed style).
-- `.claude/skills/jam-game-creator/SKILL.md` — the step-by-step path from a game idea to a merged PR (age band, style, spike, guidance ladder, quality bar, checks).
+- `docs/solutions/` — compounded knowledge: conventions and solutions from past work, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`, `applies_when`). Start a new game from [`docs/solutions/conventions/building-a-jam-game.md`](docs/solutions/conventions/building-a-jam-game.md), the step-by-step path from idea to a green PR.
+- `CONCEPTS.md` — shared domain vocabulary for the jam (quality bar, claimed style, age band, guidance ladder, and more).
+- [compound-cli](https://github.com/kieranklaassen/compound-cli) manages that knowledge. Before starting work, recall what applies with `compound find "<what you are about to do>"` (judged recall; needs `TYPESAFE_API_KEY` in the environment). Without the CLI or the key, grep the frontmatter under `docs/solutions/` instead. New learnings are captured with the compound-engineering `ce-compound` workflow, one learning per run, and `compound audit --strict` (config in `.compound-engineering/config.yaml`) validates their frontmatter in CI.
+
+## Before you show the owner
+
+Lessons from building Pebble Table, so the next game does not repeat them. The full checklist is in [`docs/solutions/conventions/building-a-jam-game.md`](docs/solutions/conventions/building-a-jam-game.md#before-you-show-the-owner).
+
+- **Look first.** The first screenshot is already in the chosen style at the quality bar; explore styles before gameplay ([style per game](docs/solutions/conventions/distinct-visual-style-per-game-shared-quality-bar.md)).
+- **Clear to a child.** One obvious want per scene, the guidance ladder in the first slice, and a cold playtest proxy run before the owner sees it ([wordless clarity](docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md)).
+- **Every character moves like itself.** No shared animations; variants and delights per character ([motion personality](docs/solutions/design-patterns/motion-personality-per-character.md)).
+- **Refine in logged passes.** Screenshot, critique, one fix set, re-screenshot, frame rate ([refinement loop](docs/solutions/workflow-issues/refinement-loop-for-kid-3d-readability.md)).
+- **Measure on the target.** A production build in WebKit and throttled Chrome, a real iPad when possible; ship adaptive quality and the grown-up fps overlay from day one ([performance](docs/solutions/performance-issues/measure-on-the-target-device-and-ship-adaptive-quality.md)).
+- **Share a production build.** `npm run serve:lan`, never the dev server, and say which URL is which ([production build](docs/solutions/workflow-issues/share-a-production-build-not-the-dev-server.md)).
+- **Deliver cleanly.** Push the branch with CI green, hand the PR body to the coordinator, and never write a key value anywhere ([agent delivery](docs/solutions/workflow-issues/agent-delivery-push-branches-and-keep-secrets-out.md)).
 
 ## Shape of a game
 
