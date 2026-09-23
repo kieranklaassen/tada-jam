@@ -32,11 +32,18 @@ export const FAST_MS = 17.6
 export const RAISE_AFTER_MS = 8000
 /** A tier that just failed is not retried for this long. */
 export const RETRY_AFTER_MS = 30000
+/** Seconds of rest (untouched, nothing held or flying, no demonstration, nobody waking) before rendering drops to half rate. */
+export const REST_BEFORE_PACING = 20
+
+/** A resting garden renders every other display frame, sparing an iPad's battery and heat; skipped frames do no work. */
+export function skipFrame(frame: number, restingFor: number): boolean {
+  return restingFor > REST_BEFORE_PACING && frame % 2 === 1
+}
 const SETTLE_MS = 2000
 
 export class QualityGovernor {
   tier: number
-  readonly pinned: boolean
+  pinned: boolean
   private ema = 16.7
   private slowFor = 0
   private fastFor = 0
@@ -51,6 +58,12 @@ export class QualityGovernor {
 
   get settings(): TierSettings {
     return TIERS[this.tier]
+  }
+
+  /** Pin a tier from the grown-up overlay, or `null` to go back to adapting from the current one. */
+  force(tier: number | null): void {
+    this.pinned = tier !== null
+    this.change(tier === null ? this.tier : Math.max(0, Math.min(TOP_TIER, Math.round(tier))))
   }
 
   /** Feed one frame's duration (ms). Returns true when the tier changed. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DROP_AFTER_MS, parseTierOverride, QualityGovernor, RAISE_AFTER_MS, RETRY_AFTER_MS, TIERS, TOP_TIER, wantsPerfOverlay } from './tiers'
+import { DROP_AFTER_MS, parseTierOverride, QualityGovernor, RAISE_AFTER_MS, REST_BEFORE_PACING, RETRY_AFTER_MS, skipFrame, TIERS, TOP_TIER, wantsPerfOverlay } from './tiers'
 
 function feed(governor: QualityGovernor, frameMs: number, totalMs: number): void {
   for (let t = 0; t < totalMs; t += frameMs) governor.sample(frameMs)
@@ -11,6 +11,13 @@ describe('quality tiers', () => {
     expect(TIERS.filter((t) => t.glowPass)).toHaveLength(1)
     expect(TIERS[TOP_TIER].glowPass).toBe(true)
     expect(TIERS[0].motes).toBe(0)
+  })
+
+  it('renders every frame while anything happens, and every other frame once the garden has rested', () => {
+    const rendered = (resting: number) => Array.from({ length: 60 }, (_, frame) => !skipFrame(frame, resting)).filter(Boolean).length
+    expect(rendered(0)).toBe(60)
+    expect(rendered(REST_BEFORE_PACING - 0.1)).toBe(60)
+    expect(rendered(REST_BEFORE_PACING + 0.1)).toBe(30)
   })
 
   it('holds the top tier at a steady 60 fps', () => {
@@ -50,6 +57,18 @@ describe('quality tiers', () => {
     const governor = new QualityGovernor(1, true)
     feed(governor, 80, 20000)
     expect(governor.tier).toBe(1)
+  })
+
+  it('the grown-up overlay pins any tier, and hands back to adapting', () => {
+    const governor = new QualityGovernor()
+    governor.force(0)
+    feed(governor, 10, 60000)
+    expect(governor.tier).toBe(0)
+    expect(governor.pinned).toBe(true)
+    governor.force(null)
+    expect(governor.pinned).toBe(false)
+    feed(governor, 10, 60000)
+    expect(governor.tier).toBe(TOP_TIER)
   })
 
   it('reads ?tier= and ?fps= from the query or the hash', () => {
