@@ -7,7 +7,7 @@ Pebble Table's own visual style: a plasticine tabletop set, shot like a stop-mot
 - **Everything is clay.** Soft matte surfaces with thumbprints and tool drags, shapes that are round and slightly lumpy, never CAD-perfect. If a prop would be wood or metal in real life, it is clay painted that colour.
 - **A kid can read it at a glance.** Big, distinct silhouettes; few objects; uncluttered backdrop; strong figure-ground contrast. Countable things (stones) are one clear colour on a surface of a contrasting temperature: terracotta stones on a cool sage-teal table.
 - **Motion carries the charm.** Real physics weight, squash on landing, stretch on pickup, springs that overshoot and settle, characters that anticipate and follow through. A still frame should look good; a moving one should feel alive.
-- **Calm, not busy.** Idle life breathes and blinks; nothing flashes, beckons, or nags. Guidance is a gentle glow and a ghost hand that appear only when the child is idle.
+- **Calm, not busy.** Idle life breathes and blinks; nothing flashes, beckons, or nags. Guidance is a golden glow ring and a ghost hand that appear only when the child is idle.
 - **History.** The first 2D canvas slice was judged "ugly" by the owner. Ten 3D style concepts were compared on kid clarity, artistry, and iPad cost; the owner picked claymation. The concept render showed rust stones on a rust table, so the table was cooled to sage-teal.
 
 ## Palette
@@ -16,14 +16,15 @@ Warm set, cool stage. The backdrop and props are warm; the play surface is cool 
 
 | Role | Colour | Notes |
 | --- | --- | --- |
-| Backdrop / floor | `#f2e2c6` / `#e9d4b3` | Warm cream, fog to the same colour |
-| Table slab | `#7fa4a6` | Cool sage-teal; never rust or orange under rust pieces |
+| Backdrop / floor | `#ecd2aa` / `#e2c49a` | Warm cream, fog to the same colour |
+| Table slab | `#6e9a9b` | Cool sage-teal; never rust or orange under rust pieces |
 | Stones | `#c9683d` | Terracotta clay, identical by design |
 | Bag | `#dcaa3c` with cream cord `#efe1c3` | Mustard |
 | Scale | wood-clay `#9a5a38`, pans ochre `#d8a54c` | |
 | Rug, bowl | `#e8d7b6`, `#f0dec2` | Cream |
 | Plates | `#3f9a8e` | Teal |
-| Characters | rabbit `#e6d3b2`, bear cub `#a0613d`, hedgehog `#efd8b0` with spikes `#6b4a33` | Black bead eyes with a white shine, pink cheeks |
+| Characters | rabbit `#e6d3b2`, bear cub `#a0613d`, hedgehog `#efd8b0` with quills `#6b4a33` fading to `#c9a27a` | Big black bead eyes with a double white shine, pink cheeks |
+| Glow | `#ffd76a` | A golden ring, readable on the cream rug and the sage table |
 
 All colours live in `PALETTE` in [`view/clay.ts`](view/clay.ts).
 
@@ -31,12 +32,15 @@ All colours live in `PALETTE` in [`view/clay.ts`](view/clay.ts).
 
 - **One shared clay material** (`MeshStandardMaterial`, vertex colours, roughness about 0.6, double-sided) with a procedural thumbprint normal map drawn on a canvas at startup. Nothing is fetched or committed as an image.
 - **Merged meshes.** Each rigid prop (bag, scale post, beam, bowl, knife, shelf rack) and each character part is built from primitives with `piece()` (lump, place, paint) and merged into one geometry: one draw call each. Characters are six parts (body, head, eyes, mouth, two arms) so they can animate.
+- **Clay fur is a shader, not geometry** ([`view/fur.ts`](view/fur.ts)). Rabbit and bear body and head get up to six instanced shells: the part pushed out along its normals and alpha-tested against a procedural tuft texture (fat strokes like clay dragged with a loop tool), darker at the root and lighter at the tip, with a soft rim. The vertex shader sways the tips with breath and a little wind. Front-facing surfaces (face, belly) stay bare so the face reads cleanly. Shell count comes from on-screen size (3 to 6). The hedgehog's quills are one instanced tapered clay spike per body part, tinted per instance, each swaying out of phase.
 - **Lumps are geometry, not shaders.** `lump()` pushes vertices along their normals with 3D noise once, at build time.
 - **Contact occlusion is baked** into vertex colours (`paint()` darkens vertices near the surface they sit on). No AO pass.
 - **Blob shadows, no shadow maps.** One instanced mesh of soft radial blobs; height above the ground widens and fades each blob. The same trick, in warm light, draws guidance glows.
-- **Instanced stones.** All stones are one draw, with per-instance squash matrices and brightness.
-- **One post pass.** A single merged effect: gentle tilt-shift depth of field (the near and far table edges soften), a warm grade, a soft vignette, then ACES tone mapping. DPR is capped at 2; MSAA is off at DPR 2.
-- **Budget.** About 45 draw calls in a full Fair Feeding scene (target under 80), one full-screen pass, zero network requests. The render loop stops whenever the game is unattended or hidden.
+- **Instanced stones.** One draw each for whole stones, halves, and quarters, with per-instance squash matrices and brightness. Halves and quarters are the whole pebble with flat cut faces, so a half visibly is half a stone. Pebbles are domed (thicker on top) with underside shading baked into vertex colours so they read as round from the camera.
+- **Camera.** 46° pitch with a 27° lens: low enough that pebbles show thickness and guests show faces, high enough to see every plate.
+- **One post pass.** ACES tone mapping, then a single merged effect in display space: gentle tilt-shift depth of field (the near and far table edges soften), an S-curve and saturation grade, a touch of warmth, a soft vignette. Grading after tone mapping matters: saturating linear HDR values pushed channels negative and turned highlights pink. DPR is capped at 2; MSAA is off at DPR 2.
+- **Lights.** A warm key from the front left, a cool fill from the right, and a warm rim from behind that lifts the guests off the table.
+- **Budget.** About 55 draw calls in a full Fair Feeding scene (target under 80), one full-screen pass, zero network requests. The render loop stops whenever the game is unattended or hidden.
 - **Geometry is built once per page** (`once()` in `view/models.tsx`), so swapping mats never stalls a frame.
 
 ## Motion rules
@@ -45,6 +49,7 @@ All colours live in `PALETTE` in [`view/clay.ts`](view/clay.ts).
 - **The beam** is a spring toward an honest tilt, slightly underdamped: it overshoots once and settles. It is silent when level.
 - **Characters** breathe and blink out of phase with each other, turn their heads toward what matters (clamped so a child still sees their face), hop when a stone lands on their plate (anticipation squash, jump, landing squash, wobble), munch together (lean back, three chomps, follow-through), and pop in with an overshoot.
 - **The bag** anticipates before it tips, lurches, then wobbles back; it slumps as it empties; on first open it wiggles and a stone peeks out.
+- **Sound is clay too.** Hits are dull thocks with a low body, touches are soft pats, stones fall into a cloth bag, the number voice is a soft marimba bar, guests go "nom", and a hop boings. A small procedural room reverb (a decaying-noise impulse) warms everything; nothing is recorded or fetched.
 - **Stop-motion boil** (per-frame surface jitter) is allowed only if it costs nothing in smoothness. It is off by default and not built yet.
 
 ## Guidance (style-independent)
@@ -53,4 +58,4 @@ All colours live in `PALETTE` in [`view/clay.ts`](view/clay.ts).
 
 ## Pebble Table against the jam quality bar
 
-Measured with the scripted Playwright walkthrough at 1180×820, DPR 2 (Apple M4, headless Chrome): 59.9 fps average, 99th-percentile frame 16.8 ms, one frame over 25 ms in about 57 seconds. About 45 draw calls, one post pass, no shadow maps, zero network requests. Not yet measured on a physical iPad.
+Measured with the scripted Playwright walkthrough at 1180×820, DPR 2 (Apple M4, headless Chrome) after the ten refinement passes in [`REFINEMENT.md`](REFINEMENT.md): 59.9 fps average, 99th-percentile frame 16.8 ms, one frame over 25 ms in about 57 seconds. About 55 draw calls, one post pass, no shadow maps, zero network requests. Not yet measured on a physical iPad.
