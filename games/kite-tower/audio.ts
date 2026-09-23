@@ -6,6 +6,12 @@ import type { PieceKind } from './pieces'
 // kite's wind, and a pentatonic run when the kite comes free. Nothing is
 // spoken. The context is created inside the child's first touch, suspended
 // while unattended or hidden, and rebuilt if WebKit leaves it interrupted.
+//
+// The expensive parts never land on a touch or a frame: the white noise (also
+// the room's impulse) is filled in small slices after load, and each piece's
+// tok is rendered once offline, so a landing plays one buffer through one gain
+// instead of building a dozen nodes. Until those are ready, the same sounds
+// are synthesized live.
 
 export type Doll = 0 | 1 | 2
 
@@ -35,6 +41,56 @@ const VOICE: Record<Doll, number> = { 0: 760, 1: 390, 2: 1020 }
 
 type ExtendedState = AudioContextState | 'interrupted'
 
+const BAKE_RATE = 48000
+const NOISE_SAMPLES = BAKE_RATE
+const NOISE_SLICE = 4096
+const IMPULSE_SECONDS = 0.45
+const TOK_SECONDS = 0.26
+/** A tok's loudness at full speed; quieter toks scale the baked one down. */
+const TOK_FULL = 0.39
+
+function voiceTone(context: BaseAudioContext, out: AudioNode, freq: number, at: number, duration: number, gain: number, type: OscillatorType = 'sine', glideTo?: number): void {
+  const osc = context.createOscillator()
+  osc.type = type
+  osc.frequency.setValueAtTime(freq, at)
+  if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, at + duration)
+  const env = context.createGain()
+  env.gain.setValueAtTime(0.0001, at)
+  env.gain.exponentialRampToValueAtTime(gain, at + 0.006)
+  env.gain.exponentialRampToValueAtTime(0.0001, at + duration)
+  osc.connect(env).connect(out)
+  osc.start(at)
+  osc.stop(at + duration + 0.02)
+}
+
+function voiceBurst(context: BaseAudioContext, out: AudioNode, noise: AudioBuffer, at: number, duration: number, freq: number, q: number, gain: number, type: BiquadFilterType = 'bandpass'): void {
+  const source = context.createBufferSource()
+  source.buffer = noise
+  const filter = context.createBiquadFilter()
+  filter.type = type
+  filter.frequency.value = freq
+  filter.Q.value = q
+  const env = context.createGain()
+  env.gain.setValueAtTime(0.0001, at)
+  env.gain.exponentialRampToValueAtTime(gain, at + 0.004)
+  env.gain.exponentialRampToValueAtTime(0.0001, at + duration)
+  source.connect(filter).connect(env).connect(out)
+  source.start(at, Math.random() * 0.5)
+  source.stop(at + duration + 0.02)
+}
+
+/** Three partials of a free wooden bar and a short knock, at full speed. */
+function voiceTok(context: BaseAudioContext, out: AudioNode, noise: AudioBuffer, base: number, at: number, loud: number): void {
+  BAR_MODES.forEach((ratio, i) => voiceTone(context, out, base * ratio, at, 0.22 / (i + 1), (0.34 * loud + 0.05) / (i * 1.6 + 1)))
+  voiceBurst(context, out, noise, at, 0.025, base * 3, 1.4, 0.18 * loud + 0.03)
+}
+
+function whiteNoise(length: number): Float32Array<ArrayBuffer> {
+  const data = new Float32Array(length)
+  for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1
+  return data
+}
+
 export class KiteAudio implements KiteSound {
   private context: AudioContext | null = null
   private master: GainNode | null = null
@@ -44,6 +100,48 @@ export class KiteAudio implements KiteSound {
   private active = true
   private lastTok = 0
   private toksThisBurst = 0
+  private noiseData: Float32Array<ArrayBuffer> | null = null
+  private baked: Partial<Record<PieceKind, AudioBuffer>> = {}
+  private timer: ReturnType<typeof setTimeout> | null = null
+  private disposed = false
+
+  constructor() {
+    if (typeof window === 'undefined') return
+    const data = new Float32Array(NOISE_SAMPLES)
+    let filled = 0
+    const slice = () => {
+      this.timer = null
+      if (this.disposed) return
+      const end = Math.min(NOISE_SAMPLES, filled + NOISE_SLICE)
+      for (let i = filled; i < end; i++) data[i] = Math.random() * 2 - 1
+      filled = end
+      if (filled < NOISE_SAMPLES) this.timer = setTimeout(slice, 0)
+      else {
+        this.noiseData = data
+        this.timer = setTimeout(() => void this.bake(), 0)
+      }
+    }
+    this.timer = setTimeout(slice, 0)
+  }
+
+  /** Renders each piece's tok once, off the main thread, so a landing is one buffer. */
+  private async bake(): Promise<void> {
+    this.timer = null
+    const Offline = window.OfflineAudioContext
+    if (!Offline || !this.noiseData) return
+    for (const kind of Object.keys(PITCH) as PieceKind[]) {
+      if (this.disposed) return
+      try {
+        const offline = new Offline(1, Math.round(BAKE_RATE * TOK_SECONDS), BAKE_RATE)
+        const noise = offline.createBuffer(1, this.noiseData.length, BAKE_RATE)
+        noise.copyToChannel(this.noiseData, 0)
+        voiceTok(offline, offline.destination, noise, PITCH[kind], 0, 1)
+        this.baked[kind] = await offline.startRendering()
+      } catch {
+        return
+      }
+    }
+  }
 
   unlock(): void {
     const state = this.context?.state as ExtendedState | undefined
@@ -63,6 +161,9 @@ export class KiteAudio implements KiteSound {
   }
 
   dispose(): void {
+    this.disposed = true
+    if (this.timer !== null) clearTimeout(this.timer)
+    this.timer = null
     this.teardown()
   }
 
@@ -76,16 +177,23 @@ export class KiteAudio implements KiteSound {
     compressor.threshold.value = -16
     master.connect(compressor).connect(context.destination)
 
-    const noise = context.createBuffer(1, context.sampleRate, context.sampleRate)
-    const data = noise.getChannelData(0)
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
+    const noiseData = this.noiseData ?? whiteNoise(NOISE_SAMPLES)
+    const noise = context.createBuffer(1, noiseData.length, BAKE_RATE)
+    noise.copyToChannel(noiseData, 0)
 
     // A small wooden room: a short procedural impulse, no recorded assets.
-    const length = Math.round(context.sampleRate * 0.45)
+    // The convolver needs the context's own rate; the two channels take
+    // different stretches of the noise.
+    const length = Math.min(Math.round(context.sampleRate * IMPULSE_SECONDS), noiseData.length >> 1)
     const impulse = context.createBuffer(2, length, context.sampleRate)
     for (let channel = 0; channel < 2; channel++) {
       const samples = impulse.getChannelData(channel)
-      for (let i = 0; i < length; i++) samples[i] = (Math.random() * 2 - 1) * (1 - i / length) ** 4
+      const offset = channel * (noiseData.length >> 1)
+      for (let i = 0; i < length; i++) {
+        const fade = 1 - i / length
+        const fade2 = fade * fade
+        samples[i] = noiseData[offset + i] * fade2 * fade2
+      }
     }
     const room = context.createConvolver()
     room.buffer = impulse
@@ -139,38 +247,12 @@ export class KiteAudio implements KiteSound {
 
   private tone(freq: number, at: number, duration: number, gain: number, type: OscillatorType = 'sine', glideTo?: number): void {
     const live = this.ready()
-    if (!live) return
-    const { context, master } = live
-    const osc = context.createOscillator()
-    osc.type = type
-    osc.frequency.setValueAtTime(freq, at)
-    if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, at + duration)
-    const env = context.createGain()
-    env.gain.setValueAtTime(0.0001, at)
-    env.gain.exponentialRampToValueAtTime(gain, at + 0.006)
-    env.gain.exponentialRampToValueAtTime(0.0001, at + duration)
-    osc.connect(env).connect(master)
-    osc.start(at)
-    osc.stop(at + duration + 0.02)
+    if (live) voiceTone(live.context, live.master, freq, at, duration, gain, type, glideTo)
   }
 
   private burst(at: number, duration: number, freq: number, q: number, gain: number, type: BiquadFilterType = 'bandpass'): void {
     const live = this.ready()
-    if (!live || !this.noise) return
-    const { context, master } = live
-    const source = context.createBufferSource()
-    source.buffer = this.noise
-    const filter = context.createBiquadFilter()
-    filter.type = type
-    filter.frequency.value = freq
-    filter.Q.value = q
-    const env = context.createGain()
-    env.gain.setValueAtTime(0.0001, at)
-    env.gain.exponentialRampToValueAtTime(gain, at + 0.004)
-    env.gain.exponentialRampToValueAtTime(0.0001, at + duration)
-    source.connect(filter).connect(env).connect(master)
-    source.start(at, Math.random() * 0.5)
-    source.stop(at + duration + 0.02)
+    if (live && this.noise) voiceBurst(live.context, live.master, this.noise, at, duration, freq, q, gain, type)
   }
 
   private now(): number {
@@ -183,10 +265,22 @@ export class KiteAudio implements KiteSound {
       if (++this.toksThisBurst > 3) return
     } else this.toksThisBurst = 0
     this.lastTok = at
+    const live = this.ready()
+    if (!live || !this.noise) return
     const loud = Math.min(1, speed / 6)
-    const base = PITCH[kind] * (0.97 + Math.random() * 0.06)
-    BAR_MODES.forEach((ratio, i) => this.tone(base * ratio, at, 0.22 / (i + 1), (0.34 * loud + 0.05) / (i * 1.6 + 1)))
-    this.burst(at, 0.025, base * 3, 1.4, 0.18 * loud + 0.03)
+    const detune = 0.97 + Math.random() * 0.06
+    const baked = this.baked[kind]
+    if (!baked) {
+      voiceTok(live.context, live.master, this.noise, PITCH[kind] * detune, at, loud)
+      return
+    }
+    const source = live.context.createBufferSource()
+    source.buffer = baked
+    source.playbackRate.value = detune
+    const gain = live.context.createGain()
+    gain.gain.value = (0.34 * loud + 0.05) / TOK_FULL
+    source.connect(gain).connect(live.master)
+    source.start(at)
   }
 
   pickup(): void {
