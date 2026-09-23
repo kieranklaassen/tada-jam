@@ -19,9 +19,9 @@ describe('TierController', () => {
 
   it('drops one tier after a sustained slow stretch, with a cooldown between drops', () => {
     const c = new TierController(0)
-    const changes = run(c, 40, 0, DROP_AFTER_S + 0.6)
+    const changes = run(c, 25, 0, DROP_AFTER_S + 0.6)
     expect(changes).toEqual([1])
-    run(c, 40, DROP_AFTER_S + 0.6, 30)
+    run(c, 25, DROP_AFTER_S + 0.6, 30)
     expect(c.tier).toBe(TIERS.length - 1)
   })
 
@@ -36,7 +36,7 @@ describe('TierController', () => {
   it('climbs back only after a long on-time stretch, at 60 Hz as well as 120 Hz', () => {
     for (const frameMs of [16.7, 8.3]) {
       const c = new TierController(0)
-      run(c, 40, 0, DROP_AFTER_S + 0.6)
+      run(c, 25, 0, DROP_AFTER_S + 0.6)
       expect(c.tier).toBe(1)
       run(c, frameMs, 10, RISE_AFTER_S - 1)
       expect(c.tier).toBe(1)
@@ -58,7 +58,7 @@ describe('TierController', () => {
     const c = new TierController(1)
     run(c, 16.7, 0, RISE_AFTER_S + 1)
     expect(c.tier).toBe(0)
-    run(c, 40, RISE_AFTER_S + 1, COOLDOWN_S + DROP_AFTER_S + 0.5)
+    run(c, 25, RISE_AFTER_S + 1, COOLDOWN_S + DROP_AFTER_S + 0.5)
     expect(c.tier).toBe(1)
     run(c, 16.7, 20, 120)
     expect(c.tier).toBe(1)
@@ -68,15 +68,27 @@ describe('TierController', () => {
     const c = new TierController(0)
     let t = 0
     for (let round = 0; round < 2; round++) {
-      run(c, 40, t, DROP_AFTER_S + 0.6)
+      run(c, 25, t, DROP_AFTER_S + 0.6)
       t += 20
       run(c, 10, t, RISE_AFTER_S + COOLDOWN_S + 1)
       t += 20
     }
-    run(c, 40, t, DROP_AFTER_S + 0.6)
+    run(c, 25, t, DROP_AFTER_S + 0.6)
     t += 20
     run(c, 10, t, 60)
     expect(c.tier).toBe(1)
+  })
+
+  it('steps a very slow device all the way down, two tiers at a time: 400 ms frames are slow, not a stall', () => {
+    const c = new TierController(0)
+    const changes = run(c, 400, 0, 12)
+    expect(changes[0]).toBe(2)
+    expect(c.tier).toBe(TIERS.length - 1)
+  })
+
+  it('drops one tier when only a little slow', () => {
+    const c = new TierController(0)
+    expect(run(c, 25, 0, DROP_AFTER_S + 0.6)).toEqual([1])
   })
 
   it('ignores pauses such as a tab switch', () => {
