@@ -16,7 +16,13 @@ export const PAN_REST_HEIGHT = 6
 export const PAN_WALL = 1.6
 export const BOWL_WALL = 4.8
 const STONE_THICKNESS = 0.64
-const MAX_SUBSTEPS = 6
+/** Catch-up substeps per frame by default. More would let one slow frame make the next one slower (a spiral), so an overloaded frame slows time slightly instead. */
+export const DEFAULT_MAX_SUBSTEPS = 3
+// Convex-convex collision cost grows with faces times edges, and a spill is
+// almost all stone-on-stone contacts, so colliders use few sides. The drawn
+// pebbles are separate meshes and stay round.
+const STONE_SIDES = 8
+const FIXTURE_SIDES = 10
 const FALL_LIMIT = -12
 
 export type Vec3 = { x: number; y: number; z: number }
@@ -57,6 +63,7 @@ export class TablePhysics {
   private readonly targets = new Map<CANNON.Body, Vec3>()
   private impacts: number[] = []
   private accumulator = 0
+  maxSubsteps = DEFAULT_MAX_SUBSTEPS
 
   constructor() {
     this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, GRAVITY, 0) })
@@ -122,7 +129,7 @@ export class TablePhysics {
       const body = new CANNON.Body({ mass: 0, type: CANNON.Body.KINEMATIC, material: this.woodMaterial })
       const at = to3(pan)
       body.position.set(at.x, PAN_REST_HEIGHT, at.z)
-      body.addShape(new CANNON.Cylinder(pan.r * UNIT, pan.r * UNIT, 0.6, 20), new CANNON.Vec3(0, -0.3, 0))
+      body.addShape(new CANNON.Cylinder(pan.r * UNIT, pan.r * UNIT, 0.6, FIXTURE_SIDES + 2), new CANNON.Vec3(0, -0.3, 0))
       this.ring(body, pan.r * UNIT, PAN_WALL, 0)
       this.world.addBody(body)
       this.pans.push(body)
@@ -150,7 +157,7 @@ export class TablePhysics {
     const body = new CANNON.Body({ mass: 0, material: this.woodMaterial })
     const at = to3(circle)
     body.position.set(at.x, height / 2, at.z)
-    body.addShape(new CANNON.Cylinder(circle.r * UNIT, circle.r * UNIT, height, 16))
+    body.addShape(new CANNON.Cylinder(circle.r * UNIT, circle.r * UNIT, height, FIXTURE_SIDES))
     this.world.addBody(body)
     this.fixtures.set(key, body)
   }
@@ -179,7 +186,7 @@ export class TablePhysics {
       sleepSpeedLimit: 1.2,
       sleepTimeLimit: 0.4,
     })
-    body.addShape(new CANNON.Cylinder(r, r, h, 12))
+    body.addShape(new CANNON.Cylinder(r, r, h, STONE_SIDES))
     const p = to3(at, options.y ?? h / 2)
     body.position.set(p.x, p.y, p.z)
     if (options.velocity) body.velocity.set(options.velocity.x, options.velocity.y, options.velocity.z)
@@ -268,7 +275,7 @@ export class TablePhysics {
     }
     if (!body) {
       body = new CANNON.Body({ mass: 0, type: CANNON.Body.KINEMATIC, material: this.woodMaterial })
-      body.addShape(new CANNON.Cylinder(4.2, 4.2, 3, 12))
+      body.addShape(new CANNON.Cylinder(4.2, 4.2, 3, STONE_SIDES))
       const start = to3(at, 1.5)
       body.position.set(start.x, start.y, start.z)
       this.world.addBody(body)
@@ -299,7 +306,7 @@ export class TablePhysics {
   }
 
   step(elapsed: number): StepReport {
-    this.accumulator = Math.min(this.accumulator + elapsed, STEP * MAX_SUBSTEPS)
+    this.accumulator = Math.min(this.accumulator + elapsed, STEP * this.maxSubsteps)
     while (this.accumulator >= STEP) {
       for (const [body, target] of this.targets) {
         body.velocity.set((target.x - body.position.x) / STEP, (target.y - body.position.y) / STEP, (target.z - body.position.z) / STEP)
