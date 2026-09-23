@@ -462,8 +462,9 @@ function guestShapes(species: Species): GuestShapes {
   }
 
   const eyes = [-1, 1].flatMap((side) => [
-    piece(sphere, PALETTE.eye, { position: [side * 1.35, 0, 2.95], scale: [0.62, 0.72, 0.5] }, { ground: null }),
-    piece(sphere, PALETTE.shine, { position: [side * 1.35 + 0.2, 0.25, 3.35], scale: 0.18 }, { ground: null }),
+    piece(sphere, PALETTE.eye, { position: [side * 1.42, 0, 2.9], scale: [0.78, 0.9, 0.55] }, { ground: null }),
+    piece(sphere, PALETTE.shine, { position: [side * 1.42 + 0.26, 0.32, 3.38], scale: 0.26 }, { ground: null }),
+    piece(sphere, PALETTE.shine, { position: [side * 1.42 - 0.2, -0.28, 3.4], scale: 0.1 }, { ground: null }),
   ])
   return {
     body: merge(body),
@@ -502,7 +503,7 @@ function prewarm(): void {
   }))
 }
 
-const GUEST_SIZE = 1.32
+const GUEST_SIZE = 1.5
 
 function easeOutBack(t: number): number {
   const c = 1.9
@@ -531,7 +532,7 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
   const arms = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
   const springs = useRef({ yaw: { x: 0, v: 0 }, pitch: { x: 0, v: 0 }, squash: { x: 0, v: 0 }, landedFrom: null as number | null })
   const facing = FEEDING.seats[seat].facing
-  const face = new THREE.Vector2(-facing.x, -facing.y + 0.9).normalize()
+  const face = new THREE.Vector2(-facing.x * 0.8, -facing.y + 1.5).normalize()
   const yaw = Math.atan2(face.x, face.y)
   const p = to3(at)
   const phase = seat * 1.37
@@ -566,7 +567,7 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
     if (pose.look) {
       const target = to3(pose.look)
       const worldAngle = Math.atan2(target.x - p.x, target.z - p.z)
-      lookYaw = THREE.MathUtils.clamp(Math.atan2(Math.sin(worldAngle - yaw), Math.cos(worldAngle - yaw)), -0.5, 0.5)
+      lookYaw = THREE.MathUtils.clamp(Math.atan2(Math.sin(worldAngle - yaw), Math.cos(worldAngle - yaw)), -0.38, 0.38)
     }
     springStep(s.yaw, lookYaw, dt, 60, 9)
 

@@ -72,7 +72,7 @@ export function gazeTarget(view: FeedingView, seat: number): number | null {
   return view.plates[seat] < view.plates[fullest] ? fullest : null
 }
 
-export const GUEST_RADIUS = 58
+export const GUEST_RADIUS = 64
 
 /** A free spot on a plate, spiralling out from the center and keeping clear of the guest. */
 export function freeSpotOnPlate(seat: number, occupied: readonly Point[], radius: number): Point {
