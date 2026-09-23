@@ -98,7 +98,7 @@ function quickestFrames(runs: readonly Run[]): number[] {
 
 A busy runner adds time to random frames (preemption, other suites' workers, garbage collection) and never removes any. The minimum of a measurement over repeats therefore settles on the real cost, and the maximum settles on the runner's worst stall; a guard on a maximum is a guard on the runner. A count does not involve the runner at all.
 
-A loop that runs until its wall-clock budget is spent is the extreme case, because timing it measures the budget. Shadow Lantern's controller spends `HINT_BUDGET_MS` (0.6 ms) of wall time in every searching frame by design, and the timed test that is still on `main` for it, "the idle hint search stays within its slice of the frame" in `games/shadow-lantern/controller.test.ts`, allows a 1 ms average, best of three. On this 4-core VM it read 0.477–0.498 ms and passed in five plain full-suite runs, then failed two of three runs under twelve busy loops (1.802 and 1.489 ms; the third read 0.710 ms). The counted slice test in `coverage.test.ts` already covers the slice itself without a clock; what the timed test adds is that the controller runs one slice a frame and little else, and a count of scored candidates per frame would check that too.
+A loop that runs until its wall-clock budget is spent is the extreme case, because timing it measures the budget. Shadow Lantern's controller spends `HINT_BUDGET_MS` (0.6 ms) of wall time in every searching frame by design. Its old timed test, "the idle hint search stays within its slice of the frame", allowed a 1 ms average, best of three. On this 4-core VM it read 0.477–0.498 ms and passed in five plain full-suite runs, then failed two of three runs under twelve busy loops (1.802 and 1.489 ms; the third read 0.710 ms). It is now counted: "the idle hint search runs one budgeted slice a frame until it has a hint" in `games/shadow-lantern/controller.test.ts` gives the search a fake clock that advances 0.05 ms per read and spies on `soloScore`. It asserts one slice per frame, a budget of at most 0.6 ms, at most 14 candidates scored per frame, a search spread over more than one frame, and a hint at the end.
 
 ## Prevention
 
@@ -118,12 +118,11 @@ kill $pids
 
 Still timed on `main`, with what they read on this VM idle and under twelve busy loops:
 
-- Shadow Lantern, "the idle hint search stays within its slice of the frame": fails under load, as measured in Why This Works. It is the one to replace, with the counted slice test or a count of scored candidates per frame.
 - Hillside Spring, the worst turn across 60 cluttered hillsides: each hillside's quickest of three turns of the same piece, then the largest across hillsides, which is the per-frame minimum pattern with three replays. 0.481–0.529 ms against 4 ms; it fails only if all three turns of one hillside stall.
 - Shadow Lantern drag (0.021–0.067 ms against 0.5), Hillside Spring busy frame (0.003–0.012 against 0.1), Frog Choir (0.010–0.014 against 0.15), Light Garden (0.011–0.055 against 0.15): best-of-five averages.
 - Felt Meadow, the median of 600 controller frames: 0.004–0.007 ms against 0.3. A median ignores stalls on fewer than half the frames.
 
-Bedtime Forest, Critter Clay and Cosy Scarf have no controller frame-budget test on `main`; their perf and tier tests cover the quality tiers and the governor, not a frame budget.
+Bedtime Forest, Critter Clay and Cosy Scarf each have a per-frame-minimum budget in `frameBudget.test.ts`: seven seeded replays of their busiest moment, with runs checked to be the same length and the heavy moment checked to have happened. On the Mac mini (M4) they read about 0.002 ms (an animal carried while the others roam), 0.020 ms (four fully built critters wandering while a part is carried) and 0.001 ms (a scarf given while a ball is carried), against budgets of 0.1, 0.2 and 0.1 ms on average and 1 ms for any frame. All ten timed test files on `main` passed three runs under thirty busy loops on the 10-core Mac mini.
 
 ## Related Issues
 

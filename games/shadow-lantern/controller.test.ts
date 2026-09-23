@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { TheatreController, type Projector } from './controller'
 import { bestHint, CoverageMeter, TAP_TURN, type HintMove, type Placed } from './coverage'
 import { CREATURE_ORDER } from './creatures'
@@ -456,18 +456,6 @@ describe('frame budget', () => {
     return times.reduce((a, b) => a + b, 0) / times.length
   }
 
-  function searchCost(): number {
-    const { ctrl } = theatre(fullSky(), true)
-    run(ctrl, 0.5)
-    const times: number[] = []
-    for (let i = 0; i < 240 && !ctrl.demo; i++) {
-      const t0 = performance.now()
-      ctrl.step(FRAME)
-      times.push(performance.now() - t0)
-    }
-    return times.reduce((a, b) => a + b, 0) / times.length
-  }
-
   it('dragging a card under a full sky costs the controller under 0.5 ms per frame on average', () => {
     dragCost(60)
     const best = Math.min(...Array.from({ length: 5 }, () => dragCost(180)))
@@ -475,10 +463,43 @@ describe('frame budget', () => {
     expect(best).toBeLessThan(0.5)
   })
 
-  it('the idle hint search stays within its slice of the frame', () => {
-    searchCost()
-    const best = Math.min(...Array.from({ length: 3 }, searchCost))
-    console.log(`search: best average ${best.toFixed(3)} ms`)
-    expect(best).toBeLessThan(1)
+  it('the idle hint search runs one budgeted slice a frame until it has a hint', () => {
+    // Counted, not timed: each read of the search's clock stands for one scored candidate's cost, so the slices
+    // are the same on every machine however busy it is.
+    const { ctrl } = theatre(fullSky(), true)
+    const continueSearch = CoverageMeter.prototype.continueSearch
+    const candidate = 0.05
+    let clock = 0
+    const budgets: number[] = []
+    const slices = vi.spyOn(CoverageMeter.prototype, 'continueSearch').mockImplementation(function (this: CoverageMeter, budgetMs: number) {
+      budgets.push(budgetMs)
+      return continueSearch.call(this, budgetMs, () => (clock += candidate))
+    })
+    const scoring = vi.spyOn(CoverageMeter.prototype as unknown as { soloScore: (...args: unknown[]) => number }, 'soloScore')
+    try {
+      run(ctrl, 0.5)
+      let searchFrames = 0
+      let mostSlices = 0
+      let mostScored = 0
+      for (let i = 0; i < 600 && !ctrl.demo; i++) {
+        const slicesBefore = slices.mock.calls.length
+        const scoredBefore = scoring.mock.calls.length
+        ctrl.step(FRAME)
+        const frameSlices = slices.mock.calls.length - slicesBefore
+        if (frameSlices > 0) searchFrames += 1
+        mostSlices = Math.max(mostSlices, frameSlices)
+        mostScored = Math.max(mostScored, scoring.mock.calls.length - scoredBefore)
+      }
+      expect(ctrl.demo, 'the search ended in a hint').not.toBeNull()
+      expect(searchFrames, 'the search was spread over frames').toBeGreaterThan(1)
+      expect(mostSlices, 'slices in one frame').toBe(1)
+      expect(Math.max(...budgets), 'slice budget (ms of a 16.7 ms frame)').toBeLessThanOrEqual(0.6)
+      // One read starts a slice, then one per scored candidate until the budget is spent; soloScore also runs once
+      // per shape for its baseline.
+      expect(mostScored, 'candidates scored in one frame').toBeLessThanOrEqual(Math.ceil(0.6 / candidate) + 2)
+    } finally {
+      slices.mockRestore()
+      scoring.mockRestore()
+    }
   })
 })
