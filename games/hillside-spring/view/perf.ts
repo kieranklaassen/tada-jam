@@ -8,10 +8,10 @@ import { LOWEST_TIER } from '../quality'
 export const BUFFER = 600
 
 export type JamPerf = {
-  cpuMs: number[]
-  tier: number
-  drawCalls: number
-  triangles: number
+  readonly cpuMs: number[]
+  readonly tier: number
+  readonly drawCalls: number
+  readonly triangles: number
   reset(): void
 }
 
