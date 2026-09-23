@@ -89,15 +89,38 @@ describe('TierGovernor', () => {
     expect(changes).toBe(1)
   })
 
-  it('an upgrade that fails becomes a ceiling for the session', () => {
+  it('an upgrade that fails is taken back within half a second and becomes a ceiling for the session', () => {
     const governor = new TierGovernor(1)
-    feed(governor, WINDOW * (GOOD_WINDOWS_TO_RAISE + 1), FRAME, 3)
+    let frames = 0
+    while (governor.tier === 1 && frames < WINDOW * 20) { governor.sample(FRAME, 3); frames += 1 }
     expect(governor.tier).toBe(0)
-    feed(governor, WINDOW * 3, 22, 3)
+    let slow = 0
+    while (governor.tier === 0 && slow < 200) { governor.sample(22, 3); slow += 1 }
     expect(governor.tier).toBe(1)
+    expect(slow * 22, 'ms spent at the failed tier').toBeLessThan(500)
     expect(governor.ceiling).toBe(1)
     feed(governor, WINDOW * 60, FRAME, 3)
     expect(governor.tier).toBe(1)
+  })
+
+  it('an upgrade that fails after probation waits twice as long before the next climb', () => {
+    const governor = new TierGovernor(1)
+    feed(governor, WINDOW * 20, FRAME, 3)
+    expect(governor.tier).toBe(0)
+    feed(governor, WINDOW * 2, 22, 3)
+    expect(governor.tier).toBe(1)
+    expect(governor.ceiling).toBe(0)
+    feed(governor, WINDOW * (GOOD_WINDOWS_TO_RAISE + 2), FRAME, 3)
+    expect(governor.tier, 'not back after the usual clean stretch').toBe(1)
+    feed(governor, WINDOW * (GOOD_WINDOWS_TO_RAISE + 2), FRAME, 3)
+    expect(governor.tier, 'back after twice that').toBe(0)
+  })
+
+  it('an upgrade that holds through probation stays, with no ceiling', () => {
+    const governor = new TierGovernor(1)
+    feed(governor, WINDOW * 20, FRAME, 3)
+    expect(governor.tier).toBe(0)
+    expect(governor.ceiling).toBe(0)
   })
 
   it('ignores stalls, and a pinned tier holds until released', () => {

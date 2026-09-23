@@ -163,6 +163,7 @@ export class OrreryScene {
   protected time = 0
   private halvesFade = 0
   private kidCache: ReturnType<OrreryScene['placeKid']> | null = null
+  private windowMaterials: [THREE.Mesh, THREE.Material, THREE.Material][] = []
   private m = new THREE.Matrix4()
 
   constructor(assets: OrreryAssets) {
@@ -358,6 +359,15 @@ export class OrreryScene {
 
     // The sun lamp: a bulb bright enough to bloom, on a turned brass stand.
     this.sun = new THREE.Mesh(track(new THREE.SphereGeometry(0.85, 64, 40)), track(new THREE.MeshBasicMaterial({ map: assets.sun, color: new THREE.Color(1.25, 1.05, 0.78), toneMapped: false })))
+    // The round window draws to the screen and the main view into the post target, and three builds a
+    // different program for each; a material drawn in both would switch programs twice a frame. So Earth, its
+    // clouds and air, the moon and the sun have a copy for the window, sharing their textures and uniforms.
+    for (const mesh of [this.earth, this.clouds, this.atmosphere, this.moon, this.sun]) {
+      const main = mesh.material as THREE.Material
+      const copy = track(main.clone())
+      copy.onBeforeCompile = main.onBeforeCompile
+      this.windowMaterials.push([mesh, main, copy])
+    }
     this.sun.position.set(SUN_X, PLANE_Y, 0)
     const glowTexture = assets.glow
     // Two glows: over the model it ignores depth so the tabletop never cuts it off;
@@ -701,6 +711,11 @@ export class OrreryScene {
     const ray = new THREE.Raycaster()
     ray.setFromCamera(ndc, this.camera)
     return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -PLANE_Y), new THREE.Vector3())
+  }
+
+  /** Swaps in the window's own copies of the materials both views draw, or back to the main view's. */
+  useWindowMaterials(on: boolean) {
+    for (const [mesh, main, copy] of this.windowMaterials) mesh.material = on ? copy : main
   }
 
   /** Points the round window's camera at its view (the child's sky, or the model from above) and returns it. */

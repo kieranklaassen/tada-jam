@@ -115,7 +115,7 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
   const api = useRef<{ setPov(on: boolean): void; setHalves(on: boolean): void; goTo(index: number): void; awake(on: boolean): void } | null>(null)
   const [pov, setPovState] = useState(false)
   const [halves, setHalvesState] = useState(false)
-  const [phase, setPhase] = useState(0)
+  const phaseRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   useEffect(() => {
     const root = rootRef.current!, canvas = canvasRef.current!, porthole = windowRef.current!
@@ -214,10 +214,13 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
       const index = phaseIndex(orrery.elongation)
       if (index !== currentPhase) {
         if (currentPhase !== -1) sound.bell(index)
-        currentPhase = index; setPhase(index)
+        // The strip's highlight moves by class, not by re-rendering every control on each phase.
+        phaseRefs.current[currentPhase]?.classList.remove('is-on')
+        phaseRefs.current[index]?.classList.add('is-on')
+        currentPhase = index
       }
       orrery.update(dt)
-      // Every program a tier could need is linked once, behind the opening curtain.
+      // A surface that mounted parked (0×0) warms up on its first real frame instead.
       if (!warmed && width) { warmed = true; orrery.prewarm(width, height) }
       frameCount += 1
       draw(frameCount % governor.settings.windowEvery === 0)
@@ -423,7 +426,7 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
 
       <div className="mp-strip mp-glass" role="group" aria-label="Moon phases">
         {Array.from({ length: PHASE_COUNT }, (_, i) => (
-          <button key={i} type="button" className={i === phase ? 'is-on' : ''} aria-label={`Phase ${i + 1} of ${PHASE_COUNT}`} onClick={() => api.current?.goTo(i)}>
+          <button key={i} ref={el => { phaseRefs.current[i] = el }} type="button" aria-label={`Phase ${i + 1} of ${PHASE_COUNT}`} onClick={() => api.current?.goTo(i)}>
             <MoonIcon elongation={phaseAngle(i)} size={40} />
           </button>
         ))}

@@ -182,19 +182,23 @@ export class Orrery extends OrreryScene {
   }
 
   /**
-   * Links every program a tier change could need, before the child can see it: the scene as each camera sees
-   * it, every pass of the full chain, and the window's disc. A tier change then never stalls on a shader
-   * compile, which would fail the very upgrade the governor just made.
+   * Uploads every texture and links every program a tier change could need, before the child can see it: the
+   * scene as each camera sees it, every pass of the full chain, and the window's disc. The first frames then
+   * run smooth, and a tier change never stalls on a shader compile, which would fail the very upgrade the
+   * governor just made.
    */
   prewarm(width: number, height: number) {
     const r = this.renderer
+    for (const texture of this.textures) r.initTexture(texture)
     // The main view renders into the post target; the window's views render to the screen. Three builds a
     // different variant of each material for each.
     r.setRenderTarget(this.composer.readBuffer)
     r.compile(this.scene, this.camera)
     r.setRenderTarget(null)
+    this.useWindowMaterials(true)
     r.compile(this.scene, this.eyeCamera)
     r.compile(this.scene, this.overheadCamera)
+    this.useWindowMaterials(false)
     const post = this.post
     for (const mode of ['full', 'bloom', 'plain'] as const) {
       this.post = mode
@@ -236,7 +240,9 @@ export class Orrery extends OrreryScene {
       r.setScissorTest(true)
       r.setScissor(0, 0, size, size)
       r.setViewport(0, 0, size, size)
+      this.useWindowMaterials(true)
       r.render(this.scene, this.aimWindow())
+      this.useWindowMaterials(false)
       r.copyFramebufferToTexture(this.windowTexture)
       r.setScissorTest(false)
       r.setViewport(0, 0, width, height)

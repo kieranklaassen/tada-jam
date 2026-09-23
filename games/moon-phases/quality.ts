@@ -6,8 +6,11 @@
 // 26 ms, drop a tier, and a window far off the pace drops two. Stepping up
 // needs six clean windows in which nine frames in ten did under 8 ms of work
 // (the game's own CPU time, not the interval, which a 60 Hz display pins at
-// 16.7 ms; the browser's own style and compositing come on top), and an
-// upgrade that fails within a few windows becomes a ceiling for the session.
+// 16.7 ms; the browser's own style and compositing come on top). A fresh
+// upgrade is on probation, judged on short windows: one bad window takes it
+// back at once and makes it a ceiling for the session, so a failed upgrade
+// costs well under a second; one that fails later doubles the wait before the
+// next climb.
 // Touch devices start one tier down while it learns. `?tier=N` pins a tier.
 
 /**
@@ -30,7 +33,7 @@ export const TIERS: readonly Tier[] = [
   { dpr: 2, post: 'full', windowEvery: 1, frosted: true },
   { dpr: 1.5, post: 'bloom', windowEvery: 2, frosted: true },
   { dpr: 1.25, post: 'plain', windowEvery: 2, frosted: false },
-  { dpr: 1, post: 'plain', windowEvery: 3, frosted: false },
+  { dpr: 1, post: 'plain', windowEvery: 4, frosted: false },
 ]
 export const LOWEST_TIER = TIERS.length - 1
 
@@ -58,8 +61,17 @@ const FAR_OFF_AVERAGE_MS = 34
 /** Per-frame work that nine frames in ten of a clean window must stay under to count towards a step up. */
 export const WORK_BUDGET_MS = 8
 export const GOOD_WINDOWS_TO_RAISE = 6
-/** A step down within this many windows of a step up means the upgrade failed. */
+/** A raised tier that fails later doubles the clean stretch the next climb needs, up to this. */
+const MAX_GOOD_WINDOWS_TO_RAISE = 48
+/** A step down within this many windows after probation still means the upgrade failed. */
 const FAILED_RAISE_WINDOWS = 8
+/** A fresh upgrade is judged on windows this short, this many times; one bad window takes it back. */
+const PROBATION_WINDOW = 12
+const PROBATION_WINDOW_MS = 300
+const PROBATION_WINDOWS = 8
+/** A fresh upgrade settles only briefly: every tier's programs are compiled ahead, so only a resize costs a frame. */
+const PROBATION_SETTLE_FRAMES = 4
+const PROBATION_SETTLE_MS = 100
 /** A gap this long is a stall (a hidden tab, a paused debugger), not a slow device. */
 export const STALL_MS = 1000
 
@@ -92,6 +104,11 @@ export class TierGovernor {
   private badWindows = 0
   private goodWindows = 0
   private settling = true
+  private settleFrames = SETTLE_FRAMES
+  private settleMs = SETTLE_MS
+  private probation = 0
+  private goodNeeded = GOOD_WINDOWS_TO_RAISE
+  private raisedTo = -1
   private windows = 0
   private lastRaise = -Infinity
 
@@ -108,7 +125,7 @@ export class TierGovernor {
   force(tier: number | null): void {
     this.forced = tier !== null
     this.clear()
-    this.settling = true
+    this.settle(false)
     if (tier !== null) this.tier = clampTier(tier)
   }
 
@@ -121,13 +138,15 @@ export class TierGovernor {
     if (intervalMs > DROPPED_FRAME_MS) this.dropped += 1
     if (intervalMs > this.longest) this.longest = intervalMs
     if (this.settling) {
-      if (this.frames >= SETTLE_FRAMES || this.elapsed >= SETTLE_MS) {
+      if (this.frames >= this.settleFrames || this.elapsed >= this.settleMs) {
         this.settling = false
         this.clear()
       }
       return false
     }
-    if (this.frames < WINDOW && !(this.frames >= MIN_WINDOW_FRAMES && this.elapsed >= WINDOW_SECONDS * 1000)) return false
+    const size = this.probation > 0 ? PROBATION_WINDOW : WINDOW
+    const closeMs = this.probation > 0 ? PROBATION_WINDOW_MS : WINDOW_SECONDS * 1000
+    if (this.frames < size && !(this.frames >= MIN_WINDOW_FRAMES && this.elapsed >= closeMs)) return false
     return this.judge()
   }
 
@@ -142,21 +161,29 @@ export class TierGovernor {
     this.clear()
     this.windows += 1
     if (this.forced) return false
+    if (this.probation > 0) {
+      this.probation -= 1
+      if (dropped / frames > BAD_DROP_RATIO) {
+        this.probation = 0
+        this.ceiling = Math.max(this.ceiling, this.tier + 1)
+        return this.change(this.tier + 1)
+      }
+      if (this.probation === 0) this.lastRaise = this.windows
+      return false
+    }
     if (dropped / frames > BAD_DROP_RATIO) {
       this.goodWindows = 0
       this.badWindows += 1
       if ((this.badWindows >= 2 || average > TERRIBLE_AVERAGE_MS) && this.tier < LOWEST_TIER) {
         if (this.windows - this.lastRaise <= FAILED_RAISE_WINDOWS) this.ceiling = Math.max(this.ceiling, this.tier + 1)
+        if (this.tier === this.raisedTo) this.goodNeeded = Math.min(this.goodNeeded * 2, MAX_GOOD_WINDOWS_TO_RAISE)
         return this.change(this.tier + (average > FAR_OFF_AVERAGE_MS ? 2 : 1))
       }
       return false
     }
     this.badWindows = 0
     this.goodWindows = dropped === 0 && work < WORK_BUDGET_MS ? this.goodWindows + 1 : 0
-    if (this.goodWindows >= GOOD_WINDOWS_TO_RAISE && this.tier > this.ceiling) {
-      this.lastRaise = this.windows
-      return this.change(this.tier - 1)
-    }
+    if (this.goodWindows >= this.goodNeeded && this.tier > this.ceiling) return this.change(this.tier - 1, true)
     return false
   }
 
@@ -167,13 +194,21 @@ export class TierGovernor {
     this.longest = 0
   }
 
-  private change(tier: number): boolean {
+  private change(tier: number, raise = false): boolean {
     this.tier = clampTier(tier)
     this.clear()
     this.badWindows = 0
     this.goodWindows = 0
-    this.settling = true
+    this.settle(raise)
+    this.probation = raise ? PROBATION_WINDOWS : 0
+    if (raise) this.raisedTo = this.tier
     return true
+  }
+
+  private settle(afterRaise: boolean): void {
+    this.settling = true
+    this.settleFrames = afterRaise ? PROBATION_SETTLE_FRAMES : SETTLE_FRAMES
+    this.settleMs = afterRaise ? PROBATION_SETTLE_MS : SETTLE_MS
   }
 }
 
