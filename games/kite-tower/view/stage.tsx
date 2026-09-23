@@ -55,7 +55,9 @@ function Lights() {
 
 /**
  * The warm grade and vignette: one full-screen triangle multiplied over the
- * frame (no render target), drawn last. Only on the top tiers.
+ * frame (no render target), drawn last. It stays on every tier: without it
+ * the corners go bright and cool and the lowest tier stops looking like the
+ * room, and at DPR 1 it costs about 3% of a software-GL frame.
  */
 function Grade() {
   const material = useMemo(
@@ -266,7 +268,7 @@ function TierProvider({
     <TierContext.Provider value={settings}>
       <FrameLoop perf={perf} running={running} restingFor={restingFor} onTier={setTier} />
       {children}
-      {settings.grade && <Grade />}
+      <Grade />
     </TierContext.Provider>
   )
 }

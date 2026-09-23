@@ -95,6 +95,23 @@ describe('KiteController', () => {
     expect(last.pieces[0]).toMatchObject({ id: 0, tray: false })
   })
 
+  it('everyone watches a piece the child lets go of land, then looks back', () => {
+    const { game } = make(defaultState(5))
+    run(game, 0.2)
+    game.pointerDown(1, slotScreen(0), 0)
+    game.pointerMove(1, { x: 0, y: 40 })
+    game.pointerMove(1, { x: -1, y: 2 })
+    run(game, 0.5)
+    game.pointerUp(1, { x: -1, y: 2 }, 900)
+    run(game, 0.4)
+    const piece = game.physics.body(0)!.position.x
+    expect(Math.abs(game.hero.look.x - piece)).toBeLessThan(0.05)
+    for (const w of game.watchers) expect(Math.abs(w.look.x - piece)).toBeLessThan(0.05)
+    run(game, 1.5)
+    expect(Math.abs(game.hero.look.x - piece)).toBeGreaterThan(1)
+    for (const w of game.watchers) expect(Math.abs(w.look.x - piece)).toBeGreaterThan(1)
+  })
+
   it('a touch unlocks the sound on the way down and again on the way up, where a finger counts as a gesture', () => {
     const { game, sound } = make(defaultState(5))
     game.pointerDown(1, { x: 0, y: 40 }, 0)
@@ -150,6 +167,18 @@ describe('KiteController', () => {
     expect(game.kite.position.x).toBeCloseTo(PERCHES[1].kite.x, 5)
     expect(game.hero.y).toBeCloseTo(0, 5)
     for (const name of ['climb', 'freed', 'wind', 'land']) expect(sound.calls).toContain(name)
+  })
+
+  it('the kite catches on its new perch with a shiver and a rustle', () => {
+    const perch = PERCHES[0]
+    const { game, sound } = make(withPieces([{ id: 0, tray: false, x: perch.x - 0.7, y: 0.5, a: 0 }], 0))
+    let driftEnded = -1
+    run(game, 16, () => {
+      if (driftEnded < 0 && game.state.perch === 1 && game.kite.mode === 'perched') driftEnded = game.t
+    })
+    expect(driftEnded).toBeGreaterThan(0)
+    expect(game.kite.flutterAt).toBeCloseTo(driftEnded, 5)
+    expect(sound.calls.lastIndexOf('flutter')).toBeGreaterThan(sound.calls.lastIndexOf('land'))
   })
 
   it('a bare rug: the doll stays and reaches up', () => {

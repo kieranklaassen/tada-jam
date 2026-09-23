@@ -9,9 +9,9 @@ function feed(governor: TierGovernor, frames: number, intervalMs: number, workMs
 describe('tiers', () => {
   it('step DPR down from 2 to 1 and cut effects on the way', () => {
     expect(TIERS.map((t) => t.dpr)).toEqual([2, 1.5, 1.25, 1])
-    expect(TIERS[0].grade).toBe(true)
-    expect(TIERS[LOWEST_TIER].grade).toBe(false)
+    expect(TIERS[0].motes).toBeGreaterThan(0)
     expect(TIERS[LOWEST_TIER].motes).toBe(0)
+    expect(TIERS[LOWEST_TIER].tail).toBeLessThan(TIERS[0].tail)
   })
 
   it('?tier=N pins a tier, anything else is automatic', () => {
