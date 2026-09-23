@@ -45,6 +45,9 @@ export type Creature = {
   to: Point
   /** World time of its last playful nudge. */
   nudgeAt: number
+  /** World time a child last poked it, or -Infinity, and which of its poke answers that was. */
+  pokeAt: number
+  pokeVariant: number
 }
 
 export function makeCreature(index: number, kind: CreatureKind, wants: Mask, radius: number, bed: Point): Creature {
@@ -64,6 +67,8 @@ export function makeCreature(index: number, kind: CreatureKind, wants: Mask, rad
     from: { ...bed },
     to: { ...bed },
     nudgeAt: -Infinity,
+    pokeAt: -Infinity,
+    pokeVariant: 0,
   }
 }
 

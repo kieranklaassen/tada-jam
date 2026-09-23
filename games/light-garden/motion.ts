@@ -2,7 +2,7 @@ import { WAKING_SECONDS, type Creature } from './creatures'
 import type { CreatureKind } from './layout'
 
 // Four motion personalities. Each creature has its own routine for sleeping,
-// stirring, waking, playing, getting drowsy, wandering, and being carried,
+// stirring, waking, playing, getting drowsy, wandering, being poked, and being carried,
 // with its own timing and curves. None is another's routine with different
 // numbers:
 //   jellyfish  pulses: a sharp squeeze and a slow relax lift it; it sinks between
@@ -41,9 +41,12 @@ export function makePose(): Pose {
   return { dx: 0, dy: 0, alt: 0, heading: 0, roll: 0, pitch: 0, squash: 1, stretch: 1, eyes: 0, glow: 0.15, a: 0, b: 0, c: 0 }
 }
 
-export type Carry = { held: boolean; heldFor: number }
+/** `want` 0..1: how strongly this sleeper is the scene's one obvious want. */
+export type Carry = { held: boolean; heldFor: number; want: number }
 
 const SLEEP_HEADING: Readonly<Record<CreatureKind, number>> = { moth: 1.9, fish: 2.75, snail: 0.55, jelly: Math.PI / 2 }
+/** The want turns toward the child, three-quarters on so its silhouette still reads. */
+const WANT_HEADING: Readonly<Record<CreatureKind, number>> = { moth: Math.PI / 2, fish: 2.2, snail: 1.05, jelly: Math.PI / 2 }
 const TAU = Math.PI * 2
 
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t))
@@ -417,6 +420,214 @@ function fish(creature: Creature, now: number, carry: Carry, out: Pose): void {
   }
 }
 
+// --- the want ----------------------------------------------------------------
+
+/** 0..1 through the current gesture (`length` seconds, every `period`), or -1 between gestures. */
+function beat(now: number, period: number, length: number): number {
+  const age = frac(now / period) * period
+  return age < length ? age / length : -1
+}
+
+/**
+ * The sleeper the next act is for dreams out loud, each in its own way:
+ * the moth sniffs for light, the fish swims in its sleep, the snail peeks
+ * out one stalk, and the jellyfish floats up without waking.
+ */
+function wanting(kind: CreatureKind, now: number, want: number, out: Pose): void {
+  let turn = WANT_HEADING[kind] - out.heading
+  turn -= TAU * Math.round(turn / TAU)
+  out.heading += turn * want
+  out.glow += 0.1 * want
+  switch (kind) {
+    case 'moth': {
+      const p = beat(now, 3.4, 1.8)
+      if (p < 0) break
+      const k = smooth(p / 0.3) * (1 - smooth((p - 0.7) / 0.3))
+      out.c += 0.6 * k * want
+      out.a += 0.25 * k * want
+      break
+    }
+    case 'fish': {
+      const p = beat(now, 2.9, 1.2)
+      if (p < 0) break
+      const k = Math.sin(p * Math.PI)
+      out.a += 0.45 * Math.sin(p * 2 * TAU) * k * want
+      out.b += 0.3 * k * want
+      out.roll -= 0.15 * k * want
+      break
+    }
+    case 'snail': {
+      const p = beat(now, 4.6, 2.4)
+      if (p < 0) break
+      const k = elasticOut(p / 0.35) * (1 - smooth((p - 0.65) / 0.35))
+      out.b = Math.max(out.b, 0.6 * k * want)
+      out.a += 0.2 * k * want
+      break
+    }
+    case 'jelly': {
+      const p = beat(now, 3.9, 2)
+      if (p < 0) break
+      const k = Math.sin(p * Math.PI)
+      out.a += 0.3 * jellyPulse(p) * want
+      out.alt += 0.8 * k * want
+      out.c -= 0.3 * k * want
+      break
+    }
+    default: {
+      const never: never = kind
+      return never
+    }
+  }
+}
+
+// --- a child's poke ----------------------------------------------------------
+
+/**
+ * A poke is the child's own touch, so it gets answers no game event uses
+ * (not the light-driven stir, not the playful nudge). Two per creature, taken
+ * in turn so the same one never plays twice running, asleep or awake.
+ */
+export const POKES: Readonly<Record<CreatureKind, readonly { name: string; seconds: number }[]>> = {
+  moth: [
+    { name: 'flurry', seconds: 0.9 },
+    { name: 'hide-and-fan', seconds: 1.3 },
+  ],
+  fish: [
+    { name: 'dodge', seconds: 0.8 },
+    { name: 'twirl', seconds: 1 },
+  ],
+  snail: [
+    { name: 'tuck', seconds: 1.8 },
+    { name: 'who-is-there', seconds: 1.6 },
+  ],
+  jelly: [
+    { name: 'boing', seconds: 1.3 },
+    { name: 'sparkle', seconds: 1.1 },
+  ],
+}
+
+/** Record a poke at `now` and return which answer it gets. */
+export function poke(creature: Creature, now: number): number {
+  creature.pokeVariant = creature.pokeAt === -Infinity ? 0 : (creature.pokeVariant + 1) % POKES[creature.kind].length
+  creature.pokeAt = now
+  return creature.pokeVariant
+}
+
+/** Rises over the first `attack` of the gesture, then eases away by its end. */
+const swell = (p: number, attack: number) => smooth(p / attack) * (1 - smooth((p - attack) / (1 - attack)))
+
+function poked(creature: Creature, now: number, out: Pose): void {
+  const answer = POKES[creature.kind][creature.pokeVariant]
+  const age = now - creature.pokeAt
+  if (!answer || age < 0 || age > answer.seconds) return
+  const p = age / answer.seconds
+  const first = creature.pokeVariant === 0
+  switch (creature.kind) {
+    case 'moth': {
+      if (first) {
+        // Flurry: pops up in a blur of wings, antennae high, loops once, and flops back down.
+        const k = swell(p, 0.15)
+        out.alt += 4 * k
+        out.dx += Math.sin(p * TAU) * 3.5 * k
+        out.dy -= Math.sin(p * Math.PI) * 3.5 * k
+        out.a += (0.95 - out.a) * k
+        out.b = out.b * (1 - k) + Math.sin(now * TAU * 20) * 0.7 * k
+        out.c += (1 - out.c) * k
+        out.eyes = Math.max(out.eyes, 0.7 * k)
+        out.glow += 0.25 * k
+      } else {
+        // Hide-and-fan: folds its wings down over itself, then fans them wide, twice.
+        const hide = smooth(p / 0.08) * (1 - smooth((p - 0.26) / 0.1))
+        const fan = smooth((p - 0.3) / 0.12) * (1 - smooth((p - 0.72) / 0.28))
+        out.a = out.a * (1 - hide) + (1 - out.a) * fan
+        out.b = out.b * (1 - Math.max(hide, fan)) - 0.45 * hide + 0.4 * Math.sin((p - 0.3) * TAU * 2.2) * fan
+        out.c += -0.5 * hide + 0.4 * fan
+        out.squash -= 0.12 * hide
+        out.eyes = Math.max(out.eyes, 0.6 * fan)
+      }
+      break
+    }
+    case 'fish': {
+      if (first) {
+        // Dodge: curls into a C and darts sideways, then drifts back.
+        const curl = smooth(p / 0.1) * (1 - smooth((p - 0.12) / 0.12))
+        const dodge = easeOut((p - 0.12) / 0.25) * (1 - smooth((p - 0.45) / 0.55))
+        const side = out.heading + Math.PI / 2
+        out.c += 1.3 * curl - 0.5 * dodge
+        out.dx += Math.cos(side) * 6 * dodge
+        out.dy += Math.sin(side) * 6 * dodge
+        out.heading += 0.5 * dodge
+        out.a = out.a * (1 - dodge) + Math.sin(now * 44) * 0.9 * dodge
+        out.roll *= 1 - Math.max(curl, dodge)
+        out.eyes = Math.max(out.eyes, Math.max(curl, dodge))
+      } else {
+        // Twirl: spins once round on the spot, fins out, and settles.
+        const k = Math.sin(p * Math.PI)
+        out.heading += TAU * smooth(p)
+        out.roll += 0.35 * k
+        out.alt += 0.7 * k
+        out.b += 0.5 * k
+        out.a += Math.sin(now * 30) * 0.5 * k
+        out.eyes = Math.max(out.eyes, 0.8 * k)
+      }
+      break
+    }
+    case 'snail': {
+      if (first) {
+        // Tuck: everything pulls in at once and the shell scoots back and rocks, then it slowly oozes out.
+        const hide = smooth(p / 0.07) * (1 - smooth((p - 0.45) / 0.55))
+        const scoot = easeOut(p / 0.1) * (1 - smooth((p - 0.3) / 0.7))
+        out.a *= 1 - hide
+        out.b *= 1 - hide
+        out.c *= 1 - hide
+        out.eyes *= 1 - hide
+        out.dx -= Math.cos(out.heading) * 1.3 * scoot
+        out.dy -= Math.sin(out.heading) * 1.3 * scoot
+        out.roll += 0.32 * Math.sin(age * 6) * hide
+        out.pitch += 0.12 * hide
+        out.squash -= 0.1 * hide
+      } else {
+        // Who-is-there: rears up, both stalks spring out and look around, then back.
+        const look = elasticOut(p / 0.3) * (1 - smooth((p - 0.7) / 0.3))
+        const late = elasticOut((p - 0.06) / 0.3) * (1 - smooth((p - 0.7) / 0.3))
+        out.a = Math.max(out.a, 0.55 * look)
+        out.b = Math.max(out.b, 1.25 * look)
+        out.c = Math.max(out.c, 1.25 * late)
+        out.pitch -= 0.2 * look
+        out.stretch += 0.12 * look
+        out.heading += 0.3 * Math.sin(age * 5) * look
+        out.eyes = Math.max(out.eyes, look)
+      }
+      break
+    }
+    case 'jelly': {
+      if (first) {
+        // Boing: squashes flat, springs up high, and wobbles as it floats back.
+        const flat = smooth(p / 0.1) * (1 - smooth((p - 0.1) / 0.08))
+        const after = Math.max(0, age - 0.16 * answer.seconds)
+        const hop = p < 0.16 ? 0 : Math.sin(Math.min(1, (p - 0.16) / 0.6) * Math.PI)
+        const wobble = p < 0.16 ? 0 : Math.sin(after * 20) * Math.exp(-after * 4)
+        out.squash += -0.4 * flat + 0.16 * wobble
+        out.alt += -0.4 * flat + 4.8 * hop
+        out.a += 0.5 * flat + 0.25 * hop
+        out.c += 0.7 * hop
+      } else {
+        // Sparkle: a bright flash, tentacles splay and shimmy.
+        const k = swell(p, 0.15)
+        out.glow += 0.6 * k
+        out.c += 0.9 * k
+        out.roll += 0.25 * Math.sin(age * 16) * k
+        out.a += 0.3 * Math.sin(age * 9) * k
+      }
+      break
+    }
+    default: {
+      const never: never = creature.kind
+      return never
+    }
+  }
+}
+
 /** Write the creature's pose at world time `now` into `out` (no allocation). */
 export function poseCreature(creature: Creature, now: number, carry: Carry, out: Pose): Pose {
   reset(out, creature.kind)
@@ -438,6 +649,8 @@ export function poseCreature(creature: Creature, now: number, carry: Carry, out:
       return never
     }
   }
+  if (creature.phase === 'asleep' && !carry.held && carry.want > 0.001) wanting(creature.kind, now, carry.want, out)
+  if (!carry.held) poked(creature, now, out)
   return out
 }
 
