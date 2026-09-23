@@ -30,7 +30,7 @@ export const PALETTE = {
   pine: '#3f6a5a',
   pineFar: '#7c998f',
   blanket: '#2f6770',
-  blanketRib: '#285a62',
+  blanketRib: '#4a8a8f',
   loom: '#c9955a',
   loomDark: '#a8763f',
   backboard: '#554a63',

@@ -20,6 +20,9 @@ const FLAKES = 220
 const THREAD_BEADS = 40
 /** How far behind a yarn ball its glow ring sits: just past the basket's back row (`ballRest`). */
 const GLOW_BACK = BALL_RADIUS * 2.2
+/** A carried ball stretches 1 % per 5 units a second along its path, up to a fifth longer. */
+const STRETCH_PER_SPEED = 0.002
+const MAX_STRETCH = 0.2
 
 /** A per-instance fade (`aFade`) multiplied into alpha: one draw call, many opacities. */
 function withFade(material: THREE.MeshBasicMaterial, key: string): void {
@@ -290,14 +293,27 @@ export class Props {
       const suggested = g.glowBalls && ball.colour === g.glowBall
       if (suggested) this.ballGlow.index.value = i
       const swell = suggested ? 1 + 0.08 * g.frame.glow : 1
-      this.s.set((1 + squash * 0.12) * swell, (1 - squash * 0.2) * swell, (1 + squash * 0.12) * swell)
+      // The spin turns the wound yarn; the squash and the carry's stretch act in the world's axes, so a landing flattens the ball straight down however it has turned.
       this.e.set(ball.spin, i * 1.3, i * 0.7)
-      this.q.setFromEuler(this.e)
-      this.p.set(ball.pos.x, ball.pos.y - squash * BALL_RADIUS * 0.2, ball.pos.z)
-      this.m.compose(this.p, this.q, this.s)
+      this.m.makeRotationFromEuler(this.e)
+      this.m.premultiply(this.n.makeScale((1 + squash * 0.12) * swell, (1 - squash * 0.2) * swell, (1 + squash * 0.12) * swell))
+      this.stretchAlong(ball.carry.x.v, ball.carry.y.v)
+      this.m.setPosition(ball.pos.x, ball.pos.y - squash * BALL_RADIUS * 0.2, ball.pos.z)
       this.balls.setMatrixAt(i, this.m)
     }
     this.balls.instanceMatrix.needsUpdate = true
+  }
+
+  /** Stretches `m` along a carried ball's path in the screen plane, keeping its volume: the faster it moves, the longer it pulls. */
+  private stretchAlong(vx: number, vy: number): void {
+    const speed = Math.hypot(vx, vy)
+    if (speed < 2) return
+    const a = 1 + Math.min(MAX_STRETCH, speed * STRETCH_PER_SPEED)
+    const b = 1 / Math.sqrt(a)
+    const c = vx / speed
+    const s = vy / speed
+    const shear = (a - b) * c * s
+    this.m.premultiply(this.n.set(a * c * c + b * s * s, shear, 0, 0, shear, a * s * s + b * c * c, 0, 0, 0, 0, b, 0, 0, 0, 0, 1))
   }
 
   /** The stitch being knitted, in world space, from the loom scarf's hang frame. */

@@ -9,6 +9,17 @@ import { PALETTE, type YarnMaterials } from './yarn'
 // wooden loom with a plain felt backboard (the calmest, darkest surface in
 // the scene, so the scarf's colours read at a glance), and the basket.
 
+/**
+ * The play blanket: from in front of the loom, draped over the foot of the
+ * slope, with a round rib all along its hem. Its back hem follows the hill's
+ * swell, so the blanket meets the snow as a soft knitted edge, not a ruled line.
+ */
+const BLANKET = { back: -28, front: 80, halfWidth: 150, rib: 4, lift: 0.2, ridge: 1 }
+/** How far the snow is pressed down under the blanket, so the coarse snow mesh never pokes through where the blanket bends up the slope. */
+const BLANKET_PRESS = 0.6
+
+const underBlanket = (x: number, z: number) => Math.abs(x) <= BLANKET.halfWidth && z > BLANKET.back && z < BLANKET.front + 3
+
 /** Extra rise of the far hills beyond the slope the animals stand on. */
 function farRise(x: number, z: number): number {
   const far = THREE.MathUtils.smoothstep(-z, 110, 215)
@@ -37,7 +48,7 @@ function terrain(): THREE.BufferGeometry {
   for (let i = 0; i < position.count; i++) {
     const x = position.getX(i)
     const z = position.getZ(i)
-    position.setY(i, landHeight(x, z))
+    position.setY(i, landHeight(x, z) - (underBlanket(x, z) ? BLANKET_PRESS : 0))
     uv.setXY(i, x / 3.4, z / 4.6)
     const far = THREE.MathUtils.smoothstep(-z, 40, 230)
     c.copy(snow).lerp(hillFar, far * 0.75)
@@ -151,34 +162,41 @@ function pineGeometry(): THREE.BufferGeometry {
 
 function blanketGeometry(): THREE.BufferGeometry {
   return once('cosy-blanket', () => {
-    const shape = (x0: number, z0: number, x1: number, z1: number, r: number) => {
-      const s = new THREE.Shape()
-      s.moveTo(x0 + r, z0)
-      s.lineTo(x1 - r, z0)
-      s.quadraticCurveTo(x1, z0, x1, z0 + r)
-      s.lineTo(x1, z1 - r)
-      s.quadraticCurveTo(x1, z1, x1 - r, z1)
-      s.lineTo(x0 + r, z1)
-      s.quadraticCurveTo(x0, z1, x0, z1 - r)
-      s.lineTo(x0, z0 + r)
-      s.quadraticCurveTo(x0, z0, x0 + r, z0)
-      return s
+    const { back, front, halfWidth, rib } = BLANKET
+    // Fine steps across the hem, so its rib is round; broad ones across the middle.
+    const steps = (from: number, to: number, broad: number) => {
+      const out: number[] = []
+      for (let at = from; at < from + rib; at += 0.5) out.push(at)
+      for (let at = from + rib; at < to - rib; at += broad) out.push(at)
+      for (let at = to - rib; at <= to + 1e-6; at += 0.5) out.push(at)
+      return out
     }
-    // Shapes are drawn in (x, -z) so that laying them flat faces them up.
-    const flat = (geometry: THREE.ShapeGeometry, color: string, y: number, scaleU: number, scaleV: number) => {
-      geometry.rotateX(-Math.PI / 2)
-      geometry.translate(0, y, 0)
-      const position = geometry.attributes.position
-      const uv = geometry.attributes.uv
-      for (let i = 0; i < position.count; i++) uv.setXY(i, position.getX(i) / scaleU, position.getZ(i) / scaleV)
-      return part(geometry, { color, underside: 0 })
+    const xs = steps(-halfWidth, halfWidth, 5)
+    const zs = steps(back, front, 3)
+    const hem = (x: number, z: number) => Math.min(halfWidth - Math.abs(x), z - back, front - z)
+    const positions: number[] = []
+    const uvs: number[] = []
+    for (const z of zs) {
+      for (const x of xs) {
+        const d = hem(x, z)
+        positions.push(x, groundY(x, z) + BLANKET.lift + (d < rib ? BLANKET.ridge * Math.sin((Math.PI * d) / rib) : 0), z)
+        uvs.push(x / 2.6, z / 1.9)
+      }
     }
-    const outer = shape(-150, -80, 150, 15, 9)
-    const inner = shape(-146, -76, 146, 11, 6)
-    const border = new THREE.Shape(outer.getPoints(12))
-    border.holes.push(new THREE.Path(inner.getPoints(12).reverse()))
-    // The base runs under the rib border too: the border is raised, and a gap between them shows the snow.
-    return merge([flat(new THREE.ShapeGeometry(outer, 12), PALETTE.blanket, 0.2, 2.6, 1.9), flat(new THREE.ShapeGeometry(border, 12), PALETTE.blanketRib, 0.32, 1.2, 2.4)])
+    const index: number[] = []
+    const n = xs.length
+    for (let j = 0; j < zs.length - 1; j++) {
+      for (let i = 0; i < n - 1; i++) {
+        const a = j * n + i
+        index.push(a, a + n, a + 1, a + 1, a + n, a + n + 1)
+      }
+    }
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+    g.setIndex(index)
+    g.computeVertexNormals()
+    return merge([part(g, { color: (p) => (hem(p.x, p.z) < rib - 0.25 ? PALETTE.blanketRib : PALETTE.blanket), underside: 0 })])
   })
 }
 
@@ -280,11 +298,14 @@ export type World = {
 
 export function buildWorld(materials: YarnMaterials): World {
   const group = new THREE.Group()
+  // The backdrop draws after everything standing on it, nearest first (blanket, snow, sky), so the
+  // depth test skips every pixel already covered instead of shading it twice.
   const land = new THREE.Mesh(landGeometry(), materials.land)
   land.matrixAutoUpdate = false
+  land.renderOrder = 2
   const sky = new THREE.Mesh(skyGeometry(), materials.sky)
   sky.matrixAutoUpdate = false
-  sky.renderOrder = -1
+  sky.renderOrder = 3
   group.add(land, sky)
 
   const pines = new THREE.InstancedMesh(pineGeometry(), materials.crochetInstanced, PINES.length)
@@ -305,6 +326,7 @@ export function buildWorld(materials: YarnMaterials): World {
 
   const blanket = new THREE.Mesh(blanketGeometry(), materials.blanket)
   blanket.matrixAutoUpdate = false
+  blanket.renderOrder = 1
   group.add(blanket)
 
   const loom = new THREE.Group()

@@ -31,6 +31,8 @@ const EXPOSURE = 1.12
 const POOL = 15
 const FLIGHT_ARC = 24
 const LEAVE_SECONDS = 0.9
+/** Long past a hum's last lit row; the shader never sees an infinite age. */
+const SONG_FADED = 60
 
 export type SceneOptions = { search: string; coarse: boolean }
 
@@ -78,7 +80,9 @@ export class CosyScene {
   constructor(host: HTMLElement, game: ScarfController, options: SceneOptions) {
     this.host = host
     this.game = game
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', stencil: false })
+    // No MSAA: the tiers with the post pass render into a plain buffer anyway, and on the tiers
+    // without it a multisampled canvas is the cost a struggling device can least afford.
+    this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance', stencil: false })
     this.renderer.info.autoReset = false
     this.renderer.toneMappingExposure = EXPOSURE
     const canvas = this.renderer.domElement
@@ -381,8 +385,11 @@ export class CosyScene {
       u.uHang.value.copy(this.loomHang)
       u.uWrap.value = 0
       u.uKnitRows.value = 2
+      const song = this.game.song
+      u.uSong.value.set(Math.min(SONG_FADED, t - song.at), song.first, song.period, song.copies)
       return
     }
+    u.uSong.value.w = 0
 
     const rig = this.animals[view.holder]
     const stack = view.stack

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { HUM_LEAD_S, HUM_STEP_S } from '../controller'
 import { CELL_H, CELL_W } from '../layout'
 import { MAX_ROWS, WIDTH, type Scarf } from '../state'
 import { patchYarn, YARN, type YarnTextures } from './yarn'
@@ -91,9 +92,12 @@ uniform float uSeed;
 uniform vec2 uWrapSize;
 uniform mat4 uHang;
 uniform mat4 uNeck;
+/** Seconds since the hum began, its first row, the rows per copy, and the copies (0 when this scarf is not singing). */
+uniform vec4 uSong;
 varying float vShow;
 varying float vFresh;
 varying float vTassel;
+varying float vSong;
 `
 
 const VERTEX_SHAPE = /* glsl */ `
@@ -105,6 +109,10 @@ float pop = (1.0 - pow(1.0 - local, 3.0)) * (1.0 + 0.45 * sin(local * 3.14159));
 vShow = tassel > 0.5 ? (uFringe > 0.01 ? 1.0 : 0.0) : local;
 vFresh = tassel > 0.5 ? 0.0 : 1.0 - clamp((uReveal - order) / 7.0, 0.0, 1.0);
 vTassel = tassel > 0.5 ? 1.0 : 0.0;
+// A hummed row lights and plumps on its own note; the copies of a repeat light together, so the same rows shine at once.
+float songRow = aCell.y - uSong.y;
+float songAge = uSong.x - ${HUM_LEAD_S.toFixed(2)} - mod(songRow, max(uSong.z, 1.0)) * ${HUM_STEP_S.toFixed(2)};
+vSong = tassel < 0.5 && songRow >= 0.0 && songRow < uSong.z * uSong.w ? smoothstep(-0.04, 0.02, songAge) * exp(-max(songAge, 0.0) * 4.0) : 0.0;
 float u;
 float v;
 float beyond = 0.0;
@@ -121,6 +129,7 @@ if (tassel < 0.5) {
   v = tassel < 1.5 ? -beyond : rows + beyond;
   bulge = 0.3;
 }
+bulge += vSong * 0.6;
 vNormalMapUv = tassel < 0.5 ? vec2(u * 2.0, v * uKnitRows) : vec2(aCorner.x * 0.8, aCorner.y * 3.0);
 #ifdef USE_MAP
 vMapUv = vec2((aCell.x + 0.5) / ${WIDTH.toFixed(1)}, ((tassel > 1.5 ? rows - 1.0 : aCell.y) + 0.5) / ${MAX_ROWS.toFixed(1)});
@@ -184,6 +193,7 @@ export type ScarfUniforms = {
   uWrapSize: { value: THREE.Vector2 }
   uHang: { value: THREE.Matrix4 }
   uNeck: { value: THREE.Matrix4 }
+  uSong: { value: THREE.Vector4 }
 }
 
 let shared: THREE.BufferGeometry | null = null
@@ -236,6 +246,7 @@ export class ScarfMesh {
       uWrapSize: { value: new THREE.Vector2(8, 40) },
       uHang: { value: new THREE.Matrix4() },
       uNeck: { value: new THREE.Matrix4() },
+      uSong: { value: new THREE.Vector4(0, 0, 1, 0) },
     }
     const yarn = this.material.onBeforeCompile
     const uniforms = this.uniforms
@@ -247,9 +258,9 @@ export class ScarfMesh {
         .replace('#include <beginnormal_vertex>', `${VERTEX_SHAPE}\nvec3 objectNormal = scarfNormal;\n#ifdef USE_TANGENT\nvec3 objectTangent = vec3(tangent.xyz);\n#endif`)
         .replace('#include <begin_vertex>', 'vec3 transformed = scarfPos;')
       shader.fragmentShader = shader.fragmentShader
-        .replace('#include <common>', '#include <common>\nvarying float vShow;\nvarying float vFresh;\nvarying float vTassel;')
+        .replace('#include <common>', '#include <common>\nvarying float vShow;\nvarying float vFresh;\nvarying float vTassel;\nvarying float vSong;')
         .replace('#include <clipping_planes_fragment>', 'if (vShow < 0.02) discard;\n#include <clipping_planes_fragment>')
-        .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb *= 1.0 + vFresh * 0.22 - vTassel * 0.06;')
+        .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb *= 1.0 + vFresh * 0.22 + vSong * 0.5 - vTassel * 0.06;')
     }
     this.material.customProgramCacheKey = () => 'cosy-scarf'
     this.mesh = new THREE.Mesh(scarfGeometry(), this.material)
