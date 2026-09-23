@@ -69,10 +69,16 @@ Feedback that comes from the material's own physical response (a beam that level
 ## Process
 
 ### Refinement pass
-One cycle of improving how a game looks: screenshot a fixed, seeded scene at iPad-landscape size on a fixed timer, critique it honestly from a young child's point of view, make one focused set of fixes, re-screenshot, and check the frame rate, reverting any fix that hurts.
+One cycle of improving how a game looks: screenshot a fixed, seeded scene at iPad-landscape size at a fixed moment of game time, critique it honestly from a young child's point of view, make one focused set of fixes, re-screenshot, and check the frame rate, reverting any fix that hurts.
 *Avoid:* iteration, polish round
 
 Passes are logged in order with their critique, change, and frame rate, so the next game can see what moved readability and what was reverted.
+
+### Walkthrough
+A scripted recording of a whole game, from a fresh open through the hands-off opening and its guidance, the core loop, every verb, and each character's reactions, reviewed frame by frame before the game is called done.
+*Avoid:* demo video, screen recording
+
+It is played at a quick child's pace, each step starting as soon as the game allows, because overlapping moments are where state goes wrong and a still of one moment cannot show them. Game time advances in fixed steps from the first frame the game draws, with randomness seeded, so two recordings of the same script match frame for frame however slowly the machine renders. Run in real time on a device, the same script also measures smoothness against the Quality bar; on a machine that renders in software only the stepped recording means anything, and it judges behaviour and readability. It differs from a Cold playtest proxy, which plays only the first minute as a newcomer to find what is unclear.
 
 ## Motion
 
