@@ -38,6 +38,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Game | Style | Art guide |
 | --- | --- | --- |
 | Pebble Table | Claymation 3D: plasticine with thumbprints, stop-motion lighting, terracotta on cool sage-teal | [`games/pebble-table/ART.md`](../games/pebble-table/ART.md) |
+| Felt Meadow | Felted wool 3D: a needle-felted nature table, heathered dyes, soft fuzzy halos on a few hero objects, light and saturated pieces on a mid-dark sage hill | [`games/felt-meadow/ART.md`](../games/felt-meadow/ART.md) |
 
 ## 4. Menu of unclaimed directions
 
