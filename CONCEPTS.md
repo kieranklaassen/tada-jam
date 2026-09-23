@@ -5,7 +5,7 @@
 ## Art direction
 
 ### Quality bar
-The set of properties every jam game must have regardless of how it looks: alive at idle, motion and sound on every touch, physical weight with squash and follow-through, kid-clear silhouettes and touchable things, wordless idle guidance, a smooth frame rate on a mid-range iPad, no externally fetched assets, and a recognisably distinct look of its own.
+The set of properties every jam game must have regardless of how it looks: alive at idle, motion and sound on every touch, physical weight with squash and follow-through, kid-clear silhouettes and touchable things, Wordless clarity for its Age band, a Guidance ladder when the child is idle, a smooth frame rate on a mid-range iPad, no externally fetched assets, and a recognisably distinct look of its own.
 *Avoid:* fidelity bar (the earlier, narrower Tada term this extends)
 
 The quality bar is style-independent: a game in any Claimed style is held to the same bar, and a game's pull request states how it meets each line with a measured frame rate.
@@ -26,6 +26,38 @@ The per-game document that describes a Claimed style: its palette, materials, li
 
 Style-specific guidance lives only in a game's art guide; jam-wide guidance covers the Quality bar and the registry of Claimed styles, never one game's look.
 
+## Age and clarity
+
+### Age band
+The range of ages, in whole years, that a game declares it is made for; its youngest age is the design target for every interaction.
+*Avoid:* target age, age range, age gate
+
+A game declares one audience, so a band stays narrow; an idea that spans a wider range becomes separate faces or a second game. Within the band, the child's age is a dial that changes defaults (how much material, which activity opens first) and never a gate: every child can reach everything.
+
+### Kid side
+Everything a child sees and touches while playing a game, as opposed to the jam shell and any grown-up corner.
+
+The kid side shows no words or numerals by default and gives no spoken instructions. A documented exception may show text in a grown-up corner reached by a deliberate hold gesture, or an optional numeral that an older child in the Age band reaches for and never needs.
+
+### Wordless clarity
+The Quality bar property that a child at the youngest age of a game's Age band can work out every interaction from cues alone: what can be touched looks touchable, one next act is offered at a time, and the world answers physically.
+
+Which cues work depends on age: demonstration and one affordance at a time for the youngest children, more simultaneous options and optional symbols (never required) as the band gets older.
+
+### Guidance ladder
+The escalating, idle-only hints a game gives when the child stops: first a glow on what can be touched, then a demonstration (a ghost hand or a character) of one possible next act, backing off with growing gaps and stopping after a few tries.
+*Avoid:* tutorial, onboarding, hint system
+
+Any touch clears the ladder at once and restarts the idle clock. A demonstration shows a move, never the answer, and is chosen from the current state.
+
+### State-revealed affordance
+A tool or action that appears only when the current state makes it meaningful, so the child never faces an option that does nothing yet.
+
+### Control of error
+Feedback that comes from the material's own physical response (a beam that levels, plates that visibly match, a leftover that stays put) rather than from a judgment such as a tick, a cross, a score, or a sad face.
+*Avoid:* verdict, right/wrong feedback
+
 ## Flagged ambiguities
 
 - "Art direction" had been used for both one game's look and the jam-wide standard. These are distinct: a game's look is its Claimed style, described in its Art guide; the jam-wide standard is the Quality bar.
+- "Wordless guidance" had been used both for the idle hints and for the rule that a game needs no words at all. These are distinct: the idle hints are the Guidance ladder; understanding every interaction without words at the youngest age of the Age band is Wordless clarity.
