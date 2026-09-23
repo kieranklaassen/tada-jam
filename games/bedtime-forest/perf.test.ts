@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FrameGovernor, perfOptions, Ring, TOP_TIER } from './perf'
+import { FrameGovernor, perfOptions, Ring, startingTier, TOP_TIER } from './perf'
 
 /** Feed frames of `ms` each for `seconds`; returns how many times the tier changed. */
 function feed(governor: FrameGovernor, ms: number, seconds: number, clock: { t: number }): number {
@@ -11,6 +11,16 @@ function feed(governor: FrameGovernor, ms: number, seconds: number, clock: { t: 
   }
   return changes
 }
+
+describe('starting tier', () => {
+  it('starts touch devices one tier down, and a fast one earns the top tier at 60 Hz', () => {
+    expect(startingTier(false)).toBe(TOP_TIER)
+    const governor = new FrameGovernor(startingTier(true))
+    expect(governor.tier).toBe(TOP_TIER - 1)
+    feed(governor, 16.7, 20, { t: 0 })
+    expect(governor.tier).toBe(TOP_TIER)
+  })
+})
 
 describe('the frame governor', () => {
   it('steps down after two slow windows, not one', () => {

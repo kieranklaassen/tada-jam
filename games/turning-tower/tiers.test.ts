@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CHANGE_SETTLE_MS, LOWEST, pinnedTier, STALL_MS, START_SETTLE_MS, TIERS, TierGovernor, WINDOW, WINDOW_MS } from './tiers'
+import { CHANGE_SETTLE_MS, LOWEST, pinnedTier, STALL_MS, START_SETTLE_MS, startingTier, TIERS, TierGovernor, WINDOW, WINDOW_MS } from './tiers'
 
 function feed(governor: TierGovernor, windows: number, intervalMs: number, workMs = 2): number {
   let changes = 0
@@ -13,6 +13,16 @@ function feedFor(governor: TierGovernor, seconds: number, intervalMs: number, wo
   for (let t = 0; t < seconds * 1000; t += intervalMs) if (governor.sample(intervalMs, workMs)) changes.push((t + intervalMs) / 1000)
   return changes
 }
+
+describe('starting tier', () => {
+  it('starts touch devices one tier down, and a fast one earns the top tier at 60 Hz', () => {
+    expect(startingTier(false)).toBe(0)
+    const governor = new TierGovernor(startingTier(true))
+    expect(governor.tier).toBe(1)
+    feedFor(governor, 60, 16.7)
+    expect(governor.tier).toBe(0)
+  })
+})
 
 describe('quality tiers', () => {
   it('has at least three tiers stepping DPR down from 2 to 1', () => {

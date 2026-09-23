@@ -53,6 +53,11 @@ const WARMUP_SECONDS = 1.5
 /** Intervals this long mean the tab stalled or was hidden, not that rendering is slow. */
 const STALL_MS = 1000
 
+/** Touch devices (tablets) start one tier down, so the first seconds on an iPad never lag while the governor learns; a fast one earns the top tier. */
+export function startingTier(coarsePointer: boolean): number {
+  return coarsePointer ? TOP_TIER - 1 : TOP_TIER
+}
+
 export function clampTier(tier: number): number {
   return Math.max(0, Math.min(TOP_TIER, Math.round(tier)))
 }
