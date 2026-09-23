@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import type { Projector, ScarfController, ScarfView } from '../controller'
 import type { Point3 } from '../guidance'
 import type { Point } from '../input'
-import { CELL_H, CELL_W, LOOM, SCARF } from '../layout'
+import { CELL_H, CELL_W, feltBottom, LOOM, SCARF } from '../layout'
 import { PerfMeter } from '../perf'
 import { clamp01, smooth } from '../springs'
 import { ANIMALS, WIDTH, type AnimalKey } from '../state'
@@ -195,8 +195,11 @@ export class CosyScene {
   /**
    * Compile every program now, while the game opens, so the first scarf, puff
    * or strand never stalls a frame, and neither does a tier change (which
-   * happens exactly when the device is struggling): the current tier's
-   * variants synchronously, every other tier's in the background.
+   * happens exactly when the device is struggling): every other tier's
+   * variants in the background, the current tier's synchronously. Then draw
+   * everything once into a single pixel: a program's first draw and each
+   * texture's and buffer's upload would otherwise land on the frame where a
+   * hidden thing (an animal walking in, the ghost hand) first appears.
    */
   private prewarm(): void {
     const hidden: THREE.Object3D[] = []
@@ -207,12 +210,30 @@ export class CosyScene {
     })
     const current = TIERS[this.tiers.tier]
     const toneMapping = this.renderer.toneMapping
-    this.compileFor(current, false)
     for (const tier of TIERS) if (tier !== current) this.compileFor(tier, true)
-    this.materials.setHillRelief(current.hillRelief)
+    this.compileFor(current, false)
+    this.drawOnePixel()
     this.renderer.toneMapping = toneMapping
     this.renderer.setRenderTarget(null)
     for (const object of hidden) object.visible = false
+  }
+
+  /** Draws the whole scene into the current target, scissored to its corner pixel. */
+  private drawOnePixel(): void {
+    const target = this.renderer.getRenderTarget()
+    if (target) {
+      target.scissor.set(0, 0, 1, 1)
+      target.scissorTest = true
+      this.renderer.setRenderTarget(target)
+    } else {
+      this.renderer.setScissor(0, 0, 1, 1)
+      this.renderer.setScissorTest(true)
+    }
+    this.renderer.render(this.scene, this.camera)
+    if (target) {
+      target.scissorTest = false
+      this.renderer.setRenderTarget(target)
+    } else this.renderer.setScissorTest(false)
   }
 
   /** Programs are created synchronously even by `compileAsync`, so the tier's state can be undone right after. */
@@ -258,6 +279,8 @@ export class CosyScene {
 
     this.hangFrame(game.loom, true, this.loomHang)
     this.world.loom.rotation.z = game.loomRock.x * 0.022
+    const felt = this.materials.feltBottom
+    felt.value += (feltBottom(game.loom.reveal / WIDTH) - felt.value) * (1 - Math.exp(-dt * 7))
     const wobble = t - game.basketAt
     this.world.basket.rotation.z = wobble >= 0 && wobble < 0.9 ? Math.sin(wobble * 24) * 0.05 * (1 - wobble / 0.9) : 0
 
@@ -366,7 +389,7 @@ export class CosyScene {
     const radius = rig.neckRadius + stack * 1.15
     const band = rig.band * (1 + stack * 0.05)
     const tails = radius * Math.min(2.2, 0.5 + 0.12 * rows)
-    const length = 5.1 * radius + 2 * tails
+    const length = 2 * Math.PI * radius + 2 * tails
     let wrap = view.wrap
     let shrink = 1
     if (view.leavingAt >= 0) {
@@ -377,11 +400,12 @@ export class CosyScene {
     const neck = u.uNeck.value.copy(rig.neck.matrixWorld)
     neck.multiply(this.m.makeTranslation(0, -stack * band * 0.55, 0))
 
-    // Target of the flight: laid out flat behind the neck, as long as the wrapped scarf.
+    // Target of the flight: laid flat behind the neck at its knitted length; it
+    // stretches to the wrapped length only as it wraps, so no long bar sticks out.
     const target = this.n.copy(neck)
     target.multiply(this.m.makeTranslation(0, 0, -radius - 0.6))
     target.multiply(this.m.makeRotationZ(Math.PI / 2))
-    target.multiply(this.m.makeScale((band / (WIDTH * CELL_W)) * shrink, (length / (rows * CELL_H)) * shrink, shrink))
+    target.multiply(this.m.makeScale((band / (WIDTH * CELL_W)) * shrink, shrink, shrink))
 
     const fly = view.fly
     if (fly >= 1) u.uHang.value.copy(target)
