@@ -38,7 +38,7 @@ The wordless check (`scripts/wordless-check.ts`) parses kid-side game code and f
 
 ## Add a game
 
-The [`jam-game-creator` skill](.claude/skills/jam-game-creator/SKILL.md) walks an agent through these steps in order.
+[`docs/solutions/conventions/building-a-jam-game.md`](docs/solutions/conventions/building-a-jam-game.md) walks through these steps in order, with the lessons from building Pebble Table.
 
 1. Create `games/<key>/` where `<key>` is a kebab-case slug (it doubles as the Tada storage namespace).
 2. `games/<key>/manifest.ts` — export the manifest const (`key`, `name`, `ageBand`, `permissions`, `iconIdentity`). Keep it free of JSX and React imports. `ageBand` names one audience: whole years, 2 to 12, at most five years wide.
