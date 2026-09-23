@@ -51,7 +51,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 
 ## Games
 
-None yet. Pebble Table is the first one in progress.
+- **Bad Neighbours** (`games/bad-neighbours/`, 🏘️): drop wobbly apartment buildings onto a construction slab and watch the residents live in them. It's a port of the house version of Stapel (the `bad-neighbours-v1` tag), with the later physics: secured foundations, gentler landings, instant controls and drag/tap/swipe input. There's no score and no lives. A fallen building parachutes its resident out and goes back into the delivery queue. The street is saved through `ctx.storage`. Uses matter.js.
 
 ## License
 
