@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PROBATION_MS, TIER_COUNT, tierLook, TierMonitor, tierOverride } from './tiers'
+import { PROBATION_MS, startingTier, TIER_COUNT, tierLook, TierMonitor, tierOverride } from './tiers'
 
 function run(monitor: TierMonitor, frameMs: number, seconds: number, startMs: number): number {
   let now = startMs
@@ -18,6 +18,16 @@ describe('quality tiers', () => {
     expect(monitor.tier).toBe(0)
   })
 
+  it('starts touch devices one tier down, and climbs to the top once they keep up', () => {
+    expect(startingTier(false)).toBe(0)
+    const monitor = new TierMonitor({ start: startingTier(true) })
+    expect(monitor.tier).toBe(1)
+    const now = run(monitor, 16.7, 9, 0)
+    expect(monitor.tier).toBe(1)
+    run(monitor, 16.7, 3, now)
+    expect(monitor.tier).toBe(0)
+  })
+
   it('steps down after sustained slow frames, one tier at a time', () => {
     const monitor = new TierMonitor()
     let now = run(monitor, 28, 3.2, 0)
@@ -28,6 +38,16 @@ describe('quality tiers', () => {
     expect(monitor.tier).toBe(TIER_COUNT - 1)
   })
 
+  it('drops two tiers at once when a second is far over budget', () => {
+    const monitor = new TierMonitor()
+    let now = run(monitor, 100, 2.1, 0)
+    expect(monitor.tier).toBe(2)
+    now = run(monitor, 100, 2.1, now)
+    expect(monitor.tier).toBe(TIER_COUNT - 1)
+    run(monitor, 100, 10, now)
+    expect(monitor.tier).toBe(TIER_COUNT - 1)
+  })
+
   it('ignores a single slow second and long pauses', () => {
     const monitor = new TierMonitor()
     let now = run(monitor, 16.7, 2, 0)
@@ -35,6 +55,20 @@ describe('quality tiers', () => {
     now = run(monitor, 16.7, 2, now)
     monitor.sample(4000, now + 4000)
     expect(monitor.tier).toBe(0)
+  })
+
+  it('treats a run of very long frames as a very slow device, not a pause', () => {
+    const monitor = new TierMonitor()
+    run(monitor, 380, 12, 0)
+    expect(monitor.tier).toBeGreaterThan(0)
+    const alternating = new TierMonitor()
+    let now = 0
+    for (let i = 0; i < 60; i++) {
+      const frameMs = i % 2 ? 266 : 240
+      now += frameMs
+      alternating.sample(frameMs, now)
+    }
+    expect(alternating.tier).toBeGreaterThan(0)
   })
 
   it('climbs back only after a long steady stretch, and not into a tier that was just slow', () => {
@@ -61,7 +95,8 @@ describe('quality tiers', () => {
   it('caps DPR at the device and trims effects in lower tiers', () => {
     expect(tierLook(0, 3).dpr).toBe(2)
     expect(tierLook(0, 1).dpr).toBe(1)
-    expect(tierLook(TIER_COUNT - 1, 2).ambientFireflies).toBe(0)
+    expect(tierLook(TIER_COUNT - 1, 2).ambientFireflies).toBeGreaterThan(0)
+    expect(tierLook(TIER_COUNT - 1, 2).ambientFireflies).toBeLessThan(tierLook(0, 2).ambientFireflies)
     expect(tierLook(0, 2).trail).toBeGreaterThan(tierLook(TIER_COUNT - 1, 2).trail)
   })
 })

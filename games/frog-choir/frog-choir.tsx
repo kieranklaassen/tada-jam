@@ -37,7 +37,11 @@ function FrogChoirMount({ ctx }: { ctx: CartridgeContext }) {
       .then((saved) => {
         if (disposed || !host.current) return
         controller = new PondController(deserialize(saved), { save: (state) => storage.save(state), sound: new PondAudio(), childAge })
-        created = new PondView(host.current, controller, { search: window.location.search, deviceDpr: window.devicePixelRatio || 1 })
+        created = new PondView(host.current, controller, {
+          search: window.location.search,
+          deviceDpr: window.devicePixelRatio || 1,
+          coarsePointer: window.matchMedia?.('(pointer: coarse)').matches ?? false,
+        })
         setView(created)
       })
     return () => {

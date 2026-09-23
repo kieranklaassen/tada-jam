@@ -20,6 +20,7 @@ export const PALETTE = {
   waterFar: '#b9e3d2',
   waterGlint: '#fff1d6',
   waterDusk: '#f4c7c0',
+  splash: '#eefffa',
   pad: '#c7a2e4',
   padLight: '#dcc2f2',
   padSide: '#9e7fcb',
