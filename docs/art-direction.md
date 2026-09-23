@@ -38,6 +38,14 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Game | Style | Art guide |
 | --- | --- | --- |
 | Pebble Table | Claymation 3D: plasticine with thumbprints, stop-motion lighting, terracotta on cool sage-teal | [`games/pebble-table/ART.md`](../games/pebble-table/ART.md) |
+| Felt Meadow | Felted wool 3D: a needle-felted nature table, heathered dyes, soft fuzzy halos on a few hero objects, light and saturated pieces on a mid-dark sage hill | [`games/felt-meadow/ART.md`](../games/felt-meadow/ART.md) |
+| Light Garden | Glass and light table 3D: frosted sea-glass creatures and glass tools on a milky light table in a dim teal room, beams of additive primary light | [`games/light-garden/ART.md`](../games/light-garden/ART.md) |
+| Frog Choir | Dusk-pastel toon 3D: three-step cel shading, plum ink outlines, a firefly that lights in stepped bands, coral-to-butter frogs on lilac pads over mint water under a peach sky | [`games/frog-choir/ART.md`](../games/frog-choir/ART.md) |
+| Shadow Lantern | Paper-craft diorama: layered cut paper on deep indigo, a brass lamp throwing geometric shadows onto a lit paper screen, offset dark shadow cards | [`games/shadow-lantern/ART.md`](../games/shadow-lantern/ART.md) |
+| Bedtime Forest | Picture-book gouache 3D: opaque pigment in 2–3 painted tone bands, dry brush, a loose brown ink line, paper grain; warm animals in blue-green woods under an apricot-to-violet dusk | [`games/bedtime-forest/ART.md`](../games/bedtime-forest/ART.md) |
+| Turning Tower | Geometric (Monument Valley): faceted flat-shaded towers on stepped plinths under a peach-to-lavender dusk, orthographic, with a hard hue split (mint paths, sunflower handles, indigo wanderer) | [`games/turning-tower/ART.md`](../games/turning-tower/ART.md) |
+| Critter Clay | Claymation 3D, second entry (owner-approved): a clay workshop bench in cool daylight, cobalt, lemon, and bubblegum-pink plasticine on a slate-blue board, 12 fps boil only while moving | [`games/critter-clay/ART.md`](../games/critter-clay/ART.md) |
+| Hillside Spring | Painterly, Ghibli-like: a hand-painted terraced garden, unlit painted scenery, cel-lit movers, afternoon light shafts, gold bamboo on sage | [`games/hillside-spring/ART.md`](../games/hillside-spring/ART.md) |
 | Cosy Scarf | Knitted and crocheted yarn 3D: amigurumi animals, a chunky striped scarf on a honey-wood loom with a plain felt backboard, faint knitted snow hills under a ribbed knit sky | [`games/cosy-scarf/ART.md`](../games/cosy-scarf/ART.md) |
 
 ## 4. Menu of unclaimed directions
