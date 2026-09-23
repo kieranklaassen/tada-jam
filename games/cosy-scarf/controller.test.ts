@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { DANCE_SECONDS, DANCE_START, PAINT_DWELL_S, POWDER_PUFF, ScarfController, silentSound, type Projector } from './controller'
+import { DANCE_SECONDS, DANCE_START, PAINT_DWELL_S, POWDER_PUFF, ScarfController, silentSound, type Projector, type Sound } from './controller'
 import type { Point } from './input'
-import { CELL_H, HILL_SPOTS, LOOM_SPOT, SCARF, cellCentre, groundY, needlesY } from './layout'
+import { BASKET, CELL_H, HILL_SPOTS, LOOM, LOOM_SPOT, SCARF, cellCentre, groundY, needlesY } from './layout'
 import { suggestColour } from './pattern'
 import { ANIMALS, initialState, WIDTH, type GameState, type Row } from './state'
 
@@ -32,11 +32,19 @@ const row = (colour: number): Row => new Array<number>(WIDTH).fill(colour)
 
 let clock = 0
 
-function setup(state: GameState = initialState(), age: number | null = 5) {
+function setup(state: GameState = initialState(), age: number | null = 5, sound: Sound = silentSound) {
   const saves: GameState[] = []
-  const game = new ScarfController(state, { save: (saved) => saves.push(saved), sound: silentSound, childAge: age })
+  const game = new ScarfController(state, { save: (saved) => saves.push(saved), sound, childAge: age })
   game.setProjector(projector)
   return { game, saves }
+}
+
+/** A sound that writes down what it is asked to play (not its plumbing, and not footsteps, which walking makes). */
+function listening(): { sound: Sound; heard: string[] } {
+  const heard: string[] = []
+  const quiet = new Set(['unlock', 'setActive', 'dispose', 'footstep'])
+  const sound = Object.fromEntries(Object.keys(silentSound).map((name) => [name, () => void (quiet.has(name) || heard.push(name))])) as unknown as Sound
+  return { sound, heard }
 }
 
 function run(game: ScarfController, seconds: number): void {
@@ -172,11 +180,93 @@ describe('ScarfController', () => {
     expect(inSky[0].z).toBeLessThan(-250)
   })
 
+  it('answers every touch with a sound: a ball lifted and set back down, and a stroke on anything that does not follow a finger', () => {
+    const { sound, heard } = listening()
+    const { game } = setup(initialState(), 5, sound)
+    run(game, 4)
+    const listen = (touch: () => void): string[] => {
+      heard.length = 0
+      touch()
+      run(game, 1)
+      return [...heard]
+    }
+    const stroke = (from: Point) => () => carry(game, from, { x: from.x + 40, y: from.y + 10 })
+    expect(listen(() => carry(game, ballAt(game, 1), screenOf(-60, 40)))).toEqual(['lift', 'settle'])
+    const bunny = game.actors.bunny
+    expect(listen(stroke(screenOf(bunny.x, groundY(bunny.x, bunny.z) + 8)))).toEqual(['shiver'])
+    expect(listen(stroke(screenOf(BASKET.x, 0.5)))).toEqual(['basket'])
+    expect(listen(stroke(screenOf(-60, 5)))).toEqual(['crunch'])
+    const frame = cellCentre(4, 1)
+    expect(listen(stroke(screenOf(frame.x, frame.y)))).toContain('hop')
+  })
+
+  it('answers every touch on the knitting: a stroke that unravels nothing, a scarf let go short of the animal, and the gift at once', () => {
+    const state = initialState()
+    state.loom = [row(0), row(1), row(0), row(1), row(0)]
+    const { sound, heard } = listening()
+    const { game } = setup(state, 5, sound)
+    run(game, 8)
+    const first = (touch: () => void): string[] => {
+      heard.length = 0
+      touch()
+      run(game, 1 / 60)
+      return [...heard]
+    }
+    const needles = screenOf(SCARF.x, needlesY(5))
+    expect(first(() => carry(game, needles, { x: needles.x + 60, y: needles.y + 40 }))).toContain('hum')
+    expect(game.state.loom).toHaveLength(5)
+    const stitch = cellCentre(1, 2)
+    const scarf = screenOf(stitch.x, stitch.y)
+    const heardScarf = first(() => carry(game, scarf, { x: scarf.x + 30, y: scarf.y + 25 }))
+    expect(heardScarf[0]).toBe('lift')
+    expect(heardScarf).toContain('hum')
+    for (const colour of [1, 0, 1]) {
+      tap(game, ballAt(game, colour))
+      run(game, 1.2)
+    }
+    run(game, 1)
+    expect(game.offered).toBe(true)
+    expect(first(() => tap(game, scarf))).toContain('castOff')
+  })
+
   it('knits when a ball is carried to the loom and let go', () => {
     const { game } = setup()
     const loom = cellCentre(2, 2)
     carry(game, ballAt(game, 1), screenOf(loom.x, loom.y))
     expect(game.state.loom).toEqual([row(1)])
+  })
+
+  it('sends a ball given to the cold animal itself into the loom, which knits it for the animal, then home', () => {
+    const { sound, heard } = listening()
+    const { game } = setup(initialState(), 5, sound)
+    run(game, 8)
+    const bunny = game.actors.bunny
+    const ball = game.balls[2]
+    heard.length = 0
+    carry(game, ballAt(game, 2), screenOf(bunny.x, groundY(bunny.x, bunny.z) + 14))
+    expect(heard).toEqual(['lift', 'hop'])
+    expect(game.state.loom).toEqual([])
+    run(game, 0.3)
+    expect(game.state.loom).toEqual([])
+    expect(Math.abs(ball.pos.x - SCARF.x)).toBeLessThan(Math.abs(bunny.x - SCARF.x) / 2)
+    run(game, 0.25)
+    expect(game.state.loom).toEqual([row(2)])
+    run(game, 0.6)
+    expect(ball.pos).toEqual(ball.rest)
+    expect(heard).toContain('settle')
+  })
+
+  it('sends a ball let go over a warm animal on the hillside straight home', () => {
+    const state = initialState()
+    state.scarves.bunny = [[row(0), row(1)]]
+    state.atLoom = 'penguin'
+    const { game } = setup(state)
+    run(game, 1)
+    const bunny = game.actors.bunny
+    carry(game, ballAt(game, 2), screenOf(bunny.x, groundY(bunny.x, bunny.z) + 14))
+    run(game, 1.5)
+    expect(game.state.loom).toEqual([])
+    expect(game.balls[2].pos).toEqual(game.balls[2].rest)
   })
 
   it('paints the stitch a ball rests on, mirrored while the butterfly is open, and knits nothing then', () => {
@@ -240,6 +330,26 @@ describe('ScarfController', () => {
     expect(game.actors.bunny.warm).toBe(1)
     expect(game.actors.penguin.x).toBeCloseTo(LOOM_SPOT.x)
     expect(game.worn[0].wrap).toBe(1)
+  })
+
+  it('lets the friend walking home behind the loom clear its window before the next cold animal arrives', () => {
+    const state = initialState()
+    state.scarves.bunny = [[row(0), row(1)]]
+    state.atLoom = 'penguin'
+    state.loom = Array.from({ length: 8 }, (_, i) => row(i % 2))
+    const { game } = setup(state, 5)
+    run(game, 10)
+    expect(game.offered).toBe(true)
+    tap(game, screenOf(SCARF.x, SCARF.top - 10))
+    const penguin = game.actors.penguin
+    const fox = game.actors.fox
+    let arrivedWith = Number.NaN
+    for (let i = 0; i < 60 * 25 && Number.isNaN(arrivedWith); i++) {
+      game.step(1 / 60)
+      if (fox.destination === 'loom' && fox.visible && !fox.walking) arrivedWith = penguin.x
+    }
+    expect(arrivedWith).toBeGreaterThan(LOOM.x + LOOM.postX)
+    expect(penguin.x).toBeLessThan(HILL_SPOTS.penguin.x)
   })
 
   it('does not give a scarf that is still short', () => {
