@@ -65,6 +65,14 @@ One cycle of improving how a game looks: screenshot a fixed, seeded scene at iPa
 
 Passes are logged in order with their critique, change, and frame rate, so the next game can see what moved readability and what was reverted.
 
+## Motion
+
+### Motion personality
+The way one kind of character moves in everything it does: its tempo, weight, idle life, how quickly it turns to look, and its own variants of every action and rare delights, so no two kinds of character share an animation.
+*Avoid:* animation set, shared hop
+
+Variants of an action are picked without repeating back to back, with randomized timing and size, and delights play only while nothing else is happening.
+
 ## Performance
 
 ### Quality tier
