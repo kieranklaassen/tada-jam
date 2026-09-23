@@ -98,7 +98,7 @@ void main() {
     },
     [material, geometry],
   )
-  return <mesh geometry={geometry} material={material} frustumCulled={false} renderOrder={1000} />
+  return <mesh name="grade" geometry={geometry} material={material} frustumCulled={false} renderOrder={1000} />
 }
 
 export type PerfHandle = { ring: PerfRing; governor: TierGovernor; render: { calls: number; triangles: number } }

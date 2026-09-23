@@ -57,6 +57,7 @@ export function Pieces({ controller, geometries }: { controller: KiteController;
       const mesh = new THREE.InstancedMesh(geometry, material, counts[kind])
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
       mesh.frustumCulled = false
+      mesh.name = `piece-${kind}`
       meshes[kind] = mesh
     }
     for (const piece of PIECES) {
@@ -219,6 +220,7 @@ export function Blobs({ kind, capacity, write }: { kind: 'shadow' | 'glow'; capa
     instanced.setColorAt(0, new THREE.Color(0, 0, 0))
     instanced.instanceColor!.setUsage(THREE.DynamicDrawUsage)
     instanced.frustumCulled = false
+    instanced.name = `${kind}-blobs`
     instanced.renderOrder = kind === 'shadow' ? 2 : 6
     instanced.count = 0
     return instanced
@@ -311,6 +313,7 @@ export function GhostHand({ controller, geometries }: { controller: KiteControll
     // The fingertip sits near the top-left of the drawing; move the quad so the fingertip is the pivot.
     plane.translate(HAND_SIZE * 0.02, -HAND_SIZE * 0.36, 0)
     const hand = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: handTexture(), transparent: true, depthTest: false, depthWrite: false, toneMapped: false }))
+    hand.name = 'ghost-hand'
     hand.renderOrder = 999
     hand.frustumCulled = false
     hand.visible = false
@@ -319,6 +322,7 @@ export function GhostHand({ controller, geometries }: { controller: KiteControll
     material.opacity = 0.5
     material.depthWrite = false
     const ghost = new THREE.Mesh(geometries.cube, material)
+    ghost.name = 'ghost-piece'
     ghost.renderOrder = 998
     ghost.visible = false
     ghost.frustumCulled = false

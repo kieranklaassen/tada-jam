@@ -755,6 +755,15 @@ export function Room() {
       new THREE.MeshBasicMaterial({ map: patchTexture(), transparent: true, opacity: 0.2, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
     )
     patch.renderOrder = 2
+    wood.name = 'room-wood'
+    wall.name = 'room-wall'
+    rug.name = 'room-rug'
+    sky.name = 'room-sky'
+    shade.name = 'lamp-shade'
+    floorShadow.name = 'floor-shadows'
+    wallShadow.name = 'wall-shadows'
+    beam.name = 'sunbeam'
+    patch.name = 'sun-patch'
     const group = new THREE.Group()
     group.add(wood, wall, rug, sky, shade, floorShadow, wallShadow, beam, patch)
     for (const child of group.children) child.matrixAutoUpdate = false

@@ -24,6 +24,7 @@ const HAPPY: Expression = 2
 const SURPRISED: Expression = 3
 
 type DollSpec = {
+  name: 'pip' | 'moss' | 'bean'
   row: number
   scale: number
   lower: string
@@ -34,9 +35,9 @@ type DollSpec = {
   kind: 'bob' | 'cap' | 'beanie'
 }
 
-const HERO: DollSpec = { row: 0, scale: 1, lower: '#e25a47', upper: '#ee7a5d', band: '#f7e6c4', hair: '#6d4428', kind: 'bob' }
-const MOSS: DollSpec = { row: 1, scale: 1.1, lower: '#6f9a78', upper: '#94b88f', band: '#e9dcc0', hair: '#d8d2c6', hat: '#9c8764', kind: 'cap' }
-const BEAN: DollSpec = { row: 2, scale: 0.8, lower: '#3e72b8', upper: '#f3cf5e', band: '#3e72b8', hair: '#8a5a34', hat: '#d9473b', kind: 'beanie' }
+const HERO: DollSpec = { name: 'pip', row: 0, scale: 1, lower: '#e25a47', upper: '#ee7a5d', band: '#f7e6c4', hair: '#6d4428', kind: 'bob' }
+const MOSS: DollSpec = { name: 'moss', row: 1, scale: 1.1, lower: '#6f9a78', upper: '#94b88f', band: '#e9dcc0', hair: '#d8d2c6', hat: '#9c8764', kind: 'cap' }
+const BEAN: DollSpec = { name: 'bean', row: 2, scale: 0.8, lower: '#3e72b8', upper: '#f3cf5e', band: '#3e72b8', hair: '#8a5a34', hat: '#d9473b', kind: 'beanie' }
 
 const SKIN = '#f4dcc0'
 const NECK_Y = 1.34
@@ -330,23 +331,28 @@ class DollRig {
     this.texture.repeat.set(1 / 4, 1 / 3)
     this.texture.offset.set(0, 1 - (spec.row + 1) / 3)
     const faceMaterial = new THREE.MeshStandardMaterial({ map: this.texture, transparent: true, depthWrite: false, roughness: 0.75, polygonOffset: true, polygonOffsetFactor: -1 })
+    const named = (mesh: THREE.Mesh, part: string) => {
+      mesh.name = `${spec.name}-${part}`
+      return mesh
+    }
+    this.root.userData.jamObject = spec.name
     this.root.add(this.lean)
-    this.lean.add(new THREE.Mesh(body, wood))
+    this.lean.add(named(new THREE.Mesh(body, wood), 'body'))
     this.head.position.set(0, NECK_Y, 0)
-    this.head.add(new THREE.Mesh(head, wood))
-    const faceMesh = new THREE.Mesh(face, faceMaterial)
+    this.head.add(named(new THREE.Mesh(head, wood), 'head'))
+    const faceMesh = named(new THREE.Mesh(face, faceMaterial), 'face')
     faceMesh.renderOrder = 3
     this.head.add(faceMesh)
     this.lean.add(this.head)
     this.armL.position.set(-SHOULDER.x, SHOULDER.y, 0)
     this.armR.position.set(SHOULDER.x, SHOULDER.y, 0)
-    this.armL.add(new THREE.Mesh(arm, wood))
-    this.armR.add(new THREE.Mesh(arm, wood))
+    this.armL.add(named(new THREE.Mesh(arm, wood), 'arm-l'))
+    this.armR.add(named(new THREE.Mesh(arm, wood), 'arm-r'))
     this.lean.add(this.armL, this.armR)
     if (spec.kind === 'beanie') {
       const pom = woodSphere(0.12, 0, Math.PI * 2, 0, Math.PI, '#f7efe0', 16, 10)
       this.geometries.push(pom)
-      this.pom = new THREE.Mesh(pom, wood)
+      this.pom = named(new THREE.Mesh(pom, wood), 'pom')
       this.pom.position.set(0, HEAD_R * 2 + 0.05, 0)
       this.head.add(this.pom)
     }

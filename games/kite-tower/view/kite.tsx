@@ -198,6 +198,11 @@ export function Kite({ controller }: { controller: KiteController }) {
     const flyLine = new THREE.Line(flyGeometry, lineMaterial)
     const spool = new THREE.Mesh(spoolGeometry(), wood)
     for (const o of [body, bows, tailLine, flyLine, spool]) o.frustumCulled = false
+    body.name = 'kite-body'
+    bows.name = 'kite-bows'
+    tailLine.name = 'kite-tail'
+    flyLine.name = 'kite-line'
+    spool.name = 'kite-spool'
     const group = new THREE.Group()
     group.add(body, bows, tailLine, flyLine, spool)
     const tail = new Chain(TAIL_MAX, TIERS[0].tail)
