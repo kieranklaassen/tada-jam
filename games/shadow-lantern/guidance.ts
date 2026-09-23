@@ -149,7 +149,8 @@ export function demoPose(demo: Demo, progress: number, out: DemoPose): DemoPose 
   out.ghost.lift = Math.sin(travel * Math.PI) * 1.4 + grip * (1 - release) * 0.6
   out.ghostOpacity = out.opacity * Math.max(taps > 0 ? Math.min(1, turned * 2) : 0, grip)
   out.hand.x = out.ghost.x
-  out.hand.y = PIN_HEIGHT + GRIP_HEIGHT + out.ghost.lift + (1 - out.press) * 1.6
+  // The hand reaches up from the child's side, so it never covers the screen the move is about.
+  out.hand.y = PIN_HEIGHT + GRIP_HEIGHT + out.ghost.lift - (1 - out.press) * 1.6
   out.hand.z = out.ghost.z + 0.6
   return out
 }

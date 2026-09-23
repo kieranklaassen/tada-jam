@@ -181,9 +181,14 @@ export class CoverageMeter {
   private cursor = 0
   private baseScore = 0
   private readonly trial: CardPose = { x: 0, z: 0, angle: 0, yaw: 0, lift: 0 }
-  /** Best improving move found so far by the running search, or null. */
-  best: HintMove | null = null
+  private clearBest: HintMove | null = null
+  private coveringBest: HintMove | null = null
   searching = false
+
+  /** Best improving move found so far by the running search, or null; one that keeps clear of the other cards if any does. */
+  get best(): HintMove | null {
+    return this.clearBest ?? this.coveringBest
+  }
 
   /**
    * Snapshot the arrangement for a hint search that the game spreads over
@@ -196,8 +201,32 @@ export class CoverageMeter {
     this.searchCount = this.tabulate(placed)
     this.searchPreferDepth = preferDepth
     this.cursor = 0
-    this.best = null
+    this.clearBest = null
+    this.coveringBest = null
     this.searching = true
+  }
+
+  /**
+   * How much a card at `pose` gets in another card's way: CROWDED side by
+   * side at one depth (they cut through each other), COVERING close in front
+   * of or behind one (seen from the seat the nearer card hides the other,
+   * which is then out of a child's reach), or CLEAR. With `behindOnly`, only
+   * nearer cards covering this one count.
+   */
+  private crowding(index: number, pose: CardPose, behindOnly = false): number {
+    const r = SHAPES[this.searchKinds[index]].radius
+    let level = CLEAR
+    for (let j = 0; j < this.searchCount; j++) {
+      if (j === index) continue
+      const other = this.searchPoses[j]
+      if (behindOnly && other.z <= pose.z) continue
+      const dz = Math.abs(other.z - pose.z)
+      const dx = Math.abs(other.x - pose.x)
+      const reach = r + SHAPES[this.searchKinds[j]].radius
+      if (!behindOnly && dz < CROWD_DEPTH && dx < reach) return CROWDED
+      if (dz < COVER_DEPTH && dx < reach * 0.5) level = COVERING
+    }
+    return level
   }
 
   /** Try candidate moves until `budgetMs` of wall time is spent. Returns true when the search is finished. */
@@ -206,7 +235,6 @@ export class CoverageMeter {
     const started = clock()
     const perShape = TURNS.length * DEPTHS.length * XS.length
     const total = perShape * this.searchCount
-    let tried = 0
     while (this.cursor < total) {
       const index = Math.floor(this.cursor / perShape)
       const within = this.cursor % perShape
@@ -218,14 +246,29 @@ export class CoverageMeter {
       pose.angle = current.angle + turn
       pose.z = depth
       pose.x = XS[within % XS.length]
+      if (within === 0 && this.crowding(index, current, true) !== CLEAR) {
+        // Hidden behind a nearer card: no hint asks a child to reach for it.
+        this.cursor += perShape
+        continue
+      }
+      const level = this.crowding(index, pose)
+      if (level === CROWDED) {
+        this.cursor += 1
+        continue
+      }
       let gain = this.soloScore(index, this.searchCount, pose) - this.baseScore
       if (this.searchPreferDepth) gain += Math.min(6, Math.abs(pose.z - current.z) * 0.25) * 4
       gain -= (turn / TAP_TURN) * 6
       gain -= Math.hypot(pose.x - current.x, pose.z - current.z) * 0.15
-      if (gain > 8 && (!this.best || gain > this.best.gain)) this.best = { index, x: pose.x, z: pose.z, angle: pose.angle, gain }
+      const kept = level === CLEAR ? this.clearBest : this.coveringBest
+      if (gain > 8 && (!kept || gain > kept.gain)) {
+        const move = { index, x: pose.x, z: pose.z, angle: pose.angle, gain }
+        if (level === CLEAR) this.clearBest = move
+        else this.coveringBest = move
+      }
       this.cursor += 1
-      tried += 1
-      if ((tried & 7) === 0 && clock() - started >= budgetMs) return false
+      // Every scored candidate: on a slow tablet one costs a sizeable slice of the budget.
+      if (clock() - started >= budgetMs) return false
     }
     this.searching = false
     return true
@@ -235,6 +278,13 @@ export class CoverageMeter {
 export type HintMove = { index: number; x: number; z: number; angle: number; gain: number }
 
 const SPILL_WEIGHT = 0.35
+/** Hints never put a card this close in depth to a card it would stand beside, */
+const CROWD_DEPTH = 2
+/** and only when nothing else helps this close in front of or behind one. */
+const COVER_DEPTH = 8
+const CLEAR = 0
+const COVERING = 1
+const CROWDED = 2
 /** A tap turns a shape an eighth of a turn counter-clockwise; hints ask for at most two taps. */
 export const TAP_TURN = Math.PI / 4
 const TURNS = [0, TAP_TURN, TAP_TURN * 2]
