@@ -21,10 +21,11 @@ import {
   type Object3D,
   type Scene,
 } from 'three'
+import { BEE_SCALE } from '../bee'
 import { PRIMARIES, type Hue } from '../colors'
 import { POUCH_SEED_Y, PUFF_POOL, SEED_POOL, type MeadowController } from '../controller'
-import { PETALS, PLUCK_SECONDS } from '../flowers'
-import { BURROW, GRASS, groundY, onGrass, PLOT_RADIUS, plotAt, plotTop, PLOTS, POUCH, POUCH_RADIUS, SEED_RADIUS, SNAIL_PATH } from '../layout'
+import { PETALS } from '../flowers'
+import { BURROW, GRASS, groundY, onGrass, PLOT_RADIUS, plotAt, plotTop, PLOTS, POUCH, POUCH_RADIUS, SEED_RADIUS, SNAIL_PATH, STEM_HEIGHT } from '../layout'
 import { mixOf } from '../meadow'
 import type { Tier } from '../perf'
 import { SEASON_LOOKS, type Season } from '../season'
@@ -34,6 +35,7 @@ import {
   BEE_HEAD,
   beeBodyGeometry,
   beeHeadGeometry,
+  beeShellGeometries,
   centreGeometry,
   decorGeometry,
   eyeStalkGeometry,
@@ -56,6 +58,7 @@ import {
   snailShellGeometry,
   stemGeometry,
   tuftGeometry,
+  wallDecorGeometry,
   wingGeometry,
 } from './geometry'
 
@@ -71,8 +74,9 @@ function buildGeometries(season: Season) {
   return {
     season,
     hill: hillGeometry(look),
-    backdrop: backdropGeometry(),
-    decor: decorGeometry(look),
+    backdrop: backdropGeometry(look),
+    decor: decorGeometry(),
+    wallDecor: wallDecorGeometry(look),
     tuft: tuftGeometry(),
     scatter: scatterGeometry(look.scatter),
     molehill: molehillGeometry(),
@@ -84,6 +88,7 @@ function buildGeometries(season: Season) {
     centre: centreGeometry(),
     beeBody: beeBodyGeometry(),
     beeHead: beeHeadGeometry(),
+    beeShell: beeShellGeometries(),
     wing: wingGeometry(),
     pollen: pollenGeometry(),
     snailBody: snailBodyGeometry(),
@@ -166,6 +171,8 @@ function handTexture(): CanvasTexture {
 
 const M = new Matrix4()
 const M2 = new Matrix4()
+const STRETCH = new Matrix4()
+const R = new Matrix4()
 const HEAD = new Matrix4()
 const Q = new Quaternion()
 const Q2 = new Quaternion()
@@ -195,6 +202,10 @@ const BLOB_POOL = 32
 const TILT = 0.55
 const WING_ROOT = { x: 1.25, y: 2.35, z: 0.3 }
 const POLLEN_LEGS = { x: 1.9, y: -3.3, z: 0.5 }
+/** The mouse is the smallest character; a size up keeps it readable beside the molehills. */
+const MOUSE_SCALE = 1.2
+const SEED_STRETCH_MAX = 0.24
+const SEED_STRETCH_PER_SPEED = 0.003
 
 function instanced(geometry: BufferGeometry, material: Material, count: number, colors = true): InstancedMesh {
   const mesh = new InstancedMesh(geometry, material, count)
@@ -275,10 +286,16 @@ export class MeadowModels {
       return material
     }
     const hillMaterial = track(feltMaterial(textures, { sheen: 0.14, normalScale: 0.75 }))
+    // three.js rebuilds a material's program parameters (garbage and a full
+    // uniform upload) each time consecutive draws differ in instancing or
+    // instance colour, so each mesh shape gets its own copy of the prop felt.
     const prop = track(feltMaterial(textures, { sheen: 0.3 }))
+    const propInstanced = track(feltMaterial(textures, { sheen: 0.3 }))
+    const propTinted = track(feltMaterial(textures, { sheen: 0.3 }))
     const seedMaterial = track(feltMaterial(textures, { sheen: 0.4, normalScale: 0.5 }))
     const pouchMaterial = track(feltMaterial(textures, { sheen: 0.26, side: DoubleSide }))
     const backdropMaterial = track(new MeshBasicMaterial({ vertexColors: true }))
+    const appliqueMaterial = track(new MeshBasicMaterial({ vertexColors: true, map: textures.heather }))
 
     scene.add(new HemisphereLight(paint(0xfff3de), paint(0x7c8466), 2.35))
     const sun = new DirectionalLight(paint(0xfff0d6), 1.55)
@@ -292,12 +309,13 @@ export class MeadowModels {
     hill.renderOrder = -2
     scene.add(fixed(hill))
     scene.add(fixed(new Mesh(g.decor, prop)))
+    scene.add(fixed(new Mesh(g.wallDecor, appliqueMaterial)))
 
-    const tufts = instanced(g.tuft, prop, 140)
+    const tufts = instanced(g.tuft, propTinted, 90)
     this.scatterTufts(tufts, SEASON_LOOKS[season].grass, SEASON_LOOKS[season].grassFleck)
     scene.add(fixed(tufts))
     if (g.scatter) {
-      const scatter = instanced(g.scatter, prop, 40)
+      const scatter = instanced(g.scatter, propTinted, 40)
       this.scatterSeason(scatter, SEASON_LOOKS[season].scatterColors)
       scene.add(fixed(scatter))
     }
@@ -306,7 +324,7 @@ export class MeadowModels {
     this.blobs.renderOrder = -1
     scene.add(this.blobs)
 
-    this.molehills = instanced(g.molehill, prop, PLOTS.length, false)
+    this.molehills = instanced(g.molehill, propInstanced, PLOTS.length, false)
     this.molehills.count = PLOTS.length
     this.molehillFuzz = shellOf(this.molehills, track(fuzzMaterial({ thickness: 0.75, edge: 0.4, lift: 0.2, vertexColors: true, fibre: 1.4 })))
     scene.add(this.molehills, this.molehillFuzz)
@@ -318,8 +336,8 @@ export class MeadowModels {
     this.seeds = instanced(g.seed, seedMaterial, SEED_POOL)
     scene.add(this.seeds)
 
-    this.stems = instanced(g.stem, prop, PLOTS.length * STEM_SEGMENTS, false)
-    this.leaves = instanced(g.leaf, prop, PLOTS.length * 2, false)
+    this.stems = instanced(g.stem, propInstanced, PLOTS.length * STEM_SEGMENTS, false)
+    this.leaves = instanced(g.leaf, propInstanced, PLOTS.length * 2, false)
     this.petals = instanced(g.petal, seedMaterial, PLOTS.length * PETALS)
     this.petalFuzz = shellOf(this.petals, track(fuzzMaterial({ thickness: 0.32, edge: 0.55, lift: 0.3, vertexColors: true, fibre: 2.6 })))
     this.centres = instanced(g.centre, seedMaterial, PLOTS.length)
@@ -328,10 +346,10 @@ export class MeadowModels {
     scene.add(this.stems, this.leaves, this.petals, this.petalFuzz, this.centres, this.centreFuzz)
 
     const beeBody = new Mesh(g.beeBody, prop)
-    const beeBodyFuzz = new Mesh(g.beeBody, track(fuzzMaterial({ thickness: 0.55, edge: 0.5, lift: 0.3, vertexColors: true, fibre: 2.4 })))
+    const beeBodyFuzz = new Mesh(g.beeShell.body, track(fuzzMaterial({ thickness: 0.55, edge: 0.5, lift: 0.3, vertexColors: true, fibre: 2.4 })))
     beeBodyFuzz.renderOrder = 1
     const head = new Mesh(g.beeHead, prop)
-    const headFuzz = new Mesh(g.beeHead, track(fuzzMaterial({ thickness: 0.42, edge: 0.5, lift: 0.38, vertexColors: true, fibre: 2.8 })))
+    const headFuzz = new Mesh(g.beeShell.head, track(fuzzMaterial({ thickness: 0.42, edge: 0.5, lift: 0.38, vertexColors: true, fibre: 2.8 })))
     headFuzz.renderOrder = 1
     this.beeHead.position.set(0, BEE_HEAD.y, BEE_HEAD.z)
     this.beeHead.add(head, headFuzz)
@@ -351,7 +369,7 @@ export class MeadowModels {
     this.snailBody = new Mesh(g.snailBody, prop)
     this.snailShell = new Mesh(g.snailShell, prop)
     this.snailShell.position.set(0, SNAIL_SHELL.y, SNAIL_SHELL.z)
-    this.eyes = instanced(g.eyeStalk, prop, 2, false)
+    this.eyes = instanced(g.eyeStalk, propInstanced, 2, false)
     this.eyes.count = 2
     this.snail.add(this.snailBody, this.snailShell, this.eyes)
     scene.add(this.snail)
@@ -366,9 +384,10 @@ export class MeadowModels {
     this.mouseTilt.position.z = -2.4
     this.mouseTilt.add(mouseBody, this.mouseHead, this.mouseTail)
     this.mouse.add(this.mouseTilt)
+    this.mouse.scale.setScalar(MOUSE_SCALE)
     scene.add(this.mouse)
 
-    this.puffs = instanced(g.puff, prop, PUFF_POOL)
+    this.puffs = instanced(g.puff, propTinted, PUFF_POOL)
     scene.add(this.puffs)
 
     this.rings = instanced(g.quad, track(ringMaterial()), 2)
@@ -411,8 +430,8 @@ export class MeadowModels {
       seed = (seed * 16807) % 2147483647
       return seed / 2147483647
     }
-    const dark = paint(parseInt(grass.slice(1), 16)).multiplyScalar(0.92)
-    const light = paint(parseInt(fleck.slice(1), 16))
+    const dark = paint(parseInt(grass.slice(1), 16)).multiplyScalar(0.96)
+    const light = paint(parseInt(fleck.slice(1), 16)).lerp(dark, 0.4)
     let count = 0
     for (let tries = 0; tries < 900 && count < mesh.instanceMatrix.count; tries++) {
       const x = -92 + random() * 184
@@ -424,8 +443,8 @@ export class MeadowModels {
       if (onGrass(x, z) && random() < 0.55) continue
       E.set(0, random() * Math.PI * 2, 0)
       Q.setFromEuler(E)
-      const s = 0.8 + random() * 0.7
-      M.compose(V.set(x, groundY(x, z) - 0.2, z), Q, S.set(s, s * (0.8 + random() * 0.5), s))
+      const s = 0.95 + random() * 0.5
+      M.compose(V.set(x, groundY(x, z) - 0.15, z), Q, S.set(s, s * (0.75 + random() * 0.4), s))
       mesh.setMatrixAt(count, M)
       mesh.setColorAt(count, C.copy(dark).lerp(light, random() * 0.7))
       count++
@@ -485,6 +504,16 @@ export class MeadowModels {
       M.makeRotationFromEuler(E)
       M2.makeScale(grow * (1 + squash * 0.45), grow * (1 - squash), grow * (1 + squash * 0.45))
       M.premultiply(M2)
+      const speed = Math.hypot(seed.vx, seed.vy, seed.vz)
+      const stretch = seed.mode === 'held' || seed.mode === 'arc' ? Math.min(SEED_STRETCH_MAX, speed * SEED_STRETCH_PER_SPEED) : 0
+      if (stretch > 0.01) {
+        // A felt ball on the move draws out along its path and rounds up again when it stops.
+        Q.setFromUnitVectors(UP, V.set(seed.vx, seed.vy, seed.vz).divideScalar(speed))
+        R.makeRotationFromQuaternion(Q)
+        STRETCH.makeScale(1 - stretch * 0.4, 1 + stretch, 1 - stretch * 0.4).premultiply(R)
+        STRETCH.multiply(R.transpose())
+        M.premultiply(STRETCH)
+      }
       M.setPosition(seed.x, seed.y - squash * SEED_RADIUS * grow, seed.z)
       this.seeds.setMatrixAt(seeds, M)
       this.seeds.setColorAt(seeds, hueColor(seed.hue))
@@ -521,11 +550,11 @@ export class MeadowModels {
     this.syncBee(c)
     const bee = c.bee
     const beeHeight = Math.max(0, bee.y - groundY(bee.x, bee.z))
-    this.addBlob(bee.x, bee.z, 8 * (1 + beeHeight * 0.025), 0.5 / (1 + beeHeight * 0.06))
+    this.addBlob(bee.x, bee.z, 8 * BEE_SCALE * (1 + beeHeight * 0.025), 0.5 / (1 + beeHeight * 0.06))
     this.syncSnail(c)
     this.addBlob(c.snail.x + c.snail.dir * 0.5, c.snail.z, 11 * c.snail.stretch, 0.5)
     this.syncMouse(c)
-    if (c.mouse.visible() && c.mouse.out > 0.4) this.addBlob(c.mouse.x, c.mouse.z, 8, 0.45 * c.mouse.out)
+    if (c.mouse.visible() && c.mouse.out > 0.4) this.addBlob(c.mouse.x, c.mouse.z, 8 * MOUSE_SCALE, 0.45 * c.mouse.out)
     this.syncGuidance(c, camera)
     this.syncPuffs(c)
 
@@ -544,8 +573,7 @@ export class MeadowModels {
       if (flower.phase === 'empty') continue
       const p = PLOTS[plot]
       const plucked = flower.phase === 'plucked'
-      const fold = plucked ? Math.min(1, flower.pluckT / PLUCK_SECONDS) : 0
-      const keep = 1 - fold
+      const keep = flower.pluckStem()
       const head = flower.headAt(HEADPOS)
       const baseY = plotTop(plot) - 0.8
       const stemX = Math.max(0, flower.stem.x) * keep
@@ -575,12 +603,13 @@ export class MeadowModels {
       for (let side = 0; side < 2; side++) {
         E.set(0, plot * 0.9 + 0.5 + side * Math.PI, 1.3 - unfurl * 1.05 + Math.sin(c.t * 1.4 + plot + side) * 0.05)
         Q.setFromEuler(E)
-        const s = Math.max(0.001, Math.min(1.1, unfurl * 1.1))
+        const s = Math.max(0.001, Math.min(1.25, unfurl * 1.25))
         M.compose(P0, Q, S.set(s, s, s))
         this.leaves.setMatrixAt(leaves++, M)
       }
 
-      const bud = Math.max(0, flower.bud.x) * keep
+      const bud = Math.max(0, flower.bud.x) * flower.pluckKeep()
+      const close = flower.pluckClose()
       const squeeze = flower.budSqueeze
       const leanX = TILT + (head.z - bz) * 0.03 + flower.droop.x * 0.06
       const leanZ = -(head.x - bx) * 0.035
@@ -593,14 +622,14 @@ export class MeadowModels {
       centres++
       const petalColor = PETAL_COLORS.get(flower.hue) ?? C
       for (let i = 0; i < PETALS; i++) {
-        const open = flower.petals[i].x
+        const open = flower.petals[i].x * (1 - close)
         const lift = (Math.PI / 2 - 0.18) * (1 - Math.min(1, open)) + 0.14 - Math.max(0, open - 1) * 0.9
         E.set(0, (i / PETALS) * Math.PI * 2, lift)
         Q2.setFromEuler(E)
         const scale = 0.62 + 0.38 * Math.min(1, Math.max(0, open))
         M2.compose(V.set(0, 0.25, 0), Q2, S.set(scale, 1, scale))
         M2.premultiply(HEAD)
-        M.makeTranslation(0.85, 0, 0)
+        M.makeTranslation(1.05, 0, 0)
         M.premultiply(M2)
         this.petals.setMatrixAt(petals, M)
         this.petals.setColorAt(petals, petalColor)
@@ -634,14 +663,18 @@ export class MeadowModels {
     this.bee.position.set(bee.x, bee.y, bee.z)
     this.bee.rotation.set(bee.pitch, bee.yaw, bee.roll)
     const s = bee.squash
-    this.bee.scale.set(1 + s * 0.45, 1 - s, 1 + s * 0.45)
+    this.bee.scale.set(BEE_SCALE * (1 + s * 0.45), BEE_SCALE * (1 - s), BEE_SCALE * (1 + s * 0.45))
     this.beeHead.rotation.set(bee.headDip * 0.5 - 0.05, Math.sin(bee.t * 0.7) * 0.12, Math.sin(bee.t * 1.3) * 0.1)
     const spread = bee.wingSpread
     const flap = Math.sin(bee.wingPhase)
+    const cover = bee.wingCover
+    const open = 1 - cover
     for (let i = 0; i < this.wings.length; i++) {
       const wing = this.wings[i]
       const side = i === 0 ? 1 : -1
-      wing.rotation.set(-0.15, side * (1 - spread) * 1.15, side * (0.25 + flap * 0.85 * spread))
+      // A giggle slides the wing roots forward so the wings can reach over the mouth.
+      wing.position.set(side * WING_ROOT.x, WING_ROOT.y - cover * 0.4, WING_ROOT.z + cover * 3)
+      wing.rotation.set(-0.15 * open, side * ((1 - spread) * 1.15 * open - cover * 1.75), side * ((0.32 + flap * 0.6 * spread) * open - cover * 0.2))
     }
     const pollen = c.meadow.pollen
     const merge = bee.merge
@@ -673,15 +706,22 @@ export class MeadowModels {
     this.snailBody.scale.set(1 + (1 - stretch) * 0.25, 1 + (1 - stretch) * 0.2, stretch)
     this.snailBody.position.set(0, 0, (stretch - 1) * 3.2)
     this.snailShell.position.set(0, SNAIL_SHELL.y + reach * 0.15 - (1 - stretch) * 0.6, SNAIL_SHELL.z - (stretch - 1) * 1.2)
-    this.snailShell.rotation.set(snail.shellTilt.x + reach * 0.03, 0, 0)
+    this.snailShell.rotation.set(snail.shellTilt.x + reach * 0.03, 0, snail.shiver)
     const headZ = 4.9 * stretch + (stretch - 1) * 3.2
+    // The head's top surface: it rises toward the front of the body, and sinks as the body pulls in.
+    const headTop = 2.2 + 0.85 * Math.min(1, Math.max(0, (headZ - 2) / 2.9))
+    const look = snail.eyeLook
+    const towardChild = -Math.sin(snail.childSide()) * 0.65 * look
+    const wobble = 1 + snail.wobble * 3
     for (let i = 0; i < 2; i++) {
       const side = i === 0 ? 1 : -1
       const eye = i === 0 ? snail.eyeLeft.x : snail.eyeRight.x
-      E.set(0.38 + Math.sin(snail.t * (2.1 + i * 0.4) + i) * 0.1, 0, side * (0.3 + Math.sin(snail.t * 1.7 + i * 2) * 0.08))
+      const nod = Math.sin(snail.t * (2.1 + i * 0.4) * (1 + snail.wobble) + i) * 0.1 * wobble
+      const sway = Math.sin(snail.t * 1.7 * (1 + snail.wobble * 1.5) + i * 2) * 0.08 * wobble
+      E.set(0.26 * (1 - 0.7 * look) + nod, 0, side * (0.42 * (1 - 0.5 * look) + sway) + towardChild)
       Q.setFromEuler(E)
       const s = Math.max(0.02, eye)
-      M.compose(V.set(side * 0.72, 1.9 + 0.4 * (headZ > 4 ? 1 : 0), headZ), Q, S.set(Math.min(1, s * 1.5), s, Math.min(1, s * 1.5)))
+      M.compose(V.set(side * 0.62, headTop, headZ), Q, S.set(Math.min(1, s * 1.5), s, Math.min(1, s * 1.5)))
       this.eyes.setMatrixAt(i, M)
     }
     this.eyes.instanceMatrix.needsUpdate = true
@@ -692,13 +732,14 @@ export class MeadowModels {
     const visible = mouse.visible()
     this.mouse.visible = visible
     if (!visible) return
-    const sink = (1 - mouse.out) * 6.5
+    const sink = (1 - mouse.out) * 6.5 * MOUSE_SCALE
     this.mouse.position.set(mouse.x, groundY(mouse.x, mouse.z) - sink + mouse.hop, mouse.z)
     this.mouse.rotation.set(0, mouse.yaw, 0)
     this.mouseTilt.rotation.set(-mouse.rear * 0.95, 0, 0)
     this.mouseTilt.scale.set(1 - mouse.stretch * 0.15, 1 - mouse.stretch * 0.22, 1 + mouse.stretch * 0.5)
-    this.mouseHead.rotation.set(mouse.rear * 0.75 + mouse.sniff * 0.1, mouse.look, 0)
-    this.mouseTail.rotation.set(0, Math.sin(mouse.t * 3.6) * 0.3, 0)
+    const groom = mouse.groom
+    this.mouseHead.rotation.set(mouse.rear * 0.75 + mouse.sniff * 0.1 + Math.sin(mouse.t * Math.PI * 2 * 6) * 0.2 * groom, mouse.look, Math.sin(mouse.t * Math.PI * 2 * 3) * 0.28 * groom)
+    this.mouseTail.rotation.set(0, Math.sin(mouse.t * 3.6) * 0.3 + mouse.tailFlick, 0)
   }
 
   private syncGuidance(c: MeadowController, camera: Camera): void {
@@ -711,7 +752,9 @@ export class MeadowModels {
           this.ringAt(hint.from.x, groundY(hint.from.x, hint.from.z) + 0.2, hint.from.z, SEED_RADIUS * 3.6, glow, c.t)
           break
         case 'plantPouch':
-          this.ringAt(hint.from.x, POUCH_SEED_Y - SEED_RADIUS * 0.4, hint.from.z, SEED_RADIUS * 3.4, glow, c.t)
+          // On the grass around the pouch: over the cream felt a gold ring barely shows,
+          // and at seed height it crossed the seeds. The seed itself hops to say which one.
+          this.ringAt(POUCH.x, groundY(POUCH.x, POUCH.z) + 0.2, POUCH.z, POUCH_RADIUS * 2.7, glow, c.t)
           break
         case 'callBee':
         case 'pick':
@@ -734,7 +777,7 @@ export class MeadowModels {
     if (!hand.visible || !hint) return
     const carrying = hint.kind === 'plantLoose' || hint.kind === 'plantPouch'
     const surface = hint.kind === 'plantPouch' && hand.press < 0.99 && Math.hypot(hand.x - hint.from.x, hand.z - hint.from.z) < 1 ? POUCH_SEED_Y - SEED_RADIUS : groundY(hand.x, hand.z)
-    const fingertip = carrying ? SEED_RADIUS * 2 + 1.5 : hint.kind === 'callBee' ? plotTop(hint.plot) + 13 - groundY(hand.x, hand.z) : 6
+    const fingertip = carrying ? SEED_RADIUS * 2 + 1.5 : hint.kind === 'callBee' ? plotTop(hint.plot) + STEM_HEIGHT - groundY(hand.x, hand.z) : 6
     const y = surface + fingertip + (1 - hand.press) * 4.5
     this.hand.position.set(hand.x + 1.2, y, hand.z + 2)
     this.hand.quaternion.copy(camera.quaternion).multiply(this.handTwist)
