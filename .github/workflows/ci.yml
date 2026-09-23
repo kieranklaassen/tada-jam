@@ -21,6 +21,8 @@ jobs:
         run: npm test
       - name: Egress check (source)
         run: npm run egress:check
+      - name: Wordless check (no text on the kid side)
+        run: npm run wordless:check
       - name: Build
         run: npm run build
       - name: Egress check (built assets)

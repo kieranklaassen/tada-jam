@@ -15,7 +15,8 @@
     "test": "vitest run",
     "egress:check": "node scripts/egress-check.ts",
     "egress:built": "node scripts/egress-check.ts --built",
-    "check": "npm run typecheck && npm run test && npm run egress:check"
+    "wordless:check": "node scripts/wordless-check.ts",
+    "check": "npm run typecheck && npm run test && npm run egress:check && npm run wordless:check"
   },
   "dependencies": {
     "@react-three/fiber": "^9.8.0",

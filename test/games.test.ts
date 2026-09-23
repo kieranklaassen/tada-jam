@@ -27,6 +27,14 @@ describe('jam games', () => {
         expect(game.cartridge.manifest.key).toBe(folder)
       })
 
+      it('declares a specific target age band (whole years, 2–12, at most five years wide)', () => {
+        const [min, max] = game.cartridge.manifest.ageBand
+        expect(Number.isInteger(min) && Number.isInteger(max), 'ageBand uses whole years').toBe(true)
+        expect(min, 'youngest age is at least 2').toBeGreaterThanOrEqual(2)
+        expect(max, 'oldest age is at most 12').toBeLessThanOrEqual(12)
+        expect(max - min, 'a game is designed for one audience; split wider ranges into faces or a second game').toBeLessThanOrEqual(5)
+      })
+
       it('has a launcher emoji', () => {
         expect(game.emoji.trim()).not.toBe('')
       })
