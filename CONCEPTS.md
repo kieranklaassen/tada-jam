@@ -65,6 +65,14 @@ One cycle of improving how a game looks: screenshot a fixed, seeded scene at iPa
 
 Passes are logged in order with their critique, change, and frame rate, so the next game can see what moved readability and what was reverted.
 
+## Performance
+
+### Quality tier
+One of a few rendering levels a game steps between at runtime, each trading look for frame time (pixel density, fur, the post pass, physics catch-up), chosen by the game's own frame-time measurements rather than by guessing the device.
+*Avoid:* graphics preset, LOD level
+
+Stepping down is quick after sustained dropped frames; stepping up needs a long clean stretch and backs off after a failed attempt, so tiers never flicker. A grown-up overlay can pin a tier to judge it on a device.
+
 ## Flagged ambiguities
 
 - "Art direction" had been used for both one game's look and the jam-wide standard. These are distinct: a game's look is its Claimed style, described in its Art guide; the jam-wide standard is the Quality bar.

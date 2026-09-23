@@ -113,7 +113,7 @@ Starting the loop for a new game: copy the seeding approach from `scripts/pebble
 
 ## Related
 
-- The performance learning in `docs/solutions/performance-issues/`: why the 60 fps numbers from these passes came from the wrong target, and the adaptive quality that followed.
+- [`measure-on-the-target-device-and-ship-adaptive-quality.md`](../performance-issues/measure-on-the-target-device-and-ship-adaptive-quality.md): why the 60 fps numbers from these passes came from the wrong target, and the adaptive quality that followed.
 - [`distinct-visual-style-per-game-shared-quality-bar.md`](../conventions/distinct-visual-style-per-game-shared-quality-bar.md): the shared quality bar these passes polish toward.
 - [`wordless-clarity-for-the-declared-age-band.md`](../conventions/wordless-clarity-for-the-declared-age-band.md): clarity for the declared age, which the passes serve.
 - [`games/pebble-table/REFINEMENT.md`](../../../games/pebble-table/REFINEMENT.md): the per-pass log.
