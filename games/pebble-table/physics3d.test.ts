@@ -1,0 +1,124 @@
+import { describe, expect, it } from 'vitest'
+import { FEEDING, SCALE, TABLE } from './layout'
+import { panOf } from './scale'
+import { STEP, TablePhysics, to3, toWorld2 } from './physics3d'
+
+const run = (physics: TablePhysics, seconds: number) => {
+  let last = physics.step(0)
+  for (let t = 0; t < seconds; t += STEP) last = physics.step(STEP)
+  return last
+}
+
+describe('coordinates', () => {
+  it('round-trips world points through 3D', () => {
+    const p = { x: 321, y: 777 }
+    const back = toWorld2(to3(p))
+    expect(back.x).toBeCloseTo(p.x)
+    expect(back.y).toBeCloseTo(p.y)
+  })
+})
+
+describe('TablePhysics', () => {
+  it('drops a stone onto the table where it comes to rest', () => {
+    const physics = new TablePhysics()
+    physics.addStone(1, 4, { x: 700, y: 500 }, { y: 8 })
+    const report = run(physics, 2)
+    const body = physics.body(1)!
+    expect(body.position.y).toBeGreaterThan(0)
+    expect(body.position.y).toBeLessThan(3)
+    expect(report.moving).toBe(false)
+    expect(physics.position2(1)!.x).toBeCloseTo(700, -1)
+  })
+
+  it('reports a stone swept off the table edge as fallen', () => {
+    const physics = new TablePhysics()
+    physics.addStone(1, 4, { x: TABLE.x + 60, y: 500 })
+    run(physics, 0.5)
+    let fallen: number[] = []
+    for (let x = TABLE.x + 160; x > TABLE.x - 120 && fallen.length === 0; x -= 3) {
+      physics.setBroom(7, { x, y: 500 })
+      fallen = physics.step(STEP).fallen
+    }
+    physics.setBroom(7, null)
+    for (let t = 0; t < 3 && fallen.length === 0; t += STEP) fallen = physics.step(STEP).fallen
+    expect(fallen).toEqual([1])
+  })
+
+  it('keeps a crowd of five stones inside the bowl', () => {
+    const physics = new TablePhysics()
+    physics.setMat('feeding')
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2
+      physics.addStone(i + 1, 4, { x: FEEDING.bowl.x + Math.cos(angle) * 40, y: FEEDING.bowl.y + Math.sin(angle) * 40 }, { y: 3 + i * 3 })
+    }
+    run(physics, 3)
+    for (let i = 1; i <= 5; i++) {
+      const p = physics.position2(i)!
+      expect(Math.hypot(p.x - FEEDING.bowl.x, p.y - FEEDING.bowl.y)).toBeLessThan(FEEDING.bowl.r)
+    }
+  })
+
+  it('catches a stone released above a pan, and the pan carries it down', () => {
+    const physics = new TablePhysics()
+    physics.setMat('scale')
+    const pan = SCALE.pans[0]
+    physics.addStone(1, 4, pan, { y: 12 })
+    run(physics, 1.5)
+    expect(panOf(physics.position2(1)!)).toBe(0)
+    const before = physics.body(1)!.position.y
+    for (let t = 0; t < 1; t += STEP) {
+      physics.setPanDrops([SCALE.maxDrop * Math.min(1, t * 2), -SCALE.maxDrop * Math.min(1, t * 2)])
+      physics.step(STEP)
+    }
+    expect(physics.body(1)!.position.y).toBeLessThan(before - 3)
+    expect(panOf(physics.position2(1)!)).toBe(0)
+  })
+
+  it('holds a stone in the air and throws it with the finger on release', () => {
+    const physics = new TablePhysics()
+    physics.addStone(1, 4, { x: 600, y: 500 })
+    physics.hold(1)
+    physics.moveHeld(1, { x: 650, y: 520 })
+    run(physics, 0.5)
+    expect(physics.position2(1)).toMatchObject({ x: 650, y: 520 })
+    physics.release(1, { x: 400, y: 0 })
+    run(physics, 2)
+    expect(physics.position2(1)!.x).toBeGreaterThan(670)
+  })
+
+  it('lifts a held stone out of a crowd without scattering its neighbours', () => {
+    const physics = new TablePhysics()
+    physics.setMat('feeding')
+    physics.addStone(1, 4, { x: FEEDING.bowl.x - 25, y: FEEDING.bowl.y })
+    physics.addStone(2, 4, { x: FEEDING.bowl.x + 35, y: FEEDING.bowl.y })
+    run(physics, 1)
+    const before = physics.position2(2)!
+    physics.hold(1)
+    physics.moveHeld(1, { x: FEEDING.bowl.x + 60, y: FEEDING.bowl.y - 200 })
+    run(physics, 0.5)
+    const after = physics.position2(2)!
+    expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeLessThan(3)
+  })
+
+  it('sweeps stones ahead of a broom finger', () => {
+    const physics = new TablePhysics()
+    physics.addStone(1, 4, { x: 700, y: 500 })
+    run(physics, 0.5)
+    for (let x = 600; x < 760; x += 4) {
+      physics.setBroom(9, { x, y: 500 })
+      physics.step(1 / 120)
+    }
+    physics.setBroom(9, null)
+    run(physics, 1)
+    expect(physics.position2(1)!.x).toBeGreaterThan(740)
+  })
+
+  it('bounces stones off fixtures such as a seated guest', () => {
+    const physics = new TablePhysics()
+    physics.setFixture('guest', { x: 800, y: 500, r: 46 })
+    physics.addStone(1, 4, { x: 700, y: 500 })
+    physics.body(1)!.velocity.set(90, 0, 0)
+    run(physics, 2)
+    expect(physics.position2(1)!.x).toBeLessThan(800 - 46 - 25)
+  })
+})

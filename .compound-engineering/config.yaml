@@ -1,0 +1,11 @@
+# Compound Engineering config. The `compound:` block is read only by
+# compound-cli (https://github.com/kieranklaassen/compound-cli), which audits
+# the learnings under docs/solutions/ in CI and recalls them before work.
+compound:
+  schema:
+    fields:
+      applies_when:
+        required: true
+        max_items: 5
+  audit:
+    strict: true
