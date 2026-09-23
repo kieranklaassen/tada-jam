@@ -6,13 +6,14 @@ The authority for cartridge mechanics is Tada's `docs/cartridges.md`. This file 
 
 ## Verify
 
-- `npm run check` runs TypeScript, vitest, and the source egress scan. CI also builds and scans the built assets (`npm run build && npm run egress:built`).
+- `npm run check` runs TypeScript, vitest, the source egress scan, and the wordless check (no words or numerals rendered by kid-side game code). CI also builds and scans the built assets (`npm run build && npm run egress:built`).
 - `npm run dev` starts the jam shell. Open the printed URL, pick a game. Add `?chrome=0` to hide the grown-up control strip.
 
 ## Documented knowledge
 
 - `docs/solutions/` — documented solutions and conventions from past work, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`). Check it before implementing or debugging in a documented area.
 - `CONCEPTS.md` — shared domain vocabulary for the jam (terms like quality bar and claimed style).
+- `.claude/skills/jam-game-creator/SKILL.md` — the step-by-step path from a game idea to a merged PR (age band, style, spike, guidance ladder, quality bar, checks).
 
 ## Shape of a game
 
@@ -25,7 +26,7 @@ The authority for cartridge mechanics is Tada's `docs/cartridges.md`. This file 
 ## Rules that still apply (from the Tada contract)
 
 - **Contract surface only.** A game reaches the child, age, language, persistence, and attention through `ctx` alone. Never import from `harness/` or from another game. The egress check enforces this.
-- **Manifest.** Kebab-case `key` equal to the folder name, non-blank `name`, valid `ageBand`, `permissions` from the closed set, `iconIdentity` required. Declare `'storage'` if you persist.
+- **Manifest.** Kebab-case `key` equal to the folder name, non-blank `name`, an `ageBand` naming one audience (whole years, 2 to 12, at most five years wide; `test/games.test.ts` enforces it), `permissions` from the closed set, `iconIdentity` required. Declare `'storage'` if you persist.
 - **Persistence only through `ctx.storage`.** No `fetch`, `localStorage`, `sessionStorage`, `IndexedDB`, or invented endpoints. Call `save()` on every meaningful change; it is debounced, and the shell flushes on put-away. Saved state is small plain JSON under 64 KB, versioned, and read defensively (older or corrupt shapes must not crash).
 - **Lossless exit.** Put-away can happen at any instant. No confirm dialogs, no "are you sure", nothing lost.
 - **Attention.** Pause animation loops, physics, and audio while `ctx.attention.attended` is false or `document.hidden` is true. A parked game stays mounted (`display: none`); unmount cleanups do not run on park.
@@ -37,7 +38,7 @@ The authority for cartridge mechanics is Tada's `docs/cartridges.md`. This file 
 - **Sound.** Synthesized with tone.js or raw Web Audio. Start audio inside the child's first real tap, dispose nodes on cleanup, and stay silent while unattended.
 - **Tech menu.** React 19, canvas 2D / SVG / pixi.js, three.js (raw), matter.js or rapier, tone.js, gsap, zustand. Anything else is a proposal in the PR description and must be egress-free, bundled, and license-clean (no AGPL/copyleft). The allowed package list lives in `scripts/egress-check.ts`.
 - **Touch-first.** No hover-only behavior; hit targets around 48 px or larger.
-- **Quality bar.** Every game meets the shared bar in `docs/art-direction.md`: alive at idle; motion and sound on every touch; weight, squash, and follow-through; kid-clear silhouettes and tappables; wordless idle guidance; 60 fps on a mid-range iPad (DPR cap 2, under about 80 draw calls, no shadow maps, at most one post pass); procedural or committed assets only. Say in the PR how the game meets each line, with a measured frame rate.
+- **Quality bar.** Every game meets the shared bar in `docs/art-direction.md`: alive at idle; motion and sound on every touch; weight, squash, and follow-through; kid-clear silhouettes and tappables; wordless clarity for the declared age band (every interaction understandable from cues at the youngest age in `ageBand`; no words or numerals on the kid side, enforced by `npm run wordless:check`; no voice instructions); wordless idle guidance; 60 fps on a mid-range iPad (DPR cap 2, under about 80 draw calls, no shadow maps, at most one post pass); procedural or committed assets only. Say in the PR how the game meets each line, with a measured frame rate.
 - **A distinct look per game.** Games must not look alike. Before building visuals, pick a style nobody has claimed in the registry in `docs/art-direction.md`, spike it (screenshot at 1180×820 and measure fps at DPR 2), and register it there in the same PR with a link to the game's own art guide (`games/<key>/ART.md`). Claymation belongs to Pebble Table. Sharing techniques is fine; sharing a look is not.
 
 ## Jam allowances (proposed Tada contract deltas)
