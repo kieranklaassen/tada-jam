@@ -18,12 +18,13 @@ export const PALETTE = {
   farTrees: '#2f4a4e',
   farTreesNight: '#141c33',
   moon: '#fff0c2',
+  sun: '#ffcb6b',
   star: '#fff6dc',
 
   grass: '#93ab58',
   grassEdge: '#5d7a44',
   moss: '#3b5a3c',
-  path: '#b9a46e',
+  path: '#d6bc84',
   leaf: '#4b7a4a',
   leafDark: '#335c44',
   leafLight: '#79a257',
@@ -49,6 +50,7 @@ export const PALETTE = {
   glow: '#ffc75e',
   nest: '#a47a44',
   nestDark: '#7a5530',
+  straw: '#d1a861',
 
   owl: '#a8703b',
   owlDark: '#7b4f2a',

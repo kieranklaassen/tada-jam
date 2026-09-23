@@ -525,14 +525,24 @@ const HAND_FRAGMENT = /* glsl */ `
   }
 `
 
-/** A soft cream hand in gouache with a brown ink line, pointing its finger down; the fingertip is the bottom centre. */
+const HAND_W = 128
+const HAND_H = 176
+/** Room around the painted hand for its soft shadow, which falls down and to the right. */
+const PAD = { left: 6, top: 6, right: 16, bottom: 22 }
+const TEX_W = HAND_W + PAD.left + PAD.right
+const TEX_H = HAND_H + PAD.top + PAD.bottom
+const TIP = { x: 45, y: 172 }
+
+/**
+ * A soft cream hand in gouache with a brown ink line, pointing its finger
+ * down, over a soft violet shadow so it reads on pale rock as well as on
+ * grass. The fingertip lands on the anchor (see FINGER_X and FINGER_Y).
+ */
 function paintHand(): THREE.Texture {
-  const w = 128
-  const h = 176
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')!
+  const hand = document.createElement('canvas')
+  hand.width = HAND_W
+  hand.height = HAND_H
+  const ctx = hand.getContext('2d')!
   const ink = PALETTE.ink
   const skin = '#fbe8d2'
   const shade = '#eecaa8'
@@ -548,7 +558,7 @@ function paintHand(): THREE.Texture {
   const paint = (fill: string) => {
     ctx.fillStyle = fill
     ctx.fill()
-    ctx.lineWidth = 5
+    ctx.lineWidth = 6
     ctx.strokeStyle = ink
     ctx.stroke()
   }
@@ -575,6 +585,16 @@ function paintHand(): THREE.Texture {
   ctx.beginPath()
   ctx.ellipse(45, 160, 6, 5, 0, 0, Math.PI * 2)
   ctx.fill()
+
+  const canvas = document.createElement('canvas')
+  canvas.width = TEX_W
+  canvas.height = TEX_H
+  const out = canvas.getContext('2d')!
+  out.shadowColor = 'rgba(43, 35, 80, 0.5)'
+  out.shadowBlur = 10
+  out.shadowOffsetX = 5
+  out.shadowOffsetY = 9
+  out.drawImage(hand, PAD.left, PAD.top)
   const texture = new THREE.CanvasTexture(canvas)
   texture.colorSpace = THREE.NoColorSpace
   texture.minFilter = THREE.LinearMipmapLinearFilter
@@ -582,8 +602,11 @@ function paintHand(): THREE.Texture {
   return texture
 }
 
-/** The fingertip sits 45/128 across the texture; shift the quad so it lands on the anchor. */
-const FINGER_X = 45 / 128 - 0.5
+/** Where the fingertip sits in the texture, as offsets that move it onto the quad's anchor. */
+const FINGER_X = (PAD.left + TIP.x) / TEX_W - 0.5
+const FINGER_Y = (TEX_H - PAD.top - TIP.y) / TEX_H
+/** World size of the quad: 17.2 units across the painted hand itself, grown by the shadow padding. */
+const HAND_SIZE = { x: (17.2 * TEX_W) / HAND_W, y: ((17.2 * HAND_H) / HAND_W) * (TEX_H / HAND_H) }
 
 class GhostHand {
   readonly mesh: THREE.Mesh
@@ -591,8 +614,8 @@ class GhostHand {
 
   constructor() {
     const geometry = new THREE.PlaneGeometry(1, 1)
-    geometry.translate(-FINGER_X, 0, 0)
-    this.uniforms = { anchor: { value: new THREE.Vector3() }, size: { value: new THREE.Vector2(15, 20.6) }, opacity: { value: 0 }, map: { value: paintHand() } }
+    geometry.translate(-FINGER_X, -FINGER_Y, 0)
+    this.uniforms = { anchor: { value: new THREE.Vector3() }, size: { value: new THREE.Vector2(HAND_SIZE.x, HAND_SIZE.y) }, opacity: { value: 0 }, map: { value: paintHand() } }
     const material = new THREE.ShaderMaterial({ ...PREMULTIPLIED, depthTest: false, uniforms: this.uniforms, vertexShader: HAND_VERTEX, fragmentShader: HAND_FRAGMENT })
     this.mesh = new THREE.Mesh(geometry, material)
     this.mesh.frustumCulled = false
@@ -604,7 +627,7 @@ class GhostHand {
     this.mesh.visible = opacity > 0.01
     this.uniforms.anchor.value.set(x, y, z)
     const s = 1 - press * 0.08
-    this.uniforms.size.value.set(15 * s, 20.6 * s)
+    this.uniforms.size.value.set(HAND_SIZE.x * s, HAND_SIZE.y * s)
     this.uniforms.opacity.value = opacity * 0.92
   }
 }
