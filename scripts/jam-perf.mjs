@@ -14,7 +14,7 @@ import { join } from 'node:path'
 // canvas data attributes). "worst1s" is the fewest frames in any one-second
 // window, which is what "never under 45 fps" judges.
 // `full` pins each game's full-quality tier (tier numbering differs per game;
-// see FULL_TIER); `tierN` pins raw tier N. WebKit cannot be CPU-throttled.
+// see COUNTS_UP); `tierN` pins raw tier N. WebKit cannot be CPU-throttled.
 // Env: SIZE=2 multiplies the viewport (SIZE=2 is four times the pixels, a
 // stand-in for a weaker GPU); BUSY and QUIET set the play and rest seconds;
 // OUT sets the results folder (one JSON line per run in results.jsonl, plus a
@@ -33,13 +33,12 @@ const H = 820 * SIZE
 const OUT = process.env.OUT ?? join(tmpdir(), 'jam-perf')
 mkdirSync(OUT, { recursive: true })
 
-// The URL value that pins full quality (DPR 2, every effect); Pebble Table pins through its overlay.
-const FULL_TIER = { 'felt-meadow': 0, 'frog-choir': 0, 'shadow-lantern': 0, 'turning-tower': 0, 'hillside-spring': 0, 'light-garden': 3, 'bedtime-forest': 3, 'critter-clay': 3 }
+// Most games number tiers from 0 = full quality (DPR 2) down to 3 = minimal (DPR 1). These count the other way,
+// so their full tier is 3. Pebble Table has no URL pin; it pins through its grown-up overlay.
+const COUNTS_UP = new Set(['light-garden', 'bedtime-forest', 'critter-clay'])
+const FULL_TIER = COUNTS_UP.has(game) ? 3 : 0
 // DPR by raw tier index, to report tiers comparably.
-const DPR_BY_TIER = {
-  'felt-meadow': [2, 1.5, 1.25, 1], 'frog-choir': [2, 1.5, 1.25, 1], 'shadow-lantern': [2, 1.5, 1.25, 1], 'turning-tower': [2, 1.5, 1.25, 1], 'hillside-spring': [2, 1.5, 1.25, 1],
-  'light-garden': [1, 1.25, 1.5, 2], 'bedtime-forest': [1, 1.25, 1.5, 2], 'critter-clay': [1, 1.25, 1.5, 2],
-}
+const DPR_BY_TIER = { [game]: COUNTS_UP.has(game) ? [1, 1.25, 1.5, 2] : [2, 1.5, 1.25, 1] }
 const PEBBLE_DPR = { full: 2, balanced: 1.5, lean: 1.25, minimal: 1 }
 
 const launcher = engine === 'webkit' ? webkit : chromium
@@ -54,7 +53,7 @@ if (engine === 'chrome' && throttle > 1) {
   const cdp = await context.newCDPSession(page)
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle })
 }
-const pin = mode.startsWith('tier') ? `&tier=${mode.slice(4)}` : mode === 'full' && game !== 'pebble-table' ? `&tier=${FULL_TIER[game]}` : ''
+const pin = mode.startsWith('tier') ? `&tier=${mode.slice(4)}` : mode === 'full' && game !== 'pebble-table' ? `&tier=${FULL_TIER}` : ''
 await page.goto(`${base}/?chrome=0${pin}#/play/${game}`)
 await page.waitForTimeout(1500)
 if (mode === 'full' && game === 'pebble-table') {
