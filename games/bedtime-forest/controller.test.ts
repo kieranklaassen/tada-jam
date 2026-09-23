@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { CARRY_LIFT, MOTION } from './brain'
 import { DAWN_SECONDS, NIGHT_SECONDS, NIGHTFALL_SECONDS } from './cycle'
 import { ForestController, type Cue, type Projector, type Sound } from './controller'
-import { IDLE_BEFORE_HINT } from './guidance'
+import { IDLE_BEFORE_GLOW, IDLE_BEFORE_HINT } from './guidance'
 import type { ScreenPoint } from './input'
 import { ANIMAL_KEYS, HOMES, inClearing, type AnimalKey, type HomeKey } from './layout'
 import { defaultForest, type ForestState } from './state'
@@ -37,10 +38,10 @@ function recordingSound(cues: string[]): Sound {
   }
 }
 
-function setup(state: ForestState = defaultForest(), childAge: number | null = 4) {
+function setup(state: ForestState = defaultForest(), childAge: number | null = 4, seed?: number) {
   const saves: ForestState[] = []
   const cues: string[] = []
-  const forest = new ForestController(state, { save: (s) => saves.push(structuredClone(s)), sound: recordingSound(cues), childAge })
+  const forest = new ForestController(state, { save: (s) => saves.push(structuredClone(s)), sound: recordingSound(cues), childAge, seed })
   forest.setProjector(projector)
   return { forest, saves, cues }
 }
@@ -66,8 +67,12 @@ function screenOfHome(home: HomeKey): ScreenPoint {
 let clock = 0
 /** Press an animal, carry it over a home in a few moves, and let go. */
 function carry(forest: ForestController, key: AnimalKey, home: HomeKey, pointerId = 1): void {
+  carryTo(forest, key, screenOfHome(home), pointerId)
+}
+
+/** Press an animal, carry it to a screen point in a few moves, and let go. */
+function carryTo(forest: ForestController, key: AnimalKey, to: ScreenPoint, pointerId = 1): void {
   const from = screenOfAnimal(forest, key)
-  const to = screenOfHome(home)
   forest.pointerDown(pointerId, from, (clock += 16))
   for (let k = 1; k <= 10; k++) {
     forest.pointerMove(pointerId, { x: from.x + ((to.x - from.x) * k) / 10, y: from.y + ((to.y - from.y) * k) / 10 })
@@ -107,6 +112,81 @@ describe('carrying animals to bed', () => {
     expect(creature(forest, 'bear').roaming).toBe(true)
     forest.pause()
     expect(saves.at(-1)!.animals.bear.asleep).toBe(false)
+  })
+
+  it('letting go anywhere on the wide cave rock counts, not only over its doorway', () => {
+    const { forest } = setup()
+    run(forest, 0.5)
+    const boulder = { x: 0, y: 0 }
+    projector.toScreen(-30, 10, -50, boulder)
+    carryTo(forest, 'bear', boulder)
+    run(forest, 2.5)
+    expect(creature(forest, 'bear').mode).toBe('asleep')
+  })
+
+  it('a tap on an animal standing by a home plays its trick right there, never a trip inside', () => {
+    const { forest, cues } = setup()
+    run(forest, 0.5)
+    const fish = creature(forest, 'fish')
+    fish.x = -2
+    fish.z = -30
+    const at = screenOfAnimal(forest, 'fish')
+    forest.pointerDown(1, at, (clock += 16))
+    run(forest, 0.1)
+    forest.pointerUp(1, at, (clock += 150))
+    run(forest, 1.5)
+    expect(cues).toContain('trick:fish')
+    expect(cues).not.toContain('hover:fish')
+    expect(cues).not.toContain('flop:fish')
+  })
+
+  it('holding an animal still by a home and letting go sets it down where it was', () => {
+    const { forest, cues } = setup()
+    run(forest, 0.5)
+    const fish = creature(forest, 'fish')
+    fish.x = -2
+    fish.z = -30
+    const at = screenOfAnimal(forest, 'fish')
+    forest.pointerDown(1, at, (clock += 16))
+    run(forest, 0.8)
+    forest.pointerUp(1, at, (clock += 800))
+    run(forest, 1.5)
+    expect(cues).not.toContain('hover:fish')
+    expect(cues).not.toContain('flop:fish')
+    expect(fish.roaming).toBe(true)
+  })
+
+  it('a carried animal held over the back of the clearing rises in front of the homes instead of sinking behind them', () => {
+    const { forest } = setup()
+    run(forest, 0.5)
+    const rabbit = creature(forest, 'rabbit')
+    const from = screenOfAnimal(forest, 'rabbit')
+    const overRock = { x: 0, y: 0 }
+    projector.toScreen(-2, 0, -70, overRock)
+    forest.pointerDown(1, from, (clock += 16))
+    for (let k = 1; k <= 10; k++) {
+      forest.pointerMove(1, { x: from.x + ((overRock.x - from.x) * k) / 10, y: from.y + ((overRock.y - from.y) * k) / 10 })
+      run(forest, 1 / 20)
+    }
+    run(forest, 1.5)
+    expect(rabbit.mode).toBe('held')
+    expect(rabbit.z - rabbit.spec.radius).toBeGreaterThan(-37)
+    expect(rabbit.y).toBeGreaterThan(CARRY_LIFT)
+    forest.pointerUp(1, overRock, (clock += 2000))
+  })
+
+  it('an animal tumbling out of a wrong home nudges a bystander aside instead of landing inside it', () => {
+    const { forest } = setup()
+    run(forest, 0.5)
+    const owl = creature(forest, 'owl')
+    const fox = creature(forest, 'fox')
+    owl.x = HOMES.nest.door.x
+    owl.z = HOMES.nest.door.z
+    carry(forest, 'fox', 'nest')
+    for (let t = 0; t < 4 && !(fox.mode === 'react' && fox.stage === 2); t += 1 / 60) forest.step(1 / 60)
+    expect(fox.stage).toBe(2)
+    run(forest, 0.2)
+    expect(Math.hypot(fox.x - owl.x, fox.z - owl.z)).toBeGreaterThan((fox.spec.radius + owl.spec.radius) * 0.9)
   })
 
   it('the fish flops out of the nest and ends asleep in the pond on its own', () => {
@@ -171,6 +251,42 @@ describe('touch at night and on the scenery', () => {
     expect(cues).toContain('knock:cave')
     expect(forest.fxCount).toBe(before + 2)
   })
+
+  it('a knock on a home makes whoever lives there stop, answer, and look at it', () => {
+    const { forest, cues } = setup()
+    run(forest, 0.5)
+    forest.pointerDown(1, screenOfHome('cave'), (clock += 16))
+    forest.pointerUp(1, screenOfHome('cave'), (clock += 100))
+    expect(cues).toContain('answer:bear')
+    expect(cues.filter((cue) => cue.startsWith('answer:'))).toHaveLength(1)
+    run(forest, 0.8)
+    const bear = creature(forest, 'bear')
+    expect(bear.mode).toBe('idle')
+    expect(bear.look).toBeGreaterThan(0.6)
+    for (const c of forest.creatures) if (c !== bear) expect(c.look).toBeLessThan(0.1)
+    run(forest, 2)
+    expect(bear.look).toBeLessThan(0.3)
+  })
+
+  it('an animal in the middle of its trick still turns to its home at once when it is knocked on', () => {
+    const { forest, cues } = setup()
+    run(forest, 0.5)
+    const bear = creature(forest, 'bear')
+    const at = screenOfAnimal(forest, 'bear')
+    forest.pointerDown(1, at, (clock += 16))
+    forest.pointerUp(1, at, (clock += 100))
+    run(forest, 0.5)
+    expect(bear.mode).toBe('trick')
+    forest.pointerDown(2, screenOfHome('cave'), (clock += 16))
+    forest.pointerUp(2, screenOfHome('cave'), (clock += 100))
+    expect(cues).toContain('answer:bear')
+    run(forest, 0.6)
+    expect(bear.mode).toBe('trick')
+    expect(bear.look).toBeGreaterThan(0.6)
+    run(forest, MOTION.bear.trick)
+    expect(bear.mode).toBe('idle')
+    expect(bear.look).toBeGreaterThan(0.6)
+  })
 })
 
 describe('gestures and pausing', () => {
@@ -230,10 +346,37 @@ describe('guidance', () => {
     for (const c of forest.creatures) expect(c.asleep).toBe(false)
   })
 
+  it('once the hints have said their piece, a watched forest goes back to its evening', () => {
+    const { forest } = setup()
+    forest.pointerDown(1, { x: 600, y: 700 }, (clock += 16))
+    forest.pointerUp(1, { x: 600, y: 700 }, (clock += 100))
+    run(forest, 100)
+    expect(forest.gazeHome).toBe(false)
+    expect(forest.glowIndex).toBe(-1)
+    const moved = new Set<string>()
+    for (let t = 0; t < 30; t += 1 / 30) {
+      forest.step(1 / 30)
+      for (const c of forest.creatures) if (c.mode === 'walk' || c.mode === 'yawn') moved.add(c.key)
+    }
+    expect(moved.size).toBeGreaterThanOrEqual(3)
+  })
+
   it('on first open an animal yawns an invitation before any touch', () => {
     const { forest, cues } = setup()
     run(forest, 2)
     expect(cues.some((cue) => cue.startsWith('invite:'))).toBe(true)
+  })
+
+  it('on first open, the animal that yawns the invitation is the one the ring and the ghost hand then show', () => {
+    for (let seed = 1; seed <= 12; seed++) {
+      const { forest, cues } = setup(defaultForest(), 4, seed)
+      run(forest, IDLE_BEFORE_GLOW + 0.5)
+      const invited = cues.find((cue) => cue.startsWith('invite:'))?.slice('invite:'.length)
+      expect(invited).toBeDefined()
+      expect(forest.creatures[forest.glowIndex].key).toBe(invited)
+      run(forest, IDLE_BEFORE_HINT + 1 - (IDLE_BEFORE_GLOW + 0.5))
+      expect(forest.creatures[forest.handAnimal].key).toBe(invited)
+    }
   })
 
   it('carried animals lean toward home for the youngest, not for older children', () => {

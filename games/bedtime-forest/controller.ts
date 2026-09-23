@@ -2,7 +2,7 @@ import { CARRY_LIFT, Creature, type BrainEvent, type BrainWorld } from './brain'
 import { ForestCycle, type Phase } from './cycle'
 import { chooseHint, handPose, HintScheduler, type HandPose, type HintCandidate } from './guidance'
 import { GestureTracker, type Intent, type ScreenPoint } from './input'
-import { ANIMAL_KEYS, HOME_KEYS, HOMES, WAKE_ORDER, type AnimalKey, type HomeKey, type Point } from './layout'
+import { ANIMAL_KEYS, HOME_KEYS, HOMES, WAKE_ORDER, type AnimalKey, type HomeKey, type HomeSpec, type Point } from './layout'
 import { createRng, type Rng } from './rng'
 import { SaveCadence } from './saveCadence'
 import { serialize, type ForestState } from './state'
@@ -13,7 +13,7 @@ import { serialize, type ForestState } from './state'
 // projector for hit tests. Everything that runs per frame is
 // allocation-free.
 
-export type Cue = BrainEvent | 'pickup' | 'hover' | 'stir' | 'rustle' | 'twinkle' | 'invite'
+export type Cue = BrainEvent | 'pickup' | 'hover' | 'stir' | 'rustle' | 'twinkle' | 'invite' | 'answer'
 
 export type Sound = {
   unlock(): void
@@ -49,6 +49,10 @@ const HOME_SLOP_PX = 10
 const DEMO_LIFT_AT = 0.24
 const DEMO_SET_DOWN_AT = 0.74
 const NO_POINTER = -1
+/** The front of the homes and trees at the back of the clearing: a carried animal is never held behind it. */
+const CARRY_BACK_Z = -36
+/** How far up the finger's ray a carried animal may rise to stay in front of them. */
+const MAX_CARRY_RAISE = 60
 
 const HOME_INDEX = Object.fromEntries(HOME_KEYS.map((key, index) => [key, index])) as Record<HomeKey, number>
 /** Creatures are indexed like ANIMAL_KEYS, homes like HOME_KEYS; each animal shares its home's index. */
@@ -67,6 +71,8 @@ export class ForestController implements BrainWorld {
   readonly holder: number[]
   /** Per creature: the home it is carried over (index into HOME_KEYS), or -1. */
   readonly hovering: number[]
+  /** Per creature: has the finger holding it moved past the tap slop? Only a real carry reaches a home. */
+  private readonly carried: boolean[]
   /** Per home: when it was last knocked, bumped, or shaken (attended seconds), for the view's wobble. */
   readonly shook: number[]
   /** Guidance for the view: which animal gets the breathing ring and how strongly. */
@@ -108,6 +114,7 @@ export class ForestController implements BrainWorld {
     this.creatures = ANIMAL_KEYS.map((key, index) => new Creature(key, index, index / ANIMAL_KEYS.length))
     this.holder = this.creatures.map(() => NO_POINTER)
     this.hovering = this.creatures.map(() => -1)
+    this.carried = this.creatures.map(() => false)
     this.shook = HOME_KEYS.map(() => -10)
     for (let i = 0; i < this.creatures.length; i++) this.candidates.push({ index: i, x: 0, z: 0, homeX: 0, homeZ: 0 })
     for (let i = 0; i < FX_CAPACITY; i++) this.fx.push({ kind: 'dust', x: 0, y: 0, z: 0, t: -10, animal: -1, home: -1, strength: 0 })
@@ -226,7 +233,8 @@ export class ForestController implements BrainWorld {
       if (pointerId === NO_POINTER) continue
       const creature = this.creatures[i]
       const screen = this.screens.get(pointerId)
-      if (screen && this.projector?.toPlane(screen.x, screen.y, creature.spec.hang + CARRY_LIFT, this.plane)) creature.setGrab(this.plane.x, this.plane.z)
+      const height = screen ? this.holdPoint(creature, screen) : -1
+      if (height >= 0) creature.setGrab(this.plane.x, this.plane.z, height)
       this.updateHover(i, screen)
     }
 
@@ -271,8 +279,11 @@ export class ForestController implements BrainWorld {
     const timing = this.scheduler.update(now, quiet)
     this.gazeHome = timing.glow > 0
 
+    // Before the first touch, the animal that invites is the one the ring and the ghost hand then show,
+    // so a newcomer follows one animal from its yawn to the demonstration.
+    const inviter = !this.scheduler.touched && this.inviteIndex >= 0 && this.free(this.inviteIndex) ? this.inviteIndex : -1
     if (timing.invite && count > 0) {
-      const index = this.candidates[Math.floor(this.rng() * count)].index
+      const index = this.hintIndex >= 0 ? this.hintIndex : inviter >= 0 ? inviter : chooseHint(this.candidates, count)
       const creature = this.creatures[index]
       if (creature.mode === 'idle' || creature.mode === 'walk') {
         creature.invite()
@@ -283,7 +294,7 @@ export class ForestController implements BrainWorld {
     }
 
     if (timing.glow <= 0 && timing.demo < 0) this.hintIndex = -1
-    else if (this.hintIndex < 0 || !this.free(this.hintIndex)) this.hintIndex = chooseHint(this.candidates, count)
+    else if (this.hintIndex < 0 || !this.free(this.hintIndex)) this.hintIndex = inviter >= 0 ? inviter : chooseHint(this.candidates, count)
 
     if (timing.demo >= 0 && this.hintIndex >= 0) this.runDemo(timing.demo)
     else this.endDemo()
@@ -439,8 +450,10 @@ export class ForestController implements BrainWorld {
     if (home >= 0) {
       this.shook[home] = this.t
       this.sound.knock(HOME_KEYS[home])
+      // Whoever lives there answers the knock, so a tap on a home says whose it is.
       const owner = this.creatures[home]
       if (owner.asleep) owner.stir()
+      else if (this.cycle.playful && owner.answer()) this.sound.cue('answer', owner.key, 1)
       const mouth = HOMES[HOME_KEYS[home]].mouth
       this.pushFx(HOME_KEYS[home] === 'pond' ? 'splash' : 'leaves', mouth.x, mouth.y + 2, mouth.z, -1, home, 0.35)
       return
@@ -457,9 +470,17 @@ export class ForestController implements BrainWorld {
 
   /** A sleeping animal can be lifted back out of bed with a drag while it is still dusk. */
   private dragStart(pointerId: number, screen: ScreenPoint): void {
-    if (this.holder.indexOf(pointerId) >= 0 || !this.cycle.playful) return
+    const held = this.holder.indexOf(pointerId)
+    if (held >= 0) {
+      this.carried[held] = true
+      return
+    }
+    if (!this.cycle.playful) return
     const index = this.creatureAt(screen)
-    if (index >= 0 && this.creatures[index].asleep) this.lift(index, pointerId)
+    if (index >= 0 && this.creatures[index].asleep) {
+      this.lift(index, pointerId)
+      this.carried[index] = this.holder[index] === pointerId
+    }
   }
 
   private lift(index: number, pointerId: number): void {
@@ -467,6 +488,7 @@ export class ForestController implements BrainWorld {
     if (!creature.pickable(this.cycle.playful) || this.holder[index] !== NO_POINTER) return
     creature.pickUp()
     this.holder[index] = pointerId
+    this.carried[index] = false
     this.carrying = true
     this.sound.cue('pickup', creature.key, 1)
     this.cadence.change(performance.now(), true)
@@ -491,6 +513,33 @@ export class ForestController implements BrainWorld {
   }
 
   // --- hit tests (screen space: the forest is seen at an angle) ---------------
+
+  /**
+   * Where a finger holds an animal: at its carrying height under the finger or, where that would sink it
+   * behind the homes at the back of the clearing, higher up the finger's own ray in front of them.
+   * Writes `plane` and returns the pivot height, or -1 when the ray misses.
+   */
+  private holdPoint(creature: Creature, screen: ScreenPoint): number {
+    const projector = this.projector
+    const height = creature.spec.hang + CARRY_LIFT
+    if (!projector?.toPlane(screen.x, screen.y, height, this.plane)) return -1
+    const back = CARRY_BACK_Z + creature.spec.radius
+    const x0 = this.plane.x
+    const z0 = this.plane.z
+    if (z0 >= back) return height
+    // Along one ray the hit point moves linearly with the plane's height, so one more sample finds the rise.
+    if (!projector.toPlane(screen.x, screen.y, height + 1, this.plane)) {
+      this.plane.x = x0
+      this.plane.z = z0
+      return height
+    }
+    const dx = this.plane.x - x0
+    const dz = this.plane.z - z0
+    const raise = dz > 0.01 ? Math.min(MAX_CARRY_RAISE, (back - z0) / dz) : 0
+    this.plane.x = x0 + dx * raise
+    this.plane.z = z0 + dz * raise
+    return height + raise
+  }
 
   private creatureAt(screen: ScreenPoint): number {
     const projector = this.projector
@@ -530,16 +579,32 @@ export class ForestController implements BrainWorld {
       const radius = Math.hypot(this.screenB.x - ax, this.screenB.y - ay) + HOME_SLOP_PX
       if (!projector.toScreen(mouth.x, 0, mouth.z, this.screenB)) continue
       const distance = segmentDistance(sx, sy, ax, ay, this.screenB.x, this.screenB.y)
-      if (distance <= radius && distance < bestDistance) {
+      const inside = distance <= radius ? distance : this.insideBody(spec, sx, sy)
+      if (inside < bestDistance) {
         best = h
-        bestDistance = distance
+        bestDistance = inside
       }
     }
     return best
   }
 
+  /** How far a screen point is from the spine of a home's body, or Infinity when it is outside it. */
+  private insideBody(spec: HomeSpec, sx: number, sy: number): number {
+    const body = spec.body
+    const projector = this.projector
+    if (!body || !projector) return Infinity
+    if (!projector.toScreen(body.from.x, body.from.y, body.from.z, this.screenA)) return Infinity
+    const ax = this.screenA.x
+    const ay = this.screenA.y
+    if (!projector.toScreen(body.from.x + body.radius, body.from.y, body.from.z, this.screenB)) return Infinity
+    const radius = Math.hypot(this.screenB.x - ax, this.screenB.y - ay) + HOME_SLOP_PX
+    if (!projector.toScreen(body.to.x, body.to.y, body.to.z, this.screenB)) return Infinity
+    const distance = segmentDistance(sx, sy, ax, ay, this.screenB.x, this.screenB.y)
+    return distance <= radius ? distance : Infinity
+  }
+
   private updateHover(index: number, screen: ScreenPoint | undefined): void {
-    const home = screen ? this.homeAt(screen.x, screen.y) : -1
+    const home = screen && this.carried[index] ? this.homeAt(screen.x, screen.y) : -1
     if (home !== this.hovering[index] && home >= 0) this.sound.cue('hover', this.creatures[index].key, 1)
     this.hovering[index] = home
   }
