@@ -52,6 +52,7 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 ## Games
 
 - **Bad Neighbours** (`games/bad-neighbours/`, 🏘️): drop wobbly apartment buildings onto a construction slab and watch the residents live in them. It's a port of the house version of Stapel (the `bad-neighbours-v1` tag), with the later physics: secured foundations, gentler landings, instant controls and drag/tap/swipe input. There's no score and no lives. A fallen building parachutes its resident out and goes back into the delivery queue. The street is saved through `ctx.storage`. Uses matter.js.
+- **Moon Phases** (`games/moon-phases/`, 🌓): a tabletop orrery in three.js that shows why the moon changes shape. The sun lamp always lights half the moon. Drag the moon around Earth and a round window shows what a child standing on Earth sees, or stand there yourself. An optional overlay shows the two halves: the one lit by the sun and the one facing Earth. Textures are procedural and the bell sounds are synthesized.
 
 ## License
 
