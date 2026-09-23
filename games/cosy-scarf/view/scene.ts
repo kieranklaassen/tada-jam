@@ -33,6 +33,8 @@ const FLIGHT_ARC = 24
 const LEAVE_SECONDS = 0.9
 /** Long past a hum's last lit row; the shader never sees an infinite age. */
 const SONG_FADED = 60
+/** After this long with nothing happening, the loop steps and draws every other display frame. */
+const REST_BEFORE_PACING = 20
 
 export type SceneOptions = { search: string; coarse: boolean }
 
@@ -61,6 +63,8 @@ export class CosyScene {
   private height = 1
   private raf = 0
   private last = 0
+  private skip = false
+  private paced = false
   private running = false
   private stamp = 0
   private disposed = false
@@ -254,6 +258,14 @@ export class CosyScene {
   private readonly frame = (now: number): void => {
     if (!this.running) return
     this.raf = requestAnimationFrame(this.frame)
+    // A hillside that has only been breathing for a long while is stepped and drawn every other display frame.
+    if (this.game.restingFor >= REST_BEFORE_PACING) {
+      this.skip = !this.skip
+      if (this.skip) {
+        this.paced = true
+        return
+      }
+    }
     const interval = this.last > 0 ? now - this.last : 1000 / 60
     this.last = now
     const start = performance.now()
@@ -262,7 +274,9 @@ export class CosyScene {
     const cpu = performance.now() - start
     const info = this.renderer.info.render
     this.perf.record(cpu, interval, this.tiers.tier, info.calls, info.triangles)
-    if (this.tiers.sample(interval, now / 1000) >= 0) this.applyTier()
+    // A paced interval spans two display frames: it says nothing about how fast the device is.
+    if (!this.paced && this.tiers.sample(interval, now / 1000) >= 0) this.applyTier()
+    this.paced = false
   }
 
   private draw(): void {
@@ -491,15 +505,18 @@ export class CosyScene {
     const cancel = (event: PointerEvent) => game.pointerCancel(event.pointerId)
     const menu = (event: Event) => event.preventDefault()
     element.addEventListener('pointerdown', down)
-    element.addEventListener('pointermove', move)
-    element.addEventListener('pointerup', up)
-    element.addEventListener('pointercancel', cancel)
+    // A press is followed on the window, not the canvas: WebKit sometimes refuses or loses the
+    // capture, and a finger that wanders off the canvas must still be able to carry, drop and lift.
+    // The tracker ignores fingers that did not start here.
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', cancel)
     element.addEventListener('contextmenu', menu)
     return () => {
       element.removeEventListener('pointerdown', down)
-      element.removeEventListener('pointermove', move)
-      element.removeEventListener('pointerup', up)
-      element.removeEventListener('pointercancel', cancel)
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', cancel)
       element.removeEventListener('contextmenu', menu)
     }
   }

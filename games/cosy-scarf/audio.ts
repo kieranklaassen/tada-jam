@@ -40,8 +40,8 @@ export class ScarfAudio implements Sound {
   private master: GainNode | null = null
   private noise: AudioBuffer | null = null
   private active = true
-  private lastStitch = 0
-  private lastStep = 0
+  private lastStitch = -Infinity
+  private lastStep = -Infinity
   private samples = samples(RATE)
   private failed = false
 
@@ -75,6 +75,9 @@ export class ScarfAudio implements Sound {
     const AudioCtor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!AudioCtor) return
     const context = new AudioCtor()
+    // A new context's clock starts at zero: the throttles must not hold cues back against an older one's time.
+    this.lastStitch = -Infinity
+    this.lastStep = -Infinity
     this.context = context
     const master = context.createGain()
     master.gain.value = 0.62
@@ -109,8 +112,16 @@ export class ScarfAudio implements Sound {
     this.master = null
   }
 
+  /**
+   * The context to play into, or null while the game is silent. A context resumed
+   * inside this very touch is still `suspended` on WebKit for the rest of it, so
+   * cues are scheduled into it anyway: its clock starts where they are waiting,
+   * and the first hop, lift or stitch sounds instead of being dropped.
+   */
   private ready(): AudioContext | null {
-    return this.active && this.context && this.context.state === 'running' ? this.context : null
+    if (!this.active || !this.context) return null
+    const state = this.context.state as ExtendedState
+    return state === 'running' || state === 'suspended' ? this.context : null
   }
 
   private envelope(context: AudioContext, peak: number, attack: number, decay: number, at: number): GainNode {

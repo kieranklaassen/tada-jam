@@ -413,6 +413,29 @@ describe('ScarfController', () => {
     expect(game.state.loom).toHaveLength(1)
   })
 
+  it('keeps a row given to the cold animal when the game is put away while the ball is still flying', () => {
+    const { game, saves } = setup()
+    run(game, 8)
+    const bunny = game.actors.bunny
+    carry(game, ballAt(game, 2), screenOf(bunny.x, groundY(bunny.x, bunny.z) + 14))
+    run(game, 0.2)
+    expect(game.state.loom).toEqual([])
+    game.setRunning(false)
+    expect(game.state.loom).toEqual([row(2)])
+    expect(saves.at(-1)?.loom).toEqual([row(2)])
+  })
+
+  it('rests once nothing is happening, and wakes on a touch', () => {
+    const { game } = setup()
+    run(game, 5.4)
+    expect(game.restingFor).toBe(0)
+    run(game, 4)
+    expect(game.restingFor).toBeGreaterThan(9)
+    tap(game, ballAt(game, 0))
+    game.step(1 / 60)
+    expect(game.restingFor).toBeLessThan(1)
+  })
+
   it('calls a cosy animal down to the loom when everyone is wrapped and a new scarf is long enough', () => {
     const state = initialState()
     for (const animal of ANIMALS) state.scarves[animal] = [[row(0), row(1)]]

@@ -370,7 +370,7 @@ export class ScarfController {
   }
 
   dispose(): void {
-    this.cadence.settle(this.t * 1000)
+    this.pause()
     this.sound.dispose()
   }
 
@@ -903,6 +903,14 @@ export class ScarfController {
     return this.entry
   }
 
+  /** The ball given to the waiting animal reaches the loom: its row is knitted, then it flies home. */
+  private knitFromFlight(ball: BallView): void {
+    ball.toLoom = false
+    ball.squash.v += 6
+    this.knit(ball.colour)
+    this.sendHome(ball)
+  }
+
   private sendHome(ball: BallView): void {
     ball.returnFrom.x = ball.pos.x
     ball.returnFrom.y = ball.pos.y
@@ -932,10 +940,7 @@ export class ScarfController {
         ball.pos.y = ball.returnFrom.y + (to.y - ball.returnFrom.y) * k + arc
         ball.pos.z = ball.returnFrom.z + (to.z - ball.returnFrom.z) * k
         if (ball.returning >= 1 && ball.toLoom) {
-          ball.toLoom = false
-          ball.squash.v += 6
-          this.knit(ball.colour)
-          this.sendHome(ball)
+          this.knitFromFlight(ball)
         } else if (ball.returning >= 1) {
           ball.returning = -1
           ball.squash.v += 9
@@ -1061,10 +1066,18 @@ export class ScarfController {
 
   // --- lifecycle -----------------------------------------------------------------------
 
+  /** Seconds the hillside has only been breathing: no touch, no gift, and no guidance playing. */
+  get restingFor(): number {
+    const frame = this.guidance.frame
+    return frame.demo >= 0 || frame.peek >= 0 ? 0 : frame.idle
+  }
+
   /** Put away, faded, or hidden mid-anything: every gesture ends where it is and nothing is lost. */
   pause(): void {
     this.tracker.reset()
     for (const id of [...this.drags.keys()]) this.dragEnd(id, null, false)
+    // A ball still flying into the loom was already given: knit its row now, so the stitch is saved.
+    for (const ball of this.balls) if (ball.toLoom) this.knitFromFlight(ball)
     this.cadence.settle(this.t * 1000)
   }
 

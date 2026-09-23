@@ -3,13 +3,15 @@ import { ScarfAudio } from './audio'
 
 type FakeBuffer = { rate: number; length: number; copyToChannel: () => void }
 
-const node = () => ({ gain: { value: 1 }, frequency: { value: 1 }, threshold: { value: 0 }, type: '', connect: (next: unknown) => next })
+const param = () => ({ value: 1, setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} })
 
 function fakeContext(sampleRate: number, options: { brokenConvolver?: boolean } = {}) {
-  const made: { impulses: FakeBuffer[]; contexts: number } = { impulses: [], contexts: 0 }
+  const made: { impulses: FakeBuffer[]; contexts: number; voices: number } = { impulses: [], contexts: 0, voices: 0 }
+  const node = () => ({ gain: param(), frequency: param(), Q: param(), playbackRate: param(), threshold: param(), type: '', buffer: null as unknown, connect: (next: unknown) => next, start: () => made.voices++, stop: () => {} })
   class FakeContext {
     readonly sampleRate = sampleRate
     readonly destination = node()
+    readonly currentTime = 0
     state = 'suspended'
     constructor() {
       made.contexts++
@@ -17,6 +19,8 @@ function fakeContext(sampleRate: number, options: { brokenConvolver?: boolean } 
     createGain = node
     createDynamicsCompressor = node
     createBiquadFilter = node
+    createBufferSource = node
+    createOscillator = node
     createBuffer(_channels: number, length: number, rate: number): FakeBuffer {
       return { rate, length, copyToChannel: () => {} }
     }
@@ -66,5 +70,13 @@ describe('sound', () => {
     expect(() => audio.unlock()).not.toThrow()
     expect(() => audio.stitch(0)).not.toThrow()
     expect(made.contexts).toBe(1)
+  })
+
+  it('plays the first touch into a context still resuming from that very touch, instead of dropping it', () => {
+    const made = fakeContext(48000)
+    const audio = new ScarfAudio()
+    audio.unlock()
+    audio.stitch(0)
+    expect(made.voices).toBeGreaterThan(0)
   })
 })
