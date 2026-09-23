@@ -80,7 +80,7 @@ export function TableModel() {
   const floor = useMemo(() => new THREE.MeshStandardMaterial({ color: PALETTE.floor, roughness: 1 }), [])
   const tableClay = useMemo(() => {
     const material = clay.clone()
-    material.normalScale = new THREE.Vector2(0.8, 0.8)
+    material.normalScale = new THREE.Vector2(1.25, 1.25)
     return material
   }, [clay])
   return (
@@ -395,6 +395,17 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
 
 // --- Fair Feeding --------------------------------------------------------------
 
+/** A rolled clay rope that follows the rug's scalloped elliptical hem. */
+function ellipseRope(rx: number, rz: number): THREE.BufferGeometry {
+  const points: THREE.Vector3[] = []
+  for (let i = 0; i < 160; i++) {
+    const a = (i / 160) * Math.PI * 2
+    const scallop = 1 + Math.abs(Math.sin(a * 14)) * 0.02
+    points.push(new THREE.Vector3(Math.cos(a) * rx * scallop, 0, Math.sin(a) * rz * scallop))
+  }
+  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 240, 0.42, 8, true)
+}
+
 export function FeedingSetting({ seats }: { seats: readonly boolean[] }) {
   const { clay, rug } = useClay()
   const center = to3({ x: 780, y: 470 })
@@ -403,7 +414,12 @@ export function FeedingSetting({ seats }: { seats: readonly boolean[] }) {
       rug: geo.cloth(40),
       bowl: merge([piece(geo.bowl(48), PALETTE.bowl, { scale: FEEDING.bowl.r * UNIT }, { lump: 0.22, frequency: 0.4, seed: 8, occlusion: 0.42 })]),
       plate: merge([piece(geo.plate(36), PALETTE.plate, { scale: [FEEDING.plateRadius * UNIT, 5, FEEDING.plateRadius * UNIT] }, { lump: 0.15, frequency: 0.5, seed: 3, occlusion: 0.15 })]),
-      stool: merge([piece(geo.cylinder(28, 0.9, 1), PALETTE.stool, { position: [0, 1.4, 0], scale: [4.2, 2.8, 4.2] }, { lump: 0.25, frequency: 0.6, seed: 6 })]),
+      stool: merge([
+        piece(geo.sphere(28), PALETTE.stool, { position: [0, 1.5, 0], scale: [4.5, 1.7, 4.5] }, { lump: 0.3, frequency: 0.6, seed: 6 }),
+        piece(geo.sphere(14), '#c79a45', { position: [0, 3.05, 0], scale: [0.9, 0.35, 0.9] }, { ground: null }),
+        piece(geo.torus(32, 0.16), '#c79a45', { position: [0, 1.55, 0], rotation: [Math.PI / 2, 0, 0], scale: 4.35 }, { lump: 0.05, ground: null }),
+      ]),
+      rugRope: merge([piece(ellipseRope(42, 30), '#d8c39c', {}, { lump: 0.12, frequency: 0.5, ground: null })]),
     }))
   const plates = useRef<THREE.InstancedMesh>(null)
   const stools = useRef<THREE.InstancedMesh>(null)
@@ -433,6 +449,7 @@ export function FeedingSetting({ seats }: { seats: readonly boolean[] }) {
   return (
     <group>
       <mesh geometry={shapes.rug} material={rug} position={[center.x, 0.04, center.z]} scale={[42, 4, 30]} />
+      <mesh geometry={shapes.rugRope} material={clay} position={[center.x, 0.3, center.z]} />
       <mesh geometry={shapes.bowl} material={clay} position={[bowl.x, 0, bowl.z]} />
       <instancedMesh ref={plates} args={[shapes.plate, clay, 5]} frustumCulled={false} />
       <instancedMesh ref={stools} args={[shapes.stool, clay, 5]} frustumCulled={false} />
