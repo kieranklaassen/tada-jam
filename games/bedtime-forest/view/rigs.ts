@@ -9,8 +9,8 @@ import type { Vec3Tuple } from './geometry'
 // diagonal pairs, the rabbit hops in discrete arcs with ears that follow
 // through, the bear lumbers in a heavy pace, the fish hops on its tail,
 // and the songbird bounces on two feet with jerky head turns. Each has its
-// own yawn, trick, dangle, reactions, and sleeping pose. Poses are rigid
-// part matrices, written allocation-free every frame.
+// own yawn, two tricks (taken in turns), dangle, reactions, and sleeping
+// pose. Poses are rigid part matrices, written allocation-free every frame.
 
 const TAU = Math.PI * 2
 const ORIGIN: Vec3Tuple = [0, 0, 0]
@@ -162,10 +162,13 @@ function owl(c: Creature, J: Joints): void {
       wl = wr = 0.08 + Math.abs(Math.sin(ph)) * 0.08 * a
       break
     }
-    case 'idle':
+    case 'idle': {
+      // Curious: a slow head sway, a long look over its shoulder now and then, and a deep tilt to alternate sides.
+      const tilt = t / 4.2 + c.index * 0.2
       hy += Math.sin(t * 0.5 + c.index) * 0.45 + bell(fract(t / 9.5 + c.index * 0.3), 0.72, 0.96) * 1.9
-      hr = Math.sin(t * 0.37) * 0.09
+      hr = Math.sin(t * 0.37) * 0.09 + bell(fract(tilt), 0.1, 0.6) * (Math.floor(tilt) % 2 === 0 ? 0.45 : -0.45)
       break
+    }
     case 'yawn': {
       const u = m / c.motion.yawn
       hp = -0.42 * bell(u, 0, 0.8)
@@ -178,6 +181,19 @@ function owl(c: Creature, J: Joints): void {
     }
     case 'trick': {
       const u = m / c.motion.trick
+      if (c.trickVariant === 1) {
+        // Spreads both wings wide, hops up with a flap, and lands in a fluffed-up shake.
+        const hop = bell(u, 0.25, 0.65)
+        sy = 1 - 0.08 * bell(u, 0, 0.25)
+        bob = hop * 3.2
+        wl = wr = 0.06 + 1.45 * bell(u, 0.08, 0.78) + Math.sin(m * 21) * 0.3 * hop
+        fl = fr = 0.5 * hop
+        hp = -0.15 * hop
+        fluff = 1 + 0.12 * bell(u, 0.7, 1)
+        hr = Math.sin(m * 32) * 0.22 * bell(u, 0.72, 1)
+        eyes = Math.min(eyes, 1 - 0.7 * bell(u, 0.72, 1))
+        break
+      }
       hy += ease((u - 0.1) / 0.75) * TAU
       bob = bell(u, 0, 0.22) * 0.8
       wl = wr = 0.06 + 0.3 * bell(u, 0.8, 1)
@@ -279,11 +295,15 @@ function fox(c: Creature, J: Joints): void {
       hp = -0.08 * a + Math.sin(ph * 2) * 0.03
       break
     }
-    case 'idle':
+    case 'idle': {
+      // Alert: quick glances, ear flicks, and every few seconds the nose goes up to sniff the air.
+      const sniff = bell(fract(t / 3.4 + c.index * 0.3), 0.05, 0.4)
       hy += glance(t, 2.1, c.index * 0.37, 0.5)
+      hp = -0.38 * sniff + Math.sin(t * 19) * 0.05 * sniff
       earL = -0.5 * flick(t, 4.3, 0)
       earR = -0.5 * flick(t, 5.1, 0.4)
       break
+    }
     case 'yawn': {
       const u = m / c.motion.yawn
       const bow = bell(u, 0, 0.85)
@@ -300,6 +320,23 @@ function fox(c: Creature, J: Joints): void {
     }
     case 'trick': {
       const u = m / c.motion.trick
+      if (c.trickVariant === 1) {
+        // Chases its own tail round a full circle, then sits back and pants.
+        const run = bell(u, 0.02, 0.82)
+        const sit = bell(u, 0.78, 1)
+        yawB = TAU * ease((u - 0.05) / 0.75)
+        hy += 0.75 * run
+        tailY = 0.9 * run
+        fl = Math.sin(m * 24) * 0.55 * run
+        fr = -fl
+        bl = fr + 0.6 * sit
+        br = fl + 0.6 * sit
+        bob = Math.abs(Math.sin(m * 24)) * 0.4 * run
+        roll = -0.12 * run
+        pitch = -0.3 * sit
+        mouth = 0.5 * sit * (0.6 + 0.4 * Math.sin(m * 26))
+        break
+      }
       const crouch = bell(u, 0, 0.4)
       const v = clamp01((u - 0.3) / 0.42)
       if (u < 0.3) {
@@ -319,16 +356,21 @@ function fox(c: Creature, J: Joints): void {
       }
       break
     }
-    case 'held':
-      fl = -c.swingZ * 0.9 + Math.sin(t * 9) * 0.35
-      fr = -c.swingZ * 0.9 + Math.sin(t * 9 + Math.PI) * 0.35
-      bl = -c.swingZ * 0.9 + Math.sin(t * 9 + 1.6) * 0.3
-      br = -c.swingZ * 0.9 + Math.sin(t * 9 + 4.7) * 0.3
+    case 'held': {
+      // Carried by the scruff: the rump sinks and the paddling legs hang under it.
+      const sag = 0.5 * ease(m / 0.35)
+      pitch = -sag
+      fl = sag - c.swingZ * 0.9 + Math.sin(t * 9) * 0.35
+      fr = sag - c.swingZ * 0.9 + Math.sin(t * 9 + Math.PI) * 0.35
+      bl = sag - c.swingZ * 0.9 + Math.sin(t * 9 + 1.6) * 0.3
+      br = sag - c.swingZ * 0.9 + Math.sin(t * 9 + 4.7) * 0.3
       legRoll = c.swingX * 0.9
-      tailP = -0.6 + c.swingZ
+      tailP = -0.6 - sag * 0.6 + c.swingZ
       tailY = c.swingX * 1.5 + Math.sin(t * 3) * 0.3
+      hp = sag * 0.7
       hy += Math.sin(t * 1.7) * 0.4
       break
+    }
     case 'fall':
       fl = fr = -0.8
       bl = br = 0.8
@@ -495,6 +537,20 @@ function rabbit(c: Creature, J: Joints): void {
     }
     case 'trick': {
       const u = m / c.motion.trick
+      if (c.trickVariant === 1) {
+        // Sits up tall and thumps its hind feet twice, ears swivelling.
+        const tall = bell(u, 0, 1)
+        const thump = bell(u, 0.3, 0.42) + bell(u, 0.55, 0.67)
+        pitch = -0.5 * tall + 0.12 * thump
+        bob = 1.8 * tall - 0.5 * thump
+        front = -0.95 * tall
+        hind = -0.6 * thump
+        earLY = Math.sin(m * 17) * 0.5 * tall
+        earRY = -earLY
+        earLP = earRP = -0.2 * thump
+        hp = Math.sin(m * 22) * 0.06 * tall
+        break
+      }
       const leap = bell(u, 0.1, 0.8)
       bob = leap * 6.5
       yawB = Math.sin(Math.PI * clamp01((u - 0.1) / 0.7)) * 1.1
@@ -652,6 +708,22 @@ function bear(c: Creature, J: Joints): void {
     }
     case 'trick': {
       const u = m / c.motion.trick
+      if (c.trickVariant === 1) {
+        // Rears right up on its hind legs, swaying to keep its balance, and gives the child a big, slow wave.
+        const rear = bell(u, 0, 1)
+        const up = bell(u, 0.08, 0.95)
+        pitch = -1.15 * rear
+        bob = 2.5 * rear
+        roll = Math.sin(m * 3.2) * 0.12 * rear
+        armR = -2.5 * up
+        armRollR = Math.sin(m * 6.5) * 0.55 * up
+        armL = -0.35 * rear
+        hp = 0.08 + 0.35 * rear
+        hr = -0.22 * rear
+        hy += 0.2 * rear
+        mouth = 0.55 * rear
+        break
+      }
       const sit = bell(u, 0, 1)
       pitch = -0.8 * sit
       armL = (-1.0 + Math.sin(t * 16) * 0.35) * sit
@@ -660,13 +732,18 @@ function bear(c: Creature, J: Joints): void {
       mouth = 0.4 * sit
       break
     }
-    case 'held':
-      armL = armR = legL = legR = -c.swingZ
+    case 'held': {
+      // Heavy and limp: the rump sags slowly and all four legs hang straight down.
+      const sag = 0.42 * ease(m / 0.5)
+      pitch = -sag
+      armL = armR = sag - c.swingZ + Math.sin(t * 2.1) * 0.08
+      legL = legR = sag - c.swingZ + Math.sin(t * 2.1 + 1) * 0.1
       armRollL = armRollR = c.swingX
-      hp = 0.45 + c.swingZ * 0.5
+      hp = 0.45 + sag * 0.5 + c.swingZ * 0.5
       eyes = Math.min(eyes, 0.55)
       mouth = 0.35 * bell(fract(t / 3.2), 0.3, 0.6)
       break
+    }
     case 'fall':
       armL = armR = -2.0 + Math.sin(t * 10) * 0.3
       break
@@ -715,6 +792,8 @@ function bear(c: Creature, J: Joints): void {
   if (k.curl > 0) {
     const curl = k.curl
     pitch = lerp(pitch, -1.25, curl)
+    // Rolled back around the rump, the seat would float; settle it onto the ground.
+    bob -= 3.2 * curl
     hp = lerp(hp, 0.85, curl)
     armL = lerp(armL, -0.9 + k.stir * Math.sin(t * 15) * 0.25, curl)
     armR = lerp(armR, -0.9, curl)
@@ -787,6 +866,15 @@ function fish(c: Creature, J: Joints): void {
     }
     case 'trick': {
       const u = m / c.motion.trick
+      if (c.trickVariant === 1) {
+        // A sideways barrel roll in the air, fins spread wide and mouth round.
+        bob = bell(u, 0.05, 0.85) * 6
+        roll = TAU * ease((u - 0.1) / 0.68)
+        fins = 0.2 + 1.0 * bell(u, 0.05, 0.9)
+        tailY = Math.sin(m * 26) * 0.5
+        mouth = 0.25 + 0.6 * bell(u, 0.2, 0.8)
+        break
+      }
       bob = bell(u, 0.05, 0.85) * 7.5
       pitch = -TAU * ease((u - 0.08) / 0.72)
       tailY = Math.sin(m * 20) * 0.6
@@ -896,13 +984,26 @@ function songbird(c: Creature, J: Joints): void {
       eyes = Math.min(eyes, 1 - 0.8 * bell(u, 0.25, 0.7))
       break
     }
-    case 'trick':
+    case 'trick': {
+      if (c.trickVariant === 1) {
+        // Flutters up and hovers a moment, looking about, then drops back onto its feet.
+        const hover = bell(m / c.motion.trick, 0, 0.95)
+        bob = 5 * hover
+        wl = wr = 0.3 + 1.1 * Math.abs(Math.sin(m * 26)) * hover
+        legsP = 0.5 * hover
+        legsS = 1 - 0.35 * hover
+        tailP = -0.35 * hover
+        hy += Math.sin(m * 5) * 0.7 * hover
+        pitch = -0.12 * hover
+        break
+      }
       fx = fy = 1.15
       wl = wr = 0.5 + 0.5 * Math.sin(t * 34)
       bob = Math.abs(Math.sin(t * 14)) * 0.9
       hp = -0.3
       mouth = 0.5 + 0.5 * Math.sin(t * 30)
       break
+    }
     case 'held':
       wl = wr = 0.8 + 0.7 * Math.sin(t * 30)
       legsP = -c.swingZ
