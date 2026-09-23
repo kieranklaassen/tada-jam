@@ -70,7 +70,7 @@ const CAPACITY: Record<BatchKey, number> = {
   pupil: 30,
   lid: 30,
   mark: 24,
-  crescent: 16,
+  crescent: 32,
 }
 
 /** One instanced draw's worth of clay: matrices, colours, and per-instance boil (amount, seed). */
@@ -200,8 +200,14 @@ export function displayBase(kind: PartKind): number {
       return HEAD_RADIUS * 0.8 * s
     case 'tail':
       return (kind === 'tailLong' ? 1.4 : 0.9) * s
-    default:
+    case 'eyes':
+    case 'ears':
+    case 'horns':
       return 0.4 * s
+    default: {
+      const unreachable: never = FAMILY[kind]
+      return unreachable
+    }
   }
 }
 
@@ -225,6 +231,7 @@ export class Rig {
   private readonly W = new THREE.Matrix4()
   private readonly R = new THREE.Matrix4()
   private readonly T = new THREE.Matrix4()
+  private readonly markScratch = new THREE.Matrix4()
   private readonly v = new THREE.Vector3()
   private readonly v2 = new THREE.Vector3()
   private readonly x = new THREE.Vector3()
@@ -286,20 +293,19 @@ export class Rig {
   /** The head hangs off the body at HEAD_DIR and nods and tilts about its neck. */
   private headFrame(critter: Critter, out: THREE.Matrix4): THREE.Matrix4 {
     ellipsoidPoint(HEAD_DIR, this.rx, this.ry, this.rz, surface)
-    const [px, py, pz] = surface.p
-    const [nx, ny, nz] = surface.n
+    const { p, n } = surface
     const pose = critter.pose
-    out.copy(this.B).multiply(this.T.makeTranslation(px, py, pz))
+    out.copy(this.B).multiply(this.T.makeTranslation(p[0], p[1], p[2]))
     this.e.set(pose.headNod, 0, pose.headTilt, 'XYZ')
     out.multiply(this.R.makeRotationFromEuler(this.e))
     const reach = HEAD_RADIUS * 0.62
-    return out.multiply(this.T.makeTranslation(nx * reach, ny * reach, nz * reach))
+    return out.multiply(this.T.makeTranslation(n[0] * reach, n[1] * reach, n[2] * reach))
   }
 
   /** A point on the face (the head's sphere, or the body's front) along `dir`, into `surface`. */
   private faceSurface(dir: Vec3, tilt: boolean): void {
     if (this.faceIsHead) {
-      const l = Math.hypot(dir[0], dir[1], dir[2])
+      const l = Math.sqrt(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2])
       for (let i = 0; i < 3; i++) {
         surface.n[i] = dir[i] / l
         surface.p[i] = surface.n[i] * HEAD_RADIUS
@@ -339,11 +345,11 @@ export class Rig {
       ellipsoidPoint(dir, BODY.rx, BODY.ry, BODY.rz, surface)
       const standY = critter.standLift + surface.p[1] + SINK
       ellipsoidPoint(dir, this.rx, this.ry, this.rz, surface)
-      const [px, py, pz] = surface.p
+      const { p } = surface
       const length = Math.min(1.6, Math.max(0.55, standY / LEG_LENGTH[kind as 'legStub' | 'legLong']))
       const side = Math.abs(dir[0]) < 0.05 ? 0 : Math.sign(dir[0])
       const splay = 0.12 + pose.legSplay * 1.25
-      out.copy(this.B).multiply(this.T.makeTranslation(px, py + SINK - push, pz))
+      out.copy(this.B).multiply(this.T.makeTranslation(p[0], p[1] + SINK - push, p[2]))
       out.multiply(this.basis(0, -1, 0, FORWARD, this.R))
       if (side !== 0) out.multiply(this.R.makeRotationZ(side * splay))
       else out.multiply(this.R.makeRotationX((dir[2] >= 0 ? 1 : -1) * (splay - 0.12)))
@@ -354,27 +360,27 @@ export class Rig {
     }
     if (family === 'tail') {
       ellipsoidPoint(dir, this.rx, this.ry, this.rz, surface)
-      const [px, py, pz] = surface.p
-      const [nx, ny, nz] = surface.n
+      const { p, n } = surface
       const sink = SINK - push
-      out.copy(this.B).multiply(this.T.makeTranslation(px - nx * sink, py - ny * sink, pz - nz * sink))
-      out.multiply(this.basis(nx, ny, nz, UP, this.R))
+      out.copy(this.B).multiply(this.T.makeTranslation(p[0] - n[0] * sink, p[1] - n[1] * sink, p[2] - n[2] * sink))
+      out.multiply(this.basis(n[0], n[1], n[2], UP, this.R))
       out.multiply(this.R.makeRotationZ(pose.tail * 0.6 + wiggle))
       out.multiply(this.R.makeRotationX(pose.tailLift * 0.5))
       return out.multiply(this.T.makeScale(sxz, sy, sxz))
     }
     // face parts: eyes, ears, horns
     this.faceSurface(dir, family !== 'eyes')
-    const [px, py, pz] = surface.p
-    const [nx, ny, nz] = surface.n
+    const { p, n } = surface
     const sink = (family === 'eyes' ? SINK * 0.5 : SINK) - push
-    out.copy(this.F).multiply(this.T.makeTranslation(px - nx * sink, py - ny * sink, pz - nz * sink))
-    out.multiply(this.basis(nx, ny, nz, family === 'eyes' ? UP : FORWARD, this.R))
+    out.copy(this.F).multiply(this.T.makeTranslation(p[0] - n[0] * sink, p[1] - n[1] * sink, p[2] - n[2] * sink))
+    out.multiply(this.basis(n[0], n[1], n[2], family === 'eyes' ? UP : FORWARD, this.R))
     if (family === 'ears') {
       const side = Math.sign(dir[0]) || 1
       if (kind === 'earFlop') {
-        out.multiply(this.R.makeRotationZ(-side * (1.15 + 0.3 * pose.ear)))
-        out.multiply(this.R.makeRotationX(0.35 * pose.ear + wiggle))
+        // hangs down past the cheek; perking up lifts it toward level
+        const droop = Math.min(2.3, Math.max(1.25, 2.0 - 0.5 * pose.ear))
+        out.multiply(this.R.makeRotationZ(-side * droop))
+        out.multiply(this.R.makeRotationX(0.3 + 0.2 * pose.ear + wiggle))
       } else {
         out.multiply(this.R.makeRotationX((kind === 'earPoint' ? 0.2 : 0.12) * pose.ear + wiggle))
         out.multiply(this.R.makeRotationZ(-side * 0.18))
@@ -455,11 +461,10 @@ export class Rig {
 
     // nose
     this.faceSurface(NOSE_DIR, false)
-    const [px, py, pz] = surface.p
-    const [nx, ny, nz] = surface.n
-    this.W.copy(this.F).multiply(this.T.makeTranslation(px - nx * 0.3, py - ny * 0.3, pz - nz * 0.3))
-    this.W.multiply(this.basis(nx, ny, nz, UP, this.R))
-    const nose = 1 + 0.1 * Math.max(0, -critter.wobble) * 4
+    const { p, n } = surface
+    this.W.copy(this.F).multiply(this.T.makeTranslation(p[0] - n[0] * 0.3, p[1] - n[1] * 0.3, p[2] - n[2] * 0.3))
+    this.W.multiply(this.basis(n[0], n[1], n[2], UP, this.R))
+    const nose = (1 + 0.1 * Math.max(0, -critter.wobble) * 4) * (1 + 0.4 * critter.itch)
     this.W.multiply(this.T.makeScale(nose, nose, nose))
     this.batches.nose.push(this.W, COLORS, hueAt(noseHue(critter.save.hue)), boil, seed + 0.5)
     this.v.set(0, 0.8, 0).applyMatrix4(this.W)
@@ -480,10 +485,9 @@ export class Rig {
 
   private mark(dir: Vec3, width: number, height: number, boil: number, seed: number, key: 'mark' | 'crescent' = 'mark'): void {
     this.faceSurface(dir, false)
-    const [px, py, pz] = surface.p
-    const [nx, ny, nz] = surface.n
-    this.M.copy(this.F).multiply(this.T.makeTranslation(px, py, pz))
-    this.M.multiply(this.basis(nx, ny, nz, UP, this.R))
+    const { p, n } = surface
+    this.M.copy(this.F).multiply(this.T.makeTranslation(p[0], p[1], p[2]))
+    this.M.multiply(this.basis(n[0], n[1], n[2], UP, this.R))
     this.M.multiply(this.T.makeScale(width, 1, height))
     this.batches[key].push(this.M, COLORS, WHITE, boil * 0.5, seed)
   }
@@ -496,7 +500,12 @@ export class Rig {
     this.W.multiply(this.R.makeRotationFromEuler(this.e)).multiply(this.T.makeTranslation(0, EYE_BALL.radius * 0.86, 0))
     const wide = Math.max(1, Math.min(1.25, lids))
     this.W.multiply(this.T.makeScale(wide, 1, wide))
-    this.batches.pupil.push(this.W, COLORS, WHITE, boil * 0.5, seed)
+    // under a mostly shut lid the pupil's glint would poke through; a lash line shows the eye is closed instead
+    if (lids > 0.3) this.batches.pupil.push(this.W, COLORS, WHITE, boil * 0.5, seed)
+    else {
+      this.W.copy(this.M).multiply(this.T.makeTranslation(0, EYE_BALL.radius * 1.12, 0)).multiply(this.T.makeScale(0.85, 1, 0.85))
+      this.batches.crescent.push(this.W, COLORS, WHITE, boil * 0.5, seed)
+    }
     if (lids < 0.995) {
       this.M.multiply(this.R.makeRotationX(Math.max(0, lids) * Math.PI))
       this.batches.lid.push(this.M, COLORS, hueAt(lidHue), boil, seed)
@@ -515,6 +524,18 @@ export class Rig {
     let legOrder = 0
     for (const part of parts) if (FAMILY[part.kind] === 'legs') legOrder++
     this.place(critter, kind, socket.dir, legOrder, null, out)
+    return true
+  }
+
+  /**
+   * Where a new part of this kind will show once pressed on: part-way along it, outside the body.
+   * Glows and the demonstration aim here, not at the socket itself, which for a leg is under the
+   * belly and would put the glow on the face.
+   */
+  socketMark(critter: Critter, kind: PartKind, out: THREE.Vector3): boolean {
+    if (!this.socket(critter, kind, this.markScratch)) return false
+    // a leg is marked at its foot, clear of the nose that is tapped later
+    out.set(0, PART_REACH[kind] * (FAMILY[kind] === 'legs' ? 1 : 0.7), 0).applyMatrix4(this.markScratch)
     return true
   }
 
