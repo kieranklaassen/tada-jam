@@ -14,15 +14,14 @@ export type TierSettings = {
   twinkle: boolean
   /** The soft penumbra ring around every shadow. */
   penumbra: boolean
-  /** The lamp's additive halo and the guidance glow rings. */
-  halo: boolean
 }
 
+// The lamp's glow is never shed: it is what says the lamp makes the shadows.
 export const TIERS: readonly TierSettings[] = [
-  { name: 'full', dpr: 2, motes: 36, twinkle: true, penumbra: true, halo: true },
-  { name: 'balanced', dpr: 1.5, motes: 18, twinkle: true, penumbra: true, halo: true },
-  { name: 'lean', dpr: 1.25, motes: 0, twinkle: false, penumbra: true, halo: true },
-  { name: 'minimal', dpr: 1, motes: 0, twinkle: false, penumbra: false, halo: false },
+  { name: 'full', dpr: 2, motes: 36, twinkle: true, penumbra: true },
+  { name: 'balanced', dpr: 1.5, motes: 18, twinkle: true, penumbra: true },
+  { name: 'lean', dpr: 1.25, motes: 0, twinkle: false, penumbra: true },
+  { name: 'minimal', dpr: 1, motes: 0, twinkle: false, penumbra: false },
 ]
 
 export const LOWEST_TIER = TIERS.length - 1

@@ -24,6 +24,21 @@ export const LAMP_RADIUS = 0.55
  */
 export const STAGE = { zNear: 8, zFar: 48, xMin: -34, xMax: 34 } as const
 
+/**
+ * The proscenium around the screen (frame, tied-back curtains, valance and
+ * crest) as two rectangles in the screen plane, a wide one and the crest on
+ * top, with the z of its nearest face. Anything flying over it must be in
+ * front of `front` or the paper hides it.
+ */
+export const PROSCENIUM = { halfWidth: 43, top: 48, crestHalfWidth: 11.5, crestTop: 54, front: 3.8 } as const
+
+/** How far a disc of radius r centred at (x, y) is clear of the proscenium; negative while it overlaps. */
+export function clearOfProscenium(x: number, y: number, r: number): number {
+  const wide = Math.max(Math.abs(x) - PROSCENIUM.halfWidth, y - PROSCENIUM.top)
+  const crest = Math.max(Math.abs(x) - PROSCENIUM.crestHalfWidth, y - PROSCENIUM.crestTop)
+  return Math.min(wide, crest) - r
+}
+
 export function shadowScale(z: number): number {
   return LAMP.z / (LAMP.z - z)
 }

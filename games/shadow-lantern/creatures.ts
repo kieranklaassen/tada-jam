@@ -25,6 +25,8 @@ export type CreatureDef = {
   color: string
   /** A darker accent paper for its parts (sRGB hex). */
   accent: string
+  /** The other paper, for a second of its kind in the sky while the first is still there. */
+  second: { color: string; accent: string }
   body: Prim[]
   parts: CreaturePart[]
   eye: Point
@@ -62,6 +64,7 @@ export const CREATURES: Record<CreatureKind, CreatureDef> = {
     kind: 'bird',
     color: '#f5b83d',
     accent: '#e0892c',
+    second: { color: '#80c6ee', accent: '#4a8fc6' },
     body: [e(1, 21.5, 11, 6.2, 0.12), e(11, 25.5, 5.2, 4.8), tri([15, 27.6], [21, 25.4], [15, 23.4]), tri([-8, 22.5], [-19, 29], [-18, 17.5])],
     parts: [{ name: 'wing', pivot: { x: 1, y: 25 }, prims: [tri([-5, 24.5], [6, 25.5], [-9, 40]), e(-5.5, 34, 4.2, 6.8, -0.45)] }],
     eye: { x: 12.4, y: 26.6 },
@@ -71,6 +74,7 @@ export const CREATURES: Record<CreatureKind, CreatureDef> = {
     kind: 'fish',
     color: '#4fb8ae',
     accent: '#2f8f8a',
+    second: { color: '#a58be0', accent: '#7862c2' },
     body: [e(-1, 23, 15, 8.4), tri([-4, 30], [5, 30.2], [-7, 36.5]), tri([1, 16], [7, 16.2], [-3, 11])],
     parts: [{ name: 'tail', pivot: { x: -14, y: 23 }, prims: [tri([-12, 23], [-25, 32.5], [-25, 13.5]), sub(e(-26.5, 23, 3.2, 4.2))] }],
     eye: { x: 8.5, y: 25.2 },
@@ -80,6 +84,7 @@ export const CREATURES: Record<CreatureKind, CreatureDef> = {
     kind: 'snail',
     color: '#ef93b2',
     accent: '#c4607f',
+    second: { color: '#f2cd5c', accent: '#c99a2e' },
     body: [cap(-15, 16.2, 13, 16.2, 3.6), e(14.5, 18.6, 4.2, 3.8), cap(14.8, 20.5, 17.8, 29, 0.9), cap(12.2, 21, 12.6, 29.5, 0.9), e(18, 29.4, 1.5, 1.5), e(12.7, 30, 1.5, 1.5)],
     parts: [{ name: 'shell', pivot: { x: -2, y: 17 }, prims: [e(-2, 27, 10, 9.8)] }],
     eye: { x: 16, y: 19.4 },
@@ -89,8 +94,9 @@ export const CREATURES: Record<CreatureKind, CreatureDef> = {
     kind: 'whale',
     color: '#6ea4e8',
     accent: '#3f73c0',
+    second: { color: '#a39bd8', accent: '#716ab4' },
     body: [e(3, 21, 19, 9.5), e(14.5, 22, 9.5, 9.2), cap(-13, 22.5, -20, 28, 3)],
-    parts: [{ name: 'flukes', pivot: { x: -20, y: 28 }, prims: [e(-24.5, 31.5, 5.6, 2.2, 0.55), e(-17, 33, 5.4, 2.1, -0.5)] }],
+    parts: [{ name: 'flukes', pivot: { x: -20, y: 28 }, prims: [e(-20.2, 30, 2.4, 2.2), e(-24, 31.4, 5.6, 2.3, 0.55), e(-17.4, 32.4, 5.4, 2.2, -0.5)] }],
     eye: { x: 17.5, y: 22.5 },
     snore: { x: 21, y: 33 },
   },
@@ -98,6 +104,7 @@ export const CREATURES: Record<CreatureKind, CreatureDef> = {
     kind: 'fox',
     color: '#ef8340',
     accent: '#c45d25',
+    second: { color: '#f3e4c6', accent: '#cdb48a' },
     body: [e(-2, 18.5, 9, 11.2), e(5, 31.5, 6, 5.6), tri([9.5, 33.6], [18, 30], [9.5, 27.6]), tri([0.4, 34.5], [2.4, 42.5], [6.8, 36]), tri([6.2, 36], [11.4, 41.5], [10.4, 33.2])],
     parts: [{ name: 'tail', pivot: { x: -9, y: 12 }, prims: [e(-16, 13.5, 9, 4.2, 0.35), e(-22, 18.5, 3.8, 4.4, 0.2)] }],
     eye: { x: 8, y: 32.4 },
@@ -107,6 +114,7 @@ export const CREATURES: Record<CreatureKind, CreatureDef> = {
     kind: 'dragon',
     color: '#72c45e',
     accent: '#3f9447',
+    second: { color: '#9468d8', accent: '#6a44ad' },
     body: [
       cap(-26, 14, -14, 20.5, 3.4),
       cap(-14, 20.5, -2, 18, 5.2),
