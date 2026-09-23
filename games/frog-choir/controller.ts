@@ -20,7 +20,8 @@ export type Sound = {
   land(frog: number): void
   splash(): void
   chime(): void
-  preview(pitch: number): void
+  /** A carried frog softly sings the note of the pad under it; a newer preview cuts the last one off. */
+  preview(frog: number, pitch: number): void
   dispose(): void
 }
 
@@ -62,9 +63,13 @@ export type Frog = {
   vx: number
   vz: number
   pointer: number | null
-  targetX: number
-  targetZ: number
-  /** The pad under a held frog, or null over open water. */
+  /** The pond point under the carrying fingertip: the frog lands on the pad there. */
+  fingerX: number
+  fingerZ: number
+  /** Where the frog sat relative to the fingertip when picked up; eases to zero so it rises to float just above the finger. */
+  grabX: number
+  grabZ: number
+  /** The pad under the fingertip while held, or null over open water. */
   hover: number | null
   hopFromX: number
   hopFromY: number
@@ -85,12 +90,15 @@ export type Frog = {
 export type Ripple = { x: number; z: number; at: number; size: number }
 
 export const LIFT_HEIGHT = 0.85
-/** A held frog's centre sits this far above its feet: the finger holds its middle. */
-export const HOLD_CENTER = 0.45
+/** How fast a picked-up frog slides from under the finger to float over the fingertip, per second. */
+const GRAB_EASE = 7
 export const LOOKAHEAD = 0.12
 export const SPLASH_SECONDS = 0.55
-const FROG_HIT_PX = 34
+/** The smallest frog touch radius, CSS px. It only binds on phones, where the pond is small; frog centres are ~100 px apart there. */
+const FROG_HIT_PX = 44
 const FIREFLY_HIT_PX = 30
+/** A child taps where the firefly was: at the slowest tempo it flies ~230 px/s, so the touch area trails it along this much of its path. */
+const FIREFLY_TRAIL_SECONDS = 0.3
 const DROP_SLOP = 0.35
 const RIPPLES = 12
 /** The loop starts partway round the flight home, so the firefly glides in before the first note. */
@@ -112,6 +120,7 @@ export class PondController {
   /** Loop clock: beat k happens at clock = k × beat. */
   clock: number
   readonly firefly: Vec3 = { x: 0, y: 2, z: 0 }
+  private readonly fireflyPast: Vec3 = { x: 0, y: 2, z: 0 }
   fireflyLoopAt = -Infinity
   readonly padKickAt = new Float64Array(PAD_COUNT).fill(-Infinity)
   readonly padKickStrength = new Float32Array(PAD_COUNT)
@@ -140,6 +149,7 @@ export class PondController {
   private rippleNext = 0
   private readonly screen: Point = { x: 0, y: 0 }
   private readonly edge: Point = { x: 0, y: 0 }
+  private readonly trailScreen: Point = { x: 0, y: 0 }
   private readonly plane: Point = { x: 0, y: 0 }
 
   constructor(state: PondState, options: ControllerOptions) {
@@ -159,8 +169,10 @@ export class PondController {
       vx: 0,
       vz: 0,
       pointer: null,
-      targetX: 0,
-      targetZ: 0,
+      fingerX: 0,
+      fingerZ: 0,
+      grabX: 0,
+      grabZ: 0,
       hover: null,
       hopFromX: 0,
       hopFromY: 0,
@@ -246,7 +258,9 @@ export class PondController {
       }
     }
     const fire = projector.toScreen(this.firefly.x, this.firefly.y, this.firefly.z, this.screen)
-    const fireDistance = fire ? Math.hypot(fire.x - sx, fire.y - sy) : Infinity
+    const past = fireflyAt(phaseAt(this.clock - FIREFLY_TRAIL_SECONDS, this.beat), this.targets, this.occupied, this.fireflyPast)
+    const trail = projector.toScreen(past.x, past.y, past.z, this.trailScreen)
+    const fireDistance = fire ? segmentDistance(sx, sy, fire, trail ?? fire) : Infinity
     if (fireDistance <= FIREFLY_HIT_PX && (bestFrog < 0 || fireDistance / FIREFLY_HIT_PX < bestFrogScore)) return { kind: 'firefly' }
     if (bestFrog >= 0) return { kind: 'frog', frog: bestFrog }
     const on = projector.toPlane(sx, sy, 0.05, this.plane)
@@ -297,7 +311,7 @@ export class PondController {
         if (frog >= 0 && this.frogs[frog].mode === 'sit') this.tapFrog(frog)
         else {
           this.kickPad(target.pad, 1)
-          this.ripple(PADS[target.pad].x, PADS[target.pad].z, 1.2)
+          this.ripple(PADS[target.pad].x, PADS[target.pad].z, PADS[target.pad].radius * 2.6)
           this.sound.plink(PADS[target.pad].pitch, 1)
         }
         return
@@ -340,7 +354,11 @@ export class PondController {
     frog.hover = this.state.frogs[index]
     this.kickPad(this.state.frogs[index], -0.8)
     this.sound.lift(index)
+    frog.fingerX = frog.x
+    frog.fingerZ = frog.z
     this.aim(frog, sx, sy)
+    frog.grabX = frog.x - frog.fingerX
+    frog.grabZ = frog.z - frog.fingerZ
   }
 
   private dragTo(pointer: number, sx: number, sy: number): void {
@@ -349,10 +367,10 @@ export class PondController {
   }
 
   private aim(frog: Frog, sx: number, sy: number): void {
-    const on = this.projector?.toPlane(sx, sy, LIFT_HEIGHT + HOLD_CENTER, this.plane)
+    const on = this.projector?.toPlane(sx, sy, 0.05, this.plane)
     if (!on) return
-    frog.targetX = on.x
-    frog.targetZ = on.y
+    frog.fingerX = on.x
+    frog.fingerZ = on.y
   }
 
   private heldBy(pointer: number): Frog | null {
@@ -363,7 +381,7 @@ export class PondController {
     const frog = this.heldBy(pointer)
     if (!frog) return
     frog.pointer = null
-    const pad = padUnder(frog.targetX, frog.targetZ, DROP_SLOP)
+    const pad = padUnder(frog.fingerX, frog.fingerZ, DROP_SLOP)
     if (!pad) {
       frog.mode = 'splash'
       frog.splashedAt = this.time
@@ -375,7 +393,8 @@ export class PondController {
     const from = this.state.frogs[frog.index]
     const other = moveFrog(this.state, frog.index, pad.index)
     this.hop(frog, 0)
-    if (other !== null) this.hop(this.frogs[other], 0.12)
+    // A partner still in another finger keeps being carried; it hops to its new pad when let go.
+    if (other !== null && this.frogs[other].mode !== 'held') this.hop(this.frogs[other], 0.12)
     if (from !== pad.index) this.save(serialize(this.state))
   }
 
@@ -396,8 +415,10 @@ export class PondController {
     frog.hopFromY = frog.y
     frog.hopFromZ = frog.z
     frog.hopStart = this.time + delay
-    frog.hopDuration = Math.min(0.62, 0.34 + distance * 0.06)
-    frog.hopHeight = 0.35 + Math.min(1.2, distance * 0.16)
+    // Let go of right above its pad, a frog falls with weight instead of hopping.
+    const dropped = frog.y > 0.3 && distance < 0.8
+    frog.hopDuration = dropped ? 0.22 + distance * 0.1 : Math.min(0.62, 0.34 + distance * 0.06)
+    frog.hopHeight = dropped ? 0.05 : 0.35 + Math.min(1.2, distance * 0.16)
   }
 
   private kickPad(pad: number, strength: number): void {
@@ -453,19 +474,25 @@ export class PondController {
       case 'sit':
         return
       case 'held': {
+        const keep = Math.exp(-dt * GRAB_EASE)
+        frog.grabX *= keep
+        frog.grabZ *= keep
         const follow = 1 - Math.exp(-dt * 16)
-        const dx = (frog.targetX - frog.x) * follow
-        const dz = (frog.targetZ - frog.z) * follow
+        const dx = (frog.fingerX + frog.grabX - frog.x) * follow
+        const dz = (frog.fingerZ + frog.grabZ - frog.z) * follow
         frog.x += dx
         frog.z += dz
         frog.y += (LIFT_HEIGHT - frog.y) * (1 - Math.exp(-dt * 12))
         const smooth = 1 - Math.exp(-dt * 10)
         frog.vx += (dx / Math.max(dt, 1e-3) - frog.vx) * smooth
         frog.vz += (dz / Math.max(dt, 1e-3) - frog.vz) * smooth
-        const hover = padUnder(frog.targetX, frog.targetZ, DROP_SLOP)?.index ?? null
+        const hover = padUnder(frog.fingerX, frog.fingerZ, DROP_SLOP)?.index ?? null
         if (hover !== frog.hover) {
           frog.hover = hover
-          if (hover !== null) this.sound.preview(PADS[hover].pitch)
+          if (hover !== null) {
+            this.sing(frog, 0.55)
+            this.sound.preview(frog.index, PADS[hover].pitch)
+          }
         }
         return
       }
@@ -487,7 +514,7 @@ export class PondController {
         }
         frog.x = frog.hopFromX + (pad.x - frog.hopFromX) * t
         frog.z = frog.hopFromZ + (pad.z - frog.hopFromZ) * t
-        frog.y = frog.hopFromY * (1 - t) + 4 * frog.hopHeight * t * (1 - t)
+        frog.y = frog.hopFromY * (1 - t * t) + 4 * frog.hopHeight * t * (1 - t)
         return
       }
       case 'splash':
@@ -557,14 +584,14 @@ export class PondController {
       this.demoBeats(hint, this.demoProgress, timing.demo)
       this.demoProgress = timing.demo
     } else this.hand.opacity = 0
-    this.inviteFrog = timing.invite !== null ? nearestFrog(this.seated) : null
+    if (timing.invite === null) this.inviteFrog = null
+    else if (this.inviteFrog === null) this.inviteFrog = nearestFrog(this.seated)
   }
 
   /** The demonstration's touches are real: a demonstrated tap makes the frog sing, and a demonstrated drop plinks the new pad. */
   private demoBeats(hint: Hint, from: number, to: number): void {
-    const crossed = (at: number) => from < at && to >= at
     if (hint.kind === 'tapFrog') {
-      if (crossed(0.28) || crossed(0.58)) {
+      if (crossed(from, to, 0.28) || crossed(from, to, 0.58)) {
         const frog = this.frogs[hint.frog]
         if (frog.mode !== 'sit') return
         frog.tappedAt = this.time
@@ -573,7 +600,7 @@ export class PondController {
       }
       return
     }
-    if (hint.toPad !== null && crossed(0.76)) {
+    if (hint.toPad !== null && crossed(from, to, 0.76)) {
       this.kickPad(hint.toPad, 0.8)
       this.sound.plink(PADS[hint.toPad].pitch, 0.6)
     }
@@ -586,6 +613,20 @@ export class PondController {
 }
 
 export const FIREFLY_LOOP_SECONDS = 1.1
+
+/** Whether progress moved past `at` this frame. */
+function crossed(from: number, to: number, at: number): boolean {
+  return from < at && to >= at
+}
+
+/** Distance from a point to the segment a–b. */
+function segmentDistance(px: number, py: number, a: Point, b: Point): number {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  const lengthSq = dx * dx + dy * dy
+  const t = lengthSq > 0 ? Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / lengthSq)) : 0
+  return Math.hypot(px - (a.x + dx * t), py - (a.y + dy * t))
+}
 
 function easeInOut(t: number): number {
   return t * t * (3 - 2 * t)

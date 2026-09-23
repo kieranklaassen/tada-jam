@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { fireflyAt, phaseAt } from './choir'
 import { PondController, silentSound, type Projector, type Sound } from './controller'
 import { IDLE_BEFORE_DEMO } from './guidance'
 import { PADS, partnerPad, ROW_PITCH_HZ } from './layout'
@@ -113,6 +114,19 @@ describe('PondController', () => {
     expect(calls.some((call) => call.name === 'bloop')).toBe(true)
   })
 
+  it('catches the firefly where the child saw it, a moment behind where it is now', () => {
+    const { pond, calls } = makePond()
+    for (let i = 0; i < 2000 && (pond.phase < 6.3 || pond.phase > 6.5); i++) pond.step(1 / 60)
+    const seen = fireflyAt(phaseAt(pond.clock - 0.25, pond.beat), pond.targets, pond.occupied, { x: 0, y: 0, z: 0 })
+    expect(Math.hypot(seen.x - pond.firefly.x, seen.z - pond.firefly.z) * 100).toBeGreaterThan(40)
+    tapAt(pond, seen.x, seen.z)
+    expect(calls.some((call) => call.name === 'chime')).toBe(true)
+    calls.length = 0
+    run(pond, 1.5)
+    tapAt(pond, pond.firefly.x + 1, pond.firefly.z + 1)
+    expect(calls.some((call) => call.name === 'chime')).toBe(false)
+  })
+
   it('dragging a frog to an empty pad moves it there, saves, and it lands singing its new note', () => {
     const { pond, save, calls } = makePond()
     const from = PADS[pond.state.frogs[1]]
@@ -120,12 +134,35 @@ describe('PondController', () => {
     dragTo(pond, from.x, from.z, to.x, to.z)
     expect(pond.state.frogs[1]).toBe(to.index)
     expect(save).toHaveBeenCalledWith(expect.objectContaining({ frogs: pond.state.frogs }))
-    expect(calls.some((call) => call.name === 'preview' && call.args[0] === to.pitch)).toBe(true)
+    expect(calls.some((call) => call.name === 'preview' && call.args[0] === 1 && call.args[1] === to.pitch)).toBe(true)
     run(pond, 1)
     expect(pond.frogs[1].mode).toBe('sit')
     expect(pond.frogs[1].x).toBeCloseTo(to.x)
     expect(calls.some((call) => call.name === 'land' && call.args[0] === 1)).toBe(true)
     expect(voices(calls).some((call) => call.args[0] === 1 && call.args[1] === to.pitch)).toBe(true)
+  })
+
+  it('a frog lands on the pad under the fingertip, even though it is carried in the air above it', () => {
+    // A camera in front of the pond looking down at 45°: height shifts a point up the screen.
+    const oblique: Projector = {
+      toScreen: (x, y, z, out) => {
+        out.x = 1000 + x * 100
+        out.y = 1000 + (z - y) * 100
+        return out
+      },
+      toPlane: (sx, sy, height, out) => {
+        out.x = (sx - 1000) / 100
+        out.y = (sy - 1000) / 100 + height
+        return out
+      },
+    }
+    const { pond, save } = makePond()
+    pond.setProjector(oblique)
+    const from = PADS[pond.state.frogs[1]]
+    const to = partnerPad(from.index)
+    dragTo(pond, from.x, from.z, to.x, to.z)
+    expect(pond.state.frogs[1]).toBe(to.index)
+    expect(save).toHaveBeenCalled()
   })
 
   it('dropping on another frog swaps them, and the other frog hops to the vacated pad', () => {
@@ -138,6 +175,27 @@ describe('PondController', () => {
     run(pond, 1.2)
     expect(pond.frogs[3].mode).toBe('sit')
     expect(pond.frogs[3].x).toBeCloseTo(PADS[a].x)
+  })
+
+  it('dropping on the pad of a frog another finger is carrying swaps them without pulling it out of the hand', () => {
+    const { pond } = makePond()
+    const a = pond.state.frogs[0]
+    const b = pond.state.frogs[3]
+    const held = screenOf(PADS[b].x, PADS[b].z)
+    pond.pointerDown(7, held.x, held.y, (ms += 10))
+    pond.pointerMove(7, held.x + 40, held.y + 120)
+    run(pond, 0.2)
+    expect(pond.frogs[3].mode).toBe('held')
+    dragTo(pond, PADS[a].x, PADS[a].z, PADS[b].x, PADS[b].z)
+    expect(pond.state.frogs[0]).toBe(b)
+    expect(pond.state.frogs[3]).toBe(a)
+    expect(pond.frogs[3].mode).toBe('held')
+    pond.pointerCancel(7)
+    run(pond, 1.2)
+    expect(pond.frogs[3].mode).toBe('sit')
+    expect(pond.frogs[3].x).toBeCloseTo(PADS[a].x)
+    const home = screenOf(PADS[a].x, PADS[a].z)
+    expect(pond.pick(home.x, home.y)).toEqual({ kind: 'frog', frog: 3 })
   })
 
   it('a frog dropped on open water splashes and hops back home, with nothing saved', () => {

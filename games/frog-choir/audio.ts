@@ -19,6 +19,7 @@ export class PondAudio implements Sound {
   private master: GainNode | null = null
   private echo: GainNode | null = null
   private noise: AudioBuffer | null = null
+  private readonly mouths: (GainNode | null)[] = CAST.map(() => null)
   private active = true
 
   unlock(): void {
@@ -79,6 +80,7 @@ export class PondAudio implements Sound {
     this.master = null
     this.echo = null
     this.noise = null
+    this.mouths.fill(null)
   }
 
   private ready(): { ctx: AudioContext; out: GainNode; echo: GainNode } | null {
@@ -105,7 +107,7 @@ export class PondAudio implements Sound {
     const character = CAST[frog]?.character
     if (!character) return
     const at = audio.ctx.currentTime + Math.max(0, delay)
-    VOICES[character](audio.ctx, this.bus(audio.ctx, audio.out, audio.echo, 0.5), pitch, at, Math.min(1.3, strength), this.noise!)
+    VOICES[character](audio.ctx, this.mouth(audio, frog, at, 0.5), pitch, at, Math.min(1.3, strength), this.noise!)
   }
 
   plink(pitch: number, strength: number): void {
@@ -158,7 +160,7 @@ export class PondAudio implements Sound {
     if (!audio) return
     const { ctx } = audio
     const t = ctx.currentTime
-    const base = 330 * (CAST[frog]?.scale ? 1 / CAST[frog].scale : 1)
+    const base = 330 / (CAST[frog]?.scale ?? 1)
     const gain = this.bus(ctx, audio.out, audio.echo, 0.2)
     const osc = ctx.createOscillator()
     osc.type = 'triangle'
@@ -265,21 +267,31 @@ export class PondAudio implements Sound {
     })
   }
 
-  preview(pitch: number): void {
+  preview(frog: number, pitch: number): void {
     const audio = this.ready()
-    if (!audio) return
+    const character = CAST[frog]?.character
+    if (!audio || !character) return
+    const at = audio.ctx.currentTime
+    VOICES[character](audio.ctx, this.mouth(audio, frog, at, 0), pitch, at, 0.45, this.noise!)
+  }
+
+  /**
+   * One frog has one mouth: a new note fades out the one it is still singing,
+   * so a child tapping fast re-sings the note instead of stacking copies.
+   * The voice owns its bus envelope, so the cut-off rides a separate gain
+   * with no automation of its own (cancelAndHoldAtTime is missing in
+   * Safari), placed before the echo send so no tail leaks past it.
+   */
+  private mouth(audio: { ctx: AudioContext; out: GainNode; echo: GainNode }, frog: number, at: number, wet: number): GainNode {
     const { ctx } = audio
-    const t = ctx.currentTime
-    const gain = this.bus(ctx, audio.out, audio.echo, 0.3)
-    const osc = ctx.createOscillator()
-    osc.type = 'sine'
-    osc.frequency.value = pitch
-    osc.connect(gain)
-    gain.gain.setValueAtTime(0.0001, t)
-    gain.gain.exponentialRampToValueAtTime(0.12, t + 0.03)
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3)
-    osc.start(t)
-    osc.stop(t + 0.32)
+    this.mouths[frog]?.gain.setTargetAtTime(0, at, 0.025)
+    const mouth = this.bus(ctx, audio.out, audio.echo, wet)
+    mouth.gain.value = 1
+    this.mouths[frog] = mouth
+    const voice = ctx.createGain()
+    voice.gain.value = 0
+    voice.connect(mouth)
+    return voice
   }
 }
 
@@ -323,7 +335,7 @@ const showoffVoice: Voice = (ctx, out, pitch, at, strength) => {
 
 /** Rib-bit: two quick plucks, the second brighter. */
 const bouncyVoice: Voice = (ctx, out, pitch, at, strength) => {
-  out.gain.setValueAtTime(strength * 0.9, at)
+  out.gain.setValueAtTime(strength * 1.05, at)
   for (const [offset, bright] of [
     [0, 900],
     [0.2, 2200],
@@ -359,18 +371,28 @@ const sleepyVoice: Voice = (ctx, out, pitch, at, strength) => {
   sub.frequency.setValueAtTime(low / 2, at + 0.5)
   sub.frequency.exponentialRampToValueAtTime(low * 0.45, at + 0.85)
   const subGain = ctx.createGain()
-  subGain.gain.value = 0.5
+  subGain.gain.value = 0.25
+  // Tablet speakers barely reproduce the hum's fundamental on the near rows, so
+  // a soft partial at the written pitch carries it.
+  const hum2 = ctx.createOscillator()
+  hum2.type = 'sine'
+  hum2.frequency.setValueAtTime(pitch, at)
+  hum2.frequency.setValueAtTime(pitch, at + 0.5)
+  hum2.frequency.exponentialRampToValueAtTime(pitch * 0.9, at + 0.85)
+  const hum2Gain = ctx.createGain()
+  hum2Gain.gain.value = 0.8
   const hum = ctx.createBiquadFilter()
   hum.type = 'lowpass'
-  hum.frequency.value = 700
+  hum.frequency.value = 900
   tri.connect(hum)
   sub.connect(subGain).connect(hum)
+  hum2.connect(hum2Gain).connect(hum)
   hum.connect(out)
-  const end = shape(out.gain, at, 0.42 * strength, 0.2, 0.32, 0.36)
-  tri.start(at)
-  sub.start(at)
-  tri.stop(end)
-  sub.stop(end)
+  const end = shape(out.gain, at, 0.24 * strength, 0.2, 0.32, 0.36)
+  for (const osc of [tri, sub, hum2]) {
+    osc.start(at)
+    osc.stop(end)
+  }
 }
 
 /** A breathy little whistle an octave up, with a puff of air before it. */
@@ -395,7 +417,7 @@ const shyVoice: Voice = (ctx, out, pitch, at, strength, noise) => {
   const breathGain = ctx.createGain()
   shape(breathGain.gain, at, 0.08, 0.04, 0.05, 0.2)
   breath.connect(airy).connect(breathGain).connect(out)
-  const end = shape(out.gain, at, 0.3 * strength, 0.08, 0.16, 0.2)
+  const end = shape(out.gain, at, 0.13 * strength, 0.08, 0.16, 0.2)
   osc.start(at)
   wobble.start(at)
   breath.start(at, Math.random() * 0.5)
