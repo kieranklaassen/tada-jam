@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { MotionDirector, PERSONALITIES, type ActionKind, type MotionPose, type Species } from './motion'
 
-const SPECIES: Species[] = ['rabbit', 'bear', 'hedgehog']
+const SPECIES = Object.keys(PERSONALITIES) as Species[]
 const KINDS: ActionKind[] = ['react', 'eat', 'poke', 'arrive', 'delight']
 
 function trajectory(species: Species, kind: ActionKind, name: string): number[] {
@@ -83,7 +83,7 @@ describe('reaching for the bowl', () => {
       return director.sample(0.5, true, 1)
     }
     const responses = SPECIES.map((species) => PERSONALITIES[species].reachResponse)
-    expect(new Set(responses).size).toBe(3)
+    expect(new Set(responses).size).toBe(SPECIES.length)
     expect(after('bear').armForward[0]).toBeLessThan(PERSONALITIES.bear.reach(1, 0, 0).armForward![0] * 0.8)
   })
 })

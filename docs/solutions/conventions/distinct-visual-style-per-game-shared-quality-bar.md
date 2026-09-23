@@ -1,6 +1,8 @@
 ---
 title: Every jam game picks its own visual style; all games meet one shared quality bar
 date: 2026-09-22
+last_refreshed: 2026-09-22
+last_updated: 2026-09-22
 category: conventions
 module: art-direction
 problem_type: convention
@@ -9,8 +11,8 @@ severity: medium
 related_components:
   - development_workflow
 applies_when:
-  - Adding a new game under games/ in tada-jam
-  - Choosing or changing a game's visual style or art direction
+  - Starting a new game under games/ in tada-jam, before building gameplay or visuals
+  - Choosing, exploring, or changing a game's visual style or art direction
   - Writing jam-wide art or quality guidance that could be mistaken for one game's look
   - Building a 3D kid game that must hold 60 fps on a mid-range iPad
   - Reviewing a game PR against the shared quality bar
@@ -38,7 +40,7 @@ The correction is in PR [#1](https://github.com/kieranklaassen/tada-jam/pull/1),
 - `docs/art-direction.md` holds the jam-wide quality bar, the rule for picking a style, a registry of claimed styles, and a menu of unclaimed directions.
 - `games/pebble-table/ART.md` holds everything specific to claymation (palette, material, motion rules).
 
-The rule is also stated in `AGENTS.md` (`CLAUDE.md` is a symlink to it) and in the README's "Add a game" step 6.
+The rule is also stated in `AGENTS.md` (`CLAUDE.md` is a symlink to it) and in the README's "Add a game" step 7.
 
 ## Guidance
 
@@ -46,19 +48,31 @@ The rule is also stated in `AGENTS.md` (`CLAUDE.md` is a symlink to it) and in t
 
 ### The rule for a new game
 
-From `docs/art-direction.md:29-33` and `AGENTS.md:36`:
+From `docs/art-direction.md` (section 2) and the "A distinct look per game" rule in `AGENTS.md`:
 
 1. Pick a direction nobody has claimed in the registry in `docs/art-direction.md`.
 2. Spike it on the game's real scene, not a mood board. Take a screenshot at 1180×820 and measure the frame rate at DPR 2.
 3. Register it in the same PR, with a link to the game's own art guide at `games/<key>/ART.md`.
 
-Techniques may be shared across games (merged meshes, blob shadows, the ghost-hand guidance). A look may not. The test is whether two games could be mistaken for each other in a screenshot (`docs/art-direction.md:33`).
+Techniques may be shared across games (merged meshes, blob shadows, the ghost-hand guidance). A look may not. The test is whether two games could be mistaken for each other in a screenshot (`docs/art-direction.md`).
 
 When writing guidance, put style-specific details (palette, material, surface texture, lighting mood) in `games/<key>/ART.md`. Put style-independent requirements in `docs/art-direction.md`. If a sentence would be wrong for a paper-craft game, it does not belong in the shared doc.
 
+### Explore the look before building gameplay
+
+Decide the look first, then build the game inside it. A first slice that is playable but plain is not a first slice: the owner judges the game by its first screenshot, and a plain renderer gets thrown away.
+
+1. Before writing any gameplay, build the game's real scene (its table, props, and one character) in several candidate styles from the unclaimed menu in `docs/art-direction.md`.
+2. For each candidate, take a screenshot at 1180x820 and record a measured fps. Put the screenshots on one contact sheet with the numbers.
+3. Show the contact sheet to the owner and get a pick. Register it as the existing rule describes.
+4. Hold the slice to the full quality bar from its first screenshot, not after the mechanics work.
+5. Write game rules (state, scoring, fairness, timing, save cadence) as pure modules with no renderer or physics imports, each with its own tests, so a later look change costs only the view.
+
+Evidence from Pebble Table: the first slice was 2D canvas, the owner called it "ugly", and after the 3D exploration the rebuild in PR #1 deleted `render.ts`, `scene.ts`, `physics.ts`, and `physics.test.ts` outright, while `state`, `scale`, `feeding`, `voice`, `input`, `layout`, and `saveCadence` and all their tests carried over with at most a few lines changed (plan "Revision 3" in `docs/plans/2026-09-22-001-feat-pebble-table-plan.md`; "History" in `games/pebble-table/ART.md`).
+
 ### The shared quality bar
 
-`docs/art-direction.md:5-25` lists the lines every game must meet, whatever its style: alive at idle; motion and sound on every touch; weight, squash, and follow-through; kid-clear silhouettes; wordless guidance; 60 fps on a mid-range iPad; procedural or committed assets only; and a recognisably distinct art direction. The PR for a game must say how it meets each line, with a measured frame rate.
+`docs/art-direction.md` (section 1) lists the lines every game must meet, whatever its style: alive at idle; motion and sound on every touch; weight, squash, and follow-through; kid-clear silhouettes; wordless clarity for the declared age band (see [`wordless-clarity-for-the-declared-age-band.md`](wordless-clarity-for-the-declared-age-band.md)); wordless guidance; 60 fps on a mid-range iPad; procedural or committed assets only; and a recognisably distinct art direction. The PR for a game must say how it meets each line, with a measured frame rate.
 
 ### What made Pebble Table's 3D read clearly and hold 60 fps
 
@@ -67,40 +81,40 @@ These lessons came from building the claymation style, but most of them are tech
 **Clarity for a young child**
 
 - Big, distinct silhouettes, few objects, and an uncluttered backdrop.
-- Countable pieces should sit on a surface of contrasting hue and temperature. The claymation concept image had rust stones on a rust table. The fix was a cool sage-teal table (`PALETTE.table` `#7fa4a6` against `PALETTE.stone` `#c9683d`, `games/pebble-table/view/clay.ts:14-16`).
+- Countable pieces should sit on a surface of contrasting hue and temperature. The claymation concept image had rust stones on a rust table. The fix was a cool sage-teal table (`PALETTE.table` `#6e9a9b` against `PALETTE.stone` `#c9683d`, `games/pebble-table/view/clay.ts`).
 
 **Draw calls and geometry**
 
-- Merge each rigid prop into a single geometry, which means one draw call per prop (`merge()` built on `mergeGeometries`, `clay.ts:126-135`). Characters are split into about six parts (body, head, eyes, mouth, two arms) so they can still animate (`games/pebble-table/ART.md:33`).
-- Instance anything that repeats. All stones are one `instancedMesh`, and each instance gets its own squash matrix (`games/pebble-table/view/models.tsx:110-156`). Plates, stools, and chain links are instanced the same way (`models.tsx:347`, `393-394`).
-- Build geometry once per page, not on every mount. `once()` caches geometry by key (`models.tsx:35-39`), and `prewarm()` builds the bag, the scale mat, and all three characters' geometry shortly after startup (`models.tsx:487-497`); Fair Feeding's plates, stools, bowl, and knife are still built the first time that mat mounts, so prewarming those too is an open improvement.
+- Merge each rigid prop into a single geometry, which means one draw call per prop (`merge()` built on `mergeGeometries`, `clay.ts`). Characters are split into about six parts (body, head, eyes, mouth, two arms) so they can still animate (`games/pebble-table/ART.md`).
+- Instance anything that repeats. Stones are three `instancedMesh` draws (whole, half, quarter), and each instance gets its own squash matrix (`games/pebble-table/view/models.tsx`). Plates, stools, and chain links are instanced the same way (`models.tsx`).
+- Build geometry once per page, not on every mount. `once()` caches geometry by key (`models.tsx`), and `prewarm()` builds the bag, the scale mat, and all three characters' geometry shortly after startup (`models.tsx`); Fair Feeding's plates, stools, bowl, and knife are still built the first time that mat mounts, so prewarming those too is an open improvement.
 
 **Lighting and shading on a budget**
 
-- Use blob shadows instead of shadow maps. One instanced mesh of soft radial blobs widens and fades with height above the ground, and the same mesh in warm light draws the guidance glows (`models.tsx:159-196`). The stage sets up no shadow maps (`stage.tsx:12-14`).
-- Bake contact occlusion into vertex colours. `paint()` darkens vertices near the surface a piece sits on, so no AO pass is needed (`clay.ts:102-124`).
-- Draw textures procedurally at startup. The thumbprint normal map is drawn on a canvas and wrapped in a `CanvasTexture` (`clay.ts:199-243`, with the `CanvasTexture` created at `clay.ts:181`; used at `clay.ts:314-317`). Nothing is fetched, which also satisfies the zero-egress rule.
+- Use blob shadows instead of shadow maps. One instanced mesh of soft radial blobs widens and fades with height above the ground, and the same mesh in warm light draws the guidance glows (`models.tsx`). The stage sets up no shadow maps (`stage.tsx`).
+- Bake contact occlusion into vertex colours. `paint()` darkens vertices near the surface a piece sits on, so no AO pass is needed (`clay.ts`).
+- Draw textures procedurally at startup. The thumbprint normal map is drawn on a canvas and wrapped in a `CanvasTexture` (`clay.ts`, with the `CanvasTexture` created at `clay.ts`; used at `clay.ts`). Nothing is fetched, which also satisfies the zero-egress rule.
 
 **Post-processing and resolution**
 
-- Allow at most one full-screen post pass. `ClayFinishEffect` merges tilt-shift depth of field, a warm grade, and a vignette into one shader (`games/pebble-table/view/finish.ts:4-6`). ACES tone mapping follows it in the same composer (`stage.tsx:57-65`).
-- Cap DPR at 2 (`dpr={[1, 2]}`, `stage.tsx:105`) and turn MSAA off at DPR 2 (`multisampling={dpr >= 2 ? 0 : 4}`, `stage.tsx:61`).
+- Allow at most one full-screen post pass. `ClayFinishEffect` merges tilt-shift depth of field, a warm grade, and a vignette into one shader (`games/pebble-table/view/finish.ts`). ACES tone mapping follows it in the same composer (`stage.tsx`).
+- Cap DPR at 2 and let the adaptive quality tier lower it (full 2, balanced 1.5, lean 1.25, minimal 1; `TIERS` in `games/pebble-table/quality.ts`). The composer runs without MSAA (`multisampling={0}`, `stage.tsx`).
 
 **Attention and guidance**
 
-- Pause the render loop when the game is unattended. `running` is `ctx.attention.attended && !hidden` (`games/pebble-table/pebble-table.tsx:27`), and the canvas uses `frameloop={running ? 'always' : 'never'}` (`stage.tsx:106`).
-- Show guidance without words, as a camera-facing sprite of a ghost hand (`models.tsx:753-787`). Per the build session, an earlier 3D ghost-hand model (never committed) was foreshortened into an unreadable blob by the angled camera, so the committed version is a sprite. Timing lives in `guidance.ts`: a glow after 3 seconds of idle, demonstrations after 5 seconds and then 10, 20, and 40 second gaps, and at most four per idle stretch (`games/pebble-table/guidance.ts:85-88`, `119-126`).
+- Pause the render loop when the game is unattended. `running` is `ctx.attention.attended && !hidden` (`games/pebble-table/pebble-table.tsx`), and the canvas uses `frameloop={running ? 'demand' : 'never'}` with a pacer that renders every display frame during play and every other frame after 20 s of rest (`games/pebble-table/view/quality.tsx`).
+- Show guidance without words, as a camera-facing sprite of a ghost hand (`models.tsx`). Per the build session, an earlier 3D ghost-hand model (never committed) was foreshortened into an unreadable blob by the angled camera, so the committed version is a sprite. Timing lives in `guidance.ts`: a glow after 3 seconds of idle, demonstrations after 5 seconds and then 10, 20, and 40 second gaps, and at most four per idle stretch (`games/pebble-table/guidance.ts`).
 
 **Motion**
 
-- Use one damped spring helper, `springStep` (`models.tsx:46-54`), for all motion. Low damping overshoots, and that overshoot is the charm.
-- Stones squash on landing and stretch on pickup (stiffness 330, damping 11, `models.tsx:138-146`). The balance beam is a slightly underdamped spring. Characters anticipate before a hop and follow through after it (`models.tsx:508`, `555-571`).
+- Use one damped spring helper, `springStep` (`models.tsx`), for all motion. Low damping overshoots, and that overshoot is the charm.
+- Stones squash on landing and stretch on pickup, with a spring per size (`STONE_FEEL` in `models.tsx`: whole stones heavy and slow, quarters quick). The balance beam is a slightly underdamped spring. Characters move by personality, not by one shared animation (`games/pebble-table/motion.ts`).
 
 **Measurement**
 
-- Measure with a scripted walkthrough rather than by eye. Pebble Table was measured with a Playwright walkthrough at 1180×820 and DPR 2 on an Apple M4 in headless Chrome. It averaged 59.9 fps with a 99th-percentile frame of 16.8 ms, and one frame went over 25 ms in about 57 seconds (`games/pebble-table/ART.md:54-56`).
+- Measure with a scripted walkthrough rather than by eye, and on the right target. Headless Chrome on an Apple M4 reported 59.9 fps for Pebble Table while the owner saw heavy lag on a real device; the committed profile (`scripts/pebble-perf.mjs`, `npm run perf:pebble`) now runs a production build in WebKit, in Chrome with CPU throttling, and on a software GPU, and the game adapts its quality at runtime.
 - Do not take screenshots during the timed run. They cause stalls that pollute the numbers.
-- The walkthrough script does not appear to be committed to the repo. Pebble Table has not yet been measured on a physical iPad, so treat desktop numbers as a floor check, not proof.
+- Pebble Table has not yet been measured on a physical iPad, so treat desktop numbers as a floor check, not proof; the grown-up overlay (triple-tap the top-left corner) shows the real frame rate on the device.
 
 ## Why This Matters
 
@@ -108,7 +122,8 @@ These lessons came from building the claymation style, but most of them are tech
 - **A shared bar keeps variety from becoming uneven quality.** Without it, "a different style" could turn into a cheaper style, or one that runs at 30 fps on an iPad. The bar is deliberately style-independent: a paper-craft game and a claymation game are held to the same standard for idle life, feedback, clarity, guidance, and frame rate.
 - **Mixing the two layers causes drift.** The first art-direction doc showed what happens when a style decision is written into jam-wide guidance: later agents read it as a rule and copy the look. Keeping style in `games/<key>/ART.md` and the bar in `docs/art-direction.md` makes the boundary visible.
 - **Claiming a style early prevents collisions.** The registry plus a spike on the real scene makes the choice concrete (a screenshot and a number) before any visuals are built. Two parallel agents can't silently pick the same look, and a style that can't hit 60 fps is caught before the build starts.
-- **The performance techniques are hard-won and reusable.** Merging, instancing, blob shadows, baked AO, one post pass, and the DPR cap are what kept Pebble Table at about 45 draw calls and 60 fps. A new game in a different style can reuse all of them without borrowing the clay look.
+- **The performance techniques are hard-won and reusable.** Merging, instancing, blob shadows, baked AO, one post pass, and the DPR cap are what keep Pebble Table at about 48 draw calls. A new game in a different style can reuse all of them without borrowing the clay look.
+- **Gameplay-first costs a rewrite.** Pebble Table's 2D renderer and 2D physics were deleted wholesale once the owner saw the slice and asked for 3D; the pure rule modules and their tests carried over almost untouched. Exploring the look first, with rules kept renderer-free, turns that rewrite into a view swap.
 
 ## When to Apply
 
@@ -117,6 +132,9 @@ These lessons came from building the claymation style, but most of them are tech
 - Reviewing a game PR. Check that the style is registered and unclaimed by another game, that the PR says how each quality-bar line is met, and that it includes a measured frame rate.
 - Reworking an existing game's look. Update its registry row and its `ART.md` in the same PR.
 - Building any 3D kids' game in the jam. The clarity and performance techniques apply regardless of style.
+- Before the first gameplay commit of a new game. The style exploration and the owner's pick come first; a gameplay-first slice on a placeholder renderer is the pattern to avoid.
+- Structuring a new game's modules. Keep rules pure and renderer-free (no three.js, canvas, or physics imports) so a look change never touches them.
+- When an owner reacts to a slice with "looks plain" or "looks ugly". Stop adding mechanics and run the multi-style exploration on the real scene before continuing.
 
 This does not stop games from sharing code-level techniques or the style-independent guidance logic. Only the look must differ.
 
@@ -126,11 +144,11 @@ This does not stop games from sharing code-level techniques or the style-indepen
 
 > **Art direction.** Jam games share the claymation look and its iPad budget: see `docs/art-direction.md`.
 
-**Corrected framing (`docs/art-direction.md:3`):**
+**Corrected framing (`docs/art-direction.md`):**
 
 > Every Tada Jam game must meet the same **quality bar**, and every game must **look different**. Claymation is Pebble Table's style, not the jam's.
 
-**Registering a new game's style.** Say a second game spikes picture-book gouache from the unclaimed menu (`docs/art-direction.md:47`). In its PR it would add `games/<new-key>/ART.md` and one row to the registry (in `docs/art-direction.md` the art-guide column holds links):
+**Registering a new game's style.** Say a second game spikes picture-book gouache from the unclaimed menu (`docs/art-direction.md`). In its PR it would add `games/<new-key>/ART.md` and one row to the registry (in `docs/art-direction.md` the art-guide column holds links):
 
 ```markdown
 | Game | Style | Art guide |
@@ -141,24 +159,26 @@ This does not stop games from sharing code-level techniques or the style-indepen
 
 It would reuse techniques freely, such as instancing, blob shadows, one post pass, the DPR cap, and the ghost-hand guidance. It would replace everything that makes the look: a ramp shader and ink outlines instead of the clay material with thumbprint normals, and its own palette.
 
-**Figure-ground fix in the palette (`games/pebble-table/view/clay.ts:14-16`):**
+**Figure-ground fix in the palette (`games/pebble-table/view/clay.ts`):**
 
 ```ts
-table: '#7fa4a6',
-tableEdge: '#6f9294',
+table: '#6e9a9b',
+tableEdge: '#5e8788',
 stone: '#c9683d',
 ```
 
-**The iPad-safe render setup (`games/pebble-table/view/stage.tsx:61`, `104-108`):**
+**The iPad-safe render setup (`games/pebble-table/view/stage.tsx`):**
 
 ```tsx
-<EffectComposer multisampling={dpr >= 2 ? 0 : 4} enableNormalPass={false}>
-  ...
 <Canvas
-  dpr={[1, 2]}
-  frameloop={running ? 'always' : 'never'}
+  dpr={Math.min(window.devicePixelRatio || 1, 2)}
+  frameloop={running ? 'demand' : 'never'}
   flat
   gl={{ antialias: false, powerPreference: 'high-performance', stencil: false }}
+>
+  <QualityProvider governor={governor} running={running} restingFor={restingFor} onSettings={onSettings}>
+  ...
+<EffectComposer multisampling={0} enableNormalPass={false}>
 ```
 
 ## Related
@@ -166,4 +186,5 @@ stone: '#c9683d',
 - [`docs/art-direction.md`](../../art-direction.md): the canonical quality bar, style rule, claimed-styles registry, and menu of unclaimed directions. This doc records why; that doc is the rule.
 - [`games/pebble-table/ART.md`](../../../games/pebble-table/ART.md): the worked example of one claimed style (claymation 3D) and its measured budget.
 - [`AGENTS.md`](../../../AGENTS.md): the "Quality bar" and "A distinct look per game" rules, plus the jam 3D stack allowance.
-- [`README.md`](../../../README.md): "Add a game" step 6 (pick, spike, register a style).
+- [`README.md`](../../../README.md): "Add a game" step 7 (pick, spike, register a style).
+- [`wordless-clarity-for-the-declared-age-band.md`](wordless-clarity-for-the-declared-age-band.md): the quality-bar line on clarity for the declared age.
