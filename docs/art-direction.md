@@ -38,6 +38,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Game | Style | Art guide |
 | --- | --- | --- |
 | Pebble Table | Claymation 3D: plasticine with thumbprints, stop-motion lighting, terracotta on cool sage-teal | [`games/pebble-table/ART.md`](../games/pebble-table/ART.md) |
+| Hillside Spring | Painterly, Ghibli-like: a hand-painted terraced garden, unlit painted scenery, cel-lit movers, afternoon light shafts, gold bamboo on sage | [`games/hillside-spring/ART.md`](../games/hillside-spring/ART.md) |
 
 ## 4. Menu of unclaimed directions
 
