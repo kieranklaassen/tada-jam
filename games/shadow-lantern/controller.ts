@@ -1,26 +1,29 @@
 import { CoverageMeter, stirLevel, TAP_TURN, wakeRuleForAge, wakes, type CoverageResult, type Placed, type WakeRule } from './coverage'
 import { buildCreature, type BuiltCreature, type CreatureKind } from './creatures'
-import { blankDemoPose, demoPose, GRIP_HEIGHT, HintScheduler, IDLE_BEFORE_GLOW, type Demo, type DemoPose, type GuidanceState } from './guidance'
+import { blankDemoPose, DEMO_SECONDS, demoPose, GRIP_HEIGHT, HintScheduler, type Demo, type DemoPose, type GuidanceState } from './guidance'
 import { GestureTracker, type Intent, type Point, type Target } from './input'
 import {
   ANTICIPATE_S,
   blankPose,
+  flightDepth,
+  flightScale,
   PEEL_S,
   peelPose,
   PERSONALITIES,
   restPose,
   SILHOUETTE_S,
   SKY_HOMES,
-  SKY_SCALE,
   SKY_Z,
+  skyDepth,
+  skyScale,
   type CreaturePose,
   type Ring,
   type SleepPose,
 } from './motion'
-import { clampToStage, LAMP, PIN_HEIGHT, shadowScale, STAGE, type CardPose, type Vec3 } from './projection'
+import { clampToStage, clearOfProscenium, LAMP, PIN_HEIGHT, PROSCENIUM, SCREEN, shadowScale, STAGE, type CardPose, type Vec3 } from './projection'
 import { SaveCadence } from './saveCadence'
-import { SHAPES, type ShapeKind } from './shapes'
-import { normalizeAngle, serialize, wakeCreature, type TheatreState } from './state'
+import { SHAPE_KINDS, SHAPES, type ShapeKind } from './shapes'
+import { INVITE_SHAPE, normalizeAngle, serialize, wakeCreature, type SkyCreature, type TheatreState } from './state'
 
 // The theatre while it is on screen: rules, touch, springs, coverage, the
 // wake of each creature and its life in the sky, guidance, sound and saving.
@@ -111,16 +114,25 @@ export type Waking = {
   built: BuiltCreature
   start: number
   slot: number
+  paper: 0 | 1
   pose: CreaturePose
   /** 0..1 opacity of the dark silhouette card as it fills in. */
   fillIn: number
-  facingTarget: number
-  arrived: boolean
+}
+
+/** A companion's trip from the turned page to its home in the sky. */
+export type Flight = {
+  start: number
+  fromX: number
+  fromY: number
+  /** Half the creature's larger extent at full size, to keep it in front of the frame while it crosses. */
+  radius: number
 }
 
 export type Companion = {
   kind: CreatureKind
   slot: number
+  paper: 0 | 1
   seed: number
   pose: CreaturePose
   reactAt: number
@@ -130,9 +142,16 @@ export type Companion = {
   ringCount: number
   /** Set while it drifts behind the moon; removed when done. */
   leavingAt: number
+  /** Set while it is still on its way home; null once it has arrived. */
+  flight: Flight | null
 }
 
+/** Where a tap's little burst of stars lands: the sky (or the frame), the plank floor and meadow, or the lit screen. */
+export type SparkSurface = 'sky' | 'floor' | 'screen'
+
 const HIT_SLOP_CM = 1.6
+/** Ground further back than this is hidden behind the hills and bushes, so the sky takes the tap. */
+const GROUND_BACK = -10
 const SPRING_STEP = 1 / 120
 const WAKE_HOLD_S = 0.32
 const ENTER_S = 1.8
@@ -140,6 +159,7 @@ const ENTER_S = 1.8
 export const MOON = { x: 62, y: 46, z: SKY_Z - 8 }
 const LEAVE_S = 3.2
 const HINT_BUDGET_MS = 0.6
+const SEARCH_AFTER_S = 0.6
 
 function blankRings(): Ring[] {
   return [0, 1, 2, 3].map(() => ({ x: 0, y: 0, r: 0, alpha: 0 }))
@@ -170,12 +190,14 @@ export class TheatreController {
   /** Seconds of attended play; stands still while the theatre is put away. */
   t = 0
   lampFlareAt = -Infinity
-  readonly spark = { x: 0, y: 0, z: 0, at: -Infinity }
+  readonly spark: { x: number; y: number; z: number; at: number; surface: SparkSurface } = { x: 0, y: 0, z: 0, at: -Infinity, surface: 'sky' }
+  /** Stars that spring off the outline's edge the moment the shadow opens its eye: centre and half-size on the screen (cm). */
+  readonly wakeBurst = { x: 0, y: 0, rx: 0, ry: 0, at: -Infinity }
   snuffleAt = -Infinity
   /** Bumped whenever the set of creatures changes, so the view can reassign meshes. */
   version = 0
   /** Index of the shape doing the first-open invite hop. */
-  readonly inviteShape = 3
+  readonly inviteShape = SHAPE_KINDS.indexOf(INVITE_SHAPE)
 
   private readonly sound: Sound
   private readonly cadence: SaveCadence
@@ -190,6 +212,7 @@ export class TheatreController {
   private nextSleeperAt = -1
   private searchFor: CreatureKind | null = null
   private searchDone = false
+  private demoReadyAt = Infinity
   private lastDotSound = -Infinity
   private peelSoundAt = -1
   private readonly origin: Vec3 = { x: 0, y: 0, z: 0 }
@@ -221,7 +244,7 @@ export class TheatreController {
     }))
     this.placed = this.shapes.map((shape) => ({ kind: shape.kind, pose: shape.pose }))
     this.measured = new Float64Array(this.shapes.length * 3).fill(NaN)
-    this.state.sky.forEach((creature, index) => this.companions.push(this.companion(creature.kind, creature.slot, index * 2.3)))
+    this.state.sky.forEach((creature, index) => this.companions.push(this.companion(creature, index * 2.3)))
     this.setSleeper(state.sleeping, -ENTER_S)
   }
 
@@ -260,7 +283,7 @@ export class TheatreController {
       this.nextSleeperAt = -1
       this.setSleeper(this.state.sleeping, t)
     }
-    if (this.waking) this.stepWaking(this.waking, dt)
+    if (this.waking) this.stepWaking(this.waking)
     this.stepCompanions(dt)
     this.stepGuidance()
     this.sound.stir(this.sleeper ? this.stir : 0)
@@ -366,7 +389,7 @@ export class TheatreController {
     } else this.holdFor = 0
   }
 
-  private stepWaking(waking: Waking, dt: number): void {
+  private stepWaking(waking: Waking): void {
     const t = this.t
     const e = t - waking.start
     const personality = PERSONALITIES[waking.kind]
@@ -398,38 +421,48 @@ export class TheatreController {
       pose.facing = 1
       peelPose((e - peelAt) / PEEL_S, hinge, pose)
     } else {
-      // After the page turn the card is mirrored about its tail edge: the same
-      // picture as an unturned card facing the other way.
+      // The page has turned: from here it is a companion on its way home, so
+      // the next outline can wake at any moment without cutting its trip short.
+      // The turned card is mirrored about its tail edge: the same picture as
+      // an unturned card facing the other way.
       const fromX = center.x + 2 * hinge
-      const home = SKY_HOMES[waking.slot]
-      if (waking.facingTarget === 0) {
-        waking.facingTarget = home.x >= fromX ? 1 : -1
-        waking.pose.facing = -1
-      }
-      const k = Math.min(1, (e - flyAt) / personality.gaitSeconds)
-      personality.gait(k, fromX, center.y, home.x, home.y, pose)
-      pose.z = lerp(0.3, SKY_Z, smooth(k * 1.3))
-      pose.scale = lerp(1, SKY_SCALE, smooth(k * 1.15))
-      if (k >= 1 && !waking.arrived) {
-        waking.arrived = true
-        const companion = this.companion(waking.kind, waking.slot, 0)
-        companion.pose.facing = pose.facing
-        companion.facingTarget = waking.facingTarget
-        companion.seed = -t
-        this.companions.push(companion)
-        this.waking = null
-        this.version++
-        this.sound.voice(waking.kind)
-        return
-      }
+      const companion = this.companion(waking, 0)
+      companion.pose.facing = -1
+      companion.facingTarget = SKY_HOMES[waking.slot].x >= fromX ? 1 : -1
+      companion.flight = { start: waking.start + flyAt, fromX, fromY: center.y, radius: Math.max(bounds.x1 - bounds.x0, bounds.y1 - bounds.y0) / 2 }
+      this.companions.push(companion)
+      this.waking = null
+      this.version++
     }
-    if (waking.facingTarget !== 0) pose.facing += (waking.facingTarget - pose.facing) * Math.min(1, dt * 5)
+  }
+
+  /** Poses a companion on its way home; returns false once it has arrived and should idle this frame. */
+  private stepFlight(c: Companion, flight: Flight, dt: number): boolean {
+    const personality = PERSONALITIES[c.kind]
+    const k = (this.t - flight.start) / personality.gaitSeconds
+    if (k >= 1) {
+      c.flight = null
+      c.seed = -this.t
+      this.version++
+      this.sound.voice(c.kind)
+      return false
+    }
+    const pose = c.pose
+    const home = SKY_HOMES[c.slot]
+    restPose(pose)
+    personality.gait(k, flight.fromX, flight.fromY, home.x, home.y, pose)
+    pose.scale = flightScale(c.kind, k)
+    pose.z = flightDepth(k, pose.x, pose.y, flight.radius * pose.scale, skyDepth(c.slot))
+    pose.facing += (c.facingTarget - pose.facing) * Math.min(1, dt * 5)
+    c.ringCount = 0
+    return true
   }
 
   private stepCompanions(dt: number): void {
     const t = this.t
     for (let i = this.companions.length - 1; i >= 0; i--) {
       const c = this.companions[i]
+      if (c.flight && this.stepFlight(c, c.flight, dt)) continue
       const personality = PERSONALITIES[c.kind]
       const pose = c.pose
       const home = SKY_HOMES[c.slot]
@@ -437,8 +470,8 @@ export class TheatreController {
       restPose(pose)
       pose.facing = facing
       personality.idle(t + c.seed, home.x, home.y, pose)
-      pose.z = SKY_Z
-      pose.scale = SKY_SCALE
+      pose.z = skyDepth(c.slot)
+      pose.scale = skyScale(c.kind)
       if (c.reactAt > -Infinity) {
         const k = (t - c.reactAt) / personality.reactSeconds
         if (k >= 1) c.reactAt = -Infinity
@@ -460,8 +493,8 @@ export class TheatreController {
         const u = smooth(k)
         pose.x = lerp(pose.x, MOON.x, u)
         pose.y = lerp(pose.y, MOON.y, u) + Math.sin(u * Math.PI) * 4
-        pose.z = lerp(SKY_Z, MOON.z, u)
-        pose.scale = SKY_SCALE * (1 - u * 0.7)
+        pose.z = lerp(skyDepth(c.slot), MOON.z, u)
+        pose.scale = skyScale(c.kind) * (1 - u * 0.7)
         c.ringCount = 0
       }
     }
@@ -472,16 +505,20 @@ export class TheatreController {
     const g = this.scheduler.state(t, this.guidance)
     const sleeper = this.sleeper
     const ready = sleeper !== null && t - sleeper.enterAt >= ENTER_S && !this.waking
-    if (ready && this.scheduler.idleFor(t) >= IDLE_BEFORE_GLOW - 1 && this.searchFor !== sleeper.kind) {
+    // Search as soon as the stage is still, so the move is ready long before the first demonstration.
+    if (ready && this.scheduler.idleFor(t) >= SEARCH_AFTER_S && this.searchFor !== sleeper.kind) {
       this.searchFor = sleeper.kind
       this.searchDone = false
       sleeper.meter.beginSearch(this.placed, true)
     }
     if (ready && this.searchFor === sleeper.kind && !this.searchDone && sleeper.meter.continueSearch(HINT_BUDGET_MS)) {
       this.searchDone = true
+      this.demoReadyAt = t
       this.demo = this.makeDemo(sleeper)
     }
-    const playing = ready && g.demo !== null && this.demo !== null && this.searchDone
+    // A demonstration found late waits for the next one rather than starting halfway through the move.
+    const windowStart = g.demo === null ? -Infinity : t - g.demo * DEMO_SECONDS
+    const playing = ready && g.demo !== null && this.demo !== null && this.searchDone && windowStart >= this.demoReadyAt - 1e-6
     if (playing) demoPose(this.demo!, g.demo!, this.demoPose)
     else this.demoPose.opacity = 0
     const hinted = playing ? this.demo!.index : -1
@@ -536,10 +573,10 @@ export class TheatreController {
     this.version++
   }
 
-  private companion(kind: CreatureKind, slot: number, seed: number): Companion {
+  private companion({ kind, slot, paper }: SkyCreature, seed: number): Companion {
     const pose = blankPose()
     pose.facing = SKY_HOMES[slot].x > 0 ? -1 : 1
-    return { kind, slot, seed, pose, reactAt: -Infinity, flipped: false, facingTarget: pose.facing, rings: blankRings(), ringCount: 0, leavingAt: -Infinity }
+    return { kind, slot, paper, seed, pose, reactAt: -Infinity, flipped: false, facingTarget: pose.facing, rings: blankRings(), ringCount: 0, leavingAt: -Infinity, flight: null }
   }
 
   private startWake(sleeper: Sleeper): void {
@@ -549,7 +586,13 @@ export class TheatreController {
       const leaving = this.companions.find((c) => c.slot === departed.slot && c.leavingAt === -Infinity)
       if (leaving) leaving.leavingAt = t
     }
-    this.waking = { kind: sleeper.kind, built: sleeper.built, start: t, slot: arrived.slot, pose: blankPose(), fillIn: 0, facingTarget: 0, arrived: false }
+    this.waking = { kind: sleeper.kind, built: sleeper.built, start: t, slot: arrived.slot, paper: arrived.paper, pose: blankPose(), fillIn: 0 }
+    const { center, bounds } = sleeper.built
+    this.wakeBurst.x = center.x
+    this.wakeBurst.y = center.y
+    this.wakeBurst.rx = (bounds.x1 - bounds.x0) / 2
+    this.wakeBurst.ry = (bounds.y1 - bounds.y0) / 2
+    this.wakeBurst.at = t + SILHOUETTE_S
     this.sleeper = null
     this.nextSleeperAt = t + SILHOUETTE_S + ANTICIPATE_S + 0.4
     this.stir = 0
@@ -657,7 +700,7 @@ export class TheatreController {
       }
       case 'sky': {
         const c = this.companions[target.index]
-        if (c && c.reactAt === -Infinity && c.leavingAt === -Infinity) {
+        if (c && !c.flight && c.reactAt === -Infinity && c.leavingAt === -Infinity) {
           c.reactAt = t
           c.flipped = false
           this.sound.voice(c.kind)
@@ -673,13 +716,7 @@ export class TheatreController {
         this.sound.lamp()
         break
       case 'backdrop': {
-        const hit = this.projector && this.projector.ray(at, this.origin, this.dir) ? this.rayToPlaneZ(SKY_Z) : null
-        if (hit) {
-          this.spark.x = hit.x
-          this.spark.y = hit.y
-          this.spark.z = SKY_Z
-          this.spark.at = t
-        }
+        if (this.projector && this.projector.ray(at, this.origin, this.dir)) this.placeSpark(t)
         this.sound.sparkle()
         break
       }
@@ -737,6 +774,11 @@ export class TheatreController {
     return false
   }
 
+  private anyFlying(): boolean {
+    for (const c of this.companions) if (c.flight) return true
+    return false
+  }
+
   // --- hit tests ---------------------------------------------------------------
 
   private planeHit(screen: Point, height: number): { x: number; z: number } | null {
@@ -747,6 +789,37 @@ export class TheatreController {
     this.clamped.x = this.origin.x + this.dir.x * k
     this.clamped.z = this.origin.z + this.dir.z * k
     return this.clamped
+  }
+
+  /** A tap on nothing in particular: the burst goes on the first surface along the last ray, wherever the finger landed. */
+  private placeSpark(t: number): void {
+    const o = this.origin
+    const d = this.dir
+    const spark = this.spark
+    const toFloor = d.y < 0 ? -o.y / d.y : Infinity
+    const toScreen = d.z < 0 ? -o.z / d.z : Infinity
+    const sx = o.x + d.x * toScreen
+    const sy = o.y + d.y * toScreen
+    if (toScreen < toFloor && sy > 0 && clearOfProscenium(sx, sy, 0) < 0) {
+      const onScreen = sx > SCREEN.left && sx < SCREEN.right && sy > SCREEN.bottom && sy < SCREEN.top
+      spark.surface = onScreen ? 'screen' : 'sky'
+      spark.x = sx
+      spark.y = sy
+      spark.z = onScreen ? 0.1 : PROSCENIUM.front
+    } else if (toFloor < Infinity && o.z + d.z * toFloor > GROUND_BACK) {
+      spark.surface = 'floor'
+      spark.x = o.x + d.x * toFloor
+      spark.y = 0
+      spark.z = o.z + d.z * toFloor
+    } else {
+      const hit = this.rayToPlaneZ(SKY_Z)
+      if (!hit) return
+      spark.surface = 'sky'
+      spark.x = hit.x
+      spark.y = hit.y
+      spark.z = SKY_Z
+    }
+    spark.at = t
   }
 
   private rayToPlaneZ(z: number): { x: number; y: number } | null {
@@ -801,7 +874,7 @@ export class TheatreController {
       let nearestD = 9
       this.companions.forEach((c, index) => {
         const dist = Math.hypot(inSky.x - c.pose.x, inSky.y - c.pose.y)
-        if (dist < nearestD) {
+        if (!c.flight && dist < nearestD) {
           nearest = index
           nearestD = dist
         }
@@ -837,7 +910,7 @@ export class TheatreController {
 
   /** Seconds the theatre has been untouched and still (for half-rate rendering at rest). */
   restingFor(): number {
-    if (this.anyHeld() || this.waking || this.guidance.demo !== null || this.guidance.invite !== null) return 0
+    if (this.anyHeld() || this.waking || this.anyFlying() || this.guidance.demo !== null || this.guidance.invite !== null) return 0
     return this.scheduler.idleFor(this.t)
   }
 }
