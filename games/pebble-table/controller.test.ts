@@ -342,3 +342,20 @@ describe('hidden delights', () => {
     expect(sound.sigh).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('forgiving drops', () => {
+  it('lets the asking guest catch a stone dropped just short of its plate', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 950 })
+    run(table, 1)
+    const seat = table.wanting
+    expect(seat).not.toBeNull()
+    const plate = FEEDING.seats[seat!].plate
+    const away = Math.hypot(plate.x - 780, plate.y - 470)
+    const short = { x: plate.x + ((plate.x - 780) / away) * FEEDING.plateRadius * 1.35, y: plate.y + ((plate.y - 470) / away) * FEEDING.plateRadius * 1.35 }
+    expect(plateOf(short)).toBeNull()
+    drag(table, { x: BAG.x, y: BAG.y }, short)
+    run(table, 2)
+    expect(table.state.pieces.filter((piece) => plateOf(piece) === seat)).toHaveLength(1)
+  })
+})

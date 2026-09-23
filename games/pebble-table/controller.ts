@@ -56,6 +56,8 @@ const STORY_REST = 1.6
 const STORY_CARRY = 1.3
 const STORY_FADE = 0.7
 const RUMBLE_AFTER = 2.5
+/** How far past its plate's rim (in plate radii) the asking guest catches a dropped stone. */
+const CATCH_REACH = 1.7
 const RUMBLE_GAP = 8
 const MAX_RUMBLES = 3
 
@@ -1280,15 +1282,30 @@ export class TableController {
       this.cadence.change(performance.now(), true)
       return
     }
-    if (!this.pieceById(id)) return
+    const piece = this.pieceById(id)
+    if (!piece) return
     const at = this.physics.position2(id)
     if (at && Math.hypot(at.x - BAG.x, at.y - BAG.y) < BAG.r * 0.8) {
       this.physics.release(id, { x: 0, y: 0 })
       return this.sendHome(id)
     }
+    const catcher = at ? this.catcher(at) : null
+    if (catcher !== null) {
+      this.physics.release(id, { x: 0, y: 0 })
+      this.sound.hop()
+      return this.hopOntoPlate(piece, catcher)
+    }
     this.physics.release(id, velocity)
     if (speak) this.pendingVoice = { groups: this.voiceFor(id), deadline: this.t + 2.5 }
     this.cadence.change(performance.now(), true)
+  }
+
+  /** A stone dropped just short of the asking guest's plate: small hands miss, so the guest catches it. */
+  private catcher(at: Point): number | null {
+    const seat = this.wanting
+    if (this.state.liveMat !== 'feeding' || seat === null || plateOf(at) !== null || inBowl(at)) return null
+    const plate = FEEDING.seats[seat].plate
+    return Math.hypot(at.x - plate.x, at.y - plate.y) < FEEDING.plateRadius * CATCH_REACH ? seat : null
   }
 
   private tipBag(): void {
@@ -1365,13 +1382,18 @@ export class TableController {
       } else this.sound.touch(1.1)
       return
     }
+    this.dealCursor = seat
+    this.sound.hop()
+    this.hopOntoPlate(piece, seat)
+  }
+
+  /** Flies a stone in a small hop onto a free spot on a guest's plate. */
+  private hopOntoPlate(piece: Piece, seat: number): void {
     const body = this.physics.body(piece.id)
     const from = body ? { x: body.position.x, y: body.position.y, z: body.position.z } : to3(piece, 1)
     const onPlate = this.restingPieces().filter((p) => plateOf(p) === seat)
     const spot = freeSpotOnPlate(seat, onPlate, stoneRadius3(piece.q) / UNIT)
     this.physics.removeStone(piece.id)
-    this.dealCursor = seat
-    this.sound.hop()
     this.flights.push({
       id: piece.id,
       q: piece.q,
