@@ -18,6 +18,14 @@ const SETTLE_SECONDS = 0.3
 const LOST_Y = -3
 /** Below this speed a body may fall asleep. Cannon's 0.1 never lets a straight tower sleep: it creeps a hair a frame and keeps the solver running (and the doll on top rides the creep). */
 const SLEEP_SPEED = 0.4
+/**
+ * A loaded tower can still jiggle above that speed for seconds without going
+ * anywhere, and the doll waits for rest before she climbs. So a body that
+ * stays within this much of one pose (units, radians) for CALM_SECONDS is put
+ * to sleep too. A real topple leaves the window well inside that time.
+ */
+const CALM_DRIFT = 0.04
+const CALM_SECONDS = 0.8
 
 export type StepReport = {
   /** How many new contacts this step were hard enough to hear; ids and speeds are in `impactIds` and `impactSpeeds`. */
@@ -32,6 +40,12 @@ export type StepReport = {
   lost: number
 }
 
+/**
+ * A convex part as a prism. Every body lives on the z = 0 plane, so two
+ * prisms always overlap in z and only the in-plane side normals can separate
+ * them: the hull tests just those, and skips cannon's edge-pair axes, which
+ * for prisms only repeat the side normals or give z.
+ */
 function extrude(parts: readonly { x: number; y: number }[], depth: number): CANNON.ConvexPolyhedron {
   const n = parts.length
   const vertices: CANNON.Vec3[] = []
@@ -44,11 +58,19 @@ function extrude(parts: readonly { x: number; y: number }[], depth: number): CAN
     back.push(2 * n - 1 - i)
   }
   const faces = [front, back]
+  const axes: CANNON.Vec3[] = []
   for (let i = 0; i < n; i++) {
     const j = (i + 1) % n
     faces.push([i, i + n, j + n, j])
+    const dx = parts[j].x - parts[i].x
+    const dy = parts[j].y - parts[i].y
+    const length = Math.hypot(dx, dy)
+    const axis = new CANNON.Vec3(dy / length, -dx / length, 0)
+    if (!axes.some((a) => Math.abs(a.x * axis.y - a.y * axis.x) < 1e-6)) axes.push(axis)
   }
-  return new CANNON.ConvexPolyhedron({ vertices, faces })
+  const hull = new CANNON.ConvexPolyhedron({ vertices, faces, axes })
+  hull.uniqueEdges.length = 0
+  return hull
 }
 
 type Hull = { hull: CANNON.ConvexPolyhedron; offset: CANNON.Vec3 }
@@ -82,6 +104,8 @@ type Held = { x: number; y: number; angle: number }
 export class PlayPhysics {
   readonly world: CANNON.World
   private readonly bodies: (CANNON.Body | null)[] = PIECES.map(() => null)
+  /** Each body's reference pose and how long it has stayed near it. */
+  private readonly calm = PIECES.map(() => ({ x: 0, y: 0, angle: 0, seconds: 0 }))
   private readonly held = new Map<number, Held>()
   private readonly woodMaterial = new CANNON.Material('wood')
   private readonly rugMaterial = new CANNON.Material('rug')
@@ -232,6 +256,7 @@ export class PlayPhysics {
     for (const body of this.bodies) {
       if (body && body.type === CANNON.Body.DYNAMIC) body.wakeUp()
     }
+    for (const calm of this.calm) calm.seconds = 0
     this.resting = false
     this.still = 0
   }
@@ -293,6 +318,21 @@ export class PlayPhysics {
       if (!body || this.held.has(id)) continue
       if (body.position.y < LOST_Y || body.position.x < PLAY_MIN_X - 2 || body.position.x > PLAY_MAX_X + 2) report.lost = id
       if (body.sleepState === CANNON.Body.SLEEPING) continue
+      const calm = this.calm[id]
+      const angle = angleOf(body)
+      if (Math.abs(body.position.x - calm.x) < CALM_DRIFT && Math.abs(body.position.y - calm.y) < CALM_DRIFT && Math.abs(angle - calm.angle) < CALM_DRIFT) {
+        calm.seconds += elapsed
+        if (calm.seconds >= CALM_SECONDS) {
+          calm.seconds = 0
+          body.sleep()
+          continue
+        }
+      } else {
+        calm.x = body.position.x
+        calm.y = body.position.y
+        calm.angle = angle
+        calm.seconds = 0
+      }
       if (body.velocity.length() > STILL_SPEED || Math.abs(body.angularVelocity.z) > STILL_SPEED * 1.5) moving = true
     }
     report.moving = moving

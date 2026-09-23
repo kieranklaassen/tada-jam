@@ -1,6 +1,7 @@
+import type { ConvexPolyhedron } from 'cannon-es'
 import { describe, expect, it } from 'vitest'
 import { angleOf, PlayPhysics, STEP } from './physics'
-import { SHAPES } from './pieces'
+import { PIECES, SHAPES } from './pieces'
 
 // Ids from the tray set: 0 cube, 2 large arch, 4 plank, 6 pillar.
 const CUBE = 0
@@ -31,6 +32,25 @@ describe('PlayPhysics', () => {
     expect(impacts).toBeGreaterThan(0)
     expect(physics.body(CUBE)!.position.y).toBeCloseTo(cubeRest, 1)
     expect(physics.isResting).toBe(true)
+  })
+
+  it('every hull separates on its own in-plane side normals only, with no edge-pair axes', () => {
+    const physics = new PlayPhysics()
+    for (const piece of PIECES) {
+      const body = physics.add(piece.id, { x: 0, y: 3, angle: 0 })
+      for (const shape of body.shapes) {
+        const hull = shape as ConvexPolyhedron
+        expect(hull.uniqueEdges).toHaveLength(0)
+        const sides = hull.faces.length - 2
+        expect(hull.uniqueAxes!.length).toBeGreaterThanOrEqual(Math.ceil(sides / 2))
+        expect(hull.uniqueAxes!.length).toBeLessThanOrEqual(sides)
+        for (const axis of hull.uniqueAxes!) {
+          expect(axis.z).toBe(0)
+          expect(axis.length()).toBeCloseTo(1, 6)
+        }
+      }
+      physics.remove(piece.id)
+    }
   })
 
   it('a cube dropped on a cube rests on top of it', () => {
@@ -122,6 +142,7 @@ describe('PlayPhysics', () => {
       t += STEP
     }
     expect(physics.isResting, 'the loaded tower falls asleep').toBe(true)
+    expect(t, 'seconds from the doll stepping on to rest (she waits for rest before climbing on)').toBeLessThan(2)
     const before = tower.map((id) => ({ x: physics.body(id)!.position.x, y: physics.body(id)!.position.y }))
     run(physics, 4)
     tower.forEach((id, i) => {

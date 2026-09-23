@@ -96,6 +96,22 @@ describe('TierGovernor', () => {
     feed(governor, WINDOW * 4, STALL_MS + 1)
     expect(governor.tier).toBe(0)
   })
+
+  it('the overlay can pin any tier and hand it back to automatic', () => {
+    const governor = new TierGovernor(0)
+    governor.force(2)
+    expect(governor.tier).toBe(2)
+    feed(governor, WINDOW * 10, 40)
+    expect(governor.tier).toBe(2)
+    feed(governor, WINDOW * 20, 10)
+    expect(governor.tier).toBe(2)
+    expect(governor.lastFrames).toBe(WINDOW)
+    expect(governor.lastDropped).toBe(0)
+    governor.force(null)
+    feed(governor, WINDOW * 3, 40)
+    expect(governor.tier).toBe(3)
+    expect(governor.lastDropped).toBe(WINDOW)
+  })
 })
 
 describe('PerfRing', () => {

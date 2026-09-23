@@ -85,6 +85,22 @@ export class TierGovernor {
     return this.average
   }
 
+  /** Dropped frames and all frames in the last judged window, for the grown-up overlay. */
+  lastDropped = 0
+  lastFrames = 0
+
+  /** Pin a tier from the grown-up overlay, or pass null to go back to automatic. */
+  force(tier: number | null): void {
+    if (tier === null) {
+      this.forced = false
+      this.clear()
+      this.settle = 1
+      return
+    }
+    this.forced = true
+    if (clampTier(tier) !== this.tier) this.change(clampTier(tier))
+  }
+
   /** Record one frame: its interval and its CPU work, in ms. Returns true when the tier changed. */
   sample(intervalMs: number, workMs: number): boolean {
     if (!(intervalMs > 0) || intervalMs > STALL_MS) return false
@@ -101,6 +117,8 @@ export class TierGovernor {
     const bad = this.dropped / this.frames > BAD_DROP_RATIO
     const clean = this.dropped === 0 && this.workSum / this.frames < WORK_BUDGET_MS
     this.average = average
+    this.lastDropped = this.dropped
+    this.lastFrames = this.frames
     this.clear()
     this.windows += 1
     if (this.forced) return false
