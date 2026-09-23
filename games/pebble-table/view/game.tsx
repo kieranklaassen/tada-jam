@@ -47,7 +47,7 @@ function groundUnder(table: TableController, at: Point): number {
     const side = panOf(at)
     if (side !== null) return table.physics.panTop(side) + 0.2
   }
-  return table.state.liveMat === 'feeding' && inBowl(at) ? 0.25 : 0
+  return table.state.liveMat === 'feeding' && inBowl(at) ? 0.75 : 0
 }
 
 function shadows(table: TableController): Blob[] {
@@ -83,10 +83,10 @@ function glows(table: TableController): Blob[] {
   const blobs: Blob[] = []
   for (const piece of table.state.pieces) {
     const strength = Math.max(table.pulse(piece.id) * 0.7, g.glowStones.has(piece.id) ? g.glow : 0)
-    if (strength > 0.01) blobs.push({ at: piece, ground: groundUnder(table, piece), radius: stoneRadius3(piece.q) * 2.1, strength: strength * 0.9 })
+    if (strength > 0.01) blobs.push({ at: piece, ground: groundUnder(table, piece), radius: stoneRadius3(4) * (1.75 + 0.15 * Math.sin(table.t * 3)), strength: Math.min(1, strength * 1.1) })
   }
   if (g.glowBag && g.glow > 0) blobs.push({ at: { x: BAG.x + 20, y: BAG.y - 15 }, ground: 0, radius: 14, strength: g.glow * 0.8 })
-  if (g.glowKnife && g.glow > 0) blobs.push({ at: table.knife.at, ground: 0, radius: 8, strength: g.glow })
+  if (g.glowKnife && g.glow > 0) blobs.push({ at: table.knife.at, ground: 0, radius: 7 + 0.5 * Math.sin(table.t * 3), strength: g.glow })
   if (g.glowShelf && g.glow > 0) blobs.push({ at: shelfTile(0), ground: 3.5, radius: 9, strength: g.glow })
   if (g.hand && g.hand.press > 0.3) blobs.push({ at: g.hand.at, ground: 0, radius: 4.5, strength: g.hand.press * g.hand.opacity * 0.7 })
   return blobs

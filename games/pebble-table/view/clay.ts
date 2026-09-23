@@ -38,7 +38,7 @@ export const PALETTE = {
   bearMuzzle: '#e8cfa6',
   hedgehog: '#efd8b0',
   spikes: '#6b4a33',
-  glow: '#fff4d6',
+  glow: '#ffd76a',
 } as const
 
 // --- noise -----------------------------------------------------------------
@@ -273,6 +273,21 @@ function ropeTextures(): { map: THREE.Texture; normal: THREE.Texture } {
   return { map, normal }
 }
 
+/** A soft ring with a faint core: reads as "touch here" on light and dark surfaces alike. */
+function ringTexture(): THREE.Texture {
+  const element = canvas(128, (g) => {
+    const gradient = g.createRadialGradient(64, 64, 0, 64, 64, 64)
+    gradient.addColorStop(0, 'rgba(255,255,255,0.28)')
+    gradient.addColorStop(0.5, 'rgba(255,255,255,0.35)')
+    gradient.addColorStop(0.7, 'rgba(255,255,255,1)')
+    gradient.addColorStop(0.82, 'rgba(255,255,255,0.75)')
+    gradient.addColorStop(1, 'rgba(255,255,255,0)')
+    g.fillStyle = gradient
+    g.fillRect(0, 0, 128, 128)
+  })
+  return new THREE.CanvasTexture(element)
+}
+
 function blobTexture(): THREE.Texture {
   const element = canvas(128, (g) => {
     const gradient = g.createRadialGradient(64, 64, 0, 64, 64, 64)
@@ -302,8 +317,8 @@ export type ClayMaterials = {
 }
 
 /** Instanced soft overlays: the instance colour's red channel is the opacity. */
-function overlayMaterial(color: string, blending: THREE.Blending): THREE.MeshBasicMaterial {
-  const material = new THREE.MeshBasicMaterial({ color, map: blobTexture(), transparent: true, depthWrite: false, blending, toneMapped: false })
+function overlayMaterial(color: string, blending: THREE.Blending, map: THREE.Texture = blobTexture()): THREE.MeshBasicMaterial {
+  const material = new THREE.MeshBasicMaterial({ color, map, transparent: true, depthWrite: false, blending, toneMapped: false })
   material.onBeforeCompile = (shader) => {
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <color_fragment>',
@@ -328,7 +343,7 @@ export function createClayMaterials(): ClayMaterials {
   const fur = furMaterial(clay, tufts, 0.55)
   const quill = quillMaterial(clay)
   const shadow = overlayMaterial('#4a2a18', THREE.NormalBlending)
-  const glow = overlayMaterial(PALETTE.glow, THREE.NormalBlending)
+  const glow = overlayMaterial(PALETTE.glow, THREE.NormalBlending, ringTexture())
   return {
     clay,
     stones,
