@@ -22,7 +22,8 @@ import { join } from 'node:path'
 // Showcases (showcase/<key>/, such as Alien Frontier) run in a same-origin
 // iframe and are played with the keyboard and mouse: the probe measures inside
 // the iframe and drives the showcase's own scripted play-through (SHOWCASE_PLAY).
-// STANDALONE=1 opens a showcase's page directly instead of through the shell.
+// STANDALONE=1 opens a showcase's page directly instead of through the shell;
+// SMOOTH=off switches off its smoothness shim (Alien Frontier's jam-smooth.js).
 // Needs the Playwright browsers: npx playwright install webkit chromium (Chrome
 // runs are the installed Google Chrome via channel 'chrome').
 const [, , game, engine = 'webkit', throttleArg = '1', mode = 'auto', base = 'http://localhost:4173'] = process.argv
@@ -84,6 +85,8 @@ page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)))
 await page.goto(base + '/')
 await page.evaluate(() => { localStorage.clear(); localStorage.setItem('tada-jam:prefs', JSON.stringify({ childAge: 5 })) })
 if (showcase && mode === 'full') await page.evaluate(showcase.full)
+// SMOOTH=off (or a comma list) switches a showcase's own smoothness shim for comparison runs.
+if (showcase && process.env.SMOOTH) await page.evaluate((v) => localStorage.setItem('jam-smooth', v), process.env.SMOOTH)
 if (engine === 'chrome' && throttle > 1) {
   const cdp = await context.newCDPSession(page)
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle })
