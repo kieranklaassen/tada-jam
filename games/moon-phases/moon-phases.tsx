@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { Cartridge, CartridgeContext } from '../types'
 import { Sound } from './audio'
+import { homeForCountry } from './geo'
 import { moonPhasesManifest } from './manifest'
 import { Orrery } from './orrery'
 import { PHASE_COUNT, TAU, elongationAt, litPath, phaseAngle, phaseIndex, shortestTurn, wrap } from './phase'
@@ -9,11 +10,16 @@ import { deserialize, serialize } from './snapshot'
 import './moon-phases.css'
 
 // Moon Phases: a tabletop orrery that shows why the moon changes shape.
-// The sun lamp always lights exactly half of the moon. Drag the moon around
-// Earth and the round window shows what a child standing on Earth sees; tap
-// the window (or the eye) to stand there yourself. Wordless throughout.
+// The sun lamp always lights exactly half of the moon. The child lives at a
+// real place on the turning Earth (their profile's country; tap the globe to
+// move), and the round window shows their sky: day or night, the moon up or
+// set. Drag the moon, turn the day/night dial, or tap the window to stand
+// there yourself. Wordless throughout.
 
-const AUTO_SPEED = TAU / 40 // one orbit every 40 seconds while nobody is touching
+// While nobody is touching: a day passes every 24 seconds, and the moon moves
+// on by one phase per day, so each night shows the next phase.
+const DAY_SECONDS = 24
+const AUTO_SPEED = TAU / (PHASE_COUNT * DAY_SECONDS)
 const IDLE_RESUME_MS = 6000
 const POV_SECONDS = 1.2
 
@@ -98,6 +104,8 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const windowRef = useRef<HTMLCanvasElement>(null)
   const pinRefs = useRef<(HTMLDivElement | null)[]>([])
+  const dialRef = useRef<HTMLDivElement>(null)
+  const knobRef = useRef<HTMLDivElement>(null)
   const [ready, setReady] = useState(false)
   const ctxRef = useRef(ctx)
   ctxRef.current = ctx
@@ -115,12 +123,12 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
     let loaded = false
     let povTarget = 0, lastTouch = -Infinity, autoBlend = 1, currentPhase = -1
     // One finger at a time: dragging the moon, turning the model, or tapping a phase.
-    let dragging: { id: number; mode: 'moon' | 'look' | 'spin' | 'phase'; x: number; y: number; moved: boolean; phase?: number } | null = null
+    let dragging: { id: number; mode: 'moon' | 'look' | 'spin' | 'phase' | 'earth'; x: number; y: number; moved: boolean; phase?: number; point?: THREE.Vector3 } | null = null
     let shown = false, maxDpr = 2
     const slow = { sum: 0, frames: 0 }
     let tween: { from: number; turn: number; start: number; duration: number } | null = null
 
-    const save = () => loaded && ctxRef.current.storage.save(serialize(orrery.elongation, povTarget === 1, orrery.showHalves))
+    const save = () => loaded && ctxRef.current.storage.save(serialize(orrery.elongation, povTarget === 1, orrery.showHalves, orrery.home, orrery.hours))
     const touched = () => { lastTouch = performance.now(); autoBlend = 0 }
 
     const setPov = (on: boolean) => {
@@ -170,7 +178,12 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
       } else if (!dragging && now - lastTouch > IDLE_RESUME_MS) {
         autoBlend = Math.min(1, autoBlend + dt * 0.5)
         orrery.setMoon(wrap(orrery.elongation + AUTO_SPEED * autoBlend * dt))
+        if (!dialDrag) orrery.hours = (orrery.hours + (24 / DAY_SECONDS) * autoBlend * dt) % 24
       }
+      // The dial's knob follows the clock: midnight at the bottom, noon at the top.
+      const turn = (orrery.hours / 24) * TAU
+      knobRef.current?.style.setProperty('transform', `rotate(${turn}rad)`)
+      knobRef.current?.classList.toggle('is-day', orrery.hours >= 6 && orrery.hours < 18)
       orrery.pov += Math.sign(povTarget - orrery.pov) * Math.min(Math.abs(povTarget - orrery.pov), dt / POV_SECONDS)
       const index = phaseIndex(orrery.elongation)
       if (index !== currentPhase) {
@@ -220,8 +233,8 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
       if (dragging) return
       sound.unlock(); touched()
       const hit = orrery.pick(ndc(event))
-      const mode = orrery.pov >= 0.5 ? 'spin' : hit?.kind === 'moon' ? 'moon' : hit?.kind === 'phase' ? 'phase' : 'look'
-      dragging = { id: event.pointerId, mode, x: event.clientX, y: event.clientY, moved: false, phase: hit?.kind === 'phase' ? hit.index : undefined }
+      const mode = orrery.pov >= 0.5 ? 'spin' : hit?.kind === 'moon' ? 'moon' : hit?.kind === 'phase' ? 'phase' : hit?.kind === 'earth' ? 'earth' : 'look'
+      dragging = { id: event.pointerId, mode, x: event.clientX, y: event.clientY, moved: false, phase: hit?.kind === 'phase' ? hit.index : undefined, point: hit?.kind === 'earth' ? hit.point : undefined }
       if (mode === 'moon') { orrery.showHint = false; tween = null; sound.tick() }
       canvas.setPointerCapture(event.pointerId)
     }
@@ -235,7 +248,7 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
         if (point && Math.hypot(point.x, point.z) > 0.5) orrery.setMoon(elongationAt(point.x, point.z))
       } else if (dragging.mode === 'spin') {
         orrery.setMoon(wrap(orrery.elongation + dx * 0.006))
-      } else if (dragging.mode === 'look' || (dragging.mode === 'phase' && dragging.moved)) {
+      } else if (dragging.mode === 'look' || ((dragging.mode === 'phase' || dragging.mode === 'earth') && dragging.moved)) {
         dragging.mode = 'look'
         orrery.view.azimuth -= dx * 0.005
         orrery.view.elevation = Math.max(0.12, Math.min(1.25, orrery.view.elevation + dy * 0.004))
@@ -245,6 +258,8 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
     const onUp = (event: PointerEvent) => {
       if (!dragging || event.pointerId !== dragging.id) return
       if (dragging.mode === 'phase' && !dragging.moved && dragging.phase !== undefined) goTo(dragging.phase)
+      // Tapping the globe moves the child's home there.
+      if (dragging.mode === 'earth' && !dragging.moved && dragging.point) { orrery.setHomeFrom(dragging.point); sound.bell(2, 0.04); save() }
       if (dragging.mode === 'moon' || dragging.mode === 'spin') save()
       dragging = null
     }
@@ -259,6 +274,26 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
     canvas.addEventListener('pointercancel', onCancel)
     canvas.addEventListener('wheel', onWheel, { passive: false })
 
+    // The day/night dial: drag round it to change the time at home.
+    const dial = dialRef.current!
+    let dialDrag: number | null = null
+    const dialTime = (event: PointerEvent) => {
+      const rect = dial.getBoundingClientRect()
+      const dx = event.clientX - (rect.left + rect.width / 2), dy = event.clientY - (rect.top + rect.height / 2)
+      // Angle measured clockwise from the bottom (midnight).
+      orrery.hours = ((wrap(Math.atan2(-dx, dy)) / TAU) * 24) % 24
+    }
+    const onDialDown = (event: PointerEvent) => {
+      event.preventDefault(); sound.unlock(); touched(); sound.tick()
+      dialDrag = event.pointerId; dial.setPointerCapture(event.pointerId); dialTime(event)
+    }
+    const onDialMove = (event: PointerEvent) => { if (event.pointerId === dialDrag) { touched(); dialTime(event) } }
+    const onDialUp = (event: PointerEvent) => { if (event.pointerId === dialDrag) { dialDrag = null; save() } }
+    dial.addEventListener('pointerdown', onDialDown)
+    dial.addEventListener('pointermove', onDialMove)
+    dial.addEventListener('pointerup', onDialUp)
+    dial.addEventListener('pointercancel', onDialUp)
+
     const onKey = (event: KeyboardEvent) => {
       if (root.offsetParent === null) return
       if (event.code === 'ArrowLeft' || event.code === 'ArrowRight') {
@@ -268,6 +303,7 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
       if (event.code === 'Space') { event.preventDefault(); setPov(povTarget !== 1) }
       if (event.code === 'KeyH') setHalves(!orrery.showHalves)
       if (/^Digit[1-8]$/.test(event.code)) goTo(Number(event.code.slice(5)) - 1)
+      if (event.code === 'BracketLeft' || event.code === 'BracketRight') { touched(); orrery.hours = (orrery.hours + (event.code === 'BracketRight' ? 1 : 23)) % 24 }
     }
     window.addEventListener('keydown', onKey)
 
@@ -285,6 +321,9 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
         const saved = deserialize(value)
         const age = ctxRef.current.childAge
         orrery.setMoon(saved?.elongation ?? phaseAngle(2))
+        orrery.home = saved?.home ?? homeForCountry(ctxRef.current.childCountry)
+        // Start in the evening, when a first-quarter moon is high.
+        orrery.hours = saved?.hours ?? 20
         orrery.showHalves = saved ? saved.halves : age !== null && age >= 7
         setHalvesState(orrery.showHalves)
         if (saved?.pov) { povTarget = 1; orrery.pov = 1; setPovState(true) }
@@ -305,6 +344,10 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
       canvas.removeEventListener('pointerup', onUp)
       canvas.removeEventListener('pointercancel', onCancel)
       canvas.removeEventListener('wheel', onWheel)
+      dial.removeEventListener('pointerdown', onDialDown)
+      dial.removeEventListener('pointermove', onDialMove)
+      dial.removeEventListener('pointerup', onDialUp)
+      dial.removeEventListener('pointercancel', onDialUp)
       api.current = null
       sound.dispose()
       orrery.dispose()
@@ -340,6 +383,16 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
         <canvas ref={windowRef} />
         <span className="mp-window-badge">{pov ? <ModelIcon /> : <EyeIcon />}</span>
       </button>
+
+      <div ref={dialRef} className="mp-dial mp-glass" role="slider" aria-label="Time of day at home" aria-valuemin={0} aria-valuemax={24}>
+        <div className="mp-dial-face" />
+        <div ref={knobRef} className="mp-dial-arm">
+          <span className="mp-dial-knob">
+            <span className="mp-dial-sun"><SunGlyph /></span>
+            <span className="mp-dial-moon"><MoonGlyph /></span>
+          </span>
+        </div>
+      </div>
 
       <div className="mp-strip mp-glass" role="group" aria-label="Moon phases">
         {Array.from({ length: PHASE_COUNT }, (_, i) => (

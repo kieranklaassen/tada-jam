@@ -6,13 +6,15 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { DEFAULT_HOME, altitude, earthAngle, homeAt, horizonDip, viewPitch, zenith, type Home } from './geo'
 import { PHASE_COUNT, TAU, litPath, phaseAngle } from './phase'
 import { cloudCanvas, earthCanvases, glowCanvas, moonCanvases, scaleCanvas, sunCanvas, woodCanvas } from './textures'
 
 // A brass orrery on a varnished table in a dim room at night. The sun lamp's
 // light is parallel (a DirectionalLight), so the moon is always exactly half
-// lit; what changes is how much of that lit half faces Earth. A second camera
-// stands in a child's shoes on Earth.
+// lit; what changes is how much of that lit half faces Earth. A child lives
+// at a real place on the turning Earth, and a second camera shows their sky:
+// day or night, with the moon up or set, and upside down south of the equator.
 //
 // Layers: SPACE (0) is what exists in space: sun, Earth, moon. MODEL (1) is the
 // model and the room around it, which the view from Earth leaves out. SKY (2)
@@ -24,8 +26,6 @@ export const ORBIT_R = 3.3
 export const PLANE_Y = 1.7
 const SUN_X = -7.3
 const TABLE_R = 8.4
-/** How far north the child stands; the moon then sits low over their horizon. */
-const KID_LAT = 1.05
 const MODEL = 1
 const SKY = 2
 const INTRO_SECONDS = 3.6
@@ -138,6 +138,9 @@ export class Orrery {
   showHalves = false
   showHint = true
   elongation = 0
+  /** Where the child lives, and the local solar time there (hours). */
+  home: Home = DEFAULT_HOME
+  hours = 21
   /** 0 → 1 while the opening camera flight plays. */
   intro = 0
   /** Set to false to drop depth of field on slower devices. */
@@ -165,6 +168,11 @@ export class Orrery {
   private rayMaterial: THREE.ShaderMaterial
   private hint: THREE.Sprite
   private stars: THREE.Points[] = []
+  private sky: THREE.Mesh
+  private skyMaterial: THREE.ShaderMaterial
+  private moonMaterial!: THREE.MeshStandardMaterial
+  private moonDaylight = { value: 0 }
+  private kidHop = 0
   private disposables: { dispose(): void }[] = []
   private time = 0
   private halvesFade = 0
@@ -297,7 +305,8 @@ export class Orrery {
         .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance *= smoothstep(0.12, -0.25, dot(normalize(vWorldNormalMP), sunDir));')
     }
     this.earth = new THREE.Mesh(track(new THREE.SphereGeometry(EARTH_R, 128, 96)), earthMaterial)
-    this.earth.position.y = PLANE_Y; this.earth.rotation.order = 'ZYX'; this.earth.rotation.z = 0.41
+    // The axis stands straight up: always an equinox, so day and night stay easy to read.
+    this.earth.position.y = PLANE_Y
     this.clouds = new THREE.Mesh(track(new THREE.SphereGeometry(EARTH_R * 1.015, 96, 64)), track(new THREE.MeshStandardMaterial({ map: track(canvasTexture(cloudCanvas())), transparent: true, depthWrite: false, roughness: 1, })))
     this.earth.add(this.clouds)
     this.atmosphere = new THREE.Mesh(track(new THREE.SphereGeometry(EARTH_R * 1.045, 96, 64)), track(new THREE.ShaderMaterial({
@@ -314,8 +323,16 @@ export class Orrery {
     const [moonColor, moonBump] = moonCanvases()
     this.moon = new THREE.Mesh(
       track(new THREE.SphereGeometry(MOON_R, 128, 96)),
-      track(new THREE.MeshStandardMaterial({ map: track(canvasTexture(moonColor)), bumpMap: track(canvasTexture(moonBump, false)), bumpScale: 2.4, roughness: 0.96, })),
+      this.moonMaterial = track(new THREE.MeshStandardMaterial({ map: track(canvasTexture(moonColor)), bumpMap: track(canvasTexture(moonBump, false)), bumpScale: 2.4, roughness: 0.96, transparent: true })),
     )
+    // Against a daytime sky only the sunlit part of the moon shows; its night
+    // side lets the blue through, as it does in the real sky.
+    this.moonMaterial.onBeforeCompile = shader => {
+      shader.uniforms.daylight = this.moonDaylight
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform float daylight;')
+        .replace('#include <dithering_fragment>', '#include <dithering_fragment>\ngl_FragColor.a = mix(1.0, clamp(dot(gl_FragColor.rgb, vec3(0.33)) * 5.0, 0.0, 1.0), daylight);')
+    }
     this.moon.position.set(ORBIT_R, PLANE_Y, 0)
     const armHeight = 0.62
     const beam = new THREE.Mesh(track(new THREE.CylinderGeometry(0.04, 0.04, ORBIT_R + 0.9, 20)), brass)
@@ -380,11 +397,36 @@ export class Orrery {
     this.rays.frustumCulled = false
     this.scene.add(inModel(this.rays))
 
+    // The sky seen from home: blue by day, glowing at sunrise and sunset, starry at night.
+    this.skyMaterial = track(new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, depthTest: false,
+      uniforms: { eye: { value: new THREE.Vector3() }, up: { value: new THREE.Vector3(0, 1, 0) }, sunDir: { value: SUN_DIR.clone() }, sunAlt: { value: -1 } },
+      vertexShader: 'varying vec3 vWorld; void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vWorld = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }',
+      fragmentShader: `
+        uniform vec3 eye; uniform vec3 up; uniform vec3 sunDir; uniform float sunAlt; varying vec3 vWorld;
+        void main() {
+          vec3 d = normalize(vWorld - eye);
+          float h = dot(d, up), toSun = max(dot(d, sunDir), 0.0);
+          float day = smoothstep(-0.12, 0.2, sunAlt);
+          vec3 night = mix(vec3(0.015, 0.02, 0.06), vec3(0.03, 0.05, 0.12), smoothstep(0.4, -0.05, h));
+          vec3 blue = mix(vec3(0.36, 0.56, 0.8), vec3(0.08, 0.24, 0.62), smoothstep(-0.05, 0.55, h));
+          vec3 c = mix(night, blue, day);
+          float dusk = exp(-abs(sunAlt) * 9.0) * exp(-abs(h) * 5.0) * (0.35 + pow(toSun, 3.0));
+          c += vec3(1.0, 0.45, 0.18) * dusk * 0.8;
+          c += vec3(1.0, 0.9, 0.7) * pow(toSun, 60.0) * day * 0.35;
+          gl_FragColor = vec4(c, 1.0);
+        }`,
+    }))
+    this.sky = new THREE.Mesh(track(new THREE.SphereGeometry(100, 48, 24)), this.skyMaterial)
+    this.sky.renderOrder = -1
+    this.sky.layers.set(SKY)
+    this.scene.add(this.sky)
+
     // Stars, only in the sky seen from Earth.
     for (let set = 0; set < 2; set++) {
       const count = 900, star = new Float32Array(count * 3)
       for (let i = 0; i < count; i++) {
-        const u = Math.random() * 2 - 1, theta = Math.random() * TAU, r = 120, s = Math.sqrt(1 - u * u)
+        const u = Math.random() * 2 - 1, theta = Math.random() * TAU, r = 90, s = Math.sqrt(1 - u * u)
         star[i * 3] = r * s * Math.cos(theta); star[i * 3 + 1] = r * u; star[i * 3 + 2] = r * s * Math.sin(theta)
       }
       const geometry = track(new THREE.BufferGeometry())
@@ -453,19 +495,28 @@ export class Orrery {
     this.arm.rotation.y = Math.PI + elongation
   }
 
-  /** Where the child stands: on the side of Earth facing the moon, well north. */
+  get spin() { return earthAngle(this.hours, this.home.lon) }
+
+  /** Where the child stands: at home, carried round as Earth turns. */
   private kidFrame() {
-    const angle = Math.PI + this.elongation
-    const toMoon = new THREE.Vector3(Math.cos(angle), 0, -Math.sin(angle))
-    const up = toMoon.clone().multiplyScalar(Math.cos(KID_LAT)).add(new THREE.Vector3(0, Math.sin(KID_LAT), 0)).normalize()
+    const z = zenith(this.home, this.spin)
+    const up = new THREE.Vector3(z.x, z.y, z.z)
     const feet = up.clone().multiplyScalar(EARTH_R * 1.005).add(new THREE.Vector3(0, PLANE_Y, 0))
-    return { up, feet, toMoon }
+    const eye = feet.clone().addScaledVector(up, 0.045)
+    const moon = this.moonWorld(new THREE.Vector3())
+    return { up, feet, eye, moon, moonAlt: altitude(eye, up, moon), sunAlt: altitude(eye, up, this.sun.position) }
+  }
+
+  /** Moves home to the place on Earth under a world-space point. */
+  setHomeFrom(point: THREE.Vector3) {
+    this.home = homeAt({ x: point.x, y: point.y - PLANE_Y, z: point.z }, this.spin)
+    this.kidHop = 1
   }
 
   moonWorld(target = new THREE.Vector3()) { return this.moon.getWorldPosition(target) }
 
-  private pose(position: THREE.Vector3, target: THREE.Vector3, fov: number) {
-    return { position, q: new THREE.Quaternion().setFromRotationMatrix(this.m.lookAt(position, target, THREE.Object3D.DEFAULT_UP)), fov, focus: position.distanceTo(target) }
+  private pose(position: THREE.Vector3, target: THREE.Vector3, fov: number, up = THREE.Object3D.DEFAULT_UP) {
+    return { position, q: new THREE.Quaternion().setFromRotationMatrix(this.m.lookAt(position, target, up)), fov, focus: position.distanceTo(target) }
   }
 
   private orreryPose() {
@@ -489,14 +540,35 @@ export class Orrery {
     return this.pose(new THREE.Vector3(-5.2, 1.25, 3.6), new THREE.Vector3(0, PLANE_Y, 0), 26)
   }
 
-  private eyePose(fov: number, tilt = 0) {
-    const { up, feet } = this.kidFrame()
+  /**
+   * The child's view: facing the moon's direction along the ground, tipped up
+   * to frame it (or, once it has set, the empty sky over the horizon). "Up"
+   * is the child's own zenith, which is why the moon looks upside down from
+   * the southern hemisphere.
+   */
+  private eyePose(fov: number) {
     // Eye close to the ground: on a globe this small, standing any higher sinks the horizon out of view.
-    const position = feet.clone().addScaledVector(up, 0.045)
-    const pose = this.pose(position, this.moonWorld(new THREE.Vector3()), fov)
-    // Tip the view down a little so the ground the child stands on shows at the bottom.
-    if (tilt) pose.q.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -tilt))
+    const { up, eye, moon, moonAlt } = this.kidFrame()
+    const toMoon = moon.clone().sub(eye).normalize()
+    const ground = toMoon.clone().addScaledVector(up, -toMoon.dot(up))
+    if (ground.lengthSq() < 1e-6) ground.set(1, 0, 0).addScaledVector(up, -up.x)
+    ground.normalize()
+    const pitch = viewPitch(moonAlt, (fov * Math.PI) / 180, horizonDip(EARTH_R, 0.049))
+    const look = ground.multiplyScalar(Math.cos(pitch)).addScaledVector(up, Math.sin(pitch))
+    const pose = this.pose(eye, eye.clone().add(look), fov, up)
+    pose.focus = eye.distanceTo(moon)
     return pose
+  }
+
+  /** Points the sky shader and the moon at the view from home. */
+  private skyFor(active: boolean) {
+    const { up, eye, sunAlt } = this.kidFrame()
+    const u = this.skyMaterial.uniforms
+    ;(u.eye.value as THREE.Vector3).copy(eye)
+    ;(u.up.value as THREE.Vector3).copy(up)
+    ;(u.sunDir.value as THREE.Vector3).copy(this.sun.position).sub(eye).normalize()
+    u.sunAlt.value = sunAlt
+    this.moonDaylight.value = active ? Math.min(1, Math.max(0, (sunAlt + 0.12) / 0.32)) : 0
   }
 
   update(dt: number) {
@@ -509,23 +581,29 @@ export class Orrery {
     this.current.elevation += (this.view.elevation - this.current.elevation) * k
     this.current.distance += (this.view.distance - this.current.distance) * k
 
-    this.earth.rotation.y += dt * 0.1
-    this.clouds.rotation.y += dt * 0.018
+    this.earth.rotation.y = this.spin
+    this.clouds.rotation.y += dt * 0.03
     this.sun.rotation.y += dt * 0.05
     for (const [i, glow] of this.sunGlow.entries()) glow.scale.setScalar(glow.userData.size * (1 + Math.sin(t * (1.3 + i * 0.4)) * 0.03))
-    this.stars.forEach((points, i) => { (points.material as THREE.PointsMaterial).opacity = 0.65 + Math.sin(t * (0.9 + i * 0.7) + i * 2) * 0.3 })
+    // Stars fade out as the sun comes up over home.
+    const { up, feet, moon: moonPos, moonAlt, sunAlt } = this.kidFrame()
+    const dark = 1 - Math.min(1, Math.max(0, (sunAlt + 0.1) / 0.25))
+    this.stars.forEach((points, i) => { (points.material as THREE.PointsMaterial).opacity = (0.65 + Math.sin(t * (0.9 + i * 0.7) + i * 2) * 0.3) * dark })
     // The clockwork follows the arm: 64 teeth drive 20.
     this.bigGear.rotation.y = this.arm.rotation.y
     this.pinion.rotation.y = -this.arm.rotation.y * (64 / 20)
 
-    // The child turns to face the moon and points at it.
-    const { up, feet, toMoon } = this.kidFrame()
-    this.kid.position.copy(feet)
-    const forward = toMoon.clone().addScaledVector(up, -toMoon.dot(up)).normalize()
+    // The child stands at home, faces the moon's direction and points at it
+    // while it is up; after moving house they give a little hop.
+    const toMoon = moonPos.clone().sub(feet)
+    const forward = toMoon.addScaledVector(up, -toMoon.dot(up)).normalize()
     const right = new THREE.Vector3().crossVectors(up, forward).normalize()
     this.kid.quaternion.setFromRotationMatrix(this.m.makeBasis(right, up, forward.clone().negate()))
-    this.kid.position.addScaledVector(up, Math.abs(Math.sin(t * 3)) * 0.008)
-    this.kidArm.rotation.set(-1.25 - Math.sin(t * 2) * 0.08, 0, -0.15)
+    this.kidHop = Math.max(0, this.kidHop - dt * 2.5)
+    this.kid.position.copy(feet).addScaledVector(up, Math.abs(Math.sin(t * 3)) * 0.008 + Math.sin(this.kidHop * Math.PI) * 0.12)
+    // Arm rotation about x: moonAlt − π/2 aims it at the moon's height; with the moon set, it rests at their side.
+    const pointing = moonAlt > 0 ? moonAlt - Math.PI / 2 : Math.PI - 0.15
+    this.kidArm.rotation.set(pointing - Math.sin(t * 2) * 0.06, 0, -0.15)
 
     // Rays: parallel lines from the lamp, ending on whichever sphere they reach.
     const moon = this.moonWorld(new THREE.Vector3())
@@ -614,12 +692,14 @@ export class Orrery {
       r.setScissor(0, 0, insetSize, insetSize)
       r.setViewport(0, 0, insetSize, insetSize)
       if (this.pov < 0.5) {
-        const eye = this.eyePose(13)
+        this.skyFor(true)
+        const eye = this.eyePose(24)
         this.eyeCamera.position.copy(eye.position); this.eyeCamera.quaternion.copy(eye.q)
         this.eyeCamera.aspect = 1; this.eyeCamera.updateProjectionMatrix()
         this.kid.visible = false
         r.render(this.scene, this.eyeCamera)
       } else {
+        this.skyFor(false)
         this.overheadCamera.aspect = 1; this.overheadCamera.updateProjectionMatrix()
         this.kid.visible = true
         r.render(this.scene, this.overheadCamera)
@@ -631,7 +711,7 @@ export class Orrery {
 
     // Main camera: the opening flight, then the model, blending into the child's eyes.
     const intro = easeInOut(this.intro)
-    const model = this.orreryPose(), eye = this.eyePose(60, 0.3), start = this.introPose()
+    const model = this.orreryPose(), eye = this.eyePose(60), start = this.introPose()
     const a = {
       position: start.position.clone().lerp(model.position, intro),
       q: start.q.clone().slerp(model.q, intro),
@@ -647,6 +727,7 @@ export class Orrery {
     if (this.pov < 0.5) { this.camera.layers.enable(MODEL); this.camera.layers.disable(SKY) }
     else { this.camera.layers.disable(MODEL); this.camera.layers.enable(SKY) }
     this.kid.visible = this.pov < 0.35
+    this.skyFor(this.pov >= 0.5)
 
     const uniforms = this.bokeh.uniforms as Record<string, { value: number }>
     uniforms.focus.value = a.focus + (eye.focus - a.focus) * k
@@ -658,7 +739,7 @@ export class Orrery {
   }
 
   /** What is under a point in normalised device coordinates. */
-  pick(ndc: THREE.Vector2): { kind: 'moon' } | { kind: 'phase'; index: number } | null {
+  pick(ndc: THREE.Vector2): { kind: 'moon' } | { kind: 'phase'; index: number } | { kind: 'earth'; point: THREE.Vector3 } | null {
     if (this.pov >= 0.5 || this.intro < 0.6) return null
     const ray = new THREE.Raycaster()
     ray.layers.enableAll()
@@ -667,6 +748,8 @@ export class Orrery {
     // The moon is small on a phone; accept touches near it too.
     const moonScreen = this.moonWorld(new THREE.Vector3()).project(this.camera)
     if (moonHit || Math.hypot((moonScreen.x - ndc.x) * this.camera.aspect, moonScreen.y - ndc.y) < 0.14) return { kind: 'moon' }
+    const earthHit = ray.intersectObject(this.earth, false)[0]
+    if (earthHit) return { kind: 'earth', point: earthHit.point }
     const hit = ray.intersectObjects(this.medallions, true)[0]
     let object: THREE.Object3D | null = hit?.object ?? null
     while (object && object.userData.phase === undefined) object = object.parent
