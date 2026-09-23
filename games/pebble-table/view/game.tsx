@@ -2,10 +2,10 @@ import { useFrame } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { TableController } from '../controller'
 import { QualityGovernor, startingTier, type QualitySettings } from '../quality'
-import { inBowl } from '../feeding'
 import { BAG, DOOR, FEEDING, SCALE, shelfTile, type Point } from '../layout'
-import { stoneHeight3, stoneRadius3, toWorld2 } from '../physics3d'
-import { panOf } from '../scale'
+import { stoneRadius3, toWorld2 } from '../physics3d'
+import { stoneRest } from '../stoneShape'
+import { RUG, surfaceUnder } from '../surfaces'
 import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
 import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type StoneState } from './models'
 import { GrownUpOverlay } from './overlay'
@@ -77,11 +77,7 @@ function jarCounts(table: TableController): Record<PartKind, number> {
 }
 
 function groundUnder(table: TableController, at: Point): number {
-  if (table.state.liveMat === 'scale') {
-    const side = panOf(at)
-    if (side !== null) return table.physics.panTop(side) + 0.2
-  }
-  return table.state.liveMat === 'feeding' && inBowl(at) ? 0.75 : 0
+  return surfaceUnder(at, table.physics.surfaces(table.state.liveMat, table.state.seats))
 }
 
 function shadows(table: TableController): Blob[] {
@@ -89,7 +85,7 @@ function shadows(table: TableController): Blob[] {
   for (const stone of stoneStates(table)) {
     const at = toWorld2(stone.position)
     const ground = stone.id > 0 ? groundUnder(table, at) : 0
-    const height = Math.max(0, stone.position.y - ground - stoneHeight3(stone.q) / 2)
+    const height = Math.max(0, stone.position.y - ground - stoneRest(stone.q))
     const r = stoneRadius3(stone.q)
     blobs.push({ at, ground, radius: r * (1.12 + height * 0.07), strength: 0.95 / (1 + height * 0.2), stretch: 0.5 + height })
   }
@@ -105,20 +101,24 @@ function shadows(table: TableController): Blob[] {
       const ground = groundUnder(table, at)
       blobs.push({ at, ground, radius: (PART_RADIUS[part.kind] / 10) * 1.1, strength: 0.7, stretch: 0.5 + Math.max(0, part.position.y - ground - 1) })
     }
-    SCALE.pans.forEach((pan, side) => blobs.push({ at: pan, ground: 0, radius: 15, strength: 0.32, stretch: table.physics.panTop(side as 0 | 1) }))
+    SCALE.pans.forEach((pan, side) => blobs.push({ at: pan, ground: 0, radius: 15, strength: 0.32, stretch: table.physics.panY(side as 0 | 1) }))
   } else {
-    blobs.push({ at: FEEDING.bowl, ground: 0, radius: 12.5, strength: 0.4, stretch: 1 })
+    blobs.push({ at: FEEDING.bowl, ground: RUG.top, radius: 12.5, strength: 0.4, stretch: 1 })
     FEEDING.seats.forEach((seat, index) => {
       if (table.state.seats[index]) {
-        blobs.push({ at: seat.plate, ground: 0, radius: 8.8, strength: 0.22, stretch: 0.3 })
-        blobs.push({ at: table.guestDrag?.seat === index ? table.guestDrag.at : seat.guest, ground: 0, radius: 9, strength: 0.75, stretch: 2.5 })
-      } else if (table.stoolsShown) blobs.push({ at: seat.guest, ground: 0, radius: 5.2, strength: 0.4, stretch: 1.5 })
+        blobs.push({ at: seat.plate, ground: RUG.top, radius: 8.8, strength: 0.22, stretch: 0.3 })
+        const guest = table.guestDrag?.seat === index ? table.guestDrag.at : seat.guest
+        blobs.push({ at: guest, ground: groundUnder(table, guest), radius: 9, strength: 0.75, stretch: 2.5 })
+      } else if (table.stoolsShown) blobs.push({ at: seat.guest, ground: groundUnder(table, seat.guest), radius: 5.2, strength: 0.4, stretch: 1.5 })
     })
-    if (table.feeding.leftover || table.knife.pointerId !== null) blobs.push({ at: table.knife.at, ground: 0, radius: 5.5, strength: 0.4, stretch: table.knife.pointerId !== null ? 5 : 0.5 })
+    if (table.feeding.leftover || table.knife.pointerId !== null) blobs.push({ at: table.knife.at, ground: groundUnder(table, table.knife.at), radius: 5.5, strength: 0.4, stretch: table.knife.pointerId !== null ? 5 : 0.5 })
   }
-  for (const carrier of carrierMice(table)) blobs.push({ at: toWorld2(carrier), ground: 0, radius: 5, strength: 0.45, stretch: 1 + carrier.hop * 1.6 })
+  for (const carrier of carrierMice(table)) {
+    const at = toWorld2(carrier)
+    blobs.push({ at, ground: groundUnder(table, at), radius: 5, strength: 0.45, stretch: 1 + carrier.hop * 1.6 })
+  }
   const hand = table.guidance.hand
-  if (hand) blobs.push({ at: hand.at, ground: 0, radius: 2.4 + (1 - hand.press) * 1.6, strength: 0.28 * hand.opacity, stretch: (1 - hand.press) * 5 })
+  if (hand) blobs.push({ at: hand.at, ground: groundUnder(table, hand.at), radius: 2.4 + (1 - hand.press) * 1.6, strength: 0.28 * hand.opacity, stretch: (1 - hand.press) * 5 })
   return blobs
 }
 
@@ -130,10 +130,10 @@ function glows(table: TableController): Blob[] {
     if (strength > 0.01) blobs.push({ at: piece, ground: groundUnder(table, piece), radius: stoneRadius3(4) * (1.75 + 0.15 * Math.sin(table.t * 3)), strength: Math.min(1, strength * 1.1) })
   }
   if (g.glowBag && g.glow > 0) blobs.push({ at: { x: BAG.x + 20, y: BAG.y - 15 }, ground: 0, radius: 14, strength: g.glow * 0.8 })
-  if (g.glowKnife && g.glow > 0) blobs.push({ at: table.knife.at, ground: 0, radius: 7 + 0.5 * Math.sin(table.t * 3), strength: g.glow })
+  if (g.glowKnife && g.glow > 0) blobs.push({ at: table.knife.at, ground: groundUnder(table, table.knife.at), radius: 7 + 0.5 * Math.sin(table.t * 3), strength: g.glow })
   if (table.state.liveMat === 'door' && g.glow > 0 && table.door.visitors.length === 0) blobs.push({ at: DOOR.door, ground: 0.3, radius: 10, strength: g.glow })
   if (g.glowShelf && g.glow > 0) blobs.push({ at: shelfTile(0), ground: 0.3, radius: 10, strength: g.glow })
-  if (g.hand && g.hand.press > 0.3) blobs.push({ at: g.hand.at, ground: 0, radius: 4.5, strength: g.hand.press * g.hand.opacity * 0.7 })
+  if (g.hand && g.hand.press > 0.3) blobs.push({ at: g.hand.at, ground: groundUnder(table, g.hand.at), radius: 4.5, strength: g.hand.press * g.hand.opacity * 0.7 })
   return blobs
 }
 
@@ -190,7 +190,7 @@ function World({ table }: { table: TableController }) {
         />
       ) : live === 'scale' ? (
         <>
-          <ScaleModel read={() => ({ angle: table.beam.angle, panY: [table.physics.panTop(0), table.physics.panTop(1)], now: table.t })} />
+          <ScaleModel read={() => ({ angle: table.beam.angle, panY: [table.physics.panY(0), table.physics.panY(1)], now: table.t })} />
           <JarsModel read={() => ({ tips: table.jarTips, full: jarCounts(table), glow: table.state.parts.length === 0 ? table.guidance.glow : 0, now: table.t })} />
           <PartsModel read={() => partStates(table)} />
         </>

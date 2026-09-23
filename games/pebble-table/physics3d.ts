@@ -1,22 +1,25 @@
 import * as CANNON from 'cannon-es'
 import { JARS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
+import { outlineCorners, STONE_CUTS, stoneOutline, stoneRest } from './stoneShape'
+import { BOWL_FLOOR, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, PAN_DEPTH, PAN_FLOOR, PAN_RIM, PLATE_TOP, RUG, type Surfaces } from './surfaces'
 
 // Real stone physics (cannon-es) under the same world coordinates the game
 // rules use. One 3D unit is one centimetre and ten world units; the table
-// top is y = 0 and the world's centre is the origin. Stones are short
-// cylinders so they lie flat and stack; walls make the bowl and pans hold
-// what falls into them; anything that leaves the table top falls and is
-// reported so it can go home to the bag.
+// top is y = 0 and the world's centre is the origin. Stones are low
+// prisms around their drawn outline (stoneShape.ts) so they lie flat,
+// stack, and touch where they are drawn; the rug, plates, bowl, and pans
+// are solid at the heights they are drawn (surfaces.ts), and walls make the
+// bowl and pans hold what falls into them; anything that leaves the table
+// top falls and is reported so it can go home to the bag.
 
 export const UNIT = 0.1
 export const GRAVITY = -981
 export const STEP = 1 / 120
 export const HOLD_HEIGHT = 11
 export const PAN_REST_HEIGHT = 6
-export const PAN_WALL = 1.6
-export const BOWL_WALL = 4.8
-const STONE_THICKNESS = 0.64
+/** How far a pan's rim rises above its floor, as drawn. */
+export const PAN_WALL = 0.13 * PAN_DEPTH - PAN_FLOOR
 /** Catch-up substeps per frame by default. More would let one slow frame make the next one slower (a spiral), so an overloaded frame slows time slightly instead. */
 export const DEFAULT_MAX_SUBSTEPS = 3
 // Convex-convex collision cost grows with faces times edges, and a spill is
@@ -24,7 +27,11 @@ export const DEFAULT_MAX_SUBSTEPS = 3
 // pebbles are separate meshes and stay round.
 const STONE_SIDES = 8
 const FIXTURE_SIDES = 10
+const RUG_SIDES = 16
+const BOWL_SEGMENTS = 14
 const FALL_LIMIT = -12
+/** How deep the table and what lies on it are solid: a thin collider lets a fast stone sink past its middle and be pushed out underneath. */
+const SLAB = 4
 /** A loose part slower than this (units/s, spin included) for `LOOSE_CALM_SECONDS` is put to sleep: parts in a pile can nudge each other just above cannon's own sleep limit for a long time. */
 const LOOSE_CALM_SPEED = 4
 const LOOSE_CALM_SECONDS = 1
@@ -50,8 +57,34 @@ export function stoneRadius3(q: Quarters): number {
   return RADIUS_BY_QUARTERS[q] * UNIT
 }
 
-export function stoneHeight3(q: Quarters): number {
-  return stoneRadius3(q) * STONE_THICKNESS
+export type Collider = { shape: CANNON.ConvexPolyhedron; offset: CANNON.Vec3 }
+
+/**
+ * An upright prism around an outline (corners counterclockwise from +x toward
+ * +z, seen from above), from `bottom` to `top`: the same vertices, faces, and
+ * cost as a cannon cylinder of that many sides, but sized to what is drawn.
+ * The hull is built around its own middle and placed at `offset`, because
+ * cannon points a contact's normal from one shape's origin to the other's:
+ * a hull hanging below its origin pushes whatever sinks past that origin
+ * down through it instead of back out.
+ */
+export function prism(corners: readonly { x: number; z: number }[], bottom: number, top: number): Collider {
+  const n = corners.length
+  const half = (top - bottom) / 2
+  const vertices = corners.flatMap(({ x, z }) => [new CANNON.Vec3(x, -half, z), new CANNON.Vec3(x, half, z)])
+  const faces: number[][] = []
+  for (let k = 0; k < n; k++) {
+    const next = (k + 1) % n
+    faces.push([2 * k, 2 * k + 1, 2 * next + 1, 2 * next])
+  }
+  faces.push(corners.map((_, k) => 2 * k))
+  faces.push(corners.map((_, k) => 2 * (n - 1 - k) + 1))
+  return { shape: new CANNON.ConvexPolyhedron({ vertices, faces }), offset: new CANNON.Vec3(0, bottom + half, 0) }
+}
+
+export function stoneCollider(q: Quarters): Collider {
+  const outline = stoneOutline(STONE_CUTS[q])
+  return prism(outlineCorners(outline.reach), outline.bottom, outline.top)
 }
 
 type StoneEntry = { body: CANNON.Body; q: Quarters }
@@ -86,14 +119,13 @@ export class TablePhysics {
     this.world.addContactMaterial(new CANNON.ContactMaterial(this.stoneMaterial, this.woodMaterial, { friction: 0.45, restitution: 0.12 }))
     this.world.addContactMaterial(new CANNON.ContactMaterial(this.stoneMaterial, this.stoneMaterial, { friction: 0.35, restitution: 0.22 }))
     this.addTable()
-    this.addBowl()
   }
 
   private addTable(): void {
     const center = to3({ x: TABLE.x + TABLE.w / 2, y: TABLE.y + TABLE.h / 2 })
     const table = new CANNON.Body({ mass: 0, material: this.woodMaterial })
-    table.addShape(new CANNON.Box(new CANNON.Vec3((TABLE.w * UNIT) / 2, 2, (TABLE.h * UNIT) / 2)))
-    table.position.set(center.x, -2, center.z)
+    table.addShape(new CANNON.Box(new CANNON.Vec3((TABLE.w * UNIT) / 2, SLAB / 2, (TABLE.h * UNIT) / 2)))
+    table.position.set(center.x, -SLAB / 2, center.z)
     this.world.addBody(table)
     const shelfLeft = TABLE.x + TABLE.w
     const shelfRight = SHELF.x + SHELF.w
@@ -104,35 +136,68 @@ export class TablePhysics {
     this.world.addBody(shelf)
   }
 
-  private ring(body: CANNON.Body, radius: number, height: number, baseY: number): void {
-    const segments = 14
-    const thickness = 0.8
-    const half = Math.tan(Math.PI / segments) * (radius + thickness)
-    for (let i = 0; i < segments; i++) {
-      const angle = (i / segments) * Math.PI * 2
-      const offset = new CANNON.Vec3(Math.cos(angle) * (radius + thickness / 2), baseY + height / 2, Math.sin(angle) * (radius + thickness / 2))
-      const orientation = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -angle)
-      body.addShape(new CANNON.Box(new CANNON.Vec3(thickness / 2, height / 2, half)), offset, orientation)
+  /**
+   * A wall of boxes around the y axis whose inner face runs along `line`
+   * ((radius, height) points up the wall) and whose inner corners touch it,
+   * so nothing resting against the wall reaches into what is drawn there.
+   */
+  private wall(body: CANNON.Body, line: readonly (readonly [number, number])[], thickness: number, baseY = 0): void {
+    const inset = Math.cos(Math.PI / BOWL_SEGMENTS)
+    for (let band = 0; band + 1 < line.length; band++) {
+      const [r0, h0] = line[band]
+      const [r1, h1] = line[band + 1]
+      const length = Math.hypot(r1 - r0, h1 - h0)
+      const along = { r: (r1 - r0) / length, h: (h1 - h0) / length }
+      const out = { r: along.h, h: -along.r }
+      const centre = { r: ((r0 + r1) / 2) * inset + (out.r * thickness) / 2, h: baseY + (h0 + h1) / 2 + (out.h * thickness) / 2 }
+      const half = new CANNON.Vec3(thickness / 2, length / 2, Math.tan(Math.PI / BOWL_SEGMENTS) * (Math.max(r0, r1) + thickness))
+      const tilt = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.atan2(-along.r, along.h))
+      for (let i = 0; i < BOWL_SEGMENTS; i++) {
+        const angle = (i / BOWL_SEGMENTS) * Math.PI * 2
+        const turn = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -angle)
+        body.addShape(new CANNON.Box(half), new CANNON.Vec3(Math.cos(angle) * centre.r, centre.h, Math.sin(angle) * centre.r), turn.mult(tilt))
+      }
     }
+  }
+
+  /** A flat disc from `bottom` to `top` (relative to its body) whose corners reach `radius`, so it never sticks out past what is drawn. */
+  private disc(body: CANNON.Body, radius: number, bottom: number, top: number): void {
+    body.addShape(new CANNON.Cylinder(radius, radius, top - bottom, FIXTURE_SIDES + 2), new CANNON.Vec3(0, (top + bottom) / 2, 0))
   }
 
   private addBowl(): void {
     const bowl = new CANNON.Body({ mass: 0, material: this.woodMaterial })
     const at = to3(FEEDING.bowl)
-    bowl.position.set(at.x, 0, at.z)
-    this.ring(bowl, FEEDING.bowl.r * UNIT, BOWL_WALL, 0)
+    bowl.position.set(at.x, RUG.top, at.z)
+    this.disc(bowl, BOWL_WALL[0][0], -SLAB, BOWL_FLOOR - RUG.top)
+    this.wall(bowl, BOWL_WALL, BOWL_WALL_THICKNESS)
+    this.world.addBody(bowl)
     this.fixtures.set('bowl', bowl)
   }
 
-  /** The scale's pans and post exist only while the scale is the live mat; the bowl only with Fair Feeding. */
+  private addRug(): void {
+    const rug = new CANNON.Body({ mass: 0, material: this.woodMaterial })
+    const at = to3(RUG.center)
+    rug.position.set(at.x, 0, at.z)
+    const corners = Array.from({ length: RUG_SIDES }, (_, k) => {
+      const a = (k / RUG_SIDES) * Math.PI * 2
+      return { x: Math.cos(a) * RUG.rx * UNIT, z: Math.sin(a) * RUG.rz * UNIT }
+    })
+    const { shape, offset } = prism(corners, -SLAB, RUG.top)
+    rug.addShape(shape, offset)
+    this.world.addBody(rug)
+    this.fixtures.set('rug', rug)
+  }
+
+  /** The scale's pans and post exist only while the scale is the live mat; the rug and bowl only with Fair Feeding. */
   setMat(mat: MatKey): void {
-    const bowl = this.fixtures.get('bowl')!
     for (const pan of this.pans) {
       this.world.removeBody(pan)
       this.targets.delete(pan)
     }
     this.pans.length = 0
-    this.world.removeBody(bowl)
+    this.removeFixture('bowl')
+    this.removeFixture('rug')
     this.removeFixture('post')
     this.removeFixture('house')
     for (const kind of ['acorn', 'shell', 'stick'] as const) this.removeFixture(`jar-${kind}`)
@@ -141,21 +206,43 @@ export class TablePhysics {
       return
     }
     if (mat === 'feeding') {
-      this.world.addBody(bowl)
+      this.addRug()
+      this.addBowl()
       return
     }
     for (const pan of SCALE.pans) {
       const body = new CANNON.Body({ mass: 0, type: CANNON.Body.KINEMATIC, material: this.woodMaterial })
       const at = to3(pan)
       body.position.set(at.x, PAN_REST_HEIGHT, at.z)
-      body.addShape(new CANNON.Cylinder(pan.r * UNIT, pan.r * UNIT, 0.6, FIXTURE_SIDES + 2), new CANNON.Vec3(0, -0.3, 0))
-      this.ring(body, pan.r * UNIT, PAN_WALL, 0)
+      const r = pan.r * UNIT
+      this.disc(body, r * PAN_RIM, DISH_PROFILE[0][1] * PAN_DEPTH, PAN_FLOOR)
+      this.wall(body, [[r * PAN_RIM, PAN_FLOOR], [r * PAN_RIM, PAN_FLOOR + PAN_WALL]], 0.8)
       this.world.addBody(body)
       this.pans.push(body)
     }
     this.setFixture('post', { ...SCALE.post, r: 18 }, 30)
     for (const kind of ['acorn', 'shell', 'stick'] as const) this.setFixture(`jar-${kind}`, { ...JARS[kind], r: 48 }, 16)
     this.panDrops = [0, 0]
+  }
+
+  /** A seated guest's plate is solid at its drawn top; an empty seat has no plate. */
+  setPlates(seats: readonly boolean[]): void {
+    FEEDING.seats.forEach((seat, index) => {
+      const key = `plate-${index}`
+      this.removeFixture(key)
+      if (!seats[index]) return
+      const body = new CANNON.Body({ mass: 0, material: this.woodMaterial })
+      const at = to3(seat.plate)
+      body.position.set(at.x, 0, at.z)
+      this.disc(body, FEEDING.plateRadius * UNIT, -SLAB, PLATE_TOP)
+      this.world.addBody(body)
+      this.fixtures.set(key, body)
+    })
+  }
+
+  /** What a piece lying on the live mat rests on, as `surfaceUnder` needs it. */
+  surfaces(mat: MatKey, seats: readonly boolean[]): Surfaces {
+    return { mat, seats, panFloors: [this.panFloor(0), this.panFloor(1)] }
   }
 
   /** Beam tilt drives the pans up and down; stones in them ride along. `drops` are world units. */
@@ -168,8 +255,14 @@ export class TablePhysics {
     this.panDrops = [drops[0], drops[1]]
   }
 
-  panTop(side: 0 | 1): number {
+  /** Where a pan hangs from its ropes (its drawn origin). */
+  panY(side: 0 | 1): number {
     return this.pans[side]?.position.y ?? PAN_REST_HEIGHT
+  }
+
+  /** The top of a pan's floor, where pieces in it rest. */
+  panFloor(side: 0 | 1): number {
+    return this.panY(side) + PAN_FLOOR
   }
 
   setFixture(key: string, circle: Circle, height = 12): void {
@@ -184,7 +277,7 @@ export class TablePhysics {
 
   removeFixture(key: string): void {
     const body = this.fixtures.get(key)
-    if (body && key !== 'bowl') {
+    if (body) {
       this.world.removeBody(body)
       this.fixtures.delete(key)
     }
@@ -196,8 +289,6 @@ export class TablePhysics {
 
   addStone(id: number, q: Quarters, at: Point, options: { y?: number; velocity?: Vec3; spin?: number } = {}): void {
     this.removeStone(id)
-    const r = stoneRadius3(q)
-    const h = stoneHeight3(q)
     const body = new CANNON.Body({
       mass: q,
       material: this.stoneMaterial,
@@ -206,8 +297,9 @@ export class TablePhysics {
       sleepSpeedLimit: 1.2,
       sleepTimeLimit: 0.4,
     })
-    body.addShape(new CANNON.Cylinder(r, r, h, STONE_SIDES))
-    const p = to3(at, options.y ?? h / 2)
+    const { shape, offset } = stoneCollider(q)
+    body.addShape(shape, offset)
+    const p = to3(at, options.y ?? stoneRest(q))
     body.position.set(p.x, p.y, p.z)
     if (options.velocity) body.velocity.set(options.velocity.x, options.velocity.y, options.velocity.z)
     if (options.spin) body.angularVelocity.set(0, options.spin, 0)

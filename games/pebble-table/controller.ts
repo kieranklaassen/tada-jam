@@ -3,7 +3,9 @@ import { freeSpotOnPlate, GUEST_RADIUS, gazeTarget, inBowl, nextSeat, plateOf, v
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
 import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
-import { HOLD_HEIGHT, PAN_REST_HEIGHT, stoneHeight3, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
+import { HOLD_HEIGHT, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
+import { stoneRest } from './stoneShape'
+import { surfaceUnder } from './surfaces'
 import { SaveCadence } from './saveCadence'
 import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
 import { cutPiece, placeFromBag, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
@@ -449,7 +451,7 @@ export class TableController {
           id: piece.id,
           q: piece.q,
           from: to3(BAG_MOUTH, 4),
-          to: to3(rest, stoneHeight3(piece.q) / 2 + 0.2),
+          to: to3(rest, this.restHeight(rest, piece.q) + 0.15),
           t0: now,
           duration: 0.95,
           arc: 5,
@@ -458,7 +460,7 @@ export class TableController {
             if (!this.pieceById(piece.id)) return
             piece.x = rest.x
             piece.y = rest.y
-            this.addPieceBody(piece, { y: stoneHeight3(piece.q) / 2 + 0.2 })
+            this.addPieceBody(piece, { y: this.restHeight(rest, piece.q) + 0.15 })
             this.sound.clack(0.4)
             if (this.story?.phase === 'rolling') Object.assign(this.story, { phase: 'resting', at: this.t })
           },
@@ -487,7 +489,7 @@ export class TableController {
           id: piece.id,
           q: piece.q,
           from,
-          to: to3(spot, stoneHeight3(piece.q) / 2 + 0.6),
+          to: to3(spot, this.restHeight(spot, piece.q) + 0.55),
           t0: now,
           duration: STORY_CARRY,
           arc: 4,
@@ -496,7 +498,7 @@ export class TableController {
             if (!this.pieceById(piece.id)) return
             piece.x = spot.x
             piece.y = spot.y
-            this.addPieceBody(piece, { y: stoneHeight3(piece.q) / 2 + 0.6 })
+            this.addPieceBody(piece, { y: this.restHeight(spot, piece.q) + 0.55 })
             this.dealCursor = seat
             this.sound.touch(1)
             this.pendingVoice = { groups: this.voiceFor(piece.id), deadline: this.t + 1 }
@@ -583,12 +585,11 @@ export class TableController {
     page.stones.forEach((stone, index) => {
       const piece = placeFromBag(this.state, stone.q, stone)
       if (!piece) return
-      const rest = stoneHeight3(piece.q) / 2 + 0.6
       this.flights.push({
         id: piece.id,
         q: piece.q,
         from: to3(BAG, BAG_TOP),
-        to: to3(stone, rest + (this.state.liveMat === 'scale' && panOf(stone) !== null ? PAN_REST_HEIGHT : 0)),
+        to: to3(stone, this.restHeight(stone, piece.q) + 0.55),
         t0: this.t + 0.45 + index * 0.09,
         duration: 0.55,
         arc: 14,
@@ -597,7 +598,7 @@ export class TableController {
           if (!this.pieceById(piece.id)) return
           piece.x = stone.x
           piece.y = stone.y
-          this.addPieceBody(piece, { y: this.restHeight(piece) + 0.4 })
+          this.addPieceBody(piece, { y: this.restHeight(piece, piece.q) + 0.35 })
           this.sound.clack(0.3)
         },
       })
@@ -781,7 +782,7 @@ export class TableController {
         if (!this.pieceById(piece.id) || this.state.liveMat !== 'scale') return
         piece.x = pan.x
         piece.y = pan.y
-        this.addPieceBody(piece, { y: this.restHeight(piece) + 3 })
+        this.addPieceBody(piece, { y: this.restHeight(piece, piece.q) + 3 })
         this.sound.clack(0.5)
         this.cadence.change(performance.now(), true)
       },
@@ -856,17 +857,13 @@ export class TableController {
     return this.state.pieces.find((piece) => piece.id === id)
   }
 
-  private restHeight(piece: Piece): number {
-    const half = stoneHeight3(piece.q) / 2
-    if (this.state.liveMat === 'scale') {
-      const side = panOf(piece)
-      if (side !== null) return this.physics.panTop(side) + half + 0.2
-    }
-    return half + 0.05
+  /** Where a stone of size `q` lying at `at` has its centre: on whatever is under it, a hair above. */
+  private restHeight(at: Point, q: Quarters): number {
+    return surfaceUnder(at, this.physics.surfaces(this.state.liveMat, this.state.seats)) + stoneRest(q) + 0.05
   }
 
   private addPieceBody(piece: Piece, options: { y?: number; velocity?: Vec3; spin?: number } = {}): void {
-    this.physics.addStone(piece.id, piece.q, piece, { y: options.y ?? this.restHeight(piece), velocity: options.velocity, spin: options.spin })
+    this.physics.addStone(piece.id, piece.q, piece, { y: options.y ?? this.restHeight(piece, piece.q), velocity: options.velocity, spin: options.spin })
   }
 
   private enterMat(): void {
@@ -875,6 +872,7 @@ export class TableController {
   }
 
   private syncGuests(): void {
+    this.physics.setPlates(this.state.liveMat === 'feeding' ? this.state.seats : [])
     FEEDING.seats.forEach((seat, index) => {
       const key = `guest-${index}`
       if (this.state.liveMat !== 'feeding') this.physics.removeFixture(key)
@@ -899,7 +897,7 @@ export class TableController {
     this.physics.removeStone(id)
     returnToBag(this.state, id)
     this.changed()
-    const half = stoneHeight3(piece.q) / 2
+    const half = stoneRest(piece.q)
     const distance = Math.hypot(edge.x - BAG.x, edge.y - BAG.y)
     this.sound.squeak()
     this.flights.push({
@@ -1398,7 +1396,7 @@ export class TableController {
       id: piece.id,
       q: piece.q,
       from,
-      to: to3(spot, stoneHeight3(piece.q) / 2 + 0.6),
+      to: to3(spot, this.restHeight(spot, piece.q) + 0.55),
       t0: this.t,
       duration: 0.42,
       arc: 9,
@@ -1407,7 +1405,7 @@ export class TableController {
         if (!this.pieceById(piece.id)) return
         piece.x = spot.x
         piece.y = spot.y
-        this.addPieceBody(piece, { y: stoneHeight3(piece.q) / 2 + 0.6 })
+        this.addPieceBody(piece, { y: this.restHeight(spot, piece.q) + 0.55 })
         this.sound.touch(1)
         this.pendingVoice = { groups: this.voiceFor(piece.id), deadline: this.t + 1 }
         this.cadence.change(performance.now(), true)
@@ -1430,7 +1428,7 @@ export class TableController {
     if (halves.length === 0) return
     this.physics.removeStone(target.piece.id)
     halves.forEach((half, index) => {
-      this.addPieceBody(half, { y: stoneHeight3(half.q) / 2 + 0.4, velocity: { x: (index === 0 ? -1 : 1) * 12, y: 6, z: 0 } })
+      this.addPieceBody(half, { y: this.restHeight(half, half.q) + 0.35, velocity: { x: (index === 0 ? -1 : 1) * 12, y: 6, z: 0 } })
       this.pulses.set(half.id, this.t)
     })
     this.sound.snick()

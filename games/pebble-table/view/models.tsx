@@ -3,7 +3,8 @@ import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode }
 import * as THREE from 'three'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
-import { createClayMaterials, merge, PALETTE, piece, type ClayMaterials } from './clay'
+import { createClayMaterials, merge, PALETTE, piece, type ClayMaterials, type Hold } from './clay'
+import { BOWL_PROFILE, BOWL_SCALE, DISH_PROFILE, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y } from '../surfaces'
 import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
 import { useQuality } from './quality'
 import { MotionDirector, PERSONALITIES, SEAT_SPECIES, type Species } from '../motion'
@@ -213,6 +214,8 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
 export type Blob = { at: Point; ground: number; radius: number; strength: number; stretch?: number }
 
 const LIGHT_OFFSET = { x: 0.32, z: -0.12 }
+/** Decals lie a hair above what they are cast on (their material's polygon offset keeps them in front); any higher and they cut into whatever rests beside them. */
+const DECAL_LIFT = 0.02
 
 /** Soft blob shadows: the height above the ground widens and fades them. */
 export function Overlays({ kind, read, capacity }: { kind: 'shadow' | 'glow'; read: () => Blob[]; capacity: number }) {
@@ -229,7 +232,7 @@ export function Overlays({ kind, read, capacity }: { kind: 'shadow' | 'glow'; re
     if (!instanced) return
     const blobs = read().slice(0, capacity)
     blobs.forEach((blob, i) => {
-      const p = to3(blob.at, blob.ground + (kind === 'shadow' ? 0.06 : 0.12))
+      const p = to3(blob.at, blob.ground + DECAL_LIFT)
       const lift = Math.max(0, blob.strength)
       const offset = kind === 'shadow' ? blob.stretch ?? 0 : 0
       scratch.m.compose(
@@ -325,6 +328,12 @@ export type ScalePose = { angle: number; panY: [number, number]; now: number }
 const ROPE_OBJECTS = Array.from({ length: 6 }, () => 'scale')
 
 const PIVOT_Y = 25
+/** The balls on the beam's ends that the pan ropes hang from. */
+const BEAM_END_RADIUS = 2.1
+/** How far a rope reaches into its beam-end ball: the same at every tilt, so the rope never slides through it. */
+const ROPE_GRIP = 0.4
+/** The knob on top of the pivot ball, high enough that the beam's own thickness clears it at full tilt. */
+const KNOB = { y: PIVOT_Y + 3, radius: 1.1 }
 
 function postGeometry(): THREE.BufferGeometry {
   const turned = new THREE.LatheGeometry(
@@ -349,7 +358,7 @@ function postGeometry(): THREE.BufferGeometry {
   return merge([
     piece(turned, PALETTE.scaleWood, {}, { lump: 0.18, frequency: 0.5, seed: 2 }),
     piece(geo.sphere(20), PALETTE.scaleWood, { position: [0, PIVOT_Y, 0], scale: 2.1 }, { lump: 0.15, ground: null }),
-    piece(geo.sphere(14), PALETTE.scaleWood, { position: [0, PIVOT_Y + 2.6, 0], scale: 1.1 }, { ground: null }),
+    piece(geo.sphere(14), PALETTE.scaleWood, { position: [0, KNOB.y, 0], scale: KNOB.radius }, { ground: null }),
   ])
 }
 
@@ -359,8 +368,8 @@ function beamGeometry(half: number): THREE.BufferGeometry {
   )
   return merge([
     piece(geo.capsule(18), PALETTE.scaleWood, { rotation: [0, 0, Math.PI / 2], scale: [2.5, half, 2.5] }, { lump: 0.18, frequency: 0.7, ground: null }),
-    piece(geo.sphere(18), PALETTE.scaleWood, { position: [-half, 0, 0], scale: 2.1 }, { lump: 0.12, ground: null }),
-    piece(geo.sphere(18), PALETTE.scaleWood, { position: [half, 0, 0], scale: 2.1 }, { lump: 0.12, ground: null }),
+    piece(geo.sphere(18), PALETTE.scaleWood, { position: [-half, 0, 0], scale: BEAM_END_RADIUS }, { lump: 0.12, ground: null }),
+    piece(geo.sphere(18), PALETTE.scaleWood, { position: [half, 0, 0], scale: BEAM_END_RADIUS }, { lump: 0.12, ground: null }),
     ...collars,
   ])
 }
@@ -385,8 +394,8 @@ function coilGeometry(): THREE.BufferGeometry {
 
 function panGeometry(radius: number): THREE.BufferGeometry {
   return merge([
-    piece(geo.dish(40), PALETTE.pan, { scale: [radius, 13, radius] }, { lump: 0.3, frequency: 0.35, seed: 5, ground: null }),
-    piece(geo.torus(40, 0.08), PALETTE.pan, { position: [0, 1.6, 0], rotation: [Math.PI / 2, 0, 0], scale: radius * 1.03 }, { lump: 0.12, frequency: 0.5, ground: null }),
+    piece(geo.dish(40), PALETTE.pan, { scale: [radius, PAN_DEPTH, radius] }, { lump: 0.3, frequency: 0.35, seed: 5, ground: null, hold: holdLathe(DISH_PROFILE.slice(4)) }),
+    piece(geo.torus(40, PAN_ROLL.tube), PALETTE.pan, { position: [0, PAN_ROLL.y, 0], rotation: [Math.PI / 2, 0, 0], scale: radius * PAN_ROLL.radius }, { lump: 0.04, frequency: 0.5, ground: null }),
   ])
 }
 
@@ -418,10 +427,11 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
       const end = new THREE.Vector3(post.x + Math.cos(angle) * half * sign, PIVOT_Y - Math.sin(angle) * half * sign, post.z)
       for (let k = 0; k < 3; k++) {
         const a = (k / 3) * Math.PI * 2 + 0.5
-        const rim = new THREE.Vector3(center.x + Math.cos(a) * pan.r * UNIT * 0.96, center.y + 1.6, center.z + Math.sin(a) * pan.r * UNIT * 0.96)
-        const dir = rim.clone().sub(end)
-        const length = dir.length()
-        scratch.m.compose(end, scratch.q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()), scratch.s.set(0.95, length, 0.95))
+        const reach = pan.r * UNIT * PAN_ROLL.radius
+        const rim = new THREE.Vector3(center.x + Math.cos(a) * reach, center.y + PAN_ROLL.y, center.z + Math.sin(a) * reach)
+        const dir = rim.clone().sub(end).normalize()
+        const start = end.clone().addScaledVector(dir, BEAM_END_RADIUS - ROPE_GRIP)
+        scratch.m.compose(start, scratch.q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir), scratch.s.set(0.95, rim.distanceTo(start), 0.95))
         instanced?.setMatrixAt(side * 3 + k, scratch.m)
       }
     })
@@ -451,26 +461,37 @@ function ellipseRope(rx: number, rz: number): THREE.BufferGeometry {
     const scallop = 1 + Math.abs(Math.sin(a * 14)) * 0.02
     points.push(new THREE.Vector3(Math.cos(a) * rx * scallop, 0, Math.sin(a) * rz * scallop))
   }
-  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 240, 0.42, 8, true)
+  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 240, RUG_HEM.tube, 8, true)
+}
+
+/** Keep a lathe's named profile points (radius, height) true while the rest of it is lumped. */
+function holdLathe(fixed: readonly (readonly [number, number])[], level: readonly (readonly [number, number])[] = []): Hold {
+  const on = (points: readonly (readonly [number, number])[], x: number, y: number, z: number) =>
+    points.some(([r, h]) => Math.abs(Math.hypot(x, z) - r) < 1e-4 && Math.abs(y - h) < 1e-4)
+  return (x, y, z) => (on(fixed, x, y, z) ? 'fixed' : on(level, x, y, z) ? 'level' : null)
 }
 
 function feedingShapes() {
   return {
     rug: geo.cloth(40),
-    bowl: merge([piece(geo.bowl(48), PALETTE.bowl, { scale: FEEDING.bowl.r * UNIT }, { lump: 0.22, frequency: 0.4, seed: 8, occlusion: 0.42 })]),
-    plate: merge([piece(geo.plate(36), PALETTE.plate, { scale: [FEEDING.plateRadius * UNIT, 5, FEEDING.plateRadius * UNIT] }, { lump: 0.15, frequency: 0.5, seed: 3, occlusion: 0.15 })]),
+    bowl: merge([
+      piece(geo.bowl(48), PALETTE.bowl, { scale: BOWL_SCALE }, { lump: 0.22, frequency: 0.4, seed: 8, occlusion: 0.42, hold: holdLathe(BOWL_PROFILE.slice(8), BOWL_PROFILE.slice(0, 2)) }),
+    ]),
+    plate: merge([
+      piece(geo.plate(36), PALETTE.plate, { scale: [FEEDING.plateRadius * UNIT, PLATE_HEIGHT, FEEDING.plateRadius * UNIT] }, { lump: 0.08, frequency: 0.5, seed: 3, occlusion: 0.15, hold: holdLathe(PLATE_PROFILE.slice(4), PLATE_PROFILE.slice(0, 2)) }),
+    ]),
     stool: merge([
       piece(geo.sphere(28), PALETTE.stool, { position: [0, 1.5, 0], scale: [4.5, 1.7, 4.5] }, { lump: 0.3, frequency: 0.6, seed: 6 }),
       piece(geo.sphere(14), '#c79a45', { position: [0, 3.05, 0], scale: [0.9, 0.35, 0.9] }, { ground: null }),
       piece(geo.torus(32, 0.16), '#c79a45', { position: [0, 1.55, 0], rotation: [Math.PI / 2, 0, 0], scale: 4.35 }, { lump: 0.05, ground: null }),
     ]),
-    rugRope: merge([piece(ellipseRope(42, 30), '#d8c39c', {}, { lump: 0.12, frequency: 0.5, ground: null })]),
+    rugRope: merge([piece(ellipseRope(RUG.rx * UNIT, RUG.rz * UNIT), '#d8c39c', { position: [0, RUG_HEM_Y, 0], scale: [1, RUG_HEM.flatten, 1] }, { lump: 0.12, frequency: 0.5, ground: null })]),
   }
 }
 
 export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonly boolean[]; showStools: boolean; readBowl: () => { dingAt: number | null; now: number } }) {
   const { clay, rug } = useClay()
-  const center = to3({ x: 780, y: 470 })
+  const center = to3(RUG.center)
   const bowl = to3(FEEDING.bowl)
   const shapes = once('feeding', feedingShapes)
   const plates = useRef<THREE.InstancedMesh>(null)
@@ -495,7 +516,7 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
     let plateCount = 0
     FEEDING.seats.forEach((seat, index) => {
       if (!seats[index]) return
-      const p = to3(seat.plate, 0.12)
+      const p = to3(seat.plate, RUG.top)
       scratch.m.makeTranslation(p.x, p.y, p.z)
       plates.current?.setMatrixAt(plateCount++, scratch.m)
     })
@@ -514,6 +535,8 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
     if (bowlMesh.current) {
       const wobble = age < 1.4 ? Math.sin(age * 22) * 0.07 * Math.exp(-age * 3) : 0
       bowlMesh.current.rotation.set(wobble * 0.6, 0, wobble)
+      // It rocks on the edge of its flat base, which stays on the rug.
+      bowlMesh.current.position.y = RUG.top + BOWL_PROFILE[1][0] * BOWL_SCALE * Math.sin(Math.hypot(wobble * 0.6, wobble))
     }
     const at = reveal.current.at
     if (at === null) return
@@ -523,9 +546,11 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
   })
   return (
     <group>
-      <mesh name="rug" geometry={shapes.rug} material={rug} position={[center.x, 0.04, center.z]} scale={[42, 4, 30]} />
-      <mesh name="rug-rope" geometry={shapes.rugRope} material={clay} position={[center.x, 0.3, center.z]} />
-      <mesh name="bowl" ref={bowlMesh} geometry={shapes.bowl} material={clay} position={[bowl.x, 0, bowl.z]} />
+      <group userData={{ jamObject: 'rug' }} position={[center.x, 0, center.z]}>
+        <mesh name="rug" geometry={shapes.rug} material={rug} position={[0, RUG.bottom, 0]} scale={[RUG.rx * UNIT, (RUG.top - RUG.bottom) / 0.02, RUG.rz * UNIT]} />
+        <mesh name="rug-rope" geometry={shapes.rugRope} material={clay} />
+      </group>
+      <mesh name="bowl" ref={bowlMesh} geometry={shapes.bowl} material={clay} position={[bowl.x, RUG.top, bowl.z]} />
       <instancedMesh name="plates" ref={plates} args={[shapes.plate, clay, 5]} frustumCulled={false} />
       <instancedMesh name="stools" ref={stools} args={[shapes.stool, clay, 5]} frustumCulled={false} />
     </group>
