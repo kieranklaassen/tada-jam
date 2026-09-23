@@ -13,32 +13,64 @@ export const REGION_W = 4
 export const REGION_H = 2
 const SIZE = PX_PER_UNIT * REGION_W
 
-function hash(x: number, y: number): number {
+export function hash(x: number, y: number): number {
   let h = (x * 374761393 + y * 668265263) | 0
   h = Math.imul(h ^ (h >>> 13), 1274126177)
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296
 }
 
-/** Value noise; with `period` (cells) it repeats along x, so long grain tiles seamlessly along the board. */
-function noise(x: number, y: number, period = 0): number {
-  const xi = Math.floor(x)
-  const yi = Math.floor(y)
-  const xf = x - xi
-  const yf = y - yi
-  const u = xf * xf * (3 - 2 * xf)
-  const v = yf * yf * (3 - 2 * yf)
-  const x0 = period > 0 ? ((xi % period) + period) % period : xi
-  const x1 = period > 0 ? (x0 + 1) % period : xi + 1
-  const a = hash(x0, yi)
-  const b = hash(x1, yi)
-  const c = hash(x0, yi + 1)
-  const d = hash(x1, yi + 1)
-  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v
+/**
+ * Value noise along one row of pixels. The row's y is fixed, so each cell
+ * column's y-blend is done once in `set`, and a pixel only eases between two
+ * of them along x: the same value as blending four corner hashes per pixel,
+ * at a fraction of the cost (the atlas is built before the first frame).
+ * With `period` (cells) it repeats along x, so long grain tiles seamlessly.
+ */
+export class NoiseRow {
+  private columns = new Float64Array(0)
+  private first = 0
+
+  /** Ready the row at `y` for every x in [xMin, xMax]. */
+  set(y: number, xMin: number, xMax: number, period = 0): void {
+    const yi = Math.floor(y)
+    const yf = y - yi
+    const v = yf * yf * (3 - 2 * yf)
+    this.first = Math.floor(xMin)
+    const count = Math.floor(xMax) - this.first + 2
+    if (this.columns.length < count) this.columns = new Float64Array(count)
+    for (let i = 0; i < count; i++) {
+      const xi = this.first + i
+      const x = period > 0 ? ((xi % period) + period) % period : xi
+      const a = hash(x, yi)
+      this.columns[i] = a + (hash(x, yi + 1) - a) * v
+    }
+  }
+
+  at(x: number): number {
+    const xi = Math.floor(x)
+    const xf = x - xi
+    const u = xf * xf * (3 - 2 * xf)
+    const i = xi - this.first
+    const a = this.columns[i]
+    return a + (this.columns[i + 1] - a) * u
+  }
 }
 
-/** Three octaves; with `period` the first octave repeats every `period` cells along x. */
-function fbm(x: number, y: number, period = 0): number {
-  return noise(x, y, period) * 0.55 + noise(x * 2 + 5, y * 2.1 + 1.3, period * 2) * 0.3 + noise(x * 4 + 9, y * 4.3 + 3.7, period * 4) * 0.15
+/** Three octaves of `NoiseRow`; with `period` the first octave repeats every `period` cells along x. */
+export class FbmRow {
+  private readonly low = new NoiseRow()
+  private readonly mid = new NoiseRow()
+  private readonly high = new NoiseRow()
+
+  set(y: number, xMin: number, xMax: number, period = 0): void {
+    this.low.set(y, xMin, xMax, period)
+    this.mid.set(y * 2.1 + 1.3, xMin * 2 + 5, xMax * 2 + 5, period * 2)
+    this.high.set(y * 4.3 + 3.7, xMin * 4 + 9, xMax * 4 + 9, period * 4)
+  }
+
+  at(x: number): number {
+    return this.low.at(x) * 0.55 + this.mid.at(x * 2 + 5) * 0.3 + this.high.at(x * 4 + 9) * 0.15
+  }
 }
 
 function band(f: number): number {
@@ -62,17 +94,38 @@ function paint(data: Uint8ClampedArray, index: number, r: number, g: number, b: 
  */
 function longGrain(data: Uint8ClampedArray, width: number, rows: number, offsetRow: number): void {
   const cells = (f: number) => Math.round(REGION_W * f)
+  const last = (width - 1) / PX_PER_UNIT
+  const wander = new FbmRow()
+  const streaks = new NoiseRow()
+  const poreRow = new NoiseRow()
+  const flecks = new NoiseRow()
+  const tones = new FbmRow()
+  // The slow sway sin(a + b) splits into a column part and a row part, so there is no sine per pixel.
+  const swaySin = new Float64Array(width)
+  const swayCos = new Float64Array(width)
+  for (let px = 0; px < width; px++) {
+    const a = ((px / PX_PER_UNIT) * Math.PI * 2) / REGION_W
+    swaySin[px] = Math.sin(a) * 0.025
+    swayCos[px] = Math.cos(a) * 0.025
+  }
   for (let py = 0; py < rows; py++) {
     const Y = py / PX_PER_UNIT
+    const rowSin = Math.sin(Y * 0.5)
+    const rowCos = Math.cos(Y * 0.5)
+    wander.set(Y * 0.9, 0, last * 0.5, cells(0.5))
+    streaks.set(Y * 38, 0, last, cells(1))
+    poreRow.set(Y * 90, 0, last * 3, cells(3))
+    flecks.set(Y * 4.5, 3, last * 16 + 3, cells(16))
+    tones.set(Y * 0.8, 11, last * 0.75 + 11, cells(0.75))
     for (let px = 0; px < width; px++) {
       const X = px / PX_PER_UNIT
-      const warp = (fbm(X * 0.5, Y * 0.9, cells(0.5)) - 0.5) * 0.28 + Math.sin((X * Math.PI * 2) / REGION_W + Y * 0.5) * 0.025
+      const warp = (wander.at(X * 0.5) - 0.5) * 0.28 + swaySin[px] * rowCos + swayCos[px] * rowSin
       const phase = (Y + warp) * 8.5
       const ring = band(phase - Math.floor(phase))
-      const streak = (noise(X * 1, Y * 38, cells(1)) - 0.5) * 0.9
-      const pores = Math.max(0, noise(X * 3, Y * 90, cells(3)) - 0.62) * 2.2
-      const fleck = Math.max(0, noise(X * 16 + 3, Y * 4.5, cells(16)) - 0.82) * 4
-      const tone = (fbm(X * 0.75 + 11, Y * 0.8, cells(0.75)) - 0.5) * 0.05
+      const streak = (streaks.at(X) - 0.5) * 0.9
+      const pores = Math.max(0, poreRow.at(X * 3) - 0.62) * 2.2
+      const fleck = Math.max(0, flecks.at(X * 16 + 3) - 0.82) * 4
+      const tone = (tones.at(X * 0.75 + 11) - 0.5) * 0.05
       const dark = ring * 0.3 + pores * 0.1 + fleck * 0.12 + streak * 0.12
       const r = 0.985 + tone - dark * 0.13
       const g = 0.95 + tone - dark * 0.2
@@ -86,19 +139,26 @@ function longGrain(data: Uint8ClampedArray, width: number, rows: number, offsetR
 function endGrain(data: Uint8ClampedArray, width: number, rows: number, offsetRow: number): void {
   const pithX = -2.4
   const pithY = -5.5
+  const last = (width - 1) / PX_PER_UNIT
+  const wobble = new FbmRow()
+  const rayRow = new NoiseRow()
+  const poreRow = new NoiseRow()
   for (let py = 0; py < rows; py++) {
     const Y = py / PX_PER_UNIT
+    wobble.set(Y * 1.4, 0, last * 1.4)
+    rayRow.set(Y * 6, 0, last * 6)
+    poreRow.set(Y * 40, 0, last * 40)
     for (let px = 0; px < width; px++) {
       const X = px / PX_PER_UNIT
       const dx = X - pithX
       const dy = Y - pithY
-      const r = Math.hypot(dx, dy) + (fbm(X * 1.4, Y * 1.4) - 0.5) * 0.08
+      const r = Math.sqrt(dx * dx + dy * dy) + (wobble.at(X * 1.4) - 0.5) * 0.08
       const phase = r * 8.5
       const ring = band(phase - Math.floor(phase))
       const angle = Math.atan2(dy, dx)
-      const rayPhase = angle * 260 + noise(X * 6, Y * 6) * 2
+      const rayPhase = angle * 260 + rayRow.at(X * 6) * 2
       const ray = Math.max(0, Math.sin(rayPhase) - 0.93) * 12
-      const pores = Math.max(0, noise(X * 40, Y * 40) - 0.7) * 1.6
+      const pores = Math.max(0, poreRow.at(X * 40) - 0.7) * 1.6
       const dark = ring * 0.4 + ray * 0.1 + pores * 0.1
       const rr = 0.95 - dark * 0.15
       const gg = 0.895 - dark * 0.22

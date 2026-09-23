@@ -10,8 +10,6 @@ export type Tier = {
   name: string
   /** Device pixel ratio cap (never above the screen's own). */
   dpr: number
-  /** The warm grade and vignette overlay (the only full-screen pass). */
-  grade: boolean
   /** Dust motes drifting in the window's sunbeam. */
   motes: number
   /** Verlet links in the kite's tail. */
@@ -21,10 +19,10 @@ export type Tier = {
 }
 
 export const TIERS: readonly Tier[] = [
-  { name: 'full', dpr: 2, grade: true, motes: 40, tail: 14, substeps: 3 },
-  { name: 'balanced', dpr: 1.5, grade: true, motes: 20, tail: 12, substeps: 3 },
-  { name: 'lean', dpr: 1.25, grade: false, motes: 0, tail: 10, substeps: 2 },
-  { name: 'minimal', dpr: 1, grade: false, motes: 0, tail: 8, substeps: 2 },
+  { name: 'full', dpr: 2, motes: 40, tail: 14, substeps: 3 },
+  { name: 'balanced', dpr: 1.5, motes: 20, tail: 12, substeps: 3 },
+  { name: 'lean', dpr: 1.25, motes: 0, tail: 10, substeps: 2 },
+  { name: 'minimal', dpr: 1, motes: 0, tail: 8, substeps: 2 },
 ]
 export const LOWEST_TIER = TIERS.length - 1
 

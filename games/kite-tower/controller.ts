@@ -104,6 +104,8 @@ const SUPPORT_TURN = 0.12
 const HIT_PAD = 0.32
 const MAX_TOKS_PER_FRAME = 2
 const HINT_BATCH = 3
+/** How long everyone keeps watching a piece the child has just let go of. */
+const NOTICE_SECONDS = 1.4
 
 type Drag = { pointer: number; id: number; offset: Vec2; goal: Vec2; at: Vec2; lastX: number; vx: number }
 type Turn = { id: number; start: number; from: number; to: number }
@@ -199,6 +201,8 @@ export class KiteController {
   private recentImpacts = 0
   private running = true
   private readonly supportRef = new Float64Array(PIECES.length * 3)
+  private dropId = -1
+  private dropAt = -Infinity
 
   constructor(state: KiteState, deps: ControllerDeps) {
     this.state = { v: state.v, perch: state.perch, pieces: state.pieces.map((p) => ({ ...p })) }
@@ -534,8 +538,25 @@ export class KiteController {
   private drop(drag: Drag): void {
     this.removeDrag(drag)
     this.physics.release(drag.id, drag.vx * 0.35)
+    this.noticeDrop(drag.id)
     this.dodgeIfUnder(drag.id)
     this.saves.change(this.t, true)
+  }
+
+  private noticeDrop(id: number): void {
+    this.dropId = id
+    this.dropAt = this.t
+  }
+
+  /** The piece the child just let go of, while everyone is still watching it land, into `out`. */
+  private droppedPiece(out: Vec3): Vec3 | null {
+    const id = this.dropId
+    if (id < 0 || this.t - this.dropAt > NOTICE_SECONDS || this.trayed[id] || !this.physics.has(id) || this.physics.isHeld(id)) return null
+    const pose = this.physics.pose(id, this.poseScratch)
+    out.x = pose.x
+    out.y = pose.y
+    out.z = 0
+    return out
   }
 
   private putAway(id: number): void {
@@ -563,6 +584,7 @@ export class KiteController {
     this.trayed[id] = false
     this.popAt[id] = this.t
     this.physics.add(id, { x, y: restHeight(shape, 0, x, this.placedList(id)) + 0.9, angle: 0 })
+    this.noticeDrop(id)
     this.dodgeIfUnder(id)
     this.sound?.pickup()
     this.saves.change(this.t, true)
@@ -868,12 +890,12 @@ export class KiteController {
       look.x = drag.x
       look.y = drag.y
       look.z = 0
-    } else if (this.kite.mode !== 'perched' || hero.mode === 'grab' || Math.sin(this.t * 0.8) > -0.55) {
+    } else if (this.kite.mode !== 'perched' || hero.mode === 'grab') {
       look.x = this.kite.position.x
       look.y = this.kite.position.y
       look.z = this.kite.position.z
-    } else {
-      const w = SLOT_WORLD[this.guidance.hint?.id ?? 0]
+    } else if (!this.droppedPiece(look)) {
+      const w = Math.sin(this.t * 0.8) > -0.55 ? this.kite.position : SLOT_WORLD[this.guidance.hint?.id ?? 0]
       look.x = w.x
       look.y = w.y
       look.z = w.z
@@ -1008,6 +1030,9 @@ export class KiteController {
         if (age >= DRIFT_SECONDS) {
           kite.mode = 'perched'
           kite.since = this.t
+          // It catches on its new perch with a shiver and a rustle, so the child sees where it went.
+          kite.flutterAt = this.t
+          this.sound?.flutter()
           this.wantPlan = true
           this.version += 1
         }
@@ -1126,7 +1151,7 @@ export class KiteController {
         look.x = drag.x
         look.y = drag.y
         look.z = 0
-      } else {
+      } else if (!this.droppedPiece(look)) {
         look.x = this.hero.x
         look.y = this.hero.y + 1.4
         look.z = 0
