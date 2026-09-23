@@ -85,12 +85,19 @@ Variants of an action are picked without repeating back to back, with randomized
 ## Performance
 
 ### Quality tier
-One of a few rendering levels a game steps between at runtime, each trading look for frame time (pixel density, fur, the post pass, physics catch-up), chosen by the game's own frame-time measurements rather than by guessing the device.
+One of a few rendering levels a game steps between at runtime, each trading look for rendering cost (pixel density, fur, the post pass, physics catch-up), chosen by the game's own measurements of its frame intervals and Frame work rather than by guessing the device.
 *Avoid:* graphics preset, LOD level
 
-Stepping down is quick after sustained dropped frames; stepping up needs a long clean stretch and backs off after a failed attempt, so tiers never flicker. A grown-up overlay can pin a tier to judge it on a device.
+Stepping down is quick after sustained dropped frames; stepping up needs a long clean stretch and backs off after a failed attempt, so tiers never flicker. A grown-up overlay can pin a tier to judge it on a device. On a machine that renders in software, a working game settles at its lowest tier, so a measurement there describes the lowest look unless a tier is pinned.
+
+### Frame work
+The CPU time a frame spends on the game's own work, advancing the game and submitting the draw, as distinct from the frame interval, the time from one displayed frame to the next.
+*Avoid:* frame time, CPU time
+
+Frame work is what performance budgets are written in and what carries over between machines. The interval is paced by the display, so on a device that already meets its refresh rate it cannot show how much time is spare. A software renderer that rasterizes inside the draw calls can fold its raster time into Frame work, which then stops being comparable.
 
 ## Flagged ambiguities
 
 - "Art direction" had been used for both one game's look and the jam-wide standard. These are distinct: a game's look is its Claimed style, described in its Art guide; the jam-wide standard is the Quality bar.
+- "Frame time" had been used both for the interval between displayed frames and for the CPU work inside one. These are distinct: the work is Frame work; the interval is the display's pacing.
 - "Wordless guidance" had been used both for the idle hints and for the rule that a game needs no words at all. These are distinct: the idle hints are the Guidance ladder; understanding every interaction without words at the youngest age of the Age band is Wordless clarity.
