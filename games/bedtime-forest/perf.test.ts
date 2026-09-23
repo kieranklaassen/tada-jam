@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { FrameGovernor, perfOptions, Ring, TOP_TIER } from './perf'
 
-function feed(governor: FrameGovernor, ms: number, frames: number, clock: { t: number }): number {
+/** Feed frames of `ms` each for `seconds`; returns how many times the tier changed. */
+function feed(governor: FrameGovernor, ms: number, seconds: number, clock: { t: number }): number {
   let changes = 0
+  const frames = Math.round((seconds * 1000) / ms)
   for (let i = 0; i < frames; i++) {
     clock.t += ms / 1000
     if (governor.sample(ms, clock.t)) changes += 1
@@ -14,50 +16,75 @@ describe('the frame governor', () => {
   it('steps down after two slow windows, not one', () => {
     const clock = { t: 2 }
     const governor = new FrameGovernor(TOP_TIER)
-    feed(governor, 30, 45, clock)
+    feed(governor, 30, 0.51, clock)
     expect(governor.tier).toBe(TOP_TIER)
-    feed(governor, 30, 45, clock)
+    feed(governor, 30, 0.51, clock)
     expect(governor.tier).toBe(TOP_TIER - 1)
   })
 
   it('keeps stepping down on a slow device, down to the lightest tier and no further', () => {
     const clock = { t: 2 }
     const governor = new FrameGovernor(TOP_TIER)
-    feed(governor, 40, 45 * 20, clock)
+    feed(governor, 30, 20, clock)
     expect(governor.tier).toBe(0)
   })
 
-  it('steps back up only after a long fast stretch', () => {
+  it('reaches the lightest tier within a few seconds when frames crawl', () => {
+    const clock = { t: 0 }
+    const governor = new FrameGovernor(TOP_TIER)
+    feed(governor, 140, 4, clock)
+    expect(governor.tier).toBe(0)
+    const glacial = new FrameGovernor(TOP_TIER)
+    feed(glacial, 650, 12, { t: 0 })
+    expect(glacial.tier).toBe(0)
+  })
+
+  it('a lone long frame now and then is a hiccup, not a slow device', () => {
+    const clock = { t: 2 }
+    const governor = new FrameGovernor(TOP_TIER)
+    for (let i = 0; i < 20; i++) {
+      feed(governor, 16.7, 1.2, clock)
+      clock.t += 0.6
+      governor.sample(600, clock.t)
+    }
+    expect(governor.tier).toBe(TOP_TIER)
+  })
+
+  it('steps back up after a long clean stretch at 60 Hz', () => {
     const clock = { t: 2 }
     const governor = new FrameGovernor(1)
-    feed(governor, 10, 45 * 5, clock)
+    feed(governor, 16.7, 2.5, clock)
     expect(governor.tier).toBe(1)
-    feed(governor, 10, 45 * 2, clock)
+    feed(governor, 16.7, 1.5, clock)
     expect(governor.tier).toBe(2)
   })
 
-  it('a failed step up blocks the next one for a while (no flicker)', () => {
+  it('a failed step up blocks the next one, longer each time (no flicker)', () => {
     const clock = { t: 2 }
     const governor = new FrameGovernor(1)
-    feed(governor, 10, 45 * 7, clock)
+    feed(governor, 16.7, 4, clock)
     expect(governor.tier).toBe(2)
-    feed(governor, 30, 45 * 3, clock)
+    feed(governor, 30, 1.6, clock)
     expect(governor.tier).toBe(1)
-    const changes = feed(governor, 10, 45 * 12, clock)
-    expect(changes).toBe(0)
-    feed(governor, 10, 45 * 60, clock)
-    expect(governor.tier).toBe(TOP_TIER)
+    expect(feed(governor, 16.7, 25, clock)).toBe(0)
+    feed(governor, 16.7, 6, clock)
+    expect(governor.tier).toBe(2)
+    feed(governor, 30, 1.6, clock)
+    expect(governor.tier).toBe(1)
+    expect(feed(governor, 16.7, 55, clock)).toBe(0)
+    feed(governor, 16.7, 7, clock)
+    expect(governor.tier).toBe(2)
   })
 
   it('ignores warm-up, stalls, and pinned tiers', () => {
     const early = new FrameGovernor(TOP_TIER)
-    feed(early, 40, 30, { t: 0 })
+    feed(early, 40, 1.2, { t: 0 })
     expect(early.tier).toBe(TOP_TIER)
     const stalls = new FrameGovernor(TOP_TIER)
-    feed(stalls, 500, 400, { t: 2 })
+    feed(stalls, 1500, 60, { t: 2 })
     expect(stalls.tier).toBe(TOP_TIER)
     const pinned = new FrameGovernor(TOP_TIER, true)
-    feed(pinned, 40, 900, { t: 2 })
+    feed(pinned, 140, 30, { t: 2 })
     expect(pinned.tier).toBe(TOP_TIER)
   })
 })

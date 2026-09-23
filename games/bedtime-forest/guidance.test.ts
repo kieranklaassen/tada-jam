@@ -28,6 +28,18 @@ describe('HintScheduler', () => {
     expect(demosIn(s, 0, 400)).toBe(4)
   })
 
+  it('lets the ring fade a few seconds after the last demonstration, until the next touch', () => {
+    const s = new HintScheduler(0)
+    s.touch(0)
+    let lastDemo = 0
+    for (let t = 0; t < 400; t += 0.05) if (s.update(t, false).demo >= 0) lastDemo = t
+    expect(s.update(lastDemo + 1, false).glow).toBeGreaterThan(0)
+    expect(s.update(lastDemo + 8, false).glow).toBe(0)
+    expect(s.update(400, false).glow).toBe(0)
+    s.touch(400)
+    expect(s.update(400 + IDLE_BEFORE_GLOW + 1.6, false).glow).toBeGreaterThan(0)
+  })
+
   it('any touch clears the glow and the demo at once', () => {
     const s = new HintScheduler(0)
     s.touch(0)

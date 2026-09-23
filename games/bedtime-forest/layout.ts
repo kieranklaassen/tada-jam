@@ -38,6 +38,8 @@ export type HomeSpec = {
   /** The entrance: carried animals fly here, and the drop zone is centred on it. */
   mouth: Vec3
   dropRadius: number
+  /** The rest of a wide home a child sees as "the home": a drop anywhere along this segment counts too. */
+  body?: { from: Vec3; to: Vec3; radius: number }
   /** Where its sleeper rests. */
   bed: Vec3
   /** Where a turned-away animal lands, outside the entrance. */
@@ -48,13 +50,25 @@ export type HomeSpec = {
   facing: number
 }
 
+/**
+ * How much bigger the animals are drawn and handled than the proportions
+ * below: big enough for a four-year-old to find and grab at a glance. It
+ * scales the physical sizes only; `girth` stays a pure fit number, so which
+ * home takes whom never changes with it.
+ */
+export const ANIMAL_SCALE = 1.25
+
+function animal(spec: AnimalSpec): AnimalSpec {
+  return { ...spec, size: spec.size * ANIMAL_SCALE, radius: spec.radius * ANIMAL_SCALE, hang: spec.hang * ANIMAL_SCALE }
+}
+
 export const ANIMALS: Record<AnimalKey, AnimalSpec> = {
-  owl: { key: 'owl', home: 'hollow', kind: 'bird', size: 12, girth: 11, radius: 6.5, weight: 0.35, walkSpeed: 9, hang: 11 },
-  fox: { key: 'fox', home: 'den', kind: 'mammal', size: 12, girth: 13, radius: 8, weight: 0.5, walkSpeed: 17, hang: 11 },
-  rabbit: { key: 'rabbit', home: 'burrow', kind: 'mammal', size: 11, girth: 9, radius: 6, weight: 0.3, walkSpeed: 15, hang: 10 },
-  bear: { key: 'bear', home: 'cave', kind: 'mammal', size: 19, girth: 20, radius: 11, weight: 1, walkSpeed: 8, hang: 17 },
-  fish: { key: 'fish', home: 'pond', kind: 'fish', size: 8, girth: 6, radius: 5.5, weight: 0.2, walkSpeed: 12, hang: 8 },
-  songbird: { key: 'songbird', home: 'nest', kind: 'bird', size: 6.5, girth: 5, radius: 5, weight: 0.08, walkSpeed: 14, hang: 6 },
+  owl: animal({ key: 'owl', home: 'hollow', kind: 'bird', size: 12, girth: 11, radius: 6.5, weight: 0.35, walkSpeed: 9, hang: 11 }),
+  fox: animal({ key: 'fox', home: 'den', kind: 'mammal', size: 12, girth: 13, radius: 8, weight: 0.5, walkSpeed: 17, hang: 11 }),
+  rabbit: animal({ key: 'rabbit', home: 'burrow', kind: 'mammal', size: 11, girth: 9, radius: 6, weight: 0.3, walkSpeed: 15, hang: 10 }),
+  bear: animal({ key: 'bear', home: 'cave', kind: 'mammal', size: 19, girth: 20, radius: 11, weight: 1, walkSpeed: 8, hang: 17 }),
+  fish: animal({ key: 'fish', home: 'pond', kind: 'fish', size: 8, girth: 6, radius: 5.5, weight: 0.2, walkSpeed: 12, hang: 8 }),
+  songbird: animal({ key: 'songbird', home: 'nest', kind: 'bird', size: 6.5, girth: 5, radius: 5, weight: 0.08, walkSpeed: 14, hang: 6 }),
 }
 
 export const HOMES: Record<HomeKey, HomeSpec> = {
@@ -75,7 +89,8 @@ export const HOMES: Record<HomeKey, HomeSpec> = {
     at: { x: -2, z: -62 },
     mouth: { x: -2, y: 9, z: -45 },
     dropRadius: 17,
-    bed: { x: -2, y: 0, z: -42 },
+    body: { from: { x: -28, y: 12, z: -50 }, to: { x: 24, y: 12, z: -50 }, radius: 12 },
+    bed: { x: -2, y: 0, z: -36 },
     door: { x: -2, z: -28 },
     entrance: 22,
     facing: 0,
@@ -84,10 +99,10 @@ export const HOMES: Record<HomeKey, HomeSpec> = {
     key: 'nest',
     habitat: 'tree',
     at: { x: 74, z: -46 },
-    mouth: { x: 74, y: 18, z: -38 },
-    dropRadius: 12,
-    bed: { x: 74, y: 16.2, z: -38 },
-    door: { x: 62, z: -26 },
+    mouth: { x: 61, y: 21, z: -40 },
+    dropRadius: 13,
+    bed: { x: 61, y: 19.6, z: -40 },
+    door: { x: 54, z: -26 },
     entrance: 6,
     facing: -0.1,
   },
@@ -119,7 +134,7 @@ export const HOMES: Record<HomeKey, HomeSpec> = {
     at: { x: -52, z: 46 },
     mouth: { x: -52, y: 0, z: 46 },
     dropRadius: 19,
-    bed: { x: -51, y: -0.6, z: 46 },
+    bed: { x: -51, y: -0.6, z: 37 },
     door: { x: -30, z: 34 },
     entrance: 99,
     facing: 0,
@@ -129,7 +144,7 @@ export const HOMES: Record<HomeKey, HomeSpec> = {
 export const POND_RADIUS = 17
 
 /** Where animals wander: an ellipse in the middle of the clearing. */
-export const CLEARING = { x: 4, z: 2, rx: 56, rz: 24 }
+export const CLEARING = { x: 4, z: 2, rx: 62, rz: 29 }
 
 export function inClearing(p: Point, margin = 0): boolean {
   const dx = (p.x - CLEARING.x) / (CLEARING.rx - margin)
@@ -151,12 +166,12 @@ export function clampToClearing(p: Point, margin = 0): Point {
 
 /** Where each animal first stands, spread across the clearing. */
 export const START: Record<AnimalKey, Point> = {
-  owl: { x: -30, z: -8 },
-  fox: { x: -38, z: 12 },
-  rabbit: { x: 30, z: 10 },
-  bear: { x: 2, z: -6 },
-  fish: { x: -8, z: 16 },
-  songbird: { x: 34, z: -10 },
+  songbird: { x: -50, z: -8 },
+  fish: { x: -16, z: -16 },
+  owl: { x: 30, z: -18 },
+  rabbit: { x: -38, z: 16 },
+  bear: { x: 6, z: 10 },
+  fox: { x: 50, z: 10 },
 }
 
 /** Dawn wakes them in this order: the songbird first, the bear last. */

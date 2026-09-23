@@ -5,13 +5,16 @@ import type { Point } from './layout'
 // painted ring, the animals stop and look toward their homes, and then a
 // ghost hand presses that one animal and carries it part of the way home:
 // it shows the move (pick up, carry), never the whole answer. Demos back off
-// and stop after a few, and any touch clears everything at once. On first
-// open, before any touch, one animal yawns a big invitation at the child.
+// and stop after a few, then the ring fades and the forest goes back to its
+// evening; any touch clears everything at once. On first open, before any
+// touch, one animal yawns a big invitation at the child.
 
 export const IDLE_BEFORE_GLOW = 3
 export const IDLE_BEFORE_HINT = 5
 export const DEMO_SECONDS = 3
 export const MAX_DEMOS_PER_IDLE = 4
+/** How long the ring keeps breathing after the last demonstration before it fades. */
+export const GLOW_AFTER_LAST_DEMO = 4
 export const FIRST_INVITE_DELAY = 1.2
 export const INVITE_EVERY = 6
 export const MAX_INVITES = 3
@@ -83,11 +86,15 @@ export class HintScheduler {
     timing.demo = -1
     let start = this.idleSince + IDLE_BEFORE_HINT
     let gap = IDLE_BEFORE_HINT * 2
+    let lastEnd = start
     for (let i = 0; i < MAX_DEMOS_PER_IDLE; i++) {
       if (now >= start && now < start + DEMO_SECONDS) timing.demo = (now - start) / DEMO_SECONDS
+      lastEnd = start + DEMO_SECONDS
       start += DEMO_SECONDS + gap
       gap *= 2
     }
+    // After the last demonstration the ring fades and the animals go back to their evening until the next touch.
+    timing.glow *= 1 - Math.min(1, Math.max(0, (now - lastEnd - GLOW_AFTER_LAST_DEMO) / 2))
     if (!this.everTouched && this.invitesStarted < MAX_INVITES) {
       const due = this.openedAt + FIRST_INVITE_DELAY + this.invitesStarted * INVITE_EVERY
       if (now >= due) {
