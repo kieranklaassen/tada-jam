@@ -52,6 +52,22 @@ export class TableAudio {
     const data = noise.getChannelData(0)
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
 
+    // A small, warm room: a procedural decaying-noise impulse, no recorded assets.
+    const impulseLength = Math.round(context.sampleRate * 0.7)
+    const impulse = context.createBuffer(2, impulseLength, context.sampleRate)
+    for (let channel = 0; channel < 2; channel++) {
+      const samples = impulse.getChannelData(channel)
+      for (let i = 0; i < impulseLength; i++) samples[i] = (Math.random() * 2 - 1) * (1 - i / impulseLength) ** 3
+    }
+    const convolver = context.createConvolver()
+    convolver.buffer = impulse
+    const warm = context.createBiquadFilter()
+    warm.type = 'lowpass'
+    warm.frequency.value = 2400
+    const room = context.createGain()
+    room.gain.value = 0.16
+    master.connect(room).connect(warm).connect(convolver).connect(compressor)
+
     const creakOsc = context.createOscillator()
     creakOsc.type = 'sawtooth'
     creakOsc.frequency.value = 150
@@ -118,16 +134,16 @@ export class TableAudio {
     osc.stop(at + attack + decay + 0.05)
   }
 
-  /** A soft wooden tick under the finger. */
+  /** A soft clay pat under the finger. */
   touch(size = 1): void {
     const context = this.ready()
     if (!context) return
     const now = context.currentTime
-    this.tone(420 / size, 'sine', 0.18, 0.004, 0.09, now)
-    this.noiseBurst(2400, 3, 0.05, 0.03, now)
+    this.tone(330 / size, 'sine', 0.16, 0.004, 0.11, now, 210 / size)
+    this.noiseBurst(900, 1.4, 0.06, 0.04, now, 'lowpass')
   }
 
-  /** Clay on clay, as loud as the hit. */
+  /** Clay on clay: a dull thock with a low body, as loud as the hit. */
   clack(intensity: number): void {
     const context = this.ready()
     if (!context) return
@@ -135,8 +151,8 @@ export class TableAudio {
     if (now - this.lastClack < 0.025) return
     this.lastClack = now
     const level = Math.min(1, intensity)
-    this.noiseBurst(1800 + Math.random() * 900, 4, 0.08 + level * 0.3, 0.05, now)
-    this.tone(900 + Math.random() * 300, 'triangle', 0.04 + level * 0.1, 0.002, 0.05, now)
+    this.noiseBurst(1000 + Math.random() * 500, 2.2, 0.08 + level * 0.26, 0.045, now)
+    this.tone(260 + Math.random() * 90, 'sine', 0.06 + level * 0.16, 0.002, 0.07, now, 150)
   }
 
   /** The cloth bag tipping. */
@@ -144,18 +160,18 @@ export class TableAudio {
     const context = this.ready()
     if (!context) return
     const now = context.currentTime
-    for (let i = 0; i < 4; i++) this.noiseBurst(900 + i * 300, 1.2, 0.12, 0.12, now + i * 0.05, 'bandpass')
+    for (let i = 0; i < 5; i++) this.noiseBurst(700 + i * 260, 1.1, 0.11, 0.13, now + i * 0.045, 'bandpass')
   }
 
-  /** Stones dropping home into the bag. */
+  /** Stones dropping home into the cloth bag: muffled knocks and a soft thump. */
   clatter(count = 1): void {
     const context = this.ready()
     if (!context) return
     const now = context.currentTime
     for (let i = 0; i < Math.min(5, count + 2); i++) {
-      this.noiseBurst(1500 + Math.random() * 1200, 5, 0.22, 0.05, now + i * 0.045 + Math.random() * 0.02)
+      this.noiseBurst(700 + Math.random() * 500, 2, 0.2, 0.06, now + i * 0.05 + Math.random() * 0.02, 'lowpass')
     }
-    this.tone(160, 'sine', 0.2, 0.005, 0.18, now)
+    this.tone(140, 'sine', 0.22, 0.006, 0.2, now, 90)
   }
 
   /** Continuous beam creak: gain 0 is silence. */
@@ -168,35 +184,47 @@ export class TableAudio {
     this.creakFilter.frequency.setTargetAtTime(pitch * 4, now, 0.08)
   }
 
-  /** One beat of the number voice, `delay` seconds from now. */
+  /** One beat of the number voice, `delay` seconds from now: a soft marimba bar. */
   beat(step: number, delay: number): void {
     const context = this.ready()
     if (!context) return
     const at = context.currentTime + delay
     const frequency = PENTATONIC[step % PENTATONIC.length]
-    this.tone(frequency, 'sine', 0.26, 0.005, 0.42, at)
-    this.tone(frequency * 2, 'triangle', 0.05, 0.003, 0.18, at)
+    this.tone(frequency, 'sine', 0.24, 0.004, 0.5, at)
+    this.tone(frequency * 4.01, 'sine', 0.06, 0.002, 0.07, at)
+    this.tone(frequency * 2.99, 'triangle', 0.03, 0.003, 0.15, at)
   }
 
-  /** The table settling when shares are fair: a soft, low chord. */
+  /** The table settling when shares are fair: a soft, warm chord that blooms. */
   chord(): void {
     const context = this.ready()
     if (!context) return
     const now = context.currentTime
-    for (const [i, f] of [261.63, 329.63, 392].entries()) this.tone(f, 'sine', 0.1, 0.08, 1.4, now + i * 0.06)
+    for (const [i, f] of [261.63, 329.63, 392, 523.25].entries()) {
+      this.tone(f, 'sine', 0.08, 0.12, 1.6, now + i * 0.07)
+      this.tone(f * 1.003, 'triangle', 0.025, 0.14, 1.2, now + i * 0.07)
+    }
   }
 
+  /** Three "noms": a little vowel glide with a soft crunch. */
   munch(): void {
     const context = this.ready()
     if (!context) return
     const now = context.currentTime
-    for (let i = 0; i < 3; i++) this.noiseBurst(700, 1.5, 0.16, 0.07, now + i * 0.22, 'lowpass')
+    for (let i = 0; i < 3; i++) {
+      const at = now + 0.22 + i * 0.3
+      this.tone(290, 'triangle', 0.09, 0.02, 0.14, at, 210)
+      this.noiseBurst(1400, 1.5, 0.08, 0.05, at + 0.04, 'bandpass')
+    }
   }
 
+  /** A springy boing: up, overshoot, settle. */
   hop(): void {
     const context = this.ready()
     if (!context) return
-    this.tone(360, 'sine', 0.14, 0.01, 0.2, context.currentTime, 720)
+    const now = context.currentTime
+    this.tone(280, 'sine', 0.13, 0.01, 0.12, now, 760)
+    this.tone(760, 'sine', 0.08, 0.005, 0.16, now + 0.12, 520)
   }
 
   whoosh(): void {

@@ -57,7 +57,7 @@ function Lights() {
 
 function Finish() {
   const dpr = useThree((state) => state.viewport.dpr)
-  const effect = useMemo(() => new ClayFinishEffect({ focusCenter: 0.52, focusBand: 0.2, blurRadius: 2.6 * dpr, warmth: 0.3, vignette: 0.26 }), [dpr])
+  const effect = useMemo(() => new ClayFinishEffect({ focusCenter: 0.47, focusBand: 0.24, blurRadius: 2.4 * dpr, warmth: 0.3, vignette: 0.3 }), [dpr])
   return (
     <EffectComposer multisampling={dpr >= 2 ? 0 : 4} enableNormalPass={false}>
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
