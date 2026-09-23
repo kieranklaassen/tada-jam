@@ -108,6 +108,12 @@ A headless test that runs in CI and drives a game's heaviest moment through its 
 
 It has to hold on a shared, busy machine that adds time to random frames. Where the code exposes the work that sets the cost (physics steps, contacts, candidates scored), it counts that work; otherwise it replays the same seeded input several times and keeps each frame's quickest run, never the slowest frame of any one run. It also checks that the heavy moment happened, so a run that skipped it cannot pass.
 
+### Perf probe
+The jam's shared browser script that plays any game's production build through the same scripted touches and hands-off pauses, and reports its frame rate, its worst second, Frame work, draw counts, and the Quality tiers it visited.
+*Avoid:* jam probe
+
+It reads Frame work, the current tier, and the draw counts from a grown-up handle each game publishes on the page, so a game publishes that handle in the one shape the probe expects. It can pin a Quality tier or leave the choice to the Governor, and it can throttle the CPU or enlarge the page to stand in for a weaker device. Its numbers describe the machine and browser it ran on, not a child's device.
+
 ## Flagged ambiguities
 
 - "Art direction" had been used for both one game's look and the jam-wide standard. These are distinct: a game's look is its Claimed style, described in its Art guide; the jam-wide standard is the Quality bar.
