@@ -393,8 +393,10 @@ function basePair(a: Piece, b: Piece): Omit<Finding, 'kind' | 'depth' | 'relativ
   return { a: a.id, b: b.id, labelA: a.label, labelB: b.label, objectA: a.object, objectB: b.object }
 }
 
+export type PairDepth = { depth: number; segments: number[]; contained: boolean; point: Vector3 | null; support: boolean }
+
 // Crossing and depth for one pair; null when they do not cross or touch.
-export function pairDepth(a: Piece, b: Piece, camera: CameraInfo): { depth: number; segments: number[]; contained: boolean; point: Vector3 | null; support: boolean } | null {
+export function pairDepth(a: Piece, b: Piece, camera: CameraInfo): PairDepth | null {
   if (!a.box.intersectsBox(b.box)) return null
   const segments = crossings(a, b)
   if (segments.length === 0) {
@@ -416,8 +418,11 @@ export function tolerance(a: Piece, b: Piece, viewSize: number, tol: Tolerance):
   return Math.max(tol.relative * Math.min(a.scale, b.scale), tol.absolute * viewSize)
 }
 
-export function penetrationFinding(a: Piece, b: Piece, all: Piece[], camera: CameraInfo, viewSize: number, tol: Tolerance): Finding | null {
-  const r = pairDepth(a, b, camera)
+// `pair` passes in an already computed pairDepth; visibility always comes from
+// the pieces given here, since anything in the scene may have moved in front of
+// or away from the crossing since the pair itself was last measured.
+export function penetrationFinding(a: Piece, b: Piece, all: Piece[], camera: CameraInfo, viewSize: number, tol: Tolerance, pair?: PairDepth | null): Finding | null {
+  const r = pair === undefined ? pairDepth(a, b, camera) : pair
   if (!r) return null
   const limit = tolerance(a, b, viewSize, tol)
   if (r.depth <= limit) return null
@@ -738,7 +743,7 @@ export function analyseMoment(pieces: Piece[], options: MomentOptions): Finding[
         if (r && depth - h.min > limit && depth > limit) {
           h.flagged = true
           const { focus, radius } = centroidAndRadius(r.segments, r.point)
-          const probe = spotsOf(r.segments)
+          const probe = r.segments.length ? spotsOf(r.segments) : [focus]
           const onScreen = probe.some((p) => pointVisible(p, camera).onScreen)
           findings.push({
             ...basePair(a, b), kind: 'pose', depth: depth - h.min, relative: (depth - h.min) / Math.min(a.scale, b.scale), area: 0,
@@ -749,7 +754,8 @@ export function analyseMoment(pieces: Piece[], options: MomentOptions): Finding[
         }
         continue
       }
-      const f = cached(options, 'p|' + key, () => penetrationFinding(a, b, pieces, camera, viewSize, tol))
+      const r = cached(options, 'd|' + key, () => pairDepth(a, b, camera))
+      const f = penetrationFinding(a, b, pieces, camera, viewSize, tol, r)
       if (f) findings.push(f)
     }
     const self = cached(options, `s|${at(a)}|${cam}`, () => zfightFinding(a, a, camera, tol))

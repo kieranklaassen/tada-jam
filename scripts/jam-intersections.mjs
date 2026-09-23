@@ -182,6 +182,7 @@ async function auditGame(browser, base, game, opts) {
 
   const positions = new Map()
   const versions = new Map()
+  const names = new Map()
   const prepared = new Map()
   const cache = new TwoGen()
   const poseHistory = new Map()
@@ -242,7 +243,10 @@ async function auditGame(browser, base, game, opts) {
       }
     }
     prepared.clear()
-    for (const piece of pieces) prepared.set(piece.id + '@' + piece.version, piece)
+    for (const piece of pieces) {
+      prepared.set(piece.id + '@' + piece.version, piece)
+      names.set(piece.id, { label: piece.label, object: piece.object })
+    }
     pieceCount = Math.max(pieceCount, pieces.length)
     lastPieces = pieces
     lastSnap = snap
@@ -387,11 +391,15 @@ async function auditGame(browser, base, game, opts) {
   for (const [key, h] of poseHistory) {
     if (h.flagged || !(h.max - h.min > h.limit)) continue
     const [, a, b] = key.split('|')
-    findings.set(key, {
-      kind: 'pose', a, b, labelA: a, labelB: b, objectA: '', objectB: '', depth: h.max - h.min, relative: (h.max - h.min) / h.scale,
+    const A = names.get(a) ?? { label: a, object: '' }
+    const B = names.get(b) ?? { label: b, object: '' }
+    const entry = {
+      kind: 'pose', a, b, labelA: A.label, labelB: B.label, objectA: A.object, objectB: B.object, depth: h.max - h.min, relative: (h.max - h.min) / h.scale,
       area: 0, pixels: NaN, support: false, visible: true, onScreen: true, focus: [0, 0, 0], radius: 0,
-      severity: (h.max - h.min) / h.scale, reportable: true, moment: '(whole run)', at: null, seen: [], shot: null, allowedBy: allowedBy({ kind: 'pose', a, b, labelA: a, labelB: b, objectA: '', objectB: '', relative: (h.max - h.min) / h.scale }, allow)?.reason ?? null,
-    })
+      severity: (h.max - h.min) / h.scale, reportable: true, moment: '(whole run)', at: null, seen: [], shot: null,
+    }
+    entry.allowedBy = allowedBy(entry, allow)?.reason ?? null
+    findings.set(key, entry)
   }
   await context.close()
 
