@@ -29,8 +29,11 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
     color = sum / weight;
   }
   float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
-  color = mix(vec3(luma), color, 1.18);
-  color += vec3(0.05, 0.02, -0.035) * warmth * (0.35 + luma);
+  color = clamp(color, 0.0, 1.0);
+  color = max(mix(vec3(luma), color, 1.16), 0.0);
+  vec3 curved = color * color * (3.0 - 2.0 * color);
+  color = mix(color, curved, 0.32);
+  color += vec3(0.035, 0.012, -0.03) * warmth;
   vec2 centered = uv - 0.5;
   color *= 1.0 - vignette * smoothstep(0.35, 0.85, length(centered * vec2(1.0, 1.15)));
   outputColor = vec4(color, inputColor.a);

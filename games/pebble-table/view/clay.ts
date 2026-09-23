@@ -10,10 +10,10 @@ import { furMaterial, quillMaterial, tuftTexture } from './fur'
 // Every texture here is drawn procedurally at runtime; nothing is fetched.
 
 export const PALETTE = {
-  backdrop: '#f2e2c6',
-  floor: '#e9d4b3',
-  table: '#7fa4a6',
-  tableEdge: '#6f9294',
+  backdrop: '#ecd2aa',
+  floor: '#e2c49a',
+  table: '#6e9a9b',
+  tableEdge: '#5e8788',
   stone: '#c9683d',
   bag: '#dcaa3c',
   cord: '#efe1c3',
@@ -327,7 +327,7 @@ export function createClayMaterials(): ClayMaterials {
   const tufts = tuftTexture()
   const fur = furMaterial(clay, tufts, 0.55)
   const quill = quillMaterial(clay)
-  const shadow = overlayMaterial('#3b2a22', THREE.NormalBlending)
+  const shadow = overlayMaterial('#4a2a18', THREE.NormalBlending)
   const glow = overlayMaterial(PALETTE.glow, THREE.NormalBlending)
   return {
     clay,

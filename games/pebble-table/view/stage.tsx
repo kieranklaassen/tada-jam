@@ -46,21 +46,22 @@ function Lights() {
   }, [scene])
   return (
     <>
-      <ambientLight color="#fff0dc" intensity={0.28} />
-      <hemisphereLight args={['#fff1dc', '#7f9696', 0.7]} />
-      <directionalLight color="#ffd6a8" intensity={3.3} position={[-110, 105, 70]} />
-      <directionalLight color="#cfe0ff" intensity={0.5} position={[110, 60, 30]} />
+      <ambientLight color="#ffe9cc" intensity={0.2} />
+      <hemisphereLight args={['#fff0d8', '#6f8a88', 0.55]} />
+      <directionalLight color="#ffd09a" intensity={3.7} position={[-110, 100, 70]} />
+      <directionalLight color="#c9dcff" intensity={0.55} position={[110, 55, 30]} />
+      <directionalLight color="#fff2dc" intensity={1.1} position={[-30, 70, -130]} />
     </>
   )
 }
 
 function Finish() {
   const dpr = useThree((state) => state.viewport.dpr)
-  const effect = useMemo(() => new ClayFinishEffect({ focusCenter: 0.52, focusBand: 0.2, blurRadius: 2.6 * dpr, warmth: 0.5, vignette: 0.26 }), [dpr])
+  const effect = useMemo(() => new ClayFinishEffect({ focusCenter: 0.52, focusBand: 0.2, blurRadius: 2.6 * dpr, warmth: 0.3, vignette: 0.26 }), [dpr])
   return (
     <EffectComposer multisampling={dpr >= 2 ? 0 : 4} enableNormalPass={false}>
-      <primitive object={effect} />
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+      <primitive object={effect} />
     </EffectComposer>
   )
 }
