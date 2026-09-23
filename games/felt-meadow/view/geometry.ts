@@ -4,7 +4,6 @@ import {
   CapsuleGeometry,
   CatmullRomCurve3,
   Color,
-  ConeGeometry,
   CylinderGeometry,
   Euler,
   IcosahedronGeometry,
@@ -20,6 +19,7 @@ import {
 } from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { BURROW, groundY, HILL, PLOT_RADIUS, PLOTS, POUCH, POUCH_RADIUS, SEED_RADIUS } from '../layout'
+import { smoothstep } from '../math'
 import type { SeasonLook } from '../season'
 import { paint, PALETTE } from './felt'
 
@@ -114,11 +114,6 @@ function lumpy(geometry: BufferGeometry, amount: number, frequency: number, seed
   return geometry
 }
 
-function smoothstep(a: number, b: number, x: number): number {
-  const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
-  return t * t * (3 - 2 * t)
-}
-
 function mixHex(a: number, b: number, t: number, out: Color): Color {
   paint(a, out)
   const r = out.r
@@ -193,7 +188,7 @@ export function hillGeometry(look: SeasonLook): BufferGeometry {
 
       const mottle = valueNoise(x * 0.035, 0.5, z * 0.035) - 0.5
       const patch = smoothstep(0.66, 0.82, valueNoise(x * 0.09 + 3, 1.5, z * 0.09))
-      color.copy(grass).lerp(fleck, patch * 0.45)
+      color.copy(grass).lerp(fleck, patch * 0.22)
       let light = 1 + mottle * 0.12
       for (let plot = 0; plot < PLOTS.length; plot++) {
         const r = Math.hypot(x - PLOTS[plot].x, z - PLOTS[plot].z)
@@ -228,17 +223,21 @@ export function hillGeometry(look: SeasonLook): BufferGeometry {
   return geometry
 }
 
-/** The warm seamless paper the slab stands on, curving up into a wall; the slab's contact shadow is baked in. */
-export function backdropGeometry(): BufferGeometry {
+/** Where the backdrop's floor turns up into its wall, and the wall's plane: close enough behind the slab to fill the top of the frame. */
+export const WALL = { turn: -94, radius: 18, z: -112 }
+
+/** The warm seamless paper the slab stands on, curving up into a pale sky wall; the slab's contact shadow is baked in. */
+export function backdropGeometry(look: SeasonLook): BufferGeometry {
   const profile: { z: number; y: number }[] = []
   const bottom = SLAB.bottom
-  for (let i = 0; i <= 16; i++) profile.push({ z: 320 - (i / 16) * 440, y: bottom })
-  const radius = 90
-  for (let i = 1; i <= 14; i++) {
-    const a = (i / 14) * (Math.PI / 2)
-    profile.push({ z: -120 - Math.sin(a) * radius, y: bottom + (1 - Math.cos(a)) * radius })
+  for (let i = 0; i <= 16; i++) profile.push({ z: 320 - (i / 16) * (320 - WALL.turn), y: bottom })
+  const radius = WALL.radius
+  for (let i = 1; i <= 10; i++) {
+    const a = (i / 10) * (Math.PI / 2)
+    profile.push({ z: WALL.turn - Math.sin(a) * radius, y: bottom + (1 - Math.cos(a)) * radius })
   }
-  for (let i = 1; i <= 8; i++) profile.push({ z: -120 - radius, y: bottom + radius + (i / 8) * 420 })
+  for (let i = 1; i <= 8; i++) profile.push({ z: WALL.turn - radius, y: bottom + radius + (i / 8) * 300 })
+  const sky = parseInt(look.sky.slice(1), 16)
   const columns = 56
   const positions: number[] = []
   const colors: number[] = []
@@ -251,8 +250,8 @@ export function backdropGeometry(): BufferGeometry {
       positions.push(x, y, z)
       uvs.push(i / columns, j / profile.length)
       const height = y - bottom
-      if (height < 1) mixHex(PALETTE.floorNear, PALETTE.floorFar, smoothstep(320, -120, z), color)
-      else mixHex(PALETTE.wallLow, PALETTE.wallHigh, smoothstep(0, 260, height), color)
+      if (height < 1) mixHex(PALETTE.floorNear, PALETTE.floorFar, smoothstep(320, WALL.turn, z), color)
+      else mixHex(PALETTE.floorFar, sky, smoothstep(0, 30, height), color)
       const ox = Math.max(0, Math.abs(x) - (HILL.right - 4))
       const oz = Math.max(0, z - (HILL.near - 4), HILL.far + 4 - z)
       const outside = Math.hypot(ox, oz)
@@ -321,8 +320,6 @@ export function seedGeometry(): BufferGeometry {
   const geometry = lumpy(sphere(SEED_RADIUS, 20, 14), 0.22, 1.1)
   return tint(geometry, (p, _n, out) => out.setRGB(1, 1, 1).multiplyScalar(0.74 + 0.26 * smoothstep(-SEED_RADIUS, SEED_RADIUS * 0.4, p.y)))
 }
-
-export const POUCH_MOUTH = 11.6
 
 /** The cream drawstring pouch, sitting up with its mouth open toward the child. */
 export function pouchGeometry(): BufferGeometry {
@@ -395,11 +392,11 @@ export function leafGeometry(): BufferGeometry {
   return tint(geometry, (p, _n, out) => paint(Math.abs(p.z) < 0.28 ? PALETTE.leafVein : PALETTE.leaf, out).multiplyScalar(0.82 + 0.18 * smoothstep(0, 3, p.x)))
 }
 
-export const PETAL_LENGTH = 5
+export const PETAL_LENGTH = 6.2
 
 /** A petal pointing along +x from its base at the origin, cupped a little at the tip. Coloured per instance. */
 export function petalGeometry(): BufferGeometry {
-  const geometry = place(sphere(1, 14, 8), PETAL_LENGTH * 0.5, 0, 0, 0, 0, 0, PETAL_LENGTH * 0.5, 0.62, 1.7)
+  const geometry = place(sphere(1, 14, 8), PETAL_LENGTH * 0.5, 0, 0, 0, 0, 0, PETAL_LENGTH * 0.5, 0.7, 2.05)
   const position = geometry.getAttribute('position')
   for (let i = 0; i < position.count; i++) {
     tmpP.fromBufferAttribute(position, i)
@@ -411,7 +408,7 @@ export function petalGeometry(): BufferGeometry {
 }
 
 export function centreGeometry(): BufferGeometry {
-  const geometry = lumpy(place(sphere(1.9, 16, 10), 0, 0.2, 0, 0, 0, 0, 1, 0.62, 1), 0.3, 1.6, 4)
+  const geometry = lumpy(place(sphere(2.35, 16, 10), 0, 0.25, 0, 0, 0, 0, 1, 0.62, 1), 0.34, 1.4, 4)
   return tint(geometry, (p, _n, out) => out.setRGB(1, 1, 1).multiplyScalar(0.8 + 0.2 * smoothstep(-0.6, 1.2, p.y)))
 }
 
@@ -424,10 +421,26 @@ function beeStripe(z: number): number {
   return Math.min(1, dark(-0.02, 0.3) + dark(-0.66, -0.36) + (1 - smoothstep(-0.95, -0.85, u)))
 }
 
-export function beeBodyGeometry(): BufferGeometry {
+function beeBodyBall(): BufferGeometry {
   const body = lumpy(place(sphere(1, 24, 18), 0, 0, 0, 0, 0, 0, 3.1, 2.9, 3.9), 0.18, 0.9, 9)
-  tint(body, (p, _n, out) => mixHex(PALETTE.beeYellow, PALETTE.beeDark, beeStripe(p.z), out).multiplyScalar(0.78 + 0.22 * smoothstep(-2.6, 1.6, p.y)))
-  const parts = [body]
+  return tint(body, (p, _n, out) => mixHex(PALETTE.beeYellow, PALETTE.beeDark, beeStripe(p.z), out).multiplyScalar(0.78 + 0.22 * smoothstep(-2.6, 1.6, p.y)))
+}
+
+function beeHeadBall(): BufferGeometry {
+  return tint(lumpy(sphere(2.6, 20, 14), 0.14, 1.2, 3), (p, _n, out) => paint(PALETTE.beeDark, out).multiplyScalar(0.8 + 0.2 * smoothstep(-2, 1.5, p.y)))
+}
+
+/**
+ * The hulls the bee's fuzz shells are pushed out from: the body and head balls
+ * alone. Inflating the merged legs, eyes, cheeks, and smile too would leave a
+ * dithered grey ring around every one of them, right across the face.
+ */
+export function beeShellGeometries(): { body: BufferGeometry; head: BufferGeometry } {
+  return { body: beeBodyBall(), head: beeHeadBall() }
+}
+
+export function beeBodyGeometry(): BufferGeometry {
+  const parts = [beeBodyBall()]
   for (const side of [-1, 1]) {
     for (const z of [-1.3, 0.2, 1.6]) {
       parts.push(tint(rod(new Vector3(side * 1.3, -2.2, z), new Vector3(side * 1.9, -3.4, z + 0.3), 0.3), PALETTE.beeDark))
@@ -436,27 +449,29 @@ export function beeBodyGeometry(): BufferGeometry {
   return merge(parts)
 }
 
-export const BEE_HEAD = { y: 0.9, z: 4.1 }
+export const BEE_HEAD = { y: 0.95, z: 4.25 }
 
 export function beeHeadGeometry(): BufferGeometry {
-  const head = tint(lumpy(sphere(2.45, 20, 14), 0.14, 1.2, 3), (p, _n, out) => paint(PALETTE.beeDark, out).multiplyScalar(0.8 + 0.2 * smoothstep(-2, 1.5, p.y)))
-  const parts = [head]
+  const parts = [beeHeadBall()]
   for (const side of [-1, 1]) {
-    parts.push(tint(place(sphere(1, 14, 10), side * 1.05, 0.55, 1.7), PALETTE.eyeWhite))
-    parts.push(tint(place(sphere(0.52, 10, 8), side * 1.12, 0.62, 2.48), PALETTE.beeDark))
-    parts.push(tint(place(sphere(0.16, 6, 4), side * 1.0, 0.86, 2.92), PALETTE.eyeWhite))
-    parts.push(tint(place(sphere(1, 10, 6), side * 1.62, -0.5, 1.62, 0, side * 0.6, 0, 0.6, 0.42, 0.25), PALETTE.cheek))
+    parts.push(tint(place(sphere(1, 14, 10), side * 1.12, 0.62, 1.72, 0, 0, 0, 1.2, 1.32, 1.05), PALETTE.eyeWhite))
+    parts.push(tint(place(sphere(0.7, 12, 8), side * 1.2, 0.58, 2.62, 0, 0, 0, 1, 1.12, 0.8), PALETTE.beeDark))
+    parts.push(tint(place(sphere(0.24, 8, 6), side * 1.0, 0.98, 3.12), PALETTE.eyeWhite))
+    parts.push(tint(place(sphere(0.11, 6, 4), side * 1.42, 0.3, 3.1), PALETTE.eyeWhite))
+    parts.push(tint(place(sphere(1, 10, 6), side * 1.7, -0.62, 1.72, 0, side * 0.6, 0, 0.66, 0.46, 0.25), PALETTE.cheek))
     const from = new Vector3(side * 0.7, 1.9, 0.6)
     const to = new Vector3(side * 1.45, 3.7, 1.9)
     parts.push(tint(rod(from, to, 0.22), PALETTE.beeDark))
     parts.push(tint(place(sphere(0.5, 8, 6), to.x, to.y, to.z), PALETTE.beeDark))
   }
+  const smile = new CatmullRomCurve3([new Vector3(-0.62, -0.72, 2.34), new Vector3(0, -1.02, 2.5), new Vector3(0.62, -0.72, 2.34)])
+  parts.push(tint(new TubeGeometry(smile, 8, 0.13, 4), PALETTE.cheek))
   return merge(parts)
 }
 
 /** The right wing, pivoting at its root on the body's shoulder; the left one is the same wing mirrored. */
 export function wingGeometry(): BufferGeometry {
-  const geometry = place(sphere(1, 16, 8), 3, 0, -0.4, 0, 0.35, 0, 3.4, 0.16, 1.9)
+  const geometry = place(sphere(1, 16, 8), 2.9, 0, -0.5, 0, 0.4, 0, 3.1, 0.34, 2.1)
   return tint(geometry, (p, _n, out) => paint(PALETTE.wing, out).multiplyScalar(0.9 + 0.1 * smoothstep(0, 3, p.x)))
 }
 
@@ -500,10 +515,11 @@ export function snailShellGeometry(): BufferGeometry {
   return merge(parts)
 }
 
+/** One eye stalk, standing on the head's top. The pupil sits on the top-front of the tip, where a camera looking down sees it. */
 export function eyeStalkGeometry(): BufferGeometry {
-  const stalk = tint(new CylinderGeometry(0.3, 0.36, 3, 7, 1).translate(0, 1.5, 0), PALETTE.snailBody)
-  const tip = tint(place(sphere(0.62, 10, 8), 0, 3.15, 0), PALETTE.snailBody)
-  const pupil = tint(place(sphere(0.34, 8, 6), 0, 3.25, 0.42), PALETTE.beeDark)
+  const stalk = tint(new CylinderGeometry(0.26, 0.36, 3.4, 7, 1).translate(0, 1.7, 0), PALETTE.snailBody)
+  const tip = tint(place(sphere(0.64, 10, 8), 0, 3.55, 0), PALETTE.snailBody)
+  const pupil = tint(place(sphere(0.4, 8, 6), 0, 3.75, 0.36), PALETTE.beeDark)
   return merge([stalk, tip, pupil])
 }
 
@@ -553,15 +569,18 @@ export function mouseTailGeometry(): BufferGeometry {
 
 // ---- the hill's quiet furniture -------------------------------------------
 
+/** A felted grass tussock: a low soft mound with three short rounded blades leaning out of it. */
 export function tuftGeometry(): BufferGeometry {
-  const parts: BufferGeometry[] = []
-  for (let i = 0; i < 5; i++) {
-    const a = (i / 5) * Math.PI * 2 + 0.3
-    const lean = 0.18 + (i % 2) * 0.12
-    const cone = new ConeGeometry(0.42, 2.8 + (i % 3) * 0.5, 4, 1)
-    cone.translate(0, 1.4, 0)
-    place(cone, Math.cos(a) * 0.35, 0, Math.sin(a) * 0.35, Math.sin(a) * lean, 0, -Math.cos(a) * lean)
-    parts.push(tint(cone, (p, _n, out) => out.setRGB(1, 1, 1).multiplyScalar(0.7 + 0.4 * smoothstep(0, 3, p.y))))
+  const mound = lumpy(place(sphere(1, 8, 4), 0, 0.1, 0, 0, 0, 0, 1.25, 0.55, 1.1), 0.12, 1.4, 2)
+  const parts: BufferGeometry[] = [tint(mound, (p, _n, out) => out.setRGB(1, 1, 1).multiplyScalar(0.86 + 0.14 * smoothstep(-0.2, 0.6, p.y)))]
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + 0.5
+    const lean = 0.5 + (i % 2) * 0.18
+    const blade = new CapsuleGeometry(0.42, 0.5 + (i % 2) * 0.35, 2, 5)
+    blade.scale(1, 1, 0.7)
+    blade.translate(0, 0.62, 0)
+    place(blade, Math.cos(a) * 0.45, 0, Math.sin(a) * 0.45, Math.sin(a) * lean, 0, -Math.cos(a) * lean)
+    parts.push(tint(blade, (p, _n, out) => out.setRGB(1, 1, 1).multiplyScalar(0.84 + 0.22 * smoothstep(0, 2.2, p.y))))
   }
   return merge(parts)
 }
@@ -590,8 +609,8 @@ export function scatterGeometry(kind: SeasonLook['scatter']): BufferGeometry | n
   }
 }
 
-/** Static felt things: the mouse's burrow, bushes on the crest, two stones, and a sun and clouds on the wall. */
-export function decorGeometry(look: SeasonLook): BufferGeometry {
+/** Static felt things on the hill: the mouse's burrow, bushes on the crest, two stones. */
+export function decorGeometry(): BufferGeometry {
   const parts: BufferGeometry[] = []
   const by = groundY(BURROW.x, BURROW.z)
   parts.push(tint(place(sphere(1, 18, 8), BURROW.x, by + 0.05, BURROW.z, 0, 0, 0, 3.4, 0.3, 2.6), 0x24170f))
@@ -621,18 +640,24 @@ export function decorGeometry(look: SeasonLook): BufferGeometry {
     place(stone, x, groundY(x, z) + s * 0.25, z, 0, x, 0, 1.2, 0.55, 1)
     parts.push(tint(stone, (p, _n, out) => paint(PALETTE.stone, out).multiplyScalar(0.8 + 0.2 * smoothstep(-s, s, p.y - groundY(x, z)))))
   }
-  const wallZ = -120 - 90 + 4
-  const sun = paint(parseInt(look.sun.slice(1), 16))
-  parts.push(tint(lumpy(place(sphere(16, 28, 10), 88, 150, wallZ, 0, 0, 0, 1, 1, 0.22), 0.8, 0.2, 1), (p, _n, out) => out.copy(sun).multiplyScalar(0.93 + 0.07 * smoothstep(135, 165, p.y))))
+  return merge(parts)
+}
+
+/** Felt appliqué on the sky wall: a sun and two clouds, drawn unlit so their dyes show as authored. */
+export function wallDecorGeometry(look: SeasonLook): BufferGeometry {
+  const parts: BufferGeometry[] = []
+  const wallZ = WALL.z + 1.5
+  const edge = (n: Vector3) => (0.86 + 0.14 * Math.max(0, n.z)) * 1.1
+  parts.push(tint(lumpy(place(sphere(11, 28, 10), 74, 27, wallZ, 0, 0, 0, 1, 1, 0.22), 0.6, 0.25, 1), (p, n, out) => paint(parseInt(look.sun.slice(1), 16), out).multiplyScalar(edge(n) * (0.95 + 0.05 * smoothstep(18, 36, p.y)))))
   for (const [x, y, s] of [
-    [-70, 130, 1],
-    [10, 175, 0.8],
+    [-58, 20, 0.7],
+    [16, 29, 0.55],
   ] as const) {
     for (let k = 0; k < 4; k++) {
       const r = (9 - Math.abs(k - 1.5) * 2.2) * s
       const cloud = lumpy(sphere(r, 16, 8), r * 0.12, 0.3, k)
       place(cloud, x + (k - 1.5) * 9 * s, y + (k === 1 || k === 2 ? 3 : 0) * s, wallZ + 1, 0, 0, 0, 1, 0.8, 0.25)
-      parts.push(tint(cloud, (p, _n, out) => paint(PALETTE.cloud, out).multiplyScalar(0.95 + 0.05 * smoothstep(y - r, y + r, p.y))))
+      parts.push(tint(cloud, (p, n, out) => paint(PALETTE.cloud, out).multiplyScalar(edge(n) * (0.97 + 0.03 * smoothstep(y - r, y + r, p.y)))))
     }
   }
   return merge(parts)
