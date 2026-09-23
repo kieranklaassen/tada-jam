@@ -19,6 +19,7 @@ const base: GardenSummary = {
   ],
   whiteBeam: { x: 0, y: 2 },
   colourBeam: null,
+  spots: [],
   lit: [],
   open: { x: 0, y: 0 },
 }
@@ -27,19 +28,25 @@ const timing = (): GuidanceTiming => ({ demo: null, glow: 0, peek: null })
 
 describe('guidance', () => {
   it('while the moth sleeps, shows the lamp being tapped', () => {
-    expect(chooseHint(base)).toMatchObject({ kind: 'tapLamp', piece: 'lampA', to: null })
+    expect(chooseHint(base)).toMatchObject({ kind: 'tapLamp', piece: 'lampA', to: null, sleeper: 0 })
   })
 
   it('with the moth awake, brings the prism into the white beam', () => {
     const summary = { ...base, sleepers: base.sleepers.slice(1) }
-    expect(chooseHint(summary)).toMatchObject({ kind: 'bringPiece', piece: 'prism', from: { x: -22.5, y: 50 }, to: { x: 0, y: 2 } })
+    expect(chooseHint(summary)).toMatchObject({ kind: 'bringPiece', piece: 'prism', from: { x: -22.5, y: 50 }, to: { x: 0, y: 2 }, sleeper: 2 })
   })
 
   it('then a red filter for a sleeping fish, then a mirror into coloured light', () => {
     const noPrism = { ...base, sleepers: base.sleepers.slice(1), tray: base.tray.filter((p) => p.id !== 'prism') }
-    expect(chooseHint(noPrism)).toMatchObject({ kind: 'bringPiece', piece: 'filterR' })
+    expect(chooseHint(noPrism)).toMatchObject({ kind: 'bringPiece', piece: 'filterR', sleeper: 1 })
     const noFilter = { ...noPrism, tray: noPrism.tray.filter((p) => p.id !== 'filterR'), colourBeam: { x: 10, y: 10 } }
     expect(chooseHint(noFilter)).toMatchObject({ kind: 'bringPiece', piece: 'mirror1', to: { x: 10, y: 10 } })
+  })
+
+  it("when a sleeper's own colour already crosses open panel, shows it being carried there", () => {
+    const summary = { ...base, sleepers: base.sleepers.slice(1), spots: [{ index: 3, x: 20, y: 10 }, { index: 1, x: 30, y: -10 }] }
+    expect(chooseHint(summary)).toMatchObject({ kind: 'carrySleeper', from: { x: 40, y: -18 }, to: { x: 30, y: -10 }, piece: null, sleeper: 1 })
+    expect(chooseHint({ ...summary, sleepers: base.sleepers })).toMatchObject({ kind: 'tapLamp', sleeper: 0 })
   })
 
   it('with the tray empty, turns a piece the light is touching', () => {
@@ -103,11 +110,11 @@ describe('guidance', () => {
 
   it('the ghost hand taps twice in place, or presses, carries, and lifts', () => {
     const pose = { x: 0, y: 0, press: 0, opacity: 0 }
-    const tap = { kind: 'tapLamp' as const, from: { x: 3, y: 4 }, to: null, piece: 'lampA' as const }
+    const tap = { kind: 'tapLamp' as const, from: { x: 3, y: 4 }, to: null, piece: 'lampA' as const, sleeper: 0 }
     expect(handPose(tap, 0.27, pose)).toMatchObject({ x: 3, y: 4 })
     expect(pose.press).toBeGreaterThan(0.9)
     expect(handPose(tap, 0.41, pose).press).toBeLessThan(0.2)
-    const drag = { kind: 'bringPiece' as const, from: { x: 0, y: 50 }, to: { x: 0, y: 0 }, piece: 'prism' as const }
+    const drag = { kind: 'bringPiece' as const, from: { x: 0, y: 50 }, to: { x: 0, y: 0 }, piece: 'prism' as const, sleeper: 2 }
     expect(handPose(drag, 0.1, pose).y).toBe(50)
     expect(handPose(drag, 0.8, pose)).toMatchObject({ x: 0, y: 0 })
     expect(handPose(drag, 0.5, pose).press).toBe(1)

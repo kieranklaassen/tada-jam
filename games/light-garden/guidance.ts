@@ -1,24 +1,31 @@
 import type { PieceId, Point } from './layout'
-import { WHITE, type Mask } from './optics'
+import { RED, WHITE, type Mask } from './optics'
 
 // Wordless guidance for a seven-year-old: no text, no voice, no verdicts.
-// When the child stops, touchable glass breathes and each sleeper dreams of
-// its colour; a little later a ghost hand shows one possible next act (tap
-// the lamp, bring a piece into a beam, turn a piece the light is touching).
+// From the first frame one sleeper is the scene's want: the one the next act
+// is for. When the child stops, touchable glass breathes and every sleeper
+// dreams of its colour; a little later a ghost hand shows one possible next
+// act for that sleeper (tap the lamp, carry the sleeper into a beam of its
+// colour, bring a piece into a beam, turn a piece the light is touching).
 // It shows a move, never the answer. Any touch clears everything at once;
 // demonstrations back off and stop after a few, so an idle table goes quiet.
 
-export type HintKind = 'tapLamp' | 'bringPiece' | 'tapPiece'
+export type HintKind = 'tapLamp' | 'bringPiece' | 'tapPiece' | 'carrySleeper'
 
 export type Hint = {
   kind: HintKind
   from: Point
   to: Point | null
-  piece: PieceId
+  /** The piece pressed or carried; null when a sleeper is carried. */
+  piece: PieceId | null
+  /** The sleeper this move is for: the scene's one obvious want. */
+  sleeper: number
 }
 
 export type Sleeper = { index: number; x: number; y: number; wants: Mask }
 export type Placed = { id: PieceId; x: number; y: number }
+/** Open panel where exactly sleeper `index`'s colour of light lands. */
+export type Spot = { index: number; x: number; y: number }
 
 export type GardenSummary = {
   sleepers: readonly Sleeper[]
@@ -28,6 +35,8 @@ export type GardenSummary = {
   whiteBeam: Point | null
   /** A good spot on a coloured beam, if there is one. */
   colourBeam: Point | null
+  /** Where each sleeper's own colour already lands on open panel (at most one per sleeper). */
+  spots: readonly Spot[]
   /** Panel pieces other than lamps that light is touching now. */
   lit: readonly Placed[]
   /** Somewhere open near the middle of the panel. */
@@ -47,36 +56,50 @@ function nearest<T extends Point>(items: readonly T[], to: Point): T | null {
   return best
 }
 
-function fromTray(summary: GardenSummary, id: PieceId, to: Point | null): Hint | null {
+/** Bring a tray piece to `to`, for the sleeper nearest there unless one is named. */
+function fromTray(summary: GardenSummary, id: PieceId, to: Point | null, sleeper?: Sleeper): Hint | null {
   const piece = summary.tray.find((p) => p.id === id)
-  return piece && to ? { kind: 'bringPiece', from: { x: piece.x, y: piece.y }, to, piece: id } : null
+  if (!piece || !to) return null
+  return { kind: 'bringPiece', from: { x: piece.x, y: piece.y }, to, piece: id, sleeper: (sleeper ?? nearest(summary.sleepers, to)!).index }
 }
 
-/** The one next act worth demonstrating, given the table. */
+/** The one next act worth demonstrating, given the table, and the sleeper it is for. */
 export function chooseHint(summary: GardenSummary): Hint | null {
   if (summary.sleepers.length === 0) return null
   const firstSleeper = summary.sleepers[0]
   if (summary.lamps.length === 0) {
     const lamp = summary.tray.find((p) => p.id === 'lampA') ?? summary.tray.find((p) => p.id === 'lampB')
-    return lamp ? { kind: 'bringPiece', from: { x: lamp.x, y: lamp.y }, to: summary.open, piece: lamp.id } : null
+    return lamp ? { kind: 'bringPiece', from: { x: lamp.x, y: lamp.y }, to: summary.open, piece: lamp.id, sleeper: firstSleeper.index } : null
   }
   const moth = summary.sleepers.find((s) => s.wants === WHITE)
   if (moth) {
     const lamp = nearest(summary.lamps, moth)!
-    return { kind: 'tapLamp', from: { x: lamp.x, y: lamp.y }, to: null, piece: lamp.id }
+    return { kind: 'tapLamp', from: { x: lamp.x, y: lamp.y }, to: null, piece: lamp.id, sleeper: moth.index }
   }
-  const wantsRed = summary.sleepers.some((s) => s.wants === 1)
+  // Its own colour already crosses the panel somewhere: show that a sleeper can be carried into it.
+  let carry: { sleeper: Sleeper; spot: Spot; distance: number } | null = null
+  for (const spot of summary.spots) {
+    const sleeper = summary.sleepers.find((s) => s.index === spot.index)
+    if (!sleeper) continue
+    const distance = Math.hypot(spot.x - sleeper.x, spot.y - sleeper.y)
+    if (!carry || distance < carry.distance) carry = { sleeper, spot, distance }
+  }
+  if (carry) {
+    const { sleeper, spot } = carry
+    return { kind: 'carrySleeper', from: { x: sleeper.x, y: sleeper.y }, to: { x: spot.x, y: spot.y }, piece: null, sleeper: sleeper.index }
+  }
+  const wantsRed = summary.sleepers.find((s) => s.wants === RED)
   const hint =
     fromTray(summary, 'prism', summary.whiteBeam) ??
-    (wantsRed ? fromTray(summary, 'filterR', summary.whiteBeam) : null) ??
+    (wantsRed ? fromTray(summary, 'filterR', summary.whiteBeam, wantsRed) : null) ??
     fromTray(summary, 'mirror1', summary.colourBeam ?? summary.whiteBeam) ??
     fromTray(summary, 'mirror2', summary.colourBeam ?? summary.whiteBeam) ??
-    fromTray(summary, 'lampB', { x: (firstSleeper.x + summary.open.x) / 2, y: (firstSleeper.y + summary.open.y) / 2 })
+    fromTray(summary, 'lampB', { x: (firstSleeper.x + summary.open.x) / 2, y: (firstSleeper.y + summary.open.y) / 2 }, firstSleeper)
   if (hint) return hint
   const piece = nearest(summary.lit, firstSleeper)
-  if (piece) return { kind: 'tapPiece', from: { x: piece.x, y: piece.y }, to: null, piece: piece.id }
+  if (piece) return { kind: 'tapPiece', from: { x: piece.x, y: piece.y }, to: null, piece: piece.id, sleeper: firstSleeper.index }
   const lamp = nearest(summary.lamps, firstSleeper)!
-  return { kind: 'tapLamp', from: { x: lamp.x, y: lamp.y }, to: null, piece: lamp.id }
+  return { kind: 'tapLamp', from: { x: lamp.x, y: lamp.y }, to: null, piece: lamp.id, sleeper: firstSleeper.index }
 }
 
 export const IDLE_BEFORE_GLOW = 3
@@ -111,6 +134,10 @@ export class HintScheduler {
   touch(now: number): void {
     this.idleSince = now
     this.everTouched = true
+  }
+
+  idleFor(now: number): number {
+    return now - this.idleSince
   }
 
   /** Is `now` inside one of this idle stretch's demonstrations (5 s, then gaps of 10, 20, 40 s)? */

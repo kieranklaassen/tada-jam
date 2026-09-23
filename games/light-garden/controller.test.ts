@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { GardenController, type Projector } from './controller'
+import { GardenController, type Projector, type Sound } from './controller'
 import { isAwake } from './creatures'
-import { KNOB, slotPoint, TURN_STEP, type Point } from './layout'
+import { KNOB, slotPoint, TURN_STEP, type CreatureKind, type Point } from './layout'
+import { lightAt } from './optics'
+import { REST_BEFORE_PACING } from './tiers'
 import { defaultGarden, deserialize, type GardenState } from './state'
 
 // A straight-down camera: ten screen pixels to a centimetre, height ignored.
@@ -124,6 +126,33 @@ describe('GardenController', () => {
     expect(saved.beds[fish.c.index].x).toBeCloseTo(fish.c.bed.x, 0)
   })
 
+  it('an awake creature flies round a sleeping one instead of through it', () => {
+    const { garden } = makeGarden(7)
+    tap(garden, piece(garden, 'lampA').pose)
+    run(garden, 3)
+    const moth = garden.creatures.find((c) => c.c.kind === 'moth')!
+    const snail = garden.creatures.find((c) => c.c.kind === 'snail')!
+    expect(isAwake(moth.c)).toBe(true)
+    // Right beside its bed, on the open side (towards the middle of the panel).
+    snail.c.bed.x = moth.c.bed.x + 2
+    snail.c.bed.y = moth.c.bed.y - 4
+    run(garden, 1.5)
+    // Without the sidestep its loops pass within a centimetre of the snail; with it, it only brushes by as it dodges.
+    let closest = Infinity
+    let near = 0
+    const frames = 8 * 60
+    for (let f = 0; f < frames; f++) {
+      garden.step(1 / 60)
+      const distance = Math.hypot(moth.x - snail.x, moth.y - snail.y)
+      closest = Math.min(closest, distance)
+      if (distance < 11) near++
+    }
+    expect(isAwake(snail.c)).toBe(false)
+    expect(Math.hypot(snail.x - snail.c.bed.x, snail.y - snail.c.bed.y)).toBeLessThan(0.01)
+    expect(closest).toBeGreaterThan(7)
+    expect(near / frames).toBeLessThan(0.1)
+  })
+
   it('a hand resting on the glass cancels every gesture', () => {
     const { garden } = makeGarden()
     const lamp = piece(garden, 'lampA')
@@ -131,6 +160,102 @@ describe('GardenController', () => {
     for (let id = 1; id <= 4; id++) garden.pointerDown(id, px({ x: -46, y: 2 }), (clock += 5))
     for (let id = 1; id <= 4; id++) garden.pointerUp(id, px({ x: -46, y: 2 }), (clock += 5))
     expect(lamp.pose.angle).toBe(before)
+  })
+
+  it('one sleeper is the want from the first frame; it passes on when that one wakes', () => {
+    const { garden } = makeGarden(7)
+    const moth = garden.creatures.find((c) => c.c.kind === 'moth')!
+    expect(garden.wantIndex).toBe(moth.c.index)
+    expect(moth.carry.want).toBe(1)
+    run(garden, 7)
+    expect(garden.guide.hint?.sleeper).toBe(moth.c.index)
+    tap(garden, piece(garden, 'lampA').pose)
+    run(garden, 3)
+    expect(isAwake(moth.c)).toBe(true)
+    expect(garden.wantIndex).not.toBe(moth.c.index)
+    const next = garden.creatures[garden.wantIndex]
+    expect(next.c.phase).toBe('asleep')
+    expect(next.carry.want).toBeGreaterThan(0.9)
+    expect(moth.carry.want).toBeLessThan(0.1)
+  })
+
+  it('a ghost tap swings the lamp part of a step and back, without turning it', () => {
+    const { garden } = makeGarden(7)
+    const lamp = piece(garden, 'lampA')
+    let swing = 0
+    for (let t = 0; t < 11; t += 1 / 60) {
+      garden.step(1 / 60)
+      if (garden.guide.hint?.kind === 'tapLamp') swing = Math.max(swing, lamp.wobble.x)
+    }
+    expect(swing).toBeGreaterThan(0.12)
+    expect(swing).toBeLessThan(TURN_STEP * 0.6)
+    expect(lamp.pose.angle).toBe(0)
+    expect(Math.abs(lamp.wobble.x)).toBeLessThan(0.01)
+    expect(garden.creatures.some((c) => isAwake(c.c))).toBe(false)
+  })
+
+  it('once colours fan out, the ghost hand carries a sleeper into its own colour', () => {
+    const state = defaultGarden(7)
+    Object.assign(state.pieces.find((p) => p.id === 'lampA')!, { angle: TURN_STEP })
+    Object.assign(state.pieces.find((p) => p.id === 'prism')!, { x: -24, y: 11, angle: -Math.PI / 2 + TURN_STEP, inTray: false })
+    const garden = new GardenController(state, { save: () => {} })
+    garden.setProjector(topDown)
+    const moth = garden.creatures.find((c) => c.c.kind === 'moth')!
+    moth.c.phase = 'awake'
+    run(garden, 0.5)
+    const summary = garden.summary()
+    expect(summary.spots.length).toBeGreaterThan(0)
+    for (const spot of summary.spots) {
+      const sleeper = garden.creatures[spot.index]
+      expect(lightAt(garden.beams, spot.x, spot.y, sleeper.c.radius)).toBe(sleeper.c.wants)
+    }
+    run(garden, 6)
+    const hint = garden.guide.hint!
+    expect(hint.kind).toBe('carrySleeper')
+    expect(hint.sleeper).toBe(garden.wantIndex)
+    expect(summary.spots.map((s) => s.index)).toContain(hint.sleeper)
+  })
+
+  it('a poke gets the creature its own answer and voice, a different one each time, and never wakes it', () => {
+    const poke = vi.fn<(kind: CreatureKind, variant: number) => void>()
+    const creature = vi.fn<Sound['creature']>()
+    const quiet = () => {}
+    const sound: Sound = { unlock: quiet, setActive: quiet, dispose: quiet, pick: quiet, drop: quiet, turn: quiet, tick: quiet, home: quiet, ripple: quiet, creature, poke, garden: quiet }
+    const garden = new GardenController(defaultGarden(7), { save: () => {}, sound })
+    garden.setProjector(topDown)
+    const snail = garden.creatures.find((c) => c.c.kind === 'snail')!
+    for (let i = 0; i < 3; i++) {
+      tap(garden, { x: snail.x, y: snail.y })
+      run(garden, 0.4)
+    }
+    expect(poke.mock.calls).toEqual([
+      ['snail', 0],
+      ['snail', 1],
+      ['snail', 0],
+    ])
+    expect(creature).not.toHaveBeenCalled()
+    expect(snail.c.phase).toBe('asleep')
+    expect(snail.c.stirAt).toBe(-Infinity)
+  })
+
+  it('rests only while nothing happens: no demonstration, nothing held, nobody waking', () => {
+    const { garden } = makeGarden()
+    tap(garden, { x: 0, y: -10 })
+    let longest = 0
+    for (let t = 0; t < 60; t += 1 / 60) {
+      garden.step(1 / 60)
+      const resting = garden.restingFor()
+      if (garden.guide.handVisible) expect(resting).toBe(0)
+      longest = Math.max(longest, resting)
+    }
+    expect(longest).toBeGreaterThan(REST_BEFORE_PACING)
+    const lamp = piece(garden, 'lampA')
+    drag(garden, lamp.pose, { x: -30, y: 0 }, false)
+    run(garden, REST_BEFORE_PACING + 2)
+    expect(garden.restingFor()).toBe(0)
+    garden.pointerUp(2, px({ x: -30, y: 0 }), (clock += 80))
+    garden.step(1 / 60)
+    expect(garden.restingFor()).toBeLessThan(0.1)
   })
 
   it('idle guidance shows a ghost hand, and a touch clears it at once', () => {

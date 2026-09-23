@@ -212,7 +212,7 @@ export class GardenAudio implements Sound {
     })
   }
 
-  creature(kind: CreatureKind, event: CreatureEvent | 'poke' | 'nudge' | 'lift'): void {
+  creature(kind: CreatureKind, event: CreatureEvent | 'nudge' | 'lift' | 'set'): void {
     const context = this.ready()
     if (!context) return
     const now = context.currentTime
@@ -235,14 +235,14 @@ export class GardenAudio implements Sound {
       case 'nap':
         this.tone(this.voice(kind) * 0.5, 'sine', 0.035, 0.3, 1.4, now)
         break
-      case 'poke':
-        this.poke(kind, now)
-        break
       case 'nudge':
         this.nudge(kind, now)
         break
       case 'lift':
         this.tone(this.voice(kind), 'sine', 0.05, 0.02, 0.3, now, this.voice(kind) * 1.6)
+        break
+      case 'set':
+        this.tone(this.voice(kind) * 1.6, 'sine', 0.04, 0.01, 0.35, now, this.voice(kind))
         break
       default: {
         const never: never = event
@@ -320,9 +320,61 @@ export class GardenAudio implements Sound {
     }
   }
 
-  private poke(kind: CreatureKind, now: number): void {
-    const note = this.voice(kind) * (kind === 'snail' ? 2 : 1.5)
-    this.tone(note, 'sine', 0.05, 0.004, 0.14, now, note * 1.12)
+  /** A poke answers in the creature's own voice, shaped like the move it makes (see `POKES` in motion). */
+  poke(kind: CreatureKind, variant: number): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    const first = variant === 0
+    switch (kind) {
+      case 'moth':
+        if (first) {
+          // A papery flurry and a tiny giggle.
+          for (let i = 0; i < 7; i++) this.noiseBurst(5200, 3, 0.018, 0.004, 0.03, now + i * 0.028, 'highpass')
+          ;[9, 8, 9].forEach((step, i) => this.tone(D[step], 'sine', 0.035, 0.004, 0.07, now + 0.1 + i * 0.07))
+        } else {
+          // A soft fold, then two slow wing fans.
+          this.tone(D[8], 'sine', 0.03, 0.01, 0.12, now, D[6])
+          ;[0.45, 0.8].forEach((at) => this.noiseBurst(2600, 1.2, 0.025, 0.06, 0.18, now + at))
+        }
+        break
+      case 'fish':
+        if (first) {
+          // A startled bloop, darting off.
+          this.tone(D[7] * 1.2, 'sine', 0.06, 0.003, 0.09, now, D[4])
+          this.tone(D[6], 'sine', 0.04, 0.003, 0.08, now + 0.12, D[8])
+        } else {
+          // A whirl that goes up and round.
+          this.tone(D[3], 'sine', 0.045, 0.02, 0.5, now, D[8])
+          this.tone(D[5], 'triangle', 0.02, 0.02, 0.45, now + 0.08, D[9], 0.3)
+        }
+        break
+      case 'snail':
+        if (first) {
+          // A low "oof" into the shell, and a hollow knock.
+          this.tone(D[1], 'triangle', 0.05, 0.01, 0.3, now, D[0] * 0.8)
+          this.noiseBurst(320, 4, 0.05, 0.004, 0.12, now + 0.05, 'lowpass')
+        } else {
+          // A slow, rising "hm?".
+          this.tone(D[0], 'triangle', 0.045, 0.12, 0.55, now, D[3])
+          this.tone(D[4] * 0.5, 'sine', 0.025, 0.1, 0.4, now + 0.35, D[5] * 0.5)
+        }
+        break
+      case 'jelly':
+        if (first) {
+          // Boing: a quick drop and a springy wobble back up.
+          this.tone(D[5], 'sine', 0.05, 0.004, 0.12, now, D[1])
+          this.tone(D[2], 'sine', 0.045, 0.004, 0.4, now + 0.12, D[6])
+        } else {
+          // A sparkling shimmer.
+          ;[8, 10, 9, 11].forEach((step, i) => this.glass(D[step], 0.025, 0.5, now + i * 0.06, i % 2 ? 0.3 : -0.3))
+        }
+        break
+      default: {
+        const never: never = kind
+        return never
+      }
+    }
   }
 
   private nudge(kind: CreatureKind, now: number): void {
