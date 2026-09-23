@@ -1,12 +1,12 @@
 import * as THREE from 'three'
-import type { Companion, TheatreController, Waking } from '../controller'
+import type { Companion, SparkSurface, TheatreController, Waking } from '../controller'
 import { CREATURES, type CreatureKind, buildCreature } from '../creatures'
-import { wobble, type Point } from '../geometry2d'
+import { chaikinClosed, polygonArea, wobble, type Point } from '../geometry2d'
 import { SILHOUETTE_S, type CreaturePose, type Ring } from '../motion'
 import { LAMP, penumbra, PIN_HEIGHT, projectCardPoint, SCREEN, shadowScale, type CardPose } from '../projection'
 import { OUTLINE_POINTS, SHAPES, type ShapeKind } from '../shapes'
 import { PerfRing, startingTier, TierGovernor, TIERS } from '../tiers'
-import { cardGeometry, flatGeometry, GRAIN_REPEAT, grainTexture, paintCard, paintFlat, paper, softSpotTexture, withInstanceAlpha } from './paper'
+import { cardGeometry, flatGeometry, glowRingTexture, GRAIN_REPEAT, grainTexture, paintCard, paintFlat, paper, softSpotTexture, withInstanceAlpha } from './paper'
 import { buildScenery, PALETTE } from './scenery'
 
 // The theatre drawn with raw three.js and one hand-written frame loop:
@@ -37,11 +37,21 @@ const SHADOW_ALPHA = 0.94
 const MIN_SOFT = 0.12
 const STICK_HALF = 0.17
 const CARD_DEPTH = 0.26
+const CARD_STAGGER = 0.3
 const CREATURE_DEPTH = 0.36
+/** How far a creature's backing card drops below it (world cm, like the scenery's). */
+const BACKING_DROP = 0.55
 const MAX_DOTS = 220
 const MAX_RINGS = 44
+/** Sleep rings on the screen drawn bigger than they rise, so a six-year-old reads them from arm's length and they stay on the paper. */
+const SLEEP_RING_GROW = 2.2
 const RIGS = 10
 const REST_BEFORE_PACING = 20
+const SPARK_STARS = 6
+const SPARK_S = 0.9
+const WAKE_STARS = 14
+const WAKE_BURST_S = 1.4
+const burstScale = new THREE.Vector3()
 
 /** Parts drawn in front of the body (wings, shells) rather than behind it (tails, flukes). */
 const FRONT_PART: Record<CreatureKind, boolean> = { bird: true, fish: false, snail: true, whale: false, fox: false, dragon: true }
@@ -60,6 +70,7 @@ type Rig = {
   eye: THREE.Mesh
   dark: THREE.Mesh
   kind: CreatureKind | null
+  paper: 0 | 1
 }
 
 type CreatureGeometry = { body: THREE.BufferGeometry; part: THREE.BufferGeometry; eye: THREE.BufferGeometry; dark: THREE.BufferGeometry }
@@ -98,6 +109,8 @@ export class TheatreView {
   private readonly sticks: THREE.InstancedMesh
   private readonly blobs: THREE.InstancedMesh
   private readonly blobAlpha: THREE.InstancedBufferAttribute
+  private readonly glows: THREE.InstancedMesh
+  private readonly glowAlpha: THREE.InstancedBufferAttribute
   private readonly shadowGeometry = new THREE.BufferGeometry()
   private readonly shadowPos: Float32Array
   private readonly shadowCol: Float32Array
@@ -110,11 +123,12 @@ export class TheatreView {
   private readonly rings: THREE.InstancedMesh
   private readonly ringAlpha: THREE.InstancedBufferAttribute
   private readonly rigs: Rig[] = []
-  private readonly creatureGeometry = new Map<CreatureKind, CreatureGeometry>()
+  private readonly creatureGeometry = new Map<string, CreatureGeometry>()
   private readonly creatureMaterial: THREE.MeshLambertMaterial
   private readonly darkMaterial: THREE.MeshBasicMaterial
   private readonly eyeMaterial: THREE.MeshBasicMaterial
   private readonly shadowEyeMaterial: THREE.MeshBasicMaterial
+  private readonly backingMaterial: THREE.MeshBasicMaterial
   private readonly flame: THREE.Mesh
   private readonly halo: THREE.Mesh
   private readonly haloMaterial: THREE.MeshBasicMaterial
@@ -124,6 +138,10 @@ export class TheatreView {
   private readonly twinkles: THREE.InstancedMesh
   private readonly twinkleAlpha: THREE.InstancedBufferAttribute
   private readonly twinkleAnchors: Float32Array
+  /** The spark stars' colours relative to the twinkle material: cream as it is, and shadow ink for the lit screen. */
+  private readonly sparkCream = new THREE.Color(1, 1, 1)
+  private readonly sparkInk = new THREE.Color()
+  private sparkPainted: SparkSurface = 'sky'
   private readonly hand: THREE.Mesh
   private readonly handMaterial: THREE.MeshBasicMaterial
   private readonly ghost: THREE.Mesh
@@ -211,6 +229,20 @@ export class TheatreView {
       this.scene.add(this.blobs)
       this.disposables.push(geometry, material)
     }
+    {
+      // Guidance halos: a golden ring behind each card, which the card itself hides in the middle.
+      const ring = glowRingTexture()
+      const geometry = new THREE.PlaneGeometry(1, 1)
+      // Normal blending: an additive glow vanishes against the warm stage floor behind most cards.
+      const material = new THREE.MeshBasicMaterial({ map: ring, color: '#fff1b8', transparent: true, depthWrite: false })
+      this.glows = new THREE.InstancedMesh(geometry, material, controller.shapes.length)
+      this.glowAlpha = withInstanceAlpha(material, this.glows)
+      this.glows.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+      this.glows.frustumCulled = false
+      this.glows.visible = false
+      this.scene.add(this.glows)
+      this.disposables.push(ring, geometry, material)
+    }
 
     // --- shadows on the screen: one dynamic buffer ------------------------------
     this.shadowPos = new Float32Array(SLOTS * VERTS_PER_SLOT * 3)
@@ -257,7 +289,7 @@ export class TheatreView {
       this.disposables.push(geometry, material)
     }
     {
-      const geometry = new THREE.RingGeometry(0.74, 1, 22)
+      const geometry = new THREE.RingGeometry(0.64, 1, 22)
       const material = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false })
       this.rings = new THREE.InstancedMesh(geometry, material, MAX_RINGS)
       this.ringAlpha = withInstanceAlpha(material, this.rings)
@@ -276,7 +308,8 @@ export class TheatreView {
     this.darkMaterial = new THREE.MeshBasicMaterial({ color: PALETTE.ink, map: grain, transparent: true })
     this.eyeMaterial = new THREE.MeshBasicMaterial({ vertexColors: true })
     this.shadowEyeMaterial = new THREE.MeshBasicMaterial({ color: '#ffd35a' })
-    this.disposables.push(this.creatureMaterial, this.darkMaterial, this.eyeMaterial, this.shadowEyeMaterial)
+    this.backingMaterial = new THREE.MeshBasicMaterial({ color: PALETTE.dropShadow, map: grain })
+    this.disposables.push(this.creatureMaterial, this.darkMaterial, this.eyeMaterial, this.shadowEyeMaterial, this.backingMaterial)
     const empty = new THREE.BufferGeometry()
     for (let i = 0; i < RIGS; i++) {
       const group = new THREE.Group()
@@ -288,7 +321,7 @@ export class TheatreView {
       group.add(body, part, eye, dark)
       group.visible = false
       this.scene.add(group)
-      this.rigs.push({ group, body, part, eye, dark, kind: null })
+      this.rigs.push({ group, body, part, eye, dark, kind: null, paper: 0 })
     }
 
     // --- the lamp's flame, halo, and dust in the beam ------------------------------
@@ -348,18 +381,25 @@ export class TheatreView {
       const geometry = flatGeometry(starOutline)
       const material = new THREE.MeshBasicMaterial({ color: PALETTE.star, transparent: true, depthWrite: false })
       this.twinkleAnchors = anchors.twinkles
-      const count = anchors.twinkles.length / 4 + 6
-      this.twinkles = new THREE.InstancedMesh(geometry, material, count)
+      const fixed = anchors.twinkles.length / 4
+      this.twinkles = new THREE.InstancedMesh(geometry, material, fixed + SPARK_STARS + WAKE_STARS)
       this.twinkleAlpha = withInstanceAlpha(material, this.twinkles)
       this.twinkles.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
       this.twinkles.frustumCulled = false
+      // After the shadows and the dark face, so the wake's stars spring over them.
+      this.twinkles.renderOrder = 6
+      // Gold (cream paper would vanish on the lit screen): the material's cream times this.
+      const gold = new THREE.Color(PALETTE.brass)
+      gold.setRGB(gold.r / material.color.r, gold.g / material.color.g, gold.b / material.color.b)
+      for (let i = 0; i < WAKE_STARS; i++) this.twinkles.setColorAt(fixed + SPARK_STARS + i, gold)
+      this.sparkInk.setRGB(INK.r / material.color.r, INK.g / material.color.g, INK.b / material.color.b)
       this.scene.add(this.twinkles)
       this.disposables.push(geometry, material)
     }
 
     // --- guidance: a paper ghost hand and a see-through copy of the shape ----------
     {
-      const geometry = paintFlat(flatGeometry(handOutline()), paper('#ffffff'))
+      const geometry = handGeometry()
       this.handMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, depthTest: false, opacity: 0 })
       this.hand = new THREE.Mesh(geometry, this.handMaterial)
       this.hand.renderOrder = 10
@@ -476,7 +516,6 @@ export class TheatreView {
     if (this.width > 0) this.renderer.setSize(this.width, this.height, false)
     this.motes.count = settings.motes
     this.motes.visible = settings.motes > 0
-    this.halo.visible = settings.halo
     this.penumbraOn = settings.penumbra
     this.lastPoses.fill(NaN)
     this.renderer.domElement.dataset.tier = settings.name
@@ -579,14 +618,17 @@ export class TheatreView {
 
   private updateShapes(): void {
     const c = this.controller
+    let glowing = false
     for (let i = 0; i < c.shapes.length; i++) {
       const shape = c.shapes[i]
       const pose = shape.pose
       const card = this.cards[i]
       const landing = c.landing(shape)
+      // Each card stands a hair off its pin's depth, so two cards a child puts at one depth never cut through each other.
+      const z = pose.z + (i - (c.shapes.length - 1) / 2) * CARD_STAGGER
       this.e.set(0, pose.yaw, pose.angle, 'YXZ')
       this.q.setFromEuler(this.e)
-      this.v.set(pose.x, PIN_HEIGHT + pose.lift, pose.z)
+      this.v.set(pose.x, PIN_HEIGHT + pose.lift, z)
       this.s.set(1 + landing * 0.06, 1 - landing * 0.08, 1)
       card.matrix.compose(this.v, this.q, this.s)
       card.matrixWorldNeedsUpdate = true
@@ -594,16 +636,31 @@ export class TheatreView {
       material.emissiveIntensity = shape.glow * 0.32 + c.pulse(shape) * 0.45 + (shape.heldBy !== null ? 0.08 : 0)
       this.e.set(0, pose.yaw, 0)
       this.q.setFromEuler(this.e)
-      this.v.set(pose.x, pose.lift, pose.z)
+      this.v.set(pose.x, pose.lift, z)
       this.s.set(1, 1, 1)
       this.m.compose(this.v, this.q, this.s)
       this.sticks.setMatrixAt(i, this.m)
       // A soft contact spot under the foot that shrinks and fades as the stand lifts.
       const lift = Math.max(0, pose.lift)
       const size = 6.5 - lift * 0.8
-      this.m.makeScale(size, 1, size * 0.62).setPosition(pose.x, 0.06, pose.z - CARD_DEPTH)
+      this.m.makeScale(size, 1, size * 0.62).setPosition(pose.x, 0.06, z - CARD_DEPTH)
       this.blobs.setMatrixAt(i, this.m)
       this.blobAlpha.setX(i, 0.5 / (1 + lift * 0.5))
+      if (shape.glow > 0.01) {
+        glowing = true
+        const spec = SHAPES[shape.kind]
+        const ca = Math.cos(pose.angle)
+        const sa = Math.sin(pose.angle)
+        const size = spec.radius * 2.9 * (1 + 0.06 * Math.sin(c.t * 2.4 + i))
+        this.m.makeScale(size, size, 1).setPosition(pose.x + spec.center.x * ca - spec.center.y * sa, PIN_HEIGHT + pose.lift + spec.center.x * sa + spec.center.y * ca, z - CARD_DEPTH - 0.4)
+        this.glows.setMatrixAt(i, this.m)
+      }
+      this.glowAlpha.setX(i, shape.glow)
+    }
+    this.glows.visible = glowing
+    if (glowing) {
+      this.glows.instanceMatrix.needsUpdate = true
+      this.glowAlpha.needsUpdate = true
     }
     this.m.makeScale(17, 1, 12).setPosition(LAMP.x, 0.05, LAMP.z)
     this.blobs.setMatrixAt(c.shapes.length, this.m)
@@ -848,14 +905,16 @@ export class TheatreView {
 
   // --- creatures ----------------------------------------------------------------
 
-  private geometryFor(kind: CreatureKind): CreatureGeometry {
-    const cached = this.creatureGeometry.get(kind)
+  private geometryFor(kind: CreatureKind, sheet: 0 | 1): CreatureGeometry {
+    const key = `${kind}:${sheet}`
+    const cached = this.creatureGeometry.get(key)
     if (cached) return cached
     const built = buildCreature(kind)
     const def = CREATURES[kind]
     const { x: cx, y: cy } = built.center
-    const color = paper(def.color)
-    const accent = paper(def.accent)
+    const papers = sheet === 1 ? def.second : def
+    const color = paper(papers.color)
+    const accent = paper(papers.accent)
     const edge = color.clone().multiplyScalar(0.72)
     const bodyOutline = wobble(recentre(built.bodyOutline, cx, cy), 0.07, 11)
     const body = paintCard(cardGeometry(bodyOutline, CREATURE_DEPTH), color, color, edge)
@@ -874,16 +933,18 @@ export class TheatreView {
       body: mergeTwo(body, drop),
       part,
       eye: mergeTwo(mergeTwo(eyeWhite, pupil), glint),
-      dark: flatGeometry(wobble(recentre(built.outline, cx, cy), 0.07, 13)),
+      // The shadow face is the body alone; the part goes dark itself, so a stirring wing moves in silhouette.
+      dark: flatGeometry(bodyOutline),
     }
-    this.creatureGeometry.set(kind, geometry)
+    this.creatureGeometry.set(key, geometry)
     return geometry
   }
 
-  private assign(rig: Rig, kind: CreatureKind): void {
-    if (rig.kind === kind) return
+  private assign(rig: Rig, kind: CreatureKind, sheet: 0 | 1): void {
+    if (rig.kind === kind && rig.paper === sheet) return
     rig.kind = kind
-    const g = this.geometryFor(kind)
+    rig.paper = sheet
+    const g = this.geometryFor(kind, sheet)
     rig.body.geometry = g.body
     rig.part.geometry = g.part
     rig.eye.geometry = g.eye
@@ -893,7 +954,6 @@ export class TheatreView {
     const pivot = def.parts[0].pivot
     rig.part.userData.base = { x: pivot.x - built.center.x, y: pivot.y - built.center.y, z: FRONT_PART[kind] ? CREATURE_DEPTH * 0.95 : -CREATURE_DEPTH * 0.95 }
     rig.eye.position.set(def.eye.x - built.center.x, def.eye.y - built.center.y, CREATURE_DEPTH / 2 + 0.05)
-    rig.dark.position.set(0, 0, CREATURE_DEPTH / 2 + 0.06)
   }
 
   private poseRig(rig: Rig, pose: CreaturePose): void {
@@ -909,8 +969,13 @@ export class TheatreView {
     rig.part.rotation.z = pose.part
     rig.eye.scale.set(1, Math.max(0.08, pose.eye), 1)
     const dark = pose.dark > 0
-    rig.dark.visible = dark
+    rig.body.visible = !dark
+    rig.part.material = dark ? this.darkMaterial : this.creatureMaterial
     rig.eye.material = dark ? this.shadowEyeMaterial : this.eyeMaterial
+    // In colour, the silhouette becomes the dark backing card every cut-paper piece has, glued behind and dropped a little.
+    rig.dark.material = dark ? this.darkMaterial : this.backingMaterial
+    if (dark) rig.dark.position.set(0, 0, CREATURE_DEPTH / 2 + 0.06)
+    else rig.dark.position.set(0, -BACKING_DROP / s, -CREATURE_DEPTH * 1.6)
     g.visible = true
   }
 
@@ -920,19 +985,14 @@ export class TheatreView {
     const waking: Waking | null = c.waking
     if (waking) {
       const rig = this.rigs[r++]
-      this.assign(rig, waking.kind)
+      this.assign(rig, waking.kind, waking.paper)
       this.poseRig(rig, waking.pose)
       this.darkMaterial.opacity = waking.fillIn
-      // While still a shadow on the screen, the colour stays hidden behind the dark face.
-      rig.body.visible = waking.fillIn >= 1 || waking.pose.dark === 0
-      rig.part.visible = rig.body.visible
     }
     for (let i = 0; i < c.companions.length && r < RIGS; i++) {
       const companion: Companion = c.companions[i]
       const rig = this.rigs[r++]
-      this.assign(rig, companion.kind)
-      rig.body.visible = true
-      rig.part.visible = true
+      this.assign(rig, companion.kind, companion.paper)
       this.poseRig(rig, companion.pose)
     }
     for (; r < RIGS; r++) this.rigs[r].group.visible = false
@@ -946,7 +1006,7 @@ export class TheatreView {
       const snore = sleeper.built.def.snore
       const enter = c.enterProgress()
       const color = sleeper.kind === 'dragon' ? SMOKE : RING_INK
-      for (let i = 0; i < sleeper.ringCount && n < MAX_RINGS; i++) n = this.writeRing(n, sleeper.rings[i], snore.x, snore.y, 0.09, 1, color, enter)
+      for (let i = 0; i < sleeper.ringCount && n < MAX_RINGS; i++) n = this.writeRing(n, sleeper.rings[i], snore.x, snore.y, 0.09, 1, color, enter, 1, SLEEP_RING_GROW)
     }
     for (const companion of c.companions) {
       if (companion.ringCount === 0) continue
@@ -964,8 +1024,8 @@ export class TheatreView {
     this.ringAlpha.needsUpdate = true
   }
 
-  private writeRing(n: number, ring: Ring, ox: number, oy: number, z: number, scale: number, color: THREE.Color, alpha: number, facing = 1): number {
-    const r = ring.r * scale
+  private writeRing(n: number, ring: Ring, ox: number, oy: number, z: number, scale: number, color: THREE.Color, alpha: number, facing = 1, grow = 1): number {
+    const r = ring.r * scale * grow
     this.m.makeScale(r, r, 1).setPosition(ox + ring.x * scale * facing, oy + ring.y * scale, z)
     this.rings.setMatrixAt(n, this.m)
     this.rings.setColorAt(n, color)
@@ -998,40 +1058,73 @@ export class TheatreView {
   }
 
   private twinkled = false
+  private burstsShown = true
 
   private updateTwinkles(t: number): void {
     const animate = this.governor.settings.twinkle
-    if (!animate && this.twinkled) return
     const a = this.twinkleAnchors
     const count = a.length / 4
-    for (let i = 0; i < count; i++) {
-      const tw = animate ? 0.75 + 0.25 * Math.sin(t * (1.3 + (i % 5) * 0.37) + i * 2.1) : 1
-      const size = a[i * 4 + 3] * tw
-      this.m.makeScale(size, size, 1).setPosition(a[i * 4], a[i * 4 + 1], a[i * 4 + 2])
-      this.twinkles.setMatrixAt(i, this.m)
-      this.twinkleAlpha.setX(i, 0.55 + 0.45 * tw)
-    }
-    // A tap on the sky makes a little burst of stars.
-    const spark = this.controller.spark
-    const age = this.controller.t - spark.at
-    for (let k = 0; k < 6; k++) {
-      const i = count + k
-      if (age < 0 || age > 0.9) {
-        this.m.makeScale(0, 0, 0)
+    let dirty = false
+    if (animate || !this.twinkled) {
+      for (let i = 0; i < count; i++) {
+        const tw = animate ? 0.75 + 0.25 * Math.sin(t * (1.3 + (i % 5) * 0.37) + i * 2.1) : 1
+        const size = a[i * 4 + 3] * tw
+        this.m.makeScale(size, size, 1).setPosition(a[i * 4], a[i * 4 + 1], a[i * 4 + 2])
         this.twinkles.setMatrixAt(i, this.m)
-        this.twinkleAlpha.setX(i, 0)
-        continue
+        this.twinkleAlpha.setX(i, 0.55 + 0.45 * tw)
       }
-      const angle = (k / 6) * Math.PI * 2 + 0.4
-      const reach = 1.5 + age * 7
-      const size = 0.9 * (1 - age / 0.9) + 0.2
-      this.m.makeScale(size, size, 1).setPosition(spark.x + Math.cos(angle) * reach, spark.y + Math.sin(angle) * reach, spark.z + 0.5)
-      this.twinkles.setMatrixAt(i, this.m)
-      this.twinkleAlpha.setX(i, 1 - age / 0.9)
+      this.twinkled = !animate
+      dirty = true
     }
+    // The bursts play on every tier: they answer the child.
+    const c = this.controller
+    const sparkAge = c.t - c.spark.at
+    const wakeAge = c.t - c.wakeBurst.at
+    const sparking = sparkAge >= 0 && sparkAge <= SPARK_S
+    const waking = wakeAge >= 0 && wakeAge <= WAKE_BURST_S
+    if (sparking || waking || this.burstsShown) {
+      // A tap on nothing in particular makes a little burst of stars: fanning up out of
+      // the floor, in shadow ink on the lit screen, and in a ring anywhere else.
+      const spark = c.spark
+      if (sparking && spark.surface !== this.sparkPainted && (spark.surface === 'screen' || this.sparkPainted === 'screen')) {
+        const color = spark.surface === 'screen' ? this.sparkInk : this.sparkCream
+        for (let k = 0; k < SPARK_STARS; k++) this.twinkles.setColorAt(count + k, color)
+        if (this.twinkles.instanceColor) this.twinkles.instanceColor.needsUpdate = true
+      }
+      if (sparking) this.sparkPainted = spark.surface
+      const up = spark.surface === 'floor'
+      for (let k = 0; k < SPARK_STARS; k++) {
+        const angle = up ? ((k + 0.5) / SPARK_STARS) * Math.PI : (k / SPARK_STARS) * Math.PI * 2 + 0.4
+        const reach = 1.5 + sparkAge * 7
+        const size = 0.9 * (1 - sparkAge / SPARK_S) + 0.2
+        const x = spark.x + Math.cos(angle) * reach
+        const y = spark.y + (up ? 0.8 : 0) + Math.sin(angle) * reach
+        this.setBurstStar(count + k, sparking, x, y, spark.z + 0.5, size, 1 - sparkAge / SPARK_S)
+      }
+      // The shadow comes alive: gold stars spring out of it and past the edge of its outline.
+      const burst = c.wakeBurst
+      const u = 1 - (1 - Math.min(1, wakeAge / WAKE_BURST_S)) ** 3
+      for (let k = 0; k < WAKE_STARS; k++) {
+        const angle = (k / WAKE_STARS) * Math.PI * 2 + (k % 2) * 0.2
+        const out = 0.55 + (0.75 + (k % 3) * 0.12) * u
+        const size = (k % 2 ? 1.5 : 2.1) * (1 - 0.55 * u)
+        const x = burst.x + Math.cos(angle) * burst.rx * out
+        const y = burst.y + Math.sin(angle) * burst.ry * out
+        this.setBurstStar(count + SPARK_STARS + k, waking, x, y, 0.8, size, 1 - u ** 3, (k % 2 ? -1 : 1) * u * 1.6)
+      }
+      this.burstsShown = sparking || waking
+      dirty = true
+    }
+    if (!dirty) return
     this.twinkles.instanceMatrix.needsUpdate = true
     this.twinkleAlpha.needsUpdate = true
-    this.twinkled = !animate
+  }
+
+  private setBurstStar(i: number, shown: boolean, x: number, y: number, z: number, size: number, alpha: number, spin = 0): void {
+    if (shown) this.m.makeRotationZ(spin).scale(burstScale.set(size, size, 1)).setPosition(x, y, z)
+    else this.m.makeScale(0, 0, 0)
+    this.twinkles.setMatrixAt(i, this.m)
+    this.twinkleAlpha.setX(i, shown ? alpha : 0)
   }
 
   private updateGuidance(): void {
@@ -1046,7 +1139,7 @@ export class TheatreView {
     this.hand.visible = true
     this.handMaterial.opacity = pose.opacity * 0.92
     const press = 1 - pose.press * 0.08
-    this.hand.scale.set(press * 1.4, press * 1.4, 1)
+    this.hand.scale.set(press * 1.7, press * 1.7, 1)
     this.hand.position.set(pose.hand.x, pose.hand.y, pose.hand.z)
     const kind = c.shapes[demo.index].kind
     this.ghost.geometry = this.cardFor(kind)
@@ -1150,25 +1243,70 @@ function mergeTwo(a: THREE.BufferGeometry, b: THREE.BufferGeometry): THREE.Buffe
   return out
 }
 
-/** A paper hand with the index finger pointing down; the fingertip is at the origin. */
+/** A paper hand pointing up with its index finger (fingertip at the origin), a curled fist, a thumb and a cuff below. */
 function handOutline(): Point[] {
   const pts: [number, number][] = [
-    [0, 0],
-    [0.55, 0.15],
-    [0.7, 2.4],
-    [1.1, 2.6],
-    [1.9, 2.5],
-    [2.6, 2.9],
-    [3.2, 3.6],
-    [3.1, 5.6],
-    [2.4, 6.6],
-    [0.2, 6.8],
-    [-1.3, 6.2],
-    [-1.6, 5.2],
-    [-1.2, 4.5],
-    [-0.9, 3.6],
-    [-0.55, 2.4],
-    [-0.55, 0.15],
+    [0, -0.05],
+    [0.42, 0.12],
+    [0.6, 0.55],
+    [0.62, 2.9],
+    [1.15, 3.0],
+    [1.8, 3.1],
+    [2.1, 3.55],
+    [1.9, 4.0],
+    [2.2, 4.45],
+    [2.05, 4.95],
+    [2.25, 5.4],
+    [1.95, 5.95],
+    [1.65, 6.35],
+    [1.7, 7.7],
+    [-1.4, 7.7],
+    [-1.35, 6.35],
+    [-1.8, 6.05],
+    [-2.3, 5.45],
+    [-2.5, 4.75],
+    [-2.3, 4.1],
+    [-1.8, 3.7],
+    [-1.15, 3.55],
+    [-0.62, 3.2],
+    [-0.6, 0.55],
+    [-0.42, 0.12],
   ]
-  return pts.map(([x, y]) => ({ x, y }))
+  return chaikinClosed(
+    pts.map(([x, y]) => ({ x, y: -y })),
+    2,
+  )
+}
+
+/** The outline pushed out along its normals by `d` (either winding). */
+function offsetOutline(points: readonly Point[], d: number): Point[] {
+  const n = points.length
+  const sign = polygonArea(points) >= 0 ? 1 : -1
+  return points.map((p, i) => {
+    const a = points[(i + n - 1) % n]
+    const b = points[(i + 1) % n]
+    const tx = b.x - a.x
+    const ty = b.y - a.y
+    const len = Math.hypot(tx, ty) || 1
+    return { x: p.x + ((ty / len) * d) * sign, y: p.y - ((tx / len) * d) * sign }
+  })
+}
+
+/** The ghost hand: warm paper with an ink edge (so it reads on the cream screen and pale cards) and a blue cuff. */
+function handGeometry(): THREE.BufferGeometry {
+  const hand = handOutline()
+  const edge = paintFlat(flatGeometry(offsetOutline(hand, 0.3)), paper(PALETTE.ink))
+  edge.translate(0.12, -0.12, -0.02)
+  const face = paintFlat(flatGeometry(hand), paper('#fff4e0'))
+  const cuff = paintFlat(
+    flatGeometry([
+      { x: -1.38, y: -6.55 },
+      { x: 1.68, y: -6.55 },
+      { x: 1.7, y: -7.7 },
+      { x: -1.4, y: -7.7 },
+    ]),
+    paper('#b9c6ff'),
+  )
+  cuff.translate(0, 0, 0.01)
+  return mergeTwo(mergeTwo(edge, face), cuff)
 }
