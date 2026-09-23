@@ -1,6 +1,7 @@
 ---
 title: Push branches and let the owner open PRs, run CI on every push, and keep secrets out of the repo when an agent delivers a jam game
 date: 2026-09-22
+last_updated: 2026-09-23
 category: workflow-issues
 module: agent-delivery
 problem_type: workflow_issue
@@ -30,18 +31,20 @@ tags: [agent-delivery, pull-requests, ci, github-actions, secrets, compound-cli,
 
 ## Context
 
-Pebble Table was delivered by an agent running on the owner's Mac mini, on the branch `cursor/pebble-table-cceb` (in PR #1, unmerged as of writing). Four things about that setup cost time and are easy to get wrong the next time.
+Pebble Table was delivered by an agent running on the owner's Mac mini, on the branch `cursor/pebble-table-cceb` (merged in PR #1). Four things about that setup cost time and are easy to get wrong the next time.
 
 - The agent's pull request tool is bound to a different repository (thinkroom), so it cannot create or edit tada-jam PRs. `gh` is authenticated but read-only for the agent.
 - Until CI was changed, a pushed branch had no status until someone opened a PR.
 - compound-cli needs `TYPESAFE_API_KEY` for `compound find` (see the Documented knowledge section of `AGENTS.md`). The owner said to take the key from baby-agent, which meant searching the owner's files for a secret without leaking it.
 - The agent environment has a few quirks: file-sync lag between tool calls, zsh word-splitting rules, and long browser measurements that outlive a single command.
 
+The ten style-showcase games (PRs #2 to #10 and #14) were built on cloud VMs, where `git push` returns 403 and the worker brief routes publishing through the GitHub MCP instead. That route has its own rules, in [delivering from a cloud VM](deliver-from-a-cloud-vm-through-the-github-mcp-when-git-push-is-refused.md); the PR hand-off and secrets rules here apply there too.
+
 ## Guidance
 
 ### Pull requests: push, keep green, hand off the description
 
-1. Do not try to create or edit a tada-jam PR with the agent's PR tool, and do not work around it with other tools (for example raw API calls or a write-capable token). The binding is to another repository; `gh` is read-only on purpose.
+1. Do not try to create or edit a tada-jam PR with the agent's PR tool, and do not work around it with other tools (for example raw API calls or a write-capable token). The binding is to another repository; `gh` is read-only on purpose. The GitHub MCP route on the cloud VMs is not such a workaround: the brief sanctions it there.
 2. Push the feature branch with `git push -u origin <branch>` and make sure CI is green on it.
 3. Write the PR description to the Project store's `internal/` folder (Pebble Table used `internal/pebble-table-pr-body.md`), not into the repo. Tell the coordinator or owner the path; they open or edit the PR.
 4. Follow the quality bar in `AGENTS.md` when writing that description: say how the game meets each line of the bar, with a measured frame rate.
@@ -117,4 +120,5 @@ Reporting a key's location in a handoff: "compound-cli reads `TYPESAFE_API_KEY` 
 ## Related
 
 - [`share-a-production-build-not-the-dev-server.md`](share-a-production-build-not-the-dev-server.md): what to share with the owner once a branch is pushed.
+- [`deliver-from-a-cloud-vm-through-the-github-mcp-when-git-push-is-refused.md`](deliver-from-a-cloud-vm-through-the-github-mcp-when-git-push-is-refused.md): publishing when `git push` returns 403, in batches through the GitHub MCP.
 - [`AGENTS.md`](../../../AGENTS.md): documented knowledge and compound-cli, including the key `compound find` needs.

@@ -69,10 +69,16 @@ Feedback that comes from the material's own physical response (a beam that level
 ## Process
 
 ### Refinement pass
-One cycle of improving how a game looks: screenshot a fixed, seeded scene at iPad-landscape size on a fixed timer, critique it honestly from a young child's point of view, make one focused set of fixes, re-screenshot, and check the frame rate, reverting any fix that hurts.
+One cycle of improving how a game looks: screenshot a fixed, seeded scene at iPad-landscape size at a fixed moment of game time, critique it honestly from a young child's point of view, make one focused set of fixes, re-screenshot, and check the frame rate, reverting any fix that hurts.
 *Avoid:* iteration, polish round
 
 Passes are logged in order with their critique, change, and frame rate, so the next game can see what moved readability and what was reverted.
+
+### Walkthrough
+A scripted recording of a whole game, from a fresh open through the hands-off opening and its guidance, the core loop, every verb, and each character's reactions, reviewed frame by frame before the game is called done.
+*Avoid:* demo video, screen recording
+
+It is played at a quick child's pace, each step starting as soon as the game allows, because overlapping moments are where state goes wrong and a still of one moment cannot show them. Game time advances in fixed steps from the first frame the game draws, with randomness seeded, so two recordings of the same script match frame for frame however slowly the machine renders. Run in real time on a device, the same script also measures smoothness against the Quality bar; on a machine that renders in software only the stepped recording means anything, and it judges behaviour and readability. It differs from a Cold playtest proxy, which plays only the first minute as a newcomer to find what is unclear.
 
 ## Motion
 
@@ -85,12 +91,38 @@ Variants of an action are picked without repeating back to back, with randomized
 ## Performance
 
 ### Quality tier
-One of a few rendering levels a game steps between at runtime, each trading look for frame time (pixel density, fur, the post pass, physics catch-up), chosen by the game's own frame-time measurements rather than by guessing the device.
+One of a few rendering levels a game steps between at runtime, each trading look for rendering cost (pixel density, fur, the post pass, physics catch-up), chosen by the game's Governor rather than by guessing the device.
 *Avoid:* graphics preset, LOD level
 
-Stepping down is quick after sustained dropped frames; stepping up needs a long clean stretch and backs off after a failed attempt, so tiers never flicker. A grown-up overlay can pin a tier to judge it on a device.
+The lowest tier must still look like the game. A grown-up overlay can pin a tier to judge it on a device. On a machine that renders in software, a working Governor settles at the lowest tier, so a measurement there describes the lowest look unless a tier is pinned.
+
+### Governor
+The part of a game that watches its own frame intervals and Frame work and moves between Quality tiers to fit whatever device it runs on.
+*Avoid:* tier controller, tier monitor, quality monitor
+
+Stepping down follows missed frames counted over short windows rather than an average, so steady judder is caught and one long frame is not mistaken for a slow device; a window far off the pace drops two tiers at once. Stepping up needs a long clean stretch with Frame work to spare, because the interval cannot show spare time, and an upgrade that fails is not retried soon (a longer wait each time, or a ceiling for the session), so tiers never flicker. Touch devices start one tier down while it learns.
+
+### Frame work
+The CPU time a frame spends on the game's own work, advancing the game and submitting the draw, as distinct from the frame interval, the time from one displayed frame to the next.
+*Avoid:* frame time, CPU time
+
+Frame work is what performance budgets are written in and what carries over between machines. The interval is paced by the display, so on a device that already meets its refresh rate it cannot show how much time is spare. A software renderer that rasterizes inside the draw calls can fold its raster time into Frame work, which then stops being comparable.
+
+### Frame-budget test
+A headless test that runs in CI and drives a game's heaviest moment through its real game logic, failing when the Frame work spent advancing the game exceeds a budget; the cost of drawing is left to measurement in a browser.
+*Avoid:* perf test
+
+It has to hold on a shared, busy machine that adds time to random frames. Where the code exposes the work that sets the cost (physics steps, contacts, candidates scored), it counts that work; otherwise it replays the same seeded input several times and keeps each frame's quickest run, never the slowest frame of any one run. It also checks that the heavy moment happened, so a run that skipped it cannot pass.
+
+### Perf probe
+The jam's shared browser script that plays any game's production build through the same scripted touches and hands-off pauses, and reports its frame rate, its worst second, Frame work, draw counts, and the Quality tiers it visited.
+*Avoid:* jam probe
+
+It reads Frame work, the current tier, and the draw counts from a grown-up handle each game publishes on the page, so a game publishes that handle in the one shape the probe expects. It can pin a Quality tier or leave the choice to the Governor, and it can throttle the CPU or enlarge the page to stand in for a weaker device. Its numbers describe the machine and browser it ran on, not a child's device.
 
 ## Flagged ambiguities
 
 - "Art direction" had been used for both one game's look and the jam-wide standard. These are distinct: a game's look is its Claimed style, described in its Art guide; the jam-wide standard is the Quality bar.
+- "Frame time" had been used both for the interval between displayed frames and for the CPU work inside one. These are distinct: the work is Frame work; the interval is the display's pacing.
+- "Perf test" had named both a game's Frame-budget test and its tests of the Governor and Quality tiers. These are distinct: the Frame-budget test bounds Frame work; the Governor's tests feed it synthetic frames and check which tier it picks.
 - "Wordless guidance" had been used both for the idle hints and for the rule that a game needs no words at all. These are distinct: the idle hints are the Guidance ladder; understanding every interaction without words at the youngest age of the Age band is Wordless clarity.
