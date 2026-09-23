@@ -32,6 +32,8 @@ export class MeadowView {
   private readonly models: MeadowModels
   private readonly post = new PostPass()
   private readonly tiers: TierController
+  /** CPU work of the last drawn frame (ms), for the tier controller's step-up check. */
+  private work = 0
   private readonly perf = new PerfRecorder()
   private readonly observer: ResizeObserver
   private readonly overlay: PerfOverlay | null
@@ -145,7 +147,7 @@ export class MeadowView {
     const interval = this.last < 0 ? 1000 / 60 : now - this.last
     this.last = now
     if (this.skipped) this.tiers.skip(now / 1000)
-    else if (this.tiers.frame(interval, now / 1000)) this.applyTier()
+    else if (this.tiers.frame(interval, now / 1000, this.work)) this.applyTier()
     this.skipped = false
     this.controller.update(Math.min(0.05, interval / 1000))
     this.models.sync(this.controller, this.camera)
@@ -155,7 +157,8 @@ export class MeadowView {
     if (tier.post) this.post.render(this.renderer, this.scene, this.camera, tier.blur)
     else this.renderer.render(this.scene, this.camera)
     const perf = this.perf
-    perf.push(performance.now() - start)
+    this.work = performance.now() - start
+    perf.push(this.work)
     perf.tier = this.tiers.tier
     perf.drawCalls = info.render.calls
     perf.triangles = info.render.triangles
@@ -170,7 +173,6 @@ export class MeadowView {
       this.renderer.setSize(this.width, this.height, false)
       this.post.setSize(Math.round(this.width * dpr), Math.round(this.height * dpr))
     }
-    this.post.setSamples(tier.msaa ? 4 : 0)
     this.models.setTier(tier)
   }
 

@@ -46,6 +46,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Turning Tower | Geometric (Monument Valley): faceted flat-shaded towers on stepped plinths under a peach-to-lavender dusk, orthographic, with a hard hue split (mint paths, sunflower handles, indigo wanderer) | [`games/turning-tower/ART.md`](../games/turning-tower/ART.md) |
 | Critter Clay | Claymation 3D, second entry (owner-approved): a clay workshop bench in cool daylight, cobalt, lemon, and bubblegum-pink plasticine on a slate-blue board, 12 fps boil only while moving | [`games/critter-clay/ART.md`](../games/critter-clay/ART.md) |
 | Hillside Spring | Painterly, Ghibli-like: a hand-painted terraced garden, unlit painted scenery, cel-lit movers, afternoon light shafts, gold bamboo on sage | [`games/hillside-spring/ART.md`](../games/hillside-spring/ART.md) |
+| Cosy Scarf | Knitted and crocheted yarn 3D: amigurumi animals, a chunky striped scarf on a honey-wood loom with a plain felt backboard, faint knitted snow hills under a ribbed knit sky | [`games/cosy-scarf/ART.md`](../games/cosy-scarf/ART.md) |
 
 ## 4. Menu of unclaimed directions
 

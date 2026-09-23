@@ -39,6 +39,22 @@ describe('QualityGovernor', () => {
     expect(governor.tier).toBe(1)
   })
 
+  it('leaves out one isolated long frame per window (a first-time build), but not two', () => {
+    const window = (governor: QualityGovernor, long: number) => {
+      feed(governor, 36 - long, 16.7)
+      feed(governor, 4, 25)
+      feed(governor, long, 350)
+    }
+    const once = new QualityGovernor(0)
+    feed(once, 40, 16.7)
+    for (let i = 0; i < 4; i++) window(once, 1)
+    expect(once.tier).toBe(0)
+    const twice = new QualityGovernor(0)
+    feed(twice, 40, 16.7)
+    for (let i = 0; i < 2; i++) window(twice, 2)
+    expect(twice.tier).toBe(1)
+  })
+
   it('steps down at once when frames are terrible', () => {
     const governor = new QualityGovernor(0)
     feed(governor, 40, 16.7)

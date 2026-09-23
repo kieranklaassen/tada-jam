@@ -7,6 +7,9 @@ import { deserialize } from './state'
 import { PALETTE } from './view/clay'
 import { GameView } from './view/game'
 
+/** Build the sound graph this long after load: past the first frames, well before a child's first tap usually lands. */
+const AUDIO_PREPARE_MS = 1500
+
 // A thin Mount: load the saved table, build the controller, render the 3D
 // view, and forward attention. The table itself is the whole UI.
 
@@ -29,16 +32,20 @@ function PebbleTableMount({ ctx }: { ctx: CartridgeContext }) {
   useEffect(() => {
     let disposed = false
     let created: TableController | null = null
+    let prepareTimer: ReturnType<typeof setTimeout> | undefined
     void storage
       .load<unknown>()
       .catch(() => null)
       .then((saved) => {
         if (disposed) return
-        created = new TableController(deserialize(saved, childAge), { save: (state) => storage.save(state), sound: new TableAudio() })
+        const sound = new TableAudio()
+        created = new TableController(deserialize(saved, childAge), { save: (state) => storage.save(state), sound })
         setTable(created)
+        prepareTimer = setTimeout(() => sound.prepare(), AUDIO_PREPARE_MS)
       })
     return () => {
       disposed = true
+      clearTimeout(prepareTimer)
       created?.dispose()
     }
   }, [storage, childAge])
