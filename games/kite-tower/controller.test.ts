@@ -95,6 +95,14 @@ describe('KiteController', () => {
     expect(last.pieces[0]).toMatchObject({ id: 0, tray: false })
   })
 
+  it('a touch unlocks the sound on the way down and again on the way up, where a finger counts as a gesture', () => {
+    const { game, sound } = make(defaultState(5))
+    game.pointerDown(1, { x: 0, y: 40 }, 0)
+    expect(sound.calls.filter((c) => c === 'unlock')).toHaveLength(1)
+    game.pointerUp(1, { x: 0, y: 40 }, 80)
+    expect(sound.calls.filter((c) => c === 'unlock')).toHaveLength(2)
+  })
+
   it('dragging a piece back onto the tray puts it away', () => {
     const { game, sound } = make(withPieces([{ id: 1, tray: false, x: -2, y: 0.5, a: 0 }]))
     run(game, 0.5)

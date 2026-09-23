@@ -156,6 +156,8 @@ export class KiteController {
   /** Index into `stacks` for each piece, -1 when loose or moving. */
   readonly pieceStack: number[]
   stackKick: number[] = []
+  /** When something last toppled or crashed loudly enough for everyone to react. */
+  toppleAt = -Infinity
   readonly guidance: GuidanceView = { glow: 0, hint: null, hand: null, peek: null, buildAt: { x: 0, y: 0 } }
 
   private readonly deps: ControllerDeps
@@ -394,7 +396,9 @@ export class KiteController {
     this.handle(this.gestures.move(pointer, at))
   }
 
+  /** Unlocks on the way up too: for a finger, WebKit and Chrome count only the lift as a user gesture. */
   pointerUp(pointer: number, at: Vec2, time: number): void {
+    this.sound?.unlock()
     this.handle(this.gestures.up(pointer, at, time))
   }
 
@@ -1056,6 +1060,7 @@ export class KiteController {
   // ---- watchers ----------------------------------------------------------
 
   private watchersReact(): void {
+    this.toppleAt = this.t
     for (const w of this.watchers) {
       if (w.mode === 'cheer') continue
       w.mode = 'react'
