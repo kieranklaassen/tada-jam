@@ -3,16 +3,19 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { GardenController, Projector } from '../controller'
 import type { Point } from '../layout'
-import { parseTierOverride, QualityGovernor, TIERS, TOP_TIER, wantsPerfOverlay } from '../tiers'
+import { parseTierOverride, QualityGovernor, REST_BEFORE_PACING, skipFrame, TIERS, TOP_TIER, wantsPerfOverlay } from '../tiers'
 import { GardenView } from './garden'
 import { GlowPass } from './glow'
+import { GrownUpOverlay } from './overlay'
 import { PALETTE } from './palette'
 import { installJamPerf, JamPerf, PerfOverlay } from './perf'
 
 // The stage: a fixed camera looking down over the light table from the
 // child's side, one frame hook that steps the garden, updates the view, and
 // renders (timed as one span for window.__jamPerf), the top tier's glow
-// pass, and direct touch. The loop stops whenever the garden is put away.
+// pass, and direct touch. A resting garden renders at half rate; the loop
+// stops whenever the garden is put away. Triple-tapping the top-left corner
+// opens the grown-up overlay.
 
 const TARGET = new THREE.Vector3(0, 0, 12)
 const PITCH = (55 * Math.PI) / 180
@@ -66,8 +69,12 @@ function bindInput(garden: GardenController, element: HTMLCanvasElement): () => 
   }
   const down = (event: PointerEvent) => {
     event.preventDefault()
-    element.setPointerCapture?.(event.pointerId)
     garden.pointerDown(event.pointerId, local(event), event.timeStamp)
+    try {
+      element.setPointerCapture?.(event.pointerId)
+    } catch {
+      // Capture throws when the pointer is already gone (a finger lifted mid-dispatch); the press still counts.
+    }
   }
   const move = (event: PointerEvent) => garden.pointerMove(event.pointerId, local(event))
   const up = (event: PointerEvent) => garden.pointerUp(event.pointerId, local(event), event.timeStamp)
@@ -95,6 +102,7 @@ function Garden3D({ garden, governor, perf, tier, onTier, running }: { garden: G
   const view = useMemo(() => new GardenView(garden), [garden])
   const glow = useMemo(() => new GlowPass(), [])
   const last = useRef(0)
+  const pacing = useRef({ frame: 0, pending: 0, paced: false })
   const glowOn = useRef(TIERS[tier].glowPass)
 
   useEffect(() => {
@@ -131,11 +139,21 @@ function Garden3D({ garden, governor, perf, tier, onTier, running }: { garden: G
   useEffect(() => bindInput(garden, gl.domElement), [garden, gl])
 
   useFrame((_, delta) => {
+    const pace = pacing.current
+    pace.frame += 1
+    pace.pending += delta
+    const resting = garden.restingFor()
+    const paced = resting > REST_BEFORE_PACING
+    if (skipFrame(pace.frame, resting)) return
     const start = performance.now()
     const interval = last.current > 0 ? start - last.current : 0
     last.current = start
-    if (interval > 0 && governor.sample(interval)) onTier(governor.tier)
-    garden.step(Math.min(delta, 1 / 20))
+    // A paced frame's long interval is rest, not a slow device.
+    if (interval > 0 && !paced && !pace.paced && governor.sample(interval)) onTier(governor.tier)
+    pace.paced = paced
+    perf.paced = paced
+    garden.step(Math.min(pace.pending, 1 / 20))
+    pace.pending = 0
     view.update(garden, camera)
     gl.info.reset()
     gl.render(scene, camera)
@@ -175,6 +193,7 @@ export function GardenStage({ garden, running }: { garden: GardenController; run
         <Garden3D garden={garden} governor={options.governor} perf={perf} tier={tier} onTier={setTier} running={running} />
       </Canvas>
       {options.overlay && <PerfOverlay perf={perf} />}
+      <GrownUpOverlay perf={perf} governor={options.governor} onTier={setTier} />
     </>
   )
 }

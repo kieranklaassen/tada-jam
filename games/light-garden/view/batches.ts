@@ -83,7 +83,8 @@ const WASH = 1
 const INSIDE = 2
 const CORE_HEIGHT = 1.9
 const WASH_HEIGHT = 0.05
-const INSIDE_HEIGHT = 3.72
+/** Just above the prism's bevelled top, the only glass light travels inside. */
+const INSIDE_HEIGHT = 4.42
 const QUADS_PER_SEGMENT = 2
 
 export class BeamRibbon {

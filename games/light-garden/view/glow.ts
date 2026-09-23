@@ -3,10 +3,15 @@ import * as THREE from 'three'
 // The top tier's one glow pass. Only emissive things (beams and additive
 // sprites, which also live on GLOW_LAYER) are drawn again into a target at
 // half the CSS resolution, blurred there in two small separable steps, and
-// added over the finished frame by a single full-screen composite. Lower
-// tiers skip all of it; their sprite halos are simply larger.
+// added over the finished frame by a single full-screen composite. The
+// target has no depth from the glass, so broad halos and caustics stay out
+// of it (GLOW_PASS) or they would wash over the pieces. Lower tiers skip all
+// of it; their sprite halos are simply larger.
 
 export const GLOW_LAYER = 1
+
+/** Shared by the beam and sprite materials: 1 while the glow layer is drawn, so only small hot light blooms. */
+export const GLOW_PASS = { value: 0 }
 
 const FULLSCREEN_VERTEX = /* glsl */ `
 varying vec2 vUv;
@@ -64,7 +69,7 @@ export class GlowPass {
       depthWrite: false,
     })
     this.composite = new THREE.ShaderMaterial({
-      uniforms: { uTexture: { value: null }, uStrength: { value: 0.9 } },
+      uniforms: { uTexture: { value: null }, uStrength: { value: 0.7 } },
       vertexShader: FULLSCREEN_VERTEX,
       fragmentShader: COMPOSITE_FRAGMENT,
       depthTest: false,
@@ -100,9 +105,11 @@ export class GlowPass {
     gl.setClearColor(this.black, 1)
 
     camera.layers.set(GLOW_LAYER)
+    GLOW_PASS.value = 1
     gl.setRenderTarget(this.a)
     gl.clear(true, true, false)
     gl.render(scene, camera)
+    GLOW_PASS.value = 0
     camera.layers.set(0)
 
     gl.autoClear = false

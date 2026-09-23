@@ -4,9 +4,16 @@ import { TOP_TIER } from '../tiers'
 // Grown-up instrumentation. `window.__jamPerf` holds the CPU time of each
 // frame's work (controller step, view update, and render submit) for the
 // last 600 frames, plus the tier and the renderer budget. `?fps=1` shows a
-// small bar graph of it; there are no numerals anywhere.
+// small bar graph of it with no numerals; the numbers live in the
+// triple-tap grown-up overlay (`overlay.tsx`).
 
 const FRAMES = 600
+/** Frames summarised by `stats`, about a second at 60 Hz. */
+const WINDOW = 60
+/** An interval this long (ms) missed a 60 Hz vsync. */
+const DROPPED_MS = 25
+
+export type PerfStats = { fps: number; frameMs: number; cpuMs: number; dropped: number; frames: number }
 
 export class JamPerf {
   readonly cpuMs: number[] = []
@@ -14,7 +21,11 @@ export class JamPerf {
   tier = 0
   drawCalls = 0
   triangles = 0
+  /** Rendering every other frame because the garden is resting. */
+  paced = false
   private cursor = 0
+  private readonly gaps: number[] = []
+  private readonly work: number[] = []
 
   record(cpuMs: number, intervalMs: number, drawCalls: number, triangles: number, tier: number): void {
     if (this.cpuMs.length < FRAMES) {
@@ -36,11 +47,36 @@ export class JamPerf {
     this.cursor = 0
   }
 
+  /** Frame rate, mean interval, CPU p95, and missed vsyncs over the newest frames (a paced frame may take two). */
+  stats(out: PerfStats): PerfStats {
+    const n = this.recent(this.intervals, WINDOW, this.gaps)
+    this.recent(this.cpuMs, WINDOW, this.work)
+    let sum = 0
+    let counted = 0
+    let dropped = 0
+    const late = DROPPED_MS * (this.paced ? 2 : 1)
+    for (let i = 0; i < n; i++) {
+      const gap = this.gaps[i]
+      if (!(gap > 0)) continue
+      sum += gap
+      counted += 1
+      if (gap > late) dropped += 1
+    }
+    const cpu = this.work.slice(0, n).sort((a, b) => a - b)
+    out.frameMs = counted ? sum / counted : 0
+    out.fps = out.frameMs > 0 ? 1000 / out.frameMs : 0
+    out.cpuMs = n ? cpu[Math.min(n - 1, Math.floor(n * 0.95))] : 0
+    out.dropped = dropped
+    out.frames = n
+    return out
+  }
+
   /** The newest `count` samples of `list`, oldest first, into `out`. */
   recent(list: readonly number[], count: number, out: number[]): number {
-    const n = Math.min(count, list.length)
-    const end = list.length < FRAMES ? list.length : this.cursor
-    for (let i = 0; i < n; i++) out[i] = list[(end - n + i + FRAMES) % Math.max(1, list.length)]
+    const size = list.length
+    const n = Math.min(count, size)
+    const end = size < FRAMES ? size : this.cursor
+    for (let i = 0; i < n; i++) out[i] = list[(end - n + i + size) % size]
     return n
   }
 }
