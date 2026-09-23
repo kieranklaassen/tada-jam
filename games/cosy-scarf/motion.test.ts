@@ -154,6 +154,29 @@ describe('motion director', () => {
     }
   })
 
+  it('answers a cold poke with an ask as soon as the shiver ends, unless the child is busy', () => {
+    for (const animal of ANIMALS) {
+      const director = new MotionDirector(animal, 13)
+      const pose = emptyPose()
+      director.sample(0, false, true, pose)
+      director.trigger('poke', 0.1)
+      let t = 0.1
+      while (director.playing('poke', t)) director.sample((t += 1 / 30), false, true, pose)
+      const ended = t
+      while (!director.playing('ask', t) && t < ended + 1) director.sample((t += 1 / 30), false, true, pose)
+      expect(director.playing('ask', t), animal).not.toBeNull()
+      expect(t - ended, animal).toBeLessThan(0.4)
+
+      const busy = new MotionDirector(animal, 13)
+      busy.sample(0, false, true, pose)
+      busy.trigger('poke', 0.1)
+      for (let q = 0.1; q < 1.8; q += 1 / 30) {
+        busy.sample(q, true, true, pose)
+        expect(busy.playing('ask', q)).toBeNull()
+      }
+    }
+  })
+
   it('drops a playing delight when a real action starts', () => {
     const director = new MotionDirector('bear', 5)
     const pose = emptyPose()

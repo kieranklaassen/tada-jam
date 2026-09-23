@@ -61,6 +61,8 @@ export type ActionKind = 'poke' | 'pet' | 'row' | 'hum' | 'ask' | 'delight'
 export const ACTION_KINDS: readonly ActionKind[] = ['poke', 'pet', 'row', 'hum', 'ask', 'delight']
 /** Things that happened to the animal; idle beats (asks and delights) never play over them. */
 const FOREGROUND: readonly ActionKind[] = ['poke', 'pet', 'row', 'hum']
+/** Seconds between a poke's end and the ask that answers it. */
+const POKE_ANSWER_GAP = 0.25
 
 export type Action = {
   name: string
@@ -889,6 +891,8 @@ export class MotionDirector {
     slot.side = this.random() < 0.5 ? -1 : 1
     if (kind !== 'delight') this.slots.delight.action = null
     if (kind !== 'delight' && kind !== 'ask') this.slots.ask.action = null
+    // A poke is the child asking "what's wrong?": once the shiver ends, the cold animal answers with an ask.
+    if (kind === 'poke') this.nextBeat = slot.start + action.duration / slot.speed + POKE_ANSWER_GAP
     return action.name
   }
 
