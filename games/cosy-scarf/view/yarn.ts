@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { FELT, feltBottom } from '../layout'
 
 // Cosy Scarf's knitted and crocheted look (games/cosy-scarf/ART.md).
 // Every surface is yarn, but only the scarf and the characters carry a
@@ -23,6 +24,7 @@ export const PALETTE = {
   skyGlow: '#dfe4ea',
   snow: '#eef2f6',
   snowShade: '#bac8d6',
+  powder: '#86a2c4',
   hill: '#d9e1e9',
   hillFar: '#a9bbce',
   pine: '#3f6a5a',
@@ -248,6 +250,8 @@ function ballHeight(size: number): HTMLCanvasElement {
 export type YarnTextures = {
   knitNormal: THREE.Texture
   knitShade: THREE.Texture
+  /** The knit's shading baked into an albedo tile, for the lowest tier, which drops the hill's relief. */
+  knitFlat: THREE.Texture
   crochetNormal: THREE.Texture
   crochetShade: THREE.Texture
   ballNormal: THREE.Texture
@@ -262,12 +266,14 @@ function ringTexture(): THREE.Texture {
   const texture = new THREE.CanvasTexture(
     canvas(size, size, (g) => {
       const c = size / 2
+      // A bright core for the dark blanket and felt, and an amber edge (once tinted) so the ring still reads on pale snow.
       const gradient = g.createRadialGradient(c, c, 0, c, c, c)
       gradient.addColorStop(0, 'rgba(255,255,255,0.18)')
-      gradient.addColorStop(0.62, 'rgba(255,255,255,0.3)')
-      gradient.addColorStop(0.78, 'rgba(255,255,255,1)')
-      gradient.addColorStop(0.9, 'rgba(255,255,255,0.35)')
-      gradient.addColorStop(1, 'rgba(255,255,255,0)')
+      gradient.addColorStop(0.6, 'rgba(255,255,255,0.3)')
+      gradient.addColorStop(0.74, 'rgba(255,255,255,1)')
+      gradient.addColorStop(0.83, 'rgba(200,110,28,0.95)')
+      gradient.addColorStop(0.92, 'rgba(200,110,28,0.4)')
+      gradient.addColorStop(1, 'rgba(200,110,28,0)')
       g.fillStyle = gradient
       g.fillRect(0, 0, size, size)
     }),
@@ -341,6 +347,7 @@ export function createTextures(): YarnTextures {
   const textures = {
     knitNormal: normalFrom(knit, 5),
     knitShade: shadeFrom(knit, 0.42),
+    knitFlat: shadeFrom(knit, 0.72),
     crochetNormal: normalFrom(crochet, 4),
     crochetShade: shadeFrom(crochet, 0.55),
     ballNormal: normalFrom(ballHeight(128), 3.5),
@@ -421,6 +428,114 @@ export function patchYarn(material: THREE.MeshStandardMaterial, patch: YarnPatch
   return warmth
 }
 
+const WOUND = /* glsl */ `
+varying vec3 vWoundDir;
+varying mat3 vWoundToView;
+const float WOUND_STRANDS = 8.5 * 6.2831853;
+// Axis and half-width (in the dot product with the axis) of each band, in winding order; the first covers the whole ball.
+const vec4 WOUND_BANDS[5] = vec4[5](
+  vec4(0.0, 1.0, 0.0, 2.0),
+  vec4(0.976, 0.195, 0.098, 0.48),
+  vec4(-0.279, 0.233, 0.932, 0.44),
+  vec4(0.697, 0.597, -0.398, 0.4),
+  vec4(-0.601, 0.45, -0.661, 0.38)
+);
+float woundYarn(vec3 d, out vec3 grad, out float tuck) {
+  float h = 0.0;
+  grad = vec3(0.0);
+  tuck = 1.0;
+  for (int i = 0; i < 5; i++) {
+    vec3 axis = WOUND_BANDS[i].xyz;
+    float width = WOUND_BANDS[i].w;
+    float lat = dot(d, axis);
+    float away = abs(lat);
+    float cover = 1.0 - smoothstep(width - 0.05, width, away);
+    float phase = lat * WOUND_STRANDS;
+    h = mix(h, 0.5 + 0.5 * cos(phase), cover);
+    grad = mix(grad, -0.5 * WOUND_STRANDS * sin(phase) * (axis - lat * d), cover);
+    tuck = mix(tuck, 1.0, cover);
+    tuck *= 1.0 - 0.3 * smoothstep(width - 0.02, width + 0.02, away) * (1.0 - smoothstep(width + 0.02, width + 0.1, away));
+  }
+  return h;
+}
+`
+
+/**
+ * The loom's felt unrolls with the scarf: its roll and bottom edge (everything
+ * within a roll's width of the fully unrolled edge) ride up to `uFeltBottom`,
+ * and any felt below that folds up behind the roll.
+ */
+function patchFelt(material: THREE.MeshStandardMaterial): { value: number } {
+  const bottom = { value: feltBottom(0) }
+  material.customProgramCacheKey = () => 'cosy-felt'
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uFeltBottom = bottom
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nuniform float uFeltBottom;').replace(
+      '#include <begin_vertex>',
+      `#include <begin_vertex>
+      float feltLift = uFeltBottom - ${FELT.bottom.toFixed(2)};
+      if (transformed.y <= ${(FELT.bottom + FELT.roll + 0.05).toFixed(2)}) transformed.y += feltLift;
+      else transformed.y = max(transformed.y, uFeltBottom);`,
+    )
+  }
+  return bottom
+}
+
+/** Which ball instance wears the guidance glow on its own rim, and how strongly (0..1, breathing). */
+export type BallGlow = { index: { value: number }; strength: { value: number } }
+
+/**
+ * Wound yarn balls: bands of parallel strands round great circles, each band
+ * lying over the ones wound before it, drawn in the shader from the ball's own
+ * directions so the strands turn with the ball. The relief is an analytic
+ * normal, not a screen-space bump, so it looks the same at every tier's DPR.
+ * The suggested ball also lights a warm rim, on the ball itself, where no
+ * neighbour or basket can hide it.
+ */
+function patchWound(material: THREE.MeshStandardMaterial): BallGlow {
+  const glow: BallGlow = { index: { value: -1 }, strength: { value: 0 } }
+  const yarn = material.onBeforeCompile
+  material.customProgramCacheKey = () => 'yarn-wound'
+  material.onBeforeCompile = (shader, renderer) => {
+    yarn.call(material, shader, renderer)
+    shader.uniforms.uGlowBall = glow.index
+    shader.uniforms.uGlowStrength = glow.strength
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nuniform float uGlowBall;\nuniform float uGlowStrength;\nvarying vec3 vWoundDir;\nvarying mat3 vWoundToView;\nvarying float vBallGlow;')
+      .replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+      vWoundDir = normalize(position);
+      #ifdef USE_INSTANCING
+      vWoundToView = normalMatrix * mat3(instanceMatrix);
+      vBallGlow = float(gl_InstanceID) == uGlowBall ? uGlowStrength : 0.0;
+      #else
+      vWoundToView = normalMatrix;
+      vBallGlow = 0.0;
+      #endif`,
+      )
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>\nvarying float vBallGlow;\n${WOUND}`)
+      .replace(
+        '#include <normal_fragment_maps>',
+        `#include <normal_fragment_maps>
+      vec3 woundDir = normalize(vWoundDir);
+      vec3 woundGrad;
+      float woundTuck;
+      float woundHeight = woundYarn(woundDir, woundGrad, woundTuck);
+      normal = normalize(vWoundToView * normalize(woundDir - 0.026 * woundGrad));
+      diffuseColor.rgb *= mix(0.62, 1.0, woundHeight) * woundTuck;`,
+      )
+      .replace(
+        '#include <opaque_fragment>',
+        `float ballRim = 1.0 - saturate(dot(normalize(vWoundToView * woundDir), normalize(vViewPosition)));
+      outgoingLight += vec3(1.0, 0.78, 0.32) * vBallGlow * 0.9 * smoothstep(0.45, 0.95, ballRim);
+      #include <opaque_fragment>`,
+      )
+  }
+  return glow
+}
+
 export type YarnMaterials = {
   textures: YarnTextures
   /** Crochet for props (loom, basket, butterfly): vertex colours, beads. */
@@ -439,7 +554,13 @@ export type YarnMaterials = {
   blanket: THREE.MeshStandardMaterial
   /** Plain felt for the loom's backboard: no stitch at all. */
   felt: THREE.MeshStandardMaterial
+  /** Height of the felt's rolled bottom edge (see `feltBottom` in the layout). */
+  feltBottom: { value: number }
+  /** Wound yarn balls (instanced only). */
   balls: THREE.MeshStandardMaterial
+  ballGlow: BallGlow
+  /** The live loops on the needles: plain yarn with instance colours (instanced only). */
+  stitches: THREE.MeshStandardMaterial
   flakes: THREE.MeshStandardMaterial
   shadow: THREE.MeshBasicMaterial
   glow: THREE.MeshBasicMaterial
@@ -476,9 +597,14 @@ export function createMaterials(): YarnMaterials {
   patchYarn(blanket, { shade: textures.knitShade, shadeAmount: 0.45, rim: 0.18 })
 
   const felt = own(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }))
+  const feltBottom = patchFelt(felt)
 
-  const balls = own(new THREE.MeshStandardMaterial({ roughness: 0.9, normalMap: textures.ballNormal, normalScale: new THREE.Vector2(1.1, 1.1) }))
+  const balls = own(new THREE.MeshStandardMaterial({ roughness: 0.9 }))
   patchYarn(balls, { shade: textures.crochetShade, shadeAmount: 0, rim: 0.4 })
+  const ballGlow = patchWound(balls)
+
+  const stitches = own(new THREE.MeshStandardMaterial({ roughness: 0.9, normalMap: textures.ballNormal, normalScale: new THREE.Vector2(1.1, 1.1) }))
+  patchYarn(stitches, { shade: textures.crochetShade, shadeAmount: 0, rim: 0.4 })
 
   const flakes = own(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, emissive: '#dfe8f2', emissiveIntensity: 0.35 }))
 
@@ -496,7 +622,10 @@ export function createMaterials(): YarnMaterials {
     sky,
     blanket,
     felt,
+    feltBottom,
     balls,
+    ballGlow,
+    stitches,
     flakes,
     shadow,
     glow,
@@ -507,9 +636,10 @@ export function createMaterials(): YarnMaterials {
       return { material, warmth }
     },
     setHillRelief(on) {
-      const map = on ? textures.knitNormal : null
-      if (land.normalMap === map) return
-      land.normalMap = map
+      const normalMap = on ? textures.knitNormal : null
+      if (land.normalMap === normalMap) return
+      land.normalMap = normalMap
+      land.map = on ? null : textures.knitFlat
       land.needsUpdate = true
     },
     dispose() {

@@ -16,6 +16,8 @@ const SUB_Y = 3
 const FRINGE_SEGMENTS = 4
 /** Fringe length in cells while it hangs on the loom. */
 export const FRINGE_CELLS = 1.3
+/** How far round the neck (radians) the scarf's middle sits from straight behind; the knot is opposite it. */
+const KNOT_SHIFT = 0.3
 
 function buildGeometry(): THREE.BufferGeometry {
   const cells: number[] = []
@@ -130,28 +132,31 @@ hangLocal.z += sin(v * 0.9 + uTime * 1.3 + uSeed) * 0.16;
 vec3 hangPos = (uHang * vec4(hangLocal, 1.0)).xyz;
 vec3 hangNormal = normalize(mat3(uHang) * vec3(0.0, 0.0, 1.0));
 
-// Wrapped: the middle behind the neck, a loop round it, two tails down the front.
+// Wrapped: the middle behind the neck, one whole turn round it (so the band
+// crosses the front, under the chin), and two tails from a knot just off centre.
+// The second half rides a little proud of the first into the knot and its tail
+// lies over the other one, so the two never fight for the same pixels.
 float band = uWrapSize.x;
 float lw = uWrapSize.y;
 float vb = clamp(v, 0.0, rows);
 float s = (vb / rows - 0.5) * lw + (v - vb) * 1.4;
 float w = (u / ${WIDTH.toFixed(1)} - 0.5) * band;
-float r = uNeckR;
 float side = s < 0.0 ? -1.0 : 1.0;
-float loopEnd = 2.55 * r;
+float loopEnd = 3.14159 * uNeckR;
 float as = abs(s);
+float r = uNeckR + (side < 0.0 ? 0.55 * smoothstep(loopEnd - 1.4 * uNeckR, loopEnd, as) : 0.0);
 vec3 wrapPos;
 vec3 wrapNormal;
 if (as <= loopEnd) {
-  float th = s / r;
+  float th = s / uNeckR + ${KNOT_SHIFT.toFixed(2)};
   wrapNormal = vec3(sin(th), 0.0, -cos(th));
   wrapPos = vec3(r * sin(th), w, -r * cos(th)) + wrapNormal * bulge * 0.6;
 } else {
   float e = as - loopEnd;
-  float ph = smoothstep(0.0, 1.1 * r, e);
-  float th = side * 2.55;
+  float ph = smoothstep(0.0, 1.1 * uNeckR, e);
+  float th = 3.14159 + ${KNOT_SHIFT.toFixed(2)};
   vec3 startNormal = vec3(sin(th), 0.0, -cos(th));
-  vec3 centre = vec3(r * sin(th) * (1.0 - 0.25 * ph), -e * 0.94, -r * cos(th) + ph * (0.35 + uLayer) + e * uDrape);
+  vec3 centre = vec3(r * sin(th) * (1.0 - 0.25 * ph) + side * ph * (0.3 * uNeckR + e * 0.06), -e * 0.94, -r * cos(th) + ph * (0.35 + uLayer) + e * uDrape);
   float phi = ph * 1.4;
   vec3 dirW = vec3(side * sin(phi), cos(phi), 0.0);
   wrapNormal = normalize(mix(startNormal, vec3(side * 0.12, 0.15, 1.0), ph));
@@ -160,7 +165,7 @@ if (as <= loopEnd) {
 }
 vec3 neckPos = (uNeck * vec4(wrapPos, 1.0)).xyz;
 vec3 neckNormal = normalize(mat3(uNeck) * wrapNormal);
-float prog = smoothstep(0.0, 1.0, clamp(uWrap * 1.7 - as / lw * 1.4, 0.0, 1.0));
+float prog = smoothstep(0.0, 1.0, clamp(uWrap * 1.3 - as / lw * 0.6, 0.0, 1.0));
 vec3 scarfPos = mix(hangPos, neckPos, prog);
 vec3 scarfNormal = normalize(mix(hangNormal, neckNormal, prog));
 `

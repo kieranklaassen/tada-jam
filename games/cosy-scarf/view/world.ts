@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { BASKET, groundY, LOOM, SCARF } from '../layout'
+import { BASKET, FELT, groundY, LOOM, SCARF } from '../layout'
 import { ball, capsule, cone, cylinder, lathe, merge, once, part, torus } from './shapes'
 import { PALETTE, type YarnMaterials } from './yarn'
 
@@ -115,20 +115,20 @@ function skyGeometry(): THREE.BufferGeometry {
   })
 }
 
+/** None stands in the loom's window, where the rows land. */
 const PINES: [number, number, number][] = [
   [-128, -96, 1.2],
   [-96, -128, 1.5],
   [-160, -150, 1.4],
   [-66, -178, 1.2],
   [-205, -118, 1.6],
-  [-24, -200, 1.1],
+  [-56, -230, 1.1],
   [-112, -205, 1.3],
   [98, -104, 1.3],
   [134, -142, 1.6],
   [78, -168, 1.2],
   [168, -118, 1.4],
   [210, -165, 1.5],
-  [36, -214, 1.2],
   [-178, -70, 1.1],
   [186, -78, 1.2],
 ]
@@ -202,24 +202,23 @@ function loomGeometry(): THREE.BufferGeometry {
 function backboardGeometry(): THREE.BufferGeometry {
   return once('cosy-backboard', () => {
     const w = LOOM.postX * 2 - 3.2
-    const bottom = 2.6
+    const bottom = FELT.bottom
     const top = LOOM.rodY + 0.6
     const r = 3
     const s = new THREE.Shape()
     const x0 = -w / 2
     const x1 = w / 2
-    s.moveTo(x0 + r, bottom)
-    s.lineTo(x1 - r, bottom)
-    s.quadraticCurveTo(x1, bottom, x1, bottom + r)
+    s.moveTo(x0, bottom)
+    s.lineTo(x1, bottom)
     s.lineTo(x1, top - r)
     s.quadraticCurveTo(x1, top, x1 - r, top)
     s.lineTo(x0 + r, top)
     s.quadraticCurveTo(x0, top, x0, top - r)
-    s.lineTo(x0, bottom + r)
-    s.quadraticCurveTo(x0, bottom, x0 + r, bottom)
+    s.lineTo(x0, bottom)
 
     // A hanging felt cloth, not a doorway: a shade lighter where it hangs, a
-    // quiet running stitch round its edge, and two felt loops over the rod.
+    // quiet running stitch down its sides, two felt loops over the rod, and a
+    // roll along its bottom edge. The felt shader unrolls it with the scarf.
     const high = new THREE.Color(PALETTE.backboard)
     const low = new THREE.Color(PALETTE.backboardLow)
     const c = new THREE.Color()
@@ -227,18 +226,16 @@ function backboardGeometry(): THREE.BufferGeometry {
     const inset = 1.3
     const dash = (x: number, y: number, across: boolean) => part(new THREE.BoxGeometry(across ? 1.3 : 0.36, across ? 0.36 : 1.3, 0.2), { color: PALETTE.stitch, at: [x, y, -0.08], underside: 0 })
     const runX = w - 2 * r
-    const runY = top - bottom - 2 * r
+    const runY = top - r - (bottom + FELT.roll * 2)
     const dashesX = Math.round(runX / 2.3)
     const dashesY = Math.round(runY / 2.3)
-    for (let i = 0; i <= dashesX; i++) {
-      const x = -runX / 2 + (i * runX) / dashesX
-      parts.push(dash(x, bottom + inset, true), dash(x, top - inset, true))
-    }
+    for (let i = 0; i <= dashesX; i++) parts.push(dash(-runX / 2 + (i * runX) / dashesX, top - inset, true))
     for (let i = 0; i <= dashesY; i++) {
-      const y = bottom + r + (i * runY) / dashesY
+      const y = bottom + FELT.roll * 2 + (i * runY) / dashesY
       parts.push(dash(x0 + inset, y, false), dash(x1 - inset, y, false))
     }
     for (const side of [-1, 1]) parts.push(part(torus(1.9, 0.6, 0.8), { color: PALETTE.backboard, at: [side * (w / 2 - 1.6), LOOM.rodY, SCARF.z - LOOM.z], rot: [0, Math.PI / 2, 0], underside: 0 }))
+    parts.push(part(cylinder(FELT.roll, FELT.roll, w + 0.6, 1, 14), { color: PALETTE.backboard, at: [0, bottom, FELT.roll - 0.2], rot: [0, 0, Math.PI / 2], underside: 0.1 }))
     return merge(parts)
   })
 }
