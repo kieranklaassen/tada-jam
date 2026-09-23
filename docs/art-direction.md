@@ -38,6 +38,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Game | Style | Art guide |
 | --- | --- | --- |
 | Pebble Table | Claymation 3D: plasticine with thumbprints, stop-motion lighting, terracotta on cool sage-teal | [`games/pebble-table/ART.md`](../games/pebble-table/ART.md) |
+| Shadow Lantern | Paper-craft diorama: layered cut paper on deep indigo, a brass lamp throwing geometric shadows onto a lit paper screen, offset dark shadow cards | [`games/shadow-lantern/ART.md`](../games/shadow-lantern/ART.md) |
 
 ## 4. Menu of unclaimed directions
 

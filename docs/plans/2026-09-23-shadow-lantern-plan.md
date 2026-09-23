@@ -16,7 +16,7 @@ decision_tags: "`decided (brief)` = settled by the jam brief; `assumed default` 
 
 ## Goal Capsule
 
-- **Objective:** A wordless paper-theatre toy for ages 6–10. A lamp stands at the back of a cut-paper stage, a paper screen at the front, and a dotted sleeping shadow creature waits on the screen. The child slides and turns cut-paper shapes between the lamp and the screen; the shadows are real projections, so closer to the lamp means a bigger, softer shadow. When the shadows fill the outline well enough, the creature wakes, peels off the screen as coloured paper and joins a layered paper night sky, and a new outline drifts in.
+- **Objective:** A wordless paper-theatre toy for ages 6–10. A lamp stands at the front of a cut-paper stage, a paper screen at the back, and a dotted sleeping shadow creature waits on the screen. The child slides and turns cut-paper shapes between the lamp and the screen; the shadows are real projections, so closer to the lamp means a bigger, softer shadow. When the shadows fill the outline well enough, the creature wakes, peels off the screen as coloured paper and joins a layered paper night sky, and a new outline drifts in.
 - **Product authority:** the jam brief (style 04 paper-craft, age band 6–10, scene, want, and core play) and the repo rules: `AGENTS.md`, `docs/art-direction.md`, `docs/solutions/**`, `CONCEPTS.md`, `.claude/skills/jam-game-creator/SKILL.md`. `games/pebble-table/` is the reference implementation.
 - **Open blockers:** none.
 - **Where it is built:** `games/shadow-lantern/` only, plus one row in the claimed-styles table of `docs/art-direction.md` and this plan.
