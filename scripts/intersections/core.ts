@@ -758,7 +758,7 @@ export function analyseMoment(pieces: Piece[], options: MomentOptions): Finding[
         continue
       }
       const r = cached(options, 'd|' + key, () => pairDepth(a, b, camera))
-      const f = penetrationFinding(a, b, all_placeholder_never_used, camera, viewSize, tol, r)
+      const f = penetrationFinding(a, b, pieces, camera, viewSize, tol, r)
       if (f) findings.push(f)
     }
     const self = cached(options, `s|${at(a)}|${cam}`, () => zfightFinding(a, a, camera, tol))
