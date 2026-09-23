@@ -70,13 +70,6 @@ function floorboards(): THREE.BufferGeometry[] {
   return parts
 }
 
-function archOutline(outer: number, inner: number): Vec2[] {
-  const points: Vec2[] = []
-  for (let i = 0; i <= 28; i++) points.push({ x: Math.cos((Math.PI * i) / 28) * outer, y: Math.sin((Math.PI * i) / 28) * outer })
-  for (let i = 0; i <= 20; i++) points.push({ x: Math.cos(Math.PI - (Math.PI * i) / 20) * inner, y: Math.sin(Math.PI - (Math.PI * i) / 20) * inner })
-  return points
-}
-
 function shelf(): THREE.BufferGeometry[] {
   const { x0, x1, back, front, boards, top, side, board } = SHELF
   const cx = (x0 + x1) / 2
@@ -89,17 +82,57 @@ function shelf(): THREE.BufferGeometry[] {
   boards.forEach((y, i) => add(woodBox(x1 - x0 - side * 2 + 0.02, board, depth - 0.06, { x: cx, y: y - board / 2, z: mz + 0.02 }, 'x', { offset: { x: i * 0.7, y: 0.2 } }), STAIN.shelf))
   add(woodBox(x1 - x0 + 0.14, 0.16, depth + 0.1, { x: cx, y: top - 0.08, z: mz + 0.03 }, 'x', { offset: { x: 0.2, y: 0.4 } }), STAIN.shelf)
   add(woodBox(x1 - x0 - side * 2 + 0.04, top - 0.3, 0.05, { x: cx, y: (top - 0.3) / 2 + 0.1, z: back + 0.04 }, 'y', { bevel: 0.015, segments: 1 }), STAIN.back)
-  // A nested stacking rainbow on the bottom board, books on the next, a jar above, a little tree on top.
-  const rainbow: [number, number, string][] = [
-    [0.78, 0.6, '#d9473b'],
-    [0.58, 0.41, '#f08a2a'],
-    [0.39, 0.22, '#f2c230'],
+  // A ring stacker and books on the bottom board, a house and a ball on the next, a jar above, a little
+  // tree on top. The stacker sits right behind Pip's head, so it is pale and cool: a saturated arch there
+  // read as one of her blocks and cut into her silhouette.
+  const stackX = x0 + 1.0
+  const stackZ = mz + 0.1
+  const stackBase = woodLathe(
+    [
+      { x: 0, y: 0 },
+      { x: 0.46, y: 0 },
+      { x: 0.5, y: 0.04 },
+      { x: 0.48, y: 0.1 },
+      { x: 0, y: 0.1 },
+    ],
+    24,
+  )
+  stackBase.translate(stackX, boards[0], stackZ)
+  add(stackBase, STAIN.lamp)
+  const rings: [number, string][] = [
+    [0.44, '#9cc3dc'],
+    [0.38, '#8ec5b4'],
+    [0.32, '#b3a4d6'],
+    [0.26, '#a9cde8'],
   ]
-  for (const [outer, inner, color] of rainbow) {
-    const arch = woodSlab(archOutline(outer, inner), 0.26, 'x', { bevel: 0.03 })
-    arch.translate(x0 + 1.05, boards[0], mz + 0.1)
-    add(arch, color)
-  }
+  const RING_HEIGHT = 0.19
+  rings.forEach(([outer, color], i) => {
+    const r = RING_HEIGHT / 2
+    const profile: Vec2[] = [{ x: 0.08, y: 0 }]
+    for (let k = 0; k <= 8; k++) {
+      const a = -Math.PI / 2 + (Math.PI * k) / 8
+      profile.push({ x: outer - r + Math.cos(a) * r, y: r + Math.sin(a) * r })
+    }
+    profile.push({ x: 0.08, y: RING_HEIGHT })
+    const ring = woodLathe(profile, 24)
+    ring.translate(stackX, boards[0] + 0.1 + i * RING_HEIGHT, stackZ)
+    add(ring, color)
+  })
+  const pegTop = 0.1 + rings.length * RING_HEIGHT
+  const stackPeg = woodLathe(
+    [
+      { x: 0, y: 0.1 },
+      { x: 0.08, y: 0.1 },
+      { x: 0.08, y: pegTop },
+      { x: 0.1, y: pegTop + 0.03 },
+      { x: 0.1, y: pegTop + 0.1 },
+      { x: 0.06, y: pegTop + 0.15 },
+      { x: 0, y: pegTop + 0.16 },
+    ],
+    16,
+  )
+  stackPeg.translate(stackX, boards[0], stackZ)
+  add(stackPeg, STAIN.lamp)
   const books: [number, number, string][] = [
     [0.22, 1.25, '#7c5bab'],
     [0.18, 1.1, '#27a39a'],
@@ -692,21 +725,29 @@ export function Room() {
     const floorPlane = new THREE.PlaneGeometry(FLOOR.x1 - FLOOR.x0, FLOOR.z1 - FLOOR.z0)
     floorPlane.rotateX(-Math.PI / 2)
     floorPlane.translate((FLOOR.x0 + FLOOR.x1) / 2, FLOOR_Y + 0.004, (FLOOR.z0 + FLOOR.z1) / 2)
-    const floorShadow = new THREE.Mesh(floorPlane, shadowMaterial(floorMap))
     const rugPlane = new THREE.PlaneGeometry(RUG.x1 - RUG.x0, RUG.z1 - RUG.z0)
     rugPlane.rotateX(-Math.PI / 2)
     rugPlane.translate((RUG.x0 + RUG.x1) / 2, 0.004, (RUG.z0 + RUG.z1) / 2)
     const rugUv = rugPlane.getAttribute('uv') as THREE.BufferAttribute
     const rugPosition = rugPlane.getAttribute('position') as THREE.BufferAttribute
     for (let i = 0; i < rugUv.count; i++) rugUv.setXY(i, (rugPosition.getX(i) - FLOOR.x0) / (FLOOR.x1 - FLOOR.x0), 1 - (rugPosition.getZ(i) - FLOOR.z0) / (FLOOR.z1 - FLOOR.z0))
-    const rugShadow = new THREE.Mesh(rugPlane, shadowMaterial(floorMap))
+    const floorShadow = new THREE.Mesh(merge([floorPlane, rugPlane]), shadowMaterial(floorMap))
     const wallPlane = new THREE.PlaneGeometry(WALL.x1 - WALL.x0, WALL.y1 - WALL.y0)
     wallPlane.translate((WALL.x0 + WALL.x1) / 2, (WALL.y0 + WALL.y1) / 2, WALL_Z + 0.004)
     const wallShadow = new THREE.Mesh(wallPlane, shadowMaterial(wallShadows()))
-    for (const m of [floorShadow, rugShadow, wallShadow]) m.renderOrder = 1
+    for (const m of [floorShadow, wallShadow]) m.renderOrder = 1
     const beam = new THREE.Mesh(
       quad(SUN.top, SUN.topRight, SUN.bottom, SUN.bottomRight),
-      new THREE.MeshBasicMaterial({ map: beamTexture(), transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, toneMapped: false }),
+      new THREE.MeshBasicMaterial({
+        map: beamTexture(),
+        transparent: true,
+        opacity: 0.16,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        forceSinglePass: true,
+        toneMapped: false,
+      }),
     )
     beam.renderOrder = 4
     const patch = new THREE.Mesh(
@@ -715,7 +756,7 @@ export function Room() {
     )
     patch.renderOrder = 2
     const group = new THREE.Group()
-    group.add(wood, wall, rug, sky, shade, floorShadow, rugShadow, wallShadow, beam, patch)
+    group.add(wood, wall, rug, sky, shade, floorShadow, wallShadow, beam, patch)
     for (const child of group.children) child.matrixAutoUpdate = false
     group.traverse((object) => object.updateMatrix())
     return group

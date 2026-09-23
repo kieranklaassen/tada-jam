@@ -171,14 +171,22 @@ export function Pieces({ controller, geometries }: { controller: KiteController;
 
 export type BlobAdd = (x: number, y: number, z: number, width: number, depth: number, strength: number, tilt?: number) => void
 
-function radialTexture(): THREE.CanvasTexture {
+/** A soft disc for shadows; for the touch cue a ring with a faint core, which reads as "here" on pale wood where a bright blob washes out. */
+function radialTexture(ring: boolean): THREE.CanvasTexture {
   const canvas = document.createElement('canvas')
   canvas.width = 128
   canvas.height = 128
   const context = canvas.getContext('2d')!
   const g = context.createRadialGradient(64, 64, 0, 64, 64, 64)
-  g.addColorStop(0, 'rgba(255,255,255,1)')
-  g.addColorStop(0.45, 'rgba(255,255,255,0.62)')
+  if (ring) {
+    g.addColorStop(0, 'rgba(255,255,255,0.16)')
+    g.addColorStop(0.5, 'rgba(255,255,255,0.22)')
+    g.addColorStop(0.7, 'rgba(255,255,255,0.9)')
+    g.addColorStop(0.8, 'rgba(255,255,255,0.75)')
+  } else {
+    g.addColorStop(0, 'rgba(255,255,255,1)')
+    g.addColorStop(0.45, 'rgba(255,255,255,0.62)')
+  }
   g.addColorStop(1, 'rgba(255,255,255,0)')
   context.fillStyle = g
   context.fillRect(0, 0, 128, 128)
@@ -193,12 +201,11 @@ export function Blobs({ kind, capacity, write }: { kind: 'shadow' | 'glow'; capa
     const geometry = new THREE.PlaneGeometry(1, 1)
     geometry.rotateX(-Math.PI / 2)
     const material = new THREE.MeshBasicMaterial({
-      color: kind === 'shadow' ? PALETTE.shadow : '#ffd27a',
-      map: radialTexture(),
+      color: kind === 'shadow' ? PALETTE.shadow : '#f0a73a',
+      map: radialTexture(kind === 'glow'),
       transparent: true,
       depthWrite: false,
       toneMapped: false,
-      blending: kind === 'shadow' ? THREE.NormalBlending : THREE.AdditiveBlending,
       polygonOffset: true,
       polygonOffsetFactor: -2,
       polygonOffsetUnits: -2,
