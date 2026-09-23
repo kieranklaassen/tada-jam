@@ -82,22 +82,25 @@ export function skyTexture(): THREE.CanvasTexture {
     g.fill()
   }
   g.globalAlpha = 1
+  // The far bank's bushes cover the bottom two bands, so the sun sits that
+  // high to set half behind them, above the glint path on the water.
   const sunX = W * 0.62
+  const sunY = horizon - bandHeight * 1.9
   for (const [r, alpha] of [
-    [118, 0.16],
-    [84, 0.26],
-    [58, 0.5],
+    [128, 0.16],
+    [92, 0.26],
+    [64, 0.5],
   ] as const) {
     g.globalAlpha = alpha
     g.fillStyle = PALETTE.sunGlow
     g.beginPath()
-    g.arc(sunX, horizon, r, 0, Math.PI * 2)
+    g.arc(sunX, sunY, r, 0, Math.PI * 2)
     g.fill()
   }
   g.globalAlpha = 1
   g.fillStyle = PALETTE.sun
   g.beginPath()
-  g.arc(sunX, horizon, 38, 0, Math.PI * 2)
+  g.arc(sunX, sunY, 42, 0, Math.PI * 2)
   g.fill()
   puff(g, W * 0.06, bandHeight * 1.4, 190, 58, PALETTE.cloud, PALETTE.cloudShade)
   puff(g, W * 0.36, bandHeight * 0.7, 130, 40, '#fbe0e4', '#efc3d0')
@@ -187,8 +190,8 @@ export function haloTexture(): THREE.CanvasTexture {
   steppedDisc(g, S, [
     [0.98, 0.06],
     [0.7, 0.1],
-    [0.44, 0.18],
-    [0.24, 0.4],
+    [0.44, 0.14],
+    [0.24, 0.26],
     [0.12, 0.85],
   ])
   return texture(element, false)

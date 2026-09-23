@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   chooseHint,
   DEMO_SECONDS,
+  GLOW_FADE,
   handPose,
   HintScheduler,
   IDLE_BEFORE_DEMO,
@@ -40,6 +41,18 @@ describe('guidance timing', () => {
     expect(gaps[0]).toBeCloseTo(IDLE_BEFORE_DEMO * 2, 0)
     expect(gaps[1]).toBeCloseTo(gaps[0] * 2, 0)
     expect(gaps[2]).toBeCloseTo(gaps[1] * 2, 0)
+  })
+
+  it('lets the glow fade once the last demonstration is over, until the next touch', () => {
+    const scheduler = new HintScheduler(0)
+    scheduler.touch(0)
+    let lastDemo = 0
+    for (let t = 0; t < 200; t += 0.05) if (scheduler.update(t).demo !== null) lastDemo = t
+    expect(scheduler.update(lastDemo + 0.5).glow).toBeGreaterThan(0)
+    expect(scheduler.update(lastDemo + GLOW_FADE + 0.1).glow).toBe(0)
+    expect(scheduler.update(1000).glow).toBe(0)
+    scheduler.touch(1000)
+    expect(scheduler.update(1000 + IDLE_BEFORE_GLOW + 1.5).glow).toBeGreaterThan(0)
   })
 
   it('clears everything on a touch and restarts the idle clock', () => {

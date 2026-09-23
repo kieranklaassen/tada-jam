@@ -19,7 +19,6 @@ export type SharedUniforms = {
   uRimStrength: { value: number }
   /** Toward the sunset behind the pond, in view space (set when the camera moves). */
   uRimDir: { value: THREE.Vector3 }
-  uSway: { value: number }
 }
 
 export function createShared(): SharedUniforms {
@@ -31,7 +30,6 @@ export function createShared(): SharedUniforms {
     uRimColor: { value: new THREE.Color(PALETTE.rim) },
     uRimStrength: { value: 0.55 },
     uRimDir: { value: new THREE.Vector3(0, 1, 0) },
-    uSway: { value: 1 },
   }
 }
 
@@ -58,8 +56,8 @@ const SWAY_VERTEX = /* glsl */ `
   #ifdef FROG_SWAY
     vec4 swayWorld = modelMatrix * vec4(transformed, 1.0);
     float swayWave = sin(uTime * 1.3 + swayWorld.x * 0.7 + swayWorld.z * 0.4) + 0.4 * sin(uTime * 2.3 + swayWorld.x * 1.9);
-    transformed.x += swayWave * sway * 0.07 * uSway;
-    transformed.z += swayWave * sway * 0.03 * uSway;
+    transformed.x += swayWave * sway * 0.07;
+    transformed.z += swayWave * sway * 0.03;
   #endif
 `
 
@@ -80,20 +78,27 @@ export const FIRE_BANDS = /* glsl */ `
   }
 `
 
-export function toonMaterial(shared: SharedUniforms, gradient: THREE.Texture, options: THREE.MeshToonMaterialParameters & { sway?: boolean } = {}): THREE.MeshToonMaterial {
-  const { sway, ...parameters } = options
+type ToonOptions = THREE.MeshToonMaterialParameters & {
+  sway?: boolean
+  /** 0..1: a wide gold band around every silhouette edge, the idle "you can touch this" breath. */
+  touchGlow?: { value: number }
+}
+
+export function toonMaterial(shared: SharedUniforms, gradient: THREE.Texture, options: ToonOptions = {}): THREE.MeshToonMaterial {
+  const { sway, touchGlow, ...parameters } = options
   const material = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradient, ...parameters })
   if (sway) material.defines = { ...material.defines, FROG_SWAY: '' }
+  if (touchGlow) material.defines = { ...material.defines, FROG_TOUCH: '' }
   material.onBeforeCompile = (shader) => {
-    Object.assign(shader.uniforms, shared)
+    Object.assign(shader.uniforms, shared, touchGlow ? { uTouchGlow: touchGlow } : {})
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform float uTime;\nuniform float uSway;\nattribute float sway;\nvarying vec3 vFireWorld;')
+      .replace('#include <common>', '#include <common>\nuniform float uTime;\nattribute float sway;\nvarying vec3 vFireWorld;')
       .replace('#include <begin_vertex>', `#include <begin_vertex>\n${SWAY_VERTEX}`)
       .replace('#include <project_vertex>', `#include <project_vertex>\n${worldPosition('vFireWorld')}`)
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
-        `#include <common>\nuniform vec3 uFirePos;\nuniform vec3 uFireColor;\nuniform float uFireStrength;\nuniform vec3 uRimColor;\nuniform float uRimStrength;\nuniform vec3 uRimDir;\nvarying vec3 vFireWorld;\n${FIRE_BANDS}`,
+        `#include <common>\nuniform vec3 uFirePos;\nuniform vec3 uFireColor;\nuniform float uFireStrength;\nuniform vec3 uRimColor;\nuniform float uRimStrength;\nuniform vec3 uRimDir;\nuniform float uTouchGlow;\nvarying vec3 vFireWorld;\n${FIRE_BANDS}`,
       )
       .replace(
         '#include <opaque_fragment>',
@@ -103,10 +108,13 @@ export function toonMaterial(shared: SharedUniforms, gradient: THREE.Texture, op
         float facing = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
         float rim = step(facing, 0.36) * step(0.25, dot(normal, uRimDir));
         outgoingLight += uRimColor * rim * uRimStrength;
+        #ifdef FROG_TOUCH
+          outgoingLight += uRimColor * step(facing, 0.44) * uTouchGlow * 0.6;
+        #endif
         #include <opaque_fragment>`,
       )
   }
-  material.customProgramCacheKey = () => `frog-toon${sway ? '-sway' : ''}`
+  material.customProgramCacheKey = () => `frog-toon${sway ? '-sway' : ''}${touchGlow ? '-touch' : ''}`
   return material
 }
 
@@ -118,7 +126,7 @@ export function outlineMaterial(shared: SharedUniforms, width: number, options: 
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, shared, uniforms)
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform float uTime;\nuniform float uSway;\nuniform float uOutline;\nattribute float sway;')
+      .replace('#include <common>', '#include <common>\nuniform float uTime;\nuniform float uOutline;\nattribute float sway;')
       .replace('#include <begin_vertex>', `#include <begin_vertex>\n${SWAY_VERTEX}\ntransformed += normalize(normal) * uOutline;`)
   }
   material.customProgramCacheKey = () => `frog-outline${options.sway ? '-sway' : ''}`

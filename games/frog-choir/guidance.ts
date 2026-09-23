@@ -5,9 +5,10 @@ import { PADS, partnerPad } from './layout'
 // later a ghost hand shows one next act, chosen from the pond as it is.
 // First it taps a frog (they sing when touched). Once the child has tapped,
 // it drags a frog to the other pad in its column instead (moving a frog
-// changes its note). Demonstrations back off and stop after a few, and any
-// touch clears everything at once, so an idle pond goes quiet instead of
-// nagging. Before the very first touch, the frog nearest the child puffs
+// changes its note). Demonstrations back off and stop after a few, the glow
+// fades after the last one, and any touch clears everything at once, so an
+// idle pond goes quiet instead of nagging: only the firefly's song goes on.
+// Before the very first touch, the frog nearest the child puffs
 // its throat and bounces toward them, at most three times.
 
 export const IDLE_BEFORE_GLOW = 3
@@ -15,6 +16,8 @@ export const GLOW_RAMP = 1.2
 export const IDLE_BEFORE_DEMO = 5
 export const DEMO_SECONDS = 3.2
 export const MAX_DEMOS = 4
+/** Seconds the glow takes to fade once the last demonstration is over. */
+export const GLOW_FADE = 4
 export const INVITE_DELAY = 1.2
 export const INVITE_SECONDS = 1.4
 export const INVITE_EVERY = 6
@@ -94,21 +97,22 @@ export class HintScheduler {
   update(now: number): GuidanceTiming {
     const idle = now - this.idleSince
     const timing = this.timing
-    const ramp = Math.min(1, Math.max(0, (idle - IDLE_BEFORE_GLOW) / GLOW_RAMP))
-    timing.glow = ramp * (0.62 + 0.38 * Math.sin(now * 2.4))
     timing.demo = null
     timing.demoIndex = -1
     let start = IDLE_BEFORE_DEMO
     let gap = IDLE_BEFORE_DEMO * 2
+    let lastEnd = 0
     for (let i = 0; i < MAX_DEMOS; i++) {
       if (idle >= start && idle < start + DEMO_SECONDS) {
         timing.demo = (idle - start) / DEMO_SECONDS
         timing.demoIndex = i
-        break
       }
+      lastEnd = start + DEMO_SECONDS
       start += DEMO_SECONDS + gap
       gap *= 2
     }
+    const ramp = clamp01((idle - IDLE_BEFORE_GLOW) / GLOW_RAMP) * (1 - clamp01((idle - lastEnd) / GLOW_FADE))
+    timing.glow = ramp * (0.62 + 0.38 * Math.sin(now * 2.4))
     timing.invite = null
     if (!this.touched) {
       const since = now - this.openedAt - INVITE_DELAY

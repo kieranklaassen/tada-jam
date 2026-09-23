@@ -4,8 +4,9 @@ import { blobTexture, ghostFrogTexture, handTexture, ringTexture, rippleTexture 
 
 // Flat helpers that lie on the water or float over it: toon blob shadows
 // under the frogs and the firefly, breathing glow rings on what can be
-// touched, expanding ripples, and the ghost hand with the ghost frog it
-// carries during a drag demonstration. Each kind is one instanced draw.
+// touched, expanding ripples, splash droplets, and the ghost hand with the
+// ghost frog it carries during a drag demonstration. Each kind is one
+// instanced draw.
 
 function flatPlane(): THREE.PlaneGeometry {
   const geometry = new THREE.PlaneGeometry(1, 1)
@@ -27,16 +28,19 @@ function instanced(material: THREE.Material, count: number, renderOrder: number)
 export const SHADOWS = 6
 export const RINGS = 6
 export const RIPPLE_SLOTS = 12
+export const DROPS_PER_SPLASH = 8
 
 export type Overlays = {
   shadows: THREE.InstancedMesh
   rings: THREE.InstancedMesh
   ripples: THREE.InstancedMesh
+  /** A crown of droplets per frog that falls in the water; hidden (no draw) unless one is in the air. */
+  droplets: THREE.InstancedMesh
   hand: THREE.Sprite
   ghost: THREE.Sprite
 }
 
-export function buildOverlays(): Overlays {
+export function buildOverlays(frogs: number): Overlays {
   const shadows = new THREE.InstancedMesh(
     flatPlane(),
     new THREE.MeshBasicMaterial({ color: PALETTE.shadow, map: blobTexture(), transparent: true, opacity: 0.32, depthWrite: false, fog: false, polygonOffset: true, polygonOffsetFactor: -2 }),
@@ -48,16 +52,20 @@ export function buildOverlays(): Overlays {
   const additive = (map: THREE.Texture) => new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })
   const rings = instanced(additive(ringTexture()), RINGS, 3)
   const ripples = instanced(additive(rippleTexture()), RIPPLE_SLOTS, 3)
+  const droplets = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshBasicMaterial({ color: PALETTE.splash }), frogs * DROPS_PER_SPLASH)
+  droplets.frustumCulled = false
+  droplets.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+  droplets.visible = false
 
   const hand = new THREE.Sprite(new THREE.SpriteMaterial({ map: handTexture(), transparent: true, depthTest: false, depthWrite: false, fog: false }))
   hand.center.set(0.5, 0.955)
   hand.renderOrder = 20
   hand.visible = false
   const ghost = new THREE.Sprite(new THREE.SpriteMaterial({ map: ghostFrogTexture(), transparent: true, depthTest: false, depthWrite: false, fog: false }))
-  ghost.center.set(0.5, 0.35)
+  ghost.center.set(0.5, 0.12)
   ghost.renderOrder = 19
   ghost.visible = false
-  return { shadows, rings, ripples, hand, ghost }
+  return { shadows, rings, ripples, droplets, hand, ghost }
 }
 
 const matrix = new THREE.Matrix4()
