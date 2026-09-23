@@ -19,6 +19,10 @@ import { join } from 'node:path'
 // stand-in for a weaker GPU); BUSY and QUIET set the play and rest seconds;
 // OUT sets the results folder (one JSON line per run in results.jsonl, plus a
 // screenshot).
+// Showcases (showcase/<key>/, such as Alien Frontier) run in a same-origin
+// iframe and are played with the keyboard and mouse: the probe measures inside
+// the iframe and drives the showcase's own scripted play-through (SHOWCASE_PLAY).
+// STANDALONE=1 opens a showcase's page directly instead of through the shell.
 // Needs the Playwright browsers: npx playwright install webkit chromium (Chrome
 // runs are the installed Google Chrome via channel 'chrome').
 const [, , game, engine = 'webkit', throttleArg = '1', mode = 'auto', base = 'http://localhost:4173'] = process.argv
@@ -41,6 +45,36 @@ const FULL_TIER = COUNTS_UP.has(game) ? 3 : 0
 const DPR_BY_TIER = { [game]: COUNTS_UP.has(game) ? [1, 1.25, 1.5, 2] : [2, 1.5, 1.25, 1] }
 const PEBBLE_DPR = { full: 2, balanced: 1.5, lean: 1.25, minimal: 1 }
 
+// Scripted play-throughs for showcases, about 40 s each, including their scene changes.
+const SHOWCASE_PLAY = {
+  'alien-frontier': {
+    page: '/alien-frontier/index.html',
+    /** Full quality: the game's own saved setting (it has no ?tier= pin). */
+    full: () => localStorage.setItem('alien-frontier-settings-v1', JSON.stringify({ quality: 'high', v: 2 })),
+    async play(page, frame) {
+      await page.waitForTimeout(4000)
+      // New Game: the title scene gives way to the opening cinematic, then play.
+      await frame.evaluate(() => document.getElementById('play')?.click())
+      await page.waitForTimeout(9000)
+      for (let i = 0; i < 4; i++) {
+        await page.keyboard.press('Space')
+        await page.waitForTimeout(400)
+      }
+      await page.mouse.click(W / 2, H / 2)
+      for (const key of ['w', 'a', 'w', 'd', 'w', 's', 'w', 'd']) {
+        await page.keyboard.down(key)
+        for (let k = 0; k < 8; k++) {
+          await page.mouse.move(W / 2 + Math.sin(k * 0.9) * 220, H / 2 + Math.cos(k * 0.7) * 70, { steps: 5 })
+          await page.waitForTimeout(120)
+        }
+        await page.keyboard.up(key)
+      }
+      await page.waitForTimeout(3000)
+    },
+  },
+}
+const showcase = SHOWCASE_PLAY[game]
+
 const launcher = engine === 'webkit' ? webkit : chromium
 const browser = await launcher.launch(engine === 'webkit' ? { headless: true } : { channel: 'chrome', headless: true, args: ['--enable-gpu', '--use-angle=metal', '--ignore-gpu-blocklist'] })
 const context = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 2, hasTouch: true })
@@ -49,13 +83,18 @@ const errors = []
 page.on('pageerror', (e) => errors.push(String(e).slice(0, 160)))
 await page.goto(base + '/')
 await page.evaluate(() => { localStorage.clear(); localStorage.setItem('tada-jam:prefs', JSON.stringify({ childAge: 5 })) })
+if (showcase && mode === 'full') await page.evaluate(showcase.full)
 if (engine === 'chrome' && throttle > 1) {
   const cdp = await context.newCDPSession(page)
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle })
 }
 const pin = mode.startsWith('tier') ? `&tier=${mode.slice(4)}` : mode === 'full' && game !== 'pebble-table' ? `&tier=${FULL_TIER}` : ''
-await page.goto(`${base}/?chrome=0${pin}#/play/${game}`)
+await page.goto(showcase && process.env.STANDALONE === '1' ? base + showcase.page : `${base}/?chrome=0${pin}#/play/${game}`)
 await page.waitForTimeout(1500)
+// The frame the game draws in: the page itself, or a showcase's iframe.
+let target = page.mainFrame()
+if (showcase && process.env.STANDALONE !== '1') target = await (await page.waitForSelector('iframe', { timeout: 20000 })).contentFrame()
+if (showcase) await target.waitForFunction(() => window.game && window.game.renderer, null, { timeout: 30000 })
 if (mode === 'full' && game === 'pebble-table') {
   const tripleTap = () => page.evaluate(() => { const el = document.querySelector('[data-grown-up-corner]'); for (let i = 0; i < 3; i++) el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })) })
   await page.waitForSelector('[data-grown-up-corner]')
@@ -65,17 +104,18 @@ if (mode === 'full' && game === 'pebble-table') {
 }
 await page.waitForTimeout(3500)
 
-const readGame = () => page.evaluate(() => {
+const readGame = () => target.evaluate(() => {
   const perf = window.__jamPerf
   if (perf) {
     const cpu = perf.cpuMs.filter((v) => Number.isFinite(v))
     return { tier: perf.tier, calls: perf.drawCalls, tris: perf.triangles, cpu: cpu.slice(-120) }
   }
+  if (window.game && 'tierIndex' in window.game) return { tier: window.game.tierIndex, calls: NaN, tris: NaN, cpu: [] }
   const c = document.querySelector('canvas')
   return { tier: c?.dataset.quality ?? null, calls: Number(c?.dataset.calls ?? NaN), tris: Number(c?.dataset.triangles ?? NaN), cpu: [] }
 })
 
-await page.evaluate(() => {
+await target.evaluate(() => {
   window.__frames = []
   window.__stop = false
   let last = performance.now()
@@ -104,12 +144,15 @@ const busy = async (seconds) => {
   }
 }
 const BUSY = Number(process.env.BUSY ?? 16)
-await busy(BUSY)
-await page.waitForTimeout(Number(process.env.QUIET ?? 8) * 1000)
-await busy(BUSY)
+if (showcase) await showcase.play(page, target)
+else {
+  await busy(BUSY)
+  await page.waitForTimeout(Number(process.env.QUIET ?? 8) * 1000)
+  await busy(BUSY)
+}
 polling = false
 await poll
-const frames = (await page.evaluate(() => { window.__stop = true; return window.__frames })).slice(3)
+const frames = (await target.evaluate(() => { window.__stop = true; return window.__frames })).slice(3)
 await page.screenshot({ path: `${OUT}/${game}-${engine}${throttle > 1 ? throttle : ''}-${mode}.png` })
 await browser.close()
 
@@ -132,7 +175,7 @@ const tiers = samples.map((s) => s.tier)
 const dprOf = (t) => (game === 'pebble-table' ? PEBBLE_DPR[t] : DPR_BY_TIER[game]?.[t])
 const cpu = samples.flatMap((s) => s.cpu).filter((v) => v > 0).sort((a, b) => a - b)
 const result = {
-  game, engine, throttle, mode, size: SIZE,
+  game, engine, throttle, mode, size: SIZE, standalone: !!showcase && process.env.STANDALONE === '1',
   seconds: +((Date.now() - t0) / 1000).toFixed(0),
   fps: +(1000 / (total / intervals.length)).toFixed(1),
   worst1s: worst === Infinity ? null : worst,
