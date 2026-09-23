@@ -3,8 +3,8 @@ import { RIPPLES, type RoomInfo, type TowerController } from '../controller'
 import { SCREEN_RIGHT, SCREEN_UP, TOWARD_CAMERA, type MutableVec3 } from '../projection'
 import { pinnedTier, TierGovernor, type Tier } from '../tiers'
 import { axisVector } from '../world'
-import { buildDoorGeometry, buildRoomGeometry, buildSilhouettes, DOOR } from './build'
-import { buildBird, buildWanderer, type BirdRig, type WandererRig } from './characters'
+import { buildDoorGeometry, buildRoomGeometry, DOOR } from './build'
+import { buildBird, buildWanderer, WANDERER_SCALE, type BirdRig, type WandererRig } from './characters'
 import {
   facetMaterial,
   flatMaterial,
@@ -20,11 +20,11 @@ import {
   type FlatUniforms,
 } from './materials'
 import { PALETTE } from './palette'
-import { PerfMonitor } from './perf'
+import { CornerTaps, PerfMonitor } from './perf'
 
-// The whole picture in one scene and one render call (R16): sky, distant
-// spires, the current diorama, its door and characters, the little models on
-// the ring, and a pixel-space layer for touch ripples and the ghost hand. The
+// The whole picture in one scene and one render call (R16): sky, the current
+// diorama, its door and characters, the little models on the ring, and a
+// pixel-space layer for touch ripples and the ghost hand. The
 // camera never rotates, so every billboard shares its orientation. Nothing in
 // `sync` allocates.
 
@@ -36,7 +36,7 @@ const DOOR_SWING = 1.35
 
 type FlatMesh = THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial & { uniforms: FlatUniforms }>
 
-type GroupView = { object: THREE.Object3D; axis: THREE.Vector3; kind: 'turn' | 'slide'; slideAxis: number }
+type GroupView = { object: THREE.Mesh; axis: THREE.Vector3; kind: 'turn' | 'slide'; slideAxis: number; pivotY: number }
 
 type RoomView = { root: THREE.Object3D; groups: (GroupView | null)[] }
 
@@ -51,24 +51,28 @@ function groupViews(info: RoomInfo, meshes: (THREE.BufferGeometry | null)[], mat
     if (def.kind === 'turn') {
       object.position.set(def.pivot[0], def.pivot[1], def.pivot[2])
       const [ax, ay, az] = axisVector(def.axis)
-      return { object, axis: new THREE.Vector3(ax, ay, az), kind: 'turn', slideAxis: 0 }
+      return { object, axis: new THREE.Vector3(ax, ay, az), kind: 'turn', slideAxis: 0, pivotY: def.pivot[1] }
     }
-    return { object, axis: new THREE.Vector3(), kind: 'slide', slideAxis: def.axis === 'x' ? 0 : def.axis === 'y' ? 1 : 2 }
+    return { object, axis: new THREE.Vector3(), kind: 'slide', slideAxis: def.axis === 'x' ? 0 : def.axis === 'y' ? 1 : 2, pivotY: 0 }
   })
 }
 
-function poseGroup(view: GroupView, value: number): void {
+function poseGroup(view: GroupView, value: number, dip = 0): void {
   if (view.kind === 'turn') {
     view.object.quaternion.setFromAxisAngle(view.axis, (value * Math.PI) / 2)
+    view.object.position.y = view.pivotY + dip
     return
   }
-  view.object.position.set(view.slideAxis === 0 ? value : 0, view.slideAxis === 1 ? value : 0, view.slideAxis === 2 ? value : 0)
+  view.object.position.set(view.slideAxis === 0 ? value : 0, (view.slideAxis === 1 ? value : 0) + dip, view.slideAxis === 2 ? value : 0)
 }
 
+// Every sprite shares one of two quads, so a ripple or hand appearing for the
+// first time never needs a new buffer mid-play.
+const UPRIGHT_QUAD = new THREE.PlaneGeometry(1, 1)
+const FLAT_QUAD = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
+
 function quad(material: THREE.ShaderMaterial & { uniforms: FlatUniforms }, flat = false): FlatMesh {
-  const geometry = new THREE.PlaneGeometry(1, 1)
-  if (flat) geometry.rotateX(-Math.PI / 2)
-  const mesh = new THREE.Mesh(geometry, material)
+  const mesh = new THREE.Mesh(flat ? FLAT_QUAD : UPRIGHT_QUAD, material)
   mesh.frustumCulled = false
   return mesh
 }
@@ -95,6 +99,8 @@ export class TowerView {
   private readonly camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400)
   private readonly governor: TierGovernor
   private readonly perf = new PerfMonitor()
+  private readonly corner = new CornerTaps()
+  private detachOverlay: (() => void) | null = null
   private readonly cleanups: (() => void)[] = []
 
   private readonly stage = new THREE.Object3D()
@@ -106,10 +112,10 @@ export class TowerView {
   private readonly miniMaterial = facetMaterial({ fog: 0 })
   private readonly walkerMaterial = facetMaterial()
   private readonly birdMaterial = facetMaterial()
-  private readonly hazeMaterial = facetMaterial({ fog: 0 })
+  /** Swapped onto the one segment worth touching while the child is idle: it warms from within. */
+  private readonly hintMaterial = facetMaterial()
   private readonly sky = skyMesh()
   private readonly motes = motes(48, 16)
-  private readonly silhouettes: THREE.Mesh
   private readonly door = new THREE.Object3D()
   private readonly leafLeft: THREE.Mesh
   private readonly leafRight: THREE.Mesh
@@ -131,6 +137,9 @@ export class TowerView {
   private running = false
   private handle = 0
   private last = 0
+  /** Once guidance has gone quiet the scene only breathes, so every other frame is skipped to save battery. */
+  private skip = false
+  private steady = true
   private shownRoom = -1
   private cameraScale = 0
   private readonly target: MutableVec3 = [0, 0, 0]
@@ -159,11 +168,6 @@ export class TowerView {
 
     // Background.
     this.scene.add(this.sky)
-    this.silhouettes = new THREE.Mesh(buildSilhouettes(), this.hazeMaterial)
-    this.silhouettes.frustumCulled = false
-    this.hazeMaterial.uniforms.uTint.value = raw(PALETTE.skyMid)
-    this.hazeMaterial.uniforms.uTintAmount.value = 0.62
-    this.scene.add(this.silhouettes)
     this.motes.renderOrder = 5
     this.scene.add(this.motes)
 
@@ -210,7 +214,7 @@ export class TowerView {
 
     // Characters.
     const walkerShadow = quad(flatMaterial(shadow, PALETTE.shadow, { opacity: 0.42 }), true)
-    walkerShadow.scale.set(0.5, 1, 0.5)
+    walkerShadow.scale.set(0.5 * WANDERER_SCALE, 1, 0.5 * WANDERER_SCALE)
     const lanternHalo = quad(flatMaterial(glow, PALETTE.lantern, { additive: true, opacity: 0.7 }))
     lanternHalo.quaternion.copy(this.camera.quaternion)
     lanternHalo.renderOrder = 6
@@ -255,13 +259,37 @@ export class TowerView {
     this.hud.add(this.press, this.hand)
 
     this.cleanups.push(this.perf.expose())
-    if (/[?&]fps=1/.test(search)) this.cleanups.push(this.perf.attachOverlay(host))
+    if (/[?&]fps=1/.test(search)) this.toggleOverlay()
+    this.cleanups.push(() => this.detachOverlay?.())
     this.bindPointers(canvas)
     const observer = new ResizeObserver(() => this.resize())
     observer.observe(host)
     this.cleanups.push(() => observer.disconnect())
     this.applyTier()
     this.resize()
+    this.warm()
+  }
+
+  /**
+   * Draws everything once, hidden or not, so every buffer, texture and program
+   * reaches the GPU at mount instead of on the frame a ripple, the ghost hand
+   * or another diorama first appears. The real picture is drawn straight after
+   * in the same task, so this frame is never shown.
+   */
+  private warm(): void {
+    const restore: [THREE.Object3D, boolean, boolean][] = []
+    this.scene.traverse((object) => {
+      restore.push([object, object.visible, object.frustumCulled])
+      object.visible = true
+      object.frustumCulled = false
+    })
+    this.renderer.render(this.scene, this.camera)
+    for (const [object, visible, culled] of restore) {
+      object.visible = visible
+      object.frustumCulled = culled
+    }
+    this.sync(performance.now() / 1000)
+    this.renderer.render(this.scene, this.camera)
   }
 
   setRunning(running: boolean): void {
@@ -296,6 +324,9 @@ export class TowerView {
 
   private readonly loop = (): void => {
     this.handle = requestAnimationFrame(this.loop)
+    const resting = this.controller.isResting
+    this.skip = resting && !this.skip
+    if (this.skip) return
     const start = performance.now()
     const interval = this.last > 0 ? start - this.last : 1000 / 60
     this.last = start
@@ -307,7 +338,10 @@ export class TowerView {
     this.perf.drawCalls = info.calls
     this.perf.triangles = info.triangles
     this.perf.record(cpu, interval)
-    if (this.governor.sample(interval, cpu)) this.applyTier()
+    // Half-rate intervals say nothing about the device; judge only back-to-back full-rate frames.
+    const steady = this.steady && !resting
+    this.steady = !resting
+    if (steady && this.governor.sample(interval, cpu)) this.applyTier()
   }
 
   private resize(): void {
@@ -333,10 +367,16 @@ export class TowerView {
     this.renderer.setSize(this.width, this.height, false)
     this.motes.visible = tier.motes > 0
     this.motes.geometry.setDrawRange(0, tier.motes)
-    this.silhouettes.visible = tier.silhouettes
     this.sky.material.uniforms.uDither.value = tier.dither ? 1 : 0
-    this.doorHalo.visible = tier.halos
-    this.walker.halo.visible = tier.halos
+  }
+
+  private toggleOverlay(): void {
+    if (this.detachOverlay) {
+      this.detachOverlay()
+      this.detachOverlay = null
+    } else {
+      this.detachOverlay = this.perf.attachOverlay(this.host)
+    }
   }
 
   private bindPointers(canvas: HTMLCanvasElement): void {
@@ -349,6 +389,7 @@ export class TowerView {
       this.rect = null
       canvas.setPointerCapture?.(event.pointerId)
       const [x, y] = local(event)
+      if (this.corner.tap(x, y, event.timeStamp)) this.toggleOverlay()
       this.controller.pointerDown(event.pointerId, x, y, event.timeStamp)
     }
     const move = (event: PointerEvent) => {
@@ -400,7 +441,6 @@ export class TowerView {
     }
     const t = projector.target(this.target)
     this.camera.position.set(t[0] + TOWARD_CAMERA[0] * CAMERA_DISTANCE, t[1] + TOWARD_CAMERA[1] * CAMERA_DISTANCE, t[2] + TOWARD_CAMERA[2] * CAMERA_DISTANCE)
-    this.silhouettes.position.set(t[0] - TOWARD_CAMERA[0] * 25, t[1] - TOWARD_CAMERA[1] * 25 - 3, t[2] - TOWARD_CAMERA[2] * 25)
     this.motes.position.set(t[0], t[1], t[2])
     this.motes.material.uniforms.uTime.value = now
     this.motes.material.uniforms.uPixel.value = this.dpr * (scale / 42)
@@ -419,11 +459,19 @@ export class TowerView {
     }
     this.stage.position.y = frame.drop
     const room = this.rooms[index]
+    const hint = frame.glow
+    const hinted = hint.kind === 'group' && hint.strength > 0.01 ? hint.group : -1
+    const warmth = hint.strength * (0.72 + 0.28 * Math.sin(now * 2.6))
     for (let g = 0; g < room.groups.length; g++) {
       const view = room.groups[g]
-      if (view) poseGroup(view, frame.values[g])
+      if (!view) continue
+      poseGroup(view, frame.values[g], frame.dips[g])
+      view.object.material = g === hinted ? this.hintMaterial : this.architecture
     }
     this.architecture.uniforms.uFade.value = frame.fade
+    this.hintMaterial.uniforms.uFade.value = frame.fade
+    this.hintMaterial.uniforms.uTintAmount.value = 0.2 * warmth
+    this.hintMaterial.uniforms.uLift.value = 1.6 * warmth
     const open = frame.door.open
     this.leafLeft.rotation.y = open * DOOR_SWING
     this.leafRight.rotation.y = -open * DOOR_SWING
@@ -439,24 +487,26 @@ export class TowerView {
     this.walkerMaterial.uniforms.uTintAmount.value = frame.phase === 'enter' ? 1 - walker.alpha : 0
     const lantern = this.walker.halo as FlatMesh
     const glow = walker.glow
-    lantern.scale.set(0.95 * glow, 0.95 * glow, 1)
+    lantern.scale.set(0.95 * WANDERER_SCALE * glow, 0.95 * WANDERER_SCALE * glow, 1)
     lantern.material.uniforms.uOpacity.value = 0.62 * walker.alpha * (1 - frame.fade) * Math.min(1.3, glow)
     const walkerShadow = this.walker.shadow as FlatMesh
     walkerShadow.material.uniforms.uOpacity.value = 0.42 * walker.alpha * (1 - frame.fade)
     const bird = frame.bird
     this.bird.apply(bird)
-    this.birdMaterial.uniforms.uFade.value = Math.max(frame.fade, 1 - bird.alpha)
+    // Like the wanderer, the bird goes into the door as light, not into the dusk.
+    const entering = frame.phase === 'enter'
+    this.birdMaterial.uniforms.uFade.value = Math.max(frame.fade, entering ? 0 : 1 - bird.alpha)
+    this.birdMaterial.uniforms.uTintAmount.value = entering ? 1 - bird.alpha : hinted >= 0 && hinted === info.birdGroup ? 0.2 * warmth : 0
     const birdShadow = this.bird.shadow as FlatMesh
     birdShadow.material.uniforms.uOpacity.value = 0.36 * bird.alpha * (1 - frame.fade)
 
-    // Guidance glows.
-    const hint = frame.glow
+    // Guidance glows: a soft halo at the handle, over the warmth in the segment itself.
     this.handleGlow.visible = hint.kind === 'group' && hint.strength > 0.01
     if (this.handleGlow.visible) {
-      const size = (info.handleRadius[hint.group] ?? 0.45) * 2 + 0.9
+      const size = (info.handleRadius[hint.group] ?? 0.45) * 1.6 + 0.7
       this.handleGlow.position.set(hint.x, hint.y, hint.z)
       this.handleGlow.scale.set(size, size, 1)
-      this.handleGlow.material.uniforms.uOpacity.value = hint.strength * 0.75
+      this.handleGlow.material.uniforms.uOpacity.value = hint.strength * 0.4
     }
     this.tileGlow.visible = hint.kind === 'tile' && hint.strength > 0.01
     if (this.tileGlow.visible) {
