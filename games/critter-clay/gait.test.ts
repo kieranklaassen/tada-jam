@@ -5,16 +5,22 @@ import {
   gaitPose,
   idleFor,
   idlePose,
+  LAND_TIMING,
+  landPose,
   profileFor,
   reactPose,
+  SLEEP_BREATH,
   sleepPose,
   snoreBubble,
   temperamentFor,
-  WAKE_HOP_AT,
-  WAKE_SECONDS,
+  WAKE_HOP_LATEST,
+  WAKE_TIMING,
   wakePose,
+  WIND_UP_SECONDS,
+  windUpPose,
   type GaitProfile,
   type Pose,
+  type Temperament,
 } from './gait'
 import type { Part, PartKind } from './parts'
 
@@ -37,6 +43,16 @@ function trace(profile: GaitProfile, read: (pose: Pose) => number): number[] {
 }
 
 const range = (values: number[]) => Math.max(...values) - Math.min(...values)
+
+/** Every pair of signatures differs by more than `gap` in at least one sample: no two share a routine. */
+function expectDistinct(names: readonly string[], signatures: number[][], gap: number): void {
+  for (let a = 0; a < signatures.length; a++) {
+    for (let b = a + 1; b < signatures.length; b++) {
+      const most = Math.max(...signatures[a].map((v, i) => Math.abs(v - signatures[b][i])))
+      expect(most, `${names[a]} vs ${names[b]}`).toBeGreaterThan(gap)
+    }
+  }
+}
 
 describe('profileFor', () => {
   it('picks a gait routine from the number of legs', () => {
@@ -145,26 +161,116 @@ describe('idle and temperament', () => {
   })
 })
 
+describe('wind-up', () => {
+  const legged = (n: number) => profileFor(parts(...Array.from({ length: n }, (): PartKind => 'legStub')), 1)
+  const profiles = [0, 1, 2, 3, 4, 6].map(legged)
+
+  /** What the wind-up does over time, channel by channel, so two routines can be told apart. */
+  function signature(profile: GaitProfile): number[] {
+    const out: number[] = []
+    for (let i = 1; i < 10; i++) {
+      const pose = windUpPose(profile, (i / 10) * WIND_UP_SECONDS[profile.routine], createPose())
+      out.push(pose.sy - 1, pose.sz - 1, pose.pitch, pose.roll, pose.lift / 4, pose.legSwing[0], pose.legBend[0], pose.tail, pose.headNod)
+    }
+    return out
+  }
+
+  it('every gait gathers itself its own way, without travelling', () => {
+    expectDistinct(profiles.map((p) => p.routine), profiles.map(signature), 0.08)
+    for (const profile of profiles) expect(windUpPose(profile, WIND_UP_SECONDS[profile.routine] * 0.5, createPose()).advance).toBe(0)
+  })
+
+  it('ends back at rest, where the walk takes over', () => {
+    for (const profile of profiles) {
+      const pose = windUpPose(profile, WIND_UP_SECONDS[profile.routine], createPose())
+      expect(Math.abs(pose.sy - 1) + Math.abs(pose.pitch) + Math.abs(pose.lift) + Math.abs(pose.legSwing[0])).toBeLessThan(0.02)
+    }
+  })
+})
+
 describe('sleep, wake, carry', () => {
-  it('sleeps with eyes shut, legs folded, and a snore bubble that comes and goes', () => {
-    const pose = sleepPose(1, createPose())
-    expect(pose.lids).toBe(0)
-    expect(pose.legSplay).toBe(1)
-    const bubbles = Array.from({ length: 34 }, (_, i) => snoreBubble(i * 0.1))
-    expect(Math.max(...bubbles)).toBeGreaterThan(0.9)
-    expect(Math.min(...bubbles)).toBe(0)
+  const temperaments: Temperament[] = ['shy', 'curious', 'bouncy', 'bold']
+
+  it('sleeps with eyes shut, legs folded, and a snore bubble that comes and goes with each breath', () => {
+    for (const temperament of temperaments) {
+      const pose = sleepPose(temperament, 1, createPose())
+      expect(pose.lids, temperament).toBe(0)
+      expect(pose.legSplay, temperament).toBe(1)
+      const { seconds, bubble } = SLEEP_BREATH[temperament]
+      const bubbles = Array.from({ length: 40 }, (_, i) => snoreBubble(temperament, (i / 40) * seconds))
+      expect(Math.max(...bubbles), temperament).toBeGreaterThan(bubble * 0.95)
+      expect(Math.min(...bubbles), temperament).toBe(0)
+    }
   })
 
-  it('wakes by opening its eyes, then hops off with a squash landing', () => {
-    expect(wakePose(0.1, createPose()).lids).toBe(0)
-    expect(wakePose(0.95, createPose()).lids).toBeGreaterThan(0.9)
-    expect(wakePose(WAKE_HOP_AT + 0.2, createPose()).lift).toBeGreaterThan(4)
-    expect(wakePose(WAKE_SECONDS - 0.04, createPose()).sy).toBeLessThan(1)
+  it('no two temperaments sleep alike', () => {
+    const signature = (temperament: Temperament) => {
+      const out: number[] = []
+      for (let i = 0; i < 40; i++) {
+        const pose = sleepPose(temperament, i * 0.25, createPose())
+        out.push(pose.sy - 1, pose.sx - 1, pose.roll, pose.pitch, pose.headNod, pose.headTilt, pose.mouth, pose.ear / 2, pose.legSwing[0], pose.tailLift)
+      }
+      return out
+    }
+    expectDistinct(temperaments, temperaments.map(signature), 0.3)
   })
 
-  it('paddles its legs while carried', () => {
-    const a = carriedPose(0, createPose()).legSwing[0]
-    const b = carriedPose(0.1, createPose()).legSwing[0]
-    expect(Math.abs(a - b)).toBeGreaterThan(0.2)
+  it('every temperament wakes its own way: eyes open before the hop, off it goes, and it lands in a squash', () => {
+    for (const temperament of temperaments) {
+      const { hopAt, seconds } = WAKE_TIMING[temperament]
+      expect(wakePose(temperament, 0.02, createPose()).lids, temperament).toBeLessThan(0.5)
+      expect(wakePose(temperament, hopAt - 0.05, createPose()).lids, temperament).toBeGreaterThan(0.9)
+      expect(wakePose(temperament, hopAt + (seconds - hopAt) * 0.4, createPose()).lift, temperament).toBeGreaterThan(3)
+      expect(wakePose(temperament, seconds - 0.04, createPose()).sy, temperament).toBeLessThan(1)
+      expect(hopAt, temperament).toBeLessThanOrEqual(WAKE_HOP_LATEST)
+    }
   })
+
+  it('no two temperaments share a wake', () => {
+    const signature = (temperament: Temperament) => {
+      const out: number[] = []
+      for (let i = 1; i < 16; i++) {
+        const pose = wakePose(temperament, i * 0.1, createPose())
+        out.push(pose.sy - 1, pose.pitch, pose.roll, pose.yaw, pose.lift / 4, pose.mouth, pose.lids, pose.headNod, pose.headTilt, pose.ear / 2)
+      }
+      return out
+    }
+    expectDistinct(temperaments, temperaments.map(signature), 0.3)
+  })
+
+  it('no two temperaments are carried alike; a shy one curls up tight', () => {
+    const signature = (temperament: Temperament) => {
+      const out: number[] = []
+      for (let k = 1; k < 12; k++) {
+        const pose = carriedPose(temperament, k * 0.13, createPose())
+        out.push(pose.legSwing[0], pose.legSwing[1], pose.legBend[0], pose.roll, pose.pitch, pose.lids, pose.mouth, pose.ear / 2, pose.lookY, pose.sy - 1)
+      }
+      return out
+    }
+    expectDistinct(temperaments, temperaments.map(signature), 0.3)
+    const shy = carriedPose('shy', 0.4, createPose())
+    expect(shy.legBend[0]).toBe(1)
+    expect(shy.lids).toBeLessThan(0.2)
+  })
+
+  it('no two temperaments land alike; each squashes as it meets the bench, and bouncy rebounds', () => {
+    const signature = (temperament: Temperament) => {
+      const out: number[] = []
+      for (let i = 1; i < 14; i++) {
+        const pose = landPose(temperament, i * 0.1, createPose())
+        out.push(pose.sy - 1, pose.pitch, pose.roll, pose.yaw, pose.lift / 4, pose.legSwing[0], pose.legBend[0], pose.lids, pose.headNod, pose.lookY, pose.ear / 2)
+      }
+      return out
+    }
+    expectDistinct(temperaments, temperaments.map(signature), 0.3)
+    for (const temperament of temperaments) {
+      const { touches, seconds } = LAND_TIMING[temperament]
+      const squash = Math.min(...[0, 0.04, 0.08, 0.12, 0.16].map((after) => landPose(temperament, touches[0] + after, createPose()).sy))
+      expect(squash, temperament).toBeLessThan(0.9)
+      expect(touches[touches.length - 1], temperament).toBeLessThan(seconds)
+    }
+    const { touches } = LAND_TIMING.bouncy
+    expect(landPose('bouncy', (touches[0] + touches[1]) / 2, createPose()).lift).toBeGreaterThan(3)
+  })
+
 })
