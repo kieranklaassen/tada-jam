@@ -45,6 +45,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Bedtime Forest | Picture-book gouache 3D: opaque pigment in 2–3 painted tone bands, dry brush, a loose brown ink line, paper grain; warm animals in blue-green woods under an apricot-to-violet dusk | [`games/bedtime-forest/ART.md`](../games/bedtime-forest/ART.md) |
 | Turning Tower | Geometric (Monument Valley): faceted flat-shaded towers on stepped plinths under a peach-to-lavender dusk, orthographic, with a hard hue split (mint paths, sunflower handles, indigo wanderer) | [`games/turning-tower/ART.md`](../games/turning-tower/ART.md) |
 | Critter Clay | Claymation 3D, second entry (owner-approved): a clay workshop bench in cool daylight, cobalt, lemon, and bubblegum-pink plasticine on a slate-blue board, 12 fps boil only while moving | [`games/critter-clay/ART.md`](../games/critter-clay/ART.md) |
+| Hillside Spring | Painterly, Ghibli-like: a hand-painted terraced garden, unlit painted scenery, cel-lit movers, afternoon light shafts, gold bamboo on sage | [`games/hillside-spring/ART.md`](../games/hillside-spring/ART.md) |
 
 ## 4. Menu of unclaimed directions
 
