@@ -5,6 +5,7 @@ import { BAG, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, 
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
 import { createClayMaterials, merge, PALETTE, piece, type ClayMaterials } from './clay'
 import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
+import { useQuality } from './quality'
 import * as geo from './geometry'
 
 // Claymation models. Rigid props are merged into one mesh each (one draw
@@ -41,7 +42,18 @@ function once<T>(key: string, make: () => T): T {
   if (!built.has(key)) built.set(key, make())
   return built.get(key) as T
 }
-const scratch = { m: new THREE.Matrix4(), q: new THREE.Quaternion(), p: new THREE.Vector3(), s: new THREE.Vector3(), c: new THREE.Color(), e: new THREE.Euler() }
+const scratch = {
+  m: new THREE.Matrix4(),
+  m2: new THREE.Matrix4(),
+  m3: new THREE.Matrix4(),
+  m4: new THREE.Matrix4(),
+  q: new THREE.Quaternion(),
+  p: new THREE.Vector3(),
+  p2: new THREE.Vector3(),
+  s: new THREE.Vector3(),
+  c: new THREE.Color(),
+  e: new THREE.Euler(),
+}
 
 // --- springs -----------------------------------------------------------------
 
@@ -148,9 +160,9 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
       const amount = THREE.MathUtils.clamp(springStep(s, stone.held ? -0.07 : 0, dt, 330, 11), -0.3, 0.35)
       const r = stoneRadius3(4)
       const pop = 1 + stone.pulse * 0.22 + stone.glow * 0.06
-      const rotation = new THREE.Matrix4().makeRotationFromQuaternion(scratch.q.set(...stone.quaternion))
-      const shapeScale = new THREE.Matrix4().makeScale(r * pop, r * pop, r * pop)
-      const squashScale = new THREE.Matrix4().makeScale(1 + amount * 0.6, 1 - amount, 1 + amount * 0.6)
+      const rotation = scratch.m2.makeRotationFromQuaternion(scratch.q.set(...stone.quaternion))
+      const shapeScale = scratch.m3.makeScale(r * pop, r * pop, r * pop)
+      const squashScale = scratch.m4.makeScale(1 + amount * 0.6, 1 - amount, 1 + amount * 0.6)
       const lift = amount > 0 ? -amount * r * 0.35 : 0
       scratch.m.makeTranslation(stone.position.x, stone.position.y + lift, stone.position.z).multiply(squashScale).multiply(rotation).multiply(shapeScale)
       instanced.setMatrixAt(i, scratch.m)
@@ -575,6 +587,7 @@ function easeOutBack(t: number): number {
  */
 export function Guest({ seat, at, read }: { seat: number; at: Point; read: () => GuestPose }) {
   const { clay, fur, quill } = useClay()
+  const furCap = useQuality().furShells
   const camera = useThree((state) => state.camera)
   const viewport = useThree((state) => state.size)
   const dpr = useThree((state) => state.viewport.dpr)
@@ -614,11 +627,16 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
     const now = pose.now
 
     // Shell LOD: more shells only when the guest is big on screen.
-    const a = new THREE.Vector3(p.x, 6, p.z).project(camera)
-    const b = new THREE.Vector3(p.x + 6 * GUEST_SIZE, 6, p.z).project(camera)
-    const pixels = (Math.abs(b.x - a.x) / 2) * viewport.width * dpr
-    const shells = THREE.MathUtils.clamp(Math.round(pixels / 12), 3, MAX_SHELLS)
-    for (const ref of furParts) if (ref.current) ref.current.count = shells
+    const a = scratch.p.set(p.x, 6, p.z).project(camera)
+    const ax = a.x
+    const b = scratch.p2.set(p.x + 6 * GUEST_SIZE, 6, p.z).project(camera)
+    const pixels = (Math.abs(b.x - ax) / 2) * viewport.width * dpr
+    const shells = Math.min(furCap, THREE.MathUtils.clamp(Math.round(pixels / 12), 3, MAX_SHELLS))
+    for (const ref of furParts) {
+      if (!ref.current) continue
+      ref.current.visible = shells > 0
+      ref.current.count = shells
+    }
 
     let lookYaw = Math.sin(now * 0.5 + phase) * 0.12
     if (pose.look) {

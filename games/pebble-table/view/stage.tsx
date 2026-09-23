@@ -1,4 +1,4 @@
-import { Canvas, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, ToneMapping } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
 import { useEffect, useMemo, type ReactNode } from 'react'
@@ -6,12 +6,15 @@ import * as THREE from 'three'
 import type { Point } from '../layout'
 import { toWorld2, type Vec3 } from '../physics3d'
 import { PALETTE } from './clay'
-import { ClayFinishEffect } from './finish'
+import { ClayFinishEffect, installClayToneMapping } from './finish'
+import type { QualityGovernor, QualitySettings } from '../quality'
 import { ClayProvider } from './models'
+import { QualityProvider, useQuality } from './quality'
 
 // The claymation stage: a fixed camera at a slight angle over the table, a
 // warm key light with a cool bounce from the table, no shadow maps (blob
-// shadows do that job), and one post pass. DPR is capped at 2.
+// shadows do that job), and at most one post pass. DPR, the post pass, fur,
+// and physics substeps follow the adaptive quality tier.
 
 const TARGET = new THREE.Vector3(1, 0, 2)
 const PITCH = (46 * Math.PI) / 180
@@ -57,13 +60,30 @@ function Lights() {
 
 function Finish() {
   const dpr = useThree((state) => state.viewport.dpr)
+  const gl = useThree((state) => state.gl)
+  const { post } = useQuality()
   const effect = useMemo(() => new ClayFinishEffect({ focusCenter: 0.47, focusBand: 0.24, blurRadius: 2.4 * dpr, warmth: 0.3, vignette: 0.3 }), [dpr])
+  useEffect(() => {
+    effect.uniforms.get('blurRadius')!.value = post === 'full' ? 2.4 * dpr : 0
+  }, [effect, post, dpr])
+  useEffect(() => {
+    if (post === 'off') installClayToneMapping()
+    gl.toneMapping = post === 'off' ? THREE.CustomToneMapping : THREE.NoToneMapping
+  }, [gl, post])
+  useEffect(() => () => effect.dispose(), [effect])
+  if (post === 'off') return <DirectRender />
   return (
-    <EffectComposer multisampling={dpr >= 2 ? 0 : 4} enableNormalPass={false}>
+    <EffectComposer multisampling={0} enableNormalPass={false}>
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       <primitive object={effect} />
     </EffectComposer>
   )
+}
+
+/** Without a post pass the scene renders straight to the screen (a positive-priority frame hook turns off the automatic render). */
+function DirectRender() {
+  useFrame(({ gl, scene, camera }) => gl.render(scene, camera), 1)
+  return null
 }
 
 export type ProjectorHandle = {
@@ -100,22 +120,36 @@ export function ProjectorBridge({ onReady }: { onReady: (projector: ProjectorHan
   return null
 }
 
-export function Stage({ running, children }: { running: boolean; children: ReactNode }) {
+export function Stage({
+  running,
+  governor,
+  restingFor,
+  onSettings,
+  children,
+}: {
+  running: boolean
+  governor: QualityGovernor
+  restingFor: () => number
+  onSettings: (settings: QualitySettings) => void
+  children: ReactNode
+}) {
   return (
     <Canvas
-      dpr={[1, 2]}
-      frameloop={running ? 'always' : 'never'}
+      dpr={Math.min(typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1, 2)}
+      frameloop={running ? 'demand' : 'never'}
       flat
       gl={{ antialias: false, powerPreference: 'high-performance', stencil: false }}
       camera={{ fov: FOV, position: [0, 180, 120], near: 20, far: 1000 }}
       style={{ position: 'absolute', inset: 0, touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
     >
-      <ClayProvider>
-        <CameraRig />
-        <Lights />
-        {children}
-        <Finish />
-      </ClayProvider>
+      <QualityProvider governor={governor} running={running} restingFor={restingFor} onSettings={onSettings}>
+        <ClayProvider>
+          <CameraRig />
+          <Lights />
+          {children}
+          <Finish />
+        </ClayProvider>
+      </QualityProvider>
     </Canvas>
   )
 }

@@ -54,3 +54,26 @@ export class ClayFinishEffect extends Effect {
     })
   }
 }
+
+const CUSTOM_HOOK = 'vec3 CustomToneMapping( vec3 color ) { return color; }'
+
+/**
+ * The same tone curve and grade, run per fragment inside every material via
+ * three's custom tone mapping, so the lowest quality tier keeps the clay
+ * colours with no post pass at all (only the vignette and blur are lost).
+ * Idempotent; it only fills three's otherwise empty custom tone-mapping hook.
+ */
+export function installClayToneMapping(): void {
+  const chunk = THREE.ShaderChunk.tonemapping_pars_fragment
+  if (!chunk.includes(CUSTOM_HOOK)) return
+  THREE.ShaderChunk.tonemapping_pars_fragment = chunk.replace(
+    CUSTOM_HOOK,
+    /* glsl */ `vec3 CustomToneMapping( vec3 color ) {
+  color = clamp(ACESFilmicToneMapping(color), 0.0, 1.0);
+  float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+  color = max(mix(vec3(luma), color, 1.16), 0.0);
+  color = mix(color, color * color * (3.0 - 2.0 * color), 0.32);
+  return color + vec3(0.035, 0.012, -0.03) * 0.3;
+}`,
+  )
+}

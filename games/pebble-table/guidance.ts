@@ -116,6 +116,10 @@ export class HintScheduler {
     this.everTouched = true
   }
 
+  idleFor(now: number): number {
+    return now - this.idleSince
+  }
+
   /** Start times of this idle stretch's demonstrations: 5 s idle, then 10 s, 20 s, 40 s gaps. */
   private scheduledStarts(): number[] {
     const starts: number[] = []

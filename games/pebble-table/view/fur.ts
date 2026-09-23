@@ -173,7 +173,7 @@ export function quillGeometry(root: string, tip: string): THREE.BufferGeometry {
     [0.05, 1.9],
     [0.0, 1.95],
   ].map(([x, y]) => new THREE.Vector2(x, y))
-  const geometry = new THREE.LatheGeometry(new THREE.SplineCurve(profile).getPoints(14), 7)
+  const geometry = new THREE.LatheGeometry(new THREE.SplineCurve(profile).getPoints(8), 6)
   const position = geometry.attributes.position
   const colors = new Float32Array(position.count * 3)
   const a = new THREE.Color(root)

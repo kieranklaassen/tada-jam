@@ -195,6 +195,13 @@ export class TableController {
     this.guidance = this.computeGuidance()
   }
 
+  /** Seconds the table has been untouched and still with no demonstration playing; the view paces rendering down while nothing happens. */
+  restingFor(): number {
+    if (this.guidance.hand || (this.munchStart !== null && this.t - this.munchStart < 3)) return 0
+    const calm = this.calmSince === null ? 0 : this.t - this.calmSince
+    return Math.min(calm, this.scheduler.idleFor(this.t))
+  }
+
   private updateFeeding(now: number): void {
     const view = this.feeding
     const calm = this.held.size === 0 && this.flights.every((f) => !f.carriesPiece)

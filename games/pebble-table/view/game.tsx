@@ -1,11 +1,13 @@
 import { useFrame } from '@react-three/fiber'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { TableController } from '../controller'
+import { QualityGovernor, startingTier, type QualitySettings } from '../quality'
 import { inBowl } from '../feeding'
 import { BAG, FEEDING, SCALE, shelfTile, type Point } from '../layout'
 import { stoneHeight3, stoneRadius3, toWorld2 } from '../physics3d'
 import { panOf } from '../scale'
 import { BagModel, FeedingSetting, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, StonesModel, TableModel, type Blob, type GuestPose, type StoneState } from './models'
+import { GrownUpOverlay } from './overlay'
 import { ProjectorBridge, Stage, type ProjectorHandle } from './stage'
 
 // Binds the game controller to the clay models: the controller steps inside
@@ -190,10 +192,21 @@ function Input({ table }: { table: TableController }) {
 }
 
 export function GameView({ table, running }: { table: TableController; running: boolean }) {
+  const governor = useMemo(() => new QualityGovernor(startingTier(window.matchMedia?.('(pointer: coarse)').matches ?? false)), [])
+  const restingFor = useCallback(() => table.restingFor(), [table])
+  const onSettings = useCallback(
+    (settings: QualitySettings) => {
+      table.physics.maxSubsteps = settings.physicsSubsteps
+    },
+    [table],
+  )
   return (
-    <Stage running={running}>
-      <Input table={table} />
-      <World table={table} />
-    </Stage>
+    <>
+      <Stage running={running} governor={governor} restingFor={restingFor} onSettings={onSettings}>
+        <Input table={table} />
+        <World table={table} />
+      </Stage>
+      <GrownUpOverlay governor={governor} />
+    </>
   )
 }
