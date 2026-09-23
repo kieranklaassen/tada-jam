@@ -6,8 +6,11 @@
 // jam registration, or the harness) with a real TSX parser and flags:
 //   kid-text-jsx        text between JSX tags            <p>Tap here</p>
 //   kid-text-literal    a string or template child      <p>{'Tap'}</p>
+//   kid-text-number     a value formatted as text child  <p>{String(count)}</p>, {n.toFixed(1)}
 //   kid-text-api        DOM or canvas text APIs         el.textContent = 'x', ctx.fillText(...)
 //   kid-text-component  3D/HTML text components         <Text>, <Text3D>, <Html>
+// A bare `{count}` child cannot be told apart from an element without types,
+// so review still has to catch raw numbers rendered that way.
 // Attributes are not text on screen, so aria-label and friends stay allowed.
 // A deliberate exception (for example a grown-up corner behind a hold
 // gesture) carries a `wordless-ok: <reason>` comment on the same or the
@@ -26,6 +29,8 @@ const HAS_WORDS = /[\p{L}\p{N}]/u
 const TEXT_PROPERTIES = new Set(['textContent', 'innerText', 'innerHTML', 'outerHTML'])
 const TEXT_CALLS = new Set(['fillText', 'strokeText', 'createTextNode', 'insertAdjacentText', 'insertAdjacentHTML', 'alert', 'prompt'])
 const TEXT_COMPONENTS = new Set(['Text', 'Text3D', 'Html'])
+const FORMAT_FUNCTIONS = new Set(['String', 'Number'])
+const FORMAT_METHODS = new Set(['toString', 'toFixed', 'toPrecision', 'toLocaleString', 'format', 'join'])
 
 function isNode(value: unknown): value is Node {
   return typeof value === 'object' && value !== null && typeof (value as Node).type === 'string'
@@ -53,6 +58,14 @@ function propertyName(node: unknown): string | null {
     return property?.type === 'Identifier' ? (property.name as string) : null
   }
   return null
+}
+
+function formatsText(node: Node): boolean {
+  if (node.type !== 'CallExpression') return false
+  const callee = node.callee as Node
+  if (callee?.type === 'Identifier') return FORMAT_FUNCTIONS.has(callee.name as string)
+  const name = propertyName(callee)
+  return name !== null && FORMAT_METHODS.has(name)
 }
 
 function literalHasWords(node: Node): boolean {
@@ -103,6 +116,7 @@ export function scanWordless(source: string, file: string): WordlessFinding[] {
       case 'JSXExpressionContainer': {
         const expression = node.expression
         if (isNode(expression) && literalHasWords(expression)) report(node, 'kid-text-literal')
+        else if (isNode(expression) && formatsText(expression)) report(node, 'kid-text-number')
         break
       }
       case 'JSXOpeningElement': {

@@ -16,6 +16,12 @@ describe('wordless check', () => {
     expect(rules('export const A = (n: number) => <p>{`${n} left`}</p>')).toEqual(['kid-text-literal'])
   })
 
+  it('flags values formatted as text children', () => {
+    expect(rules('export const A = (n: number) => <p>{String(n)}</p>')).toEqual(['kid-text-number'])
+    expect(rules('export const A = (n: number) => <p>{n.toFixed(1)}</p>')).toEqual(['kid-text-number'])
+    expect(rules('export const A = (f: Intl.NumberFormat) => <p>{f.format(3)}</p>')).toEqual(['kid-text-number'])
+  })
+
   it('flags DOM and canvas text APIs, in .ts files too', () => {
     expect(rules("el.textContent = 'Hi'", 'games/demo/hud.ts')).toEqual(['kid-text-api'])
     expect(rules("ctx.fillText('5', 10, 10)", 'games/demo/draw.ts')).toEqual(['kid-text-api'])
