@@ -50,6 +50,38 @@ function EyeIcon() {
   )
 }
 
+function SunGlyph() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="10" cy="10" r="4.2" fill="#ffd46e" />
+      <g stroke="#ffd46e" strokeWidth="1.6" strokeLinecap="round">
+        {Array.from({ length: 8 }, (_, i) => {
+          const a = (i / 8) * TAU, c = Math.cos(a), s = Math.sin(a)
+          return <line key={i} x1={10 + c * 6.6} y1={10 + s * 6.6} x2={10 + c * 8.6} y2={10 + s * 8.6} />
+        })}
+      </g>
+    </svg>
+  )
+}
+
+function EarthGlyph() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="10" cy="10" r="7.5" fill="#3a7fd0" />
+      <path d="M5 8c2-2 4 0 5-1s2-2 4-1-1 3 1 4 1 3-1 4-3-1-4 0-3 1-4-1 1-3-1-5Z" fill="#6cc070" />
+    </svg>
+  )
+}
+
+function MoonGlyph() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="10" cy="10" r="7.5" fill="#3a4466" />
+      <path d="M10 2.5a7.5 7.5 0 0 1 0 15a4 7.5 0 0 0 0-15Z" fill="#fff1c9" />
+    </svg>
+  )
+}
+
 function HalvesIcon() {
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true">
@@ -65,6 +97,8 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const windowRef = useRef<HTMLCanvasElement>(null)
+  const pinRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [ready, setReady] = useState(false)
   const ctxRef = useRef(ctx)
   ctxRef.current = ctx
   const api = useRef<{ setPov(on: boolean): void; setHalves(on: boolean): void; goTo(index: number): void; awake(on: boolean): void } | null>(null)
@@ -82,6 +116,8 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
     let povTarget = 0, lastTouch = -Infinity, autoBlend = 1, currentPhase = -1
     // One finger at a time: dragging the moon, turning the model, or tapping a phase.
     let dragging: { id: number; mode: 'moon' | 'look' | 'spin' | 'phase'; x: number; y: number; moved: boolean; phase?: number } | null = null
+    let shown = false, maxDpr = 2
+    const slow = { sum: 0, frames: 0 }
     let tween: { from: number; turn: number; start: number; duration: number } | null = null
 
     const save = () => loaded && ctxRef.current.storage.save(serialize(orrery.elongation, povTarget === 1, orrery.showHalves))
@@ -104,7 +140,7 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
       const w = root.clientWidth, h = root.clientHeight
       if (w <= 0 || h <= 0) return
       // Sharp on phones, bounded on big tablets.
-      const ratio = Math.max(1, Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(2_400_000 / (w * h))))
+      const ratio = Math.max(1, Math.min(window.devicePixelRatio || 1, maxDpr, Math.sqrt(2_400_000 / (w * h))))
       if (w === width && h === height && ratio === dpr) return
       width = w; height = h; dpr = ratio
       orrery.resize(w, h, dpr)
@@ -143,6 +179,25 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
       }
       orrery.update(dt)
       draw()
+      if (!shown) { shown = true; setReady(true) }
+      // Pins ride along with the sun, Earth and moon.
+      orrery.pins(width, height).forEach((pin, i) => {
+        const el = pinRefs.current[i]
+        if (!el) return
+        el.style.transform = `translate3d(${pin.x}px, ${pin.y}px, 0) translate(-50%, -100%)`
+        el.classList.toggle('is-visible', pin.visible)
+      })
+      // Slower devices first lose depth of field, then drop to one pixel per point.
+      if (orrery.intro >= 1 && dt > 0) {
+        slow.sum += dt; slow.frames++
+        if (slow.frames === 90) {
+          if (slow.sum / slow.frames > 0.026) {
+            if (orrery.fancy) orrery.fancy = false
+            else if (dpr > 1) { maxDpr = 1; width = 0; resize() }
+          }
+          slow.sum = 0; slow.frames = 0
+        }
+      }
       frame = requestAnimationFrame(tick)
     }
 
@@ -261,8 +316,17 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
   return (
     <div ref={rootRef} className="mp-root">
       <canvas ref={canvasRef} className="mp-world" aria-label="A model of the sun, Earth and moon" />
+      <div className="mp-pins" aria-hidden>
+        {[<SunGlyph key="s" />, <EarthGlyph key="e" />, <MoonGlyph key="m" />].map((glyph, i) => (
+          <div key={i} ref={el => { pinRefs.current[i] = el }} className="mp-pin">
+            <span className="mp-pin-chip">{glyph}</span>
+            <span className="mp-pin-stem" />
+          </div>
+        ))}
+      </div>
+      <div className={`mp-curtain${ready ? ' is-open' : ''}`} aria-hidden />
 
-      <div className="mp-toolbar">
+      <div className="mp-toolbar mp-glass">
         <div className="mp-segmented" role="group" aria-label="Point of view">
           <button type="button" className={pov ? '' : 'is-on'} aria-pressed={!pov} aria-label="Look at the model" onClick={() => api.current?.setPov(false)}><ModelIcon /></button>
           <button type="button" className={pov ? 'is-on' : ''} aria-pressed={pov} aria-label="Stand on Earth" onClick={() => api.current?.setPov(true)}><EyeIcon /></button>
@@ -277,7 +341,7 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
         <span className="mp-window-badge">{pov ? <ModelIcon /> : <EyeIcon />}</span>
       </button>
 
-      <div className="mp-strip" role="group" aria-label="Moon phases">
+      <div className="mp-strip mp-glass" role="group" aria-label="Moon phases">
         {Array.from({ length: PHASE_COUNT }, (_, i) => (
           <button key={i} type="button" className={i === phase ? 'is-on' : ''} aria-label={`Phase ${i + 1} of ${PHASE_COUNT}`} onClick={() => api.current?.goTo(i)}>
             <MoonIcon elongation={phaseAngle(i)} size={40} />

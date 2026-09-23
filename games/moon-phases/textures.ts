@@ -54,24 +54,65 @@ function paintSphere(width: number, height: number, paint: Painter) {
 const lerp3 = (a: number[], b: number[], t: number): [number, number, number] => [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)]
 const clamp01 = (t: number) => Math.max(0, Math.min(1, t))
 
-export function earthCanvas(size = 1024) {
+/** Earth's colour, roughness (shiny oceans, matte land) and night lights, painted together. */
+export function earthCanvases(size = 1024) {
   const deep = [22, 64, 128], shallow = [46, 128, 178], grass = [86, 150, 76], forest = [48, 108, 62], sand = [214, 190, 128], ice = [236, 244, 250]
-  return paintSphere(size, size / 2, (x, y, z, lat) => {
+  const height = size / 2
+  const rough = new Uint8ClampedArray(new ArrayBuffer(size * height * 4)), lights = new Uint8ClampedArray(new ArrayBuffer(size * height * 4))
+  let i = 0
+  const color = paintSphere(size, height, (x, y, z, lat) => {
     const n = fbm(x * 1.7 + 3, y * 1.7, z * 1.7, 11)
     const detail = fbm(x * 6, y * 6, z * 6, 23, 3)
     const polar = Math.abs(lat) / (Math.PI / 2)
-    if (polar > 0.86 - detail * 0.08) return [...ice, 255] as [number, number, number, number]
     const land = n + detail * 0.08 - 0.56
-    if (land < 0) {
+    let rgb: [number, number, number], r = 235, glow = 0
+    if (polar > 0.86 - detail * 0.08) rgb = [ice[0], ice[1], ice[2]]
+    else if (land < 0) {
       const t = clamp01(1 + land * 9)
-      return [...lerp3(deep, shallow, t * t), 255]
+      rgb = lerp3(deep, shallow, t * t); r = 60
+    } else {
+      const dry = clamp01((1 - polar * 1.6) * 1.2 - 0.25 + (detail - 0.5) * 0.8)
+      const base = lerp3(forest, grass, clamp01(detail * 1.4 - 0.2))
+      rgb = lerp3(lerp3(base, sand, dry * 0.8), sand, clamp01(1 - land * 30) * 0.5)
+      // Towns cluster near coasts and in temperate bands.
+      const towns = fbm(x * 40, y * 40, z * 40, 29, 2)
+      glow = clamp01((towns - 0.62) * 9) * clamp01(1 - land * 6) * clamp01(1.2 - polar * 1.4)
     }
-    const dry = clamp01((1 - polar * 1.6) * 1.2 - 0.25 + (detail - 0.5) * 0.8)
-    const base = lerp3(forest, grass, clamp01(detail * 1.4 - 0.2))
-    const c = lerp3(base, sand, dry * 0.8)
-    const coast = clamp01(1 - land * 30)
-    return [...lerp3(c, sand, coast * 0.5), 255]
+    rough[i] = rough[i + 1] = rough[i + 2] = r; rough[i + 3] = 255
+    lights[i] = 255 * glow; lights[i + 1] = 196 * glow; lights[i + 2] = 120 * glow; lights[i + 3] = 255
+    i += 4
+    return [rgb[0], rgb[1], rgb[2], 255]
   })
+  const fromPixels = (data: Uint8ClampedArray<ArrayBuffer>) => {
+    const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = height
+    canvas.getContext('2d')!.putImageData(new ImageData(data, size, height), 0, 0)
+    return canvas
+  }
+  return { color, rough: fromPixels(rough), lights: fromPixels(lights) }
+}
+
+/** An engraved brass ring for the moon's path: fine degree ticks, bold marks at the eight phases. */
+export function scaleCanvas(size: number, inner: number, outer: number) {
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  const c = size / 2, k = size / 2 / outer
+  ctx.translate(c, c)
+  // Brushed brass band.
+  const band = ctx.createRadialGradient(0, 0, inner * k, 0, 0, outer * k)
+  band.addColorStop(0, '#8a6232'); band.addColorStop(0.15, '#d9a95a'); band.addColorStop(0.5, '#f0cf8a'); band.addColorStop(0.85, '#c8964a'); band.addColorStop(1, '#7a5428')
+  ctx.fillStyle = band
+  ctx.beginPath(); ctx.arc(0, 0, outer * k, 0, Math.PI * 2); ctx.arc(0, 0, inner * k, 0, Math.PI * 2, true); ctx.fill()
+  ctx.strokeStyle = '#4a3216'
+  for (let d = 0; d < 360; d++) {
+    const a = (d / 360) * Math.PI * 2, major = d % 45 === 0, mid = d % 5 === 0
+    const r1 = outer * k * (major ? 0.62 : mid ? 0.8 : 0.88), r2 = outer * k * 0.97
+    ctx.lineWidth = major ? 3.2 : mid ? 1.6 : 0.8
+    ctx.beginPath(); ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1); ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2); ctx.stroke()
+  }
+  ctx.lineWidth = 2
+  for (const r of [inner * k + 3, outer * k - 3]) { ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke() }
+  return canvas
 }
 
 export function cloudCanvas(size = 512) {
@@ -129,7 +170,7 @@ export function woodCanvas(size = 768) {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = size
   const ctx = canvas.getContext('2d')!, image = ctx.createImageData(size, size)
-  const dark = [112, 68, 38], light = [184, 128, 78]
+  const dark = [70, 40, 22], light = [138, 88, 50]
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const u = x / size - 0.5, v = y / size - 0.5
     // Planks of straight grain with a few soft knots, not a record's rings.

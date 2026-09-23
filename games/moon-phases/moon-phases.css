@@ -1,12 +1,18 @@
 .mp-root {
-  --mp-paper: #fff4dc;
-  --mp-ink: #1d2447;
-  --mp-brass: #c8964a;
+  --mp-glass: rgba(16, 18, 30, 0.58);
+  --mp-glass-edge: rgba(255, 255, 255, 0.11);
+  --mp-glass-shine: rgba(255, 255, 255, 0.06);
+  --mp-on: #f6f2e8;
+  --mp-on-ink: #141626;
+  --mp-ink: #e9ecf6;
+  --mp-brass: #d4a456;
+  --mp-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --mp-out: cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #0b1230;
+  background: #070a16;
   color: var(--mp-ink);
   user-select: none;
   -webkit-user-select: none;
@@ -34,76 +40,100 @@
   display: block;
 }
 
+/* While the textures are painted, the room waits in the dark and then fades up. */
+.mp-curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: #05070f;
+  pointer-events: none;
+  transition: opacity 1.4s ease 0.1s;
+}
+
+.mp-curtain.is-open {
+  opacity: 0;
+}
+
+/* Frosted glass, as on an instrument's control panel. */
+.mp-glass {
+  background: var(--mp-glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: inset 0 0 0 1px var(--mp-glass-edge), inset 0 1px 0 var(--mp-glass-shine), 0 18px 40px -18px rgba(0, 0, 0, 0.7);
+}
+
 .mp-toolbar {
   position: absolute;
   top: max(16px, env(safe-area-inset-top));
   left: max(16px, env(safe-area-inset-left));
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
+  padding: 6px;
+  border-radius: 22px;
+  animation: mp-rise 900ms var(--mp-out) 2.6s both;
 }
 
 .mp-segmented {
   display: flex;
-  padding: 5px;
-  gap: 4px;
-  border-radius: 999px;
-  background: var(--mp-paper);
-  box-shadow: 0 4px 0 #00000040, inset 0 0 0 2px var(--mp-brass);
+  gap: 2px;
+  padding: 3px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .mp-segmented button,
 .mp-round {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 54px;
+  height: 54px;
   padding: 0;
   border: 0;
-  border-radius: 999px;
+  border-radius: 15px;
   background: transparent;
-  transition: background-color 160ms, transform 120ms;
+  color: var(--mp-ink);
+  transition: background-color 240ms var(--mp-out), color 240ms, transform 160ms var(--mp-spring);
 }
 
 .mp-segmented button svg,
 .mp-round svg {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
 }
 
-.mp-segmented button.is-on {
-  background: #f2c65f;
-  box-shadow: inset 0 -3px 0 #b8894a;
+.mp-segmented button.is-on,
+.mp-round.is-on {
+  background: var(--mp-on);
+  color: var(--mp-on-ink);
+  box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.6);
 }
 
 .mp-round {
-  width: 66px;
-  height: 66px;
-  background: var(--mp-paper);
-  box-shadow: 0 4px 0 #00000040, inset 0 0 0 2px var(--mp-brass);
-}
-
-.mp-round.is-on {
-  background: #f2c65f;
-  box-shadow: 0 4px 0 #00000040, inset 0 0 0 2px var(--mp-brass), inset 0 -4px 0 #b8894a;
+  border-radius: 18px;
 }
 
 .mp-root button:active {
-  transform: translateY(2px) scale(0.97);
+  transform: scale(0.94);
 }
 
-/* The round window: a brass porthole onto the other point of view. */
+/* The round window: a brass porthole onto the other point of view, with glass on it. */
 .mp-window {
   position: absolute;
   top: max(16px, env(safe-area-inset-top));
   right: max(16px, env(safe-area-inset-right));
-  width: clamp(128px, 28vmin, 250px);
+  width: clamp(128px, 27vmin, 240px);
   aspect-ratio: 1;
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: #0b1230;
-  box-shadow: 0 0 0 7px var(--mp-brass), 0 0 0 10px #8a6232, 0 10px 24px #0008;
+  background: #05070f;
+  box-shadow:
+    0 0 0 5px #caa059,
+    0 0 0 7px #7a5428,
+    0 0 0 8px rgba(255, 255, 255, 0.12),
+    0 20px 40px -10px rgba(0, 0, 0, 0.8);
+  animation: mp-pop 900ms var(--mp-spring) 2.9s both;
 }
 
 .mp-window canvas {
@@ -113,77 +143,161 @@
   border-radius: 50%;
 }
 
+.mp-window::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(120% 70% at 30% 8%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 45%),
+    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.55) 100%);
+  pointer-events: none;
+}
+
 .mp-window-badge {
   position: absolute;
-  left: -6px;
-  bottom: -6px;
+  left: -4px;
+  bottom: -4px;
+  z-index: 1;
   display: grid;
   place-items: center;
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: var(--mp-paper);
-  box-shadow: 0 0 0 3px var(--mp-brass), 0 3px 0 #0006;
+  background: var(--mp-on);
+  color: var(--mp-on-ink);
+  box-shadow: 0 0 0 3px #caa059, 0 6px 14px -4px rgba(0, 0, 0, 0.7);
 }
 
 .mp-window-badge svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* Pins: tiny glass chips standing over the sun, Earth and moon. */
+.mp-pins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mp-pin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  will-change: transform;
+}
+
+.mp-pin.is-visible {
+  opacity: 1;
+}
+
+.mp-pin-chip {
+  display: grid;
+  place-items: center;
   width: 30px;
   height: 30px;
+  border-radius: 10px;
+  background: var(--mp-glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 0 1px var(--mp-glass-edge), 0 6px 16px -6px rgba(0, 0, 0, 0.8);
+}
+
+.mp-pin-chip svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mp-pin-stem {
+  width: 1px;
+  height: 14px;
+  background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
 }
 
 .mp-strip {
   position: absolute;
   left: 50%;
-  bottom: max(14px, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
+  bottom: max(16px, env(safe-area-inset-bottom));
   display: flex;
-  gap: 4px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #fff4dcee;
-  box-shadow: 0 4px 0 #00000040, inset 0 0 0 2px var(--mp-brass);
+  gap: 2px;
+  padding: 6px;
+  border-radius: 24px;
+  transform: translateX(-50%);
+  animation: mp-rise-centred 900ms var(--mp-out) 3s both;
 }
 
 .mp-strip button {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: 18px;
   background: transparent;
-  transition: transform 220ms cubic-bezier(0.3, 1.6, 0.5, 1), background-color 200ms;
+  transition: background-color 260ms var(--mp-out), transform 320ms var(--mp-spring);
 }
 
 .mp-strip button.is-on {
-  background: #f2c65f;
-  transform: translateY(-6px) scale(1.12);
-  box-shadow: 0 4px 0 #b8894a;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  transform: translateY(-3px) scale(1.08);
+}
+
+.mp-strip button.is-on svg {
+  filter: drop-shadow(0 0 8px rgba(255, 236, 190, 0.55));
+}
+
+@keyframes mp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes mp-rise-centred {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+}
+
+@keyframes mp-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
 }
 
 @media (max-height: 520px) {
   .mp-segmented button,
   .mp-round {
-    width: 50px;
-    height: 50px;
-  }
-  .mp-window {
-    width: clamp(112px, 32vmin, 170px);
-  }
-  .mp-strip button {
     width: 46px;
     height: 46px;
   }
+  .mp-window {
+    width: clamp(108px, 30vmin, 160px);
+  }
+  .mp-strip button {
+    width: 44px;
+    height: 44px;
+  }
   .mp-strip svg {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mp-root button,
-  .mp-strip button {
-    transition: none;
+  .mp-root *,
+  .mp-root *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }
