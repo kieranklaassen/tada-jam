@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import type { ForestController, Projector } from '../controller'
 import type { ScreenPoint } from '../input'
-import { ANIMAL_KEYS, HOME_KEYS, HOMES, type AnimalKey, type Point } from '../layout'
+import { ANIMAL_KEYS, ANIMAL_SCALE, HOME_KEYS, HOMES, type AnimalKey, type Point } from '../layout'
 import type { Tier } from '../perf'
 import { buildAnimal, PART_COUNT } from './animals'
 import { fillMaterial, homeUniforms, inkMaterial, shared } from './gouache'
@@ -21,7 +21,7 @@ import { createSky, skyUniforms } from './sky'
 const FOV = 34
 const PITCH = THREE.MathUtils.degToRad(30)
 /** How far the camera tilts up to show the sky at night. */
-const NIGHT_TILT = THREE.MathUtils.degToRad(10)
+const NIGHT_TILT = THREE.MathUtils.degToRad(5)
 /** The fit: the meadow reaches this far toward the child at the bottom edge… */
 const BOTTOM_Z = 74
 /** …and the homes at this depth fit within this half-width. */
@@ -32,6 +32,7 @@ type AnimalView = { key: AnimalKey; fill: THREE.Mesh; ink: THREE.Mesh; joints: J
 
 const rotX = new THREE.Matrix4()
 const rotZ = new THREE.Matrix4()
+const animalScale = new THREE.Vector3(ANIMAL_SCALE, ANIMAL_SCALE, ANIMAL_SCALE)
 const ndc = new THREE.Vector3()
 const pointer = new THREE.Vector2()
 const hit = new THREE.Vector3()
@@ -59,9 +60,11 @@ export class ForestWorld {
   constructor() {
     this.camera.rotation.order = 'YXZ'
     const sky = createSky()
-    const scenery = buildScenery()
+    const scenery = buildScenery(new THREE.Vector3(0, -Math.sin(PITCH), -Math.cos(PITCH)))
     const groundMaterial = fillMaterial({ brushScale: 0.045, hazeNear: 380, hazeFar: 720 })
     const ground = new THREE.Mesh(scenery.ground, groundMaterial)
+    // The meadow is drawn after everything standing on it, so the grass they hide is never shaded.
+    ground.renderOrder = 1
     const sceneryFill = new THREE.Mesh(scenery.fill, fillMaterial({ homes: true, brushScale: 0.07 }))
     const sceneryInk = new THREE.Mesh(scenery.ink, inkMaterial({ homes: true }))
     for (const mesh of [ground, sceneryFill, sceneryInk]) {
@@ -185,6 +188,7 @@ export class ForestWorld {
         rotZ.makeRotationZ(-c.swingX)
         m.premultiply(rotX).premultiply(rotZ)
       }
+      m.scale(animalScale)
       m.elements[12] = c.x
       m.elements[13] = c.y
       m.elements[14] = c.z
@@ -194,6 +198,12 @@ export class ForestWorld {
     }
 
     this.overlays.update(forest, dt, tier, sky.night, sky.morning)
+  }
+
+  /** Compiles every shader before the first frame, hidden ones too (the ghost hand), so nothing stalls a frame the first time it shows. */
+  warm(gl: THREE.WebGLRenderer): void {
+    gl.compile(this.scene, this.camera)
+    gl.compile(this.post.scene, this.post.camera)
   }
 
   render(gl: THREE.WebGLRenderer, post: boolean): void {

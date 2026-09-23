@@ -40,6 +40,8 @@ function Loop({ forest, governor, stats, walk }: { forest: ForestController; gov
     return () => world.dispose()
   }, [forest, world])
 
+  useEffect(() => world.warm(gl), [gl, world])
+
   useEffect(() => {
     if (!walk) return
     const at = (x: number, y: number, z: number) => {
@@ -201,6 +203,9 @@ export function ForestStage({ forest, running }: { forest: ForestController; run
         dpr={Math.min(screenDpr(), TIERS[governor.tier].dpr)}
         frameloop={running ? 'always' : 'never'}
         flat
+        // The shaders paint display sRGB themselves. A linear output also gives the screen and the paper pass's
+        // target the same compiled programs, so a tier change that drops the pass never recompiles the scene.
+        linear
         gl={{ antialias: false, alpha: false, stencil: false, powerPreference: 'high-performance' }}
         style={{ position: 'absolute', inset: 0, touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
       >

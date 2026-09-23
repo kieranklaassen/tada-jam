@@ -33,6 +33,8 @@ function makeUnitShapes() {
   taper.translate(0, 0.5, 0)
   return {
     sphere: new THREE.SphereGeometry(1, 18, 12),
+    /** A lighter sphere for background tree crowns, where the ink line hides the facets. */
+    crown: new THREE.SphereGeometry(1, 14, 10),
     ball: new THREE.SphereGeometry(1, 12, 8),
     dome: new THREE.SphereGeometry(1, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2),
     cone,
@@ -44,7 +46,7 @@ function makeUnitShapes() {
   }
 }
 
-/** Unit primitives: sphere radius 1; cone, cylinder, taper stand on y=0 with height 1; disc faces +z. */
+/** Unit primitives: sphere and crown radius 1; cone, cylinder, taper stand on y=0 with height 1; disc faces +z. */
 export function shapes() {
   unitShapes ??= makeUnitShapes()
   return unitShapes
@@ -88,9 +90,14 @@ const offset = new THREE.Vector3()
 const v = new THREE.Vector3()
 const n = new THREE.Vector3()
 
+/** One added piece's run of indices in a target, and where the piece sits. */
+type Span = { start: number; end: number; x: number; y: number; z: number }
+
 export class ShapeBuilder {
   private readonly fill = arrays()
   private readonly line = arrays()
+  private readonly fillSpans: Span[] = []
+  private readonly lineSpans: Span[] = []
   /** Scale of the line-width noise: larger values vary the brush line faster over the surface. */
   private readonly inkFrequency: number
 
@@ -126,16 +133,35 @@ export class ShapeBuilder {
         const f = this.inkFrequency
         target.ink.push(ink * (0.45 + 1.1 * smoothNoise(v.x * f, v.y * f, v.z * f)))
       }
+      const start = target.index.length
       const index = geometry.getIndex()
       if (index) for (let i = 0; i < index.count; i++) target.index.push(base + index.getX(i))
       else for (let i = 0; i < position.count; i++) target.index.push(base + i)
+      const spans = target === this.fill ? this.fillSpans : this.lineSpans
+      spans.push({ start, end: target.index.length, x: a[0], y: a[1], z: a[2] })
     }
     return this
   }
 
-  build(): { fill: THREE.BufferGeometry; ink: THREE.BufferGeometry } {
+  /**
+   * Merge everything added. With `view` (the camera's forward direction), pieces are drawn nearest
+   * first, so a fill-bound rasterizer's depth test rejects what they hide before shading it.
+   */
+  build(view?: THREE.Vector3): { fill: THREE.BufferGeometry; ink: THREE.BufferGeometry } {
+    if (view) {
+      nearFirst(this.fill, this.fillSpans, view)
+      nearFirst(this.line, this.lineSpans, view)
+    }
     return { fill: toGeometry(this.fill, false), ink: toGeometry(this.line, true) }
   }
+}
+
+function nearFirst(a: Arrays, spans: Span[], view: THREE.Vector3): void {
+  const depth = (s: Span) => s.x * view.x + s.y * view.y + s.z * view.z
+  const sorted = spans.slice().sort((p, q) => depth(p) - depth(q))
+  const index = a.index.slice()
+  let k = 0
+  for (const s of sorted) for (let i = s.start; i < s.end; i++) a.index[k++] = index[i]
 }
 
 function toGeometry(a: Arrays, ink: boolean): THREE.BufferGeometry {
