@@ -1,3 +1,4 @@
+import type { Species } from './motion'
 // Every sound on the table is synthesized with raw Web Audio (KTD7): clay
 // clacks, a cloth rustle, the beam's creak, and the pentatonic number voice.
 // The context is only created inside the child's first real tap, is
@@ -219,6 +220,31 @@ export class TableAudio {
   }
 
   /** A springy boing: up, overshoot, settle. */
+  /** A guest being poked, in its own voice: a squeaky giggle, a low happy hum, or a tiny sniff-squeak. */
+  poke(species: Species): void {
+    const context = this.ready()
+    if (!context) return
+    const now = context.currentTime
+    switch (species) {
+      case 'rabbit':
+        for (let i = 0; i < 4; i++) this.tone(820 + i * 90 + Math.random() * 40, 'sine', 0.1, 0.005, 0.06, now + i * 0.075, 1000 + i * 90)
+        return
+      case 'bear':
+        this.tone(150, 'triangle', 0.16, 0.04, 0.22, now, 128)
+        this.tone(175, 'triangle', 0.14, 0.04, 0.3, now + 0.26, 140)
+        return
+      case 'hedgehog':
+        this.noiseBurst(3200, 2, 0.08, 0.05, now, 'highpass')
+        this.noiseBurst(3600, 2, 0.07, 0.04, now + 0.09, 'highpass')
+        this.tone(1250, 'sine', 0.08, 0.004, 0.09, now + 0.18, 1650)
+        return
+      default: {
+        const unknown: never = species
+        return unknown
+      }
+    }
+  }
+
   hop(): void {
     const context = this.ready()
     if (!context) return

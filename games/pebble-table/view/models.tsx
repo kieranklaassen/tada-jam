@@ -6,6 +6,7 @@ import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
 import { createClayMaterials, merge, PALETTE, piece, type ClayMaterials } from './clay'
 import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
 import { useQuality } from './quality'
+import { MotionDirector, PERSONALITIES, SEAT_SPECIES, type Species } from '../motion'
 import * as geo from './geometry'
 
 // Claymation models. Rigid props are merged into one mesh each (one draw
@@ -118,7 +119,20 @@ export type StoneState = {
   glow: number
 }
 
-type Squash = Spring & { lastVy: number; wasHeld: boolean }
+type Squash = Spring & { lastVy: number; wasHeld: boolean; rock: Spring }
+
+/**
+ * How each size lands. A whole stone is heavy: a deep, slow squash and a
+ * lazy rock as it settles. Halves and quarters are lighter: springier, a
+ * smaller squash, and a quicker rattle. Nothing shares one bounce.
+ */
+const STONE_FEEL: Record<Quarters, { stiffness: number; damping: number; kick: number; rockStiffness: number; rockDamping: number; rockKick: number }> = {
+  4: { stiffness: 300, damping: 10, kick: 0.05, rockStiffness: 70, rockDamping: 3.2, rockKick: 0.004 },
+  2: { stiffness: 520, damping: 9, kick: 0.04, rockStiffness: 190, rockDamping: 4, rockKick: 0.006 },
+  1: { stiffness: 760, damping: 8, kick: 0.032, rockStiffness: 420, rockDamping: 5, rockKick: 0.008 },
+}
+const rockAxis = new THREE.Vector3()
+const rockTurn = new THREE.Quaternion()
 
 const MAX_STONES = 64
 
@@ -150,17 +164,24 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
       seen.add(stone.id)
       let s = squash.current.get(stone.id)
       if (!s) {
-        s = { x: 0, v: 0, lastVy: 0, wasHeld: stone.held }
+        s = { x: 0, v: 0, lastVy: 0, wasHeld: stone.held, rock: { x: 0, v: 0 } }
         squash.current.set(stone.id, s)
       }
+      const feel = STONE_FEEL[stone.q]
       if (stone.held && !s.wasHeld) s.v -= 3.2
-      if (!stone.held && s.lastVy < -30 && stone.velocityY > -6) s.v += Math.min(4.5, -s.lastVy * 0.045)
+      if (!stone.held && s.lastVy < -30 && stone.velocityY > -6) {
+        s.v += Math.min(4.5, -s.lastVy * feel.kick)
+        s.rock.v += Math.min(2.2, -s.lastVy * feel.rockKick) * (stone.id % 2 === 0 ? 1 : -1)
+      }
       s.wasHeld = stone.held
       s.lastVy = stone.velocityY
-      const amount = THREE.MathUtils.clamp(springStep(s, stone.held ? -0.07 : 0, dt, 330, 11), -0.3, 0.35)
+      const amount = THREE.MathUtils.clamp(springStep(s, stone.held ? -0.07 : 0, dt, feel.stiffness, feel.damping), -0.3, 0.35)
+      const rock = springStep(s.rock, 0, dt, feel.rockStiffness, feel.rockDamping)
       const r = stoneRadius3(4)
       const pop = 1 + stone.pulse * 0.22 + stone.glow * 0.06
-      const rotation = scratch.m2.makeRotationFromQuaternion(scratch.q.set(...stone.quaternion))
+      rockAxis.set(Math.cos(stone.id * 2.39), 0, Math.sin(stone.id * 2.39))
+      rockTurn.setFromAxisAngle(rockAxis, THREE.MathUtils.clamp(rock, -0.35, 0.35))
+      const rotation = scratch.m2.makeRotationFromQuaternion(scratch.q.set(...stone.quaternion).premultiply(rockTurn))
       const shapeScale = scratch.m3.makeScale(r * pop, r * pop, r * pop)
       const squashScale = scratch.m4.makeScale(1 + amount * 0.6, 1 - amount, 1 + amount * 0.6)
       const lift = amount > 0 ? -amount * r * 0.35 : 0
@@ -252,23 +273,32 @@ export function BagModel({ read }: { read: () => BagPose }) {
   const pebble = useMemo(() => geo.pebble(20), [])
   const settle = useRef<Spring>({ x: 0, v: 0 })
   const lastTip = useRef<number | null>(null)
+  const tips = useRef(0)
   const p = to3(BAG)
   useFrame((_, dt) => {
     const pose = read()
     const group = body.current
     if (group) {
-      if (pose.tipAge !== null && pose.tipAge < dt * 1.5 && lastTip.current !== pose.tipAge) settle.current.v += 7
+      if (pose.tipAge !== null && pose.tipAge < dt * 1.5 && lastTip.current !== pose.tipAge) {
+        settle.current.v += 7
+        tips.current += 1
+      }
       lastTip.current = pose.tipAge
       const t = pose.tipAge ?? 10
-      const anticipation = t < 0.12 ? Math.sin((t / 0.12) * Math.PI) * 0.12 : 0
-      const lurch = t >= 0.12 && t < 0.55 ? Math.sin(((t - 0.12) / 0.43) * Math.PI) * 0.42 : 0
-      const wobble = springStep(settle.current, 0, dt, 90, 7)
+      // Two ways to tip, alternating: a big lurch forward, or a shake-out that
+      // jiggles the stones loose side to side.
+      const shakeOut = tips.current % 2 === 0
+      const anticipation = t < 0.12 ? Math.sin((t / 0.12) * Math.PI) * (shakeOut ? 0.08 : 0.12) : 0
+      const lurch = t >= 0.12 && t < 0.55 ? Math.sin(((t - 0.12) / 0.43) * Math.PI) * (shakeOut ? 0.26 : 0.42) : 0
+      const shake = shakeOut && t >= 0.12 && t < 0.8 ? Math.sin((t - 0.12) * 42) * 0.12 * Math.sin(((t - 0.12) / 0.68) * Math.PI) : 0
+      // An empty bag is floppy: softer spring, longer wobble.
+      const wobble = springStep(settle.current, 0, dt, 55 + pose.fullness * 45, 4 + pose.fullness * 4)
       const girth = 0.7 + pose.fullness * 0.32
       const breathe = 1 + Math.sin(pose.now * 1.4) * 0.014
       const invite = pose.peek === null ? 0 : Math.sin(pose.peek * Math.PI * 6) * 0.1 * Math.sin(pose.peek * Math.PI)
       group.scale.set(BAG_GIRTH * girth * breathe * (1 + anticipation), BAG_LENGTH * (1 - anticipation * 0.6), BAG_GIRTH * girth * breathe * (1 + anticipation) * 1.1)
       group.position.y = BAG_GIRTH * girth * 0.88
-      group.rotation.set(invite + wobble * 0.04, 0, -1.42 - lurch + anticipation * 0.6 + wobble * 0.02)
+      group.rotation.set(invite + wobble * 0.04 + shake, 0, -1.42 - lurch + anticipation * 0.6 + wobble * 0.02)
     }
     if (peek.current) {
       const k = pose.peek === null ? 0 : Math.sin(pose.peek * Math.PI)
@@ -370,13 +400,21 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
     pans: SCALE.pans.map((pan) => panGeometry(pan.r * UNIT)),
     chain: coilGeometry(),
   }))
-  useFrame(() => {
+  const swing = useRef({ last: 0, pans: [{ x: 0, v: 0 }, { x: 0, v: 0 }] as Spring[] })
+  useFrame((_, dt) => {
     const pose = read()
     const angle = pose.angle + Math.sin(pose.now * 0.9) * 0.003
     if (beam.current) beam.current.rotation.z = -angle
     const instanced = chains.current
+    // Pans hang on ropes: when the beam moves they lag, then swing back and settle.
+    const turn = dt > 0 ? (angle - swing.current.last) / dt : 0
+    swing.current.last = angle
     SCALE.pans.forEach((pan, side) => {
+      const spring = swing.current.pans[side]
+      spring.v -= turn * 5
+      const sway = THREE.MathUtils.clamp(springStep(spring, 0, dt, 26, 2.6), -1.6, 1.6)
       const center = to3(pan, pose.panY[side])
+      center.x += sway
       pans[side].current?.position.set(center.x, center.y, center.z)
       const sign = side === 0 ? -1 : 1
       const end = new THREE.Vector3(post.x + Math.cos(angle) * half * sign, PIVOT_Y - Math.sin(angle) * half * sign, post.z)
@@ -471,14 +509,15 @@ export function FeedingSetting({ seats }: { seats: readonly boolean[] }) {
 
 // --- guests ------------------------------------------------------------------
 
-export type Species = 'rabbit' | 'bear' | 'hedgehog'
-export const SEAT_SPECIES: readonly Species[] = ['bear', 'rabbit', 'hedgehog', 'bear', 'hedgehog']
 
 export type GuestPose = {
   look: Point | null
   reach: number
   munchAt: number | null
+  /** A stone landed on this guest's plate. */
   hopAt: number | null
+  /** The child tapped this guest. */
+  pokeAt: number | null
   arriveAt: number | null
   now: number
 }
@@ -491,6 +530,11 @@ type GuestShapes = {
   eyes: THREE.BufferGeometry
   mouth: THREE.BufferGeometry
   arm: THREE.BufferGeometry
+  /** Parts that move on their own: nose (wiggles), cheeks (puff), rabbit ears (flick, left then right, built around their base). */
+  nose: THREE.BufferGeometry
+  cheeks: THREE.BufferGeometry
+  ears: [THREE.BufferGeometry, THREE.BufferGeometry] | null
+  noseAt: V3
   /** Shell geometry for clay-tuft fur (rabbit, bear), or null. */
   furBody: THREE.BufferGeometry | null
   furHead: THREE.BufferGeometry | null
@@ -516,16 +560,22 @@ function guestShapes(species: Species): GuestShapes {
   const head = [piece(sphere, fur, { position: headSphere, scale: species === 'hedgehog' ? [3.4, 3.1, 3.3] : [3.5, 3.3, 3.3] }, { lump: 0.22, frequency: 0.7, seed: 3, ground: null })]
   const muzzle = species === 'hedgehog' ? { position: [0, 2.3, 3.4] as V3, scale: [1.5, 1.3, 1.9] as V3 } : { position: [0, 2.3, 2.9] as V3, scale: [1.8, 1.3, 1.1] as V3 }
   head.push(piece(sphere, light, muzzle, { lump: 0.08, ground: null }))
-  head.push(piece(sphere, PALETTE.nose, { position: [0, 2.8, muzzle.position[2] + muzzle.scale[2] * 0.85], scale: [0.55, 0.42, 0.4] }, { ground: null }))
+  const nose = merge([piece(sphere, PALETTE.nose, { position: [0, 0, 0], scale: [0.55, 0.42, 0.4] }, { ground: null })])
+  const cheeks = merge([-1, 1].map((side) => piece(sphere, PALETTE.cheek, { position: [side * 2.4, 0, 0], scale: [0.8, 0.5, 0.35] }, { ground: null })))
+  const ears =
+    species === 'rabbit'
+      ? ([-1, 1].map((side) =>
+          merge([
+            piece(geo.capsule(14), fur, { position: [0, 2, 0], rotation: [-0.12, 0, -side * 0.16], scale: [1.4, 3.3, 0.9] }, { lump: 0.12, ground: null }),
+            piece(geo.capsule(12), PALETTE.rabbitInner, { position: [0, 2.1, 0.55], rotation: [-0.12, 0, -side * 0.16], scale: [0.75, 2.6, 0.35] }, { ground: null }),
+          ]),
+        ) as [THREE.BufferGeometry, THREE.BufferGeometry])
+      : null
   for (const side of [-1, 1]) {
-    head.push(piece(sphere, PALETTE.cheek, { position: [side * 2.4, 2.3, 2.5], scale: [0.8, 0.5, 0.35] }, { ground: null }))
-    if (species === 'rabbit') {
-      head.push(piece(geo.capsule(14), fur, { position: [side * 1.4, 7.6, -0.3], rotation: [-0.12, 0, -side * 0.16], scale: [1.4, 3.3, 0.9] }, { lump: 0.12, ground: null }))
-      head.push(piece(geo.capsule(12), PALETTE.rabbitInner, { position: [side * 1.4, 7.7, 0.25], rotation: [-0.12, 0, -side * 0.16], scale: [0.75, 2.6, 0.35] }, { ground: null }))
-    } else if (species === 'bear') {
+    if (species === 'bear') {
       head.push(piece(sphere, fur, { position: [side * 2.7, 5.9, 0], scale: [1.35, 1.35, 0.9] }, { lump: 0.1, ground: null }))
       head.push(piece(sphere, PALETTE.bearMuzzle, { position: [side * 2.7, 5.9, 0.6], scale: [0.75, 0.75, 0.4] }, { ground: null }))
-    } else {
+    } else if (species === 'hedgehog') {
       head.push(piece(sphere, fur, { position: [side * 2.4, 5.2, 0.2], scale: [0.8, 0.8, 0.5] }, { ground: null }))
     }
   }
@@ -541,6 +591,10 @@ function guestShapes(species: Species): GuestShapes {
     eyes: merge(eyes),
     mouth: merge([piece(geo.capsule(10), PALETTE.mouth, { rotation: [0, 0, Math.PI / 2], scale: [0.3, 0.7, 0.3] }, { ground: null })]),
     arm: merge([piece(geo.capsule(12), fur, { position: [0, -1.5, 0], scale: [1.2, 1.6, 1.2] }, { lump: 0.08, ground: null })]),
+    nose,
+    cheeks,
+    ears,
+    noseAt: [0, 2.8, muzzle.position[2] + muzzle.scale[2] * 0.85],
     furBody: species === 'hedgehog' ? null : withShells(piece(sphere, fur, { position: [0, 4, 0], scale: [4.4, 4.1, 4.1] }, { lump: 0.3, frequency: 0.55, seed: 1 })),
     furHead: species === 'hedgehog' ? null : withShells(piece(sphere, fur, { position: headSphere, scale: [3.5, 3.3, 3.3] }, { lump: 0.22, frequency: 0.7, seed: 3, ground: null })),
     quill: species === 'hedgehog' ? quillGeometry(PALETTE.spikes, '#c9a27a') : null,
@@ -580,10 +634,11 @@ function easeOutBack(t: number): number {
 }
 
 /**
- * A clay guest. Idle: breathes, blinks, sways. Looks at what matters. Hops
- * when a stone lands on its plate (anticipation squash, jump, landing squash,
- * wobble), munches with the party (lean back, three chomps, follow-through),
- * and pops in with an overshoot when seated.
+ * A clay guest with its own motion personality (see `motion.ts`): the
+ * director blends idle life, reactions, eating, pokes, arrivals, and rare
+ * delights into one pose, and this component maps it onto clay parts. Head
+ * turns toward what matters use the species' own spring, so the bear turns
+ * lazily and the rabbit snaps.
  */
 export function Guest({ seat, at, read }: { seat: number; at: Point; read: () => GuestPose }) {
   const { clay, fur, quill } = useClay()
@@ -594,18 +649,23 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
   const furParts = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)]
   const quillParts = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)]
   const species = SEAT_SPECIES[seat % SEAT_SPECIES.length]
+  const personality = PERSONALITIES[species]
   const shapes = speciesShapes(species)
+  const director = useMemo(() => new MotionDirector(species, seat + 1), [species, seat])
+  const seen = useRef({ hopAt: null as number | null, munchAt: null as number | null, pokeAt: null as number | null, arriveAt: null as number | null })
   const root = useRef<THREE.Group>(null)
   const head = useRef<THREE.Group>(null)
   const eyes = useRef<THREE.Mesh>(null)
   const mouth = useRef<THREE.Mesh>(null)
+  const nose = useRef<THREE.Mesh>(null)
+  const cheeks = useRef<THREE.Mesh>(null)
+  const ears = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
   const arms = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
-  const springs = useRef({ yaw: { x: 0, v: 0 }, pitch: { x: 0, v: 0 }, squash: { x: 0, v: 0 }, landedFrom: null as number | null })
+  const springs = useRef({ yaw: { x: 0, v: 0 }, pitch: { x: 0, v: 0 } })
   const facing = FEEDING.seats[seat].facing
   const face = new THREE.Vector2(-facing.x * 0.8, -facing.y + 1.5).normalize()
   const yaw = Math.atan2(face.x, face.y)
   const p = to3(at)
-  const phase = seat * 1.37
 
   useEffect(() => {
     ;[shapes.quillsBody, shapes.quillsHead].forEach((matrices, i) => {
@@ -638,62 +698,52 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
       ref.current.count = shells
     }
 
-    let lookYaw = Math.sin(now * 0.5 + phase) * 0.12
+    const last = seen.current
+    if (pose.arriveAt !== null && pose.arriveAt !== last.arriveAt) director.trigger('arrive', pose.arriveAt)
+    if (pose.hopAt !== null && pose.hopAt !== last.hopAt) director.trigger('react', pose.hopAt)
+    if (pose.pokeAt !== null && pose.pokeAt !== last.pokeAt) director.trigger('poke', pose.pokeAt)
+    if (pose.munchAt !== null && pose.munchAt !== last.munchAt) director.trigger('eat', pose.munchAt)
+    seen.current = { hopAt: pose.hopAt, munchAt: pose.munchAt, pokeAt: pose.pokeAt, arriveAt: pose.arriveAt }
+    const m = director.sample(now, pose.reach > 0.05, pose.reach)
+
+    let lookYaw = 0
     if (pose.look) {
       const target = to3(pose.look)
       const worldAngle = Math.atan2(target.x - p.x, target.z - p.z)
       lookYaw = THREE.MathUtils.clamp(Math.atan2(Math.sin(worldAngle - yaw), Math.cos(worldAngle - yaw)), -0.38, 0.38)
     }
-    springStep(s.yaw, lookYaw, dt, 60, 9)
+    springStep(s.yaw, lookYaw, dt, personality.look.stiffness, personality.look.damping)
+    springStep(s.pitch, pose.look ? 0.18 : 0, dt, personality.look.stiffness * 1.4, personality.look.damping)
 
-    let pitchTarget = pose.look ? 0.18 : 0
-    const munchAge = pose.munchAt === null ? Infinity : now - pose.munchAt
-    let mouthOpen = 0
-    if (munchAge < 1.4) {
-      if (munchAge < 0.22) pitchTarget = -0.28
-      else {
-        const chomp = Math.abs(Math.sin(((munchAge - 0.22) / 1.1) * Math.PI * 3))
-        pitchTarget = 0.12 + chomp * 0.3
-        mouthOpen = 1 - chomp
-      }
-    }
-    springStep(s.pitch, pitchTarget - pose.reach * 0.1, dt, 140, 9)
-
-    let hopY = 0
-    let stretch = 0
-    const hopAge = pose.hopAt === null ? Infinity : now - pose.hopAt
-    if (hopAge < 0.1) stretch = -0.16 * Math.sin((hopAge / 0.1) * Math.PI * 0.5)
-    else if (hopAge < 0.42) {
-      const k = (hopAge - 0.1) / 0.32
-      hopY = Math.sin(k * Math.PI) * 3.4
-      stretch = 0.12 * (1 - k)
-    } else if (hopAge < 1 && s.landedFrom !== pose.hopAt) {
-      s.squash.v += 6
-      s.landedFrom = pose.hopAt
-    }
-    const squash = springStep(s.squash, 0, dt, 260, 10)
-    const breathe = Math.sin(now * 1.8 + phase) * 0.022
-    const arrive = pose.arriveAt === null ? 1 : THREE.MathUtils.clamp((now - pose.arriveAt) / 0.55, 0, 1)
+    const arrive = pose.arriveAt === null ? 1 : THREE.MathUtils.clamp((now - pose.arriveAt) / 0.4, 0, 1)
     const pop = pose.arriveAt === null || arrive >= 1 ? 1 : Math.max(0.01, easeOutBack(arrive))
-    const vertical = 1 + breathe + stretch - squash * 0.5
-    const horizontal = 1 - breathe * 0.5 - stretch * 0.5 + squash * 0.35
+    const vertical = 1 - m.squash
+    const horizontal = 1 + m.squash * 0.6
 
     if (root.current) {
-      root.current.position.y = hopY
+      root.current.position.y = Math.max(0, m.lift)
       root.current.scale.set(GUEST_SIZE * horizontal * pop, GUEST_SIZE * vertical * pop, GUEST_SIZE * horizontal * pop)
-      root.current.rotation.x = pose.reach * 0.16
+      root.current.rotation.set(m.lean, m.twist, m.roll)
     }
     if (head.current) {
-      head.current.rotation.set(s.pitch.x, s.yaw.x, Math.sin(now * 0.7 + phase) * 0.05)
+      head.current.position.y = NECK_Y - m.headDrop
+      head.current.rotation.set(s.pitch.x + m.headPitch, s.yaw.x + m.headYaw, m.headRoll)
     }
-    const blink = (now + phase) % 4.3 < 0.13
-    if (eyes.current) eyes.current.scale.set(1, blink ? 0.12 : 1, 1)
-    if (mouth.current) mouth.current.scale.set(1, 1 + mouthOpen * 2.4, 1)
+    if (eyes.current) eyes.current.scale.set(1 + Math.max(0, m.eyes - 1) * 0.5, m.eyes, 1)
+    if (mouth.current) mouth.current.scale.set(personality.mouthWidth * (1 + m.mouth * 0.35), 1 + m.mouth * 3.4, 1 + m.mouth * 0.5)
+    if (nose.current) {
+      nose.current.position.y = shapes.noseAt[1] + m.nose * 0.22
+      nose.current.scale.set(1 + Math.abs(m.nose) * 0.18, 1 - Math.abs(m.nose) * 0.2, 1)
+    }
+    if (cheeks.current) cheeks.current.scale.set(1 + m.cheeks * 0.12, 1 + m.cheeks * 0.45, 1 + m.cheeks * 0.6)
+    ears.forEach((ref, side) => {
+      if (ref.current) ref.current.rotation.set(-0.05 - m.ears[side] * 0.9, 0, (side === 0 ? 1 : -1) * m.ears[side] * 0.15)
+    })
+    for (const ref of quillParts) if (ref.current) ref.current.scale.setScalar(1 + m.quills * 0.22)
     arms.forEach((ref, side) => {
       if (!ref.current) return
       const sign = side === 0 ? -1 : 1
-      const flap = hopAge < 0.42 ? Math.sin(hopAge * 18) * 0.35 : 0
-      ref.current.rotation.set(-pose.reach * 1.35, 0, sign * (0.45 + flap - pose.reach * 0.25) + Math.sin(now * 2 + side + phase) * 0.04)
+      ref.current.rotation.set(-m.armForward[side], 0, sign * (0.45 + m.armUp[side]))
     })
   })
 
@@ -714,6 +764,13 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
           {shapes.quill && <instancedMesh ref={quillParts[1]} args={[shapes.quill, quill, shapes.quillsHead.length]} frustumCulled={false} />}
           <mesh ref={eyes} geometry={shapes.eyes} material={clay} position={[0, 3.7, 0]} />
           <mesh ref={mouth} geometry={shapes.mouth} material={clay} position={[0, 1.65, species === 'hedgehog' ? 4.9 : 3.85]} />
+          <mesh ref={nose} geometry={shapes.nose} material={clay} position={shapes.noseAt} />
+          <mesh ref={cheeks} geometry={shapes.cheeks} material={clay} position={[0, 2.3, 2.5]} />
+          {shapes.ears?.map((geometry, i) => (
+            <group key={i} ref={ears[i]} position={[(i === 0 ? -1 : 1) * 1.4, 5.6, -0.3]}>
+              <mesh geometry={geometry} material={clay} />
+            </group>
+          ))}
         </group>
       </group>
     </group>
@@ -732,15 +789,28 @@ export function KnifeModel({ read }: { read: () => { at: Point; visible: boolean
     ]),
   )
   const lift = useRef<Spring>({ x: 0, v: 0 })
+  const feel = useRef({ pop: { x: 0, v: 0 } as Spring, lean: { x: 0, v: 0 } as Spring, chop: { x: 0, v: 0 } as Spring, wasVisible: false, wasHeld: false, lastX: 0 })
   useFrame((_, dt) => {
     const pose = read()
     const group = ref.current
     if (!group) return
+    const f = feel.current
     group.visible = pose.visible
+    // Appears with a springy pop, leans into the direction it is dragged, and chops down when let go.
+    if (pose.visible && !f.wasVisible) f.pop.x = 0.2
+    if (!pose.held && f.wasHeld) f.chop.v -= 9
+    f.wasVisible = pose.visible
+    f.wasHeld = pose.held
+    const velocity = dt > 0 ? (pose.at.x - f.lastX) / dt : 0
+    f.lastX = pose.at.x
+    const scale = springStep(f.pop, 1, dt, 180, 9)
+    const lean = springStep(f.lean, pose.held ? THREE.MathUtils.clamp(-velocity * 0.0012, -0.35, 0.35) : 0, dt, 90, 9)
+    const chop = springStep(f.chop, 0, dt, 260, 12)
     const y = springStep(lift.current, pose.held ? 5 : 0.5, dt, 120, 12)
     const p = to3(pose.at, y)
     group.position.set(p.x, p.y, p.z)
-    group.rotation.set(0, 0.5 + (pose.held ? 0 : Math.sin(pose.now * 0.8) * 0.03), pose.held ? 0.25 : 0)
+    group.scale.setScalar(Math.max(0.01, scale))
+    group.rotation.set(lean, 0.5 + (pose.held ? 0 : Math.sin(pose.now * 0.8) * 0.03), (pose.held ? 0.25 : 0) + chop * 0.08)
   })
   return (
     <group ref={ref}>

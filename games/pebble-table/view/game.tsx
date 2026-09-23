@@ -108,12 +108,12 @@ function World({ table }: { table: TableController }) {
   }, -1)
 
   const guestPose = (seat: number): GuestPose => {
-    const hopAt = Math.max(hops.current.get(seat) ?? -Infinity, table.nudges.get(seat) ?? -Infinity)
     return {
       look: table.gaze(seat),
       reach: table.guidance.guestsReach ? table.guidance.glow : 0,
       munchAt: table.munchStart,
-      hopAt: Number.isFinite(hopAt) ? hopAt : null,
+      hopAt: hops.current.get(seat) ?? null,
+      pokeAt: table.nudges.get(seat) ?? null,
       arriveAt: table.arrivals.get(seat) ?? null,
       now: table.t,
     }

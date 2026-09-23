@@ -8,6 +8,7 @@ import { SaveCadence } from './saveCadence'
 import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
 import { cutPiece, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
 import { chunk, clusterPieces, groupsFor, schedule } from './voice'
+import { SEAT_SPECIES } from './motion'
 
 // The table while it is on screen: game rules, real physics, touch, sound,
 // saving, and guidance. It knows nothing about rendering; the 3D view reads
@@ -15,7 +16,7 @@ import { chunk, clusterPieces, groupsFor, schedule } from './voice'
 
 export type Sound = Pick<
   TableAudio,
-  'unlock' | 'setActive' | 'touch' | 'clack' | 'rustle' | 'clatter' | 'creak' | 'beat' | 'chord' | 'munch' | 'hop' | 'whoosh' | 'snick' | 'dispose'
+  'unlock' | 'setActive' | 'touch' | 'clack' | 'rustle' | 'clatter' | 'creak' | 'beat' | 'chord' | 'munch' | 'hop' | 'poke' | 'whoosh' | 'snick' | 'dispose'
 >
 
 export const silentSound: Sound = {
@@ -30,6 +31,7 @@ export const silentSound: Sound = {
   chord() {},
   munch() {},
   hop() {},
+  poke() {},
   whoosh() {},
   snick() {},
   dispose() {},
@@ -556,7 +558,7 @@ export class TableController {
         return this.seat(target.seat)
       case 'guest':
         this.nudges.set(target.seat, this.t)
-        this.sound.hop()
+        this.sound.poke(SEAT_SPECIES[target.seat % SEAT_SPECIES.length])
         return
       case 'bowl':
         return this.hopFromBowl()

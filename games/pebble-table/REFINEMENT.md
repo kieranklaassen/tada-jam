@@ -29,3 +29,25 @@ Screenshots are in the Project store under `media/pebble-table-v3/` (`iter-00-be
 - The backdrop is still one flat colour; a soft, out-of-focus room behind the table would add depth.
 - The new sounds were tuned by reasoning, not by ear on an iPad speaker; they need a listening pass.
 - Not yet measured on a physical iPad.
+
+# Animation passes: every character moves like itself
+
+The owner: "make sure animations are not all the same, more unique, more depth and iteration." Before these passes every guest shared one breathe, one blink rhythm, one hop when a stone landed, one three-chomp munch, and one reach toward the bowl, differing only by a phase offset. Motion now lives in [`motion.ts`](motion.ts): a personality per species (idle life, blink rhythm, head-turn spring, reach) with several variants of every action (react, eat, poke, arrive) and rare delights, picked by a per-guest director that never repeats a variant back to back, randomizes amplitude and speed, and plays delights only while nothing else happens. `motion.test.ts` fails if two species share an action, if two variants are near-copies, or if a variant repeats.
+
+Each pass: record a scripted scene (poke every guest twice, deal six stones so everyone reacts twice and the party eats, then idle) as video, cut per-guest frame strips, ask "does this look like the same animation reused?", fix, re-record. Frame rate was checked on a production build after the last pass.
+
+| Pass | Critique | Change |
+| --- | --- | --- |
+| 1: personalities | Everything was one shared motion. First cut of the personality system: the hedgehog's curl-up and the bear's slow wave read at once, but the bear's belly laugh and the rabbit's giggle were invisible at play distance, and eating barely registered. | Rabbit, bear cub, and hedgehog get their own idle, blink, and head-turn spring, 2 to 3 variants per action and 4 delights each (rabbit: twitch-hop, thump, binky, nibble, ear flick, scratch; bear: belly pat, heavy bounce, happy rock, big chomps and sigh, yawn; hedgehog: shuffle, quill ripple, tippy-toes, curl-up, sneeze). Ears, nose, and cheeks split out of the head so they can flick, wiggle, and puff; quills puff. A poke is no longer the same hop as a stone landing. |
+| 2: readable at play distance | The bear's belly pat hid behind the same-coloured belly from the camera; eats were tiny head nods. | Pats swing the arms out and back in (the silhouette changes); the belly laugh shakes, bounces, and throws the head back; the giggle bounces; each eat gets body motion (rabbit bobs, bear sways and sighs deeper, hedgehog wiggles after). |
+| 3: objects | Every stone size landed with one spring; the bag always tipped the same way; pans were rigid; the knife just appeared. | Stones by size: a whole stone squashes deep and rocks slowly as it settles, halves and quarters are springier and rattle quicker. The bag alternates a lurch with a shake-out and gets floppier as it empties. Pans swing on their ropes behind the beam. The knife pops in, leans into drags, and chops when let go. |
+| 4: idle up close | Side by side the hedgehog's idle shuffle was nearly invisible, chomping mouths were too small to read, and the rabbit's nose wiggle was lost. | The hedgehog shuffles in visible bursts with a slow twist; mouths open wider, with a width per species (the bear's is widest); nose wiggles doubled. |
+| 5: synchronised moments | When the ghost hand appears, all three guests reached for the bowl at the same instant with the identical lean and arms-out pose: the last shared animation. Pokes all made the same hop sound. | Reaching moved into the personalities: the rabbit stretches up on tiptoe with ears pricked, the bear slowly holds out both paws, the hedgehog leans in sniffing, each with its own response speed, so they stagger. Pokes answer in each species' voice: a squeaky giggle, a low "hm-hm", a tiny sniff-squeak. |
+
+**Frame rate after the passes** (production build, 1180×820, DPR 2): Chrome at 6× CPU throttle 60 fps idle, spill, and drag; WebKit 60 fps; Chrome at 20× throttle 60 idle, 52 spill, 60 drag (the governor at balanced). Draw calls rose from 40 to 48 (nose, cheeks, and ears as separate meshes), still under the 80 budget.
+
+## Still weak (motion)
+
+- Eating is still quieter than it should be for the hedgehog; its chomps read mostly as a lean.
+- The objects' new character was checked in code and in the full walkthrough, but the scripted object recording missed the knife and the bag moments, so they have not had a dedicated critique pass.
+- The munch still starts at the same moment for everyone (the controller fires one munch for the party); staggering it by personality is the next step.
