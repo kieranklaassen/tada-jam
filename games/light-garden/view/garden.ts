@@ -20,13 +20,14 @@ import { CREATURE_LOOK, lightColour, PALETTE, PIECE_LOOK } from './palette'
 type GlassMesh = THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial & { uniforms: GlassUniforms }>
 
 type PieceView = { sim: PieceSim; mesh: GlassMesh; lit: number; knob: number }
-type CreatureView = { sim: CreatureSim; mesh: GlassMesh; awake: number; dream: number }
+/** `fed`: per primary (red, green, blue), how strongly that part of its dream is already reaching it. */
+type CreatureView = { sim: CreatureSim; mesh: GlassMesh; awake: number; dream: number; fed: Float32Array }
 
 const CREATURE_KIND: Readonly<Record<CreatureKind, number>> = { jelly: KIND.jelly, moth: KIND.moth, snail: KIND.snail, fish: KIND.fish }
 const BITS = [RED, GREEN, BLUE] as const
 const TAU = Math.PI * 2
 /** Creatures are drawn a little larger than the circle that catches light, so a seven-year-old reads them at a glance. */
-const CREATURE_SCALE = 1.25
+const CREATURE_SCALE = 1.45
 
 const approach = (value: number, target: number, rate: number, dt: number) => value + (target - value) * (1 - Math.exp(-rate * dt))
 
@@ -78,7 +79,7 @@ export class GardenView {
       const mesh = new THREE.Mesh(geometry, material) as GlassMesh
       mesh.rotation.order = 'YXZ'
       this.root.add(mesh)
-      return { sim, mesh, awake: 0, dream: 1 }
+      return { sim, mesh, awake: 0, dream: 1, fed: new Float32Array(3) }
     })
 
     this.shade.mesh.renderOrder = 1
@@ -128,10 +129,11 @@ export class GardenView {
 
     const kind = sim.spec.kind
     let target = 0
-    if (kind === 'lamp') target = inTray || sim.flying > 0 ? 0.12 : 1
+    if (kind === 'lamp') target = inTray || sim.flying > 0 ? 0.04 : 0.16
     else if (kind === 'filter') target = sim.input & sim.spec.mask ? 1 : sim.input ? 0.3 : 0
     else if (kind === 'prism') target = sim.input ? 1 : 0
-    else target = sim.lit ? 0.7 : 0
+    // Light only bounces off a mirror, so it glints rather than glowing through like filter or prism glass.
+    else target = sim.lit ? 0.2 : 0
     view.lit = approach(view.lit, target, 10, dt)
     view.knob = approach(view.knob, !sim.pose.inTray && sim.flying === 0 ? 1 : 0, 9, dt)
     u.uLit.value = view.lit
@@ -187,9 +189,10 @@ export class GardenView {
     mesh.scale.set(stretch * CREATURE_SCALE, squash * CREATURE_SCALE, CREATURE_SCALE / Math.sqrt(Math.max(0.2, stretch * squash)))
     u.uAnim.value.set(pose.a, pose.b, pose.c, 0)
     u.uTime.value = t
-    u.uLit.value = pose.glow
-    u.uDim.value = 0.76 + 0.24 * view.awake
-    u.uGlow.value = sim.heldBy !== null ? 0.35 : 0
+    // Awake glass glows at the rim and in its halo; the body keeps its markings instead of washing to white.
+    u.uLit.value = pose.glow * 0.3
+    u.uDim.value = 0.84 + 0.16 * view.awake
+    u.uGlow.value = (sim.heldBy !== null ? 0.35 : 0) + 0.45 * pose.glow * view.awake
     u.uUnder.value = 1 / (1 + alt * 0.25)
 
     const r = c.radius
@@ -230,18 +233,22 @@ export class GardenView {
     // as their primaries drifting together, and additive light shows the sum.
     const dreaming = c.phase === 'asleep' && sim.heldBy === null ? 1 : 0
     view.dream = approach(view.dream, dreaming, dreaming ? 1.5 : 6, dt)
-    if (view.dream > 0.02) this.dream(view, t, glow)
+    if (view.dream > 0.02) this.dream(view, t, dt, glow)
   }
 
-  private dream(view: CreatureView, t: number, glow: number): void {
+  private dream(view: CreatureView, t: number, dt: number, glow: number): void {
     const c = view.sim.c
-    const stir = Math.max(0, 1 - (t - c.stirAt) / 1.6)
-    const bob = Math.sin(t * 1.1 + c.index * 1.7) * 0.5
+    const poked = Math.max(0, 1 - (t - c.pokeAt) / 2.2)
+    const stir = Math.max(0, 1 - (t - c.stirAt) / 1.6, poked)
+    // The want dreams out loud; the other sleepers dream quietly until the child pauses and the glow comes,
+    // or pokes one, which tells what it dreams of.
+    const voice = 0.3 + 0.7 * Math.max(view.sim.carry.want, glow, poked)
+    const bob = Math.sin(t * 1.1 + c.index * 1.7) * (0.5 + 0.7 * view.sim.carry.want)
     const x = c.bed.x - 1.2
     const y = 10.5 + bob
     const z = c.bed.y - 3.5
-    const alpha = view.dream * (0.5 + 0.35 * glow + 0.4 * stir)
-    const size = 4.4 * (1 + 0.12 * stir)
+    const alpha = view.dream * voice * (0.62 + 0.3 * glow + 0.4 * stir)
+    const size = 4.4 * (0.72 + 0.28 * voice) * (1 + 0.12 * stir)
     for (let i = 1; i <= 2; i++) {
       const k = i / 3
       this.light.push(c.bed.x + (x - c.bed.x) * k, 5 + (y - 5) * k, c.bed.y + (z - c.bed.y) * k, 1 + i * 0.5, 0.9, 1, 1, alpha * 0.5, SHAPE.glow, FACING.billboard)
@@ -255,8 +262,14 @@ export class GardenView {
       const bit = BITS[b]
       if (!(c.wants & bit)) continue
       const a = (n / count) * TAU + Math.PI / 2 + (count === 2 ? Math.PI / 2 : 0)
+      // A primary that already reaches it swells and sparkles: the part of the mix still missing is the one left dim.
+      view.fed[b] = approach(view.fed[b], c.light & bit ? 1 : 0, 5, dt)
+      const fed = view.fed[b]
+      const ox = x + Math.cos(a) * spread
+      const oy = y + Math.sin(a) * spread * 0.9
       lightColour(bit as Mask, this.rgb)
-      this.light.push(x + Math.cos(a) * spread, y + Math.sin(a) * spread * 0.9, z, size * (count > 1 ? 0.78 : 1), this.rgb[0], this.rgb[1], this.rgb[2], alpha, SHAPE.orb, FACING.billboard)
+      this.light.push(ox, oy, z, size * (count > 1 ? 0.78 : 1) * (1 + 0.3 * fed), this.rgb[0], this.rgb[1], this.rgb[2], alpha * (1 + 0.7 * fed), SHAPE.orb, FACING.billboard)
+      if (fed > 0.05) this.light.push(ox, oy, z + 0.6, 3.4, 1, 1, 1, 0.55 * fed * view.dream, SHAPE.sparkle, FACING.billboard, t * 0.5 + b)
       n++
     }
   }
@@ -317,8 +330,10 @@ export class GardenView {
     this.hand.update(guide.handVisible, hand.x, hand.y, hand.press, hand.opacity, camera)
     if (!guide.handVisible) return
     if (hand.press > 0.2) this.light.push(hand.x, 0.1, hand.y, 7, 0.9, 1, 0.97, hand.press * hand.opacity * 0.5, SHAPE.ring, FACING.flat, 0, 0.3 + 0.2 * hand.press)
-    if (guide.hint?.kind === 'bringPiece' && hand.press > 0.5) {
-      const look = PIECE_LOOK[guide.hint.piece].core
+    const hint = guide.hint
+    if (hint && hint.to && hand.press > 0.5) {
+      // What the ghost carries: the piece's glass glow, or the sleeper's own colour.
+      const look = hint.piece ? PIECE_LOOK[hint.piece].core : CREATURE_LOOK[garden.creatures[hint.sleeper].c.kind].core
       this.light.push(hand.x, 1.6, hand.y, 9, look[0], look[1], look[2], hand.opacity * 0.4 * hand.press, SHAPE.glow, FACING.billboard)
     }
   }

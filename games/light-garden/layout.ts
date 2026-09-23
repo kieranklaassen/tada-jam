@@ -57,10 +57,10 @@ export type CreatureSpec = { kind: CreatureKind; wants: Mask; radius: number }
 
 /** The four sleepers and the one colour of light that wakes each. */
 export const CREATURES: readonly CreatureSpec[] = [
-  { kind: 'moth', wants: WHITE, radius: 4.6 },
-  { kind: 'fish', wants: RED, radius: 4.6 },
-  { kind: 'snail', wants: RED | GREEN, radius: 4.6 },
-  { kind: 'jelly', wants: GREEN | BLUE, radius: 4.6 },
+  { kind: 'moth', wants: WHITE, radius: 5.4 },
+  { kind: 'fish', wants: RED, radius: 5.4 },
+  { kind: 'snail', wants: RED | GREEN, radius: 5.4 },
+  { kind: 'jelly', wants: GREEN | BLUE, radius: 5.4 },
 ]
 
 export function clampToPanel(at: Point, margin: number): Point {
@@ -114,7 +114,7 @@ export function defaultLayout(childAge: number | null): { pieces: PiecePose[]; b
 export function trayAngle(kind: PieceKind): number {
   switch (kind) {
     case 'lamp':
-      return -Math.PI / 2
+      return Math.PI / 2
     case 'mirror':
     case 'filter':
       return 0

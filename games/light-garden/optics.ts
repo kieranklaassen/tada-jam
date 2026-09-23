@@ -171,7 +171,7 @@ function push(ox: number, oy: number, dx: number, dy: number, mask: number, glas
   stack.depth[i] = depth
 }
 
-/** Distance along the ray to segment AB, or Infinity. Also writes the unit normal of AB into `hitN`. */
+/** Distance along the ray to segment AB, or Infinity. */
 function raySegment(ox: number, oy: number, dx: number, dy: number, ax: number, ay: number, bx: number, by: number): number {
   const ex = bx - ax
   const ey = by - ay
