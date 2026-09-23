@@ -21,9 +21,16 @@ export type SlabOptions = {
   offset?: Vec2
 }
 
-function fillet(outline: readonly Vec2[], radius: number): Vec2[] {
+/**
+ * Round every sharp corner of `outline`. `reach` gets, per output point, how
+ * far that point may be inset before it passes its corner's centre: a corner
+ * next to a short edge gets a tighter fillet than the bevel, and insetting
+ * past it would fold the cap over itself.
+ */
+function fillet(outline: readonly Vec2[], radius: number, reach: number[] = []): Vec2[] {
   const n = outline.length
   const out: Vec2[] = []
+  reach.length = 0
   for (let i = 0; i < n; i++) {
     const p = outline[i]
     const a = outline[(i - 1 + n) % n]
@@ -40,6 +47,7 @@ function fillet(outline: readonly Vec2[], radius: number): Vec2[] {
     const interior = Math.acos(cos)
     if (Math.PI - interior < (25 * Math.PI) / 180) {
       out.push(p)
+      reach.push(Infinity)
       continue
     }
     const tangent = Math.min(radius / Math.tan(interior / 2), 0.45 * Math.min(l1, l2))
@@ -58,6 +66,7 @@ function fillet(outline: readonly Vec2[], radius: number): Vec2[] {
     for (let k = 0; k <= steps; k++) {
       const angle = a1 + (sweep * k) / steps
       out.push({ x: center.x + Math.cos(angle) * r, y: center.y + Math.sin(angle) * r })
+      reach.push(r)
     }
     a1 = a2
   }
@@ -105,19 +114,8 @@ class Builder {
   }
 }
 
-/**
- * A bevelled wooden slab: `outline` (counter-clockwise, x/y) extruded along z
- * by `depth`, centred on z = 0. `grain` is the axis the wood runs along.
- */
-export function woodSlab(outline: readonly Vec2[], depth: number, grain: 'x' | 'y', options: SlabOptions = {}): THREE.BufferGeometry {
-  const radius = options.bevel ?? 0.05
-  const segments = options.segments ?? 3
-  const shade = options.shade ?? (() => 1)
-  const offset = options.offset ?? { x: 0, y: 0 }
-  const ccw = signedArea(outline) >= 0 ? outline : [...outline].reverse()
-  const ring = fillet(ccw, radius)
+function ringNormals(ring: readonly Vec2[]): Vec2[] {
   const n = ring.length
-
   const normals: Vec2[] = []
   for (let i = 0; i < n; i++) {
     const a = ring[(i - 1 + n) % n]
@@ -132,6 +130,36 @@ export function woodSlab(outline: readonly Vec2[], depth: number, grain: 'x' | '
     const l = Math.hypot(nx, ny) || 1
     normals.push({ x: nx / l, y: ny / l })
   }
+  return normals
+}
+
+type SlabRing = { ring: Vec2[]; normals: Vec2[]; inset: number[] }
+
+/** The filleted outline, its vertex normals, and how deep the bevel may cut in at each point. */
+function slabRing(outline: readonly Vec2[], radius: number): SlabRing {
+  const ccw = signedArea(outline) >= 0 ? outline : [...outline].reverse()
+  const reach: number[] = []
+  const ring = fillet(ccw, radius, reach)
+  return { ring, normals: ringNormals(ring), inset: reach.map((r) => Math.min(radius, r * 0.95)) }
+}
+
+/** The flat cap of a slab: its outline filleted and inset by the bevel. */
+export function slabCap(outline: readonly Vec2[], radius: number): Vec2[] {
+  const { ring, normals, inset } = slabRing(outline, radius)
+  return ring.map((p, i) => ({ x: p.x - normals[i].x * inset[i], y: p.y - normals[i].y * inset[i] }))
+}
+
+/**
+ * A bevelled wooden slab: `outline` (counter-clockwise, x/y) extruded along z
+ * by `depth`, centred on z = 0. `grain` is the axis the wood runs along.
+ */
+export function woodSlab(outline: readonly Vec2[], depth: number, grain: 'x' | 'y', options: SlabOptions = {}): THREE.BufferGeometry {
+  const radius = options.bevel ?? 0.05
+  const segments = options.segments ?? 3
+  const shade = options.shade ?? (() => 1)
+  const offset = options.offset ?? { x: 0, y: 0 }
+  const { ring, normals, inset: depthAt } = slabRing(outline, radius)
+  const n = ring.length
 
   // Profile rings from the back cap edge, round the back bevel, along the wall, round the front bevel.
   type Ring = { inset: number; z: number; nxy: number; nz: number; edge: number; w: number }
@@ -186,10 +214,11 @@ export function woodSlab(outline: readonly Vec2[], depth: number, grain: 'x' | '
     ] as [number, Vec2, number][]) {
       const nrm = normals[k]
       const bend = corner(k)
+      const cut = depthAt[k] / radius
       const col: number[] = []
       for (const r of rings) {
-        const x = point.x - nrm.x * r.inset
-        const y = point.y - nrm.y * r.inset
+        const x = point.x - nrm.x * r.inset * cut
+        const y = point.y - nrm.y * r.inset * cut
         col.push(
           b.vertex(x, y, r.z, nrm.x * r.nxy, nrm.y * r.nxy, r.nz, long, su, MARGIN + offset.y + r.w, Math.max(r.edge, bend), shade(x, y, r.z)),
         )
@@ -204,7 +233,7 @@ export function woodSlab(outline: readonly Vec2[], depth: number, grain: 'x' | '
   }
 
   // Caps: the inset outline, long grain running along the piece's grain axis.
-  const inset = ring.map((p, i) => ({ x: p.x - normals[i].x * radius, y: p.y - normals[i].y * radius }))
+  const inset = ring.map((p, i) => ({ x: p.x - normals[i].x * depthAt[i], y: p.y - normals[i].y * depthAt[i] }))
   let minX = Infinity
   let minY = Infinity
   let maxX = -Infinity
