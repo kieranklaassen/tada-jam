@@ -5,6 +5,11 @@ import type { CartridgeStorage } from './contract'
 // now, load() answers from a local cache after the first read, and the 64 KB
 // cap is enforced the way the server enforces it (the write is refused).
 // "The server" here is the harness's own localStorage; games never touch it.
+//
+// save() is on a game's hot path (some save every frame), so it only records
+// the state: no serialization, no write, and at most one timer armed at a
+// time. Serializing and writing happen once per quiet stretch, in an idle
+// callback where the browser has one.
 
 export const DEBOUNCE_MS = 2000
 export const STATE_CAP_BYTES = 64 * 1024
@@ -27,7 +32,14 @@ type Options = {
   backend?: SlotBackend
   debounceMs?: number
   log?: (message: string, detail?: unknown) => void
+  /** Clock in ms, for the debounce's quiet period. */
+  now?: () => number
 }
+
+type IdleWindow = { requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number; cancelIdleCallback?: (handle: number) => void }
+
+/** Longest an idle write may wait for an idle moment before it runs anyway. */
+const IDLE_TIMEOUT_MS = 1000
 
 const NOTHING = Symbol('nothing')
 
@@ -57,18 +69,42 @@ export function createJamStorage(appKey: string, options: Options): JamStorage {
   const backend = options.backend ?? browserBackend()
   const debounceMs = options.debounceMs ?? DEBOUNCE_MS
   const log = options.log ?? (() => {})
+  const now = options.now ?? (() => Date.now())
   const key = slotKey(appKey)
+  const idle = (typeof window === 'undefined' ? {} : window) as IdleWindow
 
   let loaded = false
   let cache: unknown = null
   let pending: unknown = NOTHING
+  let lastSave = 0
   let timer: ReturnType<typeof setTimeout> | null = null
+  let idleHandle: number | null = null
+
+  function cancel(): void {
+    if (timer !== null) clearTimeout(timer)
+    timer = null
+    if (idleHandle !== null) idle.cancelIdleCallback?.(idleHandle)
+    idleHandle = null
+  }
+
+  /** The debounce timer: persist once the saves have been quiet for debounceMs, re-arming for whatever is left. */
+  function onTimer(): void {
+    timer = null
+    const quiet = now() - lastSave
+    if (quiet < debounceMs) {
+      timer = setTimeout(onTimer, debounceMs - quiet)
+      return
+    }
+    if (idle.requestIdleCallback) {
+      idleHandle = idle.requestIdleCallback(() => {
+        idleHandle = null
+        persist()
+      }, { timeout: IDLE_TIMEOUT_MS })
+    } else persist()
+  }
 
   function persist(): void {
-    if (timer !== null) {
-      clearTimeout(timer)
-      timer = null
-    }
+    cancel()
     if (pending === NOTHING) return
     const state = pending
     pending = NOTHING
@@ -117,16 +153,15 @@ export function createJamStorage(appKey: string, options: Options): JamStorage {
       loaded = true
       cache = state
       pending = state
-      if (timer !== null) clearTimeout(timer)
-      timer = setTimeout(persist, debounceMs)
+      lastSave = now()
+      if (timer === null && idleHandle === null) timer = setTimeout(onTimer, debounceMs)
     },
     flush(): Promise<void> {
       persist()
       return Promise.resolve()
     },
     reset(): void {
-      if (timer !== null) clearTimeout(timer)
-      timer = null
+      cancel()
       pending = NOTHING
       cache = null
       loaded = true
