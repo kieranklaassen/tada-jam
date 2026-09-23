@@ -54,7 +54,23 @@ export class Rng {
   range(a: number, b: number): number {
     return a + (b - a) * this.next()
   }
+
+  /** An index below `count` that is not `last`, so a reaction never plays twice in a row. */
+  other(count: number, last: number): number {
+    const pick = Math.floor(this.next() * (count - 1))
+    return pick < last ? pick : pick + 1
+  }
 }
+
+/** How the wanderer answers a poke: looks out at the child, bows, or swings its lantern and watches it. */
+export const GREETS = ['look-out', 'bow', 'swing'] as const
+export type Greet = (typeof GREETS)[number]
+const GREET_SECONDS = 1.3
+
+/** How the bird answers a poke: an indignant ruffle, a puffed-up chest, or a bob with a flap. */
+export const POKES = ['ruffle', 'puff', 'bob'] as const
+export type Poke = (typeof POKES)[number]
+const PUFF_SECONDS = 0.45
 
 function wrapAngle(a: number): number {
   return Math.atan2(Math.sin(a), Math.cos(a))
@@ -89,8 +105,12 @@ export type WandererPose = {
 }
 
 const STRIDE = 0.15
+/** The invitation opens with a look out at the child before the lantern turns to the door. */
+export const LOOK_OUT_SECONDS = 0.6
 const LANTERN_OMEGA2 = 70
 const LANTERN_DAMPING = 3.2
+/** Seconds for the lantern to swing from one side to the other. */
+export const LANTERN_HALF_SWING = Math.PI / Math.sqrt(LANTERN_OMEGA2)
 
 export class WandererMotion {
   readonly pose: WandererPose = {
@@ -137,12 +157,15 @@ export class WandererMotion {
   private nextLook = 1.5
   private idleYaw = 0
   private idlePitch = 0
+  private aimFrom = -1
   private aimUntil = -1
+  private lookOutAt = -1
   private aimX = 0
   private aimY = 0
   private aimZ = 0
   private anticipateAt = -1
   private greetAt = -1
+  private greetKind: Greet = 'look-out'
   private lookBackAt = -1
 
   /** Face a direction (radians about +y, 0 facing +z). Eased, never snapped. */
@@ -161,7 +184,14 @@ export class WandererMotion {
     this.aimX = x
     this.aimY = y
     this.aimZ = z
+    this.aimFrom = now
     this.aimUntil = now + seconds
+  }
+
+  /** The first-open invitation: a look out at the child, then the lantern held toward the door, so the child's eyes follow. */
+  invite(x: number, y: number, z: number, now: number): void {
+    this.lookOutAt = now
+    this.aim(x, y, z, now + LOOK_OUT_SECONDS, 2.2)
   }
 
   /** A small lean back before the first step. */
@@ -174,10 +204,28 @@ export class WandererMotion {
     this.squash.velocity -= 1.3
   }
 
-  /** Tapped: the lantern lifts and the wanderer looks out at the child. */
-  greet(now: number): void {
+  /** Tapped: the first time it looks out at the child, then one of its greetings, never the same one twice running. */
+  greet(now: number, choice?: Greet): Greet {
+    const kind = choice ?? (this.greetAt < 0 ? 'look-out' : GREETS[this.rng.other(GREETS.length, GREETS.indexOf(this.greetKind))])
     this.greetAt = now
-    this.squash.velocity += 1.1
+    this.greetKind = kind
+    switch (kind) {
+      case 'look-out':
+        this.squash.velocity += 1.1
+        break
+      case 'bow':
+        this.squash.velocity -= 0.9
+        break
+      case 'swing':
+        this.swingSv += this.swingS >= 0 ? -5 : 5
+        this.squash.velocity += 0.5
+        break
+      default: {
+        const unreachable: never = kind
+        return unreachable
+      }
+    }
+    return kind
   }
 
   /** At the door: one look back over the shoulder. */
@@ -247,7 +295,7 @@ export class WandererMotion {
       this.idleYaw = this.rng.range(-0.95, 0.95)
       this.idlePitch = this.rng.range(-0.12, 0.22)
     }
-    const aiming = now < this.aimUntil
+    const aiming = now >= this.aimFrom && now < this.aimUntil
     let yawTarget = walking ? 0 : this.idleYaw
     let pitchTarget = walking ? 0.05 : this.idlePitch
     let armTarget = riding ? 0.28 : 0
@@ -262,15 +310,49 @@ export class WandererMotion {
       armYawTarget = clamp(rel, -0.9, 0.9)
     }
     const greet = now - this.greetAt
-    if (greet >= 0 && greet < 1.3) {
-      // The camera sits toward +x +z: look out of the diorama at the child.
-      yawTarget = clamp(wrapAngle(Math.PI / 4 - h), -1.2, 1.2)
-      pitchTarget = 0.28
-      armTarget = Math.max(armTarget, 0.75)
+    const greeting = greet >= 0 && greet < GREET_SECONDS
+    let greetLean = 0
+    let greetRoll = 0
+    // The camera sits toward +x +z: out of the diorama, at the child.
+    const toCamera = wrapAngle(Math.PI / 4 - h)
+    const toChild = clamp(toCamera, -1.2, 1.2)
+    if (greeting) {
+      switch (this.greetKind) {
+        case 'look-out':
+          yawTarget = toChild
+          pitchTarget = 0.28
+          armTarget = Math.max(armTarget, 0.75)
+          break
+        case 'bow': {
+          const dip = Math.sin(Math.min(1, greet / 0.9) * Math.PI)
+          yawTarget = toChild * 0.7
+          pitchTarget = -0.45 * dip
+          greetLean = 0.22 * dip
+          armTarget = Math.max(armTarget, 0.35)
+          break
+        }
+        case 'swing':
+          // Eyes on the lantern at head height, the body swaying along with it.
+          yawTarget = clamp(this.swingS * 1.4, -1, 1)
+          pitchTarget = 0.05
+          armTarget = Math.max(armTarget, 1)
+          greetRoll = clamp(this.swingS * 0.35, -0.2, 0.2) * (1 - greet / GREET_SECONDS)
+          break
+        default: {
+          const unreachable: never = this.greetKind
+          return unreachable
+        }
+      }
+    }
+    const out = now - this.lookOutAt
+    if (out >= 0 && out < LOOK_OUT_SECONDS) {
+      yawTarget = toChild
+      pitchTarget = 0.22
+      armTarget = Math.max(armTarget, 0.2)
     }
     const back = now - this.lookBackAt
     if (back >= 0 && back < 0.9) {
-      yawTarget = clamp(wrapAngle(Math.PI / 4 - h), -1.9, 1.9)
+      yawTarget = clamp(toCamera, -1.9, 1.9)
       pitchTarget = 0.12
     }
     this.headYaw.target = yawTarget
@@ -278,7 +360,7 @@ export class WandererMotion {
     this.arm.target = armTarget
     this.armYaw.target = armYawTarget
 
-    let leanTarget = walking ? 0.1 : 0
+    let leanTarget = walking ? 0.1 : greetLean
     const anticipation = now - this.anticipateAt
     if (anticipation >= 0 && anticipation < 0.16) leanTarget = -0.16
     if (riding) leanTarget -= clamp(aForward * 0.012, -0.2, 0.2)
@@ -311,7 +393,7 @@ export class WandererMotion {
     pose.heading = h
     pose.squash = this.squash.value
     pose.lean = this.lean.value
-    pose.roll = stepWave * 0.11 * gait + sway * (1 - gait) + (riding ? clamp(-aSide * 0.01, -0.15, 0.15) : 0)
+    pose.roll = stepWave * 0.11 * gait + sway * (1 - gait) + greetRoll + (riding ? clamp(-aSide * 0.01, -0.15, 0.15) : 0)
     pose.headYaw = this.headYaw.value
     pose.headPitch = this.headPitch.value
     pose.arm = this.arm.value
@@ -319,7 +401,7 @@ export class WandererMotion {
     pose.swingForward = clamp(this.swingF, -1.1, 1.1)
     pose.swingSide = clamp(this.swingS, -1.1, 1.1)
     const flicker = Math.sin(now * 17.3) * 0.04 + Math.sin(now * 7.1 + 1.3) * 0.05 + Math.sin(now * 31.7) * 0.025
-    pose.glow = 1 + flicker + (aiming ? 0.25 : 0) + (greet >= 0 && greet < 1.3 ? 0.35 * Math.sin((greet / 1.3) * Math.PI) : 0)
+    pose.glow = 1 + flicker + (aiming ? 0.25 : 0) + (greeting ? 0.35 * Math.sin((greet / GREET_SECONDS) * Math.PI) : 0)
   }
 }
 
@@ -338,6 +420,8 @@ export type BirdPose = {
   /** Wing beat angle; 0 is folded. */
   wing: number
   tail: number
+  /** 0..1 feathers fluffed up: the whole body swells. */
+  puff: number
 }
 
 export class BirdMotion {
@@ -355,6 +439,7 @@ export class BirdMotion {
     headTilt: 0,
     wing: 0,
     tail: 0,
+    puff: 0,
   }
   /** Set true on the frame a wing comes down (for the flap sound). */
   flapped = false
@@ -366,6 +451,11 @@ export class BirdMotion {
   private readonly tail = new Spring(0, 520, 14)
   private readonly squash = new Spring(1, 520, 15)
   private readonly pitch = new Spring(0, 300, 20)
+  // Underdamped: the feathers settle with a jiggle.
+  private readonly puff = new Spring(0, 160, 9)
+  private puffUntil = -1
+  private pokeAt = -1
+  private pokeKind: Poke = 'ruffle'
   private nextSaccade = 0.4
   private nextFlick = 2.2
   private nextPeck = 4
@@ -422,6 +512,34 @@ export class BirdMotion {
     this.nextSaccade = now + 0.25
   }
 
+  /** Tapped: the first time a ruffle, then one of its answers, never the same one twice running. */
+  poke(now: number, choice?: Poke): Poke {
+    const kind = choice ?? (this.pokeAt < 0 ? 'ruffle' : POKES[this.rng.other(POKES.length, POKES.indexOf(this.pokeKind))])
+    this.pokeAt = now
+    this.pokeKind = kind
+    switch (kind) {
+      case 'ruffle':
+        this.ruffle(now)
+        break
+      case 'puff':
+        this.puff.target = 1
+        this.puffUntil = now + PUFF_SECONDS
+        this.tail.velocity += 12
+        this.headTilt.velocity -= 10
+        break
+      case 'bob':
+        this.crouch(now)
+        this.flap(now, 0.24)
+        this.pitch.velocity -= 5
+        break
+      default: {
+        const unreachable: never = kind
+        return unreachable
+      }
+    }
+    return kind
+  }
+
   update(dt: number, now: number, x: number, y: number, z: number, heading: number, hovering: boolean): void {
     const pose = this.pose
     this.flapped = false
@@ -451,6 +569,10 @@ export class BirdMotion {
       this.squash.target = 1
       this.squash.velocity += 4
     }
+    if (this.puffUntil >= 0 && now >= this.puffUntil) {
+      this.puffUntil = -1
+      this.puff.target = 0
+    }
 
     const flapping = hovering || now < this.flapUntil
     if (flapping) {
@@ -469,6 +591,7 @@ export class BirdMotion {
     this.tail.step(dt)
     this.squash.step(dt)
     this.pitch.step(dt)
+    this.puff.step(dt)
 
     pose.x = x
     pose.y = y
@@ -482,5 +605,6 @@ export class BirdMotion {
     pose.headTilt = this.headTilt.value
     pose.wing = flapping ? 0.55 + Math.sin(this.flapPhase) * 0.6 : 0
     pose.tail = this.tail.value
+    pose.puff = this.puff.value
   }
 }

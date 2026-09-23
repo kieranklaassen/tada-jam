@@ -88,8 +88,8 @@ export function facetMaterial(options: { fogTop?: number; fogBottom?: number; fo
     uShade: { value: raw(options.shade ?? PALETTE.shade) },
     uFade: { value: 0 },
     uFogTop: { value: options.fogTop ?? -0.5 },
-    uFogBottom: { value: options.fogBottom ?? -4 },
-    uFogAmount: { value: options.fog ?? 0.92 },
+    uFogBottom: { value: options.fogBottom ?? -5.5 },
+    uFogAmount: { value: options.fog ?? 0.85 },
     uTint: { value: raw(PALETTE.doorLight) },
     uTintAmount: { value: 0 },
     uLift: { value: 0 },
@@ -114,12 +114,17 @@ void main() {
   vec3 c = skyAt(vNdc);
   float glow = 1.0 - smoothstep(0.0, 1.1, length((vNdc - vec2(-0.1, 0.35)) * vec2(0.8, 1.2)));
   c = mix(c, uGlow, glow * 0.22);
-  float noise = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
+  // Interleaved gradient noise: no sin() of large pixel coordinates, which loses precision and patterns on mobile GPUs.
+  float noise = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) - 0.5;
   gl_FragColor = vec4(c + noise * uDither / 255.0, 1.0);
 }
 `
 
-/** One full-screen triangle behind everything: the dusk gradient. */
+/**
+ * One full-screen triangle behind everything: the dusk gradient. It draws
+ * after the opaque architecture at the far plane, so the depth test skips
+ * every pixel the diorama already covers.
+ */
 export function skyMesh(): THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial> {
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3))
@@ -133,12 +138,11 @@ export function skyMesh(): THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial
     },
     vertexShader: SKY_VERTEX,
     fragmentShader: SKY_FRAGMENT,
-    depthTest: false,
     depthWrite: false,
   })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.frustumCulled = false
-  mesh.renderOrder = -10
+  mesh.renderOrder = 1
   return mesh
 }
 

@@ -58,7 +58,7 @@ const firstTurn: RoomSpec = {
   key: 'first-turn',
   accent: '#f2a48f',
   cells: build(
-    box(-1, 7, -4, -4, 0, 4, 'lilac'),
+    box(-1, 7, -4, -4, 0, 4, 'plinth'),
     box(0, 1, -3, 1, 1, 3),
     paths([
       [0, 2, 2],
@@ -92,14 +92,15 @@ const ferryRaft: GroupDef = {
   max: 4,
   start: 4,
   cells: paths([[3, 2, 0]], 'rose'),
-  grip: [4.02, 2.5, 0.5],
+  // On the raft's open front: its +x side is pressed against the door tower at the far stop.
+  grip: [3.5, 2.5, 1.02],
 }
 
 const ferry: RoomSpec = {
   key: 'ferry',
   accent: '#e7b86d',
   cells: build(
-    box(-1, 7, -4, -4, -1, 5, 'lilac'),
+    box(-1, 7, -4, -4, -1, 5, 'plinth'),
     box(0, 2, -3, 1, -1, 0),
     paths([
       [0, 2, 0],
@@ -121,12 +122,11 @@ const ferry: RoomSpec = {
   door: [6, 2, 4],
   perch: [1.5, 2, -0.5],
   decor: [
-    { kind: 'grip', at: [4.02, 2.5, 0.5], face: 'x', group: 0 },
+    { kind: 'grip', at: [3.5, 2.5, 1.02], face: 'z', group: 0 },
     { kind: 'dome', at: [0.5, 2, -0.5], radius: 0.45, tone: 'trim' },
     { kind: 'window', at: [3, -0.4, 0.5], face: 'x', height: 1.2 },
     { kind: 'window', at: [5.5, -0.5, 6], face: 'z', height: 1.3 },
     { kind: 'window', at: [7, -0.3, 4.5], face: 'x', height: 1.3 },
-    { kind: 'cone', at: [4.5, 2, 5.5], radius: 0.4, height: 1.2, tone: 'rose' },
     { kind: 'finial', at: [6.5, 2, 5.5], tone: 'trim' },
   ],
 }
@@ -148,7 +148,7 @@ const impossibleStair: RoomSpec = {
   key: 'impossible-stair',
   accent: '#c9a3e6',
   cells: build(
-    box(-1, 9, -4, -4, 2, 8, 'lilac'),
+    box(-1, 9, -4, -4, 2, 8, 'plinth'),
     box(-1, 2, -3, 0, 2, 4),
     paths([
       [0, 1, 3],
@@ -162,10 +162,10 @@ const impossibleStair: RoomSpec = {
   groups: [stairArm],
   start: [0, 1, 3],
   door: [9, 4, 6],
-  perch: [-0.5, 1, 2.5],
+  perch: [-0.5, 1, 4.5],
   decor: [
     { kind: 'wheel', at: [7.5, 3.72, 6.5], axis: 'y', radius: 1.3, group: 0 },
-    { kind: 'dome', at: [-0.5, 1, 3.5], radius: 0.42, tone: 'trim' },
+    { kind: 'dome', at: [2.5, 1, 4.5], radius: 0.42, tone: 'trim' },
     { kind: 'window', at: [2.8, -1.2, 2.5], face: 'x', height: 1.2 },
     { kind: 'window', at: [1.5, -1.2, 5], face: 'z', height: 1.2 },
     { kind: 'window', at: [8, 0.5, 6.5], face: 'x', height: 1.6 },
@@ -202,7 +202,7 @@ const birdBridge: RoomSpec = {
   key: 'bird-bridge',
   accent: '#8fd3c8',
   cells: build(
-    box(-1, 7, -4, -4, -3, 3, 'lilac'),
+    box(-1, 7, -4, -4, -3, 3, 'plinth'),
     box(0, 2, -3, 1, 0, 2),
     paths([
       [0, 2, 1],
@@ -260,7 +260,8 @@ const crank: RoomSpec = {
   key: 'crank',
   accent: '#f0c75e',
   cells: build(
-    box(-3, 5, -4, -4, -4, 6, 'lilac'),
+    // The slab hugs the two towers, so the camera frames them, not an empty floor.
+    box(-2, 4, -4, -4, -3, 5, 'plinth'),
     box(3, 3, -3, 0, 4, 5),
     box(2, 2, -3, -1, 4, 5),
     paths([
@@ -274,11 +275,13 @@ const crank: RoomSpec = {
       [-1, 1, -3],
       [-2, 1, -3],
     ]),
+    // A low ledge in front of the tower, so the bird can watch from where the child can see it.
+    box(4, 4, -3, -1, 5, 5, 'rose'),
   ),
   groups: [drawbridge, lift],
   start: [3, 1, 5],
   door: [-2, 1, -3],
-  perch: [2.5, 0, 5.5],
+  perch: [4.5, 0, 5.5],
   decor: [
     { kind: 'wheel', at: [4.04, 1.5, 3.5], axis: 'x', radius: 0.62, group: 0 },
     { kind: 'grip', at: [4.02, 1.5, 0.5], face: 'x', group: 1 },

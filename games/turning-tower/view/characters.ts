@@ -73,6 +73,19 @@ function ball(b: Builder, centre: Vec3, radius: number, sides: number, rings: nu
   }
 }
 
+/** Big enough for a seven-year-old to find at a glance: a hood nearly as tall as a paver is wide. */
+export const WANDERER_SCALE = 1.3
+
+/**
+ * The lantern hangs from the hook of a staff held out from the cloak, at head
+ * height, so it reads beside the body from any heading instead of trailing on
+ * the ground.
+ */
+const LANTERN_SCALE = 1.4
+const ARM_OUT = 0.25
+const STAFF_TOP = 0.66
+const STAFF_HOOK = 0.1
+
 export type WandererRig = {
   root: THREE.Object3D
   shadow: THREE.Object3D
@@ -82,7 +95,7 @@ export type WandererRig = {
 
 /**
  * A small pilgrim in a deep indigo cloak and a tall pointed hood, carrying an
- * amber lantern on a hanging bail. Indigo against coral is the strongest
+ * amber lantern on a crooked staff. Indigo against coral is the strongest
  * contrast in the scene: the child finds the wanderer first.
  */
 export function buildWanderer(material: THREE.Material, halo: THREE.Object3D, shadow: THREE.Object3D): WandererRig {
@@ -111,6 +124,11 @@ export function buildWanderer(material: THREE.Material, halo: THREE.Object3D, sh
   box(arm, [-0.026, -0.17, -0.026], [0.026, 0.01, 0.026], INDIGO)
   ball(arm, [0, -0.18, 0], 0.034, 5, 3, CREAM)
 
+  const staff = new Builder()
+  box(staff, [-0.016, -0.1, -0.016], [0.016, STAFF_TOP, 0.016], HUB)
+  box(staff, [-0.016, STAFF_TOP - 0.03, -0.016], [STAFF_HOOK + 0.016, STAFF_TOP, 0.016], HUB)
+  box(staff, [STAFF_HOOK - 0.012, STAFF_TOP - 0.05, -0.012], [STAFF_HOOK + 0.012, STAFF_TOP - 0.02, 0.012], HUB)
+
   const lantern = new Builder()
   box(lantern, [-0.007, -0.04, -0.007], [0.007, 0, 0.007], HUB)
   frustum(lantern, [0, 0, 0], 0.058, 0.018, -0.075, -0.035, 6, HUB)
@@ -118,8 +136,11 @@ export function buildWanderer(material: THREE.Material, halo: THREE.Object3D, sh
   frustum(lantern, [0, 0, 0], 0.04, 0.058, -0.18, -0.16, 6, LANTERN)
 
   const root = new THREE.Object3D()
+  const figure = new THREE.Object3D()
+  figure.scale.setScalar(WANDERER_SCALE)
+  root.add(figure)
   const torso = new THREE.Object3D()
-  root.add(torso)
+  figure.add(torso)
   const bodyMesh = new THREE.Mesh(body.geometry(), material)
   torso.add(bodyMesh)
   const headMesh = new THREE.Mesh(head.geometry(), material)
@@ -131,16 +152,23 @@ export function buildWanderer(material: THREE.Material, halo: THREE.Object3D, sh
   armPivot.rotation.order = 'YXZ'
   armPivot.add(new THREE.Mesh(arm.geometry(), material))
   torso.add(armPivot)
+  // The staff stands upright in the hand whatever the arm's outward angle.
+  const staffPivot = new THREE.Object3D()
+  staffPivot.position.set(0, -0.18, 0)
+  staffPivot.rotation.z = -ARM_OUT
+  staffPivot.add(new THREE.Mesh(staff.geometry(), material))
+  armPivot.add(staffPivot)
   const lanternPivot = new THREE.Object3D()
-  lanternPivot.position.set(0, -0.19, 0)
+  lanternPivot.position.set(STAFF_HOOK, STAFF_TOP - 0.05, 0)
+  lanternPivot.scale.setScalar(LANTERN_SCALE)
   lanternPivot.add(new THREE.Mesh(lantern.geometry(), material))
   const glass = new THREE.Object3D()
   glass.position.set(0, -0.12, 0)
   lanternPivot.add(glass)
-  armPivot.add(lanternPivot)
+  staffPivot.add(lanternPivot)
   for (const mesh of [bodyMesh, headMesh]) mesh.frustumCulled = false
 
-  const LIFT = 1.25
+  const LIFT = 0.7
   return {
     root,
     shadow,
@@ -161,7 +189,7 @@ export function buildWanderer(material: THREE.Material, halo: THREE.Object3D, sh
       torso.scale.set(1 / Math.sqrt(s), s, 1 / Math.sqrt(s))
       torso.rotation.set(pose.lean, 0, pose.roll)
       headMesh.rotation.set(-pose.headPitch, pose.headYaw, 0)
-      armPivot.rotation.set(-pose.arm * LIFT, pose.armYaw, 0)
+      armPivot.rotation.set(-pose.arm * LIFT, pose.armYaw, ARM_OUT)
       lanternPivot.rotation.set(pose.arm * LIFT - pose.swingForward, 0, -pose.swingSide)
       shadow.position.set(pose.x, pose.y + 0.012, pose.z)
       root.updateWorldMatrix(true, true)
@@ -177,10 +205,10 @@ export type BirdRig = {
 }
 
 /**
- * A plump sunflower-yellow bird the size of one block, with a flat back
- * saddled in the same mint as every walkable path: it is a moving bridge,
- * and it looks like one. Yellow is the "you can move this" hue it shares
- * with the handles; teal crest and tail give it a hue of its own.
+ * A plump cerulean bird the size of one block, with a flat back saddled in
+ * the same mint as every walkable path: where it is a moving bridge, it looks
+ * like one. It is not sunflower, because in most dioramas it is company, not
+ * a handle; a cream crest and tail tips make it a bluebird.
  */
 export function buildBird(material: THREE.Material, shadow: THREE.Object3D): BirdRig {
   const body = new Builder()
@@ -308,7 +336,8 @@ export function buildBird(material: THREE.Material, shadow: THREE.Object3D): Bir
       root.position.set(pose.x, pose.y + pose.bob, pose.z)
       root.rotation.set(0, pose.heading, 0)
       const s = pose.squash
-      torso.scale.set(1 / Math.sqrt(s), s, 1 / Math.sqrt(s))
+      const p = 1 + pose.puff * 0.14
+      torso.scale.set(p / Math.sqrt(s), p * s, p / Math.sqrt(s))
       torso.rotation.set(pose.pitch, 0, 0)
       headMesh.rotation.set(-pose.headPitch, pose.headYaw, pose.headTilt)
       tailMesh.rotation.set(Math.max(-0.6, Math.min(0.8, pose.tail * 0.5)), 0, 0)
