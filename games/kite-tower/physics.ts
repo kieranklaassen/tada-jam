@@ -13,6 +13,8 @@ export const STEP = 1 / 60
 export const DOLL_WEIGHT = 0.7
 const MAX_IMPACTS = 16
 const IMPACT_SPEED = 0.9
+/** A knock at least this hard is a clatter rather than a block being set down. */
+export const HARD_KNOCK = 2
 const STILL_SPEED = 0.12
 const SETTLE_SECONDS = 0.3
 const LOST_Y = -3
@@ -28,10 +30,12 @@ const CALM_DRIFT = 0.04
 const CALM_SECONDS = 0.8
 
 export type StepReport = {
-  /** How many new contacts this step were hard enough to hear; ids and speeds are in `impactIds` and `impactSpeeds`. */
+  /** How many knocks this frame were hard enough to hear; ids and speeds are in `impactIds` and `impactSpeeds`. */
   impacts: number
   impactIds: Int16Array
   impactSpeeds: Float32Array
+  /** How many of this frame's fixed steps had a knock over HARD_KNOCK, so a slow frame counts a clatter like fast ones do. */
+  hardKnocks: number
   /** Anything loose still moving. */
   moving: boolean
   /** True on the one step the world came to rest. */
@@ -122,10 +126,15 @@ export class PlayPhysics {
     impacts: 0,
     impactIds: new Int16Array(MAX_IMPACTS),
     impactSpeeds: new Float32Array(MAX_IMPACTS),
+    hardKnocks: 0,
     moving: false,
     settledNow: false,
     lost: -1,
   }
+  /** The other piece in each knock this frame, or -1 for the rug, floor or a wall. */
+  private readonly heardWith = new Int16Array(MAX_IMPACTS)
+  /** The first knock of the fixed step being run: knocks only merge within one step. */
+  private stepFirst = 0
 
   constructor() {
     this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, GRAVITY, 0) })
@@ -184,16 +193,37 @@ export class PlayPhysics {
     body.addEventListener('collide', (event: { body: CANNON.Body; contact: CANNON.ContactEquation }) => {
       if (this.held.has(id)) return
       const speed = Math.abs(event.contact.getImpactVelocityAlongNormal())
-      const report = this.report
-      if (speed < IMPACT_SPEED || report.impacts >= MAX_IMPACTS) return
-      report.impactIds[report.impacts] = id
-      report.impactSpeeds[report.impacts] = speed
-      report.impacts += 1
+      if (speed >= IMPACT_SPEED) this.hear(id, this.bodies.indexOf(event.body), speed)
     })
     this.world.addBody(body)
     this.bodies[id] = body
     this.wakeAll()
     return body
+  }
+
+  /**
+   * Cannon raises a collide event for every contact point of a new touch, on
+   * both bodies, so one block landing flat arrives as two to four events and
+   * a plank landing across two cubes as more. Everything touching in one
+   * step is heard as one knock at its hardest, in the voice of the piece
+   * that was moving (events come before the solver, so that one is faster).
+   */
+  private hear(id: number, other: number, speed: number): void {
+    const report = this.report
+    const touches = (piece: number) => piece >= 0 && (piece === id || piece === other)
+    const voice = other >= 0 && this.speedOf(other) > this.speedOf(id) ? other : id
+    for (let i = this.stepFirst; i < report.impacts; i++) {
+      if (!touches(report.impactIds[i]) && !touches(this.heardWith[i])) continue
+      if (speed > report.impactSpeeds[i]) report.impactSpeeds[i] = speed
+      if (this.speedOf(voice) > this.speedOf(report.impactIds[i])) report.impactIds[i] = voice
+      if (this.heardWith[i] < 0) this.heardWith[i] = voice === id ? other : id
+      return
+    }
+    if (report.impacts >= MAX_IMPACTS) return
+    report.impactIds[report.impacts] = voice
+    report.impactSpeeds[report.impacts] = speed
+    this.heardWith[report.impacts] = voice === id ? other : id
+    report.impacts += 1
   }
 
   remove(id: number): void {
@@ -285,6 +315,7 @@ export class PlayPhysics {
   step(elapsed: number): StepReport {
     const report = this.report
     report.impacts = 0
+    report.hardKnocks = 0
     report.settledNow = false
     report.lost = -1
     this.accumulator = Math.min(this.accumulator + elapsed, STEP * this.maxSubsteps)
@@ -302,9 +333,16 @@ export class PlayPhysics {
         this.scratch.z = 0
         load.applyForce(this.loadForce, this.scratch)
       }
+      this.stepFirst = report.impacts
       this.world.step(STEP)
       this.accumulator -= STEP
+      for (let i = this.stepFirst; i < report.impacts; i++) {
+        if (report.impactSpeeds[i] <= HARD_KNOCK) continue
+        report.hardKnocks += 1
+        break
+      }
     }
+    this.stepFirst = 0
     for (const [id, target] of this.held) {
       const body = this.bodies[id]!
       body.position.set(target.x, target.y, 0)

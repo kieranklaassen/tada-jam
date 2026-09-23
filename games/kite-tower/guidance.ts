@@ -115,13 +115,18 @@ function ease(t: number): number {
   return k * k * (3 - 2 * k)
 }
 
+/** How far the ghost hand has carried its piece through a demonstration: 0 still at the piece, 1 at the spot. */
+export function handTravel(progress: number): number {
+  return ease((progress - 0.22) / 0.46)
+}
+
 /**
  * The ghost hand over one demonstration: it fades in on the piece, presses,
  * lifts it in an arc to the target, lets go, and fades out. `from` and `to`
  * are screen points, so the arc reads the same wherever the piece starts.
  */
 export function handPose(from: Vec2, to: Vec2, progress: number, out: HandPose = { at: { x: 0, y: 0 }, press: 0, opacity: 0, carry: 0 }): HandPose {
-  const travel = ease((progress - 0.22) / 0.46)
+  const travel = handTravel(progress)
   const lift = Math.sin(travel * Math.PI) * Math.min(160, Math.abs(to.x - from.x) * 0.35 + 60)
   out.opacity = Math.min(clamp01(progress / 0.1), clamp01((1 - progress) / 0.12))
   out.press = progress < 0.12 ? 0 : progress < 0.2 ? (progress - 0.12) / 0.08 : progress < 0.74 ? 1 : 1 - clamp01((progress - 0.74) / 0.08)

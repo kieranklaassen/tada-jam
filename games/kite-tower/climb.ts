@@ -20,8 +20,12 @@ export const DROP = 3.2
 /** Feet to fingertips, stretching on tiptoe. */
 export const REACH = 3
 export const GRAB_DX = 0.95
-/** How much a sideways step away from the kite is worth in height. */
-const SIDEWAYS_COST = 0.45
+/** How much a sideways step away from the kite is worth in height: enough that a tall build across the room never draws her away from her kite. */
+const SIDEWAYS_COST = 0.8
+const SHOULDER = 1.3
+const HAND_WIDTH = 0.75
+/** Outweighs the 0.25 a doll gives the spot she already stands on plus the sideways cost of stepping a hand's width back, so she steps back. */
+const CRAMPED_COST = 1
 const SPACING = 0.25
 const WALK_DX = 0.42
 const FLOOR_MIN = PLAY_MIN_X + 0.35
@@ -111,6 +115,17 @@ export function spotValue(spot: Spot, kite: KiteTarget): number {
   return spot.y - SIDEWAYS_COST * Math.max(0, Math.abs(spot.x - kite.x) - GRAB_DX)
 }
 
+/** Wood above her shoulder within a hand's width on the kite side, where her reaching arm would go into it. */
+function crampedReach(placed: readonly Placed[], spot: Spot, kite: KiteTarget): boolean {
+  const toward = Math.sign(kite.x - spot.x)
+  return toward !== 0 && blocked(placed, spot.x + toward * HAND_WIDTH, spot.y + SHOULDER, spot.y + DOLL_HEIGHT + 0.6)
+}
+
+/** Where to wait when the kite is out of reach: as good a spot as the build gives, but never pressed against a block she reaches into. */
+function waitValue(placed: readonly Placed[], spot: Spot, kite: KiteTarget): number {
+  return spotValue(spot, kite) - (crampedReach(placed, spot, kite) ? CRAMPED_COST : 0)
+}
+
 function nearestSpot(spots: readonly Spot[], at: { x: number; y: number }, on: number | null): number {
   let best = -1
   let bestDistance = 0.7
@@ -170,10 +185,10 @@ export function planClimb(placed: readonly Placed[], doll: { x: number; y: numbe
   if (goal >= 0) reachesKite = true
   else {
     goal = start
-    let bestValue = spotValue(spots[start], kite) + 0.25
+    let bestValue = waitValue(placed, spots[start], kite) + 0.25
     for (let i = 0; i < n; i++) {
       if (cost[i] === Infinity) continue
-      const value = spotValue(spots[i], kite)
+      const value = waitValue(placed, spots[i], kite)
       if (value > bestValue + 1e-6 || (Math.abs(value - bestValue) < 1e-6 && goal !== start && cost[i] < cost[goal])) {
         goal = i
         bestValue = value

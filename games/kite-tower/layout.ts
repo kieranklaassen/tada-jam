@@ -78,11 +78,12 @@ export function slotCenter(slot: TraySlot): Vec2 {
   return { x: slot.x, y: slot.z + (minY + maxY) / 2 }
 }
 
-export type WatcherHome = { home: number; min: number; max: number; z: number }
+/** A watcher wanders between `min` and `max`; to give the doll room it may step out as far as `aside`. */
+export type WatcherHome = { home: number; min: number; max: number; aside: number; z: number }
 
 export const WATCHERS: readonly WatcherHome[] = [
-  { home: -6.55, min: -7.05, max: -5.85, z: -1.05 },
-  { home: 6.55, min: 5.95, max: 7.1, z: -0.95 },
+  { home: -6.55, min: -7.05, max: -5.85, aside: -7.35, z: -1.05 },
+  { home: 6.55, min: 5.95, max: 7.1, aside: 7.35, z: -0.95 },
 ]
 
 export const SHELF = { x0: 3.72, x1: 6.98, back: WALL_Z + 0.02, front: -1.0, boards: [0.22, 2.0, 4.0], top: 6.7, side: 0.16, board: 0.14 }
