@@ -12,15 +12,21 @@ export type Tier = {
   blur: boolean
   /** The single full-screen pass (grade, vignette, blur). */
   post: boolean
+  /**
+   * The post pass draws the scene into a multisampled target, so its edges are
+   * as smooth as the canvas's own (which is always multisampled). Top tier only:
+   * on top of the canvas's samples it is a second multisampled surface.
+   */
+  msaa: boolean
   /** Fuzz shells: 3 bee + flowers + molehills, 2 bee + flowers, 1 bee, 0 none. */
   fuzz: 0 | 1 | 2 | 3
 }
 
 export const TIERS: readonly Tier[] = [
-  { dpr: 2, blur: true, post: true, fuzz: 3 },
-  { dpr: 1.5, blur: false, post: true, fuzz: 2 },
-  { dpr: 1.25, blur: false, post: false, fuzz: 1 },
-  { dpr: 1, blur: false, post: false, fuzz: 0 },
+  { dpr: 2, blur: true, post: true, msaa: true, fuzz: 3 },
+  { dpr: 1.5, blur: false, post: true, msaa: false, fuzz: 2 },
+  { dpr: 1.25, blur: false, post: false, msaa: false, fuzz: 1 },
+  { dpr: 1, blur: false, post: false, msaa: false, fuzz: 0 },
 ]
 
 export const WINDOW_SECONDS = 1

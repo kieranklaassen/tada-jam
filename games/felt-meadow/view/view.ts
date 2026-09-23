@@ -1,7 +1,7 @@
 import { LinearSRGBColorSpace, NoToneMapping, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three'
 import type { MeadowController, Projector, ScreenPoint } from '../controller'
 import { groundY, type Point } from '../layout'
-import { parseTier, PerfRecorder, TierController } from '../perf'
+import { parseTier, PerfRecorder, startingTier, TierController } from '../perf'
 import type { Season } from '../season'
 import { paint, PALETTE } from './felt'
 import { MeadowModels } from './models'
@@ -9,7 +9,8 @@ import { PostPass } from './post'
 
 // The drawing side of the meadow: one canvas, one three.js scene built once,
 // and a requestAnimationFrame loop that runs only while the meadow is
-// attended and visible. Each frame measures its own CPU cost (update plus
+// attended and visible, and draws every other display frame once the meadow
+// has rested a while. Each frame measures its own CPU cost (update plus
 // render submit) for window.__jamPerf and feeds frame intervals to the tier
 // controller, which trades DPR, blur, the post pass, fuzz shells, and puffs
 // for frame rate.
@@ -41,14 +42,16 @@ export class MeadowView {
   private top = 0
   private raf = 0
   private last = -1
+  /** The previous display frame was left undrawn because the meadow rests (half rate). */
+  private skipped = false
   private running = false
 
   constructor(host: HTMLElement, controller: MeadowController, options: { search: string; season: Season }) {
     this.controller = controller
     this.canvas = document.createElement('canvas')
     this.canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none'
-    host.appendChild(this.canvas)
     this.renderer = new WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: false, stencil: false, powerPreference: 'high-performance' })
+    host.appendChild(this.canvas)
     this.renderer.outputColorSpace = LinearSRGBColorSpace
     this.renderer.toneMapping = NoToneMapping
     this.renderer.info.autoReset = false
@@ -56,7 +59,7 @@ export class MeadowView {
     this.scene.matrixWorldAutoUpdate = true
 
     this.models = new MeadowModels(this.scene, options.season)
-    this.tiers = new TierController(parseTier(options.search), 0)
+    this.tiers = new TierController(parseTier(options.search), 0, startingTier(window.matchMedia?.('(pointer: coarse)').matches ?? false))
     this.applyTier()
 
     const projector: Projector = {
@@ -134,10 +137,16 @@ export class MeadowView {
 
   private readonly frame = (now: number): void => {
     this.raf = requestAnimationFrame(this.frame)
+    if (!this.skipped && this.last >= 0 && this.controller.resting()) {
+      this.skipped = true
+      return
+    }
     const start = performance.now()
     const interval = this.last < 0 ? 1000 / 60 : now - this.last
     this.last = now
-    if (this.tiers.frame(interval, now / 1000)) this.applyTier()
+    if (this.skipped) this.tiers.skip(now / 1000)
+    else if (this.tiers.frame(interval, now / 1000)) this.applyTier()
+    this.skipped = false
     this.controller.update(Math.min(0.05, interval / 1000))
     this.models.sync(this.controller, this.camera)
     const info = this.renderer.info
@@ -161,6 +170,7 @@ export class MeadowView {
       this.renderer.setSize(this.width, this.height, false)
       this.post.setSize(Math.round(this.width * dpr), Math.round(this.height * dpr))
     }
+    this.post.setSamples(tier.msaa ? 4 : 0)
     this.models.setTier(tier)
   }
 
