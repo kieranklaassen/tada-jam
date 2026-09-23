@@ -17,6 +17,8 @@ Open the printed URL (Vite binds to your LAN too, so an iPad on the same network
 - **Reset slot** forgets the game's saved state.
 - **Hide** removes the strip for full-bleed play; a small dot in the top-right corner brings it back. Start hidden with `?chrome=0`.
 
+**Judging smoothness on an iPad: use a production build.** The dev server serves unbundled modules with React in development mode and HMR, which is slower and not what a child would run. `npm run serve:lan` builds and serves the production bundle on your LAN at port 4173 (open `http://<this-machine's-LAN-IP>:4173/?chrome=0#/play/<key>` on the iPad). Pebble Table has a hidden grown-up overlay for frame rate and quality tier: triple-tap the top-left corner. `npm run perf:pebble` profiles it in Chrome, WebKit, or a software GPU against that server.
+
 Saved state lives in the browser's `localStorage` under `tada-jam:slot:<key>`, with the same 2-second debounce, flush-on-park, flush-on-hide, and 64 KB cap the Tada server enforces. Turning the device to portrait covers the game with a wordless "turn sideways" picture.
 
 ## Look

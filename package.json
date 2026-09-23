@@ -16,6 +16,8 @@
     "egress:check": "node scripts/egress-check.ts",
     "egress:built": "node scripts/egress-check.ts --built",
     "wordless:check": "node scripts/wordless-check.ts",
+    "serve:lan": "vite build && vite preview --host 0.0.0.0 --port 4173 --strictPort",
+    "perf:pebble": "node scripts/pebble-perf.mjs",
     "check": "npm run typecheck && npm run test && npm run egress:check && npm run wordless:check"
   },
   "dependencies": {
