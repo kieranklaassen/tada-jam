@@ -130,7 +130,8 @@ export function scanTree(root: string, options: { built: boolean }): Finding[] {
     const isGameCode = /\.(?:ts|tsx|js|jsx|css)$/.test(path) && !isTestFile(path) && relative(gamesDir, path).includes('/')
     findings.push(...(isGameCode ? scanGameSource(text, file) : scanUrls(text, file, [])))
   }
-  for (const path of walk(join(root, 'harness'))) {
+  // The harness and the showcases get the URL rule: nothing they load may come from outside.
+  for (const path of [...walk(join(root, 'harness')), ...walk(join(root, 'showcases'))]) {
     if (!TEXT_EXTENSIONS.has(extname(path))) continue
     findings.push(...scanUrls(readFileSync(path, 'utf8'), relative(root, path), []))
   }
