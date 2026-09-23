@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { Hero, KiteController, Watcher } from '../controller'
+import { ARM, ARM_R, BODY_PROFILE, BRIM, CUFF, DollGuard, FLY_RAISE, HAND_R, HEAD_R, HEAD_Y, POM_R, POM_Y, SHOULDER, type HeadKind } from '../doll'
 import { WATCHERS } from '../layout'
 import { MotionDirector, type Activity, type Face, type PoseDelta } from '../motion'
 import { swayAngle, type Rock } from '../sway'
@@ -23,7 +24,7 @@ const BLINK: Expression = 1
 const HAPPY: Expression = 2
 const SURPRISED: Expression = 3
 
-type DollSpec = {
+export type DollSpec = {
   name: 'pip' | 'moss' | 'bean'
   row: number
   scale: number
@@ -32,20 +33,16 @@ type DollSpec = {
   band: string
   hair: string
   hat?: string
-  kind: 'bob' | 'cap' | 'beanie'
+  kind: HeadKind
 }
 
-const HERO: DollSpec = { name: 'pip', row: 0, scale: 1, lower: '#e25a47', upper: '#ee7a5d', band: '#f7e6c4', hair: '#6d4428', kind: 'bob' }
-const MOSS: DollSpec = { name: 'moss', row: 1, scale: 1.1, lower: '#6f9a78', upper: '#94b88f', band: '#e9dcc0', hair: '#d8d2c6', hat: '#9c8764', kind: 'cap' }
-const BEAN: DollSpec = { name: 'bean', row: 2, scale: 0.8, lower: '#3e72b8', upper: '#f3cf5e', band: '#3e72b8', hair: '#8a5a34', hat: '#d9473b', kind: 'beanie' }
+export const HERO: DollSpec = { name: 'pip', row: 0, scale: 1, lower: '#e25a47', upper: '#ee7a5d', band: '#f7e6c4', hair: '#6d4428', kind: 'bob' }
+export const MOSS: DollSpec = { name: 'moss', row: 1, scale: 1.1, lower: '#6f9a78', upper: '#94b88f', band: '#e9dcc0', hair: '#d8d2c6', hat: '#9c8764', kind: 'cap' }
+export const BEAN: DollSpec = { name: 'bean', row: 2, scale: 0.8, lower: '#3e72b8', upper: '#f3cf5e', band: '#3e72b8', hair: '#8a5a34', hat: '#d9473b', kind: 'beanie' }
 
 const SKIN = '#f4dcc0'
-const NECK_Y = 1.34
-const HEAD_R = 0.37
-const SHOULDER = { x: 0.31, y: 1.14 }
-const ARM = 0.78
 /** Feet to fingertips with both arms straight up (the hero's hands on the kite string). */
-export const DOLL_HANDS = SHOULDER.y + ARM
+export const DOLL_HANDS = SHOULDER.y + ARM_R + ARM
 
 // ---- faces -------------------------------------------------------------------
 
@@ -192,23 +189,8 @@ function paintByHeight(geometry: THREE.BufferGeometry, colorAt: (y: number) => s
   return geometry
 }
 
-function bodyGeometry(spec: DollSpec): THREE.BufferGeometry {
-  const profile = [
-    { x: 0, y: 0 },
-    { x: 0.32, y: 0 },
-    { x: 0.355, y: 0.035 },
-    { x: 0.36, y: 0.12 },
-    { x: 0.33, y: 0.26 },
-    { x: 0.295, y: 0.55 },
-    { x: 0.285, y: 0.78 },
-    { x: 0.3, y: 0.98 },
-    { x: 0.3, y: 1.1 },
-    { x: 0.265, y: 1.22 },
-    { x: 0.18, y: 1.3 },
-    { x: 0.13, y: NECK_Y },
-    { x: 0, y: NECK_Y + 0.02 },
-  ]
-  const body = woodLathe(profile, 32, (y) => 0.86 + 0.14 * THREE.MathUtils.smoothstep(y, 0, 0.12))
+export function bodyGeometry(spec: DollSpec): THREE.BufferGeometry {
+  const body = woodLathe(BODY_PROFILE, 32, (y) => 0.86 + 0.14 * THREE.MathUtils.smoothstep(y, 0, 0.12))
   return paintByHeight(body, (y) => (y > 1.27 ? SKIN : y > 0.66 ? spec.upper : y > 0.58 ? spec.band : spec.lower))
 }
 
@@ -228,18 +210,16 @@ function woodSphere(r: number, phiStart: number, phiLength: number, thetaStart: 
   return stained(g, color)
 }
 
-function headGeometry(spec: DollSpec): THREE.BufferGeometry {
+export function headGeometry(spec: DollSpec): THREE.BufferGeometry {
   const r = HEAD_R
   const profile = Array.from({ length: 15 }, (_, i) => {
     const a = -Math.PI / 2 + (Math.PI * i) / 14
     return { x: Math.max(0, Math.cos(a) * r), y: r + Math.sin(a) * r }
   })
   const head = stained(woodLathe(profile, 32), SKIN)
-  head.translate(0, -0.04, 0)
+  head.translate(0, -r, 0)
   const parts = [head]
-  const cy = r - 0.04
   const hair = (g: THREE.BufferGeometry) => {
-    g.translate(0, cy, 0)
     parts.push(g)
   }
   if (spec.kind === 'bob') {
@@ -252,55 +232,55 @@ function headGeometry(spec: DollSpec): THREE.BufferGeometry {
     const brim = woodLathe(
       [
         { x: 0, y: 0 },
-        { x: 0.34, y: 0 },
-        { x: 0.36, y: 0.02 },
-        { x: 0.34, y: 0.045 },
-        { x: 0, y: 0.045 },
+        { x: BRIM.rx - 0.02, y: 0 },
+        { x: BRIM.rx, y: 0.02 },
+        { x: BRIM.rx - 0.02, y: BRIM.thick },
+        { x: 0, y: BRIM.thick },
       ],
       24,
     )
-    brim.scale(1, 1, 1.25)
-    brim.translate(0, r * 0.62, 0.14)
+    brim.scale(1, 1, BRIM.rz / BRIM.rx)
+    brim.translate(0, BRIM.y, BRIM.z)
     hair(stained(brim, spec.hat!))
   } else {
     hair(woodSphere(r + 0.03, 0, Math.PI * 2, 0, 1.2, spec.hat!))
+    const mid = r * 0.36
     const cuff = woodLathe(
       [
-        { x: r * 0.9, y: -0.06 },
+        { x: r * 0.9, y: CUFF.y0 - mid },
         { x: r + 0.06, y: -0.05 },
-        { x: r + 0.075, y: 0.02 },
+        { x: CUFF.r, y: 0.02 },
         { x: r + 0.05, y: 0.08 },
-        { x: r * 0.8, y: 0.09 },
+        { x: r * 0.8, y: CUFF.y1 - mid },
       ],
       32,
     )
-    cuff.translate(0, r * 0.36, 0)
+    cuff.translate(0, mid, 0)
     hair(stained(cuff, spec.hat!))
     hair(woodSphere(r + 0.02, Math.PI / 2 + 1.2, Math.PI * 2 - 2.4, 1.1, 0.7, spec.hair))
   }
   return merge(parts)
 }
 
-function faceGeometry(): THREE.BufferGeometry {
-  const g = new THREE.SphereGeometry(HEAD_R + 0.006, 24, 14, Math.PI / 2 - 0.85, 1.7, 0.95, 1.25)
-  g.translate(0, HEAD_R - 0.04, 0)
-  return g
+export function faceGeometry(): THREE.BufferGeometry {
+  return new THREE.SphereGeometry(HEAD_R + 0.006, 24, 14, Math.PI / 2 - 0.85, 1.7, 0.95, 1.25)
 }
 
-function armGeometry(spec: DollSpec): THREE.BufferGeometry {
-  const r = 0.078
+/** An arm hanging from the middle of its rounded top (the shoulder pivot) down to the hand. */
+export function armGeometry(spec: DollSpec): THREE.BufferGeometry {
+  const r = ARM_R
   const profile: { x: number; y: number }[] = []
   for (let i = 0; i <= 5; i++) {
     const a = -Math.PI / 2 + (Math.PI / 2) * (i / 5)
-    profile.push({ x: Math.cos(a) * r * 1.12, y: r + Math.sin(a) * r * 1.12 })
+    profile.push({ x: Math.cos(a) * HAND_R, y: r + Math.sin(a) * HAND_R })
   }
   for (let i = 0; i <= 5; i++) {
     const a = (Math.PI / 2) * (i / 5)
     profile.push({ x: Math.cos(a) * r, y: ARM - r + Math.sin(a) * r })
   }
   const arm = woodLathe(profile, 12)
-  arm.translate(0, -ARM, 0)
-  return paintByHeight(arm, (y) => (y < -ARM + 0.17 ? SKIN : spec.upper))
+  arm.translate(0, -ARM + r, 0)
+  return paintByHeight(arm, (y) => (y < -ARM + r + 0.17 ? SKIN : spec.upper))
 }
 
 // ---- rig ----------------------------------------------------------------------
@@ -318,10 +298,14 @@ class DollRig {
   private expression = -1
   private followYaw = 0
   private followPitch = 0
+  private readonly turn = { pitch: 0, roll: 0 }
   readonly spec: DollSpec
+  /** Keeps the arms out of the head, hat, body and each other, and the face out of the body. */
+  readonly guard: DollGuard
 
   constructor(spec: DollSpec, wood: THREE.Material, faces: THREE.Texture) {
     this.spec = spec
+    this.guard = new DollGuard(spec.kind)
     const body = bodyGeometry(spec)
     const head = headGeometry(spec)
     const face = faceGeometry()
@@ -338,7 +322,7 @@ class DollRig {
     this.root.userData.jamObject = spec.name
     this.root.add(this.lean)
     this.lean.add(named(new THREE.Mesh(body, wood), 'body'))
-    this.head.position.set(0, NECK_Y, 0)
+    this.head.position.set(0, HEAD_Y, 0)
     this.head.add(named(new THREE.Mesh(head, wood), 'head'))
     const faceMesh = named(new THREE.Mesh(face, faceMaterial), 'face')
     faceMesh.renderOrder = 3
@@ -350,11 +334,12 @@ class DollRig {
     this.armR.add(named(new THREE.Mesh(arm, wood), 'arm-r'))
     this.lean.add(this.armL, this.armR)
     if (spec.kind === 'beanie') {
-      const pom = woodSphere(0.12, 0, Math.PI * 2, 0, Math.PI, '#f7efe0', 16, 10)
+      const pom = woodSphere(POM_R, 0, Math.PI * 2, 0, Math.PI, '#f7efe0', 16, 10)
       this.geometries.push(pom)
       this.pom = named(new THREE.Mesh(pom, wood), 'pom')
-      this.pom.position.set(0, HEAD_R * 2 + 0.05, 0)
+      this.pom.position.set(0, POM_Y, 0)
       this.head.add(this.pom)
+      this.guard.setPom(0, POM_Y, 0)
     }
     this.root.scale.setScalar(spec.scale)
     this.root.traverse((o) => {
@@ -368,15 +353,24 @@ class DollRig {
     this.texture.offset.x = expression / 4
   }
 
-  /** Arms by how far each is raised (0 down .. PI straight up, outward) and swung forward. */
+  /**
+   * Arms by how far each is raised (0 down .. PI straight up, outward) and swung forward. Each stops where
+   * it would first touch the head, hat, body, the other arm or a block; call after `look` so the head's turn
+   * this frame is the one it keeps clear of. The right arm goes first, so the right hand wins a clap.
+   */
   arms(raiseL: number, raiseR: number, forwardL = 0, forwardR = 0): void {
-    this.armL.rotation.set(forwardL, 0, -raiseL)
-    this.armR.rotation.set(forwardR, 0, raiseR)
+    const guard = this.guard
+    guard.beginArms()
+    const right = guard.arm(1, raiseR, forwardR)
+    const left = guard.arm(-1, raiseL, forwardL)
+    this.armL.rotation.set(forwardL, 0, -left)
+    this.armR.rotation.set(forwardR, 0, right)
   }
 
   /**
    * Turn the head toward a room point (yaw across, pitch up and down), limited like a neck, following at
    * the doll's own rate per second; the pose's head offsets go on top unsmoothed, so quick nods stay quick.
+   * A nod or tilt that would dip the face or hair into the body is eased back to the first touch.
    */
   look(target: { x: number; y: number }, from: { x: number; y: number }, bodyYaw: number, amount: number, rate: number, dt: number, pose: PoseDelta): void {
     const dx = target.x - from.x
@@ -386,7 +380,9 @@ class DollRig {
     const blend = 1 - Math.exp(-rate * dt)
     this.followYaw += (yaw * amount - this.followYaw) * blend
     this.followPitch += (pitch * amount - this.followPitch) * blend
-    this.head.rotation.set(this.followPitch + pose.headPitch, this.followYaw + pose.headYaw, pose.headRoll)
+    const headYaw = this.followYaw + pose.headYaw
+    const turn = this.guard.turnHead(this.followPitch + pose.headPitch, headYaw, pose.headRoll, this.turn)
+    this.head.rotation.set(turn.pitch, headYaw, turn.roll)
   }
 
   dispose(): void {
@@ -561,10 +557,10 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
         break
       }
       case 'fly': {
-        // Dangling from the kite string, kicking.
+        // Dangling from the kite string, kicking; the right hand holds the spool at FLY_GRIP.
         roll = hero.swing
         squash = 1.03
-        raise = 3.05
+        raise = FLY_RAISE
         forward = Math.sin(t * 2.1) * 0.12
         yawGoal = Math.sin(t * 1.4) * 0.6
         expression = HAPPY
@@ -634,10 +630,11 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
     }
     if (hero.mode !== 'tumble' || age >= 0.55 + Math.min(0.5, Math.max(0, hero.y) * 0.12)) rig.lean.position.set(0, 0, 0)
     rig.lean.scale.set(1 / Math.sqrt(squash), squash, 1 / Math.sqrt(squash))
-    rig.arms(raise + raiseL + pose.raiseL, raise + raiseR + pose.raiseR, forward + forwardL + pose.forwardL, forward + forwardR + pose.forwardR)
     scratch.from.x = x
     scratch.from.y = y + 1.7
     rig.look(hero.look, scratch.from, scratch.yaw, hero.mode === 'fly' ? 0.3 : 1, cues.director.personality.lookRate, dt, pose)
+    if (hero.mode === 'fly') rig.arms(raise + pose.raiseL, FLY_RAISE, forward + pose.forwardL, 0)
+    else rig.arms(raise + raiseL + pose.raiseL, raise + raiseR + pose.raiseR, forward + forwardL + pose.forwardL, forward + forwardR + pose.forwardR)
     rig.setExpression(expression)
   })
   return <primitive object={rig.root} />
@@ -669,11 +666,11 @@ function MossDoll({ controller, wood, faces }: { controller: KiteController; woo
     rig.lean.rotation.set(pose.bow, 0, pose.roll)
     const squash = 1 + pose.squash
     rig.lean.scale.set(1 / Math.sqrt(squash), squash, 1 / Math.sqrt(squash))
-    rig.arms(0.12 + pose.raiseL, 0.12 + pose.raiseR, pose.forwardL, pose.forwardR)
     scratch.from.x = w.x
     scratch.from.y = 1.9
     // Hands over his eyes means he is not watching.
     rig.look(w.look, scratch.from, scratch.yaw, director.isPlaying('react', t) ? 0.3 : 1, director.personality.lookRate, dt, pose)
+    rig.arms(0.12 + pose.raiseL, 0.12 + pose.raiseR, pose.forwardL, pose.forwardR)
     rig.setExpression(faceOf(pose.face))
   })
   return <primitive object={rig.root} />
@@ -709,7 +706,6 @@ function BeanDoll({ controller, wood, faces }: { controller: KiteController; woo
     rig.lean.rotation.set(pose.bow, 0, roll)
     const squash = 1 + pose.squash
     rig.lean.scale.set(1 / Math.sqrt(squash), squash, 1 / Math.sqrt(squash))
-    rig.arms(0.25 + pose.raiseL, 0.25 + pose.raiseR, pose.forwardL, pose.forwardR)
     // The pom-pom on two springs, flung by the body's motion and the head's shakes and nods.
     if (dt > 0) {
       const vx = (x - scratch.prevX) / dt
@@ -728,13 +724,14 @@ function BeanDoll({ controller, wood, faces }: { controller: KiteController; woo
     scratch.prevRoll = roll + pose.headRoll
     scratch.prevPitch = pose.bow + pose.headPitch
     if (rig.pom) {
-      rig.pom.position.x = Math.sin(scratch.pom) * 0.12
-      rig.pom.position.z = Math.sin(scratch.pomZ) * 0.12
-      rig.pom.position.y = HEAD_R * 2 + 0.05 - (Math.abs(scratch.pom) + Math.abs(scratch.pomZ)) * 0.04
+      const p = rig.pom.position
+      p.set(Math.sin(scratch.pom) * 0.12, POM_Y - (Math.abs(scratch.pom) + Math.abs(scratch.pomZ)) * 0.04, Math.sin(scratch.pomZ) * 0.12)
+      rig.guard.setPom(p.x, p.y, p.z)
     }
     scratch.from.x = w.x
     scratch.from.y = 1.4
     rig.look(w.look, scratch.from, scratch.yaw, 1, director.personality.lookRate, dt, pose)
+    rig.arms(0.25 + pose.raiseL, 0.25 + pose.raiseR, pose.forwardL, pose.forwardR)
     rig.setExpression(faceOf(pose.face))
   })
   return <primitive object={rig.root} />
