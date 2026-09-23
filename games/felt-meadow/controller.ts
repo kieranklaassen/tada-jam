@@ -3,9 +3,10 @@ import { Bee, type BeeEvents, type BeeWorld, type Vec3 } from './bee'
 import { isPrimary, PRIMARIES, RED, type Hue } from './colors'
 import { Mouse, Snail } from './critters'
 import { Flower } from './flowers'
-import { chooseHint, GuidanceClock, handPose, IDLE_BEFORE_GLOW, type GuidanceTiming, type HandPose, type Hint, type MeadowSummary } from './guidance'
+import { chooseHint, GuidanceClock, handPose, type GuidanceTiming, type HandPose, type Hint, type MeadowSummary } from './guidance'
 import { GestureTracker, type GestureHandler, type Target } from './input'
 import {
+  BURROW,
   groundY,
   onPouch,
   PLOT_RADIUS,
@@ -20,6 +21,7 @@ import {
   SEED_RADIUS,
   type Point,
 } from './layout'
+import { clamp, spring, STEADY_STEP, substeps, toward, type Spring } from './math'
 import { addLoose, BEE_ROOM, blend, emptyPlots, pick, plant, readyToMix, serialize, takeLoose, visit, type MeadowState } from './meadow'
 import { SaveCadence } from './saveCadence'
 
@@ -37,18 +39,6 @@ export type Projector = {
   /** Where the finger ray at canvas pixel (px, py) meets the hill raised by `lift`. */
   ground(px: number, py: number, lift: number, out: Point): Point
   pixelsPerUnit(x: number, y: number, z: number): number
-}
-
-type Spring = { x: number; v: number }
-
-function spring(s: Spring, target: number, dt: number, stiffness: number, damping: number): number {
-  s.v += (stiffness * (target - s.x) - damping * s.v) * dt
-  s.x += s.v * dt
-  return s.x
-}
-
-function clamp(value: number, lo: number, hi: number): number {
-  return Math.min(hi, Math.max(lo, value))
 }
 
 export type SeedMode = 'off' | 'pouch' | 'held' | 'arc' | 'rest' | 'sink'
@@ -114,11 +104,18 @@ export const HELD_LIFT = 5.5
 export const REFILL_SECONDS = 0.9
 export const SINK_SECONDS = 0.3
 export const MIN_TOUCH_PX = 30
+/** Seconds untouched, with nothing the child set going, before the meadow is drawn at half rate. */
+export const REST_BEFORE_PACING = 20
 const DROP_SLOP = 5
 const MAGNET_REACH = PLOT_RADIUS + 7
 const POUCH_BASE_Y = groundY(POUCH.x, POUCH.z)
 /** Height of a seed's centre while it waits in the pouch mouth. */
 export const POUCH_SEED_Y = POUCH_BASE_Y + POUCH_HEIGHT + SEED_RADIUS * 0.35
+/** A tap on the pouch offers its seeds: each pops up out of the mouth in turn, as if to say "take one". */
+export const OFFER_STAGGER = 0.12
+export const OFFER_HOP = 0.42
+const OFFER_HEIGHT = 5
+const OFFER_END = OFFER_HOP + OFFER_STAGGER * 2 + 0.1
 
 export const FIBRE_TINT = 0xf4ead8
 export const SOIL_TINT = 0x6b4630
@@ -152,13 +149,15 @@ export class MeadowController implements GestureHandler {
   readonly seeds: SeedBody[] = Array.from({ length: SEED_POOL }, (_, i) => new SeedBody(i))
   readonly puffs: Puff[] = Array.from({ length: PUFF_POOL }, () => new Puff())
   readonly slotSeed: (SeedBody | null)[] = [null, null, null]
-  readonly guide: GuidanceTiming = { demo: -1, glow: 0, invite: -1, idle: 0 }
+  readonly guide: GuidanceTiming = { demo: -1, glow: 0, invite: -1, idle: 0, beckon: false }
   readonly hand: HandPose = { x: 0, z: 0, press: 0, opacity: 0, visible: false }
   hint: Hint | null = null
   /** The seed body the current hint is about (a loose seed), for its wiggle. */
   hintSeed: SeedBody | null = null
   readonly pouchWiggle: Spring = { x: 0, v: 0 }
   readonly pouchSquash: Spring = { x: 0, v: 0 }
+  /** Seconds into the pouch's offer after a tap, or -1. */
+  pouchOffer = -1
   readonly heave: Spring[] = PLOTS.map(() => ({ x: 0, v: 0 }))
   /** 0..1 how far a molehill opens for a seed hovering over it. */
   readonly open: Spring[] = PLOTS.map(() => ({ x: 0, v: 0 }))
@@ -178,6 +177,8 @@ export class MeadowController implements GestureHandler {
   private nextPuff = 0
   private buzzAt = 0
   private running = true
+  /** A finger landed since the last frame; the guidance clock has not seen it yet. */
+  private touchedSinceUpdate = false
   private readonly held: SeedBody[] = []
   private readonly summaryEmpty: number[] = []
   private readonly summaryBloomed: { plot: number; hue: Hue }[] = []
@@ -210,6 +211,7 @@ export class MeadowController implements GestureHandler {
         flower.headAt(out)
         return true
       },
+      isNew: (plot) => this.flowers[plot].isNew(),
       wouldMix: (plot) => {
         const hue = this.meadow.plots[plot]
         return hue !== null && !this.meadow.pollen.includes(hue)
@@ -238,7 +240,7 @@ export class MeadowController implements GestureHandler {
         if (plot >= 0) this.flowers[plot].beeOn = false
       },
       drop: (at) => this.beeDrops(at),
-      startle: () => this.sound.zip(),
+      startle: (variant) => this.sound.beePoke(variant, this.bee.motion.seconds),
     }
     this.bee = new Bee(events)
     this.tracker = new GestureTracker(this, (x, y) => this.hitTest(x, y))
@@ -253,6 +255,19 @@ export class MeadowController implements GestureHandler {
     this.held.length = 0
     for (const seed of this.seeds) if (seed.mode === 'held') this.held.push(seed)
     return serialize(this.meadow, this.held)
+  }
+
+  /**
+   * The meadow has rested: untouched a while, no demonstration or beckon near,
+   * and no seed, flower, or answered call still in motion. Only the meadow's
+   * own idle life plays, so the view may draw every other display frame.
+   */
+  resting(): boolean {
+    const guide = this.guide
+    if (this.touchedSinceUpdate || guide.idle < REST_BEFORE_PACING || guide.demo >= 0 || guide.beckon || guide.invite >= 0 || this.bee.answering) return false
+    for (const seed of this.seeds) if (seed.mode === 'held' || seed.mode === 'arc' || seed.mode === 'sink') return false
+    for (const flower of this.flowers) if (flower.phase === 'growing' || flower.phase === 'plucked') return false
+    return true
   }
 
   setRunning(running: boolean): void {
@@ -275,6 +290,7 @@ export class MeadowController implements GestureHandler {
   // ---- pointers (canvas CSS pixels) ------------------------------------
 
   pointerDown(id: number, x: number, y: number, timeMs: number): void {
+    this.touchedSinceUpdate = true
     this.sound.unlock()
     const finger = this.fingers.find((f) => !f.active)
     if (finger) {
@@ -300,6 +316,8 @@ export class MeadowController implements GestureHandler {
   }
 
   pointerUp(id: number, timeMs: number): void {
+    // A touch's pointerdown does not count as a user gesture for audio (its pointerup does), so unlock on both.
+    this.sound.unlock()
     this.tracker.up(id, timeMs)
     this.release(id)
   }
@@ -350,7 +368,7 @@ export class MeadowController implements GestureHandler {
     }
     if (best) return best.mode === 'pouch' ? { kind: 'pouchSeed', slot: best.slot } : { kind: 'seed', id: best.index }
 
-    if (near(this.bee.x, this.bee.y, this.bee.z, 5.5) < 1) return { kind: 'bee' }
+    if (near(this.bee.x, this.bee.y, this.bee.z, 6.5) < 1) return { kind: 'bee' }
 
     for (let plot = 0; plot < PLOTS.length; plot++) {
       const flower = this.flowers[plot]
@@ -358,13 +376,14 @@ export class MeadowController implements GestureHandler {
       const head = flower.headAt(scratchHead)
       const p = PLOTS[plot]
       const top = plotTop(plot)
-      if (near(head.x, head.y, head.z, 6) < 1 || near((head.x + p.x) / 2, (head.y + top) / 2, (head.z + p.z) / 2, 4.5) < 1) return { kind: 'flower', plot }
+      if (near(head.x, head.y, head.z, 7.5) < 1 || near((head.x + p.x) / 2, (head.y + top) / 2, (head.z + p.z) / 2, 4.5) < 1) return { kind: 'flower', plot }
     }
 
     const snail = this.snail
     if (near(snail.x, groundY(snail.x, snail.z) + 2.5, snail.z, 6) < 1) return { kind: 'snail' }
     const mouse = this.mouse
-    if (mouse.visible() && mouse.out > 0.3 && near(mouse.x, groundY(mouse.x, mouse.z) + 2, mouse.z, 5.5) < 1) return { kind: 'mouse' }
+    if (mouse.visible() && mouse.out > 0.3 && near(mouse.x, groundY(mouse.x, mouse.z) + 2.4, mouse.z, 6.5) < 1) return { kind: 'mouse' }
+    if (near(BURROW.x, groundY(BURROW.x, BURROW.z) + 0.3, BURROW.z, 5.5) < 1) return { kind: 'burrow' }
 
     if (near(POUCH.x, POUCH_BASE_Y + POUCH_HEIGHT * 0.5, POUCH.z, POUCH_RADIUS * 1.1) < 1) return { kind: 'pouch' }
 
@@ -409,19 +428,28 @@ export class MeadowController implements GestureHandler {
       case 'bee':
         this.bee.poke()
         return
-      case 'snail':
-        if (this.snail.mode !== 'hide') this.sound.shloop()
-        this.snail.poke()
+      case 'snail': {
+        const variant = this.snail.poke()
+        if (variant !== null) this.sound.snailPoke(variant, this.snail.motion.seconds)
         return
-      case 'mouse':
-        this.sound.squeak()
-        this.mouse.poke()
+      }
+      case 'mouse': {
+        const variant = this.mouse.poke()
+        if (variant !== null) this.sound.mousePoke(variant)
+        return
+      }
+      case 'burrow':
+        this.mouse.knock()
+        this.sound.heave()
+        this.emit(BURROW.x, groundY(BURROW.x, BURROW.z) + 0.6, BURROW.z, 3, SOIL_TINT, 3)
         return
       case 'pouch':
         this.pouchWiggle.v += 2.6
         this.pouchSquash.v += 4
-        for (const seed of this.slotSeed) if (seed) seed.squash.v -= 5
-        this.sound.rustle()
+        if (this.pouchOffer < 0) {
+          this.pouchOffer = 0
+          this.sound.offer(OFFER_STAGGER)
+        } else this.sound.rustle()
         return
       case 'molehill': {
         this.heave[target.plot].v += 7
@@ -507,6 +535,7 @@ export class MeadowController implements GestureHandler {
     this.grab(seed, pointerId)
     this.sound.pluck()
     this.emit(head.x, head.y, head.z, 6, 0, 7, hue)
+    this.emit(PLOTS[plot].x, plotTop(plot), PLOTS[plot].z, 3, SOIL_TINT, 4)
     this.cadence.now(this.t * 1000)
   }
 
@@ -732,6 +761,7 @@ export class MeadowController implements GestureHandler {
   // ---- the frame -----------------------------------------------------------
 
   update(dt: number): void {
+    this.touchedSinceUpdate = false
     this.t += dt
     const t = this.t
     let touching = false
@@ -748,7 +778,6 @@ export class MeadowController implements GestureHandler {
         this.sound.bloom(flower.hue)
         const head = flower.headAt(scratchHead)
         this.emit(head.x, head.y, head.z, 5, 0, 5, flower.hue)
-        this.clock.settle(t)
         this.changed()
       }
       if (flower.phase === 'growing' && before < 0.3 && flower.age >= 0.3) this.sound.sprout()
@@ -757,7 +786,11 @@ export class MeadowController implements GestureHandler {
         flower.carryX = carrier.x
         flower.carryY = carrier.y
         flower.carryZ = carrier.z
-      } else if (pluckedBefore || carrier) this.pluckSeed[plot] = null
+      } else if (pluckedBefore || carrier) {
+        // The bud has shrunk into the seed: the seed pops a little, as if it just arrived.
+        if (pluckedBefore && carrier && carrier.mode !== 'off') carrier.squash.v -= 6
+        this.pluckSeed[plot] = null
+      }
       spring(this.heave[plot], 0, dt, 180, 9)
       spring(this.open[plot], this.magnetOpen[plot], dt, 160, 12)
       this.magnetOpen[plot] = 0
@@ -774,6 +807,10 @@ export class MeadowController implements GestureHandler {
     }
     spring(this.pouchWiggle, 0, dt, 60, 5)
     spring(this.pouchSquash, 0, dt, 200, 10)
+    if (this.pouchOffer >= 0) {
+      this.pouchOffer += dt
+      if (this.pouchOffer > OFFER_END) this.pouchOffer = -1
+    }
 
     for (const seed of this.seeds) if (seed.mode !== 'off') this.stepSeed(seed, dt, t)
     for (const puff of this.puffs) {
@@ -797,6 +834,11 @@ export class MeadowController implements GestureHandler {
   }
 
   private updateGuidance(t: number): void {
+    // A flower the child planted still opening, or the bee answering a tapped one, is the child's own act
+    // playing out; a hint then would talk over it.
+    let opening = false
+    for (const flower of this.flowers) if (flower.isNew()) opening = true
+    if (opening || this.bee.answering) this.clock.settle(t)
     let untouched = this.meadow.loose.length === 0
     for (const hue of this.meadow.plots) if (hue !== null) untouched = false
     this.clock.timing(t, untouched, this.guide)
@@ -811,7 +853,7 @@ export class MeadowController implements GestureHandler {
       }
     }
     const hint = showing ? this.hint : null
-    this.world.pointAt = hint && (hint.kind === 'plantLoose' || hint.kind === 'plantPouch') && this.guide.idle >= IDLE_BEFORE_GLOW ? hint.plot : -1
+    this.world.pointAt = hint && (hint.kind === 'plantLoose' || hint.kind === 'plantPouch') && this.guide.beckon ? hint.plot : -1
     if (hint && this.guide.demo >= 0) handPose(hint, this.guide.demo, this.hand)
     else {
       this.hand.visible = false
@@ -841,9 +883,18 @@ export class MeadowController implements GestureHandler {
         const invite = this.guide.invite
         const bounce = invite >= 0 ? Math.abs(Math.sin(invite * Math.PI * 3 + slot * 0.7)) * 2.6 * Math.sin(invite * Math.PI) : 0
         const breathe = Math.sin(t * 1.3 + slot * 1.1) * 0.25
+        const hinted = this.hint?.kind === 'plantPouch' && this.hint.slot === slot ? Math.max(0, Math.sin(t * 5.5)) * 1.3 * this.guide.glow : 0
+        let offer = 0
+        if (this.pouchOffer >= 0) {
+          const k = (this.pouchOffer - slot * OFFER_STAGGER) / OFFER_HOP
+          const before = (this.pouchOffer - dt - slot * OFFER_STAGGER) / OFFER_HOP
+          if (k > 0 && k < 1) offer = Math.sin(k * Math.PI) * OFFER_HEIGHT
+          if (before <= 0 && k > 0) seed.squash.v -= 7
+          else if (before < 1 && k >= 1) seed.squash.v += 6
+        }
         seed.x = POUCH_SLOTS[slot].x + this.pouchWiggle.x * 1.6
         seed.z = POUCH_SLOTS[slot].z
-        seed.y = POUCH_SEED_Y + breathe + bounce - this.pouchSquash.x * 1.2
+        seed.y = POUCH_SEED_Y + breathe + bounce + offer + hinted - this.pouchSquash.x * 1.2
         break
       }
       case 'held': {
@@ -855,7 +906,7 @@ export class MeadowController implements GestureHandler {
           this.cadence.now(this.t * 1000)
           break
         }
-        seed.lift += (HELD_LIFT - seed.lift) * Math.min(1, dt * 6)
+        seed.lift = toward(seed.lift, HELD_LIFT, dt, 6)
         if (this.projector) {
           this.projector.ground(finger.x, finger.y, SEED_RADIUS + seed.lift, scratchPoint)
           seed.tx = scratchPoint.x
@@ -873,12 +924,17 @@ export class MeadowController implements GestureHandler {
           y += (plotTop(plot) + SEED_RADIUS + HELD_LIFT * 0.6 - y) * pull
           this.magnetOpen[plot] = 1
         }
+        // Underdamped a little, so a seed swung and stopped hard swings on past the finger and back.
         const k = 520
-        const c = 36
-        seed.vx += (k * (x - seed.x) - c * seed.vx) * dt
-        seed.vy += (k * (y - seed.y) - c * seed.vy) * dt
-        seed.vz += (k * (z - seed.z) - c * seed.vz) * dt
-        this.integrate(seed, dt)
+        const c = 27
+        const steps = substeps(dt, STEADY_STEP)
+        const h = dt / steps
+        for (let i = 0; i < steps; i++) {
+          seed.vx += (k * (x - seed.x) - c * seed.vx) * h
+          seed.vy += (k * (y - seed.y) - c * seed.vy) * h
+          seed.vz += (k * (z - seed.z) - c * seed.vz) * h
+          this.integrate(seed, h)
+        }
         break
       }
       case 'arc': {
