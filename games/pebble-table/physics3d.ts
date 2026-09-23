@@ -215,7 +215,7 @@ export class TablePhysics {
         case 'acorn':
           return { body: new CANNON.Cylinder(1.3, 1.3, 1.9, STONE_SIDES), mass: 2, half: 0.95, damping: 0.4 }
         case 'shell':
-          return { body: new CANNON.Cylinder(2, 1.65, 0.7, STONE_SIDES), mass: 1, half: 0.35, damping: 0.45 }
+          return { body: new CANNON.Cylinder(1.85, 1.85, 0.9, STONE_SIDES), mass: 1, half: 0.45, damping: 0.5 }
         case 'stick':
           return { body: new CANNON.Box(new CANNON.Vec3(3.6, 0.45, 0.45)), mass: 4, half: 0.45, damping: 0.45 }
         case 'boulder':
@@ -226,7 +226,7 @@ export class TablePhysics {
         }
       }
     })()
-    const body = new CANNON.Body({ mass: shape.mass, material: this.stoneMaterial, linearDamping: shape.damping, angularDamping: 0.8, sleepSpeedLimit: 1.2, sleepTimeLimit: 0.4 })
+    const body = new CANNON.Body({ mass: shape.mass, material: this.stoneMaterial, linearDamping: shape.damping, angularDamping: 0.9, sleepSpeedLimit: 2, sleepTimeLimit: 0.3 })
     body.addShape(shape.body)
     const p = to3(at, options.y ?? shape.half)
     body.position.set(p.x, p.y, p.z)

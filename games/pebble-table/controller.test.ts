@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import * as CANNON from 'cannon-es'
 import { silentSound, TableController, type Projector } from './controller'
 import { IDLE_BEFORE_HINT } from './guidance'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, shelfTile } from './layout'
@@ -261,6 +262,16 @@ describe('jars of loose parts', () => {
     run(table, 4)
     expect(Math.abs(table.beam.angle)).toBeLessThan(0.02)
   })
+
+  it('lets every tipped-out part come to rest, so physics goes quiet', () => {
+    for (let trial = 0; trial < 4; trial++) {
+      const table = scaleTable()
+      for (const kind of Object.keys(JARS) as (keyof typeof JARS)[]) tap(table, JARS[kind])
+      run(table, 10)
+      const awake = table.state.parts.filter((part) => table.physics.body(part.id)?.sleepState !== CANNON.Body.SLEEPING)
+      expect(awake.map((part) => part.kind)).toEqual([])
+    }
+  }, 30_000)
 
   it('sends every part home when the scale is put away', () => {
     const table = scaleTable()
