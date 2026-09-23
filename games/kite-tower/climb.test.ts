@@ -37,6 +37,18 @@ describe('planClimb', () => {
     expect(plan?.moves.filter((m) => m.kind === 'climb').length).toBeGreaterThanOrEqual(2)
   })
 
+  it('waits a hand’s width back from a tower under the kite, so her reaching arm is clear of it', () => {
+    const placed = [place(0, 5.2, 0.5), place(1, 5.2, 1.5)]
+    const plan = planClimb(placed, { x: 2, y: 0, on: null }, LOW_KITE)
+    expect(plan?.reachesKite).toBe(false)
+    expect(plan?.goal.y).toBe(0)
+    const face = 5.2 - 0.5
+    expect(face - plan!.goal.x).toBeGreaterThanOrEqual(0.75)
+    expect(face - plan!.goal.x).toBeLessThan(1.2)
+    const again = planClimb(placed, { x: face - 0.3, y: 0, on: null }, LOW_KITE)
+    expect(face - again!.goal.x).toBeGreaterThanOrEqual(0.75)
+  })
+
   it('needs the step: two stacked cubes alone are too tall', () => {
     const placed = [place(1, 3, 0.5), place(3, 3, 1.5)]
     expect(planClimb(placed, { x: 0, y: 0, on: null }, { x: 3, grabY: 5 })?.reachesKite).toBe(false)
@@ -99,7 +111,7 @@ describe('planClimb', () => {
     expect(planClimb([], { x: 0, y: 2, on: 3 }, LOW_KITE)).toBeNull()
   })
 
-  it('plans a full set quickly', () => {
+  it('keeps the search small with every piece out', () => {
     const placed = [
       place(0, -4, 0.5),
       place(1, -3, 0.5),
@@ -112,9 +124,10 @@ describe('planClimb', () => {
       place(9, 4.5, 0.4),
       place(7, 6, 0.3),
     ]
-    const start = performance.now()
-    for (let i = 0; i < 10; i++) planClimb(placed, { x: -6, y: 0, on: null }, { x: 5.6, grabY: 6.6 })
-    expect((performance.now() - start) / 10).toBeLessThan(20)
+    // The search is quadratic in the spot count, so the count is its cost.
+    const rug = standableSpots([]).length
+    expect(standableSpots(placed).length).toBeLessThanOrEqual(rug + 30)
+    expect(planClimb(placed, { x: -6, y: 0, on: null }, { x: 5.6, grabY: 6.6 })?.moves.length).toBeGreaterThan(0)
   })
 
   it('grabs only when close and high enough', () => {

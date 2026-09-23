@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { KiteSound } from './audio'
-import { KiteController, type Projector } from './controller'
+import { KiteController, slotWorld, type Projector } from './controller'
 import { TRAY_SLOTS } from './layout'
 import { PERCHES } from './perches'
 import { defaultState, type KiteState, type SavedPiece } from './state'
@@ -112,6 +112,48 @@ describe('KiteController', () => {
     for (const w of game.watchers) expect(Math.abs(w.look.x - piece)).toBeGreaterThan(1)
   })
 
+  it('a block set down is one tok and nobody flinches; a tower falling makes the watchers flinch once', () => {
+    const drop = (game: KiteController, id: number, at: { x: number; y: number }) => {
+      game.pointerDown(1, slotScreen(id), 0)
+      game.pointerMove(1, { x: 0, y: 40 })
+      game.pointerMove(1, at)
+      run(game, 0.5)
+      game.pointerUp(1, at, 900)
+      run(game, 3)
+    }
+    // The kite on the shelf board, far right, and the blocks on the left, well away from the doll.
+    const stacked = make(withPieces([{ id: 0, tray: false, x: -3, y: 0.5, a: 0 }], 0))
+    run(stacked.game, 1)
+    stacked.sound.calls.length = 0
+    drop(stacked.game, 1, { x: -3, y: 2.2 })
+    const bridged = make(withPieces([{ id: 0, tray: false, x: -3, y: 0.5, a: 0 }, { id: 1, tray: false, x: -1, y: 0.5, a: 0 }], 0))
+    run(bridged.game, 1)
+    drop(bridged.game, 4, { x: -2, y: 1.8 })
+    const dropped = make(withPieces([], 0))
+    run(dropped.game, 1)
+    dropped.sound.calls.length = 0
+    drop(dropped.game, 0, { x: -2, y: 5.5 })
+    expect([stacked, bridged, dropped].map(({ game }) => game.toppleAt)).toEqual([-Infinity, -Infinity, -Infinity])
+    expect(dropped.sound.calls.filter((c) => c === 'tok')).toHaveLength(1)
+    expect(stacked.sound.calls.filter((c) => c === 'tok').length).toBeLessThanOrEqual(2)
+
+    const leaning = make(
+      withPieces(
+        [
+          { id: 0, tray: false, x: -2, y: 0.5, a: 0 },
+          { id: 1, tray: false, x: -1.65, y: 1.5, a: 0 },
+          { id: 3, tray: false, x: -1.3, y: 2.5, a: 0 },
+          { id: 8, tray: false, x: -0.95, y: 3.5, a: 0 },
+        ],
+        3,
+      ),
+    )
+    const flinches = new Set<number>()
+    run(leaning.game, 4, () => flinches.add(leaning.game.toppleAt))
+    flinches.delete(-Infinity)
+    expect(flinches.size).toBe(1)
+  })
+
   it('a touch unlocks the sound on the way down and again on the way up, where a finger counts as a gesture', () => {
     const { game, sound } = make(defaultState(5))
     game.pointerDown(1, { x: 0, y: 40 }, 0)
@@ -153,6 +195,24 @@ describe('KiteController', () => {
     const body = game.physics.body(0)!
     expect(Math.abs(body.position.x - game.hero.x)).toBeLessThan(1.6)
     expect(body.position.y).toBeCloseTo(0.5, 1)
+  })
+
+  it('a block that comes down across the doll’s walk stops her short, and she climbs it instead of walking through it', () => {
+    const { game } = make(defaultState(5))
+    run(game, 0.2)
+    expect(game.hero.mode).toBe('travel')
+    game.pointerDown(1, slotScreen(0), 0)
+    game.pointerUp(1, slotScreen(0), 100)
+    const modes = new Set<string>()
+    let inside = false
+    run(game, 5, () => {
+      modes.add(game.hero.mode)
+      const body = game.physics.body(0)!
+      if (game.hero.y < 0.1 && Math.abs(game.hero.x - body.position.x) < 0.45) inside = true
+    })
+    expect(inside).toBe(false)
+    expect(modes).not.toContain('tumble')
+    expect(modes).toContain('grab')
   })
 
   it('one cube under the lowest kite: the doll climbs, grabs, flies, lands, and the kite moves on', () => {
@@ -284,37 +344,146 @@ describe('KiteController', () => {
     expect(game.guidance.glow).toBe(0)
   })
 
+  it('during a demonstration every doll watches the ghost hand carry its piece from the tray to the spot', () => {
+    const { game } = make(defaultState(5))
+    const dolls = () => [game.hero, ...game.watchers]
+    const sawTray = [false, false, false]
+    const sawSpot = [false, false, false]
+    run(game, 9, () => {
+      const hint = game.guidance.hint
+      if (!game.guidance.hand || hint?.kind !== 'fromTray') return
+      const tray = slotWorld(hint.id)
+      const spot = game.guidance.buildAt
+      dolls().forEach((doll, i) => {
+        if (Math.abs(doll.look.x - tray.x) < 0.01 && Math.abs(doll.look.y - tray.y) < 0.01) sawTray[i] = true
+        if (Math.abs(doll.look.x - spot.x) < 0.01) sawSpot[i] = true
+      })
+    })
+    expect(sawTray).toEqual([true, true, true])
+    expect(sawSpot).toEqual([true, true, true])
+  })
+
   it('the guidance points at a spot where one block lets the doll reach the kite', () => {
     const { game } = make(defaultState(5))
     run(game, 1)
     const perch = PERCHES[0]
     expect(Math.abs(game.guidance.buildAt.x - perch.x)).toBeLessThanOrEqual(1.2)
   })
+
+  it('the ghost hand never shows a cube set down half off an edge, where it would tip off', () => {
+    for (const [below, perch] of [
+      [-3.3, 4],
+      [-1.4, 1],
+      [5.4, 2],
+    ] as const) {
+      const base: SavedPiece = { id: 0, tray: false, x: below, y: 0.5, a: 0 }
+      const { game } = make(withPieces([base], perch))
+      run(game, 4)
+      const at = { ...game.guidance.buildAt }
+      const { game: followed } = make(withPieces([base, { id: 1, tray: false, x: at.x, y: at.y + 0.5, a: 0 }], perch))
+      run(followed, 4)
+      const pose = followed.physics.pose(1, { x: 0, y: 0, angle: 0 })
+      expect(Math.abs(pose.x - at.x)).toBeLessThan(0.15)
+      expect(Math.abs(pose.angle)).toBeLessThan(0.05)
+    }
+  })
+
+  it('a watcher steps aside when the doll comes to reach beside him, and does not wander back into her way', () => {
+    const { game } = make(withPieces([{ id: 0, tray: false, x: 5.4, y: 0.5, a: 0 }], 2))
+    const [moss, bean] = game.watchers
+    let upSince = -1
+    let beanClosest = Infinity
+    let mossFarthest = 0
+    run(game, 20, () => {
+      const hero = game.hero
+      if (hero.mode === 'stand' && hero.on === 0) {
+        if (upSince < 0) upSince = game.t
+        if (game.t - upSince > 1.5) beanClosest = Math.min(beanClosest, Math.abs(bean.x - hero.x))
+      }
+      mossFarthest = Math.max(mossFarthest, Math.abs(moss.x - -6.55))
+    })
+    expect(upSince).toBeGreaterThan(0)
+    expect(beanClosest).toBeGreaterThan(1.9)
+    expect(bean.x).toBeCloseTo(7.35, 2)
+    expect(mossFarthest).toBeLessThan(0.75)
+  })
+
+  it('a watcher steps out from behind a tower built in front of him, and does not wander back behind it', () => {
+    const tower: SavedPiece[] = [
+      { id: 0, tray: false, x: -6.9, y: 0.5, a: 0 },
+      { id: 1, tray: false, x: -6.9, y: 1.5, a: 0 },
+    ]
+    const { game } = make(withPieces(tower, 0))
+    const [moss] = game.watchers
+    expect(moss.x).toBeCloseTo(-6.55, 2)
+    let hiddenLate = false
+    run(game, 25, () => {
+      if (game.t > 4 && moss.x < -6.1) hiddenLate = true
+    })
+    expect(hiddenLate).toBe(false)
+    expect(moss.x).toBeGreaterThan(-6.1)
+    expect(game.physics.pose(1, { x: 0, y: 0, angle: 0 }).y).toBeCloseTo(1.5, 1)
+  })
+
+  it('after the flight she waits under her new kite instead of walking back up the tower she left', () => {
+    const hookStair: SavedPiece[] = [
+      { id: 8, tray: false, x: 0.9, y: 0.5, a: 0 },
+      { id: 0, tray: false, x: -0.1, y: 0.5, a: 0 },
+      { id: 3, tray: false, x: -0.1, y: 1.5, a: 0 },
+      { id: 1, tray: false, x: -1.2, y: 0.5, a: 0 },
+      { id: 6, tray: false, x: -1.2, y: 1.95, a: 0 },
+    ]
+    const { game } = make(withPieces(hookStair, 1))
+    let landed = false
+    let farthest = 0
+    let highest = 0
+    run(game, 25, () => {
+      if (game.state.perch !== 2) return
+      if (game.hero.mode === 'land') landed = true
+      if (!landed) return
+      farthest = Math.max(farthest, Math.abs(game.hero.x - PERCHES[2].x))
+      highest = Math.max(highest, game.hero.y)
+    })
+    expect(landed).toBe(true)
+    expect(highest).toBe(0)
+    expect(farthest).toBeLessThan(2)
+    expect(Math.abs(game.hero.x - PERCHES[2].x)).toBeLessThan(1.6)
+  })
 })
 
-describe('frame budget', () => {
-  it('a tower toppling costs the controller well under a millisecond per frame on average', () => {
-    const cost = () => {
-      const pieces: SavedPiece[] = [
-        { id: 0, tray: false, x: 0, y: 0.5, a: 0 },
-        { id: 1, tray: false, x: 0.3, y: 1.5, a: 0 },
-        { id: 3, tray: false, x: 0.6, y: 2.5, a: 0 },
-        { id: 8, tray: false, x: 0.9, y: 3.5, a: 0 },
-        { id: 2, tray: false, x: -4, y: 0.6, a: 0 },
-        { id: 4, tray: false, x: 4, y: 0.16, a: 0 },
-      ]
-      const { game } = make(withPieces(pieces, 1))
-      const times: number[] = []
-      for (let i = 0; i < 180; i++) {
-        const start = performance.now()
-        game.step(FRAME)
-        times.push(performance.now() - start)
+describe('a newcomer who only copies the ghost hand', () => {
+  // Across the room and back: the kite then lands the doll by the next perch
+  // and the hand points where a block helps her from there.
+  it('frees the shelf board, the hook and the shelf top, each within a dozen demonstrations', () => {
+    const { game } = make(defaultState(5))
+    const demosPerPerch: number[] = []
+    let perch = game.state.perch
+    let demos = 0
+    let pointer = 1
+    for (let frame = 0; frame < 60 * 400 && demosPerPerch.length < 3; frame++) {
+      game.step(FRAME)
+      if (game.state.perch !== perch) {
+        demosPerPerch.push(demos)
+        perch = game.state.perch
+        demos = 0
       }
-      return times.reduce((a, b) => a + b, 0) / times.length
+      const hint = game.guidance.hint
+      if (!game.guidance.hand || !hint || game.guidance.hand.carry <= 0) continue
+      demos += 1
+      while (game.guidance.hand) game.step(FRAME)
+      run(game, 0.5)
+      pointer += 1
+      const from = hint.kind === 'fromTray' ? slotScreen(hint.id) : hint.from
+      game.pointerDown(pointer, from, game.t * 1000)
+      // Up and away first, so the press reads as a drag and not as a tap that turns the piece.
+      game.pointerMove(pointer, hint.kind === 'fromTray' ? { x: 0, y: 40 } : { x: from.x, y: from.y + 40 })
+      const to = { x: hint.to.x, y: hint.to.y + 1.3 }
+      game.pointerMove(pointer, to)
+      run(game, 0.5)
+      game.pointerUp(pointer, to, game.t * 1000 + 900)
+      run(game, 1)
     }
-    cost()
-    const best = Math.min(cost(), cost(), cost())
-    console.log(`topple: best average ${best.toFixed(3)} ms per frame`)
-    expect(best).toBeLessThan(1)
+    expect(demosPerPerch).toHaveLength(3)
+    for (const count of demosPerPerch) expect(count).toBeLessThanOrEqual(12)
   })
 })

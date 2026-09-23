@@ -34,6 +34,36 @@ describe('PlayPhysics', () => {
     expect(physics.isResting).toBe(true)
   })
 
+  it('a block landing flat is one knock, however many contact points it touches down on', () => {
+    const physics = new PlayPhysics()
+    physics.add(CUBE, { x: 0, y: 3, angle: 0 })
+    let hard = 0
+    let most = 0
+    for (let t = 0; t < 1.5; t += STEP) {
+      const report = physics.step(STEP)
+      hard += report.hardKnocks
+      most = Math.max(most, report.impacts)
+    }
+    expect(most).toBe(1)
+    expect(hard).toBe(1)
+  })
+
+  it('a plank landing across two cubes is one knock, in the plank’s voice', () => {
+    const physics = new PlayPhysics()
+    physics.add(CUBE, { x: -1, y: cubeRest, angle: 0 })
+    physics.add(CUBE_B, { x: 1, y: cubeRest, angle: 0 })
+    run(physics, 1)
+    physics.add(PLANK, { x: 0, y: 2.2, angle: 0 })
+    for (let t = 0; t < 1; t += STEP) {
+      const report = physics.step(STEP)
+      if (report.impacts === 0) continue
+      expect(report.impacts).toBe(1)
+      expect(report.impactIds[0]).toBe(PLANK)
+      return
+    }
+    expect.unreachable('the plank never landed')
+  })
+
   it('every hull separates on its own in-plane side normals only, with no edge-pair axes', () => {
     const physics = new PlayPhysics()
     for (const piece of PIECES) {
