@@ -44,6 +44,14 @@ export type FrogMoment = {
   fireNear: number
   /** 0..1 progress of the first-open invitation, or null. */
   invite: number | null
+  /** 0..1 while a carried frog hovers over this frog's pad: one drop from a swap. */
+  visited: number
+  /** The carried frog relative to this frog's eyes, in the frog's own units. */
+  visitorX: number
+  visitorY: number
+  visitorZ: number
+  /** Which way to make room (+1 or -1 on x): toward the middle of the pond, so it never leans off screen. */
+  visitorSide: number
 }
 
 export type Pose = {
@@ -220,7 +228,7 @@ function showoff(m: FrogMoment, p: Pose, s: ShowoffState): void {
   // Singing: a fast puff that swells twice, up on its toes with arms flung wide.
   const sing = m.sing
   const puff = envelope(sing, 0.06, 0.3, 0.3)
-  p.bubble = puff * (1.2 + 0.18 * bump(sing, 0.12, 0.36)) * m.singStrength
+  p.bubble = puff * (0.98 + 0.2 * bump(sing, 0.12, 0.36)) * m.singStrength
   volume(p, 1 + puff * 0.1)
   p.armLOut += puff * 1.1
   p.armROut += puff * 1.1
@@ -325,9 +333,11 @@ function shy(m: FrogMoment, p: Pose, s: ShyState): void {
     volume(p, 1 - ring(m.land, 3.2, 9) * 0.1)
     p.headRoll += bump(m.land, 0.4, 1.4) * -0.3
   }
+  // Her arm is raised overhead, so hiding pitches it the other way from a hanging arm:
+  // the leaf swings down in front of her face, broad side to the child.
   const leaf = spring(s.leaf, hide, 70, 11, m.dt)
-  p.armRFwd = leaf * 1.25
-  p.armROut += -leaf * 0.55 + Math.sin(t * 1.1) * 0.03
+  p.armRFwd = -leaf * 1.2
+  p.armROut += -leaf * 0.18 + Math.sin(t * 1.1) * 0.03
 }
 
 // The sleepy one: big and leafy green, in a striped nightcap.
@@ -362,7 +372,8 @@ function sleepy(m: FrogMoment, p: Pose, s: SleepyState): void {
   const sing = m.sing
   const hum = envelope(sing, 0.3, 0.2, 0.55)
   p.bubble = hum * 1.1 * m.singStrength
-  p.lidL = p.lidR = Math.max(p.lidL, hum)
+  p.lidL = Math.max(p.lidL, hum)
+  p.lidR = Math.max(p.lidR, hum)
   p.headRoll += hum * 0.25
   p.bodyRoll = hum * 0.1
   // Tapped: startled awake, eyes wide and the cap flying up, then drooping again.
@@ -502,19 +513,24 @@ function crooner(m: FrogMoment, p: Pose, s: CroonerState): void {
   // Singing: a long note with vibrato, eyes closed, head back, arm sweeping wide.
   const sing = m.sing
   const note = envelope(sing, 0.12, 0.35, 0.45)
-  p.bubble = note * (1.15 + Math.sin(sing * 44) * 0.07) * m.singStrength
+  p.bubble = note > 0 ? note * (1.15 + Math.sin(sing * 44) * 0.07) * m.singStrength : 0
   p.lidL = p.lidR = Math.max(p.lidL, note)
   p.headPitch -= note * 0.3
   p.armLOut += note * 1.2
   p.armLFwd += note * 0.4
   p.hatY += note * 0.04
-  // Tapped: a slow, polite bow, then a push at the spectacles.
+  // Tapped: a slow stage bow, then a push at the spectacles. The camera looks
+  // down, so a straight bow foreshortens away; the lean and the wide sweep of
+  // the free arm are what read.
   const tap = m.tap
   if (tap < 2) {
     const bow = envelope(tap, 0.35, 0.3, 0.45)
-    p.bodyPitch = bow * 0.45
+    p.bodyPitch = bow * 0.5
+    p.bodyRoll += bow * 0.24
+    p.headRoll += bow * 0.16
     p.headPitch += bow * 0.2
-    p.armLFwd += bow * 0.8
+    p.armLOut += bow * 0.9
+    p.armLFwd += bow * 0.3
     const specs = bump(tap, 1.05, 1.8)
     p.armROut = p.armROut * (1 - specs) + specs * 2.3
     p.armRFwd = p.armRFwd * (1 - specs) + specs * 1.2
@@ -601,6 +617,22 @@ export function overlays(m: FrogMoment, p: Pose): void {
     p.rootY += hop * 0.22
     p.rootZ += hop * 0.12
     p.lidL = p.lidR = Math.min(p.lidL, 1 - puff)
+  }
+  // A frog hovering overhead is about to swap in, and it covers this one's
+  // face, so this one scoots aside and leans out past it to look up, wide-eyed.
+  if (m.visited > 0.01) {
+    const k = m.visited
+    const d = Math.hypot(m.visitorX, m.visitorY, m.visitorZ) + 1e-4
+    p.pupilX += ((m.visitorX / d) * 0.045 - p.pupilX) * k
+    p.pupilY += ((m.visitorY / d) * 0.04 - p.pupilY) * k
+    p.lidL *= 1 - k
+    p.lidR *= 1 - k
+    p.rootX += m.visitorSide * 0.34 * k
+    p.bodyRoll -= m.visitorSide * 0.24 * k
+    p.headRoll -= m.visitorSide * 0.14 * k
+    p.headPitch -= 0.18 * k
+    volume(p, 1 - 0.07 * k)
+    p.mouth = Math.max(p.mouth, 0.22 * k)
   }
   if (m.mode === 'splash') {
     p.lidL = p.lidR = 0
