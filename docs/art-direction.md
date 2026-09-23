@@ -42,6 +42,7 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Light Garden | Glass and light table 3D: frosted sea-glass creatures and glass tools on a milky light table in a dim teal room, beams of additive primary light | [`games/light-garden/ART.md`](../games/light-garden/ART.md) |
 | Frog Choir | Dusk-pastel toon 3D: three-step cel shading, plum ink outlines, a firefly that lights in stepped bands, coral-to-butter frogs on lilac pads over mint water under a peach sky | [`games/frog-choir/ART.md`](../games/frog-choir/ART.md) |
 | Shadow Lantern | Paper-craft diorama: layered cut paper on deep indigo, a brass lamp throwing geometric shadows onto a lit paper screen, offset dark shadow cards | [`games/shadow-lantern/ART.md`](../games/shadow-lantern/ART.md) |
+| Bedtime Forest | Picture-book gouache 3D: opaque pigment in 2–3 painted tone bands, dry brush, a loose brown ink line, paper grain; warm animals in blue-green woods under an apricot-to-violet dusk | [`games/bedtime-forest/ART.md`](../games/bedtime-forest/ART.md) |
 
 ## 4. Menu of unclaimed directions
 
