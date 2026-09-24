@@ -69,28 +69,32 @@ export function stoneVertices(cut: Cut, segments: number): Float32Array {
 /** Directions of the collider's side faces: an octagon, as few sides as the old cylinders so a spill costs the same. */
 export const OUTLINE_SIDES = 8
 
-/** The collider: how far the drawn piece reaches along each side's outward normal (angle k·45° from +x toward +z), and its bottom and top, in cm. */
-export type StoneOutline = { reach: number[]; bottom: number; top: number }
+/** A prism collider: how far the drawn piece reaches along each side's outward normal (side k at k/sides of a turn from +x toward +z), and its bottom and top, in cm. */
+export type Outline = { reach: number[]; bottom: number; top: number }
 
-const outlines = new Map<Cut, StoneOutline>()
-
-export function stoneOutline(cut: Cut): StoneOutline {
-  let outline = outlines.get(cut)
-  if (outline) return outline
-  const vertices = stoneVertices(cut, STONE_SEGMENTS)
-  const reach = new Array<number>(OUTLINE_SIDES).fill(-Infinity)
+/** The outline of drawn points (x, y, z triples) on `sides` sides. */
+export function outlineOf(points: ArrayLike<number>, sides: number): Outline {
+  const reach = new Array<number>(sides).fill(-Infinity)
   let bottom = Infinity
   let top = -Infinity
-  for (let i = 0; i < vertices.length; i += 3) {
-    const [x, y, z] = [vertices[i], vertices[i + 1], vertices[i + 2]]
+  for (let i = 0; i < points.length; i += 3) {
+    const [x, y, z] = [points[i], points[i + 1], points[i + 2]]
     bottom = Math.min(bottom, y)
     top = Math.max(top, y)
-    for (let k = 0; k < OUTLINE_SIDES; k++) {
-      const angle = (k / OUTLINE_SIDES) * Math.PI * 2
+    for (let k = 0; k < sides; k++) {
+      const angle = (k / sides) * Math.PI * 2
       reach[k] = Math.max(reach[k], x * Math.cos(angle) + z * Math.sin(angle))
     }
   }
-  outline = { reach: reach.map((r) => r * STONE_DRAWN_RADIUS), bottom: bottom * STONE_DRAWN_RADIUS, top: top * STONE_DRAWN_RADIUS }
+  return { reach, bottom, top }
+}
+
+const outlines = new Map<Cut, Outline>()
+
+export function stoneOutline(cut: Cut): Outline {
+  let outline = outlines.get(cut)
+  if (outline) return outline
+  outline = outlineOf(stoneVertices(cut, STONE_SEGMENTS).map((v) => v * STONE_DRAWN_RADIUS), OUTLINE_SIDES)
   outlines.set(cut, outline)
   return outline
 }

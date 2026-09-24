@@ -54,6 +54,22 @@ function stone(segments: number, cut: Cut): THREE.BufferGeometry {
   })
 }
 
+/** A shape pressed from clay on a sphere's grid (partShape.ts): what the physics measures is what is drawn. */
+export function fromGrid(vertices: Float32Array, segments: number, rings: number): THREE.BufferGeometry {
+  const geometry = new THREE.SphereGeometry(1, segments, rings)
+  geometry.attributes.position.array.set(vertices)
+  geometry.computeVertexNormals()
+  return geometry
+}
+
+/** A ring pressed from clay (partShape.ts), on a torus's grid. */
+export function fromRing(vertices: Float32Array, tube: number, radial: number, tubular: number): THREE.BufferGeometry {
+  const geometry = new THREE.TorusGeometry(1, tube, radial, tubular)
+  geometry.attributes.position.array.set(vertices)
+  geometry.computeVertexNormals()
+  return geometry
+}
+
 /** A pebble: a squashed sphere with a slightly flattened belly, unit radius (see stoneShape.ts). */
 export function pebble(segments: number): THREE.BufferGeometry {
   return stone(segments, 'whole')
