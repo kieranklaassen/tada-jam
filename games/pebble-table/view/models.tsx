@@ -1143,7 +1143,7 @@ const JAR_LID = '#fbe7cf'
 const NEST_BED = '#c9a45c'
 
 /** A part at its drawn size, from the same vertices its collider is fitted to (partShape.ts). */
-function partGeometry(kind: PartKind): THREE.BufferGeometry {
+export function partGeometry(kind: PartKind): THREE.BufferGeometry {
   const pieces: Record<string, Lumped> = PART_PIECES[kind]
   const colors: Record<string, string> = PART_COLORS[kind]
   return merge(
