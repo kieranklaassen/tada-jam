@@ -1106,15 +1106,21 @@ export class TableController {
       return distance <= projected.r + slop ? distance : Infinity
     }
 
+    // The shelf's tokens stand close enough, seen at the table's angle, for a
+    // tap on a tall one's top to fall within reach of the one behind it.
+    let shelf: { target: Target; distance: number } | null = null
     if (this.state.album.length > 0) {
       const slot = albumSlot()
-      if (within(to3(slot, slot.height + 3), 9) < Infinity) return { kind: 'album' }
+      const distance = within(to3(slot, slot.height + 3), 9)
+      if (distance < Infinity) shelf = { target: { kind: 'album' }, distance }
     }
     const mats = this.shelfMats()
     for (let i = 0; i < mats.length; i++) {
       const tile = shelfTile(i)
-      if (within(to3(tile, tile.height + 3), 10) < Infinity) return { kind: 'shelf', mat: mats[i] }
+      const distance = within(to3(tile, tile.height + 3), 10)
+      if (distance < (shelf?.distance ?? Infinity)) shelf = { target: { kind: 'shelf', mat: mats[i] }, distance }
     }
+    if (shelf) return shelf.target
     if (this.state.liveMat === 'feeding' && this.feeding.leftover && within(to3(this.knife.at, 1), 6) < Infinity) return { kind: 'knife' }
     if (this.state.liveMat === 'door') {
       for (let index = 0; index < this.door.visitors.length; index++) {
