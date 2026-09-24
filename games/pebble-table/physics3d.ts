@@ -3,7 +3,7 @@ import { JAR_SCALE, JARS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, HOUSE_REACH, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 import { JAR_LIFT, JAR_MOUTH, JAR_REACH, JAR_TOP, jarLabelBox, NEST_SPAN, partCollider, partRest } from './partShape'
 import { outlineCorners, STONE_CUTS, stoneOutline, stoneRest } from './stoneShape'
-import { BOWL_FLOOR, BOWL_OUTSIDE, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, PLATE_TOP, radiusAt, RUG, type Surfaces } from './surfaces'
+import { BOWL_FLOOR, BOWL_OUTSIDE, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, HEM_LINE, HEM_POINTS, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, PLATE_TOP, radiusAt, RUG, RUG_HEM_REACH, RUG_HEM_TOP, type Surfaces } from './surfaces'
 
 // Real stone physics (cannon-es) under the same world coordinates the game
 // rules use. One 3D unit is one centimetre and ten world units; the table
@@ -29,6 +29,8 @@ export const DEFAULT_MAX_SUBSTEPS = 3
 const STONE_SIDES = 8
 const FIXTURE_SIDES = 10
 const RUG_SIDES = 16
+/** The hem is split into this many static bodies, so a stone only meets the stretch of it beside it. */
+const HEM_ARCS = 16
 const BOWL_SEGMENTS = 14
 const FALL_LIMIT = -12
 /** How tall the little house stands, for what is carried over it (cm). */
@@ -208,6 +210,24 @@ export class TablePhysics {
     rug.addShape(shape, offset)
     this.world.addBody(rug)
     this.fixtures.set('rug', rug)
+    this.addHem()
+  }
+
+  /** The hem's rope is solid as drawn: a box along each stretch of its line, as wide as its lumps reach and as tall as the highest. */
+  private addHem(): void {
+    const per = HEM_POINTS / HEM_ARCS
+    for (let arc = 0; arc < HEM_ARCS; arc++) {
+      const body = new CANNON.Body({ mass: 0, material: this.woodMaterial })
+      for (let i = arc * per; i < (arc + 1) * per; i++) {
+        const [a, b] = [to3(HEM_LINE[i], 0), to3(HEM_LINE[i + 1], 0)]
+        const [dx, dz] = [b.x - a.x, b.z - a.z]
+        const box = new CANNON.Box(new CANNON.Vec3(Math.hypot(dx, dz) / 2, (RUG_HEM_TOP + SLAB) / 2, RUG_HEM_REACH))
+        const turn = new CANNON.Quaternion().setFromAxisAngle(CANNON.Vec3.UNIT_Y, -Math.atan2(dz, dx))
+        body.addShape(box, new CANNON.Vec3((a.x + b.x) / 2, (RUG_HEM_TOP - SLAB) / 2, (a.z + b.z) / 2), turn)
+      }
+      this.world.addBody(body)
+      this.fixtures.set(`hem-${arc}`, body)
+    }
   }
 
   /** The scale's pans and post exist only while the scale is the live mat; the rug and bowl only with Fair Feeding. */
@@ -219,6 +239,7 @@ export class TablePhysics {
     this.pans.length = 0
     this.removeFixture('bowl')
     this.removeFixture('rug')
+    for (let arc = 0; arc < HEM_ARCS; arc++) this.removeFixture(`hem-${arc}`)
     this.removeFixture('post')
     this.removeFixture('house')
     for (const kind of LIDDED_JARS) this.removeFixture(`jar-${kind}`)

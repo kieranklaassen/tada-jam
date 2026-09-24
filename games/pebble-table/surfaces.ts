@@ -29,7 +29,8 @@ export function hemAt(t: number): Point {
   return { x: RUG.center.x + Math.cos(a) * RUG.rx * scallop, y: RUG.center.y + Math.sin(a) * RUG.rz * scallop }
 }
 
-const HEM_LINE: readonly Point[] = Array.from({ length: HEM_POINTS + 1 }, (_, i) => hemAt(i / HEM_POINTS))
+/** The hem's line through its drawn points, closed (world units). */
+export const HEM_LINE: readonly Point[] = Array.from({ length: HEM_POINTS + 1 }, (_, i) => hemAt(i / HEM_POINTS))
 
 /** How far `at` is from the hem's line, in world units. */
 function hemDistance(at: Point): number {
