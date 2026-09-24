@@ -12,7 +12,7 @@ import { PART_PIECES, partCollider, partCover, partPieceVertices, partReachDown,
 import { HOLD_HEIGHT, PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
 import { JARS, PART_KINDS, type PartKind } from './parts'
 import { panDrops, SWAY_MOST } from './scale'
-import { defaultTable } from './state'
+import { defaultTable, type Piece } from './state'
 import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneReachDown, stoneRest, stoneVertices } from './stoneShape'
 import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PAN_ROLL, panRimReach, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, ROPE_KNOT, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
 import { ARM_AT, CHEEK_AT, EAR_AT, GUEST_SIZE, guestFloor, NECK_Y, poseGuest, soleDepth, speciesShapes } from './view/guest'
@@ -1222,6 +1222,40 @@ describe('the scale hangs together at every tilt', () => {
     for (const a of [0, Math.PI, 0.4, Math.PI - 0.4]) drop({ x: left.x + Math.cos(a) * left.r * 0.6, y: left.y + Math.sin(a) * left.r * 0.6 }, 1.2)
     for (let i = 0; i < 6; i++) drop({ x: right.x, y: right.y }, 1.6)
     expect(swung, 'the pans never swung, so this measures nothing').toBeGreaterThan(1)
+    expect(met, 'no stone lay in a pan, so this measures nothing').toBeGreaterThan(1000)
+    expect(deepest).toBeLessThan(0.1)
+  }, 60_000)
+
+  it('comes out over stones left lying where a pan hangs with none caught in its rim or under it as it comes down', () => {
+    const [left] = SCALE.pans
+    let [deepest, met] = [0, 0]
+    // Eight stones lie where the left pan hangs, so it comes down as far as it goes; a ring of big and small ones lies across or just under its rim.
+    for (const out of [0.97, 1.04, 1.12]) {
+      const pieces: Piece[] = []
+      for (let i = 0; i < 8; i++) pieces.push({ id: pieces.length + 1, q: 4, x: left.x + ((i % 4) - 1.5) * 60, y: left.y - 30 + Math.floor(i / 4) * 60 })
+      for (const a of [0.3, 0.9, 1.6, 2.3, 2.9, 3.6, 4.4, 5.2, 5.9]) pieces.push({ id: pieces.length + 1, q: a > 3 ? 1 : 4, x: left.x + Math.cos(a) * left.r * out, y: left.y + Math.sin(a) * left.r * out })
+      const start = { ...defaultTable(4), liveMat: 'door' as const, shelf: ['door', 'scale', 'feeding'] as MatKey[], pieces, nextId: pieces.length + 1 }
+      const table = new TableController({ ...start, bag: start.total - pieces.length * 4 }, { save: () => {} })
+      table.setProjector({ toScreen: (v) => toWorld2(v), toPlane: (screen) => screen })
+      table.pointerDown(1, shelfTile(0), 10)
+      table.pointerUp(1, shelfTile(0), 90)
+      for (let t = 0; t < 3; t += 1 / 60) {
+        table.step(1 / 60)
+        ;([0, 1] as const).forEach((side) => {
+          const at = to3(SCALE.pans[side])
+          const pan = drawnPan(side, at.x + table.physics.panSwung(side), table.physics.panY(side), at.z)
+          for (const stone of stoneStates(table)) {
+            const piece = auditPiece('stone', stoneGeometry(stone.q), stoneMatrix(still(stone), 1, new THREE.Matrix4()))
+            if (!piece.box.intersectsBox(pan.box)) continue
+            met++
+            deepest = Math.max(deepest, pairDepth(piece, pan, CAMERA)?.depth ?? 0)
+          }
+        })
+      }
+      expect(table.state.liveMat).toBe('scale')
+      expect(table.physics.panY(0) - PAN_REST_HEIGHT, 'the left pan never came down, so this measures nothing').toBeLessThan(-3)
+      expect(table.state.pieces).toHaveLength(pieces.length)
+    }
     expect(met, 'no stone lay in a pan, so this measures nothing').toBeGreaterThan(1000)
     expect(deepest).toBeLessThan(0.1)
   }, 60_000)

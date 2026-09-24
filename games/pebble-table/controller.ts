@@ -6,9 +6,9 @@ import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelf
 import { GRAVITY, HOLD_HEIGHT, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
 import { JAR_REACH, partDepth, partRest, STOOL_REACH, STOOL_TOP } from './partShape'
 import { STONE_REACH, stoneRest } from './stoneShape'
-import { feedingFloor, surfaceUnder } from './surfaces'
+import { feedingFloor, PAN_RIM, panRimReach, surfaceUnder } from './surfaces'
 import { SaveCadence } from './saveCadence'
-import { creak, panDrops, panOf, restingBeam, stepBeam, stepSway, swayOf, targetTilt, type Beam, type Side, type Sway } from './scale'
+import { creak, panDrops, panOf, restingBeam, stepBeam, stepSway, SWAY_MOST, swayOf, targetTilt, type Beam, type Side, type Sway } from './scale'
 import { cutPiece, placeFromBag, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
 import { chunk, clusterPieces, groupsFor, schedule } from './voice'
 import { comingOut, DOOR_SWING, doorwayGap, goingHome, houseGap, visitorGone, visitorHome, type VisitorTimes } from './visitors'
@@ -69,6 +69,8 @@ const MAX_RUMBLES = 3
 const KNOCK_PAUSE = 1.1
 /** Room (world units) a stone keeps from where the door swings and the visitors walk. */
 const DOORWAY_ROOM = 5
+/** Room (world units) a stone the scale comes out over keeps inside a pan's rim, or from under where a pan can swing. */
+const PAN_ROOM = 2
 const PEEK_AFTER = 2
 const PEEK_GAP = 7
 const PEEK_LENGTH = 1.8
@@ -1478,12 +1480,14 @@ export class TableController {
     this.knife.pointerId = null
     this.guestDrag = null
     this.resetDoor()
+    const lying = new Set(this.state.pieces.map((piece) => piece.id))
     swapMat(this.state, mat)
     this.pouring = []
     for (const id of this.physics.stoneIds()) this.physics.removeStone(id)
     this.beam = restingBeam()
     this.sway = { x: 0, v: 0 }
     this.enterMat()
+    if (mat === 'scale') this.clearPans(this.state.pieces.filter((piece) => lying.has(piece.id)))
     for (const piece of this.state.pieces) this.addPieceBody(piece)
     this.matSlideStart = this.t
     this.dealCursor = null
@@ -1563,6 +1567,34 @@ export class TableController {
       const spot = this.besideStool(stool, piece, r, stools, [...taken.values()])
       taken.set(piece.id, { ...spot, r })
       this.hopAside(piece, spot)
+    }
+  }
+
+  /**
+   * The scale comes out over the stones left `lying` on the table: one caught
+   * across a pan's rim is laid in that pan, inside the rim, if there is room
+   * for it there, and one under a pan, which would come down on it as the
+   * beam tips, or with no room in the pan, is set down beside it, clear of
+   * wherever either pan can swing.
+   */
+  private clearPans(lying: readonly Piece[]): void {
+    const taken = new Map(this.state.pieces.map((piece) => [piece.id, { x: piece.x, y: piece.y, r: stoneRadius3(piece.q) / UNIT }]))
+    const off = (at: Point, to: Point) => Math.hypot(at.x - to.x, at.y - to.y)
+    const swing = SCALE.pans.map((pan) => panRimReach(pan.r * UNIT).out / UNIT + SWAY_MOST / UNIT + PAN_ROOM)
+    for (const piece of lying) {
+      const r = stoneRadius3(piece.q) / UNIT
+      const side = panOf(piece)
+      const inPan = (at: Point) => side !== null && panOf(at) === side && off(at, SCALE.pans[side]) + r <= SCALE.pans[side].r * PAN_RIM - PAN_ROOM
+      const beside = (at: Point) => SCALE.pans.every((pan, k) => off(at, pan) - r >= swing[k])
+      if (inPan(piece) || beside(piece)) continue
+      taken.delete(piece.id)
+      const others = [...taken.values()]
+      const settle = (fits: (at: Point) => boolean) => this.spotNear(piece, r, (at) => fits(at) && others.every((stone) => off(at, stone) >= stone.r + r + 2))
+      const inside = side === null ? null : settle(inPan)
+      const spot = inside && inPan(inside) ? inside : settle(beside)
+      taken.set(piece.id, { ...spot, r })
+      piece.x = spot.x
+      piece.y = spot.y
     }
   }
 
