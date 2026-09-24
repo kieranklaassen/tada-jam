@@ -13,8 +13,8 @@ import { QualityProvider, useQuality } from './quality'
 
 // The claymation stage: a fixed camera at a slight angle over the table, a
 // warm key light with a cool bounce from the table, no shadow maps (blob
-// shadows do that job), and at most one post pass. DPR, the post pass, fur,
-// and physics substeps follow the adaptive quality tier.
+// shadows do that job), and at most one post pass. DPR, the post pass, and
+// fur follow the adaptive quality tier; physics never does.
 
 const TARGET = new THREE.Vector3(1, 0, 2)
 const PITCH = (46 * Math.PI) / 180
