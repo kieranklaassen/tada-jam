@@ -161,8 +161,8 @@ export default {
       a: '^scenery',
       b: '^screen-shadows',
       kind: 'penetration',
-      upTo: 1.2,
-      reason: "the shadows' material clips them to the screen's paper (clippingPlanes), which the audit does not model: what would cross the frame is never drawn",
+      upTo: 1.9,
+      reason: "the shadows are clipped to the screen's paper (x ±32, y 4 to 44), whose edges are the frame's inner walls: the cut edge lies along the wall inside the frame's opening, and no shadow is drawn on the frame",
     },
   ],
   ignore: [
