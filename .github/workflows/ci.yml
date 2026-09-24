@@ -67,3 +67,20 @@ jobs:
           name: intersections-${{ matrix.shard }}
           path: test-results/intersections
           retention-days: 14
+
+  # The mechanic prototype lab (lab/) has its own typecheck, tests, and build.
+  # It shares nothing with the jam's checks above.
+  lab:
+    name: Mechanic lab
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Lab typecheck and tests
+        run: npm run lab:check
+      - name: Lab build
+        run: npm run lab:build

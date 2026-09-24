@@ -126,6 +126,52 @@ The jam's shared browser script that plays any game's production build through t
 
 It reads Frame work, the current tier, and the draw counts from a grown-up handle each game publishes on the page, so a game publishes that handle in the one shape the probe expects. It can pin a Quality tier or leave the choice to the Governor, and it can throttle the CPU or enlarge the page to stand in for a weaker device. Its numbers describe the machine and browser it ran on, not a child's device.
 
+## Mechanics
+
+### Depth engine
+The part of a game loop that makes play 5 differ from play 1 (physics that surprises, combining things, things the child makes, procedural variety), as opposed to content authored in advance.
+*Avoid:* replayability hook, content
+
+An idea names its depth engine and a one-line "what is different on play 5" before anything is built; an idea that cannot is cut.
+
+### Mechanic prototype
+A throwaway build of one game loop with simple graphics, made to find out whether the loop has depth, and free of the jam's rules (words, scores, wins and timers are allowed).
+*Avoid:* game, jam game, cartridge
+
+A mechanic prototype is never a cartridge: a winner is rebuilt to fit the jam and the Tada contract before it goes into the kid shell.
+
+### Child persona
+A simulated child defined by age, touch precision, attention span and what draws them, who plays prototypes the way a child does (imprecise touches, short attention, distractible, inventing their own aims) and comes back, or does not.
+*Avoid:* bot, test user
+
+Personas are model guesses at children, so real children still test the last few finalists. A Cold playtest proxy is one builder playing the first minute; a persona panel plays every prototype over repeated sessions.
+
+### Outcome signature
+A short string a prototype reports for its current state, coarse enough that two runs ending in the same kind of place share it, so runs can be counted as alike or different.
+
+Depth is read from how many distinct signatures a prototype reaches and how that changes from session to session, never from raw timings.
+
+### Hook
+A score, level, timer, win state, or unlock that a prototype leans on to pull play forward.
+
+Every prototype declares its hooks and can run with them off, so a spec can say whether the loop needed them. The list of hooks that were needed is the evidence for amending the guidelines. A hook is a mechanic in a prototype; the jam's rule against engagement mechanics still governs jam games.
+
+### Depth gate
+The persona-panel test a prototype must pass before it can be a finalist: enough of the personas in its target age keep coming back over repeated sessions. Clarity is checked only after a prototype passes it.
+
+A prototype that fails the gate stays one of the 30 with its report; it is not ranked.
+
+### Target panel
+The child personas within one year of a prototype's Age band (widened to the nearest two when fewer fall in), whose runs the Depth gate reads. The other personas are still run and reported as information.
+
+Ranking compares prototypes only within their own age bucket because each is judged by a different target panel.
+
+### Shortlist entry
+A prototype that passed the Depth gate, ranked against others in its own age bucket and carrying a clarity flag.
+*Avoid:* finalist (that names one of the loops the owner picks from the shortlist)
+
+When fewer than three prototypes pass, the shortlist also lists the near-the-gate prototypes, marked as not entries, so a person can decide whether to reset the gate.
+
 ## Intersection checks
 
 ### Intersection audit

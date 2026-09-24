@@ -65,6 +65,15 @@ These come from the Pebble Table plan (`docs/plans/`) and are proposed upstream 
 - **Jam stack — react-three-fiber, @react-three/postprocessing, and cannon-es.** Tada's tech menu asks for raw three.js and matter.js or rapier. The jam allows react-three-fiber (plus its postprocessing wrapper) and cannon-es so 3D games can iterate fast; they are egress-free, bundled, and MIT-licensed. Porting such a game means either proposing these libraries in the Tada PR or rewriting the view layer on raw three.js (the game rules, physics wrapper, and guidance are framework-free). The allowed package list lives in `scripts/egress-check.ts`.
 - **Δ4 — Grown-up corner.** A game may keep a grown-up corner behind a deliberate hold gesture for settings a parent tunes in the moment. Its state lives in `ctx.storage`, and it never shows the child a score, log, or verdict.
 
+## The mechanic prototype lab (`lab/`)
+
+`lab/` holds throwaway **mechanic prototypes**, made to find game loops with depth on repeat play (see `CONCEPTS.md`: Mechanic prototype, Child persona, Depth gate, Hook). It is **exempt from every rule above**: no cartridge shape, no manifest, no wordless or egress checks, no quality bar, and words, scores, wins, and timers are allowed. Do not apply the jam rules to it, and do not copy its code into `games/`.
+
+- It has its own scripts and toolchain (`npm run lab:check`, `lab:build`, `lab:serve`, `lab:panel`, `lab:report`, `lab:catalog`, `lab:smoke`; output lands in `lab/dist`, never the published `dist/`). Nothing under `lab/` imports from `games/` or `harness/`, and nothing there is imported by them; the root checks do not look inside it. `lab/kit/isolation.test.ts` enforces this.
+- A prototype is `lab/protos/<key>/` with a pure, deterministic `meta.ts` and `sim.ts` (seeded, no `Math.random`, `Date.now`, or DOM), a thin canvas `view.ts`, and a `SPEC.md`. `lab/kit/example/` is the template; the shared contract suite in `lab/kit/contract.test.ts` runs over every folder.
+- The persona panel is a set of model guesses at children, not measurements. Its reports and `lab/reports/SHORTLIST.md` say what to look at; real children check anything before it is polished into a cartridge.
+- Specs, reports, and the idea catalog live under `lab/`, not `docs/solutions/` (the compound audit needs frontmatter there).
+
 ## Licensing
 
 - The repo is under the O'Saasy license (same as Tada). Never copy code from Tada's pre-rebuild git history (AGPL). The jam shell in `harness/` is an independent re-implementation of the contract's behavior, not a copy of Tada's shim.
