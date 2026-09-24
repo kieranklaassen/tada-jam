@@ -1393,14 +1393,15 @@ export class TableController {
    * as little higher up the finger's line of sight as carries it clear over
    * whatever stands under it (a guest, the bag, a jar, the house), and not
    * lower than clears what stands under where it is now, so it comes down
-   * only once past.
+   * only once past: past a guest's head, if it is up riding over one.
    */
   private heldAt(screen: Point, id: number): { at: Point; height: number } | null {
     const piece = this.pieceById(id)
     const part = piece ? undefined : this.partById(id)
     const reach = piece ? stoneRadius3(piece.q) : part ? PART_RADIUS[part.kind] * UNIT : 0
     const rest = piece ? stoneRest(piece.q) : part ? partRest(part.kind) : 0
-    const clear = (at: Point) => this.physics.heldClearance(at, reach) + rest + HOLD_ROOM
+    const riding = (this.physics.body(id)?.position.y ?? 0) > HOLD_HEIGHT + 0.5
+    const clear = (at: Point) => this.physics.heldClearance(at, reach, riding) + rest + HOLD_ROOM
     const now = this.physics.position2(id)
     for (let height = Math.max(HOLD_HEIGHT, now ? clear(now) : 0); ; height += 0.5) {
       const at = this.projector?.toPlane(screen, height)

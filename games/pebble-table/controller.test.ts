@@ -595,13 +595,12 @@ describe('forgiving drops', () => {
       for (let i = 1; i <= 30; i++) move({ x: BAG.x + ((from.x - BAG.x) * i) / 30, y: BAG.y + ((from.y - BAG.y) * i) / 30 })
       const piece = table.state.pieces[table.state.pieces.length - 1]
       // Across the guest and back at 30 cm a second, a brisk small hand's pace.
+      let over = false
       for (const [a, b] of [[from, to], [to, guest]]) {
         const steps = Math.ceil((Math.hypot(b.x - a.x, b.y - a.y) * UNIT) / 30 * 60)
         for (let i = 1; i <= steps; i++) {
           move({ x: a.x + ((b.x - a.x) * i) / steps, y: a.y + ((b.y - a.y) * i) / steps })
-          const body = table.physics.body(piece.id)!
-          const off = Math.hypot(toWorld2(body.position).x - guest.x, toWorld2(body.position).y - guest.y) * UNIT
-          if (off < GUEST_RADIUS * UNIT + stoneRadius3(piece.q)) expect(body.position.y - stoneRest(piece.q), `seat ${seat}, ${off.toFixed(1)} cm from its middle`).toBeGreaterThanOrEqual(GUEST_TOP[SEAT_SPECIES[seat]])
+          over = rideOver(table, piece.id, seat, over)
         }
       }
       run(table, 0.3)
@@ -610,4 +609,52 @@ describe('forgiving drops', () => {
       expect(plateOf(table.state.pieces.find((p) => p.id === piece.id)!), `seat ${seat}`).toBe(seat)
     }
   })
+
+  it('brings a stone carried over a guest\'s head down only once clear of its face, and it still lands on the plate it is let go over', () => {
+    for (const seat of [1, 4]) {
+      const { table } = makeTable()
+      tap(table, { x: 1000, y: 900 })
+      run(table, 1)
+      const { guest, plate } = FEEDING.seats[seat]
+      // From beside the guest, away from its plate, over its head, and on to the middle of its plate.
+      const away = { x: guest.x - (plate.y - guest.y) * 1.4, y: guest.y + (plate.x - guest.x) * 1.4 }
+      table.pointerDown(2, BAG, (clock += 10))
+      const move = (at: { x: number; y: number }) => {
+        table.pointerMove(2, at, (clock += 16))
+        table.step(1 / 60)
+      }
+      for (let i = 1; i <= 30; i++) move({ x: BAG.x + ((away.x - BAG.x) * i) / 30, y: BAG.y + ((away.y - BAG.y) * i) / 30 })
+      const piece = table.state.pieces[table.state.pieces.length - 1]
+      let over = false
+      for (const [a, b] of [[away, guest], [guest, plate]]) {
+        const steps = Math.ceil((Math.hypot(b.x - a.x, b.y - a.y) * UNIT) / 30 * 60)
+        for (let i = 1; i <= steps; i++) {
+          move({ x: a.x + ((b.x - a.x) * i) / steps, y: a.y + ((b.y - a.y) * i) / steps })
+          over = rideOver(table, piece.id, seat, over)
+        }
+      }
+      expect(over, `seat ${seat}: it rode over the guest`).toBe(true)
+      run(table, 0.3)
+      table.pointerUp(2, plate, (clock += 150))
+      run(table, 3)
+      expect(plateOf(table.state.pieces.find((p) => p.id === piece.id)!), `seat ${seat}`).toBe(seat)
+    }
+  })
 })
+
+/**
+ * Checks a carried stone against the guest at `seat`: over its body it rides
+ * at the guest's top, and once it has ridden over (`over`) it stays there
+ * until its edge is clear of all the guest's reach, head and nose included.
+ * Returns whether it is still riding over.
+ */
+function rideOver(table: TableController, id: number, seat: number, over: boolean): boolean {
+  const piece = table.state.pieces.find((p) => p.id === id)!
+  const body = table.physics.body(id)!
+  const { guest } = FEEDING.seats[seat]
+  const off = Math.hypot(toWorld2(body.position).x - guest.x, toWorld2(body.position).y - guest.y) * UNIT
+  const r = stoneRadius3(piece.q)
+  const riding = off < GUEST_RADIUS * UNIT + r || (over && off < GUEST_REACH + r)
+  if (riding) expect(body.position.y - stoneRest(piece.q), `seat ${seat}, ${off.toFixed(1)} cm from its middle`).toBeGreaterThanOrEqual(GUEST_TOP[SEAT_SPECIES[seat]])
+  return riding
+}

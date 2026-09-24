@@ -15,7 +15,7 @@ import { panDrops, SWAY_MOST } from './scale'
 import { defaultTable } from './state'
 import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneReachDown, stoneRest, stoneVertices } from './stoneShape'
 import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PAN_ROLL, panRimReach, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, ROPE_KNOT, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
-import { ARM_AT, GUEST_SIZE, guestFloor, NECK_Y, poseGuest, soleDepth, speciesShapes } from './view/guest'
+import { ARM_AT, CHEEK_AT, EAR_AT, GUEST_SIZE, guestFloor, NECK_Y, poseGuest, soleDepth, speciesShapes } from './view/guest'
 import {
   ALBUM_SCALE,
   albumGeometry,
@@ -782,24 +782,35 @@ describe('guests stand on what is drawn under them', () => {
     }
   })
 
-  it('reaches no farther from a guest\'s middle than GUEST_REACH, however it waves, hops or springs in', () => {
+  it('reaches no farther from a guest\'s middle than GUEST_REACH, head and nose included, however it waves, hops, springs in or looks down', () => {
     const kinds: ActionKind[] = ['react', 'eat', 'poke', 'arrive', 'delight']
     let farthest = 0
     for (const species of new Set(SEAT_SPECIES)) {
       const shapes = speciesShapes(species)
       const root = new THREE.Object3D()
-      const arms = [-1, 1].map((side) => {
-        const arm = new THREE.Object3D()
-        arm.position.set(side * ARM_AT[0], ARM_AT[1], ARM_AT[2])
-        root.add(arm)
-        return arm
-      })
-      const head = new THREE.Object3D()
-      head.position.set(0, NECK_Y, 0)
-      root.add(head)
-      const rig = { root, head, nose: new THREE.Object3D(), cheeks: [null, null], ears: [null, null], arms }
-      const parts: [THREE.BufferGeometry, THREE.Object3D][] = [[shapes.body, root], ...arms.map((arm): [THREE.BufferGeometry, THREE.Object3D] => [shapes.arm, arm])]
+      const hang = (parent: THREE.Object3D, at: readonly [number, number, number]) => {
+        const node = new THREE.Object3D()
+        node.position.set(...at)
+        parent.add(node)
+        return node
+      }
+      const arms = [-1, 1].map((side) => hang(root, [side * ARM_AT[0], ARM_AT[1], ARM_AT[2]]))
+      const head = hang(root, [0, NECK_Y, 0])
+      const nose = hang(head, shapes.noseAt)
+      const cheeks = [-1, 1].map((side) => hang(head, [side * CHEEK_AT[0], CHEEK_AT[1], CHEEK_AT[2]]))
+      const ears = (shapes.ears ?? []).map((_, i) => hang(head, [(i === 0 ? -1 : 1) * EAR_AT[0], EAR_AT[1], EAR_AT[2]]))
+      const rig = { root, head, nose, cheeks, ears, arms }
+      type Part = [THREE.BufferGeometry, THREE.Object3D]
+      const parts: Part[] = [[shapes.body, root], ...arms.map((arm): Part => [shapes.arm, arm])]
+      const onHead: Part[] = [[shapes.head, head], [shapes.nose, nose], ...cheeks.map((cheek): Part => [shapes.cheek, cheek]), ...(shapes.ears ?? []).map((ear, i): Part => [ear, ears[i]])]
       const v = new THREE.Vector3()
+      const measure = (list: Part[], stride: number) => {
+        root.updateMatrixWorld(true)
+        for (const [geometry, node] of list) {
+          const position = geometry.attributes.position
+          for (let i = 0; i < position.count; i += stride) farthest = Math.max(farthest, Math.hypot(v.fromBufferAttribute(position, i).applyMatrix4(node.matrixWorld).x, v.z))
+        }
+      }
       for (let seed = 0; seed < 2; seed++) {
         const director = new MotionDirector(species, seed, 0)
         let [t, arrived] = [0, -Infinity]
@@ -813,12 +824,12 @@ describe('guests stand on what is drawn under them', () => {
             for (const reach of [0, 1]) {
               const m = director.sample(t, reach > 0, reach)
               for (const rumble of [0, 1]) {
-                const posed = { ...m, squash: m.squash + 0.06 * rumble, armForward: [m.armForward[0] + 0.5 * rumble, m.armForward[1] + 0.5 * rumble] as [number, number] }
-                poseGuest(rig, shapes, posed, { yaw: 0, pitch: 0 }, pop)
-                root.updateMatrixWorld(true)
-                for (const [geometry, node] of parts) {
-                  const position = geometry.attributes.position
-                  for (let i = 0; i < position.count; i += 2) farthest = Math.max(farthest, Math.hypot(v.fromBufferAttribute(position, i).applyMatrix4(node.matrixWorld).x, v.z))
+                const posed = { ...m, squash: m.squash + 0.06 * rumble, headPitch: m.headPitch + 0.22 * rumble, armForward: [m.armForward[0] + 0.5 * rumble, m.armForward[1] + 0.5 * rumble] as [number, number] }
+                // Looking at something, a guest's head tips down 0.18, and its springiest look overshoots that by about a quarter.
+                for (const pitch of [0, 0.23]) {
+                  poseGuest(rig, shapes, posed, { yaw: 0, pitch }, pop)
+                  if (pitch === 0) measure(parts, 2)
+                  measure(onHead, 8)
                 }
               }
             }
@@ -828,7 +839,7 @@ describe('guests stand on what is drawn under them', () => {
     }
     expect(farthest).toBeLessThanOrEqual(GUEST_REACH)
     expect(GUEST_REACH - farthest).toBeLessThan(0.5)
-  })
+  }, 30_000)
 
   it('holds each seated guest\'s arms inside its collider as it idles and rumbles', () => {
     for (const seat of seats) {

@@ -109,7 +109,7 @@ export function guestYaw(seat: number): number {
  */
 export const GUEST_ARM = { x: 6.8, z: 1.95, r: 2.45, low: 3, high: 9.3 } as const
 
-/** The farthest (cm) a seated guest's arms or body reach out from its middle in any of its motion, waving, hopping and springing included: a stone hopped off a guest it leaned on lands farther out, unless it lay on the guest's plate. */
+/** The farthest (cm) a seated guest's arms, body or head (nose, cheeks and ears too) reach out from its middle in any of its motion, waving, hopping, springing and looking down included: a stone hopped off a guest it leaned on lands farther out, unless it lay on the guest's plate, and one carried over a guest comes down only once past it. */
 export const GUEST_REACH = 12
 
 /** The middles of the guest at `seat`'s arms on the table, left then right (layout units). */
