@@ -7,7 +7,7 @@
 import type { Driver, Frac, GameAudit } from '../types.ts'
 import { BAG, DOOR, FEEDING, SCALE, type Point } from '../../../games/pebble-table/layout.ts'
 
-type Audit = { main(): { scene: { getObjectByName(name: string): unknown } } | null; projectFrac(p: number[]): number[] | null }
+type Audit = { main(): { scene: { getObjectByName(name: string): unknown }; calls: number } | null; projectFrac(p: number[]): number[] | null }
 type Instanced = { count: number; instanceMatrix: { array: ArrayLike<number> } }
 
 const to3 = (p: Point, y: number) => [(p.x - 800) * 0.1, y, (p.y - 500) * 0.1]
@@ -29,6 +29,21 @@ async function instances(d: Driver, name: string): Promise<Point[]> {
     return out
   }, name)
   return list.map(([x, z]) => ({ x: x / 0.1 + 800, y: z / 0.1 + 500 }))
+}
+
+/** The frame the story starts from: past any the audit's zero can fall on. */
+const START_FRAME = 8
+
+/**
+ * Runs the page's clock on to the game's `n`th drawn frame, outside the
+ * audit's own time and samples. The audit's zero falls on its 33 ms grid and
+ * the game draws on the 16 ms animation-frame grid, so without this every
+ * tap lands a frame or two apart, relative to the game, from run to run.
+ */
+async function toFrame(d: Driver, n: number) {
+  const calls = () => d.page.evaluate(() => (window as unknown as { __jamAudit: Audit }).__jamAudit.main()?.calls ?? 0)
+  if ((await calls()) >= n) throw new Error(`pebble-table: already past frame ${n}`)
+  while ((await calls()) < n) await d.page.clock.runFor(1)
 }
 
 const near = (a: Point, b: Point, r: number) => Math.hypot(a.x - b.x, a.y - b.y) < r
@@ -78,6 +93,7 @@ export default {
       // Then a tap on the bag spills the rest.
       name: 'story-spill',
       run: async (d) => {
+        await toFrame(d, START_FRAME)
         await d.wait(6500)
         await d.tap(await spot(d, BAG, 6))
         await d.wait(2600)
