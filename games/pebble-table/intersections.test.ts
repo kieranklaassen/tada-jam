@@ -12,7 +12,7 @@ import { PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT 
 import { panDrops } from './scale'
 import { defaultTable } from './state'
 import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneRest, stoneVertices } from './stoneShape'
-import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_TOP, type Surfaces } from './surfaces'
+import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_REACH, RUG_HEM_TOP, type Surfaces } from './surfaces'
 import { GUEST_SIZE, guestFloor, guestYaw, NECK_Y, soleDepth, speciesShapes } from './view/guest'
 import {
   ALBUM_SCALE,
@@ -177,6 +177,41 @@ describe('stones collide as they are drawn', () => {
     }
     expect(deepest).toBeLessThan(0.8)
   }, 30_000)
+
+  it('keeps every stone that lands on, slides into or rests beside the rug hem out of its rope', () => {
+    const hemDistance = (x: number, z: number) => {
+      let near = Infinity
+      for (let i = 1; i < HEM_LINE.length; i++) {
+        const [a, b] = [to3(HEM_LINE[i - 1]), to3(HEM_LINE[i])]
+        const [dx, dz] = [b.x - a.x, b.z - a.z]
+        const k = Math.min(1, Math.max(0, ((x - a.x) * dx + (z - a.z) * dz) / (dx * dx + dz * dz)))
+        near = Math.min(near, Math.hypot(x - a.x - k * dx, z - a.z - k * dz))
+      }
+      return near
+    }
+    let deepest = 0
+    for (const [out, speed] of [[-2, 0], [0, 0], [1.5, 0], [3.2, 0], [7, -25]] as const) {
+      const physics = new TablePhysics()
+      physics.setMat('feeding')
+      const spots = Array.from({ length: 12 }, (_, k) => {
+        const a = ((k + 0.37) / 12) * Math.PI * 2
+        const hem = hemAt(a / (Math.PI * 2))
+        const [nx, nz] = [Math.cos(a) / RUG.rx, Math.sin(a) / RUG.rz]
+        const n = Math.hypot(nx, nz)
+        const at = { x: hem.x + (nx / n) * (out / UNIT), y: hem.y + (nz / n) * (out / UNIT) }
+        return { q: SIZES[k % 3], at, velocity: { x: (nx / n) * speed, y: 0, z: (nz / n) * speed } }
+      })
+      spots.forEach(({ q, at, velocity }, i) => physics.addStone(i + 1, q, at, { y: stoneRest(q) + 1.5, velocity }))
+      run(physics, 2)
+      spots.forEach(({ q }, i) => {
+        const body = physics.body(i + 1)!
+        for (const p of drawnPoints(q).map((local) => toWorld(body, local))) {
+          if (p.y < RUG_HEM_TOP - 0.02) deepest = Math.max(deepest, RUG_HEM_REACH - hemDistance(p.x, p.z))
+        }
+      })
+    }
+    expect(deepest).toBeLessThan(0.05)
+  })
 })
 
 /** A stone as the view reads it: a body at `at` (cm) turned by `turn`. */
