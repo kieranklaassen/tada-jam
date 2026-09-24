@@ -409,7 +409,9 @@ export class MeadowController implements GestureHandler {
     const snail = this.snail
     if (near(snail.x, groundY(snail.x, snail.z) + 2.5, snail.z, 6) < 1) return { kind: 'snail' }
     const mouse = this.mouse
-    if (mouse.visible() && mouse.out > 0.3 && near(mouse.x, groundY(mouse.x, mouse.z) + 2.4, mouse.z, 6.5) < 1) return { kind: 'mouse' }
+    // Only once it is out on its feet: while it climbs out or dives it is on the way up or down the shaft, not where
+    // (mouse.x, mouse.z) says, so the hole answers those taps instead.
+    if (mouse.visible() && mouse.out >= 1 && near(mouse.x, groundY(mouse.x, mouse.z) + 2.4, mouse.z, 6.5) < 1) return { kind: 'mouse' }
     if (near(BURROW.x, groundY(BURROW.x, BURROW.z) + 0.3, BURROW.z, 5.5) < 1) return { kind: 'burrow' }
 
     if (near(POUCH.x, POUCH_BASE_Y + POUCH_HEIGHT * 0.5, POUCH.z, POUCH_RADIUS * 1.1) < 1) return { kind: 'pouch' }

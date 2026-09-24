@@ -745,10 +745,12 @@ export class MeadowModels {
     this.ghostSeed.visible = false
     if (!hand.visible || !hint) return
     const carrying = hint.kind === 'plantLoose' || hint.kind === 'plantPouch'
-    // The ghost seed rides where a seed the child held would, over the seed it shows and clear of the pouch.
-    const ghostY = carrying ? c.heldY(null, hand.x, hand.z, HELD_LIFT) : 0
+    // The ghost seed does what the real one does under a finger: the press lifts it off its seat into the hand, it
+    // rides where a held seed rides (over the seed it shows and clear of the pouch), and letting go sets it down.
+    const held = carrying ? c.heldY(null, hand.x, hand.z, HELD_LIFT) : 0
+    const ghostY = carrying ? c.heldY(null, hand.x, hand.z, HELD_LIFT * hand.press) : 0
     const ground = groundY(hand.x, hand.z)
-    const fingertip = carrying ? ghostY + SEED_RADIUS + 1.2 : hint.kind === 'callBee' ? plotTop(hint.plot) + STEM_HEIGHT : ground + 6
+    const fingertip = carrying ? held + SEED_RADIUS + 1.2 : hint.kind === 'callBee' ? plotTop(hint.plot) + STEM_HEIGHT : ground + 6
     const y = fingertip + (1 - hand.press) * 4.5
     this.hand.position.set(hand.x + 1.2, y, hand.z + 2)
     this.hand.quaternion.copy(camera.quaternion).multiply(this.handTwist)

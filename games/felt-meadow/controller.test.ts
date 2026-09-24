@@ -368,6 +368,16 @@ describe('touching everything is safe', () => {
     expect(JSON.stringify(controller.snapshot())).toBe(before)
   })
 
+  it('leaves the hole tappable while the mouse climbs out of it, its body still on the shaft', () => {
+    const { controller } = makeMeadow(grownMeadow([RED, null, BLUE]))
+    run(controller, 30, () => controller.mouse.mode === 'emerge')
+    run(controller, 0.3)
+    expect(controller.mouse.mode).toBe('emerge')
+    expect(controller.mouse.out).toBeGreaterThan(0.3)
+    const hole = screen(BURROW.x, groundY(BURROW.x, BURROW.z), BURROW.z)
+    expect(controller.hitTest(hole.x, hole.y)).toEqual({ kind: 'burrow' })
+  })
+
   it('a resting hand (four fingers) cancels a drag and leaves the seed on the grass', () => {
     const { controller } = makeMeadow()
     drag(controller, pouchSeed(1), fingerOver(10, 22), 1, false)
