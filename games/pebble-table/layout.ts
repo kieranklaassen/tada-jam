@@ -69,6 +69,19 @@ export const DOOR = {
   maxVisitors: 10,
 } as const
 
+/**
+ * The little house where stones lie against it, house-local (each unit is
+ * DOOR.houseScale cm): its walls, and in front of them its door frame and
+ * the door shut in it, knob and all. Its collider is these boxes.
+ */
+export const HOUSE_FOOTPRINT = [
+  { left: -12.6, right: 12.6, back: -9.2, front: 9.25 },
+  { left: -4.2, right: 4.2, back: 9, front: 11.9 },
+] as const
+
+/** How far the house reaches from its middle, in world units: something held rides over it within this. */
+export const HOUSE_REACH = (Math.max(...HOUSE_FOOTPRINT.flatMap((box) => [box.left, box.right].flatMap((x) => [box.back, box.front].map((z) => Math.hypot(x, z))))) * DOOR.houseScale) / 0.1
+
 /** Activity choosers stand on the table's right margin, big enough to read as things to touch. */
 export const SHELF_RACK = { x: 1352, firstY: 235, spacing: 200, height: 0 } as const
 

@@ -2,7 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
-import { DOOR_SWING, visitorPose } from '../visitors'
+import { DOOR_HINGE, DOOR_SWING, visitorPose } from '../visitors'
 import { BAG_HEADING, BAG_LENGTH, bagShape, bagTip } from '../bag'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
 import { stoneReachAlong, stoneReachOf } from '../stoneShape'
@@ -1363,8 +1363,6 @@ export function houseGeometry(): THREE.BufferGeometry {
   return merge(houseParts(1, [0, 0, 0]))
 }
 
-/** The door's hinge, house-local: at the frame's left edge and just proud of it, so the leaf swings out clear of the frame and walls. */
-export const DOOR_HINGE: V3 = [-3.4, 0, 10.75]
 /** The open door's angle: swung round flat against the front wall, not quite touching it. */
 export const DOOR_OPEN = -Math.PI + 0.12
 /** The farthest a knock can rattle the door round. */

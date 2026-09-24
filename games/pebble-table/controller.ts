@@ -11,7 +11,7 @@ import { SaveCadence } from './saveCadence'
 import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
 import { cutPiece, placeFromBag, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
 import { chunk, clusterPieces, groupsFor, schedule } from './voice'
-import { comingOut, DOOR_SWING, goingHome, visitorGone, visitorHome, type VisitorTimes } from './visitors'
+import { comingOut, DOOR_SWING, doorwayGap, goingHome, houseGap, visitorGone, visitorHome, type VisitorTimes } from './visitors'
 import { bagExit, bagShape, bagTip } from './bag'
 import { SEAT_SPECIES } from './motion'
 import { keepPage, pageOf, turnPage } from './album'
@@ -67,6 +67,8 @@ const RUMBLE_GAP = 8
 const MAX_RUMBLES = 3
 
 const KNOCK_PAUSE = 1.1
+/** Room (world units) a stone keeps from where the door swings and the visitors walk. */
+const DOORWAY_ROOM = 5
 const PEEK_AFTER = 2
 const PEEK_GAP = 7
 const PEEK_LENGTH = 1.8
@@ -732,6 +734,7 @@ export class TableController {
     const home = this.door.visitors.filter((visitor) => visitor.leaveAt === null)
     if (home.length > 0) {
       this.door.closeAt = goingHome(home, this.t) + 0.1
+      this.clearDoorway(home.map((visitor) => visitor.home))
     }
     this.door.knocks.push(this.t)
     this.door.knockAt = this.t
@@ -762,6 +765,7 @@ export class TableController {
       }
       const openAt = cursor + 0.2
       door.answer = { times, groups, openAt }
+      this.clearDoorway(yardSpots(groups))
     }
     const answer = door.answer
     if (answer && now >= answer.openAt) {
@@ -1526,28 +1530,63 @@ export class TableController {
       taken.delete(piece.id)
       const spot = this.besideStool(stool, piece, r, stools, [...taken.values()])
       taken.set(piece.id, { ...spot, r })
-      const body = this.physics.body(piece.id)
-      const from = body ? { x: body.position.x, y: body.position.y, z: body.position.z } : to3(piece, 1)
-      this.physics.removeStone(piece.id)
-      this.flights.push({
-        id: piece.id,
-        q: piece.q,
-        from,
-        to: to3(spot, this.restHeight(spot, piece.q) + 0.15),
-        t0: this.t,
-        duration: 0.42,
-        arc: 9,
-        carriesPiece: true,
-        land: () => {
-          if (!this.pieceById(piece.id)) return
-          piece.x = spot.x
-          piece.y = spot.y
-          this.addPieceBody(piece, { y: this.restHeight(spot, piece.q) + 0.15 })
-          this.sound.clack(0.3)
-          this.cadence.change(performance.now(), true)
-        },
-      })
+      this.hopAside(piece, spot)
     }
+  }
+
+  /** A lying stone hops out of the way to `spot`. */
+  private hopAside(piece: Piece, spot: Point): void {
+    const body = this.physics.body(piece.id)
+    const from = body ? { x: body.position.x, y: body.position.y, z: body.position.z } : to3(piece, 1)
+    this.physics.removeStone(piece.id)
+    this.flights.push({
+      id: piece.id,
+      q: piece.q,
+      from,
+      to: to3(spot, this.restHeight(spot, piece.q) + 0.15),
+      t0: this.t,
+      duration: 0.42,
+      arc: 9,
+      carriesPiece: true,
+      land: () => {
+        if (!this.pieceById(piece.id)) return
+        piece.x = spot.x
+        piece.y = spot.y
+        this.addPieceBody(piece, { y: this.restHeight(spot, piece.q) + 0.15 })
+        this.sound.clack(0.3)
+        this.cadence.change(performance.now(), true)
+      },
+    })
+  }
+
+  /** Knock-Knock: a stone lying where the door swings or the visitors walk to and from `homes` hops out of their way. */
+  private clearDoorway(homes: readonly Point[]): void {
+    if (this.state.liveMat !== 'door') return
+    const resting = this.restingPieces()
+    const taken = new Map(resting.map((piece) => [piece.id, { x: piece.x, y: piece.y, r: stoneRadius3(piece.q) / UNIT }]))
+    for (const piece of resting) {
+      const r = stoneRadius3(piece.q) / UNIT
+      if (doorwayGap(piece, homes) >= r + DOORWAY_ROOM) continue
+      taken.delete(piece.id)
+      const others = [...taken.values()]
+      const spot = this.spotNear(piece, r, (at) => doorwayGap(at, homes) >= r + DOORWAY_ROOM && houseGap(at) >= r + DOORWAY_ROOM && others.every((stone) => Math.hypot(at.x - stone.x, at.y - stone.y) >= stone.r + r + 2))
+      taken.set(piece.id, { ...spot, r })
+      this.hopAside(piece, spot)
+    }
+  }
+
+  /** The nearest spot to `from` on the table, off the bag, where a stone of radius `r` passes `clear`; searched in rings outward. */
+  private spotNear(from: Point, r: number, clear: (at: Point) => boolean): Point {
+    const bare = (at: Point) => at.x > TABLE.x + r && at.x < TABLE.x + TABLE.w - r && at.y > TABLE.y + r && at.y < TABLE.y + TABLE.h - r && Math.hypot(at.x - BAG.x, at.y - BAG.y) >= BAG.r + r && clear(at)
+    for (let ring = 1; ring <= 40; ring++) {
+      const distance = ring * r * 0.5
+      for (let k = 0; k < 24; k++) {
+        const angle = (k / 24) * Math.PI * 2
+        const at = { x: from.x + Math.cos(angle) * distance, y: from.y + Math.sin(angle) * distance }
+        if (bare(at)) return at
+      }
+    }
+    return { x: from.x, y: from.y }
   }
 
   /** The nearest bare spot just outside a stool, on the side the stone lay: off every plate, the bowl, the bag, the guests, the stools and the other stones. */
