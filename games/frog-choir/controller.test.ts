@@ -3,7 +3,7 @@ import { BODIES, FIREFLY_REACH, GRAZE, PAD_HEIGHTS, PAIR_REACH, RINGS } from './
 import { fireflyAt, phaseAt } from './choir'
 import { PAD_SINK, PAD_SPREAD_MAX, padDip, padWave, PondController, silentSound, type Frog, type Projector, type Sound } from './controller'
 import { IDLE_BEFORE_DEMO } from './guidance'
-import { PAD_RIM, PAD_UNDERSIDE, PADS, partnerPad, POND, ROW_PITCH_HZ, SHORE_Z } from './layout'
+import { PAD_RIM, PAD_TOP, PAD_UNDERSIDE, PADS, partnerPad, POND, ROW_PITCH_HZ, SHORE_Z } from './layout'
 import { defaultPond } from './state'
 import { dropLanded, shadowSpot, type ShadowSpot } from './surfaces'
 
@@ -177,6 +177,24 @@ describe('PondController', () => {
     run(pond, 1.2)
     expect(pond.frogs[3].mode).toBe('sit')
     expect(pond.frogs[3].x).toBeCloseTo(PADS[a].x)
+  })
+
+  it('takes the swapped-out frog off the lifted pad it was sitting on, not the waterline', () => {
+    const { pond } = makePond()
+    const a = pond.state.frogs[0]
+    const b = pond.state.frogs[3]
+    const from = screenOf(PADS[a].x, PADS[a].z)
+    const to = screenOf(PADS[b].x, PADS[b].z)
+    pond.pointerDown(2, from.x, from.y, (ms += 10))
+    pond.pointerMove(2, to.x, to.y)
+    run(pond, 0.5)
+    // Its pad has risen to meet the carried frog, so it sits well above PAD_TOP.
+    expect(pond.padTop[b]).toBeGreaterThan(PAD_TOP + 0.05)
+    const sitting = pond.frogs[3].baseY
+    pond.pointerUp(2, to.x, to.y, (ms += 300))
+    pond.step(1 / 600)
+    expect(pond.frogs[3].mode).toBe('hop')
+    expect(pond.frogs[3].baseY).toBeGreaterThan(sitting - 0.01)
   })
 
   it('dropping on the pad of a frog another finger is carrying swaps them without pulling it out of the hand', () => {

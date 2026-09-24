@@ -520,6 +520,8 @@ export class PondController {
       frog.carryY = frog.surface + frog.y - PAD_TOP
       frog.carryZ = frog.z
       frog.rise = 0
+      // A hop is measured from PAD_TOP, so it leaves at the height it was at: the pad it sat on may be lifted to meet a carried frog.
+      frog.y = frog.carryY
     }
     frog.mode = 'hop'
     frog.hover = null
