@@ -79,6 +79,8 @@ export const EAR_AT: V3 = [1.4, 5.6, -0.3]
 export const CHEEK_AT: V3 = [2.4, 2.3, 2.5]
 /** How far the head sinks (curling up) as the cheeks tuck away into the face, from starting to gone: gone before the face meets the belly. */
 const CHEEK_TUCK: [number, number] = [1.2, 1.9]
+/** How small a tucking cheek has grown when it is all but sunk under the face, and is put away. */
+const CHEEK_SUNK = 0.4
 
 /** The nodes of a guest that move: the root turns and squashes the whole guest, the head sits on it, and the rest hang on the head or the body. */
 export type GuestRig = {
@@ -103,14 +105,15 @@ export function poseGuest(rig: GuestRig, shapes: GuestShapes, m: MotionPose, loo
   rig.nose.rotation.x = noseTilt
   rig.nose.scale.set(1 + Math.abs(m.nose) * 0.18, 1 - Math.abs(m.nose) * 0.2, 1)
   // A cheek puffs out of the face and tucks back into it about the point of it
-  // sunk deepest in the head, so it never sinks any deeper however it swells.
+  // sunk deepest in the head, so it never sinks any deeper however it swells;
+  // tucked out of sight, it is put away rather than left shrinking inside.
   const tuck = 1 - THREE.MathUtils.smoothstep(m.headDrop, CHEEK_TUCK[0], CHEEK_TUCK[1])
   const puff: V3 = [(1 + m.cheeks * 0.12) * tuck, (1 + m.cheeks * 0.45) * tuck, (1 + m.cheeks * 0.6) * tuck]
   rig.cheeks.forEach((cheek, side) => {
     if (!cheek) return
     const mirror = side === 0 ? -1 : 1
     const deep: V3 = [shapes.cheekDeep[0] * mirror, shapes.cheekDeep[1], shapes.cheekDeep[2]]
-    cheek.visible = tuck > 0.02
+    cheek.visible = tuck > CHEEK_SUNK
     cheek.scale.set(...puff)
     cheek.position.set(mirror * CHEEK_AT[0] + deep[0] * (1 - puff[0]), CHEEK_AT[1] + deep[1] * (1 - puff[1]), CHEEK_AT[2] + deep[2] * (1 - puff[2]))
   })
