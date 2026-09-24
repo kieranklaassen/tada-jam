@@ -60,7 +60,6 @@ const NEAR_SHAPES_SLACK = 0.001
 // pebbles are separate meshes and stay round.
 const STONE_SIDES = 8
 const FIXTURE_SIDES = 10
-const RUG_SIDES = 16
 /** The hem is split into this many static bodies, so a stone only meets the stretch of it beside it. */
 const HEM_ARCS = 16
 const BOWL_SEGMENTS = 14
@@ -170,6 +169,8 @@ export class TablePhysics {
   private readonly tops = new Map<string, { circle: Circle; height: number; over?: number }>()
   private readonly openJars = new Set<PartKind>()
   private readonly pans: CANNON.Body[] = []
+  /** The rug's top, while Fair Feeding is the live mat: a plane that holds only what lies over the rug (see `addRug`). */
+  private rug: CANNON.Body | null = null
   private readonly brooms = new Map<number, CANNON.Body>()
   private panDrops: [number, number] = [0, 0]
   private panSway = 0
@@ -282,6 +283,7 @@ export class TablePhysics {
     narrowphase.getContacts = (p1, p2, world, result, oldcontacts, frictionResult, frictionPool) => {
       for (let k = 0; k < p1.length; k++) {
         const [a, b] = [p1[k], p2[k]]
+        if ((a === this.rug && !this.overRug(b)) || (b === this.rug && !this.overRug(a))) continue
         if (a.shapes.length * b.shapes.length < NEAR_SHAPES_FROM) {
           one[0][0] = a
           one[1][0] = b
@@ -392,19 +394,33 @@ export class TablePhysics {
     this.fixtures.set('bowl', bowl)
   }
 
+  /**
+   * The rug is 1.2 mm of cloth, so all it does is hold what lies over it that
+   * much above the table. A plane at its top does that for a sliver of a
+   * polygon's cost (a stone on a 16-sided prism was a fifth of a spill's
+   * physics), and it holds a body only while the body's middle is over the
+   * rug. Near the edge the hem, taller than the cloth, is what a stone rests
+   * on, and nothing slides onto the rug under the hem.
+   */
   private addRug(): void {
     const rug = new CANNON.Body({ mass: 0, material: this.woodMaterial })
     const at = to3(RUG.center)
-    rug.position.set(at.x, 0, at.z)
-    const corners = Array.from({ length: RUG_SIDES }, (_, k) => {
-      const a = (k / RUG_SIDES) * Math.PI * 2
-      return { x: Math.cos(a) * RUG.rx * UNIT, z: Math.sin(a) * RUG.rz * UNIT }
-    })
-    const { shape, offset } = prism(corners, -SLAB, RUG.top)
-    rug.addShape(shape, offset)
+    rug.position.set(at.x, RUG.top, at.z)
+    rug.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
+    rug.addShape(new CANNON.Plane())
     this.world.addBody(rug)
     this.fixtures.set('rug', rug)
+    this.rug = rug
     this.addHem()
+  }
+
+  /** Whether a body's middle lies over the rug. */
+  private overRug(body: CANNON.Body): boolean {
+    const rug = this.rug
+    if (!rug) return false
+    const dx = (body.position.x - rug.position.x) / (RUG.rx * UNIT)
+    const dz = (body.position.z - rug.position.z) / (RUG.rz * UNIT)
+    return dx * dx + dz * dz <= 1
   }
 
   /** The hem's rope is solid as drawn: a box along each stretch of its line, as wide as its lumps reach and as tall as the highest. */
@@ -433,6 +449,7 @@ export class TablePhysics {
     this.pans.length = 0
     this.removeFixture('bowl')
     this.removeFixture('rug')
+    this.rug = null
     for (let arc = 0; arc < HEM_ARCS; arc++) this.removeFixture(`hem-${arc}`)
     this.removeFixture('post')
     this.removeFixture('house')
