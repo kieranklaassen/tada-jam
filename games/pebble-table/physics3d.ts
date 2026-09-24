@@ -3,7 +3,7 @@ import { JAR_SCALE, JARS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 import { JAR_LIFT, JAR_MOUTH, JAR_REACH, JAR_TOP, jarLabelBox, NEST_SPAN, partCollider, partRest } from './partShape'
 import { outlineCorners, STONE_CUTS, stoneOutline, stoneRest } from './stoneShape'
-import { BOWL_FLOOR, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, PAN_DEPTH, PAN_FLOOR, PAN_RIM, PLATE_TOP, RUG, type Surfaces } from './surfaces'
+import { BOWL_FLOOR, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, PLATE_TOP, RUG, type Surfaces } from './surfaces'
 
 // Real stone physics (cannon-es) under the same world coordinates the game
 // rules use. One 3D unit is one centimetre and ten world units; the table
@@ -173,8 +173,8 @@ export class TablePhysics {
   private addBowl(): void {
     const bowl = new CANNON.Body({ mass: 0, material: this.woodMaterial })
     const at = to3(FEEDING.bowl)
-    bowl.position.set(at.x, RUG.top, at.z)
-    this.disc(bowl, BOWL_WALL[0][0], -SLAB, BOWL_FLOOR - RUG.top)
+    bowl.position.set(at.x, ON_RUG, at.z)
+    this.disc(bowl, BOWL_WALL[0][0], -SLAB, BOWL_FLOOR - ON_RUG)
     this.wall(bowl, BOWL_WALL, BOWL_WALL_THICKNESS)
     this.world.addBody(bowl)
     this.fixtures.set('bowl', bowl)
