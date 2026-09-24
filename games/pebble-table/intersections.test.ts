@@ -2,9 +2,10 @@ import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { MeshBVH } from 'three-mesh-bvh'
 import { describe, expect, it } from 'vitest'
+import { pairDepth, preparePiece, type CameraInfo, type MaterialInfo } from '../../scripts/intersections/core'
 import { BAG_HEADING, bagExit, bagMouth, bagShape, bagTip, SACK_MOUTH, type BagShape } from './bag'
 import { TableController, yardSpots } from './controller'
-import { albumSlot, BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, SCALE, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
+import { albumSlot, BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, SCALE, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
 import { GUEST_TOP } from './feeding'
 import { MotionDirector, SEAT_SPECIES, type ActionKind } from './motion'
 import { partReachDown, partVertices, STOOL_REACH, STOOL_TOP } from './partShape'
@@ -12,8 +13,8 @@ import { PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT 
 import { PART_KINDS } from './parts'
 import { panDrops } from './scale'
 import { defaultTable } from './state'
-import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneRest, stoneVertices } from './stoneShape'
-import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_REACH, RUG_HEM_TOP, type Surfaces } from './surfaces'
+import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneReachDown, stoneRest, stoneVertices } from './stoneShape'
+import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
 import { GUEST_SIZE, guestFloor, guestYaw, NECK_Y, soleDepth, speciesShapes } from './view/guest'
 import {
   ALBUM_SCALE,
@@ -44,7 +45,8 @@ import {
   type StoneMotion,
   type StoneState,
 } from './view/models'
-import { ghostFloor } from './view/game'
+import { ghostFloor, stoneStates } from './view/game'
+import * as geo from './view/geometry'
 import { comingOut, DOOR_HINGE, DOOR_SWING, doorwayGap, goingHome, houseGap, VISITOR_GAP, VISITOR_REACH, visitorGone, visitorPose, visitorWalk, type VisitorPose, type VisitorTimes } from './visitors'
 import { chunk } from './voice'
 
@@ -93,6 +95,20 @@ function lowest(body: CANNON.Body, points: readonly CANNON.Vec3[]): number {
   return body.position.y + low
 }
 const toLocal = (body: CANNON.Body, world: CANNON.Vec3) => body.quaternion.conjugate().vmult(world.vsub(body.position))
+
+const CLAY: MaterialInfo = { type: 'MeshStandardMaterial', side: THREE.FrontSide, transparent: false, opacity: 1, depthTest: true, depthWrite: true, polygonOffset: false, colorWrite: true, customVertex: false, renderOrder: 0 }
+// The pieces measured here are closed shapes, so no camera has to say which side of one is inside.
+const CAMERA: CameraInfo = { position: [0, 200, 0], forward: [0, -1, 0], ortho: false, near: 1, far: 1000, fov: 27, orthoHeight: 0, view: [], projection: [], viewport: [1180, 820], logDepth: false }
+
+/** A drawn shape placed as the intersection audit reads it: its triangles in world space. */
+function auditPiece(name: string, geometry: THREE.BufferGeometry, matrix: THREE.Matrix4) {
+  const position = geometry.getAttribute('position')
+  const positions = new Float32Array(position.count * 3)
+  const v = new THREE.Vector3()
+  for (let i = 0; i < position.count; i++) v.fromBufferAttribute(position, i).applyMatrix4(matrix).toArray(positions, i * 3)
+  const index = geometry.getIndex()
+  return preparePiece({ id: name, mesh: name, label: name, object: name, positions, index: index ? Uint32Array.from(index.array) : null, material: CLAY })
+}
 
 describe('stones collide as they are drawn', () => {
   it('draws every size inside its collider, and the collider touches the drawing on every side', () => {
@@ -238,7 +254,38 @@ function stoneGeometry(q: Quarters): THREE.BufferGeometry {
   return geometry
 }
 
-describe('the guidance ghost stone lies on the stone it is lifted from', () => {
+describe('the guidance ghost stone lies on what it is lifted from and carried over', () => {
+  it("lifts the ghost stone over the bowl's side, a plate's rim and the rug's hem rather than into them", () => {
+    const table = new TableController({ ...defaultTable(6), liveMat: 'feeding', seats: FEEDING.seats.map(() => true) }, { save: () => {} })
+    const shapes = feedingShapes()
+    const rug = to3(RUG.center)
+    const place = (at: Point, y: number) => new THREE.Matrix4().makeTranslation(to3(at).x, y, to3(at).z)
+    const drawn = [
+      auditPiece('hem', shapes.rugRope, new THREE.Matrix4().makeTranslation(rug.x, 0, rug.z)),
+      auditPiece('bowl', shapes.bowl, place(FEEDING.bowl, ON_RUG)),
+      ...FEEDING.seats.map((seat, index) => auditPiece(`plate ${index}`, shapes.plate, place(seat.plate, ON_RUG))),
+    ]
+    const pebble = geo.pebble(20)
+    const size = new THREE.Vector3().setScalar(stoneRadius3(4))
+    const spots = [FEEDING.bowl, ...FEEDING.seats.map((seat) => seat.plate), ...HEM_LINE.filter((_, i) => i % 20 === 0)]
+    let met = 0
+    for (const spot of spots) {
+      for (let dx = -160; dx <= 160; dx += 20) {
+        for (let dy = -160; dy <= 160; dy += 20) {
+          const at = { x: spot.x + dx, y: spot.y + dy }
+          const p = to3(at, Math.max(1.4, ghostFloor(table, at) + GHOST_BELOW))
+          const ghost = auditPiece('ghost', pebble, new THREE.Matrix4().makeTranslation(p.x, p.y, p.z).scale(size))
+          for (const piece of drawn) {
+            if (!ghost.box.intersectsBox(piece.box)) continue
+            met++
+            expect(pairDepth(ghost, piece, CAMERA)?.depth ?? 0, `${piece.id} at ${at.x}, ${at.y}`).toBeLessThan(0.05)
+          }
+        }
+      }
+    }
+    expect(met).toBeGreaterThan(100)
+  }, 30_000)
+
   it('lays the ghost stone on top of every stone it would reach into, however they lie in a heap', () => {
     const table = new TableController({ ...defaultTable(6), bag: 40, total: 40 }, { save: () => {} })
     table.setProjector({ toScreen: (v) => toWorld2(v), toPlane: (screen) => screen })
@@ -274,6 +321,53 @@ describe('the guidance ghost stone lies on the stone it is lifted from', () => {
     }
     expect(ids.length).toBeGreaterThan(8)
     expect(under).toBeGreaterThan(ids.length)
+  })
+})
+
+describe('stones are drawn on what they land on', () => {
+  it('measures how far a turned stone reaches down to its drawing', () => {
+    let seed = 3
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
+    for (const q of SIZES) {
+      const points = drawnPoints(q)
+      for (let trial = 0; trial < 20; trial++) {
+        const turn = new CANNON.Quaternion(random() - 0.5, random() - 0.5, random() - 0.5, random() - 0.5).normalize()
+        const body = new CANNON.Body({ mass: 0 })
+        body.quaternion.copy(turn)
+        expect(stoneReachDown(q, turn.x, turn.y, turn.z, turn.w), `size ${q}`).toBeCloseTo(-lowest(body, points), 4)
+      }
+    }
+  })
+
+  it('draws a stone dropped from the hand on the table, however hard it lands in the physics', () => {
+    const table = new TableController({ ...defaultTable(6), bag: 40, total: 40 }, { save: () => {} })
+    table.setProjector({ toScreen: (v) => toWorld2(v), toPlane: (screen) => screen })
+    let [dipped, drawn, clock] = [Infinity, Infinity, 0]
+    for (let i = 0; i < 6; i++) {
+      const to = { x: 560 + i * 60, y: 640 }
+      table.pointerDown(2, BAG, (clock += 10))
+      for (let k = 1; k <= 10; k++) {
+        table.pointerMove(2, { x: BAG.x + ((to.x - BAG.x) * k) / 10, y: BAG.y + ((to.y - BAG.y) * k) / 10 }, (clock += 16))
+        table.step(1 / 60)
+      }
+      table.pointerUp(2, to, (clock += 16))
+      for (let t = 0; t < 0.8; t += 1 / 60) {
+        table.step(1 / 60)
+        const surfaces = table.physics.surfaces(table.state.liveMat, table.state.seats)
+        for (const stone of stoneStates(table)) {
+          const body = table.physics.body(stone.id)
+          if (!body || stone.held) continue
+          // Under a hanging pan, a stone lies on the table.
+          const under = surfaceUnder(toWorld2(body.position), surfaces)
+          const ground = body.position.y > under ? under : 0
+          const low = lowest(body, drawnPoints(stone.q)) - body.position.y
+          dipped = Math.min(dipped, body.position.y + low - ground)
+          drawn = Math.min(drawn, stone.position.y + low - ground)
+        }
+      }
+    }
+    expect(dipped, 'no stone dipped into the table as it landed, so this measures nothing').toBeLessThan(-0.1)
+    expect(drawn).toBeGreaterThan(-1e-6)
   })
 })
 

@@ -4,10 +4,10 @@ import type { TableController } from '../controller'
 import { QualityGovernor, startingTier, type QualitySettings } from '../quality'
 import { BAG, DOOR, FEEDING, SCALE, shelfTile, type Point } from '../layout'
 import { stoneRadius3, toWorld2, UNIT } from '../physics3d'
-import { stoneReachAlong, stoneReachOf, stoneRest } from '../stoneShape'
+import { stoneReachAlong, stoneReachDown, stoneReachOf, stoneRest } from '../stoneShape'
 import { partReachDown, STOOL_REACH } from '../partShape'
 import { panOf } from '../scale'
-import { feedingFloor, RUG, surfaceUnder } from '../surfaces'
+import { feedingFloor, feedingRest, RUG, surfaceUnder } from '../surfaces'
 import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
 import { visitorHome } from '../visitors'
 import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GHOST_REACH, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, STONE_COVER, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type StoneState } from './models'
@@ -21,16 +21,24 @@ import { ProjectorBridge, Stage, type ProjectorHandle } from './stage'
 /** A stone lies on what is under it while its middle is less than this (cm) above its resting height. */
 const STONE_LYING = 0.5
 
-function stoneStates(table: TableController): StoneState[] {
+export function stoneStates(table: TableController): StoneState[] {
   const states: StoneState[] = []
+  const surfaces = table.physics.surfaces(table.state.liveMat, table.state.seats)
   for (const id of table.visibleStoneIds()) {
     const body = table.physics.body(id)
     if (!body) continue
+    const q = table.quartersOf(id)
+    const { x, y, z, w } = body.quaternion
+    // A stone landing fast dips into what it lands on for a step before the
+    // physics lifts it back out; it is drawn on it. Under a hanging pan, it
+    // lies on the table.
+    const under = surfaceUnder(toWorld2(body.position), surfaces)
+    const ground = body.position.y > under ? under : 0
     states.push({
       id,
-      q: table.quartersOf(id),
-      position: { x: body.position.x, y: body.position.y, z: body.position.z },
-      quaternion: [body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w],
+      q,
+      position: { x: body.position.x, y: Math.max(body.position.y, ground + stoneReachDown(q, x, y, z, w)), z: body.position.z },
+      quaternion: [x, y, z, w],
       velocityY: body.velocity.y,
       held: table.isHeld(id),
       pulse: table.pulse(id),
@@ -92,9 +100,9 @@ function groundUnder(table: TableController, at: Point): number {
   return surfaceUnder(at, table.physics.surfaces(table.state.liveMat, table.state.seats))
 }
 
-/** What the guidance's ghost stone lies on at `at`: the top of any stone it would reach into, or the feeding mat's plates, bowl and rug. */
+/** What the guidance's ghost stone lies on at `at`: the top of any stone it would reach into, or of the feeding mat's plates, bowl and rug. */
 export function ghostFloor(table: TableController, at: Point): number {
-  let floor = table.state.liveMat === 'feeding' ? groundUnder(table, at) : 0
+  let floor = table.state.liveMat === 'feeding' ? feedingRest(at, GHOST_REACH, table.state.seats) : 0
   for (const stone of stoneStates(table)) {
     const p = toWorld2(stone.position)
     if (Math.hypot(p.x - at.x, p.y - at.y) * UNIT >= GHOST_REACH + stoneReachOf(stone.q)) continue
