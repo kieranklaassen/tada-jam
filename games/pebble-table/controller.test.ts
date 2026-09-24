@@ -4,6 +4,7 @@ import { silentSound, TableController, type Projector } from './controller'
 import { IDLE_BEFORE_HINT } from './guidance'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, shelfTile } from './layout'
 import { JARS, PART_COUNTS } from './parts'
+import { STOOL_REACH } from './partShape'
 import { stoneRadius3, toWorld2, UNIT } from './physics3d'
 import { stoneRest } from './stoneShape'
 import { panOf } from './scale'
@@ -172,6 +173,31 @@ describe('one obvious want', () => {
     }
     run(table, 3)
     expect(table.stoolsShown).toBe(true)
+  })
+
+  it('hops a stone lying where a stool pops up out beside it, clear of the stool, the plates and the other stones', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 900 })
+    const stools = [0, 2, 3].map((seat) => FEEDING.seats[seat].guest)
+    const r = stoneRadius3(4) / UNIT
+    const inStool = (p: { x: number; y: number }) => stools.some((at) => Math.hypot(p.x - at.x, p.y - at.y) < (STOOL_REACH / UNIT) * 1.12 + r)
+    for (const at of [...stools, { x: stools[2].x + 25, y: stools[2].y - 15 }]) {
+      drag(table, { x: BAG.x, y: BAG.y }, at)
+      run(table, 1)
+    }
+    expect(table.state.pieces.filter(inStool)).toHaveLength(4)
+    for (const seat of [1, 4]) {
+      drag(table, { x: BAG.x, y: BAG.y }, FEEDING.seats[seat].plate)
+      run(table, 1)
+    }
+    run(table, 3)
+    expect(table.stoolsShown).toBe(true)
+    expect(table.state.pieces).toHaveLength(6)
+    expect(table.state.pieces.filter(inStool)).toEqual([])
+    expect(table.physics.stoneIds()).toHaveLength(6)
+    expect(table.feeding.plates).toEqual([0, 4, 0, 0, 4])
+    const pieces = table.state.pieces
+    for (const [i, a] of pieces.entries()) for (const b of pieces.slice(i + 1)) expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(r * 1.9)
   })
 })
 

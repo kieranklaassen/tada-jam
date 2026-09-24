@@ -122,6 +122,8 @@ const BAG_TOP = 11
 const HOLD_ROOM = 1
 /** The highest a held thing rides, however tall what it is carried over. */
 const HOLD_CEILING = 50
+/** How far an empty seat's stool reaches (layout units) at the top of its springy pop-in, which overshoots its size by an eighth. */
+const STOOL_CLEAR = (STOOL_REACH / UNIT) * 1.125
 /** Room (cm) a poured part keeps from its jar's pot, for the little it turns in flight. */
 const POUR_ROOM = 1.5
 
@@ -332,6 +334,7 @@ export class TableController {
       this.sound.chord()
       if (!this.stoolsShown) {
         this.stoolsShown = true
+        this.clearStools()
         this.syncGuests()
         this.changed()
       }
@@ -1485,6 +1488,69 @@ export class TableController {
         this.cadence.change(performance.now(), true)
       },
     })
+  }
+
+  /** The stools pop up where the table was bare: a stone lying where one stands hops out beside it as it rises. */
+  private clearStools(): void {
+    const stools = FEEDING.seats.flatMap((seat, index) => (this.state.seats[index] ? [] : [seat.guest]))
+    const resting = this.restingPieces()
+    const taken = new Map(resting.map((piece) => [piece.id, { x: piece.x, y: piece.y, r: stoneRadius3(piece.q) / UNIT }]))
+    for (const piece of resting) {
+      const r = stoneRadius3(piece.q) / UNIT
+      const stool = stools.find((at) => Math.hypot(piece.x - at.x, piece.y - at.y) < STOOL_CLEAR + r)
+      if (!stool) continue
+      taken.delete(piece.id)
+      const spot = this.besideStool(stool, piece, r, stools, [...taken.values()])
+      taken.set(piece.id, { ...spot, r })
+      const body = this.physics.body(piece.id)
+      const from = body ? { x: body.position.x, y: body.position.y, z: body.position.z } : to3(piece, 1)
+      this.physics.removeStone(piece.id)
+      this.flights.push({
+        id: piece.id,
+        q: piece.q,
+        from,
+        to: to3(spot, this.restHeight(spot, piece.q) + 0.15),
+        t0: this.t,
+        duration: 0.42,
+        arc: 9,
+        carriesPiece: true,
+        land: () => {
+          if (!this.pieceById(piece.id)) return
+          piece.x = spot.x
+          piece.y = spot.y
+          this.addPieceBody(piece, { y: this.restHeight(spot, piece.q) + 0.15 })
+          this.sound.clack(0.3)
+          this.cadence.change(performance.now(), true)
+        },
+      })
+    }
+  }
+
+  /** The nearest bare spot just outside a stool, on the side the stone lay: off every plate, the bowl, the bag, the guests, the stools and the other stones. */
+  private besideStool(stool: Point, from: Point, r: number, stools: readonly Point[], stones: readonly (Point & { r: number })[]): Point {
+    const bare = (at: Point) =>
+      at.x > TABLE.x + r &&
+      at.x < TABLE.x + TABLE.w - r &&
+      at.y > TABLE.y + r &&
+      at.y < TABLE.y + TABLE.h - r &&
+      Math.hypot(at.x - FEEDING.bowl.x, at.y - FEEDING.bowl.y) >= FEEDING.bowl.r + r &&
+      Math.hypot(at.x - BAG.x, at.y - BAG.y) >= BAG.r + r &&
+      stools.every((other) => Math.hypot(at.x - other.x, at.y - other.y) >= STOOL_CLEAR + r) &&
+      FEEDING.seats.every(
+        ({ plate, guest }, index) =>
+          Math.hypot(at.x - plate.x, at.y - plate.y) >= FEEDING.plateRadius + r && (!this.state.seats[index] || Math.hypot(at.x - guest.x, at.y - guest.y) >= GUEST_RADIUS + r),
+      ) &&
+      stones.every((stone) => Math.hypot(at.x - stone.x, at.y - stone.y) >= stone.r + r + 2)
+    const away = Math.atan2(from.y - stool.y, from.x - stool.x)
+    for (let ring = 0; ring < 6; ring++) {
+      const distance = STOOL_CLEAR + r + 3 + ring * r * 2
+      for (let k = 0; k < 16; k++) {
+        const angle = away + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8)
+        const at = { x: stool.x + Math.cos(angle) * distance, y: stool.y + Math.sin(angle) * distance }
+        if (bare(at)) return at
+      }
+    }
+    return { x: stool.x + Math.cos(away) * (STOOL_CLEAR + r + 3), y: stool.y + Math.sin(away) * (STOOL_CLEAR + r + 3) }
   }
 
   private dropKnife(): void {
