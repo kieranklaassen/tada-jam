@@ -126,6 +126,23 @@ The jam's shared browser script that plays any game's production build through t
 
 It reads Frame work, the current tier, and the draw counts from a grown-up handle each game publishes on the page, so a game publishes that handle in the one shape the probe expects. It can pin a Quality tier or leave the choice to the Governor, and it can throttle the CPU or enlarge the page to stand in for a weaker device. Its numbers describe the machine and browser it ran on, not a child's device.
 
+## Intersection checks
+
+### Intersection audit
+The jam's shared headless check that plays a game's production build on a paused, seeded clock through the game's own scripted stretches of play, and reports what a child would see pass through something: two pieces crossing, a piece sunk into what it rests on or hidden inside another, a Pose finding, coplanar faces that flicker, and anything cut by the camera.
+
+It reads the live 3D scene's positions on the processor at intervals, so motion done only in a shader, anything that happens between two samples, and games drawn without a 3D scene are outside what it sees; those are covered by tests on the game's own model. A game is enforced once its pass is clean, and from then on any visible finding that is not an Intended contact fails CI. A clean run proves only the states its script reached.
+
+### Pose finding
+A finding where two parts of one object cross deeper, at some moment, than they did at their shallowest in the same run, such as a wing swinging through its body.
+
+Because each pair is measured against its own shallowest, parts modelled into each other at rest are not flagged; only a swing past that is. Which parts form one object is declared by the game or guessed from size, and that grouping decides whether a crossing is judged as a pose or as two objects passing through each other. Depth is measured in the world, so a scaled parent changes it.
+
+### Intended contact
+A place where a game means two pieces to touch or overlap (a stem planted in soil, a fish under the water surface), which the Intersection audit allows by name, with a written reason and a depth cap, instead of the game fixing it.
+
+The reason says why the contact is meant or why a child never sees it. The cap sits a little above the depth measured, so a new, deeper fault in the same pair still fails; a contact allowed without a cap is allowed at any depth.
+
 ## Flagged ambiguities
 
 - "Art direction" had been used for both one game's look and the jam-wide standard. These are distinct: a game's look is its Claimed style, described in its Art guide; the jam-wide standard is the Quality bar.
