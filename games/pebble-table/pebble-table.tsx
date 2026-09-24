@@ -3,6 +3,7 @@ import type { Cartridge, CartridgeContext } from '../types'
 import { TableAudio } from './audio'
 import { TableController } from './controller'
 import { pebbleTableManifest } from './manifest'
+import { seededRandom } from './random'
 import { deserialize } from './state'
 import { PALETTE } from './view/clay'
 import { GameView } from './view/game'
@@ -39,7 +40,8 @@ function PebbleTableMount({ ctx }: { ctx: CartridgeContext }) {
       .then((saved) => {
         if (disposed) return
         const sound = new TableAudio()
-        created = new TableController(deserialize(saved, childAge), { save: (state) => storage.save(state), sound })
+        // Sound and three.js draw from Math.random at moments the audio clock and shader compiles decide, so how a spill is flung keeps a stream of its own.
+        created = new TableController(deserialize(saved, childAge), { save: (state) => storage.save(state), sound, random: seededRandom(Math.random() * 2 ** 32) })
         setTable(created)
         prepareTimer = setTimeout(() => sound.prepare(), AUDIO_PREPARE_MS)
       })

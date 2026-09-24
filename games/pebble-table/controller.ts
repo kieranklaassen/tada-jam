@@ -164,6 +164,8 @@ export class TableController {
   readonly nudges = new Map<number, number>()
   /** Seconds of attended play; stands still while the table is put away. */
   t = 0
+  /** Every random choice the table makes (how a spill or a pour is flung) draws from this, so sound and drawing cannot change them. */
+  private readonly random: () => number
   beam: Beam = restingBeam()
   sway: Sway = { x: 0, v: 0 }
   bagTipStart: number | null = null
@@ -206,9 +208,10 @@ export class TableController {
   /** Knock-Knock: the child's knocks waiting for an answer, the house's answer, and the visitors in the yard. */
   readonly door: DoorState = { knocks: [], knockAt: null, answer: null, openAt: null, closeAt: null, visitors: [], peekStretch: { lastIdle: 0, count: 0, next: PEEK_AFTER, at: null } }
 
-  constructor(state: TableState, options: { save: (state: TableState) => void; sound?: Sound }) {
+  constructor(state: TableState, options: { save: (state: TableState) => void; sound?: Sound; random?: () => number }) {
     this.state = state
     this.sound = options.sound ?? silentSound
+    this.random = options.random ?? (() => Math.random())
     this.cadence = new SaveCadence(() => options.save(serialize(this.state)))
     this.tracker = new GestureTracker(() => this.hitTest())
     this.scheduler = new HintScheduler(0)
@@ -707,10 +710,10 @@ export class TableController {
     for (let i = 0; i < count; i++) {
       const { at, y, direction } = spillFrom(kind, i, count)
       const part = this.newPart(kind, at)
-      const speed = kind === 'boulder' ? 45 : 60 + Math.random() * 30
-      const lift = kind === 'boulder' ? 18 + Math.random() * 12 : pourLift(kind, speed) * (1.2 + Math.random() * 0.2)
+      const speed = kind === 'boulder' ? 45 : 60 + this.random() * 30
+      const lift = kind === 'boulder' ? 18 + this.random() * 12 : pourLift(kind, speed) * (1.2 + this.random() * 0.2)
       const velocity = { x: direction.x * speed, y: lift, z: direction.y * speed }
-      this.pouring.push({ id: part.id, kind, at, y, velocity, spin: Math.random() - 0.5, yaw: Math.atan2(direction.x, direction.y), due: this.t + i * POUR_GAP })
+      this.pouring.push({ id: part.id, kind, at, y, velocity, spin: this.random() - 0.5, yaw: Math.atan2(direction.x, direction.y), due: this.t + i * POUR_GAP })
     }
     this.syncJars()
     this.pour()
@@ -1440,13 +1443,13 @@ export class TableController {
     const exit = this.leaveBag()
     spilled.forEach((piece, index) => {
       const spread = (index / Math.max(1, spilled.length - 1) - 0.5) * 1.2
-      const angle = -0.6 + spread + (Math.random() - 0.5) * 0.3
-      const speed = 70 + Math.random() * 55
+      const angle = -0.6 + spread + (this.random() - 0.5) * 0.3
+      const speed = 70 + this.random() * 55
       Object.assign(piece, toWorld2({ x: exit.x + Math.cos(angle) * SPILL_OUT, z: exit.z + Math.sin(angle) * SPILL_OUT }))
       this.addPieceBody(piece, {
         y: exit.y + index * SPILL_STACK,
-        velocity: { x: Math.cos(angle) * speed, y: 28 + Math.random() * 22, z: Math.sin(angle) * speed },
-        spin: (Math.random() - 0.5) * 14,
+        velocity: { x: Math.cos(angle) * speed, y: 28 + this.random() * 22, z: Math.sin(angle) * speed },
+        spin: (this.random() - 0.5) * 14,
       })
     })
     const ids = spilled.map((piece) => piece.id)
