@@ -38,6 +38,8 @@ export type PieceInput = {
   material: MaterialInfo
   // Changes whenever the piece's geometry or transform changes.
   version?: string
+  // Stable name of the part within its object for pose history (partKeys).
+  part?: string
 }
 
 export type CameraInfo = {
@@ -712,7 +714,30 @@ export function splitComponents(input: PieceInput): PieceInput[] {
 
 // --- one moment ------------------------------------------------------------
 
-export type PoseTrack = { min: number; max: number; flagged: boolean; limit: number; scale: number }
+export type PoseTrack = { min: number; max: number; flagged: boolean; limit: number; scale: number; a: string; b: string }
+
+// A stable name for each part of an object: the object, the mesh, and the
+// part's rank among that object's instances of the mesh. Instanced batches
+// that pool slots hand instance i to a different owner from one moment to the
+// next; the rank within the owner stays with the part.
+export function partKeys(pieces: ReadonlyArray<Pick<PieceInput, 'id' | 'mesh' | 'object'>>): Map<string, string> {
+  const groups = new Map<string, Array<{ id: string; slot: number }>>()
+  for (const p of pieces) {
+    const base = p.id.replace(/~\d+$/, '')
+    const hash = base.lastIndexOf('#')
+    const slot = hash >= 0 ? Number(base.slice(hash + 1)) : 0
+    const key = `${p.object}::${p.mesh}${p.id.slice(base.length)}`
+    let list = groups.get(key)
+    if (!list) groups.set(key, (list = []))
+    list.push({ id: p.id, slot })
+  }
+  const out = new Map<string, string>()
+  for (const [key, list] of groups) {
+    list.sort((x, y) => x.slot - y.slot)
+    list.forEach((p, rank) => out.set(p.id, list.length > 1 ? `${key}@${rank}` : key))
+  }
+  return out
+}
 
 export type MomentOptions = {
   camera: CameraInfo
@@ -721,6 +746,8 @@ export type MomentOptions = {
   // Pairs to leave alone entirely (checked against ids, labels, objects).
   skipPair?: (a: Piece, b: Piece) => boolean
   // Depths of same-object part pairs seen so far, keyed by pair, for pose.
+  // Keyed by each piece's `part` when it has one (see partKeys), so a pooled
+  // instance handed to another owner does not carry the old owner's history.
   poseHistory?: Map<string, PoseTrack>
   // Results of pairs whose pieces have not moved since they were computed,
   // keyed by piece versions and the camera.
@@ -776,8 +803,8 @@ export function analyseMoment(pieces: Piece[], options: MomentOptions): Finding[
         const r = cached(options, 'd|' + key, () => pairDepth(a, b, camera))
         const depth = r ? r.depth : 0
         const limit = tolerance(a, b, viewSize, tol)
-        const pk = pairKey('pose', a.id, b.id)
-        const h = options.poseHistory.get(pk) ?? { min: Infinity, max: 0, flagged: false, limit, scale: Math.min(a.scale, b.scale) }
+        const pk = pairKey('pose', a.part ?? a.id, b.part ?? b.id)
+        const h = options.poseHistory.get(pk) ?? { min: Infinity, max: 0, flagged: false, limit, scale: Math.min(a.scale, b.scale), a: a.id, b: b.id }
         h.min = Math.min(h.min, depth)
         h.max = Math.max(h.max, depth)
         options.poseHistory.set(pk, h)

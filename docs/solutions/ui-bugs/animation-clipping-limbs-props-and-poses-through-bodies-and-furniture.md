@@ -1,6 +1,7 @@
 ---
 title: Limbs, props and carried things clip through bodies and furniture when heights are hand-set; measure rest and reach from the rig, rise over lower ranks ahead of contact, keep motion on the CPU, and sweep pose extremes in unit tests
 date: 2026-09-24
+last_updated: 2026-09-24
 category: ui-bugs
 module: animation
 problem_type: ui_bug
@@ -20,7 +21,7 @@ symptoms:
   - Light Garden carried pieces at a fixed 3.6 cm, under the lamp's 6.85 cm top, and a piece flying home popped up over a tray lamp in one frame
   - Moon Phases' child stood partly inside Earth at 1,899 of 2,880 swept homes, hours and phases, and upside down at 743, from a left-handed basis
   - A wing, tail or shell swung through its own body (Shadow Lantern, 7 pose findings; Felt Meadow's bee wings 33 to 34% into its face)
-  - The audit saw rest-pose or full-size geometry where a vertex shader moved it (Light Garden's tray knob, Hillside Spring's crops)
+  - The audit saw rest-pose or full-size geometry where a vertex shader moved it (Light Garden's tray knob, Hillside Spring's crops, Bedtime Forest's sleeping animals, Pebble Table's fur and quills)
 root_cause: logic_error
 resolution_type: code_fix
 tags: [animation, clipping, pose, rest-height, carry, vertex-shader, morph-targets, intersection-audit]
@@ -30,7 +31,7 @@ tags: [animation, clipping, pose, rest-height, carry, vertex-shader, morph-targe
 
 ## Problem
 
-Most of what the intersection audit (PR #16) found in the ten merged three.js game passes was motion, not modelling. A wing or tail swung through its own body, a character sank into what it stood on, and a carried, hopping or flying thing passed through whatever it crossed. The common cause was heights, reaches and clearances set by hand, which no test tied to the drawn meshes, plus motion that lived where neither the unit tests nor the audit could see it: a vertex shader, or a frame drawn before the first update. A child sees a frog's head in a lily pad or a hand through a table as the game being broken.
+Most of what the intersection audit (PR #16) found in the eleven merged three.js game passes was motion, not modelling. A wing or tail swung through its own body, a character sank into what it stood on, and a carried, hopping or flying thing passed through whatever it crossed. The common cause was heights, reaches and clearances set by hand, which no test tied to the drawn meshes, plus motion that lived where neither the unit tests nor the audit could see it: a vertex shader, or a frame drawn before the first update. A child sees a frog's head in a lily pad or a hand through a table as the game being broken.
 
 ## Symptoms
 
@@ -50,7 +51,7 @@ Most of what the intersection audit (PR #16) found in the ten merged three.js ga
 - **Lifting at the moment of contact.** Light Garden's height floor lifted a piece flying home in the single frame it would have touched the tray lamp, and dropped it as fast once past. Bugbot's autofix compared the rest of the path against the arc's current height and still jolted by 0.79 cm in one frame.
 - **Trusting a clean audit for a one-frame fault.** The audit stayed clean before and after that pop. It checks crossings, not smoothness, and at 262 samples over 66 s of game time it rarely lands on the one bad frame.
 - **A unit test that skips the controller's events.** Hillside Spring's first test of the tanuki's visit never called the director's `trigger('arrive')` or `cue()` as the controller does, so it passed on broken code. The audit's worst tanuki findings came from exactly that arrival spin.
-- **Motion only a vertex shader knows about.** Light Garden folded a tray piece's knob in the glass vertex shader. On the CPU the knob still stuck out 6 to 9 cm, so the audit reported it through the tray frame when nothing showed. The creatures' shader moves (wing sweep, jelly tentacles, snail stalks) were invisible in the other direction: the moth's wings dipped under the panel at take-off and the snail overshot into it when set down, and the audit could not see either. Hillside Spring's crops still grow in the vertex shader, so a harvested bed is drawn as stubble but audited full-size.
+- **Motion only a vertex shader knows about.** Light Garden folded a tray piece's knob in the glass vertex shader. On the CPU the knob still stuck out 6 to 9 cm, so the audit reported it through the tray frame when nothing showed. The creatures' shader moves (wing sweep, jelly tentacles, snail stalks) were invisible in the other direction: the moth's wings dipped under the panel at take-off and the snail overshot into it when set down, and the audit could not see either. Hillside Spring's crops still grow in the vertex shader, so a harvested bed is drawn as stubble but audited full-size. Bedtime Forest poses every part of its animals through a `parts` uniform in the vertex shader (`games/bedtime-forest/view/gouache.ts`), so the audit checks each animal in its bind pose: "a sleeping bear slumped in front of the cave mouth is checked as a standing bear with its back in the rock", and "a rearing bear's forelegs are not checked at all" (its pass's tool notes). Pebble Table's pending pass (branch `cursor/pebble-table-intersections-2526`) found the same for its guests' fur shells and hedgehog quills, which their vertex shaders push out and sway.
 
 ## Solution
 
@@ -125,6 +126,8 @@ Hillside Spring lifts a carried piece along the ray through the finger (`CarryGr
 
 The audit reads morphed and skinned positions (`getVertexPosition` in `scripts/intersections/page.js`), so the fold is seen. Where a deform has to stay in the shader, port it to TypeScript and test that. Light Garden ported its creatures' moves to `games/light-garden/bodies.ts`, whose header says to "keep the two in step". A throwaway vitest then ran the audit's `preparePiece` and `pairDepth` on every creature pair through 72 s of a full garden, and found 0 crossings. Hillside Spring kept its crop tests on the full-grown CPU crops, the worst case.
 
+Where shader motion is neither on the CPU nor mirrored, a clean audit says nothing about it, so say that in the config and the log. Bedtime Forest allows each animal in its own doorway ("the sleeping poses come from the vertex shader", PR #29), fits its footprints to the bind pose with 0.6 units of air, and lists "Poses are not audited" under what is still weak in `games/bedtime-forest/REFINEMENT.md`. Pebble Table's branch ignores `guest-fur-` and `guest-quills-` and reviews them by eye in the close-ups and contact sheets. The audit has no hook for a game to hand it a shader pose; Bedtime Forest's tool notes suggest one.
+
 **Build a rotation from vectors in right-handed order.** Moon Phases turned the child by (up × forward, up, back). That set is a mirror, not a rotation, and the quaternion three.js takes from it had length 0.71. Now (`games/moon-phases/scene.ts`):
 
 ```ts
@@ -158,14 +161,15 @@ this.kid.quaternion.setFromRotationMatrix(this.m.makeBasis(right, up, forward.cl
 - Test that a rise is smooth, not only clear. Light Garden's fly-home test fails when the height's frame-to-frame change of course (its second difference) passes 0.3 cm: 4.64 cm before the look-ahead, 0.79 cm on the autofix, 0.02 cm with it.
 - Compare a test's depths with the audit's in the same frame. The audit measures pose depth in world space, so a parent's scale changes it. In Cosy Scarf's pass (PR #28), the cold bear's body squashes in y and its head is the body's child: the audit measured body × head at 6.26% and a sweep in the body's own frame got 7.1% for the same poses. Neither is wrong, but a threshold taken in one frame does not carry over to the other. A test meant to agree with the audit applies the same world transform before comparing with its 6%. A test kept in the parent's frame, as Cosy Scarf's is, will not read the audit's numbers.
 - Keep deforms that matter for contact on the CPU (morph targets, skinning, or TypeScript the view also uses), or mirror them in TypeScript and say so in a comment on both sides.
+- When a deform stays in the shader unmirrored, give its allow or ignore rule a reason that names the shader, and list it under what is still weak, so nobody reads the clean result as covering it. `report.md` counts the meshes with custom vertex shaders; compare that count with what the config accounts for.
 - Build bases with cross products in right-handed order, and assert the quaternion is unit length in a test.
 - End a scene's constructor with its first update, and test that a new scene is already where that update leaves it.
 - Revert each fix once to see its test fail, as the Hillside Spring pass did for every one of its fixes.
 
 ## Related Issues
 
-- The game passes: PR #19 Shadow Lantern, PR #20 Frog Choir, PR #22 Moon Phases, PR #24 Felt Meadow, PR #26 Light Garden, PR #27 Hillside Spring, PR #28 Cosy Scarf, PR #29 Bedtime Forest, PR #30 Turning Tower, and Kite Tower's, merged from a bundle as "Merge cursor/kite-tower-intersections-bundle". The audit: PR #16, and tool v4 (PR #23) for the first-frame wait.
-- Pending passes: Pebble Table and Critter Clay.
+- The game passes: PR #19 Shadow Lantern, PR #20 Frog Choir, PR #22 Moon Phases, PR #24 Felt Meadow, PR #26 Light Garden, PR #27 Hillside Spring, PR #28 Cosy Scarf, PR #29 Bedtime Forest, PR #30 Turning Tower, and Kite Tower's and Critter Clay's, merged from bundles as "Merge cursor/kite-tower-intersections-bundle" and "Merge cursor/critter-clay-intersections-bundle". The audit: PR #16, and tool v4 (PR #23) for the first-frame wait.
+- Pending pass: Pebble Table.
 - [Give every character its own motion personality](../design-patterns/motion-personality-per-character.md): each extra variant or delight is another set of poses to sweep here.
 - [Pieces collide as drawn and rest on what is drawn](pieces-collide-as-drawn-and-rest-on-what-is-drawn.md) covers physics colliders, rest heights and spawn footprints taken from the drawn geometry.
 - [Coplanar faces and flat overlays z-fight](z-fighting-from-coplanar-faces-decals-and-flat-overlays.md) covers the flat pieces that dip or settle onto a surface (Frog Choir's struck pad, blob shadows over moving pads).

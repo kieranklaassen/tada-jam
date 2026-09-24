@@ -1,6 +1,7 @@
 ---
 title: Coplanar faces and flat overlays z-fight until the overlay is lifted, offset and drawn after what it covers, flush parts end short, and quads are cut to what their texture draws
 date: 2026-09-24
+last_updated: 2026-09-24
 category: ui-bugs
 module: rendering
 problem_type: ui_bug
@@ -30,7 +31,7 @@ tags: [z-fighting, decals, polygon-offset, contact-shadows, depth-buffer, draw-o
 
 ## Problem
 
-The intersection audit (`npm run check:intersections`, PR #16) found surfaces that z-fight in seven of the ten three.js games whose audit passes have merged (Moon Phases, PR #22, and Cosy Scarf, PR #28, had none, and Bedtime Forest's one, PR #29, was its ink outline read as a solid): two faces in one plane, or closer together than the depth buffer can tell apart, so they draw in stripes that shimmer as the camera or the piece moves. Between them those seven games had 22 zfight findings before their passes and none on screen after (Shadow Lantern 3, Frog Choir 1, Light Garden 1, Hillside Spring 6, Felt Meadow 3, Turning Tower 6, Kite Tower 2). The same passes found flat overlays (shadows, rings, ripples) reported inside what they lie on, because of their geometry rather than anything a child could see. A flicker reads to a child as something broken, and it is easy to miss on a still screenshot.
+The intersection audit (`npm run check:intersections`, PR #16) found surfaces that z-fight in seven of the eleven three.js games whose audit passes have merged (Moon Phases, PR #22, Cosy Scarf, PR #28, and Critter Clay, merged from a bundle as "Merge cursor/critter-clay-intersections-bundle", had none on screen, and Bedtime Forest's one, PR #29, was its ink outline read as a solid): two faces in one plane, or closer together than the depth buffer can tell apart, so they draw in stripes that shimmer as the camera or the piece moves. Between them those seven games had 22 zfight findings before their passes and none on screen after (Shadow Lantern 3, Frog Choir 1, Light Garden 1, Hillside Spring 6, Felt Meadow 3, Turning Tower 6, Kite Tower 2). The same passes found flat overlays (shadows, rings, ripples) reported inside what they lie on, because of their geometry rather than anything a child could see. A flicker reads to a child as something broken, and it is easy to miss on a still screenshot.
 
 ## Symptoms
 

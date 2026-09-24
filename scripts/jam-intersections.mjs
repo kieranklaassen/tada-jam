@@ -28,7 +28,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { chromium } from 'playwright'
-import { DEFAULT_TOLERANCE, analyseMoment, clipToPlanes, pairKey, preparePiece, splitComponents } from './intersections/core.ts'
+import { DEFAULT_TOLERANCE, analyseMoment, clipToPlanes, pairKey, partKeys, preparePiece, splitComponents } from './intersections/core.ts'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const W = 1180
@@ -262,9 +262,11 @@ async function auditGame(browser, base, game, opts) {
       }
     }
     prepared.clear()
+    const parts = partKeys(pieces)
     for (const piece of pieces) {
       prepared.set(piece.id + '@' + piece.version, piece)
       names.set(piece.id, { label: piece.label, object: piece.object })
+      piece.part = parts.get(piece.id)
     }
     pieceCount = Math.max(pieceCount, pieces.length)
     lastPieces = pieces
@@ -431,9 +433,10 @@ async function auditGame(browser, base, game, opts) {
     moments.push({ name: m.name, from: +(from / 1000).toFixed(2), to: +(t / 1000).toFixed(2), contacts: await contactShots(m.name) })
   }
   // Pose tracks whose shallowest moment came after their deepest one.
-  for (const [key, h] of poseHistory) {
+  for (const h of poseHistory.values()) {
     if (h.flagged || !(h.max - h.min > h.limit)) continue
-    const [, a, b] = key.split('|')
+    const { a, b } = h
+    const key = pairKey('pose', a, b)
     const A = names.get(a) ?? { label: a, object: '' }
     const B = names.get(b) ?? { label: b, object: '' }
     const entry = {

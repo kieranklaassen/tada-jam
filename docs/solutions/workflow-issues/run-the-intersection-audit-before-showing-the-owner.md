@@ -1,6 +1,7 @@
 ---
 title: Before showing the owner a three.js jam game, run the intersection audit on moments that reach every state, cover what it cannot read with model tests, allow only reasoned and capped contacts, replay before and after, and enforce it in CI
 date: 2026-09-24
+last_updated: 2026-09-24
 category: workflow-issues
 module: intersection-audit
 problem_type: workflow_issue
@@ -17,10 +18,10 @@ applies_when:
   - An audit run is clean when you did not expect it, or a finding shows only at 0 s or as a whole-run pose
 symptoms:
   - The owner saw pieces going through each other in many games, and the first generic audit found 3 to 141 visible findings in each game then on main
-  - Moon Phases' audit was clean on main while its moments never reached the homes where the child sank into Earth, and its ignore list hid two solid rings
+  - Moon Phases' audit misled twice on main, as its moments never reached the homes where the child sank into Earth (and its ignore list hid two solid rings), and its first sample sometimes caught a frame drawn before the first tick, with nine findings no child could see
   - A single reload into a saved Light Garden lost to the game's own save on unload and reopened the garden from before
-  - Moon Phases' first sample sometimes caught a frame drawn before the first tick, with nine findings no child could see
   - Hillside Spring's pass-30 code named no meshes, so the pass's regression tests could not even load on it
+  - Pebble Table's enforced audit was clean twice on the VM and failed a CI shard on two stones no local run had caught, with 87 pieces where the local runs had 85
 root_cause: missing_workflow_step
 resolution_type: workflow_improvement
 tags: [intersection-audit, playwright, ci, allow-rules, determinism, coverage, vertex-shader, kids-games]
@@ -40,7 +41,7 @@ The owner saw pieces going through each other in many of the jam games, so PR #1
 
 Its first run used a generic idle, tap and drag script. It found visible findings in all eleven games then on `main`, from 3 in Light Garden to 141 in Shadow Lantern.
 
-Each game then had its own pass (PRs #19 to #30, and Kite Tower's, merged from a bundle as "Merge cursor/kite-tower-intersections-bundle"): script the moments, fix what is real, allow what is meant, and set `enforce: true` so CI keeps it clean. Ten three.js games are enforced now: Shadow Lantern, Frog Choir, Moon Phases, Felt Meadow, Light Garden, Hillside Spring, Cosy Scarf, Bedtime Forest, Turning Tower and Kite Tower. Bad Neighbours (PR #21) is canvas 2D, which the audit does not read. The passes for Pebble Table and Critter Clay are pending. Those two still run the generic script, and nothing about them fails CI. The tool changed three times from what the passes ran into (PRs #17, #18 and #23).
+Each game then had its own pass (PRs #19 to #30, and Kite Tower's and Critter Clay's, merged from bundles as "Merge cursor/kite-tower-intersections-bundle" and "Merge cursor/critter-clay-intersections-bundle"): script the moments, fix what is real, allow what is meant, and set `enforce: true` so CI keeps it clean. Eleven three.js games are enforced now: Shadow Lantern, Frog Choir, Moon Phases, Felt Meadow, Light Garden, Hillside Spring, Cosy Scarf, Bedtime Forest, Turning Tower, Kite Tower and Critter Clay. Bad Neighbours (PR #21) is canvas 2D, which the audit does not read. Pebble Table's pass is pending. On `main` it still runs the generic script, and nothing about it fails CI. The tool changed three times from what the passes ran into (PRs #17, #18 and #23).
 
 This doc is the workflow the passes converged on. The fixes for the two largest kinds of finding are in the z-fighting and animation-clipping docs linked under Related, and pieces that collide or rest off their drawing are in the colliders doc. Several passes learned the same lessons the hard way. Moon Phases' audit was clean on `main` while its moments never reached the homes where the child sank into Earth. Light Garden's saved-state moment quietly reopened the garden from before. Hillside Spring's pass-30 code "cannot load the tests at all, since it named no meshes" (PR #27).
 
@@ -71,13 +72,21 @@ Felt Meadow's petals crossing each other counted as penetrations between strange
 
 When a run is clean, write down what no moment reached, and what `report.md` says it skipped or cannot read. Cover those with unit tests on the game's own model.
 
-**4. Cover what the audit cannot read.**
+**4. Know what the audit handles, and cover what it cannot read.** It already handles these, so a config need not work around them:
+
+- **Overlays.** A mesh whose materials all have `depthTest: false`, such as a ghost hand or a see-through card drawn over everything, is skipped for every kind of finding, since it "cannot visibly cross anything" (PR #18). So is a mesh with `colorWrite` off or under 5% opacity (`scripts/intersections/page.js`).
+- **Clipping planes.** A piece is cut to what the renderer's `clippingPlanes` keep, plus its material's when `localClippingEnabled` is on, before it is checked (PR #18).
+- **Instances.** Each instance of an `InstancedMesh` is its own object unless a rule says otherwise: an `instances` rule makes instance i part of object floor(i / `per`), and `userData.jamInstanceObjects` names each instance's object, joining a group whose `jamObject` has the same key (`scripts/intersections/types.ts`). Pose history follows each part by its object, its mesh and its rank among that object's instances of the mesh (`partKeys` in `scripts/intersections/core.ts`). A batch that repacks its instances every frame can therefore hand a slot to another owner without mixing two owners' depths into one pose. A whole-run pose is named by the two pieces its track began with, not by the slot's last owner (`scripts/jam-intersections.mjs`). Before that fix (the PR "Compound: intersection lessons, round 2, and pose history per part"), history was kept by instance slot. In Critter Clay's before run, 31 of its 93 piece ids changed owner, and at least 51 of its 73 pose findings involved one of them. Hillside Spring allowed 47 bamboo-kit pose findings, hub × arm up to 113%, as slot swaps (both from the passes' tool notes). Its rule still gives that reason at `upTo: 1.5` (`scripts/intersections/games/hillside-spring.ts`), so re-measure and tighten allowances written for slot swaps.
+- **Outline hulls.** A back-side mesh with a custom vertex shader that shares its front mesh's geometry is skipped as an outline (PR #23).
+- **Bare names.** `ignore`, `allow`, `objects`, `instances` and `split` patterns are also tried without colour suffixes and child indices, "so `outline$` matches `frog>outline #574373` and `frog:5/outline:1`" (PR #23).
+
+What it cannot read needs a config line or a test:
 
 - **Vertex-shader motion.** The audit reads positions on the CPU. It sees morph targets and skinning (`getVertexPosition` in `scripts/intersections/page.js`), but not code in a custom vertex shader, which `report.md` only counts. Move deforms that matter for contact into morph targets or TypeScript and test them there (the animation-clipping doc). A mesh drawn entirely by its shader is ignored by name, with the reason beside it, and reviewed on the contact sheets. Cosy Scarf's `scarf` and `strand` are ignored this way. So is a full-screen sky triangle that its shader places in clip space, which the audit reads at the world origin (Bedtime Forest's and Turning Tower's `^sky$`, PRs #29 and #30).
 - **Shader-instanced batches and outline hulls.** Meshes on `InstancedBufferGeometry`, and inverted-hull outlines that share their front mesh's geometry, are skipped and listed under "Not audited" in `report.md`. Check them by eye. A hull built as a geometry of its own is audited as a solid: Bedtime Forest's ink lines made 41 of its 53 findings until its config ignored `-ink$` (PR #29). Light Garden's `shadows-and-eyes` and `light` batches, Frog Choir's outline bands and Felt Meadow's fuzz shells were checked on the frames and contact sheets (PRs #26, #20, #24).
 - **Texture alpha.** The audit reads triangles. A quad carrying a round or cut-out texture counts its invisible corners, and a transparent material under 5% opacity is skipped entirely. Cut the quad to what its texture draws (the z-fighting doc).
 - **Anything between samples.** A one-frame pop or a jolt falls between samples. Test smoothness in a unit test, as Light Garden's fly-home test does with the frame-to-frame change of course in a height.
-- **Canvas 2D, SVG and DOM games.** The audit reports "not audited (no three.js scene)" and exits 0; "their overlaps belong in tests on their own model" (PR #17). Bad Neighbours' check is a vitest, `games/bad-neighbours/intersections.test.ts`. It plays the real `Game` at 60 fps with seeded input and measures every pair of matter-js colliders, every thrown prop against the slab as the renderer paints it, each sprite against its collider, and the spawn point against the street (PR #21).
+- **Canvas 2D, SVG and DOM games.** The audit reports "not audited (no three.js scene)" and exits 0; "their overlaps belong in tests on their own model" (PR #17). Bad Neighbours' check is a vitest, `games/bad-neighbours/intersections.test.ts`. It plays the real `Game` at 60 fps with seeded input and measures every pair of matter-js colliders, every thrown prop against the slab as the renderer paints it, each sprite against its collider, and the spawn point against the street (PR #21). Its budgets are the 2D form of the audit's tolerance: two bodies may cross up to 3 px for an instant, as a landing or a topple does; a pair deeper than 1 px must be apart again within 100 ms; locked foundations keep no more than 0.3 px. A 2D context that "keeps where each fill and stroke lands instead of drawing it" gives the test the renderer's own shapes to compare with the colliders. The colliders doc has what those tests caught.
 - **A whole-run pose.** When a pair's shallowest sample came after its deepest, the audit reports the pose as "(whole run)", with no time and no picture. Sweep that pair's poses in a unit test to find when. Cosy Scarf's pass found its cold bear's head sinking this way (`games/cosy-scarf/limbs.test.ts`).
 
 **5. Triage every visible finding as real or intended.** `report.md` lists visible findings first, and among those the ones where something moves: "A pair where neither piece ever moved is modelling …; one that moves is play" (`scripts/jam-intersections.mjs`). Findings not visible, or under the pixel floor, are counted as hidden and never fail CI.
@@ -107,7 +116,10 @@ A finished pass too large to publish file by file through the GitHub MCP goes to
 
 - **A frame drawn before the game's own loop.** Moon Phases' `resize()` drew once before the first tick, under an opening curtain no child sees. The audit sampled that frame in some runs and not others, which "would turn this enforced game red at random" (PR #22). Since PR #23 the first sample waits for a second frame, and the scene now places itself at the end of its constructor.
 - **A fallback tap.** `(await d.find(pattern)) ?? point` taps a fixed point when the named thing is gone, and nothing in the report says so. In Hillside Spring's pass, a poke aimed at the sparrow fell back to a bed after the sparrow had flown off and harvested it, so later samples audited a different garden.
-- **Runs of one build differ a little.** The audit's frames land at slightly different game times from run to run, and a physics fall goes a little differently. Bedtime Forest's owl in its own doorway measured 30% to 38% across runs, so its cap is 50% (PR #29). Turning Tower's bird-socket pose showed in some runs of the same code and not others (PR #30). Kite Tower found three more faults, each in one run of several, only after it enforced. Run `--ci` two or three times after a fix, and set each `upTo` from the deepest run.
+- **Runs of one build differ a little.** The audit's frames land at slightly different game times from run to run, and a physics fall goes a little differently. Bedtime Forest's owl in its own doorway measured 30% to 38% across runs, so its cap is 50% (PR #29). Turning Tower's bird-socket pose showed in some runs of the same code and not others (PR #30). Kite Tower found three more faults, each in one run of several, only after it enforced. A replay is no exception: the splash ring around Frog Choir's dunked frog measured 23.9% in a plain run and 24.9% in the `--ci --replay` run of the same build, per its pass's tool notes, although a replay adds no samples and only photographs the earlier run's moments. The water-and-ring rule is capped at `upTo: 0.3` (`scripts/intersections/games/frog-choir.ts`). Run `--ci` two or three times after a fix, and set each `upTo` from the deepest run.
+- **A run that is not the same run.** A cap can absorb a contact that goes a little deeper in one run. It cannot absorb a finding that is open in one run and missing from the next, and that turns an enforced game's CI red at random. Pebble Table's enforcing pass was clean twice on the VM, each run 205 samples and 85 pieces (its pass's PR body). Then `Intersection audit (3/4)` failed on the pushed bundle (CI run 36038821759), whose game code was the same, merged with PR #31's docs only. It reported `pebble-table: FAIL - 1 open, 0 allowed, 2 hidden; 205 samples, 87 pieces`, two stones 9% into each other at 6.86 s in the story-and-spill moment (`penetration 9%  stone-whole #c9683d  x  stone-whole #c9683d  [story-spill @ 6.86s]`). The samples were the same, but the pieces were not, so the run itself had changed. Its pass's tool notes had already seen it: "Each physics run tips the jars a few milliseconds differently, so each run can surface a different single finding." The coordinator's handoff notes put the piece count at 83 to 88 between runs, reproducible under CPU load. The cause is not yet known, and the fix is pending in Pebble Table's final pass.
+
+  The clock does not carry the load into the game. Under the audit's clock, a probe on Playwright 1.63 found every frame 16.0 ms after the last (61 intervals) and `performance.now()` unmoved inside a frame despite a busy loop there (62 frames). So a game's frame time, and a governor's reading of its CPU work, are the same under any load. Pebble Table reads no `tier` query, so the runner leaves its governor automatic, but under that clock the governor has nothing to step down on. Whatever differs must reach the game through something the paused clock does not drive. Before enforcing, and after any change to physics or timing, run `--ci` at least five times, some of them under CPU load. Samples, pieces and open findings must match in every run: a piece count that moves means the runs are not the same, whatever the findings say. Keep the simulation on game time alone, with a fixed step and a step count each frame that only the game time decides, never the quality tier or how long the frame took. Pebble Table's cap follows its tier (`physicsSubsteps` is 3, 3, 2 and 2 in `games/pebble-table/quality.ts`, applied as `maxSubsteps`), so a machine on another tier would simulate the same game time differently.
 - **Waits timed by the clock.** A moment that waits a fixed time for a walk-in or an animation lands somewhere else once any timing changes. Poll the scene instead (`atLoom`), and keep the moments unchanged between before and after so the replay lines up.
 
 ## Why This Matters
@@ -120,9 +132,10 @@ A finished pass too large to publish file by file through the GitHub MCP goes to
 ## When to Apply
 
 - Before showing the owner any build of a three.js jam game, and before calling one done.
-- When starting a game's audit pass, including Pebble Table's and Critter Clay's.
+- When starting a game's audit pass, including Pebble Table's.
 - When adding a shader deform, an instanced batch, a cut-out texture, a saved-state moment or a new verb to an enforced game.
 - When a run is clean and you did not expect it to be, or a finding has no moment or shows only at 0 s.
+- When an enforced game fails CI on a finding no local run showed, or its piece count changes between runs.
 
 ## Examples
 
@@ -150,6 +163,7 @@ npm run check:intersections -- <key> --ci --out /tmp/ia-<key>/after --replay /tm
 | Bedtime Forest | #29 | 53 | 5 | 0 | 300 |
 | Turning Tower | #30 | 95 | 2 (3 in some runs) | 0 | 268 |
 | Kite Tower | bundle merge | 72 | 0 | 0 | 187 |
+| Critter Clay | bundle merge | 389 | 88 | 3 | not stated |
 
 What stays allowed in Felt Meadow "is what the meadow means: things planted in the felt, a seed sinking into its molehill, a picked flower folding round its seed, a flower's own parts, and the critters' own joints" (PR #24). Its 21 rules each carry a reason and an `upTo`, and "each rule's cap sits a little above the depth measured".
 
