@@ -60,6 +60,8 @@ export type Action<N extends string = string> = {
   duration: number
   /** t runs 0 to 1 over the action; amp scales it (about 0.85 to 1.15); side is -1 or 1. */
   sample(t: number, amp: number, side: number): PoseDelta
+  /** A poke that only plays once the visitor has settled, since it moves the way the visitor lies at rest. */
+  settled?: true
 }
 
 export type PokeName = 'spin-leap' | 'croak-puff' | 'belly-flop' | 'startle-hover' | 'scold' | 'hop-back' | 'yawn-stretch' | 'roll-over' | 'peek-and-burrow'
@@ -127,7 +129,9 @@ const frog: Personality = {
     }
     const air = (u - 0.28) / 0.72
     const stretch = Math.sin(air * Math.PI)
-    return { squash: -0.25 * stretch, lean: -0.5 * (1 - air) + 0.35 * air, legs: both(stretch) }
+    // Nose up off the ground and down onto it, eased in and out so the body never snaps round through what it stands on.
+    const ease = Math.min(1, air / 0.18, (1 - air) / 0.18)
+    return { squash: -0.25 * stretch, lean: (-0.5 * (1 - air) + 0.35 * air) * ease, legs: both(stretch) }
   },
   blinkEvery: [2.6, 5.5],
   blinkLength: 0.16,
@@ -166,7 +170,8 @@ const frog: Personality = {
       sample: (t, amp) => {
         const hop = hump(t, 0.12, 0.42)
         const flat = hold(t, 0.4, 0.45, 0.72, 0.88)
-        const splay = hold(t, 0.14, 0.3, 0.72, 0.88) * 1.25
+        // Legs flung out in the air, folded flat by the time its belly lands: flat on the ground they would reach into it.
+        const splay = hold(t, 0.14, 0.26, 0.32, 0.4) * 1.25
         return {
           lift: hop * 1.1 * amp,
           lean: hop * 0.35 - hump(t, 0, 0.12) * 0.2,
@@ -321,7 +326,7 @@ const sparrow: Personality = {
       },
     },
     {
-      // Two hops back along the terrace, a head-cocked look at the finger, and two hops home.
+      // Two little hops back along its ridge, a head-cocked look at the finger, and two hops home.
       name: 'hop-back',
       duration: 1.4,
       sample: (t, amp, side) => {
@@ -330,7 +335,7 @@ const sparrow: Personality = {
         const hops = hump(t, 0.02, 0.16) + hump(t, 0.19, 0.33) + hump(t, 0.66, 0.8) + hump(t, 0.83, 0.97)
         const eye = hold(t, 0.34, 0.4, 0.58, 0.64)
         return {
-          advance: -(away - home) * 1.1 * amp,
+          advance: -(away - home) * 0.4 * amp,
           lift: hops * 0.6,
           wings: both(hops * 0.5),
           face: eye * 0.7,
@@ -429,6 +434,8 @@ const tanuki: Personality = {
     {
       name: 'yawn-stretch',
       duration: 2.8,
+      // It stretches out of its curl; still circling to lie down, it has no curl to stretch out of.
+      settled: true,
       sample: (t, amp) => {
         const wake = ramp(t, 0, 0.107) * (1 - ramp(t, 0.786, 1))
         const yawn = hump(t, 0.16, 0.607) * amp
@@ -446,13 +453,18 @@ const tanuki: Personality = {
     {
       name: 'roll-over',
       duration: 2.6,
-      sample: (t, _amp, side) => {
+      // It rolls over toward the child, belly up to them: the rig turns a roll toward whichever side that is. Poked
+      // while it still circles on arriving, it isn't lying toward the child yet, so it answers another way.
+      settled: true,
+      sample: (t) => {
         const over = hold(t, 0.1, 0.34, 0.66, 0.9)
         const wiggle = Math.sin(t * 28) * 0.14 * hold(t, 0.34, 0.4, 0.6, 0.66)
+        const angle = over * 2.6
         return {
           curl: -hold(t, 0.04, 0.16, 0.8, 0.95),
-          roll: side * over * 2.6 + wiggle,
-          lift: (1 - Math.cos(over * 2.6)) * 0.5,
+          roll: angle + wiggle,
+          // Up off the ground by what it rolls onto: its round flank going over, then its head and ears on its back.
+          lift: Math.max(0.5 * Math.sin(Math.min(angle, Math.PI / 2)), 0.78 * (1 - Math.cos(angle))),
           awake: over * 0.9,
           mouth: over * 0.3,
           tail: Math.sin(t * 32) * 0.45 * over,
@@ -470,10 +482,11 @@ const tanuki: Personality = {
           face: peek * 0.85,
           awake: peek * (1 - hump(t, 0.26, 0.32)),
           curl: -peek * 0.55,
-          headPitch: -peek * 0.18 + burrow * 0.25,
+          headPitch: -peek * 0.18,
           headYaw: side * peek * 0.3,
-          squash: burrow * 0.18,
-          tail: burrow * 1.1,
+          squash: burrow * 0.12,
+          // Its tail stays wrapped round its front as it uncurls to peek, clear of the bushes behind.
+          tail: peek * 0.83 + burrow * 1.1,
           roll: Math.sin(t * 50) * 0.1 * hump(t, 0.52, 0.74),
           ears: both(peek * 0.7 - burrow * 0.25),
         }
@@ -501,6 +514,9 @@ const tanuki: Personality = {
       duration: 2.3,
       sample: (t) => ({
         spin: ramp(t, 0, 0.7) * TAU * 2,
+        // It circles with its tail already wrapped round its side, as it will lie curled, so the tail never sweeps
+        // out behind it into the bank and flowers at the back of its terrace.
+        tail: 1.5 * ramp(t, 0, 0.12) * (1 - ramp(t, 0.56, 1)),
         roll: Math.sin(t * 2.3 * TAU * 2.4) * 0.1 * (1 - ramp(t, 0.6, 0.72)),
         curl: -(1 - ramp(t, 0.56, 1)),
         awake: 1 - ramp(t, 0.66, 0.8),
@@ -607,7 +623,7 @@ type Playing = { action: Action; start: number; amp: number; speed: number; side
 /** A shared moment is dropped if the visitor is still busy this long after it would have noticed. */
 const CUE_PATIENCE = 2.5
 /** Seconds to ease from resting life into a travel gait (so the tanuki gets up rather than pops up). */
-const TRAVEL_BLEND = 0.4
+export const TRAVEL_BLEND = 0.4
 
 /** Picks and blends one visitor's actions over time. */
 export class MotionDirector {
@@ -659,7 +675,9 @@ export class MotionDirector {
 
   /** Answers a poke; the name lets the voice match the move. */
   poke(now: number): PokeName {
-    return this.start('poke', this.choose('poke', this.personality.poke), now).name
+    const arriving = this.current('arrive', now) !== null
+    const options = arriving ? this.personality.poke.filter((action) => !action.settled) : this.personality.poke
+    return this.start('poke', this.choose('poke', options), now).name
   }
 
   /** Something good happened nearby: cheer once this visitor notices, by its own temperament. */
@@ -686,19 +704,21 @@ export class MotionDirector {
 
   /**
    * The pose at `now`. While travelling, pass the gait cycle (and a flying
-   * arrival's landing blend): the gait replaces idle life and nothing new
-   * starts. The returned pose is reused by the next call.
+   * arrival's landing blend): the gait replaces idle life and whatever was
+   * still playing, and nothing new starts. The returned pose is reused by the
+   * next call.
    */
   sample(now: number, travel: number | null = null, landing = 0): MotionPose {
     const pose = this.pose
     resetPose(pose)
     const p = this.personality
     const travelling = travel !== null
+    let gait = 0
     if (travelling) {
       this.travelSince ??= now
-      const k = ramp(now - this.travelSince, 0, TRAVEL_BLEND)
-      if (k < 1) addPose(pose, p.idle(now, this.phase), 1 - k)
-      addPose(pose, p.travel(travel, landing), k)
+      gait = ramp(now - this.travelSince, 0, TRAVEL_BLEND)
+      if (gait < 1) addPose(pose, p.idle(now, this.phase), 1 - gait)
+      addPose(pose, p.travel(travel, landing), gait)
     } else {
       this.travelSince = null
       addPose(pose, p.idle(now, this.phase))
@@ -723,7 +743,7 @@ export class MotionDirector {
         this.playing[i] = null
         continue
       }
-      addPose(pose, playing.action.sample(t, playing.amp, playing.side))
+      addPose(pose, playing.action.sample(t, playing.amp, playing.side), 1 - gait)
     }
 
     if (now >= this.nextBlink) {

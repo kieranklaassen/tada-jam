@@ -52,6 +52,7 @@ export class Grade {
       blendDst: THREE.SrcColorFactor,
     })
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material)
+    this.mesh.name = 'grade'
     this.mesh.frustumCulled = false
     this.mesh.renderOrder = 15
   }
