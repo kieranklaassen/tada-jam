@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { Critter } from './critter'
-import { CAMERA, TRAY, traySlot, TRAY_SLOT_RISE } from './layout'
+import { CAMERA, onTurntable, TRAY, traySlot, TRAY_SLOT_RISE, TURNTABLE } from './layout'
 import {
   BODY,
   canTake,
@@ -50,6 +50,8 @@ export const PART_REACH: Record<PartKind, number> = {
 /** The eye's white ball: its centre height above the eye base, and its radius. */
 export const EYE_BALL = { center: 1.05, radius: 1.3 } as const
 export const PUPIL_RADIUS = 0.6
+/** How far a foot spreads from the end of its leg, so a tipped leg's heel stays on the floor too. */
+const FOOT_RADIUS = 1.7
 /** How thick each part is around its tip, for a critter's footprint: a foot, an eyeball, the head's whole ball. */
 const PART_GIRTH: Record<PartKind, number> = {
   legStub: 2.2,
@@ -285,6 +287,9 @@ export class Rig {
   private rz: number = BODY.rz
   private faceIsHead = false
   private owner = ''
+  /** The top of what the critter being drawn stands over (none while it is carried). */
+  private floor = 0
+  private feetOnFloor = true
 
   constructor() {
     const batches = {} as Record<BatchKey, Batch>
@@ -317,6 +322,7 @@ export class Rig {
     const legs = critter.profile.legs
     const lift = legs ? critter.standLift + (belly - critter.standLift) * pose.legSplay : belly
     const m = critter.mover
+    this.floor = critter.mode === 'carried' ? -Infinity : onTurntable(m, 1) ? TURNTABLE.height : 0
     this.e.set(pose.pitch, m.heading + pose.yaw, pose.roll, 'YXZ')
     this.q.setFromEuler(this.e)
     this.v.set(m.x, critter.ground + lift + pose.lift, m.z)
@@ -398,7 +404,8 @@ export class Rig {
       const swing = pose.legSwing[Math.min(legOrder, pose.legSwing.length - 1)]
       out.multiply(this.R.makeRotationX(swing + wiggle))
       const bend = pose.legBend[Math.min(legOrder, pose.legBend.length - 1)]
-      return out.multiply(this.T.makeScale(sxz, length * sy * (1 - 0.28 * bend), sxz))
+      out.multiply(this.T.makeScale(sxz, length * sy * (1 - 0.28 * bend), sxz))
+      return this.footOnFloor(out, LEG_LENGTH[kind as 'legStub' | 'legLong'])
     }
     if (family === 'tail') {
       ellipsoidPoint(dir, this.rx, this.ry, this.rz, surface)
@@ -429,6 +436,18 @@ export class Rig {
       }
     } else if (wiggle !== 0) out.multiply(this.R.makeRotationX(wiggle))
     return out.multiply(this.T.makeScale(sxz, sy, sxz))
+  }
+
+  /** A leg never reaches through what its critter stands on: splayed, tipped, or swung, it is shortened so its foot rests on top. */
+  private footOnFloor(out: THREE.Matrix4, legLength: number): THREE.Matrix4 {
+    const e = out.elements
+    const down = -e[5] * legLength
+    if (down <= 0 || !this.feetOnFloor) return out
+    const upright = -e[5] / Math.hypot(e[4], e[5], e[6])
+    const floor = this.floor + FOOT_RADIUS * Math.sqrt(Math.max(0, 1 - upright * upright))
+    const room = e[13] - floor
+    if (room >= down) return out
+    return out.multiply(this.T.makeScale(1, Math.max(0.15, room / down), 1))
   }
 
   private readonly anim: Anim = { sy: 1, sxz: 1, out: 0, wiggle: 0 }
@@ -581,7 +600,11 @@ export class Rig {
    * belly and would put the glow on the face.
    */
   socketMark(critter: Critter, kind: PartKind, out: THREE.Vector3): boolean {
-    if (!this.socket(critter, kind, this.markScratch)) return false
+    // where a standing leg would reach, even on a lump lying flat on the turntable
+    this.feetOnFloor = false
+    const room = this.socket(critter, kind, this.markScratch)
+    this.feetOnFloor = true
+    if (!room) return false
     // a leg is marked at its foot, clear of the nose that is tapped later
     out.set(0, PART_REACH[kind] * (FAMILY[kind] === 'legs' ? 1 : 0.7), 0).applyMatrix4(this.markScratch)
     return true
