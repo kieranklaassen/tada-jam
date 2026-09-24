@@ -45,8 +45,8 @@ export const FEEDING = {
   knifeRest: { x: MAT_CENTER.x + 150, y: MAT_CENTER.y - 85 },
   plateRadius: 78,
   seats: SEAT_DIRECTIONS.map((d) => {
-    const plate = { x: MAT_CENTER.x + d.x * 285, y: MAT_CENTER.y + d.y * 205 }
-    const guest = { x: plate.x + d.x * 132, y: plate.y + d.y * 112 }
+    const plate = { x: MAT_CENTER.x + d.x * 270, y: MAT_CENTER.y + d.y * 205 }
+    const guest = { x: plate.x + d.x * 147, y: plate.y + d.y * 142 }
     return { plate, guest, facing: d }
   }),
 } as const

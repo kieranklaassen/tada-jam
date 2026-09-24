@@ -11,10 +11,41 @@ import { panOf } from './scale'
 /** The Fair Feeding rug: a thin cloth ellipse (world units in the plane, cm up). */
 export const RUG = { center: { x: 780, y: 470 } as Point, rx: 420, rz: 300, bottom: 0.04, top: 0.12 } as const
 
-/** The rug's hem: a clay rope pressed flat into the cloth's edge, low enough to stand and rest on. */
-export const RUG_HEM = { tube: 0.42, flatten: 0.3 } as const
+/** The rug's hem: a clay rope pressed flat into the cloth's edge, low enough to stand and rest on; its lumps push it out by up to `lump` (cm, before it is flattened). */
+export const RUG_HEM = { tube: 0.42, flatten: 0.3, lump: 0.06 } as const
 export const RUG_HEM_Y = RUG_HEM.tube * RUG_HEM.flatten
-export const RUG_HEM_TOP = 2 * RUG_HEM_Y
+/** The top of the hem's highest lump, and how far its lumps reach either side of the line it follows (cm). */
+export const RUG_HEM_TOP = RUG_HEM_Y + (RUG_HEM.tube + RUG_HEM.lump) * RUG_HEM.flatten
+export const RUG_HEM_REACH = RUG_HEM.tube + RUG_HEM.lump
+/** How many points the hem's line is drawn through. */
+export const HEM_POINTS = 160
+
+/** The line the hem follows, `t` of the way round: the rug's ellipse, gently scalloped (world units). */
+export function hemAt(t: number): Point {
+  const a = t * Math.PI * 2
+  const scallop = 1 + Math.abs(Math.sin(a * 14)) * 0.02
+  return { x: RUG.center.x + Math.cos(a) * RUG.rx * scallop, y: RUG.center.y + Math.sin(a) * RUG.rz * scallop }
+}
+
+/** How far `at` is from the hem's line, in world units. */
+function hemDistance(at: Point): number {
+  let near = Infinity
+  let a = hemAt(0)
+  for (let i = 1; i <= HEM_POINTS; i++) {
+    const b = hemAt(i / HEM_POINTS)
+    const [dx, dy] = [b.x - a.x, b.y - a.y]
+    const k = Math.min(1, Math.max(0, ((at.x - a.x) * dx + (at.y - a.y) * dy) / (dx * dx + dy * dy)))
+    near = Math.min(near, Math.hypot(at.x - a.x - k * dx, at.y - a.y - k * dy))
+    a = b
+  }
+  return near
+}
+
+/** The highest the feeding mat stands anywhere within `reach` cm of `at`: the hem's top, the rug's, or the bare table. */
+export function feedingFloor(at: Point, reach: number): number {
+  if (hemDistance(at) * 0.1 < reach + RUG_HEM_REACH) return RUG_HEM_TOP
+  return onRug(at) ? RUG.top : 0
+}
 
 /** Where the plates and the bowl stand: a hair above the rug's top, so their flat bases never share its plane (which flickers). */
 export const ON_RUG = RUG.top + 0.05

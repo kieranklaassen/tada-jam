@@ -1,9 +1,13 @@
 import * as CANNON from 'cannon-es'
+import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { FEEDING, TABLE, type Quarters } from './layout'
+import { SEAT_SPECIES } from './motion'
 import { STOOL_REACH, STOOL_TOP } from './partShape'
-import { STEP, TablePhysics, toWorld2, UNIT } from './physics3d'
+import { STEP, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
 import { STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneRest, stoneVertices } from './stoneShape'
+import { feedingFloor, ON_RUG, PLATE_HEIGHT, PLATE_PROFILE } from './surfaces'
+import { GUEST_SIZE, guestFloor, guestYaw, soleDepth, speciesShapes } from './view/guest'
 
 // What the intersection audit (npm run check:intersections -- pebble-table)
 // found drawn pieces doing, pinned at the level of the shapes and physics
@@ -138,4 +142,60 @@ describe('stones collide as they are drawn', () => {
     }
     expect(deepest).toBeLessThan(0.8)
   }, 30_000)
+})
+
+type Pose = { lean: number; twist: number; roll: number; squash: number }
+const STILL: Pose = { lean: 0, twist: 0, roll: 0, squash: 0 }
+
+/** A seated guest's drawn body in the world (cm), posed and stood on its floor the way the view does it. */
+function guestBody(seat: number, pose: Pose = STILL): THREE.Vector3[] {
+  const shapes = speciesShapes(SEAT_SPECIES[seat % SEAT_SPECIES.length])
+  const root = new THREE.Object3D()
+  const [wide, tall] = [1 + pose.squash * 0.6, 1 - pose.squash]
+  root.scale.set(GUEST_SIZE * wide, GUEST_SIZE * tall, GUEST_SIZE * wide)
+  root.rotation.set(pose.lean, pose.twist, pose.roll)
+  root.updateMatrix()
+  const at = FEEDING.seats[seat].guest
+  const p = to3(at)
+  const place = new THREE.Matrix4().makeTranslation(p.x, guestFloor(seat, at) + soleDepth(shapes.sole, root.matrix), p.z).multiply(new THREE.Matrix4().makeRotationY(guestYaw(seat))).multiply(root.matrix)
+  const position = shapes.body.attributes.position
+  return Array.from({ length: position.count }, (_, i) => new THREE.Vector3().fromBufferAttribute(position, i).applyMatrix4(place))
+}
+
+const toPlane = (v: THREE.Vector3) => ({ x: v.x / UNIT + 800, y: v.z / UNIT + 500 })
+
+describe('guests stand on what is drawn under them', () => {
+  const seats = FEEDING.seats.map((_, seat) => seat)
+
+  it('keeps each seated guest clear of its plate, leaning in to eat or not', () => {
+    const plateReach = FEEDING.plateRadius * UNIT * 1.04
+    const plateTop = ON_RUG + (Math.max(...PLATE_PROFILE.map(([, h]) => h)) + 0.04) * PLATE_HEIGHT
+    for (const seat of seats) {
+      const plate = FEEDING.seats[seat].plate
+      for (const lean of [0, 0.22]) {
+        const over = guestBody(seat, { ...STILL, lean }).filter((v) => Math.hypot(toPlane(v).x - plate.x, toPlane(v).y - plate.y) * UNIT < plateReach)
+        expect(Math.min(Infinity, ...over.map((v) => v.y)), `seat ${seat} leaning ${lean}`).toBeGreaterThan(plateTop)
+      }
+    }
+  })
+
+  it('stands each guest with its lowest point on the highest thing under it as it leans, rolls, twists and squashes', () => {
+    let seed = 5
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
+    for (const seat of seats) {
+      const floor = guestFloor(seat, FEEDING.seats[seat].guest)
+      for (let trial = 0; trial < 12; trial++) {
+        const pose = { lean: (random() * 2 - 1) * 0.22, twist: (random() * 2 - 1) * 1.5, roll: (random() * 2 - 1) * 0.2, squash: -0.14 + random() * 0.42 }
+        const low = Math.min(...guestBody(seat, pose).map((v) => v.y))
+        expect(Math.abs(low - floor), `seat ${seat} ${JSON.stringify(pose)}`).toBeLessThan(0.01)
+      }
+    }
+  })
+
+  it('never stands a guest in the rug, its hem or the table', () => {
+    for (const seat of seats) {
+      const sunk = Math.max(...guestBody(seat).map((v) => feedingFloor(toPlane(v), 0) - v.y))
+      expect(sunk, `seat ${seat}`).toBeLessThanOrEqual(1e-6)
+    }
+  })
 })

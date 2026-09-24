@@ -5,9 +5,11 @@ import { QualityGovernor, startingTier, type QualitySettings } from '../quality'
 import { BAG, DOOR, FEEDING, SCALE, shelfTile, type Point } from '../layout'
 import { stoneRadius3, toWorld2 } from '../physics3d'
 import { stoneRest } from '../stoneShape'
-import { RUG, surfaceUnder } from '../surfaces'
+import { STOOL_REACH } from '../partShape'
+import { feedingFloor, RUG, surfaceUnder } from '../surfaces'
 import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
 import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type StoneState } from './models'
+import { guestFloor } from './guest'
 import { GrownUpOverlay } from './overlay'
 import { ProjectorBridge, Stage, type ProjectorHandle } from './stage'
 
@@ -108,8 +110,8 @@ function shadows(table: TableController): Blob[] {
       if (table.state.seats[index]) {
         blobs.push({ at: seat.plate, ground: RUG.top, radius: 8.8, strength: 0.22, stretch: 0.3 })
         const guest = table.guestDrag?.seat === index ? table.guestDrag.at : seat.guest
-        blobs.push({ at: guest, ground: groundUnder(table, guest), radius: 9, strength: 0.75, stretch: 2.5 })
-      } else if (table.stoolsShown) blobs.push({ at: seat.guest, ground: groundUnder(table, seat.guest), radius: 5.2, strength: 0.4, stretch: 1.5 })
+        blobs.push({ at: guest, ground: guestFloor(index, guest), radius: 9, strength: 0.75, stretch: 2.5 })
+      } else if (table.stoolsShown) blobs.push({ at: seat.guest, ground: feedingFloor(seat.guest, STOOL_REACH), radius: 5.2, strength: 0.4, stretch: 1.5 })
     })
     if (table.feeding.leftover || table.knife.pointerId !== null) blobs.push({ at: table.knife.at, ground: groundUnder(table, table.knife.at), radius: 5.5, strength: 0.4, stretch: table.knife.pointerId !== null ? 5 : 0.5 })
   }
@@ -199,7 +201,7 @@ function World({ table }: { table: TableController }) {
           <FeedingSetting seats={table.state.seats} showStools={table.stoolsShown} readBowl={() => ({ dingAt: table.bowlDingAt, now: table.t })} />
           {FEEDING.seats.map((seat, index) =>
             table.state.seats[index] ? (
-              <Guest key={index} seat={index} at={table.guestDrag?.seat === index ? table.guestDrag.at : seat.guest} read={() => guestPose(index)} />
+              <Guest key={index} seat={index} at={table.guestDrag?.seat === index ? table.guestDrag.at : seat.guest} carried={table.guestDrag?.seat === index} read={() => guestPose(index)} />
             ) : null,
           )}
           <KnifeModel read={() => ({ at: table.knife.at, visible: table.feeding.leftover || table.knife.pointerId !== null, held: table.knife.pointerId !== null, now: table.t })} />
