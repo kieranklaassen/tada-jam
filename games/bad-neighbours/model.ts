@@ -250,9 +250,17 @@ export class Game {
   /** Two zero-length ties between a pair of bodies, pinned where they meet. */
   private brace(a: Matter.Body, b: Matter.Body) {
     const anchor = { x: (a.position.x + b.position.x) / 2, y: (a.position.y + b.position.y) / 2 }
-    for (const dx of [-10, 10]) {
-      const p = { x: anchor.x + dx, y: anchor.y }
-      Composite.add(this.engine.world, Constraint.create({ bodyA: a, bodyB: b, pointA: Vector.sub(p, a.position), pointB: Vector.sub(p, b.position), length: 0, stiffness: 0.75, damping: 0.12 }))
+    const resistance = a.inverseMass + b.inverseMass + a.inverseInertia + b.inverseInertia
+    // The ties sit a cell either side: closer together they turn like a hinge, and the
+    // weight above folds the pair into each other. Matter turns a tie's pull into spin by
+    // its lever from each centre, so a tie far from a centre is softened until one pass
+    // corrects no more than its stretch; stiffer, each pass overshoots the last until the
+    // pair is flung through each other or the slab.
+    for (const dx of [-CELL, CELL]) {
+      const p = { x: anchor.x + dx, y: anchor.y }, pointA = Vector.sub(p, a.position), pointB = Vector.sub(p, b.position)
+      const spin = Vector.magnitudeSquared(pointA) * a.inverseInertia + Vector.magnitudeSquared(pointB) * b.inverseInertia
+      const stiffness = Math.min(0.75, resistance / (resistance + spin) / (STEP / (1000 / 60)))
+      Composite.add(this.engine.world, Constraint.create({ bodyA: a, bodyB: b, pointA, pointB, length: 0, stiffness, damping: 0.12 }))
     }
     a.plugin.bonded = [...a.plugin.bonded || [], b.id]
     this.pieces.filter(p => p.body === a || p.body === b).forEach(p => p.glued = true)
