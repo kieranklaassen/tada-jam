@@ -1,6 +1,7 @@
 import * as THREE from 'three'
+import { BALL_SWELL, ballStretch } from '../balls'
 import { POWDER_PUFF, type ScarfController } from '../controller'
-import { BALL_RADIUS, BASKET, BUTTERFLY, CELL_H, CELL_W, groundY, LOOM } from '../layout'
+import { BALL_RADIUS, BASKET, BUTTERFLY, CELL_H, CELL_W, groundY, LOOM, LOOPS, NEEDLE_BAR } from '../layout'
 import { clamp01, smooth } from '../springs'
 import { ANIMALS, WIDTH } from '../state'
 import type { Tier } from '../tiers'
@@ -20,9 +21,6 @@ const FLAKES = 220
 const THREAD_BEADS = 40
 /** How far behind a yarn ball its glow ring sits: just past the basket's back row (`ballRest`). */
 const GLOW_BACK = BALL_RADIUS * 2.2
-/** A carried ball stretches 1 % per 5 units a second along its path, up to a fifth longer. */
-const STRETCH_PER_SPEED = 0.002
-const MAX_STRETCH = 0.2
 
 /** A per-instance fade (`aFade`) multiplied into alpha: one draw call, many opacities. */
 function withFade(material: THREE.MeshBasicMaterial, key: string): void {
@@ -66,14 +64,47 @@ vec3 radial = sside * position.x + sup * position.z;
 vec3 objectNormal = radial;
 `
 
-function butterflyWing(): THREE.BufferGeometry {
+/**
+ * A wing turns about the body's middle, so each part of it keeps its distance
+ * from it however far the wing folds: sewn on this far out, no part of it
+ * comes near the head and bead eyes, and folded shut it meets the other wing
+ * edge to edge.
+ */
+const WING_OUT = 0.85
+/** The wings fold between lying flat open and shut (radians about the body's middle), never past either. */
+export const WING_OPEN = 0.12
+export const WING_SHUT = 1.25
+/** The butterfly's bob, its hop when tapped, its sway, and how big it swells as it pops in. */
+export const BUTTERFLY_MOTION = { bob: 0.25, hop: 2, sway: 0.05, biggest: 1.15 }
+
+export function butterflyWing(): THREE.BufferGeometry {
   const pink = PALETTE.butterfly
   return merge([
-    part(ball(4.2, 1, 16), { color: pink, at: [4.4, 2.6, 0], scale: [1, 0.85, 0.22], rot: [0, 0, 0.35] }),
-    part(ball(3, 1, 14), { color: pink, at: [3.4, -2.6, 0], scale: [1, 0.85, 0.22], rot: [0, 0, -0.45] }),
-    part(ball(1.35, 1, 10), { color: PALETTE.thread, at: [5.2, 3, 0.7], scale: [1, 1, 0.3] }),
-    part(ball(0.9, 1, 8), { color: PALETTE.thread, at: [3.6, -2.7, 0.55], scale: [1, 1, 0.3] }),
+    part(ball(4.2, 1, 16), { color: pink, at: [4.4 + WING_OUT, 2.6, 0], scale: [1, 0.85, 0.22], rot: [0, 0, 0.35] }),
+    part(ball(3, 1, 14), { color: pink, at: [3.4 + WING_OUT, -2.6, 0], scale: [1, 0.85, 0.22], rot: [0, 0, -0.45] }),
+    part(ball(1.35, 1, 10), { color: PALETTE.thread, at: [5.2 + WING_OUT, 3, 0.7], scale: [1, 1, 0.3] }),
+    part(ball(0.9, 1, 8), { color: PALETTE.thread, at: [3.6 + WING_OUT, -2.7, 0.55], scale: [1, 1, 0.3] }),
   ])
+}
+
+export function butterflyBody(): THREE.BufferGeometry {
+  return merge([
+    part(capsule(1.05, 6.5, 0.7), { color: PALETTE.butterflyBody }),
+    part(ball(1.5, 0.7, 12), { color: PALETTE.butterflyBody, at: [0, 4.6, 0.2] }),
+    ...beadEye([-0.62, 4.9, 1.2], 0.42, [0, 0, 1]),
+    ...beadEye([0.62, 4.9, 1.2], 0.42, [0, 0, 1]),
+    part(cylinder(0.18, 0.18, 3.4, 0.5, 5), { color: PALETTE.butterflyBody, at: [-0.9, 7.2, 0], rot: [0, 0, 0.35] }),
+    part(cylinder(0.18, 0.18, 3.4, 0.5, 5), { color: PALETTE.butterflyBody, at: [0.9, 7.2, 0], rot: [0, 0, -0.35] }),
+    part(ball(0.5, 0.5, 8), { color: PALETTE.butterfly, at: [-1.5, 8.8, 0], bead: true }),
+    part(ball(0.5, 0.5, 8), { color: PALETTE.butterfly, at: [1.5, 8.8, 0], bead: true }),
+  ])
+}
+
+/** How far the wings are folded: shut until the mirror opens them, breathing, fluttering after a tap `since` seconds ago. */
+export function wingFold(open: number, since: number, t: number): number {
+  const flap = since < 1 ? Math.sin(since * 26) * (1 - since) * 0.6 : 0
+  const breathe = Math.sin(t * 1.4) * 0.08
+  return THREE.MathUtils.clamp(THREE.MathUtils.lerp(WING_SHUT, WING_OPEN, open) + breathe + flap, WING_OPEN, WING_SHUT)
 }
 
 export class Props {
@@ -117,6 +148,7 @@ export class Props {
     this.balls = new THREE.InstancedMesh(ballGeometry, materials.balls, ballCount)
     this.balls.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
     this.balls.frustumCulled = false
+    this.balls.name = 'yarn-balls'
     for (let i = 0; i < ballCount; i++) this.balls.setColorAt(i, this.yarn[i])
     this.ballGlow = materials.ballGlow
     this.owned.push(ballGeometry)
@@ -134,66 +166,69 @@ export class Props {
     }
     this.strandMaterial.customProgramCacheKey = () => 'cosy-strand'
     this.strand = new THREE.Mesh(strandGeometry, this.strandMaterial)
+    this.strand.name = 'strand'
     this.strand.frustumCulled = false
     this.strand.matrixAutoUpdate = false
     this.owned.push(strandGeometry, this.strandMaterial)
     this.group.add(this.strand)
 
+    const { radius: needleRadius, length: needleLength, tip, bead, beadAt, apart } = NEEDLE_BAR
+    const tipAt = needleLength / 2 + tip / 2
     const needleGeometry = merge([
       ...[-1, 1].flatMap((side) => {
-        const tilt = side * 0.05
-        const dz = side * 0.7
+        const tilt = side * NEEDLE_BAR.tilt
+        const dz = side * apart
         const dx = Math.cos(tilt)
         const dy = Math.sin(tilt)
         return [
-          part(cylinder(0.55, 0.55, 30, 0.8, 8), { color: PALETTE.needle, at: [0, 0, dz], rot: [0, 0, Math.PI / 2 + tilt] }),
-          part(cone(0.55, 2.4, 0.8, 8), { color: PALETTE.needle, at: [side * 16.2 * dx, side * 16.2 * dy, dz], rot: [0, 0, side > 0 ? -Math.PI / 2 + tilt : Math.PI / 2 + tilt] }),
-          part(ball(1.5, 1, 12), { color: side > 0 ? YARN[5] : YARN[2], at: [-side * 15.5 * dx, -side * 15.5 * dy, dz], bead: true }),
+          part(cylinder(needleRadius, needleRadius, needleLength, 0.8, 8), { color: PALETTE.needle, at: [0, 0, dz], rot: [0, 0, Math.PI / 2 + tilt] }),
+          part(cone(needleRadius, tip, 0.8, 8), { color: PALETTE.needle, at: [side * tipAt * dx, side * tipAt * dy, dz], rot: [0, 0, side > 0 ? -Math.PI / 2 + tilt : Math.PI / 2 + tilt] }),
+          part(ball(bead, 1, 12), { color: side > 0 ? YARN[5] : YARN[2], at: [-side * beadAt * dx, -side * beadAt * dy, dz], bead: true }),
         ]
       }),
     ])
     this.needles = new THREE.Mesh(needleGeometry, materials.crochet)
+    this.needles.name = 'needles'
     this.needles.matrixAutoUpdate = false
     this.owned.push(needleGeometry)
     this.group.add(this.needles)
 
     // The live stitches riding on the needles: cream cast-on loops on an empty loom, then the last row's colours.
-    const loopGeometry = new THREE.TorusGeometry(1.2, 0.5, 6, 14)
+    // Each hangs upright from between the two needles, so neither needle runs through its yarn.
+    const loopGeometry = new THREE.TorusGeometry(LOOPS.radius, LOOPS.tube, 6, 14)
     this.loops = new THREE.InstancedMesh(loopGeometry, materials.stitches, WIDTH)
     this.loops.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    this.loops.name = 'needle-loops'
     this.loops.frustumCulled = false
     for (let i = 0; i < WIDTH; i++) {
-      this.e.set(0.55, 0, 0)
-      this.q.setFromEuler(this.e)
-      this.loopFrames.push(new THREE.Matrix4().compose(new THREE.Vector3((i + 0.5 - WIDTH / 2) * CELL_W, -1.05, 0), this.q, new THREE.Vector3(1, 1.2, 1)))
+      this.q.identity()
+      this.loopFrames.push(new THREE.Matrix4().compose(new THREE.Vector3((i + 0.5 - WIDTH / 2) * CELL_W, LOOPS.y, 0), this.q, new THREE.Vector3(1, LOOPS.stretch, 1)))
       this.loops.setColorAt(i, this.cream)
     }
     this.owned.push(loopGeometry)
     this.group.add(this.loops)
 
-    const bodyGeometry = merge([
-      part(capsule(1.05, 6.5, 0.7), { color: PALETTE.butterflyBody }),
-      part(ball(1.5, 0.7, 12), { color: PALETTE.butterflyBody, at: [0, 4.6, 0.2] }),
-      ...beadEye([-0.62, 4.9, 1.2], 0.42, [0, 0, 1]),
-      ...beadEye([0.62, 4.9, 1.2], 0.42, [0, 0, 1]),
-      part(cylinder(0.18, 0.18, 3.4, 0.5, 5), { color: PALETTE.butterflyBody, at: [-0.9, 7.2, 0], rot: [0, 0, 0.35] }),
-      part(cylinder(0.18, 0.18, 3.4, 0.5, 5), { color: PALETTE.butterflyBody, at: [0.9, 7.2, 0], rot: [0, 0, -0.35] }),
-      part(ball(0.5, 0.5, 8), { color: PALETTE.butterfly, at: [-1.5, 8.8, 0], bead: true }),
-      part(ball(0.5, 0.5, 8), { color: PALETTE.butterfly, at: [1.5, 8.8, 0], bead: true }),
-    ])
+    const bodyGeometry = butterflyBody()
     const wingGeometry = butterflyWing()
-    this.butterfly.add(new THREE.Mesh(bodyGeometry, materials.crochet))
+    const body = new THREE.Mesh(bodyGeometry, materials.crochet)
+    body.name = 'body'
+    this.butterfly.add(body)
     this.wingR = new THREE.Mesh(wingGeometry, materials.crochet)
+    this.wingR.name = 'wing-r'
     this.wingL = new THREE.Mesh(wingGeometry, materials.crochet)
+    this.wingL.name = 'wing-l'
     this.wingL.scale.x = -1
     this.butterfly.add(this.wingR, this.wingL)
     this.butterfly.position.set(BUTTERFLY.x, BUTTERFLY.y, BUTTERFLY.z)
+    this.butterfly.name = 'butterfly'
+    this.butterfly.userData.jamObject = 'butterfly'
     this.owned.push(bodyGeometry, wingGeometry)
     this.group.add(this.butterfly)
 
     const beadGeometry = new THREE.SphereGeometry(0.42, 8, 6)
     this.thread = new THREE.InstancedMesh(beadGeometry, materials.flakes, THREAD_BEADS)
     this.thread.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+    this.thread.name = 'mirror-thread'
     this.thread.frustumCulled = false
     this.thread.count = 0
     this.owned.push(beadGeometry)
@@ -202,12 +237,15 @@ export class Props {
     withFade(materials.shadow, 'cosy-fade-shadow')
     withFade(materials.glow, 'cosy-fade-glow')
     this.shadows = fadeQuads(materials.shadow, SHADOWS, true)
+    this.shadows.mesh.name = 'blob-shadows'
     this.shadows.mesh.renderOrder = 1
     this.glows = fadeQuads(materials.glow, GLOWS, false)
+    this.glows.mesh.name = 'glow-rings'
     this.glows.mesh.renderOrder = 2
     this.puffMaterial = new THREE.MeshBasicMaterial({ map: materials.textures.blob, transparent: true, depthWrite: false, toneMapped: false })
     withFade(this.puffMaterial, 'cosy-fade-puff')
     this.puffs = fadeQuads(this.puffMaterial, PUFFS, false)
+    this.puffs.mesh.name = 'puffs'
     this.puffs.mesh.renderOrder = 3
     for (let i = 0; i < PUFFS; i++) this.puffs.mesh.setColorAt(i, this.white)
     this.owned.push(this.shadows.mesh.geometry, this.glows.mesh.geometry, this.puffs.mesh.geometry, this.puffMaterial)
@@ -253,12 +291,14 @@ export class Props {
     })
     this.flakes = new THREE.Points(flakeGeometry, this.flakeMaterial)
     this.flakes.frustumCulled = false
+    this.flakes.name = 'snowfall'
     this.flakes.renderOrder = 4
     this.owned.push(flakeGeometry, this.flakeMaterial)
     this.group.add(this.flakes)
 
     this.hand = new THREE.Sprite(materials.hand)
     this.hand.center.set(0.5, 1)
+    this.hand.name = 'ghost-hand'
     this.hand.renderOrder = 10
     this.hand.visible = false
     this.group.add(this.hand)
@@ -292,7 +332,7 @@ export class Props {
       // The suggested ball swells and lights its rim with the glow's breath: the cue is on the ball itself, not only on its ring.
       const suggested = g.glowBalls && ball.colour === g.glowBall
       if (suggested) this.ballGlow.index.value = i
-      const swell = suggested ? 1 + 0.08 * g.frame.glow : 1
+      const swell = suggested ? 1 + (BALL_SWELL - 1) * g.frame.glow : 1
       // The spin turns the wound yarn; the squash and the carry's stretch act in the world's axes, so a landing flattens the ball straight down however it has turned.
       this.e.set(ball.spin, i * 1.3, i * 0.7)
       this.m.makeRotationFromEuler(this.e)
@@ -306,9 +346,10 @@ export class Props {
 
   /** Stretches `m` along a carried ball's path in the screen plane, keeping its volume: the faster it moves, the longer it pulls. */
   private stretchAlong(vx: number, vy: number): void {
+    const stretch = ballStretch(vx, vy)
+    if (stretch === 0) return
     const speed = Math.hypot(vx, vy)
-    if (speed < 2) return
-    const a = 1 + Math.min(MAX_STRETCH, speed * STRETCH_PER_SPEED)
+    const a = 1 + stretch
     const b = 1 / Math.sqrt(a)
     const c = vx / speed
     const s = vy / speed
@@ -341,20 +382,15 @@ export class Props {
   }
 
   private updateNeedles(game: ScarfController, loomHang: THREE.Matrix4, t: number): void {
+    const pose = game.needlePose
     const rows = Math.max(1, game.loom.rows.length)
-    const shown = game.loom.reveal / WIDTH
     const castOff = t - game.needles.castOffAt
-    const knitting = game.strand.alpha
-    let slide = 0
     let scale = 1
-    if (castOff < 0.35) slide = smooth(castOff / 0.35) * 26
-    else if (castOff < 0.9) scale = 0
-    else if (castOff < 1.4) scale = clamp01((castOff - 0.9) / 0.5)
+    if (castOff >= 0.35 && castOff < 0.9) scale = 0
+    else if (castOff >= 0.9 && castOff < 1.4) scale = clamp01((castOff - 0.9) / 0.5)
     this.needles.visible = scale > 0.01
-    const click = Math.sin(t * 26) * 0.05 * knitting
-    const along = game.strand.column - (WIDTH - 1) / 2
-    this.p.set(slide + along * knitting * 1.3, -(shown - rows / 2) * CELL_H - 0.5 + game.needles.pull.x, 1.6)
-    this.e.set(0, 0, click)
+    this.p.set(pose.x, pose.y + (rows * CELL_H) / 2, NEEDLE_BAR.z)
+    this.e.set(0, 0, pose.click)
     this.q.setFromEuler(this.e)
     this.s.setScalar(scale < 1 ? smooth(scale) : 1)
     this.m.compose(this.p, this.q, this.s).premultiply(loomHang)
@@ -380,16 +416,13 @@ export class Props {
     const show = Math.max(0, game.butterfly.show.x)
     this.butterfly.visible = show > 0.02
     if (!this.butterfly.visible) return
-    this.butterfly.scale.setScalar(Math.min(1.15, show))
-    const open = game.butterfly.open.x
+    this.butterfly.scale.setScalar(Math.min(BUTTERFLY_MOTION.biggest, show))
     const since = t - game.butterfly.flapAt
-    const flap = since < 1 ? Math.sin(since * 26) * (1 - since) * 0.6 : 0
-    const breathe = Math.sin(t * 1.4) * 0.08
-    const fold = THREE.MathUtils.lerp(1.25, 0.12, open) + breathe + flap
+    const fold = wingFold(game.butterfly.open.x, since, t)
     this.wingR.rotation.y = -fold
     this.wingL.rotation.y = fold
-    this.butterfly.position.y = BUTTERFLY.y + Math.sin(t * 1.1) * 0.25 + (since < 1 ? Math.sin(since * Math.PI) * 2 : 0)
-    this.butterfly.rotation.z = Math.sin(t * 0.7) * 0.05
+    this.butterfly.position.y = BUTTERFLY.y + Math.sin(t * 1.1) * BUTTERFLY_MOTION.bob + (since < 1 ? Math.sin(since * Math.PI) * BUTTERFLY_MOTION.hop : 0)
+    this.butterfly.rotation.z = Math.sin(t * 0.7) * BUTTERFLY_MOTION.sway
   }
 
   private updateThread(game: ScarfController, loomHang: THREE.Matrix4): void {
