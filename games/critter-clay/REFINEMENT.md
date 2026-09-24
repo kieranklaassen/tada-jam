@@ -50,8 +50,38 @@ Pass screenshots are in the Project store under `media/jam-10-games/critter-clay
 
 **Whole-game check after pass 30.** Checking the build against the base's performance lesson found two gaps in the tier controller, and both are fixed. Touch devices started at the top tier instead of one tier down. And stepping up counted only frames under 15 ms, which a 60 Hz display never delivers, so an iPad that stepped down once could never get the top look back. Headroom is now read from each frame's own work (an on-time frame under 8 ms of work counts), with a test that fails under the old rule. On the final production build, the shared probe's automatic tier gives `cpuP95Ms` of 2.5 ms at 4× and 3.8 ms at 6× in Chromium (medians of three). The scripted core loop (111 seconds at 6×: sixteen parts pressed on, a bold critter built and woken, every temperament poked, two critters carried, a part pulled off) gives 3.3 ms, with a worst frame of 22 ms of work. Draw calls are 18 to 22, with one full-screen pass at the top two tiers and no shadow maps. In WebKit, Critter Clay runs at 29.4 fps against Pebble Table's 16.8 fps in the same session (1.75×), and at 31 fps through the core loop. Part of that gain is the starting tier: Playwright's touch emulation matches `(pointer: coarse)` in both engines, so the probe now starts one tier down. In this software-GL VM the automatic tier then settles at tier 0 (DPR 1, no normal maps), so these numbers are for the lowest look. Pinned to the top tier (DPR 2 with the grain pass and normal maps), it runs at 11.4 fps against Pebble Table's 15.6. That is below the baseline, and the gap is fill, because the top tier shades 1.78 times the pixels of DPR 1.5. Pinned to tier 2 (DPR 1.5, the DPR Pebble Table starts touch devices at), it runs at 17.6 against 16.6. Pinned at tier 3, `cpuP95Ms` is 3.5 ms at 4× and 5.4 ms at 6×, with 20 draw calls. The kid side has no words (`npm run wordless:check`), nothing leaves the device (`npm run egress:built`), and the game's 112 tests pass.
 
+## Intersection pass
+
+The shared intersection audit (`npm run check:intersections -- critter-clay`, tool v4) plays 56 s of game time (`scripts/intersections/games/critter-clay.ts`), aiming with the game's own `?probe=1` hook:
+
+- the demonstration;
+- the lump dressed fast from the tray, then two parts pulled back off;
+- the lump woken, and its hop off the turntable;
+- a busy bench of four critters built differently, walking, greeting, carried and dropped over each other, dressed and undressed while awake;
+- a fourth critter woken, one put back to sleep, the turntable spun, and a rest.
+
+Every clay instance now names its owner (`userData.jamInstanceObjects`: a critter and everything pressed onto it, a tray slot, the finger, a flight), and every mesh is named.
+
+**Before: 389 open findings. After: 0 open, 88 allowed, 3 hidden.** `--ci --replay` exits 0 and the audit is enforced in CI. Each real finding was fixed at its source:
+
+- **Critters stood in each other** (137 findings: bodies through friends' legs, horns and heads). They had kept only a body's width apart, and a bench of long-legged, horned critters overlapped. The rig now measures each critter's footprint (the furthest part tip plus its girth) as it draws it. The controller keeps footprints apart every frame at a capped speed, with sleepers, landers and wakers pinned. Greetings meet footprint to footprint, and a dropped critter lands on the nearest clear spot, sliding aside faster than it falls.
+- **A critter carried over a taller friend passed through its horns.** A carried or dropping critter now floats over any friend its footprint nears (its lowest point 1.5 cm over the friend's top), rising over the last 6 cm before they touch.
+- **Tray parts sank into their slots** (26 findings). Each part now rests on its slot at the lowest point of its own shape. The head stands on its neck, and the hop, squash and regrow happen about the point where it touches.
+- **Legs reached through the turntable and the bench** (10 open, more hidden). A leg's whole sole is now clamped to what it stands on: toes, heel and sides, measured from the shapes. A leg first sits a little higher up the flank (its collar sinks deeper into the clay), then shortens, and a leg splayed out flat has its paw slimmed. A sleeping lump's splayed legs keep their width and most of their length.
+- **A new lump's nose and painted mouth dipped through the turntable** as it landed and squashed. They are now kept above what the lump rests on.
+
+Allowed, with reasons in the config:
+
+- **A part on the finger over a critter** (11): it snaps to the socket it will take and shows itself pressed in there, ringed by the socket glow.
+- **`pose` inside one critter** (77): parts pressed into squashing, breathing clay. The tool's pose history is also keyed by instance index, and the clay batches hand their indices to other critters as parts go on and off (tool note).
+
+The contact shadows are an ignored flat decal. Hidden and unallowed: a head on the finger behind a critter's ear, a long leg 7% into the turntable, and the bench's static z-fight off screen.
+
+New tests: `tray.test.ts` (tray rest; 20 of its 21 tests fail on the old code), `apart.test.ts` (footprints, landing, carry over a tall friend; fails at -20.5 cm without the lift), and `feet.test.ts` (paws against the real leg shapes, splayed legs still showing, and a plopping lump's face). Perf (shared probe, Chromium at 6×, top tier pinned, six interleaved pairs against `main`): `cpuP95` median 13.0 ms against `main`'s 14.7, with 20 draw calls each. The VM's load average ran 5 to 10 throughout (other workers), so both are far above this game's quiet-VM 5.4 ms and the difference is noise. There is no measurable cost. The per-frame additions are a footprint separation pass over at most a handful of critters, eight sole points per leg, and a box check per face mark.
+
 ## Still weak
 
+- **A sleeping lump's legs show less.** Legs that splay down into the turntable now tuck in at 35 to 70% of their length instead of reaching through it, so while it sleeps they mostly hide behind the body. Awake, they stand at full length. Laying sleeping legs out flat on the turntable at full length would read better.
 - **No physical iPad was measured.** Every number comes from a cloud VM with no GPU, rendering WebGL in software.
 - **The top tier costs fill.** At DPR 2 in software GL it runs below Pebble Table. A tile-based iPad GPU should handle it, and the tier controller steps down within about 3 seconds if it can't, but that is not measured on a device.
 - **Some garbage is left.** Numbers boxed at call boundaries still make about 380 KB/s. The final 111-second core loop at 6× ran 37 minor collections (the longest 5.8 ms) and no major ones. The 150-second run on the pass 30 build had two incremental major ones (17 and 27 ms at 6×, about 5 ms unthrottled): under the 50 ms long-task line, but over an 8 ms frame.
