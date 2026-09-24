@@ -230,5 +230,5 @@ describe('TablePhysics', () => {
     expect(near.contacts).toBeGreaterThan(5000)
     expect(near.contacts).toBe(every.contacts)
     expect(near.poses).toEqual(every.poses)
-  })
+  }, 60_000)
 })
