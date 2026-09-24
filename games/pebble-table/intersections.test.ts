@@ -12,6 +12,7 @@ import { PART_PIECES, partCollider, partCover, partPieceVertices, partReachDown,
 import { HOLD_HEIGHT, PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
 import { JARS, PART_KINDS, type PartKind } from './parts'
 import { panDrops, SWAY_MOST } from './scale'
+import { seededRandom } from './random'
 import { defaultTable, type Piece } from './state'
 import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneReachDown, stoneRest, stoneVertices } from './stoneShape'
 import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PAN_ROLL, panRimReach, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, ROPE_KNOT, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
@@ -577,6 +578,70 @@ describe('loose parts are drawn on what they land on', () => {
     expect(met, 'no two parts came to lie together, so this measures nothing').toBeGreaterThan(20)
     expect(deepest, worst).toBeLessThan(0.25)
   }, 60_000)
+})
+
+describe('spilled stones land on one another without sinking in', () => {
+  const geometries = new Map(SIZES.map((q) => [q, stoneGeometry(q)]))
+  const topDown = { toScreen: (v: { x: number; z: number }) => toWorld2(v), toPlane: (screen: Point) => screen }
+
+  /**
+   * A seeded bag spill through the real controller, read each frame the way
+   * the intersection audit reads it: every drawn stone, and how deep each one
+   * lies in any other against the audit's tolerance (6% of the smaller one's
+   * middle extent).
+   */
+  function spill(seed: number, frame: number, seconds: number) {
+    const table = new TableController(defaultTable(4), { save: () => {}, random: seededRandom(seed) })
+    table.setProjector(topDown)
+    for (let t = 0; t < 0.5; t += frame) table.step(frame)
+    table.pointerDown(1, { x: BAG.x, y: BAG.y }, 10)
+    table.pointerUp(1, { x: BAG.x, y: BAG.y }, 90)
+    const frames: { pair: string; depth: number; tolerance: number }[][] = []
+    let touching = 0
+    for (let t = 0; t < seconds; t += frame) {
+      table.step(frame)
+      // Stones in flight (negative ids: sent home, or riding a mouse) have no body to land.
+      const lying = stoneStates(table).filter((stone) => stone.id > 0)
+      const pieces = lying.map((stone) => auditPiece(`stone ${stone.id}`, geometries.get(stone.q)!, stoneMatrix(still(stone), 1, new THREE.Matrix4())))
+      const met: { pair: string; depth: number; tolerance: number }[] = []
+      pieces.forEach((a, i) =>
+        pieces.slice(i + 1).forEach((b) => {
+          if (!a.box.intersectsBox(b.box)) return
+          touching++
+          const depth = pairDepth(a, b, CAMERA)?.depth ?? 0
+          if (depth > 0) met.push({ pair: `${a.id} in ${b.id}`, depth, tolerance: 0.06 * Math.min(a.scale, b.scale) })
+        }),
+      )
+      frames.push(met)
+    }
+    return { frames, touching, stones: table.state.pieces.length }
+  }
+
+  // Cannon meets a stone only once it is inside another, as deep as it closed
+  // in one step; flying out of the bag, stones closed a whole step's worth
+  // (up to 272% of the tolerance in these spills) before the step was cut
+  // finer for stones closing on each other.
+  it('never sinks one drawn stone into another beyond the audit tolerance, and parts any two within two frames', () => {
+    for (const frame of [1 / 60, 0.016]) {
+      for (const seed of [1, 2, 3, 4, 5, 6]) {
+        const { frames, touching, stones } = spill(seed, frame, 3)
+        const where = `seed ${seed}, ${(frame * 1000).toFixed(1)} ms frames`
+        expect(stones, `${where}: the bag spilled`).toBe(10)
+        expect(touching, `${where}: no stones came together, so this measures nothing`).toBeGreaterThan(40)
+        const runs = new Map<string, number>()
+        frames.forEach((pairs, k) => {
+          for (const { pair, depth, tolerance } of pairs) {
+            expect(depth / tolerance, `${where}: ${pair} at frame ${k}`).toBeLessThan(1)
+            // Cannon pushes a stone out over a few steps; the last thousandths of a centimetre are not a stone inside another.
+            if (depth < tolerance / 10) continue
+            runs.set(pair, (runs.get(pair) ?? 0) + 1)
+            expect(runs.get(pair), `${where}: ${pair} still inside at frame ${k}`).toBeLessThanOrEqual(2)
+          }
+          for (const pair of runs.keys()) if (!pairs.some((p) => p.pair === pair && p.depth >= p.tolerance / 10)) runs.delete(pair)
+        })
+      }
+    }
+  }, 120_000)
 })
 
 describe('stones squash, rock and pop without sinking or swelling into a neighbour', () => {

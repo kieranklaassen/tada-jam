@@ -40,6 +40,15 @@ export const STEP_SLACK = 1e-6
 const BALL_TRAVEL = 1
 /** The most pieces a step is cut into. */
 const MOST_PIECES = 6
+/**
+ * Two stones (or shaped parts) closing on each other close at most this share
+ * of the smaller one's radius in one piece of a step: cannon has no continuous
+ * collision, so one meets the other only once it is already inside it, as deep
+ * as it travelled in that piece.
+ */
+const STONE_TRAVEL = 0.15
+/** The most pieces a step is cut into for stones meeting, which only a spill's first moments or a fast drop reach. */
+const MOST_STONE_PIECES = 12
 /** How many times sunk goes over the contacts it finds, so lifting a part out of one does not leave it in another. */
 const SUNK_PASSES = 4
 /** Pairs of bodies with at least this many pairs of shapes between them are handed to cannon with only the shapes that reach the other. */
@@ -148,6 +157,7 @@ export class TablePhysics {
   private readonly guests = new Set<CANNON.Body>()
   /** Each shell's or stick's biggest ball radius (cm). */
   private readonly balls = new Map<CANNON.Body, number>()
+  private readonly closing: CANNON.Body[] = []
   private readonly placed = new WeakMap<CANNON.Body, Placed>()
   private readonly surfacing = { local: new CANNON.Vec3(), out: new CANNON.Vec3(), way: new CANNON.Vec3(), back: new CANNON.Quaternion() }
   /** What sunk found last while everything lay asleep, and where everything lay. */
@@ -869,7 +879,7 @@ export class TablePhysics {
     return { fallen, impacts, moving }
   }
 
-  /** How many pieces the next step is cut into, so no shell or stick about to meet a stone or part moves its balls further than BALL_TRAVEL allows in one. */
+  /** How many pieces the next step is cut into, so no shell or stick about to meet a stone or part moves its balls further than BALL_TRAVEL allows in one, and no two stones or parts closing on each other close further than STONE_TRAVEL allows. */
   private pieces(): number {
     let pieces = 1
     for (const [body, reach] of this.balls) {
@@ -878,7 +888,29 @@ export class TablePhysics {
       const need = Math.ceil(travel / (reach * BALL_TRAVEL))
       if (need > pieces && this.nearLoose(body, travel)) pieces = need
     }
-    return Math.min(pieces, MOST_PIECES)
+    pieces = Math.min(pieces, MOST_PIECES)
+    const { DYNAMIC, SLEEPING } = CANNON.Body
+    const loose = this.closing
+    loose.length = 0
+    for (const { body } of this.stones.values()) if (body.type === DYNAMIC) loose.push(body)
+    for (let i = 0; i < loose.length; i++) {
+      const a = loose[i]
+      const aAwake = a.sleepState !== SLEEPING
+      for (let j = i + 1; j < loose.length; j++) {
+        const b = loose[j]
+        if (!aAwake && b.sleepState === SLEEPING) continue
+        // Flat stones meet edge first, anywhere around them, even while their middles part; a spinning one's rim swings in too.
+        const [vx, vy, vz] = [a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y, a.velocity.z - b.velocity.z]
+        const travel = (Math.hypot(vx, vy, vz) + a.angularVelocity.length() * a.boundingRadius + b.angularVelocity.length() * b.boundingRadius) * STEP
+        const need = Math.ceil(travel / (Math.min(a.boundingRadius, b.boundingRadius) * STONE_TRAVEL))
+        if (need <= pieces) continue
+        if (a.aabbNeedsUpdate) a.updateAABB()
+        if (b.aabbNeedsUpdate) b.updateAABB()
+        const [low, high, from, to] = [a.aabb.lowerBound, a.aabb.upperBound, b.aabb.lowerBound, b.aabb.upperBound]
+        if (from.x - travel < high.x && to.x + travel > low.x && from.y - travel < high.y && to.y + travel > low.y && from.z - travel < high.z && to.z + travel > low.z) pieces = Math.min(need, MOST_STONE_PIECES)
+      }
+    }
+    return pieces
   }
 
   /** Whether a stone or part other than `body` lies within `reach` (cm) of its bounds. */
