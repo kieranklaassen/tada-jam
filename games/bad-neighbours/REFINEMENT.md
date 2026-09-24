@@ -22,7 +22,7 @@ The street is canvas 2D, so the shared intersection audit reports it as "not aud
 | Scaffolded stack (seed 117) | 40.9 → 0.53 px | 17.5 s → 0 ms | 34.7 → 0.26 px | 19.0 → 0 px |
 | Scaffolded stack (seed 134) | 1.31 → 0.75 px | 10.3 s → 0 ms | 0.38 → 0.26 px | 7.1 → 0 px |
 
-No spawn ever touched anything (at least 123 px clear in every scenario), and every sprite sits on its collider to within 1e-11 px.
+No spawn ever touched anything (at least 123 px clear in every scenario), and every sprite sits on its collider to within 2e-11 px.
 
 **What was wrong, and the change.**
 - *Scaffolding flung buildings through each other and the slab.* Each scaffold is two zero-length ties between a pair, 10 px either side of where they meet, at stiffness 0.75. Matter turns a tie's pull into spin by its lever from each centre. Two ties close together work like a hinge, and at 120 Hz a stiff tie far from a small building's centre overcorrects each pass by more than the last. So a braced pair wound up until it was thrown through its neighbour or down into the slab, up to 41 px deep. Some locked into their foundations 35 px inside each other. The ties now sit a cell either side, and each is softened by its lever, so one pass corrects no more than its stretch (never above the old 0.75). A scaffolded pair now holds together: over six seeded runs of a busy, scaffolded street, 43 buildings are lost off the street instead of 151. The drop, the turn, the stack and the look are unchanged.
