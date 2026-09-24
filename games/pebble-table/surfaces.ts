@@ -1,5 +1,5 @@
 import { inBowl, plateOf } from './feeding'
-import { FEEDING, type MatKey, type Point } from './layout'
+import { FEEDING, SCALE, type MatKey, type Point } from './layout'
 import { panOf } from './scale'
 
 // What pieces rest on besides the bare table: the rug, the plates on it, the
@@ -20,25 +20,37 @@ export const RUG_HEM_REACH = RUG_HEM.tube + RUG_HEM.lump
 /** How many points the hem's line is drawn through. */
 export const HEM_POINTS = 160
 
+const HEM_SCALLOP = 0.02
+
 /** The line the hem follows, `t` of the way round: the rug's ellipse, gently scalloped (world units). */
 export function hemAt(t: number): Point {
   const a = t * Math.PI * 2
-  const scallop = 1 + Math.abs(Math.sin(a * 14)) * 0.02
+  const scallop = 1 + Math.abs(Math.sin(a * 14)) * HEM_SCALLOP
   return { x: RUG.center.x + Math.cos(a) * RUG.rx * scallop, y: RUG.center.y + Math.sin(a) * RUG.rz * scallop }
 }
+
+const HEM_LINE: readonly Point[] = Array.from({ length: HEM_POINTS + 1 }, (_, i) => hemAt(i / HEM_POINTS))
 
 /** How far `at` is from the hem's line, in world units. */
 function hemDistance(at: Point): number {
   let near = Infinity
-  let a = hemAt(0)
-  for (let i = 1; i <= HEM_POINTS; i++) {
-    const b = hemAt(i / HEM_POINTS)
-    const [dx, dy] = [b.x - a.x, b.y - a.y]
+  for (let i = 1; i < HEM_LINE.length; i++) {
+    const a = HEM_LINE[i - 1]
+    const [dx, dy] = [HEM_LINE[i].x - a.x, HEM_LINE[i].y - a.y]
     const k = Math.min(1, Math.max(0, ((at.x - a.x) * dx + (at.y - a.y) * dy) / (dx * dx + dy * dy)))
     near = Math.min(near, Math.hypot(at.x - a.x - k * dx, at.y - a.y - k * dy))
-    a = b
   }
   return near
+}
+
+/**
+ * A cheap lower bound on `hemDistance`: the hem lies between the rug's ellipse
+ * and the same ellipse scalloped out, and two such ellipses are nowhere closer
+ * than across their short axis.
+ */
+function hemDistanceAtLeast(at: Point): number {
+  const out = Math.hypot((at.x - RUG.center.x) / RUG.rx, (at.y - RUG.center.y) / RUG.rz)
+  return Math.max(0, out - 1 - HEM_SCALLOP, 1 - out) * Math.min(RUG.rx, RUG.rz)
 }
 
 /** The highest the feeding mat stands anywhere within `reach` cm of `at`: the hem's top, the rug's, or the bare table. */
@@ -67,6 +79,8 @@ export const PLATE_PROFILE: readonly [number, number][] = [
 ]
 export const PLATE_HEIGHT = 3.5
 export const PLATE_TOP = ON_RUG + 0.04 * PLATE_HEIGHT
+/** How lumpy the plate is modelled; its flat top is held level, and its lumps push its edge out by up to half this (of its radius). */
+export const PLATE_LUMP = 0.08
 
 /** Bowl profile (unit radius at the inner rim, drawn at the bowl's radius): a flat floor, a flared inner wall, a rolled lip. */
 export const BOWL_PROFILE: readonly [number, number][] = [
@@ -84,6 +98,8 @@ export const BOWL_PROFILE: readonly [number, number][] = [
   [0, 0.06],
 ]
 export const BOWL_SCALE = FEEDING.bowl.r * 0.1
+/** How lumpy the bowl is modelled; its lumps push its outside out by up to half this (of its scale). */
+export const BOWL_LUMP = 0.22
 /** The bowl stands on the rug; its floor is this far above the table. */
 export const BOWL_FLOOR = ON_RUG + 0.06 * BOWL_SCALE
 /** The inner wall as (radius, height above the bowl's base) in cm: from the floor, up to the lip, over the lip's crown. */
@@ -140,4 +156,45 @@ export function surfaceUnder(at: Point, { mat, seats, panFloors }: Surfaces): nu
   const plate = plateOf(at)
   if (plate !== null && seats[plate]) return PLATE_TOP
   return onRug(at) ? RUG.top : 0
+}
+
+/** Contact shadows and glow rings lie this far above what they are cast on; their material's polygon offset keeps them in front of it. */
+export const DECAL_LIFT = 0.02
+
+const PLATE_FLAT = PLATE_PROFILE[4][0]
+const PLATE_REACH = Math.max(...PLATE_PROFILE.map(([r]) => r)) + PLATE_LUMP / 2
+const BOWL_REACH = (Math.max(...BOWL_PROFILE.map(([r]) => r)) + BOWL_LUMP / 2) * BOWL_SCALE
+const PAN_FLAT = DISH_PROFILE[6][0]
+
+/**
+ * How far (cm) a flat decal lying `DECAL_LIFT` above `ground`, centred at
+ * `at`, may reach before it meets something drawn higher: the rim of the pan,
+ * bowl or plate it lies in (told by `ground`, since a shadow's centre can
+ * slide past the rim of what it lies in), the rug's hem, or the side of a
+ * plate or the bowl it lies above the foot of. Never more than `most`; below zero when
+ * the centre is already past a rim.
+ */
+export function decalReach(at: Point, ground: number, { mat, seats, panFloors }: Surfaces, most: number): number {
+  const level = ground + DECAL_LIFT
+  const cm = (to: Point) => Math.hypot(at.x - to.x, at.y - to.y) * 0.1
+  if (mat === 'scale') {
+    const pan = SCALE.pans.reduce((near, p) => (cm(p) < cm(near) ? p : near))
+    const side = SCALE.pans.indexOf(pan)
+    return ground > panFloors[side] - 0.01 ? Math.min(most, PAN_FLAT * pan.r * 0.1 - cm(pan)) : most
+  }
+  if (mat !== 'feeding') return most
+  if (ground === BOWL_FLOOR) return Math.min(most, BOWL_WALL[0][0] - cm(FEEDING.bowl))
+  const plateR = FEEDING.plateRadius * 0.1
+  let reach = most
+  if (level < RUG_HEM_TOP && hemDistanceAtLeast(at) * 0.1 - RUG_HEM_REACH < reach) reach = Math.min(reach, hemDistance(at) * 0.1 - RUG_HEM_REACH)
+  if (ground === PLATE_TOP) {
+    const off = Math.min(...FEEDING.seats.filter((_, index) => seats[index]).map((seat) => cm(seat.plate)))
+    return Math.min(reach, PLATE_FLAT * plateR - off)
+  }
+  if (level <= ON_RUG) return reach
+  reach = Math.min(reach, cm(FEEDING.bowl) - BOWL_REACH)
+  FEEDING.seats.forEach((seat, index) => {
+    if (seats[index]) reach = Math.min(reach, cm(seat.plate) - PLATE_REACH * plateR)
+  })
+  return reach
 }
