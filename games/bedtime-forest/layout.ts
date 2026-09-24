@@ -28,7 +28,16 @@ export type AnimalSpec = {
   walkSpeed: number
   /** How far below the finger the animal's feet hang when carried. */
   hang: number
+  /**
+   * The drawn body seen from above (fitted to its model; view/animals.test.ts
+   * holds them together): a capsule along its facing from `back` to `front`, `reach`
+   * out from that spine, and `top` high. Animals keep these apart, so a long
+   * fox or a broad bear never stands inside anyone.
+   */
+  footprint: Footprint
 }
+
+export type Footprint = { back: number; front: number; reach: number; top: number }
 
 export type HomeSpec = {
   key: HomeKey
@@ -59,16 +68,18 @@ export type HomeSpec = {
 export const ANIMAL_SCALE = 1.25
 
 function animal(spec: AnimalSpec): AnimalSpec {
-  return { ...spec, size: spec.size * ANIMAL_SCALE, radius: spec.radius * ANIMAL_SCALE, hang: spec.hang * ANIMAL_SCALE }
+  const f = spec.footprint
+  const footprint = { back: f.back * ANIMAL_SCALE, front: f.front * ANIMAL_SCALE, reach: f.reach * ANIMAL_SCALE, top: f.top * ANIMAL_SCALE }
+  return { ...spec, size: spec.size * ANIMAL_SCALE, radius: spec.radius * ANIMAL_SCALE, hang: spec.hang * ANIMAL_SCALE, footprint }
 }
 
 export const ANIMALS: Record<AnimalKey, AnimalSpec> = {
-  owl: animal({ key: 'owl', home: 'hollow', kind: 'bird', size: 12, girth: 11, radius: 6.5, weight: 0.35, walkSpeed: 9, hang: 11 }),
-  fox: animal({ key: 'fox', home: 'den', kind: 'mammal', size: 12, girth: 13, radius: 8, weight: 0.5, walkSpeed: 17, hang: 11 }),
-  rabbit: animal({ key: 'rabbit', home: 'burrow', kind: 'mammal', size: 11, girth: 9, radius: 6, weight: 0.3, walkSpeed: 15, hang: 10 }),
-  bear: animal({ key: 'bear', home: 'cave', kind: 'mammal', size: 19, girth: 20, radius: 11, weight: 1, walkSpeed: 8, hang: 17 }),
-  fish: animal({ key: 'fish', home: 'pond', kind: 'fish', size: 8, girth: 6, radius: 5.5, weight: 0.2, walkSpeed: 12, hang: 8 }),
-  songbird: animal({ key: 'songbird', home: 'nest', kind: 'bird', size: 6.5, girth: 5, radius: 5, weight: 0.08, walkSpeed: 14, hang: 6 }),
+  owl: animal({ key: 'owl', home: 'hollow', kind: 'bird', size: 12, girth: 11, radius: 6.5, weight: 0.35, walkSpeed: 9, hang: 11, footprint: { back: 0.3, front: 0.3, reach: 6, top: 15 } }),
+  fox: animal({ key: 'fox', home: 'den', kind: 'mammal', size: 12, girth: 13, radius: 8, weight: 0.5, walkSpeed: 17, hang: 11, footprint: { back: -11.2, front: 8.3, reach: 3.5, top: 14.5 } }),
+  rabbit: animal({ key: 'rabbit', home: 'burrow', kind: 'mammal', size: 11, girth: 9, radius: 6, weight: 0.3, walkSpeed: 15, hang: 10, footprint: { back: -2.6, front: 2.2, reach: 3.7, top: 17.3 } }),
+  bear: animal({ key: 'bear', home: 'cave', kind: 'mammal', size: 19, girth: 20, radius: 11, weight: 1, walkSpeed: 8, hang: 17, footprint: { back: -3.1, front: 8.1, reach: 6.7, top: 18.1 } }),
+  fish: animal({ key: 'fish', home: 'pond', kind: 'fish', size: 8, girth: 6, radius: 5.5, weight: 0.2, walkSpeed: 12, hang: 8, footprint: { back: -4.7, front: 1.4, reach: 3.1, top: 8.3 } }),
+  songbird: animal({ key: 'songbird', home: 'nest', kind: 'bird', size: 6.5, girth: 5, radius: 5, weight: 0.08, walkSpeed: 14, hang: 6, footprint: { back: -2.5, front: 1.3, reach: 2.6, top: 6.9 } }),
 }
 
 export const HOMES: Record<HomeKey, HomeSpec> = {
