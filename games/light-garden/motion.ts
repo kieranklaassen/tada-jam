@@ -593,7 +593,7 @@ function poked(creature: Creature, now: number, out: Pose): void {
         out.a = Math.max(out.a, 0.55 * look)
         out.b = Math.max(out.b, 1.25 * look)
         out.c = Math.max(out.c, 1.25 * late)
-        out.pitch -= 0.2 * look
+        out.pitch += 0.2 * look
         out.stretch += 0.12 * look
         out.heading += 0.3 * Math.sin(age * 5) * look
         out.eyes = Math.max(out.eyes, look)

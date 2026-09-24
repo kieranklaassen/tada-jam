@@ -1,5 +1,6 @@
 import * as THREE from 'three'
-import type { CreatureSim, GardenController, PieceSim } from '../controller'
+import { CREATURE_SCALE } from '../bodies'
+import { pieceHeight, type CreatureSim, type GardenController, type PieceSim } from '../controller'
 import { isAwake } from '../creatures'
 import { KNOB, LAMP_LENS, PANEL, type CreatureKind } from '../layout'
 import { BLUE, END_BOUNDS, GREEN, MAX_SEGMENTS, RED, type Mask } from '../optics'
@@ -26,8 +27,6 @@ type CreatureView = { sim: CreatureSim; mesh: GlassMesh; awake: number; dream: n
 const CREATURE_KIND: Readonly<Record<CreatureKind, number>> = { jelly: KIND.jelly, moth: KIND.moth, snail: KIND.snail, fish: KIND.fish }
 const BITS = [RED, GREEN, BLUE] as const
 const TAU = Math.PI * 2
-/** Creatures are drawn a little larger than the circle that catches light, so a seven-year-old reads them at a glance. */
-const CREATURE_SCALE = 1.45
 
 const approach = (value: number, target: number, rate: number, dt: number) => value + (target - value) * (1 - Math.exp(-rate * dt))
 
@@ -52,6 +51,9 @@ export class GardenView {
     const table = new THREE.Mesh(tableGeometry(), matte)
     this.panel = panelMaterial()
     const panel = new THREE.Mesh(panelGeometry(), this.panel)
+    room.name = 'room'
+    table.name = 'table'
+    panel.name = 'panel'
     for (const mesh of [room, table, panel]) {
       mesh.matrixAutoUpdate = false
       this.root.add(mesh)
@@ -69,19 +71,27 @@ export class GardenView {
       const material = glassMaterial(PIECE_LOOK[sim.spec.id], KIND.piece)
       this.disposables.push(material)
       const mesh = new THREE.Mesh(geometry, material) as GlassMesh
+      mesh.name = sim.spec.id
+      const knob = sim.pose.inTray ? 0 : 1
+      mesh.morphTargetInfluences![0] = 1 - knob
       this.root.add(mesh)
-      return { sim, mesh, lit: 0, knob: sim.pose.inTray ? 0 : 1 }
+      return { sim, mesh, lit: 0, knob }
     })
     this.creatures = garden.creatures.map((sim) => {
       const geometry = creatureGeometry(sim.c.kind)
       const material = glassMaterial(CREATURE_LOOK[sim.c.kind], CREATURE_KIND[sim.c.kind])
       this.disposables.push(geometry, material)
       const mesh = new THREE.Mesh(geometry, material) as GlassMesh
+      mesh.name = sim.c.kind
       mesh.rotation.order = 'YXZ'
       this.root.add(mesh)
       return { sim, mesh, awake: 0, dream: 1, fed: new Float32Array(3) }
     })
 
+    this.shade.mesh.name = 'shadows-and-eyes'
+    this.ribbon.mesh.name = 'beams'
+    this.light.mesh.name = 'light'
+    this.hand.mesh.name = 'ghost-hand'
     this.shade.mesh.renderOrder = 1
     this.ribbon.mesh.renderOrder = 2
     this.light.mesh.renderOrder = 3
@@ -121,8 +131,9 @@ export class GardenView {
     const u = mesh.material.uniforms
     const inTray = sim.pose.inTray && sim.flying === 0
     const base = inTray ? 0.15 : 0
-    const lift = Math.max(0, sim.lift.x) + sim.hop.x
-    mesh.position.set(sim.x, base + lift, sim.y)
+    const height = pieceHeight(sim)
+    const lift = height - base
+    mesh.position.set(sim.x, height, sim.y)
     mesh.rotation.y = -(sim.angle.x + sim.wobble.x)
     const squash = sim.squash.x
     mesh.scale.set(1 - squash * 0.35, 1 + squash * 0.9, 1 - squash * 0.35)
@@ -139,7 +150,7 @@ export class GardenView {
     u.uLit.value = view.lit
     u.uGlow.value = glow * 0.75 + (sim.heldBy !== null || sim.knobBy !== null ? 0.35 : 0)
     u.uUnder.value = inTray ? 0.12 : 1
-    u.uKnob.value = view.knob
+    mesh.morphTargetInfluences![0] = 1 - view.knob
     u.uTime.value = t
 
     const r = sim.spec.radius
@@ -181,7 +192,7 @@ export class GardenView {
     const u = mesh.material.uniforms
     const awake = isAwake(c) ? 1 : 0
     view.awake = approach(view.awake, awake, 3, dt)
-    const alt = pose.alt + sim.lift.x
+    const alt = sim.alt
     mesh.position.set(sim.x, alt, sim.y)
     mesh.rotation.set(pose.roll, -pose.heading, pose.pitch)
     const stretch = pose.stretch
