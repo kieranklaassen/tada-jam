@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PIECES, pieceShape, pointInConvex, quarter, restHeight, SHAPES, skylineAt, spanAt, worldParts, type Placed } from './pieces'
+import { HELD_SCALE, PIECES, pieceShape, pointInConvex, quarter, restHeight, restSliver, SHAPES, skylineAt, slideClear, spanAt, worldParts, type Placed } from './pieces'
 
 function place(id: number, x: number, y: number, angle = 0): Placed {
   return { id, parts: worldParts(pieceShape(id), { x, y, angle }) }
@@ -90,5 +90,42 @@ describe('restHeight', () => {
 
   it('works for a plank turned upright', () => {
     expect(restHeight(SHAPES.plank, Math.PI / 2, 0, [])).toBeCloseTo(1.7 + 0.06)
+  })
+
+  it('clears a corner poking up between any two columns, so a release never starts inside the piece below', () => {
+    // A cube stood on its corner under a plank: the gap is narrowest right over that corner, wherever the plank is.
+    const diamond = place(0, 0, Math.SQRT1_2, Math.PI / 4)
+    for (let x = -1.2; x <= 1.2; x += 0.07) {
+      expect(restHeight(SHAPES.plank, 0, x, [diamond]), `plank at ${x.toFixed(2)}`).toBeCloseTo(Math.SQRT2 + 0.16 + 0.06, 6)
+    }
+  })
+
+  it('reaches as far down as the held piece is drawn', () => {
+    expect(restHeight(SHAPES.cube, 0, 0, [], HELD_SCALE)).toBeCloseTo(0.5 * HELD_SCALE + 0.06)
+    expect(restHeight(SHAPES.cube, 0, 0, [place(1, 0, 0.5)], HELD_SCALE)).toBeCloseTo(1 + 0.5 * HELD_SCALE + 0.06)
+  })
+})
+
+describe('slideClear', () => {
+  it('sets a block down flush beside a neighbour it lands a sliver over, instead of on its corner', () => {
+    const neighbour = place(1, 0, 0.5)
+    const x = slideClear(SHAPES.cube, 0, 0.97, [neighbour])
+    expect(x).toBeGreaterThan(1)
+    expect(x).toBeLessThan(1.01)
+    expect(restHeight(SHAPES.cube, 0, x, [neighbour])).toBeCloseTo(0.56)
+    expect(restSliver.left + restSliver.right).toBe(0)
+  })
+
+  it('leaves a block that overlaps its neighbour by more than a sliver where it is, riding over it', () => {
+    const neighbour = place(1, 0, 0.5)
+    expect(slideClear(SHAPES.cube, 0, 0.8, [neighbour])).toBe(0.8)
+    expect(restHeight(SHAPES.cube, 0, 0.8, [neighbour])).toBeCloseTo(1.56)
+  })
+
+  it('rides over a gap narrower than the block instead of wedging into it', () => {
+    const left = place(1, -0.98, 0.5)
+    const right = place(3, 0.98, 0.5)
+    expect(slideClear(SHAPES.cube, 0, 0, [left, right])).toBe(0)
+    expect(restHeight(SHAPES.cube, 0, 0, [left, right])).toBeCloseTo(1.56)
   })
 })

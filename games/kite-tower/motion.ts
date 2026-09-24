@@ -347,8 +347,9 @@ const moss: Personality = {
       name: 'big-slow-wave',
       duration: 3.0,
       sample: (t, a, p) => {
+        // Swung below the brim: past about 2.8 the arm meets his cap and the guard only eases it there.
         const k = hold(t, 0.4, 2.6, 3.0)
-        p.raiseR += (2.7 + Math.sin((t / 3) * TAU * 2) * 0.35) * k * a
+        p.raiseR += (2.3 + Math.sin((t / 3) * TAU * 2) * 0.45) * k * a
         p.forwardL -= 0.8 * k * a
         p.raiseL += 0.2 * k * a
         p.lift += 0.05 * k * a

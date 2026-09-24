@@ -81,12 +81,15 @@ export function slotCenter(slot: TraySlot): Vec2 {
 /** A watcher wanders between `min` and `max`; to give the doll room it may step out as far as `aside`. */
 export type WatcherHome = { home: number; min: number; max: number; aside: number; z: number }
 
+/** Far enough behind the build that Moss's cap brim, however he turns his head, stays behind the deepest block. */
 export const WATCHERS: readonly WatcherHome[] = [
-  { home: -6.55, min: -7.05, max: -5.85, aside: -7.35, z: -1.05 },
+  { home: -6.55, min: -7.05, max: -5.85, aside: -7.35, z: -1.25 },
   { home: 6.55, min: 5.95, max: 7.1, aside: 7.35, z: -0.95 },
 ]
 
-export const SHELF = { x0: 3.72, x1: 6.98, back: WALL_Z + 0.02, front: -1.0, boards: [0.22, 2.0, 4.0], top: 6.7, side: 0.16, board: 0.14 }
+/** Shallow enough that Bean, wandering in front of it, never reaches into it (his arms and a bow backward included). */
+export const SHELF = { x0: 3.72, x1: 6.98, back: WALL_Z + 0.02, front: -1.65, boards: [0.22, 2.0, 4.0], top: 6.7, side: 0.16, board: 0.14 }
 export const WINDOW = { x0: -7.7, x1: -4.3, y0: 4.7, y1: 8.7, sill: 4.62 }
-export const LAMP = { x: -2.75, z: -1.85, shadeY: 7.25 }
-export const PEG_RAIL = { x0: -2.4, x1: 2.3, y: 7.25 }
+/** The shade's rim radius sets where the lamp can stand: clear of the wall behind it and of the blocks in front. */
+export const LAMP = { x: -2.75, z: -1.6, shadeY: 7.25, shade: 0.72, base: 0.65 }
+export const PEG_RAIL = { x0: -1.75, x1: 2.3, y: 7.25, depth: 0.12 }

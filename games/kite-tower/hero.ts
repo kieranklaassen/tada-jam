@@ -100,6 +100,43 @@ function alongPath(path: readonly Vec2[], length: number, t: number, out: RouteP
   out.y = path[0].y
 }
 
+/** Where the doll is `p` (0..1) through one move from `from` to `to`: the path her route follows, and the one the planner keeps her head clear along. */
+export function movePoint(kind: SegmentKind, from: Vec2, to: Vec2, p: number, out: Vec2): Vec2 {
+  const dx = to.x - from.x
+  switch (kind) {
+    case 'walk':
+      out.x = from.x + dx * p
+      out.y = from.y + (to.y - from.y) * p
+      break
+    case 'climb': {
+      const rise = Math.min(1, Math.max(0, (p - 0.22) / 0.46))
+      const over = Math.min(1, Math.max(0, (p - 0.62) / 0.3))
+      const lift = 1 - (1 - rise) * (1 - rise) * (1 - rise)
+      out.y = from.y + (to.y - from.y) * lift + Math.sin(over * Math.PI) * 0.12
+      out.x = from.x + dx * (0.18 * rise + 0.82 * easeInOut(over))
+      break
+    }
+    case 'hop': {
+      const k = easeInOut(p)
+      out.x = from.x + dx * k
+      out.y = from.y + (to.y - from.y) * k + (0.5 + Math.max(0, to.y - from.y)) * 4 * p * (1 - p)
+      break
+    }
+    case 'drop': {
+      const leave = Math.min(1, p / 0.25)
+      const fall = Math.max(0, (p - 0.25) / 0.75)
+      out.x = from.x + dx * (0.45 * leave + 0.55 * fall)
+      out.y = p < 0.25 ? from.y + Math.sin(leave * Math.PI * 0.5) * 0.18 : from.y + 0.18 - (from.y + 0.18 - to.y) * fall * fall
+      break
+    }
+    default: {
+      const never: never = kind
+      throw new Error(`unknown segment ${String(never)}`)
+    }
+  }
+  return out
+}
+
 /** Where the doll is `elapsed` seconds into its route, written into `out`. */
 export function routePose(segments: readonly Segment[], elapsed: number, out: RoutePose): RoutePose {
   let t = Math.max(0, elapsed)
@@ -117,36 +154,8 @@ export function routePose(segments: readonly Segment[], elapsed: number, out: Ro
     out.index = i
     out.hops = s.kind === 'walk' ? Math.max(1, Math.round(s.length / HOP_STRIDE)) : 1
     out.done = i === segments.length - 1 && t >= s.duration
-    switch (s.kind) {
-      case 'walk':
-        alongPath(s.path, s.length, p, out)
-        break
-      case 'climb': {
-        const rise = Math.min(1, Math.max(0, (p - 0.22) / 0.46))
-        const over = Math.min(1, Math.max(0, (p - 0.62) / 0.3))
-        const lift = 1 - (1 - rise) * (1 - rise) * (1 - rise)
-        out.y = s.from.y + (s.to.y - s.from.y) * lift + Math.sin(over * Math.PI) * 0.12
-        out.x = s.from.x + dx * (0.18 * rise + 0.82 * easeInOut(over))
-        break
-      }
-      case 'hop': {
-        const k = easeInOut(p)
-        out.x = s.from.x + dx * k
-        out.y = s.from.y + (s.to.y - s.from.y) * k + (0.5 + Math.max(0, s.to.y - s.from.y)) * 4 * p * (1 - p)
-        break
-      }
-      case 'drop': {
-        const leave = Math.min(1, p / 0.25)
-        const fall = Math.max(0, (p - 0.25) / 0.75)
-        out.x = s.from.x + dx * (0.45 * leave + 0.55 * fall)
-        out.y = p < 0.25 ? s.from.y + Math.sin(leave * Math.PI * 0.5) * 0.18 : s.from.y + 0.18 - (s.from.y + 0.18 - s.to.y) * fall * fall
-        break
-      }
-      default: {
-        const never: never = s.kind
-        throw new Error(`unknown segment ${String(never)}`)
-      }
-    }
+    if (s.kind === 'walk') alongPath(s.path, s.length, p, out)
+    else movePoint(s.kind, s.from, s.to, p, out)
     return out
   }
   out.done = true

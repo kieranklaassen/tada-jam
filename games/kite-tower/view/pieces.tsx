@@ -3,7 +3,7 @@ import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { KiteController } from '../controller'
 import { slotCenter, TRAY, TRAY_SLOTS, trayToWorld } from '../layout'
-import { PIECES, SHAPES, type PieceKind } from '../pieces'
+import { HELD_SCALE, PIECES, popScale, SHAPES, type PieceKind } from '../pieces'
 import { swayAngle, type Rock } from '../sway'
 import { woodSlab } from './shapes'
 import { PALETTE } from './stage'
@@ -12,10 +12,31 @@ import { woodMaterial } from './wood'
 // The wooden pieces: one instanced mesh per kind, so the whole set is six
 // draws. A piece in the tray lies on its back in its slot; on the build
 // plane it follows its physics body, rocks with its stack's sway, pops in
-// when it leaves the tray, and leans a little into a drag. Soft blob
+// when it leaves the tray, and is drawn a little larger while held (the lean
+// into a drag is the controller's, so it hovers clear too). Soft blob
 // shadows and the breathing guidance glows are two more instanced layers.
 
 const KINDS: readonly PieceKind[] = ['archL', 'archM', 'cube', 'pillar', 'half', 'plank']
+
+export type DrawnPose = { x: number; y: number; angle: number; scale: number }
+
+/** Where piece `id`, on the build plane, is drawn this frame: its body's pose rocked by its stack's sway, at its drawn scale. */
+export function drawnPose(c: KiteController, id: number, out: DrawnPose, rock: Rock): DrawnPose {
+  c.physics.pose(id, out)
+  const stack = c.pieceStack[id]
+  if (stack >= 0 && stack < c.stacks.length) {
+    swayAngle(c.stacks[stack], c.t, c.stackKick[stack] ?? 0, rock)
+    const cos = Math.cos(rock.angle)
+    const sin = Math.sin(rock.angle)
+    const dx = out.x - rock.pivot
+    const y = out.y
+    out.x = rock.pivot + dx * cos - y * sin
+    out.y = dx * sin + y * cos
+    out.angle += rock.angle
+  }
+  out.scale = popScale(c.t - c.popAt[id]) * (c.isHeld(id) ? HELD_SCALE : 1)
+  return out
+}
 
 /** Each kind's bevelled geometry, built once; the underside is a touch darker, like wood resting on wood. */
 export function pieceGeometries(): Record<PieceKind, THREE.BufferGeometry> {
@@ -33,14 +54,6 @@ export function pieceGeometries(): Record<PieceKind, THREE.BufferGeometry> {
   return out
 }
 
-function easeOutBack(t: number): number {
-  const k = Math.min(1, Math.max(0, t))
-  const c = 1.9
-  return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2)
-}
-
-const POP_SECONDS = 0.38
-
 export function Pieces({ controller, geometries }: { controller: KiteController; geometries: Record<PieceKind, THREE.BufferGeometry> }) {
   const { meshes, slot, trayMatrix } = useMemo(() => {
     const material = woodMaterial({ instanced: true })
@@ -57,6 +70,7 @@ export function Pieces({ controller, geometries }: { controller: KiteController;
       const mesh = new THREE.InstancedMesh(geometry, material, counts[kind])
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
       mesh.frustumCulled = false
+      mesh.name = `piece-${kind}`
       meshes[kind] = mesh
     }
     for (const piece of PIECES) {
@@ -87,17 +101,15 @@ export function Pieces({ controller, geometries }: { controller: KiteController;
       z: new THREE.Vector3(0, 0, 1),
       up: new THREE.Vector3(0, Math.cos(TRAY.tilt), Math.sin(TRAY.tilt)),
       wiggle: new THREE.Quaternion(),
-      pose: { x: 0, y: 0, angle: 0 },
+      pose: { x: 0, y: 0, angle: 0, scale: 1 },
       rock: { angle: 0, pivot: 0 } as Rock,
-      prevX: new Float32Array(PIECES.length),
-      lean: new Float32Array(PIECES.length),
     }),
     [],
   )
 
-  useFrame((_, dt) => {
+  useFrame(() => {
     const c = controller
-    const { m, p, q, s, z, up, wiggle, pose, rock, prevX, lean } = scratch
+    const { m, p, q, s, z, up, wiggle, pose, rock } = scratch
     const peekId = c.guidance.peek !== null ? (c.guidance.hint?.kind === 'fromTray' ? c.guidance.hint.id : TRAY_SLOTS.find((t) => c.trayed[t.id])?.id ?? -1) : -1
     for (const piece of PIECES) {
       const id = piece.id
@@ -115,35 +127,12 @@ export function Pieces({ controller, geometries }: { controller: KiteController;
           s.set(1, 1, 1)
           mesh.setMatrixAt(index, m.compose(p, q, s))
         } else mesh.setMatrixAt(index, trayMatrix[id])
-        prevX[id] = NaN
         continue
       }
-      c.physics.pose(id, pose)
-      let x = pose.x
-      let y = pose.y
-      let angle = pose.angle
-      const stack = c.pieceStack[id]
-      if (stack >= 0 && stack < c.stacks.length) {
-        swayAngle(c.stacks[stack], c.t, c.stackKick[stack] ?? 0, rock)
-        const cos = Math.cos(rock.angle)
-        const sin = Math.sin(rock.angle)
-        const dx = x - rock.pivot
-        x = rock.pivot + dx * cos - y * sin
-        y = dx * sin + y * cos
-        angle += rock.angle
-      }
-      let scale = 1
-      const popAge = c.t - c.popAt[id]
-      if (popAge < POP_SECONDS) scale = 0.78 + 0.22 * easeOutBack(popAge / POP_SECONDS)
-      if (c.isHeld(id)) {
-        scale *= 1.035
-        const vx = Number.isNaN(prevX[id]) || dt <= 0 ? 0 : (pose.x - prevX[id]) / dt
-        lean[id] += (Math.max(-0.16, Math.min(0.16, -vx * 0.025)) - lean[id]) * Math.min(1, dt * 10)
-      } else lean[id] += (0 - lean[id]) * Math.min(1, dt * 8)
-      prevX[id] = pose.x
-      p.set(x, y, 0)
-      q.setFromAxisAngle(z, angle + lean[id])
-      s.set(scale, scale, scale)
+      drawnPose(c, id, pose, rock)
+      p.set(pose.x, pose.y, 0)
+      q.setFromAxisAngle(z, pose.angle)
+      s.set(pose.scale, pose.scale, pose.scale)
       mesh.setMatrixAt(index, m.compose(p, q, s))
     }
     for (const kind of KINDS) meshes[kind].instanceMatrix.needsUpdate = true
@@ -219,6 +208,7 @@ export function Blobs({ kind, capacity, write }: { kind: 'shadow' | 'glow'; capa
     instanced.setColorAt(0, new THREE.Color(0, 0, 0))
     instanced.instanceColor!.setUsage(THREE.DynamicDrawUsage)
     instanced.frustumCulled = false
+    instanced.name = `${kind}-blobs`
     instanced.renderOrder = kind === 'shadow' ? 2 : 6
     instanced.count = 0
     return instanced
@@ -311,6 +301,7 @@ export function GhostHand({ controller, geometries }: { controller: KiteControll
     // The fingertip sits near the top-left of the drawing; move the quad so the fingertip is the pivot.
     plane.translate(HAND_SIZE * 0.02, -HAND_SIZE * 0.36, 0)
     const hand = new THREE.Mesh(plane, new THREE.MeshBasicMaterial({ map: handTexture(), transparent: true, depthTest: false, depthWrite: false, toneMapped: false }))
+    hand.name = 'ghost-hand'
     hand.renderOrder = 999
     hand.frustumCulled = false
     hand.visible = false
@@ -319,6 +310,7 @@ export function GhostHand({ controller, geometries }: { controller: KiteControll
     material.opacity = 0.5
     material.depthWrite = false
     const ghost = new THREE.Mesh(geometries.cube, material)
+    ghost.name = 'ghost-piece'
     ghost.renderOrder = 998
     ghost.visible = false
     ghost.frustumCulled = false
@@ -337,26 +329,32 @@ export function GhostHand({ controller, geometries }: { controller: KiteControll
     const { ray, ndc, plane, hit } = scratch
     ndc.set((pose.at.x / size.width) * 2 - 1, -(pose.at.y / size.height) * 2 + 1)
     ray.setFromCamera(ndc, camera)
-    plane.constant = -HAND_DEPTH
-    if (!ray.ray.intersectPlane(plane, hit)) return
-    hand.visible = true
-    hand.position.copy(hit)
-    hand.position.y -= pose.press * 0.08
-    hand.scale.setScalar(1 - pose.press * 0.1)
-    hand.quaternion.copy(camera.quaternion)
-    ;(hand.material as THREE.MeshBasicMaterial).opacity = pose.opacity * 0.9
+    // Carried, the piece rides over the build and over Pip the way a real one does, and the fingertip rises with it.
+    let rise = 0
     const hint = g.hint
+    ghost.visible = false
     if (hint && pose.carry > 0) {
       plane.constant = 0
       if (ray.ray.intersectPlane(plane, hit)) {
         const kind = PIECES[hint.id].kind
         if (ghost.geometry !== geometries[kind]) ghost.geometry = geometries[kind]
+        const y = hit.y - SHAPES[kind].half.y * 0.6
+        const ride = controller.ghostY(hint.id, hit.x, y)
+        rise = ride - y
         ghost.visible = true
-        ghost.position.set(hit.x, hit.y - SHAPES[kind].half.y * 0.6, 0)
+        ghost.position.set(hit.x, ride, 0)
         ;(ghost.material as THREE.MeshStandardMaterial).color.set(PIECES[hint.id].stain)
         ;(ghost.material as THREE.MeshStandardMaterial).opacity = 0.55 * pose.opacity
       }
-    } else ghost.visible = false
+    }
+    plane.constant = -HAND_DEPTH
+    if (!ray.ray.intersectPlane(plane, hit)) return
+    hand.visible = true
+    hand.position.copy(hit)
+    hand.position.y += rise - pose.press * 0.08
+    hand.scale.setScalar(1 - pose.press * 0.1)
+    hand.quaternion.copy(camera.quaternion)
+    ;(hand.material as THREE.MeshBasicMaterial).opacity = pose.opacity * 0.9
   })
 
   useEffect(
