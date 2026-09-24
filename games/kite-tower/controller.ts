@@ -7,7 +7,7 @@ import { Gestures, type Intent, type Target } from './input'
 import { slotCenter, TRAY, TRAY_SLOTS, trayToWorld, WATCHERS, type Vec3 } from './layout'
 import { kiteTarget, nextPerch, PERCHES } from './perches'
 import { DOLL_WEIGHT, PlayPhysics } from './physics'
-import { clampX, HELD_SCALE, PIECES, PLAY_MAX_X, PLAY_MIN_X, pieceShape, pointInConvex, popScale, restHeight, restSliver, SHAPES, skylineAt, slideClear, spanAt, transformInto, type PieceShape, type Placed, type Pose, type Vec2 } from './pieces'
+import { clampX, HELD_SCALE, PIECES, PLAY_MAX_X, PLAY_MIN_X, pieceShape, pointInConvex, popScale, restHeight, restSliver, SHAPES, skylineAt, slideClear, slideRest, spanAt, transformInto, type PieceShape, type Placed, type Pose, type Vec2 } from './pieces'
 import { SaveCadence } from './saveCadence'
 import { serialize, type KiteState, type SavedPiece } from './state'
 import { findStacks, type Stack } from './sway'
@@ -551,7 +551,7 @@ export class KiteController {
     const slid = slideClear(shape, angle, x, placed, scale)
     const reach = Math.abs(Math.cos(angle)) * shape.half.x + Math.abs(Math.sin(angle)) * shape.half.y
     this.liftX = clampX(slid, reach) === slid ? slid : x
-    this.landing = restHeight(shape, angle, this.liftX, placed, scale)
+    this.landing = slideRest.x === this.liftX ? slideRest.height : restHeight(shape, angle, this.liftX, placed, scale)
     if (restSliver.left > 0 || restSliver.right > 0) this.landing = restSliver.over
     return Math.max(this.landing, restHeight(shape, angle, this.liftX, this.pipOutline(slope), scale))
   }

@@ -427,7 +427,7 @@ class DollRig {
     f[9] = e[6]
     f[10] = e[10]
     f[11] = e[14]
-    this.guard.setObstacle(this.blocks.distance)
+    this.guard.setObstacle(this.blocks.distance, this.blocks.slope)
   }
 
   /**
@@ -527,7 +527,15 @@ class DollRig {
     this.lean.rotation.set(bow, 0, roll)
     const wide = 1 / Math.sqrt(squash)
     this.lean.scale.set(wide, squash, wide)
-    this.root.updateMatrixWorld(true)
+    // Only down to the head, the way three updates each of them: `ballsClear` reads nothing else, and `armsAmong` updates the whole doll next.
+    const root = this.root
+    root.updateMatrix()
+    if (root.parent) root.matrixWorld.multiplyMatrices(root.parent.matrixWorld, root.matrix)
+    else root.matrixWorld.copy(root.matrix)
+    this.lean.updateMatrix()
+    this.lean.matrixWorld.multiplyMatrices(root.matrixWorld, this.lean.matrix)
+    this.head.updateMatrix()
+    this.head.matrixWorld.multiplyMatrices(this.lean.matrixWorld, this.head.matrix)
   }
 
   private ballsClear(squash: number): boolean {

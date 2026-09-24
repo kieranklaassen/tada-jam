@@ -378,16 +378,30 @@ export function restHeight(shapeOf: PieceShape, angle: number, x: number, others
 export function slideClear(shapeOf: PieceShape, angle: number, x: number, others: readonly Placed[], scale = 1): number {
   let at = x
   let side = 0
+  slideRest.x = Number.NaN
   for (let pass = 0; pass < 3; pass++) {
-    restHeight(shapeOf, angle, at, others, scale)
+    const rest = restHeight(shapeOf, angle, at, others, scale)
     const push = restSliver.left > 0 ? 1 : restSliver.right > 0 ? -1 : 0
-    if (push === 0) return at
+    if (push === 0) return settled(at, rest)
     if (side !== 0 && push !== side) return x
     side = push
     at += push * ((push > 0 ? restSliver.left : restSliver.right) + SIDE_GAP)
   }
-  restHeight(shapeOf, angle, at, others, scale)
-  return restSliver.left > 0 || restSliver.right > 0 ? x : at
+  const rest = restHeight(shapeOf, angle, at, others, scale)
+  return restSliver.left > 0 || restSliver.right > 0 ? x : settled(at, rest)
+}
+
+/**
+ * The rest height `slideClear` last measured where it returned (x NaN when it
+ * returned without measuring there). `restSliver` still holds that
+ * measurement's slivers until the next `restHeight`.
+ */
+export const slideRest = { x: Number.NaN, height: 0 }
+
+function settled(at: number, height: number): number {
+  slideRest.x = at
+  slideRest.height = height
+  return at
 }
 
 /** Snap an angle to the nearest quarter turn. */

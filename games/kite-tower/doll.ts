@@ -127,6 +127,11 @@ export function bodyDistance(x: number, y: number, z: number): number {
 
 /** How deep the arm's rounded top sits in the shoulder in every pose; an arm may go no deeper anywhere. */
 export const ARM_JOINT = ARM_R - bodyDistance(SHOULDER.x, SHOULDER.y, 0)
+/** Past this far out from her middle no arm or hand can be deeper in the body than its joint: `bodyDistance` is at least 0.3 of the way out past her widest. */
+const BODY_NEAR = BODY_R + (HAND_R - ARM_JOINT - 0.004) / 0.3 + 1e-6
+/** How clear of the body the painted face and lowest hair stay, and how far out from her middle a point is that clear whatever its height. */
+const FACE_ROOM = 0.012
+const FACE_NEAR = BODY_R + FACE_ROOM / 0.3 + 1e-6
 
 function combine(outward: number, vertical: number): number {
   if (outward <= 0 && vertical <= 0) return Math.max(outward, vertical)
@@ -204,13 +209,17 @@ export class DollGuard {
   private pomZ = 0
   private pom = false
   private obstacle: Obstacle | null = null
+  /** The most the obstacle's distance changes per unit moved in the doll's frame (Infinity when not known). */
+  private obstacleSlope = Infinity
+  /** The obstacle while one arm is settled, or none when that arm cannot reach it anywhere. */
+  private reachable: Obstacle | null = null
   /** The swing the last arm asked for ended up at. */
   swing = 0
   /** The side of an arm this frame that found no clear pose at all, even tucked (0 for none). */
   boxed: -1 | 0 | 1 = 0
   private readonly held = { side: 0, reach: 0, room: 0 }
   private readonly dir = { x: 0, y: 0, z: 0 }
-  private readonly other = { set: false, ax: 0, ay: 0, az: 0, bx: 0, by: 0, bz: 0 }
+  private readonly other = { set: false, ax: 0, ay: 0, az: 0, bx: 0, by: 0, bz: 0, minX: 0, maxX: 0 }
 
   constructor(kind: HeadKind) {
     this.kind = kind
@@ -246,8 +255,10 @@ export class DollGuard {
     this.pomZ = z
   }
 
-  setObstacle(obstacle: Obstacle | null): void {
+  /** Something outside the doll to keep the arms clear of; `slope` bounds how fast its distance changes, so an arm far from it skips asking. */
+  setObstacle(obstacle: Obstacle | null, slope = Infinity): void {
     this.obstacle = obstacle
+    this.obstacleSlope = slope
   }
 
   /** Something held in one hand (side 0 for nothing): its middle `reach` down the arm from the shoulder, kept `room` clear of the blocks like the hand. */
@@ -285,10 +296,27 @@ export class DollGuard {
 
   /** Whether an arm at this raise and swing touches nothing. */
   armClear(side: -1 | 1, raise: number, forward: number): boolean {
+    return this.clearOf(this.obstacle, side, raise, forward)
+  }
+
+  private clear(side: -1 | 1, raise: number, forward: number): boolean {
+    return this.clearOf(this.reachable, side, raise, forward)
+  }
+
+  /** The obstacle, or none when even this arm's hand at full reach, and anything it holds, stays clear of it wherever the arm turns. */
+  private obstacleWithin(side: -1 | 1): Obstacle | null {
+    const obstacle = this.obstacle
+    if (!obstacle) return null
+    const holding = this.held.side === side
+    const reach = holding ? Math.max(HAND_REACH, this.held.reach) : HAND_REACH
+    const room = (holding ? Math.max(HAND_R, this.held.room) : HAND_R) + GAP
+    return obstacle(side * SHOULDER.x, SHOULDER.y, 0) - this.obstacleSlope * reach > room + 1e-9 ? null : obstacle
+  }
+
+  private clearOf(obstacle: Obstacle | null, side: -1 | 1, raise: number, forward: number): boolean {
     const d = armDirection(side, raise, forward, this.dir)
     const sx = side * SHOULDER.x
     const other = this.other
-    const obstacle = this.obstacle
     const rises = d.y * HAND_REACH + HAND_R > HEAD_Y - HEAD_R - HAIR - 0.12 - SHOULDER.y
     for (let i = 0; i <= SAMPLES; i++) {
       const a = (HAND_REACH * i) / SAMPLES
@@ -296,9 +324,14 @@ export class DollGuard {
       const x = sx + d.x * a
       const y = SHOULDER.y + d.y * a
       const z = d.z * a
-      if (bodyDistance(x, y, z) < r - ARM_JOINT - 0.004) return false
+      if (x * x + z * z < BODY_NEAR * BODY_NEAR && bodyDistance(x, y, z) < r - ARM_JOINT - 0.004) return false
       if (rises && this.headDistanceAt(x, y, z) < r + GAP) return false
-      if (other.set && segmentDistance(x, y, z, other.ax, other.ay, other.az, other.bx, other.by, other.bz) < r + HAND_R + GAP) return false
+      if (other.set) {
+        const room = r + HAND_R + GAP
+        // No nearer to the other arm than to the span across it takes.
+        const across = x < other.minX ? other.minX - x : x - other.maxX
+        if (across < room && segmentDistance(x, y, z, other.ax, other.ay, other.az, other.bx, other.by, other.bz) < room) return false
+      }
       if (obstacle && obstacle(x, y, z) < r + GAP) return false
     }
     const held = this.held
@@ -312,8 +345,9 @@ export class DollGuard {
    * fit; `swing` is the swing the arm ends up at. With no room even for that, `boxed` says which side.
    */
   arm(side: -1 | 1, raise: number, forward: number): number {
+    this.reachable = this.obstacleWithin(side)
     let home = HOME_RAISE
-    if (!this.armClear(side, home, forward)) home = this.armClear(side, HANGING, forward) ? HANGING : this.nearestClear(side, raise, forward)
+    if (!this.clear(side, home, forward)) home = this.clear(side, HANGING, forward) ? HANGING : this.nearestClear(side, raise, forward)
     if (Number.isNaN(home)) {
       const tuck = this.tuck(side, forward)
       if (!Number.isNaN(tuck)) return this.place(side, 0, tuck)
@@ -329,17 +363,17 @@ export class DollGuard {
       let clear = home
       let blocked = Number.NaN
       for (let at = home + dir * STEP; dir > 0 ? at < reach : at > reach; at += dir * STEP) {
-        if (!this.armClear(side, at, forward)) {
+        if (!this.clear(side, at, forward)) {
           blocked = at
           break
         }
         clear = at
       }
-      if (Number.isNaN(blocked) && !this.armClear(side, reach, forward)) blocked = reach
+      if (Number.isNaN(blocked) && !this.clear(side, reach, forward)) blocked = reach
       if (!Number.isNaN(blocked)) {
         for (let i = 0; i < 6; i++) {
           const mid = (clear + blocked) / 2
-          if (this.armClear(side, mid, forward)) clear = mid
+          if (this.clear(side, mid, forward)) clear = mid
           else blocked = mid
         }
         if (ease === 0) out = clear
@@ -364,6 +398,8 @@ export class DollGuard {
     other.bx = other.ax + d.x * HAND_REACH
     other.by = other.ay + d.y * HAND_REACH
     other.bz = d.z * HAND_REACH
+    other.minX = Math.min(other.ax, other.bx)
+    other.maxX = Math.max(other.ax, other.bx)
     return raise
   }
 
@@ -371,9 +407,9 @@ export class DollGuard {
   private nearestClear(side: -1 | 1, raise: number, forward: number): number {
     for (let step = 1; step * STEP <= Math.PI; step++) {
       const below = raise - step * STEP
-      if (below >= 0 && this.armClear(side, below, forward)) return below
+      if (below >= 0 && this.clear(side, below, forward)) return below
       const above = raise + step * STEP
-      if (above <= Math.PI && this.armClear(side, above, forward)) return above
+      if (above <= Math.PI && this.clear(side, above, forward)) return above
     }
     return Number.NaN
   }
@@ -382,9 +418,9 @@ export class DollGuard {
   private tuck(side: -1 | 1, forward: number): number {
     for (let step = 1; step * STEP <= TUCK_SWING; step++) {
       const back = forward + step * STEP
-      if (this.armClear(side, 0, back)) return back
+      if (this.clear(side, 0, back)) return back
       const front = forward - step * STEP
-      if (this.armClear(side, 0, front)) return front
+      if (this.clear(side, 0, front)) return front
     }
     return Number.NaN
   }
@@ -401,7 +437,9 @@ export class DollGuard {
       const x = m[0] * hx + m[1] * hy + m[2] * hz
       const y = HEAD_Y + m[3] * hx + m[4] * hy + m[5] * hz
       const z = m[6] * hx + m[7] * hy + m[8] * hz
-      if (bodyDistance(x, y, z) < 0.012) return false
+      // A point that high over the body's top or that far out from its middle is that far from it already.
+      if (y - BODY_TOP >= FACE_ROOM || x * x + z * z >= FACE_NEAR * FACE_NEAR) continue
+      if (bodyDistance(x, y, z) < FACE_ROOM) return false
     }
     return true
   }
@@ -511,6 +549,12 @@ export class BlockField {
     }
     this.sides[slot] = n
     this.halfDepth[slot] = depth / 2
+  }
+
+  /** The most `distance` changes per unit moved in the doll's frame: no block's distance changes faster than the room point, and the frame stretches a step by at most this much. */
+  get slope(): number {
+    const f = this.frame
+    return Math.sqrt(f[0] * f[0] + f[1] * f[1] + f[2] * f[2] + f[4] * f[4] + f[5] * f[5] + f[6] * f[6] + f[8] * f[8] + f[9] * f[9] + f[10] * f[10])
   }
 
   /** Signed distance from a point in the doll's frame to the nearest block. */
@@ -656,7 +700,7 @@ function pushFromSegment(p: Point, a: Point, b: Point, clear: number): boolean {
   const ox = p.x - a.x - dx * t
   const oy = p.y - a.y - dy * t
   const oz = p.z - a.z - dz * t
-  const d = Math.hypot(ox, oy, oz)
+  const d = Math.sqrt(ox * ox + oy * oy + oz * oz)
   if (d >= clear) return false
   if (d < 1e-6) {
     p.y += clear
@@ -670,6 +714,27 @@ function pushFromSegment(p: Point, a: Point, b: Point, clear: number): boolean {
 }
 
 const bodyBase: Point = { x: 0, y: 0, z: 0 }
+const placeEnds: Point[] = [bodyBase, bodyBase, bodyBase, bodyBase, bodyBase, bodyBase, bodyBase]
+
+/** Whether `p` is further than `reach` beyond the box round these points on some axis, so no segment between them comes within `reach` of it. */
+function outside(p: Point, reach: number, points: readonly Point[]): boolean {
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
+  let minZ = Infinity
+  let maxZ = -Infinity
+  for (const q of points) {
+    minX = Math.min(minX, q.x)
+    maxX = Math.max(maxX, q.x)
+    minY = Math.min(minY, q.y)
+    maxY = Math.max(maxY, q.y)
+    minZ = Math.min(minZ, q.z)
+    maxZ = Math.max(maxZ, q.z)
+  }
+  const r = reach + 1e-9
+  return p.x < minX - r || p.x > maxX + r || p.y < minY - r || p.y > maxY + r || p.z < minZ - r || p.z > maxZ + r
+}
 
 /**
  * Move a point out of the doll (head and hair, body, both arms) until it is
@@ -685,6 +750,15 @@ export function keepOut(place: DollPlace, p: Point, margin: number): boolean {
   bodyBase.x = feet.x + (neck.x - feet.x) * k
   bodyBase.y = feet.y + (neck.y - feet.y) * k
   bodyBase.z = feet.z + (neck.z - feet.z) * k
+  const ends = placeEnds
+  ends[0] = place.head
+  ends[1] = bodyBase
+  ends[2] = place.neck
+  ends[3] = place.shoulderL
+  ends[4] = place.handL
+  ends[5] = place.shoulderR
+  ends[6] = place.handR
+  if (outside(p, Math.max(HEAD_R + HAIR, BODY_R, HAND_R) * s + margin, ends)) return false
   let moved = false
   // Twice round, so a push out of one part into a neighbour is undone.
   for (let pass = 0; pass < 2; pass++) {

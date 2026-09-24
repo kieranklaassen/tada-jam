@@ -49,6 +49,14 @@ const TOUCH = -0.002
 type Arms = { raiseL: number; raiseR: number; forwardL: number; forwardR: number }
 type Turn = { pitch: number; yaw: number; roll: number }
 
+function lcg(seed: number): () => number {
+  let s = seed >>> 0
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0
+    return s / 4294967296
+  }
+}
+
 function radiusAt(a: number): number {
   return ARM_R + ((HAND_R - ARM_R) * a) / HAND_REACH
 }
@@ -381,6 +389,23 @@ describe('BlockField', () => {
     const clear = { x: 1, y: 0.5, z: 0 }
     expect(field.pushOut(clear, 0.05)).toBe(false)
   })
+
+  it('never reads further apart between two points than its slope times the step between them, in a turned, scaled and squashed frame', () => {
+    const random = lcg(7)
+    const field = new BlockField()
+    for (const kind of ['cube', 'archL', 'half'] as const) {
+      for (const part of SHAPES[kind].parts) field.add(part, random() * 2 - 1, random() * 2, random() * 6, 1, SHAPES[kind].depth)
+    }
+    const m = new THREE.Matrix4().compose(new THREE.Vector3(0.4, 0.2, 0), new THREE.Quaternion().setFromEuler(new THREE.Euler(0.1, 0.3, 0.2)), new THREE.Vector3(1.1, 0.8, 1.1))
+    const e = m.elements
+    field.frame.set([e[0], e[4], e[8], e[12], e[1], e[5], e[9], e[13], e[2], e[6], e[10], e[14]])
+    for (let i = 0; i < 2000; i++) {
+      const a = [random() * 3 - 1.5, random() * 3, random() * 2 - 1] as const
+      const b = [a[0] + random() * 0.6 - 0.3, a[1] + random() * 0.6 - 0.3, a[2] + random() * 0.6 - 0.3] as const
+      const step = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2])
+      expect(Math.abs(field.distance(...a) - field.distance(...b))).toBeLessThanOrEqual(field.slope * step + 1e-9)
+    }
+  })
 })
 
 describe('fitHead', () => {
@@ -485,6 +510,49 @@ describe('DollGuard.hold', () => {
     guard.hold(0)
     guard.beginArms()
     expect(guard.arm(1, FLY_RAISE, 0), 'let go').toBe(FLY_RAISE)
+  })
+})
+
+describe('DollGuard told how fast the blocks can come nearer', () => {
+  it('settles every arm exactly as it does asking the blocks at every step, near them and far from them', () => {
+    const random = lcg(11)
+    const kinds = Object.keys(SHAPES) as (keyof typeof SHAPES)[]
+    let skipped = 0
+    for (const kind of ['bob', 'cap', 'beanie'] as const) {
+      const bounded = new DollGuard(kind)
+      const asking = new DollGuard(kind)
+      const field = new BlockField()
+      for (let i = 0; i < 1500; i++) {
+        field.clear()
+        const shape = SHAPES[kinds[Math.floor(random() * kinds.length)]]
+        const far = random() < 0.5 ? 2.5 : 0
+        const x = (random() * 2.4 - 1.2) * (1 + far)
+        const y = random() * 2.4
+        const angle = random() * Math.PI * 2
+        for (const part of shape.parts) field.add(part, x, y, angle, 1, shape.depth)
+        const squash = 0.8 + random() * 0.4
+        field.frame.set([1.05, 0, 0, 0, 0, squash, 0, 0, 0, 0, 1.05, 0])
+        const holding = random() < 0.3
+        for (const guard of [bounded, asking]) {
+          guard.hold(holding ? 1 : 0, GRIP_REACH, SPOOL_ROOM)
+          guard.beginArms()
+        }
+        const pitch = random() * 0.6 - 0.3
+        bounded.head(pitch, 0, 0)
+        asking.head(pitch, 0, 0)
+        bounded.setObstacle(field.distance, field.slope)
+        asking.setObstacle(field.distance)
+        if (field.distance(SHOULDER.x, SHOULDER.y, 0) - field.slope * Math.max(HAND_REACH, GRIP_REACH) > SPOOL_ROOM + 0.02) skipped++
+        for (const side of [1, -1] as const) {
+          const raise = random() * 3.2
+          const forward = random() * 1.6 - 0.8
+          expect(bounded.arm(side, raise, forward)).toBe(asking.arm(side, raise, forward))
+          expect(bounded.swing).toBe(asking.swing)
+        }
+        expect(bounded.boxed).toBe(asking.boxed)
+      }
+    }
+    expect(skipped, 'some arms were far enough from the blocks to skip them').toBeGreaterThan(500)
   })
 })
 
