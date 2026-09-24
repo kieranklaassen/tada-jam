@@ -34,7 +34,7 @@ import {
 } from '../partShape'
 import { BOWL_LUMP, BOWL_PROFILE, BOWL_SCALE, DECAL_LIFT, decalReach, DISH_PROFILE, feedingFloor, HEM_POINTS, hemAt, ON_RUG, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_LUMP, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y, type Surfaces } from '../surfaces'
 import { furTime, MAX_SHELLS } from './fur'
-import { GUEST_SIZE, guestFloor, guestYaw, NECK_Y, soleDepth, speciesShapes } from './guest'
+import { ARM_AT, CHEEKS_AT, EAR_AT, GUEST_SIZE, guestFloor, guestYaw, NECK_Y, poseGuest, soleDepth, speciesShapes } from './guest'
 import { useQuality } from './quality'
 import { MotionDirector, PERSONALITIES, SEAT_SPECIES } from '../motion'
 import { JAR_SCALE, JARS, PART_COUNTS, PART_KINDS, type PartKind } from '../parts'
@@ -928,38 +928,19 @@ export function Guest({ seat, at, carried, read }: { seat: number; at: Point; ca
     }
     const arrive = pose.arriveAt === null ? 1 : THREE.MathUtils.clamp((now - pose.arriveAt) / 0.4, 0, 1)
     const pop = pose.arriveAt === null || arrive >= 1 ? 1 : Math.max(0.01, easeOutBack(arrive))
-    const vertical = 1 - m.squash
-    const horizontal = 1 + m.squash * 0.6
 
     const carry = springStep(s.carry, carried ? GUEST_CARRY : 0, dt, 160, 18)
-    if (root.current) {
-      root.current.scale.set(GUEST_SIZE * horizontal * pop, GUEST_SIZE * vertical * pop, GUEST_SIZE * horizontal * pop)
-      root.current.rotation.set(m.lean, m.twist, m.roll)
+    if (root.current && head.current && nose.current && cheeks.current) {
+      const rig = { root: root.current, head: head.current, nose: nose.current, cheeks: cheeks.current, ears: ears.map((ref) => ref.current), arms: arms.map((ref) => ref.current) }
+      poseGuest(rig, shapes, m, { yaw: s.yaw.x, pitch: s.pitch.x }, pop)
       root.current.position.y = 0
       root.current.updateMatrix()
       // It rocks and leans on its lowest point, which stays on the highest thing under it.
       root.current.position.y = floor + soleDepth(shapes.sole, root.current.matrix) + Math.max(0, m.lift, carry)
     }
-    if (head.current) {
-      head.current.position.y = NECK_Y - m.headDrop
-      head.current.rotation.set(s.pitch.x + m.headPitch, s.yaw.x + m.headYaw, m.headRoll)
-    }
     if (eyes.current) eyes.current.scale.set(1 + Math.max(0, m.eyes - 1) * 0.5, m.eyes, 1)
     if (mouth.current) mouth.current.scale.set(personality.mouthWidth * (1 + m.mouth * 0.35), 1 + m.mouth * 3.4, 1 + m.mouth * 0.5)
-    if (nose.current) {
-      nose.current.position.y = shapes.noseAt[1] + m.nose * 0.22
-      nose.current.scale.set(1 + Math.abs(m.nose) * 0.18, 1 - Math.abs(m.nose) * 0.2, 1)
-    }
-    if (cheeks.current) cheeks.current.scale.set(1 + m.cheeks * 0.12, 1 + m.cheeks * 0.45, 1 + m.cheeks * 0.6)
-    ears.forEach((ref, side) => {
-      if (ref.current) ref.current.rotation.set(-0.05 - m.ears[side] * 0.9, 0, (side === 0 ? 1 : -1) * m.ears[side] * 0.15)
-    })
     for (const ref of quillParts) if (ref.current) ref.current.scale.setScalar(1 + m.quills * 0.22)
-    arms.forEach((ref, side) => {
-      if (!ref.current) return
-      const sign = side === 0 ? -1 : 1
-      ref.current.rotation.set(-m.armForward[side], 0, sign * (0.45 + m.armUp[side]))
-    })
   })
 
   return (
@@ -969,7 +950,7 @@ export function Guest({ seat, at, carried, read }: { seat: number; at: Point; ca
         {shapes.furBody && <instancedMesh name="guest-fur-body" ref={furParts[0]} args={[shapes.furBody, fur, MAX_SHELLS]} frustumCulled={false} />}
         {shapes.quill && <instancedMesh name="guest-quills-body" ref={quillParts[0]} args={[shapes.quill, quill, shapes.quillsBody.length]} frustumCulled={false} />}
         {[-1, 1].map((side, i) => (
-          <group key={side} ref={arms[i]} position={[side * 3.9, 4.7, 0.9]}>
+          <group key={side} ref={arms[i]} position={[side * ARM_AT[0], ARM_AT[1], ARM_AT[2]]}>
             <mesh name={side < 0 ? 'guest-arm-left' : 'guest-arm-right'} geometry={shapes.arm} material={clay} />
           </group>
         ))}
@@ -980,9 +961,9 @@ export function Guest({ seat, at, carried, read }: { seat: number; at: Point; ca
           <mesh name="guest-eyes" ref={eyes} geometry={shapes.eyes} material={clay} position={[0, 3.7, 0]} />
           <mesh name="guest-mouth" ref={mouth} geometry={shapes.mouth} material={clay} position={[0, 1.65, species === 'hedgehog' ? 4.9 : 3.85]} />
           <mesh name="guest-nose" ref={nose} geometry={shapes.nose} material={clay} position={shapes.noseAt} />
-          <mesh name="guest-cheeks" ref={cheeks} geometry={shapes.cheeks} material={clay} position={[0, 2.3, 2.5]} />
+          <mesh name="guest-cheeks" ref={cheeks} geometry={shapes.cheeks} material={clay} position={CHEEKS_AT} />
           {shapes.ears?.map((geometry, i) => (
-            <group key={i} ref={ears[i]} position={[(i === 0 ? -1 : 1) * 1.4, 5.6, -0.3]}>
+            <group key={i} ref={ears[i]} position={[(i === 0 ? -1 : 1) * EAR_AT[0], EAR_AT[1], EAR_AT[2]]}>
               <mesh name={i === 0 ? 'guest-ear-left' : 'guest-ear-right'} geometry={geometry} material={clay} />
             </group>
           ))}
