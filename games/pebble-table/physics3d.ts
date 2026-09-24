@@ -128,6 +128,8 @@ export class TablePhysics {
   private readonly guests = new Set<CANNON.Body>()
   /** Each shell's or stick's biggest ball radius (cm). */
   private readonly balls = new Map<CANNON.Body, number>()
+  /** What sunk found last while everything lay asleep, and where everything lay. */
+  private lastSunk: { bodies: ReadonlySet<CANNON.Body>; poses: readonly number[]; out: Map<CANNON.Body, CANNON.Vec3> } | null = null
   /** When (world time) each stone last touched a seated guest. */
   private readonly touchedGuest = new Map<number, number>()
   /** The round fixtures something held must ride over, and how tall they stand. */
@@ -353,14 +355,31 @@ export class TablePhysics {
     return { mat, seats, panFloors: [this.panFloor(0), this.panFloor(1)], panSway: this.panSwung(0) }
   }
 
-  /** Beam tilt drives the pans up and down, and its turning swings them sideways (`sway`, cm); stones in them ride along. `drops` are world units. */
+  /**
+   * Beam tilt drives the pans up and down, and its turning swings them
+   * sideways (`sway`, cm); stones in them ride along. `drops` are world units.
+   * A tilt wakes every stone and part; a swing only those in or against a
+   * pan, as the pans swing on for seconds after the beam stops and would
+   * keep every part on the table awake.
+   */
   setPanDrops(drops: readonly [number, number], sway = 0): void {
-    const moved = Math.abs(drops[0] - this.panDrops[0]) > 0.01 || Math.abs(drops[1] - this.panDrops[1]) > 0.01 || Math.abs(sway - this.panSway) > 0.01
+    const tilted = Math.abs(drops[0] - this.panDrops[0]) > 0.01 || Math.abs(drops[1] - this.panDrops[1]) > 0.01
+    const swung = Math.abs(sway - this.panSway) > 0.01
     this.pans.forEach((pan, side) => {
       const at = to3(SCALE.pans[side])
       this.targets.set(pan, { x: at.x + sway, y: PAN_REST_HEIGHT - drops[side] * UNIT, z: at.z })
     })
-    if (moved) for (const { body } of this.stones.values()) body.wakeUp()
+    if (tilted) for (const { body } of this.stones.values()) body.wakeUp()
+    else if (swung) {
+      for (const pan of this.pans) {
+        if (pan.aabbNeedsUpdate) pan.updateAABB()
+        for (const { body } of this.stones.values()) {
+          if (body.sleepState !== CANNON.Body.SLEEPING) continue
+          if (body.aabbNeedsUpdate) body.updateAABB()
+          if (body.aabb.overlaps(pan.aabb)) body.wakeUp()
+        }
+      }
+    }
     this.panDrops = [drops[0], drops[1]]
     this.panSway = sway
   }
@@ -783,6 +802,10 @@ export class TablePhysics {
   sunk(bodies: ReadonlySet<CANNON.Body>): Map<CANNON.Body, CANNON.Vec3> {
     const out = new Map<CANNON.Body, CANNON.Vec3>()
     if (bodies.size === 0) return out
+    const still = this.stillPoses()
+    const last = this.lastSunk
+    if (still && last && last.bodies.size === bodies.size && [...bodies].every((body) => last.bodies.has(body)) && still.length === last.poses.length && still.every((v, i) => v === last.poses[i])) return last.out
+    this.lastSunk = still ? { bodies: new Set(bodies), poses: still, out } : null
     const [p1, p2]: [CANNON.Body[], CANNON.Body[]] = [[], []]
     for (const body of bodies) {
       if (body.type !== CANNON.Body.DYNAMIC) continue
@@ -822,6 +845,17 @@ export class TablePhysics {
       }
     }
     return out
+  }
+
+  /** Where every stone and part lies, while all of them sleep: nothing sunk can change until one moves. */
+  private stillPoses(): number[] | null {
+    const poses: number[] = []
+    for (const { body } of this.stones.values()) {
+      if (body.type === CANNON.Body.DYNAMIC && body.sleepState !== CANNON.Body.SLEEPING) return null
+      const { position: p, quaternion: q } = body
+      poses.push(p.x, p.y, p.z, q.x, q.y, q.z, q.w)
+    }
+    return poses
   }
 
   /** Notes when stones touch a seated guest: a stone resting against one touches it only now and then as it settles. */
