@@ -17,6 +17,13 @@ import { backZ, cellX, floorY, frontZ, rowZ } from './world'
 // plot drive all of it: one draw call.
 
 const INSET = 0.07
+/** A bed's soil lies this high over the floor. */
+export const SOIL = 0.022
+const BANK_HEIGHT = 0.045
+const BANK_WIDTH = 0.05
+/** The top of the bank round a bed: its middle is this far from the bed's middle, and it stands this high over the floor. */
+export const BANK_OUT = 0.5 - INSET + BANK_WIDTH / 2
+export const BANK_TOP = SOIL + BANK_HEIGHT
 
 const BED_VERTEX = /* glsl */ `
 attribute float aPlot;
@@ -203,9 +210,9 @@ function leaf(b: CropBuilder, plot: number, root: THREE.Vector3, at: THREE.Vecto
 
 function sunflower(b: CropBuilder, plot: number, x: number, y: number, z: number, random: () => number): void {
   for (const [dx, dz, h] of [
-    [-0.2, -0.1, 0.56],
-    [0.2, 0, 0.5],
-    [-0.02, 0.2, 0.42],
+    [-0.22, -0.14, 0.56],
+    [0.14, -0.18, 0.5],
+    [0.26, 0.02, 0.42],
   ]) {
     const root = V(x + dx, y, z + dz)
     const top = stem(b, plot, root, h, 0.03, '#6f9a3c')
@@ -225,6 +232,8 @@ function sunflower(b: CropBuilder, plot: number, x: number, y: number, z: number
 function rice(b: CropBuilder, plot: number, x: number, y: number, z: number, random: () => number): void {
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j < 3; j++) {
+      // The paddy's front left is open water: the frog sits there, on the ridge.
+      if (j === 2 && i < 3) continue
       const root = V(x - 0.3 + i * 0.2 + (random() - 0.5) * 0.03, y + 0.01, z - 0.24 + j * 0.24 + (random() - 0.5) * 0.03)
       for (let k = 0; k < 5; k++) {
         const yaw = (k / 5) * Math.PI * 2 + random()
@@ -275,7 +284,9 @@ function pumpkin(b: CropBuilder, plot: number, x: number, y: number, z: number, 
 function cosmos(b: CropBuilder, plot: number, x: number, y: number, z: number, random: () => number): void {
   const colours = ['#f29ac0', '#fbe8f0', '#d8609a', '#f6b6d0']
   for (let i = 0; i < 8; i++) {
-    const root = V(x - 0.3 + (i % 4) * 0.2 + (random() - 0.5) * 0.08, y, z - 0.18 + Math.floor(i / 4) * 0.32 + (random() - 0.5) * 0.08)
+    // The bed's front left stays open: the sparrow sits there, on the ridge.
+    if (i === 4 || i === 5) continue
+    const root = V(x - 0.3 + (i % 4) * 0.2 + (random() - 0.5) * 0.08, y, z - 0.18 + Math.floor(i / 4) * 0.27 + (random() - 0.5) * 0.08)
     const h = 0.3 + random() * 0.16
     const lean = (random() - 0.5) * 0.3
     const top = stem(b, plot, root, h, 0.018, '#6a9a3a', lean)
@@ -304,28 +315,34 @@ function bedGeometry(): THREE.BufferGeometry {
     const x1 = cellX(p.c) + 0.5 - INSET
     const z0 = backZ(p.r) + INSET
     const z1 = frontZ(p.r) - INSET
-    const y = floorY(p.r) + 0.022
+    const y = floorY(p.r) + SOIL
     const before = b.vertexCount
     const tint = new THREE.Color(1, 1, 1)
     b.quad(V(x0, y, z1), V(x1, y, z1), V(x1, y, z0), V(x0, y, z0), 'soilDry', tint)
     for (let i = before; i < b.vertexCount; i++) plot.push(p.id)
     const ridge = p.kind === 'rice' ? new THREE.Color('#9a8260') : new THREE.Color('#a07850')
     const lit = ridge.clone().multiplyScalar(1.25)
-    const h = 0.045
-    const w = 0.05
+    const h = BANK_HEIGHT
+    const w = BANK_WIDTH
     const edges: [THREE.Vector3, THREE.Vector3][] = [
       [V(x0 - w, y, z1 + w), V(x1 + w, y, z1 + w)],
       [V(x1 + w, y, z0 - w), V(x0 - w, y, z0 - w)],
       [V(x0 - w, y, z0 - w), V(x0 - w, y, z1 + w)],
       [V(x1 + w, y, z1 + w), V(x1 + w, y, z0 - w)],
     ]
-    for (const [a, c] of edges) {
+    for (let e = 0; e < edges.length; e++) {
+      const [a, c] = edges[e]
       const before2 = b.vertexCount
-      const inward = new THREE.Vector3().subVectors(c, a).cross(new THREE.Vector3(0, 1, 0)).normalize().multiplyScalar(-w)
+      const along = new THREE.Vector3().subVectors(c, a).normalize()
+      const inward = along.clone().cross(new THREE.Vector3(0, 1, 0)).multiplyScalar(-w)
       const top0 = a.clone().setY(y + h)
       const top1 = c.clone().setY(y + h)
       b.quad(a.clone().setY(y - 0.03), c.clone().setY(y - 0.03), top1, top0, p.kind === 'rice' ? 'bank' : 'wood', ridge, [0, 0, 1, 0.2])
-      b.quad(top0, top1, top1.clone().add(inward), top0.clone().add(inward), p.kind === 'rice' ? 'bank' : 'wood', lit, [0, 0.3, 1, 0.5])
+      // The front and back ridges' tops cover the corners; the sides' stop short of them rather than lie over them.
+      const trim = e < 2 ? 0 : w
+      const t0 = top0.clone().addScaledVector(along, trim)
+      const t1 = top1.clone().addScaledVector(along, -trim)
+      b.quad(t0, t1, t1.clone().add(inward), t0.clone().add(inward), p.kind === 'rice' ? 'bank' : 'wood', lit, [0, 0.3, 1, 0.5])
       for (let i = before2; i < b.vertexCount; i++) plot.push(-1)
     }
   }
@@ -349,8 +366,27 @@ function eager(t: number): number {
   return rise * rise * (3 - 2 * rise) * settle * settle * (3 - 2 * settle)
 }
 
+/** How much taller than built a crop can stand: reaching for water and asking to be picked stretch it up (the grow shader). */
+export const CROP_STRETCH = 1.3
+
+/** The top (world y) of each plot's crop at its tallest: full bloom, stretched as far as the grow shader goes. */
+export function cropTops(crops: THREE.BufferGeometry): Float32Array {
+  const tops = new Float32Array(PLOTS.length).fill(-Infinity)
+  const position = crops.getAttribute('position')
+  const root = crops.getAttribute('aRoot')
+  const plot = crops.getAttribute('aPlot')
+  for (let i = 0; i < position.count; i++) {
+    const id = Math.round(plot.getX(i))
+    const y = root.getY(i) + Math.max(0, position.getY(i) - root.getY(i)) * CROP_STRETCH
+    if (y > tops[id]) tops[id] = y
+  }
+  return tops
+}
+
 export class PlotsView {
   readonly group = new THREE.Group()
+  /** See `cropTops`. */
+  readonly tops: Float32Array
   private readonly bedMaterial: THREE.ShaderMaterial
   private readonly cropMaterial: THREE.ShaderMaterial
   private readonly beds: THREE.Mesh
@@ -380,13 +416,14 @@ export class PlotsView {
       },
     })
     this.beds = new THREE.Mesh(bedGeometry(), this.bedMaterial)
+    this.beds.name = 'beds'
     this.group.add(this.beds)
 
     const b = new CropBuilder()
     const random = rng(99)
     for (const p of PLOTS) {
       b.scale = CROP_SCALE[p.kind]
-      GROW[p.kind](b, p.id, cellX(p.c), floorY(p.r) + 0.022, rowZ(p.r), random)
+      GROW[p.kind](b, p.id, cellX(p.c), floorY(p.r) + SOIL, rowZ(p.r), random)
     }
     this.cropMaterial = new THREE.ShaderMaterial({
       vertexShader: CROP_VERTEX,
@@ -408,6 +445,8 @@ export class PlotsView {
       side: THREE.DoubleSide,
     })
     this.crops = new THREE.Mesh(b.build(), this.cropMaterial)
+    this.crops.name = 'crops'
+    this.tops = cropTops(this.crops.geometry)
     this.crops.frustumCulled = false
     this.group.add(this.crops)
   }

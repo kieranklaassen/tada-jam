@@ -1,7 +1,8 @@
+import { CREATURE_BODY, groundAlt, KNOB_BODY, PIECE_BODY } from './bodies'
 import { isAwake, makeCreature, moveBed, pickBed, seededRandom, stepCreature, type Creature, type CreatureEvent } from './creatures'
 import { chooseHint, handPose, HintScheduler, type GardenSummary, type GuidanceTiming, type HandPose, type Hint, type Placed, type Spot } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
-import { clampToPanel, CREATURES, KNOB, onPanel, overTray, PANEL, PIECES, slotPoint, trayAngle, TURN_STEP, type CreatureKind, type PieceKind, type PieceSpec, type PiecePose, type Point } from './layout'
+import { clampToPanel, CREATURES, KNOB, onPanel, overTray, PANEL, PIECES, slotPoint, TRAY, trayAngle, TURN_STEP, type CreatureKind, type PieceKind, type PieceSpec, type PiecePose, type Point } from './layout'
 import { CATCH_HEIGHT, makePose, poke, poseCreature, type Carry, type Pose } from './motion'
 import { BeamBuffer, lightAt, OpticsScene, trace, WHITE, type Mask } from './optics'
 import { SaveCadence } from './saveCadence'
@@ -84,6 +85,9 @@ export type PieceSim = {
   flying: number
   fromX: number
   fromY: number
+  fromLift: number
+  /** How far a piece flying home floats over its arc to clear what it passes. */
+  over: Spring
   /** Light touching the piece this frame. */
   lit: Mask
   /** Light arriving at a filter or prism before it acts. */
@@ -100,6 +104,10 @@ export type CreatureSim = {
   grabX: number
   grabY: number
   lift: Spring
+  /** Drawn height over the panel: its pose and lift, raised so no part of it dips under the panel or into what it is carried over. */
+  alt: number
+  /** The lowest it can stand in its pose now before any part dips under the panel. */
+  ground: number
   /** Eased sidestep (cm) that keeps a moving creature from flying through another. */
   apartX: number
   apartY: number
@@ -120,9 +128,14 @@ export type GuideView = {
 }
 
 const LIFT = 3.6
+/** How high a carried creature floats over where it stands. */
+const CREATURE_LIFT = 6
 const KNOB_HIT_PX = 30
 const BODY_SLOP_PX = 14
 const HOME_SECONDS = 0.55
+/** How far ahead (s) a piece flying home looks along its path for what it will pass over, in this many steps. */
+const HOME_AHEAD = 0.2
+const HOME_LOOKS = 4
 const NUDGE_EVERY = 7
 const RIPPLES = 10
 /** Displayed centres closer than this (cm) ease apart; about the width of one drawn creature. */
@@ -130,9 +143,101 @@ const CREATURE_GAP = 14
 const APART_RATE = 5
 /** How quickly the want passes from one sleeper to the next. */
 const WANT_RATE = 1.6
+/** What a carried or flying thing's underside keeps between itself and what it passes over (cm). */
+const CLEARANCE = 0.4
+/** It starts to rise this far (cm) before it would touch, so it floats up instead of popping up. */
+const RISE_EARLY = 2.5
+/** A resting knob keeps this far (cm) from anything else, and its bead this far inside the panel's edge. */
+const KNOB_GAP = 0.5
+/** The table's heights (cm), as view/geometry.ts builds them: the glowing lip round the panel, the frame, and a piece seated in its tray slot. */
+const LIP = 1.1
+const LIP_TOP = 0.4
+const FRAME_TOP = 0.9
+const TRAY_SEAT = 0.15
+
+/** How far along its path home (0 to 1) a piece is, `k` of the way through the flight. */
+const homeEase = (k: number) => k * k * (3 - 2 * k)
+/** How high its arc home carries a piece `k` of the way through the flight. */
+const homeArc = (piece: PieceSim, k: number) => Math.sin(k * Math.PI) * 7 + piece.fromLift * (1 - homeEase(k))
 
 /** How far `value` lies outside [min, max] (signed), or 0 inside. */
 const excess = (value: number, min: number, max: number) => (value < min ? value - min : value > max ? value - max : 0)
+
+/** How high a piece's underside sits: seated in its slot, lifted, or hopping, and never under the panel. */
+export function pieceHeight(piece: PieceSim): number {
+  return (piece.pose.inTray && piece.flying === 0 ? TRAY_SEAT : 0) + Math.max(0, Math.max(0, piece.lift.x) + piece.hop.x)
+}
+
+/** Whether a piece's knob is out (or still folding away as it flies home). */
+const knobOut = (piece: PieceSim) => !piece.pose.inTray || piece.flying > 0
+
+/** The highest part of the table under a box: the panel, its lip, a tray slot, or the frame. */
+function groundUnder(minX: number, minY: number, maxX: number, maxY: number): number {
+  if (minX >= PANEL.minX && maxX <= PANEL.maxX && minY >= PANEL.minY && maxY <= PANEL.maxY) return 0
+  if (minX >= PANEL.minX - LIP && maxX <= PANEL.maxX + LIP && minY >= PANEL.minY - LIP && maxY <= PANEL.maxY + LIP) return LIP_TOP
+  if (minX >= TRAY.minX && maxX <= TRAY.maxX && minY >= TRAY.minY && maxY <= TRAY.maxY) return TRAY_SEAT
+  return FRAME_TOP
+}
+
+const nearest = new Float64Array(4)
+const clamp01 = (t: number) => Math.min(1, Math.max(0, t))
+
+/**
+ * Distance between segments ab and cd on the table (either may be a single point), with the closest
+ * point of each left in `nearest` (ab's, then cd's).
+ */
+function segmentGap(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): number {
+  const ux = bx - ax
+  const uy = by - ay
+  const vx = dx - cx
+  const vy = dy - cy
+  const rx = ax - cx
+  const ry = ay - cy
+  const a = ux * ux + uy * uy
+  const e = vx * vx + vy * vy
+  const f = vx * rx + vy * ry
+  let s = 0
+  let t = 0
+  if (a > 1e-9 || e > 1e-9) {
+    if (a <= 1e-9) t = clamp01(f / e)
+    else {
+      const c = ux * rx + uy * ry
+      if (e <= 1e-9) s = clamp01(-c / a)
+      else {
+        const b = ux * vx + uy * vy
+        const denominator = a * e - b * b
+        s = denominator > 1e-9 ? clamp01((b * f - c * e) / denominator) : 0
+        t = (b * s + f) / e
+        if (t < 0) {
+          t = 0
+          s = clamp01(-c / a)
+        } else if (t > 1) {
+          t = 1
+          s = clamp01((b - c) / a)
+        }
+      }
+    }
+  }
+  nearest[0] = ax + ux * s
+  nearest[1] = ay + uy * s
+  nearest[2] = cx + vx * t
+  nearest[3] = cy + vy * t
+  return Math.hypot(nearest[0] - nearest[2], nearest[1] - nearest[3])
+}
+
+/** Keep a lift spring at `min` or above, still free to rise. */
+function floorAt(spring: Spring, min: number): void {
+  if (spring.x >= min) return
+  spring.x = min
+  spring.v = Math.max(0, spring.v)
+}
+
+/**
+ * Who rises over whom: what rests stays put, a piece flying home rises over it, a carried creature over
+ * those, and a carried piece over everything. Of two alike, the later rises over the earlier.
+ */
+const pieceRank = (piece: PieceSim) => (piece.heldBy !== null ? 3 : piece.flying > 0 ? 1 : 0)
+const creatureRank = (creature: CreatureSim) => (creature.heldBy !== null ? 2 : 0)
 
 const movesAside = (creature: CreatureSim) =>
   creature.heldBy === null && (creature.c.phase === 'awake' || creature.c.phase === 'drowsy' || creature.c.phase === 'wandering')
@@ -169,6 +274,7 @@ export class GardenController {
   private hintTried = false
   private ghostPressed = false
   private readonly finger: Point = { x: 0, y: 0 }
+  private readonly spot: Point = { x: 0, y: 0 }
   private readonly chooseBed = (c: Creature) =>
     pickBed(
       c,
@@ -209,6 +315,8 @@ export class GardenController {
         flying: 0,
         fromX: 0,
         fromY: 0,
+        fromLift: 0,
+        over: { x: 0, v: 0 },
         lit: 0,
         input: 0,
       }
@@ -225,12 +333,21 @@ export class GardenController {
         grabX: 0,
         grabY: 0,
         lift: { x: 0, v: 0 },
+        alt: 0,
+        ground: 0,
         apartX: 0,
         apartY: 0,
         caught: 0,
         carry: { held: false, heldFor: 0, want: 0 },
       }
     })
+    // Whatever garden was saved, every knob starts clear of the rest and over the panel.
+    for (const piece of this.pieces) {
+      if (piece.pose.inTray) continue
+      this.settle(piece)
+      piece.x = piece.pose.x
+      piece.y = piece.pose.y
+    }
     this.opticPieces = this.pieces.map((piece) => ({ id: piece.spec.id, x: 0, y: 0, angle: 0, active: false }))
     this.opticCreatures = this.creatures.map((creature) => ({ x: 0, y: 0, r: creature.c.radius, absorbs: true }))
     this.traceNow()
@@ -273,6 +390,7 @@ export class GardenController {
     const timing = this.scheduler.state(now, this.timing)
     this.stepPieces(dt, timing.peek)
     this.stepCreatures(dt)
+    this.rise(dt)
     this.traceNow()
     this.stepLife(dt, now)
     if (this.wantStale && !this.holding() && this.guide.hint === null) this.chooseWant()
@@ -303,9 +421,11 @@ export class GardenController {
     const follow = 1 - Math.exp(-dt * 22)
     for (const piece of this.pieces) {
       const pose = piece.pose
+      if (piece.knobBy !== null) this.followKnob(piece)
       if (piece.heldBy !== null) {
         const screen = this.screens.get(piece.heldBy)
-        const at = screen && this.projector?.toPlane(screen, LIFT, this.finger)
+        // Under the finger at the height it floats, however high it has risen.
+        const at = screen && this.projector?.toPlane(screen, Math.max(LIFT, piece.lift.x), this.finger)
         if (at) {
           pose.x = Math.min(PANEL.maxX + 12, Math.max(PANEL.minX - 12, at.x + piece.grabX))
           pose.y = Math.min(PANEL.maxY + 26, Math.max(PANEL.minY - 10, at.y + piece.grabY))
@@ -315,25 +435,26 @@ export class GardenController {
       } else if (piece.flying > 0) {
         piece.flying = Math.max(0, piece.flying - dt)
         const k = 1 - piece.flying / HOME_SECONDS
-        const e = k * k * (3 - 2 * k)
+        const e = homeEase(k)
         piece.x = piece.fromX + (pose.x - piece.fromX) * e
         piece.y = piece.fromY + (pose.y - piece.fromY) * e
-        piece.lift.x = Math.sin(k * Math.PI) * 7
+        piece.lift.x = homeArc(piece, k)
         if (piece.flying === 0) {
           piece.squash.v -= 2.2
           this.sound.home()
           this.wantStale = true
         }
       } else {
-        piece.x = pose.x
-        piece.y = pose.y
+        // A piece nudged clear slides there instead of jumping; turned by its knob, it keeps right with the knob.
+        const k = piece.knobBy !== null ? 1 : follow
+        piece.x = Math.abs(pose.x - piece.x) < 1e-3 ? pose.x : piece.x + (pose.x - piece.x) * k
+        piece.y = Math.abs(pose.y - piece.y) < 1e-3 ? pose.y : piece.y + (pose.y - piece.y) * k
       }
-      if (piece.knobBy !== null) this.followKnob(piece)
       if (piece.knobBy !== null) {
         piece.angle.x = pose.angle
         piece.angle.v = 0
       } else springStep(piece.angle, pose.angle, dt, 170, 12)
-      if (piece.flying === 0) springStep(piece.lift, piece.heldBy !== null ? LIFT : 0, dt, 260, 17)
+      if (piece.flying === 0 && piece.heldBy === null) springStep(piece.lift, 0, dt, 260, 17)
       springStep(piece.wobble, 0, dt, piece.wobbleK, piece.wobbleD)
       springStep(piece.hop, 0, dt, 300, 14)
       springStep(piece.squash, 0, dt, 420, 11)
@@ -353,14 +474,13 @@ export class GardenController {
       if (creature.heldBy !== null) {
         creature.heldFor += dt
         const screen = this.screens.get(creature.heldBy)
-        const at = screen && this.projector?.toPlane(screen, 6, this.finger)
+        const at = screen && this.projector?.toPlane(screen, Math.max(CREATURE_LIFT, creature.lift.x), this.finger)
         if (at) {
           const target = clampToPanel({ x: at.x + creature.grabX, y: at.y + creature.grabY }, c.radius)
           c.bed.x += (target.x - c.bed.x) * follow
           c.bed.y += (target.y - c.bed.y) * follow
         }
-      }
-      springStep(creature.lift, creature.heldBy !== null ? 6 : 0, dt, 200, 14)
+      } else springStep(creature.lift, 0, dt, 200, 14)
       const carry = creature.carry
       const wanting = c.index === this.wantIndex && c.phase === 'asleep' && creature.heldBy === null ? 1 : 0
       carry.want += (wanting - carry.want) * (1 - Math.exp(-dt * WANT_RATE))
@@ -413,6 +533,99 @@ export class GardenController {
       a.apartX += (pushX - a.apartX) * ease
       a.apartY += (pushY - a.apartY) * ease
     }
+  }
+
+  /**
+   * No creature's glass dips under the panel, and whatever is carried or flying home passes over what
+   * ranks below it (`pieceRank`) instead of through it. A carried thing starts to float up a little
+   * before it would touch, and never sinks into what it is over; the lowest rank goes first so each
+   * rises over heights already settled this frame.
+   */
+  private rise(dt: number): void {
+    const { pieces, creatures } = this
+    for (const creature of creatures) {
+      creature.ground = groundAlt(creature.c.kind, creature.pose, this.t)
+      creature.alt = Math.max(creature.pose.alt + creature.lift.x, creature.ground)
+    }
+    for (let i = 0; i < pieces.length; i++) {
+      const piece = pieces[i]
+      if (piece.flying === 0) continue
+      // Its arc alone can pass under what it crosses (a lamp in the tray stands taller than the arc's peak), so it
+      // looks ahead along its path and floats up over the arc in time, the way a carried piece does.
+      const arc = piece.lift.x
+      const angle = piece.angle.x + piece.wobble.x
+      const k = 1 - piece.flying / HOME_SECONDS
+      let over = 0
+      for (let j = 0; j <= HOME_LOOKS; j++) {
+        const ahead = Math.min(1, k + (j / HOME_LOOKS) * (HOME_AHEAD / HOME_SECONDS))
+        const e = homeEase(ahead)
+        const x = piece.fromX + (piece.pose.x - piece.fromX) * e
+        const y = piece.fromY + (piece.pose.y - piece.fromY) * e
+        over = Math.max(over, this.pieceClearance(piece, i, x, y, angle, RISE_EARLY) - homeArc(piece, ahead))
+      }
+      springStep(piece.over, Math.max(0, over - piece.hop.x), dt, 260, 17)
+      floorAt(piece.over, this.pieceClearance(piece, i, piece.x, piece.y, angle, 0) - piece.hop.x - arc)
+      piece.lift.x = arc + piece.over.x
+    }
+    for (let i = 0; i < creatures.length; i++) {
+      const creature = creatures[i]
+      if (creature.heldBy === null) continue
+      const reach = CREATURE_BODY[creature.c.kind].reach
+      const order = pieces.length + i
+      const below = creature.ground - creature.pose.alt
+      const early = this.clearance(2, order, creature.x, creature.y, creature.x, creature.y, reach, RISE_EARLY)
+      springStep(creature.lift, Math.max(CREATURE_LIFT, early + below), dt, 200, 14)
+      floorAt(creature.lift, this.clearance(2, order, creature.x, creature.y, creature.x, creature.y, reach, 0) + below)
+      creature.alt = creature.pose.alt + creature.lift.x
+    }
+    for (let i = 0; i < pieces.length; i++) {
+      const piece = pieces[i]
+      if (piece.heldBy === null) continue
+      const early = this.pieceClearance(piece, i, piece.pose.x, piece.pose.y, piece.pose.angle, RISE_EARLY)
+      springStep(piece.lift, Math.max(LIFT, early), dt, 260, 17)
+      floorAt(piece.lift, this.pieceClearance(piece, i, piece.x, piece.y, piece.angle.x + piece.wobble.x, 0) - piece.hop.x)
+    }
+  }
+
+  /** How high a piece's underside must be at (x, y), turned to `angle`, to clear what ranks below it: its body and its knob. */
+  private pieceClearance(piece: PieceSim, order: number, x: number, y: number, angle: number, pad: number): number {
+    const rank = pieceRank(piece)
+    const knob = KNOB[piece.spec.kind]
+    const kx = x + Math.cos(angle + knob.angle) * knob.distance
+    const ky = y + Math.sin(angle + knob.angle) * knob.distance
+    const body = this.clearance(rank, order, x, y, x, y, PIECE_BODY[piece.spec.kind].reach, pad)
+    return Math.max(body, this.clearance(rank, order, x, y, kx, ky, KNOB_BODY.bead, pad))
+  }
+
+  /**
+   * How high an underside must be over the table round segment ab (radius r, widened by `pad`) to clear
+   * the table itself and every piece, knob, and creature ranked below (rank, order).
+   */
+  private clearance(rank: number, order: number, ax: number, ay: number, bx: number, by: number, r: number, pad: number): number {
+    let floor = groundUnder(Math.min(ax, bx) - r, Math.min(ay, by) - r, Math.max(ax, bx) + r, Math.max(ay, by) + r)
+    const { pieces, creatures } = this
+    for (let i = 0; i < pieces.length; i++) {
+      const other = pieces[i]
+      const otherRank = pieceRank(other)
+      if (otherRank > rank || (otherRank === rank && i >= order)) continue
+      const height = pieceHeight(other)
+      const body = PIECE_BODY[other.spec.kind]
+      if (segmentGap(ax, ay, bx, by, other.x, other.y, other.x, other.y) < r + body.reach + pad) floor = Math.max(floor, height + body.top + CLEARANCE)
+      if (!knobOut(other)) continue
+      const knob = KNOB[other.spec.kind]
+      const angle = other.angle.x + other.wobble.x + knob.angle
+      const kx = other.x + Math.cos(angle) * knob.distance
+      const ky = other.y + Math.sin(angle) * knob.distance
+      if (segmentGap(ax, ay, bx, by, other.x, other.y, kx, ky) < r + KNOB_BODY.bead + pad) floor = Math.max(floor, height + KNOB_BODY.top + CLEARANCE)
+    }
+    for (let i = 0; i < creatures.length; i++) {
+      const other = creatures[i]
+      const otherRank = creatureRank(other)
+      if (otherRank > rank || (otherRank === rank && pieces.length + i >= order)) continue
+      const body = CREATURE_BODY[other.c.kind]
+      if (segmentGap(ax, ay, bx, by, other.x, other.y, other.x, other.y) < r + body.reach + pad) floor = Math.max(floor, other.alt + body.top + CLEARANCE)
+    }
+    return floor
   }
 
   /** Rebuild the optics from what is displayed and trace every lamp. */
@@ -526,8 +739,13 @@ export class GardenController {
   private roomAt(at: Point, exceptCreature: number): number {
     let room = Math.min(at.x - PANEL.minX, PANEL.maxX - at.x, at.y - PANEL.minY, PANEL.maxY - at.y) * 2
     for (const piece of this.pieces) {
-      if (piece.pose.inTray) continue
-      room = Math.min(room, Math.hypot(piece.pose.x - at.x, piece.pose.y - at.y) - piece.spec.radius)
+      const pose = piece.pose
+      if (pose.inTray) continue
+      room = Math.min(room, Math.hypot(pose.x - at.x, pose.y - at.y) - piece.spec.radius)
+      const knob = KNOB[piece.spec.kind]
+      const kx = pose.x + Math.cos(pose.angle + knob.angle) * knob.distance
+      const ky = pose.y + Math.sin(pose.angle + knob.angle) * knob.distance
+      room = Math.min(room, segmentGap(at.x, at.y, at.x, at.y, pose.x, pose.y, kx, ky) - KNOB_BODY.bead)
     }
     for (const creature of this.creatures) {
       if (creature.c.index === exceptCreature) continue
@@ -731,7 +949,7 @@ export class GardenController {
       if (piece.flying > 0) continue
       consider(piece.x, piece.y, 2.5, piece.spec.radius, { kind: 'body', piece: piece.spec.id })
     }
-    for (const creature of this.creatures) consider(creature.x, creature.y, creature.pose.alt + 1.5, creature.c.radius + 0.6, { kind: 'creature', index: creature.c.index })
+    for (const creature of this.creatures) consider(creature.x, creature.y, creature.alt + 1.5, creature.c.radius + 0.6, { kind: 'creature', index: creature.c.index })
     if (best.kind !== 'none') return best
     const plane = projector.toPlane(screen, 0)
     return plane && onPanel(plane) ? { kind: 'panel' } : { kind: 'none' }
@@ -795,6 +1013,7 @@ export class GardenController {
       }
       piece.pose.angle += TURN_STEP
       piece.lastTick = piece.pose.angle
+      this.settle(piece)
       this.sound.turn(piece.spec.kind)
       this.cadence.change(performance.now(), true)
       return
@@ -840,7 +1059,7 @@ export class GardenController {
       if (creature.heldBy !== null) return
       creature.heldBy = pointerId
       creature.heldFor = 0
-      const lifted = this.projector && this.screens.get(pointerId) ? this.projector.toPlane(this.screens.get(pointerId)!, 6) : at
+      const lifted = this.projector && this.screens.get(pointerId) ? this.projector.toPlane(this.screens.get(pointerId)!, CREATURE_LIFT) : at
       creature.grabX = creature.c.bed.x - (lifted ?? at).x
       creature.grabY = creature.c.bed.y - (lifted ?? at).y
       this.sound.creature(creature.c.kind, 'lift')
@@ -882,9 +1101,7 @@ export class GardenController {
     if (overTray(pose)) {
       this.sendHome(piece)
     } else {
-      const spot = this.clearSpot({ x: pose.x, y: pose.y }, piece.spec.radius, piece, null)
-      pose.x = spot.x
-      pose.y = spot.y
+      this.settle(piece)
       piece.squash.v -= 2.4
       piece.wobble.v += 0.4
       this.sound.drop(piece.spec.kind, 1)
@@ -896,6 +1113,9 @@ export class GardenController {
     const slot = slotPoint(piece.spec.slot)
     piece.fromX = piece.x
     piece.fromY = piece.y
+    piece.fromLift = Math.max(0, piece.lift.x)
+    piece.over.x = 0
+    piece.over.v = 0
     piece.pose.x = slot.x
     piece.pose.y = slot.y
     piece.pose.angle = this.nearestTurn(piece.angle.x, trayAngle(piece.spec.kind))
@@ -911,33 +1131,94 @@ export class GardenController {
 
   private dropCreature(creature: CreatureSim): void {
     creature.heldBy = null
-    const spot = this.clearSpot(creature.c.bed, creature.c.radius, null, creature)
-    moveBed(creature.c, spot)
+    moveBed(creature.c, this.clearSpot(creature.c.bed.x, creature.c.bed.y, null, creature))
     this.sound.creature(creature.c.kind, 'set')
     this.cadence.change(performance.now(), true)
   }
 
-  /** Nudge a dropped thing off anything it landed on, and back onto the panel. */
-  private clearSpot(at: Point, radius: number, self: PieceSim | null, selfCreature: CreatureSim | null): Point {
-    let spot = clampToPanel(at, radius)
-    for (let pass = 0; pass < 8; pass++) {
+  /** Slide a piece off whatever it landed on or its knob turned into, keeping the knob over the panel. */
+  private settle(piece: PieceSim): void {
+    const spot = this.clearSpot(piece.pose.x, piece.pose.y, piece, null)
+    piece.pose.x = spot.x
+    piece.pose.y = spot.y
+  }
+
+  /**
+   * Nudge a dropped or turned thing off anything it landed on, and back onto the panel. A piece brings
+   * its knob along: clear of every other body and knob, its bead over the panel. The answer is one
+   * shared point, overwritten by the next call.
+   */
+  private clearSpot(x: number, y: number, self: PieceSim | null, selfCreature: CreatureSim | null): Point {
+    const spot = this.spot
+    spot.x = x
+    spot.y = y
+    const bead = KNOB_BODY.bead
+    let radius = selfCreature?.c.radius ?? 0
+    let edge = radius
+    let kx = 0
+    let ky = 0
+    if (self) {
+      const knob = KNOB[self.spec.kind]
+      kx = Math.cos(self.pose.angle + knob.angle) * knob.distance
+      ky = Math.sin(self.pose.angle + knob.angle) * knob.distance
+      radius = self.spec.radius
+      edge = Math.max(radius, PIECE_BODY[self.spec.kind].reach)
+    }
+    const inset = self ? bead + KNOB_GAP : 0
+    this.keepOnPanel(edge, kx, ky, inset)
+    for (let pass = 0; pass < 12; pass++) {
       let moved = false
-      const push = (x: number, y: number, r: number) => {
-        const dx = spot.x - x
-        const dy = spot.y - y
-        const distance = Math.hypot(dx, dy)
-        const need = radius + r + 1.5
-        if (distance >= need) return
-        const nx = distance > 0.01 ? dx / distance : 1
-        const ny = distance > 0.01 ? dy / distance : 0
-        spot = clampToPanel({ x: x + nx * need, y: y + ny * need }, radius)
-        moved = true
+      for (const other of this.pieces) {
+        const o = other.pose
+        if (other === self || o.inTray) continue
+        const knob = KNOB[other.spec.kind]
+        const okx = o.x + Math.cos(o.angle + knob.angle) * knob.distance
+        const oky = o.y + Math.sin(o.angle + knob.angle) * knob.distance
+        moved = this.pushOff(0, 0, o.x, o.y, o.x, o.y, radius + other.spec.radius + 1.5) || moved
+        moved = this.pushOff(0, 0, o.x, o.y, okx, oky, radius + bead + KNOB_GAP) || moved
+        if (!self) continue
+        moved = this.pushOff(kx, ky, o.x, o.y, o.x, o.y, bead + other.spec.radius + KNOB_GAP) || moved
+        moved = this.pushOff(kx, ky, o.x, o.y, okx, oky, 2 * bead + KNOB_GAP) || moved
       }
-      for (const piece of this.pieces) if (piece !== self && !piece.pose.inTray) push(piece.pose.x, piece.pose.y, piece.spec.radius)
-      for (const creature of this.creatures) if (creature !== selfCreature) push(creature.c.bed.x, creature.c.bed.y, creature.c.radius)
+      for (const creature of this.creatures) {
+        const bed = creature.c.bed
+        if (creature === selfCreature) continue
+        moved = this.pushOff(0, 0, bed.x, bed.y, bed.x, bed.y, radius + creature.c.radius + 1.5) || moved
+        if (self) moved = this.pushOff(kx, ky, bed.x, bed.y, bed.x, bed.y, bead + creature.c.radius + KNOB_GAP) || moved
+      }
       if (!moved) break
+      this.keepOnPanel(edge, kx, ky, inset)
     }
     return spot
+  }
+
+  /** Keep the spot `edge` inside the panel, and the point (kx, ky) from it `inset` inside. */
+  private keepOnPanel(edge: number, kx: number, ky: number, inset: number): void {
+    const spot = this.spot
+    spot.x = Math.min(PANEL.maxX - Math.max(edge, inset + kx), Math.max(PANEL.minX + Math.max(edge, inset - kx), spot.x))
+    spot.y = Math.min(PANEL.maxY - Math.max(edge, inset + ky), Math.max(PANEL.minY + Math.max(edge, inset - ky), spot.y))
+  }
+
+  /** Push the spot (the segment from it to (kx, ky) further on) until it keeps `need` from segment cd. */
+  private pushOff(kx: number, ky: number, cx: number, cy: number, dx: number, dy: number, need: number): boolean {
+    const spot = this.spot
+    const gap = segmentGap(spot.x, spot.y, spot.x + kx, spot.y + ky, cx, cy, dx, dy)
+    if (gap >= need) return false
+    let nx = nearest[0] - nearest[2]
+    let ny = nearest[1] - nearest[3]
+    if (gap < 0.01) {
+      // Right on top of it: away from its middle, or to the right.
+      nx = spot.x - (cx + dx) / 2
+      ny = spot.y - (cy + dy) / 2
+      if (Math.hypot(nx, ny) < 0.01) {
+        nx = 1
+        ny = 0
+      }
+    }
+    const length = Math.hypot(nx, ny)
+    spot.x += (nx / length) * (need - gap)
+    spot.y += (ny / length) * (need - gap)
+    return true
   }
 
   private followKnob(piece: PieceSim): void {
@@ -952,6 +1233,7 @@ export class GardenController {
     const snapped = Math.round(target / TURN_STEP) * TURN_STEP
     if (Math.abs(target - snapped) < 0.06) target = snapped
     piece.pose.angle = target
+    this.settle(piece)
     if (Math.abs(target - piece.lastTick) >= Math.PI / 24) {
       piece.lastTick = target
       this.sound.tick()

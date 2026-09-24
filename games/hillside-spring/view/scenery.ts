@@ -11,6 +11,7 @@ import {
   CREEK_Z0,
   CREEK_Z1,
   floorY,
+  FROG_PAD,
   frontZ,
   GRID_LEFT,
   GRID_RIGHT,
@@ -22,6 +23,8 @@ import {
   rowZ,
   SPRING,
   STEP,
+  TANUKI_CLEARING,
+  TANUKI_NAP_OUT,
   WALL_OUT,
 } from './world'
 
@@ -33,6 +36,8 @@ import {
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z)
 
 const SIDE = 7.5
+/** No tuft hangs over a wall nearer than this, along it, to where the frog leaps up it. */
+const PAD_CLEAR = 0.45
 const CREST_Z = -5.3
 const CREST_Y = 1.75
 
@@ -77,11 +82,12 @@ function terraces(b: MeshBuilder, random: () => number): void {
     wallStrip(b, -SIDE, SIDE, yBelow, lip, z1 + WALL_OUT)
     // The lawn runs out over the wall's top so no sky shows through between floor and wall. Its segments break where
     // the wall's do (at the grid's edges, where the sides start to rise): one bridging that bend floats over the wall.
+    // It starts on the floor's front edge rather than under it: lying over the floor, the two fight for the same depth.
     const lips = Math.round(2 * SIDE)
     for (let s = 0; s < lips; s++) {
       const x0 = -SIDE + ((2 * SIDE) / lips) * s
       const x1 = x0 + (2 * SIDE) / lips
-      b.quad(V(x0, lip(x0), z1 + WALL_OUT + 0.01), V(x1, lip(x1), z1 + WALL_OUT + 0.01), V(x1, lip(x1), z1 - 0.01), V(x0, lip(x0), z1 - 0.01), 'meadow', [sunTint(x0, 0.82), sunTint(x1, 0.82), sunTint(x1, 0.9), sunTint(x0, 0.9)], [0, 0.4, 1, 0.45])
+      b.quad(V(x0, lip(x0), z1 + WALL_OUT + 0.01), V(x1, lip(x1), z1 + WALL_OUT + 0.01), V(x1, lip(x1), z1), V(x0, lip(x0), z1), 'meadow', [sunTint(x0, 0.82), sunTint(x1, 0.82), sunTint(x1, 0.9), sunTint(x0, 0.9)], [0, 0.4, 1, 0.45])
     }
   }
 }
@@ -247,6 +253,12 @@ function trunk(b: MeshBuilder, x: number, y: number, z: number, h: number, w: nu
   g.dispose()
 }
 
+/** Whether the frog lands just behind row `r`'s wall top at `x`: out of the pond, or below its paddy. */
+function frogLandsBy(r: number, x: number): boolean {
+  if (r === ROWS - 1 && Math.abs(x - FROG_PAD.x) < PAD_CLEAR) return true
+  return PLOTS.some((p) => p.kind === 'rice' && p.r + 1 === r && Math.abs(x - (cellX(p.c) - 0.5)) < PAD_CLEAR)
+}
+
 function foliage(f: MeshBuilder, solid: MeshBuilder, random: () => number): void {
   /** `rise` is where the canopy starts up the trunk; the crest trees' canopies sit low so the frame's top edge shows them, not bare poles. */
   const tree = (x: number, y: number, z: number, s: number, lean = 0, rise = 0.55) => {
@@ -255,7 +267,8 @@ function foliage(f: MeshBuilder, solid: MeshBuilder, random: () => number): void
     f.card(V(x + lean * 0.5 - 0.15 * s, y + s * (rise + 0.07), z), s * 1.35, s * 1.2, 'canopy', colour('#ffffff'), 0.1, 0.3)
     f.card(V(x + lean * 0.4 + 0.3 * s, y + s * (rise + 0.25), z + 0.25), s * 0.95, s * 0.85, 'canopy', colour('#fffbe8', 1.04), -0.15, 0.35)
   }
-  tree(-6.3, floorY(1), rowZ(1) - 0.2, 2.6, 0.3)
+  // Back against the wall, so its trunk stands clear of the tanuki's lane along the front of the terrace.
+  tree(-6.3, floorY(1), rowZ(1) - 0.32, 2.6, 0.3)
   tree(6.5, floorY(0) + 0.2, backZ(0) - 0.6, 2.3, -0.2)
   tree(-4.4, CREST_Y - 0.1, CREST_Z - 0.3, 2.1, 0, -0.2)
   tree(-2.9, CREST_Y - 0.2, CREST_Z - 1.1, 1.6, 0, -0.2)
@@ -266,19 +279,33 @@ function foliage(f: MeshBuilder, solid: MeshBuilder, random: () => number): void
   for (let r = 0; r < ROWS; r++) {
     const y = floorY(r)
     const z = frontZ(r) - 0.02
+    // Beside the grid the bushes and wildflowers grow toward the back of each terrace: its front half is the lane the
+    // tanuki walks in along and naps on, and behind where it naps is a clearing.
+    const nap = GRID_RIGHT + TANUKI_NAP_OUT
     for (const side of [-1, 1]) {
       for (let k = 0; k < 3; k++) {
-        const x = side * (GRID_RIGHT + 1.3 + k * 1.1 + random() * 0.3)
-        f.card(V(x, y + Math.max(0, Math.abs(x) - GRID_RIGHT) * SIDE_RISE, z - 0.3 - random() * 0.3), 1.1 + random() * 0.4, 0.5 + random() * 0.2, 'bush', sunTint(x, 1), (random() - 0.5) * 0.4, 0.4)
+        const out = GRID_RIGHT + 1.3 + k * 1.1 + random() * 0.3
+        const back = rowZ(r) - 0.29 - random() * 0.08
+        const width = 1.1 + random() * 0.4
+        const height = 0.5 + random() * 0.2
+        const x = side * Math.max(out, nap + TANUKI_CLEARING + width / 2)
+        f.card(V(x, y + Math.max(0, Math.abs(x) - GRID_RIGHT) * SIDE_RISE, back), width, height, 'bush', sunTint(x, 1), (random() - 0.5) * 0.1, 0.4)
       }
     }
+    // Tufts hang over the wall's top a finger in front of its face, not painted on it; a bed's front corners stay
+    // bare, since the frog and the sparrow sit there, and so does the wall's top behind each landing of the frog's
+    // leaps up a wall, where its hind legs reach back over the edge.
     for (let c = 0; c <= COLS; c++) {
       const x = cellX(c) - 0.5 + (random() - 0.5) * 0.08
-      f.card(V(x, y - 0.02, z + WALL_OUT + 0.02), 0.34, 0.13 + random() * 0.05, 'tuft', sunTint(x, 1.02), 0, 1)
+      const height = 0.13 + random() * 0.05
+      if (PLOTS.some((p) => p.r === r && (p.c === c || p.c + 1 === c))) continue
+      if (frogLandsBy(r, x)) continue
+      f.card(V(x, y - 0.02, z + WALL_OUT + 0.03), 0.34, height, 'tuft', sunTint(x, 1.02), 0, 1)
     }
+    const flowersFrom = nap + TANUKI_CLEARING + 0.3
     for (let k = 0; k < 5; k++) {
-      const x = (random() > 0.5 ? 1 : -1) * (GRID_RIGHT + 0.2 + random() * 3.2)
-      f.card(V(x, y + Math.max(0, Math.abs(x) - GRID_RIGHT) * SIDE_RISE, rowZ(r) + (random() - 0.5) * 0.6), 0.6, 0.26, 'wildflowers', colour('#ffffff'), (random() - 0.5) * 0.5, 1)
+      const x = (random() > 0.5 ? 1 : -1) * (flowersFrom + random() * (GRID_RIGHT + 3.4 - flowersFrom))
+      f.card(V(x, y + Math.max(0, Math.abs(x) - GRID_RIGHT) * SIDE_RISE, rowZ(r) - 0.28 - random() * 0.1), 0.6, 0.26, 'wildflowers', colour('#ffffff'), (random() - 0.5) * 0.3, 1)
     }
   }
   for (let k = 0; k < 12; k++) {
@@ -286,7 +313,8 @@ function foliage(f: MeshBuilder, solid: MeshBuilder, random: () => number): void
     f.card(V(x, floorY(0) + 0.42, backZ(0) - 0.2 - random() * 1.2), 0.9, 0.3, random() > 0.5 ? 'tuft' : 'wildflowers', sunTint(x, 0.98), (random() - 0.5) * 0.4, 1)
   }
   const p = POND
-  for (let k = 0; k < 5; k++) f.card(V(p.x - 1.1 + k * 0.18, CREEK_Y, p.z - 0.45 + random() * 0.2), 0.5, 0.55 + random() * 0.3, 'reeds', colour('#ffffff'), 0.3, 1)
+  // The reeds stand in the pond clear of the terrace's lip, so none reaches over it where the tanuki naps.
+  for (let k = 0; k < 5; k++) f.card(V(p.x - 1.3 + k * 0.18, CREEK_Y, p.z - 0.27 + random() * 0.2), 0.5, 0.55 + random() * 0.3, 'reeds', colour('#ffffff'), 0.3, 1)
   for (let k = 0; k < 10; k++) {
     const x = -SIDE + random() * SIDE * 2
     if (Math.abs(x) < 3.4) continue
@@ -298,10 +326,15 @@ function foliage(f: MeshBuilder, solid: MeshBuilder, random: () => number): void
   }
   const lily = uvRect('lily')
   for (let k = 0; k < 5; k++) {
-    const x = p.x - 0.6 + random() * 1.2
-    const z = p.z - 0.25 + random() * 0.5
-    const s = 0.14 + random() * 0.08
-    const yy = CREEK_Y + 0.012
+    const top = k === 4
+    const scatteredX = p.x - 0.6 + random() * 1.2
+    const scatteredZ = p.z - 0.25 + random() * 0.5
+    const scatteredS = 0.14 + random() * 0.08
+    const x = top ? FROG_PAD.x : scatteredX
+    const z = top ? FROG_PAD.z : scatteredZ
+    const s = top ? FROG_PAD.size : scatteredS
+    // Each pad floats at its own height, so where two overlap one lies over the other; the frog's is the top one.
+    const yy = top ? FROG_PAD.y : CREEK_Y + 0.012 + k * 0.003
     const base = f.vertexCount
     const up = V(0, 1, 0)
     const tint = colour('#ffffff')
@@ -423,6 +456,7 @@ function lightShafts(atlas: THREE.Texture, time: { value: number }): { mesh: THR
     side: THREE.DoubleSide,
   })
   const mesh = new THREE.Mesh(g, material)
+  mesh.name = 'light-shafts'
   mesh.renderOrder = 10
   mesh.frustumCulled = false
   const show = (share: number) => g.setDrawRange(0, Math.max(1, Math.round(SHAFTS.length * share)) * 6)
@@ -440,14 +474,18 @@ export function buildScenery(atlas: THREE.Texture, skyTexture: THREE.Texture, ti
   rocks(ground, random)
   const leaves = new MeshBuilder()
   foliage(leaves, ground, random)
-  group.add(new THREE.Mesh(ground.build(), paintedMaterial(atlas)))
+  const groundMesh = new THREE.Mesh(ground.build(), paintedMaterial(atlas))
+  groundMesh.name = 'hillside'
+  group.add(groundMesh)
   const leafMesh = new THREE.Mesh(leaves.build(true), foliageMaterial(atlas))
+  leafMesh.name = 'foliage'
   group.add(leafMesh)
 
   const far = new MeshBuilder()
   far.quad(V(-18, -4.6, -16), V(18, -4.6, -16), V(18, 1.0, -16), V(-18, 1.0, -16), 'farHills', colour('#ffffff'))
   const farMaterial = new THREE.MeshBasicMaterial({ map: atlas, vertexColors: true, transparent: true, depthWrite: false, fog: false })
   const farMesh = new THREE.Mesh(far.build(), farMaterial)
+  farMesh.name = 'far-hills'
   farMesh.renderOrder = -1
   group.add(farMesh)
 
@@ -459,6 +497,7 @@ export function buildScenery(atlas: THREE.Texture, skyTexture: THREE.Texture, ti
     depthWrite: false,
   })
   const sky = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), skyMaterial)
+  sky.name = 'sky'
   sky.renderOrder = -2
   sky.frustumCulled = false
   group.add(sky)

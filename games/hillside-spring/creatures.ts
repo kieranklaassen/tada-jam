@@ -18,6 +18,11 @@ export const ARRIVE_DELAY: Record<CreatureKind, number> = { frog: 1.2, sparrow: 
 export const TRAVEL_SECONDS: Record<CreatureKind, number> = { frog: 2.8, sparrow: 2.2, tanuki: 6 }
 export const LEAVE_DELAY = 4
 
+/** The tanuki naps on the meadow at the left end of a spot's terrace (the middle column's too), else at the right. */
+export function napsLeft(spot: Cell): boolean {
+  return spot.c <= 3
+}
+
 // Asked for every visitor every frame, so the answers are shared cells, never built fresh (and never mutated).
 const PLOT_SPOT: readonly Cell[] = PLOTS.map((plot) => ({ c: plot.c, r: plot.r }))
 const CELL_SPOT: readonly Cell[] = Array.from({ length: COLS * ROWS }, (_, i) => ({ c: i % COLS, r: Math.floor(i / COLS) }))
@@ -102,6 +107,9 @@ export class Presence {
         break
       case 'here':
         if (!wanted && now - (this.unwantSince ?? now) >= LEAVE_DELAY) this.go('leaving', now, this.spot)
+        // For the other end of the terraces the tanuki goes off round its own side and comes back round that one,
+        // never across the garden through the beds and walls.
+        else if (moved && this.kind === 'tanuki' && napsLeft(wanted) !== napsLeft(this.spot!)) this.go('leaving', now, this.spot)
         else if (moved) this.go('arriving', now, wanted)
         break
       case 'leaving':

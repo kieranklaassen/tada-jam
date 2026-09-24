@@ -50,7 +50,7 @@ export class GardenView {
     this.projector = new Projector(this.camera)
     this.plots = new PlotsView(this.atlas, this.flowTexture)
     this.scene.add(this.plots.group)
-    this.pieces = new PiecesView(this.atlas, this.projector)
+    this.pieces = new PiecesView(this.atlas, this.projector, this.plots.tops)
     this.scene.add(this.pieces.group)
     this.water = new WaterView(this.flowTexture)
     this.scene.add(this.water.group)
@@ -92,7 +92,7 @@ export class GardenView {
     this.plots.update(garden)
     this.pieces.update(garden, this.fx, this.fx.demo)
     this.creatures.update(garden, this.fx)
-    this.water.update(garden)
+    this.water.update(garden, this.pieces)
     this.fx.update(garden, this.projector, this.water, dt)
     this.renderer.render(this.scene, this.camera)
   }

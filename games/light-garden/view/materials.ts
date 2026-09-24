@@ -43,12 +43,12 @@ attribute float aGlow;
 uniform float uKind;
 uniform vec4 uAnim;
 uniform float uTime;
-uniform float uKnob;
 varying vec3 vWorldNormal;
 varying vec3 vWorldPos;
 varying vec3 vColor;
 varying float vGlow;
 varying float vPart;
+#include <morphtarget_pars_vertex>
 
 vec3 rotX(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(p.x, c * p.y - s * p.z, s * p.y + c * p.z); }
 vec3 rotY(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
@@ -57,11 +57,6 @@ vec3 rotZ(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x -
 void deform(inout vec3 p, inout vec3 n) {
   int kind = int(uKind + 0.5);
   int part = int(aPart + 0.5);
-  if (part == 9) {
-    p.xz *= uKnob;
-    p.y *= mix(0.2, 1.0, uKnob);
-    return;
-  }
   if (kind == 1) {
     // Jellyfish: a squeezes the bell narrow and tall, b sways the tentacles, c lets them droop and splay.
     float sq = uAnim.x;
@@ -126,7 +121,11 @@ void deform(inout vec3 p, inout vec3 n) {
 }
 
 void main() {
-  vec3 p = position;
+  // A piece's knob folds into it in the tray as a morph target (view/geometry.ts) rather than in deform(),
+  // so whatever reads the geometry on the CPU sees it folded too.
+  vec3 transformed = vec3(position);
+  #include <morphtarget_vertex>
+  vec3 p = transformed;
   vec3 n = normal;
   deform(p, n);
   vec4 world = modelMatrix * vec4(p, 1.0);
@@ -228,7 +227,6 @@ export type GlassUniforms = {
   uTime: { value: number }
   uKind: { value: number }
   uAnim: { value: THREE.Vector4 }
-  uKnob: { value: number }
   uRoom: { value: THREE.Vector3 }
   uPanel: { value: THREE.Vector3 }
 }
@@ -245,7 +243,6 @@ export function glassMaterial(look: GlassLook, kind: number): THREE.ShaderMateri
     uTime: { value: 0 },
     uKind: { value: kind },
     uAnim: { value: new THREE.Vector4() },
-    uKnob: { value: 1 },
     uRoom: { value: vec3(PALETTE.room) },
     uPanel: { value: vec3(PALETTE.panelCentre) },
   }

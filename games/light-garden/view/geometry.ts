@@ -119,13 +119,15 @@ function lamp(): THREE.BufferGeometry {
   b.add(new THREE.CylinderGeometry(2.0, 2.0, 2.4, 20), at(0, 4.0, 0), [1, 0.97, 0.9], PART.rigid, 0.7)
   for (let i = 0; i < 4; i++) {
     const a = Math.PI / 4 + (i * Math.PI) / 2
-    b.add(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 6), at(Math.cos(a) * 2.05, 4.0, Math.sin(a) * 2.05), BRASS)
+    // A hair shorter than the lantern, so their ends never share its faces.
+    b.add(new THREE.CylinderGeometry(0.2, 0.2, 2.3, 6), at(Math.cos(a) * 2.05, 4.0, Math.sin(a) * 2.05), BRASS)
   }
   b.add(new THREE.CylinderGeometry(0.2, 1.7, 1.1, 20), at(0, 5.75, 0), scale(WHITE, 1.05))
   b.add(new THREE.TorusGeometry(1.75, 0.2, 6, 24), at(0, 5.2, 0, Math.PI / 2), BRASS)
   b.add(new THREE.SphereGeometry(0.45, 12, 8), at(0, 6.4, 0), BRASS)
   b.add(new THREE.CylinderGeometry(1.35, 1.2, 2.3, 20), at(3.3, 1.9, 0, 0, 0, -Math.PI / 2), BRASS)
-  b.add(new THREE.CircleGeometry(1.12, 20), at(4.46, 1.9, 0, 0, Math.PI / 2, 0), [1, 0.98, 0.92], PART.rigid, 1.2)
+  // The lens is a solid disc set into the housing, not an open face, so the lamp stays one closed shape.
+  b.add(new THREE.CylinderGeometry(1.12, 1.12, 0.3, 20), at(4.33, 1.9, 0, 0, 0, -Math.PI / 2), [1, 0.98, 0.92], PART.rigid, 1.2)
   addKnob(b, 'lamp')
   return b.build()
 }
@@ -164,7 +166,29 @@ function prism(): THREE.BufferGeometry {
   return b.build()
 }
 
+/** A folded knob keeps this much of its height. */
+const KNOB_FOLDED_HEIGHT = 0.2
+
+/**
+ * A piece, with one morph target: its knob folded into the middle of it and flattened, the way it sits in
+ * the tray. The view sets the target's influence to how far the knob is folded away.
+ */
 export function pieceGeometry(kind: PieceKind): THREE.BufferGeometry {
+  const geometry = pieceBody(kind)
+  const position = geometry.getAttribute('position')
+  const part = geometry.getAttribute('aPart')
+  const folded = new Float32Array(position.array)
+  for (let i = 0; i < position.count; i++) {
+    if (Math.round(part.getX(i)) !== PART.knob) continue
+    folded[i * 3] = 0
+    folded[i * 3 + 1] *= KNOB_FOLDED_HEIGHT
+    folded[i * 3 + 2] = 0
+  }
+  geometry.morphAttributes.position = [new THREE.Float32BufferAttribute(folded, 3)]
+  return geometry
+}
+
+function pieceBody(kind: PieceKind): THREE.BufferGeometry {
   switch (kind) {
     case 'lamp':
       return lamp()
