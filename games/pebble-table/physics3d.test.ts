@@ -1,8 +1,11 @@
 import * as CANNON from 'cannon-es'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { TableController } from './controller'
 import { FEEDING, SCALE, TABLE } from './layout'
+import { JARS, PART_KINDS } from './parts'
 import { panOf } from './scale'
 import { STEP, TablePhysics, to3, toWorld2 } from './physics3d'
+import { defaultTable } from './state'
 
 const run = (physics: TablePhysics, seconds: number) => {
   let last = physics.step(0)
@@ -170,5 +173,37 @@ describe('TablePhysics', () => {
       if (body.sleepState === CANNON.Body.SLEEPING) again = t
     }
     expect(again).toBeLessThan(1.5)
+  })
+
+  it('lands every jar tipped out onto stones on the scale exactly where trying every shape of each pair against every other does', () => {
+    const topDown = { toScreen: (v: { x: number; z: number }) => toWorld2(v), toPlane: (screen: { x: number; y: number }) => screen }
+    const pour = (everyShape: boolean) => {
+      let seed = 11
+      const random = vi.spyOn(Math, 'random').mockImplementation(() => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646)
+      try {
+        const pieces = [0, 1, 2, 3].map((i) => ({ id: 500 + i, q: 4 as const, x: 700 + i * 60, y: 640 }))
+        const table = new TableController({ ...defaultTable(6), liveMat: 'scale', pieces, bag: 36 }, { save: () => {} })
+        if (everyShape) delete (table.physics.world.narrowphase as { getContacts?: unknown }).getContacts
+        table.setProjector(topDown)
+        let [clock, contacts] = [0, 0]
+        for (const kind of PART_KINDS) {
+          table.pointerDown(1, JARS[kind], (clock += 10))
+          table.pointerUp(1, JARS[kind], (clock += 80))
+          for (let k = 0; k < 15; k++) table.step(1 / 60)
+        }
+        for (let k = 0; k < 150; k++) {
+          table.step(1 / 60)
+          contacts += table.physics.world.contacts.length
+        }
+        return { contacts, poses: table.physics.world.bodies.flatMap((body) => [...body.position.toArray(), ...body.quaternion.toArray()]) }
+      } finally {
+        random.mockRestore()
+      }
+    }
+    const near = pour(false)
+    const every = pour(true)
+    expect(near.contacts).toBeGreaterThan(5000)
+    expect(near.contacts).toBe(every.contacts)
+    expect(near.poses).toEqual(every.poses)
   })
 })

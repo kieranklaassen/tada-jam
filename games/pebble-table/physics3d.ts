@@ -34,6 +34,10 @@ const BALL_TRAVEL = 1
 const MOST_PIECES = 6
 /** How many times sunk goes over the contacts it finds, so lifting a part out of one does not leave it in another. */
 const SUNK_PASSES = 4
+/** Pairs of bodies with at least this many pairs of shapes between them are handed to cannon with only the shapes that reach the other. */
+const NEAR_SHAPES_FROM = 32
+/** How far (cm) past the other body's bounds a shape still counts as reaching it, against rounding. */
+const NEAR_SHAPES_SLACK = 0.001
 // Convex-convex collision cost grows with faces times edges, and a spill is
 // almost all stone-on-stone contacts, so colliders use few sides. The drawn
 // pebbles are separate meshes and stay round.
@@ -150,10 +154,71 @@ export class TablePhysics {
     this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, GRAVITY, 0) })
     this.world.allowSleep = true
     this.world.broadphase = new CANNON.SAPBroadphase(this.world)
+    this.onlyNearShapes()
     this.world.defaultContactMaterial.friction = 0.4
     this.world.addContactMaterial(new CANNON.ContactMaterial(this.stoneMaterial, this.woodMaterial, { friction: 0.45, restitution: 0.12 }))
     this.world.addContactMaterial(new CANNON.ContactMaterial(this.stoneMaterial, this.stoneMaterial, { friction: 0.35, restitution: 0.22 }))
     this.addTable()
+  }
+
+  /**
+   * cannon tries every shape of one body against every shape of the other
+   * whenever their bounds meet: a stick of 47 balls lying on another is two
+   * thousand tries a step, and a pour lands dozens of parts on each other at
+   * once. A shape whose bounding sphere stays clear of the other body's bounds
+   * can touch none of its shapes, so leaving it out changes no contact.
+   */
+  private onlyNearShapes(): void {
+    const narrowphase = this.world.narrowphase
+    const contacts = narrowphase.getContacts.bind(narrowphase)
+    const one: [CANNON.Body[], CANNON.Body[]] = [[], []]
+    const near = [0, 1].map(() => ({ shapes: [] as CANNON.Shape[], offsets: [] as CANNON.Vec3[], orientations: [] as CANNON.Quaternion[] }))
+    const centre = new CANNON.Vec3()
+    const keep = (body: CANNON.Body, other: CANNON.Body, into: (typeof near)[number]): boolean => {
+      into.shapes.length = into.offsets.length = into.orientations.length = 0
+      const { lowerBound: low, upperBound: high } = other.aabb
+      for (let i = 0; i < body.shapes.length; i++) {
+        const shape = body.shapes[i]
+        body.quaternion.vmult(body.shapeOffsets[i], centre)
+        centre.vadd(body.position, centre)
+        const reach = shape.boundingSphereRadius + NEAR_SHAPES_SLACK
+        const dx = Math.max(low.x - centre.x, 0, centre.x - high.x)
+        const dy = Math.max(low.y - centre.y, 0, centre.y - high.y)
+        const dz = Math.max(low.z - centre.z, 0, centre.z - high.z)
+        if (dx * dx + dy * dy + dz * dz > reach * reach) continue
+        into.shapes.push(shape)
+        into.offsets.push(body.shapeOffsets[i])
+        into.orientations.push(body.shapeOrientations[i])
+      }
+      return into.shapes.length > 0
+    }
+    const swap = (body: CANNON.Body, into: (typeof near)[number]): void => {
+      ;[body.shapes, into.shapes] = [into.shapes, body.shapes]
+      ;[body.shapeOffsets, into.offsets] = [into.offsets, body.shapeOffsets]
+      ;[body.shapeOrientations, into.orientations] = [into.orientations, body.shapeOrientations]
+    }
+    narrowphase.getContacts = (p1, p2, world, result, oldcontacts, frictionResult, frictionPool) => {
+      for (let k = 0; k < p1.length; k++) {
+        const [a, b] = [p1[k], p2[k]]
+        one[0][0] = a
+        one[1][0] = b
+        if (a.shapes.length * b.shapes.length < NEAR_SHAPES_FROM) {
+          contacts(one[0], one[1], world, result, oldcontacts, frictionResult, frictionPool)
+          continue
+        }
+        if (a.aabbNeedsUpdate) a.updateAABB()
+        if (b.aabbNeedsUpdate) b.updateAABB()
+        if (!keep(a, b, near[0]) || !keep(b, a, near[1])) continue
+        swap(a, near[0])
+        swap(b, near[1])
+        try {
+          contacts(one[0], one[1], world, result, oldcontacts, frictionResult, frictionPool)
+        } finally {
+          swap(a, near[0])
+          swap(b, near[1])
+        }
+      }
+    }
   }
 
   private addTable(): void {
