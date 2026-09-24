@@ -1,6 +1,7 @@
 ---
 title: Pieces sink into, float over or pass through each other until the collider and the mesh share one set of dimensions, rest heights come from the drawn geometry, footprints fit the drawn body, and soft contact is bounded by a test
 date: 2026-09-24
+last_updated: 2026-09-24
 category: ui-bugs
 module: physics
 problem_type: ui_bug
@@ -127,7 +128,7 @@ In cannon-es, a `Box` takes half extents, not full sizes (checked in cannon-es 0
 - Take every rest, stand and spawn height from the drawn geometry's lowest point at the current turn.
 - Fit footprints to the drawn body, and test that every drawn vertex lies inside.
 - Allow landing dips only up to the bound a physics test proves.
-- For Pebble Table and Critter Clay, whose passes are still pending, start from these rules.
+- For Pebble Table, whose pass is still pending, start from these rules.
 
 ## Related Issues
 

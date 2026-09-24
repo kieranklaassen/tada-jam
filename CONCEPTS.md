@@ -136,7 +136,7 @@ It reads the live 3D scene's positions on the processor at intervals, so motion 
 ### Pose finding
 A finding where two parts of one object cross deeper, at some moment, than they did at their shallowest in the same run, such as a wing swinging through its body.
 
-Because each pair is measured against its own shallowest, parts modelled into each other at rest are not flagged; only a swing past that is. Which parts form one object is declared by the game or guessed from size, and that grouping decides whether a crossing is judged as a pose or as two objects passing through each other. Depth is measured in the world, so a scaled parent changes it.
+Because each pair is measured against its own shallowest, parts modelled into each other at rest are not flagged; only a swing past that is. A part is followed by its owner and its place among that owner's parts, not by the draw slot it happens to occupy, so when a pooled batch hands a slot to another owner, each owner's part keeps its own history and the two are never compared. Which parts form one object is declared by the game or guessed from size, and that grouping decides whether a crossing is judged as a pose or as two objects passing through each other. Depth is measured in the world, so a scaled parent changes it.
 
 ### Intended contact
 A place where a game means two pieces to touch or overlap (a stem planted in soil, a fish under the water surface), which the Intersection audit allows by name, with a written reason and a depth cap, instead of the game fixing it.

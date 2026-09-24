@@ -41,7 +41,7 @@ The owner saw pieces going through each other in many of the jam games, so PR #1
 
 Its first run used a generic idle, tap and drag script. It found visible findings in all eleven games then on `main`, from 3 in Light Garden to 141 in Shadow Lantern.
 
-Each game then had its own pass (PRs #19 to #30, and Kite Tower's, merged from a bundle as "Merge cursor/kite-tower-intersections-bundle"): script the moments, fix what is real, allow what is meant, and set `enforce: true` so CI keeps it clean. Ten three.js games are enforced now: Shadow Lantern, Frog Choir, Moon Phases, Felt Meadow, Light Garden, Hillside Spring, Cosy Scarf, Bedtime Forest, Turning Tower and Kite Tower. Bad Neighbours (PR #21) is canvas 2D, which the audit does not read. The passes for Pebble Table and Critter Clay are pending. Those two still run the generic script, and nothing about them fails CI. The tool changed three times from what the passes ran into (PRs #17, #18 and #23).
+Each game then had its own pass (PRs #19 to #30, and Kite Tower's and Critter Clay's, merged from bundles as "Merge cursor/kite-tower-intersections-bundle" and "Merge cursor/critter-clay-intersections-bundle"): script the moments, fix what is real, allow what is meant, and set `enforce: true` so CI keeps it clean. Eleven three.js games are enforced now: Shadow Lantern, Frog Choir, Moon Phases, Felt Meadow, Light Garden, Hillside Spring, Cosy Scarf, Bedtime Forest, Turning Tower, Kite Tower and Critter Clay. Bad Neighbours (PR #21) is canvas 2D, which the audit does not read. Pebble Table's pass is pending. On `main` it still runs the generic script, and nothing about it fails CI. The tool changed three times from what the passes ran into (PRs #17, #18 and #23).
 
 This doc is the workflow the passes converged on. The fixes for the two largest kinds of finding are in the z-fighting and animation-clipping docs linked under Related, and pieces that collide or rest off their drawing are in the colliders doc. Several passes learned the same lessons the hard way. Moon Phases' audit was clean on `main` while its moments never reached the homes where the child sank into Earth. Light Garden's saved-state moment quietly reopened the garden from before. Hillside Spring's pass-30 code "cannot load the tests at all, since it named no meshes" (PR #27).
 
@@ -76,7 +76,7 @@ When a run is clean, write down what no moment reached, and what `report.md` say
 
 - **Overlays.** A mesh whose materials all have `depthTest: false`, such as a ghost hand or a see-through card drawn over everything, is skipped for every kind of finding, since it "cannot visibly cross anything" (PR #18). So is a mesh with `colorWrite` off or under 5% opacity (`scripts/intersections/page.js`).
 - **Clipping planes.** A piece is cut to what the renderer's `clippingPlanes` keep, plus its material's when `localClippingEnabled` is on, before it is checked (PR #18).
-- **Instances.** Each instance of an `InstancedMesh` is its own object unless a rule says otherwise: an `instances` rule makes instance i part of object floor(i / `per`), and `userData.jamInstanceObjects` names each instance's object, joining a group whose `jamObject` has the same key (`scripts/intersections/types.ts`).
+- **Instances.** Each instance of an `InstancedMesh` is its own object unless a rule says otherwise: an `instances` rule makes instance i part of object floor(i / `per`), and `userData.jamInstanceObjects` names each instance's object, joining a group whose `jamObject` has the same key (`scripts/intersections/types.ts`). Pose history follows each part by its object, its mesh and its rank among that object's instances of the mesh (`partKeys` in `scripts/intersections/core.ts`). A batch that repacks its instances every frame can therefore hand a slot to another owner without mixing two owners' depths into one pose. A whole-run pose is named by the two pieces its track began with, not by the slot's last owner (`scripts/jam-intersections.mjs`). Before that fix (the PR "Compound: intersection lessons, round 2, and pose history per part"), history was kept by instance slot. In Critter Clay's before run, 31 of its 93 piece ids changed owner, and at least 51 of its 73 pose findings involved one of them. Hillside Spring allowed 47 bamboo-kit pose findings, hub × arm up to 113%, as slot swaps (both from the passes' tool notes). Its rule still gives that reason at `upTo: 1.5` (`scripts/intersections/games/hillside-spring.ts`), so re-measure and tighten allowances written for slot swaps.
 - **Outline hulls.** A back-side mesh with a custom vertex shader that shares its front mesh's geometry is skipped as an outline (PR #23).
 - **Bare names.** `ignore`, `allow`, `objects`, `instances` and `split` patterns are also tried without colour suffixes and child indices, "so `outline$` matches `frog>outline #574373` and `frog:5/outline:1`" (PR #23).
 
@@ -129,7 +129,7 @@ A finished pass too large to publish file by file through the GitHub MCP goes to
 ## When to Apply
 
 - Before showing the owner any build of a three.js jam game, and before calling one done.
-- When starting a game's audit pass, including Pebble Table's and Critter Clay's.
+- When starting a game's audit pass, including Pebble Table's.
 - When adding a shader deform, an instanced batch, a cut-out texture, a saved-state moment or a new verb to an enforced game.
 - When a run is clean and you did not expect it to be, or a finding has no moment or shows only at 0 s.
 
@@ -159,6 +159,7 @@ npm run check:intersections -- <key> --ci --out /tmp/ia-<key>/after --replay /tm
 | Bedtime Forest | #29 | 53 | 5 | 0 | 300 |
 | Turning Tower | #30 | 95 | 2 (3 in some runs) | 0 | 268 |
 | Kite Tower | bundle merge | 72 | 0 | 0 | 187 |
+| Critter Clay | bundle merge | 389 | 88 | 3 | not stated |
 
 What stays allowed in Felt Meadow "is what the meadow means: things planted in the felt, a seed sinking into its molehill, a picked flower folding round its seed, a flower's own parts, and the critters' own joints" (PR #24). Its 21 rules each carry a reason and an `upTo`, and "each rule's cap sits a little above the depth measured".
 
