@@ -119,6 +119,16 @@ export function outlineCorners(reach: readonly number[]): { x: number; z: number
   })
 }
 
+/** The farthest any drawn piece reaches from its body's origin, in any direction (cm). */
+export const STONE_REACH = Math.max(
+  ...Object.values(STONE_CUTS).map((cut) => {
+    const v = stoneVertices(cut, STONE_SEGMENTS)
+    let reach = 0
+    for (let i = 0; i < v.length; i += 3) reach = Math.max(reach, Math.hypot(v[i], v[i + 1], v[i + 2]))
+    return reach * STONE_DRAWN_RADIUS
+  }),
+)
+
 /** Height of a resting piece's origin above what it rests on. */
 export function stoneRest(q: Quarters): number {
   return -stoneOutline(STONE_CUTS[q]).bottom
