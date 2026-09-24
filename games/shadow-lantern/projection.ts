@@ -32,11 +32,21 @@ export const STAGE = { zNear: 8, zFar: 48, xMin: -34, xMax: 34 } as const
  */
 export const PROSCENIUM = { halfWidth: 43, top: 48, crestHalfWidth: 11.5, crestTop: 54, front: 3.8 } as const
 
-/** How far a disc of radius r centred at (x, y) is clear of the proscenium; negative while it overlaps. */
-export function clearOfProscenium(x: number, y: number, r: number): number {
-  const wide = Math.max(Math.abs(x) - PROSCENIUM.halfWidth, y - PROSCENIUM.top)
-  const crest = Math.max(Math.abs(x) - PROSCENIUM.crestHalfWidth, y - PROSCENIUM.crestTop)
-  return Math.min(wide, crest) - r
+/** How far a box rx wide and ry tall each side of (x, y) is clear of the proscenium; negative while it overlaps. */
+export function clearOfProscenium(x: number, y: number, rx: number, ry = rx): number {
+  const wide = Math.max(Math.abs(x) - rx - PROSCENIUM.halfWidth, y - ry - PROSCENIUM.top)
+  const crest = Math.max(Math.abs(x) - rx - PROSCENIUM.crestHalfWidth, y - ry - PROSCENIUM.crestTop)
+  return Math.min(wide, crest)
+}
+
+/**
+ * The largest radius, up to r, of a disc centred at (x, y) that stays on the
+ * screen's paper, and 0 once its centre is off it: what lies on the paper
+ * shrinks into the frame's edge rather than passing through the frame.
+ */
+export function onPaper(x: number, y: number, r: number): number {
+  const room = Math.min(x - SCREEN.left, SCREEN.right - x, y - SCREEN.bottom, SCREEN.top - y)
+  return Math.max(0, Math.min(r, room))
 }
 
 export function shadowScale(z: number): number {

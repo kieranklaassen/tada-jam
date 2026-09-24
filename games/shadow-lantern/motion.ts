@@ -55,11 +55,11 @@ export type CreaturePose = {
   x: number
   y: number
   z: number
-  /** Turn about the vertical axis (radians): the page-turn peel and spins. */
+  /** Turn over and back in the card's own plane (radians; mirrored at π): the dragon's barrel roll. */
   spin: number
-  /** Horizontal offset of the spin axis from the creature's centre (cm, before scale). */
+  /** Horizontal offset of the axis it spins or turns over about, from the creature's centre (cm, before scale). */
   hinge: number
-  /** −1..1: which way it faces (the card mirrors through edge-on to turn around). */
+  /** −1..1: which way it faces (the card mirrors through edge-on to turn around, or over like a page about `hinge`). */
   facing: number
   roll: number
   sx: number
@@ -624,28 +624,82 @@ export function flightScale(kind: CreatureKind, k: number): number {
   return 1 + (skyScale(kind) - 1) * smooth(k * 1.6)
 }
 
+/**
+ * A creature card's paper layers along its own z (cm, before scale), with
+ * air between each so no two faces share a plane: the offset shadow card,
+ * the backing, the moving part when it hangs behind (tails, flukes), the
+ * body, the eye, and the moving part when it sits in front (wings, shells).
+ * While dark, the shadow face takes the body's place just in front of the
+ * eye's white, so only the golden pupil shows through it.
+ */
+export const CREATURE_STACK = {
+  drop: -0.86,
+  backing: -0.646,
+  /** Thickness of the body card, centred on 0. */
+  body: 0.36,
+  /** Thickness of the moving part's card, */
+  part: 0.324,
+  /** centred this far in front of (or behind) the body. */
+  partZ: 0.442,
+  /** The eye's white; its pupil and glint lie 0.02 and 0.04 above it. */
+  eye: 0.2,
+  darkFace: 0.21,
+  /** Nearest face: a front part's. */
+  front: 0.604,
+} as const
+
 /** Just in front of the proscenium's nearest face, allowing for the creature card's own thickness. */
 export const FLIGHT_Z = PROSCENIUM.front + 0.9
 
 /**
- * How deep a waking creature flies at gait progress k, with its centre at
- * (x, y) and radius r: where the peel left it, in front of the screen and
- * its proscenium, while over them (behind, the paper would hide it); easing
- * back to its sky depth once clear of them, and on it by arrival whatever
- * the path.
+ * Where a creature wakes on the screen: its hindmost layer clear of what
+ * lies on the paper (the sleeping outline's dots and rings, the shadows,
+ * the stars a tap on the screen throws, all within 0.6 cm of it).
  */
-export function flightDepth(k: number, x: number, y: number, r: number, skyZ = SKY_Z): number {
-  const back = Math.max(smooth(clearOfProscenium(x, y, r) / 10), smooth((k - 0.86) / 0.14))
+export const WAKE_Z = 1.3
+
+/**
+ * Where a tap's stars fly (z, cm), clear of all else there: just off the lit
+ * paper, behind a waking creature; over the proscenium, in front of every
+ * waking and flying creature (the peel comes nearest, at 6.8) and behind the
+ * nearest stand; in the night, in front of the companions at home.
+ */
+export const SPARK_Z = { screen: 0.6, proscenium: 7, sky: skyDepth(SKY_HOMES.length - 1) + 0.4 } as const
+
+/** How far a creature's offset shadow card and backing reach past its outline, and its wing past it mid-beat (cm, world). */
+const PAPER_REACH = 1
+
+/**
+ * How deep a waking creature flies at gait progress k, with its centre at
+ * (x, y), reaching rx and ry to each side: where the peel left it, in front
+ * of the screen and its proscenium, while over them (behind, it would pass
+ * through the paper); easing back to its sky depth over its first 10 cm
+ * clear of them, and over its last stretch within ever less, so it is on the
+ * sky layer by arrival at any home a little clear of them. At a home right
+ * by the frame it lands a touch short and settles back there (SETTLE_S).
+ */
+export function flightDepth(k: number, x: number, y: number, rx: number, ry: number, skyZ = SKY_Z): number {
+  const reach = 10 - 9.75 * smooth((k - 0.86) / 0.14)
+  const back = smooth(clearOfProscenium(x, y, rx + PAPER_REACH, ry + PAPER_REACH) / reach)
   return FLIGHT_Z + (skyZ - FLIGHT_Z) * back
 }
 
-/** The shared peel: the dark card lifts off the screen like a page turning about its tail edge. */
+/** How long a creature that landed short of its sky layer takes to settle back onto it, at home and clear of everything (s). */
+export const SETTLE_S = 0.8
+
+/**
+ * The shared peel: the dark card turns over like a page about its tail
+ * edge, narrowing onto it and opening out mirrored on the far side, in
+ * colour. It turns in its own plane: a page swung out toward the child
+ * would sweep a whole creature's width into the stands on the stage.
+ */
 export function peelPose(k: number, hingeOffset: number, out: CreaturePose): CreaturePose {
   const u = easeInOutSine(k)
-  out.spin = u * Math.PI
+  out.spin = 0
+  out.facing = Math.cos(u * Math.PI)
   out.hinge = hingeOffset
   out.dark = u < 0.5 ? 1 : 0
   // Lifting off as it turns: a big creature lands partly beyond the screen's edge, so it lands in front of the frame.
-  out.z = 0.3 + (FLIGHT_Z - 0.3) * u + Math.sin(u * Math.PI) * 3
+  out.z = WAKE_Z + (FLIGHT_Z - WAKE_Z) * u + Math.sin(u * Math.PI) * 3
   return out
 }

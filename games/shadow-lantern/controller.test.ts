@@ -1,12 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
-import { TheatreController, type Projector } from './controller'
+import { TheatreController, type Companion, type Projector } from './controller'
 import { bestHint, CoverageMeter, TAP_TURN, type HintMove, type Placed } from './coverage'
-import { CREATURE_ORDER } from './creatures'
+import { buildCreature, CREATURE_ORDER } from './creatures'
 import { IDLE_BEFORE_DEMO } from './guidance'
 import type { Point } from './input'
-import { ANTICIPATE_S, PEEL_S, PERSONALITIES, SILHOUETTE_S, SKY_HOMES, SKY_Z, skyScale, type CreaturePose } from './motion'
-import { PROSCENIUM, shadowScale, STAGE } from './projection'
+import { ANTICIPATE_S, CREATURE_STACK, PEEL_S, PERSONALITIES, SETTLE_S, SILHOUETTE_S, SKY_HOMES, SKY_Z, skyDepth, skyScale, SPARK_Z, type CreaturePose } from './motion'
+import { clearOfProscenium, LAMP, PROSCENIUM, shadowScale, STAGE } from './projection'
 import { SHAPE_KINDS, SHAPES } from './shapes'
+import { standsClash, standTooFront } from './stands'
 import { defaultTheatre, SKY_SLOTS, type TheatreState } from './state'
 
 // The theatre driven the way a child drives it: pointer events through the
@@ -17,6 +18,8 @@ import { defaultTheatre, SKY_SLOTS, type TheatreState } from './state'
 const FRAME = 1 / 60
 const PX_PER_CM = 10
 const SQUARE = SHAPE_KINDS.indexOf('square')
+const SMALL_TRI = SHAPE_KINDS.indexOf('smallTri')
+const BIG_TRI = SHAPE_KINDS.indexOf('bigTri')
 
 const projector: Projector = {
   ray(screen, origin, dir) {
@@ -32,6 +35,11 @@ const projector: Projector = {
 
 function px(x: number, z: number): Point {
   return { x: x * PX_PER_CM, y: z * PX_PER_CM }
+}
+
+/** The screen point whose ray passes through world (x, y, z) under the fake camera. */
+function onScreen(x: number, y: number, z: number): Point {
+  return { x: x * PX_PER_CM, y: ((0.8 * (86 - y)) / 0.6 + z - 80) * PX_PER_CM }
 }
 
 function theatre(state: TheatreState = defaultTheatre(6), everTouched = false) {
@@ -60,7 +68,7 @@ function runUntil(ctrl: TheatreController, done: () => boolean, seconds: number,
 
 /** Where the view draws a creature: a page turning about its hinge is offset from its pose. */
 function drawn(pose: CreaturePose): { x: number; y: number } {
-  return { x: pose.x + pose.hinge * pose.scale * (1 - Math.cos(pose.spin)), y: pose.y }
+  return { x: pose.x + pose.hinge * pose.scale * (1 - pose.facing * Math.cos(pose.spin)), y: pose.y }
 }
 
 /** Nothing is waking on the screen or still flying home. */
@@ -90,13 +98,14 @@ function tap(ctrl: TheatreController, index: number, pointerId = 1): void {
   clock += 1000
 }
 
-/** Slide shape `index` so its pin ends at `to`, finger held throughout. */
-function drag(ctrl: TheatreController, index: number, to: { x: number; z: number }, pointerId = 1, release = true): void {
+/** Slide shape `index` so its pin ends at `to` (by way of `via`), finger held throughout. */
+function drag(ctrl: TheatreController, index: number, to: { x: number; z: number }, pointerId = 1, release = true, via: { x: number; z: number }[] = []): void {
   const start = grabPoint(ctrl, index)
   const target = ctrl.shapes[index].target
-  const end = { x: start.x + (to.x - target.x) * PX_PER_CM, y: start.y + (to.z - target.z) * PX_PER_CM }
+  const at = (p: { x: number; z: number }) => ({ x: start.x + (p.x - target.x) * PX_PER_CM, y: start.y + (p.z - target.z) * PX_PER_CM })
+  const end = at(to)
   // A short move goes the long way round, so it is a drag and not a tap.
-  const path = Math.hypot(end.x - start.x, end.y - start.y) < 30 ? [{ x: start.x, y: start.y - 40 }, end] : [end]
+  const path = Math.hypot(end.x - start.x, end.y - start.y) < 30 ? [{ x: start.x, y: start.y - 40 }, end] : [...via.map(at), end]
   ctrl.pointerDown(pointerId, start, clock)
   let from = start
   for (const leg of path) {
@@ -141,7 +150,9 @@ describe('theatre controller', () => {
     run(ctrl, 0.2)
     const square = ctrl.shapes[SQUARE]
     const atRack = shadowScale(square.pose.z)
-    drag(ctrl, SQUARE, { x: square.pose.x, z: 20 }, 1, false)
+    // Out from behind the small triangle first: straight down, the two cards would cut through each other.
+    const lane = square.pose.x + 8
+    drag(ctrl, SQUARE, { x: lane, z: 20 }, 1, false, [{ x: lane, z: square.pose.z }])
     expect(square.heldBy).toBe(1)
     run(ctrl, 0.6)
     expect(square.pose.lift, 'lifted while held').toBeGreaterThan(1.2)
@@ -218,7 +229,12 @@ describe('theatre controller', () => {
 
     // The next outline drifts in while the first creature is still on its way.
     let spin = 0
-    const nextAfter = runUntil(ctrl, () => ctrl.sleeper !== null, 2.5, () => (spin = Math.max(spin, waking.pose.spin)))
+    let turned = 1
+    const peel = () => {
+      spin = Math.max(spin, Math.abs(waking.pose.spin))
+      turned = Math.min(turned, waking.pose.facing)
+    }
+    const nextAfter = runUntil(ctrl, () => ctrl.sleeper !== null, 2.5, peel)
     expect(nextAfter).toBeGreaterThan(1.2)
     expect(ctrl.waking).toBe(waking)
     expect(ctrl.sleeper!.kind).toBe(CREATURE_ORDER[1])
@@ -231,11 +247,12 @@ describe('theatre controller', () => {
       () => ctrl.waking === null,
       3,
       () => {
-        spin = Math.max(spin, waking.pose.spin)
+        peel()
         if (ctrl.waking) last = drawn(waking.pose)
       },
     )
-    expect(spin, 'peeled off like a page').toBeCloseTo(Math.PI, 2)
+    expect(turned, 'turned over like a page').toBeCloseTo(-1, 2)
+    expect(spin, 'in its own plane, never swung out toward the stands').toBe(0)
     expect(ctrl.companions).toHaveLength(1)
     const friend = ctrl.companions[0]
     expect(friend.flight).not.toBeNull()
@@ -310,7 +327,8 @@ describe('theatre controller', () => {
     expect(ctrl.companions.map((c) => c.kind)).toEqual([first, second])
     ctrl.companions.forEach((friend) => {
       const home = SKY_HOMES[friend.slot]
-      expect(Math.hypot(friend.pose.x - home.x, friend.pose.y - home.y), `${friend.kind} at home`).toBeLessThan(3)
+      // Within its idle's reach (the fish swims a figure-eight 3.5 cm either side of home).
+      expect(Math.hypot(friend.pose.x - home.x, friend.pose.y - home.y), `${friend.kind} at home`).toBeLessThan(4)
     })
     expect(ctrl.state.sky.map((friend) => friend.kind)).toEqual([first, second])
   })
@@ -329,11 +347,60 @@ describe('theatre controller', () => {
     expect(ctrl.companions.every((c) => c.leavingAt === -Infinity)).toBe(true)
   })
 
+  it('a saved sky opens with every friend already at home, before the first step', () => {
+    const state = defaultTheatre(6)
+    state.sky = Array.from({ length: SKY_SLOTS }, (_, slot) => ({ kind: CREATURE_ORDER[slot % CREATURE_ORDER.length], slot, paper: slot < CREATURE_ORDER.length ? 0 : 1 }))
+    const { ctrl } = theatre(state, true)
+    expect(ctrl.companions).toHaveLength(SKY_SLOTS)
+    ctrl.companions.forEach((friend) => {
+      const home = SKY_HOMES[friend.slot]
+      expect(Math.hypot(friend.pose.x - home.x, friend.pose.y - home.y), `${friend.kind} in slot ${friend.slot} at home`).toBeLessThan(4)
+      expect(friend.pose.z).toBeCloseTo(skyDepth(friend.slot), 6)
+      expect(friend.pose.scale).toBeCloseTo(skyScale(friend.kind), 6)
+    })
+  })
+
+  it('a creature flying to a home by the crest keeps in front of the proscenium over it, then settles back onto its sky layer at home', () => {
+    const state = defaultTheatre(6)
+    state.sky = CREATURE_ORDER.slice(0, 5).map((kind, slot) => ({ kind, slot, paper: 0 as const }))
+    state.sleeping = 'dragon'
+    const { ctrl } = theatre(state, true)
+    run(ctrl, 0.3)
+    wakeByHints(ctrl)
+    const { bounds } = buildCreature('dragon')
+    let dragon: Companion | undefined
+    let landedAt = -1
+    let last = NaN
+    runUntil(
+      ctrl,
+      () => landedAt >= 0 && ctrl.t - landedAt > SETTLE_S + 0.1,
+      20,
+      () => {
+        dragon ??= ctrl.companions.find((c) => c.kind === 'dragon')
+        if (!dragon) return
+        const { pose } = dragon
+        const over = clearOfProscenium(pose.x, pose.y, ((bounds.x1 - bounds.x0) / 2) * pose.scale, ((bounds.y1 - bounds.y0) / 2) * pose.scale) < 0
+        if (over) expect(pose.z + CREATURE_STACK.drop * pose.scale, `over the proscenium at ${pose.x.toFixed(1)}, ${pose.y.toFixed(1)}`).toBeGreaterThan(PROSCENIUM.front)
+        if (!Number.isNaN(last)) expect(Math.abs(pose.z - last), 'no jump in depth').toBeLessThan(1)
+        last = pose.z
+        if (landedAt < 0 && !dragon.flight) {
+          landedAt = ctrl.t
+          expect(pose.z, 'lands short of the sky layer, in front of the crest').toBeGreaterThan(skyDepth(dragon.slot) + 1)
+          const card = drawn(pose)
+          expect(ctrl.hitTest(onScreen(card.x, card.y, pose.z)), 'a tap on the card while it settles').toEqual({ kind: 'sky', index: ctrl.companions.indexOf(dragon) })
+        }
+      },
+    )
+    expect(dragon!.slot).toBe(5)
+    expect(dragon!.pose.z).toBe(skyDepth(5))
+  })
+
   it('putting the theatre away mid-drag sets the card down where it is and saves it', () => {
     const { ctrl, saves } = theatre()
     run(ctrl, 0.2)
     const square = ctrl.shapes[SQUARE]
-    drag(ctrl, SQUARE, { x: square.pose.x, z: 25 }, 1, false)
+    const lane = square.pose.x + 8
+    drag(ctrl, SQUARE, { x: lane, z: 25 }, 1, false, [{ x: lane, z: square.pose.z }])
     run(ctrl, 0.3)
     expect(square.heldBy).toBe(1)
     const before = saves.length
@@ -374,12 +441,14 @@ describe('theatre controller', () => {
     const down = { x: 0, y: -0.6, z: -0.8 }
     // Onto the planks between the lamp and the right-hand rack.
     expect(tapAlong({ x: 12, y: 86, z: 140 }, down)).toMatchObject({ surface: 'floor', x: 12, y: 0, z: expect.closeTo(140 - (86 / 0.6) * 0.8, 6) })
-    // Onto the empty lit screen beside the sleeper.
-    expect(tapAlong({ x: -26, y: 86, z: 90 }, down)).toMatchObject({ surface: 'screen', x: -26, y: expect.closeTo(86 - (90 / 0.8) * 0.6, 6) })
-    // Onto the left curtain: in front of it, not hidden behind it on the sky.
-    expect(tapAlong({ x: -38, y: 86, z: 90 }, down)).toMatchObject({ surface: 'sky', z: PROSCENIUM.front })
-    // Past the theatre into the night.
-    expect(tapAlong({ x: 60, y: 150, z: 90 }, { x: 0, y: -0.3, z: -0.95 })).toMatchObject({ surface: 'sky', z: SKY_Z })
+    // Onto the empty lit screen beside the sleeper, just off the paper, under the finger.
+    expect(tapAlong({ x: -26, y: 86, z: 90 }, down)).toMatchObject({ surface: 'screen', x: -26, y: expect.closeTo(86 - ((90 - SPARK_Z.screen) / 0.8) * 0.6, 6), z: SPARK_Z.screen })
+    // Onto the left curtain: in front of it and of anything flying over it, not hidden behind it on the sky.
+    expect(tapAlong({ x: -38, y: 86, z: 90 }, down)).toMatchObject({ surface: 'sky', y: expect.closeTo(86 - ((90 - SPARK_Z.proscenium) / 0.8) * 0.6, 6), z: SPARK_Z.proscenium })
+    expect(SPARK_Z.proscenium).toBeGreaterThan(PROSCENIUM.front)
+    // Past the theatre into the night, in front of the companions at home.
+    expect(tapAlong({ x: 60, y: 150, z: 90 }, { x: 0, y: -0.3, z: -0.95 })).toMatchObject({ surface: 'sky', z: SPARK_Z.sky })
+    expect(SPARK_Z.sky).toBeGreaterThan(Math.max(...SKY_HOMES.map((_, slot) => skyDepth(slot))))
   })
 
   it('a first open invites with a hop; after an idle spell the shapes glow and a ghost hand shows a move that helps', () => {
@@ -399,12 +468,146 @@ describe('theatre controller', () => {
       tap(ctrl, demo.index)
       run(ctrl, 0.4)
     }
+    drag(ctrl, demo.index, demo.to, 1, false)
     expect(ctrl.demoPose.opacity, 'a touch clears the ghost').toBe(0)
-    drag(ctrl, demo.index, demo.to)
+    ctrl.pointerUp(1, grabPoint(ctrl, demo.index), clock)
     expect(ctrl.guidance.demo).toBeNull()
     run(ctrl, 1)
     expect(ctrl.coverage.fill).toBeGreaterThan(before)
     expect(ctrl.shapes.every((shape) => shape.glow === 0)).toBe(true)
+  })
+})
+
+describe('stands', () => {
+  /** Checks every frame that no two stands meet, none stands over the front line, and none sinks into the planks. */
+  function watch(ctrl: TheatreController): { frames: number } {
+    const seen = { frames: 0 }
+    const step = ctrl.step.bind(ctrl)
+    ctrl.step = (dt: number) => {
+      step(dt)
+      seen.frames++
+      const shapes = ctrl.shapes
+      for (let i = 0; i < shapes.length; i++) {
+        const a = shapes[i]
+        if (a.pose.lift < 0) throw new Error(`${a.kind} sank ${(-a.pose.lift).toFixed(3)} cm into the planks at ${ctrl.t.toFixed(2)} s`)
+        if (standTooFront(a)) throw new Error(`${a.kind} over the front line at ${ctrl.t.toFixed(2)} s`)
+        for (let j = i + 1; j < shapes.length; j++) if (standsClash(a, shapes[j], 0)) throw new Error(`${a.kind} through ${shapes[j].kind} at ${ctrl.t.toFixed(2)} s`)
+      }
+    }
+    return seen
+  }
+
+  function seeded(seed: number): () => number {
+    let s = seed
+    return () => (s = (s * 16807) % 2147483647) / 2147483647
+  }
+
+  it('never pass through each other, over the front line or into the planks, following the hints or pushed about', () => {
+    const { ctrl } = theatre()
+    const seen = watch(ctrl)
+    run(ctrl, 0.3)
+    for (const kind of CREATURE_ORDER.slice(0, 3)) {
+      runUntil(ctrl, () => ctrl.sleeper !== null && settled(ctrl), 12)
+      expect(ctrl.sleeper!.kind).toBe(kind)
+      wakeByHints(ctrl)
+    }
+    // Then rough handling: stands dragged straight at each other and the screen, turned and twisted where they stand.
+    const random = seeded(11)
+    for (let n = 0; n < 40; n++) {
+      const i = Math.floor(random() * ctrl.shapes.length)
+      const to = { x: STAGE.xMin - 4 + random() * (STAGE.xMax - STAGE.xMin + 8), z: STAGE.zNear - 6 + random() * (STAGE.zFar - STAGE.zNear + 6) }
+      try {
+        if (random() < 0.3) tap(ctrl, i)
+        else drag(ctrl, i, to)
+      } catch {
+        // Hidden behind a nearer card: a finger cannot reach it either.
+      }
+      run(ctrl, 0.3 + random())
+    }
+    run(ctrl, 2)
+    expect(seen.frames).toBeGreaterThan(2000)
+  })
+
+  it('a stand pushed straight at another stops against it, and is set down there', () => {
+    const { ctrl } = theatre()
+    watch(ctrl)
+    run(ctrl, 0.2)
+    const square = ctrl.shapes[SQUARE]
+    const small = ctrl.shapes[SMALL_TRI]
+    drag(ctrl, SQUARE, { x: square.pose.x, z: 20 })
+    run(ctrl, 1.5)
+    expect(square.pose.z, 'stopped behind the small triangle').toBeGreaterThan(small.pose.z)
+    expect(square.pose.z).toBeLessThan(small.pose.z + 2)
+    expect(square.target.z, 'set down where it stopped').toBeCloseTo(square.pose.z, 1)
+    expect(standsClash(square, small, 0)).toBe(false)
+  })
+
+  it('with no clearly better move, the ghost hand still shows a slide to a rest the stand can hold', () => {
+    const best = vi.spyOn(CoverageMeter.prototype, 'best', 'get').mockReturnValue(null)
+    try {
+      // The square already stands where the outline's middle falls, as it often does while it fills it.
+      const { center } = theatre().ctrl.sleeper!.built
+      const state = defaultTheatre(6)
+      state.shapes[SQUARE] = { ...state.shapes[SQUARE], x: LAMP.x + (center.x - LAMP.x) / shadowScale(21), z: 21 }
+      const { ctrl } = theatre(state)
+      run(ctrl, 0.3)
+      runUntil(ctrl, () => ctrl.demo !== null, 20)
+      const demo = ctrl.demo!
+      expect(demo.index, 'another stand is shown').not.toBe(SQUARE)
+      const shape = ctrl.shapes[demo.index]
+      const rest = { kind: shape.kind, pose: { ...shape.pose, x: demo.to.x, z: demo.to.z, angle: demo.to.angle, yaw: 0 } }
+      expect(standTooFront(rest), 'behind the front line').toBe(false)
+      ctrl.shapes.forEach((other, j) => {
+        if (j !== demo.index) expect(standsClash(rest, other), `clear of the ${other.kind}`).toBe(false)
+      })
+    } finally {
+      best.mockRestore()
+    }
+  })
+
+  it('a twist stops before the card turns into its neighbour; a tap turn steps it aside instead', () => {
+    const { ctrl } = theatre()
+    watch(ctrl)
+    run(ctrl, 0.2)
+    const small = ctrl.shapes[SMALL_TRI]
+    const big = ctrl.shapes[BIG_TRI]
+    const home = { x: small.target.x, z: small.target.z }
+    // A quarter turn where it stands would swing its point through the big triangle beside it.
+    expect(standsClash({ kind: small.kind, pose: { ...small.pose, angle: Math.PI / 2 } }, big)).toBe(true)
+    const at = grabPoint(ctrl, SMALL_TRI)
+    ctrl.pointerDown(1, at, clock)
+    ctrl.pointerDown(2, { x: at.x + 100, y: at.y }, clock + 10)
+    for (let i = 1; i <= 10; i++) {
+      const a = (-i / 10) * (Math.PI / 2)
+      ctrl.pointerMove(2, { x: at.x + Math.cos(a) * 100, y: at.y + Math.sin(a) * 100 })
+      ctrl.step(FRAME)
+    }
+    ctrl.pointerUp(2, { x: at.x, y: at.y - 100 }, clock + 200)
+    ctrl.pointerUp(1, at, clock + 220)
+    clock += 1000
+    run(ctrl, 1.5)
+    expect(small.target.angle, 'turned some way').toBeGreaterThan(0.2)
+    expect(small.target.angle, 'but not into the big triangle').toBeLessThan(Math.PI / 2)
+    expect(small.target).toMatchObject(home)
+
+    for (let i = 0; i < 3; i++) {
+      tap(ctrl, SMALL_TRI)
+      run(ctrl, 1)
+    }
+    run(ctrl, 1.5)
+    expect(Math.hypot(small.target.x - home.x, small.target.z - home.z), 'stepped aside').toBeGreaterThan(0.5)
+    expect(small.pose.x).toBeCloseTo(small.target.x, 1)
+    expect(small.pose.z).toBeCloseTo(small.target.z, 1)
+    expect(small.pose.angle).toBeCloseTo(small.target.angle, 2)
+  })
+
+  it('a layout saved with two stands in one place opens with them apart', () => {
+    const state = defaultTheatre(6)
+    state.shapes[SQUARE] = { ...state.shapes[SQUARE], x: state.shapes[SMALL_TRI].x, z: state.shapes[SMALL_TRI].z }
+    const { ctrl } = theatre(state)
+    watch(ctrl)
+    for (let i = 0; i < ctrl.shapes.length; i++) for (let j = i + 1; j < ctrl.shapes.length; j++) expect(standsClash(ctrl.shapes[i], ctrl.shapes[j], 0), `${ctrl.shapes[i].kind}, ${ctrl.shapes[j].kind}`).toBe(false)
+    run(ctrl, 1)
   })
 })
 

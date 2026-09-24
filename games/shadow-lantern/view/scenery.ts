@@ -44,6 +44,12 @@ export const PALETTE = {
   dropShadow: '#0d0b26',
 } as const
 
+/** How far a cut paper edge wanders from its outline (cm). */
+export const CUT_WOBBLE = 0.12
+
+/** The floor of the lamp's cup, where its flame stands. */
+export const LAMP_CUP_Y = 21.1
+
 const LIT: Bake = { lamp: 1, moon: 0.25, ambient: 0.55 }
 const NIGHT: Bake = { lamp: 0.12, moon: 0.7, ambient: 0.75 }
 const FAR: Bake = { lamp: 0, moon: 0.35, ambient: 1 }
@@ -191,16 +197,39 @@ function scallops(x0: number, x1: number, top: number, bottom: number, count: nu
   return out
 }
 
-/** A clump of grass blades fanning out from a narrow base on y = 0. */
+/**
+ * A clump of grass blades fanning out from a narrow base on y = 0. The base
+ * reaches past the outermost notches, so the outline never crosses itself
+ * (a crossed outline cuts into overlapping triangles that flicker).
+ */
 function tuft(cx: number, h: number, blades: number, random: () => number): Point[] {
   const w = h * 0.9
-  const out: Point[] = [{ x: cx + w * 0.28, y: 0 }]
+  const base = Math.max(0.28, 0.5 - 1 / blades + TUFT_BASE_MARGIN) * w
+  const out: Point[] = [{ x: cx + base, y: 0 }]
   for (let i = blades - 1; i >= 0; i--) {
     const x = cx - w / 2 + ((i + 0.5) * w) / blades
     out.push({ x: x + (x - cx) * 0.35, y: h * (0.62 + 0.38 * random()) })
     if (i > 0) out.push({ x: cx - w / 2 + (i * w) / blades, y: h * (0.18 + 0.14 * random()) })
   }
-  out.push({ x: cx - w * 0.28, y: 0 })
+  out.push({ x: cx - base, y: 0 })
+  return out
+}
+
+const TUFT_BASE_MARGIN = 0.04
+
+/** The meadow's grass tufts beside the stage: outlines before the cut's wobble (by `seed`), standing at `z`. */
+export function meadowTufts(): { outline: Point[]; z: number; seed: number }[] {
+  const grass = seeded(7)
+  const out: { outline: Point[]; z: number; seed: number }[] = []
+  for (let i = 0; i < 20; i++) {
+    const side = i % 2 === 0 ? -1 : 1
+    const z = -14 + (i >> 1) * 8 + grass() * 5
+    // The camera sees the meadow out to about |x| = 88 at the back, 62 at the front.
+    const reach = 88 - (z + 19) * 0.32
+    const x = side * (58.5 + grass() * (reach - 60))
+    const h = 3.4 + grass() * 2.8 + z * 0.02
+    out.push({ outline: tuft(x, h, 5 + Math.floor(grass() * 3), grass), z, seed: 60 + i })
+  }
   return out
 }
 
@@ -218,7 +247,7 @@ export function buildScenery(): { geometry: THREE.BufferGeometry; anchors: Scene
 
   /** A cut card (outline in its own xy plane) placed at z, with its dark shadow card just behind. A null bake is a light source: it keeps its own colour. */
   const layer = (outline: Point[], z: number, color: string, bake: Bake | null, options: { depth?: number; shadow?: boolean; seed?: number; edge?: string } = {}) => {
-    const cut = wobble(outline, 0.12, options.seed ?? 1)
+    const cut = wobble(outline, CUT_WOBBLE, options.seed ?? 1)
     const depth = options.depth ?? 0.3
     const g = paintCard(cardGeometry(cut, depth), paper(color), paper(color), paper(options.edge ?? color).multiplyScalar(0.8))
     g.applyMatrix4(matrix.makeTranslation(0, 0, z))
@@ -313,17 +342,8 @@ export function buildScenery(): { geometry: THREE.BufferGeometry; anchors: Scene
       edge.applyMatrix4(matrix.makeTranslation(side * 56.7, -0.04, 9))
       pieces.push(bakeLight(edge, FAR))
     }
-    const grass = seeded(7)
     const blades = [PALETTE.pine, PALETTE.pineLight, PALETTE.hillNear]
-    for (let i = 0; i < 20; i++) {
-      const side = i % 2 === 0 ? -1 : 1
-      const z = -14 + (i >> 1) * 8 + grass() * 5
-      // The camera sees the meadow out to about |x| = 88 at the back, 62 at the front.
-      const reach = 88 - (z + 19) * 0.32
-      const x = side * (58.5 + grass() * (reach - 60))
-      const h = 3.4 + grass() * 2.8 + z * 0.02
-      layer(tuft(x, h, 5 + Math.floor(grass() * 3), grass), z, blades[i % 3], NIGHT, { seed: 60 + i, depth: 0.2 })
-    }
+    meadowTufts().forEach(({ outline, z, seed }, i) => layer(outline, z, blades[i % 3], NIGHT, { seed, depth: 0.2 }))
     for (const side of [-1, 1]) {
       layer(cloud(side * 70, 0, 8, 6, 4, side + 2), -13, PALETTE.pine, NIGHT, { seed: 70 + side, edge: PALETTE.pineLight })
       layer(cloud(side * 64, 0, 5, 4, 3, side + 5), -11.5, PALETTE.pineLight, NIGHT, { seed: 72 + side })
@@ -388,7 +408,8 @@ export function buildScenery(): { geometry: THREE.BufferGeometry; anchors: Scene
     const bar = 2.6
     const frameZ = 0.7
     const post = (x: number) => {
-      box(x, (SCREEN.top + bar) / 2, frameZ, bar, SCREEN.top + bar, 1.4, PALETTE.frame, LIT)
+      // Up to the top bar, not into it: the two front faces would share a plane.
+      box(x, SCREEN.top / 2, frameZ, bar, SCREEN.top, 1.4, PALETTE.frame, LIT)
       // Folded paper feet, braced behind each post.
       const foot = paintCard(cardGeometry([{ x: 0, y: 0 }, { x: 7, y: 0 }, { x: 0, y: 9 }], 0.5), paper(PALETTE.frame), paper(PALETTE.frame), paper(PALETTE.frameEdge))
       foot.applyMatrix4(matrix.makeRotationY(Math.PI / 2))
@@ -460,7 +481,7 @@ export function buildScenery(): { geometry: THREE.BufferGeometry; anchors: Scene
       [3.8, 20.5],
       [3.9, 21],
       [3.5, 21.4],
-      [1.4, 20.6],
+      [1.4, LAMP_CUP_Y - 0.5],
     ]
     const profile: Point[] = [...half.map(([x, y]) => ({ x, y })), ...[...half].reverse().map(([x, y]) => ({ x: -x, y }))]
     const dim: Bake = { lamp: 0, moon: 0.45, ambient: 0.45 }
