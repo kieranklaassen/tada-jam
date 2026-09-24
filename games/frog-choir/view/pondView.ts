@@ -1,6 +1,8 @@
 import * as THREE from 'three'
+import { BODIES } from '../bodies'
 import { LIFT_HEIGHT, type PondController, type Projector } from '../controller'
-import { columnX, COLUMNS, NEAR_Z, PADS, ROWS, rowZ } from '../layout'
+import { columnX, COLUMNS, NEAR_Z, PAD_TOP, PADS, ROWS, rowZ } from '../layout'
+import { dropLanded, shadowSpot, type ShadowSpot } from '../surfaces'
 import { startingTier, TierMonitor, tierLook, tierOverride, type TierLook } from '../tiers'
 import { buildFirefly, type FireflyView } from './firefly'
 import { buildFrog, CAST, type FrogRig } from './frog'
@@ -8,7 +10,7 @@ import { buildOverlays, DROPS_PER_SPLASH, hideFlat, placeFlat, RIPPLE_SLOTS, typ
 import { PALETTE } from './palette'
 import { animatorFor, applyPose, overlays as poseOverlays, resetPose, restPose, type Animator, type FrogMoment, type Pose } from './personalities'
 import { PerfMeter } from './perf'
-import { buildPond, fitBackdrop, PAD_TOP, type PondSet } from './pond'
+import { buildPond, fitBackdrop, type PondSet } from './pond'
 import { aimRim, createShared, gradientMap, outlineMaterial, toonMaterial, type SharedUniforms } from './toon'
 
 // The 3D pond. One requestAnimationFrame loop steps the controller, poses
@@ -24,6 +26,9 @@ const FAR_HEAD = { y: 1.35, z: rowZ(ROWS - 1) - 0.1 }
 const RIPPLE_LIFE = 1.4
 const DROP_LIFE = 0.7
 const DROP_GRAVITY = 12
+const DROP_SIZE = 0.13
+/** Glow rings lie this far above the pad under them, over its shadow. */
+const RING_LIFT = 0.012
 const WARM = new THREE.Color(PALETTE.glow)
 const SKINS = CAST.map((spec) => new THREE.Color(spec.skin))
 /** A struck pad lights warm and a little brighter than white, then fades back. */
@@ -48,10 +53,9 @@ export class PondView {
   private readonly tiers: TierMonitor
   private look: TierLook
   private readonly deviceDpr: number
-  private readonly padY = new Float32Array(PADS.length)
-  private readonly padLift = new Float32Array(PADS.length)
-  private readonly splashX = new Float32Array(CAST.length)
-  private readonly splashZ = new Float32Array(CAST.length)
+  /** Which splash each frog's droplets belong to, and which of them have landed. */
+  private readonly dropsFor = new Float64Array(CAST.length).fill(-Infinity)
+  private readonly dropsGone = new Uint8Array(CAST.length * DROPS_PER_SPLASH)
   private readonly observer: ResizeObserver
   private width = 1
   private height = 1
@@ -220,7 +224,7 @@ export class PondView {
     const t = c.time
     this.shared.uTime.value = t
     this.touchGlow.value = c.timing.glow
-    this.posePads(t, dt)
+    this.posePads(t)
     let flare = 0
     for (const slot of this.frogs) flare = Math.max(flare, this.poseFrog(slot, dt))
     this.firefly.update(c.firefly, t, dt, flare, this.look)
@@ -237,27 +241,21 @@ export class PondView {
   private readonly scale = new THREE.Vector3()
   private readonly up = new THREE.Vector3(0, 1, 0)
   private readonly tint = new THREE.Color()
+  private readonly shadow: ShadowSpot = { y: 0, radius: 0 }
 
-  private posePads(t: number, dt: number): void {
+  private posePads(t: number): void {
     const c = this.pondState
     const { pads, padOutlines, padRings } = this.pond
     for (let i = 0; i < PADS.length; i++) {
       const pad = PADS[i]
-      let hovered = false
-      for (const frog of c.frogs) if (frog.mode === 'held' && frog.hover === i && c.state.frogs[frog.index] !== i) hovered = true
-      this.padLift[i] += ((hovered ? 0.07 : 0) - this.padLift[i]) * (1 - Math.exp(-dt * 14))
       const kick = t - c.padKickAt[i]
       const strength = c.padKickStrength[i]
-      const dip = kick < 2 ? -strength * 0.1 * Math.exp(-kick * 4.5) * Math.sin(kick * 2.4 * Math.PI * 2 + 0.3) : 0
       const flash = strength > 0 && kick < 1 ? Math.exp(-kick * 5) * Math.min(1, strength) : 0
       pads.setColorAt(i, this.tint.copy(this.pond.padTints[i]).lerp(PAD_FLASH, flash))
-      const y = Math.sin(t * 1.25 + i * 1.7) * 0.012 + dip + this.padLift[i]
-      this.padY[i] = y
-      const tilt = Math.sin(t * 0.9 + i * 2.3) * 0.025 + dip * 0.6
       this.quaternion.setFromAxisAngle(this.up, pad.notch)
-      this.position.set(pad.x, y, pad.z)
-      const s = 1 + Math.max(0, -dip) * 0.4
-      this.scale.set(pad.radius * s, 1 + tilt, pad.radius * s)
+      this.position.set(pad.x, c.padY[i], pad.z)
+      const s = c.padSpread[i]
+      this.scale.set(pad.radius * s, 1 + c.padTilt[i], pad.radius * s)
       this.matrix.compose(this.position, this.quaternion, this.scale)
       pads.setMatrixAt(i, this.matrix)
       padOutlines.setMatrixAt(i, this.matrix)
@@ -281,9 +279,8 @@ export class PondView {
     const m = slot.moment
     const t = c.time
     const pad = c.state.frogs[frog.index]
-    const surface = frog.mode === 'sit' ? this.padY[pad] + PAD_TOP : PAD_TOP
     const group = slot.rig.group
-    group.position.set(frog.x, surface + frog.y, frog.z)
+    group.position.set(frog.x, frog.baseY, frog.z)
     this.rayOrigin.setFromMatrixPosition(this.camera.matrixWorld)
     group.rotation.y = Math.atan2(this.rayOrigin.x - frog.x, this.rayOrigin.z - frog.z) * 0.7
 
@@ -304,7 +301,7 @@ export class PondView {
     m.vz = frog.vz
     const f = c.firefly
     m.gazeX = (f.x - frog.x) / spec.scale
-    m.gazeY = (f.y - (surface + frog.y + 1.05 * spec.scale)) / spec.scale
+    m.gazeY = (f.y - (frog.baseY + 1.05 * spec.scale)) / spec.scale
     m.gazeZ = (f.z - frog.z) / spec.scale
     m.fireNear = Math.max(0, 1 - Math.hypot(f.x - frog.x, f.z - frog.z) / 2.4)
     m.invite = c.inviteFrog === frog.index ? c.timing.invite : null
@@ -314,7 +311,7 @@ export class PondView {
         if (other.mode !== 'held' || other.hover !== pad) continue
         visited = true
         m.visitorX = (other.x - frog.x) / spec.scale
-        m.visitorY = (PAD_TOP + other.y - (surface + 1.05 * spec.scale)) / spec.scale
+        m.visitorY = (other.baseY - (frog.baseY + 1.05 * spec.scale)) / spec.scale
         m.visitorZ = (other.z - frog.z) / spec.scale
       }
     }
@@ -324,7 +321,7 @@ export class PondView {
 
     resetPose(slot.pose)
     slot.animate(m, slot.pose)
-    poseOverlays(m, slot.pose)
+    poseOverlays(m, slot.pose, spec.character)
     applyPose(slot.rig, slot.pose)
     return m.sing < 0.35 ? 1 - m.sing / 0.35 : 0
   }
@@ -332,16 +329,19 @@ export class PondView {
   private placeOverlays(t: number): void {
     const c = this.pondState
     const { shadows, rings, ripples, droplets, hand, ghost } = this.overlays
-    const shadowY = PAD_TOP + 0.03
     for (const slot of this.frogs) {
       const frog = c.frogs[slot.rig.index]
+      // A frog in the water has no shadow on it.
+      if (frog.mode === 'splash' && t >= frog.splashedAt) {
+        hideFlat(shadows, frog.index)
+        continue
+      }
       const lift = Math.max(0, frog.y)
       const size = slot.rig.spec.scale * 1.3 * Math.max(0.35, 1 - lift * 0.4)
-      const over = frog.mode === 'sit' ? this.padY[c.state.frogs[frog.index]] : 0
-      placeFlat(shadows, slot.rig.index, frog.x, shadowY + over, frog.z + 0.05, size, size * 0.8)
+      this.placeShadow(frog.index, frog.x, frog.z + 0.05, size, 0.8, frog.index)
     }
     const f = c.firefly
-    placeFlat(shadows, 5, f.x, shadowY, f.z, 0.42, 0.34)
+    this.placeShadow(5, f.x, f.z, 0.42, 0.34 / 0.42, -1)
     shadows.instanceMatrix.needsUpdate = true
 
     const glow = c.timing.glow
@@ -350,7 +350,7 @@ export class PondView {
     for (const frog of c.frogs) {
       const g = frog.mode === 'sit' ? glow : 0
       const pad = PADS[c.state.frogs[frog.index]]
-      if (g > 0.01) placeFlat(rings, ring, pad.x, this.padY[pad.index] + PAD_TOP + 0.02, pad.z, pad.radius * 2.5, pad.radius * 2.5, warm.r * g, warm.g * g, warm.b * g)
+      if (g > 0.01) placeFlat(rings, ring, pad.x, c.padTop[pad.index] + RING_LIFT, pad.z, pad.radius * 2.5, pad.radius * 2.5, warm.r * g, warm.g * g, warm.b * g)
       else hideFlat(rings, ring)
       ring++
     }
@@ -369,7 +369,7 @@ export class PondView {
     if (target !== null) {
       const pad = PADS[target]
       const pulse = strength * (0.75 + 0.25 * Math.sin(t * 7))
-      placeFlat(rings, ring, pad.x, this.padY[target] + PAD_TOP + 0.02, pad.z, pad.radius * 2.6, pad.radius * 2.6, pulse, pulse * 0.95, pulse * 0.8)
+      placeFlat(rings, ring, pad.x, c.padTop[target] + RING_LIFT, pad.z, pad.radius * 2.6, pad.radius * 2.6, pulse, pulse * 0.95, pulse * 0.8)
     } else hideFlat(rings, ring)
     rings.instanceMatrix.needsUpdate = true
     rings.instanceColor!.needsUpdate = true
@@ -391,24 +391,30 @@ export class PondView {
 
     let splashing = false
     for (const frog of c.frogs) {
-      if (frog.mode === 'splash') {
-        this.splashX[frog.index] = frog.x
-        this.splashZ[frog.index] = frog.z
-      }
       const age = t - frog.splashedAt
       const live = age >= 0 && age < DROP_LIFE
       splashing ||= live
-      // They leave from the frog's rim, since anything inside it is hidden by its body.
-      const rim = 0.55 * CAST[frog.index].scale
+      if (this.dropsFor[frog.index] !== frog.splashedAt) {
+        this.dropsFor[frog.index] = frog.splashedAt
+        this.dropsGone.fill(0, frog.index * DROPS_PER_SPLASH, (frog.index + 1) * DROPS_PER_SPLASH)
+      }
+      // They leave from just inside the frog's rim at the waterline, and are gone once they land on anything.
+      const rim = BODIES[frog.index].splashWater - DROP_SIZE
       for (let i = 0; i < DROPS_PER_SPLASH; i++) {
         const slot = frog.index * DROPS_PER_SPLASH + i
         const angle = (i / DROPS_PER_SPLASH) * Math.PI * 2 + frog.index * 0.7
         const reach = rim + (1.7 + (i % 3) * 0.4) * age
         const up = 3.6 + ((i * 5) % 3) * 0.5
         const y = up * age - 0.5 * DROP_GRAVITY * age * age
-        const size = live && y > 0 ? 0.06 + 0.07 * (1 - age / DROP_LIFE) : 0
+        const x = frog.splashX + Math.cos(angle) * reach
+        const z = frog.splashZ + Math.sin(angle) * reach
+        let size = live ? DROP_SIZE - 0.07 * (age / DROP_LIFE) : 0
+        if (size > 0 && (this.dropsGone[slot] || dropLanded(c, frog.index, x, y, z, size, up - DROP_GRAVITY * age < 0))) {
+          this.dropsGone[slot] = 1
+          size = 0
+        }
         this.matrix.makeScale(size, size, size)
-        this.matrix.setPosition(this.splashX[frog.index] + Math.cos(angle) * reach, y, this.splashZ[frog.index] + Math.sin(angle) * reach)
+        this.matrix.setPosition(x, y, z)
         droplets.setMatrixAt(slot, this.matrix)
       }
     }
@@ -437,6 +443,12 @@ export class PondView {
       hand.visible = false
       ghost.visible = false
     }
+  }
+
+  private placeShadow(i: number, x: number, z: number, size: number, aspect: number, caster: number): void {
+    const spot = shadowSpot(this.pondState, x, z, size / 2, caster, this.shadow)
+    if (spot.radius === 0) hideFlat(this.overlays.shadows, i)
+    else placeFlat(this.overlays.shadows, i, x, spot.y, z, spot.radius * 2, spot.radius * 2 * aspect)
   }
 
   dispose(): void {
