@@ -2,7 +2,8 @@ import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { MeshBVH } from 'three-mesh-bvh'
 import { describe, expect, it } from 'vitest'
-import { albumSlot, FEEDING, SCALE, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
+import { yardSpots } from './controller'
+import { albumSlot, DOOR, FEEDING, SCALE, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
 import { SEAT_SPECIES } from './motion'
 import { STOOL_REACH, STOOL_TOP } from './partShape'
 import { PAN_REST_HEIGHT, STEP, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
@@ -10,7 +11,9 @@ import { panDrops } from './scale'
 import { STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneRest, stoneVertices } from './stoneShape'
 import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_TOP, type Surfaces } from './surfaces'
 import { GUEST_SIZE, guestFloor, guestYaw, soleDepth, speciesShapes } from './view/guest'
-import { ALBUM_SCALE, albumGeometry, CHOOSER_SCALE, chooserGeometry, easeOutBack, feedingShapes, HUB_RADIUS, panHang, PIVOT_Y, ROPE_KNOT, ropeMatrix, scaleShapes } from './view/models'
+import { ALBUM_SCALE, albumGeometry, CHOOSER_SCALE, chooserGeometry, DOOR_FARTHEST, DOOR_HINGE, doorLeafGeometry, doorSwing, easeOutBack, feedingShapes, houseGeometry, HUB_RADIUS, MOUSE_SCALE, mouseGeometry, panHang, PIVOT_Y, ROPE_KNOT, ropeMatrix, scaleShapes } from './view/models'
+import { comingOut, DOOR_SWING, goingHome, VISITOR_GAP, VISITOR_REACH, visitorGone, visitorPose, visitorWalk, type VisitorPose, type VisitorTimes } from './visitors'
+import { chunk } from './voice'
 
 // What the intersection audit (npm run check:intersections -- pebble-table)
 // found drawn pieces doing, pinned at the level of the shapes and physics
@@ -411,6 +414,85 @@ describe('contact shadows and glow rings lie flat on what they are cast on', () 
         const centres = grid({ x: pan.x - pan.r - 30, y: pan.y - pan.r - 30 }, { x: pan.x + pan.r + 30, y: pan.y + pan.r + 30 })
         expect(firstCrossed(rims, centres, surfaces.panFloors[side], surfaces), `pan ${side} at tilt ${angle}`).toBeNull()
       })
+    }
+  })
+})
+
+describe('Knock-Knock visitors come and go clear of the house, its door and each other', () => {
+  const house = houseGeometry()
+  const leaf = doorLeafGeometry()
+  const mouse = mouseGeometry()
+  const houseTree = new MeshBVH(house)
+  const leafTree = (leaf.boundsTree = new MeshBVH(leaf))
+  const mouseTree = (mouse.boundsTree = new MeshBVH(mouse))
+  const home = to3(DOOR.house)
+  const houseAt = new THREE.Matrix4().makeTranslation(home.x, 0, home.z).scale(new THREE.Vector3().setScalar(DOOR.houseScale))
+  const leafAt = (angle: number) => houseAt.clone().multiply(new THREE.Matrix4().makeTranslation(...DOOR_HINGE)).multiply(new THREE.Matrix4().makeRotationY(angle))
+  const mouseAt = ({ x, y, z, facing, grow, squash }: VisitorPose) => {
+    const s = MOUSE_SCALE * grow
+    return new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, facing, 0)), new THREE.Vector3(s, s * squash, s))
+  }
+  const meets = (tree: MeshBVH, at: THREE.Matrix4, other: THREE.BufferGeometry, otherAt: THREE.Matrix4) => tree.intersectsGeometry(other, at.clone().invert().multiply(otherAt))
+  const swings: number[] = []
+  for (let angle = 0; angle > DOOR_FARTHEST; angle -= 0.02) swings.push(angle)
+  swings.push(DOOR_FARTHEST)
+  const answer = (count: number) => yardSpots(chunk(Array.from({ length: count }, (_, i) => i), 3))
+
+  it('draws a visitor no wider than VISITOR_REACH, standing on the table', () => {
+    const points = pointsOf(mouse, new THREE.Matrix4().makeScale(MOUSE_SCALE, MOUSE_SCALE, MOUSE_SCALE))
+    expect(Math.max(...points.map((v) => Math.hypot(v.x, v.z)))).toBeLessThanOrEqual(VISITOR_REACH)
+    expect(Math.min(...points.map((v) => v.y))).toBeGreaterThanOrEqual(-1e-6)
+  })
+
+  it('swings the door out clear of its frame and the walls, however far a knock rattles it', () => {
+    for (const angle of swings) expect(meets(houseTree, houseAt, leaf, leafAt(angle)), `angle ${angle}`).toBe(false)
+    expect(Math.min(...pointsOf(leaf, leafAt(0)).map((v) => v.y))).toBeGreaterThanOrEqual(-1e-6)
+  })
+
+  it('stands every visitor clear of every other on its spot, however they wiggle', () => {
+    for (let count = 1; count <= DOOR.maxVisitors; count++) {
+      const spots = answer(count).map((spot) => to3(spot))
+      for (let a = 0; a < spots.length; a++) {
+        for (let b = a + 1; b < spots.length; b++) {
+          for (const wa of [-0.12, 0, 0.12]) {
+            for (const wb of [-0.12, 0, 0.12]) {
+              const at = (p: THREE.Vector3 | { x: number; z: number }, facing: number) => mouseAt({ x: p.x, y: 0, z: p.z, facing, grow: 1, squash: 1, walking: false })
+              expect(meets(mouseTree, at(spots[a], wa), mouse, at(spots[b], wb)), `${count} visitors: ${a} and ${b}`).toBe(false)
+            }
+          }
+        }
+      }
+    }
+  })
+
+  it('brings every number of visitors out and back in without one touching the house, its door or another, whenever the child knocks', () => {
+    for (let count = 1; count <= DOOR.maxVisitors; count++) {
+      const spots = answer(count)
+      const outAt = comingOut(spots, 0)
+      const allOut = Math.max(...spots.map((spot, i) => outAt[i] + visitorWalk(spot)))
+      for (const knockAt of [DOOR_SWING / 2, DOOR_SWING + (count / 2) * VISITOR_GAP + 0.1, allOut + 0.5]) {
+        const visitors: VisitorTimes[] = spots.map((spot, i) => ({ home: spot, outAt: outAt[i], leaveAt: null, pokeAt: i === 0 ? allOut + 0.2 : null }))
+        let closeAt: number | null = null
+        for (let t = 0; closeAt === null || t <= closeAt + DOOR_SWING; t += 1 / 30) {
+          if (closeAt === null && t >= knockAt) closeAt = goingHome(visitors, t) + 0.1
+          const angle = doorSwing(0, closeAt, t)
+          const drawn: { pose: VisitorPose; at: THREE.Matrix4 }[] = []
+          for (const visitor of visitors) {
+            const pose = visitorPose(visitor, drawn.length, t)
+            if (pose) drawn.push({ pose, at: mouseAt(pose) })
+          }
+          const where = `${count} visitors, knocked at ${knockAt.toFixed(2)}, at ${t.toFixed(2)}`
+          for (const [a, { pose, at }] of drawn.entries()) {
+            expect(meets(houseTree, houseAt, mouse, at), `${where}: visitor ${a} in the house`).toBe(false)
+            for (const swing of [angle, Math.max(DOOR_FARTHEST, angle - 0.3)]) expect(meets(leafTree, leafAt(swing), mouse, at), `${where}: visitor ${a} in the door`).toBe(false)
+            for (const [b, other] of drawn.entries()) {
+              if (b <= a || Math.hypot(pose.x - other.pose.x, pose.z - other.pose.z) > (pose.grow + other.pose.grow) * VISITOR_REACH) continue
+              expect(meets(mouseTree, at, mouse, other.at), `${where}: visitors ${a} and ${b}`).toBe(false)
+            }
+          }
+        }
+        expect(visitors.every((visitor) => visitorGone(visitor, closeAt! + DOOR_SWING))).toBe(true)
+      }
     }
   })
 })
