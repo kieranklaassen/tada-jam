@@ -155,6 +155,17 @@ The persona-panel test a prototype must pass before it can be a finalist: enough
 
 A prototype that fails the gate stays one of the 30 with its report; it is not ranked.
 
+### Target panel
+The child personas within one year of a prototype's Age band (widened to the nearest two when fewer fall in), whose runs the Depth gate reads. The other personas are still run and reported as information.
+
+Ranking compares prototypes only within their own age bucket because each is judged by a different target panel.
+
+### Shortlist entry
+A prototype that passed the Depth gate, ranked against others in its own age bucket and carrying a clarity flag.
+*Avoid:* finalist (that names one of the loops the owner picks from the shortlist)
+
+When fewer than three prototypes pass, the shortlist also lists the near-the-gate prototypes, marked as not entries, so a person can decide whether to reset the gate.
+
 ## Flagged ambiguities
 
 - "Art direction" had been used for both one game's look and the jam-wide standard. These are distinct: a game's look is its Claimed style, described in its Art guide; the jam-wide standard is the Quality bar.
