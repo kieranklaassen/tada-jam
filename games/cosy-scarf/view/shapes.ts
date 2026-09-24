@@ -22,8 +22,8 @@ export function ball(radius: number, stitch = 1.2, segments = 22): THREE.BufferG
   return scaleUv(new THREE.SphereGeometry(radius, segments, Math.round(segments * 0.7)), Math.PI * 2 * radius, Math.PI * radius, stitch)
 }
 
-/** An egg standing on end (a lathe), wider low: the stuffed amigurumi body. */
-export function egg(radius: number, height: number, stitch = 1.2, bottomFlat = 0.35, segments = 22): THREE.BufferGeometry {
+/** The egg's outline from its bottom (y 0) to its top: radius as x, height as y. */
+export function eggProfile(radius: number, height: number, bottomFlat = 0.35): THREE.Vector2[] {
   const points: THREE.Vector2[] = []
   const rows = 14
   for (let i = 0; i <= rows; i++) {
@@ -34,7 +34,12 @@ export function egg(radius: number, height: number, stitch = 1.2, bottomFlat = 0
     if (t < 0.25) y *= 1 - bottomFlat * (1 - t / 0.25)
     points.push(new THREE.Vector2(Math.max(0.001, r), y))
   }
-  const geometry = new THREE.LatheGeometry(points, segments)
+  return points
+}
+
+/** An egg standing on end (a lathe), wider low: the stuffed amigurumi body. */
+export function egg(radius: number, height: number, stitch = 1.2, bottomFlat = 0.35, segments = 22): THREE.BufferGeometry {
+  const geometry = new THREE.LatheGeometry(eggProfile(radius, height, bottomFlat), segments)
   return scaleUv(geometry, Math.PI * 2 * radius, height * 1.3, stitch)
 }
 
