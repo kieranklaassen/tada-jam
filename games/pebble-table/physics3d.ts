@@ -332,7 +332,7 @@ export class TablePhysics {
 
   /** What a piece lying on the live mat rests on, as `surfaceUnder` needs it. */
   surfaces(mat: MatKey, seats: readonly boolean[]): Surfaces {
-    return { mat, seats, panFloors: [this.panFloor(0), this.panFloor(1)] }
+    return { mat, seats, panFloors: [this.panFloor(0), this.panFloor(1)], panSway: this.panSwung(0) }
   }
 
   /** Beam tilt drives the pans up and down, and its turning swings them sideways (`sway`, cm); stones in them ride along. `drops` are world units. */
