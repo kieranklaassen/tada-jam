@@ -52,7 +52,12 @@ export const CUFF = { y0: HEAD_R * 0.36 - 0.06, y1: HEAD_R * 0.36 + 0.09, r: HEA
 
 /** The painted face and the lowest hair, as spherical shells (radius, lowest polar angle from the top, and the arc they cover round the head). */
 type Shell = { r: number; theta: number; phi0: number; phiLength: number }
-const FACE: Shell = { r: HEAD_R + 0.006, theta: 0.95 + 1.25, phi0: Math.PI / 2 - 0.85, phiLength: 1.7 }
+/** The face atlas cell runs from polar angle `top` (its upper edge) to `bottom` round the front of the head. */
+export const FACE_CELL = { top: 0.95, bottom: 2.2 }
+const FACE: Shell = { r: HEAD_R + 0.006, theta: FACE_CELL.bottom, phi0: Math.PI / 2 - 0.85, phiLength: 1.7 }
+export const FACE_SHELL = { r: FACE.r, phi0: FACE.phi0, phiLength: FACE.phiLength }
+/** Where each doll's painted face starts: just below its hair, hat or the beanie's cuff, so it never tucks under them. */
+export const FACE_TOP: Record<HeadKind, number> = { bob: 1.02, cap: 0.97, beanie: 1.38 }
 const LOW_HAIR: Record<HeadKind, Shell> = {
   bob: { r: HEAD_R + 0.03, theta: 0.6 + 1.5, phi0: Math.PI / 2 + 0.95, phiLength: Math.PI * 2 - 1.9 },
   cap: { r: HEAD_R + 0.02, theta: 0.9 + 1.0, phi0: Math.PI / 2 + 1.1, phiLength: Math.PI * 2 - 2.2 },

@@ -4,6 +4,7 @@ import {
   ARM_JOINT,
   ARM_R,
   DollGuard,
+  FACE_CELL,
   FLY_GRIP,
   FLY_RAISE,
   HAND_R,
@@ -145,7 +146,7 @@ function pipSamples(): Sample[] {
 describe('peg doll guard', () => {
   it('measures the real doll meshes: head, hair, hat and face inside its head model, the body inside its lathe, each arm inside its capsule', () => {
     for (const spec of SPECS) {
-      for (const g of [headGeometry(spec), faceGeometry()]) {
+      for (const g of [headGeometry(spec), faceGeometry(spec.kind)]) {
         const at = g.getAttribute('position')
         for (let i = 0; i < at.count; i++) expect(headDistance(spec.kind, at.getX(i), at.getY(i), at.getZ(i)), `${spec.name} head`).toBeLessThan(0.001)
       }
@@ -155,6 +156,29 @@ describe('peg doll guard', () => {
       for (let i = 0; i < arm.count; i++) {
         const a = Math.min(HAND_REACH, Math.max(0, -arm.getY(i)))
         expect(Math.hypot(arm.getX(i), arm.getY(i) + a, arm.getZ(i)) - radiusAt(a), `${spec.name} arm`).toBeLessThan(0.001)
+      }
+    }
+  })
+
+  it('paints each face on top of the head, never tucked under the hair, the hat or the beanie cuff, with the features where they were', () => {
+    for (const spec of SPECS) {
+      const head = new THREE.Mesh(headGeometry(spec), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
+      const face = faceGeometry(spec.kind)
+      const at = face.getAttribute('position')
+      const ray = new THREE.Raycaster()
+      for (let i = 0; i < at.count; i++) {
+        const v = new THREE.Vector3(at.getX(i), at.getY(i), at.getZ(i))
+        const out = v.clone().normalize()
+        ray.set(v, out)
+        const hit = ray.intersectObject(head)[0]
+        // Walking straight out from the face, the first head surface met is entered (a brim overhead), never left (hair, hat or cuff over the face).
+        if (hit) expect(hit.face!.normal.dot(out), `${spec.name} face vertex ${i} under ${hit.distance.toFixed(3)}`).toBeLessThan(0)
+      }
+      // The atlas cell still spans the same arc: its upper edge at FACE_CELL.top, the chin at FACE_CELL.bottom.
+      const uv = face.getAttribute('uv')
+      for (let i = 0; i < at.count; i++) {
+        const theta = Math.acos(at.getY(i) / Math.hypot(at.getX(i), at.getY(i), at.getZ(i)))
+        expect(uv.getY(i)).toBeCloseTo(1 - (theta - FACE_CELL.top) / (FACE_CELL.bottom - FACE_CELL.top), 6)
       }
     }
   })
@@ -240,7 +264,7 @@ describe('peg doll guard', () => {
   it('eases a nod or tilt back just before the face or hair would dip into the body', () => {
     for (const spec of SPECS) {
       const shells: THREE.Vector3[] = []
-      for (const g of [headGeometry(spec), faceGeometry()]) {
+      for (const g of [headGeometry(spec), faceGeometry(spec.kind)]) {
         const at = g.getAttribute('position')
         for (let i = 0; i < at.count; i++) {
           const v = new THREE.Vector3(at.getX(i), at.getY(i), at.getZ(i))

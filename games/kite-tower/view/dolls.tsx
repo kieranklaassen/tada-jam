@@ -2,7 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { Hero, KiteController, Watcher } from '../controller'
-import { ARM, ARM_R, BODY_PROFILE, BRIM, CUFF, DollGuard, FLY_RAISE, HAND_R, HEAD_R, HEAD_Y, POM_R, POM_Y, SHOULDER, type HeadKind } from '../doll'
+import { ARM, ARM_R, BODY_PROFILE, BRIM, CUFF, DollGuard, FACE_CELL, FACE_SHELL, FACE_TOP, FLY_RAISE, HAND_R, HEAD_R, HEAD_Y, POM_R, POM_Y, SHOULDER, type HeadKind } from '../doll'
 import { WATCHERS } from '../layout'
 import { MotionDirector, type Activity, type Face, type PoseDelta } from '../motion'
 import { swayAngle, type Rock } from '../sway'
@@ -262,8 +262,18 @@ export function headGeometry(spec: DollSpec): THREE.BufferGeometry {
   return merge(parts)
 }
 
-export function faceGeometry(): THREE.BufferGeometry {
-  return new THREE.SphereGeometry(HEAD_R + 0.006, 24, 14, Math.PI / 2 - 0.85, 1.7, 0.95, 1.25)
+/** The face shell from just below the hair or hat down to the chin, painted as if it covered the whole atlas cell, so the features sit where they always did. */
+export function faceGeometry(kind: HeadKind): THREE.BufferGeometry {
+  const top = FACE_TOP[kind]
+  const length = FACE_CELL.bottom - top
+  const g = new THREE.SphereGeometry(FACE_SHELL.r, 24, Math.max(6, Math.round((14 * length) / (FACE_CELL.bottom - FACE_CELL.top))), FACE_SHELL.phi0, FACE_SHELL.phiLength, top, length)
+  const position = g.getAttribute('position')
+  const uv = g.getAttribute('uv')
+  for (let i = 0; i < position.count; i++) {
+    const theta = Math.acos(Math.max(-1, Math.min(1, position.getY(i) / FACE_SHELL.r)))
+    uv.setY(i, 1 - (theta - FACE_CELL.top) / (FACE_CELL.bottom - FACE_CELL.top))
+  }
+  return g
 }
 
 /** An arm hanging from the middle of its rounded top (the shoulder pivot) down to the hand. */
@@ -308,7 +318,7 @@ class DollRig {
     this.guard = new DollGuard(spec.kind)
     const body = bodyGeometry(spec)
     const head = headGeometry(spec)
-    const face = faceGeometry()
+    const face = faceGeometry(spec.kind)
     const arm = armGeometry(spec)
     this.geometries.push(body, head, face, arm)
     this.texture = faces.clone()
