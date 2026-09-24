@@ -2,17 +2,19 @@ import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { MeshBVH } from 'three-mesh-bvh'
 import { describe, expect, it } from 'vitest'
-import { yardSpots } from './controller'
-import { albumSlot, DOOR, FEEDING, SCALE, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
+import { BAG_HEADING, bagExit, bagMouth, bagShape, bagTip, SACK_MOUTH, type BagShape } from './bag'
+import { TableController, yardSpots } from './controller'
+import { albumSlot, BAG, DOOR, FEEDING, SCALE, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
 import { GUEST_TOP } from './feeding'
 import { MotionDirector, SEAT_SPECIES, type ActionKind } from './motion'
 import { STOOL_REACH, STOOL_TOP } from './partShape'
 import { PAN_REST_HEIGHT, STEP, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
 import { panDrops } from './scale'
+import { defaultTable } from './state'
 import { STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneRest, stoneVertices } from './stoneShape'
 import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_TOP, type Surfaces } from './surfaces'
 import { GUEST_SIZE, guestFloor, guestYaw, NECK_Y, soleDepth, speciesShapes } from './view/guest'
-import { ALBUM_SCALE, albumGeometry, CHOOSER_SCALE, chooserGeometry, DOOR_FARTHEST, DOOR_HINGE, doorLeafGeometry, doorSwing, easeOutBack, feedingShapes, houseGeometry, HUB_RADIUS, MOUSE_SCALE, mouseGeometry, panHang, PIVOT_Y, POST_LIFT, ROPE_KNOT, ropeMatrix, scaleShapes } from './view/models'
+import { ALBUM_SCALE, albumGeometry, bagGeometry, CHOOSER_SCALE, chooserGeometry, DOOR_FARTHEST, DOOR_HINGE, doorLeafGeometry, doorSwing, easeOutBack, feedingShapes, houseGeometry, HUB_RADIUS, MOUSE_SCALE, mouseGeometry, panHang, PIVOT_Y, POST_LIFT, ROPE_KNOT, ropeMatrix, scaleShapes } from './view/models'
 import { comingOut, DOOR_SWING, goingHome, VISITOR_GAP, VISITOR_REACH, visitorGone, visitorPose, visitorWalk, type VisitorPose, type VisitorTimes } from './visitors'
 import { chunk } from './voice'
 
@@ -526,6 +528,129 @@ describe('Knock-Knock visitors come and go clear of the house, its door and each
         }
         expect(visitors.every((visitor) => visitorGone(visitor, closeAt! + DOOR_SWING))).toBe(true)
       }
+    }
+  })
+})
+
+describe('stones leave the bag clear of it', () => {
+  const bag = bagGeometry()
+  const bagTree = new MeshBVH(bag)
+  const home = to3(BAG)
+  const bagAt = (shape: BagShape) =>
+    new THREE.Matrix4()
+      .makeTranslation(home.x, 0, home.z)
+      .multiply(new THREE.Matrix4().makeRotationY(BAG_HEADING))
+      .multiply(new THREE.Matrix4().compose(new THREE.Vector3(0, shape.y, 0), new THREE.Quaternion().setFromEuler(new THREE.Euler(shape.roll, 0, shape.lie)), new THREE.Vector3(...shape.scale)))
+  const reach = Math.max(...SIZES.flatMap((q) => drawnPoints(q).map((p) => p.length())))
+  /** The bag's drawn vertices placed for a shape, as flat x, y, z triples. */
+  const placed = (shape: BagShape) => {
+    const e = bagAt(shape).elements
+    const from = bag.attributes.position.array
+    const out = new Float64Array(from.length)
+    for (let i = 0; i < from.length; i += 3) {
+      const [x, y, z] = [from[i], from[i + 1], from[i + 2]]
+      out[i] = e[0] * x + e[4] * y + e[8] * z + e[12]
+      out[i + 1] = e[1] * x + e[5] * y + e[9] * z + e[13]
+      out[i + 2] = e[2] * x + e[6] * y + e[10] * z + e[14]
+    }
+    return out
+  }
+  const stone = new THREE.SphereGeometry(reach, 20, 14)
+  const inBag = insideOf(bag, new THREE.Matrix4())
+  const shapeOf = (table: TableController) => bagShape(table.state.bag / table.state.total, bagTip(table.bagTipStart === null ? null : table.t - table.bagTipStart, table.bagShakesOut()))
+  /** Every stone near the bag, drawn or in flight, over `seconds` of play: none may touch or sit in the bag as it is drawn at that moment. */
+  const watch = (table: TableController, seconds: number, where: string) => {
+    let near = 0
+    for (let t = 0; t < seconds; t += 1 / 60) {
+      table.step(1 / 60)
+      const toBag = bagAt(shapeOf(table)).invert()
+      const stones = [
+        ...table.physics.stoneIds().map((id) => table.physics.body(id)!.position),
+        ...table.flightViews().filter((flight) => !flight.mouse).map((flight) => flight.position),
+      ]
+      for (const p of stones) {
+        if (Math.hypot(p.x - home.x, p.z - home.z) > 30) continue
+        near++
+        const at = new THREE.Matrix4().makeTranslation(p.x, p.y, p.z)
+        const moment = `${where}, ${t.toFixed(2)} s in, stone at ${[p.x, p.y, p.z].map((v) => v.toFixed(1))}`
+        expect(bagTree.intersectsGeometry(stone, toBag.clone().multiply(at)), `${moment}: touches the bag`).toBe(false)
+        expect(inBag(new THREE.Vector3(p.x, p.y, p.z).applyMatrix4(toBag)), `${moment}: inside the bag`).toBe(false)
+      }
+    }
+    return near
+  }
+  const tapBag = (table: TableController) => {
+    table.pointerDown(1, BAG, 0)
+    table.pointerUp(1, BAG, 80)
+  }
+  const fresh = () => {
+    const table = new TableController(defaultTable(4), { save: () => {} })
+    table.setProjector({ toScreen: (v) => toWorld2(v), toPlane: (screen) => screen })
+    return table
+  }
+
+  it('draws the mouth where bagMouth says, and nothing of the sack past it where a stone leaves', () => {
+    for (const shakeOut of [false, true]) {
+      for (let age = 0; age < 0.9; age += 0.01) {
+        for (const fullness of [0, 0.5, 1]) {
+          const shape = bagShape(fullness, bagTip(age, shakeOut))
+          const { at, axis } = bagMouth(shape)
+          const drawn = new THREE.Vector3(0, SACK_MOUTH, 0).applyMatrix4(bagAt(shape))
+          expect(drawn.distanceTo(new THREE.Vector3(at.x, at.y, at.z))).toBeLessThan(1e-9)
+          const exit = bagExit(shape, reach)
+          const p = placed(shape)
+          let nearest = Infinity
+          for (let i = 0; i < p.length; i += 3) nearest = Math.min(nearest, Math.hypot(p[i] - exit.x, p[i + 1] - exit.y, p[i + 2] - exit.z))
+          expect(nearest, `${shakeOut ? 'shake-out' : 'lurch'} at ${age.toFixed(2)} s, ${fullness} full`).toBeGreaterThan(reach + 1)
+          expect(Math.hypot(axis.x, axis.y, axis.z)).toBeCloseTo(1, 12)
+        }
+      }
+    }
+  })
+
+  it('rocks the bag on its belly as it tips, never deeper into the table than it lies at rest', () => {
+    for (const fullness of [0, 0.25, 0.5, 0.75, 1]) {
+      const lowest = (shape: BagShape) => {
+        const p = placed(shape)
+        let low = Infinity
+        for (let i = 1; i < p.length; i += 3) low = Math.min(low, p[i])
+        return low
+      }
+      const rest = lowest(bagShape(fullness, bagTip(null, false)))
+      // Resting, its cloth's folds and lumps press a few millimetres into the table under it, out of sight.
+      expect(rest, `${fullness} full, at rest`).toBeGreaterThan(-0.5)
+      for (const shakeOut of [false, true]) {
+        for (let age = 0; age < 0.9; age += 0.02) {
+          expect(lowest(bagShape(fullness, bagTip(age, shakeOut))), `${shakeOut ? 'shake-out' : 'lurch'} at ${age.toFixed(2)} s, ${fullness} full`).toBeGreaterThan(Math.min(rest, 0) - 0.1)
+        }
+      }
+    }
+  })
+
+  it('spills every stone out past the mouth without one touching the bag, on a lurch or a shake-out', () => {
+    for (let run = 0; run < 4; run++) {
+      const lurch = fresh()
+      tapBag(lurch)
+      expect(lurch.bagShakesOut()).toBe(false)
+      expect(watch(lurch, 1.5, `run ${run}, a lurch`)).toBeGreaterThan(0)
+      expect(lurch.physics.stoneIds()).toHaveLength(10)
+      const shake = fresh()
+      expect(watch(shake, 6, `run ${run}, the first-open story`)).toBeGreaterThan(0)
+      tapBag(shake)
+      expect(shake.bagShakesOut()).toBe(true)
+      expect(watch(shake, 1.5, `run ${run}, a shake-out`)).toBeGreaterThan(0)
+      expect(shake.physics.stoneIds()).toHaveLength(10)
+    }
+  })
+
+  it('stacks the spilled stones clear of one another as they leave', () => {
+    const thickness = Math.max(...SIZES.map((q) => Math.max(...drawnPoints(q).map((p) => p.y)) - Math.min(...drawnPoints(q).map((p) => p.y))))
+    const table = fresh()
+    tapBag(table)
+    const at = table.physics.stoneIds().map((id) => table.physics.body(id)!.position)
+    expect(at).toHaveLength(10)
+    for (const [i, a] of at.entries()) {
+      for (const b of at.slice(i + 1)) expect(Math.abs(a.y - b.y) > thickness || Math.hypot(a.x - b.x, a.z - b.z) > 2 * reach, `${a} and ${b}`).toBe(true)
     }
   })
 })

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import { SACK_PROFILE, sackSlump } from '../bag'
 import { pebbleRings, stoneVertices, type Cut } from '../stoneShape'
 import { BOWL_PROFILE, DISH_PROFILE, PLATE_PROFILE } from '../surfaces'
 
@@ -109,21 +110,7 @@ export function plate(segments: number): THREE.BufferGeometry {
 /** The cloth bag: round bottom, gathered neck, ruffled top; unit radius, about 1.25 tall. */
 export function sack(segments: number): THREE.BufferGeometry {
   return cached(`sack:${segments}`, () => {
-    const profile: [number, number][] = [
-      [0, 0],
-      [0.55, 0.03],
-      [0.9, 0.2],
-      [1.0, 0.45],
-      [0.92, 0.72],
-      [0.62, 0.92],
-      [0.4, 1.0],
-      [0.42, 1.06],
-      [0.58, 1.18],
-      [0.62, 1.24],
-      [0.54, 1.24],
-      [0.36, 1.1],
-    ]
-    const smooth = new THREE.SplineCurve(profile.map(([x, y]) => new THREE.Vector2(x, y))).getPoints(56)
+    const smooth = new THREE.SplineCurve(SACK_PROFILE.map(([x, y]) => new THREE.Vector2(x, y))).getPoints(56)
     const geometry = new THREE.LatheGeometry(smooth, segments)
     const position = geometry.attributes.position
     for (let i = 0; i < position.count; i++) {
@@ -132,7 +119,7 @@ export function sack(segments: number): THREE.BufferGeometry {
       const y = position.getY(i)
       const angle = Math.atan2(z, x)
       const folds = 1 + Math.sin(angle * 7) * 0.035 * Math.min(1, y) + Math.sin(angle * 13 + y * 4) * 0.015
-      const slump = 1 + Math.max(0, 0.5 - y) * 0.12
+      const slump = sackSlump(y)
       position.setX(i, x * folds * slump)
       position.setZ(i, z * folds * slump)
     }

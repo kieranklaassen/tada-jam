@@ -5,13 +5,14 @@ import { GestureTracker, type Intent, type Target } from './input'
 import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
 import { GRAVITY, HOLD_HEIGHT, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
 import { JAR_REACH, partDepth, partRest, STOOL_REACH, STOOL_TOP } from './partShape'
-import { stoneRest } from './stoneShape'
+import { STONE_REACH, stoneRest } from './stoneShape'
 import { feedingFloor, surfaceUnder } from './surfaces'
 import { SaveCadence } from './saveCadence'
 import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
 import { cutPiece, placeFromBag, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
 import { chunk, clusterPieces, groupsFor, schedule } from './voice'
 import { comingOut, DOOR_SWING, goingHome, visitorGone, visitorHome, type VisitorTimes } from './visitors'
+import { bagExit, bagShape, bagTip } from './bag'
 import { SEAT_SPECIES } from './motion'
 import { keepPage, pageOf, turnPage } from './album'
 import { inJar, JAR_SCALE, jarAt, JARS, PART_KINDS, PART_RADIUS, PART_WEIGHT, POUR_GAP, spillFrom, type Part, type PartKind } from './parts'
@@ -126,6 +127,9 @@ const HOLD_CEILING = 50
 const STOOL_CLEAR = (STOOL_REACH / UNIT) * 1.125
 /** Room (cm) a poured part keeps from its jar's pot, for the little it turns in flight. */
 const POUR_ROOM = 1.5
+/** How far (cm) each spilled stone starts out from the bag's mouth toward where it is flung, and how far above the one before (a stone is not as thick). */
+const SPILL_OUT = 1.2
+const SPILL_STACK = 2.6
 
 /**
  * How fast (cm/s) a part thrown sideways out of its jar's mouth at `speed`,
@@ -158,6 +162,8 @@ export class TableController {
   t = 0
   beam: Beam = restingBeam()
   bagTipStart: number | null = null
+  /** How many times the bag has been tipped: tips alternate between a lurch and a shake-out. */
+  private bagTips = 0
   matSlideStart: number | null = null
   munchStart: number | null = null
   shelfDrag: { pointerId: number; mat: MatKey; at: Point } | null = null
@@ -471,13 +477,14 @@ export class TableController {
         const plate = FEEDING.seats[seat].plate
         const away = Math.hypot(BAG_MOUTH.x - plate.x, BAG_MOUTH.y - plate.y) || 1
         const rest = { x: plate.x + ((BAG_MOUTH.x - plate.x) / away) * 120, y: plate.y + ((BAG_MOUTH.y - plate.y) / away) * 120 }
-        this.bagTipStart = now
+        const from = this.leaveBag()
+        this.tipTheBag()
         this.sound.rustle()
         Object.assign(story, { phase: 'rolling', at: now, stoneId: piece.id, from: rest, seat })
         this.flights.push({
           id: piece.id,
           q: piece.q,
-          from: to3(BAG_MOUTH, 4),
+          from,
           to: to3(rest, this.restHeight(rest, piece.q) + 0.15),
           t0: now,
           duration: 0.95,
@@ -808,12 +815,13 @@ export class TableController {
     if (this.state.liveMat !== 'scale' || this.state.bag <= 0) return
     if (this.state.pieces.some((piece) => panOf(piece) !== null)) return
     const pan = SCALE.pans[0]
+    const from = this.leaveBag()
     const piece = pullFromBag(this.state, pan)
     if (!piece) return
     this.flights.push({
       id: piece.id,
       q: piece.q,
-      from: to3(BAG_MOUTH, 4),
+      from,
       to: to3(pan, 12),
       t0: this.t + 0.5,
       duration: 0.8,
@@ -1385,20 +1393,21 @@ export class TableController {
   private tipBag(): void {
     this.keepPage()
     const spilled = tipBag(this.state)
-    this.bagTipStart = this.t
+    this.tipTheBag()
     if (spilled.length === 0) {
       this.sound.sigh()
       return
     }
     this.sound.rustle()
+    // The stones leave in a flat stack just past the mouth, each a little way out along where it is flung.
+    const exit = this.leaveBag()
     spilled.forEach((piece, index) => {
       const spread = (index / Math.max(1, spilled.length - 1) - 0.5) * 1.2
       const angle = -0.6 + spread + (Math.random() - 0.5) * 0.3
       const speed = 70 + Math.random() * 55
-      piece.x += Math.cos(angle) * 12
-      piece.y += Math.sin(angle) * 12
+      Object.assign(piece, toWorld2({ x: exit.x + Math.cos(angle) * SPILL_OUT, z: exit.z + Math.sin(angle) * SPILL_OUT }))
       this.addPieceBody(piece, {
-        y: 6 + index * 2.6,
+        y: exit.y + index * SPILL_STACK,
         velocity: { x: Math.cos(angle) * speed, y: 28 + Math.random() * 22, z: Math.sin(angle) * speed },
         spin: (Math.random() - 0.5) * 14,
       })
@@ -1407,6 +1416,21 @@ export class TableController {
     this.pendingVoice = { groups: () => groupsFor(this.placed(this.restingPieces().filter((p) => ids.includes(p.id)))), deadline: this.t + 3.5 }
     this.changed()
     this.cadence.change(performance.now(), true)
+  }
+
+  private tipTheBag(): void {
+    this.bagTipStart = this.t
+    this.bagTips += 1
+  }
+
+  bagShakesOut(): boolean {
+    return this.bagTips % 2 === 0
+  }
+
+  /** Where a stone leaves the bag's mouth right now (world, cm). */
+  private leaveBag(): Vec3 {
+    const age = this.bagTipStart === null ? null : this.t - this.bagTipStart
+    return bagExit(bagShape(this.state.bag / this.state.total, bagTip(age, this.bagShakesOut())), STONE_REACH)
   }
 
   private bringOut(mat: MatKey): void {

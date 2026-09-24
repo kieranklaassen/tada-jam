@@ -175,6 +175,7 @@ function World({ table }: { table: TableController }) {
         read={() => ({
           fullness: table.state.bag / table.state.total,
           tipAge: table.bagTipStart === null ? null : table.t - table.bagTipStart,
+          shakeOut: table.bagShakesOut(),
           peek: table.guidance.peek,
           now: table.t,
         })}

@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode }
 import * as THREE from 'three'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
 import { DOOR_SWING, visitorPose } from '../visitors'
+import { BAG_HEADING, BAG_LENGTH, bagShape, bagTip } from '../bag'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
 import { stoneRest } from '../stoneShape'
 import { createClayMaterials, merge, paint, PALETTE, piece, type ClayMaterials, type Hold } from './clay'
@@ -290,12 +291,9 @@ export function Overlays({ kind, read, surfaces, capacity }: { kind: 'shadow' | 
 
 // --- bag ---------------------------------------------------------------------
 
-export type BagPose = { fullness: number; tipAge: number | null; peek: number | null; now: number }
+export type BagPose = { fullness: number; tipAge: number | null; shakeOut: boolean; peek: number | null; now: number }
 
-const BAG_LENGTH = 11.5
-const BAG_GIRTH = 7.2
-
-function bagGeometry(): THREE.BufferGeometry {
+export function bagGeometry(): THREE.BufferGeometry {
   return merge([
     piece(geo.sack(40), PALETTE.bag, {}, { lump: 0.05, frequency: 3.1, seed: 4, ground: null }),
     piece(geo.torus(32, 0.1), PALETTE.cord, { position: [0, 1.02, 0], rotation: [Math.PI / 2, 0, 0], scale: 0.43 }, { ground: null }),
@@ -313,32 +311,21 @@ export function BagModel({ read }: { read: () => BagPose }) {
   const pebble = useMemo(() => geo.pebble(20), [])
   const settle = useRef<Spring>({ x: 0, v: 0 })
   const lastTip = useRef<number | null>(null)
-  const tips = useRef(0)
   const p = to3(BAG)
   useFrame((_, dt) => {
     const pose = read()
     const group = body.current
     if (group) {
-      if (pose.tipAge !== null && pose.tipAge < dt * 1.5 && lastTip.current !== pose.tipAge) {
-        settle.current.v += 7
-        tips.current += 1
-      }
+      if (pose.tipAge !== null && pose.tipAge < dt * 1.5 && lastTip.current !== pose.tipAge) settle.current.v += 7
       lastTip.current = pose.tipAge
-      const t = pose.tipAge ?? 10
-      // Two ways to tip, alternating: a big lurch forward, or a shake-out that
-      // jiggles the stones loose side to side.
-      const shakeOut = tips.current % 2 === 0
-      const anticipation = t < 0.12 ? Math.sin((t / 0.12) * Math.PI) * (shakeOut ? 0.08 : 0.12) : 0
-      const lurch = t >= 0.12 && t < 0.55 ? Math.sin(((t - 0.12) / 0.43) * Math.PI) * (shakeOut ? 0.26 : 0.42) : 0
-      const shake = shakeOut && t >= 0.12 && t < 0.8 ? Math.sin((t - 0.12) * 42) * 0.12 * Math.sin(((t - 0.12) / 0.68) * Math.PI) : 0
       // An empty bag is floppy: softer spring, longer wobble.
       const wobble = springStep(settle.current, 0, dt, 55 + pose.fullness * 45, 4 + pose.fullness * 4)
-      const girth = 0.7 + pose.fullness * 0.32
       const breathe = 1 + Math.sin(pose.now * 1.4) * 0.014
       const invite = pose.peek === null ? 0 : Math.sin(pose.peek * Math.PI * 6) * 0.1 * Math.sin(pose.peek * Math.PI)
-      group.scale.set(BAG_GIRTH * girth * breathe * (1 + anticipation), BAG_LENGTH * (1 - anticipation * 0.6), BAG_GIRTH * girth * breathe * (1 + anticipation) * 1.1)
-      group.position.y = BAG_GIRTH * girth * 0.88
-      group.rotation.set(invite + wobble * 0.04 + shake, 0, -1.42 - lurch + anticipation * 0.6 + wobble * 0.02)
+      const shape = bagShape(pose.fullness, bagTip(pose.tipAge, pose.shakeOut), breathe)
+      group.scale.set(...shape.scale)
+      group.position.y = shape.y
+      group.rotation.set(shape.roll + invite + wobble * 0.04, 0, shape.lie + wobble * 0.02)
     }
     if (peek.current) {
       const k = pose.peek === null ? 0 : Math.sin(pose.peek * Math.PI)
@@ -348,7 +335,7 @@ export function BagModel({ read }: { read: () => BagPose }) {
     }
   })
   return (
-    <group position={[p.x, 0, p.z]} rotation={[0, 0.82, 0]}>
+    <group position={[p.x, 0, p.z]} rotation={[0, BAG_HEADING, 0]}>
       <group ref={body} userData={{ jamObject: 'bag' }}>
         <mesh name="bag" geometry={geometry} material={clay} />
       </group>
