@@ -128,6 +128,7 @@ export class Orrery extends OrreryScene {
   private discCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
   private discMaterial: THREE.ShaderMaterial
   private textures: THREE.Texture[]
+  private drawn = false
 
   constructor(canvas: HTMLCanvasElement) {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' })
@@ -226,7 +227,11 @@ export class Orrery extends OrreryScene {
   render(width: number, height: number, porthole: Porthole | null, refreshWindow: boolean) {
     const r = this.renderer
     r.info.reset()
-    if (porthole && refreshWindow) {
+    // The very first frame draws only the main view (the window has not popped in yet): tools that watch this
+    // renderer, such as the jam's intersection audit, take the first scene and camera drawn as the child's.
+    const first = !this.drawn
+    this.drawn = true
+    if (porthole && refreshWindow && !first) {
       // The view is drawn straight to the screen in a corner, exactly as it looks there, then copied into a
       // texture on the GPU before the main view paints over the corner.
       const size = Math.max(1, Math.round(porthole.size))

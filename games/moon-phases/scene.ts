@@ -18,6 +18,7 @@ export const MOON_R = 0.34
 export const ORBIT_R = 3.3
 export const PLANE_Y = 1.7
 const SUN_X = -7.3
+const SUN_R = 0.85
 /** The engraved scale under the moon's path. */
 export const SCALE_INNER = ORBIT_R - 0.22
 export const SCALE_OUTER = ORBIT_R + 0.22
@@ -202,6 +203,7 @@ export class OrreryScene {
       vertexShader: 'varying vec3 vPos; void main() { vPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
       fragmentShader: 'uniform vec3 top; uniform vec3 bottom; varying vec3 vPos; void main() { float t = smoothstep(-8.0, 30.0, vPos.y); gl_FragColor = vec4(mix(bottom, top, t), 1.0); }',
     })))
+    wall.name = 'room'
     this.scene.add(inModel(wall))
     const bulbs = 46
     const garland = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.16, 12, 8)), track(new THREE.MeshBasicMaterial({ color: new THREE.Color(3.2, 2.1, 1.0), toneMapped: false })), bulbs)
@@ -210,6 +212,7 @@ export class OrreryScene {
       this.m.makeTranslation(x * 0.9, 8.2 - sag * 2.6 + Math.sin(i * 1.7) * 0.2, -19 - Math.cos(u * Math.PI) * 3)
       garland.setMatrixAt(i, this.m)
     }
+    garland.name = 'garland'
     this.scene.add(inModel(garland))
 
     // The table: varnished planks, a brass band around the edge.
@@ -221,6 +224,7 @@ export class OrreryScene {
     tableGeometry.groups = tableGeometry.groups.filter(group => group.materialIndex !== 2)
     const table = new THREE.Mesh(tableGeometry, [side, top])
     table.position.y = -0.25
+    table.name = 'table'
     this.scene.add(inModel(table))
     // Metal that never moves (the table's band, Earth's plinth and stand, the lamp's stand and cup) is one draw;
     // the rest of it joins below.
@@ -234,6 +238,7 @@ export class OrreryScene {
     for (let i = 0; i < uv.count; i++) uv.setXY(i, pos.getX(i) / (2 * scaleOuter) + 0.5, pos.getY(i) / (2 * scaleOuter) + 0.5)
     const scale = new THREE.Mesh(scaleGeometry, track(new THREE.MeshStandardMaterial({ map: scaleMap, metalness: 1, roughness: 0.32, envMap, envMapIntensity: 0.525 })))
     scale.rotation.x = -Math.PI / 2; scale.position.y = 0.006
+    scale.name = 'scale'
     this.scene.add(inModel(scale))
     // All eight medallion bodies (dark brass side, bright rim) are one instanced draw, and all eight enamel faces
     // are another: the pictures share an atlas, and each instance reads its own cell and glows by its own amount.
@@ -266,6 +271,7 @@ export class OrreryScene {
     this.medallionFaces = new THREE.InstancedMesh(faceGeometry, faceMaterial, PHASE_COUNT)
     for (const instanced of [this.medallionBodies, this.medallionFaces]) {
       instanced.frustumCulled = false
+      instanced.name = instanced === this.medallionBodies ? 'medallion-bodies' : 'medallion-faces'
       this.scene.add(inModel(instanced))
     }
     for (let i = 0; i < PHASE_COUNT; i++) {
@@ -290,13 +296,17 @@ export class OrreryScene {
       tinted(gearGeometry(20, 0.42, 0.1, 0.05), DARK_BRASS),
       tinted(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 12).toNonIndexed().translate(0, 0.3, 0), BRASS),
       tinted(new THREE.CylinderGeometry(0.12, 0.12, 0.16, 32).toNonIndexed().translate(0, 0.58, 0), BLACKENED),
-      tinted(new THREE.CylinderGeometry(0.125, 0.125, 0.1, 32, 1, true).toNonIndexed().translate(0, 0.58, 0), DARK_BRASS),
+      tinted(new THREE.CylinderGeometry(0.14, 0.14, 0.1, 32, 1, true).toNonIndexed().translate(0, 0.58, 0), DARK_BRASS),
     ])), metal))
-    const mesh = 1.25 * 0.95 + 0.42 * 0.95
+    // Tooth tips just touch: the teeth are not phased to interleave, so any closer and they would pass through
+    // each other on the same plane.
+    const mesh = 1.25 + 0.42 + 0.004
     this.pinion.position.set(Math.cos(-0.7) * mesh, 0.16, Math.sin(-0.7) * mesh)
     fixedMetal.push(tinted(new THREE.CylinderGeometry(1.45, 1.55, 0.14, 96).translate(0, 0.07, 0), BLACKENED))
     const standHeight = PLANE_Y - EARTH_R - 0.2
     fixedMetal.push(tinted(latheStand(standHeight, 0.5).translate(0, 0.26, 0), BRASS))
+    this.bigGear.name = 'big-gear'
+    this.pinion.name = 'pinion'
     this.scene.add(inModel(this.bigGear), inModel(this.pinion))
 
     // Earth: shiny oceans, matte land, drifting clouds, a thin blue atmosphere,
@@ -316,8 +326,10 @@ export class OrreryScene {
     }
     this.earth = new THREE.Mesh(track(new THREE.SphereGeometry(EARTH_R, 128, 96)), earthMaterial)
     // The axis stands straight up: always an equinox, so day and night stay easy to read.
+    this.earth.name = 'earth'
     this.earth.position.y = PLANE_Y
     this.clouds = new THREE.Mesh(track(new THREE.SphereGeometry(EARTH_R * 1.015, 96, 64)), track(new THREE.MeshStandardMaterial({ map: assets.clouds, transparent: true, depthWrite: false, roughness: 1, })))
+    this.clouds.name = 'clouds'
     this.earth.add(this.clouds)
     this.atmosphere = new THREE.Mesh(track(new THREE.SphereGeometry(EARTH_R * 1.045, 96, 64)), track(new THREE.ShaderMaterial({
       side: THREE.BackSide, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
@@ -325,6 +337,7 @@ export class OrreryScene {
       vertexShader: 'varying vec3 vN; varying vec3 vView; varying vec3 vWorldN; void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vWorldN = normalize(mat3(modelMatrix) * normal); vN = normalize(normalMatrix * normal); vView = normalize(-(viewMatrix * wp).xyz); gl_Position = projectionMatrix * viewMatrix * wp; }',
       fragmentShader: 'uniform vec3 sunDir; varying vec3 vN; varying vec3 vView; varying vec3 vWorldN; void main() { float rim = pow(clamp(1.0 + dot(vN, vView), 0.0, 1.0), 5.0); float day = smoothstep(-0.3, 0.7, dot(vWorldN, sunDir)); gl_FragColor = vec4(vec3(0.35, 0.65, 1.0) * rim * (0.03 + 0.8 * day), 1.0); }',
     })))
+    this.atmosphere.name = 'atmosphere'
     this.atmosphere.position.y = PLANE_Y
     this.scene.add(this.earth, this.atmosphere)
 
@@ -344,21 +357,27 @@ export class OrreryScene {
     }
     this.moon.position.set(ORBIT_R, PLANE_Y, 0)
     const armHeight = 0.62
+    const cradleRadius = MOON_R + 0.01
     // The arm turns as one piece: beam, riser, cradle, collar and counterweight are one draw.
     const armMetal = new THREE.Mesh(track(merged([
       tinted(new THREE.CylinderGeometry(0.04, 0.04, ORBIT_R + 0.9, 20).rotateZ(Math.PI / 2).translate((ORBIT_R - 0.9) / 2, armHeight, 0), BRASS),
-      tinted(new THREE.CylinderGeometry(0.028, 0.034, PLANE_Y - MOON_R - armHeight, 20).translate(ORBIT_R, (PLANE_Y - MOON_R + armHeight) / 2, 0), BRASS),
-      tinted(new THREE.SphereGeometry(MOON_R * 0.55, 32, 12, 0, TAU, Math.PI * 0.65, Math.PI * 0.35).translate(ORBIT_R, PLANE_Y - MOON_R * 0.6, 0), DARK_BRASS),
+      tinted(new THREE.CylinderGeometry(0.028, 0.034, PLANE_Y - cradleRadius - armHeight, 20).translate(ORBIT_R, (PLANE_Y - cradleRadius + armHeight) / 2, 0), BRASS),
+      // A shallow cradle just outside the moon, so the moon rests in it rather than through it.
+      tinted(new THREE.SphereGeometry(cradleRadius, 32, 8, 0, TAU, Math.PI * 0.78, Math.PI * 0.22).translate(ORBIT_R, PLANE_Y, 0), DARK_BRASS),
       tinted(new THREE.CylinderGeometry(0.15, 0.15, 0.14, 32).translate(0, armHeight, 0), DARK_BRASS),
       tinted(new THREE.SphereGeometry(0.16, 32, 24).translate(-0.9, armHeight, 0), BLACKENED),
     ])), metal)
     this.hint = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: assets.ring, transparent: true, depthWrite: false })))
     this.hint.position.copy(this.moon.position)
+    this.arm.name = 'moon-arm'
+    this.moon.name = 'moon'
+    armMetal.name = 'arm-metal'
+    this.hint.name = 'moon-hint'
     this.arm.add(this.moon, inModel(armMetal), inModel(this.hint))
     this.scene.add(this.arm)
 
     // The sun lamp: a bulb bright enough to bloom, on a turned brass stand.
-    this.sun = new THREE.Mesh(track(new THREE.SphereGeometry(0.85, 64, 40)), track(new THREE.MeshBasicMaterial({ map: assets.sun, color: new THREE.Color(1.25, 1.05, 0.78), toneMapped: false })))
+    this.sun = new THREE.Mesh(track(new THREE.SphereGeometry(SUN_R, 64, 40)), track(new THREE.MeshBasicMaterial({ map: assets.sun, color: new THREE.Color(1.25, 1.05, 0.78), toneMapped: false })))
     // The round window draws to the screen and the main view into the post target, and three builds a
     // different program for each; a material drawn in both would switch programs twice a frame. So Earth, its
     // clouds and air, the moon and the sun have a copy for the window, sharing their textures and uniforms.
@@ -375,12 +394,16 @@ export class OrreryScene {
     for (const [layer, depthTest] of [[MODEL, false], [SKY, true]] as const) {
       const glow = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: glowTexture, blending: THREE.AdditiveBlending, depthWrite: false, depthTest, transparent: true, opacity: 0.42, toneMapped: false })))
       glow.scale.setScalar(3.2); glow.position.copy(this.sun.position); glow.userData.size = 3.2
+      glow.name = 'sun-glow'
       glow.layers.set(layer)
       this.sunGlow.push(glow); this.scene.add(glow)
     }
-    fixedMetal.push(tinted(latheStand(PLANE_Y - 0.72, 0.62).translate(SUN_X, 0, 0), BRASS))
-    fixedMetal.push(tinted(new THREE.SphereGeometry(0.52, 48, 16, 0, TAU, Math.PI * 0.6, Math.PI * 0.4).translate(SUN_X, PLANE_Y - 0.26, 0), DARK_BRASS))
-    this.scene.add(this.sun, inModel(new THREE.Mesh(track(merged(fixedMetal)), metal)))
+    // The lamp's stand ends where the bulb begins, so its tip meets the sun instead of running up into it.
+    fixedMetal.push(tinted(latheStand(PLANE_Y - SUN_R - 0.002, 0.62).translate(SUN_X, 0, 0), BRASS))
+    this.sun.name = 'sun'
+    const fixed = new THREE.Mesh(track(merged(fixedMetal)), metal)
+    fixed.name = 'fixed-metal'
+    this.scene.add(this.sun, inModel(fixed))
 
     // Soft contact shadows, since the lamp's light skims the tabletop: both blobs in one draw.
     const shadowTexture = assets.shadow
@@ -388,6 +411,7 @@ export class OrreryScene {
       track(merged([[0, 3.6], [SUN_X, 2.4]].map(([x, size]) => new THREE.PlaneGeometry(size, size).rotateX(-Math.PI / 2).translate(x, 0.004, 0)))),
       track(new THREE.MeshBasicMaterial({ map: shadowTexture, transparent: true, depthWrite: false })),
     )
+    blobs.name = 'contact-shadows'
     this.scene.add(inModel(blobs))
 
     // Rays of sunlight: fine lines from the lamp that stop where they hit Earth
@@ -405,6 +429,7 @@ export class OrreryScene {
     }))
     this.rays = new THREE.LineSegments(rayGeometry, this.rayMaterial)
     this.rays.frustumCulled = false
+    this.rays.name = 'sun-rays'
     this.scene.add(inModel(this.rays))
 
     // The sky seen from home: blue by day, glowing at sunrise and sunset, starry at night.
@@ -429,6 +454,7 @@ export class OrreryScene {
     }))
     this.sky = new THREE.Mesh(track(new THREE.SphereGeometry(100, 48, 24)), this.skyMaterial)
     this.sky.renderOrder = -1
+    this.sky.name = 'sky'
     this.sky.layers.set(SKY)
     this.scene.add(this.sky)
 
@@ -442,6 +468,7 @@ export class OrreryScene {
       const geometry = track(new THREE.BufferGeometry())
       geometry.setAttribute('position', new THREE.BufferAttribute(star, 3))
       const points = new THREE.Points(geometry, track(new THREE.PointsMaterial({ size: set ? 1.8 : 1.2, sizeAttenuation: false, color: set ? '#fff5da' : '#cbd6ff', transparent: true, depthWrite: false })))
+      points.name = 'stars'
       points.layers.set(SKY)
       this.stars.push(points); this.scene.add(points)
     }
@@ -461,7 +488,11 @@ export class OrreryScene {
     ])), clothes)
     this.kidArm = new THREE.Group()
     const sleeve = new THREE.Mesh(track(tinted(new THREE.CapsuleGeometry(0.014, 0.08, 4, 8).translate(0, 0.055, 0), '#e0553d')), clothes)
-    this.kidArm.add(sleeve); this.kidArm.position.set(0.04, 0.13, 0)
+    // The shoulder sits just outside the coat, so the arm swings clear of the body when it drops to the side.
+    this.kidArm.add(sleeve); this.kidArm.position.set(0.062, 0.13, 0)
+    this.kid.name = 'child'
+    body.name = 'child-body'
+    sleeve.name = 'child-arm'
     this.kid.add(body, this.kidArm)
     this.kid.scale.setScalar(1.7)
     this.scene.add(inModel(this.kid))
@@ -481,6 +512,7 @@ export class OrreryScene {
     const litRing = new THREE.Mesh(track(new THREE.TorusGeometry(MOON_R * 1.06, 0.012, 8, 96)), track(new THREE.MeshBasicMaterial({ color: new THREE.Color(3.2, 2.2, 0.8), transparent: true, toneMapped: false })))
     litRing.rotation.y = Math.PI / 2
     this.halves.add(this.seenHalf, litRing)
+    this.halves.name = 'halves'
     this.scene.add(inModel(this.halves))
 
     this.setMoon(0)
@@ -751,6 +783,9 @@ export class OrreryScene {
     this.camera.position.lerpVectors(a.position, eye.position, k)
     this.camera.quaternion.slerpQuaternions(a.q, eye.q, k)
     this.camera.fov = a.fov + (eye.fov - a.fov) * k
+    // A near plane far from the eye keeps the depth buffer precise over the model; it closes in only as the
+    // camera walks into the child's eyes, a few hundredths above the ground.
+    this.camera.near = 0.3 + (0.01 - 0.3) * k
     this.camera.updateProjectionMatrix()
     // Halfway into Earth-view the model falls away and the starry sky takes over.
     if (this.pov < 0.5) { this.camera.layers.enable(MODEL); this.camera.layers.disable(SKY) }
