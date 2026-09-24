@@ -3,7 +3,7 @@ import { JAR_SCALE, JARS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 import { JAR_LIFT, JAR_MOUTH, JAR_REACH, JAR_TOP, jarLabelBox, NEST_SPAN, partCollider, partRest } from './partShape'
 import { outlineCorners, STONE_CUTS, stoneOutline, stoneRest } from './stoneShape'
-import { BOWL_FLOOR, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, PLATE_TOP, RUG, type Surfaces } from './surfaces'
+import { BOWL_FLOOR, BOWL_OUTSIDE, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, PLATE_TOP, radiusAt, RUG, type Surfaces } from './surfaces'
 
 // Real stone physics (cannon-es) under the same world coordinates the game
 // rules use. One 3D unit is one centimetre and ten world units; the table
@@ -33,6 +33,8 @@ const BOWL_SEGMENTS = 14
 const FALL_LIMIT = -12
 /** How deep the table and what lies on it are solid: a thin collider lets a fast stone sink past its middle and be pushed out underneath. */
 const SLAB = 4
+/** A sweeping finger's collider reaches this high above the table, and as deep into it. */
+const BROOM_TOP = 3
 /** A loose part slower than this (units/s, spin included) for `LOOSE_CALM_SECONDS` is put to sleep: parts in a pile can nudge each other just above cannon's own sleep limit for a long time. */
 const LOOSE_CALM_SPEED = 4
 const LOOSE_CALM_SECONDS = 1
@@ -170,10 +172,20 @@ export class TablePhysics {
     body.addShape(new CANNON.Cylinder(radius, radius, top - bottom, FIXTURE_SIDES + 2), new CANNON.Vec3(0, (top + bottom) / 2, 0))
   }
 
+  /**
+   * The bowl's flared outside overhangs the rug. Up to a lying stone's
+   * thickness a ring outside its inner wall is solid out to where the flare
+   * reaches at that height, so a stone pushed against the bowl meets an
+   * upright face instead of being wedged under the overhang into the rug.
+   */
   private addBowl(): void {
     const bowl = new CANNON.Body({ mass: 0, material: this.woodMaterial })
     const at = to3(FEEDING.bowl)
     bowl.position.set(at.x, ON_RUG, at.z)
+    const stone = stoneOutline('whole')
+    const skirt = stone.top - stone.bottom
+    const inside = radiusAt(BOWL_WALL, skirt)
+    this.wall(bowl, [[inside, -SLAB], [inside, skirt]], radiusAt(BOWL_OUTSIDE, skirt) - inside)
     this.disc(bowl, BOWL_WALL[0][0], -SLAB, BOWL_FLOOR - ON_RUG)
     this.wall(bowl, BOWL_WALL, BOWL_WALL_THICKNESS)
     this.world.addBody(bowl)
@@ -311,14 +323,19 @@ export class TablePhysics {
     return this.panY(side) + PAN_FLOOR
   }
 
-  /** A round thing standing on the table: its collider's faces (not its corners) lie on the circle, so nothing resting against it reaches into what is drawn there. */
+  /**
+   * A round thing standing on the table: its collider's faces (not its corners)
+   * lie on the circle, so nothing resting against it reaches into what is drawn
+   * there. It reaches as deep into the table as it stands above it, so its
+   * origin is below everything that rests beside it (see `prism`).
+   */
   setFixture(key: string, circle: Circle, height = 12): void {
     this.removeFixture(key)
     const body = new CANNON.Body({ mass: 0, material: this.woodMaterial })
     const at = to3(circle)
     const corner = (circle.r * UNIT) / Math.cos(Math.PI / FIXTURE_SIDES)
-    body.position.set(at.x, height / 2, at.z)
-    body.addShape(new CANNON.Cylinder(corner, corner, height, FIXTURE_SIDES))
+    body.position.set(at.x, 0, at.z)
+    body.addShape(new CANNON.Cylinder(corner, corner, 2 * height, FIXTURE_SIDES))
     this.world.addBody(body)
     this.fixtures.set(key, body)
   }
@@ -448,7 +465,12 @@ export class TablePhysics {
     body.wakeUp()
   }
 
-  /** A sweeping finger: a low kinematic cylinder dragged across the table top. */
+  /**
+   * A sweeping finger: a low kinematic cylinder dragged across the table top.
+   * It reaches as deep into the table as above it, so its origin stays below
+   * every stone it meets and a deep overlap lifts the stone over it instead
+   * of pushing it down through the table (see `prism`).
+   */
   setBroom(pointerId: number, at: Point | null): void {
     let body = this.brooms.get(pointerId)
     if (!at) {
@@ -461,13 +483,13 @@ export class TablePhysics {
     }
     if (!body) {
       body = new CANNON.Body({ mass: 0, type: CANNON.Body.KINEMATIC, material: this.woodMaterial })
-      body.addShape(new CANNON.Cylinder(4.2, 4.2, 3, STONE_SIDES))
-      const start = to3(at, 1.5)
+      body.addShape(new CANNON.Cylinder(4.2, 4.2, 2 * BROOM_TOP, STONE_SIDES))
+      const start = to3(at)
       body.position.set(start.x, start.y, start.z)
       this.world.addBody(body)
       this.brooms.set(pointerId, body)
     }
-    this.targets.set(body, to3(at, 1.5))
+    this.targets.set(body, to3(at))
     for (const { body: stone } of this.stones.values()) stone.wakeUp()
   }
 
@@ -503,9 +525,12 @@ export class TablePhysics {
 
   step(elapsed: number): StepReport {
     this.accumulator = Math.min(this.accumulator + elapsed, STEP * this.maxSubsteps)
+    // What follows a target gets there evenly over this frame's substeps, not in a jump at twice its speed and a stop.
+    let substeps = Math.floor(this.accumulator / STEP)
     while (this.accumulator >= STEP) {
+      const time = Math.max(1, substeps--) * STEP
       for (const [body, target] of this.targets) {
-        body.velocity.set((target.x - body.position.x) / STEP, (target.y - body.position.y) / STEP, (target.z - body.position.z) / STEP)
+        body.velocity.set((target.x - body.position.x) / time, (target.y - body.position.y) / time, (target.z - body.position.z) / time)
       }
       this.world.step(STEP)
       this.resistRolling()
