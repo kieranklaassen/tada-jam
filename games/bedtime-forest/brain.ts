@@ -703,12 +703,11 @@ export class Creature {
   private overHeads(world: BrainWorld): number {
     const aheadX = this.x + this.pivotVX * LOOKAHEAD
     const aheadZ = this.z + this.pivotVZ * LOOKAHEAD
-    // The top of the carried body as the child holds it. Anyone whose feet are already above that (an owl on its
-    // way home passes high over the clearing) is clear of it, and rising would be the very crossing this avoids.
+    // Someone whose feet are over this animal's head at its carrying height (a bird flying across) it passes under.
     const head = this.grabY - this.spec.hang + this.spec.footprint.top
     let pivot = 0
     for (const other of world.creatures) {
-      if (other === this || other.mode === 'held' || other.y > head) continue
+      if (other === this || other.mode === 'held' || other.y >= head) continue
       const gap = Math.min(footprintGap(this, this.x, this.z, other), footprintGap(this, aheadX, aheadZ, other))
       if (gap < SPACING) pivot = Math.max(pivot, other.y + other.spec.footprint.top + HEADROOM + this.spec.hang)
     }

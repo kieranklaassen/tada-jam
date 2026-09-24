@@ -192,6 +192,30 @@ describe('carrying', () => {
     expect(rabbit.y).toBeCloseTo(CARRY_LIFT, 0)
   })
 
+  it('a carried rabbit passes under a bird flying over instead of rising up through it', () => {
+    const owl = one('owl', 60, 20)
+    // Under the middle of the owl's flight from the burrow home to its hollow, where it flies highest.
+    const x = (HOMES.burrow.mouth.x + HOMES.hollow.mouth.x) / 2
+    const z = (HOMES.burrow.mouth.z + HOMES.hollow.mouth.z) / 2
+    const rabbit = one('rabbit', x, z)
+    const creatures = [owl, rabbit]
+    const w = world(creatures)
+    rabbit.pickUp()
+    rabbit.setGrab(x, z)
+    owl.pickUp()
+    owl.sendTo('burrow')
+    let under = 0
+    for (let t = 0; t < 6; t += 1 / 60) {
+      for (const c of creatures) c.step(1 / 60, w)
+      if (footprintGap(rabbit, rabbit.x, rabbit.z, owl) >= 0) continue
+      under += 1
+      expect(rabbit.y + rabbit.spec.footprint.top).toBeLessThan(owl.y)
+    }
+    expect(under).toBeGreaterThan(3)
+    expect(owl.mode).toBe('asleep')
+    expect(rabbit.y).toBeCloseTo(CARRY_LIFT, 0)
+  })
+
   it('let go over someone, an animal slides off them on the way down instead of landing inside', () => {
     const bear = one('bear', 0, 0)
     const rabbit = one('rabbit', -50, 0)
