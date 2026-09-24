@@ -20,7 +20,11 @@ export type RoomSpec = RoomDef & {
   decor: readonly Decor[]
   /** Accent hue of this room's little model on the ring. */
   accent: string
-  /** Where the bird perches when it has no job here (world units, on a top). */
+  /**
+   * Where the bird perches when it has no job here (world units, on a top).
+   * A ledge is one block deep, so it stands toward the ledge's open edge:
+   * side-on, its body and tail clear the wall behind it.
+   */
   perch: Vec3
 }
 
@@ -69,19 +73,20 @@ const firstTurn: RoomSpec = {
     paths([
       [5, 2, 2],
       [6, 2, 2],
+      [6, 2, 1],
     ]),
   ),
   groups: [firstTurnBridge],
   start: [0, 2, 2],
-  door: [6, 2, 2],
-  perch: [0.5, 2, 3.5],
+  door: [6, 2, 1],
+  perch: [0.5, 2, 3.65],
   decor: [
     { kind: 'wheel', at: [3.5, 1.72, 2.5], axis: 'y', radius: 1.35, group: 0 },
     { kind: 'dome', at: [0.5, 2, 1.5], radius: 0.42, tone: 'trim' },
     { kind: 'window', at: [2, 0, 1.5], face: 'x', height: 1.2 },
     { kind: 'window', at: [0.5, -0.6, 4], face: 'z', height: 1.1 },
     { kind: 'window', at: [7, -0.2, 2.5], face: 'x', height: 1.4 },
-    { kind: 'cone', at: [6.5, 2, 1.5], radius: 0.42, height: 1.1, tone: 'rose' },
+    { kind: 'cone', at: [6.5, 2, 3.5], radius: 0.42, height: 1.1, tone: 'rose' },
   ],
 }
 
@@ -111,16 +116,18 @@ const ferry: RoomSpec = {
     box(3, 3, -3, 0, 0, 0, 'rose'),
     box(3, 3, -3, 0, 4, 4, 'rose'),
     box(4, 6, -3, 1, 4, 5),
+    box(6, 6, -3, 1, 3, 3),
     paths([
       [4, 2, 4],
       [5, 2, 4],
       [6, 2, 4],
+      [6, 2, 3],
     ]),
   ),
   groups: [ferryRaft],
   start: [0, 2, 0],
-  door: [6, 2, 4],
-  perch: [1.5, 2, -0.5],
+  door: [6, 2, 3],
+  perch: [1.7, 2, -0.65],
   decor: [
     { kind: 'grip', at: [3.5, 2.5, 1.02], face: 'z', group: 0 },
     { kind: 'dome', at: [0.5, 2, -0.5], radius: 0.45, tone: 'trim' },
@@ -156,13 +163,16 @@ const impossibleStair: RoomSpec = {
       [2, 1, 3],
     ]),
     box(7, 7, -3, 3, 6, 6, 'rose'),
-    box(9, 9, -3, 3, 6, 6),
-    paths([[9, 4, 6]]),
+    box(9, 9, -3, 3, 5, 6),
+    paths([
+      [9, 4, 6],
+      [9, 4, 5],
+    ]),
   ),
   groups: [stairArm],
   start: [0, 1, 3],
-  door: [9, 4, 6],
-  perch: [-0.5, 1, 4.5],
+  door: [9, 4, 5],
+  perch: [-0.65, 1, 4.65],
   decor: [
     { kind: 'wheel', at: [7.5, 3.72, 6.5], axis: 'y', radius: 1.3, group: 0 },
     { kind: 'dome', at: [2.5, 1, 4.5], radius: 0.42, tone: 'trim' },
@@ -243,7 +253,8 @@ const drawbridge: GroupDef = {
   ],
   start: 0,
   limit: [-1, 0],
-  handle: [4.04, 1.5, 3.5],
+  // Clear of the start tile's face: the wheel turns right beside it.
+  handle: [4.06, 1.5, 3.5],
 }
 
 const lift: GroupDef = {
@@ -281,9 +292,9 @@ const crank: RoomSpec = {
   groups: [drawbridge, lift],
   start: [3, 1, 5],
   door: [-2, 1, -3],
-  perch: [4.5, 0, 5.5],
+  perch: [4.7, 0, 5.7],
   decor: [
-    { kind: 'wheel', at: [4.04, 1.5, 3.5], axis: 'x', radius: 0.62, group: 0 },
+    { kind: 'wheel', at: [4.06, 1.5, 3.5], axis: 'x', radius: 0.62, group: 0 },
     { kind: 'grip', at: [4.02, 1.5, 0.5], face: 'x', group: 1 },
     { kind: 'shaft', at: [3.5, 1, 0.5], height: 4.2 },
     { kind: 'window', at: [3.5, -1, 6], face: 'z', height: 1.3 },
