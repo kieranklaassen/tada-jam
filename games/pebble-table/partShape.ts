@@ -528,6 +528,24 @@ export const JAR_TOP = JAR_LIFT + JAR_LID_CLOSED + JAR.lid.height + JAR.lid.knob
 /** How high a jar's open mouth stands on the table, as modelled: the top of its neck. */
 export const JAR_MOUTH = JAR_LIFT + JAR.neck.y + cylinderHalf(JAR.neck.height, JAR.neck.lump)
 
+/** An empty seat's stool as modelled (cm): a lumped cushion, a button on top, and a rolled rim round its middle. */
+export const STOOL = {
+  cushion: { shape: 'sphere', position: [0, 1.5, 0], scale: [4.5, 1.7, 4.5], lump: 0.3, frequency: 0.6, seed: 6, segments: 28, rings: 18 },
+  button: { shape: 'sphere', position: [0, 3.05, 0], scale: [0.9, 0.35, 0.9], segments: 14, rings: 9 },
+  rim: { tube: 0.16, radial: 11, tubular: 32, position: [0, 1.55, 0], scale: 4.35, lump: 0.05, frequency: 2.2, seed: 0 },
+} as const satisfies { cushion: Lumped; button: Lumped; rim: Ring }
+
+export const stoolCushion = () => lumpedVertices(STOOL.cushion)
+export const stoolButton = () => lumpedVertices(STOOL.button)
+export const stoolRim = () => ringVertices(STOOL.rim)
+
+const stool = extent(joined([stoolCushion(), stoolButton(), stoolRim()]))
+/** How far a stool's model is raised so its lumpy cushion stands on the table. */
+export const STOOL_LIFT = -stool.bottom
+/** How far a stool reaches sideways and how tall it stands on the table, as modelled. */
+export const STOOL_REACH = stool.reach
+export const STOOL_TOP = stool.top + STOOL_LIFT
+
 const ring = extent(nestRing())
 const bed = extent(nestBed())
 /** How far the nest is lifted so its lumpy ring and bed stand on the table, as modelled. */
