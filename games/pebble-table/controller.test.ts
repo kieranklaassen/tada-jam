@@ -487,6 +487,34 @@ describe('album of past tables', () => {
     for (const piece of table.state.pieces) expect(spots.some((spot) => near(piece, spot))).toBe(true)
     expect(table.state.album).toHaveLength(1)
   })
+
+  it('sets the page back exactly when the album is tapped while a stone is still hopping', () => {
+    let seed = 7
+    const random = vi.spyOn(Math, 'random').mockImplementation(() => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646)
+    try {
+      const { table } = makeTable()
+      tap(table, { x: 1000, y: 950 })
+      const spots = [0, 1, 4].map((seat) => FEEDING.seats[seat].plate)
+      for (const spot of spots) {
+        drag(table, { x: BAG.x, y: BAG.y }, spot)
+        run(table, 0.8)
+      }
+      run(table, 1)
+      tap(table, { x: BAG.x, y: BAG.y })
+      run(table, 3)
+      const loose = table.state.pieces.find((piece) => plateOf(piece) === null && Math.hypot(piece.x - FEEDING.bowl.x, piece.y - FEEDING.bowl.y) > FEEDING.bowl.r + 40)!
+      drag(table, loose, FEEDING.bowl)
+      run(table, 0.8)
+      tap(table, FEEDING.bowl)
+      expect(table.flightViews().filter((flight) => flight.id === loose.id)).toHaveLength(1)
+      tap(table, albumSlot())
+      run(table, 3)
+      expect(table.state.pieces).toHaveLength(3)
+      expect(accountedTotal(table.state)).toBe(40)
+    } finally {
+      random.mockRestore()
+    }
+  })
 })
 
 describe('hidden delights', () => {
