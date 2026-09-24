@@ -183,6 +183,25 @@ export class Orrery extends OrreryScene {
   }
 
   /**
+   * Blurs the bloom through five levels or three. Three skips four of its passes; the two widest levels are
+   * left unrendered and tinted black, since the composite still reads them.
+   */
+  setBloomMips(mips: 3 | 5) {
+    const tints = this.bloom.compositeMaterial.uniforms.bloomTintColors.value as THREE.Vector3[]
+    this.bloom.nMips = mips
+    for (let i = 0; i < tints.length; i++) tints[i].setScalar(i < mips ? 1 : 0)
+  }
+
+  /** Multisamples the post target, or not; the buffers are rebuilt on the next frame. */
+  setSamples(samples: number) {
+    for (const target of [this.composer.renderTarget1, this.composer.renderTarget2]) {
+      if (target.samples === samples) continue
+      target.samples = samples
+      target.dispose()
+    }
+  }
+
+  /**
    * Uploads every texture and links every program a tier change could need, before the child can see it: the
    * scene as each camera sees it, every pass of the full chain, and the window's disc. The first frames then
    * run smooth, and a tier change never stalls on a shader compile, which would fail the very upgrade the

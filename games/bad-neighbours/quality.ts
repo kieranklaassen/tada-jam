@@ -103,8 +103,11 @@ export class TierGovernor {
   private windows = 0
   private lastRaise = -Infinity
 
-  constructor(start: number, forced = false) {
-    this.tier = clampTier(start)
+  /** `ceiling` is the best tier the device may ever reach (a look it has no budget for stays out of reach). */
+  constructor(start: number, forced = false, ceiling = 0) {
+    this.ceiling = clampTier(ceiling)
+    this.tier = Math.max(this.ceiling, clampTier(start))
+    if (forced) this.tier = clampTier(start)
     this.forced = forced
   }
 

@@ -3,11 +3,13 @@
 
 // A pentatonic climb to full moon and back down again.
 const PHASE_NOTES = [392, 440, 523.25, 587.33, 659.25, 587.33, 523.25, 440]
+const BELL_GAP_S = 0.16
 
 export class Sound {
   private context: AudioContext | null = null
   private awake = true
   private noise: AudioBuffer | null = null
+  private lastBell = -Infinity
   /**
    * Builds the audio context (suspended until a tap) and the whoosh's noise ahead of time, so the child's first
    * tap and first change of view do not pay for them in a long frame.
@@ -41,6 +43,10 @@ export class Sound {
   }
   bell(phase: number, volume = 0.06) {
     const ctx = this.ready(); if (!ctx) return
+    // A moon swept fast through several phases rings once per beat, not once per phase: overlapping bells are
+    // noise, and each one builds seven audio nodes.
+    if (ctx.currentTime - this.lastBell < BELL_GAP_S) return
+    this.lastBell = ctx.currentTime
     const base = PHASE_NOTES[phase % PHASE_NOTES.length], at = ctx.currentTime
     const out = ctx.createGain()
     out.gain.setValueAtTime(0, at); out.gain.linearRampToValueAtTime(volume, at + 0.01); out.gain.exponentialRampToValueAtTime(0.0008, at + 2.2)

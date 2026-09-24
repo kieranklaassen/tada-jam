@@ -27,13 +27,17 @@ export type Tier = {
   windowEvery: number
   /** Frosted glass on the controls: a backdrop blur the compositor redoes every frame over a moving scene. */
   frosted: boolean
+  /** Multisampling on the post target: the costliest thing at a large size, so only the top tier has it. */
+  samples: number
+  /** Blur levels in the bloom: five for the widest halo, three for a tighter one at eight passes fewer. */
+  bloomMips: 3 | 5
 }
 
 export const TIERS: readonly Tier[] = [
-  { dpr: 2, post: 'full', windowEvery: 1, frosted: true },
-  { dpr: 1.5, post: 'bloom', windowEvery: 2, frosted: true },
-  { dpr: 1.25, post: 'plain', windowEvery: 2, frosted: false },
-  { dpr: 1, post: 'plain', windowEvery: 4, frosted: false },
+  { dpr: 2, post: 'full', windowEvery: 1, frosted: true, samples: 4, bloomMips: 5 },
+  { dpr: 1.5, post: 'bloom', windowEvery: 3, frosted: true, samples: 0, bloomMips: 3 },
+  { dpr: 1.25, post: 'plain', windowEvery: 3, frosted: false, samples: 0, bloomMips: 3 },
+  { dpr: 1, post: 'plain', windowEvery: 4, frosted: false, samples: 0, bloomMips: 3 },
 ]
 export const LOWEST_TIER = TIERS.length - 1
 
@@ -112,8 +116,11 @@ export class TierGovernor {
   private windows = 0
   private lastRaise = -Infinity
 
-  constructor(start: number, forced = false) {
-    this.tier = clampTier(start)
+  /** `ceiling` is the best tier the device may ever reach (a look it has no budget for stays out of reach). */
+  constructor(start: number, forced = false, ceiling = 0) {
+    this.ceiling = clampTier(ceiling)
+    this.tier = Math.max(this.ceiling, clampTier(start))
+    if (forced) this.tier = clampTier(start)
     this.forced = forced
   }
 

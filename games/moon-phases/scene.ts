@@ -163,6 +163,7 @@ export class OrreryScene {
   protected disposables: { dispose(): void }[] = []
   protected time = 0
   private halvesFade = 0
+  private raysFor = new THREE.Vector3(Infinity, 0, 0)
   private kidCache: ReturnType<OrreryScene['placeKid']> | null = null
   private windowMaterials: [THREE.Mesh, THREE.Material, THREE.Material][] = []
   private m = new THREE.Matrix4()
@@ -641,27 +642,12 @@ export class OrreryScene {
     const pointing = moonAlt > 0 ? moonAlt - Math.PI / 2 : Math.PI - 0.15
     this.kidArm.rotation.set(pointing - Math.sin(t * 2) * 0.06, 0, -0.15)
 
-    // Rays: parallel lines from the lamp, ending on whichever sphere they reach.
+    // Rays: parallel lines from the lamp, ending on whichever sphere they reach. They are laid again only once
+    // the moon has moved by more than a pixel's worth; their pulses run on the shader's clock every frame.
     const moon = this.moonWorld(new THREE.Vector3())
-    const position = this.rays.geometry.getAttribute('position') as THREE.BufferAttribute
-    const along = this.rays.geometry.getAttribute('along') as THREE.BufferAttribute
-    const count = position.count / 2, n = Math.ceil(count / 2)
-    for (let i = 0; i < count; i++) {
-      // Alternate rays aim at the moon's disc and at Earth's, so both show their lit side.
-      const onMoon = i % 2 === 0, j = Math.floor(i / 2)
-      const a = j * 2.399963, rr = Math.sqrt((j + 0.5) / n) * 0.92
-      const radius = onMoon ? MOON_R : EARTH_R, cx = onMoon ? moon.x : 0, cy = onMoon ? moon.y : PLANE_Y, cz = onMoon ? moon.z : 0
-      const dy = Math.cos(a) * rr * radius, dz = Math.sin(a) * rr * radius
-      let end = cx - Math.sqrt(Math.max(0, radius * radius - dy * dy - dz * dz))
-      // Behind Earth, a ray meant for the moon is stopped by Earth first.
-      const earthD = Math.hypot(cy + dy - PLANE_Y, cz + dz)
-      if (onMoon && moon.x > 0 && earthD < EARTH_R) end = -Math.sqrt(EARTH_R * EARTH_R - earthD * earthD)
-      const start = SUN_X + 0.8
-      position.setXYZ(i * 2, start, cy + dy, cz + dz); position.setXYZ(i * 2 + 1, Math.max(start, end), cy + dy, cz + dz)
-      along.setX(i * 2, 0); along.setX(i * 2 + 1, Math.max(0, end - start))
-    }
-    position.needsUpdate = true; along.needsUpdate = true
+    if (moon.distanceToSquared(this.raysFor) > 1e-4) this.layRays(moon)
     this.rayMaterial.uniforms.time.value = t
+
 
     // Halves fade in and out; they sit on the moon, the blue half turned to Earth.
     this.halvesFade += ((this.showHalves ? 1 : 0) - this.halvesFade) * Math.min(1, dt * 6)
@@ -703,6 +689,29 @@ export class OrreryScene {
       this.medallionFaces.instanceMatrix.needsUpdate = true
       this.medallionGlow.needsUpdate = true
     }
+  }
+
+  /** Lays each ray from the lamp to where it first meets the moon or Earth. */
+  private layRays(moon: THREE.Vector3) {
+    this.raysFor.copy(moon)
+    const position = this.rays.geometry.getAttribute('position') as THREE.BufferAttribute
+    const along = this.rays.geometry.getAttribute('along') as THREE.BufferAttribute
+    const count = position.count / 2, n = Math.ceil(count / 2)
+    for (let i = 0; i < count; i++) {
+      // Alternate rays aim at the moon's disc and at Earth's, so both show their lit side.
+      const onMoon = i % 2 === 0, j = Math.floor(i / 2)
+      const a = j * 2.399963, rr = Math.sqrt((j + 0.5) / n) * 0.92
+      const radius = onMoon ? MOON_R : EARTH_R, cx = onMoon ? moon.x : 0, cy = onMoon ? moon.y : PLANE_Y, cz = onMoon ? moon.z : 0
+      const dy = Math.cos(a) * rr * radius, dz = Math.sin(a) * rr * radius
+      let end = cx - Math.sqrt(Math.max(0, radius * radius - dy * dy - dz * dz))
+      // Behind Earth, a ray meant for the moon is stopped by Earth first.
+      const earthD = Math.hypot(cy + dy - PLANE_Y, cz + dz)
+      if (onMoon && moon.x > 0 && earthD < EARTH_R) end = -Math.sqrt(EARTH_R * EARTH_R - earthD * earthD)
+      const start = SUN_X + 0.8
+      position.setXYZ(i * 2, start, cy + dy, cz + dz); position.setXYZ(i * 2 + 1, Math.max(start, end), cy + dy, cz + dz)
+      along.setX(i * 2, 0); along.setX(i * 2 + 1, Math.max(0, end - start))
+    }
+    position.needsUpdate = true; along.needsUpdate = true
   }
 
   /** Screen positions (CSS px) for the little pins that mark each body. */

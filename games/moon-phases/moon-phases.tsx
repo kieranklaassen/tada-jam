@@ -121,7 +121,10 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
     const root = rootRef.current!, canvas = canvasRef.current!, porthole = windowRef.current!
     const orrery = new Orrery(canvas), sound = new Sound()
     const pinned = tierOverride(window.location.search)
-    const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
+    const touch = window.matchMedia('(pointer: coarse)').matches
+    // Tablets and phones start one tier down and never climb to the top tier: its depth of field and film grade
+    // are extra full-screen passes that an iPad's budget (one post pass) has no room for. Desktops start there.
+    const governor = new TierGovernor(pinned ?? startingTier(touch), pinned !== null, touch ? 1 : 0)
     const work = new PerfRing()
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, drawCalls: orrery.drawCalls, triangles: orrery.triangles }))
     let width = 0, height = 0, dpr = 1, frame = 0, last = 0, awake = false, disposed = false, frameCount = 0, warmed = false
@@ -136,6 +139,8 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
     const applyTier = () => {
       const tier = governor.settings
       orrery.setPost(tier.post)
+      orrery.setSamples(tier.samples)
+      orrery.setBloomMips(tier.bloomMips)
       root.dataset.frosted = String(tier.frosted)
       width = 0
       resize()
@@ -225,12 +230,13 @@ function MoonPhases({ ctx }: { ctx: CartridgeContext }) {
       frameCount += 1
       draw(frameCount % governor.settings.windowEvery === 0)
       if (!shown) { shown = true; setReady(true) }
-      // Pins ride along with the sun, Earth and moon, moved only when they have moved by half a pixel.
-      orrery.pins(width, height).forEach((pin, i) => {
+      // Pins ride along with the sun, Earth and moon, moved only when they have moved by a whole pixel, and on
+      // every other frame unless a finger is turning the view: each move costs the page a style and layer pass.
+      if (dragging || frameCount % 2 === 0) orrery.pins(width, height).forEach((pin, i) => {
         const el = pinRefs.current[i]
         if (!el) return
         el.classList.toggle('is-visible', pin.visible)
-        const x = Math.round(pin.x * 2) / 2, y = Math.round(pin.y * 2) / 2, at = pinAt[i]
+        const x = Math.round(pin.x), y = Math.round(pin.y), at = pinAt[i]
         if (!pin.visible || (at.x === x && at.y === y)) return
         at.x = x; at.y = y
         el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`

@@ -116,6 +116,13 @@ describe('TierGovernor', () => {
     expect(governor.tier, 'back after twice that').toBe(0)
   })
 
+  it('a starting ceiling is never climbed past, and a pin ignores it', () => {
+    const capped = new TierGovernor(1, false, 1)
+    feed(capped, WINDOW * 40, FRAME, 1)
+    expect(capped.tier).toBe(1)
+    expect(new TierGovernor(0, true, 1).tier).toBe(0)
+  })
+
   it('an upgrade that holds through probation stays, with no ceiling', () => {
     const governor = new TierGovernor(1)
     feed(governor, WINDOW * 20, FRAME, 3)

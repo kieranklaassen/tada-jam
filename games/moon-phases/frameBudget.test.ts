@@ -12,8 +12,8 @@ import { OrreryScene, type OrreryAssets } from './scene'
 // camera's layers, inside its frustum, one per material group.
 
 const FRAME = 1 / 60
-/** Draws inside UnrealBloomPass: a bright pass, five mips blurred twice each, the composite and the blend. */
-const BLOOM_DRAWS = 13
+/** Draws inside UnrealBloomPass: a bright pass, each blur level twice, the composite and the blend. */
+const bloomDraws = (mips: number) => 1 + mips * 2 + 2
 /** The output pass, the film grade, the depth of field's composite, and the window's disc: one draw each. */
 const PASS_DRAW = 1
 
@@ -91,7 +91,7 @@ function frameDraws(frame: Frame, tier: Tier, index: number): number {
   return (index % tier.windowEvery === 0 ? frame.window : 0)
     + frame.main
     + (passes.depthOfField ? frame.depth + PASS_DRAW : 0)
-    + (passes.bloom ? BLOOM_DRAWS : 0)
+    + (passes.bloom ? bloomDraws(tier.bloomMips) : 0)
     + PASS_DRAW
     + (passes.grade ? PASS_DRAW : 0)
     + PASS_DRAW
