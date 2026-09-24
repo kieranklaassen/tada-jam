@@ -169,7 +169,7 @@ function World({ table }: { table: TableController }) {
   return (
     <>
       <TableModel />
-      <Overlays kind="shadow" capacity={96} read={() => shadows(table)} />
+      <Overlays kind="shadow" capacity={96} read={() => shadows(table)} surfaces={() => table.physics.surfaces(table.state.liveMat, table.state.seats)} />
       <BagModel
         read={() => ({
           fullness: table.state.bag / table.state.total,
@@ -211,7 +211,7 @@ function World({ table }: { table: TableController }) {
       <CarrierMice read={() => carrierMice(table)} />
       <ShelfModel read={() => ({ mats: table.shelfMats(), drag: table.shelfDrag, glow: table.guidance.glowShelf ? table.guidance.glow : 0, now: table.t })} />
       <AlbumModel read={() => ({ pages: table.state.album, at: table.albumAt, now: table.t })} />
-      <Overlays kind="glow" capacity={32} read={() => glows(table)} />
+      <Overlays kind="glow" capacity={32} read={() => glows(table)} surfaces={() => table.physics.surfaces(table.state.liveMat, table.state.seats)} />
       <GhostHand read={() => table.guidance.hand} carry={() => table.guidance.hint?.kind === 'toPan' || table.guidance.hint?.kind === 'toGuest'} />
     </>
   )

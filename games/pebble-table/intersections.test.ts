@@ -1,14 +1,15 @@
 import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
-import { albumSlot, FEEDING, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
+import { albumSlot, FEEDING, SCALE, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
 import { SEAT_SPECIES } from './motion'
 import { STOOL_REACH, STOOL_TOP } from './partShape'
-import { STEP, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
+import { PAN_REST_HEIGHT, STEP, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
+import { panDrops } from './scale'
 import { STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneRest, stoneVertices } from './stoneShape'
-import { feedingFloor, ON_RUG, PLATE_HEIGHT, PLATE_PROFILE } from './surfaces'
+import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_TOP, type Surfaces } from './surfaces'
 import { GUEST_SIZE, guestFloor, guestYaw, soleDepth, speciesShapes } from './view/guest'
-import { ALBUM_SCALE, albumGeometry, CHOOSER_SCALE, chooserGeometry, easeOutBack } from './view/models'
+import { ALBUM_SCALE, albumGeometry, CHOOSER_SCALE, chooserGeometry, easeOutBack, feedingShapes, scaleShapes } from './view/models'
 
 // What the intersection audit (npm run check:intersections -- pebble-table)
 // found drawn pieces doing, pinned at the level of the shapes and physics
@@ -228,5 +229,86 @@ describe('the choosers and the album stand apart on the shelf', () => {
     const album = footprint(albumGeometry(), ALBUM_SCALE * overshoot)
     const gap = (albumSlot().y - shelfTile(1).y) * UNIT
     for (const mat of mats) expect(footprint(chooserGeometry(mat), CHOOSER_SCALE) + album, mat).toBeLessThan(gap)
+  })
+})
+
+type Segment = readonly [THREE.Vector2, THREE.Vector2]
+
+/** Where a shape placed by `matrix` crosses the level `y`: one segment on the table's plane (x, z) per triangle that does. */
+function crossings(geometry: THREE.BufferGeometry, matrix: THREE.Matrix4, y: number): Segment[] {
+  const position = geometry.attributes.position
+  const corners = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]
+  const segments: Segment[] = []
+  for (let t = 0; t < position.count; t += 3) {
+    corners.forEach((v, k) => v.fromBufferAttribute(position, t + k).applyMatrix4(matrix))
+    const cut: THREE.Vector2[] = []
+    for (const [a, b] of [[0, 1], [1, 2], [2, 0]]) {
+      const [p, q] = [corners[a], corners[b]]
+      if (p.y > y === q.y > y) continue
+      const k = (y - p.y) / (q.y - p.y)
+      cut.push(new THREE.Vector2(p.x + (q.x - p.x) * k, p.z + (q.z - p.z) * k))
+    }
+    if (cut.length === 2) segments.push([cut[0], cut[1]])
+  }
+  return segments
+}
+
+function distanceToSegment(p: THREE.Vector2, [a, b]: Segment): number {
+  const ab = b.clone().sub(a)
+  const k = THREE.MathUtils.clamp(p.clone().sub(a).dot(ab) / Math.max(ab.lengthSq(), 1e-12), 0, 1)
+  return p.distanceTo(a.clone().addScaledVector(ab, k))
+}
+
+describe('contact shadows and glow rings lie flat on what they are cast on', () => {
+  const most = 15
+  /** Half a millimetre: how far the chords of a drawn lathe (a pan has 40 of them) fall inside the circle its profile is turned on. */
+  const chord = 0.05
+  /** Decal centres every centimetre over an area of the table, in world units. */
+  const grid = (from: { x: number; y: number }, to: { x: number; y: number }) => {
+    const points: { x: number; y: number }[] = []
+    for (let x = from.x; x <= to.x; x += 10) for (let y = from.y; y <= to.y; y += 10) points.push({ x, y })
+    return points
+  }
+  /** The first decal of `ground` that a rim or hem drawn higher than it reaches into, or null. */
+  const firstCrossed = (rims: { geometry: THREE.BufferGeometry; matrix: THREE.Matrix4 }[], centres: { x: number; y: number }[], ground: number, surfaces: Surfaces) => {
+    const segments = rims.flatMap(({ geometry, matrix }) => crossings(geometry, matrix, ground + DECAL_LIFT))
+    for (const at of centres) {
+      const reach = decalReach(at, ground, surfaces, most)
+      if (reach <= 0) continue
+      const p = to3(at)
+      const centre = new THREE.Vector2(p.x, p.z)
+      const into = segments.find((segment) => distanceToSegment(centre, segment) < reach - chord)
+      if (into) return { at, ground, reach, by: reach - distanceToSegment(centre, into) }
+    }
+    return null
+  }
+
+  it('keeps every decal on the feeding mat inside the plate or bowl it lies in, and clear of the hem and of plates it lies beside', () => {
+    const shapes = feedingShapes()
+    const centre = to3(RUG.center)
+    const place = (at: { x: number; y: number }, y: number) => new THREE.Matrix4().makeTranslation(to3(at).x, y, to3(at).z)
+    const seats = FEEDING.seats.map(() => true)
+    const rims = [
+      { geometry: shapes.rugRope, matrix: new THREE.Matrix4().makeTranslation(centre.x, 0, centre.z) },
+      { geometry: shapes.bowl, matrix: place(FEEDING.bowl, ON_RUG) },
+      ...FEEDING.seats.map((seat) => ({ geometry: shapes.plate, matrix: place(seat.plate, ON_RUG) })),
+    ]
+    const centres = grid({ x: RUG.center.x - RUG.rx - 40, y: RUG.center.y - RUG.rz - 40 }, { x: RUG.center.x + RUG.rx + 40, y: RUG.center.y + RUG.rz + 40 })
+    for (const ground of [0, RUG.top, RUG_HEM_TOP, PLATE_TOP, BOWL_FLOOR]) {
+      expect(firstCrossed(rims, centres, ground, { mat: 'feeding', seats, panFloors: [0, 0] }), `ground ${ground}`).toBeNull()
+    }
+  })
+
+  it('keeps every decal in a scale pan inside its flat floor, however far the beam tilts', () => {
+    const shapes = scaleShapes()
+    for (const angle of [-SCALE.maxTilt, 0, SCALE.maxTilt]) {
+      const panY = panDrops(angle).map((drop) => PAN_REST_HEIGHT - drop * UNIT)
+      const rims = SCALE.pans.map((pan, side) => ({ geometry: shapes.pans[side], matrix: new THREE.Matrix4().makeTranslation(to3(pan).x, panY[side], to3(pan).z) }))
+      const surfaces: Surfaces = { mat: 'scale', seats: [], panFloors: [panY[0] + PAN_FLOOR, panY[1] + PAN_FLOOR] }
+      SCALE.pans.forEach((pan, side) => {
+        const centres = grid({ x: pan.x - pan.r - 30, y: pan.y - pan.r - 30 }, { x: pan.x + pan.r + 30, y: pan.y + pan.r + 30 })
+        expect(firstCrossed(rims, centres, surfaces.panFloors[side], surfaces), `pan ${side} at tilt ${angle}`).toBeNull()
+      })
+    }
   })
 })

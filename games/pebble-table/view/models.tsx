@@ -30,7 +30,7 @@ import {
   stoolRim,
   type Lumped,
 } from '../partShape'
-import { BOWL_PROFILE, BOWL_SCALE, DISH_PROFILE, feedingFloor, HEM_POINTS, hemAt, ON_RUG, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y } from '../surfaces'
+import { BOWL_LUMP, BOWL_PROFILE, BOWL_SCALE, DECAL_LIFT, decalReach, DISH_PROFILE, feedingFloor, HEM_POINTS, hemAt, ON_RUG, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_LUMP, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y, type Surfaces } from '../surfaces'
 import { furTime, MAX_SHELLS } from './fur'
 import { GUEST_SIZE, guestFloor, guestYaw, NECK_Y, soleDepth, speciesShapes } from './guest'
 import { useQuality } from './quality'
@@ -242,11 +242,16 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
 export type Blob = { at: Point; ground: number; radius: number; strength: number; stretch?: number }
 
 const LIGHT_OFFSET = { x: 0.32, z: -0.12 }
-/** Decals lie a hair above what they are cast on (their material's polygon offset keeps them in front); any higher and they cut into whatever rests beside them. */
-const DECAL_LIFT = 0.02
+/** Decals smaller than this (cm) are not drawn: they would hide under what casts them. */
+const DECAL_SMALLEST = 0.2
+const decalAt: Point = { x: 0, y: 0 }
 
-/** Soft blob shadows: the height above the ground widens and fades them. */
-export function Overlays({ kind, read, capacity }: { kind: 'shadow' | 'glow'; read: () => Blob[]; capacity: number }) {
+/**
+ * Soft blob shadows and glow rings: the height above the ground widens and
+ * fades a shadow. Each is a flat disc (its texture fades out at the disc's
+ * edge) shrunk so it never reaches up into a rim or hem beside it.
+ */
+export function Overlays({ kind, read, surfaces, capacity }: { kind: 'shadow' | 'glow'; read: () => Blob[]; surfaces: () => Surfaces; capacity: number }) {
   const { shadow, glow } = useClay()
   const mesh = useRef<THREE.InstancedMesh>(null)
   useEffect(() => {
@@ -258,25 +263,28 @@ export function Overlays({ kind, read, capacity }: { kind: 'shadow' | 'glow'; re
   useFrame(() => {
     const instanced = mesh.current
     if (!instanced) return
-    const blobs = read().slice(0, capacity)
-    blobs.forEach((blob, i) => {
-      const p = to3(blob.at, blob.ground + DECAL_LIFT)
-      const lift = Math.max(0, blob.strength)
+    const blobs = read()
+    const under = surfaces()
+    let count = 0
+    for (const blob of blobs) {
+      if (count === capacity) break
       const offset = kind === 'shadow' ? blob.stretch ?? 0 : 0
-      scratch.m.compose(
-        scratch.p.set(p.x + LIGHT_OFFSET.x * offset, p.y, p.z + LIGHT_OFFSET.z * offset),
-        scratch.q.setFromEuler(scratch.e.set(-Math.PI / 2, 0, 0)),
-        scratch.s.set(blob.radius * 2, blob.radius * 2, 1),
-      )
-      instanced.setMatrixAt(i, scratch.m)
-      instanced.setColorAt(i, scratch.c.setRGB(lift, 0, 0))
-    })
-    instanced.count = blobs.length
+      decalAt.x = blob.at.x + (LIGHT_OFFSET.x * offset) / UNIT
+      decalAt.y = blob.at.y + (LIGHT_OFFSET.z * offset) / UNIT
+      const radius = decalReach(decalAt, blob.ground, under, blob.radius)
+      if (radius < DECAL_SMALLEST) continue
+      const p = to3(decalAt, blob.ground + DECAL_LIFT)
+      scratch.m.compose(scratch.p.set(p.x, p.y, p.z), scratch.q.setFromEuler(scratch.e.set(-Math.PI / 2, 0, 0)), scratch.s.set(radius * 2, radius * 2, 1))
+      instanced.setMatrixAt(count, scratch.m)
+      instanced.setColorAt(count, scratch.c.setRGB(Math.max(0, blob.strength), 0, 0))
+      count++
+    }
+    instanced.count = count
     instanced.instanceMatrix.needsUpdate = true
     if (instanced.instanceColor) instanced.instanceColor.needsUpdate = true
   })
-  const plane = useMemo(() => new THREE.PlaneGeometry(1, 1), [])
-  return <instancedMesh name={kind === 'shadow' ? 'shadow-decals' : 'glow-rings'} ref={mesh} args={[plane, kind === 'shadow' ? shadow : glow, capacity]} frustumCulled={false} renderOrder={kind === 'shadow' ? 1 : 3} />
+  const disc = useMemo(() => new THREE.CircleGeometry(0.5, 32), [])
+  return <instancedMesh name={kind === 'shadow' ? 'shadow-decals' : 'glow-rings'} ref={mesh} args={[disc, kind === 'shadow' ? shadow : glow, capacity]} frustumCulled={false} renderOrder={kind === 'shadow' ? 1 : 3} />
 }
 
 // --- bag ---------------------------------------------------------------------
@@ -498,14 +506,14 @@ function holdLathe(fixed: readonly (readonly [number, number])[], level: readonl
   return (x, y, z) => (on(fixed, x, y, z) ? 'fixed' : on(level, x, y, z) ? 'level' : null)
 }
 
-function feedingShapes() {
+export function feedingShapes() {
   return {
     rug: geo.cloth(40),
     bowl: merge([
-      piece(geo.bowl(48), PALETTE.bowl, { scale: BOWL_SCALE }, { lump: 0.22, frequency: 0.4, seed: 8, occlusion: 0.42, hold: holdLathe(BOWL_PROFILE.slice(8), BOWL_PROFILE.slice(0, 2)) }),
+      piece(geo.bowl(48), PALETTE.bowl, { scale: BOWL_SCALE }, { lump: BOWL_LUMP, frequency: 0.4, seed: 8, occlusion: 0.42, hold: holdLathe(BOWL_PROFILE.slice(8), BOWL_PROFILE.slice(0, 3)) }),
     ]),
     plate: merge([
-      piece(geo.plate(36), PALETTE.plate, { scale: [FEEDING.plateRadius * UNIT, PLATE_HEIGHT, FEEDING.plateRadius * UNIT] }, { lump: 0.08, frequency: 0.5, seed: 3, occlusion: 0.15, hold: holdLathe(PLATE_PROFILE.slice(4), PLATE_PROFILE.slice(0, 2)) }),
+      piece(geo.plate(36), PALETTE.plate, { scale: [FEEDING.plateRadius * UNIT, PLATE_HEIGHT, FEEDING.plateRadius * UNIT] }, { lump: PLATE_LUMP, frequency: 0.5, seed: 3, occlusion: 0.15, hold: holdLathe(PLATE_PROFILE.slice(4), PLATE_PROFILE.slice(0, 2)) }),
     ]),
     stool: merge([
       paint(geo.fromGrid(stoolCushion(), STOOL.cushion.segments, STOOL.cushion.rings), PALETTE.stool, -STOOL_LIFT),
@@ -601,7 +609,7 @@ export type GuestPose = {
   now: number
 }
 
-function scaleShapes() {
+export function scaleShapes() {
   return {
     post: postGeometry(),
     beam: beamGeometry(SCALE.beamHalf * UNIT),
