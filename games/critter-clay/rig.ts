@@ -50,6 +50,19 @@ export const PART_REACH: Record<PartKind, number> = {
 /** The eye's white ball: its centre height above the eye base, and its radius. */
 export const EYE_BALL = { center: 1.05, radius: 1.3 } as const
 export const PUPIL_RADIUS = 0.6
+/** How thick each part is around its tip, for a critter's footprint: a foot, an eyeball, the head's whole ball. */
+const PART_GIRTH: Record<PartKind, number> = {
+  legStub: 2.2,
+  legLong: 2.2,
+  eye: 1.4,
+  earRound: 1.9,
+  earPoint: 1.2,
+  earFlop: 1.6,
+  tailCurl: 2,
+  tailLong: 1.6,
+  head: HEAD_RADIUS,
+  horn: 1,
+}
 /** The head's neck runs from its centre toward the body along this (unit) direction. */
 const NECK_LENGTH = Math.hypot(0.87, 0.5)
 export const HEAD_NECK: Vec3 = [0, -0.87 / NECK_LENGTH, -0.5 / NECK_LENGTH]
@@ -459,6 +472,7 @@ export class Rig {
     world.body[1] = this.v.y
     world.body[2] = this.v.z
     world.bodyR = Math.max(this.rx, this.rz) * 1.08
+    let footprint = world.bodyR
 
     const parts = critter.save.parts
     let legOrder = 0
@@ -475,6 +489,8 @@ export class Rig {
       world.parts[i * 3] = this.v.x
       world.parts[i * 3 + 1] = this.v.y
       world.parts[i * 3 + 2] = this.v.z
+      this.v.set(0, PART_REACH[part.kind], 0).applyMatrix4(this.W)
+      footprint = Math.max(footprint, Math.hypot(this.v.x - world.body[0], this.v.z - world.body[2]) + PART_GIRTH[part.kind])
       if (isLeg) {
         this.v.set(0, PART_REACH[part.kind], 0).applyMatrix4(this.W)
         const f = world.feetCount++ * 3
@@ -488,6 +504,8 @@ export class Rig {
         this.eyeExtras(this.W, critter.lookX, critter.lookY, pose.lids, critter.save.hue, boil, seed)
       }
     }
+
+    world.reach = footprint
 
     // nose
     this.faceSurface(NOSE_DIR, false)

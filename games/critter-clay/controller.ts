@@ -8,7 +8,7 @@ import { PART_KINDS, type Hue, type Part, type PartKind } from './parts'
 import { displayBase, GLOW_SHAPE, OWNER, Rig, SHADOW_SHAPE } from './rig'
 import { SaveCadence } from './saveCadence'
 import { attach, detach, putToSleep, serialize, takeFromTray, turntableFree, wake, type CritterSave, type WorkshopState } from './state'
-import { MEET_RADIUS } from './wander'
+import { MEET_RADIUS, separate, type Mover } from './wander'
 
 // The workshop while it is on screen: touch, rules, critter behaviour,
 // guidance, sound, and saving. It knows nothing about WebGL. Each step it
@@ -327,6 +327,7 @@ export class WorkshopController {
       for (let i = this.critters.length - 1; i >= 0; i--) if (this.critters[i].gone) this.critters.splice(i, 1)
       this.refreshAwake()
     }
+    this.keepApart(dt)
     findGreetings(this.awake, MEET_RADIUS, this.greet)
     if (sleeper && sleeper.mode === 'sleeping') {
       const bubble = snoreBubble(sleeper.profile.temperament, sleeper.age)
@@ -336,6 +337,27 @@ export class WorkshopController {
     this.updateTray(dt)
     this.guidance = this.computeGuidance(timing)
     this.layout()
+  }
+
+  private readonly apart: Mover[] = []
+  private readonly pinned: boolean[] = []
+
+  /** No two critters on the bench stand in each other; one moving along its own path (landing, waking, lying down, asleep) makes the others give way. */
+  private keepApart(dt: number): void {
+    let count = 0
+    for (const critter of this.critters) {
+      if (critter.gone || critter.mode === 'carried') continue
+      this.apart[count] = critter.mover
+      this.pinned[count++] = !critter.awake || critter.mode === 'landing' || critter.mode === 'waking' || critter.mode === 'lyingDown'
+    }
+    separate(this.apart, this.pinned, count, dt)
+  }
+
+  /** Everyone standing on the bench but `critter`, into `apart`; returns how many. */
+  private othersOnBench(critter: Critter): number {
+    let count = 0
+    for (const other of this.critters) if (other !== critter && !other.gone && other.mode !== 'carried') this.apart[count++] = other.mover
+    return count
   }
 
   private readonly summaryObject: { sleeper: { parts: readonly Part[] } | null; awake: { id: number; x: number; z: number }[]; childAge: number | null } = {
@@ -805,7 +827,7 @@ export class WorkshopController {
           critter.lieDown()
           this.sound.voice(critter, 'yawn')
         } else {
-          critter.setDown()
+          critter.setDown(this.apart, this.othersOnBench(critter))
         }
         this.refreshAwake()
         this.cadence.now(performance.now())
