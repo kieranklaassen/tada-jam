@@ -8,13 +8,13 @@ import { TableController, yardSpots } from './controller'
 import { albumSlot, BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, SCALE, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
 import { GUEST_TOP } from './feeding'
 import { MotionDirector, SEAT_SPECIES, type ActionKind } from './motion'
-import { partCollider, partPieceVertices, partReachDown, partVertices, SHELL, STOOL_REACH, STOOL_TOP, surfacePoints } from './partShape'
-import { PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
-import { PART_KINDS } from './parts'
+import { PART_PIECES, partCollider, partCover, partPieceVertices, partReachDown, partRest, partVertices, SHELL, STOOL_REACH, STOOL_TOP, surfacePoints, type Lumped } from './partShape'
+import { HOLD_HEIGHT, PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
+import { PART_KINDS, type PartKind } from './parts'
 import { panDrops, SWAY_MOST } from './scale'
 import { defaultTable } from './state'
 import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneReachDown, stoneRest, stoneVertices } from './stoneShape'
-import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PAN_ROLL, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
+import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PAN_ROLL, panRimReach, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, ROPE_KNOT, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
 import { GUEST_SIZE, guestFloor, guestYaw, NECK_Y, soleDepth, speciesShapes } from './view/guest'
 import {
   ALBUM_SCALE,
@@ -37,10 +37,13 @@ import {
   partGeometry,
   PIVOT_Y,
   POST_LIFT,
-  ROPE_KNOT,
+  ROPE_REACH,
   ropeMatrix,
+  ropeRun,
+  type RopeBall,
   scaleShapes,
   STONE_COVER,
+  stoneCover,
   stoneMatrix,
   stoneRoom,
   type StoneMotion,
@@ -675,6 +678,125 @@ describe('the scale hangs together at every tilt', () => {
     for (const [key, depths] of pressed) {
       expect(Math.min(...depths), key).toBeGreaterThan(0.05)
       expect(Math.max(...depths) - Math.min(...depths), key).toBeLessThan(0.15)
+    }
+  })
+
+  it('draws every rope piece within its reach of the line between its ends', () => {
+    const [from, to] = [new THREE.Vector3(1, 2, 3), new THREE.Vector3(4, -6, 5)]
+    const line = new THREE.Line3(from, to)
+    const farthest = Math.max(...pointsOf(shapes.chain, ropeMatrix(from, to, new THREE.Matrix4())).map((v) => v.distanceTo(line.closestPointToPoint(v, true, new THREE.Vector3()))))
+    expect(farthest).toBeLessThanOrEqual(ROPE_REACH + 1e-6)
+    expect(farthest).toBeGreaterThan(ROPE_REACH * 0.9)
+  })
+
+  it('lays each pan rope over a stone or part carried into it, never through it, and leaves it straight past one', () => {
+    // Held, a part is drawn 1.12x, so its cover grows as much, and a stone stretches up to a tenth
+    // and lifts a hair, so each ball of its cover grows by a tenth of how far it reaches, and more.
+    // Over a pan, where its ropes are, they ride at HOLD_HEIGHT or as high as clears its rim and
+    // knots, with HOLD_ROOM (1 cm) between (see `heldAt`): lowest, and tightest under the rim, at
+    // that. A thing is picked up as it lay: as drawn or turned about the vertical, an acorn also on
+    // its side.
+    const turns = (kind: PartKind | 'stone') => [
+      new THREE.Quaternion(),
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 1.1, 0)),
+      ...(kind === 'acorn' ? [new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0.6, Math.PI / 2))] : []),
+    ]
+    type Grown = { at: THREE.Vector3; radius: number }
+    type Held = { name: string; geometry: THREE.BufferGeometry; matrix: (at: THREE.Vector3) => THREE.Matrix4; balls: (at: THREE.Vector3) => RopeBall[]; size: number; rest: number }
+    const heldAs = (name: string, geometry: THREE.BufferGeometry, grown: Grown[], matrix: Held['matrix'], rest: number): Held => ({
+      name,
+      geometry,
+      matrix,
+      rest,
+      balls: (at) => grown.map((ball) => ({ center: ball.at.clone().add(at), radius: ball.radius })),
+      size: Math.max(...grown.map((ball) => ball.at.length() + ball.radius)),
+    })
+    const held: Held[] = [
+      ...([1, 4] as Quarters[]).flatMap((q) =>
+        turns('stone').map((turn, k) => {
+          const grown = stoneCover(q).map((ball): Grown => {
+            const at = new THREE.Vector3(ball.x, ball.y, ball.z)
+            return { at: at.clone().applyQuaternion(turn), radius: ball.r + (at.length() + ball.r) * 0.1 + 0.1 }
+          })
+          return heldAs(`stone ${q} ${k}`, stoneGeometry(q), grown, (at) => stoneMatrix({ stone: stoneAt(0, q, at, turn), amount: -0.1, rock: 0, pop: 1 }, 1, new THREE.Matrix4()), stoneRest(q))
+        }),
+      ),
+      ...PART_KINDS.flatMap((kind) =>
+        turns(kind).map((turn, k) => {
+          const grown = partCover(kind).map((ball): Grown => ({ at: new THREE.Vector3(ball.x, ball.y, ball.z).applyQuaternion(turn).multiplyScalar(1.12), radius: ball.r * 1.12 }))
+          return heldAs(`${kind} ${k}`, partGeometry(kind), grown, (at) => new THREE.Matrix4().compose(at, turn, new THREE.Vector3(1.12, 1.12, 1.12)), partRest(kind))
+        }),
+      ),
+    ]
+    const up = new THREE.Vector3(0, 1, 0)
+    let [laid, wrapped, measured, closest] = [0, 0, 0, Infinity]
+    for (const angle of tilts) {
+      const inBeam = insideOf(shapes.beam, beamAt(angle))
+      for (const { side, center: panAt, top, rims } of hangs(angle, 0)) {
+        const inPan = insideOf(shapes.pans[side], new THREE.Matrix4().makeTranslation(panAt.x, panAt.y, panAt.z))
+        const panTop = panAt.y + panRimReach(SCALE.pans[side].r * UNIT).knots
+        rims.forEach((rim, k) => {
+          const along = rim.clone().sub(top).normalize()
+          const across = new THREE.Vector3().crossVectors(along, up).normalize()
+          const level = new THREE.Vector3(along.x, 0, along.z).normalize()
+          for (const piece of held)
+            for (const aside of [across, level])
+              for (const off of [-0.5, 0, 0.5]) {
+                  const height = Math.max(HOLD_HEIGHT, panTop + piece.rest + 1)
+                  const at = top.clone().lerp(rim, (top.y - height) / (top.y - rim.y)).addScaledVector(aside, off * piece.size)
+                  const balls = piece.balls(at)
+                  const run = ropeRun(top, rim, [balls])
+                  const where = `${piece.name} on rope ${side}.${k} at tilt ${angle}, ${height.toFixed(1)} cm, ${off} aside`
+                  laid++
+                  if (run.length > 2) wrapped++
+                  expect([run[0], run.at(-1)]).toEqual([top, rim])
+                  // A ball reaching a knot is passed closer (see `ropeRun`): measured against the drawing instead.
+                  const atKnot = (c: THREE.Vector3, radius: number) => Math.min(c.distanceTo(top), c.distanceTo(rim)) < (radius + ROPE_REACH) * 1.1 + 0.1
+                  let knotted = false
+                  for (let i = 0; i + 1 < run.length; i++) {
+                    const line = new THREE.Line3(run[i], run[i + 1])
+                    for (const ball of balls) {
+                      const c = new THREE.Vector3(ball.center.x, ball.center.y, ball.center.z)
+                      if (atKnot(c, ball.radius)) knotted = true
+                      else closest = Math.min(closest, c.distanceTo(line.closestPointToPoint(c, true, new THREE.Vector3())) - ball.radius - ROPE_REACH)
+                    }
+                    const free = pointsOf(shapes.chain, ropeMatrix(run[i], run[i + 1], new THREE.Matrix4())).filter((v) => v.distanceTo(top) > ROPE_KNOT.radius && v.distanceTo(rim) > ROPE_KNOT.radius)
+                    expect(free.filter(inBeam).length, `rope in the beam: ${where}`).toBe(0)
+                    expect(free.filter(inPan).length, `rope in its pan: ${where}`).toBe(0)
+                  }
+                  if (knotted || (angle === 0 && off === 0)) {
+                    const drawn = auditPiece(piece.name, piece.geometry, piece.matrix(at))
+                    for (let i = 0; i + 1 < run.length; i++) {
+                      measured++
+                      expect(pairDepth(drawn, auditPiece('rope', shapes.chain, ropeMatrix(run[i], run[i + 1], new THREE.Matrix4())), CAMERA)?.depth ?? 0, where).toBe(0)
+                    }
+                  }
+                  const past = top.clone().lerp(rim, 0.5).addScaledVector(across, piece.size * 2 + 1)
+                  expect(ropeRun(top, rim, [piece.balls(past)]), `rope bent by ${piece.name} beside it`).toEqual([top, rim])
+                }
+        })
+      }
+    }
+    expect(laid).toBeGreaterThan(500)
+    expect(wrapped).toBeGreaterThan(laid * 0.6)
+    expect(measured).toBeGreaterThan(300)
+    expect(closest).toBeGreaterThan(0)
+  }, 60_000)
+
+  it('covers every part with balls a rope is laid over, standing off its drawing by little', () => {
+    for (const kind of PART_KINDS) {
+      const cover = partCover(kind)
+      let outside = -Infinity
+      for (const [piece, lumped] of Object.entries(PART_PIECES[kind] as Record<string, Lumped>)) {
+        const points = surfacePoints(partPieceVertices(kind, piece), lumped.segments, lumped.rings, 0.05)
+        for (let i = 0; i < points.length; i += 3) {
+          let inside = -Infinity
+          for (const ball of cover) inside = Math.max(inside, ball.r - Math.hypot(points[i] - ball.x, points[i + 1] - ball.y, points[i + 2] - ball.z))
+          outside = Math.max(outside, -inside)
+        }
+      }
+      expect(outside, kind).toBeLessThanOrEqual(0)
+      expect(Math.max(...cover.map((ball) => ball.r)), kind).toBeLessThan(kind === 'boulder' ? 1.6 : 0.75)
     }
   })
 

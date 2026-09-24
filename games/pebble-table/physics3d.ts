@@ -392,14 +392,14 @@ export class TablePhysics {
     this.tops.delete(key)
   }
 
-  /** How high (cm) something held at `at`, reaching `reach` (cm) round, must ride to clear the round fixtures and the hanging pans' rims under it: the top of the tallest, or 0. */
+  /** How high (cm) something held at `at`, reaching `reach` (cm) round, must ride to clear the round fixtures and the hanging pans' rims and rope knots under it: the top of the tallest, or 0. */
   heldClearance(at: Point, reach: number): number {
     let top = 0
     for (const { circle, height } of this.tops.values()) if (Math.hypot(at.x - circle.x, at.y - circle.y) * UNIT < circle.r * UNIT + reach) top = Math.max(top, height)
     this.pans.forEach((pan, side) => {
       const rim = panRimReach(SCALE.pans[side].r * UNIT)
       const hung = toWorld2(pan.position)
-      if (Math.hypot(at.x - hung.x, at.y - hung.y) * UNIT < rim.out + reach) top = Math.max(top, pan.position.y + rim.top)
+      if (Math.hypot(at.x - hung.x, at.y - hung.y) * UNIT < rim.out + reach) top = Math.max(top, pan.position.y + rim.knots)
     })
     return top
   }

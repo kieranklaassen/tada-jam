@@ -394,6 +394,11 @@ export class TableController {
     return false
   }
 
+  /** The stones and parts under a finger now. */
+  heldIds(): number[] {
+    return [...this.held.values()]
+  }
+
   pulse(id: number): number {
     const start = this.pulses.get(id)
     if (start === undefined) return 0

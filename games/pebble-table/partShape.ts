@@ -374,6 +374,93 @@ export function partDepth(kind: PartKind): number {
   return depth
 }
 
+const COVER_BALLS = 64
+/** How far apart (cm) a cover samples the drawn surface it holds. */
+const COVER_STEP = 0.15
+/** About how many of those points a cover's centres are spread over and settled among: as good, and quick. */
+const COVER_SETTLE = 2000
+const covers = new Map<PartKind, Ball[]>()
+
+/** The square of how far point `i` of `v` lies from centre `c` of `centres` (both flat x, y, z). */
+function squaredTo(v: ArrayLike<number>, i: number, centres: Float64Array, c: number): number {
+  const x = v[i] - centres[c * 3]
+  const y = v[i + 1] - centres[c * 3 + 1]
+  const z = v[i + 2] - centres[c * 3 + 2]
+  return x * x + y * y + z * z
+}
+
+function nearestOf(v: ArrayLike<number>, i: number, centres: Float64Array): number {
+  let best = 0
+  let bestSquared = Infinity
+  for (let c = 0; c < centres.length / 3; c++) {
+    const d = squaredTo(v, i, centres, c)
+    if (d < bestSquared) {
+      best = c
+      bestSquared = d
+    }
+  }
+  return best
+}
+
+/** A drawn sphere grid, as `surfacePoints` reads it. */
+export type Grid = { vertices: Float32Array; segments: number; rings: number }
+
+/**
+ * Balls that between them hold the whole drawn surface of `grids`, each round
+ * one patch of it: what a pan rope is laid over when the drawing is carried
+ * into it. The centres are spread over the surface (each the point farthest
+ * from those before it), then settled in the middle of the points nearest
+ * them, so each ball stands off its patch little; each reaches one sampling
+ * step past its farthest point, so the drawn triangles between the points lie
+ * inside too.
+ */
+export function coverOf(grids: readonly Grid[]): Ball[] {
+  const points = Float32Array.from(grids.flatMap(({ vertices, segments, rings }) => surfacePoints(vertices, segments, rings, COVER_STEP)))
+  const every = Math.max(1, Math.ceil(points.length / 3 / COVER_SETTLE))
+  const few = points.filter((_, i) => Math.floor(i / 3) % every === 0)
+  const centres = new Float64Array(COVER_BALLS * 3)
+  centres.set(few.subarray(0, 3))
+  const near = new Float64Array(few.length / 3).fill(Infinity)
+  for (let c = 1; c < COVER_BALLS; c++) {
+    let far = 0
+    for (let i = 0; i < near.length; i++) {
+      near[i] = Math.min(near[i], squaredTo(few, i * 3, centres, c - 1))
+      if (near[i] > near[far]) far = i
+    }
+    centres.set(few.subarray(far * 3, far * 3 + 3), c * 3)
+  }
+  for (let round = 0; round < 3; round++) {
+    const sums = new Float64Array(COVER_BALLS * 4)
+    for (let i = 0; i < few.length; i += 3) {
+      const c = nearestOf(few, i, centres)
+      for (let k = 0; k < 3; k++) sums[c * 4 + k] += few[i + k]
+      sums[c * 4 + 3]++
+    }
+    for (let c = 0; c < COVER_BALLS; c++) if (sums[c * 4 + 3] > 0) for (let k = 0; k < 3; k++) centres[c * 3 + k] = sums[c * 4 + k] / sums[c * 4 + 3]
+  }
+  const farthest = new Float64Array(COVER_BALLS).fill(-1)
+  for (let i = 0; i < points.length; i += 3) {
+    const c = nearestOf(points, i, centres)
+    farthest[c] = Math.max(farthest[c], squaredTo(points, i, centres, c))
+  }
+  const cover: Ball[] = []
+  for (let c = 0; c < COVER_BALLS; c++) {
+    if (farthest[c] >= 0) cover.push({ x: centres[c * 3], y: centres[c * 3 + 1], z: centres[c * 3 + 2], r: Math.sqrt(farthest[c]) + COVER_STEP })
+  }
+  return cover
+}
+
+/** A part's cover (see `coverOf`), in its own drawn space. */
+export function partCover(kind: PartKind): Ball[] {
+  let cover = covers.get(kind)
+  if (!cover) {
+    const pieces: Record<string, Lumped> = PART_PIECES[kind]
+    cover = coverOf(Object.keys(pieces).map((piece) => ({ vertices: partPieceVertices(kind, piece), segments: pieces[piece].segments, rings: pieces[piece].rings })))
+    covers.set(kind, cover)
+  }
+  return cover
+}
+
 /** How far a part reaches sideways from its origin, turned any way about the vertical. */
 export function partReach(kind: PartKind): number {
   const v = partVertices(kind)

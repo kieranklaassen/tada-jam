@@ -1,15 +1,16 @@
 import { useFrame } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import * as THREE from 'three'
 import type { TableController } from '../controller'
 import { QualityGovernor, startingTier, type QualitySettings } from '../quality'
 import { BAG, DOOR, FEEDING, SCALE, shelfTile, type Point } from '../layout'
 import { stoneRadius3, toWorld2, UNIT } from '../physics3d'
 import { stoneReachAlong, stoneReachDown, stoneReachOf, stoneRest } from '../stoneShape'
-import { partReachDown, STOOL_REACH } from '../partShape'
+import { partCover, partReachDown, STOOL_REACH } from '../partShape'
 import { feedingFloor, feedingRest, RUG, surfaceUnder } from '../surfaces'
 import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
 import { visitorHome } from '../visitors'
-import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GHOST_REACH, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, STONE_COVER, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type StoneState } from './models'
+import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GHOST_REACH, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, STONE_COVER, stoneCover, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type RopeBall, type StoneState } from './models'
 import { guestFloor } from './guest'
 import { GrownUpOverlay } from './overlay'
 import { ProjectorBridge, Stage, type ProjectorHandle } from './stage'
@@ -89,6 +90,40 @@ function partStates(table: TableController): PartState[] {
     })
   }
   return states
+}
+
+/** A held part is drawn this much bigger than it lies, about its body's origin. */
+const HELD_GROWTH = 1.12
+/**
+ * A held stone is drawn stretched by at most this share of how far each point
+ * lies from its body's origin (see `stoneMatrix`), and lifted by at most
+ * HELD_LIFT (cm) as it stretches.
+ */
+const HELD_STRETCH = 0.1
+const HELD_LIFT = 0.1
+
+/**
+ * The stones and parts held now, each as the balls of its cover turned as it
+ * is (for the pan ropes to be laid over): a part's grown as it is drawn, a
+ * stone's each grown enough to hold its patch however it stretches.
+ */
+export function heldBalls(table: TableController): RopeBall[][] {
+  const turn = new THREE.Quaternion()
+  const at = new THREE.Vector3()
+  return table.heldIds().flatMap((id) => {
+    const body = table.physics.body(id)
+    if (!body) return []
+    const { x, y, z } = body.position
+    turn.set(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w)
+    const part = table.state.parts.find((p) => p.id === id)
+    const grown = part
+      ? partCover(part.kind).map((ball) => ({ at: at.set(ball.x, ball.y, ball.z).applyQuaternion(turn).multiplyScalar(HELD_GROWTH).clone(), radius: ball.r * HELD_GROWTH }))
+      : stoneCover(table.quartersOf(id)).map((ball) => {
+          const reach = Math.hypot(ball.x, ball.y, ball.z)
+          return { at: at.set(ball.x, ball.y, ball.z).applyQuaternion(turn).clone(), radius: ball.r + (reach + ball.r) * HELD_STRETCH + HELD_LIFT }
+        })
+    return [grown.map((ball) => ({ center: { x: x + ball.at.x, y: y + ball.at.y, z: z + ball.at.z }, radius: ball.radius }))]
+  })
 }
 
 function jarCounts(table: TableController): Record<PartKind, number> {
@@ -222,7 +257,7 @@ function World({ table }: { table: TableController }) {
         />
       ) : live === 'scale' ? (
         <>
-          <ScaleModel read={() => ({ angle: table.beam.angle, panY: [table.physics.panY(0), table.physics.panY(1)], panSway: [table.physics.panSwung(0), table.physics.panSwung(1)], now: table.t })} />
+          <ScaleModel read={() => ({ angle: table.beam.angle, panY: [table.physics.panY(0), table.physics.panY(1)], panSway: [table.physics.panSwung(0), table.physics.panSwung(1)], held: heldBalls(table), now: table.t })} />
           <JarsModel read={() => ({ tips: table.jarTips, full: jarCounts(table), glow: table.state.parts.length === 0 ? table.guidance.glow : 0, now: table.t })} />
           <PartsModel read={() => partStates(table)} />
         </>

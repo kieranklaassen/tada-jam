@@ -5,9 +5,10 @@ import { albumSlot, BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type Mat
 import { DOOR_HINGE, DOOR_SWING, visitorPose } from '../visitors'
 import { BAG_HEADING, BAG_LENGTH, bagShape, bagTip } from '../bag'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
-import { stoneReachAlong, stoneReachOf } from '../stoneShape'
+import { pebbleRings, STONE_CUTS, STONE_SEGMENTS, stoneReachAlong, stoneReachOf, stoneVertices } from '../stoneShape'
 import { createClayMaterials, merge, paint, PALETTE, piece, type ClayMaterials, type Hold } from './clay'
 import {
+  coverOf,
   JAR,
   JAR_LID_CLOSED,
   JAR_LIFT,
@@ -21,6 +22,7 @@ import {
   nestRing,
   PART_DRAW_SCALE,
   PART_PIECES,
+  partCover,
   partPieceVertices,
   shellRib,
   sphereGrid,
@@ -30,9 +32,10 @@ import {
   stoolButton,
   stoolCushion,
   stoolRim,
+  type Ball,
   type Lumped,
 } from '../partShape'
-import { BOWL_LUMP, BOWL_PROFILE, BOWL_SCALE, DECAL_LIFT, decalReach, DISH_PROFILE, feedingFloor, HEM_POINTS, hemAt, ON_RUG, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_LUMP, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y, type Surfaces } from '../surfaces'
+import { BOWL_LUMP, BOWL_PROFILE, BOWL_SCALE, DECAL_LIFT, decalReach, DISH_PROFILE, feedingFloor, HEM_POINTS, hemAt, ON_RUG, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_LUMP, PLATE_PROFILE, ROPE_KNOT, RUG, RUG_HEM, RUG_HEM_Y, type Surfaces } from '../surfaces'
 import { furTime, MAX_SHELLS } from './fur'
 import { ARM_AT, CHEEK_AT, EAR_AT, GUEST_SIZE, guestFloor, guestYaw, NECK_Y, poseGuest, soleDepth, speciesShapes } from './guest'
 import { useQuality } from './quality'
@@ -236,6 +239,19 @@ const stoneRotation = new THREE.Matrix4()
 const stoneQuaternion = new THREE.Quaternion()
 
 /** Where a stone is drawn: its body's pose, with `keep` of its squash, rock and pop. */
+const stoneCovers = new Map<Quarters, Ball[]>()
+
+/** A stone's cover (see `coverOf`), about its body's origin, as `stoneMatrix` draws it resting and unturned. */
+export function stoneCover(q: Quarters): Ball[] {
+  let cover = stoneCovers.get(q)
+  if (!cover) {
+    const r = stoneRadius3(4)
+    cover = coverOf([{ vertices: stoneVertices(STONE_CUTS[q], STONE_SEGMENTS).map((v) => v * r), segments: STONE_SEGMENTS, rings: pebbleRings(STONE_SEGMENTS) }])
+    stoneCovers.set(q, cover)
+  }
+  return cover
+}
+
 export function stoneMatrix(motion: StoneMotion, keep: number, out: THREE.Matrix4): THREE.Matrix4 {
   const { stone } = motion
   const amount = motion.amount * keep
@@ -428,11 +444,20 @@ export function BagModel({ read }: { read: () => BagPose }) {
 
 // --- scale -------------------------------------------------------------------
 
-/** The beam's tilt, and where the pans hang and how far they have swung on their ropes (cm, as the physics holds them). */
-export type ScalePose = { angle: number; panY: [number, number]; panSway: [number, number]; now: number }
+/** One ball of a held stone or part as the pan ropes see it: they are laid over it. */
+export type RopeBall = { center: Vec3; radius: number }
 
+/**
+ * The beam's tilt, where the pans hang and how far they have swung on their
+ * ropes (cm, as the physics holds them), and the held stones and parts the
+ * ropes are laid over, each as the balls it fills.
+ */
+export type ScalePose = { angle: number; panY: [number, number]; panSway: [number, number]; held: readonly (readonly RopeBall[])[]; now: number }
+
+/** The most straight pieces a rope is drawn in, laid over what is held in its way. */
+const ROPE_PIECES = 8
 /** The pan ropes and their knots are part of the scale they hang from (for the intersection audit). */
-const ROPE_OBJECTS = Array.from({ length: 6 }, () => 'scale')
+const ROPE_OBJECTS = Array.from({ length: 6 * ROPE_PIECES }, () => 'scale')
 const KNOT_OBJECTS = Array.from({ length: 8 }, () => 'scale')
 
 export const PIVOT_Y = 25
@@ -448,7 +473,6 @@ const KNOB = { y: PIVOT_Y + 3, radius: 1.1 }
  * on. A rope ends at a knot's middle, so it meets the knot the same way
  * however the beam tilts and the pan swings.
  */
-export const ROPE_KNOT = { radius: 0.9, press: 0.35 }
 /** How thick the pan ropes are drawn, as a scale on the unit coil. */
 const ROPE_THICKNESS = 0.95
 
@@ -468,6 +492,152 @@ export function panHang(side: 0 | 1, angle: number, panY: number, sway: number):
   const sit = PAN_ROLL.y + reach * PAN_ROLL.tube + ROPE_KNOT.radius - ROPE_KNOT.press
   const rims = PAN_ANGLES.map((a) => new THREE.Vector3(center.x + Math.cos(a) * reach, center.y + sit, center.z + Math.sin(a) * reach))
   return { center, top, rims }
+}
+
+/** How far a rope's drawing reaches from its line: the unit coil's widest twist, at the rope's thickness. */
+export const ROPE_REACH = 0.5 * 1.28 * ROPE_THICKNESS
+/** A rope passes this much farther than touching round a held ball. */
+const ROPE_ROOM = 0.05
+
+/** A held ball's slice through the plane a rope is laid in is drawn as a polygon of this many sides round it. */
+const ROPE_SIDES = 8
+/** A point in the plane a rope is laid in: along the straight rope from its top knot, and out from it. */
+type Flat = [number, number]
+
+/**
+ * The way from (0, 0) to (length, 0) round every point on the far side of the
+ * line between them (s > 0): the far side of the convex hull of them all,
+ * which may reach past either end.
+ */
+function over(points: readonly Flat[], length: number): Flat[] {
+  const [start, end]: Flat[] = [[0, 0], [length, 0]]
+  const all = [start, end, ...points.filter((p) => p[1] > 0)].sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  const half = (list: readonly Flat[]) => {
+    const hull: Flat[] = []
+    for (const p of list) {
+      while (hull.length >= 2) {
+        const [o, a] = [hull[hull.length - 2], hull[hull.length - 1]]
+        if ((a[0] - o[0]) * (p[1] - o[1]) - (a[1] - o[1]) * (p[0] - o[0]) > 0) break
+        hull.pop()
+      }
+      hull.push(p)
+    }
+    return hull.slice(0, -1)
+  }
+  // Counter-clockwise from the rim knot round to the top knot is the way over them, backwards.
+  const ring = [...half(all), ...half([...all].reverse())]
+  const way: Flat[] = []
+  for (let i = ring.indexOf(end), k = 0; k < ring.length; i = (i + 1) % ring.length, k++) {
+    way.push(ring[i])
+    if (ring[i] === start) return way.reverse()
+  }
+  return [start, end]
+}
+
+/**
+ * How far above its rim knot's middle, and below its top knot's, a rope stays
+ * between them: so it passes over the rolled rim and under the beam end clear.
+ */
+const ROPE_KNOT_CLEAR = ROPE_REACH + ROPE_ROOM - (ROPE_KNOT.radius - ROPE_KNOT.press)
+/** The sides a rope is tried laid over a held thing, turned about its line from straight off the thing's middle: nearest first. */
+const ROPE_TURNS = [0, 1, -1, 2, -2, 3, -3, 4].map((k) => (k * Math.PI) / 4)
+
+/**
+ * A way over the top of things cut to at most `most` pieces: again and again,
+ * the piece whose two neighbours, run on along their lines to where they meet,
+ * take in least room is left out for them. The way only ever moves outward,
+ * so it still passes over everything. Null if it cannot be cut so.
+ */
+function fewer(way: readonly Flat[], most: number): Flat[] | null {
+  const out = [...way]
+  while (out.length - 1 > most) {
+    let [best, least, meet]: [number, number, Flat | null] = [-1, Infinity, null]
+    for (let i = 1; i + 2 < out.length; i++) {
+      const [a, b, c, d] = [out[i - 1], out[i], out[i + 1], out[i + 2]]
+      const [ux, uy, vx, vy, wx, wy] = [b[0] - a[0], b[1] - a[1], c[0] - d[0], c[1] - d[1], c[0] - b[0], c[1] - b[1]]
+      const det = vx * uy - ux * vy
+      if (Math.abs(det) < 1e-12) continue
+      const [p, q] = [(vx * wy - vy * wx) / det, (ux * wy - uy * wx) / det]
+      if (p < 0 || q < 0) continue
+      const m: Flat = [b[0] + ux * p, b[1] + uy * p]
+      const room = Math.abs((m[0] - b[0]) * wy - (m[1] - b[1]) * wx) / 2
+      if (room < least) [best, least, meet] = [i, room, m]
+    }
+    if (!meet) return null
+    out.splice(best, 2, meet)
+  }
+  return out
+}
+
+/** A held ball as a rope passes it: its middle, from the rope's top knot, and how far the rope's line keeps from it. */
+type Clearance = { at: THREE.Vector3; room: number }
+
+/**
+ * The way a rope from `top` along `u` for `length` runs over `balls` on the
+ * `n` side of its line: the shortest way from knot to knot, in the plane of
+ * the rope and `n`, that passes every ball sliced by that plane (drawn as a
+ * polygon round the slice) on that side, cut to ROPE_PIECES pieces (see
+ * `fewer`). Null if it cannot be.
+ */
+function wayOver(top: THREE.Vector3, rim: THREE.Vector3, u: THREE.Vector3, length: number, n: THREE.Vector3, balls: readonly Clearance[]): THREE.Vector3[] | null {
+  const m = new THREE.Vector3().crossVectors(u, n)
+  const slices: Flat[] = []
+  for (const { at, room } of balls) {
+    const aside = at.dot(m)
+    if (Math.abs(aside) >= room) continue
+    const size = Math.sqrt(room * room - aside * aside) / Math.cos(Math.PI / ROPE_SIDES)
+    const [t, s] = [at.dot(u), at.dot(n)]
+    for (let k = 0; k < ROPE_SIDES; k++) slices.push([t + Math.cos(((k + 0.5) * Math.PI * 2) / ROPE_SIDES) * size, s + Math.sin(((k + 0.5) * Math.PI * 2) / ROPE_SIDES) * size])
+  }
+  const way = fewer(over(slices, length), ROPE_PIECES)
+  if (!way) return null
+  return way.map(([t, s], i) => (i === 0 ? top : i === way.length - 1 ? rim : top.clone().addScaledVector(u, t).addScaledVector(n, s)))
+}
+
+/**
+ * The points a pan rope runs through from `top` to `rim`: straight, or, where
+ * a held stone or part stands in its way, laid over every ball of what it cuts
+ * (see `wayOver`): pushed straight off the middle of the thing it would cut
+ * deepest, or, if that would take it past a knot's height, turned about its
+ * line as little as keeps it between them. A ball reaching a knot is passed
+ * only as far off as leaves the knot outside its slice.
+ */
+export function ropeRun(top: THREE.Vector3, rim: THREE.Vector3, held: readonly (readonly RopeBall[])[]): THREE.Vector3[] {
+  const toRim = new THREE.Vector3().subVectors(rim, top)
+  const length = toRim.length()
+  const u = toRim.clone().divideScalar(length)
+  const clearance = (ball: RopeBall): Clearance => {
+    const at = new THREE.Vector3(ball.center.x, ball.center.y, ball.center.z).sub(top)
+    const knot = Math.min(at.length(), at.distanceTo(toRim))
+    return { at, room: Math.min(ball.radius + ROPE_REACH + ROPE_ROOM, (knot - ROPE_ROOM) * Math.cos(Math.PI / ROPE_SIDES)) }
+  }
+  const inWay: Clearance[] = []
+  let deepest: Clearance[] | null = null
+  let share = 1
+  for (const balls of held) {
+    const clear = balls.map(clearance).filter((ball) => ball.room > 0)
+    let cut = 1
+    for (const { at, room } of clear) cut = Math.min(cut, u.clone().multiplyScalar(THREE.MathUtils.clamp(at.dot(u), 0, length)).sub(at).length() / room)
+    if (cut >= 1) continue
+    inWay.push(...clear)
+    if (cut < share) [deepest, share] = [clear, cut]
+  }
+  if (!deepest) return [top, rim]
+  const off = new THREE.Vector3()
+  for (const { at } of deepest) off.sub(at)
+  off.divideScalar(deepest.length)
+  off.addScaledVector(u, -off.dot(u))
+  if (off.lengthSq() < 1e-8) off.copy(UP).addScaledVector(u, -UP.dot(u))
+  off.normalize()
+  const [low, high] = [rim.y + ROPE_KNOT_CLEAR, top.y - ROPE_KNOT_CLEAR]
+  let first: THREE.Vector3[] | null = null
+  for (const turn of ROPE_TURNS) {
+    const way = wayOver(top, rim, u, length, off.clone().applyAxisAngle(u, turn), inWay)
+    if (!way) continue
+    first ??= way
+    if (way.every((p, i) => i === 0 || i === way.length - 1 || (p.y >= low && p.y <= high))) return way
+  }
+  return first ?? [top, rim]
 }
 
 /** A rope's instance matrix: the unit coil stretched from one knot's middle to another's. */
@@ -559,21 +729,28 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
   const knots = useRef<THREE.InstancedMesh>(null)
   const post = to3(SCALE.post)
   const shapes = once('scale', scaleShapes)
+  // The ropes are laid over held stones and parts as their covers: made now, not on the first hold.
+  once('covers', () => [...PART_KINDS.map(partCover), ...([1, 2, 4] as const).map(stoneCover)])
   useFrame(() => {
     const pose = read()
     const angle = pose.angle + Math.sin(pose.now * 0.9) * 0.003
     if (beam.current) beam.current.rotation.z = -angle
     // Pans hang on ropes: when the beam moves they lag, then swing back and settle (see `stepSway`).
+    let pieces = 0
     SCALE.pans.forEach((_, side) => {
       const hang = panHang(side as 0 | 1, angle, pose.panY[side], pose.panSway[side])
       pans[side].current?.position.copy(hang.center)
       knots.current?.setMatrixAt(side * 4, scratch.m.makeTranslation(hang.top))
       hang.rims.forEach((rim, k) => {
-        chains.current?.setMatrixAt(side * 3 + k, ropeMatrix(hang.top, rim, scratch.m))
+        const run = ropeRun(hang.top, rim, pose.held)
+        for (let i = 0; i + 1 < run.length; i++) chains.current?.setMatrixAt(pieces++, ropeMatrix(run[i], run[i + 1], scratch.m))
         knots.current?.setMatrixAt(side * 4 + 1 + k, scratch.m.makeTranslation(rim))
       })
     })
-    if (chains.current) chains.current.instanceMatrix.needsUpdate = true
+    if (chains.current) {
+      chains.current.count = pieces
+      chains.current.instanceMatrix.needsUpdate = true
+    }
     if (knots.current) knots.current.instanceMatrix.needsUpdate = true
   })
   return (
@@ -585,7 +762,7 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
       {shapes.pans.map((geometry, side) => (
         <mesh key={side} name={side === 0 ? 'scale-pan-left' : 'scale-pan-right'} ref={pans[side]} geometry={geometry} material={clay} />
       ))}
-      <instancedMesh name="scale-ropes" ref={chains} args={[shapes.chain, clay, 6]} frustumCulled={false} userData={{ jamInstanceObjects: ROPE_OBJECTS }} />
+      <instancedMesh name="scale-ropes" ref={chains} args={[shapes.chain, clay, 6 * ROPE_PIECES]} frustumCulled={false} userData={{ jamInstanceObjects: ROPE_OBJECTS }} />
       <instancedMesh name="scale-knots" ref={knots} args={[shapes.knot, clay, 8]} frustumCulled={false} userData={{ jamInstanceObjects: KNOT_OBJECTS }} />
     </group>
   )
