@@ -180,6 +180,8 @@ export class TablePhysics {
   private readonly pans: CANNON.Body[] = []
   /** The rug's top, while Fair Feeding is the live mat: a plane that holds only what lies over the rug (see `addRug`). */
   private rug: CANNON.Body | null = null
+  /** Each pan's floor: a plane body that moves with the pan, and how far out from its middle it holds things. */
+  private readonly panFloors = new Map<CANNON.Body, number>()
   /** The table top and the shelf beside it: one plane that holds only what lies over them (see `addTable`). */
   private table: CANNON.Body | null = null
   private readonly brooms = new Map<number, CANNON.Body>()
@@ -195,6 +197,7 @@ export class TablePhysics {
     this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, GRAVITY, 0) })
     this.world.allowSleep = true
     this.world.broadphase = new CANNON.SAPBroadphase(this.world)
+    this.onlyPairsThatMayTouch()
     this.onlyNearShapes()
     this.world.defaultContactMaterial.friction = 0.4
     this.world.addContactMaterial(new CANNON.ContactMaterial(this.stoneMaterial, this.woodMaterial, { friction: 0.45, restitution: 0.12 }))
@@ -294,8 +297,6 @@ export class TablePhysics {
     narrowphase.getContacts = (p1, p2, world, result, oldcontacts, frictionResult, frictionPool) => {
       for (let k = 0; k < p1.length; k++) {
         const [a, b] = [p1[k], p2[k]]
-        if ((a === this.rug && !this.overRug(b)) || (b === this.rug && !this.overRug(a))) continue
-        if ((a === this.table && !overTable(b)) || (b === this.table && !overTable(a))) continue
         if (a.shapes.length * b.shapes.length < NEAR_SHAPES_FROM) {
           one[0][0] = a
           one[1][0] = b
@@ -426,6 +427,45 @@ export class TablePhysics {
     this.addHem()
   }
 
+  /** Whether a body lies in a pan: its middle within the floor's reach of the pan's middle, and not below the pan. */
+  private inPan(floor: CANNON.Body, body: CANNON.Body): boolean {
+    const reach = this.panFloors.get(floor) ?? 0
+    const dx = body.position.x - floor.position.x
+    const dz = body.position.z - floor.position.z
+    return dx * dx + dz * dz <= reach * reach && body.position.y >= floor.position.y - PAN_FLOOR + DISH_PROFILE[0][1] * PAN_DEPTH
+  }
+
+  /** Whether a pair may touch at all: the table, the rug and the pan floors are planes that hold only what lies over them. */
+  private mayTouch(a: CANNON.Body, b: CANNON.Body): boolean {
+    for (const [plane, other] of [[a, b], [b, a]] as const) {
+      if (plane === this.table && !overTable(other)) return false
+      if (plane === this.rug && !this.overRug(other)) return false
+      if (this.panFloors.has(plane) && !this.inPan(plane, other)) return false
+    }
+    return true
+  }
+
+  /**
+   * The planes' rules apply to the broadphase's pairs, before any contact is
+   * looked for, so they hold whichever way the narrowphase then runs.
+   */
+  private onlyPairsThatMayTouch(): void {
+    const broadphase = this.world.broadphase
+    const pairs = broadphase.collisionPairs.bind(broadphase)
+    broadphase.collisionPairs = (world, p1, p2) => {
+      pairs(world, p1, p2)
+      let kept = 0
+      for (let k = 0; k < p1.length; k++) {
+        if (!this.mayTouch(p1[k], p2[k])) continue
+        p1[kept] = p1[k]
+        p2[kept] = p2[k]
+        kept++
+      }
+      p1.length = kept
+      p2.length = kept
+    }
+  }
+
   /** Whether a body's middle lies over the rug. */
   private overRug(body: CANNON.Body): boolean {
     const rug = this.rug
@@ -459,6 +499,11 @@ export class TablePhysics {
       this.targets.delete(pan)
     }
     this.pans.length = 0
+    for (const floor of this.panFloors.keys()) {
+      this.world.removeBody(floor)
+      this.targets.delete(floor)
+    }
+    this.panFloors.clear()
     this.removeFixture('bowl')
     this.removeFixture('rug')
     this.rug = null
@@ -481,8 +526,16 @@ export class TablePhysics {
       const at = to3(pan)
       body.position.set(at.x, PAN_REST_HEIGHT, at.z)
       const r = pan.r * UNIT
-      this.disc(body, r * PAN_RIM, DISH_PROFILE[0][1] * PAN_DEPTH, PAN_FLOOR)
       this.wall(body, panOutline(r), 0.8)
+      // The floor is a plane that moves with the pan and holds only what lies
+      // in it (see `inPan`): a stone on a 12-sided disc cost 23 us a contact
+      // test. The pan only ever moves, never tilts, so its floor stays level.
+      const floor = new CANNON.Body({ mass: 0, type: CANNON.Body.KINEMATIC, material: this.woodMaterial })
+      floor.addShape(new CANNON.Plane())
+      floor.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
+      floor.position.set(at.x, PAN_REST_HEIGHT + PAN_FLOOR, at.z)
+      this.world.addBody(floor)
+      this.panFloors.set(floor, r * PAN_RIM)
       this.world.addBody(body)
       this.pans.push(body)
     }
@@ -562,9 +615,11 @@ export class TablePhysics {
   setPanDrops(drops: readonly [number, number], sway = 0): void {
     const tilted = Math.abs(drops[0] - this.panDrops[0]) > 0.01 || Math.abs(drops[1] - this.panDrops[1]) > 0.01
     const swung = Math.abs(sway - this.panSway) > 0.01
+    const floors = [...this.panFloors.keys()]
     this.pans.forEach((pan, side) => {
       const at = to3(SCALE.pans[side])
       this.targets.set(pan, { x: at.x + sway, y: PAN_REST_HEIGHT - drops[side] * UNIT, z: at.z })
+      if (floors[side]) this.targets.set(floors[side], { x: at.x + sway, y: PAN_REST_HEIGHT - drops[side] * UNIT + PAN_FLOOR, z: at.z })
     })
     if (tilted) for (const { body } of this.stones.values()) body.wakeUp()
     else if (swung) {
