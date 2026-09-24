@@ -67,6 +67,10 @@ export class ForestWorld {
     ground.renderOrder = 1
     const sceneryFill = new THREE.Mesh(scenery.fill, fillMaterial({ homes: true, brushScale: 0.07 }))
     const sceneryInk = new THREE.Mesh(scenery.ink, inkMaterial({ homes: true }))
+    ground.name = 'meadow'
+    sceneryFill.name = 'scenery'
+    sceneryInk.name = 'scenery-ink'
+    sky.name = 'sky'
     for (const mesh of [ground, sceneryFill, sceneryInk]) {
       mesh.frustumCulled = false
       mesh.matrixAutoUpdate = false
@@ -85,7 +89,10 @@ export class ForestWorld {
       const inkMat = inkMaterial({ parts }, data)
       const fill = new THREE.Mesh(geometry.fill, fillMat)
       const ink = new THREE.Mesh(geometry.ink, inkMat)
+      fill.name = key
+      ink.name = `${key}-ink`
       for (const mesh of [fill, ink]) {
+        mesh.userData.jamObject = key
         mesh.frustumCulled = false
         mesh.matrixAutoUpdate = false
         this.scene.add(mesh)

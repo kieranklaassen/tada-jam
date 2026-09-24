@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Creature, MOTION, type BrainEvent, type BrainWorld } from './brain'
+import { CARRY_LIFT, Creature, footprintGap, MOTION, type BrainEvent, type BrainWorld } from './brain'
 import { ANIMAL_KEYS, ANIMALS, HOME_KEYS, HOMES, inClearing, START, type AnimalKey } from './layout'
 import { createRng } from './rng'
 
@@ -22,6 +22,13 @@ function one(key: AnimalKey, x = 0, z = 0): Creature {
   const c = new Creature(key, ANIMAL_KEYS.indexOf(key), 0.3)
   c.placeAt(x, z)
   return c
+}
+
+/** How deep the worst pair of footprints overlaps (0 when everyone stands clear). */
+function deepestOverlap(creatures: Creature[]): number {
+  let worst = 0
+  for (const a of creatures) for (const b of creatures) if (a !== b) worst = Math.max(worst, -footprintGap(a, a.x, a.z, b))
+  return worst
 }
 
 describe('animals and homes', () => {
@@ -66,6 +73,8 @@ describe('wandering', () => {
 
   it('an animal hidden behind a bigger one steps out into view, even while everyone stands gazing home', () => {
     const fox = one('fox', 0, 12)
+    // Side-on, heading home: facing the child, its long tail would reach back over the bird.
+    fox.yaw = -Math.PI / 2
     const bird = one('songbird', 1, -6)
     const creatures = [fox, bird]
     expect(bird.hiddenBy(creatures)).toBe(fox)
@@ -97,6 +106,41 @@ describe('wandering', () => {
     expect(touching / samples).toBeLessThan(0.45)
   })
 
+  it('nobody stands inside anyone’s drawn body, even with all six crowded together doing their tricks', () => {
+    const creatures = ANIMAL_KEYS.map((key, i) => {
+      const c = one(key, (i % 3) * 6 - 6, Math.floor(i / 3) * 6)
+      c.yaw = i * 1.1
+      return c
+    })
+    const w = world(creatures)
+    for (const c of creatures) {
+      c.pickUp()
+      c.drop(true)
+    }
+    let tricks = 0
+    let worst = 0
+    for (let t = 0; t < 4; t += 1 / 60) {
+      for (const c of creatures) c.step(1 / 60, w)
+      tricks += creatures.filter((c) => c.mode === 'trick').length
+      if (t > 0.6) worst = Math.max(worst, deepestOverlap(creatures))
+    }
+    expect(tricks).toBeGreaterThan(60)
+    // A turning body can brush a neighbour for a frame; never more than a hair.
+    expect(worst).toBeLessThan(0.5)
+  })
+
+  it('a long fox and a broad bear keep apart by their drawn shapes, not by a circle', () => {
+    const fox = one('fox', 0, 0)
+    const bear = one('bear', -26, 0)
+    // Both face the same way along x, the bear's nose at the fox's tail.
+    fox.yaw = bear.yaw = Math.PI / 2
+    expect(Math.hypot(fox.x - bear.x, fox.z - bear.z)).toBeGreaterThan(fox.spec.radius + bear.spec.radius)
+    expect(footprintGap(fox, fox.x, fox.z, bear)).toBeLessThan(-5)
+    const creatures = [fox, bear]
+    run(creatures, world(creatures, [], { gazeHome: true }), 1)
+    expect(footprintGap(fox, fox.x, fox.z, bear)).toBeGreaterThan(0)
+  })
+
   it('idle gaze stops the walking and turns every face toward its home', () => {
     const creatures = ANIMAL_KEYS.map((key, i) => one(key, -40 + i * 16, 0))
     const w = world(creatures, [], { gazeHome: true })
@@ -124,6 +168,43 @@ describe('carrying', () => {
       most = Math.max(most, Math.abs(fox.swingX))
     }
     expect(most).toBeGreaterThan(0.05)
+  })
+
+  it('a carried rabbit rides up over the bear in its way instead of through it, and back down after', () => {
+    const bear = one('bear', 0, 0)
+    const rabbit = one('rabbit', -50, 0)
+    const creatures = [bear, rabbit]
+    const w = world(creatures, [], { gazeHome: true })
+    rabbit.pickUp()
+    rabbit.setGrab(-50, 0)
+    run(creatures, w, 0.5)
+    let over = 0
+    for (let t = 0; t <= 0.8; t += 1 / 60) {
+      rabbit.setGrab(-50 + (100 * t) / 0.8, 0)
+      for (const c of creatures) c.step(1 / 60, w)
+      if (footprintGap(rabbit, rabbit.x, rabbit.z, bear) < 0) {
+        over += 1
+        expect(rabbit.y).toBeGreaterThan(bear.spec.footprint.top)
+      }
+    }
+    expect(over).toBeGreaterThan(3)
+    run(creatures, w, 1.2)
+    expect(rabbit.y).toBeCloseTo(CARRY_LIFT, 0)
+  })
+
+  it('let go over someone, an animal slides off them on the way down instead of landing inside', () => {
+    const bear = one('bear', 0, 0)
+    const rabbit = one('rabbit', -50, 0)
+    const creatures = [bear, rabbit]
+    const w = world(creatures, [], { gazeHome: true })
+    rabbit.pickUp()
+    rabbit.setGrab(0, 2)
+    run(creatures, w, 1)
+    expect(rabbit.y).toBeGreaterThan(bear.spec.footprint.top)
+    rabbit.drop()
+    for (let t = 0; t < 1 && rabbit.mode === 'fall'; t += 1 / 60) for (const c of creatures) c.step(1 / 60, w)
+    expect(rabbit.mode).not.toBe('fall')
+    expect(footprintGap(rabbit, rabbit.x, rabbit.z, bear)).toBeGreaterThan(-0.5)
   })
 
   it('the bear swings wider and slower than the songbird for the same move', () => {
@@ -201,6 +282,27 @@ describe('homes', () => {
     expect(fish.mode).toBe('asleep')
     expect(events).toContain('fish:plop')
     expect(Math.hypot(fish.x - HOMES.pond.bed.x, fish.z - HOMES.pond.bed.z)).toBeLessThan(1)
+  })
+
+  it('a fox standing in the way of the fish flopping home steps aside instead of letting it through', () => {
+    const fish = one('fish', 30, 0)
+    // Halfway along the fish's way from the nest's door to the pond.
+    const fox = one('fox', (HOMES.nest.door.x + HOMES.pond.mouth.x) / 2, (HOMES.nest.door.z + HOMES.pond.mouth.z) / 2)
+    const creatures = [fox, fish]
+    const w = world(creatures, [], { gazeHome: true })
+    fish.pickUp()
+    fish.sendTo('nest')
+    let passing = 0
+    let worst = 0
+    for (let t = 0; t < 9; t += 1 / 60) {
+      for (const c of creatures) c.step(1 / 60, w)
+      if (fish.mode !== 'travel') continue
+      passing += 1
+      worst = Math.max(worst, -footprintGap(fox, fox.x, fox.z, fish))
+    }
+    expect(passing).toBeGreaterThan(60)
+    expect(worst).toBeLessThan(0.5)
+    expect(fish.mode).toBe('asleep')
   })
 
   it('the owl hops out of the burrow and flies to its hollow', () => {
