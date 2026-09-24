@@ -55,7 +55,10 @@
   }
 
   const compile = (list) => (list ?? []).map((s) => new RegExp(s))
-  const matches = (res, ...texts) => res.some((re) => texts.some((t) => re.test(t)))
+  // Rules also see each text without its colour suffix and child indices, so
+  // `outline$` matches `frog>outline #574373` and `frog:5/outline:1`.
+  const bare = (t) => String(t).replace(/ #[0-9a-f]{6}$/i, '').replace(/:\d+(?=[/#~]|$)/g, '')
+  const matches = (res, ...texts) => res.some((re) => texts.some((t) => re.test(t) || re.test(bare(t))))
 
   function visibleChain(o) {
     for (let q = o; q; q = q.parent) if (!q.visible) return false
@@ -173,13 +176,24 @@
     const instanceObject = (m, object, i) => {
       const tags = m.o.userData && m.o.userData.jamInstanceObjects
       if (tags && tags[i] != null) return 'tag:' + tags[i]
-      for (const r of instanceRules) if (r.re.test(m.path) || r.re.test(m.label)) return object + '#' + Math.floor(i / r.per)
+      for (const r of instanceRules) if (matches([r.re], m.path, m.label)) return object + '#' + Math.floor(i / r.per)
       return object + '#' + i
     }
     const cam = cameraInfo(camera, renderer)
     const cache = new Map()
     const meshes = []
     const skipped = []
+    // An inverted-hull outline is a back-side copy of another mesh's geometry
+    // pushed out in its vertex shader: on the CPU it is the same solid twice.
+    const frontGeometry = new Set()
+    scene.traverse((o) => {
+      if (!o.isMesh || !o.geometry || !o.geometry.attributes.position) return
+      const m = Array.isArray(o.material) ? o.material[0] : o.material
+      if (m && m.side !== 1) {
+        frontGeometry.add(o.geometry.uuid)
+        frontGeometry.add(o.geometry.attributes.position.array)
+      }
+    })
     scene.traverse((o) => {
       if (!o.isMesh || !o.geometry || !o.geometry.attributes.position) return
       if (!visibleChain(o)) return
@@ -192,6 +206,10 @@
       const label = labelOf(o, scene)
       if (matches(ignore, path, label, mat.type)) return
       if (o.geometry.isInstancedBufferGeometry) { skipped.push({ path, label, why: 'shader-instanced' }); return }
+      if (mat.side === 1 && mat.customVertex && (frontGeometry.has(o.geometry.uuid) || frontGeometry.has(o.geometry.attributes.position.array))) {
+        skipped.push({ path, label, why: 'outline hull' })
+        return
+      }
       meshes.push({ o, path, label, mat })
     })
 
@@ -231,7 +249,7 @@
     }
     const objFrac = options.objectFraction ?? 0.3
     const objectOf = (m) => {
-      for (const r of objectRules) if (r.re.test(m.path) || r.re.test(m.label)) return 'rule:' + r.as
+      for (const r of objectRules) if (matches([r.re], m.path, m.label)) return 'rule:' + r.as
       for (let q = m.o; q && q !== scene; q = q.parent) if (q.userData && q.userData.jamObject) return 'tag:' + q.userData.jamObject
       let root = m.o
       for (let q = m.o.parent; q && q !== scene; q = q.parent) {

@@ -107,13 +107,16 @@ class TwoGen {
 }
 
 const compileAll = (list) => (list ?? []).map((s) => new RegExp(s))
+// Rules also see each text without its colour suffix and child indices, as in page.js.
+const bare = (t) => String(t).replace(/ #[0-9a-f]{6}$/i, '').replace(/:\d+(?=[/#~]|$)/g, '')
+const test = (re, ...texts) => texts.some((t) => re.test(t) || re.test(bare(t)))
 
 function allowedBy(finding, allow) {
   for (const rule of allow) {
     if (rule.kind && rule.kind !== finding.kind) continue
     const ra = new RegExp(rule.a)
     const rb = rule.b ? new RegExp(rule.b) : null
-    const side = (re, x) => re.test(x.id) || re.test(x.label) || re.test(x.object)
+    const side = (re, x) => test(re, x.id, x.label, x.object)
     const A = { id: finding.a, label: finding.labelA, object: finding.objectA }
     const B = { id: finding.b, label: finding.labelB, object: finding.objectB }
     const hit = rb ? (side(ra, A) && side(rb, B)) || (side(ra, B) && side(rb, A)) : side(ra, A) || side(ra, B)
@@ -176,7 +179,9 @@ async function auditGame(browser, base, game, opts) {
   await page.goto(`${base}/?chrome=0${query ? '&' + query : ''}#/play/${game}`)
   const firstFrame = async () => {
     for (let i = 0; i <= 120; i++) {
-      if (await page.evaluate(() => (window.__jamAudit?.main()?.calls ?? 0) > 0)) return true
+      // Two frames, not one: a game may draw once from its resize handler
+      // before its own loop has placed anything.
+      if (await page.evaluate(() => (window.__jamAudit?.main()?.calls ?? 0) > 1)) return true
       await page.clock.runFor(STEP)
     }
     return false
@@ -243,9 +248,9 @@ async function auditGame(browser, base, game, opts) {
       const stored = positions.get(p.id)
       if (!stored || stored.version !== p.version || !stored.positions) continue
       if (p.material.customVertex) customVertex.add(p.mesh)
-      if (ignoreRes.some((re) => re.test(p.id) || re.test(p.label))) continue
+      if (ignoreRes.some((re) => test(re, p.id, p.label))) continue
       const input = { id: p.id, mesh: p.mesh, label: p.label, object: p.object, positions: stored.positions, index: stored.index, material: p.material, version: p.version }
-      const parts = splitRes.some((re) => re.test(p.id) || re.test(p.label)) ? splitComponents(input) : [input]
+      const parts = splitRes.some((re) => test(re, p.id, p.label)) ? splitComponents(input) : [input]
       for (const part of parts) {
         const key = part.id + '@' + part.version
         let piece = prepared.get(key)
@@ -281,6 +286,9 @@ async function auditGame(browser, base, game, opts) {
       findings.set(key, entry)
       entry.file = prev?.file
       entry.shotSeverity = prev?.shotSeverity ?? 0
+      entry.shotAt = prev?.shotAt ?? null
+      entry.shotFocus = prev?.shotFocus ?? null
+      entry.shotRadius = prev?.shotRadius ?? null
       // Rendering is most of a run's cost, so a finding is photographed again
       // only when it gets clearly worse; CI photographs only what fails it.
       const growth = opts.ci ? 1.5 : 1.25
@@ -288,11 +296,16 @@ async function auditGame(browser, base, game, opts) {
         entry.file ??= `${String(findings.size).padStart(3, '0')}-${f.kind}-${slug(f.labelA)}--${slug(f.labelB)}`
         entry.shot = await shoot(f, entry.file)
         entry.shotSeverity = sev
+        entry.shotAt = entry.at
+        entry.shotFocus = f.focus
+        entry.shotRadius = f.radius
       }
     }
+    // A replay photographs the moment and spot of the earlier photo, which can
+    // be earlier than the finding's deepest sample (`at`).
     for (const target of replayTargets) {
-      if (Math.abs(target.at * 1000 - t) > 6) continue
-      const shot = await page.evaluate((a) => window.__jamAudit.shoot(a), { focus: target.focus, radius: Math.max(target.radius, 1e-6), segments: [] })
+      if (Math.abs((target.shotAt ?? target.at) * 1000 - t) > 6) continue
+      const shot = await page.evaluate((a) => window.__jamAudit.shoot(a), { focus: target.shotFocus ?? target.focus, radius: Math.max(target.shotRadius ?? target.radius, 1e-6), segments: [] })
       if (!shot) continue
       const file = `replay/${target.file}.png`
       writeFileSync(join(out, file), Buffer.from(shot.closeup, 'base64'))
@@ -488,7 +501,7 @@ function markdown(r) {
     `Open: ${r.counts.open}. Allowed: ${r.counts.allowed}. Not visible or under the pixel floor: ${r.counts.hidden}.`,
     '',
   ]
-  if (r.skipped.length) lines.push(`Not audited (shader-instanced): ${r.skipped.map((s) => '`' + s.label + '`').join(', ')}`, '')
+  if (r.skipped.length) lines.push(`Not audited (shader-instanced geometry, outline hulls): ${r.skipped.map((s) => '`' + s.label + '` (' + s.why + ')').join(', ')}`, '')
   if (r.errors.length) lines.push('Page errors:', ...r.errors.map((e) => `- ${e}`), '')
   lines.push('| # | kind | depth | px | moves | pieces | moment @ s | status | shot |', '| --- | --- | --- | --- | --- | --- | --- | --- | --- |')
   r.findings.forEach((f, i) => {
