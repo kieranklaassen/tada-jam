@@ -73,6 +73,16 @@ export default {
     // The demonstration hand is a screen-facing sprite drawn without a depth test.
     'ghost-hand',
   ],
+  allow: [
+    {
+      a: '^piece-',
+      b: '^piece-',
+      kind: 'penetration',
+      upTo: 0.2,
+      reason:
+        "a block landing on another dips in for a frame or two (one physics step's travel at its landing speed) before the contact pushes it back out; at rest it sits on the drawn surface. physics.test bounds rest under 0.02 and landings under 0.16, and 288 swept drops never passed a fifth of the smaller piece",
+    },
+  ],
   moments: [
     // Glow at 3 s, the tray peek, then the ghost hand carries a see-through cube (demo at 5 s).
     { name: 'idle-guidance', run: (d) => d.wait(8600) },

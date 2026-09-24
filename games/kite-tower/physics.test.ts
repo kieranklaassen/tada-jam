@@ -458,7 +458,8 @@ describe('PlayPhysics: pieces resting on pieces', () => {
     expect(cases).toBe(192)
     expect(worstRest, 'at rest').toBeLessThan(0.02)
     // A step's travel at landing speed, held for a few frames at most while the contact pushes it back out.
-    expect(worstDip, 'deepest landing').toBeLessThan(0.25)
+    // The intersection audit allows pieces through each other up to a fifth of the smaller one's size for these landings (its scale is 0.8 or more).
+    expect(worstDip, 'deepest landing').toBeLessThan(0.16)
     expect(longestDip, 'longest a landing stays in more than 0.03').toBeLessThan(0.15)
   }, 60_000)
 })
