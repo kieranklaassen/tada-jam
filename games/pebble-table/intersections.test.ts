@@ -1,13 +1,14 @@
 import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
-import { FEEDING, TABLE, type Quarters } from './layout'
+import { albumSlot, FEEDING, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
 import { SEAT_SPECIES } from './motion'
 import { STOOL_REACH, STOOL_TOP } from './partShape'
 import { STEP, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
 import { STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneRest, stoneVertices } from './stoneShape'
 import { feedingFloor, ON_RUG, PLATE_HEIGHT, PLATE_PROFILE } from './surfaces'
 import { GUEST_SIZE, guestFloor, guestYaw, soleDepth, speciesShapes } from './view/guest'
+import { ALBUM_SCALE, albumGeometry, CHOOSER_SCALE, chooserGeometry, easeOutBack } from './view/models'
 
 // What the intersection audit (npm run check:intersections -- pebble-table)
 // found drawn pieces doing, pinned at the level of the shapes and physics
@@ -197,5 +198,35 @@ describe('guests stand on what is drawn under them', () => {
       const sunk = Math.max(...guestBody(seat).map((v) => feedingFloor(toPlane(v), 0) - v.y))
       expect(sunk, `seat ${seat}`).toBeLessThanOrEqual(1e-6)
     }
+  })
+})
+
+/** How far a shape reaches from its upright axis, so it holds whichever way the shape turns. */
+function footprint(geometry: THREE.BufferGeometry, scale: number): number {
+  const position = geometry.attributes.position
+  let reach = 0
+  for (let i = 0; i < position.count; i++) reach = Math.max(reach, Math.hypot(position.getX(i), position.getZ(i)))
+  return reach * scale
+}
+
+describe('the choosers and the album stand apart on the shelf', () => {
+  const mats: readonly MatKey[] = ['scale', 'feeding', 'door']
+  const spacing = (shelfTile(1).y - shelfTile(0).y) * UNIT
+
+  it('never draws two neighbouring choosers into each other, whichever two are on the shelf', () => {
+    for (const a of mats) {
+      for (const b of mats) {
+        if (a === b) continue
+        expect(footprint(chooserGeometry(a), CHOOSER_SCALE) + footprint(chooserGeometry(b), CHOOSER_SCALE), `${a} above ${b}`).toBeLessThan(spacing)
+      }
+    }
+  })
+
+  it('never draws the album into the chooser above it, even as it springs in', () => {
+    let overshoot = 0
+    for (let t = 0; t <= 1; t += 0.01) overshoot = Math.max(overshoot, easeOutBack(t))
+    const album = footprint(albumGeometry(), ALBUM_SCALE * overshoot)
+    const gap = (albumSlot().y - shelfTile(1).y) * UNIT
+    for (const mat of mats) expect(footprint(chooserGeometry(mat), CHOOSER_SCALE) + album, mat).toBeLessThan(gap)
   })
 })
