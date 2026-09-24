@@ -142,27 +142,139 @@ function headPaint(spec: FrogSpec, spotted: ((p: THREE.Vector3) => boolean) | nu
   }
 }
 
+/** The belly, the lowest thing on a sitting frog. */
+export const BELLY = { y: 0.36, height: 0.39, depth: 0.44, width: 0.5 } as const
+/** How far below its feet a frog at rest reaches: the bottom of its belly, in frog units. */
+export const REST_BOTTOM = BELLY.y - BELLY.height
+/** The throat bubble at full size (the pose's `bubble` scales it about its pivot). */
+export const BUBBLE = { y: 0.42, z: 0.46, radius: 0.24 } as const
+/** The throat bubble never shrinks below this, so a closed throat still shows. */
+export const BUBBLE_MIN = 0.14
+/** How much wider than the shared shape each frog's belly is, and how long its hind legs are. */
+export const BELLY_WIDTH: Record<Character, number> = { showoff: 1.06, bouncy: 1, sleepy: 1.1, shy: 1, crooner: 1.04 }
+export const LEG_SCALE: Record<Character, number> = { showoff: 1, bouncy: 1.2, sleepy: 1, shy: 1, crooner: 1 }
+
+// A hind leg, as the ellipsoids it is built from: height and depth of each
+// centre, and its half height and half depth at leg scale 1.
+const THIGH = { y: 0.2, z: -0.05, height: 0.18, depth: 0.28 }
+const FOOT = { y: 0.035, z: 0.18, height: 0.04, depth: 0.18 }
+const TOE = { y: 0.045, reach: 0.17, size: 0.04 }
+const TOE_SPREAD = 0.42
+/** The right hand at rest (the left mirrors it): centre and half extents. */
+const HAND = { x: 0.38, y: 0.07, z: 0.38, rx: 0.1, ry: 0.055, rz: 0.11 } as const
+
 function limbs(spec: FrogSpec, parts: Part[], legScale: number): void {
   for (const side of [-1, 1] as const) {
     const arm = side < 0 ? BONE.armL : BONE.armR
     const leg = side < 0 ? BONE.legL : BONE.legR
     parts.push(part(shapes.capsule(), spec.skin, { position: [side * 0.37, 0.26, 0.29], scale: [0.14, 0.17, 0.14], rotation: [-0.46, 0, side * 0.08] }, arm))
-    parts.push(part(shapes.sphere(0), spec.skin, { position: [side * 0.38, 0.07, 0.38], scale: [0.1, 0.055, 0.11] }, arm))
-    parts.push(part(shapes.sphere(1), spec.skin, { position: [side * 0.4, 0.2, -0.05], scale: [0.2 * legScale, 0.18 * legScale, 0.28 * legScale] }, leg))
-    parts.push(part(shapes.sphere(0), spec.skin, { position: [side * 0.47, 0.035, 0.18], scale: [0.14 * legScale, 0.04, 0.18 * legScale] }, leg))
+    parts.push(part(shapes.sphere(0), spec.skin, { position: [side * HAND.x, HAND.y, HAND.z], scale: [HAND.rx, HAND.ry, HAND.rz] }, arm))
+    parts.push(part(shapes.sphere(1), spec.skin, { position: [side * 0.4, THIGH.y, THIGH.z], scale: [0.2 * legScale, THIGH.height * legScale, THIGH.depth * legScale] }, leg))
+    parts.push(part(shapes.sphere(0), spec.skin, { position: [side * 0.47, FOOT.y, FOOT.z], scale: [0.14 * legScale, FOOT.height, FOOT.depth * legScale] }, leg))
     for (let toe = -1; toe <= 1; toe++) {
-      const a = side * 0.35 + toe * 0.42
+      const a = side * 0.35 + toe * TOE_SPREAD
       parts.push(
-        part(shapes.tiny(), spec.back, { position: [side * 0.47 + Math.sin(a) * 0.17 * legScale, 0.045, 0.18 + Math.cos(a) * 0.17 * legScale], scale: 0.04 }, leg, false),
+        part(
+          shapes.tiny(),
+          spec.back,
+          { position: [side * 0.47 + Math.sin(a) * TOE.reach * legScale, TOE.y, FOOT.z + Math.cos(a) * TOE.reach * legScale], scale: TOE.size },
+          leg,
+          false,
+        ),
       )
     }
   }
 }
 
-function base(spec: FrogSpec, parts: Part[], options: { eyes?: number; spotted?: ((p: THREE.Vector3) => boolean) | null; legs?: number; belly?: number } = {}): void {
+/** Lowest point of an ellipsoid (centre y, z and half height, depth about a pivot) turned by `angle` about x. */
+function turnedBottom(y: number, z: number, height: number, depth: number, angle: number): number {
+  const c = Math.cos(angle)
+  const s = Math.sin(angle)
+  return y * c - z * s - Math.hypot(height * c, depth * s)
+}
+
+/** The lowest point of a hind leg swung by `angle` (the pose's legL/legR), in frog units above the feet. */
+export function legBottom(legScale: number, angle: number): number {
+  const [py, pz] = [PIVOTS.legL[1], PIVOTS.legL[2]]
+  const thigh = turnedBottom(THIGH.y - py, THIGH.z - pz, THIGH.height * legScale, THIGH.depth * legScale, angle)
+  const foot = turnedBottom(FOOT.y - py, FOOT.z - pz, FOOT.height, FOOT.depth * legScale, angle)
+  const toeZ = FOOT.z + Math.cos(0.35 - TOE_SPREAD) * TOE.reach * legScale
+  const toe = turnedBottom(TOE.y - py, toeZ - pz, TOE.size, TOE.size, angle)
+  return py + Math.min(thigh, foot, toe)
+}
+
+/** The body bone's pose and the arms' swing, as far as they move the belly, the throat bubble, and the hands. */
+export type BodyTurn = {
+  pitch: number
+  yaw: number
+  roll: number
+  sx: number
+  sy: number
+  sz: number
+  bubble: number
+  armLFwd: number
+  armLOut: number
+  armRFwd: number
+  armROut: number
+}
+
+/**
+ * The lowest point of the belly, the throat bubble, or a hand for a body
+ * turned and squashed like this, in frog units above the feet (before the
+ * pose lifts the body). An ellipsoid's lowest point is its centre's height
+ * less the length of the world-up row of its turn, scaled by its half extents.
+ */
+export function bodyBottom(character: Character, turn: BodyTurn): number {
+  const [, by, bz] = PIVOTS.body
+  const { pitch, yaw, roll } = turn
+  const ca = Math.cos(pitch)
+  const sa = Math.sin(pitch)
+  const cb = Math.cos(yaw)
+  const sb = Math.sin(yaw)
+  const cg = Math.cos(roll)
+  const sg = Math.sin(roll)
+  // The world-up row of the body bone's rotation (XYZ) times its scale.
+  const w0 = (ca * sg + sa * cg * sb) * turn.sx
+  const w1 = (ca * cg - sa * sg * sb) * turn.sy
+  const w2 = -sa * cb * turn.sz
+  const wide = BELLY_WIDTH[character]
+  const belly = w1 * (BELLY.y - by) - w2 * bz - Math.hypot(w0 * BELLY.width * wide, w1 * BELLY.height, w2 * BELLY.depth * wide)
+  const b = Math.max(BUBBLE_MIN, turn.bubble)
+  const [, py, pz] = PIVOTS.bubble
+  const cy = py - by + (BUBBLE.y - py) * 0.96 * b
+  const cz = pz - bz + (BUBBLE.z - pz) * b
+  const r = BUBBLE.radius * b
+  const bubble = w1 * cy + w2 * cz - Math.hypot(w0 * r * 1.04, w1 * r * 0.96, w2 * r)
+  const rest = REST[character]
+  const left = handLowest(w0, w1, w2, -1, rest?.armL, -turn.armLFwd, -turn.armLOut)
+  const right = handLowest(w0, w1, w2, 1, rest?.armR, -turn.armRFwd, turn.armROut)
+  return by + Math.min(belly, bubble, left, right)
+}
+
+/** A hand's lowest point below the body pivot, for the body's up row `w` and the arm's swing added to its rest turn (XYZ). */
+function handLowest(w0: number, w1: number, w2: number, side: -1 | 1, rest: THREE.Euler | undefined, fwd: number, out: number): number {
+  const [px, py, pz] = side < 0 ? PIVOTS.armL : PIVOTS.armR
+  const [, by, bz] = PIVOTS.body
+  const ax = (rest?.x ?? 0) + fwd
+  const ay = rest?.y ?? 0
+  const az = (rest?.z ?? 0) + out
+  const a = Math.cos(ax)
+  const b = Math.sin(ax)
+  const c = Math.cos(ay)
+  const d = Math.sin(ay)
+  const e = Math.cos(az)
+  const f = Math.sin(az)
+  const v0 = w0 * c * e + w1 * (a * f + b * e * d) + w2 * (b * f - a * e * d)
+  const v1 = -w0 * c * f + w1 * (a * e - b * f * d) + w2 * (b * e + a * f * d)
+  const v2 = w0 * d - w1 * b * c + w2 * a * c
+  const centre = w0 * px + w1 * (py - by) + w2 * (pz - bz) + v0 * (side * HAND.x - px) + v1 * (HAND.y - py) + v2 * (HAND.z - pz)
+  return centre - Math.hypot(v0 * HAND.rx, v1 * HAND.ry, v2 * HAND.rz)
+}
+
+function base(spec: FrogSpec, parts: Part[], options: { eyes?: number; spotted?: ((p: THREE.Vector3) => boolean) | null } = {}): void {
   const spotted = options.spotted ?? null
-  const belly = options.belly ?? 1
-  parts.push(paintedPart(shapes.sphere(2), bodyPaint(spec, spotted), { position: [0, 0.36, 0], scale: [0.5 * belly, 0.39, 0.44 * belly] }, BONE.body))
+  const belly = BELLY_WIDTH[spec.character]
+  parts.push(paintedPart(shapes.sphere(2), bodyPaint(spec, spotted), { position: [0, BELLY.y, 0], scale: [BELLY.width * belly, BELLY.height, BELLY.depth * belly] }, BONE.body))
   parts.push(paintedPart(shapes.sphere(2), headPaint(spec, spotted), { position: [0, 0.78, 0.05], scale: [0.5, 0.33, 0.42] }, BONE.head))
   eye(-1, spec, parts, options.eyes ?? 1)
   eye(1, spec, parts, options.eyes ?? 1)
@@ -181,11 +293,11 @@ function base(spec: FrogSpec, parts: Part[], options: { eyes?: number; spotted?:
     paintedPart(
       shapes.sphere(2),
       (p, _, out) => out.set(spec.bubble).lerp(new THREE.Color('#ffffff'), p.y > 0.55 && p.x < -0.1 && p.z > 0.3 ? 0.75 : 0),
-      { position: [0, 0.42, 0.46], scale: 0.24 },
+      { position: [0, BUBBLE.y, BUBBLE.z], scale: BUBBLE.radius },
       BONE.bubble,
     ),
   )
-  limbs(spec, parts, options.legs ?? 1)
+  limbs(spec, parts, LEG_SCALE[spec.character])
 }
 
 /** Parts attached to a bone whose rest pose is rotated: authored where they appear at rest, stored in bind space. */
@@ -204,8 +316,14 @@ const REST: Partial<Record<Character, Partial<Record<BoneName, THREE.Euler>>>> =
   shy: { armR: new THREE.Euler(-0.2, 0, 2.55) },
 }
 
+/** How far an arm is already raised outward at rest (the shy one holds her parasol up), radians. */
+export function armRestOut(character: Character, arm: 'armL' | 'armR'): number {
+  const z = REST[character]?.[arm]?.z ?? 0
+  return arm === 'armL' ? -z : z
+}
+
 function showoff(spec: FrogSpec, parts: Part[]): void {
-  base(spec, parts, { belly: 1.06 })
+  base(spec, parts)
   const petal = '#fff1f4'
   const tip = '#ffb4c8'
   for (let i = 0; i < 6; i++) {
@@ -235,13 +353,13 @@ function bouncy(spec: FrogSpec, parts: Part[]): void {
     ],
     0.27,
   )
-  base(spec, parts, { spotted, legs: 1.2, eyes: 1.08 })
+  base(spec, parts, { spotted, eyes: 1.08 })
   parts.push(part(shapes.sphere(0), spec.back, { position: [0, 1.13, -0.05], scale: [0.05, 0.09, 0.05], rotation: [-0.4, 0, 0] }, BONE.hat))
   parts.push(part(shapes.sphere(0), spec.back, { position: [0.06, 1.12, -0.1], scale: [0.04, 0.07, 0.04], rotation: [-0.7, 0, -0.5] }, BONE.hat))
 }
 
 function sleepy(spec: FrogSpec, parts: Part[]): void {
-  base(spec, parts, { belly: 1.1, eyes: 0.95 })
+  base(spec, parts, { eyes: 0.95 })
   // A floppy nightcap: a crown sitting back on the head, and a tip that droops over one side to a pom-pom.
   const cap = '#7d86e0'
   const band = '#fff1c2'
@@ -278,7 +396,7 @@ function shy(spec: FrogSpec, parts: Part[]): void {
 function restHand(arm: 'armL' | 'armR', rest: THREE.Euler): THREE.Vector3 {
   const side = arm === 'armL' ? -1 : 1
   const pivot = new THREE.Vector3(...PIVOTS[arm])
-  return new THREE.Vector3(side * 0.38, 0.07, 0.38).sub(pivot).applyEuler(rest).add(pivot)
+  return new THREE.Vector3(side * HAND.x, HAND.y, HAND.z).sub(pivot).applyEuler(rest).add(pivot)
 }
 
 function crooner(spec: FrogSpec, parts: Part[]): void {
@@ -293,7 +411,7 @@ function crooner(spec: FrogSpec, parts: Part[]): void {
     ],
     0.16,
   )
-  base(spec, parts, { spotted: warts, eyes: 0.9, belly: 1.04 })
+  base(spec, parts, { spotted: warts, eyes: 0.9 })
   const bumps: [number, number, number][] = [
     [0.3, 0.62, -0.25],
     [-0.32, 0.58, -0.22],
@@ -323,9 +441,13 @@ export function buildFrog(index: number, materials: FrogMaterials): FrogRig {
   BUILDERS[spec.character](spec, parts)
 
   const group = new THREE.Group()
+  group.name = `frog-${spec.character}`
+  group.userData.jamObject = group.name
   group.scale.setScalar(spec.scale)
   const mesh = new THREE.SkinnedMesh(mergeParts(parts, { skin: true }), materials.toon)
   const hull = new THREE.SkinnedMesh(mergeParts(parts, { skin: true, outlineOnly: true }), materials.outline)
+  mesh.name = 'skin'
+  hull.name = 'outline'
   mesh.frustumCulled = false
   hull.frustumCulled = false
 
