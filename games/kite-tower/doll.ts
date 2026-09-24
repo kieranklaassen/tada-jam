@@ -44,6 +44,8 @@ export const BODY_PROFILE: readonly { x: number; y: number }[] = [
   { x: 0, y: NECK_Y + 0.02 },
 ]
 const BODY_TOP = NECK_Y + 0.02
+/** The body's widest radius (at the hem). */
+export const BODY_R = Math.max(...BODY_PROFILE.map((p) => p.x))
 
 /** The cap's brim: an elliptic disc over the brow. */
 export const BRIM = { y: HEAD_R * 0.62, thick: 0.045, rx: 0.36, rz: 0.45, z: 0.14 }
@@ -64,8 +66,12 @@ const LOW_HAIR: Record<HeadKind, Shell> = {
   beanie: { r: HEAD_R + 0.02, theta: 1.1 + 0.7, phi0: Math.PI / 2 + 1.2, phiLength: Math.PI * 2 - 2.4 },
 }
 
-/** Pip's outline for everything the controller moves near her: body and head (arms keep clear of blocks on their own), with room for a hop or a tiptoe. */
-export const PIP_CLEAR = { half: HEAD_R + HAIR + 0.04, top: HEAD_Y + HEAD_R + HAIR + 0.38 }
+/**
+ * Pip's outline for everything the controller moves near her: body and head
+ * (arms keep clear of blocks on their own), with room above for her highest
+ * spring, the jump for the kite (0.3 up and stretched 8%).
+ */
+export const PIP_CLEAR = { half: HEAD_R + HAIR + 0.04, top: HEAD_Y + HEAD_R + HAIR + 0.5 }
 
 /** Radius of the body at height `y`, 0 above and below it. */
 export function bodyRadius(y: number): number {
@@ -171,6 +177,7 @@ export class DollGuard {
   private pomZ = 0
   private pom = false
   private obstacle: Obstacle | null = null
+  private readonly held = { side: 0, reach: 0, room: 0 }
   private readonly dir = { x: 0, y: 0, z: 0 }
   private readonly other = { set: false, ax: 0, ay: 0, az: 0, bx: 0, by: 0, bz: 0 }
 
@@ -212,6 +219,13 @@ export class DollGuard {
     this.obstacle = obstacle
   }
 
+  /** Something held in one hand (side 0 for nothing): its middle `reach` down the arm from the shoulder, kept `room` clear of the blocks like the hand. */
+  hold(side: -1 | 0 | 1, reach = 0, room = 0): void {
+    this.held.side = side
+    this.held.reach = reach
+    this.held.room = room
+  }
+
   /** Start a frame's arms: the first arm asked for is not yet in the way of the second. */
   beginArms(): void {
     this.other.set = false
@@ -250,13 +264,15 @@ export class DollGuard {
       if (other.set && segmentDistance(x, y, z, other.ax, other.ay, other.az, other.bx, other.by, other.bz) < r + HAND_R + GAP) return false
       if (obstacle && obstacle(x, y, z) < r + GAP) return false
     }
+    const held = this.held
+    if (obstacle && held.side === side && obstacle(sx + d.x * held.reach, SHOULDER.y + d.y * held.reach, d.z * held.reach) < held.room + GAP) return false
     return true
   }
 
   /** The raise this arm may take toward `raise` at swing `forward`; remembered so the other arm keeps clear of it. */
   arm(side: -1 | 1, raise: number, forward: number): number {
     let home = HOME_RAISE
-    if (!this.armClear(side, home, forward)) home = this.armClear(side, HANGING, forward) ? HANGING : raise
+    if (!this.armClear(side, home, forward)) home = this.armClear(side, HANGING, forward) ? HANGING : this.nearestClear(side, raise, forward)
     let out = raise
     if (home !== raise) {
       const dir = raise > home ? 1 : -1
@@ -296,6 +312,17 @@ export class DollGuard {
     other.by = other.ay + d.y * HAND_REACH
     other.bz = d.z * HAND_REACH
     return out
+  }
+
+  /** The clear raise nearest `raise` (a block beside the doll can leave neither out nor hanging free), or `raise` if there is none. */
+  private nearestClear(side: -1 | 1, raise: number, forward: number): number {
+    for (let step = 1; step * STEP <= Math.PI; step++) {
+      const below = raise - step * STEP
+      if (below >= 0 && this.armClear(side, below, forward)) return below
+      const above = raise + step * STEP
+      if (above <= Math.PI && this.armClear(side, above, forward)) return above
+    }
+    return raise
   }
 
   /** Whether the painted face and the lowest hair stay out of the body at this head turn. */
@@ -360,8 +387,251 @@ export const FLY_RAISE = 2.4
 const flyHand = handAt(1, FLY_RAISE, 0, { x: 0, y: 0, z: 0 })
 /** The spool sits just past the fingers, across the arm. */
 export const SPOOL_R = 0.14
+export const SPOOL_HALF = 0.16
+/** Room the spool needs round its middle, whichever way it lies. */
+export const SPOOL_ROOM = Math.hypot(SPOOL_R, SPOOL_HALF) + 0.02
+/** From the shoulder down the arm to the middle of a spool held in the hand. */
+export const GRIP_REACH = HAND_REACH + HAND_R + SPOOL_R + 0.01
 /** Where the kite line meets the spool in Pip's frame (feet at the origin) while she flies. */
 export const FLY_GRIP = {
   x: flyHand.x + Math.sin(FLY_RAISE) * (HAND_R + SPOOL_R + 0.01),
   y: flyHand.y - Math.cos(FLY_RAISE) * (HAND_R + SPOOL_R + 0.01),
+}
+
+type Point = { x: number; y: number; z: number }
+
+/**
+ * The blocks near one doll, as drawn this frame, as an `Obstacle` in that
+ * doll's own frame. Each convex part is a prism through the build plane; the
+ * distance is the largest of its side planes, combined with its front and back
+ * faces: exact inside, a little short just off a corner, so an arm stops a
+ * hair early there rather than late.
+ */
+export class BlockField {
+  /** Doll frame to room, row-major 3x4, set each frame before the arms are asked for. */
+  readonly frame = new Float64Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0])
+  private readonly planes: Float64Array[] = []
+  private readonly sides: number[] = []
+  private readonly halfDepth: number[] = []
+  private count = 0
+
+  get empty(): boolean {
+    return this.count === 0
+  }
+
+  clear(): void {
+    this.count = 0
+  }
+
+  /** One convex part of a piece (its own points, either winding) placed at (x, y), turned `angle`, drawn at `scale`, `depth` deep. */
+  add(points: readonly { x: number; y: number }[], x: number, y: number, angle: number, scale: number, depth: number): void {
+    const n = points.length
+    const slot = this.count++
+    let planes = this.planes[slot]
+    if (!planes || planes.length < n * 3) planes = this.planes[slot] = new Float64Array(Math.max(n, 8) * 3)
+    const c = Math.cos(angle) * scale
+    const s = Math.sin(angle) * scale
+    let area = 0
+    for (let i = 0; i < n; i++) {
+      const a = points[i]
+      const b = points[(i + 1) % n]
+      area += a.x * b.y - b.x * a.y
+    }
+    const outward = area >= 0 ? 1 : -1
+    for (let i = 0; i < n; i++) {
+      const a = points[i]
+      const b = points[(i + 1) % n]
+      const ax = x + a.x * c - a.y * s
+      const ay = y + a.x * s + a.y * c
+      const dx = (b.x - a.x) * c - (b.y - a.y) * s
+      const dy = (b.x - a.x) * s + (b.y - a.y) * c
+      const length = Math.hypot(dx, dy) || 1
+      const nx = (outward * dy) / length
+      const ny = (-outward * dx) / length
+      planes[i * 3] = nx
+      planes[i * 3 + 1] = ny
+      planes[i * 3 + 2] = nx * ax + ny * ay
+    }
+    this.sides[slot] = n
+    this.halfDepth[slot] = depth / 2
+  }
+
+  /** Signed distance from a point in the doll's frame to the nearest block. */
+  readonly distance: Obstacle = (x, y, z) => {
+    const f = this.frame
+    return this.roomDistance(f[0] * x + f[1] * y + f[2] * z + f[3], f[4] * x + f[5] * y + f[6] * z + f[7], f[8] * x + f[9] * y + f[10] * z + f[11])
+  }
+
+  /** Signed distance from a point in the room to the nearest block. */
+  roomDistance(wx: number, wy: number, wz: number): number {
+    let best = Infinity
+    for (let k = 0; k < this.count; k++) {
+      const planes = this.planes[k]
+      let d = -Infinity
+      for (let i = 0, n = this.sides[k] * 3; i < n; i += 3) {
+        const side = planes[i] * wx + planes[i + 1] * wy - planes[i + 2]
+        if (side > d) d = side
+      }
+      const e = combine(d, Math.abs(wz) - this.halfDepth[k])
+      if (e < best) best = e
+    }
+    return best
+  }
+
+  /**
+   * Push room point `p` until it is `room` clear of every block (the frame
+   * is not used): out through the nearest side, or out past the front face
+   * toward the child, whichever is shorter. True if it moved.
+   */
+  pushOut(p: Point, room: number): boolean {
+    let moved = false
+    // Twice round, so a push out of one part into a neighbour is undone.
+    for (let pass = 0; pass < 2; pass++) {
+      for (let k = 0; k < this.count; k++) {
+        const half = this.halfDepth[k]
+        if (p.z >= half + room || p.z <= -half - room) continue
+        const planes = this.planes[k]
+        let d = -Infinity
+        let side = 0
+        for (let i = 0, n = this.sides[k] * 3; i < n; i += 3) {
+          const out = planes[i] * p.x + planes[i + 1] * p.y - planes[i + 2]
+          if (out > d) {
+            d = out
+            side = i
+          }
+        }
+        if (d >= room) continue
+        const across = room - d
+        const front = half + room - p.z
+        if (front < across) p.z += front
+        else {
+          p.x += planes[side] * across
+          p.y += planes[side + 1] * across
+        }
+        moved = true
+      }
+    }
+    return moved
+  }
+}
+
+/** A standing doll's spring, sideways lean about her feet, and squash (above 1 taller, below 1 shorter), as drawn this frame. */
+export type HeadPose = { lift: number; roll: number; squash: number }
+
+/** The lowest squash a doll ducks to under a block that comes down lower than her head. */
+export const DUCK = 0.78
+/** Room kept between a doll's head and a block. */
+const HEAD_GAP = 0.012
+
+/**
+ * Fit a doll's head (feet at (x, y), `z` out from the build, drawn at
+ * `scale`) among the blocks `room` measures in the room. She springs, leans
+ * and stretches only as far as they allow, eased back together, and ducks
+ * under a block lower than her head as she stands (never below `DUCK`), so
+ * she still hops and reaches, just never into wood. `pose` is fitted in
+ * place. Squash scales the head with her, so it is measured as a ball as
+ * wide as it gets either way.
+ */
+export function fitHead(room: (x: number, y: number, z: number) => number, x: number, y: number, z: number, scale: number, pose: HeadPose): void {
+  const clear = (lift: number, roll: number, squash: number) => {
+    const h = HEAD_Y * squash * scale
+    const r = (HEAD_R + HAIR) * Math.max(squash, 1 / Math.sqrt(squash)) * scale + HEAD_GAP
+    return room(x - Math.sin(roll) * h, y + lift + Math.cos(roll) * h, z) >= r
+  }
+  const { lift, roll, squash } = pose
+  if (clear(lift, roll, squash)) return
+  const low = Math.min(1, squash)
+  if (clear(0, 0, low)) {
+    let lo = 0
+    let hi = 1
+    for (let i = 0; i < 6; i++) {
+      const mid = (lo + hi) / 2
+      if (clear(lift * mid, roll * mid, low + (squash - low) * mid)) lo = mid
+      else hi = mid
+    }
+    pose.lift = lift * lo
+    pose.roll = roll * lo
+    pose.squash = low + (squash - low) * lo
+    return
+  }
+  let lo = Math.min(DUCK, low)
+  let hi = low
+  for (let i = 0; i < 6; i++) {
+    const mid = (lo + hi) / 2
+    if (clear(0, 0, mid)) lo = mid
+    else hi = mid
+  }
+  pose.lift = 0
+  pose.roll = 0
+  pose.squash = lo
+}
+
+/** Where one doll's parts are in the room this frame, written by its rig after it poses the doll. */
+export class DollPlace {
+  /** False until the rig has posed the doll once. */
+  set = false
+  scale = 1
+  readonly feet: Point = { x: 0, y: 0, z: 0 }
+  readonly neck: Point = { x: 0, y: 0, z: 0 }
+  /** The middle of the head's ball. */
+  readonly head: Point = { x: 0, y: 0, z: 0 }
+  readonly shoulderL: Point = { x: 0, y: 0, z: 0 }
+  readonly handL: Point = { x: 0, y: 0, z: 0 }
+  readonly shoulderR: Point = { x: 0, y: 0, z: 0 }
+  readonly handR: Point = { x: 0, y: 0, z: 0 }
+  /** The middle of a spool held in the right hand. */
+  readonly grip: Point = { x: 0, y: 0, z: 0 }
+}
+
+/** How far above the feet the body capsule's core starts: its round bottom then meets the hem within a few hundredths. */
+const BODY_CORE = 0.2
+
+/** Push `p` out along the shortest way until it is `clear` from segment a-b (a point when a = b); true if it moved. */
+function pushFromSegment(p: Point, a: Point, b: Point, clear: number): boolean {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  const dz = b.z - a.z
+  const length = dx * dx + dy * dy + dz * dz
+  const t = length > 0 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy + (p.z - a.z) * dz) / length)) : 0
+  const ox = p.x - a.x - dx * t
+  const oy = p.y - a.y - dy * t
+  const oz = p.z - a.z - dz * t
+  const d = Math.hypot(ox, oy, oz)
+  if (d >= clear) return false
+  if (d < 1e-6) {
+    p.y += clear
+    return true
+  }
+  const k = clear / d - 1
+  p.x += ox * k
+  p.y += oy * k
+  p.z += oz * k
+  return true
+}
+
+const bodyBase: Point = { x: 0, y: 0, z: 0 }
+
+/**
+ * Move a point out of the doll (head and hair, body, both arms) until it is
+ * `margin` clear, the way a string or a hanging bow drapes over her rather
+ * than through her. The body is a capsule as wide as the hem from the feet to
+ * the neck, a little fuller than the lathe near the neck. True if it moved.
+ */
+export function keepOut(place: DollPlace, p: Point, margin: number): boolean {
+  if (!place.set) return false
+  const s = place.scale
+  const { feet, neck } = place
+  const k = (BODY_CORE * s) / (Math.hypot(neck.x - feet.x, neck.y - feet.y, neck.z - feet.z) || 1)
+  bodyBase.x = feet.x + (neck.x - feet.x) * k
+  bodyBase.y = feet.y + (neck.y - feet.y) * k
+  bodyBase.z = feet.z + (neck.z - feet.z) * k
+  let moved = false
+  // Twice round, so a push out of one part into a neighbour is undone.
+  for (let pass = 0; pass < 2; pass++) {
+    moved = pushFromSegment(p, place.head, place.head, (HEAD_R + HAIR) * s + margin) || moved
+    moved = pushFromSegment(p, bodyBase, place.neck, BODY_R * s + margin) || moved
+    moved = pushFromSegment(p, place.shoulderL, place.handL, HAND_R * s + margin) || moved
+    moved = pushFromSegment(p, place.shoulderR, place.handR, HAND_R * s + margin) || moved
+  }
+  return moved
 }

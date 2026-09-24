@@ -3,25 +3,37 @@ import { describe, expect, it } from 'vitest'
 import {
   ARM_JOINT,
   ARM_R,
+  BlockField,
+  BODY_R,
   DollGuard,
+  DollPlace,
+  DUCK,
   FACE_CELL,
   FLY_GRIP,
   FLY_RAISE,
+  GRIP_REACH,
+  HAIR,
   HAND_R,
   HAND_REACH,
   HEAD_R,
   HEAD_Y,
+  NECK_Y,
   POM_R,
   POM_Y,
   SHOULDER,
   SPOOL_R,
+  SPOOL_ROOM,
   armDirection,
   bodyDistance,
+  fitHead,
   handAt,
   headDistance,
+  keepOut,
   type HeadKind,
+  type HeadPose,
 } from './doll'
 import { PERSONALITIES, blankPose, type Doll, type PoseDelta } from './motion'
+import { SHAPES } from './pieces'
 import { BEAN, HERO, MOSS, armGeometry, bodyGeometry, faceGeometry, headGeometry } from './view/dolls'
 
 const KIND: Record<Doll, HeadKind> = { pip: 'bob', moss: 'cap', bean: 'beanie' }
@@ -302,5 +314,157 @@ describe('peg doll guard', () => {
     expect(Math.hypot(FLY_GRIP.x - hand.x, FLY_GRIP.y - hand.y)).toBeCloseTo(HAND_R + SPOOL_R + 0.01, 9)
     // The grip is past the fingers along the arm, above her head's middle.
     expect(FLY_GRIP.y).toBeGreaterThan(HEAD_Y)
+  })
+})
+
+describe('BlockField', () => {
+  const cube = SHAPES.cube.parts[0]
+
+  it('measures from inside and outside a block, through its sides and its front and back faces, whichever way its outline winds', () => {
+    for (const points of [cube, [...cube].reverse()]) {
+      const field = new BlockField()
+      expect(field.empty).toBe(true)
+      field.add(points, 2, 0.5, 0, 1, SHAPES.cube.depth)
+      expect(field.empty).toBe(false)
+      expect(field.roomDistance(2, 0.5, 0)).toBeCloseTo(-0.5, 9)
+      expect(field.roomDistance(3, 0.5, 0)).toBeCloseTo(0.5, 9)
+      expect(field.roomDistance(2, 1.2, 0)).toBeCloseTo(0.2, 9)
+      expect(field.roomDistance(2, 0.5, SHAPES.cube.depth / 2 + 0.3)).toBeCloseTo(0.3, 9)
+      // Just off a corner it reads a little short, never long.
+      expect(field.roomDistance(2.8, 1.4, 0)).toBeLessThanOrEqual(Math.hypot(0.3, 0.4) + 1e-9)
+    }
+  })
+
+  it('turns and scales a block as it is drawn, and reads in the doll’s own frame', () => {
+    const field = new BlockField()
+    field.add(cube, 0, 0, Math.PI / 4, 1.1, SHAPES.cube.depth)
+    // The corner of a cube turned an eighth points straight up, at half its diagonal times its scale.
+    expect(field.roomDistance(0, 0.5 * Math.SQRT2 * 1.1 + 0.1, 0)).toBeGreaterThan(0.07)
+    expect(field.roomDistance(0, 0.5 * Math.SQRT2 * 1.1 - 0.05, 0)).toBeLessThan(0)
+    // A doll standing at x = 3: a point 3 to her left is in the middle of the block.
+    field.frame.set([1, 0, 0, 3, 0, 1, 0, 0, 0, 0, 1, 0])
+    expect(field.distance(-3, 0, 0)).toBeCloseTo(field.roomDistance(0, 0, 0), 9)
+    field.clear()
+    expect(field.empty).toBe(true)
+    expect(field.roomDistance(0, 0, 0)).toBe(Infinity)
+  })
+
+  it('pushes a point out through the nearest side, or out past the front face when that is shorter', () => {
+    const field = new BlockField()
+    field.add(cube, 0, 0.5, 0, 1, SHAPES.cube.depth)
+    const side = { x: 0.4, y: 0.5, z: 0 }
+    expect(field.pushOut(side, 0.05)).toBe(true)
+    expect(side).toEqual({ x: expect.closeTo(0.55, 9), y: 0.5, z: 0 })
+    const front = { x: 0, y: 0.5, z: SHAPES.cube.depth / 2 - 0.02 }
+    expect(field.pushOut(front, 0.05)).toBe(true)
+    expect(front.x).toBe(0)
+    expect(front.z).toBeCloseTo(SHAPES.cube.depth / 2 + 0.05, 9)
+    const clear = { x: 1, y: 0.5, z: 0 }
+    expect(field.pushOut(clear, 0.05)).toBe(false)
+  })
+})
+
+describe('fitHead', () => {
+  /** Wood filling everything above `ceiling`. */
+  const under = (ceiling: number) => (_x: number, y: number) => ceiling - y
+  const top = HEAD_Y + HEAD_R + HAIR
+
+  function headTop(pose: HeadPose): number {
+    return pose.lift + HEAD_Y * pose.squash + (HEAD_R + HAIR) * Math.max(pose.squash, 1 / Math.sqrt(pose.squash))
+  }
+
+  it('leaves the pose alone with no block over her', () => {
+    const pose = { lift: 0.3, roll: 0.2, squash: 1.08 }
+    fitHead(() => Infinity, 0, 0, 0, 1, pose)
+    expect(pose).toEqual({ lift: 0.3, roll: 0.2, squash: 1.08 })
+  })
+
+  it('eases a spring and a stretch back together under a low board, so she still springs, just not into it', () => {
+    const ceiling = top + 0.15
+    const pose = { lift: 0.3, roll: 0.1, squash: 1.08 }
+    fitHead(under(ceiling), 0, 0, 0, 1, pose)
+    expect(headTop(pose)).toBeLessThanOrEqual(ceiling)
+    expect(pose.lift).toBeGreaterThan(0.03)
+    expect(pose.lift / 0.3).toBeCloseTo((pose.squash - 1) / 0.08, 1)
+  })
+
+  it('ducks under a block lower than her head, never below DUCK', () => {
+    const ceiling = top - 0.15
+    const pose = { lift: 0.2, roll: 0.2, squash: 1.05 }
+    fitHead(under(ceiling), 0, 0, 0, 1, pose)
+    expect(pose.lift).toBe(0)
+    expect(pose.roll).toBe(0)
+    expect(pose.squash).toBeLessThan(1)
+    expect(pose.squash).toBeGreaterThanOrEqual(DUCK)
+    expect(headTop(pose)).toBeLessThanOrEqual(ceiling)
+    const lower = { lift: 0, roll: 0, squash: 1 }
+    fitHead(under(1), 0, 0, 0, 1, lower)
+    expect(lower.squash).toBeCloseTo(DUCK, 1)
+    expect(lower.squash).toBeGreaterThanOrEqual(DUCK)
+  })
+})
+
+describe('keepOut', () => {
+  function standing(): DollPlace {
+    const place = new DollPlace()
+    place.set = true
+    place.neck.y = NECK_Y
+    place.head.y = HEAD_Y
+    place.shoulderL.x = -SHOULDER.x
+    place.shoulderL.y = SHOULDER.y
+    place.handL.x = -SHOULDER.x - 0.1
+    place.handL.y = SHOULDER.y - HAND_REACH
+    place.shoulderR.x = SHOULDER.x
+    place.shoulderR.y = SHOULDER.y
+    place.handR.x = SHOULDER.x + 0.1
+    place.handR.y = SHOULDER.y - HAND_REACH
+    return place
+  }
+
+  it('drapes a string over her head and body instead of through them', () => {
+    const place = standing()
+    const inHead = { x: 0.1, y: HEAD_Y + 0.1, z: 0 }
+    expect(keepOut(place, inHead, 0.02)).toBe(true)
+    expect(Math.hypot(inHead.x, inHead.y - HEAD_Y, inHead.z)).toBeGreaterThanOrEqual(HEAD_R + HAIR + 0.02 - 1e-9)
+    const inBody = { x: 0, y: 0.6, z: 0.1 }
+    expect(keepOut(place, inBody, 0.02)).toBe(true)
+    expect(Math.hypot(inBody.x, inBody.z)).toBeGreaterThanOrEqual(BODY_R + 0.02 - 1e-9)
+    const clear = { x: 2, y: 1, z: 0 }
+    expect(keepOut(place, clear, 0.02)).toBe(false)
+  })
+
+  it('does nothing before the rig has posed the doll', () => {
+    const p = { x: 0, y: HEAD_Y, z: 0 }
+    expect(keepOut(new DollPlace(), p, 0.02)).toBe(false)
+    expect(p.y).toBe(HEAD_Y)
+  })
+})
+
+describe('DollGuard.hold', () => {
+  it('stops the arm before the spool in her hand meets a block the hand alone would clear', () => {
+    const d = { x: 0, y: 0, z: 0 }
+    armDirection(1, FLY_RAISE, 0, d)
+    const hand = { x: SHOULDER.x + d.x * HAND_REACH, y: SHOULDER.y + d.y * HAND_REACH }
+    const spool = { x: SHOULDER.x + d.x * GRIP_REACH, y: SHOULDER.y + d.y * GRIP_REACH }
+    // A board just over the hand, low enough to catch the spool.
+    const ceiling = (hand.y + HAND_R + spool.y + SPOOL_ROOM) / 2
+    expect(ceiling - hand.y).toBeGreaterThan(HAND_R + 0.02)
+    expect(ceiling - spool.y).toBeLessThan(SPOOL_ROOM)
+    const guard = new DollGuard('bob')
+    guard.head(0, 0, 0)
+    guard.setObstacle((_x, y) => ceiling - y)
+    guard.beginArms()
+    expect(guard.arm(1, FLY_RAISE, 0), 'empty-handed').toBe(FLY_RAISE)
+    guard.hold(1, GRIP_REACH, SPOOL_ROOM)
+    guard.beginArms()
+    const raise = guard.arm(1, FLY_RAISE, 0)
+    expect(raise).toBeLessThan(FLY_RAISE)
+    armDirection(1, raise, 0, d)
+    expect(ceiling - (SHOULDER.y + d.y * GRIP_REACH)).toBeGreaterThanOrEqual(SPOOL_ROOM)
+    guard.beginArms()
+    expect(guard.arm(-1, FLY_RAISE, 0), 'the other hand is empty').toBe(FLY_RAISE)
+    guard.hold(0)
+    guard.beginArms()
+    expect(guard.arm(1, FLY_RAISE, 0), 'let go').toBe(FLY_RAISE)
   })
 })

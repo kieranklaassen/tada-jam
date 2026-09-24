@@ -1,4 +1,6 @@
-import { PLAY_MAX_X, PLAY_MIN_X, spanAt, type Placed } from './pieces'
+import { BODY_R, HAIR, HEAD_R, HEAD_Y } from './doll'
+import { movePoint } from './hero'
+import { PLAY_MAX_X, PLAY_MIN_X, spanAt, type Placed, type Vec2 } from './pieces'
 
 // Where the peg doll can go (KTD3). Runs only when the build settles. It
 // samples standable spots on the rug and on every upward-facing edge that
@@ -8,7 +10,9 @@ import { PLAY_MAX_X, PLAY_MIN_X, spanAt, type Placed } from './pieces'
 // always climbs as far as the build lets it, so every piece that helps shows.
 
 export const DOLL_HEIGHT = 2
-export const CLEARANCE = 1.7
+/** Room the doll stands in, from the view's own measurements: up past her hair, and out past her body and head either side. */
+export const CLEARANCE = HEAD_Y + HEAD_R + HAIR + 0.03
+const STAND_HALF = Math.max(BODY_R, HEAD_R + HAIR) + 0.01
 export const MAX_SLOPE = (38 * Math.PI) / 180
 /** Up to this rise the doll just walks. */
 export const STEP_UP = 0.42
@@ -27,7 +31,8 @@ const HAND_WIDTH = 0.75
 /** Outweighs the 0.25 a doll gives the spot she already stands on plus the sideways cost of stepping a hand's width back, so she steps back. */
 const CRAMPED_COST = 1
 const SPACING = 0.25
-const WALK_DX = 0.42
+/** Far enough to walk from the rug, a body's width back from a low step's face, onto the step (spots lie on a 0.25 grid). */
+const WALK_DX = 0.8
 const FLOOR_MIN = PLAY_MIN_X + 0.35
 const FLOOR_MAX = PLAY_MAX_X - 0.35
 
@@ -47,20 +52,68 @@ function blocked(placed: readonly Placed[], x: number, from: number, to: number)
   return false
 }
 
-/** Room for the doll to stand: nothing in its body column, a little wider than its base. */
-function roomy(placed: readonly Placed[], x: number, y: number): boolean {
-  if (blocked(placed, x, y + 0.05, y + CLEARANCE)) return false
-  if (blocked(placed, x - 0.22, y + 0.3, y + CLEARANCE)) return false
-  return !blocked(placed, x + 0.22, y + 0.3, y + CLEARANCE)
+const STAND_COLUMNS = [0, -STAND_HALF / 2, STAND_HALF / 2, -STAND_HALF, STAND_HALF]
+
+/**
+ * Room for the doll to stand: nothing anywhere in her outline (columns closer
+ * than any block is wide), above the surface under her feet, which rises
+ * `slope` per unit across.
+ */
+export function roomy(placed: readonly Placed[], x: number, y: number, slope = 0): boolean {
+  for (const dx of STAND_COLUMNS) if (blocked(placed, x + dx, y + 0.05 + Math.max(0, dx * slope), y + CLEARANCE)) return false
+  return true
 }
 
-export function standableSpots(placed: readonly Placed[]): Spot[] {
+const HEAD_ROUND = HEAD_R + HAIR + 0.01
+/** Upright slices through her head's round, as offsets across and half-heights. */
+const HEAD_SLICES = [0, -0.5, 0.5, -0.9, 0.9].map((k) => ({ dx: k * HEAD_ROUND, dy: HEAD_ROUND * Math.sqrt(1 - k * k) }))
+/** How far apart along a move her head is looked at: well under its round. */
+const PATH_STEP = 0.08
+const pathPoint: Vec2 = { x: 0, y: 0 }
+
+function headBlocked(placed: readonly Placed[], x: number, y: number): boolean {
+  const middle = y + HEAD_Y
+  for (const s of HEAD_SLICES) if (blocked(placed, x + s.dx, middle - s.dy, middle + s.dy)) return true
+  return false
+}
+
+/**
+ * Her head clear of the wood all along a move, not just where it starts and
+ * ends: a climb rises close past whatever overhangs the spot she climbs from,
+ * and a long step passes under what hangs between two spots.
+ */
+export function headClearAlong(placed: readonly Placed[], kind: MoveKind, a: Spot, b: Spot): boolean {
+  const n = Math.max(2, Math.ceil((Math.abs(b.x - a.x) + Math.abs(b.y - a.y) + (kind === 'walk' ? 0 : 1)) / PATH_STEP))
+  for (let i = 1; i < n; i++) {
+    movePoint(kind, a, b, i / n, pathPoint)
+    if (headBlocked(placed, pathPoint.x, pathPoint.y)) return false
+  }
+  return true
+}
+
+/** How much higher than standing at (x, y) she can bob before her hair touches wood over her. */
+export function headroom(placed: readonly Placed[], x: number, y: number): number {
+  let ceiling = Infinity
+  for (const dx of STAND_COLUMNS) {
+    for (const piece of placed) {
+      for (const part of piece.parts) {
+        const span = spanAt(part, x + dx)
+        if (span && span[1] > y + 0.05) ceiling = Math.min(ceiling, span[0])
+      }
+    }
+  }
+  return Math.max(0, ceiling - y - CLEARANCE)
+}
+
+/** Where the doll could stand; never on piece `avoid`, which still stands in her way. */
+export function standableSpots(placed: readonly Placed[], avoid: number | null = null): Spot[] {
   const spots: Spot[] = []
   for (let x = FLOOR_MIN; x <= FLOOR_MAX + 1e-9; x += SPACING) {
     if (roomy(placed, x, 0)) spots.push({ x, y: 0, on: null })
   }
   const minUp = Math.cos(MAX_SLOPE)
   for (const piece of placed) {
+    if (piece.id === avoid) continue
     for (const part of piece.parts) {
       for (let i = 0; i < part.length; i++) {
         const a = part[i]
@@ -75,7 +128,7 @@ export function standableSpots(placed: readonly Placed[]): Spot[] {
           const x = a.x + dx * t
           const y = a.y + dy * t
           if (x < FLOOR_MIN || x > FLOOR_MAX || y < 0.05) continue
-          if (roomy(placed, x, y)) spots.push({ x, y, on: piece.id })
+          if (roomy(placed, x, y, dy / dx)) spots.push({ x, y, on: piece.id })
         }
       }
     }
@@ -87,6 +140,11 @@ export function standableSpots(placed: readonly Placed[]): Spot[] {
 type Link = { to: number; kind: MoveKind; cost: number }
 
 function linkFor(placed: readonly Placed[], a: Spot, b: Spot): Link | null {
+  const link = moveFor(placed, a, b)
+  return link && headClearAlong(placed, link.kind, a, b) ? link : null
+}
+
+function moveFor(placed: readonly Placed[], a: Spot, b: Spot): Link | null {
   const dx = Math.abs(b.x - a.x)
   const rise = b.y - a.y
   if (dx <= WALK_DX && Math.abs(rise) <= STEP_UP) return { to: -1, kind: 'walk', cost: dx + Math.abs(rise) }
@@ -141,12 +199,14 @@ function nearestSpot(spots: readonly Spot[], at: { x: number; y: number }, on: n
 
 /**
  * The doll's next route from where it stands, or null when it has nothing
- * under its feet (its support moved away) and must tumble to the rug.
+ * under its feet (its support moved away) and must tumble to the rug. She
+ * never stands on piece `avoid`.
  */
-export function planClimb(placed: readonly Placed[], doll: { x: number; y: number; on: number | null }, kite: KiteTarget): Plan | null {
-  const spots = standableSpots(placed)
+export function planClimb(placed: readonly Placed[], doll: { x: number; y: number; on: number | null }, kite: KiteTarget, avoid: number | null = null): Plan | null {
+  const spots = standableSpots(placed, avoid)
   const start = nearestSpot(spots, doll, doll.on)
   if (start < 0) return null
+  const at: Spot = { x: doll.x, y: doll.y, on: doll.on }
 
   const n = spots.length
   const cost = new Float64Array(n).fill(Infinity)
@@ -167,6 +227,9 @@ export function planClimb(placed: readonly Placed[], doll: { x: number; y: numbe
       if (done[j]) return
       const link = linkFor(placed, from, spots[j])
       if (!link) return
+      // Her route begins where she really stands, which a block set down by her can leave a little off
+      // the nearest spot: a climb, hop or drop from there has to keep her head clear from there too.
+      if (current === start && link.kind !== 'walk' && !headClearAlong(placed, link.kind, at, spots[j])) return
       const next = cost[current] + link.cost
       if (next < cost[j]) {
         cost[j] = next
