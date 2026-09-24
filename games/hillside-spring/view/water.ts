@@ -505,7 +505,7 @@ export class WaterView {
     if (toA > HUB_OUT) this.strip(line(a, this.from.copy(centre).addScaledVector(towardA, HUB_OUT), 2), d(0), d(toA - HUB_OUT), s.tArrive, s.tDepart, s.d0, look)
     const from = this.from.copy(centre).addScaledVector(towardA, Math.min(toA, HUB_IN))
     // A closed sluice's board holds the water back (what is past it goes at once), and so does an opening one until
-    // the board's edge clears the water.
+    // the board's edge clears the water: while it is down nothing runs on into the arm beyond it either.
     const board = piece?.kind === 'sluice' && (!piece.open || (pose !== undefined && pose.gate < BOARD_CLEAR))
     if (!board || toA > 0) {
       const to = board ? this.to.copy(centre).addScaledVector(towardA, BOARD_FACE) : this.to.copy(centre).addScaledVector(towardB, Math.min(toB, HUB_IN))
@@ -513,7 +513,7 @@ export class WaterView {
       const n = bend ? elbow(from, centre, to, ELBOW, 13) : line(from, to, 2)
       this.strip(n, d(Math.max(0, toA - HUB_IN)), d(toA + Math.min(toB, HUB_IN)), s.tArrive, s.tDepart, s.d0, look)
     }
-    if (toB > HUB_OUT) this.strip(line(this.from.copy(centre).addScaledVector(towardB, HUB_OUT), b, 2), d(toA + HUB_OUT), d(toA + toB), s.tArrive, s.tDepart, s.d0, look)
+    if (!board && toB > HUB_OUT) this.strip(line(this.from.copy(centre).addScaledVector(towardB, HUB_OUT), b, 2), d(toA + HUB_OUT), d(toA + toB), s.tArrive, s.tDepart, s.d0, look)
   }
 
   /** Writes the scratch path as a strip: width across, distance along, and each vertex's arrive/depart times. */

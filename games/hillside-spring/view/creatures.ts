@@ -494,8 +494,9 @@ export class CreaturesView {
         pose.spin += body
         pose.headYaw += toChild - body
       }
-      // Either end of the terraces, the tanuki curls up toward the child, its tail around the front and clear of the bushes.
-      track.rig.apply(pose, track.to.x < 0 ? 1 : -1)
+      // Either end of the terraces, the tanuki curls up toward the child, its tail around the front and clear of the
+      // bushes on the end it is at, not the one it is walking to.
+      track.rig.apply(pose, track.pos.x < 0 ? 1 : -1)
       height += Math.max(0, pose.lift) * BODY[track.kind] * SIZE[track.kind]
       root.position.copy(track.pos)
       root.rotation.set(track.kind === 'tanuki' ? slopePitch(track.pos.x, yaw) : 0, yaw, 0)
