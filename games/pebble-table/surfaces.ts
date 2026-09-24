@@ -161,6 +161,12 @@ export function panOutline(r: number): [number, number][] {
   return [[r * PAN_RIM, PAN_FLOOR], [r * PAN_RIM, PAN_ROLL.y], ...around, [DISH_PROFILE[1][0] * r, DISH_PROFILE[1][1] * PAN_DEPTH]]
 }
 
+/** How far (cm) the rolled rim of a pan of radius `r` (cm) reaches out from its middle, and how high it rises above the pan's hanging point. */
+export function panRimReach(r: number): { out: number; top: number } {
+  const reach = r * PAN_ROLL.radius
+  return { out: reach * (1 + PAN_ROLL.tube), top: PAN_ROLL.y + reach * PAN_ROLL.tube }
+}
+
 /** What pieces rest on: the live mat, which feeding seats are taken, and where the pans hang (their floors' heights, and how far in cm both have swung sideways). */
 export type Surfaces = { mat: MatKey; seats: readonly boolean[]; panFloors: readonly [number, number]; panSway: number }
 
