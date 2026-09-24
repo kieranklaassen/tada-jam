@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import * as CANNON from 'cannon-es'
+import * as THREE from 'three'
 import { silentSound, TableController, yardSpots, type Projector } from './controller'
 import { IDLE_BEFORE_HINT } from './guidance'
-import { albumSlot, BAG, DOOR, FEEDING, SCALE, shelfTile } from './layout'
+import { albumSlot, BAG, DOOR, FEEDING, MAT_KEYS, SCALE, shelfTile } from './layout'
 import { JARS, PART_COUNTS } from './parts'
 import { STOOL_REACH } from './partShape'
-import { stoneRadius3, toWorld2, UNIT } from './physics3d'
+import { stoneRadius3, to3, toWorld2, UNIT } from './physics3d'
 import { stoneRest } from './stoneShape'
 import { feedingFloor } from './surfaces'
 import { panOf } from './scale'
@@ -13,6 +14,8 @@ import { GUEST_ARM, GUEST_RADIUS, GUEST_REACH, guestArms, GUEST_TOP, plateOf } f
 import { SEAT_SPECIES } from './motion'
 import { accountedTotal, defaultTable, type Piece } from './state'
 import { doorwayGap, GATE, HINGE, houseGap } from './visitors'
+import { chooserGeometry, CHOOSER_SCALE } from './view/models'
+import { cameraProjector, placeCamera } from './view/stage'
 
 // A straight-down orthographic "camera": screen pixels are world units.
 const topDown: Projector = {
@@ -436,6 +439,32 @@ describe('jars of loose parts', () => {
     expect(table.state.liveMat).not.toBe('scale')
     expect(table.state.parts).toHaveLength(0)
   })
+})
+
+describe('the shelf', () => {
+  it("brings out the chooser tapped anywhere on it, seen at the table's angle, never the one behind it", () => {
+    const view = { width: 1180, height: 820 }
+    const camera = new THREE.PerspectiveCamera()
+    placeCamera(camera, view.width / view.height)
+    const projector = cameraProjector(camera, view)
+    let taps = 0
+    for (const live of MAT_KEYS) {
+      const shelf = MAT_KEYS.filter((mat) => mat !== live)
+      shelf.forEach((mat, i) => {
+        const tile = shelfTile(i)
+        const top = new THREE.Box3().setFromBufferAttribute(chooserGeometry(mat).getAttribute('position') as THREE.BufferAttribute).max.y * CHOOSER_SCALE
+        for (let k = 0; k <= 4; k++) {
+          const table = new TableController({ ...defaultTable(4), liveMat: live, shelf: [live, ...shelf] }, { save: () => {} })
+          table.setProjector(projector)
+          tap(table, projector.toScreen(to3(tile, tile.height + (top * k) / 4))!)
+          run(table, 1)
+          expect(table.state.liveMat, `${mat} tapped ${k}/4 up it, ${live} out`).toBe(mat)
+          taps++
+        }
+      })
+    }
+    expect(taps).toBe(30)
+  }, 30_000)
 })
 
 describe('album of past tables', () => {
