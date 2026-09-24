@@ -619,6 +619,9 @@ export class TableController {
 
   /** Set the newest page back on the table: today's stones go home to the bag, then fly out to where they were. */
   private restorePage(): void {
+    const landing = this.flights.filter((flight) => flight.carriesPiece)
+    this.flights = this.flights.filter((flight) => !flight.carriesPiece)
+    for (const flight of landing) flight.land()
     const page = turnPage(this.state.album, pageOf(this.state.liveMat, this.restingPieces()))
     if (!page) return
     this.albumAt = this.t
