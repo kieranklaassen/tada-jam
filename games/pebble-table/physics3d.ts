@@ -107,6 +107,8 @@ export class TablePhysics {
   private readonly stoneMaterial = new CANNON.Material('stone')
   private readonly woodMaterial = new CANNON.Material('wood')
   private readonly fixtures = new Map<string, CANNON.Body>()
+  /** The round fixtures something held must ride over, and how tall they stand. */
+  private readonly tops = new Map<string, { circle: Circle; height: number }>()
   private readonly openJars = new Set<PartKind>()
   private readonly pans: CANNON.Body[] = []
   private readonly brooms = new Map<number, CANNON.Body>()
@@ -238,7 +240,7 @@ export class TablePhysics {
       this.world.addBody(body)
       this.pans.push(body)
     }
-    this.setFixture('post', { ...SCALE.post, r: 18 }, 30)
+    this.setFixture('post', { ...SCALE.post, r: 18 }, 30, true)
     for (const kind of LIDDED_JARS) this.addJar(kind)
     this.addNest()
     this.panDrops = [0, 0]
@@ -328,8 +330,10 @@ export class TablePhysics {
    * lie on the circle, so nothing resting against it reaches into what is drawn
    * there. It reaches as deep into the table as it stands above it, so its
    * origin is below everything that rests beside it (see `prism`).
+   * Something held rides over it (see `heldClearance`) unless something else
+   * overhangs it, as the scale's beam does its post.
    */
-  setFixture(key: string, circle: Circle, height = 12): void {
+  setFixture(key: string, circle: Circle, height = 12, overhung = false): void {
     this.removeFixture(key)
     const body = new CANNON.Body({ mass: 0, material: this.woodMaterial })
     const at = to3(circle)
@@ -338,6 +342,7 @@ export class TablePhysics {
     body.addShape(new CANNON.Cylinder(corner, corner, 2 * height, FIXTURE_SIDES))
     this.world.addBody(body)
     this.fixtures.set(key, body)
+    if (!overhung) this.tops.set(key, { circle, height })
   }
 
   removeFixture(key: string): void {
@@ -346,6 +351,14 @@ export class TablePhysics {
       this.world.removeBody(body)
       this.fixtures.delete(key)
     }
+    this.tops.delete(key)
+  }
+
+  /** How high (cm) something held at `at`, reaching `reach` (cm) round, must ride to clear the round fixtures under it: the top of the tallest, or 0. */
+  heldClearance(at: Point, reach: number): number {
+    let top = 0
+    for (const { circle, height } of this.tops.values()) if (Math.hypot(at.x - circle.x, at.y - circle.y) * UNIT < circle.r * UNIT + reach) top = Math.max(top, height)
+    return top
   }
 
   addBag(): void {

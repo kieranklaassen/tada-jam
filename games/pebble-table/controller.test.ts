@@ -4,9 +4,11 @@ import { silentSound, TableController, type Projector } from './controller'
 import { IDLE_BEFORE_HINT } from './guidance'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, shelfTile } from './layout'
 import { JARS, PART_COUNTS } from './parts'
-import { toWorld2 } from './physics3d'
+import { stoneRadius3, toWorld2, UNIT } from './physics3d'
+import { stoneRest } from './stoneShape'
 import { panOf } from './scale'
-import { plateOf } from './feeding'
+import { GUEST_RADIUS, GUEST_TOP, plateOf } from './feeding'
+import { SEAT_SPECIES } from './motion'
 import { accountedTotal, defaultTable } from './state'
 
 // A straight-down orthographic "camera": screen pixels are world units.
@@ -368,5 +370,36 @@ describe('forgiving drops', () => {
     drag(table, { x: BAG.x, y: BAG.y }, short)
     run(table, 2)
     expect(table.state.pieces.filter((piece) => plateOf(piece) === seat)).toHaveLength(1)
+  })
+
+  it('carries a stone over a seated guest rather than through it, and the guest catches it if it is let go over its head', () => {
+    for (const seat of [1, 4]) {
+      const { table } = makeTable()
+      tap(table, { x: 1000, y: 900 })
+      run(table, 1)
+      const guest = FEEDING.seats[seat].guest
+      const [from, to] = [{ x: guest.x - 240, y: guest.y + 40 }, { x: guest.x + 240, y: guest.y - 40 }]
+      table.pointerDown(2, BAG, (clock += 10))
+      const move = (at: { x: number; y: number }) => {
+        table.pointerMove(2, at, (clock += 16))
+        table.step(1 / 60)
+      }
+      for (let i = 1; i <= 30; i++) move({ x: BAG.x + ((from.x - BAG.x) * i) / 30, y: BAG.y + ((from.y - BAG.y) * i) / 30 })
+      const piece = table.state.pieces[table.state.pieces.length - 1]
+      // Across the guest and back at 30 cm a second, a brisk small hand's pace.
+      for (const [a, b] of [[from, to], [to, guest]]) {
+        const steps = Math.ceil((Math.hypot(b.x - a.x, b.y - a.y) * UNIT) / 30 * 60)
+        for (let i = 1; i <= steps; i++) {
+          move({ x: a.x + ((b.x - a.x) * i) / steps, y: a.y + ((b.y - a.y) * i) / steps })
+          const body = table.physics.body(piece.id)!
+          const off = Math.hypot(toWorld2(body.position).x - guest.x, toWorld2(body.position).y - guest.y) * UNIT
+          if (off < GUEST_RADIUS * UNIT + stoneRadius3(piece.q)) expect(body.position.y - stoneRest(piece.q), `seat ${seat}, ${off.toFixed(1)} cm from its middle`).toBeGreaterThanOrEqual(GUEST_TOP[SEAT_SPECIES[seat]])
+        }
+      }
+      run(table, 0.3)
+      table.pointerUp(2, guest, (clock += 150))
+      run(table, 2)
+      expect(plateOf(table.state.pieces.find((p) => p.id === piece.id)!), `seat ${seat}`).toBe(seat)
+    }
   })
 })

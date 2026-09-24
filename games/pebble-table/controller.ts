@@ -1,10 +1,10 @@
 import type { TableAudio } from './audio'
-import { freeSpotOnPlate, GUEST_RADIUS, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, wantingSeat, type FeedingView } from './feeding'
+import { freeSpotOnPlate, GUEST_RADIUS, GUEST_TOP, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, wantingSeat, type FeedingView } from './feeding'
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
 import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
 import { GRAVITY, HOLD_HEIGHT, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
-import { JAR_REACH, partDepth, STOOL_REACH, STOOL_TOP } from './partShape'
+import { JAR_REACH, partDepth, partRest, STOOL_REACH, STOOL_TOP } from './partShape'
 import { stoneRest } from './stoneShape'
 import { feedingFloor, surfaceUnder } from './surfaces'
 import { SaveCadence } from './saveCadence'
@@ -118,6 +118,10 @@ type PendingVoice = { groups: () => number[][]; deadline: number }
 const HIT_SLOP_PX = 14
 const MUNCH_DELAY = 0.9
 const BAG_TOP = 11
+/** Room (cm) a held stone or part keeps above what it is carried over. */
+const HOLD_ROOM = 1
+/** The highest a held thing rides, however tall what it is carried over. */
+const HOLD_CEILING = 50
 /** Room (cm) a poured part keeps from its jar's pot, for the little it turns in flight. */
 const POUR_ROOM = 1.5
 
@@ -252,8 +256,11 @@ export class TableController {
     const now = this.t
     for (const [pointerId, id] of this.held) {
       const screen = this.screens.get(pointerId)
-      const at = screen && this.projector?.toPlane(screen, HOLD_HEIGHT)
-      if (at) this.physics.moveHeld(id, at, HOLD_HEIGHT, 1 - Math.exp(-dt * 22))
+      const held = screen && this.heldAt(screen, id)
+      if (!held) continue
+      // Climbing over what it is carried across, it keeps right up with the finger; otherwise it trails a little, which reads as weight.
+      const climbing = held.height > HOLD_HEIGHT && held.height > (this.physics.body(id)?.position.y ?? 0)
+      this.physics.moveHeld(id, held.at, held.height, climbing ? 1 : 1 - Math.exp(-dt * 22))
     }
     for (const pointerId of this.brooms) {
       const screen = this.screens.get(pointerId)
@@ -913,7 +920,7 @@ export class TableController {
     FEEDING.seats.forEach((seat, index) => {
       const key = `guest-${index}`
       if (this.state.liveMat !== 'feeding') this.physics.removeFixture(key)
-      else if (this.state.seats[index] && this.guestDrag?.seat !== index) this.physics.setFixture(key, { ...seat.guest, r: GUEST_RADIUS }, 10)
+      else if (this.state.seats[index] && this.guestDrag?.seat !== index) this.physics.setFixture(key, { ...seat.guest, r: GUEST_RADIUS }, GUEST_TOP[SEAT_SPECIES[index]])
       else if (!this.state.seats[index] && this.stoolsShown) this.physics.setFixture(key, { ...seat.guest, r: STOOL_REACH / UNIT }, feedingFloor(seat.guest, STOOL_REACH) + STOOL_TOP)
       else if (!this.state.seats[index]) this.physics.removeFixture(key)
       else this.physics.removeFixture(key)
@@ -1324,7 +1331,8 @@ export class TableController {
       this.physics.release(id, { x: 0, y: 0 })
       return this.sendHome(id)
     }
-    const catcher = at ? this.catcher(at) : null
+    // A stone let go over a guest's head, or just short of the asking guest's plate, is caught onto the guest's plate.
+    const catcher = at ? (this.guestUnder(at) ?? this.catcher(at)) : null
     if (catcher !== null) {
       this.physics.release(id, { x: 0, y: 0 })
       this.sound.hop()
@@ -1333,6 +1341,34 @@ export class TableController {
     this.physics.release(id, velocity)
     if (speak) this.pendingVoice = { groups: this.voiceFor(id), deadline: this.t + 2.5 }
     this.cadence.change(performance.now(), true)
+  }
+
+  /**
+   * Where a held stone or part rides under the finger: at the hold height, or
+   * as little higher up the finger's line of sight as carries it clear over
+   * whatever stands under it (a guest, the bag, a jar, the house), and not
+   * lower than clears what stands under where it is now, so it comes down
+   * only once past.
+   */
+  private heldAt(screen: Point, id: number): { at: Point; height: number } | null {
+    const piece = this.pieceById(id)
+    const part = piece ? undefined : this.partById(id)
+    const reach = piece ? stoneRadius3(piece.q) : part ? PART_RADIUS[part.kind] * UNIT : 0
+    const rest = piece ? stoneRest(piece.q) : part ? partRest(part.kind) : 0
+    const clear = (at: Point) => this.physics.heldClearance(at, reach) + rest + HOLD_ROOM
+    const now = this.physics.position2(id)
+    for (let height = Math.max(HOLD_HEIGHT, now ? clear(now) : 0); ; height += 0.5) {
+      const at = this.projector?.toPlane(screen, height)
+      if (!at) return null
+      if (height >= HOLD_CEILING || clear(at) <= height) return { at, height }
+    }
+  }
+
+  /** The seated guest a stone let go at `at` falls onto, if any. */
+  private guestUnder(at: Point): number | null {
+    if (this.state.liveMat !== 'feeding') return null
+    const seat = FEEDING.seats.findIndex((seat, index) => this.state.seats[index] && this.guestDrag?.seat !== index && Math.hypot(at.x - seat.guest.x, at.y - seat.guest.y) < GUEST_RADIUS)
+    return seat < 0 ? null : seat
   }
 
   /** A stone dropped just short of the asking guest's plate: small hands miss, so the guest catches it. */

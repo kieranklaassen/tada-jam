@@ -1,4 +1,5 @@
 import { FEEDING, insideCircle, type Point } from './layout'
+import type { Species } from './motion'
 import type { Piece } from './state'
 
 // Fair Feeding (R9, KTD5). Plates and the bowl are zones over the shared
@@ -91,6 +92,8 @@ export function wantingSeat(view: FeedingView, stonesAvailable: boolean, lastDea
 }
 
 export const GUEST_RADIUS = 64
+/** How tall (cm) a seated guest of each kind stands at its tallest, on the rug, ears, stretch, hop and springy arrival included: its collider stands as tall, so what is carried or flicked over it clears it. */
+export const GUEST_TOP: Record<Species, number> = { rabbit: 36.5, bear: 28.5, hedgehog: 25.5 }
 
 /** A free spot on a plate, spiralling out from the center and keeping clear of the guest. */
 export function freeSpotOnPlate(seat: number, occupied: readonly Point[], radius: number): Point {

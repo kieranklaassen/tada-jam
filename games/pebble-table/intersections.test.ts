@@ -4,13 +4,14 @@ import { MeshBVH } from 'three-mesh-bvh'
 import { describe, expect, it } from 'vitest'
 import { yardSpots } from './controller'
 import { albumSlot, DOOR, FEEDING, SCALE, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
-import { SEAT_SPECIES } from './motion'
+import { GUEST_TOP } from './feeding'
+import { MotionDirector, SEAT_SPECIES, type ActionKind } from './motion'
 import { STOOL_REACH, STOOL_TOP } from './partShape'
 import { PAN_REST_HEIGHT, STEP, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
 import { panDrops } from './scale'
 import { STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneRest, stoneVertices } from './stoneShape'
 import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_TOP, type Surfaces } from './surfaces'
-import { GUEST_SIZE, guestFloor, guestYaw, soleDepth, speciesShapes } from './view/guest'
+import { GUEST_SIZE, guestFloor, guestYaw, NECK_Y, soleDepth, speciesShapes } from './view/guest'
 import { ALBUM_SCALE, albumGeometry, CHOOSER_SCALE, chooserGeometry, DOOR_FARTHEST, DOOR_HINGE, doorLeafGeometry, doorSwing, easeOutBack, feedingShapes, houseGeometry, HUB_RADIUS, MOUSE_SCALE, mouseGeometry, panHang, PIVOT_Y, POST_LIFT, ROPE_KNOT, ropeMatrix, scaleShapes } from './view/models'
 import { comingOut, DOOR_SWING, goingHome, VISITOR_GAP, VISITOR_REACH, visitorGone, visitorPose, visitorWalk, type VisitorPose, type VisitorTimes } from './visitors'
 import { chunk } from './voice'
@@ -195,6 +196,37 @@ describe('guests stand on what is drawn under them', () => {
         const low = Math.min(...guestBody(seat, pose).map((v) => v.y))
         expect(Math.abs(low - floor), `seat ${seat} ${JSON.stringify(pose)}`).toBeLessThan(0.01)
       }
+    }
+  })
+
+  it('stands no guest taller than its collider, however it stretches, hops or springs in', () => {
+    const top = (geometry: THREE.BufferGeometry, y = 0) => Math.max(...pointsOf(geometry, new THREE.Matrix4().makeTranslation(0, y, 0)).map((v) => v.y))
+    const floor = Math.max(...FEEDING.seats.map((seat, i) => guestFloor(i, seat.guest)))
+    const kinds: ActionKind[] = ['react', 'eat', 'poke', 'arrive', 'delight']
+    for (const species of new Set(SEAT_SPECIES)) {
+      const shapes = speciesShapes(species)
+      const bottom = Math.min(...pointsOf(shapes.body, new THREE.Matrix4()).map((v) => v.y))
+      const height = Math.max(top(shapes.body), top(shapes.head, NECK_Y), ...(shapes.ears ?? []).map((ear) => top(ear, NECK_Y + 5.6))) - bottom
+      let tallest = 0
+      for (let seed = 0; seed < 4; seed++) {
+        const director = new MotionDirector(species, seed, 0)
+        let [t, arrived] = [0, -Infinity]
+        for (let round = 0; round < 30; round++) {
+          const kind = kinds[round % kinds.length]
+          director.trigger(kind, t)
+          if (kind === 'arrive') arrived = t
+          for (let k = 0; k < 150; k++, t += 1 / 60) {
+            const since = (t - arrived) / 0.4
+            const pop = since < 1 ? Math.max(0.01, easeOutBack(since)) : 1
+            for (const reach of [0, 1]) {
+              const m = director.sample(t, reach > 0, reach)
+              tallest = Math.max(tallest, floor + Math.max(0, m.lift) + height * GUEST_SIZE * (1 - m.squash) * pop)
+            }
+          }
+        }
+      }
+      expect(tallest, species).toBeLessThanOrEqual(GUEST_TOP[species])
+      expect(GUEST_TOP[species] - tallest, species).toBeLessThan(1)
     }
   })
 
