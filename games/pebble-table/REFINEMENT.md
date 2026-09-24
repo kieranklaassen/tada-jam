@@ -51,3 +51,53 @@ Each pass: record a scripted scene (poke every guest twice, deal six stones so e
 - Eating is still quieter than it should be for the hedgehog; its chomps read mostly as a lean.
 - The objects' new character was checked in code and in the full walkthrough, but the scripted object recording missed the knife and the bag moments, so they have not had a dedicated critique pass.
 - The munch still starts at the same moment for everyone (the controller fires one munch for the party); staggering it by personality is the next step.
+
+# Intersection audit: no pieces through each other
+
+The jam's intersection audit (`npm run check:intersections -- pebble-table`) plays a four-year-old's first open on the production build, in five moments: the story beat, where the bag tips one stone toward the hungry guest and the ghost hand carries it to the plate, then a ten-stone spill; stones dealt to a plate and the bowl, pokes, the knife cutting a leftover into halves and quarters, a stone carried over a guest's head to its plate, and a sweep through the pile; an idle long enough for the glow, a rumble and a ghost-hand demonstration; the Honest Scale with stones and all four jars' parts carried onto both pans, then the ghost stone's demonstration; and Knock-Knock, with knocks, the visitors coming in, a poke, and a rest. Every quarter-second of game time (208 samples over 54 s) it looks for pieces passing into each other.
+
+**Found.** The first run found 146 visible findings: 72 decals or pieces sinking into what they lie on, 47 pieces through other pieces, 18 parts set deeper into their own figure than at rest, 7 pieces wholly inside another, and 2 z-fights. Another 140 were hidden (out of sight or under the pixel floor). All 146 were real.
+
+| Seen | Change |
+| --- | --- |
+| Contact shadows and glow rings (63) reaching into the rug's hem, plate and bowl rims, a guest's body, the post, the nest and loose parts; wholly inside the rug; z-fighting with it | Each disc lies a hair above what it is cast on and shrinks to where that is flat: the pan, bowl or plate it lies in, clear of the hem and of the side of any plate or the bowl beside it, and in a pan to the middles of the dish's turned sides. Plates and the bowl stand a hair above the rug, so their bases never share its plane. |
+| Stones through stones, the rug's hem, the plates, the bowl, the bag and the table (21), and the hem rope through the rug (1) | Stones collide as they are drawn (low prisms round the drawn pebble) and rest on the drawn heights of the rug, plates, bowl and pan floors. They squash, rock and pop about their lowest point, never into a neighbour, and a sweeping finger never presses them into the table. The hem rope is solid, so a stone rests on it or beside it. Stones leave the bag from just past its mouth. |
+| Loose parts through each other, stones, the table, the nest and a pan (20), and jar lids through their jars and the table (6) | Parts and jars collide as drawn, a shell is solid to its rim, and a part landing fast on a stone meets it instead of sinking in. A part jittering against a neighbour still falls asleep. |
+| Guests' arms, ears, cheeks, nose and mouth deeper into their own head or body (10), and guests' bodies into the table, rug, hem, plates and a stone (6) | A guest's parts are posed by one pure function that never swings an arm, ear, nose or cheek deeper into what it hangs on, and a curling hedgehog puts its cheeks away once they sink under its face. Guests stand clear of their plates on the highest thing under them, and a stone carried over a guest rides over its head. |
+| The scale's ropes through the beam, the beam through the post, the post in the table, and stones in the pans' rims (8) | The ropes, beam and post meet the same way at every tilt. The pans swing on their ropes with their colliders, are solid round their rolled rims, and a stone or part carried over a raised pan rides over the rim. A pan rope is laid over a stone or part carried into it. |
+| The ghost stone through a stone, a stick and shells (4) | The ghost stone lies on whatever it is shown lifting or carried over. |
+| The shelf's choosers and the album through each other (4) | They stand apart on the shelf. |
+| Stones in the empty seats' stools, and a stool in the hem (3) | Stools collide as drawn and stand on their lumpy cushion. A stone lying where a stool pops up hops out beside it. |
+
+The Knock-Knock visitors come and go clear of the house, its door and each other, and stones hop out of the door's swing and the visitors' path.
+
+**Once the audit enforced**, more turned up, each in one run of several, because the stones' and parts' fall differs a little from run to run:
+
+- A guest's idling arm swung into a stone leaning on the guest. The guest's collider now holds its idling arms, and a stone left leaning on a guest hops off.
+- A shell poured from its jar went into a stone, and a poured stick did too: a part landing fast now meets a stone instead of sinking in.
+- The ghost stone went through a stick lying on the table. It now lies over loose parts too.
+- The Knock-Knock moment never reached the door mat: a tap on a tall shelf token's top could fall within reach of the token behind it. A tap now brings out the nearest.
+- A stone carried over the hedgehog went 25% into its nose: the stone came down as soon as it left the guest's body, but a guest's head, leaning in and looking down, reaches much farther. Something carried over a guest now stays up until it is clear of the guest's head.
+- A shadow in the left pan sank into the pan's wall (24%, 12 px): the pan is drawn with 40 sides, so its flat floor ends about 0.4 mm inside the circle the decals were shrunk to. They now stop at the sides' middles.
+- A stone sank 0.41 cm into the left pan half a second after the scale came out. Stones left on the table stay where they lay when a mat changes, so one could lie across where a pan's rim now stands, or under a pan that then came down on it. When the scale comes out, a stone caught across a rim is now laid inside the pan if there is room, and one under a pan (or with no room in it) is set down beside it, clear of where either pan can swing.
+
+Four test fixes came out of the same runs: the bag-spill and random-spill tests count a stone hopping off a guest as still on the table, and a tap on the album while a stone is hopping sets the page back exactly.
+
+**After.** Two enforcing runs of the final build are clean: no open and no allowed findings in 205 samples each, with 3 hidden (two shadows wholly under a shelf chooser, out of sight, and a guest's head on its body). A replay of the first run's photographed findings re-photographs 91 of them at the same moment and spot, and none is still there. Nothing is allowed. The config ignores only the fur shells and hedgehog quills: their vertex shaders push and sway them, so the CPU copy the audit reads is not what is drawn, and each quill is planted in the body by design. They are reviewed by eye in the close-ups and contact sheets.
+
+**Regression tests.** 66 new tests. The 52 in `intersections.test.ts` pin each fix at the level of the shapes and physics that caused it, and each fails against the code the audit first ran on. `controller.test.ts` (8) holds the stones that hop out of the way of a guest's arm, a stool, the door and the visitors; nothing under a pan rim weighing on the beam; a tap bringing out the chooser tapped; the album setting the page back exactly while a stone hops; and a stone carried over a guest, and over its head. `guest.test.ts` (3) holds the guests' posing, and `physics3d.test.ts` (3) a swinging pan waking only what lies in it, jittering parts falling asleep, and the shape cull landing a pour exactly where trying every shape does.
+
+**Perf.** Measured on this GPU-less VM with Playwright's bundled Chromium at 6× CPU throttle, a half-size viewport and full quality pinned: three interleaved runs per build and scene of the perf probe's scripted play (about a minute each), `main` 53596a3 against this branch. The figures are each frame's CPU work, the median over the runs of each run's 95th and 50th percentiles, with the runs' range. The machine was shared (load average 3.9 to 10.1 during the runs), so run-to-run noise is several milliseconds.
+
+| Scene | cpuP95 main | cpuP95 branch | cpuP50 main | cpuP50 branch |
+| --- | --- | --- | --- | --- |
+| Fair Feeding | 27.3 ms (25.5–30.1) | 31.2 ms (27.1–37.4) | 9.6 ms | 11.1 ms |
+| Honest Scale (jars tipped, stones and parts carried over the pans) | 28.7 ms (21.9–32.8) | 51.0 ms (50.8–53.9) | 8.4 ms | 18.2 ms |
+
+Every run stayed at the full tier, with 20 to 34 draw calls. Fair Feeding is within the noise. The Honest Scale is not: every run of this branch costs more than every run of `main`, about twice its median. The loose parts now collide as drawn (sticks and shells are chains of little balls), and two commits in this pass cut the controller's cost of a four-jar pour in Node from a mean of 3.5 ms to 1.0 ms at 1× (`main`: 0.5 ms), but the scale still costs about twice what it did. The frame-budget test (a ten-stone spill under 0.75 ms a frame) and the governor rules pass unchanged.
+
+## Still weak (intersections)
+
+- The Honest Scale costs about twice `main`'s CPU per frame (above). Profiling where the rest goes and cutting it is the next step.
+- The scale coming out clears stones from under its pans, but a stone or part that comes to rest on the table under a pan's rim during play could still be pressed by the pan coming down as the beam tips. No audit run has shown one.
+- The fur shells and quills are outside the audit and reviewed by eye only.
