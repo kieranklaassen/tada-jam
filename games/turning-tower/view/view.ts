@@ -1,10 +1,11 @@
 import * as THREE from 'three'
 import { RIPPLES, type RoomInfo, type TowerController } from '../controller'
-import { SCREEN_RIGHT, SCREEN_UP, TOWARD_CAMERA, type MutableVec3 } from '../projection'
+import { levelLift, SCREEN_RIGHT, SCREEN_UP, TOWARD_CAMERA, type MutableVec3 } from '../projection'
 import { pinnedTier, startingTier, TierGovernor, type Tier } from '../tiers'
 import { axisVector } from '../world'
 import { buildDoorGeometry, buildRoomGeometry, DOOR } from './build'
-import { buildBird, buildWanderer, WANDERER_SCALE, type BirdRig, type WandererRig } from './characters'
+import { WANDERER_SCALE } from '../anatomy'
+import { buildBird, buildWanderer, type BirdRig, type WandererRig } from './characters'
 import {
   facetMaterial,
   flatMaterial,
@@ -30,49 +31,120 @@ import { CornerTaps, PerfMonitor } from './perf'
 
 const CAMERA_DISTANCE = 80
 /** How far toward the camera the ring models and the pixel layer float, clear of any diorama. */
-const MINI_DEPTH = 30
+export const MINI_DEPTH = 30
 const HUD_DEPTH = 50
+/**
+ * The door's and the lantern's light float this far toward the camera from
+ * the plane through the origin: in front of every block of every diorama, so
+ * a glow is never cut off by a wall it happens to stand in, and behind the
+ * ring. The camera is orthographic, so on screen they stay exactly where they
+ * shine; the controller fades each one by how much of its source the child
+ * can actually see.
+ */
+export const HALO_DEPTH = 20
+/** Glows draw after the dioramas; the door and both characters draw over them, so the light sits behind what gives it off. */
+const GLOW_ORDER = 2
+const LIT_ORDER = 3
 const DOOR_SWING = 1.35
+
+export function toHaloDepth(position: THREE.Vector3): void {
+  const push = HALO_DEPTH - (position.x * TOWARD_CAMERA[0] + position.y * TOWARD_CAMERA[1] + position.z * TOWARD_CAMERA[2])
+  position.x += TOWARD_CAMERA[0] * push
+  position.y += TOWARD_CAMERA[1] * push
+  position.z += TOWARD_CAMERA[2] * push
+}
+
+/** A glow that draws with the opaque pass, in `renderOrder`, instead of being depth-sorted among the transparent sprites. */
+function inOrder(mesh: FlatMesh, order: number): FlatMesh {
+  mesh.material.transparent = false
+  mesh.renderOrder = order
+  return mesh
+}
+
+function drawnAfterGlows(root: THREE.Object3D): void {
+  root.traverse((object) => {
+    object.renderOrder = LIT_ORDER
+  })
+}
 
 type FlatMesh = THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial & { uniforms: FlatUniforms }>
 
-type GroupView = { object: THREE.Mesh; axis: THREE.Vector3; kind: 'turn' | 'slide'; slideAxis: number; pivotY: number }
+export type GroupView = { object: THREE.Mesh; axis: THREE.Vector3; kind: 'turn' | 'slide'; slideAxis: number; pivotY: number; level: boolean }
 
 type RoomView = { root: THREE.Object3D; groups: (GroupView | null)[] }
 
 type MiniView = { root: THREE.Object3D; groups: (GroupView | null)[]; centreX: number; centreY: number; extent: number; version: number }
 
-function groupViews(info: RoomInfo, meshes: (THREE.BufferGeometry | null)[], material: THREE.Material, parent: THREE.Object3D): (GroupView | null)[] {
+export function groupViews(info: RoomInfo, meshes: (THREE.BufferGeometry | null)[], material: THREE.Material, parent: THREE.Object3D): (GroupView | null)[] {
   return info.spec.groups.map((def, g) => {
     const geometry = meshes[g]
     if (!geometry) return null
     const object = new THREE.Mesh(geometry, material)
+    object.name = `segment-${g}`
     parent.add(object)
     if (def.kind === 'turn') {
       object.position.set(def.pivot[0], def.pivot[1], def.pivot[2])
       const [ax, ay, az] = axisVector(def.axis)
-      return { object, axis: new THREE.Vector3(ax, ay, az), kind: 'turn', slideAxis: 0, pivotY: def.pivot[1] }
+      return { object, axis: new THREE.Vector3(ax, ay, az), kind: 'turn', slideAxis: 0, pivotY: def.pivot[1], level: def.axis !== 'y' }
     }
-    return { object, axis: new THREE.Vector3(), kind: 'slide', slideAxis: def.axis === 'x' ? 0 : def.axis === 'y' ? 1 : 2, pivotY: 0 }
+    return { object, axis: new THREE.Vector3(), kind: 'slide', slideAxis: def.axis === 'x' ? 0 : def.axis === 'y' ? 1 : 2, pivotY: 0, level: false }
   })
 }
 
-function poseGroup(view: GroupView, value: number, dip = 0): void {
+export function poseGroup(view: GroupView, value: number, dip = 0): void {
   if (view.kind === 'turn') {
     view.object.quaternion.setFromAxisAngle(view.axis, (value * Math.PI) / 2)
-    view.object.position.y = view.pivotY + dip
+    view.object.position.y = view.pivotY + dip + (view.level ? levelLift(value) : 0)
     return
   }
   view.object.position.set(view.slideAxis === 0 ? value : 0, (view.slideAxis === 1 ? value : 0) + dip, view.slideAxis === 2 ? value : 0)
+}
+
+export type DoorView = { root: THREE.Object3D; leafLeft: THREE.Mesh; leafRight: THREE.Mesh; light: THREE.Mesh<THREE.BufferGeometry, ReturnType<typeof plainMaterial>> }
+
+/** The one door every diorama shares: its arch, two leaves, and the light they open onto. */
+export function doorView(material: THREE.Material): DoorView {
+  const geometry = buildDoorGeometry()
+  const root = new THREE.Object3D()
+  root.name = 'door'
+  root.userData.jamObject = 'door'
+  root.rotation.y = Math.PI / 4
+  const frame = new THREE.Mesh(geometry.frame, material)
+  frame.name = 'frame'
+  const leafLeft = new THREE.Mesh(geometry.leafLeft, material)
+  leafLeft.name = 'leaf-left'
+  leafLeft.position.set(-DOOR.width / 2, 0, -DOOR.leaf / 2)
+  const leafRight = new THREE.Mesh(geometry.leafRight, material)
+  leafRight.name = 'leaf-right'
+  leafRight.position.set(DOOR.width / 2, 0, -DOOR.leaf / 2)
+  const light = new THREE.Mesh(geometry.light, plainMaterial(PALETTE.doorLight, 0))
+  light.name = 'light'
+  root.add(frame, leafLeft, leafRight, light)
+  return { root, leafLeft, leafRight, light }
+}
+
+/** Stand the door at the controller's door point, open by `open` (0 to 1): the leaves swing in behind the light. */
+export function poseDoor(door: DoorView, at: readonly number[], open: number, fade: number): void {
+  door.root.position.set(at[0], at[1], at[2])
+  door.leafLeft.rotation.y = open * DOOR_SWING
+  door.leafRight.rotation.y = -open * DOOR_SWING
+  const k = Math.min(1, open / 0.4)
+  const light = k * k * (3 - 2 * k) * (1 - fade)
+  door.light.material.uniforms.uOpacity.value = light
+  // The shader reads the uniform; the material's own opacity says the same to anything inspecting the scene.
+  door.light.material.opacity = light
+  door.light.visible = light > 0.01
 }
 
 // Every sprite shares one of two quads, so a ripple or hand appearing for the
 // first time never needs a new buffer mid-play.
 const UPRIGHT_QUAD = new THREE.PlaneGeometry(1, 1)
 const FLAT_QUAD = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
+/** A shadow's round texture fades out at the quad's inscribed circle, so the shadow is cut to that circle: its corners would reach into whatever stands beside the caster. */
+export const SHADOW_DISC = new THREE.CircleGeometry(0.5, 24).rotateX(-Math.PI / 2)
 
-function quad(material: THREE.ShaderMaterial & { uniforms: FlatUniforms }, flat = false): FlatMesh {
-  const mesh = new THREE.Mesh(flat ? FLAT_QUAD : UPRIGHT_QUAD, material)
+function quad(material: THREE.ShaderMaterial & { uniforms: FlatUniforms }, flat = false, geometry: THREE.BufferGeometry = flat ? FLAT_QUAD : UPRIGHT_QUAD): FlatMesh {
+  const mesh = new THREE.Mesh(geometry, material)
   mesh.frustumCulled = false
   return mesh
 }
@@ -116,9 +188,7 @@ export class TowerView {
   private readonly hintMaterial = facetMaterial()
   private readonly sky = skyMesh()
   private readonly motes = motes(48, 16)
-  private readonly door = new THREE.Object3D()
-  private readonly leafLeft: THREE.Mesh
-  private readonly leafRight: THREE.Mesh
+  private readonly door: DoorView
   private readonly doorHalo: FlatMesh
   private readonly walker: WandererRig
   private readonly bird: BirdRig
@@ -167,23 +237,34 @@ export class TowerView {
     this.forward.set(-TOWARD_CAMERA[0], -TOWARD_CAMERA[1], -TOWARD_CAMERA[2])
 
     // Background.
+    this.sky.name = 'sky'
     this.scene.add(this.sky)
+    this.motes.name = 'motes'
     this.motes.renderOrder = 5
     this.scene.add(this.motes)
 
     // Dioramas: all built now, one shown at a time.
+    this.stage.name = 'stage'
+    this.miniRoot.name = 'ring'
+    this.hud.name = 'hud'
     this.scene.add(this.stage)
     for (const info of controller.rooms) {
       const geometry = buildRoomGeometry(info)
       const root = new THREE.Object3D()
-      root.add(new THREE.Mesh(geometry.static, this.architecture))
+      root.name = `room-${info.spec.key}`
+      const architecture = new THREE.Mesh(geometry.static, this.architecture)
+      architecture.name = 'architecture'
+      root.add(architecture)
       const groups = groupViews(info, geometry.groups, this.architecture, root)
       root.visible = false
       this.stage.add(root)
       this.rooms.push({ root, groups })
 
       const mini = new THREE.Object3D()
+      mini.name = `mini-${info.spec.key}`
+      mini.userData.jamObject = mini.name
       const staticMini = new THREE.Mesh(geometry.static, this.miniMaterial)
+      staticMini.name = 'architecture'
       staticMini.frustumCulled = false
       mini.add(staticMini)
       const miniGroups = groupViews(info, geometry.groups, this.miniMaterial, mini)
@@ -195,44 +276,43 @@ export class TowerView {
     this.scene.add(this.miniRoot)
 
     // The door: one arch shared by every diorama.
-    const door = buildDoorGeometry()
-    this.door.rotation.y = Math.PI / 4
-    this.door.add(new THREE.Mesh(door.frame, this.architecture))
-    this.leafLeft = new THREE.Mesh(door.leafLeft, this.architecture)
-    this.leafLeft.position.set(-DOOR.width / 2, 0, 0)
-    this.leafRight = new THREE.Mesh(door.leafRight, this.architecture)
-    this.leafRight.position.set(DOOR.width / 2, 0, 0)
-    this.door.add(this.leafLeft, this.leafRight)
-    this.stage.add(this.door)
+    this.door = doorView(this.architecture)
+    drawnAfterGlows(this.door.root)
+    this.stage.add(this.door.root)
 
     const glow = glowTexture()
     const shadow = shadowTexture()
-    this.doorHalo = quad(flatMaterial(glow, PALETTE.doorLight, { additive: true }))
+    this.doorHalo = inOrder(quad(flatMaterial(glow, PALETTE.doorLight, { additive: true })), GLOW_ORDER)
+    this.doorHalo.name = 'door-halo'
     this.doorHalo.quaternion.copy(this.camera.quaternion)
-    this.doorHalo.renderOrder = 4
     this.stage.add(this.doorHalo)
 
     // Characters.
-    const walkerShadow = quad(flatMaterial(shadow, PALETTE.shadow, { opacity: 0.42 }), true)
-    walkerShadow.scale.set(0.5 * WANDERER_SCALE, 1, 0.5 * WANDERER_SCALE)
-    const lanternHalo = quad(flatMaterial(glow, PALETTE.lantern, { additive: true, opacity: 0.7 }))
+    const walkerShadow = quad(flatMaterial(shadow, PALETTE.shadow, { opacity: 0.42 }), true, SHADOW_DISC)
+    walkerShadow.name = 'wanderer-shadow'
+    const lanternHalo = inOrder(quad(flatMaterial(glow, PALETTE.lantern, { additive: true, opacity: 0.7 })), GLOW_ORDER)
+    lanternHalo.name = 'lantern-halo'
     lanternHalo.quaternion.copy(this.camera.quaternion)
-    lanternHalo.renderOrder = 6
     this.walker = buildWanderer(this.walkerMaterial, lanternHalo, walkerShadow)
+    drawnAfterGlows(this.walker.root)
     this.stage.add(this.walker.root, walkerShadow)
     this.scene.add(lanternHalo)
-    const birdShadow = quad(flatMaterial(shadow, PALETTE.shadow, { opacity: 0.36 }), true)
-    birdShadow.scale.set(1.05, 1, 1.1)
+    const birdShadow = quad(flatMaterial(shadow, PALETTE.shadow, { opacity: 0.36 }), true, SHADOW_DISC)
+    birdShadow.name = 'bird-shadow'
     this.bird = buildBird(this.birdMaterial, birdShadow)
+    drawnAfterGlows(this.bird.root)
     this.stage.add(this.bird.root, birdShadow)
 
     // Guidance and feedback in the world.
     this.handleGlow = quad(flatMaterial(glow, '#fff2b8', { additive: true, depthTest: false }))
+    this.handleGlow.name = 'handle-glow'
     this.handleGlow.quaternion.copy(this.camera.quaternion)
     this.handleGlow.renderOrder = 7
     this.tileGlow = quad(flatMaterial(ringTexture(), '#eafff9', { additive: true }), true)
+    this.tileGlow.name = 'tile-glow'
     this.tileGlow.renderOrder = 7
     this.sparkle = quad(flatMaterial(glintTexture(), '#fffbe8', { additive: true, depthTest: false }))
+    this.sparkle.name = 'sparkle'
     this.sparkle.renderOrder = 8
     this.stage.add(this.handleGlow, this.tileGlow, this.sparkle)
 
@@ -240,21 +320,26 @@ export class TowerView {
     this.scene.add(this.hud)
     const ring = ringTexture()
     this.track = new THREE.Mesh(ellipseBand(0.86, 72), plainMaterial(PALETTE.ring, 0.34))
+    this.track.name = 'ring-track'
     this.track.frustumCulled = false
     this.track.position.z = MINI_DEPTH - HUD_DEPTH - 8
     this.hud.add(this.track)
     this.tray = quad(flatMaterial(glow, '#fff6e6', { opacity: 0.55 }))
+    this.tray.name = 'ring-tray'
     this.tray.position.z = MINI_DEPTH - HUD_DEPTH - 6
     this.hud.add(this.tray)
     for (let i = 0; i < RIPPLES; i++) {
       const ripple = quad(flatMaterial(ring, '#ffffff', { depthTest: false }))
+      ripple.name = 'ripple'
       ripple.renderOrder = 20
       this.ripples.push(ripple)
       this.hud.add(ripple)
     }
     this.press = quad(flatMaterial(ring, '#ffffff', { depthTest: false }))
+    this.press.name = 'press'
     this.press.renderOrder = 21
     this.hand = quad(flatMaterial(handTexture(), '#ffffff', { depthTest: false }))
+    this.hand.name = 'ghost-hand'
     this.hand.renderOrder = 22
     this.hud.add(this.press, this.hand)
 
@@ -454,8 +539,8 @@ export class TowerView {
       this.rooms[index].root.visible = true
       this.shownRoom = index
       const d = info.door
-      this.door.position.set(d[0], d[1], d[2])
       this.doorHalo.position.set(d[0], d[1] + DOOR.height * 0.55, d[2])
+      toHaloDepth(this.doorHalo.position)
     }
     this.stage.position.y = frame.drop
     const room = this.rooms[index]
@@ -473,12 +558,11 @@ export class TowerView {
     this.hintMaterial.uniforms.uTintAmount.value = 0.2 * warmth
     this.hintMaterial.uniforms.uLift.value = 1.6 * warmth
     const open = frame.door.open
-    this.leafLeft.rotation.y = open * DOOR_SWING
-    this.leafRight.rotation.y = -open * DOOR_SWING
+    poseDoor(this.door, info.door, open, frame.fade)
     const doorHint = frame.glow.kind === 'door' ? frame.glow.strength : 0
     const haloSize = 1.5 + 0.35 * open + 0.25 * doorHint
     this.doorHalo.scale.set(haloSize, haloSize * 1.15, 1)
-    this.doorHalo.material.uniforms.uOpacity.value = (0.5 * frame.door.glow + 0.35 * open + 0.3 * doorHint) * (1 - frame.fade)
+    this.doorHalo.material.uniforms.uOpacity.value = (0.5 * frame.door.glow + 0.35 * open + 0.3 * doorHint) * (1 - frame.fade) * frame.seen.door
 
     // Characters.
     const walker = frame.walker
@@ -486,9 +570,11 @@ export class TowerView {
     this.walkerMaterial.uniforms.uFade.value = Math.max(frame.fade, frame.phase === 'enter' ? 0 : 1 - walker.alpha)
     this.walkerMaterial.uniforms.uTintAmount.value = frame.phase === 'enter' ? 1 - walker.alpha : 0
     const lantern = this.walker.halo as FlatMesh
+    toHaloDepth(lantern.position)
     const glow = walker.glow
-    lantern.scale.set(0.95 * WANDERER_SCALE * glow, 0.95 * WANDERER_SCALE * glow, 1)
-    lantern.material.uniforms.uOpacity.value = 0.62 * walker.alpha * (1 - frame.fade) * Math.min(1.3, glow)
+    const size = 0.95 * WANDERER_SCALE * walker.scale * glow
+    lantern.scale.set(size, size, 1)
+    lantern.material.uniforms.uOpacity.value = 0.62 * walker.alpha * (1 - frame.fade) * Math.min(1.3, glow) * frame.seen.lantern
     const walkerShadow = this.walker.shadow as FlatMesh
     walkerShadow.material.uniforms.uOpacity.value = 0.42 * walker.alpha * (1 - frame.fade)
     const bird = frame.bird

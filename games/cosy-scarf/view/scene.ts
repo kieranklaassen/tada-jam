@@ -333,7 +333,8 @@ export class CosyScene {
     const rows = Math.max(1, view.rows.length)
     const lift = view.lift.x
     const length = rows * CELL_H
-    const angle = view.swing.x * 0.07 + THREE.MathUtils.clamp(view.pull.x / Math.max(8, length * 0.8), -0.45, 0.45)
+    // The loom scarf carries the needles: it swings only as far as they stay clear of the animals and the basket.
+    const angle = rock ? this.game.needleSwing : view.swing.x * 0.07 + THREE.MathUtils.clamp(view.pull.x / Math.max(8, length * 0.8), -0.45, 0.45)
     if (rock) {
       out.makeTranslation(LOOM.x, 0, LOOM.z)
       out.multiply(this.m.makeRotationZ(this.game.loomRock.x * 0.022))

@@ -1,5 +1,6 @@
 import * as CANNON from 'cannon-es'
-import { PIECES, PLAY_MAX_X, PLAY_MIN_X, pieceShape, type Pose, type PieceShape } from './pieces'
+import { BODY_R, HAIR, HEAD_R, HEAD_Y, NECK_Y } from './doll'
+import { PIECES, PLAY_MAX_X, PLAY_MIN_X, pieceShape, type Pose, type PieceShape, type Vec2 } from './pieces'
 
 // Real wooden-block physics on one build plane (KTD1). Every body is
 // extruded from the same convex parts the planner and the mesh use (KTD2),
@@ -7,6 +8,11 @@ import { PIECES, PLAY_MAX_X, PLAY_MIN_X, pieceShape, type Pose, type PieceShape 
 // gravity so a topple reads as a slow, funny tumble instead of a crash. The
 // held piece hovers with no collision at all (KTD5) and drops from where it
 // is. The doll's weight is a real force on whatever it stands on (KTD4).
+// The doll is also in the way of anything loose: a block that falls, slides
+// or tumbles into her bounces off her outline instead of passing through,
+// and the controller hears when it came in hard enough to knock her over.
+// Blocks at rest, and whatever is under her feet, never meet her, so her own
+// steps and climbs never shove the build.
 
 export const GRAVITY = -30
 export const STEP = 1 / 60
@@ -29,6 +35,39 @@ const SLEEP_SPEED = 0.4
 const CALM_DRIFT = 0.04
 const CALM_SECONDS = 0.8
 
+/** Collision groups: every piece is SOLID, a loose one is LOOSE too, and the doll meets only LOOSE pieces. */
+const SOLID = 1
+const DOLL = 2
+const LOOSE = 4
+/** A piece this fast (as `speedOf` counts it) is loose; a loaded tower's jiggle stays well under it. */
+const LOOSE_SPEED = 0.8
+/** A piece that touched the doll stays loose this long, so one that comes to rest against her never sinks into her. */
+const TOUCH_SECONDS = 0.3
+/** Further than this in a frame and the doll is put there instead of swept there. */
+const DOLL_JUMP = 0.5
+/**
+ * Room round her head a loose piece meets: a block falling onto her moves up
+ * to its speed times a step before the contact holds it, so it stops here, a
+ * hair out from her paint, rather than dipping into her head. The body keeps
+ * its own width, so walking close past the build never jostles it.
+ */
+const HEAD_SKIN = 0.04
+/** The doll's outline in her own frame (feet at the origin): the body as wide as its hem up to the neck, and the head and hair inside an octagon. */
+const HEAD_OCTAGON = (HEAD_R + HAIR + HEAD_SKIN) / Math.cos(Math.PI / 8)
+export const DOLL_PARTS: readonly (readonly Vec2[])[] = [
+  [
+    { x: -BODY_R, y: 0.03 },
+    { x: BODY_R, y: 0.03 },
+    { x: BODY_R, y: NECK_Y },
+    { x: -BODY_R, y: NECK_Y },
+  ],
+  Array.from({ length: 8 }, (_, i) => {
+    const a = Math.PI / 8 + (i * Math.PI) / 4
+    return { x: Math.cos(a) * HEAD_OCTAGON, y: HEAD_Y + Math.sin(a) * HEAD_OCTAGON }
+  }),
+]
+const DOLL_DEPTH = 0.8
+
 export type StepReport = {
   /** How many knocks this frame were hard enough to hear; ids and speeds are in `impactIds` and `impactSpeeds`. */
   impacts: number
@@ -42,6 +81,8 @@ export type StepReport = {
   settledNow: boolean
   /** A piece that left the room (only possible through a numeric glitch); the controller sends it home. */
   lost: number
+  /** A loose piece that came into the doll at a hard knock this frame, or -1. */
+  dollHit: number
 }
 
 /**
@@ -89,14 +130,18 @@ const hulls = new Map<PieceShape, Hull[]>()
 function hullOf(shape: PieceShape): Hull[] {
   let parts = hulls.get(shape)
   if (!parts) {
-    parts = shape.parts.map((part) => {
-      const cx = part.reduce((sum, p) => sum + p.x, 0) / part.length
-      const cy = part.reduce((sum, p) => sum + p.y, 0) / part.length
-      return { hull: extrude(part.map((p) => ({ x: p.x - cx, y: p.y - cy })), shape.depth), offset: new CANNON.Vec3(cx, cy, 0) }
-    })
+    parts = hullsOf(shape.parts, shape.depth)
     hulls.set(shape, parts)
   }
   return parts
+}
+
+function hullsOf(parts: readonly (readonly Vec2[])[], depth: number): Hull[] {
+  return parts.map((part) => {
+    const cx = part.reduce((sum, p) => sum + p.x, 0) / part.length
+    const cy = part.reduce((sum, p) => sum + p.y, 0) / part.length
+    return { hull: extrude(part.map((p) => ({ x: p.x - cx, y: p.y - cy })), depth), offset: new CANNON.Vec3(cx, cy, 0) }
+  })
 }
 
 export function angleOf(body: CANNON.Body): number {
@@ -130,11 +175,18 @@ export class PlayPhysics {
     moving: false,
     settledNow: false,
     lost: -1,
+    dollHit: -1,
   }
   /** The other piece in each knock this frame, or -1 for the rug, floor or a wall. */
   private readonly heardWith = new Int16Array(MAX_IMPACTS)
   /** The first knock of the fixed step being run: knocks only merge within one step. */
   private stepFirst = 0
+  private readonly doll: CANNON.Body
+  private readonly dollAt = { x: 0, y: 0, solid: false, from: -1, to: -1 }
+  /** Seconds each piece stays loose after touching the doll. */
+  private readonly touched = new Float32Array(PIECES.length)
+  /** Each piece's speed going into the fixed step, before any bounce off the doll. */
+  private readonly approach = new Float32Array(PIECES.length)
 
   constructor() {
     this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, GRAVITY, 0) })
@@ -159,6 +211,49 @@ export class PlayPhysics {
       wall.position.set(x, 30, 0)
       this.world.addBody(wall)
     }
+
+    const doll = new CANNON.Body({ type: CANNON.Body.KINEMATIC, material: this.woodMaterial, allowSleep: false })
+    for (const { hull, offset } of hullsOf(DOLL_PARTS, DOLL_DEPTH)) doll.addShape(hull, offset)
+    doll.collisionFilterGroup = DOLL
+    doll.collisionFilterMask = 0
+    this.world.addBody(doll)
+    this.doll = doll
+  }
+
+  /** Every piece touching the doll after a step stays loose a while longer; one that came in at a hard knock is reported as having knocked her over. */
+  private noticeDollContacts(): void {
+    const contacts = this.world.contacts
+    for (let i = 0; i < contacts.length; i++) {
+      const c = contacts[i]
+      const other = c.bi === this.doll ? c.bj : c.bj === this.doll ? c.bi : null
+      if (!other) continue
+      const id = this.bodies.indexOf(other)
+      if (id < 0) continue
+      this.touched[id] = TOUCH_SECONDS
+      if (this.approach[id] > HARD_KNOCK) this.report.dollHit = id
+    }
+  }
+
+  /**
+   * Where the doll stands (feet), whether she is in the build plane at all
+   * (not up with the kite or out in front), and the pieces under her feet:
+   * the one she stands on or steps from, and the one she steps onto. Those
+   * carry her, even tilted or jiggling under her weight, so they never
+   * count as knocking into her.
+   */
+  setDoll(x: number, y: number, solid: boolean, from: number | null = null, to: number | null = null): void {
+    const at = this.dollAt
+    const doll = this.doll
+    if (solid && (!at.solid || Math.hypot(x - doll.position.x, y - doll.position.y) > DOLL_JUMP)) {
+      doll.position.set(x, y, 0)
+      doll.velocity.setZero()
+    }
+    at.x = x
+    at.y = y
+    at.solid = solid
+    at.from = from ?? -1
+    at.to = to ?? -1
+    doll.collisionFilterMask = solid ? LOOSE : 0
   }
 
   body(id: number): CANNON.Body | null {
@@ -197,6 +292,7 @@ export class PlayPhysics {
     })
     this.world.addBody(body)
     this.bodies[id] = body
+    this.touched[id] = 0
     this.wakeAll()
     return body
   }
@@ -318,7 +414,9 @@ export class PlayPhysics {
     report.hardKnocks = 0
     report.settledNow = false
     report.lost = -1
+    report.dollHit = -1
     this.accumulator = Math.min(this.accumulator + elapsed, STEP * this.maxSubsteps)
+    const doll = this.doll
     while (this.accumulator >= STEP) {
       for (const [id, target] of this.held) {
         const body = this.bodies[id]!
@@ -326,6 +424,17 @@ export class PlayPhysics {
         let turn = target.angle - angleOf(body)
         turn = Math.atan2(Math.sin(turn), Math.cos(turn))
         body.angularVelocity.set(0, 0, turn / STEP)
+      }
+      const at = this.dollAt
+      doll.velocity.set((at.x - doll.position.x) / STEP, (at.y - doll.position.y) / STEP, 0)
+      for (let id = 0; id < this.bodies.length; id++) {
+        const body = this.bodies[id]
+        if (!body || this.held.has(id)) continue
+        if (this.touched[id] > 0) this.touched[id] -= STEP
+        const speed = this.speedOf(id)
+        this.approach[id] = speed
+        const loose = id !== at.from && id !== at.to && (this.touched[id] > 0 || speed > LOOSE_SPEED)
+        body.collisionFilterGroup = loose ? SOLID | LOOSE : SOLID
       }
       const load = this.loadId === null ? null : this.bodies[this.loadId]
       if (load && load.type === CANNON.Body.DYNAMIC && load.sleepState !== CANNON.Body.SLEEPING) {
@@ -336,6 +445,7 @@ export class PlayPhysics {
       this.stepFirst = report.impacts
       this.world.step(STEP)
       this.accumulator -= STEP
+      if (this.dollAt.solid) this.noticeDollContacts()
       for (let i = this.stepFirst; i < report.impacts; i++) {
         if (report.impactSpeeds[i] <= HARD_KNOCK) continue
         report.hardKnocks += 1
@@ -350,6 +460,8 @@ export class PlayPhysics {
       body.velocity.setZero()
       body.angularVelocity.setZero()
     }
+    doll.position.set(this.dollAt.x, this.dollAt.y, 0)
+    doll.velocity.setZero()
     let moving = false
     for (let id = 0; id < this.bodies.length; id++) {
       const body = this.bodies[id]

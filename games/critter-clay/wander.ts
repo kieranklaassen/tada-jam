@@ -2,9 +2,11 @@ import { blocksTurntable, clampWalk, insideWalk, TURNTABLE, WALK, type Point } f
 
 // How awake critters get around the bench: pick a spot inside the walkable
 // area, turn toward it at a limited rate while keeping clear of friends,
-// the turntable, and the bench edges, and notice when a friend is close
-// enough to greet. Pure and allocation-free per step, so it is tested
-// directly and cheap in the frame loop.
+// the turntable, and the bench edges, notice when a friend is close
+// enough to greet, and never stand in each other: every critter keeps its
+// footprint (its body and the parts that stick out) clear of its friends'.
+// Pure and allocation-free per step, so it is tested directly and cheap in
+// the frame loop.
 
 export type Random = { s: number }
 
@@ -20,6 +22,12 @@ export function random(state: Random): number {
 export const BODY_CLEARANCE = 9
 export const MEET_RADIUS = 21
 export const ARRIVE_RADIUS = 3
+/** Room left between two friends' footprints. */
+export const FOOTPRINT_GAP = 1
+/** Friends this far apart beyond their footprints are close enough to greet. */
+export const MEET_GAP = 6
+/** How fast two overlapping footprints are pushed apart, in bench units a second: faster than any gait, never a jump. */
+export const SEPARATE_SPEED = 60
 
 /** A new place to walk to: inside the walkable area, a comfortable distance away, not in front of the turntable. */
 export function pickTarget(from: Point, rand: Random, out: Point): Point {
@@ -38,7 +46,8 @@ export function pickTarget(from: Point, rand: Random, out: Point): Point {
   return out
 }
 
-export type Mover = { x: number; z: number; heading: number }
+/** Where a critter stands, which way it faces, and how far its footprint reaches from its middle (body and parts, as last drawn). */
+export type Mover = { x: number; z: number; heading: number; reach: number }
 
 function wrap(angle: number): number {
   return Math.atan2(Math.sin(angle), Math.cos(angle))
@@ -60,8 +69,9 @@ export function steer(mover: Mover, target: Point, others: readonly Mover[], cou
     const ox = mover.x - other.x
     const oz = mover.z - other.z
     const od = Math.hypot(ox, oz)
-    if (od > 0.001 && od < BODY_CLEARANCE * 2) {
-      const push = (BODY_CLEARANCE * 2 - od) / (BODY_CLEARANCE * 2)
+    const range = Math.max(BODY_CLEARANCE * 2, mover.reach + other.reach + MEET_GAP)
+    if (od > 0.001 && od < range) {
+      const push = (range - od) / range
       dx += (ox / od) * push * 1.6
       dz += (oz / od) * push * 1.6
     }
@@ -101,7 +111,80 @@ export function arrived(mover: Mover, target: Point): boolean {
 
 /** Two friends close enough to greet each other. */
 export function meeting(a: Mover, b: Mover): boolean {
-  return Math.hypot(a.x - b.x, a.z - b.z) < MEET_RADIUS
+  return Math.hypot(a.x - b.x, a.z - b.z) < meetDistance(a, b)
+}
+
+export function meetDistance(a: Mover, b: Mover): number {
+  return Math.max(MEET_RADIUS, a.reach + b.reach + MEET_GAP)
+}
+
+/** How close two friends' middles may come before their footprints touch. */
+export function apartDistance(a: Mover, b: Mover): number {
+  return a.reach + b.reach + FOOTPRINT_GAP
+}
+
+/**
+ * Push apart every pair of the first `count` movers whose footprints overlap, at most
+ * SEPARATE_SPEED * dt each step. A pinned mover (landing, waking, lying down, asleep on the
+ * turntable: its path is its own) only pushes; the other gives way.
+ */
+export function separate(movers: readonly Mover[], pinned: readonly boolean[], count: number, dt: number): void {
+  const most = SEPARATE_SPEED * dt
+  for (let i = 0; i < count; i++) {
+    for (let j = i + 1; j < count; j++) {
+      if (pinned[i] && pinned[j]) continue
+      const a = movers[i]
+      const b = movers[j]
+      let dx = b.x - a.x
+      let dz = b.z - a.z
+      const d = Math.hypot(dx, dz)
+      const overlap = apartDistance(a, b) - d
+      if (overlap <= 0) continue
+      if (d > 1e-6) {
+        dx /= d
+        dz /= d
+      } else {
+        dx = 1
+        dz = 0
+      }
+      const push = Math.min(overlap, most)
+      const share = pinned[i] ? 0 : pinned[j] ? 1 : 0.5
+      a.x -= dx * push * share
+      a.z -= dz * push * share
+      b.x += dx * push * (1 - share)
+      b.z += dz * push * (1 - share)
+      if (share > 0) clampWalk(a, 1, a)
+      if (share < 1) clampWalk(b, 1, b)
+    }
+  }
+}
+
+const candidate: Point = { x: 0, z: 0 }
+
+function clearOf(at: Point, reach: number, others: readonly Mover[], count: number): boolean {
+  for (let i = 0; i < count; i++) if (Math.hypot(at.x - others[i].x, at.z - others[i].z) < reach + others[i].reach + FOOTPRINT_GAP) return false
+  return true
+}
+
+/**
+ * The nearest spot to `at` (into `out`) inside the walkable area where a footprint of `reach` is clear
+ * of the first `count` others, searched on widening rings; `at` itself (kept inside) when the bench is too full.
+ */
+export function clearSpot(at: Point, reach: number, others: readonly Mover[], count: number, out: Point): Point {
+  clampWalk(at, 2, out)
+  if (clearOf(out, reach, others, count)) return out
+  for (let ring = 1; ring <= 40; ring++) {
+    for (let k = 0; k < 24; k++) {
+      const angle = (k / 24) * Math.PI * 2
+      candidate.x = at.x + Math.sin(angle) * ring * 1.5
+      candidate.z = at.z + Math.cos(angle) * ring * 1.5
+      if (!insideWalk(candidate, 2) || !clearOf(candidate, reach, others, count)) continue
+      out.x = candidate.x
+      out.z = candidate.z
+      return out
+    }
+  }
+  return out
 }
 
 /** The heading from `from` toward `to`. */

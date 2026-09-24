@@ -99,6 +99,11 @@ export class Projector implements Picker {
     return this.setRay(at).intersectPlane(this.plane, out) ?? out.set(0, 0, 0)
   }
 
+  /** The ray from the camera through a finger (shared: valid until the next call that reads a finger). */
+  fingerRay(at: Point): THREE.Ray {
+    return this.setRay(at)
+  }
+
   /** A point along the finger's ray at a given distance from the camera (for the ghost hand). */
   along(at: Point, distance: number, out: THREE.Vector3): THREE.Vector3 {
     return this.setRay(at).at(distance, out)

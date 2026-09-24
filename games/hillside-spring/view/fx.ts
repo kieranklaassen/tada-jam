@@ -245,6 +245,7 @@ export class FxView implements ShadowSink {
       polygonOffsetUnits: -2,
     })
     this.shadows = new THREE.InstancedMesh(flatQuad('blob'), shadowMaterial, MAX_SHADOWS)
+    this.shadows.name = 'shadows'
     this.shadows.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
     this.shadows.setColorAt(0, this.c.setRGB(1, 1, 1))
     this.shadows.frustumCulled = false
@@ -263,6 +264,7 @@ export class FxView implements ShadowSink {
       polygonOffsetUnits: -3,
     })
     this.rings = new THREE.InstancedMesh(flatQuad('ring'), ringMaterial, MAX_RINGS)
+    this.rings.name = 'rings'
     this.rings.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
     this.rings.setColorAt(0, this.c.setRGB(0, 0, 0))
     this.rings.frustumCulled = false
@@ -283,6 +285,7 @@ export class FxView implements ShadowSink {
       depthWrite: false,
     })
     this.points = new THREE.Points(g, this.pointMaterial)
+    this.points.name = 'particles'
     this.points.frustumCulled = false
     this.points.renderOrder = 4
     this.group.add(this.points)
@@ -290,6 +293,7 @@ export class FxView implements ShadowSink {
     // The fingertip of the painted hand sits at the quad's origin, so the pose point is where it presses.
     const handGeometry = new THREE.PlaneGeometry(1, 1).translate(0.07, -0.38, 0)
     this.hand = new THREE.Mesh(handGeometry, new THREE.MeshBasicMaterial({ map: handTexture, transparent: true, depthTest: false, depthWrite: false }))
+    this.hand.name = 'ghost-hand'
     this.hand.frustumCulled = false
     this.hand.renderOrder = 20
     this.hand.visible = false

@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { KiteSound } from './audio'
-import { KiteController, slotWorld, type Projector } from './controller'
+import { KiteController, slotWorld, TUMBLE_OUT, type Projector } from './controller'
+import { BODY_PROFILE, HAIR, HEAD_R, HEAD_Y } from './doll'
 import { TRAY_SLOTS } from './layout'
 import { PERCHES } from './perches'
+import { angleOf } from './physics'
+import { PIECES, pieceShape, transformInto, type Vec2 } from './pieces'
 import { defaultState, type KiteState, type SavedPiece } from './state'
 
 // Screen space in these tests: y below 90 is the build plane itself (x, y
@@ -69,9 +72,98 @@ function run(game: KiteController, seconds: number, each?: () => void): void {
   }
 }
 
+function lcg(seed: number): () => number {
+  let s = seed >>> 0
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0
+    return s / 4294967296
+  }
+}
+
 function slotScreen(id: number) {
   const slot = TRAY_SLOTS[id]
   return { x: slot.x, y: slot.z + 100 }
+}
+
+/** Pip's outline, feet at the origin: her body as turned and her head and hair. */
+const PIP_BODY: Vec2[] = [...BODY_PROFILE.map((p) => ({ x: p.x, y: p.y })), ...[...BODY_PROFILE].reverse().map((p) => ({ x: -p.x, y: p.y }))]
+const PIP_HEAD: Vec2[] = Array.from({ length: 24 }, (_, i) => ({ x: Math.cos((i * Math.PI) / 12) * (HEAD_R + HAIR), y: HEAD_Y + Math.sin((i * Math.PI) / 12) * (HEAD_R + HAIR) }))
+
+function insidePolygon(poly: readonly Vec2[], p: Vec2): boolean {
+  let inside = false
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const a = poly[i]
+    const b = poly[j]
+    if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) inside = !inside
+  }
+  return inside
+}
+
+function edgeDistance(poly: readonly Vec2[], p: Vec2): number {
+  let best = Infinity
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i]
+    const b = poly[(i + 1) % poly.length]
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy)))
+    best = Math.min(best, Math.hypot(p.x - a.x - dx * t, p.y - a.y - dy * t))
+  }
+  return best
+}
+
+/** How deep two outlines reach into each other, walking each in steps of a few hundredths. */
+function outlineOverlap(a: readonly Vec2[], b: readonly Vec2[]): number {
+  let deepest = 0
+  for (const [from, into] of [
+    [a, b],
+    [b, a],
+  ]) {
+    for (let i = 0; i < from.length; i++) {
+      const p = from[i]
+      const q = from[(i + 1) % from.length]
+      const n = Math.max(1, Math.ceil(Math.hypot(q.x - p.x, q.y - p.y) / 0.04))
+      for (let k = 0; k < n; k++) {
+        const at = { x: p.x + ((q.x - p.x) * k) / n, y: p.y + ((q.y - p.y) * k) / n }
+        if (insidePolygon(into, at)) deepest = Math.max(deepest, edgeDistance(into, at))
+      }
+    }
+  }
+  return deepest
+}
+
+/** Piece `id`'s drawn outline where physics has it now. */
+function pieceOutline(game: KiteController, id: number): Vec2[] {
+  const b = game.physics.body(id)!
+  return transformInto(pieceShape(id).outline, { x: b.position.x, y: b.position.y, angle: angleOf(b) }, [])
+}
+
+/** How deep Pip's body or head is in any block on the plane (0 when clear, or while she is up with the kite, rolling or sat out in front). */
+function pipInBlock(game: KiteController): { depth: number; id: number } {
+  const hero = game.hero
+  const worst = { depth: 0, id: -1 }
+  if (hero.mode === 'fly' || hero.z > 0.8 || (hero.mode === 'tumble' && hero.tumble === 'roll')) return worst
+  const body = PIP_BODY.map((p) => ({ x: p.x + hero.x, y: p.y + hero.y }))
+  const head = PIP_HEAD.map((p) => ({ x: p.x + hero.x, y: p.y + hero.y }))
+  for (let id = 0; id < PIECES.length; id++) {
+    if (game.trayed[id] || !game.physics.has(id) || game.physics.isHeld(id)) continue
+    const outline = pieceOutline(game, id)
+    const depth = Math.max(outlineOverlap(body, outline), outlineOverlap(head, outline))
+    if (depth > worst.depth) {
+      worst.depth = depth
+      worst.id = id
+    }
+  }
+  return worst
+}
+
+/** Carry tray piece `id` over (x, y) and let it fall there. */
+function dropFromTray(game: KiteController, pointer: number, id: number, x: number, y: number): void {
+  game.pointerDown(pointer, slotScreen(id), game.t * 1000)
+  game.pointerMove(pointer, { x: slotScreen(id).x, y: 40 })
+  game.pointerMove(pointer, { x, y })
+  run(game, 0.3)
+  game.pointerUp(pointer, { x, y }, game.t * 1000)
 }
 
 describe('KiteController', () => {
@@ -183,6 +275,50 @@ describe('KiteController', () => {
     const body = game.physics.body(4)!
     expect(body.position.y).toBeCloseTo(1.7, 1)
     expect(sound.calls).toContain('turn')
+  })
+
+  it('a tap on a piece holding another up leaves it where it is with a soft knock, so nothing falls into it', () => {
+    const tower: SavedPiece[] = [
+      { id: 6, tray: false, x: -3.3, y: 0.95, a: 0 },
+      { id: 10, tray: false, x: -1.6, y: 0.95, a: 0 },
+      { id: 4, tray: false, x: -2.45, y: 2.06, a: 0 },
+      { id: 3, tray: false, x: -2.45, y: 2.72, a: 0 },
+    ]
+    const leaning: SavedPiece[] = [
+      { id: 8, tray: false, x: 3, y: 0.5, a: 0 },
+      { id: 9, tray: false, x: 3, y: 1.4, a: 0 },
+      { id: 0, tray: false, x: 0.4, y: 0.5, a: 0 },
+      { id: 11, tray: false, x: 1.7, y: 1.6, a: 0.25 },
+    ]
+    for (const [pieces, tapped] of [
+      [tower, 10],
+      [tower, 4],
+      [leaning, 9],
+    ] as const) {
+      const { game, sound } = make(withPieces([...pieces]))
+      run(game, 3)
+      const poseOf = (id: number) => {
+        const body = game.physics.body(id)!
+        return { x: body.position.x, y: body.position.y, angle: angleOf(body) }
+      }
+      const before = pieces.map((p) => poseOf(p.id))
+      const at = game.physics.body(tapped)!.position
+      const heard = sound.calls.length
+      game.pointerDown(1, { x: at.x, y: at.y }, game.t * 1000)
+      game.pointerUp(1, { x: at.x, y: at.y }, game.t * 1000 + 100)
+      let deepest = 0
+      run(game, 2, () => {
+        expect(game.physics.isHeld(tapped)).toBe(false)
+        for (let i = 0; i < pieces.length; i++) for (let j = i + 1; j < pieces.length; j++) deepest = Math.max(deepest, outlineOverlap(pieceOutline(game, pieces[i].id), pieceOutline(game, pieces[j].id)))
+      })
+      pieces.forEach((p, i) => {
+        const now = poseOf(p.id)
+        expect(Math.hypot(now.x - before[i].x, now.y - before[i].y) + Math.abs(now.angle - before[i].angle), `piece ${p.id} after tapping ${tapped}`).toBeLessThan(0.02)
+      })
+      expect(deepest, `tapping ${tapped}`).toBeLessThan(0.02)
+      expect(sound.calls.slice(heard)).toContain('tok')
+      expect(sound.calls.slice(heard)).not.toContain('turn')
+    }
   })
 
   it('a tap on a tray piece hops it onto the rug beside the doll', () => {
@@ -449,6 +585,167 @@ describe('KiteController', () => {
     expect(farthest).toBeLessThan(2)
     expect(Math.abs(game.hero.x - PERCHES[2].x)).toBeLessThan(1.6)
   })
+})
+
+describe('Pip never ends up inside a block', () => {
+  it('tumbled out in front, she hops back in beside a block set down where she fell, not into it', () => {
+    const perch = PERCHES[2]
+    const { game } = make(withPieces([{ id: 0, tray: false, x: perch.x - 1.6, y: 0.5, a: 0 }], 2))
+    run(game, 4)
+    expect(game.hero.on).toBe(0)
+    game.pointerDown(1, { x: perch.x - 1.6, y: 0.5 }, 0)
+    game.pointerMove(1, { x: perch.x - 1.6, y: 30 })
+    for (let i = 0; i < 60 * 3 && game.hero.tumble !== 'sit'; i++) game.step(FRAME)
+    expect(game.hero.mode).toBe('tumble')
+    expect(game.hero.tumble).toBe('sit')
+    const fell = game.hero.x
+    dropFromTray(game, 2, 1, fell, 1.5)
+    // Out in front she is out of its way: it is set down and falls at once, rather than waiting in the air over her.
+    run(game, 0.4)
+    expect(game.isHeld(1)).toBe(false)
+    let deepest = 0
+    run(game, 6, () => {
+      deepest = Math.max(deepest, pipInBlock(game).depth)
+    })
+    expect(Math.abs(game.physics.body(1)!.position.x - fell)).toBeLessThan(0.3)
+    expect(deepest).toBeLessThan(0.02)
+    expect(game.hero.mode).not.toBe('tumble')
+    expect(game.hero.z).toBe(0)
+  })
+
+  it('a block set down where the kite was to land her: she comes down out in front of it, then hops back in beside it', () => {
+    const pieces: SavedPiece[] = [{ id: 0, tray: false, x: PERCHES[0].x - 0.7, y: 0.5, a: 0 }]
+    const plain = make(withPieces(pieces, 0)).game
+    let landX = NaN
+    for (let i = 0; i < 60 * 20 && Number.isNaN(landX); i++) {
+      const flying = plain.hero.mode === 'fly'
+      plain.step(FRAME)
+      if (flying && plain.hero.mode !== 'fly') landX = plain.hero.x
+    }
+    expect(plain.hero.mode).toBe('land')
+
+    const { game } = make(withPieces(pieces, 0))
+    for (let i = 0; i < 60 * 20 && game.hero.mode !== 'fly'; i++) game.step(FRAME)
+    expect(game.hero.mode).toBe('fly')
+    run(game, 0.5)
+    dropFromTray(game, 2, 1, landX, 1.5)
+    let landed = ''
+    let landedZ = -1
+    let deepest = 0
+    for (let i = 0; i < 60 * 12; i++) {
+      const flying = game.hero.mode === 'fly'
+      game.step(FRAME)
+      if (flying && game.hero.mode !== 'fly') {
+        landed = `${game.hero.mode} ${game.hero.tumble}`
+        landedZ = game.hero.z
+      }
+      deepest = Math.max(deepest, pipInBlock(game).depth)
+    }
+    expect(Math.abs(game.physics.body(1)!.position.x - landX)).toBeLessThan(0.3)
+    expect(deepest).toBeLessThan(0.02)
+    expect(landed).toBe('tumble sit')
+    expect(landedZ).toBe(TUMBLE_OUT)
+    expect(game.hero.mode).not.toBe('tumble')
+    expect(game.hero.z).toBe(0)
+  })
+
+  it('a piece carried over one waiting in the air to fall rides on top of it, never inside it', () => {
+    const { game } = make(defaultState(5))
+    run(game, 3)
+    expect(game.hero.mode).toBe('stand')
+    const x = game.hero.x
+    dropFromTray(game, 1, 0, x, 3.2)
+    expect(game.isHeld(0)).toBe(true)
+    game.pointerDown(2, slotScreen(1), game.t * 1000)
+    game.pointerMove(2, { x: slotScreen(1).x, y: 40 })
+    game.pointerMove(2, { x, y: 2.8 })
+    let waiting = 0
+    let waitingDepth = 0
+    let landingDepth = 0
+    const watch = () => {
+      if (game.trayed[1]) return
+      const depth = outlineOverlap(pieceOutline(game, 0), pieceOutline(game, 1))
+      if (game.isHeld(0)) {
+        waiting++
+        waitingDepth = Math.max(waitingDepth, depth)
+      } else landingDepth = Math.max(landingDepth, depth)
+    }
+    run(game, 0.4, watch)
+    game.pointerUp(2, { x, y: 2.8 }, game.t * 1000)
+    run(game, 3, watch)
+    expect(waiting).toBeGreaterThan(20)
+    expect(waitingDepth).toBeLessThan(0.02)
+    // Once both fall, the upper lands on the lower with the dip any landing has.
+    expect(landingDepth).toBeLessThan(0.25)
+    expect(game.physics.body(1)!.position.y).toBeCloseTo(1.5, 1)
+  })
+
+  it('however roughly a child plays, dropping blocks on her, under her and where she will land, her body and head stay out of them', () => {
+    const step = 1 / 30
+    let worst = { depth: 0, where: '' }
+    let flights = 0
+    for (let seed = 1; seed <= 8; seed++) {
+      const rnd = lcg(seed * 7919)
+      const { game } = make(defaultState(5))
+      let pointer = 1
+      let next = 1 + rnd() * 2
+      let carry: { from: Vec2; to: Vec2; start: number; end: number; pointer: number } | null = null
+      for (let frame = 0; frame < 45 / step; frame++) {
+        const flying = game.hero.mode === 'fly'
+        game.step(step)
+        if (flying && game.hero.mode !== 'fly') flights++
+        const t = game.t
+        if (carry) {
+          const k = Math.min(1, (t - carry.start) / (carry.end - carry.start))
+          if (k < 1) game.pointerMove(carry.pointer, { x: carry.from.x + (carry.to.x - carry.from.x) * k, y: carry.from.y + (carry.to.y - carry.from.y) * k })
+          else {
+            game.pointerUp(carry.pointer, carry.to, t * 1000)
+            carry = null
+            next = t + 0.2 + rnd() * 1.6
+          }
+        } else if (t >= next) {
+          const r = rnd()
+          pointer++
+          if (r < 0.1) {
+            const at = { x: game.hero.x, y: game.hero.y + 1 }
+            game.pointerDown(pointer, at, t * 1000)
+            game.pointerUp(pointer, at, t * 1000 + 80)
+            next = t + 0.5 + rnd() * 2
+          } else if (r < 0.15) {
+            next = t + 3 + rnd() * 5
+          } else {
+            const id = Math.floor(rnd() * PIECES.length)
+            let grab: Vec2
+            let from: Vec2
+            if (game.trayed[id]) {
+              grab = slotScreen(id)
+              from = { x: grab.x, y: 40 }
+            } else if (game.physics.has(id)) {
+              const b = game.physics.body(id)!
+              grab = { x: b.position.x, y: b.position.y }
+              from = { x: grab.x, y: grab.y + 0.8 }
+            } else continue
+            const perch = PERCHES[game.state.perch]
+            const landing = Math.max(-5.5, Math.min(5.5, perch.x - Math.sign(perch.x) * 1.6))
+            const to =
+              game.hero.mode === 'fly' && rnd() < 0.6
+                ? { x: landing + (rnd() - 0.5) * 1.2, y: 0.8 + rnd() * 2 }
+                : rnd() < 0.35
+                  ? { x: game.hero.x + (rnd() - 0.5) * 2.4, y: game.hero.y + 1 + rnd() * 3 }
+                  : { x: -6.8 + rnd() * 13.6, y: 0.6 + rnd() * 4.5 }
+            game.pointerDown(pointer, grab, t * 1000)
+            game.pointerMove(pointer, from)
+            carry = { from, to, start: t, end: t + 0.25 + rnd() * 0.6, pointer }
+          }
+        }
+        const inBlock = pipInBlock(game)
+        if (inBlock.depth > worst.depth) worst = { depth: inBlock.depth, where: `seed ${seed} at ${t.toFixed(2)}: ${game.hero.mode} in ${PIECES[inBlock.id].kind} ${inBlock.id}` }
+      }
+    }
+    expect(flights).toBeGreaterThan(2)
+    // A block creeping onto her can lean a few hundredths into her outline before the head's skin holds it; the drawn head ducks from it.
+    expect(worst.depth, worst.where).toBeLessThan(0.06)
+  }, 60_000)
 })
 
 describe('a newcomer who only copies the ghost hand', () => {

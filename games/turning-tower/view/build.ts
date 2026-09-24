@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import type { RoomInfo } from '../controller'
 import type { Decor } from '../rooms'
-import { FACE_NORMALS, pack, type CellDef, type GroupDef, type Vec3 } from '../world'
+import { armFit, FACE_NORMALS, pack, PAVER_RAISE, type CellDef, type GroupDef, type TurnDef, type Vec3 } from '../world'
 import { hex, PALETTE, TONES, type RGB } from './palette'
 
 // Geometry is built once per page (R16): every diorama becomes one merged
@@ -20,6 +20,20 @@ export class Builder {
 
   get empty(): boolean {
     return this.count === 0
+  }
+
+  get vertexCount(): number {
+    return this.count
+  }
+
+  /** Move every vertex added since `from` (flat faces stay flat: callers only pass axis-separable maps). */
+  remap(from: number, map: (p: V) => V): void {
+    for (let i = from; i < this.count; i++) {
+      const p = map([this.positions[i * 3], this.positions[i * 3 + 1], this.positions[i * 3 + 2]])
+      this.positions[i * 3] = p[0]
+      this.positions[i * 3 + 1] = p[1]
+      this.positions[i * 3 + 2] = p[2]
+    }
   }
 
   /** Four corners counter-clockwise as seen from outside. */
@@ -182,7 +196,7 @@ export function paver(builder: Builder, at: Vec3, face: number, offset: Vec3): v
   const ua = (axis + 1) % 3
   const va = (axis + 2) % 3
   const inset = 0.085
-  const raise = 0.055
+  const raise = PAVER_RAISE
   const c: V = [at[0] + 0.5 + n[0] * 0.5 - offset[0], at[1] + 0.5 + n[1] * 0.5 - offset[1], at[2] + 0.5 + n[2] * 0.5 - offset[2]]
   const point = (u: number, v: number, up: number): V => {
     const p: V = [c[0], c[1], c[2]]
@@ -313,9 +327,38 @@ function window(builder: Builder, at: Vec3, face: 'x' | 'z', height: number, lit
   builder.quad(sill(-0.24, -0.07), sill(0.24, -0.07), sill(0.24, 0), sill(-0.24, 0), TRIM)
 }
 
-function wheel(builder: Builder, at: Vec3, axis: 'x' | 'y' | 'z', radius: number): void {
-  ring(builder, at, axis, radius, -0.05, 0.05, 14, HANDLE, HANDLE, Math.PI / 14)
-  ring(builder, at, axis, 0.2, -0.08, 0.1, 8, HUB)
+/** A flat ring around `axis` (y up in its own frame): outer and inner walls, top and bottom caps. */
+function annulus(builder: Builder, centre: Vec3, axis: 'x' | 'y' | 'z', inner: number, outer: number, y0: number, y1: number, sides: number, color: RGB, phase = 0): void {
+  const basis = (angle: number, radius: number, along: number): V => {
+    const a = Math.cos(angle) * radius
+    const b = Math.sin(angle) * radius
+    if (axis === 'y') return [centre[0] + a, centre[1] + along, centre[2] + b]
+    if (axis === 'x') return [centre[0] + along, centre[1] + b, centre[2] + a]
+    return [centre[0] + b, centre[1] + a, centre[2] + along]
+  }
+  for (let i = 0; i < sides; i++) {
+    const a0 = phase + (i / sides) * Math.PI * 2
+    const a1 = phase + ((i + 1) / sides) * Math.PI * 2
+    builder.quad(basis(a0, outer, y0), basis(a0, outer, y1), basis(a1, outer, y1), basis(a1, outer, y0), color)
+    builder.quad(basis(a0, inner, y0), basis(a1, inner, y0), basis(a1, inner, y1), basis(a0, inner, y1), scaleColor(color, 0.9))
+    builder.quad(basis(a0, inner, y1), basis(a1, inner, y1), basis(a1, outer, y1), basis(a0, outer, y1), color)
+    builder.quad(basis(a0, inner, y0), basis(a0, outer, y0), basis(a1, outer, y0), basis(a1, inner, y0), scaleColor(color, 0.9))
+  }
+}
+
+/**
+ * A wheel threaded on a static column turns round it as a ring whose hole
+ * clears the column's corners, so nothing that turns ever passes through
+ * the stone it is mounted on.
+ */
+const THREADED_HOLE = 0.75
+
+function wheel(builder: Builder, at: Vec3, axis: 'x' | 'y' | 'z', radius: number, threaded: boolean): void {
+  if (threaded) annulus(builder, at, axis, THREADED_HOLE, radius, -0.05, 0.05, 14, HANDLE, Math.PI / 14)
+  else {
+    ring(builder, at, axis, radius, -0.05, 0.05, 14, HANDLE, HANDLE, Math.PI / 14)
+    ring(builder, at, axis, 0.2, -0.08, 0.1, 8, HUB)
+  }
   for (let i = 0; i < 4; i++) {
     const a = (i / 4) * Math.PI * 2 + Math.PI / 4
     const r = radius - 0.13
@@ -352,7 +395,7 @@ function column(builder: Builder, at: Vec3, radius: number, height: number, colo
   ring(builder, [at[0], at[1] + height, at[2]], 'y', radius * 1.35, 0, 0.07, 8, TRIM)
 }
 
-export function decor(builder: Builder, item: Decor, offset: Vec3, index: number): void {
+export function decor(builder: Builder, item: Decor, offset: Vec3, index: number, threaded = false): void {
   const at: V = [item.at[0] - offset[0], item.at[1] - offset[1], item.at[2] - offset[2]]
   switch (item.kind) {
     case 'dome':
@@ -368,7 +411,7 @@ export function decor(builder: Builder, item: Decor, offset: Vec3, index: number
       window(builder, at, item.face, item.height, index % 3 === 1)
       return
     case 'wheel':
-      wheel(builder, at, item.axis, item.radius)
+      wheel(builder, at, item.axis, item.radius, threaded)
       return
     case 'grip':
       grip(builder, at, item.face)
@@ -392,6 +435,26 @@ function decorGroup(item: Decor): number | undefined {
 
 function groupOffset(group: GroupDef): Vec3 {
   return group.kind === 'turn' ? group.pivot : [0, 0, 0]
+}
+
+/** A segment turning about a level axle is this much thinner than its cells on each side along it. */
+const AXLE_INSET = 0.02
+
+/** Draws a turning segment to its `armFit`: separable per axis, so flat faces stay flat and shared edges stay shared. */
+function sweepFit(group: TurnDef, from: number, builder: Builder): void {
+  const { plane, scale } = armFit(group)
+  const along = group.axis === 'x' ? 0 : group.axis === 'y' ? 1 : 2
+  const level = group.axis !== 'y'
+  builder.remap(from, (p) => {
+    const out: V = [p[0], p[1], p[2]]
+    plane.forEach((axis, k) => {
+      const u = p[axis]
+      if (Math.abs(u) > 0.5) out[axis] = Math.sign(u) * (0.5 + (Math.abs(u) - 0.5) * scale[k])
+    })
+    // Where a level axle's corners swing inside the neighbouring block, the block's own faces cover them.
+    if (level && Math.abs(p[along]) > 0.5 - 1e-6) out[along] = p[along] - Math.sign(p[along]) * AXLE_INSET
+    return out
+  })
 }
 
 /** A cream coping around a rectangle's top edge: it sits proud of the sides and a little above the top. */
@@ -457,8 +520,11 @@ export function buildRoomGeometry(info: RoomInfo): RoomGeometry {
     for (const cell of group.cells) solid.add(pack(cell.at[0], cell.at[1], cell.at[2]))
     greedyCells(b, group.cells, solid, [0, 1, 2, 3, 4, 5], offset)
     for (const cell of group.cells) for (const face of cell.paths ?? []) paver(b, cell.at, face, offset)
+    if (group.kind === 'turn') sweepFit(group, 0, b)
     spec.decor.forEach((item, index) => {
-      if (decorGroup(item) === g) decor(b, item, offset, index)
+      if (decorGroup(item) !== g) return
+      const threaded = item.kind === 'wheel' && staticSolid.has(pack(Math.floor(item.at[0]), Math.floor(item.at[1]), Math.floor(item.at[2])))
+      decor(b, item, offset, index, threaded)
     })
     return b.geometry()
   })
@@ -466,19 +532,27 @@ export function buildRoomGeometry(info: RoomInfo): RoomGeometry {
 }
 
 export type DoorGeometry = {
-  /** The arch, its step, the finial and the light inside (emissive). */
+  /** The arch, its step, the finial and the fanlight over the leaves (emissive). */
   frame: THREE.BufferGeometry
-  /** Hinged at the origin; the left leaf reaches toward +u, the right toward -u. */
+  /**
+   * Hinged at the origin, on the leaf's back edge at the jamb, so a leaf
+   * swinging in never reaches into the jamb; the left leaf reaches toward +u,
+   * the right toward -u.
+   */
   leafLeft: THREE.BufferGeometry
   leafRight: THREE.BufferGeometry
+  /** The opening, flat, just in front of the closed leaves: the light they open onto. */
+  light: THREE.BufferGeometry
 }
 
-export const DOOR = { width: 0.5, height: 0.84, frame: 0.1, depth: 0.14 }
+export const DOOR = { width: 0.5, height: 0.84, frame: 0.1, depth: 0.14, leaf: 0.024 }
 
 /**
  * The door stands facing the camera across the diagonal, so on screen it is a
  * clean, symmetric arch: the one shape in the diorama that means "home".
- * Local frame: u to screen right, v up, w toward the camera.
+ * Local frame: u to screen right, v up from the block its path tile tops, w
+ * toward the camera. Its feet and step stand down in that tile's paver; the
+ * leaves and the light start on the paver, where the wanderer walks.
  */
 export function buildDoorGeometry(): DoorGeometry {
   const map = (u: number, v: number, w: number): V => [u, v, w]
@@ -496,30 +570,42 @@ export function buildDoorGeometry(): DoorGeometry {
     frame.quad(map(ou0, ov0, -half), map(ou0, ov0, half), map(ou1, ov1, half), map(ou1, ov1, -half), INDIGO_LIGHT)
     frame.quad(map(iu0, iv0, half), map(iu0, iv0, -half), map(iu1, iv1, -half), map(iu1, iv1, half), INDIGO_LIGHT)
   }
+  for (const i of [0, inner.length - 1]) {
+    const iu = inner[i][0]
+    const ou = outer[i][0]
+    frame.quadAway(map(ou, 0, -half), map(ou, 0, half), map(iu, 0, half), map(iu, 0, -half), map((iu + ou) / 2, 1, 0), INDIGO)
+  }
   box(frame, [-DOOR.width / 2 - DOOR.frame - 0.06, -0.001, -half - 0.06], [DOOR.width / 2 + DOOR.frame + 0.06, 0.05, half + 0.06], TRIM)
   ring(frame, [0, DOOR.height + DOOR.frame, 0], 'y', 0.07, 0, 0.1, 6, emissive(hex(PALETTE.lantern)))
+  // Over the leaves, the arch's head is glazed, so square-topped leaves swing in clear of the arch.
   // Arch outlines run clockwise as seen from the camera; faces toward it need them reversed.
-  flatPolygon(frame, [...inner].reverse(), (u, v) => map(u, v, -half * 0.4), emissive(hex(PALETTE.doorLight)))
+  const head = inner.slice(1, -1)
+  frame.plate([...head].reverse().map(([u, v]) => map(u, v, DOOR.leaf / 2)), emissive(hex(PALETTE.doorLeaf)), INDIGO_LIGHT)
 
-  const r = DOOR.width / 2
-  const spring = DOOR.height - r
-  const outline: [number, number][] = [[0, 0], [r, 0]]
-  for (let i = 0; i <= 6; i++) {
-    const a = (i / 6) * (Math.PI / 2)
-    outline.push([Math.cos(a) * r, spring + Math.sin(a) * r])
-  }
-  outline.push([0, spring])
-  // Hinged at u = 0 (the outer edge of the opening), reaching to its middle.
-  const hinged = outline.map(([u, v]) => [r - u, v] as [number, number])
+  const spring = DOOR.height - DOOR.width / 2
   const leaf = (mirror: number): THREE.BufferGeometry => {
     const b = new Builder()
-    const front = mirror > 0 ? [...hinged].reverse() : hinged
-    const back = mirror > 0 ? hinged : [...hinged].reverse()
+    const u0 = 0.003
+    const u1 = DOOR.width / 2 - 0.004
+    const v0 = PAVER_RAISE + 0.002
+    const v1 = spring - 0.004
+    const t = DOOR.leaf
+    const p = (u: number, v: number, w: number): V => [u * mirror, v, w]
+    const inside = p((u0 + u1) / 2, (v0 + v1) / 2, t / 2)
     // Closed, the door still glows: warm light leaves in a dark arch.
-    flatPolygon(b, front, (u, v) => map(u * mirror, v, 0.012), emissive(hex(PALETTE.doorLeaf)))
-    flatPolygon(b, back, (u, v) => map(u * mirror, v, -0.012), INDIGO_LIGHT)
-    b.quadAway(map((r - 0.02) * mirror, 0.02, 0.016), map(r * mirror, 0.02, 0.016), map(r * mirror, spring, 0.016), map((r - 0.02) * mirror, spring, 0.016), [0, 0.3, 0], INDIGO)
+    b.quadAway(p(u0, v0, t), p(u1, v0, t), p(u1, v1, t), p(u0, v1, t), inside, emissive(hex(PALETTE.doorLeaf)))
+    b.quadAway(p(u0, v0, 0), p(u1, v0, 0), p(u1, v1, 0), p(u0, v1, 0), inside, INDIGO_LIGHT)
+    b.quadAway(p(u0, v0, 0), p(u1, v0, 0), p(u1, v0, t), p(u0, v0, t), inside, INDIGO)
+    b.quadAway(p(u0, v1, 0), p(u1, v1, 0), p(u1, v1, t), p(u0, v1, t), inside, INDIGO)
+    b.quadAway(p(u0, v0, 0), p(u0, v1, 0), p(u0, v1, t), p(u0, v0, t), inside, INDIGO)
+    b.quadAway(p(u1, v0, 0), p(u1, v1, 0), p(u1, v1, t), p(u1, v0, t), inside, INDIGO)
+    const stile = [p(u1 - 0.02, v0 + 0.02, t - 0.004), p(DOOR.width / 2 - 0.001, v1, t + 0.004)]
+    box(b, [Math.min(stile[0][0], stile[1][0]), stile[0][1], stile[0][2]], [Math.max(stile[0][0], stile[1][0]), stile[1][1], stile[1][2]], INDIGO)
     return b.geometry()
   }
-  return { frame: frame.geometry(), leafLeft: leaf(1), leafRight: leaf(-1) }
+
+  const light = new Builder()
+  const opening: [number, number][] = [[-DOOR.width / 2, PAVER_RAISE], ...head, [DOOR.width / 2, PAVER_RAISE]]
+  flatPolygon(light, [...opening].reverse(), (u, v) => map(u, v, DOOR.leaf / 2 + 0.01), hex(PALETTE.doorLight))
+  return { frame: frame.geometry(), leafLeft: leaf(1), leafRight: leaf(-1), light: light.geometry() }
 }

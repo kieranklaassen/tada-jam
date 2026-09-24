@@ -1,7 +1,32 @@
 import { chooseHint, handPose, HintScheduler, type GuidanceFrame, type HandPose, type Hint, type Point3 } from './guidance'
 import { GestureTracker, type Intent, type Point } from './input'
+import { BALL_SWELL, ballReach, ballRest, BASKET_KEEP_OUT, clearBall, hopPast, MAX_STRETCH, type BallScene } from './balls'
 import { canOffer, give, isFull, knitRow, paintStitch, summonIfReady, unravelRow } from './knitting'
-import { BALL_RADIUS, BASKET, BODY, BUTTERFLY, CELL_H, ENTRY, HILL_SPOTS, LOOM, LOOM_SPOT, SCARF, ballRest, cellAt, cellCentre, groundY, needlesY, type Spot } from './layout'
+import { BASKET_FOOTPRINT, LOOM_FOOTPRINT, planRoute, type Obstacle, type Point2 } from './paths'
+import {
+  BALL_RADIUS,
+  BASKET,
+  BODY,
+  BUTTERFLY,
+  CELL_H,
+  ENTRY,
+  HILL_SPOTS,
+  LOOM,
+  LOOM_SPOT,
+  MAX_SWING,
+  NEEDLE_BAR,
+  NEEDLES_FLOOR,
+  SCARF,
+  cellAt,
+  cellCentre,
+  groundY,
+  maxDrop,
+  needlesY,
+  swingRoom,
+  type KeepOut,
+  type NeedlePose,
+  type Spot,
+} from './layout'
 import { completedRepeat, stripeColours, suggestColour } from './pattern'
 import { SaveCadence } from './saveCadence'
 import { clamp01, smooth, spring, springStep, type Spring } from './springs'
@@ -98,6 +123,13 @@ export type Target =
 // --- per-animal timing: each walks and dances at its own pace -----------------
 
 export const WALK_SPEED: Record<AnimalKey, number> = { bunny: 30, penguin: 15, fox: 36, bear: 18 }
+/** A walker passes this much further from things than its body reaches. */
+export const WALK_MARGIN = 1.5
+/** How much snow a friend standing still takes up round it: its body and head, and the fox's tail curling out behind. */
+export const STANDS_IN: Record<AnimalKey, number> = { bunny: BODY.bunny.reach, penguin: BODY.penguin.reach, fox: 16, bear: BODY.bear.reach }
+
+export const walkRoom = (animal: AnimalKey) => BODY[animal].reach + WALK_MARGIN
+const legSeconds = (animal: AnimalKey, from: Point2, to: Point2) => Math.max(0.6, Math.hypot(to.x - from.x, to.z - from.z) / WALK_SPEED[animal])
 export const DANCE_SECONDS: Record<AnimalKey, number> = { bunny: 3.1, penguin: 3.6, fox: 3.3, bear: 4.2 }
 
 // --- gift timeline (seconds after the child hands the scarf over) --------------
@@ -119,8 +151,8 @@ const KNIT_FAST_CELLS_PER_S = 24
 const UNRAVEL_CELLS_PER_S = 30
 /** Painting starts only after the ball rests on one stitch this long, so a carry to the loom never paints. */
 export const PAINT_DWELL_S = 0.4
-/** The ball is carried on this plane, just in front of the scarf. */
-const CARRY_Z = SCARF.z + 6
+/** The ball is carried on this plane, just in front of the needles even when it is stretched. */
+const CARRY_Z = SCARF.z + NEEDLE_BAR.z + NEEDLE_BAR.apart + NEEDLE_BAR.radius + BALL_RADIUS * (1 + MAX_STRETCH) + 0.15
 /** A carried ball trails the finger a touch and overshoots when it stops: it has weight in the hand. */
 const CARRY_STIFFNESS = 700
 const CARRY_DAMPING = 30
@@ -197,12 +229,15 @@ export type ActorView = {
   z: number
   yaw: number
   walking: boolean
+  /** The current leg of the walk: a walk is a few straight legs round what is in the way. */
   readonly walkFrom: Spot
   readonly walkTo: Spot
   walkT0: number
   walkDuration: number
-  /** 0..1 linear progress along the current walk (each gait eases it its own way). */
+  /** 0..1 linear progress along the current leg (each gait eases it its own way). */
   walkProgress: number
+  /** When the walk's first leg started. */
+  walkBegan: number
   destination: 'loom' | 'hill' | null
   /** 0 shivering cold, 1 cosy. */
   warm: number
@@ -256,6 +291,9 @@ export class ScarfController {
   readonly needles = { pull: spring(0), castOffAt: -Infinity, held: false }
   readonly butterfly = { show: spring(0), open: spring(0), flapAt: -Infinity }
   readonly loomRock: Spring = spring(0)
+  /** Where the loom scarf's needles hang this step, and how far that scarf swings (only as far as they stay clear). */
+  readonly needlePose: NeedlePose = { pivotY: SCARF.top, pivotZ: SCARF.z, rock: 0, lean: 0, x: 0, y: 0, click: 0 }
+  needleSwing = 0
   readonly puffs: Puff[] = Array.from({ length: PUFFS }, () => ({ x: 0, y: 0, z: 0, t0: -Infinity, size: 1, colour: WHITE_PUFF }))
   readonly guidance: Guidance
   basketAt = -Infinity
@@ -290,6 +328,15 @@ export class ScarfController {
   private readonly scratch2: Point3 = { x: 0, y: 0, z: 0 }
   private readonly entry: Point3 = { x: 0, y: 0, z: 0 }
   private readonly screen: Point = { x: 0, y: 0 }
+  /** What the needles keep clear of when the scarf swings: the basket, then each animal in turn. */
+  private readonly keepOuts: KeepOut[] = [BASKET_KEEP_OUT, ...ANIMALS.map(() => ({ x: 0, z: 0, r: 0, top: -Infinity }))]
+  private readonly ballPositions: Point3[]
+  private readonly ballRests: Point3[]
+  private readonly ballReaches: number[]
+  private readonly ballScene: BallScene
+  private readonly towardEye: Point3 = { x: 0, y: 0, z: 1 }
+  /** Each walker's route: the legs' ends, the next leg to walk, and the way it faces once there. */
+  private readonly routes = Object.fromEntries(ANIMALS.map((animal) => [animal, { legs: [] as Point2[], next: 0, yaw: 0 }])) as Record<AnimalKey, { legs: Point2[]; next: number; yaw: number }>
 
   constructor(state: GameState, options: { save: (state: GameState) => void; sound?: Sound; childAge: number | null }) {
     this.state = state
@@ -324,6 +371,10 @@ export class ScarfController {
         airborne: false,
       }
     })
+    this.ballPositions = this.balls.map((ball) => ball.pos)
+    this.ballRests = this.balls.map((ball) => ball.rest)
+    this.ballReaches = this.balls.map(() => BALL_RADIUS)
+    this.ballScene = { needles: this.needlePose, swing: 0, rows: 0, butterfly: 0, animals: this.keepOuts.slice(1) }
     this.ballTargets = this.balls.map((_, index) => ({ kind: 'ball', index }))
     this.animalTargets = { bunny: { kind: 'animal', animal: 'bunny' }, penguin: { kind: 'animal', animal: 'penguin' }, fox: { kind: 'animal', animal: 'fox' }, bear: { kind: 'animal', animal: 'bear' } }
 
@@ -357,6 +408,7 @@ export class ScarfController {
       glowBall: -1,
       glowScarf: false,
     }
+    this.poseNeedles()
   }
 
   setProjector(projector: Projector): void {
@@ -422,6 +474,7 @@ export class ScarfController {
       walkT0: 0,
       walkDuration: 1,
       walkProgress: 0,
+      walkBegan: 0,
       destination: null,
       warm: 0,
       warmAt: -Infinity,
@@ -459,17 +512,38 @@ export class ScarfController {
       actor.z = ENTRY.z
       actor.yaw = ENTRY.yaw
     }
+    const route = this.routes[actor.animal]
+    route.legs = planRoute(actor, spot, walkRoom(actor.animal), this.walkObstacles(actor.animal))
+    route.next = 0
+    route.yaw = spot.yaw
+    actor.walkBegan = this.t + delay
+    this.startLeg(actor, this.t + delay)
+    actor.walking = true
+    actor.destination = destination
+  }
+
+  /** What a walker keeps clear of on the snow: the loom, the basket and friends standing still. */
+  private walkObstacles(walker: AnimalKey): Obstacle[] {
+    const obstacles: Obstacle[] = [LOOM_FOOTPRINT, BASKET_FOOTPRINT]
+    for (const animal of ANIMALS) {
+      const other = this.actors[animal]
+      if (animal !== walker && other.visible && !other.walking) obstacles.push({ kind: 'round', x: other.x, z: other.z, r: STANDS_IN[animal] })
+    }
+    return obstacles
+  }
+
+  private startLeg(actor: ActorView, at: number): void {
+    const route = this.routes[actor.animal]
+    const to = route.legs[route.next++]
     actor.walkFrom.x = actor.x
     actor.walkFrom.z = actor.z
     actor.walkFrom.yaw = actor.yaw
-    actor.walkTo.x = spot.x
-    actor.walkTo.z = spot.z
-    actor.walkTo.yaw = spot.yaw
-    actor.walkT0 = this.t + delay
-    actor.walkDuration = Math.max(0.6, Math.hypot(spot.x - actor.x, spot.z - actor.z) / WALK_SPEED[actor.animal])
+    actor.walkTo.x = to.x
+    actor.walkTo.z = to.z
+    actor.walkTo.yaw = route.next === route.legs.length ? route.yaw : Math.atan2(to.x - actor.x, to.z - actor.z)
+    actor.walkT0 = at
+    actor.walkDuration = legSeconds(actor.animal, actor, to)
     actor.walkProgress = 0
-    actor.walking = true
-    actor.destination = destination
   }
 
   // --- touch ----------------------------------------------------------------------
@@ -848,7 +922,7 @@ export class ScarfController {
       const next = this.state.atLoom
       if (!next || next === gift.to) return
       // The next cold animal arrives as the friend walking home behind the loom leaves its window, so its first rows are knitted over plain snow.
-      const walkIn = Math.hypot(LOOM_SPOT.x - ENTRY.x, LOOM_SPOT.z - ENTRY.z) / WALK_SPEED[next]
+      const walkIn = this.walkSeconds(next, ENTRY, LOOM_SPOT)
       this.walkTo(this.actors[next], LOOM_SPOT, 'loom', Math.max(NEXT_ARRIVES_AFTER, this.inWindowUntil(actor) - walkIn))
     })
   }
@@ -868,18 +942,40 @@ export class ScarfController {
     if (!p.toScreen(this.scratch, this.screen)) return 0
     const right = this.screen.x
     const bottom = this.screen.y
-    let last = 0
-    for (let i = 0; i <= WINDOW_SAMPLES; i++) {
-      const s = i / WINDOW_SAMPLES
-      const x = actor.walkFrom.x + (actor.walkTo.x - actor.walkFrom.x) * s
-      const z = actor.walkFrom.z + (actor.walkTo.z - actor.walkFrom.z) * s
-      if (z > LOOM.z) continue
-      this.scratch.x = x
-      this.scratch.y = groundY(x, z) + BODY[actor.animal].height * 0.5
-      this.scratch.z = z
-      if (p.toScreen(this.scratch, this.screen) && this.screen.x > left && this.screen.x < right && this.screen.y > top && this.screen.y < bottom) last = Math.min(1, s + 1 / WINDOW_SAMPLES)
+    const route = this.routes[actor.animal]
+    let last = -Infinity
+    let t0 = actor.walkT0
+    let duration = actor.walkDuration
+    for (let leg = route.next - 1; leg < route.legs.length; leg++) {
+      const from = leg === route.next - 1 ? actor.walkFrom : route.legs[leg - 1]
+      const to = route.legs[leg]
+      if (leg >= route.next) {
+        t0 += duration
+        duration = legSeconds(actor.animal, from, to)
+      }
+      for (let i = 0; i <= WINDOW_SAMPLES; i++) {
+        const s = i / WINDOW_SAMPLES
+        const x = from.x + (to.x - from.x) * s
+        const z = from.z + (to.z - from.z) * s
+        if (z > LOOM.z) continue
+        this.scratch.x = x
+        this.scratch.y = groundY(x, z) + BODY[actor.animal].height * 0.5
+        this.scratch.z = z
+        if (p.toScreen(this.scratch, this.screen) && this.screen.x > left && this.screen.x < right && this.screen.y > top && this.screen.y < bottom) last = t0 + Math.min(1, s + 1 / WINDOW_SAMPLES) * duration
+      }
     }
-    return last > 0 ? actor.walkT0 - this.t + last * actor.walkDuration : 0
+    return last > -Infinity ? last - this.t : 0
+  }
+
+  /** Seconds a walk from `from` to `spot` takes round what is in the way now. */
+  private walkSeconds(animal: AnimalKey, from: Point2, spot: Point2): number {
+    let seconds = 0
+    let at = from
+    for (const to of planRoute(from, spot, walkRoom(animal), this.walkObstacles(animal))) {
+      seconds += legSeconds(animal, at, to)
+      at = to
+    }
+    return seconds
   }
 
   private after(delay: number, run: () => void): void {
@@ -978,6 +1074,88 @@ export class ScarfController {
       ball.spin += ball.spinV * dt
       springStep(ball.squash, 0, dt, 320, 13)
     }
+    for (let i = 0; i < this.balls.length; i++) {
+      const ball = this.balls[i]
+      if (ball.airborne && ball.held === null && ball.returning < 0) hopPast(ball.pos, ball.rest, this.ballPositions, this.ballRests, i)
+    }
+  }
+
+  /**
+   * Moving balls keep clear of everything in their way: they ride over the
+   * snow and the basket, then slide toward the child along their line of
+   * sight, so on screen they stay where the finger or the throw put them.
+   */
+  private clearMovingBalls(): void {
+    const g = this.guidance
+    let moving = false
+    for (let i = 0; i < this.balls.length; i++) {
+      const ball = this.balls[i]
+      const swell = g.glowBalls && ball.colour === g.glowBall ? 1 + (BALL_SWELL - 1) * g.frame.glow : 1
+      this.ballReaches[i] = ballReach(ball.carry.x.v, ball.carry.y.v, swell, ball.squash.x)
+      if (ball.held !== null || ball.returning >= 0) moving = true
+    }
+    if (!moving) return
+    const scene = this.ballScene
+    scene.swing = this.needleSwing
+    scene.rows = this.loom.rows.length
+    scene.butterfly = this.butterfly.show.x
+    for (let i = 0; i < this.balls.length; i++) {
+      const ball = this.balls[i]
+      if (ball.held === null && ball.returning < 0) continue
+      this.lineOfSight(ball.pos)
+      clearBall(ball.pos, i, this.ballPositions, this.ballReaches, this.towardEye, scene)
+    }
+  }
+
+  /** The way from `p` toward the eye, per unit of depth. */
+  private lineOfSight(p: Point3): void {
+    const projector = this.projector
+    const eye = this.towardEye
+    eye.x = 0
+    eye.y = 0
+    eye.z = 1
+    if (!projector || !projector.toScreen(p, this.screen) || !projector.toPlaneZ(this.screen, p.z + 1, this.scratch)) return
+    eye.x = this.scratch.x - p.x
+    eye.y = this.scratch.y - p.y
+  }
+
+  /**
+   * Where the loom scarf's needles hang: under the last row shown, lower
+   * still on an empty loom so they clear the rod, sliding with the stitch
+   * being knitted and away when cast off, never below the needles' floor.
+   * The scarf then swings only as far as they stay clear of the basket and
+   * the animals.
+   */
+  private poseNeedles(): void {
+    const loom = this.loom
+    const lift = loom.lift.x
+    const pose = this.needlePose
+    pose.pivotY = SCARF.top + lift * 1.4 + loom.pull.y
+    pose.pivotZ = SCARF.z + lift * 0.8
+    pose.rock = this.loomRock.x * 0.022
+    pose.lean = -lift * 0.05
+    const shown = loom.reveal / WIDTH
+    const castOff = this.t - this.needles.castOffAt
+    const knitting = this.strand.alpha
+    const slide = castOff < 0.35 ? smooth(castOff / 0.35) * 26 : 0
+    const along = this.strand.column - (WIDTH - 1) / 2
+    const castOn = Math.max(0, 1 - shown) * NEEDLE_BAR.castOnDrop
+    pose.x = slide + along * knitting * 1.3
+    pose.y = Math.max(NEEDLES_FLOOR - pose.pivotY, -shown * CELL_H - 0.5 - castOn + this.needles.pull.x)
+    pose.click = Math.sin(this.t * 26) * NEEDLE_BAR.click * knitting
+    for (let i = 0; i < ANIMALS.length; i++) {
+      const animal = ANIMALS[i]
+      const actor = this.actors[animal]
+      const k = this.keepOuts[i + 1]
+      k.x = actor.x
+      k.z = actor.z
+      k.r = BODY[animal].reach
+      k.top = actor.visible ? groundY(actor.x, actor.z) + BODY[animal].top : -Infinity
+    }
+    const length = Math.max(1, loom.rows.length) * CELL_H
+    const angle = loom.swing.x * 0.07 + Math.max(-MAX_SWING, Math.min(MAX_SWING, loom.pull.x / Math.max(8, length * 0.8)))
+    const side = angle < 0 ? -1 : 1
+    this.needleSwing = side * swingRoom(side, Math.abs(angle), pose, this.keepOuts)
   }
 
   private paintUnder(ball: BallView, drag: Extract<Drag, { kind: 'ball' }>): void {
@@ -1090,6 +1268,8 @@ export class ScarfController {
     this.stepLoom(h)
     this.stepWorn(h)
     this.stepGuidance()
+    this.poseNeedles()
+    this.clearMovingBalls()
   }
 
   private runTimers(): void {
@@ -1108,7 +1288,14 @@ export class ScarfController {
     for (const animal of ANIMALS) {
       const actor = this.actors[animal]
       if (actor.walking) {
-        const progress = clamp01((this.t - actor.walkT0) / actor.walkDuration)
+        const route = this.routes[animal]
+        let progress = clamp01((this.t - actor.walkT0) / actor.walkDuration)
+        while (progress >= 1 && route.next < route.legs.length) {
+          actor.x = actor.walkTo.x
+          actor.z = actor.walkTo.z
+          this.startLeg(actor, actor.walkT0 + actor.walkDuration)
+          progress = clamp01((this.t - actor.walkT0) / actor.walkDuration)
+        }
         actor.walkProgress = progress
         actor.x = actor.walkFrom.x + (actor.walkTo.x - actor.walkFrom.x) * progress
         actor.z = actor.walkFrom.z + (actor.walkTo.z - actor.walkFrom.z) * progress
@@ -1162,7 +1349,8 @@ export class ScarfController {
     if (scarfDrag && this.projector && this.projector.toPlaneZ(scarfDrag.screen, SCARF.z, this.scratch) && this.projector.toPlaneZ(scarfDrag.start, SCARF.z, this.scratch2)) {
       const reach = this.offered ? 16 : 3
       loom.pull.x = Math.max(-reach, Math.min(reach, this.scratch.x - this.scratch2.x))
-      loom.pull.y = Math.max(-reach * 0.5, Math.min(reach * 0.5, this.scratch.y - this.scratch2.y))
+      // Pulled down no further than keeps its needles off the loom's feet and the blanket.
+      loom.pull.y = Math.max(-Math.min(reach * 0.5, maxDrop(loom.rows.length)), Math.min(reach * 0.5, this.scratch.y - this.scratch2.y))
     }
     const needlesTarget = this.needlesDragLift()
     springStep(this.needles.pull, needlesTarget, dt, 180, 16)

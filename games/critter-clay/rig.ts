@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { Critter } from './critter'
-import { CAMERA, TRAY, traySlot } from './layout'
+import { CAMERA, onTurntable, TRAY, traySlot, TRAY_SLOT_RISE, TURNTABLE } from './layout'
 import {
   BODY,
   canTake,
@@ -44,12 +44,52 @@ export const PART_REACH: Record<PartKind, number> = {
   earFlop: 5,
   tailCurl: 4.2,
   tailLong: 8,
-  head: 0,
+  head: 4.845,
   horn: 3.4,
 }
 /** The eye's white ball: its centre height above the eye base, and its radius. */
 export const EYE_BALL = { center: 1.05, radius: 1.3 } as const
 export const PUPIL_RADIUS = 0.6
+/**
+ * Where each paw's sole spreads at the end of its leg, as (x, z) in the leg's frame: toes forward, heel back, and
+ * its sides (measured from the shapes), so a tipped or swung leg keeps its toes and heel on the floor too.
+ */
+const SOLE = {
+  legStub: solePoints(1.65, 2.45, 1.5),
+  legLong: solePoints(1.55, 2.85, 1.5),
+} as const
+const SOLE_GAP = 0.02
+const FLANK_LIFT = 1.5
+type FaceBox = { readonly min: Vec3; readonly max: Vec3 }
+/**
+ * The local bounds of the shapes painted or pressed onto a body's face (measured from the shapes). The body's own
+ * belly is flattened where it rests, so a nose or mouth low on a squashed lump would otherwise dip under it.
+ */
+const FACE_BOX: Record<'nose' | 'mark' | 'crescent', FaceBox> = {
+  nose: { min: [-1.55, -0.6, -1.25], max: [1.55, 1.7, 1.25] },
+  mark: { min: [-1.05, -0.25, -1.05], max: [1.05, 0.3, 1.05] },
+  crescent: { min: [-1.25, -0.15, -0.8], max: [1.25, 0.25, 0.5] },
+}
+function solePoints(side: number, toes: number, heel: number): (readonly [number, number])[] {
+  const d = 0.75
+  return [[0, toes], [0, -heel], [side, 0], [-side, 0], [side * d, toes * d], [-side * d, toes * d], [side * d, -heel * d], [-side * d, -heel * d]]
+}
+/** How thick each part is around its tip, for a critter's footprint: a foot, an eyeball, the head's whole ball. */
+const PART_GIRTH: Record<PartKind, number> = {
+  legStub: 2.2,
+  legLong: 2.2,
+  eye: 1.4,
+  earRound: 1.9,
+  earPoint: 1.2,
+  earFlop: 1.6,
+  tailCurl: 2,
+  tailLong: 1.6,
+  head: HEAD_RADIUS,
+  horn: 1,
+}
+/** The head's neck runs from its centre toward the body along this (unit) direction. */
+const NECK_LENGTH = Math.hypot(0.87, 0.5)
+export const HEAD_NECK: Vec3 = [0, -0.87 / NECK_LENGTH, -0.5 / NECK_LENGTH]
 
 export type BatchKey = PartKind | 'body' | 'nose' | 'pupil' | 'lid' | 'mark' | 'crescent'
 export const BATCH_KEYS: readonly BatchKey[] = [...PART_KINDS, 'body', 'nose', 'pupil', 'lid', 'mark', 'crescent']
@@ -73,22 +113,44 @@ const CAPACITY: Record<BatchKey, number> = {
   crescent: 32,
 }
 
-/** One instanced draw's worth of clay: matrices, colours, and per-instance boil (amount, seed). */
+function interned(prefix: string): (id: number | string) => string {
+  const keys = new Map<number | string, string>()
+  return (id) => {
+    let key = keys.get(id)
+    if (key === undefined) {
+      key = `${prefix}-${id}`
+      keys.set(id, key)
+    }
+    return key
+  }
+}
+
+/**
+ * Which thing on the bench an instance belongs to: a critter with every part pressed on it, a part in
+ * its tray slot, on a finger, or flying home. Interned, so the frame loop allocates nothing; the view
+ * hands them to the intersection audit as each mesh's `userData.jamInstanceObjects`.
+ */
+export const OWNER = { critter: interned('critter'), tray: interned('tray'), held: interned('held'), flying: interned('flying') } as const
+
+/** One instanced draw's worth of clay: matrices, colours, per-instance boil (amount, seed), and owner. */
 export class Batch {
   readonly matrices: Float32Array
   readonly colors: Float32Array
   readonly boil: Float32Array
+  readonly owners: string[]
   count = 0
 
   constructor(readonly capacity: number) {
     this.matrices = new Float32Array(capacity * 16)
     this.colors = new Float32Array(capacity * 3).fill(1)
     this.boil = new Float32Array(capacity * 2)
+    this.owners = new Array<string>(capacity).fill('')
   }
 
-  push(matrix: THREE.Matrix4, color: ArrayLike<number>, colorAt: number, boil: number, seed: number): void {
+  push(matrix: THREE.Matrix4, color: ArrayLike<number>, colorAt: number, boil: number, seed: number, owner: string): void {
     if (this.count >= this.capacity) return
     const i = this.count++
+    this.owners[i] = owner
     matrix.toArray(this.matrices, i * 16)
     this.colors[i * 3] = color[colorAt]
     this.colors[i * 3 + 1] = color[colorAt + 1]
@@ -182,7 +244,8 @@ function displayMatrix(kind: PartKind, out: THREE.Matrix4): THREE.Matrix4 {
     case 'tail':
       return out.makeRotationFromEuler(new THREE.Euler(tilt * 0.6, kind === 'tailLong' ? 0.6 : 0, kind === 'tailLong' ? -0.9 : 0)).multiply(scale)
     case 'head':
-      return out.copy(scale)
+      // stood on its neck, face tipped up toward the child
+      return out.makeRotationX(-Math.atan2(-HEAD_NECK[2], -HEAD_NECK[1])).multiply(scale)
     default: {
       const unreachable: never = FAMILY[kind]
       return unreachable
@@ -190,25 +253,28 @@ function displayMatrix(kind: PartKind, out: THREE.Matrix4): THREE.Matrix4 {
   }
 }
 
+/**
+ * How far each part reaches below its origin as it lies in the tray (display pose and size): its
+ * collar's rim, a leg's side, the head's neck. Measured from view/shapes.ts; tray.test.ts holds them
+ * to the geometry, so a part rests on its slot instead of sinking into it.
+ */
+export const DISPLAY_FOOT: Record<PartKind, number> = {
+  legStub: 2.373,
+  legLong: 1.767,
+  eye: 2.127,
+  earRound: 1.314,
+  earPoint: 1.112,
+  earFlop: 1.119,
+  tailCurl: 1.384,
+  tailLong: 1.317,
+  head: 4.845,
+  horn: 1.414,
+}
+const REST_GAP = 0.02
+
 /** The height at which a displayed part's base sits above the surface it rests on. */
 export function displayBase(kind: PartKind): number {
-  const s = DISPLAY_SCALE[kind]
-  switch (FAMILY[kind]) {
-    case 'legs':
-      return 1.3 * s
-    case 'head':
-      return HEAD_RADIUS * 0.8 * s
-    case 'tail':
-      return (kind === 'tailLong' ? 1.4 : 0.9) * s
-    case 'eyes':
-    case 'ears':
-    case 'horns':
-      return 0.4 * s
-    default: {
-      const unreachable: never = FAMILY[kind]
-      return unreachable
-    }
-  }
+  return TRAY_SLOT_RISE + DISPLAY_FOOT[kind] + REST_GAP
 }
 
 export type Anim = { sy: number; sxz: number; out: number; wiggle: number }
@@ -221,7 +287,7 @@ export class Rig {
   readonly batches: Record<BatchKey, Batch>
   readonly shadows = new OverlayBatch(72)
   readonly glows = new OverlayBatch(48)
-  /** The tray's resting matrices, one per part kind (without the regrow scale). */
+  /** The tray's resting matrices, one per part kind, from the slot's surface (without the regrow scale). */
   private readonly trayRest: Record<PartKind, THREE.Matrix4>
   readonly display: Record<PartKind, THREE.Matrix4>
 
@@ -242,6 +308,10 @@ export class Rig {
   private ry: number = BODY.ry
   private rz: number = BODY.rz
   private faceIsHead = false
+  private owner = ''
+  /** The top of what the critter being drawn stands over (none while it is carried). */
+  private floor = 0
+  private feetOnFloor = true
 
   constructor() {
     const batches = {} as Record<BatchKey, Batch>
@@ -251,8 +321,7 @@ export class Rig {
     this.trayRest = {} as Record<PartKind, THREE.Matrix4>
     for (const kind of PART_KINDS) {
       this.display[kind] = displayMatrix(kind, new THREE.Matrix4())
-      const slot = traySlot(kind)
-      this.trayRest[kind] = new THREE.Matrix4().makeTranslation(slot.x, TRAY.height + displayBase(kind), slot.z).multiply(this.display[kind])
+      this.trayRest[kind] = new THREE.Matrix4().makeTranslation(0, displayBase(kind) - TRAY_SLOT_RISE, 0).multiply(this.display[kind])
     }
   }
 
@@ -275,6 +344,7 @@ export class Rig {
     const legs = critter.profile.legs
     const lift = legs ? critter.standLift + (belly - critter.standLift) * pose.legSplay : belly
     const m = critter.mover
+    this.floor = critter.mode === 'carried' ? -Infinity : onTurntable(m, 1) ? TURNTABLE.height : 0
     this.e.set(pose.pitch, m.heading + pose.yaw, pose.roll, 'YXZ')
     this.q.setFromEuler(this.e)
     this.v.set(m.x, critter.ground + lift + pose.lift, m.z)
@@ -356,7 +426,8 @@ export class Rig {
       const swing = pose.legSwing[Math.min(legOrder, pose.legSwing.length - 1)]
       out.multiply(this.R.makeRotationX(swing + wiggle))
       const bend = pose.legBend[Math.min(legOrder, pose.legBend.length - 1)]
-      return out.multiply(this.T.makeScale(sxz, length * sy * (1 - 0.28 * bend), sxz))
+      out.multiply(this.T.makeScale(sxz, length * sy * (1 - 0.28 * bend), sxz))
+      return this.footOnFloor(out, kind as 'legStub' | 'legLong')
     }
     if (family === 'tail') {
       ellipsoidPoint(dir, this.rx, this.ry, this.rz, surface)
@@ -387,6 +458,25 @@ export class Rig {
       }
     } else if (wiggle !== 0) out.multiply(this.R.makeRotationX(wiggle))
     return out.multiply(this.T.makeScale(sxz, sy, sxz))
+  }
+
+  /** A leg never reaches through what its critter stands on: splayed, tipped, or swung, it is shortened so its foot rests on top. */
+  private footOnFloor(out: THREE.Matrix4, kind: 'legStub' | 'legLong'): THREE.Matrix4 {
+    if (!this.feetOnFloor) return out
+    const e = out.elements
+    const down = Math.max(0, -e[5] * LEG_LENGTH[kind])
+    const room = e[13] - this.floor - SOLE_GAP
+    let low = 0
+    for (const [x, z] of SOLE[kind]) low = Math.min(low, e[1] * x + e[9] * z)
+    // First the leg sits a little higher up its critter's flank (its collar sinks deeper into the clay); past that it is
+    // shorter, and a leg splayed out flat, which being shorter can't lift, has its paw slimmed.
+    const lift = Math.min(FLANK_LIFT, Math.max(0, down - low - room))
+    e[13] += lift
+    const clear = room + lift + low
+    const fit = down > 0 ? Math.min(1, Math.max(0.15, clear / down)) : 1
+    const girth = low < 0 ? Math.min(1, Math.max(0.3, (room + lift - fit * down) / -low)) : 1
+    if (fit >= 1 && girth >= 1) return out
+    return out.multiply(this.T.makeScale(girth, fit, girth))
   }
 
   private readonly anim: Anim = { sy: 1, sxz: 1, out: 0, wiggle: 0 }
@@ -422,13 +512,17 @@ export class Rig {
     const seed = (critter.save.seed % 997) / 997
     const pose = critter.pose
     const hue = hueAt(critter.save.hue)
+    this.owner = OWNER.critter(critter.save.id)
     this.W.copy(this.B).multiply(this.T.makeScale(this.rx / BODY.rx, this.ry / BODY.ry, this.rz / BODY.rz))
-    this.batches.body.push(this.W, COLORS, hue, boil, seed)
+    this.batches.body.push(this.W, COLORS, hue, boil, seed, this.owner)
     this.v.setFromMatrixPosition(this.B)
     world.body[0] = this.v.x
     world.body[1] = this.v.y
     world.body[2] = this.v.z
     world.bodyR = Math.max(this.rx, this.rz) * 1.08
+    let footprint = world.bodyR
+    let top = world.body[1] + this.ry * 1.08
+    let bottom = world.body[1] - this.ry * 1.08
 
     const parts = critter.save.parts
     let legOrder = 0
@@ -439,12 +533,19 @@ export class Rig {
       const socket = socketFor(parts, i, socketScratch)
       const isLeg = FAMILY[part.kind] === 'legs'
       this.place(critter, part.kind, socket.dir, legOrder, this.animFor(critter, i), this.W)
-      this.batches[part.kind].push(this.W, COLORS, hueAt(part.hue), boil, seed + i * 0.07)
+      this.batches[part.kind].push(this.W, COLORS, hueAt(part.hue), boil, seed + i * 0.07, this.owner)
       const reach = PART_REACH[part.kind] * 0.55
       this.v.set(0, reach, 0).applyMatrix4(this.W)
       world.parts[i * 3] = this.v.x
       world.parts[i * 3 + 1] = this.v.y
       world.parts[i * 3 + 2] = this.v.z
+      const girth = PART_GIRTH[part.kind]
+      top = Math.max(top, this.v.y + girth)
+      bottom = Math.min(bottom, this.v.y - girth)
+      this.v.set(0, PART_REACH[part.kind], 0).applyMatrix4(this.W)
+      footprint = Math.max(footprint, Math.hypot(this.v.x - world.body[0], this.v.z - world.body[2]) + girth)
+      top = Math.max(top, this.v.y + girth)
+      bottom = Math.min(bottom, this.v.y - girth)
       if (isLeg) {
         this.v.set(0, PART_REACH[part.kind], 0).applyMatrix4(this.W)
         const f = world.feetCount++ * 3
@@ -459,6 +560,10 @@ export class Rig {
       }
     }
 
+    world.reach = footprint
+    world.top = top
+    world.bottom = bottom
+
     // nose
     this.faceSurface(NOSE_DIR, false)
     const { p, n } = surface
@@ -466,7 +571,8 @@ export class Rig {
     this.W.multiply(this.basis(n[0], n[1], n[2], UP, this.R))
     const nose = (1 + 0.1 * Math.max(0, -critter.wobble) * 4) * (1 + 0.4 * critter.itch)
     this.W.multiply(this.T.makeScale(nose, nose, nose))
-    this.batches.nose.push(this.W, COLORS, hueAt(noseHue(critter.save.hue)), boil, seed + 0.5)
+    this.offFloor(this.W, FACE_BOX.nose)
+    this.batches.nose.push(this.W, COLORS, hueAt(noseHue(critter.save.hue)), boil, seed + 0.5, this.owner)
     this.v.set(0, 0.8, 0).applyMatrix4(this.W)
     world.nose[0] = this.v.x
     world.nose[1] = this.v.y
@@ -489,7 +595,17 @@ export class Rig {
     this.M.copy(this.F).multiply(this.T.makeTranslation(p[0], p[1], p[2]))
     this.M.multiply(this.basis(n[0], n[1], n[2], UP, this.R))
     this.M.multiply(this.T.makeScale(width, 1, height))
-    this.batches[key].push(this.M, COLORS, WHITE, boil * 0.5, seed)
+    this.offFloor(this.M, FACE_BOX[key])
+    this.batches[key].push(this.M, COLORS, WHITE, boil * 0.5, seed, this.owner)
+  }
+
+  /** Moves a face feature up (into its body) until its lowest point clears the floor, as a squashed body's belly does. */
+  private offFloor(m: THREE.Matrix4, box: FaceBox): void {
+    const e = m.elements
+    let low = e[13]
+    for (let j = 0; j < 3; j++) low += Math.min(e[j * 4 + 1] * box.min[j], e[j * 4 + 1] * box.max[j])
+    const below = this.floor + SOLE_GAP - low
+    if (below > 0) e[13] += below
   }
 
   /** Pupils that look around (a glint painted in), and clay lids in the body's colour that close over the eye. */
@@ -501,14 +617,14 @@ export class Rig {
     const wide = Math.max(1, Math.min(1.25, lids))
     this.W.multiply(this.T.makeScale(wide, 1, wide))
     // under a mostly shut lid the pupil's glint would poke through; a lash line shows the eye is closed instead
-    if (lids > 0.3) this.batches.pupil.push(this.W, COLORS, WHITE, boil * 0.5, seed)
+    if (lids > 0.3) this.batches.pupil.push(this.W, COLORS, WHITE, boil * 0.5, seed, this.owner)
     else {
       this.W.copy(this.M).multiply(this.T.makeTranslation(0, EYE_BALL.radius * 1.12, 0)).multiply(this.T.makeScale(0.85, 1, 0.85))
-      this.batches.crescent.push(this.W, COLORS, WHITE, boil * 0.5, seed)
+      this.batches.crescent.push(this.W, COLORS, WHITE, boil * 0.5, seed, this.owner)
     }
     if (lids < 0.995) {
       this.M.multiply(this.R.makeRotationX(Math.max(0, lids) * Math.PI))
-      this.batches.lid.push(this.M, COLORS, hueAt(lidHue), boil, seed)
+      this.batches.lid.push(this.M, COLORS, hueAt(lidHue), boil, seed, this.owner)
     }
   }
 
@@ -533,7 +649,11 @@ export class Rig {
    * belly and would put the glow on the face.
    */
   socketMark(critter: Critter, kind: PartKind, out: THREE.Vector3): boolean {
-    if (!this.socket(critter, kind, this.markScratch)) return false
+    // where a standing leg would reach, even on a lump lying flat on the turntable
+    this.feetOnFloor = false
+    const room = this.socket(critter, kind, this.markScratch)
+    this.feetOnFloor = true
+    if (!room) return false
     // a leg is marked at its foot, clear of the nose that is tapped later
     out.set(0, PART_REACH[kind] * (FAMILY[kind] === 'legs' ? 1 : 0.7), 0).applyMatrix4(this.markScratch)
     return true
@@ -541,18 +661,20 @@ export class Rig {
 
   // --- the tray, loose parts -----------------------------------------------------
 
-  /** A part resting in its tray slot, growing back (`grow` 0..1) and hopping (`hop` in bench units). */
+  /** A part resting in its tray slot, growing back (`grow` 0..1) and hopping (`hop` in bench units); it squashes and grows about where it touches the slot. */
   trayPart(kind: PartKind, hue: Hue, grow: number, hop: number, squash: number, boil: number): void {
     const g = Math.max(0.001, grow)
     const sy = g * (1 - squash)
     const sxz = g * (1 + squash * 0.6)
-    this.W.makeTranslation(0, hop, 0).multiply(this.trayRest[kind]).multiply(this.T.makeScale(sxz, sy, sxz))
-    this.loose(kind, hue, this.W, boil, PART_KINDS.indexOf(kind) * 0.1)
+    const slot = traySlot(kind)
+    this.W.makeTranslation(slot.x, TRAY.height + TRAY_SLOT_RISE + hop, slot.z).multiply(this.T.makeScale(sxz, sy, sxz)).multiply(this.trayRest[kind])
+    this.loose(kind, hue, this.W, boil, PART_KINDS.indexOf(kind) * 0.1, OWNER.tray(kind))
   }
 
   /** A part on its own (in the tray, on a finger, or flying home), with its eye extras when it is an eye. */
-  loose(kind: PartKind, hue: Hue, matrix: THREE.Matrix4, boil: number, seed: number, lookX = 0, lookY = 0): void {
-    this.batches[kind].push(matrix, COLORS, hueAt(hue), boil, seed)
+  loose(kind: PartKind, hue: Hue, matrix: THREE.Matrix4, boil: number, seed: number, owner: string, lookX = 0, lookY = 0): void {
+    this.owner = owner
+    this.batches[kind].push(matrix, COLORS, hueAt(hue), boil, seed, owner)
     if (kind === 'eye') this.eyeExtras(matrix, lookX, lookY, 1, hue, boil, seed)
   }
 

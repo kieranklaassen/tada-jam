@@ -22,6 +22,8 @@ const COLUMNS = [27.8, 38.2]
 const ROWS = [19.4, 9.2, -1, -11.2, -21.4]
 
 export const TRAY_SLOT_RADIUS = 4.7
+/** How far each slot's clay disc stands above the tray floor: parts rest on it. */
+export const TRAY_SLOT_RISE = 0.12
 
 export function traySlot(kind: PartKind): Point {
   const index = PART_KINDS.indexOf(kind)

@@ -264,6 +264,7 @@ export class ScarfMesh {
     }
     this.material.customProgramCacheKey = () => 'cosy-scarf'
     this.mesh = new THREE.Mesh(scarfGeometry(), this.material)
+    this.mesh.name = 'scarf'
     this.mesh.frustumCulled = false
     this.mesh.matrixAutoUpdate = false
     this.mesh.visible = false

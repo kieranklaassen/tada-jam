@@ -39,8 +39,39 @@ Shots are in the Project store under `media/jam-10-games/bedtime-forest/` (`iter
 | 29 | Character | Each animal had exactly one trick, so the second tap on the same animal got the same answer as the first. The jam's motion-personality convention asks for several variants per action, never the same one twice in a row, and a four-year-old taps the same favourite again and again. | Every animal now has two tricks and takes them in turns: the owl spreads its wings and hops, the fox chases its tail round and sits panting, the rabbit sits up tall and thumps twice with its ears swivelling, the bear rears up and waves, the fish does a barrel roll, and the songbird hovers and flutters. The first bear idea (sitting back) was only 0.24 from its belly drum and failed the motion test, so it became the rear-up wave (0.43). Across all twelve tricks the closest pair is the rabbit's thump and the bear's drum, at 0.30; each animal's own two tricks are 0.43 (bear) to 6.1 (fish) apart. The motion test now poses every trick and fails below 0.25 for any pair, and a new brain test (four taps give variants 0, 1, 0, 1) fails without the alternation. A frame strip of every second trick at play distance reads for all six; the songbird's hover is the smallest. | 5.8 ms / 20 |
 | 30 | Cold playtest rerun / final perf sweep | Rerun 3 of the cold playtest on the pass-29 build. Both earlier unclear moments were gone: the bear answered the cave knock mid-drum by turning its head to the cave, and the songbird stood in view beside the fox. Hands off, one moment was newly visible: at 1.7 s the fox yawned its invitation with the ring under it, and at 3.5 s the ring jumped to the bear, which the ghost hand then carried. The invitation picked a random animal and the guidance picked the one nearest its home, so in 160 of 200 seeded first opens the child was invited by one animal and shown another. | The invitation now comes from the animal the guidance will show (the one nearest its home), and until the first touch the ring and the ghost hand stay with that animal, so a newcomer follows one animal from its yawn to the demonstration. After a touch the guidance picks as before. Mismatches in the same 200 seeded opens went from 160 to 0, and a frame strip shows the bear yawning, ringed, then carried. A new controller test over 12 seeds fails without the change. The final perf sweep on this build is in the PR: 4.3 ms at 4×, 4.1 to 6.6 ms at 6× over three runs, 6.5 ms at 6× with the top tier pinned, and the lowest tier still reads as the same painting. | 4.1 ms / 20 |
 
+## Intersection audit (after the thirty passes)
+
+The jam's intersection audit (`npm run check:intersections -- bedtime-forest`) plays one scripted evening on the production build in 78 s of game time. At dusk come the invitation, the glow and a ghost-hand demo. Then quick taps play both tricks for all six animals, and three homes are knocked on. Three wrong homes follow: the bear in the burrow, the fish in the nest and the owl in the burrow. Everyone is then carried to bed in a rush, and the audit plays the whole night and the dawn, as the animals wake one by one and wander again.
+
+| Seen | Change |
+| --- | --- |
+| The owl standing inside the fox's head and chest, and almost swallowed by the bear; the fox's tail in the bear's arm; the fish in the rabbit. All of it happened while everyone played tricks or stood gazing home | Each animal has a footprint fitted to its drawn body (`layout.ts` `footprint`: a capsule along its facing, so the fox is 33 units nose to tail rather than a 10-unit circle). Everyone on their feet keeps those footprints apart: idle, walking, yawning and in the middle of a trick. Before, only idle and walking animals made room |
+| A rabbit carried to its burrow straight through the bear | A carried animal rides up over anyone it would pass through, feet just over their heads. It looks a little ahead, so it is already up when it gets there, and comes back down at its own pace after. A bird flying over higher than its head it passes under. Let go over someone, it slides off them on the way down |
+| The fish flopping home from the nest along the grass, through the fox | Anyone standing in the way of an animal passing along the ground (a fish flopping home, a sleeper coming out at dawn) steps aside. It clears where the passer will be after the next frame too: in one of the longest frames a slow device steps (1/20 s), the fish covers more ground than the air kept between them |
+
+Two kinds of contact are allowed, with reasons in the config:
+- **Animals in their own doorways.** The homes are painted holes on solid trunks and banks, and the sleeping poses come from the vertex shader. So the audit sees a standing bear where a slumped one sleeps in front of the cave mouth (pass 9). Measured up to 38% for the owl, 33% for the bear, 18% for the fox and 15% for the rabbit.
+- **Scenery planted in the meadow.** Trunks, rocks and banks go 7% into the ground.
+
+Two things are ignored:
+- **The ink lines.** They are inverted hulls with their own geometry, so the audit's hull check misses them.
+- **The sky.** It is a full-screen triangle placed in clip space.
+
+After the pass the audit is clean: no open findings in 300 samples and 5 allowed. A replay of the first run's 53 photographed findings finds none of them still there, and the config now enforces. `view/animals.test.ts` holds the footprints to the models. `brain.test.ts` covers six cases:
+- the six crowded together in their tricks
+- the fox and the bear nose to tail
+- the carry over the bear
+- the carry under the owl flying home
+- the drop onto the bear
+- the fish flopping past the fox, at 60 fps and in the longest frames
+
+One test changed: "an animal hidden behind a bigger one" had put the songbird inside the fox's drawn tail, so the fox there now stands side-on.
+
+The new work per frame is 36 capsule checks, plus five while an animal passes by. The frame-budget test (one animal carried while the others roam) measures 0.005 ms a frame on average against 0.004 ms before, and the worst frame is 0.016 ms on both. The whole-frame A/B on the built game (cpuP95 at 6× CPU throttle, top tier pinned, three interleaved head–main–main–head rounds on a loaded VM) cannot tell them apart: head 5.7–9.9 ms (median 8.9), main 5.9–8.4 ms plus one 24.1 ms outlier (median 7.8), paired median +0.9 ms. That is inside each build's own spread and nearly a thousand times the brain's added cost, so it is the machine, not the separation. Tier 3 held and no frame errored in any run.
+
 ## Still weak
 
+- **Poses are not audited.** The animals are posed in the vertex shader, so the audit checks each one in its bind pose. A rearing bear's forelegs and a curled sleeper are judged as if standing. The footprints are fitted to the bind pose too, and keep 0.6 units of air between animals for fur, feathers and tricks.
 - **No physical iPad was measured.** Every number comes from a GPU-less cloud VM: Chromium through SwiftShader and WebKit through software GL. There, WebKit's governor settles on the lowest tier at 23 to 25 fps (Pebble Table, which has no tiers, runs at 15 to 16 fps in the same session), but with the top tier pinned WebKit manages only 8.3 to 9.3 fps, since DPR 2 plus the paper pass is fill-bound in software. Whether a real iPad holds the top tier at 60 fps is unknown.
 - **A very slow CPU still drops frames.** At 20× Chromium throttle, cpuP95 is 18.9 ms even at the lowest tier, over the 8 ms target.
 - **The playtest is a proxy.** The three cold playtests were a script plus a reviewer reading frames, not a child. A real four-year-old will find moments these missed.

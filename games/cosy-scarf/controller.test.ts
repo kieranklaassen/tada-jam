@@ -448,7 +448,7 @@ describe('ScarfController', () => {
     tap(game, ballAt(game, 0))
     expect(game.state.atLoom).toBe('penguin')
     expect(game.actors.penguin.destination).toBe('loom')
-    run(game, 8)
+    run(game, 10)
     expect(game.actors.penguin.x).toBeCloseTo(LOOM_SPOT.x)
     expect(game.offered).toBe(true)
   })

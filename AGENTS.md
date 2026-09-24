@@ -17,13 +17,14 @@ The authority for cartridge mechanics is Tada's `docs/cartridges.md`. This file 
 
 ## Before you show the owner
 
-Lessons from building Pebble Table, so the next game does not repeat them. The full checklist is in [`docs/solutions/conventions/building-a-jam-game.md`](docs/solutions/conventions/building-a-jam-game.md#before-you-show-the-owner).
+Lessons from building Pebble Table and auditing the games after it, so the next game does not repeat them. The full checklist is in [`docs/solutions/conventions/building-a-jam-game.md`](docs/solutions/conventions/building-a-jam-game.md#before-you-show-the-owner).
 
 - **Look first.** The first screenshot is already in the chosen style at the quality bar; explore styles before gameplay ([style per game](docs/solutions/conventions/distinct-visual-style-per-game-shared-quality-bar.md)).
 - **Clear to a child.** One obvious want per scene, the guidance ladder in the first slice, and a cold playtest proxy run before the owner sees it ([wordless clarity](docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md)).
 - **Every character moves like itself.** No shared animations; variants and delights per character ([motion personality](docs/solutions/design-patterns/motion-personality-per-character.md)).
 - **Refine in logged passes.** Screenshot, critique, one fix set, re-screenshot, frame rate ([refinement loop](docs/solutions/workflow-issues/refinement-loop-for-kid-3d-readability.md)).
 - **Measure on the target.** A production build in WebKit and throttled Chrome, a real iPad when possible; ship adaptive quality and the grown-up fps overlay from day one ([performance](docs/solutions/performance-issues/measure-on-the-target-device-and-ship-adaptive-quality.md)).
+- **Nothing passes through anything.** The intersection audit on moments that reach every state, every finding fixed or allowed with a reason and a cap, a before/after replay, and `enforce: true`; shader motion and 2D games covered by model tests ([intersection audit](docs/solutions/workflow-issues/run-the-intersection-audit-before-showing-the-owner.md)).
 - **Share a production build.** `npm run serve:lan`, never the dev server, and say which URL is which ([production build](docs/solutions/workflow-issues/share-a-production-build-not-the-dev-server.md)).
 - **Deliver cleanly.** Push the branch with CI green, hand the PR body to the coordinator, and never write a key value anywhere ([agent delivery](docs/solutions/workflow-issues/agent-delivery-push-branches-and-keep-secrets-out.md)).
 

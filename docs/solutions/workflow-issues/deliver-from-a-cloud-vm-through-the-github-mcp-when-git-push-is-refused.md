@@ -1,6 +1,7 @@
 ---
 title: When git push returns 403 from a cloud VM, publish a jam branch with the GitHub MCP in import order, judge CI on the final head, and keep the local history in a bundle
 date: 2026-09-23
+last_updated: 2026-09-24
 category: workflow-issues
 module: agent-delivery
 problem_type: workflow_issue
@@ -14,12 +15,13 @@ applies_when:
   - Publishing a new jam game, or a refinement of one, in more than one push_files batch
   - A jam PR conflicts with main in a file other games also edit, such as the claimed-styles table
   - Reading CI on a branch that was published in batches
-  - Finishing work on a VM that holds the only copy of the per-pass commits
+  - A branch too large for push_files (over about 150 KB), an MCP publish that was slow or failed, or a VM that holds the only copy of the per-pass commits
 symptoms:
   - Every Hillside Spring batch before index.ts failed one Vitest check, and only the index.ts batch was green
   - Cosy Scarf's first batch pushed index.ts and the mount before the modules they import and failed TypeScript with nine TS2307 errors
   - A Kite Tower batch dropped a field from a type while the files that read it came in the next batch, and failed TS2339
   - The claimed-styles table conflicted with main, and push_files cannot write the merge commit that would resolve it
+  - Kite Tower's intersection pass, 26 files and about 500 KB, timed out publishing through the MCP and left partial batches on its branch
 tags: [agent-delivery, github-mcp, push-files, cloud-vm, ci, merge-conflicts, git-bundle, kids-games]
 ---
 
@@ -39,6 +41,8 @@ The MCP's `push_files` takes a branch, a commit message, and a list of files wit
 The Mac mini setup in [agent delivery](agent-delivery-push-branches-and-keep-secrets-out.md) is the other way round: `git push` works there, and the PR tool is what points at the wrong repository. Its PR hand-off and secrets rules apply here unchanged.
 
 ## Guidance
+
+Choose the route first. The MCP suits a branch whose changed files total under about 150 KB. Over that, or once an MCP publish has been slow or has failed, hand off a bundle to a machine that can `git push` (steps 11 to 14). Kite Tower's intersection pass changed 26 files, about 500 KB, and publishing it through the MCP timed out (`internal/jam-intersections/steer-06-bundle-instead-of-mcp.md` in the Project store). Kite Tower, Critter Clay and Pebble Table then went as bundles.
 
 ### Publishing
 
@@ -81,6 +85,30 @@ git bundle create <Project store>/internal/jam-10-games/bundles/<key>.bundle ori
 A bundle made this way needs only commits that are on `main`, so it fetches onto any clone: `git fetch <bundle> HEAD:refs/heads/<branch>`.
 
 10. Open the PR with `create_pull_request` only when the brief says to. Otherwise hand the description to the coordinator, as [agent delivery](agent-delivery-push-branches-and-keep-secrets-out.md) describes. Leave the base, draft state, and merge to the coordinator.
+
+### Handing off a bundle instead
+
+11. On the VM, rebase onto the latest `main` and run the checks on that tree: `npm run check`, `npm run build && npm run egress:built`, and the game's `--ci` audit. Then write and verify the bundle, and record both ends:
+
+```bash
+git bundle create <Project store>/internal/jam-intersections/bundles/<key>.bundle origin/main..HEAD
+git bundle verify <Project store>/internal/jam-intersections/bundles/<key>.bundle
+git rev-parse HEAD origin/main
+```
+
+12. Save the PR body beside it (`internal/jam-intersections/pr-bodies/<key>.md`, title on the first line after the frontmatter), and stop. The report gives the bundle path, the head and base SHAs, the branch name and the body path. The hand-off list is the Project store's `internal/jam-intersections/bundle-handoff.md`.
+
+13. On the machine that pushes, prove the bundle on a fresh clone of `main` before pushing it. Fetch it, check it lands on the recorded head, and trial-merge it with the current `main`, and with any other bundle waiting to land:
+
+```bash
+git fetch <bundle> HEAD:refs/heads/<branch>
+git rev-parse <branch>                                   # the recorded head
+git merge-tree --write-tree origin/main <branch> >/dev/null && echo "merges cleanly"
+```
+
+The coordinator checked Pebble Table's bundle on a fresh clone: it fetched to its recorded head and merged cleanly with `main`, and together with Critter Clay's. If a timed-out MCP publish left partial batches on the branch's name, do not push on top of them. Either replace them with `git push --force-with-lease=<branch>:<partial head> origin <head>:refs/heads/<branch>`, or push to a fresh name and delete the partial branch. Kite Tower's landed on `cursor/kite-tower-intersections-bundle`, and its partial `cursor/kite-tower-intersections-2526` is gone from the remote.
+
+14. Judge CI on the pushed head, exactly as for an MCP branch (step 7): CI runs on the push. Kite Tower's and Critter Clay's bundle branches were green on their pushed heads and were merged into `main` as merge commits, "Merge cursor/kite-tower-intersections-bundle" and "Merge cursor/critter-clay-intersections-bundle", with no PR, so cite them by those titles. Pebble Table's bundle branch failed `Intersection audit (3/4)` on its pushed head (run 36038821759), so it stayed off `main` while that was fixed. A green run on the VM is not the gate.
 
 ## Why This Matters
 
