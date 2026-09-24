@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BURROW, GRASS, groundY, HILL, onGrass, onPouch, PLOT_RADIUS, plotAt, PLOTS, plotTop, POUCH, POUCH_RADIUS, POUCH_SLOTS, restingSpot, SEED_RADIUS, SNAIL_PATH, type Point } from './layout'
+import { BURROW, BURROW_HOLE, GRASS, groundY, HILL, onGrass, onPouch, PLOT_RADIUS, plotAt, PLOTS, plotTop, POUCH, POUCH_RADIUS, POUCH_SLOTS, restingSpot, SEED_RADIUS, SNAIL_PATH, type Point } from './layout'
 
 describe('hillside layout', () => {
   it('puts every molehill, the pouch, the snail path, and the burrow on the open grass', () => {
@@ -32,14 +32,16 @@ describe('hillside layout', () => {
     expect(plotAt(PLOTS[0].x + PLOT_RADIUS + 2, PLOTS[0].z, 3)).toBe(0)
   })
 
-  it('rests seeds on free grass, never on a molehill, the pouch, or another seed', () => {
+  it('rests seeds on free grass, never on a molehill, the pouch, the burrow, or another seed', () => {
     const taken: Point[] = []
-    const asks: Point[] = [...PLOTS, POUCH, { x: 500, z: -500 }, { x: 0, z: 20 }, { x: 0, z: 20 }, { x: 0, z: 20 }, { x: 0, z: 20 }]
+    const burrow: Point[] = [BURROW, { x: BURROW.x + 3, z: BURROW.z - 2 }, { x: BURROW.x - 6, z: BURROW.z + 4 }]
+    const asks: Point[] = [...PLOTS, POUCH, ...burrow, { x: 500, z: -500 }, { x: 0, z: 20 }, { x: 0, z: 20 }, { x: 0, z: 20 }, { x: 0, z: 20 }]
     for (const ask of asks) {
       const spot = restingSpot(ask.x, ask.z, taken, { x: 0, z: 0 })
       expect(onGrass(spot.x, spot.z)).toBe(true)
       expect(plotAt(spot.x, spot.z, SEED_RADIUS)).toBe(-1)
       expect(Math.hypot(spot.x - POUCH.x, spot.z - POUCH.z)).toBeGreaterThan(POUCH_RADIUS)
+      expect(Math.hypot(spot.x - BURROW.x, spot.z - BURROW.z)).toBeGreaterThan(BURROW_HOLE.ring + BURROW_HOLE.tube + SEED_RADIUS)
       for (const other of taken) expect(Math.hypot(spot.x - other.x, spot.z - other.z)).toBeGreaterThanOrEqual(SEED_RADIUS * 2)
       taken.push({ ...spot })
     }
