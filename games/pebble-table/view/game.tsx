@@ -9,13 +9,16 @@ import { STOOL_REACH } from '../partShape'
 import { feedingFloor, RUG, surfaceUnder } from '../surfaces'
 import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
 import { visitorHome } from '../visitors'
-import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type StoneState } from './models'
+import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, STONE_COVER, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type StoneState } from './models'
 import { guestFloor } from './guest'
 import { GrownUpOverlay } from './overlay'
 import { ProjectorBridge, Stage, type ProjectorHandle } from './stage'
 
 // Binds the game controller to the clay models: the controller steps inside
 // the render loop, and every model reads its pose from the controller.
+
+/** A stone lies on what is under it while its middle is less than this (cm) above its resting height. */
+const STONE_LYING = 0.5
 
 function stoneStates(table: TableController): StoneState[] {
   const states: StoneState[] = []
@@ -90,7 +93,7 @@ function shadows(table: TableController): Blob[] {
     const ground = stone.id > 0 ? groundUnder(table, at) : 0
     const height = Math.max(0, stone.position.y - ground - stoneRest(stone.q))
     const r = stoneRadius3(stone.q)
-    blobs.push({ at, ground, radius: r * (1.12 + height * 0.07), strength: 0.95 / (1 + height * 0.2), stretch: 0.5 + height })
+    blobs.push({ at, ground, radius: r * (1.12 + height * 0.07), strength: 0.95 / (1 + height * 0.2), stretch: 0.5 + height, cover: height < STONE_LYING ? r * STONE_COVER : 0 })
   }
   blobs.push({ at: { x: BAG.x + 25, y: BAG.y - 20 }, ground: 0, radius: 12, strength: 0.5, stretch: 3 })
   if (table.state.liveMat === 'door') {
@@ -130,7 +133,7 @@ function glows(table: TableController): Blob[] {
   const blobs: Blob[] = []
   for (const piece of table.state.pieces) {
     const strength = Math.max(table.pulse(piece.id) * 0.7, g.glowStones.has(piece.id) ? g.glow : 0)
-    if (strength > 0.01) blobs.push({ at: piece, ground: groundUnder(table, piece), radius: stoneRadius3(4) * (1.75 + 0.15 * Math.sin(table.t * 3)), strength: Math.min(1, strength * 1.1) })
+    if (strength > 0.01) blobs.push({ at: piece, ground: groundUnder(table, piece), radius: stoneRadius3(4) * (1.75 + 0.15 * Math.sin(table.t * 3)), strength: Math.min(1, strength * 1.1), cover: table.isHeld(piece.id) ? 0 : stoneRadius3(piece.q) * STONE_COVER })
   }
   if (g.glowBag && g.glow > 0) blobs.push({ at: { x: BAG.x + 20, y: BAG.y - 15 }, ground: 0, radius: 14, strength: g.glow * 0.8 })
   if (g.glowKnife && g.glow > 0) blobs.push({ at: table.knife.at, ground: groundUnder(table, table.knife.at), radius: 7 + 0.5 * Math.sin(table.t * 3), strength: g.glow })
