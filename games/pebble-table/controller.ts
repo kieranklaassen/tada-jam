@@ -3,7 +3,8 @@ import { freeSpotOnPlate, GUEST_RADIUS, gazeTarget, inBowl, nextSeat, plateOf, v
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
 import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
-import { HOLD_HEIGHT, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
+import { GRAVITY, HOLD_HEIGHT, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
+import { JAR_REACH, partDepth } from './partShape'
 import { stoneRest } from './stoneShape'
 import { surfaceUnder } from './surfaces'
 import { SaveCadence } from './saveCadence'
@@ -12,7 +13,7 @@ import { cutPiece, placeFromBag, pullFromBag, returnToBag, serialize, swapMat, t
 import { chunk, clusterPieces, groupsFor, schedule } from './voice'
 import { SEAT_SPECIES } from './motion'
 import { keepPage, pageOf, turnPage } from './album'
-import { inJar, jarAt, JARS, PART_RADIUS, PART_WEIGHT, spillFrom, type Part, type PartKind } from './parts'
+import { inJar, JAR_SCALE, jarAt, JARS, PART_KINDS, PART_RADIUS, PART_WEIGHT, POUR_GAP, spillFrom, type Part, type PartKind } from './parts'
 
 // The table while it is on screen: game rules, real physics, touch, sound,
 // saving, and guidance. It knows nothing about rendering; the 3D view reads
@@ -117,6 +118,19 @@ type PendingVoice = { groups: () => number[][]; deadline: number }
 const HIT_SLOP_PX = 14
 const MUNCH_DELAY = 0.9
 const BAG_TOP = 11
+/** Room (cm) a poured part keeps from its jar's pot, for the little it turns in flight. */
+const POUR_ROOM = 1.5
+
+/**
+ * How fast (cm/s) a part thrown sideways out of its jar's mouth at `speed`,
+ * turned side-on to the throw, must also rise to arc clear of the pot before
+ * it falls back to the mouth: an open jar's collider is the pot out to its
+ * widest, up to the mouth. Damping slows it in flight, so throws rise a
+ * fifth faster than this or more.
+ */
+function pourLift(kind: PartKind, speed: number): number {
+  return (-GRAVITY * (JAR_REACH * JAR_SCALE + partDepth(kind) + POUR_ROOM)) / (2 * speed)
+}
 
 export class TableController {
   readonly state: TableState
@@ -167,6 +181,8 @@ export class TableController {
   private story: Story | null = null
   /** When each jar was last tipped or touched, for its wobble. */
   readonly jarTips = new Map<PartKind, number>()
+  /** Parts tipped out of a jar that have not yet left its mouth. */
+  private pouring: { id: number; kind: PartKind; at: Point; y: number; velocity: Vec3; spin: number; yaw: number; due: number }[] = []
   /** When a page was last kept or turned, for the album's hop. */
   albumAt: number | null = null
   private restoring = false
@@ -244,6 +260,7 @@ export class TableController {
       const at = screen && this.projector?.toPlane(screen, 1.5)
       if (at) this.physics.setBroom(pointerId, at)
     }
+    this.pour()
     if (this.state.liveMat === 'scale') {
       this.beam = stepBeam(this.beam, targetTilt(this.panLoad()), dt)
       this.physics.setPanDrops(panDrops(this.beam.angle))
@@ -643,19 +660,32 @@ export class TableController {
     }
     this.sound.rustle()
     for (let i = 0; i < count; i++) {
-      const { at, direction } = spillFrom(kind, i, count)
+      const { at, y, direction } = spillFrom(kind, i, count)
       const part = this.newPart(kind, at)
       const speed = kind === 'boulder' ? 45 : 60 + Math.random() * 30
-      this.physics.addPart(part.id, kind, at, { y: 5 + i * 1.5, velocity: { x: direction.x * speed, y: 18 + Math.random() * 12, z: direction.y * speed }, spin: (Math.random() - 0.5) * 8 })
+      const lift = kind === 'boulder' ? 18 + Math.random() * 12 : pourLift(kind, speed) * (1.2 + Math.random() * 0.2)
+      const velocity = { x: direction.x * speed, y: lift, z: direction.y * speed }
+      this.pouring.push({ id: part.id, kind, at, y, velocity, spin: Math.random() - 0.5, yaw: Math.atan2(direction.x, direction.y), due: this.t + i * POUR_GAP })
     }
+    this.syncJars()
+    this.pour()
     this.changed()
     this.cadence.change(performance.now(), true)
+  }
+
+  /** Parts come out of a tipped jar's mouth when their turn comes, if they are still out (a mat change sends them home first). */
+  private pour(): void {
+    const due = this.pouring.filter((item) => item.due <= this.t)
+    if (due.length === 0) return
+    this.pouring = this.pouring.filter((item) => item.due > this.t)
+    for (const { id, kind, at, y, velocity, spin, yaw } of due) if (this.partById(id)) this.physics.addPart(id, kind, at, { y, velocity, spin, yaw })
   }
 
   private pullFromJar(kind: PartKind, at: Point): Part | null {
     if (inJar(this.state.parts, kind) === 0) return null
     this.jarTips.set(kind, this.t)
     const part = this.newPart(kind, at)
+    this.syncJars()
     this.physics.addPart(part.id, kind, at, { y: HOLD_HEIGHT })
     this.physics.hold(part.id)
     this.sound.touch(1.1)
@@ -670,6 +700,7 @@ export class TableController {
     if (!part) return
     this.physics.removeStone(id)
     this.state.parts = this.state.parts.filter((p) => p.id !== id)
+    this.syncJars()
     this.jarTips.set(part.kind, this.t)
     this.sound.clatter(1)
     this.changed()
@@ -868,7 +899,13 @@ export class TableController {
 
   private enterMat(): void {
     this.physics.setMat(this.state.liveMat)
+    this.syncJars()
     this.syncGuests()
+  }
+
+  /** Empty jars stand with their lids off, the rest with them on. */
+  private syncJars(): void {
+    for (const kind of PART_KINDS) this.physics.setJarOpen(kind, inJar(this.state.parts, kind) === 0)
   }
 
   private syncGuests(): void {
@@ -1344,6 +1381,7 @@ export class TableController {
     this.guestDrag = null
     this.resetDoor()
     swapMat(this.state, mat)
+    this.pouring = []
     for (const id of this.physics.stoneIds()) this.physics.removeStone(id)
     this.beam = restingBeam()
     this.enterMat()

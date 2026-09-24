@@ -3,7 +3,26 @@ import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode }
 import * as THREE from 'three'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
-import { createClayMaterials, merge, PALETTE, piece, type ClayMaterials, type Hold } from './clay'
+import { createClayMaterials, merge, paint, PALETTE, piece, type ClayMaterials, type Hold } from './clay'
+import {
+  JAR,
+  JAR_LID_CLOSED,
+  JAR_LIFT,
+  JAR_WOBBLE,
+  jarBody,
+  jarLidOpen,
+  labelTurn,
+  NEST,
+  NEST_LIFT,
+  nestBed,
+  nestRing,
+  PART_DRAW_SCALE,
+  PART_PIECES,
+  partPieceVertices,
+  shellRib,
+  sphereGrid,
+  type Lumped,
+} from '../partShape'
 import { BOWL_PROFILE, BOWL_SCALE, DISH_PROFILE, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y } from '../surfaces'
 import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
 import { useQuality } from './quality'
@@ -1092,62 +1111,62 @@ export function AlbumModel({ read }: { read: () => { pages: readonly AlbumPage[]
 
 // --- loose parts and their jars ---------------------------------------------------
 
-const PARTS = { nut: '#a8703d', cap: '#6e4a2c', shell: '#f4d3c0', rib: '#e3a98f', bark: '#7a5238', twig: '#8f6644', rock: '#8d8176' }
-/** Part meshes are modelled small; drawn at this size they match their colliders. */
-const PART_DRAW_SCALE = 1.45
+const PART_COLORS = {
+  acorn: { nut: '#a8703d', cap: '#6e4a2c', stem: '#6e4a2c' },
+  shell: { body: '#f4d3c0' },
+  stick: { bark: '#7a5238', twig: '#8f6644' },
+  boulder: { rock: '#8d8176' },
+} as const satisfies { [K in PartKind]: Record<keyof (typeof PART_PIECES)[K], string> }
+const SHELL_RIB = '#e3a98f'
 const JAR_COLORS: Record<PartKind, string> = { acorn: '#d9a441', shell: '#5f9fb8', stick: '#5d8a5a', boulder: '#d8b36a' }
+const JAR_LID = '#fbe7cf'
+const NEST_BED = '#c9a45c'
 
+/** A part at its drawn size, from the same vertices its collider is fitted to (partShape.ts). */
 function partGeometry(kind: PartKind): THREE.BufferGeometry {
-  const sphere = geo.sphere(16)
-  switch (kind) {
-    case 'acorn':
-      return merge([
-        piece(sphere, PARTS.nut, { position: [0, -0.15, 0], scale: [0.85, 1.0, 0.85] }, { lump: 0.06, ground: null }),
-        piece(sphere, PARTS.cap, { position: [0, 0.45, 0], scale: [0.98, 0.5, 0.98] }, { lump: 0.1, ground: null }),
-        piece(geo.capsule(6), PARTS.cap, { position: [0, 0.95, 0], scale: [0.14, 0.35, 0.14] }, { ground: null }),
-      ])
-    case 'shell':
-      return merge([
-        piece(sphere, PARTS.shell, { scale: [1.35, 0.32, 1.15] }, { lump: 0.05, ground: null }),
-        ...[-0.5, 0, 0.5].map((angle) => piece(geo.capsule(6), PARTS.rib, { position: [Math.sin(angle) * 0.55, 0.22, Math.cos(angle) * 0.35], rotation: [Math.PI / 2, angle, 0], scale: [0.12, 1.2, 0.12] }, { ground: null })),
-      ])
-    case 'stick':
-      return merge([
-        piece(geo.capsule(8), PARTS.bark, { rotation: [0, 0, Math.PI / 2], scale: [0.62, 5, 0.62] }, { lump: 0.1, frequency: 1.2, ground: null }),
-        piece(geo.capsule(6), PARTS.twig, { position: [0.8, 0.35, 0.4], rotation: [0.6, 0, 0.9], scale: [0.3, 1.4, 0.3] }, { ground: null }),
-      ])
-    case 'boulder':
-      return merge([piece(sphere, PARTS.rock, { scale: [3.3, 1.9, 3.1] }, { lump: 0.35, frequency: 0.8, seed: 41, ground: null })])
-    default: {
-      const unknown: never = kind
-      return unknown
-    }
+  const pieces: Record<string, Lumped> = PART_PIECES[kind]
+  const colors: Record<string, string> = PART_COLORS[kind]
+  return merge(
+    Object.entries(pieces).map(([name, p]) => {
+      const g = paint(geo.fromGrid(partPieceVertices(kind, name), p.segments, p.rings), colors[name], null)
+      if (kind === 'shell') ribbed(g, sphereGrid(p.segments, p.rings))
+      return g
+    }),
+  )
+}
+
+/** A shell's pressed ribs take a deeper colour than its back. */
+function ribbed(geometry: THREE.BufferGeometry, normals: Float32Array): void {
+  const color = geometry.attributes.color
+  const rib = new THREE.Color(SHELL_RIB)
+  for (let i = 0; i < color.count; i++) {
+    const k = shellRib(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2])
+    color.setXYZ(i, THREE.MathUtils.lerp(color.getX(i), rib.r, k), THREE.MathUtils.lerp(color.getY(i), rib.g, k), THREE.MathUtils.lerp(color.getZ(i), rib.b, k))
   }
 }
 
-function jarGeometry(kind: PartKind): { body: THREE.BufferGeometry; lid: THREE.BufferGeometry } {
-  const sphere = geo.sphere(24)
+function jarGeometry(kind: PartKind): { body: THREE.BufferGeometry; lid: THREE.BufferGeometry | null } {
   const color = JAR_COLORS[kind]
   if (kind === 'boulder') {
+    const { ring, bed } = NEST
     return {
-      body: merge([
-        piece(geo.torus(28, 0.35), color, { position: [0, 0.9, 0], rotation: [Math.PI / 2, 0, 0], scale: 4.6 }, { lump: 0.3, frequency: 1.4, seed: 44 }),
-        piece(sphere, '#c9a45c', { position: [0, 0.3, 0], scale: [4.4, 0.5, 4.4] }, { lump: 0.2, frequency: 1.2 }),
-      ]),
-      lid: merge([piece(sphere, color, { scale: 0.01 }, { ground: null })]),
+      body: merge([paint(geo.fromRing(nestRing(), ring.tube, ring.radial, ring.tubular), color, -NEST_LIFT), paint(geo.fromGrid(nestBed(), bed.segments, bed.rings), NEST_BED, -NEST_LIFT)]),
+      lid: null,
     }
   }
-  const label = partGeometry(kind)
-  const labelPiece = label.clone().applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(0, 4.2, 3.4), new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2 - 0.3, 0, kind === 'stick' ? 0.4 : 0)), new THREE.Vector3(0.8, 0.8, 0.8)))
+  const { body, neck, lid, label } = JAR
+  const labelPiece = partGeometry(kind).applyMatrix4(
+    new THREE.Matrix4().compose(new THREE.Vector3(...label.position), new THREE.Quaternion().setFromEuler(new THREE.Euler(...labelTurn(kind))), new THREE.Vector3().setScalar(label.scale / PART_DRAW_SCALE)),
+  )
   return {
     body: merge([
-      piece(sphere, color, { position: [0, 3.8, 0], scale: [3.6, 3.9, 3.6] }, { lump: 0.18, frequency: 0.6, seed: 45 }),
-      piece(geo.cylinder(20), color, { position: [0, 7.6, 0], scale: [2.3, 1.2, 2.3] }, { lump: 0.08, ground: null }),
+      paint(geo.fromGrid(jarBody(), body.segments, body.rings), color, -JAR_LIFT),
+      piece(geo.cylinder(20), color, { position: [0, neck.y, 0], scale: [neck.radius, neck.height, neck.radius] }, { lump: neck.lump, ground: null }),
       labelPiece,
     ]),
     lid: merge([
-      piece(geo.cylinder(20), '#fbe7cf', { scale: [2.7, 0.6, 2.7] }, { lump: 0.08, ground: null }),
-      piece(sphere, '#fbe7cf', { position: [0, 0.6, 0], scale: 0.7 }, { ground: null }),
+      piece(geo.cylinder(20), JAR_LID, { scale: [lid.radius, lid.height, lid.radius] }, { lump: lid.lump, ground: null }),
+      piece(geo.sphere(24), JAR_LID, { position: [0, lid.height, 0], scale: lid.knob }, { ground: null }),
     ]),
   }
 }
@@ -1169,7 +1188,7 @@ export function PartsModel({ read }: { read: () => PartState[] }) {
       const instanced = refs[slot].current
       if (!instanced) continue
       scratch.q.set(...part.quaternion)
-      const grow = (part.held ? 1.12 : 1) * PART_DRAW_SCALE
+      const grow = part.held ? 1.12 : 1
       scratch.m.compose(scratch.p.set(part.position.x, part.position.y, part.position.z), scratch.q, scratch.s.set(grow, grow, grow))
       instanced.setMatrixAt(counts[slot]++, scratch.m)
     }
@@ -1188,12 +1207,21 @@ export function PartsModel({ read }: { read: () => PartState[] }) {
   )
 }
 
-/** The jars on the scale mat's back row: each wobbles when tipped or when a part comes home, and its lid lies open once it is empty. */
+/** How much the nest squashes at the height of its wobble: tipped like a jar, its wide ring would dip into the table. */
+const NEST_SQUASH = 0.06
+
+/**
+ * The jars on the scale mat's back row: each wobbles about where it stands
+ * when tipped or when a part comes home, and once it is empty its lid stands
+ * on edge against it. The nest squashes instead.
+ */
 export function JarsModel({ read }: { read: () => { tips: ReadonlyMap<PartKind, number>; full: Record<PartKind, number>; glow: number; now: number } }) {
   const { clay } = useClay()
   const shapes = PART_KINDS.map(jarShapes)
   const refs = [useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
-  const lids = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
+  const closedLids = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
+  const openLids = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
+  const openAt = useMemo(() => PART_KINDS.map((kind) => (kind === 'boulder' ? null : jarLidOpen(kind))), [])
   const wobble = useRef(PART_KINDS.map(() => ({ x: 0, v: 0 }) as Spring))
   const seen = useRef(new Map<PartKind, number>())
   useFrame((_, dt) => {
@@ -1204,31 +1232,42 @@ export function JarsModel({ read }: { read: () => { tips: ReadonlyMap<PartKind, 
         wobble.current[i].v += 7
         seen.current.set(kind, tipped)
       }
-      const w = springStep(wobble.current[i], 0, dt, 70, 5)
+      const w = THREE.MathUtils.clamp(springStep(wobble.current[i], 0, dt, 70, 5), -1, 1)
       const group = refs[i].current
       if (group) {
         const hop = pose.full[kind] > 0 ? pose.glow * Math.max(0, Math.sin(pose.now * 3 + i)) * 0.6 : 0
-        group.rotation.set(w * 0.05, 0, w * 0.08)
+        if (kind === 'boulder') group.scale.set(1, 1 - Math.abs(w) * NEST_SQUASH, 1)
+        else group.rotation.set(w * JAR_WOBBLE[0], w * JAR_WOBBLE[1], w * JAR_WOBBLE[2])
         group.position.y = hop
       }
-      const lid = lids[i].current
-      if (lid) {
-        const open = pose.full[kind] === 0
-        lid.position.set(open ? 4.2 : 0, open ? 0.4 : 8.4 + Math.abs(w) * 0.05, open ? 1.5 : 0)
-        lid.rotation.set(open ? 0.3 : 0, 0, open ? 1.3 : 0)
+      const open = pose.full[kind] === 0
+      const closed = closedLids[i].current
+      if (closed) {
+        closed.visible = !open
+        closed.position.y = JAR_LID_CLOSED + Math.abs(w) * 0.05
       }
+      const lying = openLids[i].current
+      if (lying) lying.visible = open
     })
   })
   return (
     <>
       {PART_KINDS.map((kind, i) => {
         const at = to3(JARS[kind])
+        const lift = kind === 'boulder' ? NEST_LIFT : JAR_LIFT
+        const lid = shapes[i].lid
+        const leaning = openAt[i]
         return (
           <group key={kind} position={[at.x, 0, at.z]} scale={JAR_SCALE} userData={{ jamObject: `jar-${kind}` }}>
             <group ref={refs[i]}>
-              <mesh name={kind === 'boulder' ? 'boulder-nest' : `jar-${kind}`} geometry={shapes[i].body} material={clay} />
+              <group position-y={lift}>
+                <mesh name={kind === 'boulder' ? 'boulder-nest' : `jar-${kind}`} geometry={shapes[i].body} material={clay} />
+                {lid && <mesh name={`jar-lid-${kind}`} ref={closedLids[i]} geometry={lid} material={clay} />}
+              </group>
             </group>
-            {kind !== 'boulder' && <mesh name={`jar-lid-${kind}`} ref={lids[i]} geometry={shapes[i].lid} material={clay} />}
+            {lid && leaning && (
+              <mesh name={`jar-lid-open-${kind}`} ref={openLids[i]} geometry={lid} material={clay} visible={false} position={[leaning.position[0], leaning.position[1] + lift, leaning.position[2]]} rotation={leaning.rotation} />
+            )}
           </group>
         )
       })}

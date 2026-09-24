@@ -1,6 +1,7 @@
 import * as CANNON from 'cannon-es'
-import { JARS, type PartKind } from './parts'
+import { JAR_SCALE, JARS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
+import { JAR_LIFT, JAR_MOUTH, JAR_REACH, JAR_TOP, jarLabelBox, NEST_SPAN, partCollider, partRest } from './partShape'
 import { outlineCorners, STONE_CUTS, stoneOutline, stoneRest } from './stoneShape'
 import { BOWL_FLOOR, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, PAN_DEPTH, PAN_FLOOR, PAN_RIM, PLATE_TOP, RUG, type Surfaces } from './surfaces'
 
@@ -35,13 +36,16 @@ const SLAB = 4
 /** A loose part slower than this (units/s, spin included) for `LOOSE_CALM_SECONDS` is put to sleep: parts in a pile can nudge each other just above cannon's own sleep limit for a long time. */
 const LOOSE_CALM_SPEED = 4
 const LOOSE_CALM_SECONDS = 1
-/** Radius of the small balls that shells and sticks collide as: thin convex shapes stacked on each other jitter without end in cannon, clusters of balls settle. */
-const SHELL_BALL = 0.55
-const STICK_BALL = 0.45
-const SHELL_BALLS = [...[0, 1, 2].map((i) => new CANNON.Vec3(Math.cos((i * 2 * Math.PI) / 3) * 1.25, 0, Math.sin((i * 2 * Math.PI) / 3) * 1.25)), new CANNON.Vec3(0, 0, 0)]
-const STICK_BALLS = [-2, -1, 0, 1, 2].map((i) => new CANNON.Vec3(i * 1.6, 0, 0))
-
-type PartShape = { shapes: [CANNON.Shape, CANNON.Vec3?][]; mass: number; half: number; damping: number }
+/** A loose part's sleep speed: cannon wakes a sleeping body when a neighbour moves faster than √2 times the neighbour's own, so only a part faster than `LOOSE_CALM_SPEED` wakes the pile it rests in. */
+const PART_SLEEP_SPEED = LOOSE_CALM_SPEED / Math.SQRT2
+const PART_BODY: Record<PartKind, { mass: number; damping: number }> = {
+  acorn: { mass: 2, damping: 0.4 },
+  shell: { mass: 1, damping: 0.5 },
+  stick: { mass: 4, damping: 0.45 },
+  boulder: { mass: 12, damping: 0.65 },
+}
+/** The jars with lids; the boulder's nest is open. */
+const LIDDED_JARS = ['acorn', 'shell', 'stick'] as const
 
 export type Vec3 = { x: number; y: number; z: number }
 
@@ -101,6 +105,7 @@ export class TablePhysics {
   private readonly stoneMaterial = new CANNON.Material('stone')
   private readonly woodMaterial = new CANNON.Material('wood')
   private readonly fixtures = new Map<string, CANNON.Body>()
+  private readonly openJars = new Set<PartKind>()
   private readonly pans: CANNON.Body[] = []
   private readonly brooms = new Map<number, CANNON.Body>()
   private panDrops: [number, number] = [0, 0]
@@ -200,7 +205,8 @@ export class TablePhysics {
     this.removeFixture('rug')
     this.removeFixture('post')
     this.removeFixture('house')
-    for (const kind of ['acorn', 'shell', 'stick'] as const) this.removeFixture(`jar-${kind}`)
+    for (const kind of LIDDED_JARS) this.removeFixture(`jar-${kind}`)
+    this.removeFixture('nest')
     if (mat === 'door') {
       this.setFixture('house', { ...DOOR.house, r: 130 * DOOR.houseScale }, 34)
       return
@@ -221,8 +227,48 @@ export class TablePhysics {
       this.pans.push(body)
     }
     this.setFixture('post', { ...SCALE.post, r: 18 }, 30)
-    for (const kind of ['acorn', 'shell', 'stick'] as const) this.setFixture(`jar-${kind}`, { ...JARS[kind], r: 48 }, 16)
+    for (const kind of LIDDED_JARS) this.addJar(kind)
+    this.addNest()
     this.panDrops = [0, 0]
+  }
+
+  /**
+   * A jar stands as wide as its pot and as tall as its lid, or only as tall
+   * as its mouth once it is empty and its lid is off; its label stands out
+   * of the pot's front as a box.
+   */
+  private addJar(kind: (typeof LIDDED_JARS)[number]): void {
+    const key = `jar-${kind}`
+    this.setFixture(key, { ...JARS[kind], r: (JAR_REACH * JAR_SCALE) / UNIT }, (this.openJars.has(kind) ? JAR_MOUTH : JAR_TOP) * JAR_SCALE)
+    const body = this.fixtures.get(key)!
+    const label = jarLabelBox(kind)
+    const [x, y, z] = label.center
+    const turn = new CANNON.Quaternion().setFromEuler(...label.rotation, 'XYZ')
+    body.addShape(
+      new CANNON.Box(new CANNON.Vec3(...label.half.map((h) => h * JAR_SCALE))),
+      new CANNON.Vec3(x * JAR_SCALE, (y + JAR_LIFT) * JAR_SCALE - body.position.y, z * JAR_SCALE),
+      turn,
+    )
+  }
+
+  /** An empty jar's lid comes off, so parts can pour out over its mouth; one with parts in it has its lid on. */
+  setJarOpen(kind: PartKind, open: boolean): void {
+    if (kind === 'boulder' || open === this.openJars.has(kind)) return
+    if (open) this.openJars.add(kind)
+    else this.openJars.delete(kind)
+    if (this.fixtures.has(`jar-${kind}`)) this.addJar(kind)
+  }
+
+  /** The boulder's nest: a soft bed inside a ring of twigs, solid as drawn, so nothing rolls through it. */
+  private addNest(): void {
+    const nest = new CANNON.Body({ mass: 0, material: this.woodMaterial })
+    const at = to3(JARS.boulder)
+    nest.position.set(at.x, 0, at.z)
+    const [inner, outer] = [NEST_SPAN.inner * JAR_SCALE, NEST_SPAN.outer * JAR_SCALE]
+    this.disc(nest, inner, -SLAB, NEST_SPAN.bed * JAR_SCALE)
+    this.wall(nest, [[inner, 0], [inner, NEST_SPAN.top * JAR_SCALE]], outer - inner * Math.cos(Math.PI / BOWL_SEGMENTS))
+    this.world.addBody(nest)
+    this.fixtures.set('nest', nest)
   }
 
   /** A seated guest's plate is solid at its drawn top; an empty seat has no plate. */
@@ -265,12 +311,14 @@ export class TablePhysics {
     return this.panY(side) + PAN_FLOOR
   }
 
+  /** A round thing standing on the table: its collider's faces (not its corners) lie on the circle, so nothing resting against it reaches into what is drawn there. */
   setFixture(key: string, circle: Circle, height = 12): void {
     this.removeFixture(key)
     const body = new CANNON.Body({ mass: 0, material: this.woodMaterial })
     const at = to3(circle)
+    const corner = (circle.r * UNIT) / Math.cos(Math.PI / FIXTURE_SIDES)
     body.position.set(at.x, height / 2, at.z)
-    body.addShape(new CANNON.Cylinder(circle.r * UNIT, circle.r * UNIT, height, FIXTURE_SIDES))
+    body.addShape(new CANNON.Cylinder(corner, corner, height, FIXTURE_SIDES))
     this.world.addBody(body)
     this.fixtures.set(key, body)
   }
@@ -312,28 +360,19 @@ export class TablePhysics {
   }
 
   /** A loose part (acorn, shell, stick, boulder) with its own shape and weight; it moves, holds, and falls like a stone. */
-  addPart(id: number, kind: PartKind, at: Point, options: { y?: number; velocity?: Vec3; spin?: number } = {}): void {
+  addPart(id: number, kind: PartKind, at: Point, options: { y?: number; velocity?: Vec3; spin?: number; yaw?: number } = {}): void {
     this.removeStone(id)
-    const shape: PartShape = (() => {
-      switch (kind) {
-        case 'acorn':
-          return { shapes: [[new CANNON.Cylinder(1.3, 1.3, 1.9, STONE_SIDES)]], mass: 2, half: 0.95, damping: 0.4 }
-        case 'shell':
-          return { shapes: SHELL_BALLS.map((offset) => [new CANNON.Sphere(SHELL_BALL), offset]), mass: 1, half: SHELL_BALL, damping: 0.5 }
-        case 'stick':
-          return { shapes: STICK_BALLS.map((offset) => [new CANNON.Sphere(STICK_BALL), offset]), mass: 4, half: STICK_BALL, damping: 0.45 }
-        case 'boulder':
-          return { shapes: [[new CANNON.Cylinder(3.7, 3.7, 3.4, STONE_SIDES)]], mass: 12, half: 1.7, damping: 0.65 }
-        default: {
-          const unknown: never = kind
-          return unknown
-        }
-      }
-    })()
-    const body = new CANNON.Body({ mass: shape.mass, material: this.stoneMaterial, linearDamping: shape.damping, angularDamping: 0.9, sleepSpeedLimit: 2, sleepTimeLimit: 0.3 })
-    for (const [collider, offset] of shape.shapes) body.addShape(collider, offset)
-    const p = to3(at, options.y ?? shape.half)
+    const { mass, damping } = PART_BODY[kind]
+    const body = new CANNON.Body({ mass, material: this.stoneMaterial, linearDamping: damping, angularDamping: 0.9, sleepSpeedLimit: PART_SLEEP_SPEED, sleepTimeLimit: 0.3 })
+    const collider = partCollider(kind)
+    if (collider.prism) {
+      const { shape, offset } = prism(outlineCorners(collider.prism.reach), collider.prism.bottom, collider.prism.top)
+      body.addShape(shape, offset)
+    }
+    for (const ball of collider.balls) body.addShape(new CANNON.Sphere(ball.r), new CANNON.Vec3(ball.x, ball.y, ball.z))
+    const p = to3(at, options.y ?? partRest(kind))
     body.position.set(p.x, p.y, p.z)
+    if (options.yaw) body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), options.yaw)
     if (options.velocity) body.velocity.set(options.velocity.x, options.velocity.y, options.velocity.z)
     if (options.spin) body.angularVelocity.set(0, options.spin, 0)
     body.addEventListener('collide', (event: { contact: CANNON.ContactEquation }) => {

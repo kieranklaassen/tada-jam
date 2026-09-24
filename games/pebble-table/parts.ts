@@ -1,4 +1,5 @@
-import { clampToTable, insideCircle, MAT_CENTER, type Circle, type Point } from './layout'
+import { clampToTable, insideCircle, MAT_CENTER, SCALE, TABLE, type Circle, type Point } from './layout'
+import { JAR_MOUTH, jarFootprint, NEST_SPAN, partReach, partRest } from './partShape'
 
 // Loose parts for the Honest Scale: jars of acorns, shells, and sticks, and
 // one big boulder. They differ in size and weight, so the scale can compare
@@ -43,14 +44,52 @@ export function jarAt(point: Point): PartKind | null {
   return PART_KINDS.find((kind) => insideCircle(point, JARS[kind])) ?? null
 }
 
-/** Where a spilled part starts and which way it is thrown: out of the jar mouth, toward the middle of the mat. */
-export function spillFrom(kind: PartKind, index: number, count: number): { at: Point; direction: Point } {
+/** Table units per centimetre, the unit part shapes are measured in. */
+const PER_CM = 10
+
+/** Parts leave a tipped jar one after another, this many seconds apart, so each is clear of the mouth before the next comes out. */
+export const POUR_GAP = 0.1
+
+/**
+ * Where a spilled part starts (and how high, in cm) and which way it is
+ * thrown, toward the middle of the mat: out of the jar's open mouth, above
+ * its pot, or for the boulder, rolled out beside its nest.
+ */
+export function spillFrom(kind: PartKind, index: number, count: number): { at: Point; y: number; direction: Point } {
   const jar = JARS[kind]
   const toward = { x: (MAT_CENTER.x - jar.x) * 0.4, y: MAT_CENTER.y + 150 - jar.y }
-  const length = Math.hypot(toward.x, toward.y) || 1
   const spread = (index / Math.max(1, count - 1) - 0.5) * 0.9
   const angle = Math.atan2(toward.y, toward.x) + spread
-  return { at: { x: jar.x + (toward.x / length) * 75, y: jar.y + (toward.y / length) * 75 }, direction: { x: Math.cos(angle), y: Math.sin(angle) } }
+  if (kind === 'boulder') return { ...boulderOut(Math.atan2(toward.y, toward.x)), y: partRest(kind) + 0.2 }
+  return { at: { x: jar.x, y: jar.y }, y: JAR_MOUTH * JAR_SCALE + partRest(kind) + 0.4, direction: { x: Math.cos(angle), y: Math.sin(angle) } }
+}
+
+/** Table units kept between the boulder and anything it rolls out beside. */
+const BOULDER_ROOM = 10
+
+/**
+ * The boulder rolls out of its nest straight away from it, on the side
+ * nearest `angle` (toward the mat's middle) where it lands clear of the
+ * scale's pans, the other jars and their lids, and the table's edge.
+ */
+function boulderOut(angle: number): { at: Point; direction: Point } {
+  const nest = JARS.boulder
+  const reach = partReach('boulder') * PER_CM
+  const out = NEST_SPAN.outer * JAR_SCALE * PER_CM + reach + BOULDER_ROOM
+  const clear = (p: Point) =>
+    SCALE.pans.every((pan) => Math.hypot(p.x - pan.x, p.y - pan.y) >= pan.r + reach + BOULDER_ROOM) &&
+    PART_KINDS.every((kind) => kind === 'boulder' || Math.hypot(p.x - JARS[kind].x, p.y - JARS[kind].y) >= jarFootprint(kind) * JAR_SCALE * PER_CM + reach + BOULDER_ROOM) &&
+    p.x - reach >= TABLE.x + BOULDER_ROOM &&
+    p.x + reach <= TABLE.x + TABLE.w - BOULDER_ROOM &&
+    p.y - reach >= TABLE.y + BOULDER_ROOM &&
+    p.y + reach <= TABLE.y + TABLE.h - BOULDER_ROOM
+  for (let step = 0; step <= 36; step++) {
+    const turn = Math.ceil(step / 2) * (step % 2 ? 1 : -1) * (Math.PI / 36)
+    const direction = { x: Math.cos(angle + turn), y: Math.sin(angle + turn) }
+    const at = { x: nest.x + direction.x * out, y: nest.y + direction.y * out }
+    if (clear(at)) return { at, direction }
+  }
+  throw new Error('parts: no room beside the nest for the boulder')
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
