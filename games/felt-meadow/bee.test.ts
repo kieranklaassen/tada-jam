@@ -22,6 +22,13 @@ function makeWorld(bloomed: number[], overrides: Partial<BeeWorld> = {}): BeeWor
       out.y = groundY(30, 12)
       out.z = 12
     },
+    berth: (plot, out) => {
+      if (!bloomed.includes(plot)) return -Infinity
+      out.x = PLOTS[plot].x
+      out.z = PLOTS[plot].z
+      out.y = groundY(PLOTS[plot].x, PLOTS[plot].z) + 16
+      return out.y + 2.2
+    },
     pointAt: -1,
     visitEvery: 2,
     ...overrides,

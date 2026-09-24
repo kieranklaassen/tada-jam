@@ -1,7 +1,7 @@
 import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GameList } from './GameList'
-import { findGame, games } from './games'
+import { findGame, games, showcases } from './games'
 import { JamShell } from './JamShell'
 import './harness.css'
 
@@ -23,7 +23,7 @@ function App() {
   if (game) {
     return <JamShell key={key} game={game} onExit={() => (window.location.hash = '')} />
   }
-  return <GameList games={games} onPick={(next) => (window.location.hash = `#/play/${next}`)} />
+  return <GameList games={games} showcases={showcases} onPick={(next) => (window.location.hash = `#/play/${next}`)} />
 }
 
 createRoot(document.getElementById('root')!).render(

@@ -321,7 +321,10 @@ export function crossings(a: Piece, b: Piece, limit = MAX_SEGMENTS): number[] {
         const d = Math.max(Math.abs(na.dot(v1.subVectors(t2.a, t1.a))), Math.abs(na.dot(v1.subVectors(t2.b, t1.a))), Math.abs(na.dot(v1.subVectors(t2.c, t1.a))))
         if (d < Math.max(a.scale, b.scale) * 1e-4) return false
       }
-      if (t1.intersectsTriangle(t2, line) && line.distance() > 0) {
+      // The third argument (suppressLog, missing from the typings) keeps
+      // near-coplanar pairs that slip past the check above from logging.
+      const intersects = (t1.intersectsTriangle as (other: ExtendedTriangle, target: Line3, suppressLog: boolean) => boolean).call(t1, t2, line, true)
+      if (intersects && line.distance() > 0) {
         segs.push(line.start.x, line.start.y, line.start.z, line.end.x, line.end.y, line.end.z)
         if (segs.length >= limit * 6) return true
       }
@@ -616,6 +619,44 @@ export function nearClipFinding(a: Piece, camera: CameraInfo): Finding | null {
     kind: 'nearclip', depth: 0, relative: 0, area: 0, pixels: clipped, support: false, visible: true, onScreen: true,
     focus: focus.toArray() as [number, number, number], radius: box.getSize(v1).length() / 2, segments: [],
   }
+}
+
+// --- clipping planes ------------------------------------------------------------
+
+// Cut a piece to the half-spaces three.js keeps (signed distance >= 0 for
+// every plane), so geometry a clipping plane discards is never checked.
+export function clipToPlanes<T extends { positions: Float32Array; index: Uint32Array | null }>(input: T, planes: ReadonlyArray<readonly [number, number, number, number]>): T | null {
+  if (!planes.length) return input
+  const tris = triangleCount(input)
+  const idx = input.index
+  const out: number[] = []
+  const dist = (p: number[], q: readonly [number, number, number, number]) => q[0] * p[0] + q[1] * p[1] + q[2] * p[2] + q[3]
+  for (let t = 0; t < tris; t++) {
+    let poly: number[][] = []
+    for (let c = 0; c < 3; c++) {
+      const v = idx ? idx[t * 3 + c] : t * 3 + c
+      poly.push([input.positions[v * 3], input.positions[v * 3 + 1], input.positions[v * 3 + 2]])
+    }
+    for (const plane of planes) {
+      const next: number[][] = []
+      for (let i = 0; i < poly.length; i++) {
+        const p = poly[i]
+        const q = poly[(i + 1) % poly.length]
+        const dp = dist(p, plane)
+        const dq = dist(q, plane)
+        if (dp >= 0) next.push(p)
+        if ((dp >= 0) !== (dq >= 0)) {
+          const k = dp / (dp - dq)
+          next.push([p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k, p[2] + (q[2] - p[2]) * k])
+        }
+      }
+      poly = next
+      if (poly.length < 3) break
+    }
+    for (let i = 1; i + 1 < poly.length; i++) out.push(...poly[0], ...poly[i], ...poly[i + 1])
+  }
+  if (!out.length) return null
+  return { ...input, positions: new Float32Array(out), index: null }
 }
 
 // --- connected components -----------------------------------------------------

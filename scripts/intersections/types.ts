@@ -23,13 +23,20 @@ export type Driver = {
   find(pattern: string): Promise<Frac | null>
   // Take a sample now (moments end with one anyway).
   sample(): Promise<void>
+  // Write localStorage entries (a value of null removes the key; objects are
+  // stored as JSON), reload the page on the same paused clock, and wait for
+  // its first frame, so a moment can start from a saved state, say a full sky
+  // or a finished scarf. Each game's slot is `tada-jam:slot:<key>`; reloading
+  // with no entries keeps whatever the game saved so far.
+  reload(entries?: Record<string, string | object | null>): Promise<void>
 }
 
 export type Moment = { name: string; run: (driver: Driver) => Promise<void> }
 
 // A contact the game means (a stem planted in soil, a fish under the water
 // surface). `a` and `b` are regular expressions against piece ids, labels, and
-// object keys; `upTo` caps the depth allowed, as a fraction of the smaller
+// object keys, each also tried without its colour suffix and child indices
+// (`frog>outline #574373` as `frog>outline`, `frog:5/outline:1` as `frog/outline`); `upTo` caps the depth allowed, as a fraction of the smaller
 // piece's middle extent. Every entry says why it is intended.
 export type Allowance = { a: string; b?: string; kind?: Kind; upTo?: number; reason: string }
 
@@ -51,6 +58,11 @@ export type GameAudit = {
   // ancestor that is still small next to the view; `userData.jamObject` on
   // any ancestor overrides both.
   objects?: Array<{ match: string; as: string }>
+  // Instances of an InstancedMesh are separate objects by default. Group them:
+  // instance i of a matching mesh belongs to object floor(i / per). A mesh can
+  // instead name each instance's object with userData.jamInstanceObjects
+  // (one key per instance; a key equal to a group's jamObject joins that group).
+  instances?: Array<{ match: string; per: number }>
   // Merged meshes holding many separate things: split into connected parts,
   // each its own object.
   split?: string[]

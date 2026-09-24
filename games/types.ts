@@ -12,6 +12,7 @@ export type {
   IconContrast,
   IconFamily,
   JamGame,
+  JamTile,
   Permission,
   WindowShape,
 } from '../harness/contract'

@@ -1,0 +1,386 @@
+.mp-root {
+  --mp-glass: rgba(16, 18, 30, 0.58);
+  --mp-glass-edge: rgba(255, 255, 255, 0.11);
+  --mp-glass-shine: rgba(255, 255, 255, 0.06);
+  --mp-on: #f6f2e8;
+  --mp-on-ink: #141626;
+  --mp-ink: #e9ecf6;
+  --mp-brass: #d4a456;
+  --mp-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --mp-out: cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #070a16;
+  color: var(--mp-ink);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.mp-world {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.mp-root button {
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mp-root svg {
+  display: block;
+}
+
+/* While the textures are painted, the room waits in the dark and then fades up. */
+.mp-curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: #05070f;
+  pointer-events: none;
+  transition: opacity 1.4s ease 0.1s;
+}
+
+.mp-curtain.is-open {
+  opacity: 0;
+}
+
+/* Frosted glass, as on an instrument's control panel. */
+.mp-glass {
+  background: var(--mp-glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: inset 0 0 0 1px var(--mp-glass-edge), inset 0 1px 0 var(--mp-glass-shine), 0 18px 40px -18px rgba(0, 0, 0, 0.7);
+}
+
+/* Lower quality tiers drop the blur, which the compositor redoes every frame over the moving scene. */
+.mp-root[data-frosted='false'] .mp-glass,
+.mp-root[data-frosted='false'] .mp-pin-chip {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgba(16, 18, 30, 0.84);
+}
+
+.mp-toolbar {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  left: max(16px, env(safe-area-inset-left));
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 6px;
+  border-radius: 22px;
+  animation: mp-rise 900ms var(--mp-out) 2.6s both;
+}
+
+.mp-segmented {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mp-segmented button,
+.mp-round {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 0;
+  border-radius: 15px;
+  background: transparent;
+  color: var(--mp-ink);
+  transition: background-color 240ms var(--mp-out), color 240ms, transform 160ms var(--mp-spring);
+}
+
+.mp-segmented button svg,
+.mp-round svg {
+  width: 32px;
+  height: 32px;
+}
+
+.mp-segmented button.is-on,
+.mp-round.is-on {
+  background: var(--mp-on);
+  color: var(--mp-on-ink);
+  box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.6);
+}
+
+.mp-round {
+  border-radius: 18px;
+}
+
+.mp-root button:active {
+  transform: scale(0.94);
+}
+
+/* The round window: a brass porthole onto the other point of view, with glass on it. The view itself is drawn
+   into the main canvas under this ring, so the button stays clear. */
+.mp-window {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  width: clamp(128px, 27vmin, 240px);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow:
+    0 0 0 5px #caa059,
+    0 0 0 7px #7a5428,
+    0 0 0 8px rgba(255, 255, 255, 0.12),
+    0 20px 40px -10px rgba(0, 0, 0, 0.8);
+  animation: mp-pop 900ms var(--mp-spring) 2.9s both;
+}
+
+.mp-window::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(120% 70% at 30% 8%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 45%),
+    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.55) 100%);
+  pointer-events: none;
+}
+
+.mp-window-badge {
+  position: absolute;
+  left: -4px;
+  bottom: -4px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--mp-on);
+  color: var(--mp-on-ink);
+  box-shadow: 0 0 0 3px #caa059, 0 6px 14px -4px rgba(0, 0, 0, 0.7);
+}
+
+.mp-window-badge svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* Pins: tiny glass chips standing over the sun, Earth and moon. */
+.mp-pins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mp-pin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  will-change: transform;
+}
+
+.mp-pin.is-visible {
+  opacity: 1;
+}
+
+.mp-pin-chip {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--mp-glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 0 1px var(--mp-glass-edge), 0 6px 16px -6px rgba(0, 0, 0, 0.8);
+}
+
+.mp-pin-chip svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mp-pin-stem {
+  width: 1px;
+  height: 14px;
+  background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+}
+
+.mp-strip {
+  position: absolute;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 24px;
+  transform: translateX(-50%);
+  animation: mp-rise-centred 900ms var(--mp-out) 3s both;
+}
+
+.mp-strip button {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  transition: background-color 260ms var(--mp-out), transform 320ms var(--mp-spring);
+}
+
+.mp-strip button.is-on {
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  transform: translateY(-3px) scale(1.08);
+}
+
+.mp-strip button.is-on svg {
+  filter: drop-shadow(0 0 8px rgba(255, 236, 190, 0.55));
+}
+
+@keyframes mp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes mp-rise-centred {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+}
+
+@keyframes mp-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+}
+
+@media (max-height: 520px) {
+  .mp-segmented button,
+  .mp-round {
+    width: 46px;
+    height: 46px;
+  }
+  .mp-window {
+    width: clamp(108px, 30vmin, 160px);
+  }
+  .mp-strip button {
+    width: 44px;
+    height: 44px;
+  }
+  .mp-strip svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mp-root *,
+  .mp-root *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* The day/night dial: midnight at the bottom, noon at the top, dawn on the left. */
+.mp-dial {
+  position: absolute;
+  left: max(16px, env(safe-area-inset-left));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: 104px;
+  height: 104px;
+  padding: 8px;
+  border-radius: 50%;
+  touch-action: none;
+  cursor: grab;
+  animation: mp-pop 900ms var(--mp-spring) 3.1s both;
+}
+
+.mp-dial-face {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  background: conic-gradient(from 180deg, #0d1640 0deg, #1d2a66 55deg, #ef9a5a 90deg, #8fcaf2 135deg, #bfe3fb 180deg, #8fcaf2 225deg, #ef9a5a 270deg, #1d2a66 305deg, #0d1640 360deg);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), inset 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.mp-dial-arm {
+  position: absolute;
+  inset: 12px;
+  pointer-events: none;
+}
+
+/* The knob rides the rim; rotating the arm by the hour angle carries it round from the bottom. */
+.mp-dial-knob {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-left: -17px;
+  border-radius: 50%;
+  background: var(--mp-on);
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.7), 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.mp-dial-knob svg {
+  width: 22px;
+  height: 22px;
+}
+
+.mp-dial-sun,
+.mp-dial-moon {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transition: opacity 300ms ease;
+}
+
+.mp-dial-sun {
+  opacity: 0;
+}
+
+.mp-dial-arm.is-day .mp-dial-sun {
+  opacity: 1;
+}
+
+.mp-dial-arm.is-day .mp-dial-moon {
+  opacity: 0;
+}
+
+@media (max-height: 520px) {
+  .mp-dial {
+    width: 88px;
+    height: 88px;
+  }
+  .mp-dial-knob {
+    width: 30px;
+    height: 30px;
+    margin-left: -15px;
+  }
+}

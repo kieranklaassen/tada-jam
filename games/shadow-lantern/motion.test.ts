@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { buildCreature, CREATURE_ORDER } from './creatures'
-import { blankPose, FLIGHT_Z, flightDepth, flightScale, peelPose, PERSONALITIES, restPose, SKY_HOMES, SKY_Z, skyDepth, skyScale, type CreaturePose, type Ring, type SleepPose } from './motion'
+import { blankPose, CREATURE_STACK, FLIGHT_Z, flightDepth, flightScale, peelPose, PERSONALITIES, restPose, SKY_HOMES, SKY_Z, skyDepth, skyScale, SPARK_Z, WAKE_Z, type CreaturePose, type Ring, type SleepPose } from './motion'
 import { clearOfProscenium, PROSCENIUM } from './projection'
+import { STAND_FRONT } from './stands'
 
 const KINDS = CREATURE_ORDER
 const FROM = { x: -6, y: 22 }
@@ -238,25 +239,23 @@ describe('motion personalities', () => {
 })
 
 describe('flight home', () => {
-  it('stays in front of the curtains, valance and crest while over them, and lands on the sky layer', () => {
+  it('keeps all its paper in front of the curtains, valance and crest wherever it is over them, all the way home', () => {
     for (const kind of KINDS) {
-      const built = buildCreature(kind)
-      const { bounds, center } = built
-      const radius = Math.max(bounds.x1 - bounds.x0, bounds.y1 - bounds.y0) / 2
+      const { bounds, center } = buildCreature(kind)
+      const hx = (bounds.x1 - bounds.x0) / 2
+      const hy = (bounds.y1 - bounds.y0) / 2
       const fromX = center.x + 2 * (bounds.x0 - center.x)
       SKY_HOMES.forEach((home, slot) => {
         const pose = blankPose()
-        let hiddenAt = -1
+        let throughAt = -1
         for (let i = 0; i <= 400; i++) {
           const k = i / 400
           PERSONALITIES[kind].gait(k, fromX, center.y, home.x, home.y, pose)
-          const r = radius * flightScale(kind, k)
-          const z = flightDepth(k, pose.x, pose.y, r, skyDepth(slot))
-          // The last stretch is the settle into a home, which sits clear of the proscenium as seen from the seat.
-          if (k < 0.86 && clearOfProscenium(pose.x, pose.y, r) < 0 && z < PROSCENIUM.front + 0.3 && hiddenAt < 0) hiddenAt = k
-          if (i === 400) expect(z, `${kind} home ${home.x},${home.y}`).toBeCloseTo(skyDepth(slot), 9)
+          const s = flightScale(kind, k)
+          const z = flightDepth(k, pose.x, pose.y, hx * s, hy * s, skyDepth(slot))
+          if (clearOfProscenium(pose.x, pose.y, hx * s, hy * s) < 0 && z + CREATURE_STACK.drop * s < PROSCENIUM.front && throughAt < 0) throughAt = k
         }
-        expect(hiddenAt, `${kind} to ${home.x},${home.y} passes behind the proscenium`).toBe(-1)
+        expect(throughAt, `${kind} to ${home.x},${home.y} passes into the proscenium`).toBe(-1)
       })
     }
   })
@@ -283,20 +282,61 @@ describe('flight home', () => {
 })
 
 describe('peel', () => {
-  it('turns the dark card over like a page and lays it back flat', () => {
+  it('turns the dark card over like a page about its tail edge and lays it back flat, mirrored', () => {
     const pose: CreaturePose = blankPose()
     peelPose(0, -9, pose)
     expect(pose.spin).toBe(0)
+    expect(pose.facing).toBeCloseTo(1, 9)
     expect(pose.dark).toBe(1)
     expect(pose.hinge).toBe(-9)
-    expect(pose.z).toBeCloseTo(0.3, 9)
+    expect(pose.z).toBeCloseTo(WAKE_Z, 9)
     peelPose(0.5, -9, pose)
     expect(pose.z).toBeGreaterThan(3)
+    expect(Math.abs(pose.facing), 'edge-on over its tail edge').toBeLessThan(0.05)
     peelPose(1, -9, pose)
-    expect(pose.spin).toBeCloseTo(Math.PI, 9)
+    expect(pose.spin).toBe(0)
+    expect(pose.facing).toBeCloseTo(-1, 9)
     expect(pose.dark).toBe(0)
     // Landed in front of the frame, where the flight home begins.
     expect(pose.z).toBeCloseTo(FLIGHT_Z, 9)
-    expect(flightDepth(0, 0, 20, 10)).toBeCloseTo(FLIGHT_Z, 9)
+    expect(flightDepth(0, 0, 20, 10, 8)).toBeCloseTo(FLIGHT_Z, 9)
+  })
+
+  it("keeps every layer of the turning card clear of the paper, the proscenium, a tap's stars and the stands", () => {
+    const pose: CreaturePose = blankPose()
+    const stack = CREATURE_STACK
+    let nearest = -Infinity
+    for (let k = 0; k <= 1; k += 0.002) {
+      peelPose(k, -9, pose)
+      // It turns in its own plane: nothing of it swings out toward the stage.
+      expect(pose.spin).toBe(0)
+      nearest = Math.max(nearest, pose.z + stack.front)
+      // Dark, the body and its drop card are hidden: the hindmost layer is a hind part.
+      const back = pose.dark ? pose.z - stack.partZ - stack.part / 2 : pose.z + stack.drop
+      expect(back, `k ${k.toFixed(3)}: over the dots, rings and stars on the paper`).toBeGreaterThan(SPARK_Z.screen)
+      // Mirrored past its tail edge it may reach beyond the screen: there it is in front of the proscenium.
+      if (pose.facing < 0) expect(back, `k ${k.toFixed(3)}`).toBeGreaterThan(PROSCENIUM.front)
+    }
+    expect(nearest).toBeLessThan(SPARK_Z.proscenium)
+    expect(SPARK_Z.proscenium).toBeLessThan(STAND_FRONT)
+  })
+
+  it("stacks a creature card's paper layers with air between each, so no two share a plane", () => {
+    const s = CREATURE_STACK
+    const layers: [string, number, number][] = [
+      ['drop card', s.drop, s.drop],
+      ['backing', s.backing, s.backing],
+      ['hind part', -s.partZ - s.part / 2, -s.partZ + s.part / 2],
+      ['body', -s.body / 2, s.body / 2],
+      ['eye, pupil and glint', s.eye, s.eye + 0.04],
+      ['front part', s.partZ - s.part / 2, s.partZ + s.part / 2],
+    ]
+    for (let i = 1; i < layers.length; i++) expect(layers[i][1] - layers[i - 1][2], `${layers[i - 1][0]} to ${layers[i][0]}`).toBeGreaterThan(0.02)
+    expect(s.front).toBeCloseTo(s.partZ + s.part / 2, 9)
+    // The shadow face covers the eye's white and lies under its pupil.
+    expect(s.darkFace).toBeGreaterThan(s.eye)
+    expect(s.darkFace).toBeLessThan(s.eye + 0.02)
+    // In front of the proscenium once the peel has left it at FLIGHT_Z, however large.
+    expect(FLIGHT_Z + s.drop).toBeGreaterThan(PROSCENIUM.front)
   })
 })

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { FeltAudio } from './audio'
 import { BLUE, ORANGE, RED, YELLOW, type Hue } from './colors'
-import { HELD_LIFT, MeadowController, POUCH_SEED_Y, REST_BEFORE_PACING, visitEveryFor, type Projector } from './controller'
+import { HELD_LIFT, MeadowController, REST_BEFORE_PACING, visitEveryFor, type Projector } from './controller'
 import { BLOOM_AT, GROWN_AT } from './flowers'
 import { IDLE_BEFORE_DEMO, MAX_DEMOS } from './guidance'
 import { BURROW, groundY, onPouch, PLOT_RADIUS, plotAt, PLOTS, plotTop, POUCH, POUCH_SLOTS, SEED_RADIUS, STEM_HEIGHT } from './layout'
@@ -77,7 +77,7 @@ function tap(controller: MeadowController, at: { x: number; y: number }, id = 3)
 }
 
 function pouchSeed(slot: number) {
-  return screen(POUCH_SLOTS[slot].x, POUCH_SEED_Y, POUCH_SLOTS[slot].z)
+  return screen(POUCH_SLOTS[slot].x, POUCH_SLOTS[slot].y, POUCH_SLOTS[slot].z)
 }
 
 function flowerHead(controller: MeadowController, plot: number) {
@@ -288,13 +288,14 @@ describe('guidance in the meadow', () => {
 
   it('backs off its demonstrations in a full meadow left alone, though the bee keeps mixing and dropping seeds', () => {
     const { controller } = makeMeadow(grownMeadow([RED, YELLOW, BLUE]))
+    // Counted as they play to the end: a seed the bee drops mid-demonstration rewinds that one, and it plays again.
     let demos = 0
-    let playing = false
+    let last = -1
     let rested = false
     run(controller, 150, () => {
-      const now = controller.guide.demo >= 0
-      if (now && !playing) demos += 1
-      playing = now
+      const now = controller.guide.demo
+      if (now < 0 && last > 0.95) demos += 1
+      last = now
       if (controller.resting()) rested = true
       return false
     })

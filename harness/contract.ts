@@ -69,10 +69,31 @@ export type Cartridge = {
   Mount: ComponentType<{ ctx: CartridgeContext }>
 }
 
+/** Launcher art for the jam's home page: an image on a two-colour gradient. */
+export type JamTile = {
+  /** URL of a repo-committed image (import it: `import art from './tile.svg'`). */
+  art: string
+  /** Gradient behind the art, bottom-left to top-right. */
+  from: string
+  to: string
+}
+
+/**
+ * A showcase: a finished game shown in the jam but not a Tada cartridge (it may
+ * need a keyboard and mouse, or keep its own saves). It lives in showcases/,
+ * outside cartridge discovery, and the home page lists it separately.
+ */
+export type JamShowcase = JamGame & {
+  /** What a grown-up should know before opening it, shown on the home page. */
+  requires: string
+}
+
 /** The jam's launcher entry: a cartridge plus the emoji Tada keeps in CARTRIDGE_EMOJI. */
 export type JamGame = {
   cartridge: Cartridge
   emoji: string
+  /** Optional jam-only tile art; games without one show their emoji. */
+  tile?: JamTile
 }
 
 export const KEY_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/

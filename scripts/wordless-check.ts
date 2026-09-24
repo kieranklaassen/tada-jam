@@ -9,9 +9,14 @@
 //   kid-text-number     a value formatted as text child  <p>{String(count)}</p>, {n.toFixed(1)}
 //   kid-text-api        DOM or canvas text APIs         el.textContent = 'x', ctx.fillText(...)
 //   kid-text-component  3D/HTML text components         <Text>, <Text3D>, <Html>
+//   kid-text-attribute  an HTML attribute that shows    <input placeholder="Name" />, <img alt={label} />
+//                       its value on screen, given words or formatted text
 // A bare `{count}` child cannot be told apart from an element without types,
 // so review still has to catch raw numbers rendered that way.
-// Attributes are not text on screen, so aria-label and friends stay allowed.
+// Other attributes are not text on screen, so aria-label, className and
+// friends stay allowed however their value is written (a template literal
+// class name is not a word on screen). JSX passed through any attribute is
+// still scanned as JSX.
 // A deliberate exception (for example a grown-up corner behind a hold
 // gesture) carries a `wordless-ok: <reason>` comment on the same or the
 // previous line.
@@ -29,6 +34,8 @@ const HAS_WORDS = /[\p{L}\p{N}]/u
 const TEXT_PROPERTIES = new Set(['textContent', 'innerText', 'innerHTML', 'outerHTML'])
 const TEXT_CALLS = new Set(['fillText', 'strokeText', 'createTextNode', 'insertAdjacentText', 'insertAdjacentHTML', 'alert', 'prompt'])
 const TEXT_COMPONENTS = new Set(['Text', 'Text3D', 'Html'])
+// Attributes of intrinsic (lower-case) elements that the browser draws as text.
+const TEXT_ATTRIBUTES = new Set(['placeholder', 'title', 'alt', 'value', 'defaultValue', 'label'])
 const FORMAT_FUNCTIONS = new Set(['String', 'Number'])
 const FORMAT_METHODS = new Set(['toString', 'toFixed', 'toPrecision', 'toLocaleString', 'format', 'join'])
 
@@ -107,6 +114,8 @@ export function scanWordless(source: string, file: string): WordlessFinding[] {
     const match = source.slice(node.start, Math.min(node.end, node.start + 60)).replace(/\s+/g, ' ').trim()
     findings.push({ file, line, rule, match })
   }
+  // Expression containers that are an attribute's value, judged by the attribute rule instead of the child rule.
+  const attributeValues = new Set<Node>()
 
   walk(ast, (node) => {
     switch (node.type) {
@@ -114,6 +123,7 @@ export function scanWordless(source: string, file: string): WordlessFinding[] {
         if (HAS_WORDS.test(String(node.value))) report(node, 'kid-text-jsx')
         break
       case 'JSXExpressionContainer': {
+        if (attributeValues.has(node)) break
         const expression = node.expression
         if (isNode(expression) && literalHasWords(expression)) report(node, 'kid-text-literal')
         else if (isNode(expression) && formatsText(expression)) report(node, 'kid-text-number')
@@ -123,6 +133,16 @@ export function scanWordless(source: string, file: string): WordlessFinding[] {
         const name = node.name as Node
         const tag = name?.type === 'JSXIdentifier' ? (name.name as string) : name?.type === 'JSXMemberExpression' ? ((name.property as Node).name as string) : null
         if (tag && TEXT_COMPONENTS.has(tag)) report(node, 'kid-text-component')
+        const intrinsic = name?.type === 'JSXIdentifier' && /^[a-z]/.test(tag ?? '')
+        for (const attribute of (node.attributes as Node[]) ?? []) {
+          if (attribute.type !== 'JSXAttribute' || !isNode(attribute.value)) continue
+          const value = attribute.value
+          if (value.type === 'JSXExpressionContainer') attributeValues.add(value)
+          const key = attribute.name as Node
+          if (!intrinsic || key?.type !== 'JSXIdentifier' || !TEXT_ATTRIBUTES.has(key.name as string)) continue
+          const shown = value.type === 'JSXExpressionContainer' ? (value.expression as Node) : value
+          if (isNode(shown) && (literalHasWords(shown) || formatsText(shown))) report(attribute, 'kid-text-attribute')
+        }
         break
       }
       case 'AssignmentExpression': {
@@ -140,6 +160,10 @@ export function scanWordless(source: string, file: string): WordlessFinding[] {
   return findings
 }
 
+/**
+ * Kid-side files are cartridge code under games/<key>/. Showcases (showcases/<key>/) are owner-approved
+ * non-cartridges with grown-up text by design, so this check deliberately never scans them.
+ */
 function isKidSideFile(relativePath: string): boolean {
   const parts = relativePath.split('/')
   if (parts[0] !== 'games' || parts.length < 3) return false

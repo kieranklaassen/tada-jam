@@ -26,6 +26,12 @@ The per-game document that describes a Claimed style: its palette, materials, li
 
 Style-specific guidance lives only in a game's art guide; jam-wide guidance covers the Quality bar and the registry of Claimed styles, never one game's look.
 
+### Showcase
+An owner-approved piece shown in the jam that is not a cartridge: it does not follow the kid-side rules and is not meant to move into Tada.
+*Avoid:* demo game, exhibit
+
+A showcase lives apart from the games, is listed apart from them, and is exempt from the cartridge checks (age band, wordless clarity, kid-side mechanics). It is never exempt from the zero-egress rule, and it is held to the same smoothness as the games.
+
 ## Age and clarity
 
 ### Age band

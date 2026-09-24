@@ -1,6 +1,7 @@
 import type { BuiltCreature } from './creatures'
 import { LAMP, PIN_HEIGHT, shadowScale, STAGE, type CardPose } from './projection'
 import { SHAPES, type ShapeKind } from './shapes'
+import { slideReach, standBlocked, type Stand } from './stands'
 
 // How much of the sleeping outline the shadows fill, and how much shadow
 // spills onto the rest of the screen. Coverage inverse-projects sample
@@ -176,6 +177,7 @@ export class CoverageMeter {
 
   private searchKinds: ShapeKind[] = []
   private searchPoses: CardPose[] = []
+  private searchStands: Stand[][] = [[]]
   private searchCount = 0
   private searchPreferDepth = false
   private cursor = 0
@@ -198,6 +200,7 @@ export class CoverageMeter {
   beginSearch(placed: readonly Placed[], preferDepth = false): void {
     this.searchKinds = placed.map((p) => p.kind)
     this.searchPoses = placed.map((p) => ({ ...p.pose }))
+    this.searchStands = [placed.map((p) => ({ kind: p.kind, pose: { x: p.pose.x, z: p.pose.z, angle: p.pose.angle, yaw: 0 } }))]
     this.searchCount = this.tabulate(placed)
     this.searchPreferDepth = preferDepth
     this.cursor = 0
@@ -211,10 +214,12 @@ export class CoverageMeter {
    * side at one depth (they cut through each other), COVERING close in front
    * of or behind one (seen from the seat the nearer card hides the other,
    * which is then out of a child's reach), or CLEAR. With `behindOnly`, only
-   * nearer cards covering this one count.
+   * nearer cards covering this one count. A place where the stand could not
+   * stand at all (in another stand, or too near the screen) is CROWDED too.
    */
   private crowding(index: number, pose: CardPose, behindOnly = false): number {
     const r = SHAPES[this.searchKinds[index]].radius
+    if (!behindOnly && standBlocked(this.probe(index, pose), this.searchStands[0], index, HINT_GAP)) return CROWDED
     let level = CLEAR
     for (let j = 0; j < this.searchCount; j++) {
       if (j === index) continue
@@ -261,7 +266,7 @@ export class CoverageMeter {
       gain -= (turn / TAP_TURN) * 6
       gain -= Math.hypot(pose.x - current.x, pose.z - current.z) * 0.15
       const kept = level === CLEAR ? this.clearBest : this.coveringBest
-      if (gain > 8 && (!kept || gain > kept.gain)) {
+      if (gain > 8 && (!kept || gain > kept.gain) && this.reachable(index, current, pose)) {
         const move = { index, x: pose.x, z: pose.z, angle: pose.angle, gain }
         if (level === CLEAR) this.clearBest = move
         else this.coveringBest = move
@@ -273,6 +278,32 @@ export class CoverageMeter {
     this.searching = false
     return true
   }
+
+  /**
+   * Can a child do the move the way the hint shows it: tap-turn the card
+   * where it stands, then slide it straight to `to`, without it meeting
+   * another stand on the way?
+   */
+  private reachable(index: number, from: CardPose, to: CardPose): boolean {
+    const turning = this.turning
+    turning.x = from.x
+    turning.z = from.z
+    const steps = Math.ceil(Math.abs(to.angle - from.angle) / 0.1)
+    for (let i = 1; i <= steps; i++) {
+      turning.angle = from.angle + ((to.angle - from.angle) * i) / steps
+      if (standBlocked(this.probe(index, turning), this.searchStands[0], index)) return false
+    }
+    return slideReach(this.searchKinds[index], from.x, from.z, to.x, to.z, to.angle, this.searchStands, index, HINT_GAP) === 1
+  }
+
+  private readonly turning = { x: 0, z: 0, angle: 0, yaw: 0 }
+  private readonly probed: { kind: ShapeKind; pose: { x: number; z: number; angle: number } } = { kind: 'square', pose: this.turning }
+
+  private probe(index: number, pose: { x: number; z: number; angle: number }): Stand {
+    this.probed.kind = this.searchKinds[index]
+    this.probed.pose = pose
+    return this.probed
+  }
 }
 
 export type HintMove = { index: number; x: number; z: number; angle: number; gain: number }
@@ -282,6 +313,8 @@ const SPILL_WEIGHT = 0.35
 const CROWD_DEPTH = 2
 /** and only when nothing else helps this close in front of or behind one. */
 const COVER_DEPTH = 8
+/** Room a hinted place and slide leave around the stand: more than stands need, so its swing on the way has space. */
+const HINT_GAP = 0.6
 const CLEAR = 0
 const COVERING = 1
 const CROWDED = 2

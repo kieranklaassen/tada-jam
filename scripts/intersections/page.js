@@ -55,7 +55,10 @@
   }
 
   const compile = (list) => (list ?? []).map((s) => new RegExp(s))
-  const matches = (res, ...texts) => res.some((re) => texts.some((t) => re.test(t)))
+  // Rules also see each text without its colour suffix and child indices, so
+  // `outline$` matches `frog>outline #574373` and `frog:5/outline:1`.
+  const bare = (t) => String(t).replace(/ #[0-9a-f]{6}$/i, '').replace(/:\d+(?=[/#~]|$)/g, '')
+  const matches = (res, ...texts) => res.some((re) => texts.some((t) => re.test(t) || re.test(bare(t))))
 
   function visibleChain(o) {
     for (let q = o; q; q = q.parent) if (!q.visible) return false
@@ -105,6 +108,7 @@
       depthWrite: any((x) => x.depthWrite !== false),
       polygonOffset: list.every((x) => x.polygonOffset && ((x.polygonOffsetFactor ?? 0) !== 0 || (x.polygonOffsetUnits ?? 0) !== 0)),
       colorWrite: any((x) => x.colorWrite !== false),
+      overlay: list.every((x) => x.depthTest === false),
       customVertex: any((x) => x.isShaderMaterial || x.isRawShaderMaterial || typeof x.onBeforeCompile === 'function' && x.onBeforeCompile.toString().includes('vertex')),
       renderOrder: o.renderOrder || 0,
     }
@@ -166,21 +170,46 @@
     camera.updateMatrixWorld()
     const ignore = compile(options.ignore)
     const objectRules = (options.objects ?? []).map((r) => ({ re: new RegExp(r.match), as: r.as }))
+    const instanceRules = (options.instances ?? []).map((r) => ({ re: new RegExp(r.match), per: Math.max(1, r.per) }))
+    // Instances are separate objects unless the mesh names each instance's
+    // object (userData.jamInstanceObjects) or a rule packs every `per` in a row.
+    const instanceObject = (m, object, i) => {
+      const tags = m.o.userData && m.o.userData.jamInstanceObjects
+      if (tags && tags[i] != null) return 'tag:' + tags[i]
+      for (const r of instanceRules) if (matches([r.re], m.path, m.label)) return object + '#' + Math.floor(i / r.per)
+      return object + '#' + i
+    }
     const cam = cameraInfo(camera, renderer)
     const cache = new Map()
     const meshes = []
     const skipped = []
+    // An inverted-hull outline is a back-side copy of another mesh's geometry
+    // pushed out in its vertex shader: on the CPU it is the same solid twice.
+    const frontGeometry = new Set()
+    scene.traverse((o) => {
+      if (!o.isMesh || !o.geometry || !o.geometry.attributes.position) return
+      const m = Array.isArray(o.material) ? o.material[0] : o.material
+      if (m && m.side !== 1) {
+        frontGeometry.add(o.geometry.uuid)
+        frontGeometry.add(o.geometry.attributes.position.array)
+      }
+    })
     scene.traverse((o) => {
       if (!o.isMesh || !o.geometry || !o.geometry.attributes.position) return
       if (!visibleChain(o)) return
       if (o.layers && camera.layers && !camera.layers.test(o.layers)) return
       const mat = materialInfo(o)
-      if (!mat.colorWrite || (mat.transparent && mat.opacity < 0.05)) return
+      // Drawn over everything regardless of depth, so nothing can visibly cross it.
+      if (!mat.colorWrite || mat.overlay || (mat.transparent && mat.opacity < 0.05)) return
       if (o.userData && o.userData.jamAuditIgnore) return
       const path = pathOf(o, scene, cache)
       const label = labelOf(o, scene)
       if (matches(ignore, path, label, mat.type)) return
       if (o.geometry.isInstancedBufferGeometry) { skipped.push({ path, label, why: 'shader-instanced' }); return }
+      if (mat.side === 1 && mat.customVertex && (frontGeometry.has(o.geometry.uuid) || frontGeometry.has(o.geometry.attributes.position.array))) {
+        skipped.push({ path, label, why: 'outline hull' })
+        return
+      }
       meshes.push({ o, path, label, mat })
     })
 
@@ -220,7 +249,7 @@
     }
     const objFrac = options.objectFraction ?? 0.3
     const objectOf = (m) => {
-      for (const r of objectRules) if (r.re.test(m.path) || r.re.test(m.label)) return 'rule:' + r.as
+      for (const r of objectRules) if (matches([r.re], m.path, m.label)) return 'rule:' + r.as
       for (let q = m.o; q && q !== scene; q = q.parent) if (q.userData && q.userData.jamObject) return 'tag:' + q.userData.jamObject
       let root = m.o
       for (let q = m.o.parent; q && q !== scene; q = q.parent) {
@@ -244,11 +273,19 @@
       const object = objectOf(m)
       const instances = o.isInstancedMesh ? Math.min(o.count, options.maxInstances ?? 256) : 0
       const e = o.matrixWorld.elements
+      // World-space clipping planes (three.js discards where the signed
+      // distance is negative): the renderer's, plus the material's when local
+      // clipping is on.
+      const planes = [...(renderer.clippingPlanes ?? [])]
+      if (renderer.localClippingEnabled) {
+        for (const mm of Array.isArray(o.material) ? o.material : [o.material]) planes.push(...(mm.clippingPlanes ?? []))
+      }
       const base = {
         mesh: m.path,
         label: m.label,
         material: m.mat,
         instanced: o.isInstancedMesh ? o.count : 0,
+        clip: planes.map((p) => [p.normal.x, p.normal.y, p.normal.z, p.constant]),
       }
       const geomKey = g.uuid + ':' + pos.version + ':' + (g.index ? g.index.version : 0) + ':' + start + ':' + end
       const local = () => {
@@ -261,8 +298,11 @@
         return { count: pos.count, getX: (i) => out[i * 3], getY: (i) => out[i * 3 + 1], getZ: (i) => out[i * 3 + 2], array: out }
       }
       const emit = (id, obj, matrix) => {
-        const version = geomKey + ':' + (deformed ? audit.frames : '') + ':' + matrix.map((v) => v.toFixed(5)).join(',')
-        const piece = { ...base, id, object: obj, version }
+        const version = geomKey + ':' + (deformed ? audit.frames : '') + ':' + matrix.map((v) => v.toFixed(5)).join(',') + (base.clip.length ? '|' + base.clip.flat().map((v) => v.toFixed(4)).join(',') : '')
+        // Where the piece is, without the geometry's identity, so a reload that
+        // rebuilds the same scene does not look like everything moved.
+        const pose = pos.version + ':' + (deformed ? audit.frames : '') + ':' + matrix.map((v) => v.toFixed(5)).join(',')
+        const piece = { ...base, id, object: obj, version, pose }
         if (audit.sent.get(id) !== version) {
           audit.sent.set(id, version)
           const src = local()
@@ -291,7 +331,7 @@
             w[c * 4 + r] = e[r] * l[c * 4] + e[4 + r] * l[c * 4 + 1] + e[8 + r] * l[c * 4 + 2] + e[12 + r] * l[c * 4 + 3]
           }
           if (Math.abs(w[0]) + Math.abs(w[5]) + Math.abs(w[10]) < 1e-9) continue
-          emit(m.path + '#' + i, object + '#' + i, w)
+          emit(m.path + '#' + i, instanceObject(m, object, i), w)
         }
       } else {
         emit(m.path, object, Array.from(e))

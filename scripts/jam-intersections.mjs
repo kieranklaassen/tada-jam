@@ -28,7 +28,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { chromium } from 'playwright'
-import { DEFAULT_TOLERANCE, analyseMoment, pairKey, preparePiece, splitComponents } from './intersections/core.ts'
+import { DEFAULT_TOLERANCE, analyseMoment, clipToPlanes, pairKey, preparePiece, splitComponents } from './intersections/core.ts'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const W = 1180
@@ -107,13 +107,16 @@ class TwoGen {
 }
 
 const compileAll = (list) => (list ?? []).map((s) => new RegExp(s))
+// Rules also see each text without its colour suffix and child indices, as in page.js.
+const bare = (t) => String(t).replace(/ #[0-9a-f]{6}$/i, '').replace(/:\d+(?=[/#~]|$)/g, '')
+const test = (re, ...texts) => texts.some((t) => re.test(t) || re.test(bare(t)))
 
 function allowedBy(finding, allow) {
   for (const rule of allow) {
     if (rule.kind && rule.kind !== finding.kind) continue
     const ra = new RegExp(rule.a)
     const rb = rule.b ? new RegExp(rule.b) : null
-    const side = (re, x) => re.test(x.id) || re.test(x.label) || re.test(x.object)
+    const side = (re, x) => test(re, x.id, x.label, x.object)
     const A = { id: finding.a, label: finding.labelA, object: finding.objectA }
     const B = { id: finding.b, label: finding.labelB, object: finding.objectB }
     const hit = rb ? (side(ra, A) && side(rb, B)) || (side(ra, B) && side(rb, A)) : side(ra, A) || side(ra, B)
@@ -174,10 +177,25 @@ async function auditGame(browser, base, game, opts) {
   }, config.childAge ?? 5)
   const query = config.query ?? (game === 'pebble-table' ? '' : `tier=${COUNTS_UP.has(game) ? 3 : 0}`)
   await page.goto(`${base}/?chrome=0${query ? '&' + query : ''}#/play/${game}`)
-  for (let i = 0; ; i++) {
-    if (await page.evaluate(() => (window.__jamAudit?.main()?.calls ?? 0) > 0)) break
-    if (i > 120) throw new Error(`${game}: no frame drawn after 4 s of game time`)
-    await page.clock.runFor(STEP)
+  const firstFrame = async () => {
+    for (let i = 0; i <= 120; i++) {
+      // Two frames, not one: a game may draw once from its resize handler
+      // before its own loop has placed anything.
+      if (await page.evaluate(() => (window.__jamAudit?.main()?.calls ?? 0) > 1)) return true
+      await page.clock.runFor(STEP)
+    }
+    return false
+  }
+  if (!(await firstFrame())) {
+    // A canvas-2D, SVG or DOM game has no three.js scene to read: say so
+    // and leave it to its own tests, rather than failing every CI run.
+    const renderers = await page.evaluate(() => window.__jamAudit?.renderers.length ?? 0)
+    if (renderers > 0) throw new Error(`${game}: no frame drawn after 4 s of game time`)
+    await context.close()
+    const result = { game, enforce: !!config.enforce, notAudited: 'no three.js scene', skipped: [], counts: { reportable: 0, open: 0, allowed: 0, hidden: 0 }, samples: 0, pieces: 0, seconds: 0, errors, findings: [], moments: [] }
+    writeFileSync(join(out, 'report.json'), JSON.stringify(result, null, 1))
+    writeFileSync(join(out, 'report.md'), `# Intersection audit: ${game}\n\nSkipped: the game drew no three.js scene within 4 s of game time (a canvas-2D, SVG, or DOM game). Cover its overlaps with tests on its own model.\n`)
+    return result
   }
 
   const positions = new Map()
@@ -211,7 +229,7 @@ async function auditGame(browser, base, game, opts) {
   }
 
   const sample = async () => {
-    const snap = await page.evaluate((o) => window.__jamAudit.snapshot(o), { ignore: config.ignore ?? [], objects: config.objects ?? [], objectFraction: config.objectFraction })
+    const snap = await page.evaluate((o) => window.__jamAudit.snapshot(o), { ignore: config.ignore ?? [], objects: config.objects ?? [], instances: config.instances ?? [], objectFraction: config.objectFraction })
     if (!snap) return
     samples++
     lastSampleAt = t
@@ -219,19 +237,20 @@ async function auditGame(browser, base, game, opts) {
     const pieces = []
     for (const p of snap.pieces) {
       if (!versions.has(p.id)) versions.set(p.id, new Set())
-      if (versions.get(p.id).size < 3) versions.get(p.id).add(p.version)
+      if (versions.get(p.id).size < 3) versions.get(p.id).add(p.pose)
       if (p.positions) {
         const pos = decode(p.positions, Float32Array)
         let index = p.index ? decode(p.index, Uint32Array) : null
         if (!index && p.range) index = Uint32Array.from({ length: p.range[1] - p.range[0] }, (_, i) => p.range[0] + i)
-        positions.set(p.id, { version: p.version, positions: pos.slice(), index: index ? index.slice() : null })
+        const clipped = clipToPlanes({ positions: pos.slice(), index: index ? index.slice() : null }, p.clip ?? [])
+        positions.set(p.id, { version: p.version, positions: clipped?.positions ?? null, index: clipped?.index ?? null })
       }
       const stored = positions.get(p.id)
-      if (!stored || stored.version !== p.version) continue
+      if (!stored || stored.version !== p.version || !stored.positions) continue
       if (p.material.customVertex) customVertex.add(p.mesh)
-      if (ignoreRes.some((re) => re.test(p.id) || re.test(p.label))) continue
+      if (ignoreRes.some((re) => test(re, p.id, p.label))) continue
       const input = { id: p.id, mesh: p.mesh, label: p.label, object: p.object, positions: stored.positions, index: stored.index, material: p.material, version: p.version }
-      const parts = splitRes.some((re) => re.test(p.id) || re.test(p.label)) ? splitComponents(input) : [input]
+      const parts = splitRes.some((re) => test(re, p.id, p.label)) ? splitComponents(input) : [input]
       for (const part of parts) {
         const key = part.id + '@' + part.version
         let piece = prepared.get(key)
@@ -265,15 +284,28 @@ async function auditGame(browser, base, game, opts) {
       const entry = { ...f, segments: undefined, severity: sev, reportable: rep, moment, at: +(t / 1000).toFixed(2), seen: prev?.seen ?? [+(t / 1000).toFixed(2)], shot: prev?.shot ?? null }
       entry.allowedBy = allowedBy(entry, allow)?.reason ?? null
       findings.set(key, entry)
-      if (rep && opts.shots) {
-        const n = prev?.file ?? `${String(findings.size).padStart(3, '0')}-${f.kind}-${slug(f.labelA)}--${slug(f.labelB)}`
-        entry.file = n
-        entry.shot = await shoot(f, n)
+      entry.file = prev?.file
+      entry.shotSeverity = prev?.shotSeverity ?? 0
+      entry.shotAt = prev?.shotAt ?? null
+      entry.shotFocus = prev?.shotFocus ?? null
+      entry.shotRadius = prev?.shotRadius ?? null
+      // Rendering is most of a run's cost, so a finding is photographed again
+      // only when it gets clearly worse; CI photographs only what fails it.
+      const growth = opts.ci ? 1.5 : 1.25
+      if (rep && opts.shots && !(opts.ci && entry.allowedBy) && (!entry.shot || sev > entry.shotSeverity * growth)) {
+        entry.file ??= `${String(findings.size).padStart(3, '0')}-${f.kind}-${slug(f.labelA)}--${slug(f.labelB)}`
+        entry.shot = await shoot(f, entry.file)
+        entry.shotSeverity = sev
+        entry.shotAt = entry.at
+        entry.shotFocus = f.focus
+        entry.shotRadius = f.radius
       }
     }
+    // A replay photographs the moment and spot of the earlier photo, which can
+    // be earlier than the finding's deepest sample (`at`).
     for (const target of replayTargets) {
-      if (Math.abs(target.at * 1000 - t) > 6) continue
-      const shot = await page.evaluate((a) => window.__jamAudit.shoot(a), { focus: target.focus, radius: Math.max(target.radius, 1e-6), segments: [] })
+      if (Math.abs((target.shotAt ?? target.at) * 1000 - t) > 6) continue
+      const shot = await page.evaluate((a) => window.__jamAudit.shoot(a), { focus: target.shotFocus ?? target.focus, radius: Math.max(target.shotRadius ?? target.radius, 1e-6), segments: [] })
       if (!shot) continue
       const file = `replay/${target.file}.png`
       writeFileSync(join(out, file), Buffer.from(shot.closeup, 'base64'))
@@ -331,6 +363,17 @@ async function auditGame(browser, base, game, opts) {
       await driver.release()
     },
     find: (pattern) => page.evaluate((p) => window.__jamAudit.find(p), pattern),
+    reload: async (entries = {}) => {
+      await page.evaluate((e) => {
+        for (const [k, v] of Object.entries(e)) {
+          if (v === null) localStorage.removeItem(k)
+          else localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v))
+        }
+      }, entries)
+      await page.reload()
+      if (!(await firstFrame())) throw new Error(`${game}: no frame drawn after reloading`)
+      await sample()
+    },
   }
 
   const contactShots = async (label) => {
@@ -458,7 +501,7 @@ function markdown(r) {
     `Open: ${r.counts.open}. Allowed: ${r.counts.allowed}. Not visible or under the pixel floor: ${r.counts.hidden}.`,
     '',
   ]
-  if (r.skipped.length) lines.push(`Not audited (shader-instanced): ${r.skipped.map((s) => '`' + s.label + '`').join(', ')}`, '')
+  if (r.skipped.length) lines.push(`Not audited (shader-instanced geometry, outline hulls): ${r.skipped.map((s) => '`' + s.label + '` (' + s.why + ')').join(', ')}`, '')
   if (r.errors.length) lines.push('Page errors:', ...r.errors.map((e) => `- ${e}`), '')
   lines.push('| # | kind | depth | px | moves | pieces | moment @ s | status | shot |', '| --- | --- | --- | --- | --- | --- | --- | --- | --- |')
   r.findings.forEach((f, i) => {
@@ -481,58 +524,67 @@ function sheetTiles(r, out) {
   return tiles
 }
 
-// Grid of images with captions, drawn in a blank page.
-export async function composeSheet(browser, tiles, file, title, { cols = 4, tileW = 472 } = {}) {
+// Grid of images with captions, drawn in a blank page one tile at a time, so a
+// sheet of any length never holds more than one full-size picture in flight.
+// A sheet is a picture for people: failing to draw one never fails the audit.
+export async function composeSheet(browser, tiles, file, title, { cols = 4, tileW = 472, maxTiles = 120 } = {}) {
+  tiles = tiles.slice(0, maxTiles)
   if (!tiles.length) return
-  const images = tiles.map((t) => ({ src: 'data:image/png;base64,' + readFileSync(t.file).toString('base64'), caption: t.caption, tone: t.tone }))
   const page = await browser.newPage()
-  const png = await page.evaluate(async ({ images, cols, tileW, title }) => {
-    const load = (src) => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src })
-    const imgs = await Promise.all(images.map((i) => load(i.src)))
-    const tileH = Math.round(tileW * (imgs[0].height / imgs[0].width))
-    const capH = 34
-    const head = title ? 44 : 0
-    const rows = Math.ceil(imgs.length / cols)
-    const c = document.createElement('canvas')
-    c.width = cols * tileW + (cols + 1) * 8
-    c.height = head + rows * (tileH + capH + 8) + 8
-    const g = c.getContext('2d')
-    g.fillStyle = '#1d1d22'
-    g.fillRect(0, 0, c.width, c.height)
-    if (title) {
-      g.fillStyle = '#fff'
-      g.font = 'bold 22px sans-serif'
-      g.fillText(title, 12, 30)
-    }
-    imgs.forEach((img, i) => {
-      const x = 8 + (i % cols) * (tileW + 8)
-      const y = head + 8 + Math.floor(i / cols) * (tileH + capH + 8)
-      const s = Math.min(tileW / img.width, tileH / img.height)
-      g.drawImage(img, x, y, img.width * s, img.height * s)
-      const tone = images[i].tone
-      g.fillStyle = tone === 'bad' ? '#7a1830' : tone === 'ok' ? '#1f5a36' : tone === 'before' ? '#6b3b12' : tone === 'after' ? '#174a6b' : '#33333b'
-      g.fillRect(x, y + tileH, tileW, capH)
-      g.fillStyle = '#fff'
-      g.font = '13px sans-serif'
-      const text = images[i].caption
-      const words = text.split(' ')
-      let line = ''
-      let ly = y + tileH + 14
-      for (const w of words) {
-        if (g.measureText(line + w).width > tileW - 10 && line) {
-          g.fillText(line, x + 5, ly)
-          line = ''
-          ly += 15
-          if (ly > y + tileH + capH) break
-        }
-        line += w + ' '
+  try {
+    const first = 'data:image/png;base64,' + readFileSync(tiles[0].file).toString('base64')
+    await page.evaluate(async ({ first, count, cols, tileW, title }) => {
+      const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = first })
+      const tileH = Math.round(tileW * (img.height / img.width))
+      const capH = 34
+      const head = title ? 44 : 0
+      const c = document.createElement('canvas')
+      c.width = cols * tileW + (cols + 1) * 8
+      c.height = head + Math.ceil(count / cols) * (tileH + capH + 8) + 8
+      const g = c.getContext('2d')
+      g.fillStyle = '#1d1d22'
+      g.fillRect(0, 0, c.width, c.height)
+      if (title) {
+        g.fillStyle = '#fff'
+        g.font = 'bold 22px sans-serif'
+        g.fillText(title, 12, 30)
       }
-      if (ly <= y + tileH + capH) g.fillText(line, x + 5, ly)
-    })
-    return c.toDataURL('image/png').split(',')[1]
-  }, { images, cols, tileW, title })
-  await page.close()
-  writeFileSync(file, Buffer.from(png, 'base64'))
+      window.__sheet = { c, g, tileH, capH, head, cols, tileW }
+    }, { first, count: tiles.length, cols, tileW, title })
+    for (let i = 0; i < tiles.length; i++) {
+      const src = 'data:image/png;base64,' + readFileSync(tiles[i].file).toString('base64')
+      await page.evaluate(async ({ src, i, caption, tone }) => {
+        const { g, tileH, capH, head, cols, tileW } = window.__sheet
+        const img = await new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src })
+        const x = 8 + (i % cols) * (tileW + 8)
+        const y = head + 8 + Math.floor(i / cols) * (tileH + capH + 8)
+        const s = Math.min(tileW / img.width, tileH / img.height)
+        g.drawImage(img, x, y, img.width * s, img.height * s)
+        g.fillStyle = tone === 'bad' ? '#7a1830' : tone === 'ok' ? '#1f5a36' : tone === 'before' ? '#6b3b12' : tone === 'after' ? '#174a6b' : '#33333b'
+        g.fillRect(x, y + tileH, tileW, capH)
+        g.fillStyle = '#fff'
+        g.font = '13px sans-serif'
+        let line = ''
+        let ly = y + tileH + 14
+        for (const w of caption.split(' ')) {
+          if (g.measureText(line + w).width > tileW - 10 && line) {
+            g.fillText(line, x + 5, ly)
+            line = ''
+            ly += 15
+            if (ly > y + tileH + capH) break
+          }
+          line += w + ' '
+        }
+        if (ly <= y + tileH + capH) g.fillText(line, x + 5, ly)
+      }, { src, i, caption: tiles[i].caption, tone: tiles[i].tone })
+    }
+    const png = await page.evaluate(() => window.__sheet.c.toDataURL('image/png').split(',')[1])
+    writeFileSync(file, Buffer.from(png, 'base64'))
+  } catch (e) {
+    console.log(`  (could not draw ${file}: ${String(e).split('\n')[0]})`)
+  } finally {
+    await page.close().catch(() => {})
+  }
 }
 
 async function startPreview() {
@@ -572,6 +624,10 @@ async function main() {
     try {
       const r = await auditGame(browser, base, game, opts)
       results.push(r)
+      if (r.notAudited) {
+        console.log(`${game}: not audited - ${r.notAudited}`)
+        continue
+      }
       const verdict = r.counts.open === 0 ? 'clean' : r.enforce ? 'FAIL' : 'open (not enforced)'
       if (r.counts.open && r.enforce) failed = true
       console.log(`${game}: ${verdict} - ${r.counts.open} open, ${r.counts.allowed} allowed, ${r.counts.hidden} hidden; ${r.samples} samples, ${r.pieces} pieces, ${r.seconds} s${r.errors.length ? `; ${r.errors.length} page errors` : ''}`)
@@ -579,9 +635,11 @@ async function main() {
         console.log(`  ${f.kind}${f.support ? ' (sinks)' : ''} ${f.kind === 'zfight' ? Math.round(f.pixels) + ' px²' : pct(f.relative)}  ${f.labelA}  x  ${f.labelB}  [${f.moment} @ ${f.at}s]`)
       }
     } catch (e) {
-      failed = true
-      console.log(`${game}: ERROR ${e.stack ?? e}`)
-      results.push({ game, error: String(e) })
+      // A crash fails CI only for a game that has promised to stay clean.
+      const enforce = !!(await loadConfig(game).catch(() => ({}))).enforce
+      if (enforce) failed = true
+      console.log(`${game}: ERROR${enforce ? '' : ' (not enforced)'} ${e.stack ?? e}`)
+      results.push({ game, enforce, error: String(e) })
     }
   }
   writeFileSync(join(opts.out, 'summary.json'), JSON.stringify(results.map((r) => ({ game: r.game, error: r.error, enforce: r.enforce, counts: r.counts, samples: r.samples, seconds: r.seconds })), null, 1))

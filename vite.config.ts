@@ -7,7 +7,7 @@ export default defineConfig({
     host: true,
   },
   test: {
-    include: ['games/**/*.test.{ts,tsx}', 'harness/**/*.test.{ts,tsx}', 'test/**/*.test.ts'],
+    include: ['games/**/*.test.{ts,tsx}', 'harness/**/*.test.{ts,tsx}', 'showcases/**/*.test.{ts,tsx}', 'test/**/*.test.ts'],
     environment: 'node',
   },
 })
