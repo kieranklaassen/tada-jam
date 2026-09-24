@@ -52,7 +52,7 @@ const MOST_STONE_PIECES = 12
 /** How many times sunk goes over the contacts it finds, so lifting a part out of one does not leave it in another. */
 const SUNK_PASSES = 4
 /** Pairs of bodies with at least this many pairs of shapes between them are handed to cannon with only the shapes that reach the other. */
-const NEAR_SHAPES_FROM = 32
+const NEAR_SHAPES_FROM = 8
 /** How far (cm) past the other body's bounds a shape still counts as reaching it, against rounding. */
 const NEAR_SHAPES_SLACK = 0.001
 // Convex-convex collision cost grows with faces times edges, and a spill is
