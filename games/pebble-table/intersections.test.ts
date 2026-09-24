@@ -1,5 +1,6 @@
 import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
+import { MeshBVH } from 'three-mesh-bvh'
 import { describe, expect, it } from 'vitest'
 import { albumSlot, FEEDING, SCALE, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
 import { SEAT_SPECIES } from './motion'
@@ -9,7 +10,7 @@ import { panDrops } from './scale'
 import { STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneRest, stoneVertices } from './stoneShape'
 import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_TOP, type Surfaces } from './surfaces'
 import { GUEST_SIZE, guestFloor, guestYaw, soleDepth, speciesShapes } from './view/guest'
-import { ALBUM_SCALE, albumGeometry, CHOOSER_SCALE, chooserGeometry, easeOutBack, feedingShapes, scaleShapes } from './view/models'
+import { ALBUM_SCALE, albumGeometry, CHOOSER_SCALE, chooserGeometry, easeOutBack, feedingShapes, HUB_RADIUS, panHang, PIVOT_Y, ROPE_KNOT, ropeMatrix, scaleShapes } from './view/models'
 
 // What the intersection audit (npm run check:intersections -- pebble-table)
 // found drawn pieces doing, pinned at the level of the shapes and physics
@@ -199,6 +200,107 @@ describe('guests stand on what is drawn under them', () => {
       const sunk = Math.max(...guestBody(seat).map((v) => feedingFloor(toPlane(v), 0) - v.y))
       expect(sunk, `seat ${seat}`).toBeLessThanOrEqual(1e-6)
     }
+  })
+})
+
+/** Unique world-space vertices of a geometry placed by `matrix`. */
+function pointsOf(geometry: THREE.BufferGeometry, matrix: THREE.Matrix4): THREE.Vector3[] {
+  const position = geometry.attributes.position
+  const seen = new Map<string, THREE.Vector3>()
+  for (let i = 0; i < position.count; i++) {
+    const v = new THREE.Vector3().fromBufferAttribute(position, i).applyMatrix4(matrix)
+    seen.set(`${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`, v)
+  }
+  return [...seen.values()]
+}
+
+const RAYS = [new THREE.Vector3(0.5377, 0.7071, 0.4581), new THREE.Vector3(-0.6231, 0.2213, -0.7502), new THREE.Vector3(0.1279, -0.8813, 0.455)].map((d) => d.normalize())
+
+/** A test for points inside a closed shape placed by `matrix`: odd crossings along most of three rays. */
+function insideOf(geometry: THREE.BufferGeometry, matrix: THREE.Matrix4): (p: THREE.Vector3) => boolean {
+  const placed = (geometry.index ? geometry.toNonIndexed() : geometry.clone()).applyMatrix4(matrix)
+  const bvh = new MeshBVH(placed)
+  const ray = new THREE.Ray()
+  const odd = (p: THREE.Vector3, dir: THREE.Vector3) => {
+    const hits = bvh.raycast(ray.set(p, dir), THREE.DoubleSide).map((h) => h.distance).sort((a, b) => a - b)
+    return hits.filter((d, i) => d > 1e-7 && (i === 0 || d - hits[i - 1] > 1e-6)).length % 2 === 1
+  }
+  return (p) => RAYS.filter((dir) => odd(p, dir)).length >= 2
+}
+
+/** How far a point is from the nearest surface of a shape placed by `matrix`. */
+function distanceTo(geometry: THREE.BufferGeometry, matrix: THREE.Matrix4): (p: THREE.Vector3) => number {
+  const bvh = new MeshBVH(geometry.clone().applyMatrix4(matrix))
+  return (p) => bvh.closestPointToPoint(p)?.distance ?? Infinity
+}
+
+describe('the scale hangs together at every tilt', () => {
+  const shapes = scaleShapes()
+  const post = to3(SCALE.post)
+  const postAt = new THREE.Matrix4().makeTranslation(post.x, 0, post.z)
+  const beamAt = (angle: number) => new THREE.Matrix4().makeTranslation(post.x, PIVOT_Y, post.z).multiply(new THREE.Matrix4().makeRotationZ(-angle))
+  const tilts = [-SCALE.maxTilt, 0, SCALE.maxTilt]
+  const hangs = (angle: number, sway: number) =>
+    ([0, 1] as const).map((side) => ({ side, ...panHang(side, angle, PAN_REST_HEIGHT - panDrops(angle)[side] * UNIT, sway) }))
+
+  it('hangs every pan rope from knot to knot, clear of the beam and the pans', () => {
+    for (const angle of tilts) {
+      const inBeam = insideOf(shapes.beam, beamAt(angle))
+      for (const sway of [-1.6, 1.6]) {
+        for (const { side, center, top, rims } of hangs(angle, sway)) {
+          const inPan = insideOf(shapes.pans[side], new THREE.Matrix4().makeTranslation(center.x, center.y, center.z))
+          rims.forEach((rim, k) => {
+            const free = pointsOf(shapes.chain, ropeMatrix(top, rim, new THREE.Matrix4())).filter((v) => v.distanceTo(top) > ROPE_KNOT.radius && v.distanceTo(rim) > ROPE_KNOT.radius)
+            expect(free.filter(inBeam).length, `rope ${side}.${k} in the beam at tilt ${angle}, swing ${sway}`).toBe(0)
+            expect(free.filter(inPan).length, `rope ${side}.${k} in its pan at tilt ${angle}, swing ${sway}`).toBe(0)
+          })
+        }
+      }
+    }
+  })
+
+  it('presses every knot into what it hangs from or sits on, by nearly the same at every tilt and swing', () => {
+    const pressed = new Map<string, number[]>()
+    const note = (key: string, depth: number) => pressed.set(key, [...(pressed.get(key) ?? []), depth])
+    for (const angle of tilts) {
+      const toBeam = distanceTo(shapes.beam, beamAt(angle))
+      for (const sway of [-1.6, 0, 1.6]) {
+        for (const { side, center, top, rims } of hangs(angle, sway)) {
+          note(`top ${side}`, ROPE_KNOT.radius - toBeam(top))
+          const toPan = distanceTo(shapes.pans[side], new THREE.Matrix4().makeTranslation(center.x, center.y, center.z))
+          rims.forEach((rim, k) => note(`rim ${side}.${k}`, ROPE_KNOT.radius - toPan(rim)))
+        }
+      }
+    }
+    for (const [key, depths] of pressed) {
+      expect(Math.min(...depths), key).toBeGreaterThan(0.05)
+      expect(Math.max(...depths) - Math.min(...depths), key).toBeLessThan(0.15)
+    }
+  })
+
+  it('turns the beam on its round hub, so the post meets the beam only there', () => {
+    const inPost = insideOf(shapes.post, postAt)
+    const pivot = new THREE.Vector3(post.x, PIVOT_Y, post.z)
+    for (let angle = -SCALE.maxTilt; angle <= SCALE.maxTilt + 1e-9; angle += SCALE.maxTilt / 4) {
+      const inBeam = insideOf(shapes.beam, beamAt(angle))
+      const stray = [...pointsOf(shapes.post, postAt).filter(inBeam), ...pointsOf(shapes.beam, beamAt(angle)).filter(inPost)].filter((v) => v.distanceTo(pivot) > HUB_RADIUS * 1.001)
+      expect(stray.length, `tilt ${angle}`).toBe(0)
+    }
+  })
+
+  it('draws the post as a closed solid standing flat on the table', () => {
+    const points = pointsOf(shapes.post, postAt)
+    expect(Math.min(...points.map((v) => v.y))).toBeGreaterThanOrEqual(-1e-6)
+    const position = shapes.post.attributes.position
+    const at = (v: number) => Math.round(v * 1e4) + 0
+    const key = (i: number) => `${at(position.getX(i))},${at(position.getY(i))},${at(position.getZ(i))}`
+    const edges = new Map<string, number>()
+    for (let t = 0; t < position.count / 3; t++) {
+      const [a, b, c] = [key(t * 3), key(t * 3 + 1), key(t * 3 + 2)]
+      if (a === b || b === c || a === c) continue
+      for (const edge of [[a, b], [b, c], [c, a]].map((pair) => pair.sort().join('|'))) edges.set(edge, (edges.get(edge) ?? 0) + 1)
+    }
+    expect([...edges.values()].filter((n) => n !== 2).length).toBe(0)
   })
 })
 

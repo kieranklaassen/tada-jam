@@ -360,21 +360,58 @@ export function BagModel({ read }: { read: () => BagPose }) {
 
 export type ScalePose = { angle: number; panY: [number, number]; now: number }
 
-/** The pan ropes are part of the scale they hang from (for the intersection audit). */
+/** The pan ropes and their knots are part of the scale they hang from (for the intersection audit). */
 const ROPE_OBJECTS = Array.from({ length: 6 }, () => 'scale')
+const KNOT_OBJECTS = Array.from({ length: 8 }, () => 'scale')
 
-const PIVOT_Y = 25
+export const PIVOT_Y = 25
 /** The balls on the beam's ends that the pan ropes hang from. */
-const BEAM_END_RADIUS = 2.1
-/** How far a rope reaches into its beam-end ball: the same at every tilt, so the rope never slides through it. */
-const ROPE_GRIP = 0.4
+export const BEAM_END_RADIUS = 2.1
+/** The smooth ball the beam turns on, part of the beam: the post's column and knob meet it the same way at every tilt. */
+export const HUB_RADIUS = 2.1
 /** The knob on top of the pivot ball, high enough that the beam's own thickness clears it at full tilt. */
 const KNOB = { y: PIVOT_Y + 3, radius: 1.1 }
+/**
+ * Clay knots the pan ropes are tied into, one under each beam end and one on
+ * a pan's rim per rope, each pressed this far into what it hangs from or sits
+ * on. A rope ends at a knot's middle, so it meets the knot the same way
+ * however the beam tilts and the pan swings.
+ */
+export const ROPE_KNOT = { radius: 0.9, press: 0.35 }
+/** How thick the pan ropes are drawn, as a scale on the unit coil. */
+const ROPE_THICKNESS = 0.95
 
-function postGeometry(): THREE.BufferGeometry {
+const PAN_ANGLES = [0.5, 0.5 + (Math.PI * 2) / 3, 0.5 + (Math.PI * 4) / 3]
+
+/** Where a pan hangs: its centre, the knot under its beam end, and the knots its ropes are tied into on its rim. */
+export function panHang(side: 0 | 1, angle: number, panY: number, sway: number): { center: THREE.Vector3; top: THREE.Vector3; rims: THREE.Vector3[] } {
+  const post = to3(SCALE.post)
+  const pan = SCALE.pans[side]
+  const half = SCALE.beamHalf * UNIT
+  const sign = side === 0 ? -1 : 1
+  const at = to3(pan, panY)
+  const center = new THREE.Vector3(at.x + sway, at.y, at.z)
+  const hang = BEAM_END_RADIUS + ROPE_KNOT.radius - ROPE_KNOT.press
+  const top = new THREE.Vector3(post.x + Math.cos(angle) * half * sign, PIVOT_Y - Math.sin(angle) * half * sign - hang, post.z)
+  const reach = pan.r * UNIT * PAN_ROLL.radius
+  const sit = PAN_ROLL.y + reach * PAN_ROLL.tube + ROPE_KNOT.radius - ROPE_KNOT.press
+  const rims = PAN_ANGLES.map((a) => new THREE.Vector3(center.x + Math.cos(a) * reach, center.y + sit, center.z + Math.sin(a) * reach))
+  return { center, top, rims }
+}
+
+/** A rope's instance matrix: the unit coil stretched from one knot's middle to another's. */
+export function ropeMatrix(from: THREE.Vector3, to: THREE.Vector3, out: THREE.Matrix4): THREE.Matrix4 {
+  const dir = scratch.p2.subVectors(to, from)
+  const length = dir.length()
+  return out.compose(from, scratch.q.setFromUnitVectors(UP, dir.divideScalar(length)), scratch.s.set(ROPE_THICKNESS, length, ROPE_THICKNESS))
+}
+
+const UP = new THREE.Vector3(0, 1, 0)
+
+export function postGeometry(): THREE.BufferGeometry {
   const turned = new THREE.LatheGeometry(
     [
-      [0.01, 0],
+      [0, 0],
       [7.4, 0],
       [7.6, 0.9],
       [6.4, 1.8],
@@ -387,27 +424,32 @@ function postGeometry(): THREE.BufferGeometry {
       [2, 20],
       [1.5, 21.5],
       [1.6, 23],
-      [0.01, 23.2],
+      [0, 23.2],
     ].map(([x, y]) => new THREE.Vector2(x, y)),
     28,
   )
   return merge([
-    piece(turned, PALETTE.scaleWood, {}, { lump: 0.18, frequency: 0.5, seed: 2 }),
-    piece(geo.sphere(20), PALETTE.scaleWood, { position: [0, PIVOT_Y, 0], scale: 2.1 }, { lump: 0.15, ground: null }),
+    // Its foot stays flat on the table while the rest is lumped.
+    piece(turned, PALETTE.scaleWood, {}, { lump: 0.18, frequency: 0.5, seed: 2, hold: holdLathe([], [[0, 0], [7.4, 0]]) }),
     piece(geo.sphere(14), PALETTE.scaleWood, { position: [0, KNOB.y, 0], scale: KNOB.radius }, { ground: null }),
   ])
 }
 
-function beamGeometry(half: number): THREE.BufferGeometry {
+export function beamGeometry(half: number): THREE.BufferGeometry {
   const collars = [-0.72, -0.4, 0.4, 0.72].map((t) =>
     piece(geo.torus(20, 0.45), PALETTE.pan, { position: [t * half, 0, 0], rotation: [0, Math.PI / 2, 0], scale: 1.25 }, { lump: 0.06, ground: null }),
   )
   return merge([
     piece(geo.capsule(18), PALETTE.scaleWood, { rotation: [0, 0, Math.PI / 2], scale: [2.5, half, 2.5] }, { lump: 0.18, frequency: 0.7, ground: null }),
+    piece(geo.sphere(20), PALETTE.scaleWood, { scale: HUB_RADIUS }, { ground: null }),
     piece(geo.sphere(18), PALETTE.scaleWood, { position: [-half, 0, 0], scale: BEAM_END_RADIUS }, { lump: 0.12, ground: null }),
     piece(geo.sphere(18), PALETTE.scaleWood, { position: [half, 0, 0], scale: BEAM_END_RADIUS }, { lump: 0.12, ground: null }),
     ...collars,
   ])
+}
+
+export function knotGeometry(): THREE.BufferGeometry {
+  return merge([piece(geo.sphere(12), PALETTE.pan, { scale: ROPE_KNOT.radius }, { lump: 0.05, ground: null })])
 }
 
 /** A twisted clay rope, unit length along +y, for the pan hangers. */
@@ -440,7 +482,7 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
   const beam = useRef<THREE.Group>(null)
   const pans = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
   const chains = useRef<THREE.InstancedMesh>(null)
-  const half = SCALE.beamHalf * UNIT
+  const knots = useRef<THREE.InstancedMesh>(null)
   const post = to3(SCALE.post)
   const shapes = once('scale', scaleShapes)
   const swing = useRef({ last: 0, pans: [{ x: 0, v: 0 }, { x: 0, v: 0 }] as Spring[] })
@@ -448,30 +490,23 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
     const pose = read()
     const angle = pose.angle + Math.sin(pose.now * 0.9) * 0.003
     if (beam.current) beam.current.rotation.z = -angle
-    const instanced = chains.current
     // Pans hang on ropes: when the beam moves they lag, then swing back and settle.
     const turn = dt > 0 ? (angle - swing.current.last) / dt : 0
     swing.current.last = angle
-    SCALE.pans.forEach((pan, side) => {
+    SCALE.pans.forEach((_, side) => {
       const spring = swing.current.pans[side]
       spring.v -= turn * 5
       const sway = THREE.MathUtils.clamp(springStep(spring, 0, dt, 26, 2.6), -1.6, 1.6)
-      const center = to3(pan, pose.panY[side])
-      center.x += sway
-      pans[side].current?.position.set(center.x, center.y, center.z)
-      const sign = side === 0 ? -1 : 1
-      const end = new THREE.Vector3(post.x + Math.cos(angle) * half * sign, PIVOT_Y - Math.sin(angle) * half * sign, post.z)
-      for (let k = 0; k < 3; k++) {
-        const a = (k / 3) * Math.PI * 2 + 0.5
-        const reach = pan.r * UNIT * PAN_ROLL.radius
-        const rim = new THREE.Vector3(center.x + Math.cos(a) * reach, center.y + PAN_ROLL.y, center.z + Math.sin(a) * reach)
-        const dir = rim.clone().sub(end).normalize()
-        const start = end.clone().addScaledVector(dir, BEAM_END_RADIUS - ROPE_GRIP)
-        scratch.m.compose(start, scratch.q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir), scratch.s.set(0.95, rim.distanceTo(start), 0.95))
-        instanced?.setMatrixAt(side * 3 + k, scratch.m)
-      }
+      const hang = panHang(side as 0 | 1, angle, pose.panY[side], sway)
+      pans[side].current?.position.copy(hang.center)
+      knots.current?.setMatrixAt(side * 4, scratch.m.makeTranslation(hang.top))
+      hang.rims.forEach((rim, k) => {
+        chains.current?.setMatrixAt(side * 3 + k, ropeMatrix(hang.top, rim, scratch.m))
+        knots.current?.setMatrixAt(side * 4 + 1 + k, scratch.m.makeTranslation(rim))
+      })
     })
-    if (instanced) instanced.instanceMatrix.needsUpdate = true
+    if (chains.current) chains.current.instanceMatrix.needsUpdate = true
+    if (knots.current) knots.current.instanceMatrix.needsUpdate = true
   })
   return (
     <group userData={{ jamObject: 'scale' }}>
@@ -483,6 +518,7 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
         <mesh key={side} name={side === 0 ? 'scale-pan-left' : 'scale-pan-right'} ref={pans[side]} geometry={geometry} material={clay} />
       ))}
       <instancedMesh name="scale-ropes" ref={chains} args={[shapes.chain, clay, 6]} frustumCulled={false} userData={{ jamInstanceObjects: ROPE_OBJECTS }} />
+      <instancedMesh name="scale-knots" ref={knots} args={[shapes.knot, clay, 8]} frustumCulled={false} userData={{ jamInstanceObjects: KNOT_OBJECTS }} />
     </group>
   )
 }
@@ -615,6 +651,7 @@ export function scaleShapes() {
     beam: beamGeometry(SCALE.beamHalf * UNIT),
     pans: SCALE.pans.map((pan) => panGeometry(pan.r * UNIT)),
     chain: coilGeometry(),
+    knot: knotGeometry(),
   }
 }
 

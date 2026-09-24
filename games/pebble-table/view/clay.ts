@@ -57,7 +57,10 @@ export function lump(geometry: THREE.BufferGeometry, amount: number, frequency =
   g.computeVertexNormals()
   const position = g.attributes.position
   const normal = g.attributes.normal
-  const key = (i: number) => `${position.getX(i).toFixed(5)},${position.getY(i).toFixed(5)},${position.getZ(i).toFixed(5)}`
+  // `+ 0` folds -0 into 0: a lathe's or sphere's seam copy sits at -1e-16, and
+  // must move with its twin or the lumped shape opens along the seam.
+  const at = (v: number) => Math.round(v * 1e5) + 0
+  const key = (i: number) => `${at(position.getX(i))},${at(position.getY(i))},${at(position.getZ(i))}`
   const shared = new Map<string, THREE.Vector3>()
   for (let i = 0; i < position.count; i++) {
     const k = key(i)
