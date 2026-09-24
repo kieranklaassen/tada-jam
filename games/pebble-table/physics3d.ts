@@ -724,6 +724,7 @@ export class TablePhysics {
     body.velocity.setZero()
     body.angularVelocity.setZero()
     body.quaternion.set(0, 0, 0, 1)
+    body.aabbNeedsUpdate = true
     body.wakeUp()
   }
 
@@ -837,9 +838,11 @@ export class TablePhysics {
       this.settleLooseParts()
       this.accumulator -= STEP
     }
+    // A pan at rest falls asleep and stops moving itself, so its bounds are stale until marked here.
     for (const [body, target] of this.targets) {
       body.position.set(target.x, target.y, target.z)
       body.velocity.setZero()
+      body.aabbNeedsUpdate = true
     }
     const fallen: number[] = []
     let moving = false

@@ -97,6 +97,24 @@ describe('TablePhysics', () => {
     expect(awayAwake, 'steps the shell lying away from the scale was awake').toBe(0)
   })
 
+  it('meets a pan that fell asleep where it hangs now: a stick dropped in as the beam tips lands where trying every shape lands it', () => {
+    const drop = (everyShape: boolean) => {
+      const physics = new TablePhysics()
+      if (everyShape) delete (physics.world.narrowphase as { getContacts?: unknown }).getContacts
+      physics.setMat('scale')
+      run(physics, 1.5)
+      const pan = SCALE.pans[0]
+      physics.addPart(1, 'stick', { x: pan.x - 10, y: pan.y + 5 }, { y: 14, yaw: 0.4 })
+      physics.addPart(2, 'shell', { x: pan.x + 20, y: pan.y - 10 }, { y: 18 })
+      for (let t = 0; t < 1.5; t += STEP) {
+        physics.setPanDrops([Math.min(t, 0.5) * 40, -Math.min(t, 0.5) * 40])
+        physics.step(STEP)
+      }
+      return [1, 2].flatMap((id) => [...physics.body(id)!.position.toArray(), ...physics.body(id)!.quaternion.toArray()])
+    }
+    expect(drop(false)).toEqual(drop(true))
+  })
+
   it('holds a stone in the air and throws it with the finger on release', () => {
     const physics = new TablePhysics()
     physics.addStone(1, 4, { x: 600, y: 500 })
