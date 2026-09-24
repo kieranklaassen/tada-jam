@@ -1,18 +1,16 @@
 import * as THREE from 'three'
-import { MeshBVH } from 'three-mesh-bvh'
 import { describe, expect, it } from 'vitest'
+import { pairDepth, preparePiece, type CameraInfo, type MaterialInfo, type Piece } from '../../scripts/intersections/core'
 import { PERSONALITIES, restPose, SEAT_SPECIES, type ActionKind, type MotionPose, type Species } from './motion'
 import { ARM_AT, CHEEK_AT, EAR_AT, GUEST_SIZE, NECK_Y, poseGuest, speciesShapes } from './view/guest'
 
 // A guest's parts hang together as one object. The audit flags two of them
 // that cross deeper at some moment than at their shallowest: a limb or a nose
-// swinging into what it hangs on. These tests pose every species through all
-// of its motion and measure each pair the way the audit does.
+// swinging into what it hangs on, or a cheek swelling out of a face. These
+// tests pose every species through all of its motion and measure each pair
+// with the audit's own measure.
 
-type Part = { name: string; mesh: THREE.Mesh; bvh: MeshBVH; points: THREE.Vector3[]; box: THREE.Box3 }
-
-/** The audit samples up to 700 points of a piece; this many keeps every lump in reach. */
-const SAMPLES = 500
+type Part = { name: string; mesh: THREE.Mesh }
 
 function rigOf(species: Species) {
   const shapes = speciesShapes(species)
@@ -21,11 +19,7 @@ function rigOf(species: Species) {
     const mesh = new THREE.Mesh(geometry)
     if (at) mesh.position.set(...at)
     parent.add(mesh)
-    geometry.computeBoundingBox()
-    const position = geometry.attributes.position
-    const stride = Math.ceil(position.count / SAMPLES)
-    const points = Array.from({ length: Math.ceil(position.count / stride) }, (_, i) => new THREE.Vector3().fromBufferAttribute(position, i * stride))
-    parts.push({ name, mesh, bvh: new MeshBVH(geometry), points, box: geometry.boundingBox!.clone() })
+    parts.push({ name, mesh })
     return mesh
   }
   const root = new THREE.Group()
@@ -89,32 +83,18 @@ function posesOf(species: Species, step: number): Named[] {
   return poses
 }
 
-/** A part as posed: its matrix, the inverse, how much it scales lengths, and its box, all in the guest's frame. */
-type Placed = { part: Part; matrix: THREE.Matrix4; inverse: THREE.Matrix4; scale: number; box: THREE.Box3; bvh: MeshBVH; points: THREE.Vector3[]; size: number }
+const CLAY: MaterialInfo = { type: 'MeshStandardMaterial', side: THREE.FrontSide, transparent: false, opacity: 1, depthTest: true, depthWrite: true, polygonOffset: false, colorWrite: true, customVertex: false, renderOrder: 0 }
+// Every part is a closed shape, so no camera has to say which side of one is inside.
+const CAMERA: CameraInfo = { position: [0, 0, 200], forward: [0, 0, -1], ortho: false, near: 1, far: 1000, fov: 27, orthoHeight: 0, view: [], projection: [], viewport: [1180, 820], logDepth: false }
 
-const unit = new THREE.Vector3()
-function place(part: Part): Placed {
-  part.mesh.updateWorldMatrix(true, false)
-  const matrix = part.mesh.matrixWorld.clone()
-  const s = new THREE.Vector3()
-  matrix.decompose(unit, new THREE.Quaternion(), s)
-  const uniform = Math.abs(s.x - s.y) < 1e-9 && Math.abs(s.y - s.z) < 1e-9
-  // A part squashed out of true (a puffing cheek, a wiggling nose) is measured
-  // from a copy baked into place, since lengths no longer scale evenly.
-  const bvh = uniform ? part.bvh : new MeshBVH(part.mesh.geometry.clone().applyMatrix4(matrix))
-  const local = uniform ? matrix : new THREE.Matrix4()
-  const box = part.box.clone().applyMatrix4(matrix)
-  const size = box.getSize(new THREE.Vector3())
-  return {
-    part,
-    matrix: local,
-    inverse: local.clone().invert(),
-    scale: uniform ? s.x : 1,
-    box,
-    bvh,
-    points: part.points.map((p) => p.clone().applyMatrix4(matrix)),
-    size: [size.x, size.y, size.z].sort((a, b) => a - b)[1],
-  }
+const at = new THREE.Vector3()
+/** A part as the audit reads it: its triangles placed by `matrix`. */
+function bake(part: Part, matrix: THREE.Matrix4): Piece {
+  const position = part.mesh.geometry.getAttribute('position')
+  const positions = new Float32Array(position.count * 3)
+  for (let i = 0; i < position.count; i++) at.fromBufferAttribute(position, i).applyMatrix4(matrix).toArray(positions, i * 3)
+  const index = part.mesh.geometry.getIndex()
+  return preparePiece({ id: part.name, mesh: part.name, label: part.name, object: 'guest', positions, index: index ? Uint32Array.from(index.array) : null, material: CLAY })
 }
 
 /** Whether a part is drawn: the audit, like the renderer, skips a part hidden itself or under a hidden parent. */
@@ -123,58 +103,66 @@ function shown(part: Part): boolean {
   return true
 }
 
-const hit = { point: new THREE.Vector3(), distance: 0, faceIndex: 0 }
-const [ta, tb, tc, q] = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]
+type Range = { min: number; max: number; scale: number; shallowest: string; deepest: string }
 
-/** How deep a's deepest point lies inside b. */
-function depthInto(a: Placed, b: Placed): number {
-  const near = b.box.clone().expandByScalar(0.01)
-  const geometry = b.bvh.geometry
-  const index = geometry.index
-  const position = geometry.attributes.position
-  let depth = 0
-  for (const p of a.points) {
-    if (!near.containsPoint(p)) continue
-    q.copy(p).applyMatrix4(b.inverse)
-    b.bvh.closestPointToPoint(q, hit as never)
-    if (hit.distance * b.scale <= depth) continue
-    const f = hit.faceIndex * 3
-    const [i, j, k] = index ? [index.getX(f), index.getX(f + 1), index.getX(f + 2)] : [f, f + 1, f + 2]
-    ta.fromBufferAttribute(position, i)
-    tb.fromBufferAttribute(position, j)
-    tc.fromBufferAttribute(position, k)
-    const normal = tb.sub(ta).cross(tc.sub(ta))
-    if (normal.dot(ta.subVectors(q, hit.point)) < 0) depth = hit.distance * b.scale
-  }
-  return depth
-}
-
-type Range = { min: number; max: number; size: number; shallowest: string; deepest: string }
-
+/**
+ * How deep each pair of parts crosses, shallowest and deepest, over every
+ * pose. The whole guest squashes and leans together, which moves no part
+ * against another, so it is measured upright at full size; a part is measured
+ * against the head in the head's own frame, since the head is the one large
+ * part that moves. The head itself nods on its neck and, curling up, sinks
+ * into the body on purpose, so what is measured is every part that hangs on
+ * and moves on its own.
+ */
 function embedRanges(species: Species, step: number): Map<string, Range> {
   const { shapes, root, parts, rig } = rigOf(species)
   const ranges = new Map<string, Range>()
+  const upright = new THREE.Matrix4()
+  const [body, head] = ['body', 'head'].map((name) => parts.find((part) => part.name === name)!)
+  const hanging = parts.filter((part) => part !== body && part !== head)
+  for (const part of parts) part.mesh.geometry.computeBoundingBox()
+  // Most parts sit still through most poses: each placing is read, and each
+  // pair of placings measured, once.
+  const read = new Map<string, Piece>()
+  const measured = new Map<string, { depth: number; scale: number }>()
+  const placing = (part: Part, frame: THREE.Matrix4) => {
+    const matrix = frame.clone().multiply(part.mesh.matrixWorld)
+    return { part, matrix, key: `${part.name} ${matrix.elements.map((e) => e.toFixed(6)).join(' ')}` }
+  }
+  const piece = ({ part, matrix, key }: ReturnType<typeof placing>) => {
+    if (!read.has(key)) read.set(key, bake(part, matrix))
+    return read.get(key)!
+  }
+  const measure = (a: Part, b: Part, frame: THREE.Matrix4, name: string) => {
+    const key = `${a.name} x ${b.name}`
+    const [pa, pb] = [placing(a, frame), placing(b, frame)]
+    const touching = a.mesh.geometry.boundingBox!.clone().applyMatrix4(pa.matrix).intersectsBox(b.mesh.geometry.boundingBox!.clone().applyMatrix4(pb.matrix))
+    if (!touching && !ranges.has(key)) return
+    const both = `${pa.key} | ${pb.key}`
+    let crossing = touching ? measured.get(both) : { depth: 0, scale: 0 }
+    if (!crossing) {
+      const [ra, rb] = [piece(pa), piece(pb)]
+      measured.set(both, (crossing = { depth: pairDepth(ra, rb, CAMERA)?.depth ?? 0, scale: Math.min(ra.scale, rb.scale) }))
+    }
+    const depth = crossing.depth
+    if (!ranges.has(key) && depth === 0) return
+    const range = ranges.get(key) ?? { min: Infinity, max: 0, scale: crossing.scale, shallowest: '', deepest: '' }
+    if (depth < range.min) [range.min, range.shallowest] = [depth, name]
+    if (depth > range.max) [range.max, range.deepest] = [depth, name]
+    ranges.set(key, range)
+  }
   for (const { name, pose } of posesOf(species, step)) {
     poseGuest(rig, shapes, pose, { yaw: 0, pitch: 0 }, 1)
-    // The whole guest squashes and leans together, which moves no part against
-    // another; measure in its own upright frame at full size.
     root.rotation.set(0, 0, 0)
     root.scale.setScalar(GUEST_SIZE)
     root.updateMatrixWorld(true)
-    const placed = parts.filter(shown).map(place)
-    for (let i = 0; i < placed.length; i++) {
-      for (let j = i + 1; j < placed.length; j++) {
-        const [a, b] = [placed[i], placed[j]]
-        const key = `${a.part.name} x ${b.part.name}`
-        const touching = a.box.intersectsBox(b.box)
-        if (!touching && !ranges.has(key)) continue
-        const depth = touching ? Math.max(depthInto(a, b), depthInto(b, a)) : 0
-        const range = ranges.get(key) ?? { min: Infinity, max: 0, size: Math.min(a.size, b.size), shallowest: '', deepest: '' }
-        if (depth < range.min) [range.min, range.shallowest] = [depth, name]
-        if (depth > range.max) [range.max, range.deepest] = [depth, name]
-        ranges.set(key, range)
-      }
-    }
+    const inHead = new THREE.Matrix4().makeScale(GUEST_SIZE, GUEST_SIZE, GUEST_SIZE).multiply(rig.head.matrixWorld.clone().invert())
+    const moving = hanging.filter(shown)
+    moving.forEach((part, i) => {
+      measure(body, part, upright, name)
+      measure(head, part, inHead, name)
+      for (const other of moving.slice(i + 1)) measure(part, other, upright, name)
+    })
   }
   return ranges
 }
@@ -183,7 +171,7 @@ function embedRanges(species: Species, step: number): Map<string, Range> {
 // their shallowest by the larger of 6% of the smaller part and 0.2% of the
 // view; the camera always fits the table's 164 cm width (stage.tsx), so the
 // view is never narrower. These keep a quarter of that spare.
-const allowed = (range: Range) => 0.75 * Math.max(0.06 * range.size, 0.002 * 164)
+const allowed = (range: Range) => 0.75 * Math.max(0.06 * range.scale, 0.002 * 164)
 
 describe('a guest keeps its parts pressed together by the same amount, however it moves', () => {
   for (const species of new Set(SEAT_SPECIES)) {
@@ -192,14 +180,10 @@ describe('a guest keeps its parts pressed together by the same amount, however i
       const hanging = ['body x arm-left', 'body x arm-right', 'head x nose', 'head x cheek-left', 'head x cheek-right']
       if (species === 'rabbit') hanging.push('head x ear-left', 'head x ear-right')
       for (const pair of hanging) expect(ranges.has(pair), pair).toBe(true)
-      // The head itself nods on its neck and, curling up, sinks into the body
-      // on purpose; what is measured here is every part that hangs on and
-      // moves on its own.
       for (const [pair, range] of ranges) {
-        if (pair === 'body x head') continue
         expect(range.max - range.min, `${pair}: shallowest ${range.shallowest}, deepest ${range.deepest}`).toBeLessThanOrEqual(allowed(range))
       }
-    })
+    }, 30_000)
   }
 
   it('slides a nose along its snout from where it always sat', () => {
