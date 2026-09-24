@@ -223,8 +223,11 @@ function World({ table }: { table: TableController }) {
   const [, setVersion] = useState(table.version)
   const lastPlates = useRef<number[]>([...table.feeding.plates])
   const hops = useRef(new Map<number, number>())
+  const drawn = useRef(false)
   useFrame((_, dt) => {
-    table.step(dt)
+    // The first delta runs from when the canvas was made, not from a drawn frame.
+    table.step(drawn.current ? dt : 0)
+    drawn.current = true
     table.feeding.plates.forEach((total, seat) => {
       if (total > (lastPlates.current[seat] ?? 0)) hops.current.set(seat, table.t)
     })
