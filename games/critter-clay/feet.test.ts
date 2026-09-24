@@ -101,16 +101,28 @@ describe('feet', () => {
     expect(worst).toBeGreaterThan(-0.05)
   })
 
-  it.each(['legStub', 'legLong'] as const)('a lump asleep on six %s legs rests them on the turntable, not through it', (kind) => {
+  it.each(['legStub', 'legLong'] as const)('a lump asleep on six %s legs rests them on the turntable, not through it, and they still show', (kind) => {
     const state = deserialize({ v: 1, sleeper: { id: 1, hue: 1, parts: [...six(kind), ...parts('eye')], x: 0, z: 0, heading: 0, seed: 5 }, awake: [], tray: {}, nextHue: 2, nextId: 2 })
     const workshop = new WorkshopController(state, { save: vi.fn() })
     workshop.setProjector(topDown)
     let worst = Infinity
+    let shortest = Infinity
+    let slimmest = Infinity
     for (let t = 0; t < 12; t += 1 / 60) {
       workshop.step(1 / 60)
       worst = Math.min(worst, lowestFootGap(workshop))
+      const batch = workshop.rig.batches[kind]
+      for (let i = 0; i < batch.count; i++) {
+        if (batch.owners[i] !== OWNER.critter(1)) continue
+        const e = batch.matrices.subarray(i * 16, i * 16 + 16)
+        shortest = Math.min(shortest, Math.hypot(e[4], e[5], e[6]))
+        slimmest = Math.min(slimmest, Math.hypot(e[0], e[1], e[2]))
+      }
     }
     expect(worst).toBeGreaterThan(-0.05)
+    // splayed out, a leg sits higher up the flank rather than being squashed to a nub
+    expect(shortest).toBeGreaterThan(0.25)
+    expect(slimmest).toBeGreaterThan(0.9)
   })
 
   it('walking critters of every build keep their feet on the bench', () => {

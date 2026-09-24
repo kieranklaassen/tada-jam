@@ -464,19 +464,17 @@ export class Rig {
   private footOnFloor(out: THREE.Matrix4, kind: 'legStub' | 'legLong'): THREE.Matrix4 {
     if (!this.feetOnFloor) return out
     const e = out.elements
-    const down = -e[5] * LEG_LENGTH[kind]
+    const down = Math.max(0, -e[5] * LEG_LENGTH[kind])
     const room = e[13] - this.floor - SOLE_GAP
-    let fit = 1
-    if (down > 0) for (const [x, z] of SOLE[kind]) fit = Math.min(fit, (room + e[1] * x + e[9] * z) / down)
-    fit = Math.max(0.15, fit)
-    // A leg splayed out flat can't lift its paw by being shorter: it sits a little higher up its critter's flank
-    // (its collar sinks deeper into the clay), and only past that is its paw slimmed.
     let low = 0
     for (const [x, z] of SOLE[kind]) low = Math.min(low, e[1] * x + e[9] * z)
-    const left = room - fit * Math.max(0, down)
-    const lift = Math.min(FLANK_LIFT, Math.max(0, -(left + low)))
-    const girth = low < 0 ? Math.min(1, Math.max(0.3, (left + lift) / -low)) : 1
+    // First the leg sits a little higher up its critter's flank (its collar sinks deeper into the clay); past that it is
+    // shorter, and a leg splayed out flat, which being shorter can't lift, has its paw slimmed.
+    const lift = Math.min(FLANK_LIFT, Math.max(0, down - low - room))
     e[13] += lift
+    const clear = room + lift + low
+    const fit = down > 0 ? Math.min(1, Math.max(0.15, clear / down)) : 1
+    const girth = low < 0 ? Math.min(1, Math.max(0.3, (room + lift - fit * down) / -low)) : 1
     if (fit >= 1 && girth >= 1) return out
     return out.multiply(this.T.makeScale(girth, fit, girth))
   }
