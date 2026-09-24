@@ -6,7 +6,7 @@ import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelf
 import { GRAVITY, HOLD_HEIGHT, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
 import { JAR_REACH, partDepth, STOOL_REACH, STOOL_TOP } from './partShape'
 import { stoneRest } from './stoneShape'
-import { surfaceUnder } from './surfaces'
+import { feedingFloor, surfaceUnder } from './surfaces'
 import { SaveCadence } from './saveCadence'
 import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
 import { cutPiece, placeFromBag, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
@@ -914,7 +914,7 @@ export class TableController {
       const key = `guest-${index}`
       if (this.state.liveMat !== 'feeding') this.physics.removeFixture(key)
       else if (this.state.seats[index] && this.guestDrag?.seat !== index) this.physics.setFixture(key, { ...seat.guest, r: GUEST_RADIUS }, 10)
-      else if (!this.state.seats[index] && this.stoolsShown) this.physics.setFixture(key, { ...seat.guest, r: STOOL_REACH / UNIT }, STOOL_TOP)
+      else if (!this.state.seats[index] && this.stoolsShown) this.physics.setFixture(key, { ...seat.guest, r: STOOL_REACH / UNIT }, feedingFloor(seat.guest, STOOL_REACH) + STOOL_TOP)
       else if (!this.state.seats[index]) this.physics.removeFixture(key)
       else this.physics.removeFixture(key)
     })

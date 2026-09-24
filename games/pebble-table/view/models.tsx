@@ -24,15 +24,17 @@ import {
   sphereGrid,
   STOOL,
   STOOL_LIFT,
+  STOOL_REACH,
   stoolButton,
   stoolCushion,
   stoolRim,
   type Lumped,
 } from '../partShape'
-import { BOWL_PROFILE, BOWL_SCALE, DISH_PROFILE, ON_RUG, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y } from '../surfaces'
-import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
+import { BOWL_PROFILE, BOWL_SCALE, DISH_PROFILE, feedingFloor, HEM_POINTS, hemAt, ON_RUG, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y } from '../surfaces'
+import { furTime, MAX_SHELLS } from './fur'
+import { GUEST_SIZE, guestFloor, guestYaw, NECK_Y, soleDepth, speciesShapes } from './guest'
 import { useQuality } from './quality'
-import { MotionDirector, PERSONALITIES, SEAT_SPECIES, type Species } from '../motion'
+import { MotionDirector, PERSONALITIES, SEAT_SPECIES } from '../motion'
 import { JAR_SCALE, JARS, PART_COUNTS, PART_KINDS, type PartKind } from '../parts'
 import type { AlbumPage } from '../album'
 import * as geo from './geometry'
@@ -479,13 +481,12 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
 
 // --- Fair Feeding --------------------------------------------------------------
 
-/** A rolled clay rope that follows the rug's scalloped elliptical hem. */
-function ellipseRope(rx: number, rz: number): THREE.BufferGeometry {
+/** A rolled clay rope along the rug's scalloped elliptical hem, around the rug's centre. */
+function hemRope(): THREE.BufferGeometry {
   const points: THREE.Vector3[] = []
-  for (let i = 0; i < 160; i++) {
-    const a = (i / 160) * Math.PI * 2
-    const scallop = 1 + Math.abs(Math.sin(a * 14)) * 0.02
-    points.push(new THREE.Vector3(Math.cos(a) * rx * scallop, 0, Math.sin(a) * rz * scallop))
+  for (let i = 0; i < HEM_POINTS; i++) {
+    const at = hemAt(i / HEM_POINTS)
+    points.push(new THREE.Vector3((at.x - RUG.center.x) * UNIT, 0, (at.y - RUG.center.y) * UNIT))
   }
   return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 240, RUG_HEM.tube, 8, true)
 }
@@ -511,7 +512,7 @@ function feedingShapes() {
       paint(geo.fromGrid(stoolButton(), STOOL.button.segments, STOOL.button.rings), '#c79a45', null),
       paint(geo.fromRing(stoolRim(), STOOL.rim.tube, STOOL.rim.radial, STOOL.rim.tubular), '#c79a45', null),
     ]).translate(0, STOOL_LIFT, 0),
-    rugRope: merge([piece(ellipseRope(RUG.rx * UNIT, RUG.rz * UNIT), '#d8c39c', { position: [0, RUG_HEM_Y, 0], scale: [1, RUG_HEM.flatten, 1] }, { lump: 0.12, frequency: 0.5, ground: null })]),
+    rugRope: merge([piece(hemRope(), '#d8c39c', { position: [0, RUG_HEM_Y, 0], scale: [1, RUG_HEM.flatten, 1] }, { lump: 2 * RUG_HEM.lump, frequency: 0.5, ground: null })]),
   }
 }
 
@@ -530,7 +531,7 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
     FEEDING.seats.forEach((seat, index) => {
       if (seats[index] || !showStools) return
       const p = to3(seat.guest)
-      scratch.m.makeTranslation(p.x, 0, p.z).multiply(scratch.m2.makeScale(scale, scale, scale))
+      scratch.m.makeTranslation(p.x, feedingFloor(seat.guest, STOOL_REACH), p.z).multiply(scratch.m2.makeScale(scale, scale, scale))
       stools.current?.setMatrixAt(stoolCount++, scratch.m)
     })
     if (stools.current) {
@@ -598,98 +599,6 @@ export type GuestPose = {
   rumbleAt: number | null
   arriveAt: number | null
   now: number
-}
-
-const NECK_Y = 7.4
-
-type GuestShapes = {
-  body: THREE.BufferGeometry
-  head: THREE.BufferGeometry
-  eyes: THREE.BufferGeometry
-  mouth: THREE.BufferGeometry
-  arm: THREE.BufferGeometry
-  /** Parts that move on their own: nose (wiggles), cheeks (puff), rabbit ears (flick, left then right, built around their base). */
-  nose: THREE.BufferGeometry
-  cheeks: THREE.BufferGeometry
-  ears: [THREE.BufferGeometry, THREE.BufferGeometry] | null
-  noseAt: V3
-  /** Shell geometry for clay-tuft fur (rabbit, bear), or null. */
-  furBody: THREE.BufferGeometry | null
-  furHead: THREE.BufferGeometry | null
-  /** Hedgehog quills: one shared quill and where each instance sits, for the body and the head. */
-  quill: THREE.BufferGeometry | null
-  quillsBody: THREE.Matrix4[]
-  quillsHead: THREE.Matrix4[]
-}
-
-function guestShapes(species: Species): GuestShapes {
-  const fur = species === 'rabbit' ? PALETTE.rabbit : species === 'bear' ? PALETTE.bear : PALETTE.hedgehog
-  const light = species === 'bear' ? PALETTE.bearMuzzle : '#f7ead3'
-  const sphere = geo.sphere(26)
-  const body = [
-    piece(sphere, fur, { position: [0, 4, 0], scale: [4.4, 4.1, 4.1] }, { lump: 0.3, frequency: 0.55, seed: 1 }),
-    piece(sphere, light, { position: [0, 3.5, 2.6], scale: [2.9, 2.8, 1.8] }, { lump: 0.15, frequency: 0.7 }),
-    piece(sphere, fur, { position: [-2, 0.6, 2.2], scale: [1.5, 0.8, 1.9] }, { lump: 0.1 }),
-    piece(sphere, fur, { position: [2, 0.6, 2.2], scale: [1.5, 0.8, 1.9] }, { lump: 0.1 }),
-  ]
-  if (species === 'rabbit') body.push(piece(sphere, '#fbf4e8', { position: [0, 2.2, -3.8], scale: 1.4 }, { lump: 0.2 }))
-
-  const headSphere: V3 = [0, 3.1, 0.2]
-  const head = [piece(sphere, fur, { position: headSphere, scale: species === 'hedgehog' ? [3.4, 3.1, 3.3] : [3.5, 3.3, 3.3] }, { lump: 0.22, frequency: 0.7, seed: 3, ground: null })]
-  const muzzle = species === 'hedgehog' ? { position: [0, 2.3, 3.4] as V3, scale: [1.5, 1.3, 1.9] as V3 } : { position: [0, 2.3, 2.9] as V3, scale: [1.8, 1.3, 1.1] as V3 }
-  head.push(piece(sphere, light, muzzle, { lump: 0.08, ground: null }))
-  const nose = merge([piece(sphere, PALETTE.nose, { position: [0, 0, 0], scale: [0.55, 0.42, 0.4] }, { ground: null })])
-  const cheeks = merge([-1, 1].map((side) => piece(sphere, PALETTE.cheek, { position: [side * 2.4, 0, 0], scale: [0.8, 0.5, 0.35] }, { ground: null })))
-  const ears =
-    species === 'rabbit'
-      ? ([-1, 1].map((side) =>
-          merge([
-            piece(geo.capsule(14), fur, { position: [0, 2, 0], rotation: [-0.12, 0, -side * 0.16], scale: [1.4, 3.3, 0.9] }, { lump: 0.12, ground: null }),
-            piece(geo.capsule(12), PALETTE.rabbitInner, { position: [0, 2.1, 0.55], rotation: [-0.12, 0, -side * 0.16], scale: [0.75, 2.6, 0.35] }, { ground: null }),
-          ]),
-        ) as [THREE.BufferGeometry, THREE.BufferGeometry])
-      : null
-  for (const side of [-1, 1]) {
-    if (species === 'bear') {
-      head.push(piece(sphere, fur, { position: [side * 2.7, 5.9, 0], scale: [1.35, 1.35, 0.9] }, { lump: 0.1, ground: null }))
-      head.push(piece(sphere, PALETTE.bearMuzzle, { position: [side * 2.7, 5.9, 0.6], scale: [0.75, 0.75, 0.4] }, { ground: null }))
-    } else if (species === 'hedgehog') {
-      head.push(piece(sphere, fur, { position: [side * 2.4, 5.2, 0.2], scale: [0.8, 0.8, 0.5] }, { ground: null }))
-    }
-  }
-
-  const eyes = [-1, 1].flatMap((side) => [
-    piece(sphere, PALETTE.eye, { position: [side * 1.42, 0, 2.9], scale: [0.78, 0.9, 0.55] }, { ground: null }),
-    piece(sphere, PALETTE.shine, { position: [side * 1.42 + 0.26, 0.32, 3.38], scale: 0.26 }, { ground: null }),
-    piece(sphere, PALETTE.shine, { position: [side * 1.42 - 0.2, -0.28, 3.4], scale: 0.1 }, { ground: null }),
-  ])
-  return {
-    body: merge(body),
-    head: merge(head),
-    eyes: merge(eyes),
-    mouth: merge([piece(geo.capsule(10), PALETTE.mouth, { rotation: [0, 0, Math.PI / 2], scale: [0.3, 0.7, 0.3] }, { ground: null })]),
-    arm: merge([piece(geo.capsule(12), fur, { position: [0, -1.5, 0], scale: [1.2, 1.6, 1.2] }, { lump: 0.08, ground: null })]),
-    nose,
-    cheeks,
-    ears,
-    noseAt: [0, 2.8, muzzle.position[2] + muzzle.scale[2] * 0.85],
-    furBody: species === 'hedgehog' ? null : withShells(piece(sphere, fur, { position: [0, 4, 0], scale: [4.4, 4.1, 4.1] }, { lump: 0.3, frequency: 0.55, seed: 1 })),
-    furHead: species === 'hedgehog' ? null : withShells(piece(sphere, fur, { position: headSphere, scale: [3.5, 3.3, 3.3] }, { lump: 0.22, frequency: 0.7, seed: 3, ground: null })),
-    quill: species === 'hedgehog' ? quillGeometry(PALETTE.spikes, '#c9a27a') : null,
-    quillsBody: species === 'hedgehog' ? quillLayout(70, [0, 4.2, 0], 4.0, 1, 0.12, 1.8) : [],
-    quillsHead: species === 'hedgehog' ? quillLayout(26, headSphere, 3.2, 5, 0.15, 1.15) : [],
-  }
-}
-
-const shapeCache = new Map<Species, GuestShapes>()
-
-function speciesShapes(species: Species): GuestShapes {
-  let cached = shapeCache.get(species)
-  if (!cached) {
-    cached = guestShapes(species)
-    shapeCache.set(species, cached)
-  }
-  return cached
 }
 
 function scaleShapes() {
@@ -802,7 +711,8 @@ function useWarmup(materials: ClayMaterials): void {
   }, [gl, camera, scene, materials])
 }
 
-const GUEST_SIZE = 1.5
+/** How high a guest being dragged is lifted: clear of the bowl, the plates and the stones on them. */
+const GUEST_CARRY = BOWL_PROFILE.reduce((top, [, h]) => Math.max(top, h), 0) * BOWL_SCALE + ON_RUG + 1
 
 function easeOutBack(t: number): number {
   const c = 1.9
@@ -816,7 +726,7 @@ function easeOutBack(t: number): number {
  * turns toward what matters use the species' own spring, so the bear turns
  * lazily and the rabbit snaps.
  */
-export function Guest({ seat, at, read }: { seat: number; at: Point; read: () => GuestPose }) {
+export function Guest({ seat, at, carried, read }: { seat: number; at: Point; carried: boolean; read: () => GuestPose }) {
   const { clay, fur, quill } = useClay()
   const furCap = useQuality().furShells
   const camera = useThree((state) => state.camera)
@@ -837,11 +747,10 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
   const cheeks = useRef<THREE.Mesh>(null)
   const ears = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
   const arms = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
-  const springs = useRef({ yaw: { x: 0, v: 0 }, pitch: { x: 0, v: 0 } })
-  const facing = FEEDING.seats[seat].facing
-  const face = new THREE.Vector2(-facing.x * 0.8, -facing.y + 1.5).normalize()
-  const yaw = Math.atan2(face.x, face.y)
+  const springs = useRef({ yaw: { x: 0, v: 0 }, pitch: { x: 0, v: 0 }, carry: { x: 0, v: 0 } })
+  const yaw = guestYaw(seat)
   const p = to3(at)
+  const floor = useMemo(() => guestFloor(seat, at), [seat, at])
 
   useEffect(() => {
     ;[shapes.quillsBody, shapes.quillsHead].forEach((matrices, i) => {
@@ -904,10 +813,14 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
     const vertical = 1 - m.squash
     const horizontal = 1 + m.squash * 0.6
 
+    const carry = springStep(s.carry, carried ? GUEST_CARRY : 0, dt, 160, 18)
     if (root.current) {
-      root.current.position.y = Math.max(0, m.lift)
       root.current.scale.set(GUEST_SIZE * horizontal * pop, GUEST_SIZE * vertical * pop, GUEST_SIZE * horizontal * pop)
       root.current.rotation.set(m.lean, m.twist, m.roll)
+      root.current.position.y = 0
+      root.current.updateMatrix()
+      // It rocks and leans on its lowest point, which stays on the highest thing under it.
+      root.current.position.y = floor + soleDepth(shapes.sole, root.current.matrix) + Math.max(0, m.lift, carry)
     }
     if (head.current) {
       head.current.position.y = NECK_Y - m.headDrop
