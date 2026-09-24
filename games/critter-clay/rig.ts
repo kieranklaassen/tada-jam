@@ -523,6 +523,8 @@ export class Rig {
     world.body[2] = this.v.z
     world.bodyR = Math.max(this.rx, this.rz) * 1.08
     let footprint = world.bodyR
+    let top = world.body[1] + this.ry * 1.08
+    let bottom = world.body[1] - this.ry * 1.08
 
     const parts = critter.save.parts
     let legOrder = 0
@@ -539,8 +541,13 @@ export class Rig {
       world.parts[i * 3] = this.v.x
       world.parts[i * 3 + 1] = this.v.y
       world.parts[i * 3 + 2] = this.v.z
+      const girth = PART_GIRTH[part.kind]
+      top = Math.max(top, this.v.y + girth)
+      bottom = Math.min(bottom, this.v.y - girth)
       this.v.set(0, PART_REACH[part.kind], 0).applyMatrix4(this.W)
-      footprint = Math.max(footprint, Math.hypot(this.v.x - world.body[0], this.v.z - world.body[2]) + PART_GIRTH[part.kind])
+      footprint = Math.max(footprint, Math.hypot(this.v.x - world.body[0], this.v.z - world.body[2]) + girth)
+      top = Math.max(top, this.v.y + girth)
+      bottom = Math.min(bottom, this.v.y - girth)
       if (isLeg) {
         this.v.set(0, PART_REACH[part.kind], 0).applyMatrix4(this.W)
         const f = world.feetCount++ * 3
@@ -556,6 +563,8 @@ export class Rig {
     }
 
     world.reach = footprint
+    world.top = top
+    world.bottom = bottom
 
     // nose
     this.faceSurface(NOSE_DIR, false)

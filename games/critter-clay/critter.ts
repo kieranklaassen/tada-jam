@@ -75,10 +75,13 @@ export type CritterWorld = {
   /** Where each leg meets the ground, for contact shadows. */
   feet: Float32Array
   feetCount: number
+  /** The highest any of it reaches (body or part), and the lowest, in bench units. */
+  top: number
+  bottom: number
 }
 
 function createWorld(): CritterWorld {
-  return { body: [0, 0, 0], bodyR: 6, reach: BODY_CLEARANCE, nose: [0, 0, 0], parts: new Float32Array(MAX_PARTS * 3), feet: new Float32Array(MAX_LEGS * 3), feetCount: 0 }
+  return { body: [0, 0, 0], bodyR: 6, reach: BODY_CLEARANCE, nose: [0, 0, 0], parts: new Float32Array(MAX_PARTS * 3), feet: new Float32Array(MAX_LEGS * 3), feetCount: 0, top: 12, bottom: 0 }
 }
 export const CARRY_HEIGHT = 15
 const BLEND_SECONDS = 0.24
@@ -153,6 +156,8 @@ export class Critter {
   profile: GaitProfile
   /** The resting height of the body centre above the ground, on its legs. */
   standLift: number
+  /** Carried or dropping: the controller keeps its ground at least this high, over the friends under it. */
+  carryFloor = 0
   mode: Mode
   modeT = 0
   /** Seconds this critter has existed on screen (drives breathing so neighbours don't breathe in sync). */
@@ -421,7 +426,7 @@ export class Critter {
         carriedPose(this.profile.temperament, this.modeT, pose)
         this.mover.x = this.carryAt.x
         this.mover.z = this.carryAt.z
-        this.ground = CARRY_HEIGHT - this.standLift
+        this.ground = Math.max(CARRY_HEIGHT - this.standLift, this.carryFloor)
         moving = true
         break
       case 'landing':
@@ -487,7 +492,7 @@ export class Critter {
     const { touches, seconds, weight } = LAND_TIMING[this.profile.temperament]
     landPose(this.profile.temperament, t, this.pose)
     const k = Math.min(1, t / touches[0])
-    this.ground = (CARRY_HEIGHT - this.standLift) * (1 - k * k)
+    this.ground = Math.max((CARRY_HEIGHT - this.standLift) * (1 - k * k), this.carryFloor)
     // it slides clear of any friend it was held over before it drops low
     const aside = smooth(Math.min(1, k * 1.6))
     this.mover.x = mix(this.from.x, this.target.x, aside)

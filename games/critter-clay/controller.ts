@@ -8,7 +8,7 @@ import { PART_KINDS, type Hue, type Part, type PartKind } from './parts'
 import { displayBase, GLOW_SHAPE, OWNER, Rig, SHADOW_SHAPE } from './rig'
 import { SaveCadence } from './saveCadence'
 import { attach, detach, putToSleep, serialize, takeFromTray, turntableFree, wake, type CritterSave, type WorkshopState } from './state'
-import { MEET_RADIUS, separate, type Mover } from './wander'
+import { FOOTPRINT_GAP, MEET_RADIUS, separate, type Mover } from './wander'
 
 // The workshop while it is on screen: touch, rules, critter behaviour,
 // guidance, sound, and saving. It knows nothing about WebGL. Each step it
@@ -115,6 +115,10 @@ const MIN_HIT_PX = 22
 const SURE_PART = 0.5
 /** The middle of an awake critter's belly (share of its hit radius) lifts it, so a well-decorated one can still be carried. */
 const BELLY_CORE = 0.6
+/** How early (bench units before footprints touch) a carried critter starts to float over a friend, and how clear it stays. */
+const LIFT_MARGIN = 6
+const LIFT_CLEAR = 1.5
+const smooth = (t: number) => t * t * (3 - 2 * t)
 const TRAY_GROW_SECONDS = 0.45
 const FLIGHT_SECONDS = 0.6
 /** A tapped lump answers with what it wants: the tray part hops, or its own nose glows, once it has turned to look. */
@@ -313,6 +317,7 @@ export class WorkshopController {
       world.cheer = this.cheerPoint
     }
 
+    this.liftOverFriends()
     let changed = false
     for (const critter of this.critters) {
       const wasAwake = critter.awake
@@ -351,6 +356,27 @@ export class WorkshopController {
       this.pinned[count++] = !critter.awake || critter.mode === 'landing' || critter.mode === 'waking' || critter.mode === 'lyingDown'
     }
     separate(this.apart, this.pinned, count, dt)
+  }
+
+  /**
+   * A critter carried or dropping floats over any friend under its footprint, horns and all, rising as it comes
+   * within `LIFT_MARGIN` of it, so it never passes through a taller friend on the way.
+   */
+  private liftOverFriends(): void {
+    for (const critter of this.critters) {
+      critter.carryFloor = 0
+      if (critter.mode !== 'carried' && critter.mode !== 'landing') continue
+      const hang = critter.ground - critter.world.bottom
+      // dropping, it lands a footprint gap from its friends, so it may only hover where it overlaps them
+      const margin = critter.mode === 'carried' ? LIFT_MARGIN : FOOTPRINT_GAP
+      for (const other of this.critters) {
+        if (other === critter || other.gone || other.mode === 'carried') continue
+        const touching = critter.mover.reach + other.mover.reach
+        const d = Math.hypot(critter.mover.x - other.mover.x, critter.mover.z - other.mover.z)
+        const near = smooth(Math.min(1, Math.max(0, (touching + margin - d) / margin)))
+        if (near > 0) critter.carryFloor = Math.max(critter.carryFloor, near * (other.world.top + LIFT_CLEAR + hang))
+      }
+    }
   }
 
   /** Everyone standing on the bench but `critter`, into `apart`; returns how many. */

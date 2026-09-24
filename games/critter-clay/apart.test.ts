@@ -144,4 +144,39 @@ describe('a crowded bench', () => {
     }
     expect(worst).toBeLessThan(0.3)
   })
+
+  it('a critter carried across its tallest friend and dropped on it floats over its horns, never through them', () => {
+    const workshop = crowdedBench()
+    for (let t = 0; t < 2; t += 1 / 60) workshop.step(1 / 60)
+    const carried = workshop.critters.find((c) => c.save.id === 1)!
+    const tall = workshop.critters.find((c) => c.save.id === 3)!
+    let worst = Infinity
+    const watch = () => {
+      const a = carried.mover
+      const b = tall.mover
+      if (Math.hypot(a.x - b.x, a.z - b.z) < a.reach + b.reach) worst = Math.min(worst, carried.world.bottom - tall.world.top)
+    }
+    const from = { x: carried.world.body[0] * 10 + 600, y: carried.world.body[2] * 10 + 400 }
+    workshop.pointerDown(1, from, 0)
+    for (let t = 0; t < 0.3; t += 1 / 60) workshop.step(1 / 60)
+    const over = () => ({ x: tall.mover.x * 10 + 600, y: tall.mover.z * 10 + 400 })
+    for (let i = 1; i <= 20; i++) {
+      const to = over()
+      workshop.pointerMove(1, { x: from.x + ((to.x - from.x) * i) / 20, y: from.y + ((to.y - from.y) * i) / 20 }, 300 + i * 16)
+      workshop.step(1 / 60)
+      watch()
+    }
+    for (let t = 0; t < 0.4; t += 1 / 60) {
+      workshop.step(1 / 60)
+      watch()
+    }
+    expect(carried.mode).toBe('carried')
+    workshop.pointerUp(1, over(), 1000)
+    for (let t = 0; t < 3; t += 1 / 60) {
+      workshop.step(1 / 60)
+      watch()
+    }
+    expect(worst).toBeLessThan(Infinity)
+    expect(worst).toBeGreaterThan(0)
+  })
 })
