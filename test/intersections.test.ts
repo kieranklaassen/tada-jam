@@ -1,7 +1,7 @@
 import { BoxGeometry, BufferGeometry, Matrix4, PerspectiveCamera, PlaneGeometry, SphereGeometry, Vector3 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { describe, expect, it } from 'vitest'
-import { analyseMoment, canFight, clipToPlanes, depthResolution, preparePiece, splitComponents, type CameraInfo, type MaterialInfo, type PieceInput, type PoseTrack } from '../scripts/intersections/core.ts'
+import { analyseMoment, canFight, clipToPlanes, depthResolution, partKeys, preparePiece, splitComponents, type CameraInfo, type MaterialInfo, type PieceInput, type PoseTrack } from '../scripts/intersections/core.ts'
 
 const camera = (() => {
   const cam = new PerspectiveCamera(30, 1180 / 820, 1, 200)
@@ -78,6 +78,27 @@ describe('intersection audit core', () => {
     expect(rest).toEqual([])
     const swung = run([body(), piece('arm', new BoxGeometry(0.4, 0.4, 1.2), [0.5, 1, 0], { object: 'frog' })], history)
     expect(swung.map((f) => f.kind)).toEqual(['pose'])
+  })
+
+  it('keeps the pose history of a pooled part with its owner, not its instance slot', () => {
+    const history = new Map<string, PoseTrack>()
+    const frame = (owner: string, armX: number) => {
+      const inputs = [
+        piece('body#0', sphere(), [0, 1, 0], { object: owner }),
+        piece('arm#0', new BoxGeometry(0.4, 0.4, 1.2), [armX, 1, 0], { object: owner }),
+      ].map((p) => ({ ...p, mesh: p.id.replace(/#\d+$/, '') }))
+      const pieces = inputs.map((p) => preparePiece(p, camera))
+      const parts = partKeys(inputs)
+      for (const p of pieces) p.part = parts.get(p.id)
+      return analyseMoment(pieces, { camera, viewSize, poseHistory: history })
+    }
+    // Slot 0 draws the critter A at rest, then the pool hands it to critter B,
+    // whose arm rests deeper: no part of either critter moved.
+    expect(frame('A', 1.05)).toEqual([])
+    expect(frame('B', 0.8)).toEqual([])
+    expect(partKeys([{ id: 'leg#7', mesh: 'leg', object: 'A' }, { id: 'leg#2', mesh: 'leg', object: 'A' }, { id: 'leg#3', mesh: 'leg', object: 'B' }])).toEqual(
+      new Map([['leg#2', 'A::leg@0'], ['leg#7', 'A::leg@1'], ['leg#3', 'B::leg']]),
+    )
   })
 
   it('skips a child mesh inside its parent mesh', () => {
