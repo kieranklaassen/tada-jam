@@ -103,6 +103,15 @@ export function stoneRadius3(q: Quarters): number {
 
 export type Collider = { shape: CANNON.ConvexPolyhedron; offset: CANNON.Vec3 }
 
+const TABLE_LOW = to3({ x: TABLE.x, y: TABLE.y })
+const TABLE_HIGH = to3({ x: SHELF.x + SHELF.w, y: TABLE.y + TABLE.h })
+
+/** Whether a body's middle lies over the table top or the shelf beside it. */
+function overTable(body: CANNON.Body): boolean {
+  const { x, z } = body.position
+  return x >= TABLE_LOW.x && x <= TABLE_HIGH.x && z >= TABLE_LOW.z && z <= TABLE_HIGH.z
+}
+
 /**
  * An upright prism around an outline (corners counterclockwise from +x toward
  * +z, seen from above), from `bottom` to `top`: the same vertices, faces, and
@@ -171,6 +180,8 @@ export class TablePhysics {
   private readonly pans: CANNON.Body[] = []
   /** The rug's top, while Fair Feeding is the live mat: a plane that holds only what lies over the rug (see `addRug`). */
   private rug: CANNON.Body | null = null
+  /** The table top and the shelf beside it: one plane that holds only what lies over them (see `addTable`). */
+  private table: CANNON.Body | null = null
   private readonly brooms = new Map<number, CANNON.Body>()
   private panDrops: [number, number] = [0, 0]
   private panSway = 0
@@ -284,6 +295,7 @@ export class TablePhysics {
       for (let k = 0; k < p1.length; k++) {
         const [a, b] = [p1[k], p2[k]]
         if ((a === this.rug && !this.overRug(b)) || (b === this.rug && !this.overRug(a))) continue
+        if ((a === this.table && !overTable(b)) || (b === this.table && !overTable(a))) continue
         if (a.shapes.length * b.shapes.length < NEAR_SHAPES_FROM) {
           one[0][0] = a
           one[1][0] = b
@@ -326,19 +338,19 @@ export class TablePhysics {
     }
   }
 
+  /**
+   * The table top and the shelf level with it are one plane at y = 0 that
+   * holds a body only while its middle is over them, so what is pushed past
+   * the edge still falls. Parts and stones lying awake on a slab box cost
+   * 7 to 9 us a contact test, the most of any pair on the Honest Scale; on a
+   * plane each is a pass over the body's corners.
+   */
   private addTable(): void {
-    const center = to3({ x: TABLE.x + TABLE.w / 2, y: TABLE.y + TABLE.h / 2 })
     const table = new CANNON.Body({ mass: 0, material: this.woodMaterial })
-    table.addShape(new CANNON.Box(new CANNON.Vec3((TABLE.w * UNIT) / 2, SLAB / 2, (TABLE.h * UNIT) / 2)))
-    table.position.set(center.x, -SLAB / 2, center.z)
+    table.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2)
+    table.addShape(new CANNON.Plane())
     this.world.addBody(table)
-    const shelfLeft = TABLE.x + TABLE.w
-    const shelfRight = SHELF.x + SHELF.w
-    const shelf = new CANNON.Body({ mass: 0, material: this.woodMaterial })
-    shelf.addShape(new CANNON.Box(new CANNON.Vec3(((shelfRight - shelfLeft) * UNIT) / 2, 2, (TABLE.h * UNIT) / 2)))
-    const shelfCenter = to3({ x: (shelfLeft + shelfRight) / 2, y: TABLE.y + TABLE.h / 2 })
-    shelf.position.set(shelfCenter.x, -2, shelfCenter.z)
-    this.world.addBody(shelf)
+    this.table = table
   }
 
   /**
