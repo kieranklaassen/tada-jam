@@ -5,7 +5,7 @@ import { buildCreature, CREATURE_ORDER } from './creatures'
 import { IDLE_BEFORE_DEMO } from './guidance'
 import type { Point } from './input'
 import { ANTICIPATE_S, CREATURE_STACK, PEEL_S, PERSONALITIES, SETTLE_S, SILHOUETTE_S, SKY_HOMES, SKY_Z, skyDepth, skyScale, SPARK_Z, type CreaturePose } from './motion'
-import { clearOfProscenium, PROSCENIUM, shadowScale, STAGE } from './projection'
+import { clearOfProscenium, LAMP, PROSCENIUM, shadowScale, STAGE } from './projection'
 import { SHAPE_KINDS, SHAPES } from './shapes'
 import { standsClash, standTooFront } from './stands'
 import { defaultTheatre, SKY_SLOTS, type TheatreState } from './state'
@@ -35,6 +35,11 @@ const projector: Projector = {
 
 function px(x: number, z: number): Point {
   return { x: x * PX_PER_CM, y: z * PX_PER_CM }
+}
+
+/** The screen point whose ray passes through world (x, y, z) under the fake camera. */
+function onScreen(x: number, y: number, z: number): Point {
+  return { x: x * PX_PER_CM, y: ((0.8 * (86 - y)) / 0.6 + z - 80) * PX_PER_CM }
 }
 
 function theatre(state: TheatreState = defaultTheatre(6), everTouched = false) {
@@ -368,6 +373,8 @@ describe('theatre controller', () => {
         if (landedAt < 0 && !dragon.flight) {
           landedAt = ctrl.t
           expect(pose.z, 'lands short of the sky layer, in front of the crest').toBeGreaterThan(skyDepth(dragon.slot) + 1)
+          const card = drawn(pose)
+          expect(ctrl.hitTest(onScreen(card.x, card.y, pose.z)), 'a tap on the card while it settles').toEqual({ kind: 'sky', index: ctrl.companions.indexOf(dragon) })
         }
       },
     )
@@ -520,6 +527,29 @@ describe('stands', () => {
     expect(square.pose.z).toBeLessThan(small.pose.z + 2)
     expect(square.target.z, 'set down where it stopped').toBeCloseTo(square.pose.z, 1)
     expect(standsClash(square, small, 0)).toBe(false)
+  })
+
+  it('with no clearly better move, the ghost hand still shows a slide to a rest the stand can hold', () => {
+    const best = vi.spyOn(CoverageMeter.prototype, 'best', 'get').mockReturnValue(null)
+    try {
+      // The square already stands where the outline's middle falls, as it often does while it fills it.
+      const { center } = theatre().ctrl.sleeper!.built
+      const state = defaultTheatre(6)
+      state.shapes[SQUARE] = { ...state.shapes[SQUARE], x: LAMP.x + (center.x - LAMP.x) / shadowScale(21), z: 21 }
+      const { ctrl } = theatre(state)
+      run(ctrl, 0.3)
+      runUntil(ctrl, () => ctrl.demo !== null, 20)
+      const demo = ctrl.demo!
+      expect(demo.index, 'another stand is shown').not.toBe(SQUARE)
+      const shape = ctrl.shapes[demo.index]
+      const rest = { kind: shape.kind, pose: { ...shape.pose, x: demo.to.x, z: demo.to.z, angle: demo.to.angle, yaw: 0 } }
+      expect(standTooFront(rest), 'behind the front line').toBe(false)
+      ctrl.shapes.forEach((other, j) => {
+        if (j !== demo.index) expect(standsClash(rest, other), `clear of the ${other.kind}`).toBe(false)
+      })
+    } finally {
+      best.mockRestore()
+    }
   })
 
   it('a twist stops before the card turns into its neighbour; a tap turn steps it aside instead', () => {
