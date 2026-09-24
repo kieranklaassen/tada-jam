@@ -329,6 +329,22 @@ describe('jars of loose parts', () => {
     expect(Math.abs(table.beam.angle)).toBeLessThan(0.02)
   })
 
+  it('weighs nothing lying on the table under a pan rim, so the beam never rocks it', () => {
+    const table = scaleTable()
+    for (const piece of [...table.state.pieces]) drag(table, piece, { x: 700, y: 880 })
+    const pan = SCALE.pans[0]
+    drag(table, { x: BAG.x, y: BAG.y }, { x: pan.x - pan.r - 40, y: pan.y })
+    run(table, 1)
+    const [stone] = table.state.pieces.filter((piece) => piece.y < 880 - 60)
+    const body = table.physics.body(stone.id)!
+    body.position.x = (pan.x - pan.r * 0.998 - 800) * UNIT
+    body.position.z = (pan.y - 500) * UNIT
+    body.wakeUp()
+    run(table, 3)
+    expect(Math.hypot(stone.x - pan.x, stone.y - pan.y)).toBeLessThan(pan.r)
+    expect(table.beam.angle).toBe(0)
+  })
+
   it('lets every tipped-out part come to rest, so physics goes quiet', () => {
     for (let trial = 0; trial < 4; trial++) {
       const table = scaleTable()
