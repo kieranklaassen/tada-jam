@@ -285,6 +285,9 @@
 
 /* The button from the hero, repurposed: open any game at random. */
 .home-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
   margin-top: 30px;
   padding: 20px 36px;
   border: 0;
@@ -300,6 +303,12 @@
   box-shadow: 0 10px 24px -12px #d11ba4aa;
   transition: transform 200ms var(--home-spring), box-shadow 200ms;
   animation: home-rise 700ms var(--home-out) calc(1500ms + 120ms * 3) both;
+}
+
+.home-cta-icon {
+  width: 26px;
+  height: 26px;
+  flex: none;
 }
 
 .home-cta:hover {
