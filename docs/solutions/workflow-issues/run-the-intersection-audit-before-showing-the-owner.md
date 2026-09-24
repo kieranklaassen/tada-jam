@@ -72,7 +72,15 @@ Felt Meadow's petals crossing each other counted as penetrations between strange
 
 When a run is clean, write down what no moment reached, and what `report.md` says it skipped or cannot read. Cover those with unit tests on the game's own model.
 
-**4. Cover what the audit cannot read.**
+**4. Know what the audit handles, and cover what it cannot read.** It already handles these, so a config need not work around them:
+
+- **Overlays.** A mesh whose materials all have `depthTest: false`, such as a ghost hand or a see-through card drawn over everything, is skipped for every kind of finding, since it "cannot visibly cross anything" (PR #18). So is a mesh with `colorWrite` off or under 5% opacity (`scripts/intersections/page.js`).
+- **Clipping planes.** A piece is cut to what the renderer's `clippingPlanes` keep, plus its material's when `localClippingEnabled` is on, before it is checked (PR #18).
+- **Instances.** Each instance of an `InstancedMesh` is its own object unless a rule says otherwise: an `instances` rule makes instance i part of object floor(i / `per`), and `userData.jamInstanceObjects` names each instance's object, joining a group whose `jamObject` has the same key (`scripts/intersections/types.ts`).
+- **Outline hulls.** A back-side mesh with a custom vertex shader that shares its front mesh's geometry is skipped as an outline (PR #23).
+- **Bare names.** `ignore`, `allow`, `objects`, `instances` and `split` patterns are also tried without colour suffixes and child indices, "so `outline$` matches `frog>outline #574373` and `frog:5/outline:1`" (PR #23).
+
+What it cannot read needs a config line or a test:
 
 - **Vertex-shader motion.** The audit reads positions on the CPU. It sees morph targets and skinning (`getVertexPosition` in `scripts/intersections/page.js`), but not code in a custom vertex shader, which `report.md` only counts. Move deforms that matter for contact into morph targets or TypeScript and test them there (the animation-clipping doc). A mesh drawn entirely by its shader is ignored by name, with the reason beside it, and reviewed on the contact sheets. Cosy Scarf's `scarf` and `strand` are ignored this way. So is a full-screen sky triangle that its shader places in clip space, which the audit reads at the world origin (Bedtime Forest's and Turning Tower's `^sky$`, PRs #29 and #30).
 - **Shader-instanced batches and outline hulls.** Meshes on `InstancedBufferGeometry`, and inverted-hull outlines that share their front mesh's geometry, are skipped and listed under "Not audited" in `report.md`. Check them by eye. A hull built as a geometry of its own is audited as a solid: Bedtime Forest's ink lines made 41 of its 53 findings until its config ignored `-ink$` (PR #29). Light Garden's `shadows-and-eyes` and `light` batches, Frog Choir's outline bands and Felt Meadow's fuzz shells were checked on the frames and contact sheets (PRs #26, #20, #24).
