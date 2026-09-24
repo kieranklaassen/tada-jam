@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { GardenController, type Projector, type Sound } from './controller'
+import { CREATURE_BODY, KNOB_BODY, PIECE_BODY } from './bodies'
+import { GardenController, pieceHeight, type PieceSim, type Projector, type Sound } from './controller'
 import { isAwake } from './creatures'
-import { KNOB, slotPoint, TURN_STEP, type CreatureKind, type Point } from './layout'
+import { KNOB, onPanel, slotPoint, TURN_STEP, type CreatureKind, type Point } from './layout'
 import { lightAt } from './optics'
 import { REST_BEFORE_PACING } from './tiers'
 import { defaultGarden, deserialize, type GardenState } from './state'
@@ -45,6 +46,57 @@ const drag = (garden: GardenController, from: Point, to: Point, lift = true) => 
 }
 
 const piece = (garden: GardenController, id: string) => garden.pieces.find((p) => p.spec.id === id)!
+
+/** Carry whatever is under `from` through each point in turn, a frame at a time, and let go; `watch` sees every frame. */
+const carry = (garden: GardenController, from: Point, through: Point[], watch: () => void) => {
+  garden.pointerDown(3, px(from), (clock += 10))
+  let last = from
+  for (const point of through) {
+    for (let i = 1; i <= 30; i++) {
+      garden.pointerMove(3, px({ x: last.x + ((point.x - last.x) * i) / 30, y: last.y + ((point.y - last.y) * i) / 30 }))
+      garden.step(1 / 60)
+      watch()
+    }
+    last = point
+  }
+  garden.pointerUp(3, px(last), (clock += 600))
+  for (let f = 0; f < 90; f++) {
+    garden.step(1 / 60)
+    watch()
+  }
+}
+
+/** Where something carried or flying home passes through something resting this frame: their glass shares room and height. */
+function throughs(garden: GardenController): string[] {
+  const things = [
+    ...garden.pieces.map((p) => {
+      const body = PIECE_BODY[p.spec.kind]
+      return { name: p.spec.id, x: p.x, y: p.y, reach: body.reach, bottom: pieceHeight(p), top: pieceHeight(p) + body.top, moving: p.heldBy !== null || p.flying > 0 }
+    }),
+    ...garden.creatures.map((c) => {
+      const body = CREATURE_BODY[c.c.kind]
+      return { name: c.c.kind, x: c.x, y: c.y, reach: body.reach, bottom: c.alt - c.ground, top: c.alt + body.top, moving: c.heldBy !== null }
+    }),
+  ]
+  const found: string[] = []
+  for (const a of things) {
+    if (!a.moving) continue
+    for (const b of things) {
+      if (b.moving || Math.hypot(a.x - b.x, a.y - b.y) >= a.reach + b.reach || a.bottom >= b.top) continue
+      found.push(`${a.name} through ${b.name} at ${garden.t.toFixed(2)}s`)
+    }
+  }
+  return found
+}
+
+/** How near a knob (arm and bead) comes to a point on the table. */
+function knobGap(garden: GardenController, p: PieceSim, at: Point): number {
+  const knob = garden.knobPoint(p)
+  const dx = knob.x - p.x
+  const dy = knob.y - p.y
+  const k = Math.max(0, Math.min(1, ((at.x - p.x) * dx + (at.y - p.y) * dy) / (dx * dx + dy * dy)))
+  return Math.hypot(at.x - (p.x + dx * k), at.y - (p.y + dy * k)) - KNOB_BODY.bead
+}
 
 describe('GardenController', () => {
   it('a tap turns a piece one step and saves the new angle', () => {
@@ -266,6 +318,97 @@ describe('GardenController', () => {
     tap(garden, { x: 0, y: 0 })
     garden.step(1 / 60)
     expect(garden.guide.handVisible).toBe(false)
+  })
+
+  it('a carried piece floats over the lamp and the sleepers it passes, and flies home over the tray', () => {
+    const { garden } = makeGarden(7)
+    const mirror = piece(garden, 'mirror1')
+    const filter = piece(garden, 'filterB')
+    const jelly = garden.creatures.find((c) => c.c.kind === 'jelly')!
+    const found: string[] = []
+    let overLamp = 0
+    let overJelly = 0
+    carry(garden, slotPoint(mirror.spec.slot), [{ x: -46, y: 2 }, { x: -40, y: -8 }], () => {
+      found.push(...throughs(garden))
+      overLamp = Math.max(overLamp, pieceHeight(mirror))
+    })
+    carry(garden, slotPoint(filter.spec.slot), [{ x: jelly.x, y: jelly.y }, { x: 40, y: -18 }, { x: 20, y: -24 }], () => {
+      found.push(...throughs(garden))
+      overJelly = Math.max(overJelly, pieceHeight(filter))
+    })
+    // Let go short of the tray, so it flies home across the prism's slot.
+    carry(garden, mirror.pose, [{ x: -32, y: 40 }], () => found.push(...throughs(garden)))
+    expect(found.slice(0, 3)).toEqual([])
+    expect(overLamp).toBeGreaterThan(PIECE_BODY.lamp.top)
+    expect(overJelly).toBeGreaterThan(CREATURE_BODY.jelly.top)
+    expect(mirror.pose.inTray).toBe(true)
+    expect(filter.pose.inTray).toBe(false)
+  })
+
+  it('a carried creature floats over the pieces it passes, and none ever dips under the panel', () => {
+    const state = defaultGarden(7)
+    Object.assign(state.pieces.find((p) => p.id === 'mirror1')!, { x: -40, y: -6, angle: Math.PI, inTray: false })
+    const garden = new GardenController(state, { save: () => {} })
+    garden.setProjector(topDown)
+    const snail = garden.creatures.find((c) => c.c.kind === 'snail')!
+    const found: string[] = []
+    let lowest = Infinity
+    let over = 0
+    carry(garden, { x: snail.x, y: snail.y }, [{ x: -38, y: -8 }, { x: -46, y: 2 }, { x: -28, y: -18 }], () => {
+      found.push(...throughs(garden))
+      for (const c of garden.creatures) lowest = Math.min(lowest, c.alt - c.ground)
+      over = Math.max(over, snail.alt - snail.ground)
+    })
+    expect(found.slice(0, 3)).toEqual([])
+    expect(lowest).toBeGreaterThan(-1e-9)
+    expect(over).toBeGreaterThan(PIECE_BODY.lamp.top)
+  })
+
+  it('a lamp at the edge slides in to keep its knob on the panel, however it is turned', () => {
+    const saved = defaultGarden(7)
+    Object.assign(saved.pieces.find((p) => p.id === 'lampB')!, { x: -58, y: -20, angle: 0, inTray: false })
+    const loaded = new GardenController(saved, { save: () => {} })
+    expect(onPanel(loaded.knobPoint(piece(loaded, 'lampB')), KNOB_BODY.bead)).toBe(true)
+
+    const { garden } = makeGarden(7)
+    const lamp = piece(garden, 'lampB')
+    const knobOnPanel = () => onPanel(garden.knobPoint(lamp), KNOB_BODY.bead)
+    drag(garden, slotPoint(lamp.spec.slot), { x: -58, y: -20 })
+    run(garden, 0.5)
+    expect(lamp.pose.inTray).toBe(false)
+    expect(knobOnPanel()).toBe(true)
+    for (let i = 0; i < 2; i++) {
+      tap(garden, lamp.pose)
+      run(garden, 0.6)
+      expect(knobOnPanel()).toBe(true)
+    }
+    // Round and round by the knob, a whole turn in two seconds, right at the edge.
+    garden.pointerDown(4, px(garden.knobPoint(lamp)), (clock += 10))
+    let off = 0
+    for (let f = 1; f <= 120; f++) {
+      const a = Math.PI * 1.25 + (f / 120) * Math.PI * 2
+      garden.pointerMove(4, px({ x: lamp.x + Math.cos(a) * KNOB.lamp.distance, y: lamp.y + Math.sin(a) * KNOB.lamp.distance }))
+      garden.step(1 / 60)
+      if (!knobOnPanel()) off++
+    }
+    garden.pointerUp(4, px(garden.knobPoint(lamp)), (clock += 2000))
+    expect(off).toBe(0)
+  })
+
+  it('a knob swung into a neighbour pushes its own piece clear instead of passing through', () => {
+    const state = defaultGarden(7)
+    Object.assign(state.pieces.find((p) => p.id === 'mirror1')!, { x: -46, y: -12, angle: Math.PI, inTray: false })
+    const garden = new GardenController(state, { save: () => {} })
+    garden.setProjector(topDown)
+    const lamp = piece(garden, 'lampA')
+    const mirror = piece(garden, 'mirror1')
+    expect(mirror.pose).toMatchObject({ x: -46, y: -12 })
+    // Swing the lamp's knob round until it points straight at the mirror.
+    drag(garden, garden.knobPoint(lamp), { x: lamp.x, y: lamp.y - KNOB.lamp.distance })
+    run(garden, 0.5)
+    expect(Math.hypot(lamp.pose.x + 46, lamp.pose.y - 2)).toBeGreaterThan(1)
+    expect(knobGap(garden, lamp, mirror.pose)).toBeGreaterThan(mirror.spec.radius + 0.5 - 1e-6)
+    expect(Math.hypot(lamp.pose.x - mirror.pose.x, lamp.pose.y - mirror.pose.y)).toBeGreaterThan(lamp.spec.radius + mirror.spec.radius + 1.5 - 1e-6)
   })
 
   it('never lets a trace outgrow its buffers, whatever the arrangement', () => {
