@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode }
 import * as THREE from 'three'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
+import { stoneRest } from '../stoneShape'
 import { createClayMaterials, merge, paint, PALETTE, piece, type ClayMaterials, type Hold } from './clay'
 import {
   JAR,
@@ -209,7 +210,8 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
       const rotation = scratch.m2.makeRotationFromQuaternion(scratch.q.set(...stone.quaternion).premultiply(rockTurn))
       const shapeScale = scratch.m3.makeScale(r * pop, r * pop, r * pop)
       const squashScale = scratch.m4.makeScale(1 + amount * 0.6, 1 - amount, 1 + amount * 0.6)
-      const lift = amount > 0 ? -amount * r * 0.35 : 0
+      // Squash, stretch and the pop all scale about the stone's middle; its belly stays where the physics rests it.
+      const lift = stoneRest(stone.q) * (pop * (1 - amount) - 1)
       scratch.m.makeTranslation(stone.position.x, stone.position.y + lift, stone.position.z).multiply(squashScale).multiply(rotation).multiply(shapeScale)
       instanced.setMatrixAt(i, scratch.m)
       const bright = 1 + stone.pulse * 0.28 + stone.glow * 0.18
