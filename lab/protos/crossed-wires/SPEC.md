@@ -21,8 +21,8 @@ How the sim produces it: a loop's blink rate is the sum of the answer times arou
 _The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-9, arch-11 (6 runs). Thresholds u2-panel-1, master seed 1._
 
 - **Depth gate:** fail. 1 of 6 runs (17%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 1, 0, 0 of 6.
-- **Play 5 against play 1:** change 0.23 (0.23 new signatures per 100 actions plus 0.00 new action kinds).
-- **Self-set aims:** 13 adopted, 4 made progress. Tried: blinking up, crossings up, kinds up, lit down, lit up, loops up, wires up.
+- **Play 5 against play 1:** change 1.22 (1.06 new signatures per 100 actions plus 0.17 new action kinds).
+- **Self-set aims:** 9 adopted, 1 made progress. Tried: blinking up, gates down, gates up, kinds up, wires down, wires up.
 - **First 10 seconds:** not assessed (did not pass the depth gate).
 - **Self-play:** objective blinking up; outcome variety 0.00 bits (by policy: greedy 0.00, random 0.00, repeat-one 0.00). Dominant strategy: no (the objective never varied).
 - **Hook flags** (raw material for the guidelines; session 3 return 16.7% with every hook on, 16.7% with all off):
@@ -34,4 +34,4 @@ _The panel numbers are model guesses at children, not measurements; real childre
 
 - Fails the depth gate: 1 of 6 target-panel runs (17%) start session 3, 33.3 points short of the 50% line (2 more runs needed).
 - Hook ablation says little for `stamps`: removing it changed nothing the personas can register.
-- Left first: `arch-9`, starting 1.0 of 5 sessions on average (the best in the target panel starts 2.0).
+- Left first: `arch-9`, starting 1.3 of 5 sessions on average (the best in the target panel starts 1.7).

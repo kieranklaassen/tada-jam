@@ -28,6 +28,7 @@ import {
   checkSpec,
   collectPrototypes,
   defaultLocations,
+  dominantText,
   fillSpec,
   findingsLines,
   generate,
@@ -358,6 +359,33 @@ describe('the ranking', () => {
     expect(rows[0]!.ranked.meanRank).toBe(rows[1]!.ranked.meanRank)
     const entries = tableRows(section(buildShortlist(list), '## Shortlist entries'))
     expect(entries.map((r) => r['Dominant strategy'])).toEqual(['no', 'yes (repeat-one)'])
+  })
+
+  it('says the dominant check was not assessed when the objective never varied, and keeps a real "no"', () => {
+    const same = { started: [8, 7, 6] as [number, number, number], signals: { returnScore: 0.7, changeScore: 2, aimScore: 2 } }
+    const blind = proto({ key: 'blind', ...same })
+    blind.report.selfPlay.dominant = { flagged: false, by: null, note: 'the objective never varied' }
+    const checked = proto({ key: 'checked', ...same })
+    const list = [blind, checked]
+    const blindText = 'not assessed (objective never varied)'
+    const text = buildShortlist(list)
+    const byKey = (rows: Record<string, string>[], key: string): Record<string, string> =>
+      rows.find((r) => (r['Prototype'] ?? r['Key'])?.startsWith(`\`${key}\``))!
+    // The entries table and the all-prototypes table both carry it.
+    const entries = tableRows(section(text, '## Shortlist entries'))
+    expect(byKey(entries, 'blind')['Dominant strategy']).toBe(blindText)
+    expect(byKey(entries, 'checked')['Dominant strategy']).toBe('no')
+    const all = tableRows(section(text, '## All prototypes'))
+    expect(byKey(all, 'blind')['Dominant strategy']).toBe(blindText)
+    expect(byKey(all, 'checked')['Dominant strategy']).toBe('no')
+    // A prototype with no objective keeps its own wording, and ranking is untouched by the blind case.
+    const noObjective = proto({ key: 'no-objective', ...same })
+    noObjective.report.selfPlay.objective = null
+    noObjective.report.selfPlay.dominant = { flagged: false, by: null, note: 'no objective declared: variety only' }
+    expect(dominantText(summarize(noObjective))).toBe('no objective')
+    expect(summarize(blind).dominant).toBe(false)
+    const rows = rankByBucket(list.map(summarize)).find((r) => r.bucket === '5-6')!.rows
+    expect(rows.map((r) => r.summary.key)).toEqual(['blind', 'checked'])
   })
 
   it('does not change when the order of personas or prototypes in the reports is shuffled', () => {

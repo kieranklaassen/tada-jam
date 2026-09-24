@@ -527,6 +527,8 @@ export const createSim: CreateSim<CrossedWiresSnapshot> = (config): Sim<CrossedW
     }
     SOCKETS.forEach((r, i) => list.push({ ...r, kind: 'tap', salience: types[i] === '' ? 0.4 : 0.3 }))
     beetles.forEach((b, i) => around({ x: b.x, y: LANE_Y[i]! }, 40, 'tap', 0.3))
+    // Where every wire has to end: the lamps and the drawbridge input. Below the plates.
+    for (const r of [...LAMPS, BRIDGE_BOX]) list.push({ ...r, kind: 'drag', salience: wireCount() === 0 ? 0.5 : 0.3 })
     return list
   }
 

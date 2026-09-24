@@ -20,6 +20,8 @@ export const FINDINGS_START = '<!-- findings:start -->'
 export const FINDINGS_END = '<!-- findings:end -->'
 export const WEAKNESSES_HEADING = '## Known weaknesses'
 export const SPEC_MAX_LINES = 70
+// The note selfplay.ts writes when no policy moved the objective (judgeDominant).
+export const DOMINANT_BLIND_NOTE = 'the objective never varied'
 // Fewer passing prototypes than this adds the near-the-gate list to SHORTLIST.md.
 export const SHORTLIST_MIN_PASSING = 3
 export const NEAR_GATE_COUNT = 10
@@ -300,6 +302,9 @@ export interface Summary {
   aimsProgress: number
   dominant: boolean
   dominantBy: string | null
+  // The self-play objective never moved under any policy, so the dominant-strategy
+  // check had no power: its `false` flag is not a pass.
+  dominantBlind: boolean
   hasObjective: boolean
   // `clear` or `blocked-for-polish` for a prototype that passed the gate, else
   // `not assessed`: clarity is read only after depth.
@@ -372,6 +377,7 @@ export function summarize(proto: Prototype): Summary {
     aimsProgress: measures.aims.madeProgress,
     dominant: report.selfPlay.dominant.flagged,
     dominantBy: report.selfPlay.dominant.by,
+    dominantBlind: report.selfPlay.dominant.note === DOMINANT_BLIND_NOTE,
     hasObjective: report.selfPlay.objective !== null,
     clarity: !pass ? NOT_ASSESSED_SHORT : low ? BLOCKED : CLEAR,
     clarityReason: pass && low ? clarityReason(measures.clarity) : null,
@@ -383,6 +389,7 @@ export function summarize(proto: Prototype): Summary {
 
 export function dominantText(s: Summary): string {
   if (!s.hasObjective) return 'no objective'
+  if (s.dominantBlind && !s.dominant) return 'not assessed (objective never varied)'
   return s.dominant ? `yes${s.dominantBy ? ` (${s.dominantBy})` : ''}` : 'no'
 }
 

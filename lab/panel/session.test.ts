@@ -3,6 +3,7 @@ import { createRng, deriveSeed } from '../kit/rng.ts'
 import type { Affordance, CreateSim, PointerInput, ProtoMeta, Sim, SimConfig, SimEvent } from '../kit/sim.ts'
 import * as constant from './fixtures/constant.ts'
 import * as ladder from './fixtures/ladder.ts'
+import { clarityMeasure } from './metrics.ts'
 import { PERSONAS } from './personas.ts'
 import {
   createMemory,
@@ -16,7 +17,16 @@ import {
   playRun,
   predictNext,
 } from './session.ts'
-import { AIM_MIN_TOUCHES, BOREDOM_WINDOW, LP_WINDOW, SESSIONS, SESSION_CAP_TICKS, returnProbability } from './thresholds.ts'
+import {
+  AIM_MIN_TOUCHES,
+  BOREDOM_WINDOW,
+  CLARITY_MAX_FIRST_TICK,
+  FIRST_TEN_TICKS,
+  LP_WINDOW,
+  SESSIONS,
+  SESSION_CAP_TICKS,
+  returnProbability,
+} from './thresholds.ts'
 import type { PanelProto, Persona } from './types.ts'
 
 const kaia = PERSONAS[0]!
@@ -408,14 +418,41 @@ describe('the first ten seconds', () => {
     },
   }
 
-  const blind = (proto: PanelProto) => {
-    const results = PERSONAS.slice(0, 4).flatMap((persona) =>
+  const blindResults = (proto: PanelProto) =>
+    PERSONAS.slice(0, 4).flatMap((persona) =>
       [0, 1].map((k) => playClarity({ persona, proto, runSeed: masterRunSeed(1, k), seedIndex: k, mode: 'blind' })),
     )
+  const blind = (proto: PanelProto) => {
+    const results = blindResults(proto)
     return {
       touches: results.reduce((a, r) => a + r.touches, 0),
       changed: results.reduce((a, r) => a + r.changed, 0),
     }
+  }
+
+  // Wraps a proto to record the configs it was built with and the tick at which
+  // the sim first got a touch it answers. The sim is stepped once per tick and
+  // is touched before it steps, so that count is the tick of the touch.
+  const watch = (proto: PanelProto, answers: (x: number, y: number) => boolean) => {
+    const configs: SimConfig[] = []
+    let answeredAt: number | null = null
+    const watched = protoOf(proto, (config) => {
+      configs.push(config)
+      const sim = proto.createSim(config)
+      let steps = 0
+      return {
+        ...sim,
+        step() {
+          steps++
+          sim.step()
+        },
+        pointer(input) {
+          if (answeredAt === null && input.phase === 'down' && answers(input.x, input.y)) answeredAt = steps
+          sim.pointer(input)
+        },
+      }
+    })
+    return { watched, configs, answeredAt: () => answeredAt }
   }
 
   it('reads low for a sim that answers no touch away from its declared affordance, even when the declaration is honest', () => {
@@ -434,16 +471,40 @@ describe('the first ten seconds', () => {
     expect(changed / touches).toBeGreaterThan(0.9)
   })
 
-  it('uses hints on and counts the ticks to the first change from the start', () => {
-    const configs: SimConfig[] = []
-    const spy = protoOf(honest, (config) => {
-      configs.push(config)
-      return honest.createSim(config)
-    })
-    const result = playClarity({ persona: kaia, proto: spy, runSeed: 5, mode: 'aimed' })
-    expect(configs.length).toBeGreaterThan(0)
-    expect(configs.every((c) => c.hints === true)).toBe(true)
-    expect(result.firstChangeTick === null || result.firstChangeTick >= 5).toBe(true)
+  it.each([
+    ['blind', anywhere, () => true],
+    ['aimed', honest, (x: number, y: number) => inside(SMALL, x, y)],
+  ] as const)('uses hints on and counts the ticks to the first change from the start (%s)', (mode, proto, answers) => {
+    const spy = watch(proto, answers)
+    const result = playClarity({ persona: kaia, proto: spy.watched, runSeed: 5, mode })
+    expect(spy.configs.length).toBeGreaterThan(0)
+    expect(spy.configs.every((c) => c.hints === true)).toBe(true)
+    // The sim answered a touch, so a first change exists, inside the ten seconds,
+    // and it lands on the tick of the first touch the sim answers.
+    const answeredAt = spy.answeredAt()
+    expect(answeredAt).not.toBeNull()
+    expect(result.firstChangeTick).not.toBeNull()
+    expect(result.firstChangeTick!).toBeGreaterThanOrEqual(0)
+    expect(result.firstChangeTick!).toBeLessThan(FIRST_TEN_TICKS)
+    expect(result.firstChangeTick).toBe(answeredAt)
+  })
+
+  it('gives the flag its first-change input: every persona sees a change from a sim that answers anywhere', () => {
+    const results = blindResults(anywhere)
+    expect(results.length).toBeGreaterThanOrEqual(8)
+    for (const r of results) {
+      expect(r.firstChangeTick).not.toBeNull()
+      expect(r.firstChangeTick!).toBeGreaterThanOrEqual(0)
+      expect(r.firstChangeTick!).toBeLessThan(FIRST_TEN_TICKS)
+    }
+    const measure = clarityMeasure(results)
+    expect(measure.runsWithChange).toBe(measure.runs)
+    expect(measure.ticksToFirstChange!).toBeLessThanOrEqual(CLARITY_MAX_FIRST_TICK)
+  })
+
+  it('flags a sim that answers only on its declared button as low, and one that answers anywhere as ok', () => {
+    expect(clarityMeasure(blindResults(anywhere)).flag).toBe('ok')
+    expect(clarityMeasure(blindResults(honest)).flag).toBe('low')
   })
 
   it('does not credit a touch with a change the sim makes on its own', () => {

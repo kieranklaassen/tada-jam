@@ -34,15 +34,14 @@
       "arch-11": {
         "age": 11,
         "aims": {
-          "adopted": 9,
+          "adopted": 5,
           "features": [
-            "crossings up",
+            "blinking up",
+            "gates down",
             "kinds up",
-            "lit down",
-            "lit up",
-            "wires up"
+            "wires down"
           ],
-          "madeProgress": 3
+          "madeProgress": 0
         },
         "clarity": {
           "aimedHitShare": 0.972222,
@@ -56,9 +55,9 @@
         },
         "inTargetPanel": true,
         "play5": {
-          "change": 0.469484,
-          "kindGrowth": 0,
-          "newSignaturesPer100Actions": 0.469484
+          "change": 1.666667,
+          "kindGrowth": 0.333333,
+          "newSignaturesPer100Actions": 1.333333
         },
         "returnShare": {
           "session3": 0.333333,
@@ -66,19 +65,19 @@
           "session5": 0
         },
         "runs": 3,
-        "sessionsStartedMean": 2
+        "sessionsStartedMean": 1.666667
       },
       "arch-3": {
         "age": 3,
         "aims": {
           "adopted": 1,
           "features": [
-            "gates down"
+            "wires down"
           ],
           "madeProgress": 0
         },
         "clarity": {
-          "aimedHitShare": 0.321429,
+          "aimedHitShare": 0.375,
           "changedShare": 0.196078,
           "distinctKinds": 3,
           "flag": "low",
@@ -99,21 +98,21 @@
           "session5": 0
         },
         "runs": 3,
-        "sessionsStartedMean": 1
+        "sessionsStartedMean": 1.333333
       },
       "arch-6": {
         "age": 6,
         "aims": {
           "adopted": 3,
           "features": [
-            "crossings up",
-            "kinds down",
+            "blinking up",
+            "loops up",
             "wires down"
           ],
           "madeProgress": 0
         },
         "clarity": {
-          "aimedHitShare": 0.86,
+          "aimedHitShare": 0.8,
           "changedShare": 0.121951,
           "distinctKinds": 3,
           "flag": "low",
@@ -139,18 +138,15 @@
       "arch-7": {
         "age": 7,
         "aims": {
-          "adopted": 6,
+          "adopted": 3,
           "features": [
             "crossings up",
-            "kinds down",
-            "kinds up",
-            "lit up",
-            "loops down"
+            "kinds down"
           ],
-          "madeProgress": 2
+          "madeProgress": 0
         },
         "clarity": {
-          "aimedHitShare": 0.75,
+          "aimedHitShare": 0.785714,
           "changedShare": 0.075,
           "distinctKinds": 3,
           "flag": "low",
@@ -171,22 +167,23 @@
           "session5": 0
         },
         "runs": 3,
-        "sessionsStartedMean": 1.333333
+        "sessionsStartedMean": 1
       },
       "arch-8": {
         "age": 8,
         "aims": {
-          "adopted": 4,
+          "adopted": 5,
           "features": [
+            "blinking down",
             "blinking up",
-            "kinds down",
+            "crossings up",
             "loops down",
             "wires down"
           ],
           "madeProgress": 0
         },
         "clarity": {
-          "aimedHitShare": 0.978723,
+          "aimedHitShare": 0.95122,
           "changedShare": 0,
           "distinctKinds": 3,
           "flag": "low",
@@ -197,17 +194,17 @@
         },
         "inTargetPanel": false,
         "play5": {
-          "change": 0.333333,
-          "kindGrowth": 0.333333,
-          "newSignaturesPer100Actions": 0
+          "change": 1.826484,
+          "kindGrowth": 0,
+          "newSignaturesPer100Actions": 1.826484
         },
         "returnShare": {
-          "session3": 0,
+          "session3": 0.333333,
           "session4": 0,
           "session5": 0
         },
         "runs": 3,
-        "sessionsStartedMean": 1.333333
+        "sessionsStartedMean": 1.666667
       },
       "arch-9": {
         "age": 9,
@@ -215,13 +212,13 @@
           "adopted": 4,
           "features": [
             "blinking up",
-            "crossings up",
-            "loops up"
+            "gates up",
+            "wires up"
           ],
           "madeProgress": 1
         },
         "clarity": {
-          "aimedHitShare": 0.871795,
+          "aimedHitShare": 0.868421,
           "changedShare": 0.088235,
           "distinctKinds": 3,
           "flag": "low",
@@ -232,9 +229,9 @@
         },
         "inTargetPanel": true,
         "play5": {
-          "change": 0,
+          "change": 0.78125,
           "kindGrowth": 0,
-          "newSignaturesPer100Actions": 0
+          "newSignaturesPer100Actions": 0.78125
         },
         "returnShare": {
           "session3": 0,
@@ -242,7 +239,7 @@
           "session5": 0
         },
         "runs": 3,
-        "sessionsStartedMean": 1
+        "sessionsStartedMean": 1.333333
       },
       "kaia": {
         "age": 4,
@@ -250,13 +247,13 @@
           "adopted": 3,
           "features": [
             "blinking up",
-            "kinds up",
-            "loops up"
+            "crossings up",
+            "lit down"
           ],
           "madeProgress": 0
         },
         "clarity": {
-          "aimedHitShare": 0.543478,
+          "aimedHitShare": 0.521739,
           "changedShare": 0.173913,
           "distinctKinds": 3,
           "flag": "low",
@@ -282,17 +279,16 @@
       "tess": {
         "age": 5,
         "aims": {
-          "adopted": 5,
+          "adopted": 3,
           "features": [
+            "blinking up",
             "crossings down",
-            "gates down",
-            "gates up",
-            "lit up"
+            "kinds up"
           ],
-          "madeProgress": 1
+          "madeProgress": 0
         },
         "clarity": {
-          "aimedHitShare": 0.465116,
+          "aimedHitShare": 0.489362,
           "changedShare": 0.083333,
           "distinctKinds": 3,
           "flag": "low",
@@ -313,25 +309,24 @@
           "session5": 0
         },
         "runs": 3,
-        "sessionsStartedMean": 1.333333
+        "sessionsStartedMean": 1
       }
     },
     "targetPanel": {
       "aims": {
-        "adopted": 13,
+        "adopted": 9,
         "features": [
           "blinking up",
-          "crossings up",
+          "gates down",
+          "gates up",
           "kinds up",
-          "lit down",
-          "lit up",
-          "loops up",
+          "wires down",
           "wires up"
         ],
-        "madeProgress": 4
+        "madeProgress": 1
       },
       "clarity": {
-        "aimedHitShare": 0.92,
+        "aimedHitShare": 0.918919,
         "changedShare": 0.104478,
         "distinctKinds": 3,
         "flag": "low",
@@ -341,9 +336,9 @@
         "touches": 67
       },
       "play5": {
-        "change": 0.234742,
-        "kindGrowth": 0,
-        "newSignaturesPer100Actions": 0.234742
+        "change": 1.223958,
+        "kindGrowth": 0.166667,
+        "newSignaturesPer100Actions": 1.057292
       },
       "returnShare": {
         "session3": 0.166667,
@@ -353,8 +348,8 @@
       "runs": 6,
       "sessionsStartedMean": 1.5,
       "subSignals": {
-        "aimScore": 0.666667,
-        "changeScore": 0.234742,
+        "aimScore": 0.166667,
+        "changeScore": 1.223958,
         "returnScore": 0.055556
       }
     }
@@ -414,8 +409,8 @@
       "returns": [
         {
           "afterSession": 1,
-          "left": 0,
-          "probability": 0.0291,
+          "left": 0.372917,
+          "probability": 0.530353,
           "returned": false
         }
       ],
@@ -423,17 +418,17 @@
       "seed": 0,
       "sessions": [
         {
-          "actions": 62,
+          "actions": 138,
           "aims": [
             {
               "dir": "up",
-              "feature": "loops",
+              "feature": "blinking",
               "madeProgress": false,
               "progressWindows": 0,
               "windows": 2
             }
           ],
-          "distinctSignatures": 1,
+          "distinctSignatures": 5,
           "endedBy": "drift",
           "index": 1,
           "kinds": [
@@ -441,16 +436,139 @@
             "hold",
             "tap"
           ],
-          "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 960
+          "left": 0.372917,
+          "newSignatures": 5,
+          "pull": 0.296,
+          "ticks": 2152
         }
       ]
     },
     {
       "crashed": false,
       "persona": "kaia",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.070125,
+          "probability": 0.123358,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 124,
+          "aims": [
+            {
+              "dir": "down",
+              "feature": "lit",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 1
+            }
+          ],
+          "distinctSignatures": 4,
+          "endedBy": "attention",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.070125,
+          "newSignatures": 4,
+          "pull": 0.018,
+          "ticks": 2076
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "kaia",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.0875,
+          "probability": 0.146713,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
+        {
+          "actions": 130,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "crossings",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 7,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.0875,
+          "newSignatures": 7,
+          "pull": 0.275,
+          "ticks": 2034
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "tess",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.00625,
+          "probability": 0.037501,
+          "returned": false
+        }
+      ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 129,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "kinds",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 5,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.00625,
+          "newSignatures": 5,
+          "pull": 0.75,
+          "ticks": 2298
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "tess",
       "reached": 1,
       "returns": [
         {
@@ -464,48 +582,7 @@
       "seed": 1,
       "sessions": [
         {
-          "actions": 76,
-          "aims": [
-            {
-              "dir": "up",
-              "feature": "kinds",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 1,
-          "endedBy": "drift",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 1140
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "kaia",
-      "reached": 1,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0,
-          "probability": 0.0291,
-          "returned": false
-        }
-      ],
-      "runSeed": 1918689678,
-      "seed": 2,
-      "sessions": [
-        {
-          "actions": 57,
+          "actions": 71,
           "aims": [
             {
               "dir": "up",
@@ -515,7 +592,7 @@
               "windows": 2
             }
           ],
-          "distinctSignatures": 1,
+          "distinctSignatures": 4,
           "endedBy": "drift",
           "index": 1,
           "kinds": [
@@ -524,27 +601,62 @@
             "tap"
           ],
           "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 960
+          "newSignatures": 4,
+          "pull": 0.75,
+          "ticks": 1342
         }
       ]
     },
     {
       "crashed": false,
       "persona": "tess",
-      "reached": 2,
+      "reached": 1,
       "returns": [
         {
           "afterSession": 1,
-          "left": 0.5625,
-          "probability": 0.78518,
-          "returned": true
-        },
+          "left": 0.297917,
+          "probability": 0.429543,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
         {
-          "afterSession": 2,
+          "actions": 68,
+          "aims": [
+            {
+              "dir": "down",
+              "feature": "crossings",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 4,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.297917,
+          "newSignatures": 4,
+          "pull": 0.75,
+          "ticks": 1110
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-3",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
           "left": 0,
-          "probability": 0.0291,
+          "probability": 0.0285,
           "returned": false
         }
       ],
@@ -552,18 +664,263 @@
       "seed": 0,
       "sessions": [
         {
-          "actions": 159,
+          "actions": 129,
+          "aims": [],
+          "distinctSignatures": 4,
+          "endedBy": "attention",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 4,
+          "pull": 0.3,
+          "ticks": 1933
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-3",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.39375,
+          "probability": 0.546844,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 107,
+          "aims": [],
+          "distinctSignatures": 3,
+          "endedBy": "attention",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.39375,
+          "newSignatures": 3,
+          "pull": 0.632,
+          "ticks": 1759
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-3",
+      "reached": 2,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.679167,
+          "probability": 0.922574,
+          "returned": true
+        },
+        {
+          "afterSession": 2,
+          "left": 0,
+          "probability": 0.0285,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
+        {
+          "actions": 94,
+          "aims": [
+            {
+              "dir": "down",
+              "feature": "wires",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 5,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.679167,
+          "newSignatures": 5,
+          "pull": 0.6,
+          "ticks": 1428
+        },
+        {
+          "actions": 85,
+          "aims": [],
+          "distinctSignatures": 3,
+          "endedBy": "attention",
+          "index": 2,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 0,
+          "pull": 0.468,
+          "ticks": 1335
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-6",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0285,
+          "returned": false
+        }
+      ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 113,
+          "aims": [
+            {
+              "dir": "down",
+              "feature": "wires",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 4,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 4,
+          "pull": 0.2,
+          "ticks": 1935
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-6",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.366667,
+          "probability": 0.51119,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 56,
           "aims": [
             {
               "dir": "up",
-              "feature": "lit",
-              "madeProgress": true,
-              "progressWindows": 1,
-              "windows": 3
-            },
+              "feature": "loops",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 4,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.366667,
+          "newSignatures": 4,
+          "pull": 0.6,
+          "ticks": 960
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-6",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0285,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
+        {
+          "actions": 119,
+          "aims": [
             {
               "dir": "up",
-              "feature": "lit",
+              "feature": "blinking",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 7,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 7,
+          "pull": 0.428,
+          "ticks": 2188
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-7",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.208333,
+          "probability": 0.296382,
+          "returned": false
+        }
+      ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 126,
+          "aims": [
+            {
+              "dir": "down",
+              "feature": "kinds",
               "madeProgress": false,
               "progressWindows": 0,
               "windows": 2
@@ -577,46 +934,22 @@
             "hold",
             "tap"
           ],
-          "left": 0.5625,
+          "left": 0.208333,
           "newSignatures": 6,
-          "pull": 1.009259,
-          "ticks": 2794
-        },
-        {
-          "actions": 121,
-          "aims": [
-            {
-              "dir": "down",
-              "feature": "crossings",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 0
-            }
-          ],
-          "distinctSignatures": 1,
-          "endedBy": "attention",
-          "index": 2,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0,
-          "newSignatures": 0,
-          "pull": 0,
-          "ticks": 2080
+          "pull": 0.325,
+          "ticks": 2518
         }
       ]
     },
     {
       "crashed": false,
-      "persona": "tess",
+      "persona": "arch-7",
       "reached": 1,
       "returns": [
         {
           "afterSession": 1,
           "left": 0,
-          "probability": 0.0291,
+          "probability": 0.0279,
           "returned": false
         }
       ],
@@ -624,52 +957,11 @@
       "seed": 1,
       "sessions": [
         {
-          "actions": 63,
-          "aims": [
-            {
-              "dir": "down",
-              "feature": "gates",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 1,
-          "endedBy": "drift",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 1140
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "tess",
-      "reached": 1,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0,
-          "probability": 0.0291,
-          "returned": false
-        }
-      ],
-      "runSeed": 1918689678,
-      "seed": 2,
-      "sessions": [
-        {
-          "actions": 49,
+          "actions": 48,
           "aims": [
             {
               "dir": "up",
-              "feature": "gates",
+              "feature": "crossings",
               "madeProgress": false,
               "progressWindows": 0,
               "windows": 2
@@ -692,79 +984,13 @@
     },
     {
       "crashed": false,
-      "persona": "arch-3",
+      "persona": "arch-7",
       "reached": 1,
       "returns": [
         {
           "afterSession": 1,
           "left": 0,
-          "probability": 0.0285,
-          "returned": false
-        }
-      ],
-      "runSeed": 2980047484,
-      "seed": 0,
-      "sessions": [
-        {
-          "actions": 66,
-          "aims": [],
-          "distinctSignatures": 1,
-          "endedBy": "attention",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 1000
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "arch-3",
-      "reached": 1,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0,
-          "probability": 0.0285,
-          "returned": false
-        }
-      ],
-      "runSeed": 232174035,
-      "seed": 1,
-      "sessions": [
-        {
-          "actions": 56,
-          "aims": [],
-          "distinctSignatures": 1,
-          "endedBy": "attention",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 1000
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "arch-3",
-      "reached": 1,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0,
-          "probability": 0.0285,
+          "probability": 0.0279,
           "returned": false
         }
       ],
@@ -772,48 +998,7 @@
       "seed": 2,
       "sessions": [
         {
-          "actions": 66,
-          "aims": [
-            {
-              "dir": "down",
-              "feature": "gates",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 1,
-          "endedBy": "drift",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 960
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "arch-6",
-      "reached": 1,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0,
-          "probability": 0.0285,
-          "returned": false
-        }
-      ],
-      "runSeed": 2980047484,
-      "seed": 0,
-      "sessions": [
-        {
-          "actions": 69,
+          "actions": 94,
           "aims": [
             {
               "dir": "down",
@@ -823,79 +1008,49 @@
               "windows": 2
             }
           ],
-          "distinctSignatures": 1,
+          "distinctSignatures": 4,
           "endedBy": "drift",
           "index": 1,
           "kinds": [
             "drag",
-            "hold",
             "tap"
           ],
           "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 1140
+          "newSignatures": 4,
+          "pull": 0.325,
+          "ticks": 1821
         }
       ]
     },
     {
       "crashed": false,
-      "persona": "arch-6",
-      "reached": 1,
+      "persona": "arch-8",
+      "reached": 3,
       "returns": [
         {
           "afterSession": 1,
+          "left": 0.55625,
+          "probability": 0.776779,
+          "returned": true
+        },
+        {
+          "afterSession": 2,
+          "left": 0.364583,
+          "probability": 0.519152,
+          "returned": true
+        },
+        {
+          "afterSession": 3,
           "left": 0,
-          "probability": 0.0285,
+          "probability": 0.0291,
           "returned": false
         }
       ],
-      "runSeed": 232174035,
-      "seed": 1,
+      "runSeed": 2980047484,
+      "seed": 0,
       "sessions": [
         {
-          "actions": 75,
-          "aims": [
-            {
-              "dir": "up",
-              "feature": "crossings",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 1,
-          "endedBy": "drift",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 1320
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "arch-6",
-      "reached": 1,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0.089167,
-          "probability": 0.145882,
-          "returned": false
-        }
-      ],
-      "runSeed": 1918689678,
-      "seed": 2,
-      "sessions": [
-        {
-          "actions": 65,
+          "actions": 58,
           "aims": [
             {
               "dir": "down",
@@ -905,7 +1060,7 @@
               "windows": 2
             }
           ],
-          "distinctSignatures": 1,
+          "distinctSignatures": 2,
           "endedBy": "drift",
           "index": 1,
           "kinds": [
@@ -913,115 +1068,13 @@
             "hold",
             "tap"
           ],
-          "left": 0.089167,
-          "newSignatures": 1,
-          "pull": 0.04,
+          "left": 0.55625,
+          "newSignatures": 2,
+          "pull": 0.225,
           "ticks": 1140
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "arch-7",
-      "reached": 1,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0,
-          "probability": 0.0279,
-          "returned": false
-        }
-      ],
-      "runSeed": 2980047484,
-      "seed": 0,
-      "sessions": [
-        {
-          "actions": 145,
-          "aims": [
-            {
-              "dir": "down",
-              "feature": "kinds",
-              "madeProgress": true,
-              "progressWindows": 1,
-              "windows": 3
-            },
-            {
-              "dir": "down",
-              "feature": "loops",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 1,
-          "endedBy": "drift",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 2760
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "arch-7",
-      "reached": 2,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0.627083,
-          "probability": 0.836031,
-          "returned": true
         },
         {
-          "afterSession": 2,
-          "left": 0,
-          "probability": 0.0279,
-          "returned": false
-        }
-      ],
-      "runSeed": 232174035,
-      "seed": 1,
-      "sessions": [
-        {
-          "actions": 156,
-          "aims": [
-            {
-              "dir": "up",
-              "feature": "kinds",
-              "madeProgress": true,
-              "progressWindows": 1,
-              "windows": 4
-            },
-            {
-              "dir": "up",
-              "feature": "crossings",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 3,
-          "endedBy": "drift",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0.627083,
-          "newSignatures": 3,
-          "pull": 0.43,
-          "ticks": 3112
-        },
-        {
-          "actions": 50,
+          "actions": 67,
           "aims": [
             {
               "dir": "up",
@@ -1031,170 +1084,41 @@
               "windows": 2
             }
           ],
-          "distinctSignatures": 1,
+          "distinctSignatures": 2,
           "endedBy": "drift",
           "index": 2,
           "kinds": [
             "drag",
-            "hold",
             "tap"
           ],
-          "left": 0,
+          "left": 0.364583,
           "newSignatures": 0,
-          "pull": 0,
-          "ticks": 960
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "arch-7",
-      "reached": 1,
-      "returns": [
+          "pull": 0.373833,
+          "ticks": 1254
+        },
         {
-          "afterSession": 1,
-          "left": 0,
-          "probability": 0.0279,
-          "returned": false
-        }
-      ],
-      "runSeed": 1918689678,
-      "seed": 2,
-      "sessions": [
-        {
-          "actions": 47,
+          "actions": 73,
           "aims": [
             {
-              "dir": "up",
-              "feature": "lit",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 1,
-          "endedBy": "drift",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 960
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "arch-8",
-      "reached": 1,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0,
-          "probability": 0.0291,
-          "returned": false
-        }
-      ],
-      "runSeed": 2980047484,
-      "seed": 0,
-      "sessions": [
-        {
-          "actions": 47,
-          "aims": [
-            {
-              "dir": "up",
+              "dir": "down",
               "feature": "blinking",
               "madeProgress": false,
               "progressWindows": 0,
               "windows": 2
             }
           ],
-          "distinctSignatures": 1,
+          "distinctSignatures": 6,
           "endedBy": "drift",
-          "index": 1,
+          "index": 3,
           "kinds": [
             "drag",
             "hold",
             "tap"
           ],
           "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 960
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "arch-8",
-      "reached": 2,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0.489583,
-          "probability": 0.68717,
-          "returned": true
-        },
-        {
-          "afterSession": 2,
-          "left": 0.139583,
-          "probability": 0.21672,
-          "returned": false
-        }
-      ],
-      "runSeed": 232174035,
-      "seed": 1,
-      "sessions": [
-        {
-          "actions": 50,
-          "aims": [
-            {
-              "dir": "down",
-              "feature": "wires",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 3,
-          "endedBy": "drift",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "tap"
-          ],
-          "left": 0.489583,
-          "newSignatures": 3,
+          "newSignatures": 4,
           "pull": 0.45,
-          "ticks": 960
-        },
-        {
-          "actions": 97,
-          "aims": [
-            {
-              "dir": "down",
-              "feature": "kinds",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 3,
-          "endedBy": "drift",
-          "index": 2,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0.139583,
-          "newSignatures": 0,
-          "pull": 0.37,
-          "ticks": 1881
+          "ticks": 1550
         }
       ]
     },
@@ -1210,62 +1134,22 @@
           "returned": false
         }
       ],
-      "runSeed": 1918689678,
-      "seed": 2,
-      "sessions": [
-        {
-          "actions": 51,
-          "aims": [
-            {
-              "dir": "down",
-              "feature": "loops",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 1,
-          "endedBy": "drift",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "tap"
-          ],
-          "left": 0,
-          "newSignatures": 1,
-          "pull": 0,
-          "ticks": 960
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "arch-9",
-      "reached": 1,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0,
-          "probability": 0.0279,
-          "returned": false
-        }
-      ],
-      "runSeed": 2980047484,
-      "seed": 0,
+      "runSeed": 232174035,
+      "seed": 1,
       "sessions": [
         {
           "actions": 95,
           "aims": [
             {
               "dir": "up",
-              "feature": "loops",
+              "feature": "blinking",
               "madeProgress": false,
               "progressWindows": 0,
-              "windows": 1
+              "windows": 2
             }
           ],
-          "distinctSignatures": 3,
-          "endedBy": "attention",
+          "distinctSignatures": 5,
+          "endedBy": "drift",
           "index": 1,
           "kinds": [
             "drag",
@@ -1273,50 +1157,50 @@
             "tap"
           ],
           "left": 0,
-          "newSignatures": 3,
-          "pull": 0.625,
-          "ticks": 2350
+          "newSignatures": 5,
+          "pull": 0.675,
+          "ticks": 1914
         }
       ]
     },
     {
       "crashed": false,
-      "persona": "arch-9",
+      "persona": "arch-8",
       "reached": 1,
       "returns": [
         {
           "afterSession": 1,
-          "left": 0.222214,
-          "probability": 0.31427,
+          "left": 0.533333,
+          "probability": 0.745976,
           "returned": false
         }
       ],
-      "runSeed": 232174035,
-      "seed": 1,
+      "runSeed": 1918689678,
+      "seed": 2,
       "sessions": [
         {
-          "actions": 70,
+          "actions": 45,
           "aims": [
             {
-              "dir": "up",
-              "feature": "crossings",
+              "dir": "down",
+              "feature": "loops",
               "madeProgress": false,
               "progressWindows": 0,
-              "windows": 1
+              "windows": 2
             }
           ],
-          "distinctSignatures": 1,
-          "endedBy": "attention",
+          "distinctSignatures": 3,
+          "endedBy": "drift",
           "index": 1,
           "kinds": [
             "drag",
             "hold",
             "tap"
           ],
-          "left": 0.222214,
-          "newSignatures": 1,
-          "pull": 0.0575,
-          "ticks": 1669
+          "left": 0.533333,
+          "newSignatures": 3,
+          "pull": 0.45,
+          "ticks": 960
         }
       ]
     },
@@ -1332,18 +1216,121 @@
           "returned": false
         }
       ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 87,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "blinking",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 5,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 5,
+          "pull": 0,
+          "ticks": 2119
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-9",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0279,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 76,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "gates",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 3,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 3,
+          "pull": 0.3125,
+          "ticks": 1843
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-9",
+      "reached": 2,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.786901,
+          "probability": 0.93,
+          "returned": true
+        },
+        {
+          "afterSession": 2,
+          "left": 0,
+          "probability": 0.0279,
+          "returned": false
+        }
+      ],
       "runSeed": 1918689678,
       "seed": 2,
       "sessions": [
         {
-          "actions": 89,
+          "actions": 90,
+          "aims": [],
+          "distinctSignatures": 5,
+          "endedBy": "attention",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.786901,
+          "newSignatures": 5,
+          "pull": 0.1675,
+          "ticks": 2192
+        },
+        {
+          "actions": 128,
           "aims": [
             {
               "dir": "up",
-              "feature": "loops",
+              "feature": "wires",
               "madeProgress": true,
-              "progressWindows": 2,
-              "windows": 4
+              "progressWindows": 4,
+              "windows": 5
             },
             {
               "dir": "up",
@@ -1353,18 +1340,18 @@
               "windows": 2
             }
           ],
-          "distinctSignatures": 1,
+          "distinctSignatures": 8,
           "endedBy": "drift",
-          "index": 1,
+          "index": 2,
           "kinds": [
             "drag",
             "hold",
             "tap"
           ],
           "left": 0,
-          "newSignatures": 1,
-          "pull": 0.324074,
-          "ticks": 2100
+          "newSignatures": 3,
+          "pull": 0.035,
+          "ticks": 3026
         }
       ]
     },
@@ -1381,8 +1368,8 @@
         },
         {
           "afterSession": 2,
-          "left": 0.904167,
-          "probability": 0.97,
+          "left": 0.675,
+          "probability": 0.936396,
           "returned": true
         },
         {
@@ -1396,11 +1383,11 @@
       "seed": 0,
       "sessions": [
         {
-          "actions": 46,
+          "actions": 41,
           "aims": [
             {
               "dir": "down",
-              "feature": "lit",
+              "feature": "wires",
               "madeProgress": false,
               "progressWindows": 0,
               "windows": 2
@@ -1411,20 +1398,19 @@
           "index": 1,
           "kinds": [
             "drag",
-            "hold",
             "tap"
           ],
           "left": 0,
           "newSignatures": 1,
           "pull": 0,
-          "ticks": 1140
+          "ticks": 960
         },
         {
-          "actions": 65,
+          "actions": 54,
           "aims": [
             {
               "dir": "up",
-              "feature": "crossings",
+              "feature": "blinking",
               "madeProgress": false,
               "progressWindows": 0,
               "windows": 2
@@ -1435,42 +1421,78 @@
           "index": 2,
           "kinds": [
             "drag",
+            "hold",
             "tap"
           ],
-          "left": 0.904167,
+          "left": 0.675,
           "newSignatures": 3,
-          "pull": 0.716667,
-          "ticks": 1513
+          "pull": 0.375,
+          "ticks": 1286
         },
         {
-          "actions": 71,
+          "actions": 50,
           "aims": [
             {
-              "dir": "up",
-              "feature": "kinds",
-              "madeProgress": true,
-              "progressWindows": 1,
-              "windows": 3
-            },
-            {
-              "dir": "up",
-              "feature": "crossings",
+              "dir": "down",
+              "feature": "gates",
               "madeProgress": false,
               "progressWindows": 0,
               "windows": 2
             }
           ],
-          "distinctSignatures": 2,
+          "distinctSignatures": 3,
           "endedBy": "drift",
           "index": 3,
           "kinds": [
             "drag",
+            "hold",
             "tap"
           ],
           "left": 0,
           "newSignatures": 0,
-          "pull": 0.860417,
-          "ticks": 1680
+          "pull": 0.2625,
+          "ticks": 1223
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-11",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.4125,
+          "probability": 0.583559,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 38,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "kinds",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 3,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.4125,
+          "newSignatures": 3,
+          "pull": 0.375,
+          "ticks": 960
         }
       ]
     },
@@ -1486,22 +1508,15 @@
           "returned": false
         }
       ],
-      "runSeed": 232174035,
-      "seed": 1,
+      "runSeed": 1918689678,
+      "seed": 2,
       "sessions": [
         {
-          "actions": 108,
+          "actions": 68,
           "aims": [
             {
               "dir": "up",
-              "feature": "wires",
-              "madeProgress": true,
-              "progressWindows": 5,
-              "windows": 5
-            },
-            {
-              "dir": "up",
-              "feature": "lit",
+              "feature": "blinking",
               "madeProgress": false,
               "progressWindows": 0,
               "windows": 2
@@ -1517,86 +1532,8 @@
           ],
           "left": 0,
           "newSignatures": 4,
-          "pull": 0.729167,
-          "ticks": 2640
-        }
-      ]
-    },
-    {
-      "crashed": false,
-      "persona": "arch-11",
-      "reached": 2,
-      "returns": [
-        {
-          "afterSession": 1,
-          "left": 0.4625,
-          "probability": 0.650766,
-          "returned": true
-        },
-        {
-          "afterSession": 2,
-          "left": 0,
-          "probability": 0.0291,
-          "returned": false
-        }
-      ],
-      "runSeed": 1918689678,
-      "seed": 2,
-      "sessions": [
-        {
-          "actions": 105,
-          "aims": [
-            {
-              "dir": "up",
-              "feature": "lit",
-              "madeProgress": true,
-              "progressWindows": 1,
-              "windows": 3
-            },
-            {
-              "dir": "up",
-              "feature": "crossings",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 9,
-          "endedBy": "drift",
-          "index": 1,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0.4625,
-          "newSignatures": 9,
-          "pull": 0.5625,
-          "ticks": 2522
-        },
-        {
-          "actions": 64,
-          "aims": [
-            {
-              "dir": "up",
-              "feature": "kinds",
-              "madeProgress": false,
-              "progressWindows": 0,
-              "windows": 2
-            }
-          ],
-          "distinctSignatures": 1,
-          "endedBy": "drift",
-          "index": 2,
-          "kinds": [
-            "drag",
-            "hold",
-            "tap"
-          ],
-          "left": 0,
-          "newSignatures": 0,
-          "pull": 0.054167,
-          "ticks": 1610
+          "pull": 0,
+          "ticks": 1637
         }
       ]
     }

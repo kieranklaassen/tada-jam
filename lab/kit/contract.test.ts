@@ -433,6 +433,43 @@ describe('scanSource', () => {
     expect(scanSource('sim.ts', 'const a = `x ${ { k: 1 }.k } y`; const b = Date.now()\n').join()).toContain('Date.now')
   })
 
+  describe('backslash escapes and unterminated strings', () => {
+    // These build the source with real backslashes: `\\'` in a template literal is one backslash then a quote.
+    it('keeps a single-quoted string open across an escaped quote', () => {
+      const problems = scanSource('sim.ts', `const s = 'don\\'t'; const r = Math.random()\n`)
+      expect(problems).toHaveLength(1)
+      expect(problems[0]).toMatch(/^sim\.ts:1: Math\.random/)
+    })
+
+    it('keeps a double-quoted string open across an escaped quote', () => {
+      const problems = scanSource('sim.ts', `const q = "say \\"hi"; const t = Date.now()\n`)
+      expect(problems).toHaveLength(1)
+      expect(problems[0]).toMatch(/^sim\.ts:1: Date\.now/)
+    })
+
+    it('keeps a template literal open across an escaped backtick', () => {
+      const problems = scanSource('sim.ts', 'const s = `a\\`b`; const r = Math.random()\n')
+      expect(problems).toHaveLength(1)
+      expect(problems[0]).toMatch(/^sim\.ts:1: Math\.random/)
+    })
+
+    it('still hides banned words that sit after an escape inside a string', () => {
+      expect(scanSource('sim.ts', `const s = 'it\\'s a window'\n`)).toEqual([])
+      expect(scanSource('sim.ts', `const s = "say \\"document\\""\n`)).toEqual([])
+      // An escaped ${ is text, not an interpolation.
+      expect(scanSource('sim.ts', 'const s = `\\${Math.random()}`\n')).toEqual([])
+    })
+
+    it('ends an unterminated quote at the line, so the next line is still scanned', () => {
+      for (const quote of [`'`, `"`]) {
+        const problems = scanSource('sim.ts', `const a = ${quote}oops\nconst b = Math.random()\nconst c = Date.now()\n`)
+        expect(problems).toHaveLength(2)
+        expect(problems[0]).toMatch(/^sim\.ts:2: Math\.random/)
+        expect(problems[1]).toMatch(/^sim\.ts:3: Date\.now/)
+      }
+    })
+  })
+
   it('reports the file and line', () => {
     const problems = scanSource('lab/protos/x/sim.ts', 'const a = 1\n\nconst b = Math.random()\n')
     expect(problems).toHaveLength(1)

@@ -8,5 +8,7 @@ export default defineConfig({
     include: ['**/*.test.ts'],
     exclude: ['dist/**', 'node_modules/**'],
     environment: 'node',
+    // A few prototype tests take 3 to 4 s on a fast machine; the 5 s default is too tight for a shared CI runner.
+    testTimeout: 30_000,
   },
 })

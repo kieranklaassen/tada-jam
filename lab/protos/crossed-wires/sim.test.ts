@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest'
 import type { PointerInput, Sim } from '../../kit/sim.ts'
 import { meta } from './meta.ts'
-import { GATE_CYCLE, PLATE_CX, createSim } from './sim.ts'
+import { BRIDGE_BOX, GATE_CYCLE, LAMPS, PLATE_CX, createSim } from './sim.ts'
 import type { CrossedWiresSnapshot, GateType } from './sim.ts'
 
 type Pt = { x: number; y: number }
@@ -306,6 +306,21 @@ describe('crossed wires: handling', () => {
     const list = sim.affordances()
     expect(list.filter((a) => a.kind === 'drag').length).toBeGreaterThanOrEqual(3)
     expect(list.some((a) => a.kind === 'tap')).toBe(true)
+  })
+
+  it('lists the lamps and the drawbridge as drag targets, below the plates', () => {
+    const list = start().affordances()
+    const drags = list.filter((a) => a.kind === 'drag')
+    const plateSalience = Math.max(...drags.map((a) => a.salience))
+    for (const r of [...LAMPS, BRIDGE_BOX]) {
+      const hit = drags.find((a) => a.x === r.x && a.y === r.y && a.w === r.w && a.h === r.h)
+      expect(hit, `no drag affordance for the box at ${r.x},${r.y}`).toBeDefined()
+      expect(hit!.salience).toBeLessThan(plateSalience)
+      expect(hit!.x).toBeGreaterThanOrEqual(0)
+      expect(hit!.y).toBeGreaterThanOrEqual(0)
+      expect(hit!.x + hit!.w).toBeLessThanOrEqual(1180)
+      expect(hit!.y + hit!.h).toBeLessThanOrEqual(820)
+    }
   })
 })
 
