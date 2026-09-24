@@ -1,6 +1,7 @@
 ---
 title: Before showing the owner a three.js jam game, run the intersection audit on moments that reach every state, cover what it cannot read with model tests, allow only reasoned and capped contacts, replay before and after, and enforce it in CI
 date: 2026-09-24
+last_updated: 2026-09-24
 category: workflow-issues
 module: intersection-audit
 problem_type: workflow_issue
@@ -107,7 +108,7 @@ A finished pass too large to publish file by file through the GitHub MCP goes to
 
 - **A frame drawn before the game's own loop.** Moon Phases' `resize()` drew once before the first tick, under an opening curtain no child sees. The audit sampled that frame in some runs and not others, which "would turn this enforced game red at random" (PR #22). Since PR #23 the first sample waits for a second frame, and the scene now places itself at the end of its constructor.
 - **A fallback tap.** `(await d.find(pattern)) ?? point` taps a fixed point when the named thing is gone, and nothing in the report says so. In Hillside Spring's pass, a poke aimed at the sparrow fell back to a bed after the sparrow had flown off and harvested it, so later samples audited a different garden.
-- **Runs of one build differ a little.** The audit's frames land at slightly different game times from run to run, and a physics fall goes a little differently. Bedtime Forest's owl in its own doorway measured 30% to 38% across runs, so its cap is 50% (PR #29). Turning Tower's bird-socket pose showed in some runs of the same code and not others (PR #30). Kite Tower found three more faults, each in one run of several, only after it enforced. Run `--ci` two or three times after a fix, and set each `upTo` from the deepest run.
+- **Runs of one build differ a little.** The audit's frames land at slightly different game times from run to run, and a physics fall goes a little differently. Bedtime Forest's owl in its own doorway measured 30% to 38% across runs, so its cap is 50% (PR #29). Turning Tower's bird-socket pose showed in some runs of the same code and not others (PR #30). Kite Tower found three more faults, each in one run of several, only after it enforced. A replay is no exception: the splash ring around Frog Choir's dunked frog measured 23.9% in a plain run and 24.9% in the `--ci --replay` run of the same build, per its pass's tool notes, although a replay adds no samples and only photographs the earlier run's moments. The water-and-ring rule is capped at `upTo: 0.3` (`scripts/intersections/games/frog-choir.ts`). Run `--ci` two or three times after a fix, and set each `upTo` from the deepest run.
 - **Waits timed by the clock.** A moment that waits a fixed time for a walk-in or an animation lands somewhere else once any timing changes. Poll the scene instead (`atLoom`), and keep the moments unchanged between before and after so the replay lines up.
 
 ## Why This Matters
