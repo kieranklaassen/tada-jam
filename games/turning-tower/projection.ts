@@ -164,6 +164,19 @@ export function castRay(solid: Set<number>, origin: Vec3, out: RayHit): RayHit |
   return null
 }
 
+const LEVEL_LIFT_MARGIN = 0.02
+
+/**
+ * A cell turning about a level axle through its own centre dips its lowest
+ * corner below its bottom face by ½(|sin φ| + |cos φ| − 1) mid-swing. The
+ * segment rises by that much, and a hair more, so it swings over the block it
+ * rests on instead of through it; at every quarter the rise is zero.
+ */
+export function levelLift(value: number): number {
+  const angle = (value * Math.PI) / 2
+  return 0.5 * (Math.abs(Math.sin(angle)) + Math.abs(Math.cos(angle)) - 1) + LEVEL_LIFT_MARGIN * Math.abs(Math.sin(2 * angle))
+}
+
 /** Rotate or slide a quarter-0 point by a group's continuous value (quarters for turns, cells for slides). */
 export function placePoint(group: GroupDef | null, value: number, x: number, y: number, z: number, out: MutableVec3): MutableVec3 {
   if (!group) {
@@ -188,7 +201,7 @@ export function placePoint(group: GroupDef | null, value: number, x: number, y: 
   switch (group.axis) {
     case 'x':
       out[0] = x
-      out[1] = py + dy * c - dz * s
+      out[1] = py + dy * c - dz * s + levelLift(value)
       out[2] = pz + dy * s + dz * c
       return out
     case 'y':
@@ -198,7 +211,7 @@ export function placePoint(group: GroupDef | null, value: number, x: number, y: 
       return out
     case 'z':
       out[0] = px + dx * c - dy * s
-      out[1] = py + dx * s + dy * c
+      out[1] = py + dx * s + dy * c + levelLift(value)
       out[2] = z
       return out
     default: {

@@ -1,12 +1,16 @@
+import { riderPoint, WANDERER_SHADOW } from './anatomy'
+import { Clearance } from './clearance'
 import { DEMO_SECONDS, handPose, HintScheduler, INVITE_SECONDS, quietAfter, timingFor, type DemoPath, type HandPose } from './guidance'
 import { GestureTracker, type Intent, type Point } from './input'
-import { BirdMotion, Spring, WandererMotion, type Greet, type Poke } from './motion'
+import { BirdMotion, Spring, WandererMotion, type BirdPose, type Greet, type Poke } from './motion'
 import {
   castRay,
   fitRoom,
   placePoint,
   Projector,
   roomBounds,
+  SCREEN_RIGHT,
+  SCREEN_UP,
   turnAngle,
   type Bounds,
   type MutableVec3,
@@ -25,11 +29,15 @@ import {
   nearestReachable,
   overlaps,
   pack,
+  PAVER_RAISE,
   resolveRoom,
   stateRange,
   stepArrangement,
   tileCell,
   tileFace,
+  transformPoint,
+  visibleFrom,
+  type GroupDef,
   type Layout,
   type Room,
   type Tile,
@@ -90,6 +98,13 @@ const ANTICIPATION = 0.14
 export const WISH_BEAT = 0.45
 /** How far into the invitation the bird stops watching the wanderer and follows its lantern to the door. */
 const BIRD_FOLLOWS = 0.4
+/**
+ * Across a perspective seam the wanderer changes level by sliding along the
+ * line of sight, which the child can't see; it does so only this far into the
+ * half step past the seam (or this far before it), where its shadow is clear
+ * of the tile it leaves (or reaches) and can't sink into its side.
+ */
+const SEAM_CLEAR = Math.min(1, WANDERER_SHADOW / 0.5)
 const TURN_DETENT = 0.3
 const SLIDE_DETENT = 0.16
 const RUBBER = 0.3
@@ -108,9 +123,44 @@ const HOP_SECONDS = 0.34
 const ENTER_SECONDS = 1.55
 const LEAVE_SECONDS = 0.6
 const ARRIVE_SECONDS = 0.95
+/**
+ * The wanderer is wider than the door (its lantern even more so): it steps up
+ * to the threshold and goes in as light, growing smaller as it fades, instead
+ * of walking its cloak and lantern through the arch.
+ */
+const DOOR_STEP = 0.27
+const DOOR_SHRINK = 0.45
+/**
+ * On the door's tile the wanderer stands this far toward the camera from the
+ * tile's centre, on both axes. At the centre its cloak would already touch the
+ * door, and the lantern it holds out at its side would reach into the doorway.
+ */
+const DOOR_STAND = 0.2
+/** The closed leaves and the light in the doorway stand this far in front of the door's point, across its opening. */
+const DOOR_FRONT = 0.03
+const DOOR_HALF_WIDTH = 0.25
 /** The bird takes off as the wanderer steps through the door and follows it in. */
 const FOLLOW_FROM = 0.9
 const FOLLOW_TO = 1.5
+/** It flies up clear of every block before it crosses to the door, and hovers above the arch while it goes in as light. */
+const FLIGHT_CLEARANCE = 0.3
+const DOOR_HOVER = 1.2
+const BIRD_SHRINK = 0.5
+/** A perched bird turns toward the wanderer at most this fast (radians a second). */
+const PERCH_TURN = 4
+/** Arriving, it fades in as it drops onto its perch over this stretch of the phase, facing the way it will stand. */
+const DESCENT_FROM = 0.2
+const DESCENT_TO = 0.7
+const DESCENT_HEIGHT = 0.6
+/** Its bob as the clearance allows for it: the middle of a hover's beat, or the rest's tiny breath. */
+const HOVER_BOB = 0.05
+const REST_BOB = 0.004
+/** A glow fades in and out this fast as walls come between the child and its source. */
+const SEEN_SECONDS = 0.15
+/** Where the glows' sources sit: the door's light above its sill, the lantern out at the wanderer's right side (full size). */
+const DOOR_GLOW_Y = 0.46
+const LANTERN_OUT = 0.37
+const LANTERN_UP = 0.73
 
 export type RoomInfo = {
   spec: RoomSpec
@@ -123,6 +173,8 @@ export type RoomInfo = {
   handleRadius: number[]
   doorTop: Vec3
   door: Vec3
+  /** Above the highest thing in the diorama, whatever its segments are doing: the bird's feet cross to the door at this height. */
+  cruise: number
 }
 
 export type Ripple = { x: number; y: number; age: number; strong: boolean }
@@ -147,7 +199,11 @@ export type Frame = {
   ring: { turn: number; cx: number; cy: number; rx: number; ry: number; size: number; pulse: Float64Array }
   /** Increments whenever a group is released or grabbed, so the view can re-read settled values for the minis. */
   version: number
+  /** How much of the door and of the lantern the child can see (0..1): each glow shows only as much as its source does. */
+  seen: { door: number; lantern: number }
 }
+
+type Footing = { dx: number; dz: number; lift: number }
 
 type Drag = {
   pointerId: number
@@ -171,6 +227,9 @@ type Drag = {
   prevT: number
   velocity: number
   pushed: boolean
+  /** Past this end something solid is in the way: no give, not even the rubber band. */
+  hardLo: boolean
+  hardHi: boolean
 }
 
 type Walk = {
@@ -204,6 +263,42 @@ function decorRadius(decor: readonly Decor[], group: number): number {
   return 0.45
 }
 
+function decorTop(item: Decor): number {
+  switch (item.kind) {
+    case 'dome':
+      return item.at[1] + item.radius
+    case 'cone':
+    case 'column':
+      return item.at[1] + item.height + 0.07
+    case 'finial':
+      return item.at[1] + 0.48
+    case 'shaft':
+      return item.at[1] + item.height + 0.1
+    case 'wheel':
+      return item.at[1] + (item.axis === 'y' ? 0.1 : item.radius)
+    case 'window':
+    case 'grip':
+      return item.at[1] + 0.2
+    default: {
+      const unreachable: never = item
+      return unreachable
+    }
+  }
+}
+
+function highestTop(spec: RoomSpec): number {
+  let top = -Infinity
+  for (const cell of spec.cells) top = Math.max(top, cell.at[1] + 1 + PAVER_RAISE)
+  for (const group of spec.groups) {
+    const range = stateRange(group)
+    for (let state = range.min; state <= range.max; state++) {
+      for (const cell of group.cells) top = Math.max(top, transformPoint(group, state, [cell.at[0] + 0.5, cell.at[1] + 0.5, cell.at[2] + 0.5])[1] + 0.5 + PAVER_RAISE)
+    }
+  }
+  for (const item of spec.decor) top = Math.max(top, decorTop(item))
+  return top
+}
+
 export function buildRoomInfo(spec: RoomSpec): RoomInfo {
   const room = resolveRoom(spec)
   const doorTop: Vec3 = [spec.door[0] + 0.5, spec.door[1] + 1, spec.door[2] + 0.5]
@@ -222,6 +317,7 @@ export function buildRoomInfo(spec: RoomSpec): RoomInfo {
     handleRadius: spec.groups.map((_, index) => decorRadius(spec.decor, index)),
     doorTop,
     door,
+    cruise: highestTop(spec) + FLIGHT_CLEARANCE,
   }
 }
 
@@ -290,8 +386,22 @@ export class TowerController {
   private warmRoom = 0
   private readonly scratch: MutableVec3 = [0, 0, 0]
   private readonly scratch2: MutableVec3 = [0, 0, 0]
+  private readonly scratch3: MutableVec3 = [0, 0, 0]
   private readonly hit: RayHit = { x: 0, y: 0, z: 0, face: 0 }
   private readonly screen: Point = { x: 0, y: 0 }
+  private readonly footA: Footing = { dx: 0, dz: 0, lift: 0 }
+  private readonly footB: Footing = { dx: 0, dz: 0, lift: 0 }
+  /** Hard ends a segment may not pass while it settles after a drag or a nudge. */
+  private readonly stops: { lo: number; hi: number }[] = []
+  private readonly clearance = new Clearance()
+  /** Where the clearance was last worked out from, so it is only redone when something moved. */
+  private clearanceLayout: Layout | null = null
+  private clearanceMoving = -1
+  /** The bird as it will stand this frame, for asking the clearance before the motion runs. */
+  private readonly probe: BirdPose = { ...this.bird.pose }
+  /** Where the bird took off for the door, and which way it faced. */
+  private readonly takeoff = { x: 0, y: 0, z: 0, heading: 0 }
+  private perchedHeading = Math.PI / 4
 
   constructor(state: SavedState, options: ControllerOptions) {
     this.state = state
@@ -305,6 +415,7 @@ export class TowerController {
     for (let i = 0; i < MAX_GROUPS; i++) {
       this.springs.push(new Spring(0, 260, 30))
       this.dips.push(new Spring(0, DIP_STIFFNESS, DIP_DAMPING))
+      this.stops.push({ lo: -Infinity, hi: Infinity })
     }
     const ripples: Ripple[] = []
     for (let i = 0; i < RIPPLES; i++) ripples.push({ x: 0, y: 0, age: 99, strong: false })
@@ -324,12 +435,17 @@ export class TowerController {
       sparkle: { x: 0, y: 0, z: 0, age: 99 },
       ring: { turn: 0, cx: 0, cy: 0, rx: 1, ry: 1, size: 1, pulse: new Float64Array(this.rooms.length) },
       version: 0,
+      seen: { door: 1, lantern: 1 },
     }
     this.input = new GestureTracker<Target>((at) => this.hitTest(at))
     const start = Math.max(0, this.rooms.findIndex((info) => info.spec.key === state.current))
     this.ringTurn.snap(start)
     this.loadRoom(start)
     this.resize(1180, 820)
+    // The view draws a frame before the first update: both characters must already stand where they belong.
+    this.updateBird(0)
+    this.updateWanderer(0)
+    this.updateSeen(0)
   }
 
   // ---------------------------------------------------------------- queries
@@ -424,6 +540,7 @@ export class TowerController {
       if (this.settling[g]) {
         this.springs[g].snap(this.springs[g].target)
         this.settling[g] = false
+        this.clearStops(g)
         this.commit(g)
       }
     }
@@ -640,7 +757,9 @@ export class TowerController {
         }
         // A tap on a handle nudges it and lets go: it moves, but only a drag turns it.
         if (!this.drag && !this.settling[target.group]) {
-          this.springs[target.group].velocity += 1.6
+          const dir = this.nudgeDirection(target.group)
+          if (dir === 0) return
+          this.springs[target.group].velocity += 1.6 * dir
           this.settling[target.group] = true
           this.impact[target.group] = true
           this.settleSpring(target.group)
@@ -793,7 +912,7 @@ export class TowerController {
       x = ax + (sAx - ax) * t
       y = a.top
       z = az + (sAz - az) * t
-      if (k > 0) offset = k * smoothstep(0.4, 1, t)
+      if (k > 0) offset = k * smoothstep(0, 1 - SEAM_CLEAR, t)
     } else {
       const t = (u - 0.5) / 0.5
       const sBx = bx - dkx * 0.5
@@ -801,24 +920,50 @@ export class TowerController {
       x = sBx + (bx - sBx) * t
       y = b.top
       z = sBz + (bz - sBz) * t
-      if (k < 0) offset = -k * (1 - smoothstep(0, 0.6, t))
+      if (k < 0) offset = -k * (1 - smoothstep(SEAM_CLEAR, 1, t))
     }
-    out[0] = x + offset
-    out[1] = y + offset
-    out[2] = z + offset
+    // Feet go up onto the higher of the two surfaces before the seam and come down after it, so they never cut an edge.
+    const fa = this.footing(a, this.footA)
+    const fb = this.footing(b, this.footB)
+    const high = Math.max(fa.lift, fb.lift)
+    const lift = u < 0.5 ? fa.lift + (high - fa.lift) * smoothstep(0.1, 0.2, u) : high + (fb.lift - high) * smoothstep(0.8, 0.9, u)
+    out[0] = x + offset + fa.dx + (fb.dx - fa.dx) * u
+    out[1] = y + offset + lift
+    out[2] = z + offset + fa.dz + (fb.dz - fa.dz) * u
     return out
   }
 
-  /** Where the wanderer's feet are when it stands on a tile (riding any group under it). */
+  /** Where the feet rest on a tile, from its top centre: on its paver, or on the bird's saddle. */
+  private footing(tile: Tile, out: Footing): Footing {
+    if (tile.group >= 0 && tile.group === this.info.birdGroup) {
+      const p = riderPoint(this.bird.pose, this.scratch3)
+      out.dx = p[0] - (tile.x + 0.5)
+      out.dz = p[2] - (tile.z + 0.5)
+      out.lift = p[1] - tile.top
+      return out
+    }
+    const stand = tile.id === this.info.room.doorTile ? DOOR_STAND : 0
+    out.dx = stand
+    out.dz = stand
+    out.lift = PAVER_RAISE
+    return out
+  }
+
+  /** Where the wanderer's feet are when it stands on a tile (riding any group under it): on its paver, or on the bird's saddle. */
   private standPosition(tileId: number, out: MutableVec3): MutableVec3 {
     const cell = this.info.room.cells[tileCell(tileId)]
+    if (cell.group >= 0 && cell.group === this.info.birdGroup) return riderPoint(this.bird.pose, out)
     const n = FACE_NORMALS[tileFace(tileId)]
     const at = cell.def.at
     const group = cell.group >= 0 ? this.info.spec.groups[cell.group] : null
     const value = cell.group >= 0 ? this.springs[cell.group].value : 0
-    placePoint(group, value, at[0] + 0.5 + n[0] * 0.5, at[1] + 0.5 + n[1] * 0.5, at[2] + 0.5 + n[2] * 0.5, out)
+    const up = 0.5 + PAVER_RAISE
+    placePoint(group, value, at[0] + 0.5 + n[0] * up, at[1] + 0.5 + n[1] * up, at[2] + 0.5 + n[2] * up, out)
     if (cell.group >= 0) out[1] += this.dips[cell.group].value
-    if (cell.group === this.info.birdGroup && this.hop.active) out[1] += this.hopHeight()
+    if (tileId === this.info.room.doorTile) {
+      out[0] += DOOR_STAND
+      out[2] += DOOR_STAND
+    }
     return out
   }
 
@@ -932,6 +1077,8 @@ export class TowerController {
       prevT: this.now,
       velocity: 0,
       pushed: false,
+      hardLo: false,
+      hardHi: false,
     }
     this.drag = drag
     this.queuedGoal = null
@@ -956,6 +1103,12 @@ export class TowerController {
     const range = this.allowedRange(group)
     drag.lo = range.lo
     drag.hi = range.hi
+    if (drag.kind !== 'bird') {
+      drag.hardLo = this.hardEnd(group, range.lo, -1)
+      drag.hardHi = this.hardEnd(group, range.hi, 1)
+      this.stops[group].lo = drag.hardLo ? range.lo : -Infinity
+      this.stops[group].hi = drag.hardHi ? range.hi : Infinity
+    }
     drag.accum = 0
     drag.lastAngle = null
     drag.startX = drag.lastX
@@ -1001,8 +1154,8 @@ export class TowerController {
     }
     drag.raw = raw
     let v = raw
-    if (v > drag.hi) v = drag.hi + rubber(v - drag.hi)
-    else if (v < drag.lo) v = drag.lo - rubber(drag.lo - v)
+    if (v > drag.hi) v = drag.hardHi ? drag.hi : drag.hi + rubber(v - drag.hi)
+    else if (v < drag.lo) v = drag.hardLo ? drag.lo : drag.lo - rubber(drag.lo - v)
     const pushing = raw > drag.hi + 0.22 || raw < drag.lo - 0.22
     if (pushing && !drag.pushed) {
       this.sound.bump()
@@ -1034,6 +1187,58 @@ export class TowerController {
     this.settling[group] = true
     this.impact[group] = true
     this.settleSpring(group)
+  }
+
+  /** Whether a block other than the group's own stands at cell (x, y, z) in the current layout. */
+  private occupied(x: number, y: number, z: number, except: number): boolean {
+    const positions = this.layout.positions
+    const cells = this.info.room.cells
+    for (let i = 0; i < positions.length; i++) {
+      if (cells[i].group === except) continue
+      const p = positions[i]
+      if (p[0] === x && p[1] === y && p[2] === z) return true
+    }
+    return false
+  }
+
+  /** Whether the group at whole step `state`, moved `below` cells down, would stand in another block. */
+  private meets(group: number, state: number, below: number): boolean {
+    const def: GroupDef = this.info.spec.groups[group]
+    const s = stateRange(def).wraps ? mod4(state) : Math.round(state)
+    for (const cell of def.cells) {
+      const c = transformPoint(def, s, [cell.at[0] + 0.5, cell.at[1] + 0.5, cell.at[2] + 0.5])
+      if (this.occupied(Math.round(c[0] - 0.5), Math.round(c[1] - 0.5) - below, Math.round(c[2] - 0.5), group)) return true
+    }
+    return false
+  }
+
+  /** Past `end`, one step further `dir`, the group would be inside another block: nothing may push it even a little that way. */
+  private hardEnd(group: number, end: number, dir: number): boolean {
+    return Number.isFinite(end) && this.meets(group, end + dir, 0)
+  }
+
+  /** A block stands right under the group at `state`: it lands on it, and does not sink into it. */
+  private supported(group: number, state: number): boolean {
+    return this.meets(group, state, 1)
+  }
+
+  /** Which way a tap may nudge a segment without swinging it into anything: forward, back, or not at all. It stops dead at a hard end. */
+  private nudgeDirection(group: number): number {
+    const range = this.allowedRange(group)
+    const base = this.springs[group].target
+    const hardLo = this.hardEnd(group, range.lo, -1)
+    const hardHi = this.hardEnd(group, range.hi, 1)
+    const dir = !hardHi || range.hi > base ? 1 : !hardLo || range.lo < base ? -1 : 0
+    if (dir !== 0) {
+      this.stops[group].lo = hardLo ? range.lo : -Infinity
+      this.stops[group].hi = hardHi ? range.hi : Infinity
+    }
+    return dir
+  }
+
+  private clearStops(group: number): void {
+    this.stops[group].lo = -Infinity
+    this.stops[group].hi = Infinity
   }
 
   private settleSpring(group: number): void {
@@ -1103,6 +1308,14 @@ export class TowerController {
       const before = spring.value
       spring.step(dt)
       spring.target = target
+      const stop = this.stops[g]
+      if (spring.value > stop.hi) {
+        spring.value = stop.hi
+        spring.velocity = Math.min(0, spring.velocity)
+      } else if (spring.value < stop.lo) {
+        spring.value = stop.lo
+        spring.velocity = Math.max(0, spring.velocity)
+      }
       const speed = Math.abs(spring.velocity)
       if (def.kind === 'turn') grind = Math.max(grind, Math.min(1, speed / 2.4))
       else scrape = Math.max(scrape, Math.min(1, speed / 3))
@@ -1116,11 +1329,12 @@ export class TowerController {
           this.impact[g] = false
           const weight = Math.min(1, 0.35 + speed / 3)
           this.sound.settle(weight)
-          this.dips[g].velocity -= DIP_KICK * weight
+          if (!this.supported(g, target)) this.dips[g].velocity -= DIP_KICK * weight
         }
         if (Math.abs(spring.value - target) < 0.003 && speed < 0.03) {
           spring.snap(target)
           this.settling[g] = false
+          this.clearStops(g)
           this.commit(g)
         }
       }
@@ -1259,7 +1473,10 @@ export class TowerController {
       this.frame.values[g] = value
       this.dips[g].snap(0)
       this.frame.dips[g] = 0
+      this.clearStops(g)
     }
+    this.clearance.setRoom(this.info.spec, this.info.birdGroup)
+    this.clearanceLayout = null
     this.doorOpen.snap(0)
     this.hint = null
     this.hintDirty = true
@@ -1268,9 +1485,12 @@ export class TowerController {
     this.frame.version += 1
     if (this.fits.length) this.projector.set(this.width, this.height, this.fits[index])
     this.scheduler.reopen(this.now)
+    // A wanderer that arrives on the bird stands on its saddle, so the bird must be in place first; a perched bird faces where the wanderer arrives.
+    if (this.info.birdGroup >= 0) this.updateBird(0)
     this.standPosition(this.walker, this.scratch)
     this.wanderer.arrive(this.scratch[0], this.scratch[1], this.scratch[2])
     this.wanderer.face(Math.PI / 4)
+    if (this.info.birdGroup < 0) this.updateBird(0)
     const unwrapped = this.ringTurn.target + wrapRing(index - this.ringTurn.target, this.rooms.length)
     this.ringTurn.target = unwrapped
   }
@@ -1505,13 +1725,15 @@ export class TowerController {
     let riding = false
     pose.tiltAxis = 0
     pose.tilt = 0
-    if (this.phase === 'enter' && this.phaseT > 0.55) {
-      const k = smoothstep(0.55, 1.35, this.phaseT)
+    pose.scale = 1
+    if (this.phase === 'enter') {
+      const k = smoothstep(0.95, 1.4, this.phaseT)
       const top = this.info.doorTop
-      this.scratch[0] = top[0] - 0.42 * k
-      this.scratch[1] = top[1]
-      this.scratch[2] = top[2] - 0.42 * k
-      walking = k < 1
+      this.scratch[0] = top[0] + DOOR_STAND - DOOR_STEP * k
+      this.scratch[1] = top[1] + PAVER_RAISE
+      this.scratch[2] = top[2] + DOOR_STAND - DOOR_STEP * k
+      pose.scale = 1 - DOOR_SHRINK * k
+      walking = k > 0 && k < 1
     } else if (walk && walk.delay <= 0) {
       const a = this.tileById(walk.layout, walk.path[walk.index])
       const b = this.tileById(walk.layout, walk.path[walk.index + 1])
@@ -1537,10 +1759,21 @@ export class TowerController {
     let y = this.scratch[1]
     if (this.phase === 'arrive') y += Math.max(0, 0.7 * (1 - smoothstep(0.3, 0.62, this.phaseT)))
     this.wanderer.update(dt, this.now, this.scratch[0], y, this.scratch[2], walking, riding)
+    pose.shadow = this.shadowBeforeDoor(pose.x, pose.ground, pose.z, WANDERER_SHADOW * pose.scale)
     if (this.wanderer.stepped) {
       const onBird = this.info.room.cells[tileCell(this.walker)].group === this.info.birdGroup && this.info.birdGroup >= 0
       this.sound.step(Math.round(this.now * 10) % 2, onBird)
     }
+  }
+
+  /** The share of a round shadow of `radius` at a point that stays on the floor in front of the door, never under its leaves. */
+  private shadowBeforeDoor(x: number, y: number, z: number, radius: number): number {
+    const door = this.info.door
+    if (Math.abs(y - (door[1] + PAVER_RAISE)) > 0.02) return 1
+    const along = (x - door[0] + (z - door[2])) * Math.SQRT1_2
+    const across = (x - door[0] - (z - door[2])) * Math.SQRT1_2
+    if (along < 0 || Math.abs(across) > DOOR_HALF_WIDTH + radius) return 1
+    return Math.min(1, Math.max(0, (along - DOOR_FRONT) / radius))
   }
 
   private updateBird(dt: number): void {
@@ -1549,51 +1782,142 @@ export class TowerController {
     let x: number
     let y: number
     let z: number
-    let heading = Math.PI / 4
+    let heading = 0
+    let wanted = Math.PI / 4
     let hovering = false
+    let carrying = false
     if (info.birdGroup >= 0) {
-      const def = info.spec.groups[info.birdGroup]
+      const g = info.birdGroup
+      const def = info.spec.groups[g]
       const at = def.cells[0].at
-      placePoint(def, this.springs[info.birdGroup].value, at[0] + 0.5, at[1], at[2] + 0.5, this.scratch2)
+      placePoint(def, this.springs[g].value, at[0] + 0.5, at[1], at[2] + 0.5, this.scratch2)
       x = this.scratch2[0]
       y = this.scratch2[1] + (this.hop.active ? this.hopHeight() : 0)
       z = this.scratch2[2]
-      heading = 0
       const cx = Math.floor(x)
       const cz = Math.round(z - 0.5)
       hovering = !this.hop.active && !this.layout.solid.has(pack(cx, Math.round(this.scratch2[1]) - 1, cz))
-      const onBird = info.room.cells[tileCell(this.walker)].group === info.birdGroup
+      const onBird = this.groupOfTile(this.walker) === g
       if (onBird && !this.onBirdBefore) {
         this.bird.stepOn()
         this.sound.chirp('huff')
       }
       if (onBird && this.wanderer.stepped) this.bird.stepOn()
       this.onBirdBefore = onBird
+      const walk = this.walk
+      carrying = onBird || (walk !== null && walk.index + 1 < walk.path.length && (this.groupOfTile(walk.path[walk.index]) === g || this.groupOfTile(walk.path[walk.index + 1]) === g))
     } else {
       x = info.spec.perch[0]
       y = info.spec.perch[1]
       z = info.spec.perch[2]
       const w = this.wanderer.pose
-      heading = Math.atan2(w.x - x, w.z - z) * 0.5 + Math.PI / 8
+      wanted = Math.atan2(w.x - x, w.z - z) * 0.5 + Math.PI / 8
       if (this.walk && !this.bird.isLooking(now)) this.bird.lookAt(w.x, w.y + 0.4, w.z, now, 0.6)
     }
-    let alpha = this.phase === 'leave' ? 1 - this.frame.fade : this.phase === 'arrive' ? smoothstep(0.2, 0.7, this.phaseT) : 1
+    const descending = this.phase === 'arrive' && this.phaseT < DESCENT_TO
+    let alpha = this.phase === 'leave' ? 1 - this.frame.fade : this.phase === 'arrive' ? smoothstep(DESCENT_FROM, DESCENT_TO, this.phaseT) : 1
+    let scale = 1
     const following = this.phase === 'enter' || (this.phase === 'leave' && this.viaDoor)
     const s = !following ? 0 : this.phase === 'leave' ? 1 : smoothstep(FOLLOW_FROM, FOLLOW_TO, this.phaseT)
-    if (s > 0) {
+    const perched = info.birdGroup < 0 && s === 0
+    if (s === 0) {
+      this.takeoff.x = x
+      this.takeoff.y = y
+      this.takeoff.z = z
+    } else {
+      // Straight up clear of everything, across above it all, then down to hover over the arch.
       const d = info.door
-      heading = Math.atan2(d[0] - x, d[2] - z)
-      x += (d[0] - x) * s
-      y += (d[1] + 0.2 - y) * s + Math.sin(Math.PI * s) * 0.9
-      z += (d[2] - z) * s
-      hovering = s < 1
-      alpha = this.phase === 'leave' ? 0 : 1 - smoothstep(FOLLOW_TO - 0.2, FOLLOW_TO, this.phaseT)
+      const hoverY = d[1] + DOOR_HOVER
+      const high = Math.max(info.cruise, hoverY)
+      const start = this.takeoff
+      const across = smoothstep(0.3, 0.85, s)
+      const toward = Math.atan2(d[0] - start.x, d[2] - start.z)
+      heading = start.heading + wrap(toward - start.heading) * smoothstep(0.3, 0.45, s)
+      x = start.x + (d[0] - start.x) * across
+      z = start.z + (d[2] - start.z) * across
+      y = start.y + (high - start.y) * smoothstep(0, 0.3, s) + (hoverY - high) * smoothstep(0.85, 1, s)
+      hovering = true
+      const into = smoothstep(FOLLOW_TO - 0.2, FOLLOW_TO, this.phaseT)
+      alpha = this.phase === 'leave' ? 0 : 1 - into
+      scale = 1 - BIRD_SHRINK * (this.phase === 'leave' ? 1 : into)
       if (this.phase === 'enter' && this.phaseT - dt < FOLLOW_FROM) this.sound.chirp('hop')
     }
-    if (this.phase === 'arrive') y += 0.6 * (1 - smoothstep(0.2, 0.7, this.phaseT))
-    this.bird.update(dt, now, x, y, z, heading, hovering || (this.phase === 'arrive' && this.phaseT < 0.7))
+    if (this.phase === 'arrive') y += DESCENT_HEIGHT * (1 - smoothstep(DESCENT_FROM, DESCENT_TO, this.phaseT))
+    hovering = hovering || descending
+
+    const probe = this.probe
+    probe.x = x
+    probe.z = z
+    probe.ground = y
+    probe.scale = scale
+    probe.bob = hovering ? HOVER_BOB : REST_BOB
+    this.refreshClearance()
+    this.clearance.setPlace(probe, carrying ? null : this.wanderer.pose)
+    if (perched) heading = descending ? this.perchedHeading : this.clearance.face(this.perchedHeading, wanted, dt > 0 ? PERCH_TURN * dt : Infinity)
+    if (s === 0) {
+      this.perchedHeading = heading
+      this.takeoff.heading = heading
+    }
+    this.clearance.reachAt(heading, this.bird.reach)
+    this.bird.pose.scale = scale
+    this.bird.update(dt, now, x, y, z, heading, hovering, carrying)
     this.bird.pose.alpha = alpha
     if (this.bird.flapped) this.sound.flap()
+  }
+
+  private groupOfTile(tile: number): number {
+    return this.info.room.cells[tileCell(tile)].group
+  }
+
+  /** Tell the clearance about the blocks and the moving segments, only when either changed. */
+  private refreshClearance(): void {
+    let moving = 0
+    for (let g = 0; g < this.arrangement.length; g++) {
+      const value = this.springs[g].value
+      if (this.settling[g] || this.drag?.group === g || Math.abs(value - Math.round(value)) > 1e-6) moving |= 1 << g
+    }
+    if (this.layout === this.clearanceLayout && moving === this.clearanceMoving) return
+    this.clearanceLayout = this.layout
+    this.clearanceMoving = moving
+    const cells = this.info.room.cells
+    this.clearance.setLayout(
+      this.layout,
+      (cell) => cells[cell].group,
+      (group) => (moving & (1 << group)) !== 0,
+    )
+  }
+
+  /**
+   * How much of the door and of the lantern the child can see: each glow
+   * floats in front of the diorama, so it shows only as much as its source
+   * does, easing out as a wall comes between and back as it clears.
+   */
+  private updateSeen(dt: number): void {
+    const seen = this.frame.seen
+    const d = this.info.door
+    const door = this.visibility(d[0], d[1] + DOOR_GLOW_Y, d[2], 0.3, 0.4)
+    const w = this.wanderer.pose
+    const size = w.scale
+    const lx = w.x + Math.cos(w.heading) * LANTERN_OUT * size
+    const lz = w.z - Math.sin(w.heading) * LANTERN_OUT * size
+    const lantern = w.alpha > 0.03 ? this.visibility(lx, w.y + LANTERN_UP * size, lz, 0.3 * size, 0.3 * size) : seen.lantern
+    const k = dt > 0 ? Math.min(1, dt / SEEN_SECONDS) : 1
+    seen.door += (door - seen.door) * k
+    seen.lantern += (lantern - seen.lantern) * k
+  }
+
+  /** How much of a glow's source shows: its centre and four points round it on screen, weighted to the centre. */
+  private visibility(x: number, y: number, z: number, right: number, up: number): number {
+    let total = 0.4 * this.seenAt(x, y, z)
+    for (let side = -1; side <= 1; side += 2) {
+      total += 0.15 * this.seenAt(x + SCREEN_RIGHT[0] * right * side, y + SCREEN_RIGHT[1] * right * side, z + SCREEN_RIGHT[2] * right * side)
+      total += 0.15 * this.seenAt(x + SCREEN_UP[0] * up * side, y + SCREEN_UP[1] * up * side, z + SCREEN_UP[2] * up * side)
+    }
+    return total
+  }
+
+  private seenAt(x: number, y: number, z: number): number {
+    return visibleFrom(this.layout.solid, this.layout.bounds.max, x, y, z) ? 1 : 0
   }
 
   // ---------------------------------------------------------------- frame
@@ -1617,8 +1941,10 @@ export class TowerController {
     this.followWish()
     this.updatePhase(step)
     this.updateGuidance()
-    this.updateWanderer(step)
+    // The bird first: a rider stands on the saddle where the bird is this frame.
     this.updateBird(step)
+    this.updateWanderer(step)
+    this.updateSeen(step)
     this.doorOpen.step(step)
     this.ringTurn.step(step)
     const frame = this.frame

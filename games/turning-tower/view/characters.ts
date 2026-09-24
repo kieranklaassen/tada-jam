@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { BIRD, HEAD_PIVOT, tailFlick, WANDERER_SCALE, WANDERER_SHADOW } from '../anatomy'
 import type { BirdPose, WandererPose } from '../motion'
 import type { Vec3 } from '../world'
 import { box, Builder, emissive } from './build'
@@ -73,9 +74,6 @@ function ball(b: Builder, centre: Vec3, radius: number, sides: number, rings: nu
   }
 }
 
-/** Big enough for a seven-year-old to find at a glance: a hood nearly as tall as a paver is wide. */
-export const WANDERER_SCALE = 1.3
-
 /**
  * The lantern hangs from the hook of a staff held out from the cloak, at head
  * height, so it reads beside the body from any heading instead of trailing on
@@ -113,7 +111,11 @@ export function buildWanderer(material: THREE.Material, halo: THREE.Object3D, sh
   for (let i = 0; i < 8; i++) {
     const a0 = (i / 8) * Math.PI * 2
     const a1 = ((i + 1) / 8) * Math.PI * 2
-    head.triAway([0, 0.11, faceZ + 0.02], [Math.sin(a0) * 0.068, 0.11 + Math.cos(a0) * 0.072, faceZ], [Math.sin(a1) * 0.068, 0.11 + Math.cos(a1) * 0.072, faceZ], [0, 0.11, 0], CREAM)
+    const rim0: V = [Math.sin(a0) * 0.068, 0.11 + Math.cos(a0) * 0.072, faceZ]
+    const rim1: V = [Math.sin(a1) * 0.068, 0.11 + Math.cos(a1) * 0.072, faceZ]
+    head.triAway([0, 0.11, faceZ + 0.02], rim0, rim1, [0, 0.11, 0], CREAM)
+    // Backed, the mask is closed and the head is one solid.
+    head.triAway([0, 0.11, faceZ], rim0, rim1, [0, 0.11, faceZ + 0.02], CREAM)
   }
   box(head, [-0.036, 0.1, faceZ + 0.012], [-0.018, 0.13, faceZ + 0.028], INDIGO)
   box(head, [0.018, 0.1, faceZ + 0.012], [0.036, 0.13, faceZ + 0.028], INDIGO)
@@ -136,32 +138,42 @@ export function buildWanderer(material: THREE.Material, halo: THREE.Object3D, sh
   frustum(lantern, [0, 0, 0], 0.04, 0.058, -0.18, -0.16, 6, LANTERN)
 
   const root = new THREE.Object3D()
+  root.name = 'wanderer'
+  root.userData.jamObject = 'wanderer'
   const figure = new THREE.Object3D()
   figure.scale.setScalar(WANDERER_SCALE)
   root.add(figure)
   const torso = new THREE.Object3D()
   figure.add(torso)
   const bodyMesh = new THREE.Mesh(body.geometry(), material)
+  bodyMesh.name = 'body'
   torso.add(bodyMesh)
   const headMesh = new THREE.Mesh(head.geometry(), material)
+  headMesh.name = 'head'
   headMesh.position.set(0, 0.36, 0)
   headMesh.rotation.order = 'YXZ'
   torso.add(headMesh)
   const armPivot = new THREE.Object3D()
   armPivot.position.set(0.14, 0.29, 0.02)
   armPivot.rotation.order = 'YXZ'
-  armPivot.add(new THREE.Mesh(arm.geometry(), material))
+  const armMesh = new THREE.Mesh(arm.geometry(), material)
+  armMesh.name = 'arm'
+  armPivot.add(armMesh)
   torso.add(armPivot)
   // The staff stands upright in the hand whatever the arm's outward angle.
   const staffPivot = new THREE.Object3D()
   staffPivot.position.set(0, -0.18, 0)
   staffPivot.rotation.z = -ARM_OUT
-  staffPivot.add(new THREE.Mesh(staff.geometry(), material))
+  const staffMesh = new THREE.Mesh(staff.geometry(), material)
+  staffMesh.name = 'staff'
+  staffPivot.add(staffMesh)
   armPivot.add(staffPivot)
   const lanternPivot = new THREE.Object3D()
   lanternPivot.position.set(STAFF_HOOK, STAFF_TOP - 0.05, 0)
   lanternPivot.scale.setScalar(LANTERN_SCALE)
-  lanternPivot.add(new THREE.Mesh(lantern.geometry(), material))
+  const lanternMesh = new THREE.Mesh(lantern.geometry(), material)
+  lanternMesh.name = 'lantern'
+  lanternPivot.add(lanternMesh)
   const glass = new THREE.Object3D()
   glass.position.set(0, -0.12, 0)
   lanternPivot.add(glass)
@@ -178,6 +190,7 @@ export function buildWanderer(material: THREE.Material, halo: THREE.Object3D, sh
       shadow.visible = root.visible
       halo.visible = root.visible
       root.position.set(pose.x, pose.y + pose.bob, pose.z)
+      figure.scale.setScalar(WANDERER_SCALE * pose.scale)
       if (pose.tiltAxis === 2) {
         root.rotation.order = 'ZYX'
         root.rotation.set(0, pose.heading, pose.tilt)
@@ -191,7 +204,9 @@ export function buildWanderer(material: THREE.Material, halo: THREE.Object3D, sh
       headMesh.rotation.set(-pose.headPitch, pose.headYaw, 0)
       armPivot.rotation.set(-pose.arm * LIFT, pose.armYaw, ARM_OUT)
       lanternPivot.rotation.set(pose.arm * LIFT - pose.swingForward, 0, -pose.swingSide)
-      shadow.position.set(pose.x, pose.y + 0.012, pose.z)
+      shadow.position.set(pose.x, pose.ground + 0.012, pose.z)
+      const reach = 2 * WANDERER_SHADOW * pose.scale * pose.shadow
+      shadow.scale.set(reach, 1, reach)
       root.updateWorldMatrix(true, true)
       halo.position.setFromMatrixPosition(glass.matrixWorld)
     },
@@ -212,10 +227,10 @@ export type BirdRig = {
  */
 export function buildBird(material: THREE.Material, shadow: THREE.Object3D): BirdRig {
   const body = new Builder()
-  const w = 0.43
-  const y0 = 0.16
-  const y1 = 0.95
-  const c = 0.15
+  const w = BIRD.halfWidth
+  const y0 = BIRD.belly
+  const y1 = BIRD.back
+  const c = BIRD.chamfer
   const section: [number, number][] = [
     [-w + c, y0],
     [w - c, y0],
@@ -227,12 +242,7 @@ export function buildBird(material: THREE.Material, shadow: THREE.Object3D): Bir
     [-w, y0 + c],
   ]
   const mid = (y0 + y1) / 2
-  const rings: [number, number][] = [
-    [-0.47, 0.55],
-    [-0.38, 1],
-    [0.3, 1],
-    [0.44, 0.7],
-  ]
+  const rings = BIRD.rings
   const point = (ring: number, j: number): V => {
     const [z, k] = rings[ring]
     const [x, y] = section[j % section.length]
@@ -252,18 +262,20 @@ export function buildBird(material: THREE.Material, shadow: THREE.Object3D): Bir
     const capCentre: V = [0, mid, z]
     for (let j = 0; j < section.length; j++) body.triAway(capCentre, point(ring, j), point(ring, j + 1), centre, belly.has(j) ? BIRD_BELLY : BIRD_BODY)
   }
-  // The saddle: a mint paver on its back, exactly where the wanderer stands.
-  box(body, [-0.31, y1 - 0.004, -0.33], [0.31, y1 + 0.03, 0.25], PATH_EDGE)
-  body.quad([-0.29, y1 + 0.031, -0.31], [-0.29, y1 + 0.031, 0.23], [0.29, y1 + 0.031, 0.23], [0.29, y1 + 0.031, -0.31], PATH)
+  // The saddle: a mint paver on its back, exactly where the wanderer stands, as high as every other paver.
+  const saddle = BIRD.saddleTop
+  box(body, [-0.31, y1 - 0.004, -0.33], [0.31, saddle - 0.001, 0.25], PATH_EDGE)
+  body.quad([-0.29, saddle, -0.31], [-0.29, saddle, 0.23], [0.29, saddle, 0.23], [0.29, saddle, -0.31], PATH)
   for (const x of [-0.15, 0.15]) {
     box(body, [x - 0.025, 0.02, -0.02], [x + 0.025, y0 + 0.02, 0.03], BEAK)
     box(body, [x - 0.06, 0, -0.03], [x + 0.06, 0.03, 0.12], BEAK)
   }
 
   const head = new Builder()
-  ball(head, [0, 0.12, 0.06], 0.24, 8, 4, BIRD_BODY)
+  // Facets this fine, a head turning in place sits no deeper in the body at any turn than a sliver.
+  ball(head, BIRD.headBall.centre, BIRD.headBall.radius, 12, 6, BIRD_BODY)
   const beakBase = 0.27
-  const tip: V = [0, 0.08, 0.46]
+  const tip: V = [...BIRD.beakTip]
   const beakInside: V = [0, 0.1, beakBase]
   const corners: V[] = [
     [-0.075, 0.03, beakBase],
@@ -272,57 +284,55 @@ export function buildBird(material: THREE.Material, shadow: THREE.Object3D): Bir
     [-0.075, 0.16, beakBase],
   ]
   for (let i = 0; i < 4; i++) head.triAway(corners[i], corners[(i + 1) % 4], tip, beakInside, BEAK)
+  // Closed at its base, the head is one solid: open, anything behind any of its faces would read as inside it.
+  head.triAway(corners[0], corners[1], corners[2], tip, BEAK)
+  head.triAway(corners[0], corners[2], corners[3], tip, BEAK)
   for (const side of [-1, 1]) {
     const ex = side * 0.215
     box(head, [ex - 0.03, 0.14, 0.12], [ex + 0.03, 0.22, 0.2], INDIGO)
-    box(head, [ex - (side > 0 ? 0.005 : 0.035), 0.195, 0.175], [ex + (side > 0 ? 0.035 : 0.005), 0.215, 0.195], CREAM)
+    const glint = ex + side * 0.035
+    head.plate([[glint, 0.195, 0.175], [glint, 0.215, 0.175], [glint, 0.215, 0.195], [glint, 0.195, 0.195]], CREAM)
     box(head, [side * 0.14 - 0.05, 0.04, 0.2], [side * 0.14 + 0.05, 0.08, 0.26], BLUSH)
   }
-  head.plate([[0, 0.34, 0.08], [0, 0.52, -0.06], [0, 0.35, -0.04]], BIRD_ACCENT)
-  head.plate([[0, 0.33, 0.0], [0, 0.46, -0.16], [0, 0.32, -0.1]], BIRD_ACCENT)
+  head.plate([[0, 0.34, 0.08], [...BIRD.crest[0]], [0, 0.35, -0.04]], BIRD_ACCENT)
+  head.plate([[0, 0.33, 0.0], [...BIRD.crest[1]], [0, 0.32, -0.1]], BIRD_ACCENT)
 
   const tail = new Builder()
-  tail.plate([[-0.06, 0, 0], [-0.24, 0.16, -0.32], [-0.1, 0.2, -0.36]], BIRD_ACCENT)
-  tail.plate([[0, 0, 0], [-0.06, 0.26, -0.42], [0.06, 0.26, -0.42]], BIRD_ACCENT)
-  tail.plate([[0.06, 0, 0], [0.1, 0.2, -0.36], [0.24, 0.16, -0.32]], BIRD_ACCENT)
+  const [tipLeft, midLeft, midRight, tipRight] = BIRD.tailTips
+  tail.plate([[-0.06, 0, 0], [...tipLeft], [-0.1, 0.2, -0.36]], BIRD_ACCENT)
+  tail.plate([[0, 0, 0], [...midLeft], [...midRight]], BIRD_ACCENT)
+  tail.plate([[0.06, 0, 0], [0.1, 0.2, -0.36], [...tipRight]], BIRD_ACCENT)
 
   const wing = (side: number): THREE.BufferGeometry => {
     const b = new Builder()
-    const x = side * 0.012
-    b.plate(
-      [
-        [x, 0, 0.22],
-        [x, -0.02, -0.3],
-        [x, -0.44, -0.36],
-        [x, -0.34, 0.06],
-      ],
-      BIRD_WING,
-    )
-    b.plate(
-      [
-        [x * 2, -0.34, -0.2],
-        [x * 2, -0.44, -0.36],
-        [x * 2, -0.3, -0.38],
-      ],
-      BIRD_ACCENT,
-    )
+    const mirror = (corners: readonly (readonly [number, number, number])[]): V[] => corners.map(([x, y, z]) => [side * x, y, z])
+    b.plate(mirror(BIRD.wingPlate), BIRD_WING)
+    b.plate(mirror(BIRD.wingAccent), BIRD_ACCENT)
     return b.geometry()
   }
 
   const root = new THREE.Object3D()
+  root.name = 'bird'
+  root.userData.jamObject = 'bird'
   const torso = new THREE.Object3D()
   root.add(torso)
-  torso.add(new THREE.Mesh(body.geometry(), material))
-  const headMesh = new THREE.Mesh(head.geometry(), material)
-  headMesh.position.set(0, 0.86, 0.34)
+  const bodyMesh = new THREE.Mesh(body.geometry(), material)
+  bodyMesh.name = 'body'
+  torso.add(bodyMesh)
+  const [bx, by, bz] = BIRD.headBall.centre
+  const headMesh = new THREE.Mesh(head.geometry().translate(-bx, -by, -bz), material)
+  headMesh.name = 'head'
+  headMesh.position.set(...HEAD_PIVOT)
   headMesh.rotation.order = 'YXZ'
   torso.add(headMesh)
   const tailMesh = new THREE.Mesh(tail.geometry(), material)
-  tailMesh.position.set(0, 0.8, -0.44)
+  tailMesh.name = 'tail'
+  tailMesh.position.set(...BIRD.tailRoot)
   torso.add(tailMesh)
   const wings = [1, -1].map((side) => {
     const mesh = new THREE.Mesh(wing(side), material)
-    mesh.position.set(side * (w + 0.005), 0.8, -0.02)
+    mesh.name = side > 0 ? 'wing-right' : 'wing-left'
+    mesh.position.set(side * BIRD.wingRoot[0], BIRD.wingRoot[1], BIRD.wingRoot[2])
     torso.add(mesh)
     return { mesh, side }
   })
@@ -339,10 +349,12 @@ export function buildBird(material: THREE.Material, shadow: THREE.Object3D): Bir
       const p = 1 + pose.puff * 0.14
       torso.scale.set(p / Math.sqrt(s), p * s, p / Math.sqrt(s))
       torso.rotation.set(pose.pitch, 0, 0)
+      root.scale.setScalar(pose.scale)
       headMesh.rotation.set(-pose.headPitch, pose.headYaw, pose.headTilt)
-      tailMesh.rotation.set(Math.max(-0.6, Math.min(0.8, pose.tail * 0.5)), 0, 0)
-      for (const { mesh, side } of wings) mesh.rotation.set(0, 0, side * pose.wing)
-      shadow.position.set(pose.x, pose.y + 0.012, pose.z)
+      tailMesh.rotation.set(tailFlick(pose.tail), 0, 0)
+      for (const { mesh, side } of wings) mesh.rotation.set(0, 0, side * (side > 0 ? pose.wingRight : pose.wingLeft))
+      shadow.position.set(pose.x, pose.ground + 0.012, pose.z)
+      shadow.scale.set(0.92 * pose.scale, 1, 0.92 * pose.scale)
     },
   }
 }

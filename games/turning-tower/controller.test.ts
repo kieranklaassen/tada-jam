@@ -82,7 +82,7 @@ describe('turning tower controller', () => {
 
   it('walks as close as it can to an unreachable door and wonders at it', () => {
     const h = harness()
-    tap(h, [6.5, 3, 2.5])
+    tap(h, [6.5, 3, 1.5])
     h.run(3)
     expect(h.tower.walkerTile).toBe(tileAt(0, [1, 2, 2]))
     expect(h.tower.currentPhase).toBe('play')
@@ -91,7 +91,7 @@ describe('turning tower controller', () => {
 
   it('remembers the door it could not reach and sets off on its own once a turn opens the way', () => {
     const h = harness()
-    tap(h, [6.5, 3, 2.5])
+    tap(h, [6.5, 3, 1.5])
     h.run(3)
     dragGroup(h, 0, [3.5, 3, 3.5], 1, 2.05)
     h.run(0.2)
@@ -102,7 +102,7 @@ describe('turning tower controller', () => {
 
   it('forgets that wish when the child sends the wanderer somewhere else', () => {
     const h = harness()
-    tap(h, [6.5, 3, 2.5])
+    tap(h, [6.5, 3, 1.5])
     h.run(3)
     tap(h, [0.5, 3, 2.5])
     h.run(2)
@@ -120,7 +120,7 @@ describe('turning tower controller', () => {
     expect(h.saves.at(-1)!.rooms['first-turn'].groups).toEqual([2])
     expect(h.sounds).toContain('settle')
     expect(h.sounds).toContain('notch')
-    tap(h, [6.5, 3, 2.5])
+    tap(h, [6.5, 3, 1.5])
     h.run(6)
     expect(h.tower.currentPhase).not.toBe('play')
   })
@@ -129,7 +129,7 @@ describe('turning tower controller', () => {
     const h = harness()
     dragGroup(h, 0, [3.5, 3, 3.5], 1, 2.05)
     h.run(1.5)
-    tap(h, [6.5, 3, 2.5])
+    tap(h, [6.5, 3, 1.5])
     h.run(10)
     expect(h.tower.currentRoom.spec.key).toBe('ferry')
     expect(h.tower.currentPhase).toBe('play')
@@ -174,26 +174,45 @@ describe('turning tower controller', () => {
   })
 
   it('lands a released segment with weight: it sinks, bobs back, and carries the wanderer with it', () => {
-    const ferry = rooms[1]
-    const raftTile = tileId(ferry.cells.findIndex((c) => c.group === 0), UP)
-    const h = harness(deserialize({ v: 1, current: 'ferry', rooms: { ferry: { groups: [0], walker: raftTile } } }, rooms))
+    const middle = tileAt(0, [3, 2, 2])
+    const h = harness(deserialize({ v: 1, current: 'first-turn', rooms: { 'first-turn': { groups: [1], walker: middle } } }, rooms))
     h.run(0.5)
-    const restY = h.tower.frame.walker.y
-    dragGroup(h, 0, [3.5, 2.5, 1.02], 0, 3.7)
+    const restY = h.tower.frame.walker.ground
+    dragGroup(h, 0, [3.5, 3, 3.5], 1, 2.05)
     let deepest = 0
     let walkerLowest = restY
     for (let i = 0; i < 90; i++) {
       h.run(1 / 60)
       deepest = Math.min(deepest, h.tower.frame.dips[0])
-      walkerLowest = Math.min(walkerLowest, h.tower.frame.walker.y)
+      walkerLowest = Math.min(walkerLowest, h.tower.frame.walker.ground)
     }
+    expect(h.tower.walkerTile).toBe(middle)
     expect(h.sounds).toContain('settle')
     expect(deepest).toBeLessThan(-0.02)
     expect(deepest).toBeGreaterThan(-0.2)
     expect(walkerLowest).toBeLessThan(restY - 0.015)
     h.run(2)
     expect(h.tower.frame.dips[0]).toBe(0)
-    expect(h.tower.frame.walker.y).toBeCloseTo(restY, 3)
+    expect(h.tower.frame.walker.ground).toBeCloseTo(restY, 3)
+  })
+
+  it('lands a segment that comes down on a block without sinking into it', () => {
+    const ferry = rooms[1]
+    const raftTile = tileId(ferry.cells.findIndex((c) => c.group === 0), UP)
+    const h = harness(deserialize({ v: 1, current: 'ferry', rooms: { ferry: { groups: [0], walker: raftTile } } }, rooms))
+    h.run(0.5)
+    const restY = h.tower.frame.walker.ground
+    dragGroup(h, 0, [3.5, 2.5, 1.02], 0, 3.7)
+    let deepest = 0
+    let walkerLowest = restY
+    for (let i = 0; i < 150; i++) {
+      h.run(1 / 60)
+      deepest = Math.min(deepest, h.tower.frame.dips[0])
+      walkerLowest = Math.min(walkerLowest, h.tower.frame.walker.ground)
+    }
+    expect(h.sounds).toContain('settle')
+    expect(deepest).toBe(0)
+    expect(walkerLowest).toBeGreaterThan(restY - 1e-6)
   })
 
   it('hops the bird one stop at a time and will not hop with the wanderer on its back', () => {
@@ -294,7 +313,7 @@ describe('turning tower controller', () => {
     const door = h.tower.currentRoom.door
     const away = (p: { x: number; z: number }) => Math.hypot(p.x - door[0], p.z - door[2])
     const perch = away(h.tower.frame.bird)
-    tap(h, [6.5, 3, 2.5])
+    tap(h, [6.5, 3, 1.5])
     for (let t = 0; t < 10 && h.tower.frame.phase !== 'enter'; t += 1 / 60) h.run(1 / 60)
     expect(h.tower.frame.phase).toBe('enter')
     h.sounds.length = 0
