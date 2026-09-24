@@ -245,7 +245,7 @@ export const createSim: CreateSim<BalloonSnapshot> = (config): Sim<BalloonSnapsh
         b.spin = -sign(dx) * 0.5
         emit('slip')
       } else {
-        b.x += clamp(dx * 0.15, -3, 3)
+        b.x = clamp(b.x + clamp(dx * 0.15, -3, 3), R, FIELD_W - R)
         b.y = clamp(b.y + clamp((held.y - 0.92 * R - b.y) * 0.3, -8, 8), R, FIELD_H - R)
         b.vx = 0
         b.vy = 0

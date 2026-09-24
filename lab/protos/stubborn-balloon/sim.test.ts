@@ -4,6 +4,7 @@
 // never reached) cannot pass the first describe block.
 
 import { describe, expect, it } from 'vitest'
+import { affordanceProblems } from '../../kit/contract.ts'
 import { FIELD_H, FIELD_W } from '../../kit/sim.ts'
 import type { Sim, SimEvent } from '../../kit/sim.ts'
 import { meta } from './meta.ts'
@@ -217,6 +218,46 @@ describe('the cradle', () => {
     }
     expect(balloon(sim).cradled).toBe(false)
     expect(balloon(sim).x).toBeLessThan(rest.x + 400)
+  })
+
+  it('dragging a cradled balloon to a side wall keeps it and every affordance inside the field', () => {
+    for (const seed of [1, 2, 3]) {
+      for (const wallX of [1170, 10]) {
+        const sim = start({ seed })
+        const b0 = balloon(sim)
+        const fy = b0.y + b0.r + 100
+        sim.pointer({ id: 5, phase: 'down', x: b0.x, y: fy })
+        run(sim, 200)
+        expect(balloon(sim).cradled).toBe(true)
+        const inside = () => {
+          const b = balloon(sim)
+          expect(b.x).toBeGreaterThanOrEqual(b.r - 1e-9)
+          expect(b.x).toBeLessThanOrEqual(FIELD_W - b.r + 1e-9)
+          for (const a of sim.affordances()) {
+            expect(affordanceProblems(a)).toEqual([])
+          }
+        }
+        // Slide the finger 2 px a tick toward the wall and then hold it there.
+        let fx = b0.x
+        while (Math.abs(fx - wallX) > 1e-9) {
+          fx += Math.sign(wallX - fx) * Math.min(2, Math.abs(wallX - fx))
+          sim.pointer({ id: 5, phase: 'move', x: fx, y: fy })
+          sim.step()
+          inside()
+        }
+        for (let i = 0; i < 60; i++) {
+          sim.step()
+          inside()
+        }
+        expect(balloon(sim).cradled).toBe(true)
+        // Lifting the finger on the wall keeps it inside too.
+        sim.pointer({ id: 5, phase: 'up', x: fx, y: fy })
+        for (let i = 0; i < 5; i++) {
+          sim.step()
+          inside()
+        }
+      }
+    }
   })
 })
 
