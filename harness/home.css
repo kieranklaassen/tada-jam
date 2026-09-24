@@ -517,3 +517,16 @@
     transition: none !important;
   }
 }
+
+/* Showcases (owner-approved, not cartridges) sit in their own small dock under the games. */
+.home-showcases {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-dock-showcase {
+  margin-top: 0;
+}

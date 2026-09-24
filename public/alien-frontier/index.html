@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alien Frontier: A Space Western</title>
+    <meta name="description" content="An alien crash-lands in the 1880s Midwest and sets out to become a cowboy. A cozy open-world space western that runs in your browser." />
+    <meta name="theme-color" content="#1a1020" />
+    <meta property="og:title" content="Alien Frontier: A Space Western" />
+    <meta property="og:description" content="Rope cattle, tame a mustang, fly a jetpack over the prairie and fix your flying saucer. A procedurally built space western." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <!-- Fonts are bundled (OFL, via @fontsource) so the game never loads anything from outside. -->
+    <style>@font-face{font-family:Rye;font-style:normal;font-weight:400;font-display:swap;src:url(./fonts/rye-latin-400-normal.woff2)format("woff2")}@font-face{font-family:Alegreya Sans;font-style:normal;font-weight:400;font-display:swap;src:url(./fonts/alegreya-sans-latin-400-normal.woff2)format("woff2")}@font-face{font-family:Alegreya Sans;font-style:italic;font-weight:400;font-display:swap;src:url(./fonts/alegreya-sans-latin-400-italic.woff2)format("woff2")}@font-face{font-family:Alegreya Sans;font-style:normal;font-weight:700;font-display:swap;src:url(./fonts/alegreya-sans-latin-700-normal.woff2)format("woff2")}</style>
+    <style>html,body{background:#140c18;height:100%;margin:0;overflow:hidden}#boot{z-index:50;color:#f6e6c8;background:radial-gradient(at 50% 120%,#e8834a 0%,#9a4a5a 22%,#3a2448 48%,#140c18 80%);place-items:center;font-family:Alegreya Sans,Trebuchet MS,sans-serif;transition:opacity 1s;display:grid;position:fixed;inset:0}#boot.done{opacity:0;pointer-events:none}#boot .stars{background-image:radial-gradient(1px 1px at 12% 18%,#fff8,#0000),radial-gradient(1px 1px at 72% 12%,#fffa,#0000),radial-gradient(1.5px 1.5px at 38% 30%,#fff9,#0000),radial-gradient(1px 1px at 88% 36%,#fff7,#0000),radial-gradient(1px 1px at 22% 44%,#fff6,#0000),radial-gradient(1.5px 1.5px at 58% 8%,#fffb,#0000),radial-gradient(1px 1px at 5% 30%,#fff8,#0000),radial-gradient(1px 1px at 95% 20%,#fff8,#0000);position:absolute;inset:0}#boot .b-inner{text-align:center;width:min(420px,80vw);position:relative}#boot svg{filter:drop-shadow(0 0 18px #6affd088);width:120px;height:90px;animation:3s ease-in-out infinite bob}@keyframes bob{50%{transform:translateY(-8px)rotate(-3deg)}}#boot h1{letter-spacing:4px;color:#fff0d2;margin:14px 0 4px;font:400 34px Rye,Georgia,serif}#boot .bar{background:#ffffff1c;border-radius:4px;height:6px;margin:22px 0 10px;overflow:hidden}#boot .bar i{background:linear-gradient(90deg,#e8b34a,#6affd0);width:3%;height:100%;transition:width .35s;display:block}#boot .step{opacity:.8;min-height:1.3em;font-size:16px;font-style:italic}#boot .err{margin-top:16px;line-height:1.5;display:none}</style>
+    <script type="module" crossorigin src="./assets/index-Cxg5WdSF.js"></script>
+    <!-- Jam smoothness shim: merges static scenery and paces the shadow map (see showcase/alien-frontier/PERF.md). -->
+    <script type="module" src="./jam-smooth.js"></script>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <div id="ui"></div>
+    <div id="boot">
+      <div class="stars"></div>
+      <div class="b-inner">
+        <svg viewBox="0 0 120 90" aria-hidden="true">
+          <polygon points="46,52 74,52 96,90 24,90" fill="#6affd0" opacity=".18" />
+          <ellipse cx="60" cy="44" rx="48" ry="11" fill="#c9ced4" />
+          <ellipse cx="60" cy="47" rx="48" ry="6" fill="#8a9098" />
+          <path d="M40 40 Q60 12 80 40 Z" fill="#7de8d8" opacity=".85" />
+          <circle cx="28" cy="46" r="2.5" fill="#6affd0" /><circle cx="46" cy="49" r="2.5" fill="#6affd0" />
+          <circle cx="74" cy="49" r="2.5" fill="#6affd0" /><circle cx="92" cy="46" r="2.5" fill="#6affd0" />
+        </svg>
+        <h1>ALIEN FRONTIER</h1>
+        <div class="bar"><i id="boot-bar"></i></div>
+        <div class="step" id="boot-step">Warming up the engines…</div>
+        <div class="err" id="boot-err"></div>
+      </div>
+    </div>
+    <noscript><p style="color:#fff;font-family:sans-serif;padding:2em">Alien Frontier needs JavaScript to run.</p></noscript>
+  </body>
+</html>

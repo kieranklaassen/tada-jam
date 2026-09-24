@@ -160,6 +160,10 @@ export function scanWordless(source: string, file: string): WordlessFinding[] {
   return findings
 }
 
+/**
+ * Kid-side files are cartridge code under games/<key>/. Showcases (showcase/<key>/) are owner-approved
+ * non-cartridges with grown-up text by design, so this check deliberately never scans them.
+ */
 function isKidSideFile(relativePath: string): boolean {
   const parts = relativePath.split('/')
   if (parts[0] !== 'games' || parts.length < 3) return false

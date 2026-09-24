@@ -83,7 +83,7 @@ function Tile({ game, index, chosen, onPick }: { game: JamGame; index: number; c
   )
 }
 
-export function GameList({ games, onPick }: { games: readonly JamGame[]; onPick: (key: string) => void }) {
+export function GameList({ games, showcases = [], onPick }: { games: readonly JamGame[]; showcases?: readonly JamGame[]; onPick: (key: string) => void }) {
   const [surprise, setSurprise] = useState<number | null>(null)
   const frameRef = useRef<HTMLDivElement>(null)
 
@@ -142,6 +142,18 @@ export function GameList({ games, onPick }: { games: readonly JamGame[]; onPick:
               <ShuffleIcon />
               Surprise me
             </button>
+          )}
+
+          {showcases.length > 0 && (
+            // Owner-approved showcases are not cartridges: listed apart, and never picked by "Surprise me".
+            <section className="home-showcases" aria-label="Showcase">
+              <p className="home-eyebrow">Showcase, not a cartridge</p>
+              <ul className="home-dock home-dock-showcase">
+                {showcases.map((game, i) => (
+                  <Tile key={game.cartridge.manifest.key} game={game} index={games.length + 1 + i} chosen={false} onPick={onPick} />
+                ))}
+              </ul>
+            </section>
           )}
         </main>
 
