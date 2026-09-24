@@ -4,7 +4,7 @@ import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, 
 import { GestureTracker, type Intent, type Target } from './input'
 import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
 import { GRAVITY, HOLD_HEIGHT, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
-import { JAR_REACH, partDepth } from './partShape'
+import { JAR_REACH, partDepth, STOOL_REACH, STOOL_TOP } from './partShape'
 import { stoneRest } from './stoneShape'
 import { surfaceUnder } from './surfaces'
 import { SaveCadence } from './saveCadence'
@@ -914,7 +914,7 @@ export class TableController {
       const key = `guest-${index}`
       if (this.state.liveMat !== 'feeding') this.physics.removeFixture(key)
       else if (this.state.seats[index] && this.guestDrag?.seat !== index) this.physics.setFixture(key, { ...seat.guest, r: GUEST_RADIUS }, 10)
-      else if (!this.state.seats[index] && this.stoolsShown) this.physics.setFixture(key, { ...seat.guest, r: 42 }, 3)
+      else if (!this.state.seats[index] && this.stoolsShown) this.physics.setFixture(key, { ...seat.guest, r: STOOL_REACH / UNIT }, STOOL_TOP)
       else if (!this.state.seats[index]) this.physics.removeFixture(key)
       else this.physics.removeFixture(key)
     })

@@ -21,6 +21,11 @@ import {
   partPieceVertices,
   shellRib,
   sphereGrid,
+  STOOL,
+  STOOL_LIFT,
+  stoolButton,
+  stoolCushion,
+  stoolRim,
   type Lumped,
 } from '../partShape'
 import { BOWL_PROFILE, BOWL_SCALE, DISH_PROFILE, ON_RUG, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y } from '../surfaces'
@@ -500,10 +505,10 @@ function feedingShapes() {
       piece(geo.plate(36), PALETTE.plate, { scale: [FEEDING.plateRadius * UNIT, PLATE_HEIGHT, FEEDING.plateRadius * UNIT] }, { lump: 0.08, frequency: 0.5, seed: 3, occlusion: 0.15, hold: holdLathe(PLATE_PROFILE.slice(4), PLATE_PROFILE.slice(0, 2)) }),
     ]),
     stool: merge([
-      piece(geo.sphere(28), PALETTE.stool, { position: [0, 1.5, 0], scale: [4.5, 1.7, 4.5] }, { lump: 0.3, frequency: 0.6, seed: 6 }),
-      piece(geo.sphere(14), '#c79a45', { position: [0, 3.05, 0], scale: [0.9, 0.35, 0.9] }, { ground: null }),
-      piece(geo.torus(32, 0.16), '#c79a45', { position: [0, 1.55, 0], rotation: [Math.PI / 2, 0, 0], scale: 4.35 }, { lump: 0.05, ground: null }),
-    ]),
+      paint(geo.fromGrid(stoolCushion(), STOOL.cushion.segments, STOOL.cushion.rings), PALETTE.stool, -STOOL_LIFT),
+      paint(geo.fromGrid(stoolButton(), STOOL.button.segments, STOOL.button.rings), '#c79a45', null),
+      paint(geo.fromRing(stoolRim(), STOOL.rim.tube, STOOL.rim.radial, STOOL.rim.tubular), '#c79a45', null),
+    ]).translate(0, STOOL_LIFT, 0),
     rugRope: merge([piece(ellipseRope(RUG.rx * UNIT, RUG.rz * UNIT), '#d8c39c', { position: [0, RUG_HEM_Y, 0], scale: [1, RUG_HEM.flatten, 1] }, { lump: 0.12, frequency: 0.5, ground: null })]),
   }
 }
