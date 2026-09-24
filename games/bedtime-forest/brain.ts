@@ -122,6 +122,82 @@ export function yawToward(x: number, z: number, tx: number, tz: number): number 
 
 const scratch: Point = { x: 0, z: 0 }
 
+/** Air left between two animals' footprints, so fur and feathers never quite touch. */
+const SPACING = 0.6
+/** How far over a bystander's head a carried animal's feet ride. */
+const HEADROOM = 1.2
+/** A carried animal looks this far ahead along its path (seconds), so it is already up when it reaches someone. */
+const LOOKAHEAD = 0.18
+/** The unit direction from the second footprint toward the first, written by `footprintGap`. */
+export const apart: Point = { x: 0, z: 0 }
+
+/**
+ * The gap between the footprint of `a`, standing at (x, z), and that of `b`
+ * (layout.ts `footprint`: a capsule along each one's facing); negative when
+ * they overlap by that much. Writes the direction to push `a` into `apart`.
+ */
+export function footprintGap(a: Creature, x: number, z: number, b: Creature): number {
+  const fa = a.spec.footprint
+  const fb = b.spec.footprint
+  const sa = Math.sin(a.yaw)
+  const ca = Math.cos(a.yaw)
+  const sb = Math.sin(b.yaw)
+  const cb = Math.cos(b.yaw)
+  const px = x + sa * fa.back
+  const pz = z + ca * fa.back
+  const ux = sa * (fa.front - fa.back)
+  const uz = ca * (fa.front - fa.back)
+  const qx = b.x + sb * fb.back
+  const qz = b.z + cb * fb.back
+  const vx = sb * (fb.front - fb.back)
+  const vz = cb * (fb.front - fb.back)
+  // The closest points of the two spines (segments p + s·u and q + t·v).
+  const rx = px - qx
+  const rz = pz - qz
+  const uu = ux * ux + uz * uz
+  const vv = vx * vx + vz * vz
+  const vr = vx * rx + vz * rz
+  let s = 0
+  let t = 0
+  if (uu > 1e-6 && vv > 1e-6) {
+    const uv = ux * vx + uz * vz
+    const ur = ux * rx + uz * rz
+    const denom = uu * vv - uv * uv
+    s = denom > 1e-6 ? clamp01((uv * vr - ur * vv) / denom) : 0
+    t = (uv * s + vr) / vv
+    if (t < 0) {
+      t = 0
+      s = clamp01(-ur / uu)
+    } else if (t > 1) {
+      t = 1
+      s = clamp01((uv - ur) / uu)
+    }
+  } else if (vv > 1e-6) {
+    t = clamp01(vr / vv)
+  } else if (uu > 1e-6) {
+    s = clamp01(-(ux * rx + uz * rz) / uu)
+  }
+  let dx = px + ux * s - (qx + vx * t)
+  let dz = pz + uz * s - (qz + vz * t)
+  let d = Math.hypot(dx, dz)
+  if (d < 1e-4) {
+    dx = x - b.x
+    dz = z - b.z
+    d = Math.hypot(dx, dz)
+    if (d < 1e-4) {
+      dx = 1
+      dz = 0
+      d = 1
+    }
+    apart.x = dx / d
+    apart.z = dz / d
+    return -(fa.reach + fb.reach)
+  }
+  apart.x = dx / d
+  apart.z = dz / d
+  return d - fa.reach - fb.reach
+}
+
 export class Creature {
   readonly key: AnimalKey
   readonly index: number
@@ -368,15 +444,17 @@ export class Creature {
         return this.stepWalk(dt, world)
       case 'yawn':
         this.speed *= Math.exp(-dt * 8)
+        this.separate(world)
         if (this.inviting) this.faceToward(0, dt)
         if (this.modeT >= this.motion.yawn) this.endPause(world)
         return
       case 'trick':
         this.speed *= Math.exp(-dt * 8)
+        this.separate(world)
         if (this.modeT >= this.motion.trick) this.endPause(world)
         return
       case 'held':
-        return this.stepHeld(dt)
+        return this.stepHeld(dt, world)
       case 'fall':
         return this.stepFall(dt, world)
       case 'toHome':
@@ -584,28 +662,45 @@ export class Creature {
     const creatures = world.creatures
     for (let i = 0; i < creatures.length; i++) {
       const other = creatures[i]
-      // Someone who just tumbled out of a home lands solid, so a bystander shuffles aside.
+      if (other === this) continue
+      // Those on their feet share the shuffle. Someone who just tumbled out of a home lands solid, and one on its
+      // way along the ground (a fish flopping home, a sleeper coming out) keeps its course, so a bystander makes
+      // all the room.
+      const shares = other.roaming || other.mode === 'fall'
       const landed = other.mode === 'react' && other.stage === 2
-      if (other === this || !(other.roaming || other.mode === 'fall' || landed)) continue
-      const dx = this.x - other.x
-      const dz = this.z - other.z
-      const min = this.spec.radius + other.spec.radius
-      const d = Math.hypot(dx, dz)
-      if (d > 0.001 && d < min) {
-        const push = ((min - d) / d) * 0.5
-        this.x += dx * push
-        this.z += dz * push
+      const passing = (other.mode === 'travel' || other.mode === 'exit') && other.y < this.spec.footprint.top
+      if (!(shares || landed || passing)) continue
+      const gap = footprintGap(this, this.x, this.z, other) - SPACING
+      if (gap < 0) {
+        const share = shares ? 0.5 : 1
+        this.x -= apart.x * gap * share
+        this.z -= apart.z * gap * share
       }
     }
     clampToClearing(this, 0)
   }
 
-  private stepHeld(dt: number): void {
+  /** The pivot height that carries this animal's feet over anyone it would otherwise pass through (0 when no one is near). */
+  private overHeads(world: BrainWorld): number {
+    const aheadX = this.x + this.pivotVX * LOOKAHEAD
+    const aheadZ = this.z + this.pivotVZ * LOOKAHEAD
+    let pivot = 0
+    for (const other of world.creatures) {
+      if (other === this || other.mode === 'held') continue
+      const gap = Math.min(footprintGap(this, this.x, this.z, other), footprintGap(this, aheadX, aheadZ, other))
+      if (gap < SPACING) pivot = Math.max(pivot, other.y + other.spec.footprint.top + HEADROOM + this.spec.hang)
+    }
+    return pivot
+  }
+
+  private stepHeld(dt: number, world: BrainWorld): void {
     const w = this.spec.weight
     const k = 1 - Math.exp(-dt * lerp(28, 8, w))
     const nx = this.pivotX + (this.grabX - this.pivotX) * k
     const nz = this.pivotZ + (this.grabZ - this.pivotZ) * k
-    this.pivotY += (this.grabY - this.pivotY) * (1 - Math.exp(-dt * lerp(16, 6, w)))
+    // Carried over the others' heads, never through them: up briskly, back down at the animal's own pace.
+    const pivotY = Math.max(this.grabY, this.overHeads(world))
+    this.pivotY += (pivotY - this.pivotY) * (1 - Math.exp(-dt * (pivotY > this.pivotY ? 24 : lerp(16, 6, w))))
     const vx = dt > 0 ? (nx - this.pivotX) / dt : 0
     const vz = dt > 0 ? (nz - this.pivotZ) / dt : 0
     const ax = dt > 0 ? (vx - this.pivotVX) / dt : 0
@@ -645,6 +740,8 @@ export class Creature {
     this.vz *= Math.exp(-dt * 3)
     this.swingX *= Math.exp(-dt * 8)
     this.swingZ *= Math.exp(-dt * 8)
+    // Let go over someone, it slides off them on the way down instead of landing inside.
+    this.separate(world)
     if (this.y > 0) return
     const impact = -this.vy
     this.y = 0
