@@ -672,7 +672,12 @@ export class TheatreController {
 
   private companion({ kind, slot, paper }: SkyCreature, seed: number): Companion {
     const pose = blankPose()
-    pose.facing = SKY_HOMES[slot].x > 0 ? -1 : 1
+    const home = SKY_HOMES[slot]
+    pose.facing = home.x > 0 ? -1 : 1
+    // Idling at home from the start, so a still frame before the first step (a saved sky on open) draws it in the sky.
+    PERSONALITIES[kind].idle(this.t + seed, home.x, home.y, pose)
+    pose.z = skyDepth(slot)
+    pose.scale = skyScale(kind)
     return { kind, slot, paper, seed, pose, reactAt: -Infinity, flipped: false, facingTarget: pose.facing, rings: blankRings(), ringCount: 0, leavingAt: -Infinity, flight: null, settleAt: -Infinity, settleFrom: 0 }
   }
 
