@@ -34,7 +34,7 @@ import {
 } from '../partShape'
 import { BOWL_LUMP, BOWL_PROFILE, BOWL_SCALE, DECAL_LIFT, decalReach, DISH_PROFILE, feedingFloor, HEM_POINTS, hemAt, ON_RUG, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_LUMP, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y, type Surfaces } from '../surfaces'
 import { furTime, MAX_SHELLS } from './fur'
-import { ARM_AT, CHEEKS_AT, EAR_AT, GUEST_SIZE, guestFloor, guestYaw, NECK_Y, poseGuest, soleDepth, speciesShapes } from './guest'
+import { ARM_AT, CHEEK_AT, EAR_AT, GUEST_SIZE, guestFloor, guestYaw, NECK_Y, poseGuest, soleDepth, speciesShapes } from './guest'
 import { useQuality } from './quality'
 import { MotionDirector, PERSONALITIES, SEAT_SPECIES } from '../motion'
 import { JAR_SCALE, JARS, PART_COUNTS, PART_KINDS, type PartKind } from '../parts'
@@ -862,7 +862,7 @@ export function Guest({ seat, at, carried, read }: { seat: number; at: Point; ca
   const eyes = useRef<THREE.Mesh>(null)
   const mouth = useRef<THREE.Mesh>(null)
   const nose = useRef<THREE.Mesh>(null)
-  const cheeks = useRef<THREE.Mesh>(null)
+  const cheeks = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
   const ears = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
   const arms = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
   const springs = useRef({ yaw: { x: 0, v: 0 }, pitch: { x: 0, v: 0 }, carry: { x: 0, v: 0 } })
@@ -930,8 +930,8 @@ export function Guest({ seat, at, carried, read }: { seat: number; at: Point; ca
     const pop = pose.arriveAt === null || arrive >= 1 ? 1 : Math.max(0.01, easeOutBack(arrive))
 
     const carry = springStep(s.carry, carried ? GUEST_CARRY : 0, dt, 160, 18)
-    if (root.current && head.current && nose.current && cheeks.current) {
-      const rig = { root: root.current, head: head.current, nose: nose.current, cheeks: cheeks.current, ears: ears.map((ref) => ref.current), arms: arms.map((ref) => ref.current) }
+    if (root.current && head.current && nose.current) {
+      const rig = { root: root.current, head: head.current, nose: nose.current, cheeks: cheeks.map((ref) => ref.current), ears: ears.map((ref) => ref.current), arms: arms.map((ref) => ref.current) }
       poseGuest(rig, shapes, m, { yaw: s.yaw.x, pitch: s.pitch.x }, pop)
       root.current.position.y = 0
       root.current.updateMatrix()
@@ -961,7 +961,9 @@ export function Guest({ seat, at, carried, read }: { seat: number; at: Point; ca
           <mesh name="guest-eyes" ref={eyes} geometry={shapes.eyes} material={clay} position={[0, 3.7, 0]} />
           <mesh name="guest-mouth" ref={mouth} geometry={shapes.mouth} material={clay} position={[0, 1.65, species === 'hedgehog' ? 4.9 : 3.85]} />
           <mesh name="guest-nose" ref={nose} geometry={shapes.nose} material={clay} position={shapes.noseAt} />
-          <mesh name="guest-cheeks" ref={cheeks} geometry={shapes.cheeks} material={clay} position={CHEEKS_AT} />
+          {cheeks.map((ref, i) => (
+            <mesh key={i} name={i === 0 ? 'guest-cheek-left' : 'guest-cheek-right'} ref={ref} geometry={shapes.cheek} material={clay} position={[(i === 0 ? -1 : 1) * CHEEK_AT[0], CHEEK_AT[1], CHEEK_AT[2]]} />
+          ))}
           {shapes.ears?.map((geometry, i) => (
             <group key={i} ref={ears[i]} position={[(i === 0 ? -1 : 1) * EAR_AT[0], EAR_AT[1], EAR_AT[2]]}>
               <mesh name={i === 0 ? 'guest-ear-left' : 'guest-ear-right'} geometry={geometry} material={clay} />
