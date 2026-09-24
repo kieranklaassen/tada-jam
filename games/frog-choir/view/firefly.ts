@@ -1,8 +1,7 @@
 import * as THREE from 'three'
 import type { Vec3 } from '../choir'
-import { POND } from '../layout'
+import { BANK_Z, POND } from '../layout'
 import type { TierLook } from '../tiers'
-import { BANK_Z } from './pond'
 import { PALETTE } from './palette'
 import { mergeParts, part, shapes, stick } from './parts'
 import { haloTexture } from './textures'
@@ -82,6 +81,8 @@ export type FireflyView = {
 
 export function buildFirefly(shared: SharedUniforms, gradient: THREE.Texture): FireflyView {
   const group = new THREE.Group()
+  group.name = 'firefly'
+  group.userData.jamObject = group.name
   const body = new THREE.Group()
   const dark = PALETTE.fireflyBody
   const bodyParts = [
@@ -95,8 +96,13 @@ export function buildFirefly(shared: SharedUniforms, gradient: THREE.Texture): F
     part(shapes.tiny(), dark, { position: [0.08, 0.2, 0.26], scale: 0.022 }),
   ]
   const bodyGeometry = mergeParts(bodyParts)
-  body.add(new THREE.Mesh(bodyGeometry, toonMaterial(shared, gradient)), new THREE.Mesh(mergeParts(bodyParts, { outlineOnly: true }), outlineMaterial(shared, 0.012)))
+  const bodyMesh = new THREE.Mesh(bodyGeometry, toonMaterial(shared, gradient))
+  const bodyOutline = new THREE.Mesh(mergeParts(bodyParts, { outlineOnly: true }), outlineMaterial(shared, 0.012))
+  bodyMesh.name = 'body'
+  bodyOutline.name = 'outline'
+  body.add(bodyMesh, bodyOutline)
   const tail = new THREE.Mesh(shapes.sphere(1), new THREE.MeshBasicMaterial({ color: PALETTE.fireflyCore, fog: false }))
+  tail.name = 'tail'
   tail.position.set(0, -0.02, -0.1)
   tail.scale.set(0.12, 0.11, 0.15)
   body.add(tail)
@@ -105,6 +111,7 @@ export function buildFirefly(shared: SharedUniforms, gradient: THREE.Texture): F
   const wingMaterial = new THREE.MeshBasicMaterial({ color: PALETTE.fireflyWing, transparent: true, opacity: 0.8, fog: false, depthWrite: false })
   const wings = [-1, 1].map((side) => {
     const wing = new THREE.Mesh(wingGeometry, wingMaterial)
+    wing.name = side < 0 ? 'wing-left' : 'wing-right'
     wing.position.set(side * 0.03, 0.07, 0.02)
     wing.scale.set(side * 0.1, 0.015, 0.05)
     body.add(wing)
@@ -115,6 +122,7 @@ export function buildFirefly(shared: SharedUniforms, gradient: THREE.Texture): F
   const halo = new THREE.Sprite(
     new THREE.SpriteMaterial({ map: haloTexture(), color: PALETTE.fireflyGlow, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }),
   )
+  halo.name = 'halo'
   group.add(halo)
 
   const trailGeometry = new THREE.BufferGeometry()
