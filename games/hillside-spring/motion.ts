@@ -434,6 +434,8 @@ const tanuki: Personality = {
     {
       name: 'yawn-stretch',
       duration: 2.8,
+      // It stretches out of its curl; still circling to lie down, it has no curl to stretch out of.
+      settled: true,
       sample: (t, amp) => {
         const wake = ramp(t, 0, 0.107) * (1 - ramp(t, 0.786, 1))
         const yawn = hump(t, 0.16, 0.607) * amp
