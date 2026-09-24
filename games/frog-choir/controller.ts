@@ -139,11 +139,10 @@ export function padDip(wave: number): number {
 
 /**
  * Carried and waiting frogs rise in steps this big, and sink back at
- * RISE_EASE per second once clear. They rise at most high enough to clear
- * the tallest frog standing on the highest pad.
+ * RISE_EASE per second once clear. How high they may rise is measured each
+ * frame from the frogs they give way to, by riseCeiling.
  */
 const RISE_STEP = 0.05
-const RISE_MAX = PAD_HEIGHTS.high + TALLEST - DEEPEST_AIRBORNE + MARGIN
 const RISE_EASE = 12
 /** A hop is checked against the frogs under its path at this many points, and arcs at most this high. */
 const HOP_SAMPLES = 16
@@ -740,15 +739,31 @@ export class PondController {
 
   /** The lowest the frog's feet may be at (x, z) to pass over every frog it gives way to. */
   private clearance(frog: Frog, x: number, z: number): number {
-    const rank = this.ranks[frog.index]
     let need = -Infinity
     for (const other of this.frogs) {
-      if (other === frog) continue
-      const r = this.ranks[other.index]
-      if (r > rank || (r === rank && other.index > frog.index)) continue
+      if (!this.givesWay(frog, other)) continue
       need = Math.max(need, clearOver(other.baseY, other.shape.top, frog.shape.low, Math.hypot(x - other.x, z - other.z)))
     }
     return need
+  }
+
+  /** Whether the frog passes over `other`: a lower rank, or its own rank and a lower index. */
+  private givesWay(frog: Frog, other: Frog): boolean {
+    if (other === frog) return false
+    const rank = this.ranks[frog.index]
+    const r = this.ranks[other.index]
+    return r < rank || (r === rank && other.index < frog.index)
+  }
+
+  /**
+   * As high as a rising frog could ever need to go: over the highest frog it
+   * gives way to, wherever that one is now. A fixed cap would be too low for
+   * a frog hopping high or a carried frog already risen over one.
+   */
+  private riseCeiling(frog: Frog): number {
+    let highest: number = PAD_HEIGHTS.high
+    for (const other of this.frogs) if (this.givesWay(frog, other)) highest = Math.max(highest, other.baseY)
+    return highest + TALLEST - DEEPEST_AIRBORNE + MARGIN
   }
 
   /**
@@ -758,13 +773,14 @@ export class PondController {
    */
   private rise(frog: Frog, dt: number): void {
     const sight = this.projector?.toScreen(frog.carryX, PAD_TOP + frog.carryY, frog.carryZ, this.sight) ?? null
+    const ceiling = this.riseCeiling(frog)
     let h = frog.rise * Math.exp(-dt * RISE_EASE)
     if (!this.clearAt(frog, sight, h)) {
       let below = h
-      h = Math.min(RISE_MAX, h + RISE_STEP)
-      while (h < RISE_MAX && !this.clearAt(frog, sight, h)) {
+      h = Math.min(ceiling, h + RISE_STEP)
+      while (h < ceiling && !this.clearAt(frog, sight, h)) {
         below = h
-        h = Math.min(RISE_MAX, h + RISE_STEP)
+        h = Math.min(ceiling, h + RISE_STEP)
       }
       for (let i = 0; i < 5; i++) {
         const mid = (below + h) / 2

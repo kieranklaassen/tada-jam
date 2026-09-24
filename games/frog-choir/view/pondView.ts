@@ -296,7 +296,8 @@ export class PondView {
     m.lift = t - frog.liftedAt
     m.land = t - frog.landedAt
     m.splash = t - frog.splashedAt
-    m.hop = frog.mode === 'hop' ? Math.max(0, Math.min(1, (t - frog.hopStart) / frog.hopDuration)) : -1
+    // A frog waiting in the air for its pad has not planned a hop yet: airborne, but no progress through one.
+    m.hop = frog.mode !== 'hop' ? -1 : frog.planned ? Math.max(0, Math.min(1, (t - frog.hopStart) / frog.hopDuration)) : 0
     m.vx = frog.vx
     m.vz = frog.vz
     const f = c.firefly
