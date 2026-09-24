@@ -8,7 +8,7 @@ import { JAR_REACH, partDepth, partRest, STOOL_REACH, STOOL_TOP } from './partSh
 import { STONE_REACH, stoneRest } from './stoneShape'
 import { feedingFloor, surfaceUnder } from './surfaces'
 import { SaveCadence } from './saveCadence'
-import { creak, panDrops, panOf, restingBeam, stepBeam, targetTilt, type Beam, type Side } from './scale'
+import { creak, panDrops, panOf, restingBeam, stepBeam, stepSway, swayOf, targetTilt, type Beam, type Side, type Sway } from './scale'
 import { cutPiece, placeFromBag, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
 import { chunk, clusterPieces, groupsFor, schedule } from './voice'
 import { comingOut, DOOR_SWING, doorwayGap, goingHome, houseGap, visitorGone, visitorHome, type VisitorTimes } from './visitors'
@@ -163,6 +163,7 @@ export class TableController {
   /** Seconds of attended play; stands still while the table is put away. */
   t = 0
   beam: Beam = restingBeam()
+  sway: Sway = { x: 0, v: 0 }
   bagTipStart: number | null = null
   /** How many times the bag has been tipped: tips alternate between a lurch and a shake-out. */
   private bagTips = 0
@@ -280,7 +281,8 @@ export class TableController {
     this.pour()
     if (this.state.liveMat === 'scale') {
       this.beam = stepBeam(this.beam, targetTilt(this.panLoad()), dt)
-      this.physics.setPanDrops(panDrops(this.beam.angle))
+      this.sway = stepSway(this.sway, this.beam.velocity, dt)
+      this.physics.setPanDrops(panDrops(this.beam.angle), swayOf(this.sway))
       const sound = creak(this.beam)
       this.sound.creak(sound.gain, sound.pitch)
     }
@@ -1462,6 +1464,7 @@ export class TableController {
     this.pouring = []
     for (const id of this.physics.stoneIds()) this.physics.removeStone(id)
     this.beam = restingBeam()
+    this.sway = { x: 0, v: 0 }
     this.enterMat()
     for (const piece of this.state.pieces) this.addPieceBody(piece)
     this.matSlideStart = this.t

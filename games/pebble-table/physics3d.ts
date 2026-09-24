@@ -120,6 +120,7 @@ export class TablePhysics {
   private readonly pans: CANNON.Body[] = []
   private readonly brooms = new Map<number, CANNON.Body>()
   private panDrops: [number, number] = [0, 0]
+  private panSway = 0
   private readonly targets = new Map<CANNON.Body, Vec3>()
   /** Loose parts, with how long each has been calm, awake and asleep. */
   private readonly calm = new Map<CANNON.Body, { calm: number; awake: number; asleep: number }>()
@@ -270,6 +271,7 @@ export class TablePhysics {
     for (const kind of LIDDED_JARS) this.addJar(kind)
     this.addNest()
     this.panDrops = [0, 0]
+    this.panSway = 0
   }
 
   /**
@@ -331,14 +333,22 @@ export class TablePhysics {
     return { mat, seats, panFloors: [this.panFloor(0), this.panFloor(1)] }
   }
 
-  /** Beam tilt drives the pans up and down; stones in them ride along. `drops` are world units. */
-  setPanDrops(drops: readonly [number, number]): void {
-    const moved = Math.abs(drops[0] - this.panDrops[0]) > 0.01 || Math.abs(drops[1] - this.panDrops[1]) > 0.01
+  /** Beam tilt drives the pans up and down, and its turning swings them sideways (`sway`, cm); stones in them ride along. `drops` are world units. */
+  setPanDrops(drops: readonly [number, number], sway = 0): void {
+    const moved = Math.abs(drops[0] - this.panDrops[0]) > 0.01 || Math.abs(drops[1] - this.panDrops[1]) > 0.01 || Math.abs(sway - this.panSway) > 0.01
     this.pans.forEach((pan, side) => {
-      this.targets.set(pan, { x: pan.position.x, y: PAN_REST_HEIGHT - drops[side] * UNIT, z: pan.position.z })
+      const at = to3(SCALE.pans[side])
+      this.targets.set(pan, { x: at.x + sway, y: PAN_REST_HEIGHT - drops[side] * UNIT, z: at.z })
     })
     if (moved) for (const { body } of this.stones.values()) body.wakeUp()
     this.panDrops = [drops[0], drops[1]]
+    this.panSway = sway
+  }
+
+  /** How far (cm) a pan has swung sideways from where it hangs at rest. */
+  panSwung(side: 0 | 1): number {
+    const pan = this.pans[side]
+    return pan ? pan.position.x - to3(SCALE.pans[side]).x : 0
   }
 
   /** Where a pan hangs from its ropes (its drawn origin). */
