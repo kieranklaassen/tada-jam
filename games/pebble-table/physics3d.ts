@@ -49,6 +49,14 @@ const MOST_PIECES = 6
 const STONE_TRAVEL = 0.15
 /** The most pieces a step is cut into for stones meeting, which only a spill's first moments or a fast drop reach. */
 const MOST_STONE_PIECES = 12
+/**
+ * The most world steps one frame runs, catch-up steps and landing pieces
+ * together. A slow frame catches up several steps, and cutting each of them
+ * into pieces for a pour multiplied that into dozens of world steps, which
+ * made the next frame slow too. Pieces are shared out under this; a frame
+ * always runs at least its whole steps.
+ */
+const MOST_FRAME_STEPS = 12
 /** How many times sunk goes over the contacts it finds, so lifting a part out of one does not leave it in another. */
 const SUNK_PASSES = 4
 /** Pairs of bodies with at least this many pairs of shapes between them are handed to cannon with only the shapes that reach the other. */
@@ -953,7 +961,7 @@ export class TablePhysics {
       for (const [body, target] of this.targets) {
         body.velocity.set((target.x - body.position.x) / time, (target.y - body.position.y) / time, (target.z - body.position.z) / time)
       }
-      const pieces = this.pieces()
+      const pieces = Math.max(1, Math.min(this.pieces(), Math.floor(MOST_FRAME_STEPS / substeps)))
       for (let piece = 0; piece < pieces; piece++) {
         this.world.step(STEP / pieces)
         this.surfaceBalls()
