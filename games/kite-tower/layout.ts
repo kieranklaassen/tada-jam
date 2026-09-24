@@ -81,8 +81,9 @@ export function slotCenter(slot: TraySlot): Vec2 {
 /** A watcher wanders between `min` and `max`; to give the doll room it may step out as far as `aside`. */
 export type WatcherHome = { home: number; min: number; max: number; aside: number; z: number }
 
+/** Far enough behind the build that Moss's cap brim, however he turns his head, stays behind the deepest block. */
 export const WATCHERS: readonly WatcherHome[] = [
-  { home: -6.55, min: -7.05, max: -5.85, aside: -7.35, z: -1.05 },
+  { home: -6.55, min: -7.05, max: -5.85, aside: -7.35, z: -1.25 },
   { home: 6.55, min: 5.95, max: 7.1, aside: 7.35, z: -0.95 },
 ]
 

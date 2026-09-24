@@ -537,13 +537,15 @@ export class KiteController {
    * clear of the placed pieces and of Pip (her outline sloping out by
    * `slope`). It rides at `liftX`, which is `x` or a sliver aside to sit flush
    * with a neighbour instead of falling onto its corner; where it cannot slide
-   * (a wall, or another neighbour), it rides over that corner. Where it would
-   * come to rest once let go, over the placed pieces alone, is left in
-   * `landing`.
+   * (a wall, or another neighbour), it rides over that corner. Pieces waiting
+   * in the air to fall count as placed, so it is never set down inside one.
+   * Where it would come to rest once let go, over the pieces alone rather than
+   * Pip, is left in `landing`.
    */
   private lift(id: number, angle: number, x: number, scale: number, slope = 0): number {
     const shape = pieceShape(id)
     const placed = this.placedList(id)
+    for (const p of this.pending) if (p.id !== id && this.physics.has(p.id)) placed.push(this.placedOf(p.id))
     const slid = slideClear(shape, angle, x, placed, scale)
     const reach = Math.abs(Math.cos(angle)) * shape.half.x + Math.abs(Math.sin(angle)) * shape.half.y
     this.liftX = clampX(slid, reach) === slid ? slid : x
@@ -578,10 +580,10 @@ export class KiteController {
     return out
   }
 
-  /** Whether piece `id`, let go of now, would come down on Pip rather than on a block above her head. */
+  /** Whether piece `id`, let go of now, would come down on Pip rather than on a block above her head (never while she is up with the kite or out in front of the build). */
   private overPip(id: number): boolean {
     const hero = this.hero
-    if (hero.mode === 'fly' || !this.physics.has(id)) return false
+    if (hero.mode === 'fly' || hero.z >= TUMBLE_OUT || !this.physics.has(id)) return false
     const span = this.pieceSpan(id)
     if (span.hi <= hero.x - PIP_CLEAR.half || span.lo >= hero.x + PIP_CLEAR.half || span.bottom < hero.y + 0.05) return false
     const pose = this.physics.pose(id, this.poseScratch)

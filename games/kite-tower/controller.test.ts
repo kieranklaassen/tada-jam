@@ -132,6 +132,12 @@ function outlineOverlap(a: readonly Vec2[], b: readonly Vec2[]): number {
   return deepest
 }
 
+/** Piece `id`'s drawn outline where physics has it now. */
+function pieceOutline(game: KiteController, id: number): Vec2[] {
+  const b = game.physics.body(id)!
+  return transformInto(pieceShape(id).outline, { x: b.position.x, y: b.position.y, angle: angleOf(b) }, [])
+}
+
 /** How deep Pip's body or head is in any block on the plane (0 when clear, or while she is up with the kite, rolling or sat out in front). */
 function pipInBlock(game: KiteController): { depth: number; id: number } {
   const hero = game.hero
@@ -141,8 +147,7 @@ function pipInBlock(game: KiteController): { depth: number; id: number } {
   const head = PIP_HEAD.map((p) => ({ x: p.x + hero.x, y: p.y + hero.y }))
   for (let id = 0; id < PIECES.length; id++) {
     if (game.trayed[id] || !game.physics.has(id) || game.physics.isHeld(id)) continue
-    const b = game.physics.body(id)!
-    const outline = transformInto(pieceShape(id).outline, { x: b.position.x, y: b.position.y, angle: angleOf(b) }, [])
+    const outline = pieceOutline(game, id)
     const depth = Math.max(outlineOverlap(body, outline), outlineOverlap(head, outline))
     if (depth > worst.depth) {
       worst.depth = depth
@@ -551,6 +556,9 @@ describe('Pip never ends up inside a block', () => {
     expect(game.hero.tumble).toBe('sit')
     const fell = game.hero.x
     dropFromTray(game, 2, 1, fell, 1.5)
+    // Out in front she is out of its way: it is set down and falls at once, rather than waiting in the air over her.
+    run(game, 0.4)
+    expect(game.isHeld(1)).toBe(false)
     let deepest = 0
     run(game, 6, () => {
       deepest = Math.max(deepest, pipInBlock(game).depth)
@@ -595,6 +603,37 @@ describe('Pip never ends up inside a block', () => {
     expect(landedZ).toBe(TUMBLE_OUT)
     expect(game.hero.mode).not.toBe('tumble')
     expect(game.hero.z).toBe(0)
+  })
+
+  it('a piece carried over one waiting in the air to fall rides on top of it, never inside it', () => {
+    const { game } = make(defaultState(5))
+    run(game, 3)
+    expect(game.hero.mode).toBe('stand')
+    const x = game.hero.x
+    dropFromTray(game, 1, 0, x, 3.2)
+    expect(game.isHeld(0)).toBe(true)
+    game.pointerDown(2, slotScreen(1), game.t * 1000)
+    game.pointerMove(2, { x: slotScreen(1).x, y: 40 })
+    game.pointerMove(2, { x, y: 2.8 })
+    let waiting = 0
+    let waitingDepth = 0
+    let landingDepth = 0
+    const watch = () => {
+      if (game.trayed[1]) return
+      const depth = outlineOverlap(pieceOutline(game, 0), pieceOutline(game, 1))
+      if (game.isHeld(0)) {
+        waiting++
+        waitingDepth = Math.max(waitingDepth, depth)
+      } else landingDepth = Math.max(landingDepth, depth)
+    }
+    run(game, 0.4, watch)
+    game.pointerUp(2, { x, y: 2.8 }, game.t * 1000)
+    run(game, 3, watch)
+    expect(waiting).toBeGreaterThan(20)
+    expect(waitingDepth).toBeLessThan(0.02)
+    // Once both fall, the upper lands on the lower with the dip any landing has.
+    expect(landingDepth).toBeLessThan(0.25)
+    expect(game.physics.body(1)!.position.y).toBeCloseTo(1.5, 1)
   })
 
   it('however roughly a child plays, dropping blocks on her, under her and where she will land, her body and head stay out of them', () => {

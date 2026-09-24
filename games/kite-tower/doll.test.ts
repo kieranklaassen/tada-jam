@@ -32,6 +32,7 @@ import {
   type HeadKind,
   type HeadPose,
 } from './doll'
+import { WATCHERS } from './layout'
 import { PERSONALITIES, blankPose, type Doll, type PoseDelta } from './motion'
 import { SHAPES } from './pieces'
 import { BEAN, HERO, MOSS, armGeometry, bodyGeometry, faceGeometry, headGeometry } from './view/dolls'
@@ -298,6 +299,21 @@ describe('peg doll guard', () => {
           }
         }
       }
+    }
+  })
+
+  it("keeps each watcher's head, hair and hat behind the deepest block wherever he turns his head", () => {
+    const back = -Math.max(...Object.values(SHAPES).map((shape) => shape.depth)) / 2
+    for (const [spec, home] of [
+      [MOSS, WATCHERS[0]],
+      [BEAN, WATCHERS[1]],
+    ] as const) {
+      let reach = POM_R
+      for (const g of [headGeometry(spec), faceGeometry(spec.kind)]) {
+        const at = g.getAttribute('position')
+        for (let i = 0; i < at.count; i++) reach = Math.max(reach, Math.hypot(at.getX(i), at.getZ(i)))
+      }
+      expect(home.z + reach * spec.scale, spec.name).toBeLessThan(back - 0.05)
     }
   })
 
