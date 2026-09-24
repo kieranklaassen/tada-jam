@@ -86,6 +86,8 @@ const MAX_EVENTS = 64
 type Phase = 'rest' | 'glance' | 'stare' | 'dawn'
 type Flash = 'none' | 'safe' | 'caught' | 'joy'
 type Scene = 'empty' | 'moving' | 'exposed' | 'camo' | 'shade' | 'mixed'
+// Per chick: hidden by its colour patch (camo) or by a reed clump (shade), for THIS owl.
+type Cover = Array<{ camo: boolean; shade: boolean }>
 
 interface Chick {
   colour: number
@@ -128,6 +130,10 @@ export interface OwlSnapshot {
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n))
 const inside = (rect: Rect, x: number, y: number) => x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h
+// One tick of a rustle countdown, in place (the counters never go below 0).
+const cool = (ticks: number[]) => {
+  for (let i = 0; i < ticks.length; i++) if (ticks[i]! > 0) ticks[i] = ticks[i]! - 1
+}
 
 function shuffle<T>(rng: Rng, items: T[]): T[] {
   const out = items.slice()
@@ -302,7 +308,7 @@ export const createSim: CreateSim<OwlSnapshot> = (config): Sim<OwlSnapshot> => {
 
   // Which chicks are hidden from a stare right now, and by what, for THIS owl.
   // A clump hides only the chick nearest its middle.
-  const coverList = (): Array<{ camo: boolean; shade: boolean }> => {
+  const coverList = (): Cover => {
     const owl = OWL_KINDS[layout.kind]!
     const out = chicks.map((c) => ({ camo: owl.colour && inMeadow(c) && camoAt(layout, c.colour, c.x, c.y), shade: false }))
     layout.reeds.forEach((reed) => {
@@ -468,7 +474,9 @@ export const createSim: CreateSim<OwlSnapshot> = (config): Sim<OwlSnapshot> => {
     const stare = phase === 'stare'
     const half = stare ? STARE_HALF : GLANCE_HALF
     angle += (dir * 2 * SWEEP_RANGE) / (stare ? STARE_TICKS : GLANCE_TICKS)
-    const cover = coverList()
+    // Only a stare needs the cover, and only for a still chick in the beam, so
+    // it is worked out on first use (nothing in this loop changes what it reads).
+    let cover: Cover | undefined
     for (let i = 0; i < chicks.length; i++) {
       const c = chicks[i]!
       if (!inMeadow(c) || c.seenSweep === sweepId) continue
@@ -476,7 +484,11 @@ export const createSim: CreateSim<OwlSnapshot> = (config): Sim<OwlSnapshot> => {
       c.seenSweep = sweepId
       // The sight rules, in one line: motion is always seen; stillness is seen
       // only by a stare, and only if nothing hides it.
-      const seen = moving(c) || (stare && !cover[i]!.camo && !cover[i]!.shade)
+      let seen = moving(c)
+      if (!seen && stare) {
+        cover ??= coverList()
+        seen = !cover[i]!.camo && !cover[i]!.shade
+      }
       if (seen) {
         startSwoop(i)
         return
@@ -497,8 +509,8 @@ export const createSim: CreateSim<OwlSnapshot> = (config): Sim<OwlSnapshot> => {
       c.sinceMove = c.heldBy !== null ? 0 : Math.min(1000, c.sinceMove + 1)
       if (c.flashT > 0 && --c.flashT === 0) c.flash = 'none'
     }
-    reedRustle = reedRustle.map((n) => Math.max(0, n - 1))
-    patchRustle = patchRustle.map((n) => Math.max(0, n - 1))
+    cool(reedRustle)
+    cool(patchRustle)
     if (swoop) {
       swoop.t++
       if (swoop.t >= SWOOP_TICKS) finishSwoop()
@@ -537,11 +549,10 @@ export const createSim: CreateSim<OwlSnapshot> = (config): Sim<OwlSnapshot> => {
     return list
   }
 
-  const scene = (): Scene => {
+  const scene = (cover: Cover): Scene => {
     const out = chicks.map((_, i) => i).filter((i) => inMeadow(chicks[i]!))
     if (out.length === 0) return 'empty'
     if (out.some((i) => moving(chicks[i]!))) return 'moving'
-    const cover = coverList()
     if (out.some((i) => !cover[i]!.camo && !cover[i]!.shade)) return 'exposed'
     if (out.every((i) => cover[i]!.camo)) return 'camo'
     if (out.every((i) => !cover[i]!.camo)) return 'shade'
@@ -556,7 +567,7 @@ export const createSim: CreateSim<OwlSnapshot> = (config): Sim<OwlSnapshot> => {
     const cover = coverList()
     const safe = chicks.filter((c, i) => inMeadow(c) && c.heldBy === null && (cover[i]!.camo || cover[i]!.shade)).length
     return {
-      signature: `${phase}/${scene()}/${verdict}`,
+      signature: `${phase}/${scene(cover)}/${verdict}`,
       features: { safe, tucked: chicks.filter(inMeadow).length, caught, dawns },
       events,
     }

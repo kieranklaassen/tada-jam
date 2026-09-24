@@ -3,7 +3,7 @@
 
 import { circle, clear, label, line, rect } from '../../kit/draw.ts'
 import { FIELD_H, FIELD_W } from '../../kit/sim.ts'
-import { HOOK } from './sim.ts'
+import { HOOK, TRAY_Y } from './sim.ts'
 import type { SwaySnapshot } from './sim.ts'
 
 const MASS_COLORS = ['#f4d35e', '#f79256', '#ee6c4d', '#7d5ba6', '#3d5a80']
@@ -23,7 +23,7 @@ function shapePath(ctx: CanvasRenderingContext2D, form: number, x: number, y: nu
 
 export function draw(ctx: CanvasRenderingContext2D, snapshot: SwaySnapshot): void {
   clear(ctx, snapshot.complete ? '#f3f0d9' : '#f6f0e4')
-  rect(ctx, 0, 610, FIELD_W, FIELD_H - 610, '#e6dcc6')
+  rect(ctx, 0, TRAY_Y, FIELD_W, FIELD_H - TRAY_Y, '#e6dcc6')
 
   // The hook and a faint level line through the root pivot.
   const root = snapshot.bars.find((b) => b.root)!

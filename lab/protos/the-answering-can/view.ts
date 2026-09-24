@@ -3,6 +3,7 @@
 // chips when a friend is being named. Words are allowed in the lab.
 
 import { circle, clear, label, rect, roundRect } from '../../kit/draw.ts'
+import { MIN_HEARD_TO_GUESS, WAVE_TICKS } from './sim.ts'
 import type { AnswerSnapshot, Gap } from './sim.ts'
 
 const SPACING: Record<Gap, number> = { S: 30, L: 76 }
@@ -27,7 +28,7 @@ export function draw(ctx: CanvasRenderingContext2D, s: AnswerSnapshot): void {
     else if (f.solved) {
       circle(ctx, bush.x + 130, bush.y + 70, 34, { fill: can.color, stroke: '#2b2a24', width: 4 })
       label(ctx, f.label ?? '', bush.x + 110, bush.y + 150, { align: 'center', size: 22, color: '#f6f0e4' })
-    } else label(ctx, f.exchanges >= 2 ? 'who?' : '?', bush.x + 130, bush.y + 96, { align: 'center', size: 40, color: '#f6f0e4' })
+    } else label(ctx, f.exchanges >= MIN_HEARD_TO_GUESS ? 'who?' : '?', bush.x + 130, bush.y + 96, { align: 'center', size: 40, color: '#f6f0e4' })
     if (can.asleep) return
 
     // The string: straight when taut, a droop when slack.
@@ -42,7 +43,7 @@ export function draw(ctx: CanvasRenderingContext2D, s: AnswerSnapshot): void {
     // Pulses run down the string: out from a knock, back from the friend.
     for (const w of s.waves) {
       if (w.friend !== i) continue
-      const p = Math.min(1, w.age / 12)
+      const p = Math.min(1, w.age / WAVE_TICKS)
       const t = w.dir === 'out' ? 1 - p : p
       circle(ctx, f.ax + (can.x - f.ax) * t, f.ay + (can.y - f.ay) * t, 12 + 14 * p, { stroke: w.dir === 'out' ? '#2b2a24' : can.color, width: 5 })
     }

@@ -10,8 +10,9 @@
 import { critiques as critiqueFiles } from './critiques/index.ts'
 import { decisions as decisionFile } from './decisions.ts'
 import { shards } from './shards/index.ts'
+import { indexById } from './types.ts'
 import type { Critique, Decision, IdeaDraft, IdeaRecord } from './types.ts'
-import { validate } from './validate.ts'
+import { BATCH_RULES_BUILT, validate } from './validate.ts'
 import type { Problem, ValidateOptions } from './validate.ts'
 
 export interface LoadedCatalog {
@@ -19,16 +20,12 @@ export interface LoadedCatalog {
   problems: Problem[]
 }
 
-// The plan builds 30 prototypes; loadCatalog validates against that unless told otherwise.
-export const EXPECTED_BUILT = 30
+// The plan builds 30 prototypes; loadCatalog validates against that unless told
+// otherwise. It is the same number that switches on the validator's batch-balance
+// rules, so it is read from there rather than written twice.
+export const EXPECTED_BUILT = BATCH_RULES_BUILT
 
-// The first item with each id wins; later ones are reported as duplicates.
-function indexById<T extends { id: string }>(items: readonly T[]): Map<string, T> {
-  const map = new Map<string, T>()
-  for (const item of items) if (!map.has(item.id)) map.set(item.id, item)
-  return map
-}
-
+// indexById keeps the first item with an id; the later ones are reported here.
 function duplicateProblems(list: string, items: readonly { id: string }[]): Problem[] {
   const counts = new Map<string, number>()
   for (const { id } of items) counts.set(id, (counts.get(id) ?? 0) + 1)

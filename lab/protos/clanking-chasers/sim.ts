@@ -83,7 +83,6 @@ export interface ChaserSnapshot {
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n))
-export const sign = (n: number): number => (n > 0 ? 1 : n < 0 ? -1 : 0)
 export const cellKey = (c: number, r: number): number => r * COLS + c
 export const inBounds = (c: number, r: number): boolean => c >= 0 && c < COLS && r >= 0 && r < ROWS
 const distance = (a: Cell, b: Cell): number => Math.max(Math.abs(a.c - b.c), Math.abs(a.r - b.r))
@@ -98,8 +97,8 @@ export function cellAt(x: number, y: number): Cell {
 // coordinates differ, sliding along an axis when the diagonal is blocked.
 // Null when every way is blocked.
 export function childStep(child: Cell, target: Cell, blocked: (c: number, r: number) => boolean): Cell | null {
-  const dx = sign(target.c - child.c)
-  const dy = sign(target.r - child.r)
+  const dx = Math.sign(target.c - child.c)
+  const dy = Math.sign(target.r - child.r)
   if (dx === 0 && dy === 0) return { c: child.c, r: child.r }
   const tries: Array<[number, number]> = [[dx, dy]]
   if (dx !== 0 && dy !== 0) {
@@ -118,8 +117,8 @@ export function childStep(child: Cell, target: Cell, blocked: (c: number, r: num
 export function robotsMove(child: Cell, robots: readonly Robot[], heaps: readonly Heap[]): TurnResult {
   const landing = new Map<number, Robot[]>()
   for (const b of robots) {
-    const c = b.c + sign(child.c - b.c)
-    const r = b.r + sign(child.r - b.r)
+    const c = b.c + Math.sign(child.c - b.c)
+    const r = b.r + Math.sign(child.r - b.r)
     const moved: Robot = { id: b.id, c, r, pc: b.c, pr: b.r }
     const list = landing.get(cellKey(c, r))
     if (list) list.push(moved)
@@ -162,6 +161,16 @@ interface Layout {
   child: Cell
   robots: Cell[]
   heaps: Cell[]
+}
+
+// Fisher-Yates, in place, on the seeded rng.
+function shuffle<T>(rng: Rng, items: T[]): void {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = int(rng, 0, i)
+    const swap = items[i]!
+    items[i] = items[j]!
+    items[j] = swap
+  }
 }
 
 // Seeded starting positions for one formation. Robots are distinct, off the
@@ -210,12 +219,7 @@ function makeLayout(rng: Rng, formation: Formation, count: number): Layout {
     for (let i = 2; i >= -3; i--) ring.push({ c: child.c + i, r: child.r + 3 })
     for (let i = 2; i >= -2; i--) ring.push({ c: child.c - 3, r: child.r + i })
     // An uneven ring: some robots side by side, some far apart.
-    for (let i = ring.length - 1; i > 0; i--) {
-      const j = int(rng, 0, i)
-      const swap = ring[i]!
-      ring[i] = ring[j]!
-      ring[j] = swap
-    }
+    shuffle(rng, ring)
     for (const spot of ring) addRobot(spot.c, spot.r)
   } else if (formation === 'corners') {
     setChild(int(rng, 4, 7), int(rng, 3, 4))
@@ -229,12 +233,7 @@ function makeLayout(rng: Rng, formation: Formation, count: number): Layout {
       [0, 3],
       [COLS - 1, 4],
     ]
-    for (let i = anchors.length - 1; i > 0; i--) {
-      const j = int(rng, 0, i)
-      const swap = anchors[i]!
-      anchors[i] = anchors[j]!
-      anchors[j] = swap
-    }
+    shuffle(rng, anchors)
     for (const [c, r] of anchors) addRobot(c, r)
   } else if (formation === 'pillars') {
     setChild(int(rng, 3, 8), int(rng, 2, 5))
@@ -262,6 +261,10 @@ function makeLayout(rng: Rng, formation: Formation, count: number): Layout {
 // the step that ends the most robots.
 const SOLVE_TURNS = 16
 const LAYOUT_TRIES = 40
+// A square the child cannot step onto: a heap or a robot stands on it.
+export const blockedAt = (c: number, r: number, robots: readonly Cell[], heaps: readonly Cell[]): boolean =>
+  heaps.some((h) => h.c === c && h.r === r) || robots.some((b) => b.c === c && b.r === r)
+
 // Squares the child could step to from here: its eight neighbours and its own.
 function stepsFrom(child: Cell, robots: readonly Robot[], heaps: readonly Heap[]): Cell[] {
   const list: Cell[] = []
@@ -269,40 +272,44 @@ function stepsFrom(child: Cell, robots: readonly Robot[], heaps: readonly Heap[]
     for (let dc = -1; dc <= 1; dc++) {
       const c = child.c + dc
       const r = child.r + dr
-      if (inBounds(c, r) && !heaps.some((h) => h.c === c && h.r === r) && !robots.some((b) => b.c === c && b.r === r)) list.push({ c, r })
+      if (inBounds(c, r) && !blockedAt(c, r, robots, heaps)) list.push({ c, r })
     }
   }
   return list
 }
 
-// The most robots the child can end over the next `depth` turns without being
-// caught (a cleared board counts extra).
-function foresee(child: Cell, robots: readonly Robot[], heaps: readonly Heap[], depth: number): number {
+// What one turn is worth to the planner: robots ended, and a cleared board counts extra.
+const turnValue = (turn: TurnResult): number => turn.destroyed * 10 + (turn.robots.length === 0 ? 100 : 0)
+
+// The most robots the child can end on its next turn without being caught
+// (a cleared board counts extra).
+function foresee(child: Cell, robots: readonly Robot[], heaps: readonly Heap[]): number {
   let best = -1000
   for (const move of stepsFrom(child, robots, heaps)) {
     const turn = robotsMove(move, robots, heaps)
     if (turn.caught) continue
-    let value = turn.destroyed * 10
-    if (turn.robots.length === 0) value += 100
-    else if (depth > 1) value += foresee(move, turn.robots, turn.heaps, depth - 1)
+    const value = turnValue(turn)
     if (value > best) best = value
   }
   return best
 }
 
+// A layout's cells as live pieces: robots numbered in order, heaps that were there from the start.
+const spawnRobots = (cells: readonly Cell[]): Robot[] => cells.map((b, i) => ({ id: i, c: b.c, r: b.r, pc: b.c, pr: b.r }))
+const spawnHeaps = (cells: readonly Cell[]): Heap[] => cells.map((h) => ({ c: h.c, r: h.r, n: 0 }))
+
 // Turns the two-turn planner needs to clear a layout, or null if it cannot.
 function solveTurns(layout: Layout): number | null {
   let child: Cell = layout.child
-  let robots: Robot[] = layout.robots.map((b, i) => ({ id: i, c: b.c, r: b.r, pc: b.c, pr: b.r }))
-  let heaps: Heap[] = layout.heaps.map((h) => ({ c: h.c, r: h.r, n: 0 }))
+  let robots: Robot[] = spawnRobots(layout.robots)
+  let heaps: Heap[] = spawnHeaps(layout.heaps)
   for (let turn = 1; turn <= SOLVE_TURNS; turn++) {
     let best: { move: Cell; result: TurnResult; value: number } | null = null
     for (const move of stepsFrom(child, robots, heaps)) {
       const result = robotsMove(move, robots, heaps)
       if (result.caught) continue
-      let value = result.destroyed * 10
-      if (result.robots.length === 0) value += 100
-      else value += foresee(move, result.robots, result.heaps, 1)
+      let value = turnValue(result)
+      if (result.robots.length > 0) value += foresee(move, result.robots, result.heaps)
       // Prefer staying clear of the squad when nothing else separates two steps.
       value += 0.01 * result.robots.reduce((least, b) => Math.min(least, distance(move, b)), 99)
       if (best === null || value > best.value) best = { move, result, value }
@@ -374,8 +381,8 @@ export const createSim: CreateSim<ChaserSnapshot> = (config): Sim<ChaserSnapshot
       par = (solved ?? initial.robots.length + 1) + 1
     }
     child = { ...initial.child }
-    robots = initial.robots.map((b, i) => ({ id: i, c: b.c, r: b.r, pc: b.c, pr: b.r }))
-    heaps = initial.heaps.map((h) => ({ c: h.c, r: h.r, n: 0 }))
+    robots = spawnRobots(initial.robots)
+    heaps = spawnHeaps(initial.heaps)
     phase = 'play'
     turns = 0
     stars = 0
@@ -390,7 +397,7 @@ export const createSim: CreateSim<ChaserSnapshot> = (config): Sim<ChaserSnapshot
   // Scrap heaps that robots ended in (not the ones that stood there at the start).
   const piles = () => heaps.filter((h) => h.n > 0)
 
-  const isBlocked = (c: number, r: number) => heaps.some((h) => h.c === c && h.r === r) || robots.some((b) => b.c === c && b.r === r)
+  const isBlocked = (c: number, r: number) => blockedAt(c, r, robots, heaps)
 
   // One full turn: the child steps, then every robot answers.
   const takeTurn = (target: Cell) => {
@@ -455,14 +462,14 @@ export const createSim: CreateSim<ChaserSnapshot> = (config): Sim<ChaserSnapshot
     const list: Affordance[] = []
     const gap = (cell: Cell) => (robots.length === 0 ? 99 : Math.min(...robots.map((b) => distance(cell, b))))
     const here = gap(child)
-    for (let dr = -1; dr <= 1; dr++) {
-      for (let dc = -1; dc <= 1; dc++) {
-        const cell = { c: child.c + dc, r: child.r + dr }
-        if (!inBounds(cell.c, cell.r) || isBlocked(cell.c, cell.r)) continue
-        // Backing away from the nearest robot draws the eye a little more.
-        const away = dc === 0 && dr === 0 ? 0.2 : gap(cell) > here ? 0.6 : gap(cell) < here ? 0.25 : 0.4
-        list.push({ ...rectOf(cell), kind: 'tap', salience: away })
-      }
+    // Backing away from the nearest robot draws the eye a little more.
+    const awayFrom = (cell: Cell) => {
+      const g = gap(cell)
+      return g > here ? 0.6 : g < here ? 0.25 : 0.4
+    }
+    for (const cell of stepsFrom(child, robots, heaps)) {
+      const own = cell.c === child.c && cell.r === child.r
+      list.push({ ...rectOf(cell), kind: 'tap', salience: own ? 0.2 : awayFrom(cell) })
     }
     for (const b of robots) list.push({ ...rectOf(b), kind: 'tap', salience: 0.3 })
     for (const h of heaps) list.push({ ...rectOf(h), kind: 'tap', salience: 0.25 })
@@ -497,7 +504,7 @@ export const createSim: CreateSim<ChaserSnapshot> = (config): Sim<ChaserSnapshot
   const hint = (): ChaserSnapshot['hint'] => {
     if (!config.hints || phase !== 'play' || idleTicks < HINT_AFTER_TICKS) return null
     return {
-      arrows: robots.map((b) => ({ c0: b.c, r0: b.r, c1: b.c + sign(child.c - b.c), r1: b.r + sign(child.r - b.r) })),
+      arrows: robots.map((b) => ({ c0: b.c, r0: b.r, c1: b.c + Math.sign(child.c - b.c), r1: b.r + Math.sign(child.r - b.r) })),
     }
   }
 

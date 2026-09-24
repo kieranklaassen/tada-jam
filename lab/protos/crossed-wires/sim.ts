@@ -83,6 +83,9 @@ interface SinkRuns {
   since: number
   runs: Run[]
   cls: Cls
+  // What the newest runs say, worked out when a run is pushed (see reshape).
+  longest: number
+  shape: Cls
 }
 interface Beetle {
   x: number
@@ -137,7 +140,7 @@ export const createSim: CreateSim<CrossedWiresSnapshot> = (config): Sim<CrossedW
   const heads: number[] = SOCKETS.map(() => 0)
   const ins: Array<[number | null, number | null]> = Array.from({ length: NODES }, () => [null, null])
   const out: boolean[] = Array.from({ length: NODES }, () => false)
-  const sinkRuns: SinkRuns[] = [0, 1, 2, 3].map(() => ({ on: false, since: 0, runs: [], cls: 'dark' as Cls }))
+  const sinkRuns: SinkRuns[] = [0, 1, 2, 3].map(() => ({ on: false, since: 0, runs: [], cls: 'dark' as Cls, longest: 0, shape: 'dark' as Cls }))
   const drags = new Map<number, Drag>()
   const stamps: string[] = []
   let pending: SimEvent[] = []
@@ -360,19 +363,26 @@ export const createSim: CreateSim<CrossedWiresSnapshot> = (config): Sim<CrossedW
     return n
   }
 
-  // What a sink has been doing lately: a discrete class from its last few runs.
-  // The newest three runs say how fast it goes; the whole window says whether
-  // it is even.
+  // What a sink's last few runs say it is doing: a discrete class. The newest
+  // three runs say how fast it goes; the whole window says whether it is even.
+  // The runs change only when one is pushed, so this is worked out then.
+  const reshape = (s: SinkRuns) => {
+    let longest = 0
+    for (let i = Math.max(0, s.runs.length - 3); i < s.runs.length; i++) longest = Math.max(longest, s.runs[i]!.len)
+    s.longest = longest
+    // Four runs are needed before it counts as a rhythm: with three, the run
+    // before the rhythm started can still be one of the newest.
+    if (longest > SLOW_RUN || s.runs.length < 4) s.shape = 'slow'
+    else if (longest <= 4) s.shape = 'buzz'
+    else s.shape = jumps(s.runs) >= 2 ? 'beat' : 'blink'
+  }
+
+  // What a sink has been doing lately: its shape while the runs are recent,
+  // steady once nothing has changed for a while.
   const classify = (s: SinkRuns): Cls => {
     const steady: Cls = s.on ? 'lit' : 'dark'
     if (s.runs.length < 2) return steady
-    const longest = Math.max(...s.runs.slice(-3).map((r) => r.len))
-    if (tick - s.since > 2 * longest + 10) return steady
-    // Four runs are needed before it counts as a rhythm: with three, the run
-    // before the rhythm started can still be one of the newest.
-    if (longest > SLOW_RUN || s.runs.length < 4) return 'slow'
-    if (longest <= 4) return 'buzz'
-    return jumps(s.runs) >= 2 ? 'beat' : 'blink'
+    return tick - s.since > 2 * s.longest + 10 ? steady : s.shape
   }
 
   const loopGates = (): number => {
@@ -443,6 +453,7 @@ export const createSim: CreateSim<CrossedWiresSnapshot> = (config): Sim<CrossedW
         if (s.runs.length > RUN_KEEP) s.runs.shift()
         s.on = lit
         s.since = tick
+        reshape(s)
       }
       const cls = classify(s)
       if (cls !== s.cls) {
@@ -490,7 +501,11 @@ export const createSim: CreateSim<CrossedWiresSnapshot> = (config): Sim<CrossedW
     for (let id = GATE0; id < NODES; id++) for (const s of ins[id]!) if (s !== null) n++
     return n
   }
-  const gateCount = () => types.filter((t) => t !== '').length
+  const gateCount = () => {
+    let n = 0
+    for (const t of types) if (t !== '') n++
+    return n
+  }
   const hasConsumer = (src: number) => ins.some((slots) => slots.includes(src))
 
   // (contract: affordances) Top-left rectangles inside the field. Plates and
@@ -520,16 +535,21 @@ export const createSim: CreateSim<CrossedWiresSnapshot> = (config): Sim<CrossedW
   const observe = (): Observation => {
     const events = pending
     pending = []
-    const present = new Set(sinkRuns.map((s) => s.cls))
-    const kinds = new Set(types.filter((t) => t !== ''))
-    const lit = sinkRuns.filter((s) => s.on).length
-    const blinking = sinkRuns.filter((s) => s.cls === 'buzz' || s.cls === 'blink' || s.cls === 'beat').length
+    // How many different gates are seated.
+    let kinds = 0
+    for (const t of GATE_CYCLE) if (t !== '' && types.includes(t)) kinds++
+    let lit = 0
+    let blinking = 0
+    for (const s of sinkRuns) {
+      if (s.on) lit++
+      if (s.cls === 'buzz' || s.cls === 'blink' || s.cls === 'beat') blinking++
+    }
     // An unlit sink is the resting state, so `dark` names the world only when
     // nothing else is going on.
-    const active = CLS_ORDER.filter((c) => c !== 'dark' && present.has(c))
+    const active = CLS_ORDER.filter((c) => c !== 'dark' && sinkRuns.some((s) => s.cls === c))
     return {
       signature: active.length > 0 ? active.join('+') : 'dark',
-      features: { wires: wireCount(), gates: gateCount(), kinds: kinds.size, lit, loops: loopGates(), blinking, crossings },
+      features: { wires: wireCount(), gates: gateCount(), kinds, lit, loops: loopGates(), blinking, crossings },
       events,
     }
   }

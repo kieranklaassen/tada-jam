@@ -11,7 +11,7 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { ENGINE_IDS } from '../ideas/engines.ts'
 import { TOYS } from '../ideas/toys.ts'
-import { between, createRng, int } from './rng.ts'
+import { between, createRng, int, pick } from './rng.ts'
 import type { Rng } from './rng.ts'
 import { FIELD_H, FIELD_W, MAX_SIGNATURE_BOUND } from './sim.ts'
 import type { Affordance, CreateSim, Observation, PointerInput, ProtoMeta, Sim, SimConfig } from './sim.ts'
@@ -297,23 +297,19 @@ export interface LoggedInput {
 
 const EXTREMES = [1e6, -1e6, 1e9, -1e9, 1e12, -1e12, 32768, -32768, 0.001]
 
-function pickOf<T>(rng: Rng, items: readonly T[]): T {
-  return items[Math.min(items.length - 1, Math.floor(rng() * items.length))]!
-}
-
 // Mostly inside the field, then edges and corners exactly, just outside, and
 // far out of range. Never NaN or Infinity: a browser does not send those.
 function fuzzPoint(rng: Rng): { x: number; y: number } {
   const roll = rng()
   if (roll < 0.6) return { x: between(rng, 0, FIELD_W), y: between(rng, 0, FIELD_H) }
-  if (roll < 0.7) return { x: pickOf(rng, [0, FIELD_W]), y: pickOf(rng, [0, FIELD_H]) }
+  if (roll < 0.7) return { x: pick(rng, [0, FIELD_W]), y: pick(rng, [0, FIELD_H]) }
   if (roll < 0.85) {
     const outside = (max: number) => (rng() < 0.5 ? -between(rng, 0.5, 60) : max + between(rng, 0.5, 60))
     return rng() < 0.5
       ? { x: outside(FIELD_W), y: between(rng, 0, FIELD_H) }
       : { x: outside(FIELD_W), y: outside(FIELD_H) }
   }
-  return { x: pickOf(rng, EXTREMES), y: pickOf(rng, EXTREMES) }
+  return { x: pick(rng, EXTREMES), y: pick(rng, EXTREMES) }
 }
 
 function pointInside(rng: Rng, a: Affordance): { x: number; y: number } {
@@ -329,7 +325,7 @@ function planGesture(
 ): Array<{ offset: number; phase: PointerInput['phase']; id: number; x: number; y: number }> {
   const id = int(rng, 0, 3)
   const start = target ? pointInside(rng, target) : fuzzPoint(rng)
-  const kind = target ? target.kind : pickOf(rng, ['tap', 'drag', 'hold', 'strayUp', 'strayMove', 'leak', 'overlap'] as const)
+  const kind = target ? target.kind : pick(rng, ['tap', 'drag', 'hold', 'strayUp', 'strayMove', 'leak', 'overlap'] as const)
   const at = (offset: number, phase: PointerInput['phase'], p = start, pid = id) => ({
     offset,
     phase,
@@ -448,15 +444,40 @@ function checkObservation(obs: Observation, tick: number, declared: readonly str
   }
 }
 
-function finish(sim: Sim, signatures: string[], hookNames: Set<string>, log: LoggedInput[], problems: Set<string>, last: Observation): RunOutcome {
+// What a session records after every step. fuzzSession and replaySession both
+// use it, so the determinism check compares two runs that were recorded the
+// same way. `problems` is exposed so the fuzz run can add its affordance
+// checks to the same set, in order.
+function createRecorder(sim: Sim, declaredFeatures: readonly string[]) {
+  const problems = new Set<string>()
+  const hookNames = new Set<string>()
+  const signatures: string[] = []
+  let last: Observation = { signature: '', features: {}, events: [] }
   return {
-    log,
-    signatures,
-    hookNames: [...hookNames].sort(),
-    problems: [...problems].slice(0, 20),
-    finalObservation: last,
-    finalSnapshotJson: JSON.stringify(sim.snapshot()),
+    problems,
+    afterStep(tick: number): void {
+      last = sim.observe()
+      checkObservation(last, tick, declaredFeatures, problems)
+      signatures.push(last.signature)
+      for (const event of last.events) if (event.kind === 'hook') hookNames.add(event.name)
+    },
+    outcome(log: LoggedInput[]): RunOutcome {
+      return {
+        log,
+        signatures,
+        hookNames: [...hookNames].sort(),
+        problems: [...problems].slice(0, 20),
+        finalObservation: last,
+        finalSnapshotJson: JSON.stringify(sim.snapshot()),
+      }
+    },
   }
+}
+
+function addAtTick(schedule: Map<number, PointerInput[]>, tick: number, input: PointerInput): void {
+  const list = schedule.get(tick) ?? []
+  list.push(input)
+  schedule.set(tick, list)
 }
 
 // Plays one session of generated input. Aimed gestures read affordances() at
@@ -466,16 +487,10 @@ export function fuzzSession(options: RunOptions & { fuzzSeed: number; profile?: 
   const { createSim, config, ticks, fuzzSeed, declaredFeatures = [], profile = STEADY } = options
   const rng = createRng(fuzzSeed)
   const sim = createSim(config)
-  const problems = new Set<string>()
-  const hookNames = new Set<string>()
-  const signatures: string[] = []
+  const recorder = createRecorder(sim, declaredFeatures)
+  const { problems } = recorder
   const log: LoggedInput[] = []
   const schedule = new Map<number, PointerInput[]>()
-  const queue = (tick: number, input: PointerInput) => {
-    const list = schedule.get(tick) ?? []
-    list.push(input)
-    schedule.set(tick, list)
-  }
   const checkAffordances = (list: Affordance[]) => {
     for (const a of list) for (const problem of affordanceProblems(a)) problems.add(problem)
   }
@@ -484,7 +499,6 @@ export function fuzzSession(options: RunOptions & { fuzzSeed: number; profile?: 
   if (atStart.length === 0) problems.add('affordances() is empty at tick 0')
   checkAffordances(atStart)
 
-  let last: Observation = { signature: '', features: {}, events: [] }
   for (let tick = 0; tick < ticks; tick++) {
     if (rng() < profile.rate) {
       let target: Affordance | null = null
@@ -494,7 +508,7 @@ export function fuzzSession(options: RunOptions & { fuzzSeed: number; profile?: 
         if (list.length > 0) target = pickAffordance(rng, list)
       }
       for (const step of planGesture(rng, target)) {
-        queue(tick + step.offset, { id: step.id, phase: step.phase, x: step.x, y: step.y })
+        addAtTick(schedule, tick + step.offset, { id: step.id, phase: step.phase, x: step.x, y: step.y })
       }
     }
     for (const input of schedule.get(tick) ?? []) {
@@ -503,16 +517,13 @@ export function fuzzSession(options: RunOptions & { fuzzSeed: number; profile?: 
     }
     schedule.delete(tick)
     sim.step()
-    last = sim.observe()
-    checkObservation(last, tick, declaredFeatures, problems)
-    signatures.push(last.signature)
-    for (const event of last.events) if (event.kind === 'hook') hookNames.add(event.name)
+    recorder.afterStep(tick)
     if (tick % 211 === 0) {
       checkAffordances(sim.affordances())
       sim.snapshot()
     }
   }
-  return finish(sim, signatures, hookNames, log, problems, last)
+  return recorder.outcome(log)
 }
 
 // Feeds a logged session into a fresh sim. It does NOT call affordances() or
@@ -521,25 +532,15 @@ export function fuzzSession(options: RunOptions & { fuzzSeed: number; profile?: 
 export function replaySession(options: RunOptions & { log: readonly LoggedInput[] }): RunOutcome {
   const { createSim, config, ticks, log, declaredFeatures = [] } = options
   const sim = createSim(config)
-  const problems = new Set<string>()
-  const hookNames = new Set<string>()
-  const signatures: string[] = []
+  const recorder = createRecorder(sim, declaredFeatures)
   const byTick = new Map<number, PointerInput[]>()
-  for (const entry of log) {
-    const list = byTick.get(entry.tick) ?? []
-    list.push(entry.input)
-    byTick.set(entry.tick, list)
-  }
-  let last: Observation = { signature: '', features: {}, events: [] }
+  for (const entry of log) addAtTick(byTick, entry.tick, entry.input)
   for (let tick = 0; tick < ticks; tick++) {
     for (const input of byTick.get(tick) ?? []) sim.pointer(input)
     sim.step()
-    last = sim.observe()
-    checkObservation(last, tick, declaredFeatures, problems)
-    signatures.push(last.signature)
-    for (const event of last.events) if (event.kind === 'hook') hookNames.add(event.name)
+    recorder.afterStep(tick)
   }
-  return finish(sim, signatures, hookNames, [...log], problems, last)
+  return recorder.outcome([...log])
 }
 
 // ---------------------------------------------------------------------------
@@ -600,12 +601,17 @@ export function checkHooks(createSim: CreateSim, meta: ProtoMeta, ticks = SESSIO
 
   const none = play([])
   if (none.hookNames.length > 0) problems.push(`hooks: [] still produced hook events: ${none.hookNames.join(', ')}`)
+  // With no hook declared the all-hooks run is the none run, and with exactly
+  // one it is that hook's solo run: the same deterministic session, so it is
+  // not played twice.
+  let all = none
   for (const hook of meta.hooks) {
     const alone = play([hook])
+    all = alone
     const others = alone.hookNames.filter((name) => name !== hook)
     if (others.length > 0) problems.push(`hooks: ["${hook}"] also produced: ${others.join(', ')}`)
   }
-  const all = play(meta.hooks)
+  if (meta.hooks.length > 1) all = play(meta.hooks)
   const undeclared = all.hookNames.filter((name) => !meta.hooks.includes(name))
   if (undeclared.length > 0) problems.push(`hook events not declared in meta.hooks: ${undeclared.join(', ')}`)
   return problems

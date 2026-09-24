@@ -141,6 +141,11 @@ export const createSim: CreateSim<SingingPlateSnapshot> = (config): Sim<SingingP
   let count = 0
   let head = 0
   let moved = 0
+  // Bumped whenever a grain is added, moved, or the plate is tipped, so
+  // quietShare can reuse its last sweep of the sand for each tone until then.
+  let rev = 0
+  const quietRev = new Int32Array(TONES.length).fill(-1)
+  const quietMemo = new Float64Array(TONES.length)
 
   const bar = new Map<number, BarFinger>()
   const pours = new Map<number, PourFinger>()
@@ -169,6 +174,9 @@ export const createSim: CreateSim<SingingPlateSnapshot> = (config): Sim<SingingP
 
   const isRinging = () => voice >= 0 && energy >= RING_MIN
 
+  // A shaped pile is named for the tone that shaped it, then the one before.
+  const shapeName = () => (prev < 0 ? TONES[shape]!.name : `${TONES[shape]!.name}<${TONES[prev]!.name}`)
+
   const addGrain = (u: number, v: number) => {
     let slot: number
     if (count < MAX_GRAINS) slot = count++
@@ -180,6 +188,7 @@ export const createSim: CreateSim<SingingPlateSnapshot> = (config): Sim<SingingP
     gu[slot] = clamp(u, -0.98, 0.98)
     gv[slot] = clamp(v, -0.98, 0.98)
     hopped[slot] = 0
+    rev++
   }
 
   const scatter = (u: number, v: number, n: number, spread: number) => {
@@ -191,6 +200,7 @@ export const createSim: CreateSim<SingingPlateSnapshot> = (config): Sim<SingingP
     head = 0
     moved = 0
     hopped.fill(0)
+    rev++
     shape = -1
     prev = -1
     worn = 0
@@ -207,10 +217,14 @@ export const createSim: CreateSim<SingingPlateSnapshot> = (config): Sim<SingingP
 
   const quietShare = (tone: number): number => {
     if (count === 0 || tone < 0) return 0
+    if (quietRev[tone] === rev) return quietMemo[tone]!
     const distance = TONES[tone]!.distance
     let quiet = 0
     for (let i = 0; i < count; i++) if (distance(gu[i]!, gv[i]!) <= QUIET) quiet++
-    return quiet / count
+    const share = quiet / count
+    quietRev[tone] = rev
+    quietMemo[tone] = share
+    return share
   }
 
   // (contract) The sim's own hit-test decides what a touch does. The bar is a
@@ -272,6 +286,7 @@ export const createSim: CreateSim<SingingPlateSnapshot> = (config): Sim<SingingP
   const hop = () => {
     const distance = TONES[voice]!.distance
     const p = HOP_P * energy
+    let changed = false
     for (let i = 0; i < count; i++) {
       const d = distance(gu[i]!, gv[i]!)
       if (d <= QUIET || rng() >= p) continue
@@ -280,11 +295,13 @@ export const createSim: CreateSim<SingingPlateSnapshot> = (config): Sim<SingingP
       const r = reach * Math.sqrt(rng())
       gu[i] = clamp(gu[i]! + Math.cos(angle) * r, -0.98, 0.98)
       gv[i] = clamp(gv[i]! + Math.sin(angle) * r, -0.98, 0.98)
+      changed = true
       if (!hopped[i]) {
         hopped[i] = 1
         moved++
       }
     }
+    if (changed) rev++
   }
 
   // (contract: step) One fixed tick.
@@ -372,7 +389,7 @@ export const createSim: CreateSim<SingingPlateSnapshot> = (config): Sim<SingingP
     if (count === 0) signature = ringing ? 'bare-ring' : 'bare'
     else if (ringing && qVoice < SETTLE) signature = 'dancing'
     else if (shape < 0 || qShape < KEEP) signature = 'heap'
-    else signature = prev < 0 ? TONES[shape]!.name : `${TONES[shape]!.name}<${TONES[prev]!.name}`
+    else signature = shapeName()
     return {
       signature,
       features: {
@@ -416,7 +433,7 @@ export const createSim: CreateSim<SingingPlateSnapshot> = (config): Sim<SingingP
       hum: hum(),
       found: [...found],
       fingerX: activeBar()?.x ?? null,
-      pile: shape < 0 ? (count === 0 ? 'bare' : 'heap') : prev < 0 ? TONES[shape]!.name : `${TONES[shape]!.name}<${TONES[prev]!.name}`,
+      pile: shape < 0 ? (count === 0 ? 'bare' : 'heap') : shapeName(),
       woven: wovenCount(),
       hint: hint(),
     }

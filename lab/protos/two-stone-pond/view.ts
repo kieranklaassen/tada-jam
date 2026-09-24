@@ -4,6 +4,7 @@
 
 import { circle, clear, label } from '../../kit/draw.ts'
 import { FIELD_H, FIELD_W } from '../../kit/sim.ts'
+import { HEIGHT_SCALE } from './sim.ts'
 import type { PondSnapshot } from './sim.ts'
 
 let scratch: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; image: ImageData } | null = null
@@ -26,7 +27,7 @@ function paintWater(ctx: CanvasRenderingContext2D, snap: PondSnapshot): void {
   if (!buffer) return
   const data = buffer.image.data
   for (let k = 0; k < snap.cols * snap.rows; k++) {
-    const v = Math.max(-1, Math.min(1, snap.h[k]! / 64))
+    const v = Math.max(-1, Math.min(1, snap.h[k]! / HEIGHT_SCALE))
     let r = 88 + v * 110
     let g = 148 + v * 80
     let b = 196 + v * 50

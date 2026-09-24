@@ -6,7 +6,7 @@
 import { ENGINE_IDS } from './engines.ts'
 import type { Engine } from './engines.ts'
 import { TOYS } from './toys.ts'
-import { ageBucket } from './types.ts'
+import { ageBucket, indexById } from './types.ts'
 import type { AgeBucket, IdeaRecord } from './types.ts'
 
 export interface Problem {
@@ -52,14 +52,15 @@ export const MIN_PHYSICAL_PER_BATCH = 3
 const KEBAB_CASE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
 const ID_PATTERN = /^([a-z]+(?:-[a-z]+)*)-(\d{2})$/
 
-const ENGINE_SET: ReadonlySet<string> = new Set(ENGINE_IDS)
+export const ENGINE_SET: ReadonlySet<string> = new Set(ENGINE_IDS)
 const TOY_IDS: ReadonlySet<string> = new Set(TOYS.map((toy) => toy.id))
 
 function isBlank(text: string | null | undefined): boolean {
   return text === null || text === undefined || text.trim() === ''
 }
 
-function percent(part: number, whole: number): string {
+// `N.N%`, shared with the CATALOG.md summary so the two never show different numbers.
+export function percent(part: number, whole: number): string {
   return whole === 0 ? '0.0%' : `${((part * 100) / whole).toFixed(1)}%`
 }
 
@@ -70,8 +71,7 @@ export function validate(records: readonly IdeaRecord[], options: ValidateOption
   }
 
   // The first record with an id answers `replaces` lookups.
-  const byId = new Map<string, IdeaRecord>()
-  for (const record of records) if (!byId.has(record.id)) byId.set(record.id, record)
+  const byId = indexById(records)
 
   for (const record of records) checkIdea(record, byId, add)
 

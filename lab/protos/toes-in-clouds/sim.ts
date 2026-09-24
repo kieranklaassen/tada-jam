@@ -47,7 +47,7 @@ const PUMP = 0.9
 const LEG_STEP = 1 / 6
 const THETA_CAP = 1.45
 // The widest arc pumping can make, for normalising features.
-const MAX_ARC = 1.3
+export const MAX_ARC = 1.3
 const ARC_STILL = 0.15
 const ARC_LOW = 0.55
 const ARC_MID = 0.95

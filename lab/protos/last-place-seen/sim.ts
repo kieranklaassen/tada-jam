@@ -323,11 +323,7 @@ export const createSim: CreateSim<LastPlaceSnapshot> = (config): Sim<LastPlaceSn
       const looked = g.target
       if (treasure === looked) {
         g.belief = looked
-        g.post = looked
-        g.mode = 'post'
-        g.target = -1
-        g.t = 0
-        g.cycles = peekPhase
+        arrive(g)
       } else {
         if (g.belief !== -1) emit('goose-lost')
         g.belief = -1

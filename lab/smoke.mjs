@@ -9,10 +9,11 @@
 // the server when it is done. If the port is taken, it says so and exits.
 
 import { spawn } from 'node:child_process'
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { webkit } from 'playwright'
+import { listProtoDirs } from './kit/contract.ts'
 
 const labDir = dirname(fileURLToPath(import.meta.url))
 const rootDir = resolve(labDir, '..')
@@ -29,16 +30,9 @@ if (!existsSync(join(labDir, 'dist', 'index.html'))) {
   process.exit(1)
 }
 
-// Every prototype key: the folders under lab/protos (hidden and underscore
-// folders skipped, like the contract suite) plus the reference.
-const protosDir = join(labDir, 'protos')
-const protoKeys = existsSync(protosDir)
-  ? readdirSync(protosDir, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && !e.name.startsWith('_') && !e.name.startsWith('.'))
-      .map((e) => e.name)
-      .sort()
-  : []
-const keys = [...protoKeys, 'example']
+// Every prototype key: the folders the contract suite lists under lab/protos
+// (hidden and underscore folders skipped) plus the reference.
+const keys = [...listProtoDirs().map((folder) => folder.key), 'example']
 
 const viteBin = join(rootDir, 'node_modules', '.bin', 'vite')
 const preview = spawn(viteBin, ['preview', '--config', 'lab/vite.config.ts', '--port', String(PORT), '--strictPort'], {

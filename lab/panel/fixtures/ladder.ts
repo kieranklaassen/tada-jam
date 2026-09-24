@@ -6,7 +6,7 @@
 
 import type { Affordance, AffordanceKind, CreateSim, ProtoMeta, SimEvent } from '../../kit/sim.ts'
 
-export const MAX_LEVEL = 63
+const MAX_LEVEL = 63
 export const meta: ProtoMeta = {
   key: 'ladder',
   name: 'Ladder',
@@ -23,11 +23,11 @@ export const meta: ProtoMeta = {
 const KINDS: AffordanceKind[] = ['tap', 'hold', 'drag']
 const SIZE = 100
 
-export function kindFor(level: number): AffordanceKind {
+function kindFor(level: number): AffordanceKind {
   return KINDS[level % 3]!
 }
 
-export function need(level: number): number {
+function need(level: number): number {
   return 2 + Math.floor(level / 32)
 }
 
@@ -61,12 +61,9 @@ export const createSim: CreateSim = (config) => {
       }
       const down = downs.get(input.id)
       if (!down) return
-      if (input.phase === 'move') {
-        down.dist = Math.max(down.dist, Math.hypot(input.x - down.x, input.y - down.y))
-        return
-      }
-      downs.delete(input.id)
       down.dist = Math.max(down.dist, Math.hypot(input.x - down.x, input.y - down.y))
+      if (input.phase === 'move') return
+      downs.delete(input.id)
       const kind: AffordanceKind = down.dist >= 40 ? 'drag' : now - down.tick >= 9 ? 'hold' : 'tap'
       const r = rectFor(level)
       const inside = down.x >= r.x && down.x <= r.x + r.w && down.y >= r.y && down.y <= r.y + r.h

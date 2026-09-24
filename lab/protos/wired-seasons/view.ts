@@ -3,13 +3,13 @@
 // and holds no state.
 
 import { circle, clear, label, line, rect, roundRect } from '../../kit/draw.ts'
-import { FIELD_W } from '../../kit/sim.ts'
-import { GROUND_Y } from './sim.ts'
+import { FIELD_H, FIELD_W } from '../../kit/sim.ts'
+import { FALL_TICKS, GROUND_Y } from './sim.ts'
 import type { WiredSnapshot } from './sim.ts'
 
 export function draw(ctx: CanvasRenderingContext2D, snapshot: WiredSnapshot): void {
   clear(ctx, '#eef3e6')
-  rect(ctx, 0, GROUND_Y, FIELD_W, 820 - GROUND_Y, '#c9b48f')
+  rect(ctx, 0, GROUND_Y, FIELD_W, FIELD_H - GROUND_Y, '#c9b48f')
 
   // The picture the child is growing toward, when that hook is on.
   const pic = snapshot.picture
@@ -30,7 +30,7 @@ export function draw(ctx: CanvasRenderingContext2D, snapshot: WiredSnapshot): vo
 
   // Limbs already dropped fall and fade.
   for (const f of snapshot.fallen) {
-    const t = f.age / 36
+    const t = f.age / FALL_TICKS
     ctx.globalAlpha = 1 - t
     line(ctx, f.x1, f.y1 + t * 90, f.x2, f.y2 + t * 90, '#8a6a44', 6)
   }

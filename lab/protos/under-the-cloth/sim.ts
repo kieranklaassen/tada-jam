@@ -117,6 +117,9 @@ const inRect = (r: Rect, x: number, y: number) => x >= r.x && x <= r.x + r.w && 
 const centre = (r: Rect) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
 // +1 when the hidden thing attracts a hand magnet of this pole, -1 when it repels.
 const coupling = (kind: Kind, pole: number): number => (kind === IRON ? IRON_K : (kind === 0 ? 1 : -1) === pole ? -1 : 1)
+// A coordinate kept a hand margin inside the cloth (for the finger and the hand magnet).
+const handX = (x: number) => clamp(x, CLOTH.x + HAND_MARGIN, CLOTH.x + CLOTH.w - HAND_MARGIN)
+const handY = (y: number) => clamp(y, CLOTH.y + HAND_MARGIN, CLOTH.y + CLOTH.h - HAND_MARGIN)
 // A rectangle of this size centred on (cx, cy), kept inside the field.
 const boxAt = (cx: number, cy: number, w: number, h: number) => ({
   x: clamp(cx - w / 2, 0, FIELD_W - w),
@@ -392,7 +395,7 @@ export const createSim: CreateSim<ClothSnapshot> = (config): Sim<ClothSnapshot> 
       }
       if (inRect(CLOTH, x, y) && touch === null) {
         touch = { id, startX: x, startY: y, downTick: tick, moved: false }
-        finger = { x: clamp(x, CLOTH.x + HAND_MARGIN, CLOTH.x + CLOTH.w - HAND_MARGIN), y: clamp(y, CLOTH.y + HAND_MARGIN, CLOTH.y + CLOTH.h - HAND_MARGIN) }
+        finger = { x: handX(x), y: handY(y) }
       }
       return
     }
@@ -402,7 +405,7 @@ export const createSim: CreateSim<ClothSnapshot> = (config): Sim<ClothSnapshot> 
       c.y = y
     }
     if (touch && touch.id === id && finite) {
-      finger = { x: clamp(x, CLOTH.x + HAND_MARGIN, CLOTH.x + CLOTH.w - HAND_MARGIN), y: clamp(y, CLOTH.y + HAND_MARGIN, CLOTH.y + CLOTH.h - HAND_MARGIN) }
+      finger = { x: handX(x), y: handY(y) }
       if (Math.hypot(x - touch.startX, y - touch.startY) > TAP_MOVE) touch.moved = true
     }
     if (ph === 'up') release(id, finite ? x : null, finite ? y : null)
@@ -446,8 +449,8 @@ export const createSim: CreateSim<ClothSnapshot> = (config): Sim<ClothSnapshot> 
         hvx = (hvx + ax * FREE) * 0.88
         hvy = (hvy + ay * FREE) * 0.88
       }
-      hx = clamp(hx + hvx, CLOTH.x + HAND_MARGIN, CLOTH.x + CLOTH.w - HAND_MARGIN)
-      hy = clamp(hy + hvy, CLOTH.y + HAND_MARGIN, CLOTH.y + CLOTH.h - HAND_MARGIN)
+      hx = handX(hx + hvx)
+      hy = handY(hy + hvy)
       for (let i = 0; i < items.length; i++) {
         const it = items[i]!
         const d = Math.hypot(it.x - hx, it.y - hy)

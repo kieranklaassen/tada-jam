@@ -61,6 +61,9 @@ const KINDS: readonly RoomKind[] = ['wall', 'gate', 'swap']
 // The rule engine
 // ---------------------------------------------------------------------------
 
+// A sentence reads to the right or downward from its noun.
+const READ_DIRS = [[1, 0], [0, 1]] as const
+
 export function parseRules(ents: readonly Ent[]): Rule[] {
   const words = new Map<number, Ent>()
   for (const e of ents) if (e.kind !== 'obj') words.set(e.y * COLS + e.x, e)
@@ -68,7 +71,7 @@ export function parseRules(ents: readonly Ent[]): Rule[] {
   const rules: Rule[] = []
   for (const n of ents) {
     if (n.kind !== 'noun') continue
-    for (const [dx, dy] of [[1, 0], [0, 1]] as const) {
+    for (const [dx, dy] of READ_DIRS) {
       const is = wordAt(n.x + dx, n.y + dy)
       const p = wordAt(n.x + 2 * dx, n.y + 2 * dy)
       if (is?.kind === 'is' && p?.kind === 'prop') rules.push({ noun: n.name, prop: p.name as Prop, ids: [n.id, is.id, p.id] })
@@ -77,7 +80,7 @@ export function parseRules(ents: readonly Ent[]): Rule[] {
   return rules
 }
 
-const ruleKeys = (ents: readonly Ent[]): string[] => [...new Set(parseRules(ents).map((r) => `${r.noun}:${r.prop}`))].sort()
+const ruleKeys = (rules: readonly Rule[]): string[] => [...new Set(rules.map((r) => `${r.noun}:${r.prop}`))].sort()
 
 function flagMap(rules: readonly Rule[]): Map<string, Set<Prop>> {
   const map = new Map<string, Set<Prop>>()
@@ -400,27 +403,20 @@ export function attemptRoom(rng: Rng, kind: RoomKind, index: number): Room {
   }
   const fits = (x: number, y: number, vertical: boolean) =>
     isFree(x, y) && isFree(x + (vertical ? 0 : 1), y + (vertical ? 1 : 0)) && isFree(x + (vertical ? 0 : 2), y + (vertical ? 2 : 0))
-  const spot = (x0: number, x1: number, y0: number, y1: number) => {
+  // A cell inside the box that `ok` accepts: random draws first, then a scan.
+  const find = (x0: number, x1: number, y0: number, y1: number, ok: (x: number, y: number) => boolean) => {
     for (let t = 0; t < 80; t++) {
       const x = int(rng, x0, x1)
       const y = int(rng, y0, y1)
-      if (isFree(x, y)) return { x, y }
+      if (ok(x, y)) return { x, y }
     }
-    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (isFree(x, y)) return { x, y }
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (ok(x, y)) return { x, y }
     throw DOES_NOT_FIT
   }
+  const spot = (x0: number, x1: number, y0: number, y1: number) => find(x0, x1, y0, y1, isFree)
   // Where a three-tile sentence fits inside the box.
-  const spot3 = (x0: number, x1: number, y0: number, y1: number, vertical: boolean) => {
-    const xMax = vertical ? x1 : x1 - 2
-    const yMax = vertical ? y1 - 2 : y1
-    for (let t = 0; t < 80; t++) {
-      const x = int(rng, x0, xMax)
-      const y = int(rng, y0, yMax)
-      if (fits(x, y, vertical)) return { x, y }
-    }
-    for (let y = y0; y <= yMax; y++) for (let x = x0; x <= xMax; x++) if (fits(x, y, vertical)) return { x, y }
-    throw DOES_NOT_FIT
-  }
+  const spot3 = (x0: number, x1: number, y0: number, y1: number, vertical: boolean) =>
+    find(x0, vertical ? x1 : x1 - 2, y0, vertical ? y1 - 2 : y1, (x, y) => fits(x, y, vertical))
 
   const cx = int(rng, 4, 7)
   const frogLeft = chance(rng, 0.5)
@@ -535,8 +531,12 @@ function cellAt(x: number, y: number): { x: number; y: number } | null {
 
 // The first step of the shortest path over free cells; the target cell may hold
 // a tile (the last step then pushes it). Null when there is no such path.
-function routeDir(ents: readonly Ent[], from: { x: number; y: number }, to: { x: number; y: number }): readonly [number, number] | null {
-  const flags = flagMap(parseRules(ents))
+function routeDir(
+  ents: readonly Ent[],
+  flags: ReadonlyMap<string, ReadonlySet<Prop>>,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): readonly [number, number] | null {
   const blocked = new Uint8Array(COLS * ROWS)
   for (const e of ents) {
     const push = e.kind !== 'obj' || flags.get(e.name)?.has('push')
@@ -598,13 +598,25 @@ export const createSim: CreateSim<PushableSnapshot> = (config): Sim<PushableSnap
     pending.push(event)
   }
 
+  // The rules can only change when `ents` is replaced (applyMove clones, and
+  // loadRoom, undo and restart reassign), so they are parsed once per array and
+  // shared by every read that follows, tick after tick.
+  let derived: { src: Ent[]; rules: Rule[]; flags: Map<string, Set<Prop>>; keys: string[] } | null = null
+  const rulesNow = () => {
+    if (derived?.src !== ents) {
+      const rules = parseRules(ents)
+      derived = { src: ents, rules, flags: flagMap(rules), keys: ruleKeys(rules) }
+    }
+    return derived
+  }
+
   const loadRoom = () => {
     const kind = pick(rng, KINDS.filter((k) => k !== lastKind))
     lastKind = kind
     room = buildRoom(rng, kind, solvedCount)
     ents = room.ents
     startEnts = room.ents.map((e) => ({ ...e }))
-    baseRules = ruleKeys(ents)
+    baseRules = rulesNow().keys
     history = []
     target = null
     walkTimer = 0
@@ -613,14 +625,14 @@ export const createSim: CreateSim<PushableSnapshot> = (config): Sim<PushableSnap
   }
   loadRoom()
 
-  const flagsNow = () => flagMap(parseRules(ents))
+  const flagsNow = () => rulesNow().flags
   const objsWith = (p: Prop) => {
     const flags = flagsNow()
     return ents.filter((e) => e.kind === 'obj' && flags.get(e.name)?.has(p))
   }
   const firstYou = (): Ent | null => objsWith('you').sort((a, b) => a.id - b.id)[0] ?? null
   const rewrites = () => {
-    const now = ruleKeys(ents)
+    const now = rulesNow().keys
     return baseRules.filter((k) => !now.includes(k)).length + now.filter((k) => !baseRules.includes(k)).length
   }
 
@@ -637,7 +649,7 @@ export const createSim: CreateSim<PushableSnapshot> = (config): Sim<PushableSnap
   }
 
   const move = (dx: number, dy: number): boolean => {
-    const before = ruleKeys(ents)
+    const before = rulesNow().keys
     const hadYou = firstYou() !== null
     const r = applyMove(ents, dx, dy)
     if (!r.moved) return false
@@ -645,7 +657,7 @@ export const createSim: CreateSim<PushableSnapshot> = (config): Sim<PushableSnap
     if (history.length > MAX_HISTORY) history.shift()
     ents = r.ents
     emit({ kind: 'state', name: r.pushed ? 'push' : 'move' })
-    const after = ruleKeys(ents)
+    const after = rulesNow().keys
     for (const k of before) if (!after.includes(k)) emit({ kind: 'state', name: 'rule-broken' })
     for (const k of after) if (!before.includes(k)) emit({ kind: 'state', name: 'rule-made' })
     if (hadYou && firstYou() === null) emit({ kind: 'state', name: 'you-lost' })
@@ -661,7 +673,7 @@ export const createSim: CreateSim<PushableSnapshot> = (config): Sim<PushableSnap
       return
     }
     walkTimer = WALK_TICKS
-    const route = routeDir(ents, you, target)
+    const route = routeDir(ents, flagsNow(), you, target)
     const dx = target.x - you.x
     const dy = target.y - you.y
     const along: Array<readonly [number, number]> = [[Math.sign(dx), 0], [0, Math.sign(dy)]]
@@ -777,7 +789,7 @@ export const createSim: CreateSim<PushableSnapshot> = (config): Sim<PushableSnap
     for (const y of yous) for (const w of wins) gap = Math.min(gap, Math.abs(y.x - w.x) + Math.abs(y.y - w.y))
     return {
       signature: signature(),
-      features: { solved: solvedCount, padGap: gap, rules: ruleKeys(ents).length, rewrites: rewrites() },
+      features: { solved: solvedCount, padGap: gap, rules: rulesNow().keys.length, rewrites: rewrites() },
       events,
     }
   }
@@ -796,7 +808,7 @@ export const createSim: CreateSim<PushableSnapshot> = (config): Sim<PushableSnap
   }
 
   const snapshot = (): PushableSnapshot => {
-    const rules = parseRules(ents)
+    const rules = rulesNow().rules
     const live = new Set(rules.flatMap((r) => r.ids))
     const stuck = solveHold === 0 && firstYou() === null
     return {

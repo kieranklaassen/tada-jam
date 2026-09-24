@@ -6,6 +6,7 @@
 //
 // The shell advances it by real elapsed time and draws watcher.sim.snapshot().
 
+import { createStepper } from '../kit/loop.ts'
 import type { CreateWatcher, Watcher } from '../kit/proto.ts'
 import { TICK_MS } from '../kit/sim.ts'
 import { getPersona } from '../panel/personas.ts'
@@ -15,16 +16,16 @@ export const createWatcher: CreateWatcher = ({ proto, seed, personaId }): Watche
   const persona = getPersona(personaId)
   // Hints are off, as in the panel's return and self-aim runs.
   const player = createRunPlayer({ persona, proto, runSeed: seed, hints: false })
-  let elapsed = 0
+  // Uncapped: every whole tick of the time given runs (the shell caps the
+  // frame before it calls advance).
+  const stepper = createStepper(TICK_MS, Number.POSITIVE_INFINITY)
   return {
     // The session in play; it changes when the persona comes back for another.
     get sim() {
       return player.sim
     },
     advance(dtMs) {
-      elapsed += Math.max(0, dtMs)
-      while (elapsed >= TICK_MS) {
-        elapsed -= TICK_MS
+      for (let ticks = stepper.advance(dtMs); ticks > 0; ticks--) {
         if (!player.done) {
           player.tick()
         } else if (player.crash === null) {

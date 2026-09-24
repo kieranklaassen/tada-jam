@@ -73,7 +73,7 @@ export const SPEC = {
   // A stream of air: strongest at the fan, thinning to a quarter at the tip.
   fan: { body: 32, reach: 300, half: 80, accel: 1.0, thin: 0.75, drag: 0.02 },
 }
-const HALF: Record<ToolKind, number> = { ramp: 110, spring: 62, sponge: 66, fan: 36, bumper: 0 }
+const HALF: Record<ToolKind, number> = { ramp: SPEC.ramp.half, spring: SPEC.spring.half, sponge: SPEC.sponge.half, fan: 36, bumper: 0 }
 const KNOB_GAP = 40
 
 export const snapAngle = (a: number): number => (((Math.round(a / ANGLE_STEP) * ANGLE_STEP) % TAU) + TAU) % TAU
@@ -191,6 +191,11 @@ function addTool(p: Placement, cs: Collider[], fans: Fan[]): void {
 
 const startBall = (shape: Shape): Ball => ({ x: 60, y: shape.chute.y0 + 12, vx: shape.chute.v0, vy: 0 })
 
+// A cheap squared-distance test that runs before the exact Math.hypot check.
+// The margin is far above rounding error, so it only rejects what the exact
+// check would reject too; anything near the edge falls through to it.
+const beyond = (dx: number, dy: number, reach: number): boolean => dx * dx + dy * dy > reach * reach * 1.000001
+
 function collide(b: Ball, c: Collider, hit: Hit | null): void {
   let nx: number
   let ny: number
@@ -203,8 +208,9 @@ function collide(b: Ball, c: Collider, hit: Hit | null): void {
     const qy = c.ay + aby * t
     const dx = b.x - qx
     const dy = b.y - qy
-    const d = Math.hypot(dx, dy)
     const reach = c.r + BALL_R
+    if (beyond(dx, dy, reach)) return
+    const d = Math.hypot(dx, dy)
     if (d >= reach) return
     if (d > 1e-6) {
       nx = dx / d
@@ -223,8 +229,9 @@ function collide(b: Ball, c: Collider, hit: Hit | null): void {
   } else {
     const dx = b.x - c.x
     const dy = b.y - c.y
-    const d = Math.hypot(dx, dy)
     const reach = c.r + BALL_R
+    if (beyond(dx, dy, reach)) return
+    const d = Math.hypot(dx, dy)
     if (d >= reach) return
     nx = d > 1e-6 ? dx / d : 0
     ny = d > 1e-6 ? dy / d : -1
@@ -286,10 +293,14 @@ function advance(b: Ball, cs: readonly Collider[], fans: readonly Fan[], hit: Hi
         hit.tool = true
       }
     }
-    const speed = Math.hypot(b.vx, b.vy)
-    if (speed > MAX_SPEED) {
-      b.vx *= MAX_SPEED / speed
-      b.vy *= MAX_SPEED / speed
+    // Almost never over the limit, so test the square first and take the exact
+    // speed only when it might be. (NaN and Infinity fall through as before.)
+    if (b.vx * b.vx + b.vy * b.vy > MAX_SPEED * MAX_SPEED * 0.999999) {
+      const speed = Math.hypot(b.vx, b.vy)
+      if (speed > MAX_SPEED) {
+        b.vx *= MAX_SPEED / speed
+        b.vy *= MAX_SPEED / speed
+      }
     }
     b.x += b.vx * DT
     b.y += b.vy * DT
@@ -502,7 +513,7 @@ export function attempt(rng: Rng): Candidate | null {
     let next: RunResult | null = null
     let placed: Placement | null = null
     for (let tries = 0; tries < TRIES && next === null; tries++) {
-      const p = placeOnPath(kind, run.path, options[int(rng, 0, options.length - 1)]!, rng)
+      const p = placeOnPath(kind, run.path, pick(rng, options), rng)
       if (!inYard(p) || chuteDistance(p, chute.y0) < CHUTE_CLEAR || reference.some((o) => Math.hypot(o.x - p.x, o.y - p.y) < 100)) continue
       const r = runBall(bare, [...reference, p], { record: true })
       if (!r.touched.includes(kind)) continue
@@ -518,7 +529,7 @@ export function attempt(rng: Rng): Candidate | null {
   // The cat's shelf goes where the ball would land after the last tool.
   const options = room(run.path, after + 8, catRoom)
   for (let tries = 0; tries < TRIES && options.length > 0; tries++) {
-    const p = run.path[options[int(rng, 0, options.length - 1)]!]!
+    const p = run.path[pick(rng, options)]!
     const base = p.y + BALL_R + 8 + between(rng, 40, 90)
     const fall = base - 26 - p.y
     const t = (-p.vy + Math.sqrt(p.vy * p.vy + 2 * G * fall)) / G
@@ -547,7 +558,7 @@ function oneToolSolves(c: Candidate, rng: Rng): boolean {
   if (options.length === 0) return false
   for (const kind of c.deal) {
     for (let n = 0; n < SINGLE_SAMPLES; n++) {
-      const p = placeOnPath(kind, path, options[int(rng, 0, options.length - 1)]!, rng)
+      const p = placeOnPath(kind, path, pick(rng, options), rng)
       if (inYard(p) && runBall(c.shape, [p]).reached) return true
     }
   }

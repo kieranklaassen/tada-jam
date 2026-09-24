@@ -16,14 +16,15 @@ export interface Stepper {
   reset(): void
 }
 
-export function createStepper(tickMs: number): Stepper {
+// `maxSteps` caps one call's catch-up; pass Infinity to owe every whole step.
+export function createStepper(tickMs: number, maxSteps = MAX_CATCH_UP_STEPS): Stepper {
   let accumulated = 0
   return {
     advance(dtMs) {
       if (!Number.isFinite(dtMs) || dtMs <= 0) return 0
       accumulated += dtMs
       const whole = Math.floor(accumulated / tickMs)
-      const steps = Math.min(whole, MAX_CATCH_UP_STEPS)
+      const steps = Math.min(whole, maxSteps)
       // Keep only the part of a step: a capped backlog is dropped, not owed.
       accumulated %= tickMs
       return steps

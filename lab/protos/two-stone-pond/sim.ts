@@ -11,7 +11,7 @@
 // performance.now. It reads a seeded rng and counts ticks, nothing else. There
 // are no hooks: config.hooks is accepted and changes nothing.
 
-import { between, createRng } from '../../kit/rng.ts'
+import { between, createRng, pick } from '../../kit/rng.ts'
 import { FIELD_H, FIELD_W } from '../../kit/sim.ts'
 import type { Affordance, CreateSim, Observation, PointerInput, Sim, SimEvent } from '../../kit/sim.ts'
 
@@ -180,7 +180,7 @@ const patchMean = (f: Float32Array, x: number, y: number): number => {
 
 export const createSim: CreateSim<PondSnapshot> = (config): Sim<PondSnapshot> => {
   const rng = createRng(config.seed)
-  const wavelength = WAVELENGTHS[Math.min(WAVELENGTHS.length - 1, Math.floor(rng() * WAVELENGTHS.length))]!
+  const wavelength = pick(rng, WAVELENGTHS)
   const periodTicks = wavelength / WAVE_PX_PER_TICK
   const omega = (2 * Math.PI) / periodTicks
   const burstTicks = Math.round(2 * periodTicks)
@@ -198,7 +198,8 @@ export const createSim: CreateSim<PondSnapshot> = (config): Sim<PondSnapshot> =>
       damp[j * COLS + i] = Math.min(0.6, BASE_DAMP + SPONGE_DAMP * s * s)
     }
   }
-  const scratch = new Float32Array(N)
+  // The 3 by 3 weights of one stone's drive patch.
+  const scratch = new Float32Array(9)
   const meanBuf = new Float32Array(N)
 
   const corks: Cork[] = []
@@ -267,12 +268,15 @@ export const createSim: CreateSim<PondSnapshot> = (config): Sim<PondSnapshot> =>
     return best
   }
 
-  // A stone still ringing after its finger lifted, close enough to pick up.
+  // A stone still ringing after its finger lifted, so it can be picked up.
+  const isGrabbable = (s: Source): boolean => s.steady && s.heldBy === null && strength(s) >= 0.3
+
+  // The grabbable stone nearest a touch, close enough to pick up.
   const hitStone = (x: number, y: number): Source | null => {
     let best: Source | null = null
     let bestDistance = Infinity
     for (const s of sources) {
-      if (!s.steady || s.heldBy !== null || strength(s) < 0.3) continue
+      if (!isGrabbable(s)) continue
       const d = Math.hypot(x - s.x, y - s.y)
       if (d <= STONE_GRAB_R && d < bestDistance) {
         best = s
@@ -425,7 +429,6 @@ export const createSim: CreateSim<PondSnapshot> = (config): Sim<PondSnapshot> =>
         pairState = lines === 0 ? 'flat' : lines <= 2 ? 'l2' : lines <= 4 ? 'l4' : 'l6'
       }
     }
-    if (pairState !== 'flat' && pairState !== 'l2' && pairState !== 'l4' && pairState !== 'l6') lines = 0
     if (lines > 0 && lines !== lastLines) emit({ kind: 'state', name: 'lines' })
     lastLines = lines
   }
@@ -566,7 +569,7 @@ export const createSim: CreateSim<PondSnapshot> = (config): Sim<PondSnapshot> =>
       })
     }
     for (const s of sources) {
-      if (!s.steady || s.heldBy !== null || strength(s) < 0.3) continue
+      if (!isGrabbable(s)) continue
       const side = STONE_GRAB_R * 2
       list.push({
         x: clamp(s.x - STONE_GRAB_R, 0, FIELD_W - side),
@@ -656,12 +659,12 @@ export const createSim: CreateSim<PondSnapshot> = (config): Sim<PondSnapshot> =>
       h: heights,
       calm,
       sources: sources.map((s) => ({ x: s.x, y: s.y, strength: strength(s), steady: isSteadyNow(s), held: s.heldBy !== null })),
-      corks: corks.map((c) => ({
+      corks: corks.map((c, i) => ({
         x: c.x,
         y: c.y,
         r: CORK_R,
         bob: sampleField(h, c.x, c.y),
-        colour: CORK_COLOURS[corks.indexOf(c) % CORK_COLOURS.length]!,
+        colour: CORK_COLOURS[i % CORK_COLOURS.length]!,
         held: c.heldBy !== null,
         parked: c.parked,
       })),

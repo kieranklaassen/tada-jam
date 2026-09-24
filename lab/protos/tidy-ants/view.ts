@@ -2,6 +2,7 @@
 // and holds no state.
 
 import { circle, clear, label, line, rect, roundRect } from '../../kit/draw.ts'
+import { COLOUR_HEX } from './sim.ts'
 import type { TidySnapshot } from './sim.ts'
 
 const INK = '#3a2f22'
@@ -20,7 +21,7 @@ export function draw(ctx: CanvasRenderingContext2D, snapshot: TidySnapshot): voi
   for (const cup of snapshot.cups) {
     roundRect(ctx, cup.x, cup.y, cup.w, cup.h, 18, { fill: cup.colour ?? '#efe8d8', stroke: cup.selected ? INK : '#8a7f6a', width: cup.selected ? 8 : 3 })
     if (cup.colour === null) {
-      ;['#d9412f', '#2f6fc9', '#f0b62a', '#3aa55b'].forEach((hex, i) => circle(ctx, cup.x + 22 + i * 23, cup.y + 30, 9, hex))
+      COLOUR_HEX.slice(0, 4).forEach((hex, i) => circle(ctx, cup.x + 22 + i * 23, cup.y + 30, 9, hex))
     }
     label(ctx, cup.name, cup.x + cup.w / 2, cup.y + cup.h - 14, { align: 'center', size: 20, color: cup.colour === null ? INK : '#fff' })
   }

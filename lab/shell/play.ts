@@ -10,6 +10,7 @@ import type { LoopHandle } from '../kit/loop.ts'
 import type { Watcher } from '../kit/proto.ts'
 import { TICK_MS } from '../kit/sim.ts'
 import type { PointerPhase, Sim } from '../kit/sim.ts'
+import { el } from './list.ts'
 import type { RegistryEntry } from './list.ts'
 import { buildPlayHash } from './routes.ts'
 import { createWatcher } from './watch.ts'
@@ -22,10 +23,8 @@ export interface PlayOptions {
 }
 
 function button(label: string, onClick: () => void): HTMLButtonElement {
-  const node = document.createElement('button')
+  const node = el('button', 'btn', label)
   node.type = 'button'
-  node.className = 'btn'
-  node.textContent = label
   node.addEventListener('click', onClick)
   return node
 }
@@ -34,26 +33,16 @@ export function mountPlay(host: HTMLElement, options: PlayOptions): () => void {
   const { entry, seed, chrome, watch } = options
   const { proto } = entry
 
-  const root = document.createElement('div')
-  root.className = 'play'
-  const field = document.createElement('div')
-  field.className = 'field'
-  const status = document.createElement('span')
-  status.className = 'strip-note'
+  const root = el('div', 'play')
+  const field = el('div', 'field')
+  const status = el('span', 'strip-note')
 
   if (chrome) {
-    const strip = document.createElement('div')
-    strip.className = 'strip'
-    const back = document.createElement('a')
-    back.className = 'btn'
+    const strip = el('div', 'strip')
+    const back = el('a', 'btn', 'Back')
     back.href = '#/'
-    back.textContent = 'Back'
-    const title = document.createElement('span')
-    title.className = 'strip-title'
-    title.textContent = proto.meta.name
-    const seedLabel = document.createElement('span')
-    seedLabel.className = 'strip-note'
-    seedLabel.textContent = `seed ${seed}`
+    const title = el('span', 'strip-title', proto.meta.name)
+    const seedLabel = el('span', 'strip-note', `seed ${seed}`)
     strip.append(
       back,
       button('Restart', () => boot()),
@@ -90,8 +79,8 @@ export function mountPlay(host: HTMLElement, options: PlayOptions): () => void {
       try {
         watcher = createWatcher({ proto, seed, personaId: watch })
       } catch (error) {
-        // The real watcher arrives with the panel. Until then, say so and let
-        // the child play.
+        // A watcher that cannot start (an unknown persona id) throws; say so
+        // in the strip and let the child play.
         status.textContent = `Cannot watch ${watch}: ${error instanceof Error ? error.message : 'unavailable'}`
         console.warn('watch mode unavailable', error)
       }

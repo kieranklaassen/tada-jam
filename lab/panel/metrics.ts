@@ -32,7 +32,7 @@ export function round6(x: number): number {
   return Math.round(x * 1e6) / 1e6
 }
 
-function mean(values: readonly number[]): number {
+export function mean(values: readonly number[]): number {
   return values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length
 }
 

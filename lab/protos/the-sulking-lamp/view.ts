@@ -1,6 +1,7 @@
 // Flat shapes from the snapshot, nothing else. Words are allowed in the lab.
 
 import { circle, clear, label, roundRect } from '../../kit/draw.ts'
+import { STAGE, TRAY } from './sim.ts'
 import type { LampSnapshot } from './sim.ts'
 
 const COLORS = ['#d9534f', '#3b82c4', '#f0b429', '#3fa66b']
@@ -45,8 +46,8 @@ export function draw(ctx: CanvasRenderingContext2D, s: LampSnapshot): void {
     label(ctx, c.label, c.x + c.w / 2, c.y + c.h / 2, { align: 'center', baseline: 'middle', size: 24, color: CHIP_INK[c.state] })
   }
 
-  roundRect(ctx, 60, 200, 1060, 400, 24, { fill: '#3b3748', stroke: '#6f6a80', width: 4 })
-  roundRect(ctx, 60, 630, 1060, 170, 24, { fill: '#2f2c3a', stroke: '#524d63', width: 3 })
+  roundRect(ctx, STAGE.x, STAGE.y, STAGE.w, STAGE.h, 24, { fill: '#3b3748', stroke: '#6f6a80', width: 4 })
+  roundRect(ctx, TRAY.x, TRAY.y, TRAY.w, TRAY.h, 24, { fill: '#2f2c3a', stroke: '#524d63', width: 3 })
   label(ctx, 'stage', 84, 232, { size: 22, color: '#8a84a0' })
   label(ctx, 'tray', 84, 660, { size: 22, color: '#8a84a0' })
 

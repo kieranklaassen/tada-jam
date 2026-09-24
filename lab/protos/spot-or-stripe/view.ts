@@ -9,6 +9,9 @@ const SKIN: Record<string, string> = { b: '#ecdcb6', t: '#e2cf9f', l: '#d8c393' 
 const DYE = '#3a2a1e'
 const WET = '#3b6fd6'
 
+// The flat colour of one cell, or undefined where there is nothing to draw.
+const colourAt = (dye: string, skin: string, i: number) => (dye[i] === '#' ? DYE : dye[i] === 'o' ? WET : dye[i] === '.' ? SKIN[skin[i]!] : undefined)
+
 const STATUS: Record<SpotSnapshot['phase'], string> = {
   blank: 'tap to drop dye, drag to lay a row of drops',
   wet: 'the dye waits - press GO when the plan is ready',
@@ -25,10 +28,9 @@ export function draw(ctx: CanvasRenderingContext2D, snapshot: SpotSnapshot): voi
     const skin = snapshot.layout[y]!
     let x = 0
     while (x < dye.length) {
-      const colour = dye[x] === '#' ? DYE : dye[x] === 'o' ? WET : dye[x] === '.' ? SKIN[skin[x]!] : undefined
+      const colour = colourAt(dye, skin, x)
       let end = x + 1
-      const colourAt = (i: number) => (dye[i] === '#' ? DYE : dye[i] === 'o' ? WET : dye[i] === '.' ? SKIN[skin[i]!] : undefined)
-      while (end < dye.length && colourAt(end) === colour) end++
+      while (end < dye.length && colourAt(dye, skin, end) === colour) end++
       if (colour) rect(ctx, x * CELL, y * CELL, (end - x) * CELL, CELL, colour)
       x = end
     }

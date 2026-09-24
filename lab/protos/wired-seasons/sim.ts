@@ -52,7 +52,7 @@ const SHADE_REACH = 320
 const SHADE_GAP = 10
 const DIM_LIMIT = 2
 const GROW_TICKS = 18
-const FALL_TICKS = 36
+export const FALL_TICKS = 36
 const HINT_AFTER_TICKS = 150
 const MAX_EVENTS = 64
 const COVER = 85
@@ -171,8 +171,9 @@ export const createSim: CreateSim<WiredSnapshot> = (config): Sim<WiredSnapshot> 
     order.sort((a, b) => a.key - b.key)
     for (const { def } of order) pictures.push(makePicture(def, def.name === 'windswept' && prng() < 0.5))
   }
-  let pictureIndex = 0
+  // Each match moves the child on to the next picture, so this counts both.
   let matches = 0
+  const currentPicture = (): Picture | null => (pictures.length > 0 ? pictures[matches % pictures.length]! : null)
 
   const limbs = new Map<number, Limb>()
   const fallen: WiredSnapshot['fallen'] = []
@@ -205,7 +206,7 @@ export const createSim: CreateSim<WiredSnapshot> = (config): Sim<WiredSnapshot> 
   }
 
   // What the layout pass measured; observe() and the picture check read it.
-  const stats = { height: 0, width: 0, lean: 0, tips: 1, lit: 1, coverage: 0, outside: 0 }
+  const stats = { height: 0, width: 0, lean: 0, lit: 1, coverage: 0, outside: 0 }
 
   // Positions, shade, and measurements from the current bends and lengths.
   // Parents come before children in the map, so one pass in order lays it out.
@@ -248,11 +249,10 @@ export const createSim: CreateSim<WiredSnapshot> = (config): Sim<WiredSnapshot> 
     }
     stats.height = GROUND_Y - minY
     stats.width = maxX - minX
-    stats.tips = tips.length
     stats.lean = tips.reduce((sum, t) => sum + t.ex, 0) / tips.length - ROOT_X
     stats.lit = tips.filter((t) => !t.shaded).length / tips.length
 
-    const pic = pictures.length > 0 ? pictures[pictureIndex % pictures.length]! : null
+    const pic = currentPicture()
     if (pic) {
       let covered = 0
       for (const [px, py] of pic.samples) {
@@ -399,7 +399,6 @@ export const createSim: CreateSim<WiredSnapshot> = (config): Sim<WiredSnapshot> 
 
     if (pictures.length > 0 && year >= 3 && limbs.size >= 6 && stats.coverage >= MATCH_COVER && stats.outside <= MATCH_SPILL) {
       matches++
-      pictureIndex++
       emit({ kind: 'hook', name: 'picture' })
       relayout()
     }
@@ -503,7 +502,7 @@ export const createSim: CreateSim<WiredSnapshot> = (config): Sim<WiredSnapshot> 
   }
 
   const snapshot = (): WiredSnapshot => {
-    const pic = pictures.length > 0 ? pictures[pictureIndex % pictures.length]! : null
+    const pic = currentPicture()
     return {
       tick,
       year,

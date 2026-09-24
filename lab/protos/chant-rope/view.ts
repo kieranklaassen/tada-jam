@@ -3,7 +3,8 @@
 // chant bar that says which beat the rope is on. Words are allowed in the lab.
 
 import { circle, clear, label, line, rect, roundRect } from '../../kit/draw.ts'
-import { GROUND_Y, JUMPER_X, LEFT_TURNER, MAX_HANG, RIGHT_TURNER } from './sim.ts'
+import { FIELD_H, FIELD_W } from '../../kit/sim.ts'
+import { CHANT, GROUND_Y, JUMPER_X, LEFT_TURNER, MAX_HANG, RIGHT_TURNER } from './sim.ts'
 import type { ChantRopeSnapshot } from './sim.ts'
 
 const SLOW = '#3b6fb6'
@@ -12,8 +13,8 @@ const HAND_Y = 470
 
 export function draw(ctx: CanvasRenderingContext2D, s: ChantRopeSnapshot): void {
   clear(ctx, '#f3ecdc')
-  rect(ctx, 0, GROUND_Y, 1180, 160, '#cdbf9c')
-  line(ctx, 0, GROUND_Y, 1180, GROUND_Y, '#8a7f6a', 4)
+  rect(ctx, 0, GROUND_Y, FIELD_W, FIELD_H - GROUND_Y, '#cdbf9c')
+  line(ctx, 0, GROUND_Y, FIELD_W, GROUND_Y, '#8a7f6a', 4)
 
   drawTurner(ctx, s, LEFT_TURNER.x + LEFT_TURNER.w / 2, s.turners[0], -1)
   drawTurner(ctx, s, RIGHT_TURNER.x + RIGHT_TURNER.w / 2, s.turners[1], 1)
@@ -36,11 +37,10 @@ export function draw(ctx: CanvasRenderingContext2D, s: ChantRopeSnapshot): void 
   drawJumper(ctx, s)
 
   // The chant bar: which beat, and a fill for how far through it.
-  const names = ['slow', 'slow', 'quick', 'quick']
-  names.forEach((name, i) => {
+  CHANT.forEach((name, i) => {
     const x = 330 + i * 130
     const active = s.turning ? s.beat === i : s.demoBeat === i
-    roundRect(ctx, x, 40, 120, 56, 14, { fill: active ? (i >= 2 ? QUICK : SLOW) : '#e4dccb', stroke: '#8a7f6a', width: 3 })
+    roundRect(ctx, x, 40, 120, 56, 14, { fill: active ? (name === 'quick' ? QUICK : SLOW) : '#e4dccb', stroke: '#8a7f6a', width: 3 })
     label(ctx, name, x + 60, 68, { align: 'center', baseline: 'middle', size: 26, color: active ? '#fff' : '#8a7f6a' })
     if (active && s.turning) rect(ctx, x, 96, 120 * (s.beatTick / s.beatLen), 8, '#2b2620')
   })

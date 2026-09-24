@@ -5,7 +5,7 @@
 import { createRng, int } from '../../kit/rng.ts'
 import type { Affordance, CreateSim, ProtoMeta } from '../../kit/sim.ts'
 
-export const SIGNATURES = 12
+const SIGNATURES = 12
 
 export const meta: ProtoMeta = {
   key: 'noise',

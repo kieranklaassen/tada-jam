@@ -59,8 +59,8 @@ const COL_X: Record<number, readonly number[]> = {
   5: [330, 460, 590, 720, 850],
 }
 const MAX_QUEUE = 8
-const SPLASH_T = 16
-const NOPE_T = 10
+export const SPLASH_T = 16
+export const NOPE_T = 10
 const HINT_AFTER_TICKS = 150
 const MAX_EVENTS = 64
 
@@ -402,7 +402,7 @@ export const createSim: CreateSim<StonesSnapshot> = (config): Sim<StonesSnapshot
     tick++
     idle++
     // Stones slide to their column when the river widens.
-    const targets = stonePositions(cols)
+    const targets = GEOM[cols]!.pos
     targets.forEach((t, id) => {
       const s = stones[id]!
       s.x = Math.abs(t.x - s.x) < 0.5 ? t.x : s.x + (t.x - s.x) * 0.18

@@ -15,11 +15,14 @@ import { loadCatalog } from './catalog.ts'
 import type { LoadedCatalog } from './catalog.ts'
 import { ENGINE_IDS } from './engines.ts'
 import { ageBucket } from './types.ts'
-import type { IdeaRecord } from './types.ts'
-import { AGE_BUCKETS } from './validate.ts'
+import type { IdeaRecord, IdeaStatus } from './types.ts'
+import { AGE_BUCKETS, ENGINE_SET, percent } from './validate.ts'
 import type { Problem } from './validate.ts'
 
 const NO_ENGINE = '(no engine)'
+
+// A record's status, or 'none' when it has no decision.
+type StatusKey = IdeaStatus | 'none'
 
 // Plain code-unit order: the same on every machine, unlike localeCompare.
 function byId(a: IdeaRecord, b: IdeaRecord): number {
@@ -31,16 +34,12 @@ function oneLine(text: string): string {
   return text.replace(/\s+/g, ' ').trim()
 }
 
-function percent(part: number, whole: number): string {
-  return whole === 0 ? '0.0%' : `${((part * 100) / whole).toFixed(1)}%`
-}
-
-function statusOf(record: IdeaRecord): string {
+function statusOf(record: IdeaRecord): StatusKey {
   return record.decision?.status ?? 'none'
 }
 
 function knownEngine(record: IdeaRecord): boolean {
-  return record.engine !== null && (ENGINE_IDS as readonly string[]).includes(record.engine)
+  return record.engine !== null && ENGINE_SET.has(record.engine)
 }
 
 function bandText(band: readonly [number, number]): string {
@@ -70,7 +69,7 @@ function renderIdea(record: IdeaRecord): string[] {
 
 function renderSummary(sorted: readonly IdeaRecord[], problems: readonly Problem[] | undefined): string[] {
   const built = sorted.filter((r) => statusOf(r) === 'built')
-  const count = (status: string) => sorted.filter((r) => statusOf(r) === status).length
+  const count = (status: StatusKey) => sorted.filter((r) => statusOf(r) === status).length
   const physical = sorted.filter((r) => r.lens === 'physical-toy')
   const builtPhysical = built.filter((r) => r.lens === 'physical-toy')
 
@@ -99,7 +98,7 @@ function renderSummary(sorted: readonly IdeaRecord[], problems: readonly Problem
   const unknown = sorted.filter((r) => !knownEngine(r))
   if (unknown.length > 0) groups.push([NO_ENGINE, unknown])
   for (const [name, members] of groups) {
-    const of = (status: string) => members.filter((r) => statusOf(r) === status).length
+    const of = (status: StatusKey) => members.filter((r) => statusOf(r) === status).length
     lines.push(`| ${name} | ${members.length} | ${of('built')} | ${of('reserve')} | ${of('cut')} |`)
   }
 

@@ -97,7 +97,7 @@ export const createSim: CreateSim<BalloonSnapshot> = (config): Sim<BalloonSnapsh
   let wind = 0
   let windTarget = 0
   let pending: SimEvent[] = []
-  let trail: Array<{ x: number; y: number }> = []
+  const trail: Array<{ x: number; y: number }> = []
   let tick = 0
   let idleTicks = 0
   let bats = 0
@@ -290,7 +290,7 @@ export const createSim: CreateSim<BalloonSnapshot> = (config): Sim<BalloonSnapsh
 
     if (tick % 2 === 0) {
       trail.push({ x: b.x, y: b.y })
-      if (trail.length > TRAIL_LEN) trail = trail.slice(trail.length - TRAIL_LEN)
+      if (trail.length > TRAIL_LEN) trail.shift()
     }
   }
 

@@ -67,7 +67,7 @@ export function defaultLocations(): Locations {
 
 // The prototype folders under protosDir that have a meta.ts, never `example`.
 export function protoKeys(protosDir: string): string[] {
-  return listProtoKeys(protosDir, join(protosDir, '.no-example')).filter((k) => k !== 'example')
+  return listProtoKeys(protosDir).filter((k) => k !== 'example')
 }
 
 export function collectPrototypes(locations: Locations, catalog: readonly IdeaRecord[]): { protos: Prototype[]; problems: string[] } {

@@ -253,8 +253,14 @@ export function clip(text: string, max: number): string {
   return one.length <= max ? one : `${one.slice(0, max - 3)}...`
 }
 
+// True for a hook verdict of the VERDICT_INCONCLUSIVE kind (metrics.ts). A prefix
+// match, so a report written under older wording still counts.
+export function isInconclusive(verdict: string): boolean {
+  return verdict.startsWith('inconclusive')
+}
+
 export function shortVerdict(verdict: string): string {
-  if (verdict.startsWith('inconclusive')) return 'inconclusive'
+  if (isInconclusive(verdict)) return 'inconclusive'
   if (verdict.startsWith('n/a')) return 'n/a'
   return verdict
 }
@@ -318,6 +324,19 @@ export function clarityReason(clarity: ClarityMeasure): string {
   return reasons.length > 0 ? reasons.join('; ') : 'the cue-blind first ten seconds read low'
 }
 
+// Runs (of the gate's `runs`) that start session 3, 4, and 5.
+export function startCounts(report: PanelReport): { s3: number; s4: number; s5: number } {
+  const share = report.measures.targetPanel.returnShare
+  const runs = report.gate.runs
+  return { s3: Math.round(share.session3 * runs), s4: Math.round(share.session4 * runs), s5: Math.round(share.session5 * runs) }
+}
+
+// Whole runs still needed to reach the depth gate line. The epsilon absorbs float
+// error so a share exactly on the line does not ask for one more run.
+export function runsShortOfGate(gate: { started: number; runs: number }): number {
+  return Math.max(0, Math.ceil(T.GATE_SHARE * gate.runs - 1e-9) - gate.started)
+}
+
 function hookLines(report: PanelReport): HookLine[] {
   const { hooks } = report
   if (hooks.status === 'none declared') return []
@@ -347,7 +366,7 @@ export function summarize(proto: Prototype): Summary {
     started: report.gate.started,
     runs,
     shares: { s3: share.session3, s4: share.session4, s5: share.session5 },
-    counts: { s3: Math.round(share.session3 * runs), s4: Math.round(share.session4 * runs), s5: Math.round(share.session5 * runs) },
+    counts: startCounts(report),
     play5: measures.play5.change,
     aimsAdopted: measures.aims.adopted,
     aimsProgress: measures.aims.madeProgress,

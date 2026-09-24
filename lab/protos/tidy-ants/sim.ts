@@ -10,7 +10,7 @@
 // or performance.now. It reads a seeded rng and counts ticks, nothing else.
 // State changes only inside step() and pointer().
 
-import { createRng, int } from '../../kit/rng.ts'
+import { createRng, int, pick } from '../../kit/rng.ts'
 import type { Rng } from '../../kit/rng.ts'
 import type { Affordance, CreateSim, Observation, PointerInput, Sim, SimEvent } from '../../kit/sim.ts'
 
@@ -95,7 +95,6 @@ interface Ant {
 
 interface Touch {
   kind: 'sand' | 'cup'
-  cup: number
   x: number
   y: number
   startX: number
@@ -169,7 +168,7 @@ export const createSim: CreateSim<TidySnapshot> = (config): Sim<TidySnapshot> =>
     const c = int(rng, 0, COLS - 1)
     const r = int(rng, 0, ROWS - 1)
     const at = cellCentre(c, r)
-    const dir = DIRS[int(rng, 0, 7)]!
+    const dir = pick(rng, DIRS)
     ants.push({ c, r, x: at.x, y: at.y, dx: dir[0], dy: dir[1], carry: -1, carryMoves: 0, phase: i % MOVE_TICKS })
   }
 
@@ -224,7 +223,7 @@ export const createSim: CreateSim<TidySnapshot> = (config): Sim<TidySnapshot> =>
           if (colourAt[idx(c, r)]! < 0) options.push(idx(c, r))
         }
       }
-      if (options.length > 0) return options[int(rng, 0, options.length - 1)]!
+      if (options.length > 0) return pick(rng, options)
     }
     return -1
   }
@@ -298,6 +297,27 @@ export const createSim: CreateSim<TidySnapshot> = (config): Sim<TidySnapshot> =>
     const f = all === 0 ? 0 : (same / all) * Math.min(1, same / HEAP_FULL)
     if (seedNear(c, r, colour)) return Math.max(f, SEED_SETTLED)
     return hasSeed(colour) ? f * FAR_FROM_SEED : f
+  }
+
+  // settled() reads only the grid, so its answer for the bead at a cell holds
+  // until the next putBead/takeBead bumps `version`. The ants ask about the
+  // same cells again and again between changes, so remember the answers. Only
+  // for the bead that sits at (c, r): the cell alone is the key. -1 marks a
+  // cell not asked yet (settled() is never negative).
+  const settledCache = new Float64Array(COLS * ROWS)
+  let settledVersion = -1
+  const settledHere = (c: number, r: number, colour: number): number => {
+    if (settledVersion !== version) {
+      settledCache.fill(-1)
+      settledVersion = version
+    }
+    const i = idx(c, r)
+    let f = settledCache[i]!
+    if (f < 0) {
+      f = settled(c, r, colour)
+      settledCache[i] = f
+    }
+    return f
   }
 
   let cachedStats: Stats | null = null
@@ -383,14 +403,14 @@ export const createSim: CreateSim<TidySnapshot> = (config): Sim<TidySnapshot> =>
   }
 
   const randomStep = (a: Ant) => {
-    const [dx, dy] = DIRS[int(rng, 0, 7)]!
+    const [dx, dy] = pick(rng, DIRS)
     stepAnt(a, dx, dy)
   }
 
   const wander = (a: Ant) => {
     // Mostly straight on, sometimes a new heading.
     if (rng() < 0.3) {
-      const [dx, dy] = DIRS[int(rng, 0, 7)]!
+      const [dx, dy] = pick(rng, DIRS)
       a.dx = dx
       a.dy = dy
     }
@@ -411,7 +431,7 @@ export const createSim: CreateSim<TidySnapshot> = (config): Sim<TidySnapshot> =>
         const i = idx(c, r)
         const colour = colourAt[i]!
         if (colour < 0 || seedAt[i]) continue
-        if (settled(c, r, colour) >= LONE) continue
+        if (settledHere(c, r, colour) >= LONE) continue
         const d = (c - a.c) ** 2 + (r - a.r) ** 2
         if (d < bestD) {
           bestD = d
@@ -459,7 +479,7 @@ export const createSim: CreateSim<TidySnapshot> = (config): Sim<TidySnapshot> =>
     if (a.carry < 0) {
       const colour = colourAt[i]!
       if (colour >= 0 && !seedAt[i]) {
-        const f = settled(a.c, a.r, colour)
+        const f = settledHere(a.c, a.r, colour)
         const q = K_PICK / (K_PICK + f)
         if (rng() < q * q) {
           a.carry = colour
@@ -498,6 +518,9 @@ export const createSim: CreateSim<TidySnapshot> = (config): Sim<TidySnapshot> =>
   // ---- child input -------------------------------------------------------
 
   const cupCount = () => (pinkUnlocked ? 6 : 5)
+
+  // The colour a cup holds: -1 for the mix cup (index 0), pink for the last.
+  const cupColour = (i: number) => (i === 0 ? -1 : i === 5 ? PINK : i - 1)
 
   // The nearest cup under a finger, with slop. Index 0 is the mix cup.
   const cupAt = (x: number, y: number): number => {
@@ -558,13 +581,13 @@ export const createSim: CreateSim<TidySnapshot> = (config): Sim<TidySnapshot> =>
       if (!finite) return
       const cup = cupAt(x, y)
       if (cup >= 0) {
-        inHand = cup === 0 ? -1 : cup === 5 ? PINK : cup - 1
-        touches.set(id, { kind: 'cup', cup, x, y, startX: x, startY: y, startTick: tick, moved: false, lastPour: -1 })
+        inHand = cupColour(cup)
+        touches.set(id, { kind: 'cup', x, y, startX: x, startY: y, startTick: tick, moved: false, lastPour: -1 })
         emit({ kind: 'state', name: 'choose' })
       } else if (inflated(SHAKE, HIT_SLOP, x, y)) shake()
       else if (inflated(TIP, HIT_SLOP, x, y)) tip()
       else if (inflated(SAND, HIT_SLOP, x, y)) {
-        touches.set(id, { kind: 'sand', cup: -1, x, y, startX: x, startY: y, startTick: tick, moved: false, lastPour: -1 })
+        touches.set(id, { kind: 'sand', x, y, startX: x, startY: y, startTick: tick, moved: false, lastPour: -1 })
       }
       return
     }
@@ -630,7 +653,7 @@ export const createSim: CreateSim<TidySnapshot> = (config): Sim<TidySnapshot> =>
     const s = stats()
     const list: Affordance[] = []
     for (let i = 0; i < cupCount(); i++) {
-      const selected = (i === 0 && inHand < 0) || (i > 0 && inHand === (i === 5 ? PINK : i - 1))
+      const selected = cupColour(i) === inHand
       list.push({ ...cupRect(i), kind: 'tap', salience: selected ? 0.2 : 0.35 })
     }
     list.push({ ...SHAKE, kind: 'tap', salience: s.stage === 'tidy' ? 0.5 : 0.25 })
@@ -697,7 +720,7 @@ export const createSim: CreateSim<TidySnapshot> = (config): Sim<TidySnapshot> =>
     }
     const cups: TidySnapshot['cups'] = []
     for (let i = 0; i < cupCount(); i++) {
-      const colour = i === 0 ? -1 : i === 5 ? PINK : i - 1
+      const colour = cupColour(i)
       cups.push({
         ...cupRect(i),
         name: colour < 0 ? 'mix' : COLOUR_NAMES[colour]!,

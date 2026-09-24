@@ -3,7 +3,8 @@
 // and holds no state. Words and numbers are allowed in the lab.
 
 import { circle, clear, label, line, rect, roundRect } from '../../kit/draw.ts'
-import { GROUND_Y, HILL_START, HILL_TOP, ISLAND, LEGS_PAD, LETGO_PAD, PIVOT, POND_START, SAND_END } from './sim.ts'
+import { FIELD_W } from '../../kit/sim.ts'
+import { GROUND_Y, HILL_START, HILL_TOP, ISLAND, LEGS_PAD, LETGO_PAD, MAX_ARC, PIVOT, POND_START, SAND_END } from './sim.ts'
 import type { SwingSnapshot } from './sim.ts'
 
 const PLACE_WORDS = { sand: 'sandpit', lawn: 'lawn', pond: 'splash! pond', hill: 'the far hill!', cloud: 'toes in clouds!' }
@@ -12,7 +13,7 @@ export function draw(ctx: CanvasRenderingContext2D, s: SwingSnapshot): void {
   clear(ctx, '#cfe8f7')
 
   // Ground, in the order the rider meets it: sand, lawn, pond, hill.
-  rect(ctx, 0, GROUND_Y, 1180, 90, '#8cc46a')
+  rect(ctx, 0, GROUND_Y, FIELD_W, 90, '#8cc46a')
   rect(ctx, 0, GROUND_Y, SAND_END, 90, '#e8d6a0')
   rect(ctx, POND_START, GROUND_Y, HILL_START - POND_START, 90, '#5aa9d6')
   roundRect(ctx, HILL_START, HILL_TOP, 180, 200, 50, '#5f9e4a')
@@ -63,7 +64,7 @@ export function draw(ctx: CanvasRenderingContext2D, s: SwingSnapshot): void {
 
   // How wide the swing is, and the last place the rider came down.
   rect(ctx, 40, 40, 300, 22, '#e4dccb')
-  rect(ctx, 40, 40, 300 * Math.min(1, s.amp / 1.3), 22, '#3fa66b')
+  rect(ctx, 40, 40, 300 * Math.min(1, s.amp / MAX_ARC), 22, '#3fa66b')
   label(ctx, 'swing width', 40, 92, { size: 22, color: '#5d5443' })
   label(ctx, s.lastOutcome === 'none' ? 'flights 0' : `flights ${s.flights}   last: ${s.lastOutcome}`, 40, 124, { size: 22, color: '#5d5443' })
 }

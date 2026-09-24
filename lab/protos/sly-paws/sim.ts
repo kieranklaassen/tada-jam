@@ -8,7 +8,7 @@
 // Pure and deterministic: no DOM, no clocks, no Math.random. Randomness comes
 // from the seeded rng: the roster at the start, then four draws per round.
 
-import { createRng } from '../../kit/rng.ts'
+import { chance, createRng, int } from '../../kit/rng.ts'
 import type { Rng } from '../../kit/rng.ts'
 import type { Affordance, CreateSim, Observation, PointerInput, Sim, SimEvent } from '../../kit/sim.ts'
 
@@ -187,7 +187,7 @@ export const createSim: CreateSim<SlySnapshot> = (config): Sim<SlySnapshot> => {
   // Three of the five, in a seeded order.
   const deck = [...POOL]
   for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1))
+    const j = int(rng, 0, i)
     const t = deck[i]!
     deck[i] = deck[j]!
     deck[j] = t
@@ -247,10 +247,10 @@ export const createSim: CreateSim<SlySnapshot> = (config): Sim<SlySnapshot> => {
     const mH = myHide!
     const mG = myGuess!
     const c = current()
-    const fbH: Paw = rng() < 0.5 ? 0 : 1
-    const fbG: Paw = rng() < 0.5 ? 0 : 1
-    const slipH = rng() < NOISE
-    const slipG = rng() < NOISE
+    const fbH: Paw = chance(rng, 0.5) ? 0 : 1
+    const fbG: Paw = chance(rng, 0.5) ? 0 : 1
+    const slipH = chance(rng, NOISE)
+    const slipG = chance(rng, NOISE)
     const cH = slipH ? fbH : c.hide(history, fbH)
     const g = c.guess(history, fbG)
     const cG = slipG ? fbG : g.paw
@@ -363,6 +363,7 @@ export const createSim: CreateSim<SlySnapshot> = (config): Sim<SlySnapshot> => {
   const observe = (): Observation => {
     const events = pending
     pending = []
+    const g = grip()
     const edge = recent.length === 0 ? 0 : recent.reduce((a, b) => a + b, 0) / recent.length
     let swaps = 0
     for (let i = 1; i < hideLog.length; i++) if (hideLog[i] !== hideLog[i - 1]) swaps++
@@ -372,11 +373,11 @@ export const createSim: CreateSim<SlySnapshot> = (config): Sim<SlySnapshot> => {
       signature:
         lastOutcome === 'fresh'
           ? `${current().id}-fresh`
-          : `${current().id}-${lastOutcome === 'both' || lastOutcome === 'neither' ? 'wash' : lastOutcome}-${grip()}`,
+          : `${current().id}-${lastOutcome === 'both' || lastOutcome === 'neither' ? 'wash' : lastOutcome}-${g}`,
       features: {
         edge,
         switchRate: hideLog.length < 2 ? 0 : swaps / (hideLog.length - 1),
-        grip: grip(),
+        grip: g,
         dodges: totalDodges,
         rounds: totalRounds,
       },

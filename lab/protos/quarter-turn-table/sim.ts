@@ -15,7 +15,7 @@
 // Pure and deterministic: no DOM, no clocks, no Math.random. Randomness comes
 // from createRng(config.seed); state changes only inside step() and pointer().
 
-import { between, createRng, int } from '../../kit/rng.ts'
+import { between, createRng, int, pick } from '../../kit/rng.ts'
 import type { Rng } from '../../kit/rng.ts'
 import { FIELD_H, FIELD_W } from '../../kit/sim.ts'
 import type { Affordance, CreateSim, Observation, PointerInput, Sim, SimConfig, SimEvent } from '../../kit/sim.ts'
@@ -158,7 +158,7 @@ function startingArrows(rng: Rng): number[] {
     const closed = cyclesOf(nextOf(arrows))
     if (closed.length === 0) break
     const loop = closed[0]!
-    const cell = loop[int(rng, 0, loop.length - 1)]!
+    const cell = pick(rng, loop)
     arrows[cell] = (arrows[cell]! + 1) & 3
   }
   return arrows
@@ -227,6 +227,13 @@ export interface TableSnapshot {
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n))
+
+// A cheap squared-distance test that runs before the exact Math.hypot check.
+// The margin is far above rounding error, so it only rejects what the exact
+// check would reject too; anything near the edge falls through to it.
+const beyond = (dx: number, dy: number, reach: number): boolean => dx * dx + dy * dy > reach * reach * 1.000001
+// No point of a flipper is farther than this from its pivot, plus the ball.
+const FLIP_FAR = FLIP_LEN + FLIP_R + BALL_R
 
 export function buildSim(config: SimConfig, setup: Setup = {}): Sim<TableSnapshot> {
   const rng = createRng(config.seed)
@@ -326,8 +333,9 @@ export function buildSim(config: SimConfig, setup: Setup = {}): Sim<TableSnapsho
     const qy = ay + ey * t
     let dx = ball.x - qx
     let dy = ball.y - qy
-    let dist = Math.hypot(dx, dy)
     const reach = BALL_R + rad
+    if (beyond(dx, dy, reach)) return false
+    let dist = Math.hypot(dx, dy)
     if (dist >= reach) return false
     if (dist < 1e-6) {
       dx = 0
@@ -349,6 +357,8 @@ export function buildSim(config: SimConfig, setup: Setup = {}): Sim<TableSnapsho
   const hitFlipper = (ball: Ball, f: Flipper, s: number): boolean => {
     const sign = f.side === 0 ? 1 : -1
     const pivot = PIVOTS[f.side]
+    // A ball far from the pivot cannot reach the flipper, so skip the trig.
+    if (beyond(ball.x - pivot.x, ball.y - pivot.y, FLIP_FAR)) return false
     const now = f.prev + (f.angle - f.prev) * (s / SUB)
     const before = f.prev + (f.angle - f.prev) * ((s - 1) / SUB)
     return touch(
@@ -381,8 +391,9 @@ export function buildSim(config: SimConfig, setup: Setup = {}): Sim<TableSnapsho
     const b = bumpers[i]!
     const dx = ball.x - b.x
     const dy = ball.y - b.y
-    const dist = Math.hypot(dx, dy)
     const reach = BUMPER_R + BALL_R
+    if (beyond(dx, dy, reach)) return false
+    const dist = Math.hypot(dx, dy)
     if (dist >= reach) return false
     const nx = dist > 1e-6 ? dx / dist : 0
     const ny = dist > 1e-6 ? dy / dist : -1
@@ -512,16 +523,26 @@ export function buildSim(config: SimConfig, setup: Setup = {}): Sim<TableSnapsho
     return list
   }
 
+  // What the arrows alone make of the table. They change only in turn(), which
+  // counts turnsTotal, so the last result is good until that count moves.
+  let lattice: { at: number; closed: number[][]; next: number[]; table: string } | null = null
+  const latticeNow = () => {
+    if (lattice === null || lattice.at !== turnsTotal) {
+      const next = nextOf(bumpers.map(arrowOf))
+      const closed = cyclesOf(next).filter((c) => c.length >= 4)
+      lattice = { at: turnsTotal, closed, next, table: tableClass(closed, longestWalk(next)) }
+    }
+    return lattice
+  }
+
   const analysis = () => {
-    const arrowsNow = bumpers.map(arrowOf)
-    const next = nextOf(arrowsNow)
-    const closed = cyclesOf(next).filter((c) => c.length >= 4)
+    const { closed, next, table } = latticeNow()
     const trapped = balls.filter((b) => b.trapped).length
     const riding = balls.some((b) => b.chain >= RIDE_AT)
     return {
       closed,
       next,
-      table: tableClass(closed, longestWalk(next)),
+      table,
       ballState: trapped >= 2 ? 'twin' : trapped === 1 ? 'trapped' : riding ? 'riding' : 'free',
     }
   }

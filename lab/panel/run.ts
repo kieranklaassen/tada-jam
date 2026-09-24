@@ -13,6 +13,7 @@ import {
   clarityMeasure,
   gate,
   hookVerdict,
+  mean,
   notApplicable,
   play5Change,
   returnShares,
@@ -74,12 +75,10 @@ export function playPersonas(proto: PanelProto, personas: readonly Persona[], ma
 
 function playAggregate(runs: readonly RunResult[]) {
   const changes = runs.map(play5Change)
-  const mean = (f: (c: (typeof changes)[number]) => number): number =>
-    changes.length === 0 ? 0 : changes.reduce((a, c) => a + f(c), 0) / changes.length
   return {
-    newSignaturesPer100Actions: mean((c) => c.newSignaturesPer100Actions),
-    kindGrowth: mean((c) => c.kindGrowth),
-    change: mean((c) => c.change),
+    newSignaturesPer100Actions: mean(changes.map((c) => c.newSignaturesPer100Actions)),
+    kindGrowth: mean(changes.map((c) => c.kindGrowth)),
+    change: mean(changes.map((c) => c.change)),
   }
 }
 
@@ -87,7 +86,7 @@ function measuresFor(runs: readonly RunResult[], clarity: readonly ClarityResult
   const shares = returnShares(runs)
   return {
     runs: runs.length,
-    sessionsStartedMean: runs.length === 0 ? 0 : runs.reduce((a, r) => a + r.reached, 0) / runs.length,
+    sessionsStartedMean: mean(runs.map((r) => r.reached)),
     returnShare: { session3: shares.s3, session4: shares.s4, session5: shares.s5 },
     play5: playAggregate(runs),
     aims: aimSummary(runs),
@@ -287,19 +286,21 @@ export async function runKeys(keys: readonly string[], options: RunKeysOptions):
   return reports
 }
 
+function toSeed(text: string | undefined): number {
+  const seed = Number(text)
+  if (!Number.isInteger(seed)) throw new Error('--seed needs a whole number')
+  return seed
+}
+
 export function parseArgs(argv: readonly string[]): { keys: string[]; seed: number } {
   const keys: string[] = []
   let seed = DEFAULT_MASTER_SEED
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!
     if (arg === '--seed') {
-      const next = Number(argv[++i])
-      if (!Number.isInteger(next)) throw new Error('--seed needs a whole number')
-      seed = next
+      seed = toSeed(argv[++i])
     } else if (arg.startsWith('--seed=')) {
-      const next = Number(arg.slice('--seed='.length))
-      if (!Number.isInteger(next)) throw new Error('--seed needs a whole number')
-      seed = next
+      seed = toSeed(arg.slice('--seed='.length))
     } else if (arg.startsWith('--')) {
       throw new Error(`unknown option: ${arg}`)
     } else {

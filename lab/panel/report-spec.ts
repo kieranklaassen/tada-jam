@@ -14,9 +14,12 @@ import {
   clip,
   cmp,
   fixed,
+  isInconclusive,
   pct,
   plural,
   points,
+  runsShortOfGate,
+  startCounts,
   ticksText,
   withFinalNewline,
 } from './report-shape.ts'
@@ -66,11 +69,7 @@ function measureText(clarity: ClarityMeasure): string {
 export function findingsLines(report: PanelReport, compact = false): string[] {
   const measures = report.measures.targetPanel
   const runs = report.gate.runs
-  const counts = {
-    s3: Math.round(measures.returnShare.session3 * runs),
-    s4: Math.round(measures.returnShare.session4 * runs),
-    s5: Math.round(measures.returnShare.session5 * runs),
-  }
+  const counts = startCounts(report)
   const lines: string[] = []
   lines.push(`_${GUESS_NOTE} Target panel: ${panelText(report.targetPanel)} (${plural(runs, 'run')}). Thresholds ${report.thresholdsVersion}, master seed ${report.seed}._`, '')
   lines.push(
@@ -127,9 +126,8 @@ export function weaknessLines(report: PanelReport): string[] {
   const runs = report.gate.runs
   const lines: string[] = []
   if (!report.gate.pass) {
-    const needed = Math.ceil(T.GATE_SHARE * runs - 1e-9)
     lines.push(
-      `- Fails the depth gate: ${report.gate.started} of ${runs} target-panel runs (${pct(report.gate.share)}) start session ${T.GATE_SESSION}, ${points(T.GATE_SHARE - report.gate.share)} short of the ${pct(T.GATE_SHARE)} line (${plural(Math.max(0, needed - report.gate.started), 'more run')} needed).`,
+      `- Fails the depth gate: ${report.gate.started} of ${runs} target-panel runs (${pct(report.gate.share)}) start session ${T.GATE_SESSION}, ${points(T.GATE_SHARE - report.gate.share)} short of the ${pct(T.GATE_SHARE)} line (${plural(runsShortOfGate(report.gate), 'more run')} needed).`,
     )
   }
   if (report.gate.pass && measures.clarity.flag === 'low') {
@@ -140,7 +138,7 @@ export function weaknessLines(report: PanelReport): string[] {
   }
   const { hooks } = report
   if (hooks.status === 'ran') {
-    const inconclusive = hooks.declared.filter((h) => (hooks.perHook?.[h]?.verdict ?? '').startsWith('inconclusive'))
+    const inconclusive = hooks.declared.filter((h) => isInconclusive(hooks.perHook?.[h]?.verdict ?? ''))
     if (inconclusive.length > 0) {
       lines.push(`- Hook ablation says little for ${inconclusive.map((h) => `\`${h}\``).join(', ')}: removing ${inconclusive.length === 1 ? 'it' : 'them'} changed nothing the personas can register.`)
     }
@@ -189,13 +187,7 @@ export function fillSpec(spec: string, report: PanelReport, form: SpecForm = 'au
   const withFindings = [...lines.slice(0, start + 1), ...findingsLines(report, compact), ...lines.slice(end)]
   const heading = withFindings.findIndex((l) => l.trimEnd() === WEAKNESSES_HEADING)
   if (heading < 0) throw new Error(`SPEC.md for ${report.key} needs a "${WEAKNESSES_HEADING}" section`)
-  let next = withFindings.length
-  for (let i = heading + 1; i < withFindings.length; i++) {
-    if (/^## /.test(withFindings[i]!)) {
-      next = i
-      break
-    }
-  }
+  const next = heading + 1 + sectionBody(withFindings, WEAKNESSES_HEADING).length
   const out = [
     ...withFindings.slice(0, heading + 1),
     '',

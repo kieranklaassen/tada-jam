@@ -21,10 +21,12 @@ import {
   dominantText,
   fixed,
   hooksText,
+  isInconclusive,
   pct,
   plural,
   points,
   rankByBucket,
+  runsShortOfGate,
   summarize,
   table,
   withFinalNewline,
@@ -40,11 +42,6 @@ function nearTheGate(summaries: readonly Summary[]): Summary[] {
     .filter((s) => !s.pass)
     .sort((a, b) => b.shares.s3 - a.shares.s3 || cmp(a.key, b.key))
     .slice(0, NEAR_GATE_COUNT)
-}
-
-// Whole runs still needed to reach the gate line.
-function runsShort(s: Summary): number {
-  return Math.max(0, Math.ceil(T.GATE_SHARE * s.runs - 1e-9) - s.started)
 }
 
 export function buildShortlist(protos: readonly Prototype[]): string {
@@ -133,7 +130,7 @@ export function buildShortlist(protos: readonly Prototype[]): string {
           s.engine,
           `${s.started} of ${s.runs}`,
           pct(s.shares.s3, 1),
-          s.runs === 0 ? 'no runs' : `${points(T.GATE_SHARE - s.shares.s3)} (${plural(runsShort(s), 'run')})`,
+          s.runs === 0 ? 'no runs' : `${points(T.GATE_SHARE - s.shares.s3)} (${plural(runsShortOfGate(s), 'run')})`,
         ]),
         [0, 4, 5],
       ),
@@ -220,7 +217,7 @@ export function buildHooks(protos: readonly Prototype[]): string {
         const verdict = arm?.verdict ?? 'no result'
         if (verdict === VERDICT_NEEDED) tally.needed++
         else if (verdict === VERDICT_NOT_NEEDED) tally.notNeeded++
-        else if (verdict.startsWith('inconclusive')) tally.inconclusive++
+        else if (isInconclusive(verdict)) tally.inconclusive++
         rows.push([
           `\`${proto.key}\``,
           `\`${name}\``,
@@ -267,14 +264,9 @@ export function buildHooks(protos: readonly Prototype[]): string {
 }
 
 // -------------------------------------------------------------- INSTRUMENT
-interface Fixture {
-  meta: PanelProto['meta']
-  createSim: PanelProto['createSim']
-}
-
 // The five fixtures instrument.test.ts freezes the thresholds against.
-const POSITIVE_FIXTURES: readonly Fixture[] = [ladder, emergent]
-const NEGATIVE_FIXTURES: readonly Fixture[] = [constant, noise, scoreOnly]
+const POSITIVE_FIXTURES: readonly PanelProto[] = [ladder, emergent]
+const NEGATIVE_FIXTURES: readonly PanelProto[] = [constant, noise, scoreOnly]
 
 export interface FixtureResult {
   key: string
@@ -296,10 +288,9 @@ export interface InstrumentValidation {
   holds: boolean
 }
 
-function fixtureRuns(fixture: Fixture, masterSeed: number): RunResult[] {
-  const proto: PanelProto = { meta: fixture.meta, createSim: fixture.createSim }
+function fixtureRuns(proto: PanelProto, masterSeed: number): RunResult[] {
   const runs: RunResult[] = []
-  for (const persona of targetPanel(fixture.meta)) {
+  for (const persona of targetPanel(proto.meta)) {
     for (let k = 0; k < T.NOISE_SEEDS; k++) {
       runs.push(playRun({ persona, proto, runSeed: masterRunSeed(masterSeed, k), seedIndex: k }))
     }
@@ -309,7 +300,7 @@ function fixtureRuns(fixture: Fixture, masterSeed: number): RunResult[] {
 
 // Plays the five fixtures with the same functions instrument.test.ts calls.
 export function validateInstrument(seed: number = T.DEFAULT_MASTER_SEED): InstrumentValidation {
-  const cases: { fixture: Fixture; expected: 'pass' | 'fail' }[] = [
+  const cases: { fixture: PanelProto; expected: 'pass' | 'fail' }[] = [
     ...POSITIVE_FIXTURES.map((fixture) => ({ fixture, expected: 'pass' as const })),
     ...NEGATIVE_FIXTURES.map((fixture) => ({ fixture, expected: 'fail' as const })),
   ]

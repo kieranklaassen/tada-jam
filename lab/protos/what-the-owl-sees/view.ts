@@ -2,6 +2,7 @@
 // Nothing shows WHY the owl saw or missed a chick; the rules stay hidden.
 
 import { circle, clear, label, line, rect, roundRect } from '../../kit/draw.ts'
+import { CHICK_R } from './sim.ts'
 import type { OwlSnapshot } from './sim.ts'
 
 const CHICK = ['#f2c531', '#8a5a34', '#9aa0a6']
@@ -51,7 +52,7 @@ export function draw(ctx: CanvasRenderingContext2D, s: OwlSnapshot): void {
   for (const [i, c] of s.chicks.entries()) {
     const hop = !c.inField && c.flash === 'none' ? Math.abs(Math.sin((s.tick + i * 11) / 9)) * 6 : 0
     const y = c.y - hop - (c.held ? 12 : 0)
-    circle(ctx, c.x, y, 36, { fill: CHICK[c.colour]!, stroke: c.moving && c.inField ? '#e44' : '#2b2620', width: 4 })
+    circle(ctx, c.x, y, CHICK_R, { fill: CHICK[c.colour]!, stroke: c.moving && c.inField ? '#e44' : '#2b2620', width: 4 })
     circle(ctx, c.x - 12, y - 8, 4, '#2b2620')
     circle(ctx, c.x + 12, y - 8, 4, '#2b2620')
     if (c.flash === 'safe') circle(ctx, c.x, y, 50 + c.flashT / 2, { stroke: '#2ecc71', width: 6 })

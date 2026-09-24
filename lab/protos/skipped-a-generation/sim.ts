@@ -53,6 +53,8 @@ const norm = (h: number) => ((h % 360) + 360) % 360
 const hueGap = (a: number, b: number) => Math.abs(((a - b + 540) % 360) - 180)
 const inside = (r: Rect, x: number, y: number) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h
 const centre = (r: Rect) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
+// One key for a crossed pair, whichever creature was picked first.
+const pairKey = (p: number, q: number) => (p < q ? `${p}-${q}` : `${q}-${p}`)
 
 // What a child can see of a creature.
 export interface Look {
@@ -123,6 +125,16 @@ export interface FamilySnapshot {
   hint: Array<{ x: number; y: number }> | null
 }
 
+interface RosterStats {
+  spotted: number
+  longEared: number
+  gen: number
+  bodies: number
+  ears: string
+  hues: string
+  lineage: string
+}
+
 export const createSim: CreateSim<FamilySnapshot> = (config): Sim<FamilySnapshot> => {
   const gene = createRng(config.seed)
   const wander = createRng((config.seed ^ 0x3c6ef372) >>> 0)
@@ -130,6 +142,10 @@ export const createSim: CreateSim<FamilySnapshot> = (config): Sim<FamilySnapshot
   const hooks = new Set(config.hooks)
 
   let meadow: Creature[] = []
+  // What observe() reads off the roster. A creature's hue, ears, alleles and gen
+  // never change, so it is stale only when the meadow gains or loses a member;
+  // every such site sets it back to null.
+  let rosterStats: RosterStats | null = null
   let sel: number[] = []
   let pairTimer = 0
   let nest: { c: Creature; timer: number } | null = null
@@ -202,6 +218,7 @@ export const createSim: CreateSim<FamilySnapshot> = (config): Sim<FamilySnapshot
     const x = fromLeft ? MEADOW.x + 40 : MEADOW.x + MEADOW.w - 40
     const y = between(gene, MEADOW.y + 80, MEADOW.y + MEADOW.h - 80)
     meadow.push(make(between(gene, 0, 360), ears, alleles, 0, x, y, [], []))
+    rosterStats = null
     emit({ kind: 'state', name: gift ? 'gift' : 'visitor' })
   }
 
@@ -236,7 +253,7 @@ export const createSim: CreateSim<FamilySnapshot> = (config): Sim<FamilySnapshot
     if (nest) sendAway(lookOf(nest.c), nest.c.x, nest.c.y)
     const child = breed(a, b)
     nest = { c: child, timer: NEST_TICKS }
-    tried.add([a.id, b.id].sort((p, q) => p - q).join('-'))
+    tried.add(pairKey(a.id, b.id))
     hatched++
     emit({ kind: 'state', name: 'hatch' })
     // The moment the game is about: spots from two spotless parents.
@@ -260,6 +277,7 @@ export const createSim: CreateSim<FamilySnapshot> = (config): Sim<FamilySnapshot
     nest = null
     c.retarget = 0
     meadow.push(c)
+    rosterStats = null
     emit({ kind: 'state', name: 'keep' })
     if (wish && matches(c, wish)) fulfil()
   }
@@ -271,6 +289,7 @@ export const createSim: CreateSim<FamilySnapshot> = (config): Sim<FamilySnapshot
     pairTimer = 0
     if (!c) return
     meadow = meadow.filter((m) => m !== c)
+    rosterStats = null
     sendAway(lookOf(c), c.x, c.y)
     emit({ kind: 'state', name: 'release' })
   }
@@ -393,20 +412,30 @@ export const createSim: CreateSim<FamilySnapshot> = (config): Sim<FamilySnapshot
     return list
   }
 
-  const observe = (): Observation => {
-    const events = pending
-    pending = []
+  const rosterOf = (): RosterStats => {
     const spotted = meadow.filter(isSpotted).length
     const longEared = meadow.filter((c) => c.ears === 3).length
     const gen = meadow.reduce((m, c) => Math.max(m, c.gen), 0)
     const families = new Set(meadow.map((c) => Math.floor(c.hue / 60)))
     const bodies = new Set(meadow.map((c) => `${isSpotted(c) ? 's' : 'p'}${c.ears}${Math.floor(c.hue / 60)}`))
-    const ears = meadow.length > 0 && meadow.every((c) => c.ears === 1) ? 'short-ears' : meadow.length > 0 && longEared === meadow.length ? 'long-ears' : 'mixed-ears'
-    const hues = families.size <= 2 ? 'few-hues' : families.size <= 4 ? 'some-hues' : 'many-hues'
-    const lineage = gen === 0 ? 'founders' : gen <= 2 ? 'kin' : 'deep'
+    return {
+      spotted,
+      longEared,
+      gen,
+      bodies: bodies.size,
+      ears: meadow.length > 0 && meadow.every((c) => c.ears === 1) ? 'short-ears' : meadow.length > 0 && longEared === meadow.length ? 'long-ears' : 'mixed-ears',
+      hues: families.size <= 2 ? 'few-hues' : families.size <= 4 ? 'some-hues' : 'many-hues',
+      lineage: gen === 0 ? 'founders' : gen <= 2 ? 'kin' : 'deep',
+    }
+  }
+
+  const observe = (): Observation => {
+    const events = pending
+    pending = []
+    const { spotted, longEared, gen, bodies, ears, hues, lineage } = (rosterStats ??= rosterOf())
     return {
       signature: `${spotted > 0 ? 'spotted' : 'plain'}/${ears}/${hues}/${lineage}`,
-      features: { bodies: bodies.size, spotted, generation: gen, longEared, roster: meadow.length, hatched, wishes: wishesDone },
+      features: { bodies, spotted, generation: gen, longEared, roster: meadow.length, hatched, wishes: wishesDone },
       events,
     }
   }
@@ -417,13 +446,13 @@ export const createSim: CreateSim<FamilySnapshot> = (config): Sim<FamilySnapshot
     if (nest) return [centre(NEST)]
     if (sel.length === 1) {
       const chosen = find(sel[0]!)!
-      const fresh = meadow.find((c) => c !== chosen && !tried.has([c.id, chosen.id].sort((p, q) => p - q).join('-')))
+      const fresh = meadow.find((c) => c !== chosen && !tried.has(pairKey(c.id, chosen.id)))
       const other = fresh ?? meadow.find((c) => c !== chosen)
       return other ? [{ x: other.x, y: other.y }] : null
     }
     for (const a of meadow) {
       for (const b of meadow) {
-        if (a.id < b.id && !tried.has(`${a.id}-${b.id}`)) return [{ x: a.x, y: a.y }, { x: b.x, y: b.y }]
+        if (a.id < b.id && !tried.has(pairKey(a.id, b.id))) return [{ x: a.x, y: a.y }, { x: b.x, y: b.y }]
       }
     }
     return null

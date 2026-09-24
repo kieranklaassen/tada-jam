@@ -3,7 +3,7 @@
 // shell maps taps to logical coordinates and calls sim.pointer).
 
 import { circle, clear, label, line, rect, roundRect } from '../../kit/draw.ts'
-import { CELL, COLS, ROWS, X0, Y0 } from './sim.ts'
+import { CELL, COLS, ROWS, X0, Y0, blockedAt, inBounds } from './sim.ts'
 import type { ChaserSnapshot } from './sim.ts'
 
 const cx = (c: number) => X0 + c * CELL + CELL / 2
@@ -18,12 +18,11 @@ export function draw(ctx: CanvasRenderingContext2D, s: ChaserSnapshot): void {
 
   // Faint dots on the squares the child could step to.
   if (s.phase === 'play') {
-    const blocked = (c: number, r: number) => s.heaps.some((h) => h.c === c && h.r === r) || s.robots.some((b) => b.c === c && b.r === r)
     for (let dr = -1; dr <= 1; dr++) {
       for (let dc = -1; dc <= 1; dc++) {
         const c = s.child.c + dc
         const r = s.child.r + dr
-        if ((dc !== 0 || dr !== 0) && c >= 0 && c < COLS && r >= 0 && r < ROWS && !blocked(c, r)) circle(ctx, cx(c), cy(r), 9, 'rgba(47,111,181,0.35)')
+        if ((dc !== 0 || dr !== 0) && inBounds(c, r) && !blockedAt(c, r, s.robots, s.heaps)) circle(ctx, cx(c), cy(r), 9, 'rgba(47,111,181,0.35)')
       }
     }
   }
@@ -74,7 +73,7 @@ export function draw(ctx: CanvasRenderingContext2D, s: ChaserSnapshot): void {
   rect(ctx, cx(s.child.c) - 9, cy(s.child.r) + 8, 18, 4, '#fff')
 
   label(ctx, 'Tap a square: you step one toward it. Every robot steps one toward you. Robots that bump make scrap.', X0, 30, { size: 21, color: '#5d5443' })
-  label(ctx, `${s.formation}  round ${s.round + 1}  robots ${s.robots.length}  turns ${s.turns}`, X0 + COLS * CELL, Y0 + ROWS * CELL + 0, { align: 'right', baseline: 'bottom', size: 20, color: '#8a7f6a' })
+  label(ctx, `${s.formation}  round ${s.round + 1}  robots ${s.robots.length}  turns ${s.turns}`, X0 + COLS * CELL, Y0 + ROWS * CELL, { align: 'right', baseline: 'bottom', size: 20, color: '#8a7f6a' })
   if (caught) label(ctx, 'Caught. Same robots, try again.', 590, 420, { align: 'center', size: 48, color: '#b0392b' })
   if (s.phase === 'cleared') {
     const heaped = s.heaps.filter((h) => h.n > 0).length

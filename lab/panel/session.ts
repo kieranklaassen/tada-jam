@@ -12,9 +12,9 @@
 
 import { chance, createRng, deriveSeed, hashText, pick } from '../kit/rng.ts'
 import type { Rng } from '../kit/rng.ts'
-import type { Affordance, AffordanceKind, Observation, Sim } from '../kit/sim.ts'
+import type { Affordance, AffordanceKind, FeatureSpec, Observation, Sim } from '../kit/sim.ts'
 import { createDriver } from './driver.ts'
-import type { Driver, GestureInfo } from './driver.ts'
+import type { Aim, Driver, GestureInfo } from './driver.ts'
 import type {
   AimRecord,
   ClarityResult,
@@ -200,6 +200,13 @@ export interface ControlTrace {
   autonomous: Set<string>
 }
 
+// The key idleControl writes and processTick reads for "this tick changed on
+// its own": `sig` for the signature, or a feature's name.
+const AUTONOMOUS_SIGNATURE = 'sig'
+function autonomousKey(tick: number, what: string): string {
+  return `${tick}:${what}`
+}
+
 export interface GestureRecord extends GestureInfo {
   changed: boolean
 }
@@ -229,7 +236,6 @@ export interface SessionRunner {
   readonly log: LogEntry[]
   readonly done: boolean
   readonly crash: CrashRecord | null
-  readonly tickCount: number
   readonly gestures: GestureRecord[]
   readonly changeTicks: number[]
   tick(): void
@@ -243,11 +249,12 @@ interface PendingOutcome {
   features: Record<string, number>
 }
 
-interface ActiveAim {
-  feature: string
-  dir: 'up' | 'down'
+// What one judging window of an aim has counted so far.
+interface AimWindow {
   windowStart: number
-  samples: number[]
+  // The feature's first and last value in the window (meaningful once ticks > 0).
+  first: number
+  last: number
   // Ticks in the window, ticks within a touch, feature changes, and changes
   // that fell within a touch.
   ticks: number
@@ -257,12 +264,40 @@ interface ActiveAim {
   touches: number
   // Of those touches, how many led somewhere the persona did not expect.
   surprises: number
+}
+
+interface ActiveAim extends Aim, AimWindow {
   patience: number
   record: AimRecord
 }
 
-function finite(value: number | undefined): number {
+function freshWindow(windowStart: number): AimWindow {
+  return { windowStart, first: 0, last: 0, ticks: 0, touchTicks: 0, changes: 0, touchChanges: 0, touches: 0, surprises: 0 }
+}
+
+function signOf(dir: 'up' | 'down'): 1 | -1 {
+  return dir === 'up' ? 1 : -1
+}
+
+// The way a new aim pushes its feature: with the prototype's objective (one
+// draw) or against it, or a coin flip when the feature has none (one draw).
+function chooseAimDirection(rng: Rng, objective: 'up' | 'down' | undefined): 'up' | 'down' {
+  if (objective) {
+    if (chance(rng, AIM_OBJECTIVE_BIAS)) return objective
+    return objective === 'up' ? 'down' : 'up'
+  }
+  return chance(rng, 0.5) ? 'up' : 'down'
+}
+
+export function finite(value: number | undefined): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
+// An observation's features as finite numbers, one per declared feature.
+function readFeatures(specs: readonly FeatureSpec[], obs: Observation): Record<string, number> {
+  const values: Record<string, number> = {}
+  for (const spec of specs) values[spec.name] = finite(obs.features[spec.name])
+  return values
 }
 
 export function createSessionRunner(options: SessionOptions): SessionRunner {
@@ -308,6 +343,7 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
   let lastTouchEnd = -1000
 
   const driver: Driver = createDriver({ persona, rng, cueBlind, keyStats: memory.keyStats })
+  const getAffordances = (): Affordance[] => sim.affordances()
 
   const fail = (where: string, error: unknown): void => {
     crash = {
@@ -327,9 +363,9 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
     fail(`session ${sessionIndex + 1}`, error)
   }
 
-  const evaluateAim = (current: ActiveAim, gain: { value: number }): void => {
-    const dirSign = current.dir === 'up' ? 1 : -1
-    const net = (current.samples[current.samples.length - 1]! - current.samples[0]!) * dirSign
+  // Judge a finished window; returns the interest it earned.
+  const evaluateAim = (current: ActiveAim): number => {
+    const net = (current.last - current.first) * signOf(current.dir)
     // The feature must have moved the intended way over the window, and its
     // changes must fall within the persona's own touches more than chance
     // would put them there (so a feature that wanders on its own, or a noisy
@@ -339,6 +375,7 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
       current.changes > 0 && current.touchChanges / current.changes >= Math.min(1, AIM_ATTRIBUTION_LIFT * chanceShare)
     const progress = net > 0 && current.touches >= AIM_MIN_TOUCHES && attributed
     current.record.windows += 1
+    let gained = 0
     if (progress) {
       current.record.progressWindows += 1
       current.record.madeProgress = true
@@ -347,36 +384,28 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
       // had to work out: pushing a number with a move it already knows teaches
       // it nothing and refills nothing.
       const surprise = current.touches > 0 ? current.surprises / current.touches : 0
-      gain.value += AIM_GAIN * (0.5 + persona.draw.mastery) * Math.min(1, surprise / AIM_SURPRISE_FULL)
+      gained = AIM_GAIN * (0.5 + persona.draw.mastery) * Math.min(1, surprise / AIM_SURPRISE_FULL)
     } else {
       current.patience -= 1
     }
-    current.samples = []
-    current.ticks = 0
-    current.touchTicks = 0
-    current.changes = 0
-    current.touchChanges = 0
-    current.touches = 0
-    current.surprises = 0
-    current.windowStart = tick
-    if (!progress && current.patience <= 0 && !current.record.madeProgress) {
+    Object.assign(current, freshWindow(tick))
+    const gaveUp = !progress && current.patience <= 0
+    if (gaveUp && !current.record.madeProgress) {
       // An aim that never got anywhere: the persona drifts off.
       done = true
       endedBy = 'drift'
-      driver.setAim(null)
-      aim = null
-    } else if (
-      current.record.windows >= AIM_MAX_WINDOWS ||
-      (!progress && current.patience <= 0)
-    ) {
-      // Reached, or moved as far as it will: the aim is done, not failed.
+    }
+    if (gaveUp || current.record.windows >= AIM_MAX_WINDOWS) {
+      // Gave up, or reached and moved as far as it will (done, not failed, when
+      // it had made progress).
       driver.setAim(null)
       aim = null
     }
+    return gained
   }
 
   const processTick = (obs: Observation, now: number): void => {
-    const gain = { value: 0 }
+    let gain = 0
     const sig = obs.signature
 
     // Novelty: a signature reached for the first time this session. The one
@@ -389,23 +418,19 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
       if (before === 0) newSignatures += 1
       if (signatures.size > 1) {
         const weight = NOVELTY_BASE + persona.draw.novelty
-        gain.value += NOVELTY_GAIN * weight * REDISCOVERY ** before
+        gain += NOVELTY_GAIN * weight * REDISCOVERY ** before
       }
     }
 
     // The features now, and change tracking for first-10-seconds runs.
-    const current: Record<string, number> = {}
-    for (const spec of features) {
-      const value = finite(obs.features[spec.name])
-      current[spec.name] = value
-    }
+    const current = readFeatures(features, obs)
     if (options.trackChanges) {
       const autonomous = options.control?.autonomous
       let changed = obs.events.some((e) => e.kind === 'state')
-      if (lastSignature !== null && sig !== lastSignature && !autonomous?.has(`${now}:sig`)) changed = true
+      if (lastSignature !== null && sig !== lastSignature && !autonomous?.has(autonomousKey(now, AUTONOMOUS_SIGNATURE))) changed = true
       for (const spec of features) {
         const before = lastFeatures[spec.name]
-        if (before !== undefined && before !== current[spec.name] && !autonomous?.has(`${now}:${spec.name}`)) changed = true
+        if (before !== undefined && before !== current[spec.name] && !autonomous?.has(autonomousKey(now, spec.name))) changed = true
       }
       if (changed) changeTicks.push(now)
     }
@@ -422,7 +447,7 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
       memory.errors.push(wrong)
       if (memory.errors.length > 2 * LP_WINDOW) memory.errors.shift()
       const progress = learningProgress(memory.errors)
-      if (progress > 0) gain.value += LP_GAIN * progress * (LP_BASE + persona.draw.mastery)
+      if (progress > 0) gain += LP_GAIN * progress * (LP_BASE + persona.draw.mastery)
       const key = outcome.gesture.key
       if (key) {
         const stat = memory.keyStats.get(key) ?? { tries: 0, changes: 0 }
@@ -431,8 +456,7 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
         memory.keyStats.set(key, stat)
       }
       if (aim) {
-        const dirSign = aim.dir === 'up' ? 1 : -1
-        const delta = ((current[aim.feature] ?? 0) - (outcome.features[aim.feature] ?? 0)) * dirSign
+        const delta = ((current[aim.feature] ?? 0) - (outcome.features[aim.feature] ?? 0)) * signOf(aim.dir)
         if (key) driver.report(key, delta)
         aim.touches += 1
         aim.surprises += wrong
@@ -443,24 +467,25 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
     if (aim) {
       const value = current[aim.feature] ?? 0
       const touching = fingerDown || now - lastTouchEnd <= SETTLE_TICKS
-      const moved = aim.samples.length > 0 && value !== aim.samples[aim.samples.length - 1]
-      aim.samples.push(value)
+      const moved = aim.ticks > 0 && value !== aim.last
+      if (aim.ticks === 0) aim.first = value
+      aim.last = value
       aim.ticks += 1
       if (touching) aim.touchTicks += 1
       if (moved) {
         aim.changes += 1
         if (touching) aim.touchChanges += 1
       }
-      if (now + 1 - aim.windowStart >= AIM_WINDOW_TICKS) evaluateAim(aim, gain)
+      if (now + 1 - aim.windowStart >= AIM_WINDOW_TICKS) gain += evaluateAim(aim)
     }
 
     // Interest, pull, boredom.
-    interest = Math.min(startInterest, interest + gain.value - DRAIN)
+    interest = Math.min(startInterest, interest + gain - DRAIN)
     const slot = now % PULL_WINDOW
-    gainSum += gain.value - gainWindow[slot]!
-    gainWindow[slot] = gain.value
+    gainSum += gain - gainWindow[slot]!
+    gainWindow[slot] = gain
     pull = gainSum / PULL_WINDOW
-    if (gain.value >= MEANINGFUL_GAIN) {
+    if (gain >= MEANINGFUL_GAIN) {
       sinceGain = 0
       nextRoll = BOREDOM_WINDOW
     } else {
@@ -470,15 +495,7 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
       nextRoll = sinceGain + BOREDOM_REROLL
       if (features.length > 0 && chance(rng, persona.aimInvention)) {
         const spec = pick(rng, features)
-        const dir: 'up' | 'down' = spec.objective
-          ? chance(rng, AIM_OBJECTIVE_BIAS)
-            ? spec.objective
-            : spec.objective === 'up'
-              ? 'down'
-              : 'up'
-          : chance(rng, 0.5)
-            ? 'up'
-            : 'down'
+        const dir = chooseAimDirection(rng, spec.objective)
         const record: AimRecord = {
           feature: spec.name,
           dir,
@@ -488,20 +505,7 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
           madeProgress: false,
         }
         aims.push(record)
-        aim = {
-          feature: spec.name,
-          dir,
-          windowStart: now + 1,
-          samples: [],
-          ticks: 0,
-          touchTicks: 0,
-          changes: 0,
-          touchChanges: 0,
-          touches: 0,
-          surprises: 0,
-          patience: AIM_PATIENCE,
-          record,
-        }
+        aim = { feature: spec.name, dir, patience: AIM_PATIENCE, record, ...freshWindow(now + 1) }
         driver.setAim({ feature: spec.name, dir })
       }
     }
@@ -514,7 +518,7 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
 
   const step = (): void => {
     const now = tick
-    const s = driver.act(now, () => sim.affordances())
+    const s = driver.act(now, getAffordances)
     for (const input of s.inputs) {
       sim.pointer(input)
       log.push({ tick: now, input })
@@ -570,9 +574,6 @@ export function createSessionRunner(options: SessionOptions): SessionRunner {
     },
     get crash() {
       return crash
-    },
-    get tickCount() {
-      return tick
     },
     gestures,
     changeTicks,
@@ -632,7 +633,6 @@ export interface RunPlayer {
   readonly sim: Sim
   readonly done: boolean
   readonly crash: CrashRecord | null
-  readonly sessionIndex: number
   readonly runner: SessionRunner
   tick(): void
   result(): RunResult
@@ -710,9 +710,6 @@ export function createRunPlayer(options: RunOptions): RunPlayer {
     get crash() {
       return crash
     },
-    get sessionIndex() {
-      return index
-    },
     get runner() {
       return runner
     },
@@ -748,11 +745,10 @@ export function idleControl(proto: PanelProto, runSeed: number, hooks: readonly 
     for (let t = 0; t < ticks; t++) {
       sim.step()
       const obs = sim.observe()
-      if (lastSignature !== null && obs.signature !== lastSignature) autonomous.add(`${t}:sig`)
-      const now: Record<string, number> = {}
+      if (lastSignature !== null && obs.signature !== lastSignature) autonomous.add(autonomousKey(t, AUTONOMOUS_SIGNATURE))
+      const now = readFeatures(proto.meta.features, obs)
       for (const spec of proto.meta.features) {
-        now[spec.name] = finite(obs.features[spec.name])
-        if (last[spec.name] !== undefined && last[spec.name] !== now[spec.name]) autonomous.add(`${t}:${spec.name}`)
+        if (last[spec.name] !== undefined && last[spec.name] !== now[spec.name]) autonomous.add(autonomousKey(t, spec.name))
       }
       lastSignature = obs.signature
       last = now

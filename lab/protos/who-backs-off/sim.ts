@@ -177,9 +177,25 @@ export const createSim: CreateSim<WhoSnapshot> = (config): Sim<WhoSnapshot> => {
   const inPhase = (bank: Bank, phase: Phase) =>
     animals.filter((a) => a.from === bank && a.phase === phase).sort((a, b) => a.order - b.order)
   const onBridge = () => animals.filter((a) => a.phase === 'walk' || a.phase === 'flee')
+  // The front of a bank's queue in a phase, taking only animals that pass
+  // `ok`: what inPhase(...).find(ok) finds, without building and sorting a list
+  // (`order` is never shared, so the lowest one is the first).
+  const frontOf = (bank: Bank, phase: Phase, ok?: (a: Animal) => boolean): Animal | undefined => {
+    let front: Animal | undefined
+    for (const a of animals) {
+      if (a.from === bank && a.phase === phase && (!ok || ok(a)) && (!front || a.order < front.order)) front = a
+    }
+    return front
+  }
+  const canLead = (a: Animal) => !a.vip && a.shaken === 0
   // The waiting animal that sets off by itself: the first that is not marked
   // and not shaken.
-  const headOf = (bank: Bank) => inPhase(bank, 'wait').find((a) => !a.vip && a.shaken === 0)
+  const headOf = (bank: Bank) => frontOf(bank, 'wait', canLead)
+  // Whether a finger is down on this animal.
+  const isHeld = (id: number): boolean => {
+    for (const p of presses.values()) if (p.animal === id) return true
+    return false
+  }
   const vipOf = () => animals.find((a) => a.vip)!
 
   const place = (a: Animal): { x: number; y: number } => {
@@ -329,7 +345,6 @@ export const createSim: CreateSim<WhoSnapshot> = (config): Sim<WhoSnapshot> => {
   // Each bank's front animal gets impatient and sets off by itself, unless a
   // finger is on it.
   const autoGo = () => {
-    const held = new Set([...presses.values()].map((p) => p.animal))
     for (const bank of [0, 1] as const) {
       const head = headOf(bank)
       if (!head) {
@@ -341,7 +356,7 @@ export const createSim: CreateSim<WhoSnapshot> = (config): Sim<WhoSnapshot> => {
         lastHead[bank] = head.id
         timer[bank] = 0
       }
-      if (held.has(head.id)) continue
+      if (isHeld(head.id)) continue
       timer[bank]++
       if (timer[bank] >= PATIENCE) send(head)
     }
@@ -352,7 +367,7 @@ export const createSim: CreateSim<WhoSnapshot> = (config): Sim<WhoSnapshot> => {
   const enter = () => {
     for (const bank of [0, 1] as const) {
       if (animals.some((o) => o.from === bank && o.phase === 'flee')) continue
-      const a = inPhase(bank, 'gate')[0]
+      const a = frontOf(bank, 'gate')
       if (!a) continue
       const at = GATE[bank]
       const free = animals.every((o) => {
@@ -565,7 +580,6 @@ export const createSim: CreateSim<WhoSnapshot> = (config): Sim<WhoSnapshot> => {
   }
 
   const snapshot = (): WhoSnapshot => {
-    const held = new Set([...presses.values()].map((p) => p.animal))
     return {
       tick,
       round,
@@ -585,7 +599,7 @@ export const createSim: CreateSim<WhoSnapshot> = (config): Sim<WhoSnapshot> => {
           slowed: a.slowed,
           still: a.still,
           shaken: a.shaken > 0,
-          held: held.has(a.id),
+          held: isHeld(a.id),
         }
       }),
       patience: [headOf(0) ? timer[0] / PATIENCE : 0, headOf(1) ? timer[1] / PATIENCE : 0],

@@ -102,6 +102,8 @@ const inside = (r: Rect, x: number, y: number, slop = 0) =>
   x >= r.x - slop && x <= r.x + r.w + slop && y >= r.y - slop && y <= r.y + r.h + slop
 
 const poseOf = (angle: number): Pose => (angle < UP_ANGLE ? 'up' : angle < FALL_AT ? 'lean' : angle < HANG_FROM ? 'low' : 'hang')
+// Fallen: past the fall angle, low or hanging.
+const isDown = (pose: Pose): boolean => pose === 'low' || pose === 'hang'
 
 export const createSim: CreateSim<BroomSnapshot> = (config): Sim<BroomSnapshot> => {
   const rng = createRng(config.seed)
@@ -258,7 +260,7 @@ export const createSim: CreateSim<BroomSnapshot> = (config): Sim<BroomSnapshot> 
       emit({ kind: 'state', name: 'fall' })
     }
 
-    if (pose === 'low' || pose === 'hang') lowTicks++
+    if (isDown(pose)) lowTicks++
     if (!upright && angle > maxLean) maxLean = angle
     standTicks = upright ? standTicks + 1 : 0
     if (standTicks === STAND_CONFIRM) {
@@ -310,7 +312,7 @@ export const createSim: CreateSim<BroomSnapshot> = (config): Sim<BroomSnapshot> 
       list.push({ x: flagX - FLAG_HALF, y: PIVOT_Y - FLAG_HALF, w: FLAG_HALF * 2, h: FLAG_HALF * 2, kind: 'hold', salience: 0.6 })
     }
     // A fallen broom draws the eye to the rack, the way back up.
-    const fallen = poseOf(Math.abs(theta)) === 'low' || poseOf(Math.abs(theta)) === 'hang'
+    const fallen = isDown(poseOf(Math.abs(theta)))
     for (const r of RACK) list.push({ ...r, kind: 'tap', salience: fallen ? 0.7 : 0.2 })
     return list
   }

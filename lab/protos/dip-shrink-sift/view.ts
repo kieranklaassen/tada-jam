@@ -2,14 +2,13 @@
 // forwards no input (the shell maps pointer events and calls sim.pointer).
 
 import { circle, clear, label, line, rect, roundRect } from '../../kit/draw.ts'
-import { BIN_Y, COLS, ROWS, KINDS, START_COL, binRect, cellRect, trayRect } from './sim.ts'
+import { BIN_Y, BOARD_X, COLS, COL_W, KINDS, PAINTS, ROWS, ROW_H, START_COL, binRect, cellRect, trayRect } from './sim.ts'
 import type { Color, DipSnapshot, Kind, Piece, Rect, Size, Want } from './sim.ts'
 
 const PAINT: Record<Color, string> = { gray: '#9b9b9b', red: '#d64545', blue: '#3b6fd6', yellow: '#e8b830' }
 const TINT: Record<Kind, string> = { slope: '#d9cdb4', fork: '#cfe0c8', dip: '#f1d7c4', shrinker: '#d3d0ea', sieve: '#c9e0e6', bell: '#efe3a8' }
 const RADIUS: Record<Size, number> = { 1: 11, 2: 17, 3: 25 }
 const SIZE_WORD: Record<Size, string> = { 1: 'small', 2: 'medium', 3: 'large' }
-const PAINTS = ['red', 'blue', 'yellow'] as const
 
 const marble = (ctx: CanvasRenderingContext2D, x: number, y: number, color: Color, size: Size) => {
   circle(ctx, x, y, RADIUS[size], { fill: PAINT[color], stroke: '#2b2620', width: 2 })
@@ -100,12 +99,12 @@ export function draw(ctx: CanvasRenderingContext2D, s: DipSnapshot): void {
       circle(ctx, r.x + r.w / 2 - 24 + i * 24, r.y + 112, 8, { fill: v === undefined ? '#ddd3bf' : v ? '#3fa66b' : '#d64545' })
     }
   }
-  line(ctx, 290, BIN_Y - 6, 1140, BIN_Y - 6, '#cdbf9f', 3)
+  line(ctx, BOARD_X, BIN_Y - 6, BOARD_X + COLS * COL_W, BIN_Y - 6, '#cdbf9f', 3)
 
   if (s.hint) {
     const pulse = (s.tick % 30) / 30
     circle(ctx, s.hint.from.x, s.hint.from.y, 44 + pulse * 30, { stroke: `rgba(43,38,32,${1 - pulse})`, width: 5 })
     if (s.hint.to) line(ctx, s.hint.from.x, s.hint.from.y, s.hint.to.x, s.hint.to.y, 'rgba(43,38,32,0.35)', 4)
   }
-  if (s.carrying) drawPiece(ctx, { x: s.carrying.x - 85, y: s.carrying.y - 44, w: 170, h: 88 }, { kind: s.carrying.kind, setting: 0, flip: false }, 0.8)
+  if (s.carrying) drawPiece(ctx, { x: s.carrying.x - COL_W / 2, y: s.carrying.y - ROW_H / 2, w: COL_W, h: ROW_H }, { kind: s.carrying.kind, setting: 0, flip: false }, 0.8)
 }

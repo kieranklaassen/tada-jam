@@ -9,9 +9,9 @@ import { createRng, deriveSeed, int } from '../kit/rng.ts'
 import type { Rng } from '../kit/rng.ts'
 import { FIELD_H, FIELD_W } from '../kit/sim.ts'
 import type { Affordance, FeatureSpec, Observation, PointerInput, Sim, SimConfig } from '../kit/sim.ts'
-import { affordanceCenter, clampToField, dragScript, holdScript, tapScript } from './driver.ts'
+import { affordanceCenter, bySalience, clampToField, dragScript, holdScript, tapScript } from './driver.ts'
 import type { Point, Script } from './driver.ts'
-import { shannonEntropy } from './metrics.ts'
+import { mean, shannonEntropy } from './metrics.ts'
 import type { CrashRecord, LogEntry, PanelProto } from './types.ts'
 import {
   DOMINANT_COLLAPSE,
@@ -21,7 +21,7 @@ import {
   SELFPLAY_DECISION_TICKS,
   SELFPLAY_EPISODE_TICKS,
 } from './thresholds.ts'
-import { masterRunSeed, sessionSeed } from './session.ts'
+import { finite, masterRunSeed, sessionSeed } from './session.ts'
 
 export type PolicyName = 'random' | 'repeat-one' | 'greedy'
 export const POLICIES: readonly PolicyName[] = ['random', 'repeat-one', 'greedy']
@@ -79,14 +79,6 @@ function scriptFor(a: Affordance, all: readonly Affordance[], id: number): Scrip
   return dragScript(id, from, destinationFor(a, all), 3)
 }
 
-// Salience order, ties kept in list order.
-function bySalience(affs: readonly Affordance[]): Affordance[] {
-  return affs
-    .map((a, i) => ({ a, i }))
-    .sort((p, q) => q.a.salience - p.a.salience || p.i - q.i)
-    .map((r) => r.a)
-}
-
 // ------------------------------------------------------------------ episodes
 export interface EpisodeResult {
   policy: PolicyName
@@ -130,8 +122,7 @@ export function playEpisode(proto: PanelProto, policy: PolicyName, runSeed: numb
 
   const valueOf = (obs: Observation | null): number => {
     if (!obs || !objective) return 0
-    const v = obs.features[objective.name]
-    return (typeof v === 'number' && Number.isFinite(v) ? v : 0) * sign
+    return finite(obs.features[objective.name]) * sign
   }
 
   const decide = (): Script => {
@@ -245,7 +236,7 @@ export function runSelfPlay(proto: PanelProto, masterSeed: number): SelfPlayResu
   for (const [policy, list] of byPolicy) {
     const objectives = list.flatMap((e) => (e.objective === null ? [] : [e.objective]))
     policies[policy] = {
-      meanObjective: objectives.length > 0 ? objectives.reduce((a, b) => a + b, 0) / objectives.length : null,
+      meanObjective: objectives.length > 0 ? mean(objectives) : null,
       variety: pooled(list),
       episodes: list.length,
     }

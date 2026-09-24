@@ -70,8 +70,6 @@ interface Rod {
 type Grab = { kind: 'tip'; rod: number; off: number } | { kind: 'weight'; rod: number }
 
 interface Lock {
-  a: number
-  b: number
   petals: number
   cls: Openness
   open: number
@@ -138,6 +136,10 @@ export const tipPoint = (rod: number, u: number): Point => pointAlong(rod, u, RO
 export const weightPoint = (rod: number, u: number, notch: number): Point => pointAlong(rod, u, NOTCH_D[notch - 1]!)
 
 const rate = (notch: number) => notch * W
+// A rod that is held, or at rest, does not move.
+const still = (r: Rod) => r.held !== null || (r.u === 0 && r.v === 0)
+// The pen is also sampled a third and two thirds of the way through each tick.
+const MID_SAMPLES = [1 / 3, 2 / 3] as const
 
 // Exact damped swing: u = e^(-DELTA t) cos(rate t) from rest at a pull, for any dt.
 function advance(u: number, v: number, k: number, dt: number): [number, number] {
@@ -277,7 +279,7 @@ export const createSim: CreateSim<PenSnapshot> = (config): Sim<PenSnapshot> => {
     const a = ka / g
     const b = kb / g
     const open = Math.abs(Math.sin(b * phase(rods[0]!) - a * phase(rods[1]!)))
-    lock = { a, b, petals: a + b - 1, cls: open < THIN_BELOW ? 'thin' : 'wide', open }
+    lock = { petals: petalsOf(ka, kb), cls: open < THIN_BELOW ? 'thin' : 'wide', open }
     kinds.add(`${a}:${b}`)
     note('lock')
     if (resolved) return
@@ -401,22 +403,26 @@ export const createSim: CreateSim<PenSnapshot> = (config): Sim<PenSnapshot> => {
   const step = () => {
     tick++
     idle++
+    // Where each moving rod ends the tick (null for one that stays put).
+    const next = rods.map((r) => (still(r) ? null : advance(r.u, r.v, rate(r.notch), DT)))
     if (running) {
-      for (const f of [1 / 3, 2 / 3, 1]) {
-        const at = rods.map((r) => (r.held !== null || (r.u === 0 && r.v === 0) ? r.u : advance(r.u, r.v, rate(r.notch), DT * f)[0]))
+      for (const f of MID_SAMPLES) {
+        const at = rods.map((r) => (still(r) ? r.u : advance(r.u, r.v, rate(r.notch), DT * f)[0]))
         pushPoint(at[0]!, at[1]!)
       }
+      // The whole-tick sample is the end of the tick, before a rod near rest is snapped to rest.
+      pushPoint(next[0]?.[0] ?? rods[0]!.u, next[1]?.[0] ?? rods[1]!.u)
     }
-    for (const r of rods) {
-      if (r.held !== null || (r.u === 0 && r.v === 0)) continue
-      const [u, v] = advance(r.u, r.v, rate(r.notch), DT)
-      r.u = u
-      r.v = v
+    rods.forEach((r, i) => {
+      const moved = next[i]
+      if (!moved) return
+      r.u = moved[0]
+      r.v = moved[1]
       if (amp(r) < REST_AMP) {
         r.u = 0
         r.v = 0
       }
-    }
+    })
     if (running && !done && rods.every((r) => r.held === null && amp(r) < DONE_AMP)) {
       done = true
       archive()

@@ -10,7 +10,7 @@
 // Pure and deterministic: no DOM, no Vite globals, no Math.random, Date.now,
 // or performance.now. It reads a seeded rng and counts ticks, nothing else.
 
-import { between, createRng, int } from '../../kit/rng.ts'
+import { between, createRng, int, pick } from '../../kit/rng.ts'
 import type { Rng } from '../../kit/rng.ts'
 import { FIELD_W } from '../../kit/sim.ts'
 import type { Affordance, CreateSim, Observation, PointerInput, Sim, SimEvent } from '../../kit/sim.ts'
@@ -186,12 +186,12 @@ function segmentHitsCircle(x0: number, y0: number, x1: number, y1: number, cx: n
 }
 
 function makeDay(rng: Rng): Day {
-  const slantClass = SLANT_CLASSES[int(rng, 0, SLANT_CLASSES.length - 1)]!
+  const slantClass = pick(rng, SLANT_CLASSES)
   const [lo, hi] = SLANT_RANGE[slantClass]
   const s0 = between(rng, lo, hi)
-  const rain = RAIN_CLASSES[int(rng, 0, RAIN_CLASSES.length - 1)]!
-  const period = GUST_PERIODS[int(rng, 0, GUST_PERIODS.length - 1)]!
-  const amp = GUST_AMPS[int(rng, 0, GUST_AMPS.length - 1)]!
+  const rain = pick(rng, RAIN_CLASSES)
+  const period = pick(rng, GUST_PERIODS)
+  const amp = pick(rng, GUST_AMPS)
   const coin = rng() < 0.5 ? -1 : 1
   const dir: 1 | -1 = s0 >= 0.3 ? 1 : s0 <= -0.3 ? -1 : coin
   return { slantClass, s0, rain, rate: RAIN_RATE[rain], period, amp, dir, gustStart: int(rng, 30, period) }
@@ -248,6 +248,9 @@ export const createSim: CreateSim<RainSnapshot> = (config): Sim<RainSnapshot> =>
 
   const day = makeDay(rng)
   const creatures = makeCreatures(rng)
+  // Creatures never move. A falling drop whose lower end is still above the
+  // highest creature top cannot touch any of them, so it skips the circle tests.
+  const creatureTop = Math.min(...creatures.map((c) => c.y - c.r))
   const leaf = { x: LEAF_START.x, y: LEAF_START.y }
   const target = { x: LEAF_START.x, y: LEAF_START.y }
   // The one finger driving the leaf, and how it is holding it.
@@ -358,7 +361,7 @@ export const createSim: CreateSim<RainSnapshot> = (config): Sim<RainSnapshot> =>
         }
       }
       let struck = -1
-      for (let i = 0; i < creatures.length; i++) {
+      for (let i = 0; y1 >= creatureTop && i < creatures.length; i++) {
         const c = creatures[i]!
         if (segmentHitsCircle(d.x, d.y, x1, y1, c.x, c.y, c.r)) {
           struck = i
@@ -500,7 +503,7 @@ export const createSim: CreateSim<RainSnapshot> = (config): Sim<RainSnapshot> =>
       relaxed: c.relaxed,
       hits: c.hits,
     })),
-    drops: drops.filter((d) => d.x > -60 && d.x < FIELD_W + 60).map((d): [number, number, number] => [d.x, d.y, d.vx]),
+    drops: drops.filter((d) => d.x > DROP_X_MIN && d.x < DROP_X_MAX).map((d): [number, number, number] => [d.x, d.y, d.vx]),
     splashes: splashes.map((s) => ({ ...s })),
     rainbows: hooks.has('rainbow') ? rainbows : null,
     hint: hint(),

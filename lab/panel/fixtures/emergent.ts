@@ -8,12 +8,18 @@
 // the 63 non-empty sets of kinds (bounded) and the water can be steered toward
 // different ones.
 
-import { createRng } from '../../kit/rng.ts'
+import { createRng, int } from '../../kit/rng.ts'
 import { FIELD_H, FIELD_W } from '../../kit/sim.ts'
 import type { Affordance, CreateSim, ProtoMeta, SimEvent } from '../../kit/sim.ts'
 
-export const KINDS = 6
-export const MAX_DROPS = 14
+const KINDS = 6
+const MAX_DROPS = 14
+// How far a drop stays from the edge of the water.
+const MARGIN = 40
+// How far a finger travels before a touch is a drag, not a tap or a hold.
+const DRAG_DIST = 30
+// Ticks a finger stays down before a release copies the drop instead of popping it.
+const HOLD_TICKS = 9
 export const meta: ProtoMeta = {
   key: 'emergent',
   name: 'Emergent drops',
@@ -45,6 +51,7 @@ interface Finger {
 }
 
 const radius = (kind: number): number => 26 + 3 * kind
+const keepIn = (v: number, size: number): number => Math.min(size - MARGIN, Math.max(MARGIN, v))
 
 export const createSim: CreateSim = (config) => {
   const rng = createRng(config.seed)
@@ -56,8 +63,7 @@ export const createSim: CreateSim = (config) => {
   const spawn = (x: number, y: number, kind: number): void => {
     drops.push({ x, y, vx: 0, vy: 0, kind })
   }
-  const between = (min: number, max: number): number => min + Math.floor(rng() * (max - min + 1))
-  for (const kind of [0, 1, 2, between(0, 2)]) spawn(between(120, FIELD_W - 120), between(120, FIELD_H - 120), kind)
+  for (const kind of [0, 1, 2, int(rng, 0, 2)]) spawn(int(rng, 120, FIELD_W - 120), int(rng, 120, FIELD_H - 120), kind)
 
   const held = (drop: Drop): boolean => {
     for (const f of fingers.values()) if (f.drop === drop) return true
@@ -96,10 +102,10 @@ export const createSim: CreateSim = (config) => {
         d.vy = (d.vy + (rng() - 0.5) * 0.25) * 0.95
         d.x += d.vx
         d.y += d.vy
-        if (d.x < 40 || d.x > FIELD_W - 40) d.vx = -d.vx
-        if (d.y < 40 || d.y > FIELD_H - 40) d.vy = -d.vy
-        d.x = Math.min(FIELD_W - 40, Math.max(40, d.x))
-        d.y = Math.min(FIELD_H - 40, Math.max(40, d.y))
+        if (d.x < MARGIN || d.x > FIELD_W - MARGIN) d.vx = -d.vx
+        if (d.y < MARGIN || d.y > FIELD_H - MARGIN) d.vy = -d.vy
+        d.x = keepIn(d.x, FIELD_W)
+        d.y = keepIn(d.y, FIELD_H)
       }
       mergeAll()
     },
@@ -116,14 +122,14 @@ export const createSim: CreateSim = (config) => {
       if (!f) return
       f.dist = Math.max(f.dist, Math.hypot(input.x - f.x, input.y - f.y))
       if (input.phase === 'move') {
-        if (f.drop && f.dist >= 30) {
-          f.drop.x = Math.min(FIELD_W - 40, Math.max(40, input.x))
-          f.drop.y = Math.min(FIELD_H - 40, Math.max(40, input.y))
+        if (f.drop && f.dist >= DRAG_DIST) {
+          f.drop.x = keepIn(input.x, FIELD_W)
+          f.drop.y = keepIn(input.y, FIELD_H)
         }
         return
       }
       fingers.delete(input.id)
-      const dragged = f.dist >= 30
+      const dragged = f.dist >= DRAG_DIST
       const target = f.drop
       if (dragged && target && drops.includes(target)) {
         // Let go near another drop and it is pulled in: small hands miss.
@@ -143,7 +149,7 @@ export const createSim: CreateSim = (config) => {
         }
       }
       if (target && drops.includes(target)) {
-        if (!dragged && now - f.tick >= 9) {
+        if (!dragged && now - f.tick >= HOLD_TICKS) {
           if (drops.length < MAX_DROPS) {
             spawn(target.x + radius(target.kind) * 2, target.y, target.kind)
             events.push({ kind: 'state', name: 'copy' })
@@ -153,7 +159,7 @@ export const createSim: CreateSim = (config) => {
           events.push({ kind: 'state', name: 'pop' })
         }
       } else if (!target && !dragged && drops.length < MAX_DROPS) {
-        spawn(f.x, f.y, between(0, 2))
+        spawn(f.x, f.y, int(rng, 0, 2))
         events.push({ kind: 'state', name: 'spawn' })
       }
     },

@@ -172,7 +172,7 @@ const ROOT_AT = { x: 590, y: 104 }
 const ROPE = 64
 const SHAPE_ROPE = 34
 const STAGGER = 52
-const TRAY_Y = 610
+export const TRAY_Y = 610
 const TRAY_SCALE = 0.6
 const SNAP = 84
 const HUB_HIT = 36
@@ -319,15 +319,12 @@ export const createSim: CreateSim<SwaySnapshot> = (config): Sim<SwaySnapshot> =>
   let wholeTurnTicks = 0
   let cls = { signature: '1b/bare/some', state: 'bare', balanced: 0, hung: 0, tilt: 0, complete: false }
 
-  const emit = (name: string) => {
+  const push = (event: SimEvent) => {
     if (pending.length >= MAX_EVENTS) pending.shift()
-    pending.push({ kind: 'state', name })
+    pending.push(event)
   }
-
-  const emitHook = (name: string) => {
-    if (pending.length >= MAX_EVENTS) pending.shift()
-    pending.push({ kind: 'hook', name })
-  }
+  const emit = (name: string) => push({ kind: 'state', name })
+  const emitHook = (name: string) => push({ kind: 'hook', name })
 
   const childrenOf = (barId: number) => pieces.filter((p) => p.where === 'hung' && p.parent === barId)
   const massOf = (p: Piece): number => (p.isBar ? BAR_MASS + childrenOf(p.id).reduce((sum, c) => sum + massOf(c), 0) : p.mass)

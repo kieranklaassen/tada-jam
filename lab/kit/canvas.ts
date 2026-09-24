@@ -55,9 +55,6 @@ export function cappedDpr(raw: number): number {
 
 export interface MountedCanvas {
   canvas: HTMLCanvasElement
-  ctx: CanvasRenderingContext2D
-  // The current letterbox, or null until the element has been measured.
-  fit(): Fit | null
   // Clears the whole backing store, clips to the logical field, and runs the
   // callback with logical coordinates. Returns false (and draws nothing)
   // before the first real measurement.
@@ -104,8 +101,6 @@ export function mountCanvas(host: HTMLElement): MountedCanvas {
 
   return {
     canvas,
-    ctx,
-    fit: () => current,
     drawField(draw) {
       const fit = current
       if (!fit) return false

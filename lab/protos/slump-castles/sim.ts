@@ -191,11 +191,12 @@ export function analyse(h: ArrayLike<number>, d: ArrayLike<number>, sog: ArrayLi
     for (let c = 0; c < COLS; c++) {
       const v = h[r * COLS + c]!
       if (v < 1) continue
-      for (const [dc, dr, dist] of NB) {
-        const nc = c + dc
-        const nr = r + dr
+      for (let k = 0; k < 8; k++) {
+        const nb = NB[k]!
+        const nc = c + nb[0]
+        const nr = r + nb[1]
         if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue
-        if (v - h[nr * COLS + nc]! > DRY_THR * dist + STAND_MARGIN) {
+        if (v - h[nr * COLS + nc]! > DRY_THR * nb[2] + STAND_MARGIN) {
           standing++
           break
         }

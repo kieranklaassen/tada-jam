@@ -75,6 +75,8 @@ const RADII = [34, 52]
 const HIT_SLOP = 16
 const TAP_MOVE = 24
 const HINT_AFTER_TICKS = 150
+// How long the lamp shrugs after a locked chip, a wrong name, or a poke.
+const SHRUG_TICKS = 12
 const MAX_EVENTS = 64
 const TOUCH_GAP = 6
 const ROW_BAND = 60
@@ -398,10 +400,16 @@ export const createSim: CreateSim<LampSnapshot> = (config): Sim<LampSnapshot> =>
 
   const unlocked = () => seenWarm && seenDim
 
+  const showRule = () => {
+    phase = 'shown'
+    phaseTicks = 0
+    emit({ kind: 'state', name: 'shown' })
+  }
+
   const guess = (family: Family) => {
     if (phase !== 'seeking' || wrong.includes(family)) return
     if (!unlocked()) {
-      shrug = 12
+      shrug = SHRUG_TICKS
       emit({ kind: 'state', name: 'locked' })
       return
     }
@@ -414,23 +422,17 @@ export const createSim: CreateSim<LampSnapshot> = (config): Sim<LampSnapshot> =>
     }
     wrong.push(family)
     guessesLeft--
-    shrug = 12
+    shrug = SHRUG_TICKS
     emit({ kind: 'state', name: 'wrong' })
-    if (guessesLeft <= 0) {
-      phase = 'shown'
-      phaseTicks = 0
-      emit({ kind: 'state', name: 'shown' })
-    }
+    if (guessesLeft <= 0) showRule()
   }
 
   const pokeLamp = () => {
     if (phase !== 'seeking') return
     if (roundTicks >= SKIP_AFTER) {
-      phase = 'shown'
-      phaseTicks = 0
-      emit({ kind: 'state', name: 'shown' })
+      showRule()
     } else {
-      shrug = 12
+      shrug = SHRUG_TICKS
       emit({ kind: 'state', name: 'lamp-poke' })
     }
   }
@@ -533,7 +535,9 @@ export const createSim: CreateSim<LampSnapshot> = (config): Sim<LampSnapshot> =>
       phaseTicks++
       if (phaseTicks >= (phase === 'solved' ? SOLVED_TICKS : SHOWN_TICKS)) newRound()
     }
-    refresh(-1)
+    // No re-judging here: the lamp only changes when the arrangement does, and
+    // pointer() and release() refresh it then. A new round starts on an empty
+    // stage, which is already 'waiting'.
     const target = phase === 'solved' ? 1.3 : phase === 'shown' ? 0.35 : LEVELS[lamp]
     level += (target - level) * 0.2
   }

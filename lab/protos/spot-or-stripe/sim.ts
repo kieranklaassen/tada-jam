@@ -40,6 +40,7 @@ export const GO: Rect = { x: 960, y: 690, w: 180, h: 100 }
 export const WASH: Rect = { x: 40, y: 690, w: 180, h: 100 }
 
 const REGIONS: readonly Region[] = ['body', 'tail', 'legs']
+const blankCoats = (): Record<Region, Coat> => ({ body: 'blank', tail: 'blank', legs: 'blank' })
 // Region ids in the grid: 0 outside, then 1 body, 2 tail, 3 legs.
 const REGION_ID: Record<Region, number> = { body: 1, tail: 2, legs: 3 }
 
@@ -125,7 +126,6 @@ interface Analysis {
   coats: Record<Region, Coat>
   spots: number
   stripes: number
-  swirls: number
   dark: number
 }
 
@@ -277,8 +277,8 @@ export const createSim: CreateSim<SpotSnapshot> = (config): Sim<SpotSnapshot> =>
   let supply = 0
   let version = 0
   let analysed = -1
-  let analysis: Analysis = { coats: { body: 'blank', tail: 'blank', legs: 'blank' }, spots: 0, stripes: 0, swirls: 0, dark: 0 }
-  let lastCoats: Record<Region, Coat> = { body: 'blank', tail: 'blank', legs: 'blank' }
+  let analysis: Analysis = { coats: blankCoats(), spots: 0, stripes: 0, dark: 0 }
+  let lastCoats: Record<Region, Coat> = blankCoats()
 
   const emit = (name: string) => {
     if (pending.length >= MAX_EVENTS) pending.shift()
@@ -368,7 +368,7 @@ export const createSim: CreateSim<SpotSnapshot> = (config): Sim<SpotSnapshot> =>
         dark[id]!++
       }
     }
-    const coats = { body: 'blank', tail: 'blank', legs: 'blank' } as Record<Region, Coat>
+    const coats = blankCoats()
     for (const r of REGIONS) {
       const id = REGION_ID[r]
       if (dark[id]! < MIN_DARK) continue
@@ -376,7 +376,7 @@ export const createSim: CreateSim<SpotSnapshot> = (config): Sim<SpotSnapshot> =>
       const [sp, st, sw] = area[id]!
       coats[r] = sw! >= st! && sw! >= sp! ? 'swirl' : st! >= sp! ? 'stripes' : 'spots'
     }
-    analysis = { coats, spots: counts[0]!, stripes: counts[1]!, swirls: counts[2]!, dark: total }
+    analysis = { coats, spots: counts[0]!, stripes: counts[1]!, dark: total }
     return analysis
   }
 
@@ -473,7 +473,7 @@ export const createSim: CreateSim<SpotSnapshot> = (config): Sim<SpotSnapshot> =>
     flowing = false
     supply = 0
     version++
-    lastCoats = { body: 'blank', tail: 'blank', legs: 'blank' }
+    lastCoats = blankCoats()
     emit('wash')
   }
 

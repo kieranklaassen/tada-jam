@@ -4,8 +4,8 @@
 // darken as they sink, so watching one bob is how the beat is found.
 
 import { circle, clear, label, line, rect, roundRect } from '../../kit/draw.ts'
-import { FIELD_H } from '../../kit/sim.ts'
-import { SPOTS, STONE_R } from './sim.ts'
+import { FIELD_H, FIELD_W } from '../../kit/sim.ts'
+import { NOPE_T, SPLASH_T, SPOTS, STONE_R } from './sim.ts'
 import type { StonesSnapshot } from './sim.ts'
 
 const LAST_TEXT = { none: '', dunked: 'splash! back to the bank', clean: 'clean crossing', messy: 'across, after some splashes' } as const
@@ -16,7 +16,7 @@ export function draw(ctx: CanvasRenderingContext2D, s: StonesSnapshot): void {
   const [left, right] = s.banks
   rect(ctx, left.x + left.w, 0, right.x - left.x - left.w, FIELD_H, '#86bddb')
   rect(ctx, 0, 0, left.x + left.w, FIELD_H, '#a9d18e')
-  rect(ctx, right.x, 0, 1180 - right.x, FIELD_H, '#a9d18e')
+  rect(ctx, right.x, 0, FIELD_W - right.x, FIELD_H, '#a9d18e')
 
   // The lily waits on the bank the frog is heading for.
   const lily = SPOTS[s.lilySide]
@@ -35,8 +35,8 @@ export function draw(ctx: CanvasRenderingContext2D, s: StonesSnapshot): void {
   // The frog's plan.
   for (let i = 1; i < s.path.length; i++) line(ctx, s.path[i - 1]!.x, s.path[i - 1]!.y, s.path[i]!.x, s.path[i]!.y, 'rgba(40,90,40,0.5)', 5)
 
-  if (s.splash) circle(ctx, s.splash.x, s.splash.y, 20 + (16 - s.splash.t) * 5, { stroke: `rgba(255,255,255,${s.splash.t / 16})`, width: 6 })
-  if (s.nope) circle(ctx, s.nope.x, s.nope.y, STONE_R + 8, { stroke: `rgba(200,60,50,${s.nope.t / 10})`, width: 6 })
+  if (s.splash) circle(ctx, s.splash.x, s.splash.y, 20 + (SPLASH_T - s.splash.t) * 5, { stroke: `rgba(255,255,255,${s.splash.t / SPLASH_T})`, width: 6 })
+  if (s.nope) circle(ctx, s.nope.x, s.nope.y, STONE_R + 8, { stroke: `rgba(200,60,50,${s.nope.t / NOPE_T})`, width: 6 })
   if (s.hint) {
     const phase = (s.tick % 30) / 30
     circle(ctx, s.hint.x, s.hint.y, 70 + phase * 40, { stroke: `rgba(43,38,32,${(1 - phase) * 0.6})`, width: 5 })

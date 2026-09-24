@@ -56,6 +56,14 @@ export interface IdeaRecord extends IdeaDraft {
   decision: Decision | null
 }
 
+// The first item with each id wins; later ones are duplicates. The join and the
+// validator both resolve duplicate ids through this, so they agree.
+export function indexById<T extends { id: string }>(items: readonly T[]): Map<string, T> {
+  const map = new Map<string, T>()
+  for (const item of items) if (!map.has(item.id)) map.set(item.id, item)
+  return map
+}
+
 // The bucket containing the lowest age in an idea's band.
 export function ageBucket(band: readonly [number, number]): AgeBucket {
   const lowest = band[0]

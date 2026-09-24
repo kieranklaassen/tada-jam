@@ -137,12 +137,19 @@ export interface Driver {
   setAim(aim: Aim | null): void
   // What one touch on an affordance did toward the current aim.
   report(key: string, reward: number): void
-  readonly busy: boolean
 }
 
 export function affordanceKey(a: Affordance): string {
   const c = affordanceCenter(a)
   return `${a.kind}:${Math.floor(c.x / KEY_CELL)}:${Math.floor(c.y / KEY_CELL)}`
+}
+
+// Salience order, ties kept in list order.
+export function bySalience(affs: readonly Affordance[]): Affordance[] {
+  return affs
+    .map((a, i) => ({ a, i }))
+    .sort((p, q) => q.a.salience - p.a.salience || p.i - q.i)
+    .map((r) => r.a)
 }
 
 const EMPTY_STEP_INPUTS: PointerInput[] = []
@@ -178,11 +185,7 @@ export function createDriver(options: DriverOptions): Driver {
   }
 
   function choose(affs: Affordance[]): Affordance {
-    const ranked = affs
-      .map((a, i) => ({ a, i }))
-      .sort((p, q) => q.a.salience - p.a.salience || p.i - q.i)
-      .slice(0, Math.max(1, Math.min(affs.length, focus)))
-      .map((r) => r.a)
+    const ranked = bySalience(affs).slice(0, Math.max(1, Math.min(affs.length, focus)))
     if (aim && aimStats.size > 0 && !chance(rng, AIM_EXPLORE)) {
       let best: Affordance | null = null
       let bestMean = Number.NEGATIVE_INFINITY
@@ -296,9 +299,6 @@ export function createDriver(options: DriverOptions): Driver {
       } else {
         aimStats.set(key, { n: 1, sum: reward })
       }
-    },
-    get busy() {
-      return queue.length > 0
     },
   }
 }

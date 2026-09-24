@@ -7,7 +7,7 @@
 // Pure and deterministic: the seed only deals the friends' rules and the cans'
 // resting places; play itself reads no randomness, only ticks and touches.
 
-import { between, createRng, deriveSeed, int } from '../../kit/rng.ts'
+import { between, createRng, deriveSeed, int, pick } from '../../kit/rng.ts'
 import type { Rng } from '../../kit/rng.ts'
 import type { Affordance, CreateSim, Observation, PointerInput, Sim, SimEvent } from '../../kit/sim.ts'
 
@@ -34,7 +34,7 @@ export const RULE_LABELS: Record<RuleId, string> = {
 // and long gaps, rev turns the gaps around, dbl answers every knock with two
 // quick ones (a knock becomes a pair, the gaps between pairs stay).
 export function applyRule(rule: RuleId, gaps: readonly Gap[]): Gap[] {
-  const parts = rule === 'echo' ? [] : rule.split('+')
+  const parts = rule.split('+')
   let out: Gap[] = [...gaps]
   if (parts.includes('flip')) out = out.map((g) => (g === 'S' ? 'L' : 'S'))
   if (parts.includes('rev')) out.reverse()
@@ -62,7 +62,7 @@ function shuffle<T>(rng: Rng, items: T[]): T[] {
 export function friendsFor(seed: number): RuleId[] {
   const rng = createRng(seed)
   const singles = shuffle(rng, [...SINGLES]).slice(0, 2)
-  const stack = STACKS[int(rng, 0, STACKS.length - 1)]!
+  const stack = pick(rng, STACKS)
   return shuffle(rng, [...singles, stack])
 }
 
@@ -104,9 +104,9 @@ export const LONG_TICKS = 22
 const REPLY_DELAY = 12
 const REPLY_S = 8
 const REPLY_L = 22
-const WAVE_TICKS = 12
+export const WAVE_TICKS = 12
 const GUESS_COOLDOWN = 150
-const MIN_HEARD_TO_GUESS = 2
+export const MIN_HEARD_TO_GUESS = 2
 const HINT_AFTER_TICKS = 150
 const MAX_EVENTS = 64
 const MAX_WAVES = 48

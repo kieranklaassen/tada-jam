@@ -196,20 +196,17 @@ export const createSim: CreateSim<PassSnapshot> = (config): Sim<PassSnapshot> =>
   let tags = 0
   let sweeps = 0
   let golden = 0
-  let itSpeed = 0
   let settle = 0
   let flash: { fromX: number; fromY: number; toX: number; toY: number } | null = null
   const tried = new Set<number>([it])
   let been = new Set<number>([it])
 
-  const emit = (name: string) => {
+  const push = (kind: SimEvent['kind'], name: string) => {
     if (pending.length >= MAX_EVENTS) pending.shift()
-    pending.push({ kind: 'state', name })
+    pending.push({ kind, name })
   }
-  const emitHook = (name: string) => {
-    if (pending.length >= MAX_EVENTS) pending.shift()
-    pending.push({ kind: 'hook', name })
-  }
+  const emit = (name: string) => push('state', name)
+  const emitHook = (name: string) => push('hook', name)
 
   const fearRadius = () => BODY[critters[it]!.kind].fear * (golden > 0 ? 0.8 : 1)
 
@@ -257,7 +254,7 @@ export const createSim: CreateSim<PassSnapshot> = (config): Sim<PassSnapshot> =>
   }
   const toward = (c: Critter, p: { x: number; y: number }): number => Math.atan2(p.y - c.y, p.x - c.x)
 
-  const wander = (c: Critter, speed: number) => {
+  const wander = (c: Critter) => {
     if (c.wander <= 0) {
       c.wander = c.kind === 'mouse' ? int(rng, 15, 45) : int(rng, 30, 90)
       const nearWall = c.x < 150 || c.x > FIELD_W - 150 || c.y < 150 || c.y > FIELD_H - 150
@@ -268,7 +265,7 @@ export const createSim: CreateSim<PassSnapshot> = (config): Sim<PassSnapshot> =>
     }
     c.wander--
     if (c.wanderScale === 0) stand(c)
-    else walk(c, c.wanderAngle, speed)
+    else walk(c, c.wanderAngle, BODY[c.kind].graze)
   }
 
   // The finger steers the glow: it heads for the touch point, as fast as its
@@ -297,7 +294,6 @@ export const createSim: CreateSim<PassSnapshot> = (config): Sim<PassSnapshot> =>
     c.y = clamp(ny, lo, FIELD_H - lo)
     if (c.x !== nx) c.vx = 0
     if (c.y !== ny) c.vy = 0
-    itSpeed = Math.hypot(c.vx, c.vy)
   }
 
   // ---- habits ------------------------------------------------------------
@@ -367,7 +363,7 @@ export const createSim: CreateSim<PassSnapshot> = (config): Sim<PassSnapshot> =>
       stand(c)
       if (--c.timer <= 0) c.mode = 'graze'
     } else if (alert && c.cool <= 0) startBolt(c)
-    else wander(c, BODY.hare.graze)
+    else wander(c)
   }
 
   const tortoise = (c: Critter, alert: boolean) => {
@@ -381,9 +377,9 @@ export const createSim: CreateSim<PassSnapshot> = (config): Sim<PassSnapshot> =>
         c.cool = 20
       }
     } else if (alert && c.cool <= 0) {
-      if (itSpeed > SHELL_IF_FASTER) startShell(c)
+      if (Math.hypot(critters[it]!.vx, critters[it]!.vy) > SHELL_IF_FASTER) startShell(c)
       else startPlod(c)
-    } else wander(c, BODY.tortoise.graze)
+    } else wander(c)
   }
 
   const magpie = (c: Critter, alert: boolean) => {
@@ -408,7 +404,7 @@ export const createSim: CreateSim<PassSnapshot> = (config): Sim<PassSnapshot> =>
         c.cool = 15
       }
     } else if (alert && c.cool <= 0) startHome(c)
-    else wander(c, BODY.magpie.graze)
+    else wander(c)
   }
 
   const mouse = (c: Critter, alert: boolean) => {
@@ -440,7 +436,7 @@ export const createSim: CreateSim<PassSnapshot> = (config): Sim<PassSnapshot> =>
         c.cool = 25
       }
     } else if (alert && c.cool <= 0) startDash(c)
-    else wander(c, BODY.mouse.graze)
+    else wander(c)
   }
 
   const runner = (c: Critter) => {
@@ -465,7 +461,6 @@ export const createSim: CreateSim<PassSnapshot> = (config): Sim<PassSnapshot> =>
     to.timer = 0
     stand(to)
     it = target
-    itSpeed = 0
     tags++
     tried.add(target)
     been.add(target)
@@ -566,14 +561,15 @@ export const createSim: CreateSim<PassSnapshot> = (config): Sim<PassSnapshot> =>
   }
 
   // A discrete class of what the world is doing to the child right now.
-  const situation = (): string => {
+  // `pinned` is how many spooked runners are pressed against a wall.
+  const situation = (pinned: number): string => {
     if (passAge < FLASH_TICKS) return 'pass'
     const others = critters.filter((_, i) => i !== it)
     if (others.some((c) => c.mode === 'shell')) return 'shell'
     if (others.some((c) => c.mode === 'double')) return 'double'
     if (others.some((c) => c.mode === 'home' || c.mode === 'perch')) return 'home'
     if (others.some((c) => c.mode === 'hidden' || c.mode === 'pop')) return 'burrow'
-    if (critters.some((c, i) => spooked(c, i) && c.blocked)) return 'pinned'
+    if (pinned > 0) return 'pinned'
     if (others.some((c) => c.mode === 'bolt')) return 'bolt'
     if (others.some((c) => c.mode === 'plod' || c.mode === 'flee' || c.mode === 'dash')) return 'chase'
     return 'calm'
@@ -583,18 +579,30 @@ export const createSim: CreateSim<PassSnapshot> = (config): Sim<PassSnapshot> =>
     const events = pending
     pending = []
     const itc = critters[it]!
+    // One pass over the visible runners: how near the closest is, how many are
+    // spooked (as spooked() says), and how many of those are pinned to a wall.
+    const fear = fearRadius()
     let nearest = Infinity
-    critters.forEach((c, i) => {
-      if (i !== it && c.mode !== 'hidden') nearest = Math.min(nearest, dist(c, itc) - c.r - itc.r)
-    })
+    let alert = 0
+    let pinned = 0
+    for (let i = 0; i < critters.length; i++) {
+      const c = critters[i]!
+      if (i === it || c.mode === 'hidden') continue
+      const d = dist(c, itc)
+      nearest = Math.min(nearest, d - c.r - itc.r)
+      if (d < fear) {
+        alert++
+        if (c.blocked) pinned++
+      }
+    }
     return {
-      signature: `${itc.kind}/${situation()}`,
+      signature: `${itc.kind}/${situation(pinned)}`,
       features: {
         tags,
         bodies: tried.size,
         near: Number.isFinite(nearest) ? clamp(nearest / 700, 0, 1) : 1,
-        alert: critters.filter((c, i) => spooked(c, i)).length,
-        pinned: critters.filter((c, i) => spooked(c, i) && c.blocked).length,
+        alert,
+        pinned,
         sweeps,
       },
       events,

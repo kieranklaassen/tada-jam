@@ -158,7 +158,6 @@ export function traceType(cells: Grid, origin: MarbleType): Trace {
   const notes: string[] = []
   const visited: Array<[number, number]> = []
   for (let row = 0; row < ROWS; row++) {
-    m.row = row
     visited.push([row, m.col])
     arrive(m, cells[row]![m.col] ?? null, notes)
     m.col = m.to
@@ -290,16 +289,14 @@ export const createSim: CreateSim<DipSnapshot> = (config): Sim<DipSnapshot> => {
   let bagIndex = 0
   let nextDrop = FIRST_DISPENSE
   let version = 0
-  let cache: { version: number; chainColor: boolean; chainSize: boolean; spread: number; paths: Array<[number, number]> } | null = null
+  let cache: { version: number; chainColor: boolean; chainSize: boolean; spread: number; pieces: number; paths: Array<[number, number]> } | null = null
 
-  const emit = (name: string) => {
+  const push = (kind: SimEvent['kind'], name: string) => {
     if (pending.length >= MAX_EVENTS) pending.shift()
-    pending.push({ kind: 'state', name })
+    pending.push({ kind, name })
   }
-  const emitHook = (name: string) => {
-    if (pending.length >= MAX_EVENTS) pending.shift()
-    pending.push({ kind: 'hook', name })
-  }
+  const emit = (name: string) => push('state', name)
+  const emitHook = (name: string) => push('hook', name)
 
   const pieceCount = () => cells.reduce((sum, row) => sum + row.filter(Boolean).length, 0)
   const contentCount = () => bins.filter(isContent).length
@@ -319,6 +316,8 @@ export const createSim: CreateSim<DipSnapshot> = (config): Sim<DipSnapshot> => {
       chainSize: traces.some((t) => t.chainSize),
       // How many different bins the bag reaches through the machine as it stands.
       spread: new Set(traces.map((t) => t.col)).size,
+      // Pieces only appear or vanish through paths that call changed().
+      pieces: pieceCount(),
       paths: traces.flatMap((t) => t.visited),
     }
     return cache
@@ -505,17 +504,17 @@ export const createSim: CreateSim<DipSnapshot> = (config): Sim<DipSnapshot> => {
     const events = pending
     pending = []
     const a = analysis()
-    const pieces = pieceCount()
+    const content = contentCount()
     const chain = a.chainColor && a.chainSize ? 'both' : a.chainColor ? 'painted' : a.chainSize ? 'shrunk' : 'none'
     const rights = arrivals.filter((v) => v === 'right').length
     return {
       // Which chains are alive, how many bins the marbles reach (1, 2, 3 or more),
       // how many bins are content (0, 1, 2 or more): 4 x 3 x 3 = 36.
-      signature: `${chain}/${Math.min(3, a.spread)}/${Math.min(2, contentCount())}`,
+      signature: `${chain}/${Math.min(3, a.spread)}/${Math.min(2, content)}`,
       features: {
-        content: contentCount(),
+        content,
         purity: arrivals.length === 0 ? 0 : rights / arrivals.length,
-        pieces,
+        pieces: a.pieces,
         chains: (a.chainColor ? 1 : 0) + (a.chainSize ? 1 : 0),
         order: level,
       },
