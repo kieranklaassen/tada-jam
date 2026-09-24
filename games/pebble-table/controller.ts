@@ -1,5 +1,5 @@
 import type { TableAudio } from './audio'
-import { freeSpotOnPlate, GUEST_RADIUS, GUEST_TOP, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, wantingSeat, type FeedingView } from './feeding'
+import { freeSpotOnPlate, GUEST_ARM, GUEST_RADIUS, GUEST_REACH, GUEST_TOP, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, wantingSeat, type FeedingView } from './feeding'
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
 import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
@@ -306,7 +306,10 @@ export class TableController {
 
     const resting = this.restingPieces()
     this.feeding = viewFeeding(resting, this.state.seats)
-    if (this.state.liveMat === 'feeding') this.updateFeeding(now)
+    if (this.state.liveMat === 'feeding') {
+      this.updateFeeding(now)
+      this.clearGuests(resting)
+    }
     this.updateStory(now)
     if (this.state.liveMat === 'door') this.updateDoor(now)
     this.updateWanting()
@@ -953,7 +956,7 @@ export class TableController {
     FEEDING.seats.forEach((seat, index) => {
       const key = `guest-${index}`
       if (this.state.liveMat !== 'feeding') this.physics.removeFixture(key)
-      else if (this.state.seats[index] && this.guestDrag?.seat !== index) this.physics.setFixture(key, { ...seat.guest, r: GUEST_RADIUS }, GUEST_TOP[SEAT_SPECIES[index]])
+      else if (this.state.seats[index] && this.guestDrag?.seat !== index) this.physics.setGuest(key, index, GUEST_TOP[SEAT_SPECIES[index]])
       else if (!this.state.seats[index] && this.stoolsShown) this.physics.setFixture(key, { ...seat.guest, r: STOOL_REACH / UNIT }, feedingFloor(seat.guest, STOOL_REACH) + STOOL_TOP)
       else if (!this.state.seats[index]) this.physics.removeFixture(key)
       else this.physics.removeFixture(key)
@@ -1576,6 +1579,40 @@ export class TableController {
         this.cadence.change(performance.now(), true)
       },
     })
+  }
+
+  /**
+   * Fair Feeding: a stone come to rest leaning on a seated guest, standing
+   * taller than its idling arms hang low, hops off it: out of its reach, or
+   * onto a free spot clear of its arms if it lies on the guest's plate, so a
+   * wave or a hop never swings into it.
+   */
+  private clearGuests(resting: readonly Piece[]): void {
+    const guests = FEEDING.seats.flatMap((seat, index) => (this.state.seats[index] && this.guestDrag?.seat !== index ? [{ at: seat.guest, floor: feedingFloor(seat.guest, GUEST_RADIUS * UNIT) }] : []))
+    const near = (at: Point, r: number, room = 0) => guests.some((guest) => Math.hypot(at.x - guest.at.x, at.y - guest.at.y) < GUEST_REACH / UNIT + r + room)
+    let taken: Map<number, Point & { r: number }> | null = null
+    for (const piece of resting) {
+      const r = stoneRadius3(piece.q) / UNIT
+      if (!near(piece, r) || !this.physics.asleep(piece.id) || !this.physics.leansOnGuest(piece.id)) continue
+      const top = this.physics.stoneTop(piece.id)
+      if (top === null || guests.every((guest) => top - guest.floor <= GUEST_ARM.low)) continue
+      taken ??= new Map(resting.map((other) => [other.id, { x: other.x, y: other.y, r: stoneRadius3(other.q) / UNIT }]))
+      taken.delete(piece.id)
+      const others = [...taken.values()]
+      const plate = plateOf(piece)
+      const clear = (at: Point) => !near(at, r, 2) && this.offDishes(at, r) && others.every((stone) => Math.hypot(at.x - stone.x, at.y - stone.y) >= stone.r + r + 2)
+      const spot = plate !== null && this.state.seats[plate] ? freeSpotOnPlate(plate, others.filter((stone) => plateOf(stone) === plate), r) : this.spotNear(piece, r, clear)
+      taken.set(piece.id, { ...spot, r })
+      this.hopAside(piece, spot)
+    }
+  }
+
+  /** Whether a stone of radius `r` lying at `at` is clear of the seated guests' plates, the bowl and the empty seats' stools. */
+  private offDishes(at: Point, r: number): boolean {
+    if (Math.hypot(at.x - FEEDING.bowl.x, at.y - FEEDING.bowl.y) < FEEDING.bowl.r + r) return false
+    return FEEDING.seats.every(({ plate, guest }, index) =>
+      this.state.seats[index] ? Math.hypot(at.x - plate.x, at.y - plate.y) >= FEEDING.plateRadius + r : !this.stoolsShown || Math.hypot(at.x - guest.x, at.y - guest.y) >= STOOL_CLEAR + r,
+    )
   }
 
   /** Knock-Knock: a stone lying where the door swings or the visitors walk to and from `homes` hops out of their way. */

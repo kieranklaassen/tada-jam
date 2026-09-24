@@ -7,10 +7,11 @@ import { JARS, PART_COUNTS } from './parts'
 import { STOOL_REACH } from './partShape'
 import { stoneRadius3, toWorld2, UNIT } from './physics3d'
 import { stoneRest } from './stoneShape'
+import { feedingFloor } from './surfaces'
 import { panOf } from './scale'
-import { GUEST_RADIUS, GUEST_TOP, plateOf } from './feeding'
+import { GUEST_ARM, GUEST_RADIUS, GUEST_REACH, guestArms, GUEST_TOP, plateOf } from './feeding'
 import { SEAT_SPECIES } from './motion'
-import { accountedTotal, defaultTable } from './state'
+import { accountedTotal, defaultTable, type Piece } from './state'
 import { doorwayGap, GATE, HINGE, houseGap } from './visitors'
 
 // A straight-down orthographic "camera": screen pixels are world units.
@@ -174,6 +175,76 @@ describe('one obvious want', () => {
     }
     run(table, 3)
     expect(table.stoolsShown).toBe(true)
+  })
+
+  it('hops a stone left standing against a seated guest\'s arm out of its reach, or back down on its plate, and leaves the ones lying flat there', () => {
+    const { table } = makeTable()
+    tap(table, { x: 1000, y: 900 })
+    const seated = [1, 4]
+    const r = stoneRadius3(4) / UNIT
+    const floor = (at: { x: number; y: number }) => feedingFloor(at, GUEST_RADIUS * UNIT)
+    const near = (p: { x: number; y: number }) => seated.some((seat) => Math.hypot(p.x - FEEDING.seats[seat].guest.x, p.y - FEEDING.seats[seat].guest.y) < GUEST_REACH / UNIT + r)
+    const tall = (p: Piece) => table.physics.stoneTop(p.id)! - floor(FEEDING.seats[seated[0]].guest) > GUEST_ARM.low
+    const pieceOf = (id: number) => table.state.pieces.find((p) => p.id === id)
+    const offArms = (p: { x: number; y: number }) => seated.every((seat) => guestArms(seat).every((arm) => Math.hypot(p.x - arm.x, p.y - arm.y) >= GUEST_ARM.r / UNIT + r))
+    const drop = (at: { x: number; y: number }) => {
+      drag(table, { x: BAG.x, y: BAG.y }, at)
+      run(table, 1)
+      return table.state.pieces[table.state.pieces.length - 1]
+    }
+    // Lying flat beside each guest, clear of its arms and as far from its plate as can be.
+    const flat = seated.map((seat) => {
+      const { guest, plate } = FEEDING.seats[seat]
+      const spot = Array.from({ length: 24 }, (_, i) => (i * Math.PI) / 12)
+        .map((angle) => ({ x: guest.x + Math.cos(angle) * (GUEST_RADIUS + r + 12), y: guest.y + Math.sin(angle) * (GUEST_RADIUS + r + 12) }))
+        .filter((at) => guestArms(seat).every((arm) => Math.hypot(at.x - arm.x, at.y - arm.y) > GUEST_ARM.r / UNIT + r + 10))
+        .reduce((best, at) => (Math.hypot(at.x - plate.x, at.y - plate.y) > Math.hypot(best.x - plate.x, best.y - plate.y) ? at : best))
+      return { spot, id: drop(spot).id }
+    })
+    // Stood on its edge against each arm in turn, its top tipped toward the guest.
+    const hopped = { plate: 0, floor: 0 }
+    for (const seat of seated) {
+      const { guest } = FEEDING.seats[seat]
+      for (const arm of guestArms(seat)) {
+        const d = Math.hypot(guest.x - arm.x, guest.y - arm.y)
+        const u = { x: (guest.x - arm.x) / d, y: (guest.y - arm.y) / d }
+        const back = (GUEST_ARM.r + stoneRadius3(4) * 0.55 + 0.5) / UNIT
+        const spot = { x: arm.x - u.x * back, y: arm.y - u.y * back }
+        const piece = drop({ x: spot.x - u.x * 40, y: spot.y - u.y * 40 })
+        const body = table.physics.body(piece.id)!
+        body.quaternion.setFromAxisAngle(new CANNON.Vec3(-u.y, 0, u.x), (70 * Math.PI) / 180)
+        body.position.set((spot.x - 800) * UNIT, floor(spot) + stoneRadius3(4) + 0.2, (spot.y - 500) * UNIT)
+        body.velocity.setZero()
+        body.angularVelocity.setZero()
+        body.wakeUp()
+        let leaning: number | null = null
+        for (let t = 0; t < 3; t += 0.05) {
+          const at = pieceOf(piece.id)!
+          if (leaning === null && table.flightViews().some((flight) => flight.id === piece.id)) leaning = plateOf(at) ?? -1
+          run(table, 0.05)
+        }
+        const now = pieceOf(piece.id)!
+        expect(near(now) && tall(now), `seat ${seat}: a stone left standing within reach`).toBe(false)
+        if (leaning === null) continue
+        if (leaning === -1) {
+          expect(near(now)).toBe(false)
+          hopped.floor++
+        } else {
+          expect(plateOf(now)).toBe(leaning)
+          expect(offArms(now)).toBe(true)
+          hopped.plate++
+        }
+      }
+    }
+    expect(hopped.floor, 'stones hopped out of reach').toBeGreaterThan(0)
+    expect(hopped.plate, 'stones hopped back down on their plate').toBeGreaterThan(0)
+    expect(table.state.pieces).toHaveLength(6)
+    expect(table.physics.stoneIds()).toHaveLength(6)
+    for (const { spot, id } of flat) {
+      const now = pieceOf(id)!
+      expect(Math.hypot(now.x - spot.x, now.y - spot.y)).toBeLessThan(r)
+      expect(near(now)).toBe(true)
+    }
   })
 
   it('hops a stone lying where a stool pops up out beside it, clear of the stool, the plates and the other stones', () => {
