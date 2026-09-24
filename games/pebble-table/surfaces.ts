@@ -165,6 +165,9 @@ export const DECAL_LIFT = 0.02
 const PLATE_FLAT = PLATE_PROFILE[4][0]
 const PLATE_REACH = Math.max(...PLATE_PROFILE.map(([r]) => r)) + PLATE_LUMP / 2
 const BOWL_REACH = (Math.max(...BOWL_PROFILE.map(([r]) => r)) + BOWL_LUMP / 2) * BOWL_SCALE
+/** The highest a plate's rim and the bowl's lip are drawn, lumps and all. */
+const PLATE_RIM_TOP = ON_RUG + (Math.max(...PLATE_PROFILE.map(([, h]) => h)) + PLATE_LUMP / 2) * PLATE_HEIGHT
+const BOWL_TOP = ON_RUG + (Math.max(...BOWL_PROFILE.map(([, h]) => h)) + BOWL_LUMP / 2) * BOWL_SCALE
 const PAN_FLAT = DISH_PROFILE[6][0]
 
 /**
@@ -198,4 +201,24 @@ export function decalReach(at: Point, ground: number, { mat, seats, panFloors }:
     if (seats[index]) reach = Math.min(reach, cm(seat.plate) - PLATE_REACH * plateR)
   })
   return reach
+}
+
+/**
+ * What a piece reaching `reach` cm around `at` lies on, on the feeding mat:
+ * what is under its middle, or, where it would reach into something drawn
+ * higher (the bowl's wall or lip, a plate's rim, the rug's hem), the top of
+ * that. Unlike a flat decal, a piece lying on the rug is tall enough to meet
+ * the bowl's flared side and a plate's edge.
+ */
+export function feedingRest(at: Point, reach: number, seats: readonly boolean[]): number {
+  const cm = (to: Point) => Math.hypot(at.x - to.x, at.y - to.y) * 0.1
+  const plateR = FEEDING.plateRadius * 0.1
+  const plates = FEEDING.seats.filter((_, index) => seats[index]).map((seat) => cm(seat.plate))
+  const ground = surfaceUnder(at, { mat: 'feeding', seats, panFloors: [0, 0] })
+  if (ground === BOWL_FLOOR) return cm(FEEDING.bowl) + reach < BOWL_WALL[0][0] ? ground : BOWL_TOP
+  if (ground === PLATE_TOP) return Math.min(...plates) + reach < PLATE_FLAT * plateR ? ground : PLATE_RIM_TOP
+  let top = Math.max(ground, feedingFloor(at, reach))
+  if (cm(FEEDING.bowl) - reach < BOWL_REACH) top = Math.max(top, BOWL_TOP)
+  if (plates.some((off) => off - reach < PLATE_REACH * plateR)) top = Math.max(top, PLATE_RIM_TOP)
+  return top
 }

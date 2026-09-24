@@ -138,6 +138,11 @@ export function stoneReachAlong(q: Quarters, x: number, y: number, z: number): n
   return most * STONE_DRAWN_RADIUS
 }
 
+/** How far (cm) the drawn piece reaches below its body's origin when turned by the quaternion (x, y, z, w). */
+export function stoneReachDown(q: Quarters, x: number, y: number, z: number, w: number): number {
+  return stoneReachAlong(q, -2 * (x * y + w * z), 2 * (x * x + z * z) - 1, -2 * (y * z - w * x))
+}
+
 const reaches = new Map<Quarters, number>()
 
 /** The farthest a drawn piece of this size reaches from its body's origin, in any direction (cm). */
