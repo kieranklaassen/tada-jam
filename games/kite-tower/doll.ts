@@ -66,6 +66,24 @@ const LOW_HAIR: Record<HeadKind, Shell> = {
   beanie: { r: HEAD_R + 0.02, theta: 1.1 + 0.7, phi0: Math.PI / 2 + 1.2, phiLength: Math.PI * 2 - 2.4 },
 }
 
+/** Points along the painted face's and the lowest hair's lower edges (and a little above), in the head's frame, three numbers to a point. */
+function rimPoints(kind: HeadKind): Float64Array {
+  const points: number[] = []
+  for (const shell of [FACE, LOW_HAIR[kind]]) {
+    for (const theta of [shell.theta, shell.theta - 0.25]) {
+      const st = Math.sin(theta)
+      const ct = Math.cos(theta)
+      for (let i = 0; i <= 16; i++) {
+        const phi = shell.phi0 + (shell.phiLength * i) / 16
+        // three's sphere: x = -r cos(phi) sin(theta), y = r cos(theta), z = r sin(phi) sin(theta).
+        points.push(-shell.r * Math.cos(phi) * st, shell.r * ct, shell.r * Math.sin(phi) * st)
+      }
+    }
+  }
+  return Float64Array.from(points)
+}
+const HEAD_RIM: Record<HeadKind, Float64Array> = { bob: rimPoints('bob'), cap: rimPoints('cap'), beanie: rimPoints('beanie') }
+
 /**
  * Pip's outline for everything the controller moves near her: body and head
  * (arms keep clear of blocks on their own), with room above for her highest
@@ -84,38 +102,42 @@ export function bodyRadius(y: number): number {
   return 0
 }
 
-/** How far the lathe's surface slopes at `y`, as the cosine that turns a radial gap into a gap along the surface normal. */
-function bodySlope(y: number): number {
-  for (let i = 1; i < BODY_PROFILE.length; i++) {
-    const a = BODY_PROFILE[i - 1]
-    const b = BODY_PROFILE[i]
-    if (y <= b.y) {
-      const dy = b.y - a.y
-      const dx = b.x - a.x
-      return dy > 1e-9 ? dy / Math.hypot(dx, dy) : 0
-    }
-  }
-  return 1
-}
+/** How far the lathe's surface slopes along the profile segment ending at each point, as the cosine that turns a radial gap into a gap along the surface normal. */
+const BODY_SLOPE = BODY_PROFILE.map((b, i) => {
+  const a = BODY_PROFILE[Math.max(0, i - 1)]
+  const dy = b.y - a.y
+  return dy > 1e-9 ? dy / Math.hypot(b.x - a.x, dy) : 0
+})
 
-/** Signed distance from a point to the body (negative inside), in the doll's own frame. */
+/** Signed distance from a point to the body (negative inside), in the doll's own frame. The arm and head guards ask this hundreds of times a frame. */
 export function bodyDistance(x: number, y: number, z: number): number {
-  const radial = Math.hypot(x, z)
+  const radial = Math.sqrt(x * x + z * z)
   if (y < 0) return Math.hypot(-y, Math.max(0, radial - BODY_PROFILE[1].x))
   if (y > BODY_TOP) return Math.hypot(y - BODY_TOP, radial)
-  return (radial - bodyRadius(y)) * Math.max(0.3, bodySlope(y))
+  for (let i = 1; i < BODY_PROFILE.length; i++) {
+    const b = BODY_PROFILE[i]
+    if (y <= b.y) {
+      const a = BODY_PROFILE[i - 1]
+      const radius = b.y > a.y ? a.x + ((b.x - a.x) * (y - a.y)) / (b.y - a.y) : Math.max(a.x, b.x)
+      return (radial - radius) * Math.max(0.3, BODY_SLOPE[i])
+    }
+  }
+  return radial
 }
 
 /** How deep the arm's rounded top sits in the shoulder in every pose; an arm may go no deeper anywhere. */
 export const ARM_JOINT = ARM_R - bodyDistance(SHOULDER.x, SHOULDER.y, 0)
 
 function combine(outward: number, vertical: number): number {
-  return outward > 0 || vertical > 0 ? Math.hypot(Math.max(0, outward), Math.max(0, vertical)) : Math.max(outward, vertical)
+  if (outward <= 0 && vertical <= 0) return Math.max(outward, vertical)
+  const o = Math.max(0, outward)
+  const v = Math.max(0, vertical)
+  return Math.sqrt(o * o + v * v)
 }
 
 /** Signed distance to the head, hair and hat (the pom is added by the guard), in the head's frame (origin at the ball's middle). */
 export function headDistance(kind: HeadKind, x: number, y: number, z: number): number {
-  let d = Math.hypot(x, y, z) - (HEAD_R + HAIR)
+  let d = Math.sqrt(x * x + y * y + z * z) - (HEAD_R + HAIR)
   if (kind === 'cap') {
     const k = Math.hypot(x / BRIM.rx, (z - BRIM.z) / BRIM.rz)
     const across = (k - 1) * Math.min(BRIM.rx, BRIM.rz)
@@ -136,7 +158,10 @@ function segmentDistance(px: number, py: number, pz: number, ax: number, ay: num
   const dz = bz - az
   const length = dx * dx + dy * dy + dz * dz
   const t = length > 0 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy + (pz - az) * dz) / length)) : 0
-  return Math.hypot(px - ax - dx * t, py - ay - dy * t, pz - az - dz * t)
+  const ox = px - ax - dx * t
+  const oy = py - ay - dy * t
+  const oz = pz - az - dz * t
+  return Math.sqrt(ox * ox + oy * oy + oz * oz)
 }
 
 /** Signed distance to something outside the doll (a block), from a point in the doll's own frame. */
@@ -249,7 +274,12 @@ export class DollGuard {
     const hy = m[1] * dx + m[4] * dy + m[7] * dz
     const hz = m[2] * dx + m[5] * dy + m[8] * dz
     let d = headDistance(this.kind, hx, hy, hz)
-    if (this.pom) d = Math.min(d, Math.hypot(hx - this.pomX, hy - this.pomY, hz - this.pomZ) - POM_R)
+    if (this.pom) {
+      const px = hx - this.pomX
+      const py = hy - this.pomY
+      const pz = hz - this.pomZ
+      d = Math.min(d, Math.sqrt(px * px + py * py + pz * pz) - POM_R)
+    }
     return d
   }
 
@@ -363,22 +393,15 @@ export class DollGuard {
   headClear(pitch: number, yaw: number, roll: number): boolean {
     this.head(pitch, yaw, roll)
     const m = this.m
-    for (const shell of [FACE, LOW_HAIR[this.kind]]) {
-      for (const theta of [shell.theta, shell.theta - 0.25]) {
-        const st = Math.sin(theta)
-        const ct = Math.cos(theta)
-        for (let i = 0; i <= 16; i++) {
-          const phi = shell.phi0 + (shell.phiLength * i) / 16
-          // three's sphere: x = -r cos(phi) sin(theta), y = r cos(theta), z = r sin(phi) sin(theta).
-          const hx = -shell.r * Math.cos(phi) * st
-          const hy = shell.r * ct
-          const hz = shell.r * Math.sin(phi) * st
-          const x = m[0] * hx + m[1] * hy + m[2] * hz
-          const y = HEAD_Y + m[3] * hx + m[4] * hy + m[5] * hz
-          const z = m[6] * hx + m[7] * hy + m[8] * hz
-          if (bodyDistance(x, y, z) < 0.012) return false
-        }
-      }
+    const rim = HEAD_RIM[this.kind]
+    for (let i = 0; i < rim.length; i += 3) {
+      const hx = rim[i]
+      const hy = rim[i + 1]
+      const hz = rim[i + 2]
+      const x = m[0] * hx + m[1] * hy + m[2] * hz
+      const y = HEAD_Y + m[3] * hx + m[4] * hy + m[5] * hz
+      const z = m[6] * hx + m[7] * hy + m[8] * hz
+      if (bodyDistance(x, y, z) < 0.012) return false
     }
     return true
   }

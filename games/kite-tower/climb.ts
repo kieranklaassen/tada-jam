@@ -96,6 +96,24 @@ const HEAD_SLICES = [0, -0.5, 0.5, -0.9, 0.9].map((k) => ({ dx: k * HEAD_ROUND, 
 /** How far apart along a move her head is looked at: well under its round. */
 const PATH_STEP = 0.08
 const pathPoint: Vec2 = { x: 0, y: 0 }
+const nearParts: Vec2[][] = []
+const nearPlaced: Placed[] = [{ id: -1, parts: nearParts }]
+/** Past `spanAt`'s own hair of slack at a part's ends, so culling never drops wood it would have found. */
+const CULL_SLACK = 0.01
+
+function partMeets(part: readonly Vec2[], x0: number, x1: number, y0: number, y1: number): boolean {
+  let lx = Infinity
+  let hx = -Infinity
+  let ly = Infinity
+  let hy = -Infinity
+  for (const p of part) {
+    if (p.x < lx) lx = p.x
+    if (p.x > hx) hx = p.x
+    if (p.y < ly) ly = p.y
+    if (p.y > hy) hy = p.y
+  }
+  return hx >= x0 - CULL_SLACK && lx <= x1 + CULL_SLACK && hy >= y0 - CULL_SLACK && ly <= y1 + CULL_SLACK
+}
 
 function headBlocked(placed: readonly Placed[], x: number, y: number): boolean {
   const middle = y + HEAD_Y
@@ -110,9 +128,28 @@ function headBlocked(placed: readonly Placed[], x: number, y: number): boolean {
  */
 export function headClearAlong(placed: readonly Placed[], kind: MoveKind, a: Spot, b: Spot): boolean {
   const n = Math.max(2, Math.ceil((Math.abs(b.x - a.x) + Math.abs(b.y - a.y) + (kind === 'walk' ? 0 : 1)) / PATH_STEP))
+  let minX = Infinity
+  let maxX = -Infinity
+  let minY = Infinity
+  let maxY = -Infinity
   for (let i = 1; i < n; i++) {
     movePoint(kind, a, b, i / n, pathPoint)
-    if (headBlocked(placed, pathPoint.x, pathPoint.y)) return false
+    minX = Math.min(minX, pathPoint.x)
+    maxX = Math.max(maxX, pathPoint.x)
+    minY = Math.min(minY, pathPoint.y)
+    maxY = Math.max(maxY, pathPoint.y)
+  }
+  // Only wood within a head's round of the whole move can touch it anywhere along the move: the planner asks this of every link.
+  nearParts.length = 0
+  for (const piece of placed) {
+    for (const part of piece.parts) {
+      if (partMeets(part, minX - HEAD_ROUND, maxX + HEAD_ROUND, minY + HEAD_Y - HEAD_ROUND, maxY + HEAD_Y + HEAD_ROUND)) nearParts.push(part)
+    }
+  }
+  if (nearParts.length === 0) return true
+  for (let i = 1; i < n; i++) {
+    movePoint(kind, a, b, i / n, pathPoint)
+    if (headBlocked(nearPlaced, pathPoint.x, pathPoint.y)) return false
   }
   return true
 }
