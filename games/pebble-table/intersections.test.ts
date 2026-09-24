@@ -8,13 +8,40 @@ import { albumSlot, BAG, DOOR, FEEDING, SCALE, shelfTile, TABLE, type MatKey, ty
 import { GUEST_TOP } from './feeding'
 import { MotionDirector, SEAT_SPECIES, type ActionKind } from './motion'
 import { STOOL_REACH, STOOL_TOP } from './partShape'
-import { PAN_REST_HEIGHT, STEP, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
+import { PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
 import { panDrops } from './scale'
 import { defaultTable } from './state'
-import { STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneRest, stoneVertices } from './stoneShape'
+import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneRest, stoneVertices } from './stoneShape'
 import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_TOP, type Surfaces } from './surfaces'
 import { GUEST_SIZE, guestFloor, guestYaw, NECK_Y, soleDepth, speciesShapes } from './view/guest'
-import { ALBUM_SCALE, albumGeometry, bagGeometry, CHOOSER_SCALE, chooserGeometry, DOOR_FARTHEST, DOOR_HINGE, doorLeafGeometry, doorSwing, easeOutBack, feedingShapes, houseGeometry, HUB_RADIUS, MOUSE_SCALE, mouseGeometry, panHang, PIVOT_Y, POST_LIFT, ROPE_KNOT, ropeMatrix, scaleShapes } from './view/models'
+import {
+  ALBUM_SCALE,
+  albumGeometry,
+  bagGeometry,
+  CHOOSER_SCALE,
+  chooserGeometry,
+  DOOR_FARTHEST,
+  DOOR_HINGE,
+  doorLeafGeometry,
+  doorSwing,
+  easeOutBack,
+  feedingShapes,
+  houseGeometry,
+  HUB_RADIUS,
+  MOUSE_SCALE,
+  mouseGeometry,
+  panHang,
+  PIVOT_Y,
+  POST_LIFT,
+  ROPE_KNOT,
+  ropeMatrix,
+  scaleShapes,
+  STONE_COVER,
+  stoneMatrix,
+  stoneRoom,
+  type StoneMotion,
+  type StoneState,
+} from './view/models'
 import { comingOut, DOOR_SWING, goingHome, VISITOR_GAP, VISITOR_REACH, visitorGone, visitorPose, visitorWalk, type VisitorPose, type VisitorTimes } from './visitors'
 import { chunk } from './voice'
 
@@ -151,6 +178,111 @@ describe('stones collide as they are drawn', () => {
     }
     expect(deepest).toBeLessThan(0.8)
   }, 30_000)
+})
+
+/** A stone as the view reads it: a body at `at` (cm) turned by `turn`. */
+const stoneAt = (id: number, q: Quarters, at: { x: number; y: number; z: number }, turn: { x: number; y: number; z: number; w: number }, pulse = 0): StoneState => ({
+  id,
+  q,
+  position: { x: at.x, y: at.y, z: at.z },
+  quaternion: [turn.x, turn.y, turn.z, turn.w],
+  velocityY: 0,
+  held: false,
+  pulse,
+  glow: 0,
+})
+
+const still = (stone: StoneState): StoneMotion => ({ stone, amount: 0, rock: 0, pop: 1 })
+
+function stoneGeometry(q: Quarters): THREE.BufferGeometry {
+  const geometry = new THREE.SphereGeometry(1, STONE_SEGMENTS, pebbleRings(STONE_SEGMENTS))
+  geometry.attributes.position.array.set(stoneVertices(STONE_CUTS[q], STONE_SEGMENTS))
+  return geometry
+}
+
+describe('stones squash, rock and pop without sinking or swelling into a neighbour', () => {
+  const geometries = new Map(SIZES.map((q) => [q, stoneGeometry(q)]))
+  const drawn = (motion: StoneMotion, keep: number) => pointsOf(geometries.get(motion.stone.q)!, stoneMatrix(motion, keep, new THREE.Matrix4()))
+  const lowestOf = (motion: StoneMotion, keep = 1) => Math.min(...drawn(motion, keep).map((p) => p.y))
+  /** How deep any drawn point of `motion`'s stone, kept by `keep`, lies inside `other`'s. */
+  const depthInto = (motion: StoneMotion, keep: number, other: StoneMotion, otherKeep: number) => {
+    const matrix = stoneMatrix(other, otherKeep, new THREE.Matrix4())
+    const geometry = geometries.get(other.stone.q)!
+    const inside = insideOf(geometry, matrix)
+    const distance = distanceTo(geometry, matrix)
+    const box = new THREE.Box3().setFromPoints(pointsOf(geometry, matrix))
+    return Math.max(0, ...drawn(motion, keep).filter((p) => box.containsPoint(p) && inside(p)).map(distance))
+  }
+  const settledHeap = () => {
+    const physics = new TablePhysics()
+    let seed = 23
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
+    const sizes: Quarters[] = []
+    for (let i = 0; i < 10; i++) {
+      sizes.push(SIZES[i % 3])
+      physics.addStone(i + 1, SIZES[i % 3], { x: 700 + (random() - 0.5) * 80, y: 500 + (random() - 0.5) * 80 }, { y: 2 + i * 1.6, spin: (random() - 0.5) * 6 })
+    }
+    run(physics, 4)
+    return sizes.map((q, i) => {
+      const body = physics.body(i + 1)!
+      return stoneAt(i + 1, q, body.position, body.quaternion)
+    })
+  }
+  const loudest = (stone: StoneState, k: number): StoneMotion => ({ stone, amount: k % 2 ? -0.3 : 0.35, rock: k % 3 === 0 ? 0.35 : -0.35, pop: 1.28 })
+
+  it('turns and scales a stone about its lowest point, however it lies', () => {
+    let seed = 5
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
+    for (let trial = 0; trial < 45; trial++) {
+      const q = SIZES[trial % 3]
+      const turn = new THREE.Quaternion().setFromEuler(new THREE.Euler(random() * Math.PI * 2, random() * Math.PI * 2, random() * Math.PI * 2))
+      const rest = still(stoneAt(1, q, { x: 0, y: 5, z: 0 }, turn))
+      const moved: StoneMotion = { ...rest, amount: -0.3 + random() * 0.65, rock: (random() - 0.5) * 0.7, pop: 1 + random() * 0.28 }
+      expect(Math.abs(lowestOf(moved) - lowestOf(rest)), `trial ${trial}`).toBeLessThan(1e-4)
+    }
+  })
+
+  it('never swells a stone in a heap into another, one at a time or all at once', () => {
+    const heap = settledHeap()
+    const rest = heap.map(still)
+    const baseline = (a: number, b: number) => depthInto(rest[a], 1, rest[b], 1)
+    heap.forEach((stone, i) => {
+      const motions = rest.map((m, j) => (j === i ? loudest(stone, i) : m))
+      const keep = stoneRoom(motions[i], motions)
+      heap.forEach((_, j) => {
+        if (j !== i) expect(depthInto(motions[i], keep, rest[j], 1), `stone ${i + 1} into ${j + 1}`).toBeLessThan(baseline(i, j) + 0.01)
+      })
+    })
+    const all = heap.map(loudest)
+    const keeps = all.map((m) => stoneRoom(m, all))
+    all.forEach((m, i) =>
+      all.forEach((other, j) => {
+        if (j !== i) expect(depthInto(m, keeps[i], other, keeps[j]), `stone ${i + 1} into ${j + 1}, all moving`).toBeLessThan(baseline(i, j) + 0.01)
+      }),
+    )
+  }, 30_000)
+
+  it('pops a stone lying on another in full, and holds back the one under it', () => {
+    const identity = new THREE.Quaternion()
+    const under = stoneAt(1, 4, { x: 0, y: stoneRest(4), z: 0 }, identity, 1)
+    const top = stoneRest(4) + stoneReachAlong(4, 0, 1, 0)
+    const over = stoneAt(2, 4, { x: 0.4, y: top + stoneRest(4), z: 0.2 }, identity, 1)
+    const motions = [loudest(under, 0), loudest(over, 1)]
+    expect(stoneRoom(motions[1], [still(under), motions[1]])).toBe(1)
+    expect(depthInto(motions[1], 1, still(under), 1)).toBe(0)
+    expect(stoneRoom(motions[0], [motions[0], still(over)])).toBe(0)
+  })
+
+  it('draws no shadow or glow wholly inside the stone lying on it', () => {
+    const lyingStones = [...SIZES.map((q, i) => stoneAt(i + 1, q, { x: 0, y: stoneRest(q), z: 0 }, new THREE.Quaternion())), ...settledHeap()].filter((stone) => lowestOf(still(stone)) < 0.05)
+    for (const stone of lyingStones) {
+      const matrix = stoneMatrix(still(stone), 1, new THREE.Matrix4())
+      const inside = insideOf(geometries.get(stone.q)!, matrix)
+      const smallest = stoneRadius3(stone.q) * STONE_COVER
+      const edge = Array.from({ length: 32 }, (_, k) => new THREE.Vector3(stone.position.x + Math.cos((k / 32) * Math.PI * 2) * smallest, DECAL_LIFT, stone.position.z + Math.sin((k / 32) * Math.PI * 2) * smallest))
+      expect(edge.some((p) => !inside(p)), `stone ${stone.id} (size ${stone.q}) hides a decal of ${smallest.toFixed(2)} cm`).toBe(true)
+    }
+  })
 })
 
 type Pose = { lean: number; twist: number; roll: number; squash: number }

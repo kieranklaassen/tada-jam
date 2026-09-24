@@ -119,15 +119,42 @@ export function outlineCorners(reach: readonly number[]): { x: number; z: number
   })
 }
 
-/** The farthest any drawn piece reaches from its body's origin, in any direction (cm). */
-export const STONE_REACH = Math.max(
-  ...Object.values(STONE_CUTS).map((cut) => {
-    const v = stoneVertices(cut, STONE_SEGMENTS)
-    let reach = 0
+const drawn = new Map<Cut, Float32Array>()
+
+function drawnVertices(cut: Cut): Float32Array {
+  let vertices = drawn.get(cut)
+  if (!vertices) {
+    vertices = stoneVertices(cut, STONE_SEGMENTS)
+    drawn.set(cut, vertices)
+  }
+  return vertices
+}
+
+/** How far (cm) the drawn piece reaches from its body's origin along the unit direction (x, y, z) of its own frame. */
+export function stoneReachAlong(q: Quarters, x: number, y: number, z: number): number {
+  const v = drawnVertices(STONE_CUTS[q])
+  let most = -Infinity
+  for (let i = 0; i < v.length; i += 3) most = Math.max(most, v[i] * x + v[i + 1] * y + v[i + 2] * z)
+  return most * STONE_DRAWN_RADIUS
+}
+
+const reaches = new Map<Quarters, number>()
+
+/** The farthest a drawn piece of this size reaches from its body's origin, in any direction (cm). */
+export function stoneReachOf(q: Quarters): number {
+  let reach = reaches.get(q)
+  if (reach === undefined) {
+    const v = drawnVertices(STONE_CUTS[q])
+    reach = 0
     for (let i = 0; i < v.length; i += 3) reach = Math.max(reach, Math.hypot(v[i], v[i + 1], v[i + 2]))
-    return reach * STONE_DRAWN_RADIUS
-  }),
-)
+    reach *= STONE_DRAWN_RADIUS
+    reaches.set(q, reach)
+  }
+  return reach
+}
+
+/** The farthest any drawn piece reaches from its body's origin, in any direction (cm). */
+export const STONE_REACH = Math.max(...([4, 2, 1] as const).map(stoneReachOf))
 
 /** Height of a resting piece's origin above what it rests on. */
 export function stoneRest(q: Quarters): number {

@@ -5,7 +5,7 @@ import { albumSlot, BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type Mat
 import { DOOR_SWING, visitorPose } from '../visitors'
 import { BAG_HEADING, BAG_LENGTH, bagShape, bagTip } from '../bag'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
-import { stoneRest } from '../stoneShape'
+import { stoneReachAlong, stoneReachOf } from '../stoneShape'
 import { createClayMaterials, merge, paint, PALETTE, piece, type ClayMaterials, type Hold } from './clay'
 import {
   JAR,
@@ -168,11 +168,93 @@ const MAX_STONES = 64
 const PIECE_SIZES: readonly Quarters[] = [4, 2, 1]
 const STONE_NAMES = ['stone-whole', 'stone-half', 'stone-quarter'] as const
 
+/** A stone's squash, rock and pop this frame, before its neighbours hold them back. */
+export type StoneMotion = { stone: StoneState; amount: number; rock: number; pop: number }
+
+const turned = new THREE.Quaternion()
+const along = new THREE.Vector3()
+
+/** How far (cm) a drawn piece reaches below its origin (`sign` -1) or above it (1) when turned by `turn`. */
+function reachUpright(q: Quarters, turn: THREE.Quaternion, sign: 1 | -1): number {
+  along.set(0, sign, 0).applyQuaternion(turned.copy(turn).invert())
+  return stoneReachAlong(q, along.x, along.y, along.z)
+}
+
+/** The drawn turn of a stone: its body's, rocked by `rock` about an axis of its own. */
+function stoneTurn(stone: StoneState, rock: number, out: THREE.Quaternion): THREE.Quaternion {
+  rockAxis.set(Math.cos(stone.id * 2.39), 0, Math.sin(stone.id * 2.39))
+  rockTurn.setFromAxisAngle(rockAxis, THREE.MathUtils.clamp(rock, -0.35, 0.35))
+  return out.set(...stone.quaternion).premultiply(rockTurn)
+}
+
+/**
+ * How far a stone's squash (`amount`), rock and pop move it from where its
+ * body lies: they turn and scale it about its middle, and it is lifted so its
+ * lowest point stays where the body's is. Returns the lift, and how far past
+ * its reach it may now stick out from its body's origin (cm).
+ */
+function stoneStretch(stone: StoneState, amount: number, rock: number, pop: number): { lift: number; out: number } {
+  if (amount === 0 && rock === 0 && pop === 1) return { lift: 0, out: 0 }
+  const below = reachUpright(stone.q, stoneTurn(stone, rock, scratch.q), -1) * (1 - amount) * pop
+  const lift = below - reachUpright(stone.q, scratch.q.set(...stone.quaternion), -1)
+  const grow = Math.max(0, (1 + Math.abs(amount) * 0.6) * pop - 1, (1 - amount) * pop - 1)
+  return { lift, out: stoneReachOf(stone.q) * grow + Math.abs(lift) }
+}
+
+/**
+ * How much of a stone's squash, rock and pop it keeps (0 to 1) so it never
+ * swells into a stone beside it. A still stone lying wholly below it cannot
+ * be reached: everything turns and scales about the stone's lowest point,
+ * which stays put.
+ */
+export function stoneRoom(motion: StoneMotion, motions: readonly StoneMotion[]): number {
+  const { stone } = motion
+  const moving = (m: StoneMotion) => m.amount !== 0 || m.rock !== 0 || m.pop !== 1
+  const full = stoneStretch(stone, motion.amount, motion.rock, motion.pop).out
+  if (full === 0) return 1
+  const reach = stoneReachOf(stone.q)
+  const bottom = stone.position.y - reachUpright(stone.q, scratch.q.set(...stone.quaternion), -1)
+  let room = Infinity
+  for (const other of motions) {
+    if (other === motion) continue
+    const p = other.stone.position
+    const gap = Math.hypot(p.x - stone.position.x, p.y - stone.position.y, p.z - stone.position.z) - reach - stoneReachOf(other.stone.q)
+    if (gap >= full) continue
+    const still = !moving(other)
+    if (still && p.y + reachUpright(other.stone.q, scratch.q.set(...other.stone.quaternion), 1) <= bottom) continue
+    room = Math.min(room, still ? gap : gap / 2)
+  }
+  if (room >= full) return 1
+  let keep = Math.max(0, room / full)
+  while (keep > 0.01 && stoneStretch(stone, motion.amount * keep, motion.rock * keep, 1 + (motion.pop - 1) * keep).out > room) keep *= 0.7
+  return keep > 0.01 ? keep : 0
+}
+
+const shapeScale = new THREE.Matrix4()
+const squashScale = new THREE.Matrix4()
+const stoneRotation = new THREE.Matrix4()
+const stoneQuaternion = new THREE.Quaternion()
+
+/** Where a stone is drawn: its body's pose, with `keep` of its squash, rock and pop. */
+export function stoneMatrix(motion: StoneMotion, keep: number, out: THREE.Matrix4): THREE.Matrix4 {
+  const { stone } = motion
+  const amount = motion.amount * keep
+  const rock = motion.rock * keep
+  const pop = 1 + (motion.pop - 1) * keep
+  const r = stoneRadius3(4) * pop
+  const { lift } = stoneStretch(stone, amount, rock, pop)
+  stoneRotation.makeRotationFromQuaternion(stoneTurn(stone, rock, stoneQuaternion))
+  shapeScale.makeScale(r, r, r)
+  squashScale.makeScale(1 + amount * 0.6, 1 - amount, 1 + amount * 0.6)
+  return out.makeTranslation(stone.position.x, stone.position.y + lift, stone.position.z).multiply(squashScale).multiply(stoneRotation).multiply(shapeScale)
+}
+
 /** Stones in three instanced draws (whole, half, quarter): physics pose plus squash on landing and stretch on pickup. */
 export function StonesModel({ read }: { read: () => StoneState[] }) {
   const { stones } = useClay()
   const meshes = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)]
   const squash = useRef(new Map<number, Squash>())
+  const motions = useRef<StoneMotion[]>([])
   const geometries = useMemo(() => [geo.pebble(28), geo.cutPebble(28, 'half'), geo.cutPebble(28, 'quarter')], [])
   useEffect(() => {
     for (const ref of meshes) {
@@ -186,11 +268,9 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
     const list = read()
     const seen = new Set<number>()
     const counts = [0, 0, 0]
+    const moving = motions.current
+    moving.length = 0
     for (const stone of list) {
-      const slot = PIECE_SIZES.indexOf(stone.q)
-      const instanced = meshes[slot].current
-      if (!instanced || counts[slot] >= MAX_STONES) continue
-      const i = counts[slot]++
       seen.add(stone.id)
       let s = squash.current.get(stone.id)
       if (!s) {
@@ -207,17 +287,16 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
       s.lastVy = stone.velocityY
       const amount = THREE.MathUtils.clamp(springStep(s, stone.held ? -0.07 : 0, dt, feel.stiffness, feel.damping), -0.3, 0.35)
       const rock = springStep(s.rock, 0, dt, feel.rockStiffness, feel.rockDamping)
-      const r = stoneRadius3(4)
       const pop = 1 + stone.pulse * 0.22 + stone.glow * 0.06
-      rockAxis.set(Math.cos(stone.id * 2.39), 0, Math.sin(stone.id * 2.39))
-      rockTurn.setFromAxisAngle(rockAxis, THREE.MathUtils.clamp(rock, -0.35, 0.35))
-      const rotation = scratch.m2.makeRotationFromQuaternion(scratch.q.set(...stone.quaternion).premultiply(rockTurn))
-      const shapeScale = scratch.m3.makeScale(r * pop, r * pop, r * pop)
-      const squashScale = scratch.m4.makeScale(1 + amount * 0.6, 1 - amount, 1 + amount * 0.6)
-      // Squash, stretch and the pop all scale about the stone's middle; its belly stays where the physics rests it.
-      const lift = stoneRest(stone.q) * (pop * (1 - amount) - 1)
-      scratch.m.makeTranslation(stone.position.x, stone.position.y + lift, stone.position.z).multiply(squashScale).multiply(rotation).multiply(shapeScale)
-      instanced.setMatrixAt(i, scratch.m)
+      moving.push({ stone, amount: Math.abs(amount) < 1e-4 ? 0 : amount, rock: Math.abs(rock) < 1e-4 ? 0 : rock, pop })
+    }
+    for (const motion of moving) {
+      const { stone } = motion
+      const slot = PIECE_SIZES.indexOf(stone.q)
+      const instanced = meshes[slot].current
+      if (!instanced || counts[slot] >= MAX_STONES) continue
+      const i = counts[slot]++
+      instanced.setMatrixAt(i, stoneMatrix(motion, stoneRoom(motion, moving), scratch.m))
       const bright = 1 + stone.pulse * 0.28 + stone.glow * 0.18
       instanced.setColorAt(i, scratch.c.setRGB(bright, bright, bright))
     }
@@ -241,11 +320,14 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
 
 // --- blob shadows and glows ----------------------------------------------------
 
-export type Blob = { at: Point; ground: number; radius: number; strength: number; stretch?: number }
+/** A blob shadow or glow; `cover` (cm) is how small it can shrink and still show past what casts it, when that rests on it. */
+export type Blob = { at: Point; ground: number; radius: number; strength: number; stretch?: number; cover?: number }
 
 const LIGHT_OFFSET = { x: 0.32, z: -0.12 }
-/** Decals smaller than this (cm) are not drawn: they would hide under what casts them. */
+/** Decals smaller than this (cm), or than their blob's `cover`, are not drawn: they would hide under what casts them. */
 const DECAL_SMALLEST = 0.2
+/** A lying stone hides a shadow or glow shrunk to under this much of its radius. */
+export const STONE_COVER = 0.5
 const decalAt: Point = { x: 0, y: 0 }
 
 /**
@@ -274,7 +356,7 @@ export function Overlays({ kind, read, surfaces, capacity }: { kind: 'shadow' | 
       decalAt.x = blob.at.x + (LIGHT_OFFSET.x * offset) / UNIT
       decalAt.y = blob.at.y + (LIGHT_OFFSET.z * offset) / UNIT
       const radius = decalReach(decalAt, blob.ground, under, blob.radius)
-      if (radius < DECAL_SMALLEST) continue
+      if (radius < Math.max(DECAL_SMALLEST, blob.cover ?? 0)) continue
       const p = to3(decalAt, blob.ground + DECAL_LIFT)
       scratch.m.compose(scratch.p.set(p.x, p.y, p.z), scratch.q.setFromEuler(scratch.e.set(-Math.PI / 2, 0, 0)), scratch.s.set(radius * 2, radius * 2, 1))
       instanced.setMatrixAt(count, scratch.m)
