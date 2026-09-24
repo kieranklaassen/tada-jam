@@ -32,6 +32,8 @@ export const DEFAULT_MAX_SUBSTEPS = 3
 const BALL_TRAVEL = 1
 /** The most pieces a step is cut into. */
 const MOST_PIECES = 6
+/** How many times sunk goes over the contacts it finds, so lifting a part out of one does not leave it in another. */
+const SUNK_PASSES = 4
 // Convex-convex collision cost grows with faces times edges, and a spill is
 // almost all stone-on-stone contacts, so colliders use few sides. The drawn
 // pebbles are separate meshes and stay round.
@@ -668,7 +670,10 @@ export class TablePhysics {
         body.velocity.set((target.x - body.position.x) / time, (target.y - body.position.y) / time, (target.z - body.position.z) / time)
       }
       const pieces = this.pieces()
-      for (let piece = 0; piece < pieces; piece++) this.world.step(STEP / pieces)
+      for (let piece = 0; piece < pieces; piece++) {
+        this.world.step(STEP / pieces)
+        this.surfaceBalls()
+      }
       this.noteLeaning()
       this.resistRolling()
       this.settleLooseParts()
@@ -716,42 +721,104 @@ export class TablePhysics {
   }
 
   /**
+   * Pushes each awake shell or stick with a ball's middle inside a stone or a
+   * part's prism back out through the side it lies least deep behind, and
+   * stops it moving further in: cannon pushes a ball out of a convex shape
+   * only while its middle is outside it, so a thin ball driven in past that (a
+   * stick's twig or tip landing on a stone) stayed in.
+   */
+  private surfaceBalls(): void {
+    const local = new CANNON.Vec3()
+    const out = new CANNON.Vec3()
+    const way = new CANNON.Vec3()
+    const back = new CANNON.Quaternion()
+    for (const body of this.balls.keys()) {
+      if (body.type !== CANNON.Body.DYNAMIC || body.sleepState === CANNON.Body.SLEEPING) continue
+      if (body.aabbNeedsUpdate) body.updateAABB()
+      for (const { body: other } of this.stones.values()) {
+        if (other === body || other.type !== CANNON.Body.DYNAMIC) continue
+        if (other.aabbNeedsUpdate) other.updateAABB()
+        if (!body.aabb.overlaps(other.aabb)) continue
+        other.quaternion.conjugate(back)
+        other.shapes.forEach((shape, s) => {
+          if (!(shape instanceof CANNON.ConvexPolyhedron)) return
+          let need = 0
+          body.shapes.forEach((ball, b) => {
+            if (!(ball instanceof CANNON.Sphere)) return
+            body.quaternion.vmult(body.shapeOffsets[b], local)
+            local.vadd(body.position, local)
+            local.vsub(other.position, local)
+            back.vmult(local, local)
+            local.vsub(other.shapeOffsets[s], local)
+            if (local.length() >= shape.boundingSphereRadius) return
+            let [least, face] = [-Infinity, 0]
+            shape.faces.forEach((corners, f) => {
+              const normal = shape.faceNormals[f]
+              const side = normal.dot(local) - normal.dot(shape.vertices[corners[0]])
+              if (side > least) [least, face] = [side, f]
+            })
+            if (least >= 0 || ball.radius - least <= need) return
+            need = ball.radius - least
+            out.copy(shape.faceNormals[face])
+          })
+          if (need === 0) return
+          other.quaternion.vmult(out, way)
+          body.position.addScaledVector(need, way, body.position)
+          body.aabbNeedsUpdate = true
+          const inward = body.velocity.vsub(other.velocity).dot(way)
+          if (inward < 0) body.velocity.addScaledVector(-inward, way, body.velocity)
+        })
+      }
+    }
+  }
+
+  /**
    * How far (cm) each of `bodies` lies sunk into the stones and parts it
    * touches, as the way out along the contacts' normals: one landing fast goes
    * up to a centimetre in within a step, before any contact is made, and its
    * contacts push it back out over the next few. The world's own contacts are
-   * from before its last step moved things, so these are found afresh.
+   * from before its last step moved things, and leave out a part asleep on a
+   * sleeping stone, so these are found afresh.
    */
   sunk(bodies: ReadonlySet<CANNON.Body>): Map<CANNON.Body, CANNON.Vec3> {
     const out = new Map<CANNON.Body, CANNON.Vec3>()
     if (bodies.size === 0) return out
-    const [first, second]: [CANNON.Body[], CANNON.Body[]] = [[], []]
-    this.world.broadphase.collisionPairs(this.world, first, second)
     const [p1, p2]: [CANNON.Body[], CANNON.Body[]] = [[], []]
-    first.forEach((bi, i) => {
-      const bj = second[i]
-      if (bi.type !== CANNON.Body.DYNAMIC || bj.type !== CANNON.Body.DYNAMIC || !(bodies.has(bi) || bodies.has(bj))) return
-      p1.push(bi)
-      p2.push(bj)
-    })
+    for (const body of bodies) {
+      if (body.type !== CANNON.Body.DYNAMIC) continue
+      if (body.aabbNeedsUpdate) body.updateAABB()
+      for (const { body: other } of this.stones.values()) {
+        if (other === body || other.type !== CANNON.Body.DYNAMIC || (bodies.has(other) && other.id < body.id)) continue
+        if (other.aabbNeedsUpdate) other.updateAABB()
+        if (!body.aabb.overlaps(other.aabb)) continue
+        p1.push(body)
+        p2.push(other)
+      }
+    }
     if (p1.length === 0) return out
     const contacts: CANNON.ContactEquation[] = []
     this.world.narrowphase.getContacts(p1, p2, this.world, contacts, [], [], [])
     const gap = new CANNON.Vec3()
-    const away = new CANNON.Vec3()
+    const sunk: { bi: CANNON.Body; bj: CANNON.Body; ni: CANNON.Vec3; depth: number }[] = []
     for (const { bi, bj, ri, rj, ni } of contacts) {
       bj.position.vadd(rj, gap)
       gap.vsub(bi.position, gap)
       gap.vsub(ri, gap)
       const depth = -gap.dot(ni)
       if (depth <= 0) continue
-      for (const [body, side] of [[bi, -1], [bj, 1]] as const) {
-        if (!bodies.has(body)) continue
-        ni.scale(side, away)
-        let lift = out.get(body)
-        if (!lift) out.set(body, (lift = new CANNON.Vec3()))
-        const need = depth - lift.dot(away)
-        if (need > 0) lift.addScaledVector(need, away, lift)
+      sunk.push({ bi, bj, ni, depth })
+      for (const body of [bi, bj]) if (bodies.has(body) && !out.has(body)) out.set(body, new CANNON.Vec3())
+    }
+    // A part pressed between two things is lifted out of both where it can
+    // be; two lifted parts pressed together each move half the way apart.
+    for (let pass = 0; pass < SUNK_PASSES; pass++) {
+      for (const { bi, bj, ni, depth } of sunk) {
+        const [li, lj] = [out.get(bi), out.get(bj)]
+        const need = depth - (lj?.dot(ni) ?? 0) + (li?.dot(ni) ?? 0)
+        if (need <= 0) continue
+        const share = li && lj ? need / 2 : need
+        li?.addScaledVector(-share, ni, li)
+        lj?.addScaledVector(share, ni, lj)
       }
     }
     return out

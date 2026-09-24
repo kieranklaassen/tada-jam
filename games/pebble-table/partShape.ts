@@ -263,10 +263,40 @@ function rodBalls(points: ArrayLike<number>, rod: Lumped, spacing: number, slack
   })
 }
 
+/**
+ * Balls holding a rod's pointed ends past the first and last of its balls
+ * (`rod`, in order along it), each as big as the farthest of `points` nearest
+ * to it, less `slack`: rodBalls sets its end balls half a spacing in from the
+ * tips, where the rod is still thick, and a tip lying on a stone went into it.
+ */
+function tipBalls(points: ArrayLike<number>, rod: readonly Ball[], slack: number): Ball[] {
+  const [first, last] = [rod[0], rod[rod.length - 1]]
+  const length = Math.hypot(last.x - first.x, last.y - first.y, last.z - first.z)
+  const [ax, ay, az] = [(last.x - first.x) / length, (last.y - first.y) / length, (last.z - first.z) / length]
+  return ([[first, -1], [last, 1]] as const).flatMap(([end, side]) => {
+    const beyond: number[] = []
+    let [far, tip]: [number, V3 | null] = [0, null]
+    for (let i = 0; i < points.length; i += 3) {
+      const t = side * ((points[i] - end.x) * ax + (points[i + 1] - end.y) * ay + (points[i + 2] - end.z) * az)
+      if (t <= 0) continue
+      beyond.push(points[i], points[i + 1], points[i + 2])
+      if (t > far) [far, tip] = [t, [points[i], points[i + 1], points[i + 2]]]
+    }
+    if (!tip) return []
+    const [tx, ty, tz] = tip
+    const centres = TIP_BALLS.map((f): V3 => [tx + (end.x - tx) * f, ty + (end.y - ty) * f, tz + (end.z - tz) * f])
+    // The end ball takes the points nearest it; only the balls between it and the tip are new.
+    return fitBalls(beyond, [[end.x, end.y, end.z], ...centres], slack).filter((ball) => ball.x !== end.x || ball.y !== end.y || ball.z !== end.z)
+  })
+}
+
+/** Where tipBalls sets its balls, as shares of the way from a tip back to the end ball. */
+const TIP_BALLS = [0.2, 0.55] as const
+
 /** How far drawn points may lie outside a ball: well under the audit's tolerance and about a pixel on screen. */
 export const BALL_SLACK = 0.08
-/** Balls along a stick's bark this far apart dip about 0.2 cm between each other, where the bark is thickest. */
-const STICK_SPACING = 0.8
+/** Balls along a stick's bark this far apart dip about 0.05 cm between each other where the bark is thickest: a stone's cut edge lying across a stick settled into the 0.3 cm dip between balls twice as far apart. */
+const STICK_SPACING = 0.4
 /** A stick's balls are this much thinner than its lumpiest bark: it lies on its balls, so its lumps barely touch the table. */
 const STICK_SLACK = 0.03
 
@@ -335,11 +365,12 @@ export function partCollider(kind: PartKind): PartCollider {
       collider = { prism: null, balls: shellBalls() }
       break
     case 'stick': {
-      // Rows of balls along the bark and the side twig; twig balls buried in the bark are left out.
-      const bark = rodBalls(pieceSurface('stick', 'bark', 0.05), STICK.bark, STICK_SPACING, STICK_SLACK)
-      const twig = rodBalls(pieceSurface('stick', 'twig', 0.05), STICK.twig, STICK_SPACING / 2, STICK_SLACK)
+      // Rows of balls along the bark, out to its tips, and the side twig; twig balls buried in the bark are left out.
+      const surface = pieceSurface('stick', 'bark', 0.05)
+      const bark = rodBalls(surface, STICK.bark, STICK_SPACING, STICK_SLACK)
+      const twig = rodBalls(pieceSurface('stick', 'twig', 0.05), STICK.twig, STICK_SPACING, STICK_SLACK)
       const buried = (b: Ball) => bark.some((c) => Math.hypot(b.x - c.x, b.y - c.y, b.z - c.z) + b.r <= c.r)
-      collider = { prism: null, balls: [...bark, ...twig.filter((b) => !buried(b))] }
+      collider = { prism: null, balls: [...bark, ...tipBalls(surface, bark, STICK_SLACK), ...twig.filter((b) => !buried(b))] }
       break
     }
     case 'boulder':
