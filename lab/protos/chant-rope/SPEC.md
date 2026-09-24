@@ -26,8 +26,22 @@ Hooks:
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: kaia, tess, arch-3, arch-6, arch-7, arch-8 (18 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 4 of 18 runs (22%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 4, 4, 3 of 18.
+- **Play 5 against play 1:** change 1.24 (1.24 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 45 adopted, 12 made progress. Tried: charge down, charge up, reach down, reach up, streak down, streak up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective streak up; outcome variety 2.55 bits (by policy: greedy 2.43, random 2.61, repeat-one 2.43). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 22.2% with every hook on, 5.6% with all off):
+  - `streak`: inconclusive (the persona model has no reward response); without it 22.2%
+  - `tempo`: needed; without it 5.6%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 4 of 18 target-panel runs (22%) start session 3, 27.8 points short of the 50% line (5 more runs needed).
+- Hook ablation says little for `streak`: removing it changed nothing the personas can register.
+- Leans on hook `tempo`: removing it drops session-3 return from 22.2% to 5.6%.
+- Left first: `arch-3` and `arch-7`, starting 1.0 of 5 sessions on average (the best in the target panel starts 3.7).

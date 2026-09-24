@@ -18,8 +18,18 @@ Signature: place (floor, cradle, high, low) x curl (straight, left, right, air o
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: kaia, tess, arch-3, arch-6 (12 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 1 of 12 runs (8%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 1, 0, 0 of 12.
+- **Play 5 against play 1:** change 0.19 (0.19 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 16 adopted, 3 made progress. Tried: curlPats down, curlPats up, height up, landings down, nearBear down, nearBear up, pats down, pats up, rally down.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective bats up; outcome variety 0.00 bits (by policy: greedy 0.00, random 0.00, repeat-one 0.00). Dominant strategy: no (the objective never varied).
+- **Hook flags:** none declared.
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 1 of 12 target-panel runs (8%) start session 3, 41.7 points short of the 50% line (5 more runs needed).
+- Left first: `arch-3` and `kaia`, starting 1.0 of 5 sessions on average (the best in the target panel starts 2.0).

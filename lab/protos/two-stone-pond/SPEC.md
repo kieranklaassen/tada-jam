@@ -16,8 +16,18 @@ How the sim produces it: one ring only ever shows a spreading circle, so the rul
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-7, arch-8, arch-9, arch-11 (12 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 1 of 12 runs (8%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 1, 0, 0 of 12.
+- **Play 5 against play 1:** change 0.11 (0.11 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 22 adopted, 5 made progress. Tried: energy down, energy up, lines up, parked up, sources down, sources up, spacing down, spacing up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective parked up; outcome variety 1.41 bits (by policy: greedy 0.00, random 1.73, repeat-one 0.00). Dominant strategy: no (the objective never varied).
+- **Hook flags:** none declared.
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 1 of 12 target-panel runs (8%) start session 3, 41.7 points short of the 50% line (5 more runs needed).
+- Left first: `arch-8` and `arch-9`, starting 1.3 of 5 sessions on average (the best in the target panel starts 1.7).

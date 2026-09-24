@@ -21,8 +21,18 @@ The sim produces it: the habits are constant, so they can be learned, while the 
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-7, arch-8, arch-9, arch-11 (12 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 2 of 12 runs (17%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 2, 1, 1 of 12.
+- **Play 5 against play 1:** change 1.14 (1.14 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 25 adopted, 7 made progress. Tried: caught down, fooled down, fooled up, hauls up, shifts up, spotted down.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective hauls up; outcome variety 1.15 bits (by policy: greedy 1.00, random 0.98, repeat-one 1.00). Dominant strategy: no (the objective never varied).
+- **Hook flags:** none declared.
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 2 of 12 target-panel runs (17%) start session 3, 33.3 points short of the 50% line (4 more runs needed).
+- Left first: `arch-9`, starting 1.0 of 5 sessions on average (the best in the target panel starts 2.3).

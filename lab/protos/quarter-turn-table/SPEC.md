@@ -21,9 +21,19 @@ How the sim produces it: the arrows are the readable state (each shows where it 
 ## Findings
 
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-6, arch-7, arch-8, arch-9, arch-11 (15 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 0 of 15 runs (0%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 0, 0, 0 of 15.
+- **Play 5 against play 1:** change 1.09 (1.03 new signatures per 100 actions plus 0.07 new action kinds).
+- **Self-set aims:** 18 adopted, 0 made progress. Tried: balls down, balls up, bestChain up, chain down, chain up, drains down, links up, orbit down, orbit up, turns down, turns up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective bestChain up; outcome variety 1.11 bits (by policy: greedy 1.03, random 1.24, repeat-one 1.03). Dominant strategy: no (no policy dominates).
+- **Hook flags:** none declared.
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
 
-_Filled after the panel run._
+- Fails the depth gate: 0 of 15 target-panel runs (0%) start session 3, 50.0 points short of the 50% line (8 more runs needed).
+- No self-set aim made progress (0 of 18 adopted).
+- Left first: `arch-7` and `arch-8`, starting 1.0 of 5 sessions on average (the best in the target panel starts 1.3).

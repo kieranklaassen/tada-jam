@@ -18,14 +18,18 @@ How the sim produces it: the physics of each tool is the same every day, so what
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: tess, arch-6, arch-7, arch-8, arch-9 (15 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 2 of 15 runs (13%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 2, 1, 1 of 15.
+- **Play 5 against play 1:** change 1.29 (1.29 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 29 adopted, 3 made progress. Tried: attempts down, attempts up, closeness up, placed down, placed up, touched down, touched up, woken down, woken up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective closeness up; outcome variety 2.06 bits (by policy: greedy 2.19, random 0.96, repeat-one 1.58). Dominant strategy: no (no policy dominates).
+- **Hook flags:** none declared.
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
 
-Builder notes from before the panel run:
-- About half the days pass the sampled one-tool check; the rest are "robust" days where a single well-placed tool may also solve the day (the generator settles for these after a long search). Blind flailing woke the cat in roughly 1 session in 10 of 3 minutes.
-- Physics is hand-rolled (a point ball against capsules, circles, and a fan stream) and simple by design; unusual stacks of tools can trap the ball, which ends the try after it lies still or stays in one place for about 3 seconds.
-- Building a day costs about 70 ms on average (up to about half a second) and is cached by seed, so greedy replays stay cheap.
-- Turning by the knob needs a drag; tapping a placed tool turns it 30 degrees. Angles snap to 15 degrees.
+- Fails the depth gate: 2 of 15 target-panel runs (13%) start session 3, 36.7 points short of the 50% line (6 more runs needed).
+- Left first: `arch-7`, starting 1.0 of 5 sessions on average (the best in the target panel starts 2.3).

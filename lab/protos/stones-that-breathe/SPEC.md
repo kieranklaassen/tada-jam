@@ -18,8 +18,21 @@ Every session is a fresh day. The seed draws one hidden beat (about 3.6 to 5 sec
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-6, arch-7, arch-8, arch-9, arch-11 (15 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 2 of 15 runs (13%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 2, 0, 0 of 15.
+- **Play 5 against play 1:** change 2.71 (2.71 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 21 adopted, 2 made progress. Tried: clean down, clean up, crossings up, landings up, progress down, progress up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective landings up; outcome variety 3.58 bits (by policy: greedy 3.28, random 2.56, repeat-one 3.92). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 13.3% with every hook on, 13.3% with all off):
+  - `bloom`: inconclusive (the persona model has no reward response); without it 13.3%
+  - `widen`: not needed; without it 13.3%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 2 of 15 target-panel runs (13%) start session 3, 36.7 points short of the 50% line (6 more runs needed).
+- Hook ablation says little for `bloom`: removing it changed nothing the personas can register.
+- Left first: `arch-7` and `arch-9`, starting 1.0 of 5 sessions on average (the best in the target panel starts 1.7).

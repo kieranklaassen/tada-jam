@@ -18,8 +18,19 @@ Features: `peak` (up), `enclosed` (up), `damp`, `standing`.
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: kaia, tess, arch-6, arch-7, arch-8, arch-9 (18 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 1 of 18 runs (6%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 1, 1, 1 of 18.
+- **Play 5 against play 1:** change 0.55 (0.55 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 24 adopted, 0 made progress. Tried: damp down, damp up, enclosed up, peak up, standing down, standing up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective peak up; outcome variety 1.76 bits (by policy: greedy 0.00, random 2.22, repeat-one 0.00). Dominant strategy: no (no policy dominates).
+- **Hook flags:** none declared.
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 1 of 18 target-panel runs (6%) start session 3, 44.4 points short of the 50% line (8 more runs needed).
+- No self-set aim made progress (0 of 24 adopted).
+- Left first: `arch-7` and `tess`, starting 1.0 of 5 sessions on average (the best in the target panel starts 2.3).

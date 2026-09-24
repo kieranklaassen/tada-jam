@@ -16,8 +16,19 @@ How the sim produces it: the seed sets the sapling's lean, its side shoot's side
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-9, arch-11 (6 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 2 of 6 runs (33%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 2, 0, 0 of 6.
+- **Play 5 against play 1:** change 2.48 (2.48 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 15 adopted, 5 made progress. Tried: fit up, height down, height up, limbs down, limbs up, lit up, lost down, season down, season up, spread up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective spread up; outcome variety 2.93 bits (by policy: greedy 2.01, random 1.94, repeat-one 1.03). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 33.3% with every hook on, 16.7% with all off):
+  - `picture`: needed; without it 16.7%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 2 of 6 target-panel runs (33%) start session 3, 16.7 points short of the 50% line (1 more run needed).
+- Leans on hook `picture`: removing it drops session-3 return from 33.3% to 16.7%.

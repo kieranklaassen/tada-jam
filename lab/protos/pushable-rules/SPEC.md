@@ -26,8 +26,20 @@ How the sim produces it: no room can be crossed by walking alone (except a detou
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-9, arch-11 (6 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 2 of 6 runs (33%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 2, 1, 1 of 6.
+- **Play 5 against play 1:** change 1.24 (1.24 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 15 adopted, 4 made progress. Tried: padGap down, rules down, rules up, solved up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective solved up; outcome variety 1.43 bits (by policy: greedy 0.92, random 1.93, repeat-one 0.92). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 33.3% with every hook on, 33.3% with all off):
+  - `stars`: inconclusive (the persona model has no reward response); without it 33.3%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 2 of 6 target-panel runs (33%) start session 3, 16.7 points short of the 50% line (1 more run needed).
+- Hook ablation says little for `stars`: removing it changed nothing the personas can register.
+- Left first: `arch-9`, starting 1.3 of 5 sessions on average (the best in the target panel starts 3.0).

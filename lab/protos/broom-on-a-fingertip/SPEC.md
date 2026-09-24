@@ -29,16 +29,21 @@ How the sim produces it:
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-9, arch-11 (6 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 0 of 6 runs (0%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 0, 0, 0 of 6.
+- **Play 5 against play 1:** change 0.90 (0.90 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 12 adopted, 5 made progress. Tried: bestRun down, broom down, broom up, energy up, falls up, held up, planted down, walked up, wobble up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective uprightTime up; outcome variety 2.55 bits (by policy: greedy 1.27, random 2.88, repeat-one 1.27). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 0.0% with every hook on, 16.7% with all off):
+  - `flags`: not needed; without it 16.7%
+  - `best`: inconclusive (the persona model has no reward response); without it 0.0%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
 
-Builder's notes, ahead of the run:
-
-- Personas aim with jitter and emit taps, drags and holds; a stand-up broom needs continuous, well-timed correction (many small `move` events a second). If personas emit sparse drags they may never keep it up, and the panel would then read as a loop with no ceiling reached rather than a loop with no depth. Watch mode will show which.
-- Cue-blind touches only change the sim on the broom's column (150 px either side, top to bottom) and on the rack. A touch on a flag when the broom is elsewhere does nothing.
-- The `best` hook changes no affordance and no signature, so the panel will read it as inconclusive by construction. The `flags` hook does change both.
-- The idle "shake" hint (a wiggle line under the point once the broom hangs) gives the trick away; it is only on when hints are on, which the return runs turn off.
-- The rack reset is the cheap way back up. If personas prefer it every time, the swing-up will never be found by fiddling on the first sessions, only by accident (it does happen in random play).
+- Fails the depth gate: 0 of 6 target-panel runs (0%) start session 3, 50.0 points short of the 50% line (3 more runs needed).
+- Hook ablation says little for `best`: removing it changed nothing the personas can register.
+- Left first: `arch-9`, starting 1.3 of 5 sessions on average (the best in the target panel starts 1.7).

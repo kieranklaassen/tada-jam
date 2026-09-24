@@ -16,8 +16,21 @@ How the sim produces it: with no seeds the heaps form wherever the pour happened
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: kaia, tess, arch-3, arch-6, arch-7 (15 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 0 of 15 runs (0%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 0, 0, 0 of 15.
+- **Play 5 against play 1:** change 0.00 (0.00 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 18 adopted, 5 made progress. Tried: beads down, beads up, cornered up, heaps down, heaps up, seeds down, seeds up, tidy up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective tidy up; outcome variety 2.04 bits (by policy: greedy 1.80, random 0.69, repeat-one 1.74). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 0.0% with every hook on, 13.3% with all off):
+  - `tidy`: inconclusive (the persona model has no reward response); without it 0.0%
+  - `pink`: not needed; without it 13.3%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 0 of 15 target-panel runs (0%) start session 3, 50.0 points short of the 50% line (8 more runs needed).
+- Hook ablation says little for `tidy`: removing it changed nothing the personas can register.
+- Play 5 shows no measured change from play 1: no new signatures and no new action kinds.

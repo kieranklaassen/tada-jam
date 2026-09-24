@@ -16,8 +16,22 @@ How the sim produces it: the meadow starts different each session (seeded hues, 
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-9, arch-11 (6 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 0 of 6 runs (0%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 0, 0, 0 of 6.
+- **Play 5 against play 1:** change 0.28 (0.28 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 7 adopted, 0 made progress. Tried: bodies up, hatched down, spotted up, wishes down.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective bodies up; outcome variety 1.56 bits (by policy: greedy 0.38, random 2.26, repeat-one 0.38). Dominant strategy: yes, repeat-one beats random on the objective while its variety collapses.
+- **Hook flags** (raw material for the guidelines; session 3 return 0.0% with every hook on, 0.0% with all off):
+  - `wish`: inconclusive (the persona model has no reward response); without it 0.0%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 0 of 6 target-panel runs (0%) start session 3, 50.0 points short of the 50% line (3 more runs needed).
+- Dominant strategy in self-play: repeat-one beats random on the objective while its variety collapses.
+- Hook ablation says little for `wish`: removing it changed nothing the personas can register.
+- No self-set aim made progress (0 of 7 adopted).
+- Left first: `arch-9`, starting 1.0 of 5 sessions on average (the best in the target panel starts 1.3).

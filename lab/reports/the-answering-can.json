@@ -1,0 +1,1640 @@
+{
+  "crashes": [],
+  "gate": {
+    "pass": false,
+    "runs": 15,
+    "share": 0.066667,
+    "started": 1
+  },
+  "hooks": {
+    "allOff": {
+      "changedAffordancesOrSignatures": true,
+      "diffFromBaseline": 0,
+      "session3Share": 0.066667
+    },
+    "baseline": {
+      "session3Share": 0.066667
+    },
+    "declared": [
+      "stack-wakes"
+    ],
+    "perHook": {
+      "stack-wakes": {
+        "changedAffordancesOrSignatures": true,
+        "diffFromBaseline": 0,
+        "session3Share": 0.066667,
+        "verdict": "not needed"
+      }
+    },
+    "status": "ran"
+  },
+  "key": "the-answering-can",
+  "measures": {
+    "perPersona": {
+      "arch-11": {
+        "age": 11,
+        "aims": {
+          "adopted": 5,
+          "features": [
+            "probes up",
+            "solved up"
+          ],
+          "madeProgress": 1
+        },
+        "clarity": {
+          "aimedHitShare": 1,
+          "changedShare": 0,
+          "distinctKinds": 3,
+          "flag": "low",
+          "runs": 3,
+          "runsWithChange": 0,
+          "ticksToFirstChange": null,
+          "touches": 33
+        },
+        "inTargetPanel": true,
+        "play5": {
+          "change": 1.690821,
+          "kindGrowth": 0,
+          "newSignaturesPer100Actions": 1.690821
+        },
+        "returnShare": {
+          "session3": 0,
+          "session4": 0,
+          "session5": 0
+        },
+        "runs": 3,
+        "sessionsStartedMean": 1.333333
+      },
+      "arch-3": {
+        "age": 3,
+        "aims": {
+          "adopted": 1,
+          "features": [
+            "probes up"
+          ],
+          "madeProgress": 0
+        },
+        "clarity": {
+          "aimedHitShare": 0.603175,
+          "changedShare": 0.058824,
+          "distinctKinds": 3,
+          "flag": "low",
+          "runs": 3,
+          "runsWithChange": 2,
+          "ticksToFirstChange": 117.5,
+          "touches": 51
+        },
+        "inTargetPanel": false,
+        "play5": {
+          "change": 0,
+          "kindGrowth": 0,
+          "newSignaturesPer100Actions": 0
+        },
+        "returnShare": {
+          "session3": 0,
+          "session4": 0,
+          "session5": 0
+        },
+        "runs": 3,
+        "sessionsStartedMean": 1
+      },
+      "arch-6": {
+        "age": 6,
+        "aims": {
+          "adopted": 4,
+          "features": [
+            "probes up",
+            "solved up"
+          ],
+          "madeProgress": 0
+        },
+        "clarity": {
+          "aimedHitShare": 0.944444,
+          "changedShare": 0.121951,
+          "distinctKinds": 3,
+          "flag": "low",
+          "runs": 3,
+          "runsWithChange": 2,
+          "ticksToFirstChange": 45.5,
+          "touches": 41
+        },
+        "inTargetPanel": true,
+        "play5": {
+          "change": 1.253133,
+          "kindGrowth": 0,
+          "newSignaturesPer100Actions": 1.253133
+        },
+        "returnShare": {
+          "session3": 0,
+          "session4": 0,
+          "session5": 0
+        },
+        "runs": 3,
+        "sessionsStartedMean": 1.333333
+      },
+      "arch-7": {
+        "age": 7,
+        "aims": {
+          "adopted": 4,
+          "features": [
+            "probes up",
+            "solved up"
+          ],
+          "madeProgress": 1
+        },
+        "clarity": {
+          "aimedHitShare": 0.880952,
+          "changedShare": 0.05,
+          "distinctKinds": 3,
+          "flag": "low",
+          "runs": 3,
+          "runsWithChange": 1,
+          "ticksToFirstChange": 229,
+          "touches": 40
+        },
+        "inTargetPanel": true,
+        "play5": {
+          "change": 0,
+          "kindGrowth": 0,
+          "newSignaturesPer100Actions": 0
+        },
+        "returnShare": {
+          "session3": 0,
+          "session4": 0,
+          "session5": 0
+        },
+        "runs": 3,
+        "sessionsStartedMean": 1
+      },
+      "arch-8": {
+        "age": 8,
+        "aims": {
+          "adopted": 12,
+          "features": [
+            "probes down",
+            "probes up",
+            "solved down",
+            "solved up"
+          ],
+          "madeProgress": 6
+        },
+        "clarity": {
+          "aimedHitShare": 1,
+          "changedShare": 0.097561,
+          "distinctKinds": 3,
+          "flag": "low",
+          "runs": 3,
+          "runsWithChange": 3,
+          "ticksToFirstChange": 200.666667,
+          "touches": 41
+        },
+        "inTargetPanel": true,
+        "play5": {
+          "change": 3.028404,
+          "kindGrowth": 0,
+          "newSignaturesPer100Actions": 3.028404
+        },
+        "returnShare": {
+          "session3": 0.333333,
+          "session4": 0,
+          "session5": 0
+        },
+        "runs": 3,
+        "sessionsStartedMean": 2
+      },
+      "arch-9": {
+        "age": 9,
+        "aims": {
+          "adopted": 4,
+          "features": [
+            "probes up",
+            "solved down",
+            "solved up"
+          ],
+          "madeProgress": 0
+        },
+        "clarity": {
+          "aimedHitShare": 0.972222,
+          "changedShare": 0.088235,
+          "distinctKinds": 3,
+          "flag": "low",
+          "runs": 3,
+          "runsWithChange": 2,
+          "ticksToFirstChange": 18,
+          "touches": 34
+        },
+        "inTargetPanel": true,
+        "play5": {
+          "change": 1.190476,
+          "kindGrowth": 0,
+          "newSignaturesPer100Actions": 1.190476
+        },
+        "returnShare": {
+          "session3": 0,
+          "session4": 0,
+          "session5": 0
+        },
+        "runs": 3,
+        "sessionsStartedMean": 1.333333
+      },
+      "kaia": {
+        "age": 4,
+        "aims": {
+          "adopted": 2,
+          "features": [
+            "solved up"
+          ],
+          "madeProgress": 0
+        },
+        "clarity": {
+          "aimedHitShare": 0.789474,
+          "changedShare": 0.021739,
+          "distinctKinds": 3,
+          "flag": "low",
+          "runs": 3,
+          "runsWithChange": 1,
+          "ticksToFirstChange": 98,
+          "touches": 46
+        },
+        "inTargetPanel": false,
+        "play5": {
+          "change": 0,
+          "kindGrowth": 0,
+          "newSignaturesPer100Actions": 0
+        },
+        "returnShare": {
+          "session3": 0,
+          "session4": 0,
+          "session5": 0
+        },
+        "runs": 3,
+        "sessionsStartedMean": 1
+      },
+      "tess": {
+        "age": 5,
+        "aims": {
+          "adopted": 7,
+          "features": [
+            "probes down",
+            "probes up"
+          ],
+          "madeProgress": 4
+        },
+        "clarity": {
+          "aimedHitShare": 0.843137,
+          "changedShare": 0.041667,
+          "distinctKinds": 3,
+          "flag": "low",
+          "runs": 3,
+          "runsWithChange": 1,
+          "ticksToFirstChange": 163,
+          "touches": 48
+        },
+        "inTargetPanel": false,
+        "play5": {
+          "change": 0,
+          "kindGrowth": 0,
+          "newSignaturesPer100Actions": 0
+        },
+        "returnShare": {
+          "session3": 0,
+          "session4": 0,
+          "session5": 0
+        },
+        "runs": 3,
+        "sessionsStartedMean": 1
+      }
+    },
+    "targetPanel": {
+      "aims": {
+        "adopted": 29,
+        "features": [
+          "probes down",
+          "probes up",
+          "solved down",
+          "solved up"
+        ],
+        "madeProgress": 8
+      },
+      "clarity": {
+        "aimedHitShare": 0.957547,
+        "changedShare": 0.074074,
+        "distinctKinds": 3,
+        "flag": "low",
+        "runs": 15,
+        "runsWithChange": 8,
+        "ticksToFirstChange": 119.75,
+        "touches": 189
+      },
+      "play5": {
+        "change": 1.432567,
+        "kindGrowth": 0,
+        "newSignaturesPer100Actions": 1.432567
+      },
+      "returnShare": {
+        "session3": 0.066667,
+        "session4": 0,
+        "session5": 0
+      },
+      "runs": 15,
+      "sessionsStartedMean": 1.4,
+      "subSignals": {
+        "aimScore": 0.533333,
+        "changeScore": 1.432567,
+        "returnScore": 0.022222
+      }
+    }
+  },
+  "meta": {
+    "ageBand": [
+      7,
+      10
+    ],
+    "engine": "mystery",
+    "features": [
+      {
+        "name": "solved",
+        "objective": "up"
+      },
+      {
+        "name": "probes",
+        "objective": "up"
+      }
+    ],
+    "hookAblation": "supported",
+    "hooks": [
+      "stack-wakes"
+    ],
+    "key": "the-answering-can",
+    "lens": "physical-toy",
+    "name": "The Answering Can",
+    "signatureBound": 54,
+    "toy": "tin-can-telephone",
+    "verb": "knock"
+  },
+  "runs": [
+    {
+      "crashed": false,
+      "persona": "kaia",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0291,
+          "returned": false
+        }
+      ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 236,
+          "aims": [],
+          "distinctSignatures": 10,
+          "endedBy": "attention",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 10,
+          "pull": 0,
+          "ticks": 3097
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "kaia",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0291,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 171,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 6,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 6,
+          "pull": 0.398,
+          "ticks": 2146
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "kaia",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0291,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
+        {
+          "actions": 89,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 4,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 4,
+          "pull": 0.825,
+          "ticks": 1128
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "tess",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0291,
+          "returned": false
+        }
+      ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 314,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": true,
+              "progressWindows": 1,
+              "windows": 4
+            },
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": true,
+              "progressWindows": 1,
+              "windows": 4
+            },
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": true,
+              "progressWindows": 1,
+              "windows": 3
+            },
+            {
+              "dir": "down",
+              "feature": "probes",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 1
+            }
+          ],
+          "distinctSignatures": 9,
+          "endedBy": "attention",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 9,
+          "pull": 0.606667,
+          "ticks": 4446
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "tess",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0291,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 131,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 9,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 9,
+          "pull": 0.25,
+          "ticks": 1944
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "tess",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0291,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
+        {
+          "actions": 341,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": true,
+              "progressWindows": 4,
+              "windows": 5
+            },
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 16,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 16,
+          "pull": 0.583333,
+          "ticks": 5083
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-3",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.10625,
+          "probability": 0.168371,
+          "returned": false
+        }
+      ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 159,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 10,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.10625,
+          "newSignatures": 10,
+          "pull": 1.258667,
+          "ticks": 1884
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-3",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0285,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 166,
+          "aims": [],
+          "distinctSignatures": 8,
+          "endedBy": "attention",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 8,
+          "pull": 0.3,
+          "ticks": 2001
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-3",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0285,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
+        {
+          "actions": 164,
+          "aims": [],
+          "distinctSignatures": 7,
+          "endedBy": "attention",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 7,
+          "pull": 0.362667,
+          "ticks": 1996
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-6",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0285,
+          "returned": false
+        }
+      ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 144,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 7,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 7,
+          "pull": 0.488,
+          "ticks": 2023
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-6",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0285,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 142,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 10,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 10,
+          "pull": 0.2,
+          "ticks": 2218
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-6",
+      "reached": 2,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.270833,
+          "probability": 0.385033,
+          "returned": true
+        },
+        {
+          "afterSession": 2,
+          "left": 0.864583,
+          "probability": 0.95,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
+        {
+          "actions": 207,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 15,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.270833,
+          "newSignatures": 15,
+          "pull": 0.4,
+          "ticks": 3032
+        },
+        {
+          "actions": 133,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 16,
+          "endedBy": "drift",
+          "index": 2,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.864583,
+          "newSignatures": 5,
+          "pull": 1.56,
+          "ticks": 2102
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-7",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.10625,
+          "probability": 0.164826,
+          "returned": false
+        }
+      ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 145,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 18,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.10625,
+          "newSignatures": 18,
+          "pull": 0.325,
+          "ticks": 2544
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-7",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.36875,
+          "probability": 0.503113,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 119,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 11,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.36875,
+          "newSignatures": 11,
+          "pull": 0.65,
+          "ticks": 2137
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-7",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0279,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
+        {
+          "actions": 189,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": true,
+              "progressWindows": 1,
+              "windows": 3
+            },
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 15,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 15,
+          "pull": 0.408333,
+          "ticks": 3382
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-8",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0291,
+          "returned": false
+        }
+      ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 157,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 18,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 18,
+          "pull": 0.225,
+          "ticks": 2782
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-8",
+      "reached": 2,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.741667,
+          "probability": 0.97,
+          "returned": true
+        },
+        {
+          "afterSession": 2,
+          "left": 0,
+          "probability": 0.0291,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 55,
+          "aims": [
+            {
+              "dir": "down",
+              "feature": "probes",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 6,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.741667,
+          "newSignatures": 6,
+          "pull": 1.125,
+          "ticks": 1098
+        },
+        {
+          "actions": 298,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": true,
+              "progressWindows": 4,
+              "windows": 5
+            },
+            {
+              "dir": "down",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 18,
+          "endedBy": "drift",
+          "index": 2,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 12,
+          "pull": 0,
+          "ticks": 5338
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-8",
+      "reached": 3,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.983333,
+          "probability": 0.97,
+          "returned": true
+        },
+        {
+          "afterSession": 2,
+          "left": 1,
+          "probability": 0.97,
+          "returned": true
+        },
+        {
+          "afterSession": 3,
+          "left": 0,
+          "probability": 0.0291,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
+        {
+          "actions": 87,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 7,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.983333,
+          "newSignatures": 7,
+          "pull": 0.45,
+          "ticks": 1537
+        },
+        {
+          "actions": 306,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": true,
+              "progressWindows": 1,
+              "windows": 3
+            },
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": true,
+              "progressWindows": 1,
+              "windows": 4
+            },
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": true,
+              "progressWindows": 1,
+              "windows": 3
+            },
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 1
+            }
+          ],
+          "distinctSignatures": 19,
+          "endedBy": "cap",
+          "index": 2,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 1,
+          "newSignatures": 12,
+          "pull": 1.091667,
+          "ticks": 5455
+        },
+        {
+          "actions": 257,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": true,
+              "progressWindows": 1,
+              "windows": 3
+            },
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": true,
+              "progressWindows": 2,
+              "windows": 4
+            },
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 18,
+          "endedBy": "drift",
+          "index": 3,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 6,
+          "pull": 0.641667,
+          "ticks": 4550
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-9",
+      "reached": 2,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.9375,
+          "probability": 0.93,
+          "returned": true
+        },
+        {
+          "afterSession": 2,
+          "left": 0,
+          "probability": 0.0279,
+          "returned": false
+        }
+      ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 57,
+          "aims": [
+            {
+              "dir": "down",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 11,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.9375,
+          "newSignatures": 11,
+          "pull": 2.8125,
+          "ticks": 1283
+        },
+        {
+          "actions": 196,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 18,
+          "endedBy": "drift",
+          "index": 2,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 7,
+          "pull": 0,
+          "ticks": 4268
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-9",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.222917,
+          "probability": 0.315176,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 72,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 9,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.222917,
+          "newSignatures": 9,
+          "pull": 0.9375,
+          "ticks": 1696
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-9",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0279,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
+        {
+          "actions": 132,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 12,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 12,
+          "pull": 0.08,
+          "ticks": 2884
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-11",
+      "reached": 2,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0291,
+          "returned": true
+        },
+        {
+          "afterSession": 2,
+          "left": 0.047917,
+          "probability": 0.093507,
+          "returned": false
+        }
+      ],
+      "runSeed": 2980047484,
+      "seed": 0,
+      "sessions": [
+        {
+          "actions": 123,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 16,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 16,
+          "pull": 0.1875,
+          "ticks": 2857
+        },
+        {
+          "actions": 138,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 16,
+          "endedBy": "drift",
+          "index": 2,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.047917,
+          "newSignatures": 7,
+          "pull": 0.6375,
+          "ticks": 3134
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-11",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0,
+          "probability": 0.0291,
+          "returned": false
+        }
+      ],
+      "runSeed": 232174035,
+      "seed": 1,
+      "sessions": [
+        {
+          "actions": 159,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": true,
+              "progressWindows": 2,
+              "windows": 5
+            },
+            {
+              "dir": "up",
+              "feature": "solved",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 13,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0,
+          "newSignatures": 13,
+          "pull": 0.029167,
+          "ticks": 3559
+        }
+      ]
+    },
+    {
+      "crashed": false,
+      "persona": "arch-11",
+      "reached": 1,
+      "returns": [
+        {
+          "afterSession": 1,
+          "left": 0.179167,
+          "probability": 0.269926,
+          "returned": false
+        }
+      ],
+      "runSeed": 1918689678,
+      "seed": 2,
+      "sessions": [
+        {
+          "actions": 79,
+          "aims": [
+            {
+              "dir": "up",
+              "feature": "probes",
+              "madeProgress": false,
+              "progressWindows": 0,
+              "windows": 2
+            }
+          ],
+          "distinctSignatures": 8,
+          "endedBy": "drift",
+          "index": 1,
+          "kinds": [
+            "drag",
+            "hold",
+            "tap"
+          ],
+          "left": 0.179167,
+          "newSignatures": 8,
+          "pull": 0.5625,
+          "ticks": 1829
+        }
+      ]
+    }
+  ],
+  "seed": 1,
+  "selfPlay": {
+    "dominant": {
+      "by": null,
+      "flagged": false,
+      "note": "no policy dominates"
+    },
+    "objective": {
+      "dir": "up",
+      "name": "solved"
+    },
+    "overallVariety": 1.9794,
+    "policies": {
+      "greedy": {
+        "episodes": 3,
+        "meanObjective": 0,
+        "variety": 1.284859
+      },
+      "random": {
+        "episodes": 3,
+        "meanObjective": 0.333333,
+        "variety": 2.559475
+      },
+      "repeat-one": {
+        "episodes": 3,
+        "meanObjective": 0,
+        "variety": 1.284859
+      }
+    },
+    "replayedTicks": 109200
+  },
+  "targetPanel": [
+    "arch-6",
+    "arch-7",
+    "arch-8",
+    "arch-9",
+    "arch-11"
+  ],
+  "thresholdsVersion": "u2-panel-1"
+}

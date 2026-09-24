@@ -24,8 +24,19 @@ How the sim produces it:
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-7, arch-8, arch-9, arch-11 (12 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 5 of 12 runs (42%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 5, 5, 4 of 12.
+- **Play 5 against play 1:** change 6.74 (6.74 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 32 adopted, 9 made progress. Tried: found down, found up, grains down, grains up, ringing down, ringing up, settled down, settled up, woven up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective woven up; outcome variety 2.46 bits (by policy: greedy 0.79, random 2.57, repeat-one 0.67). Dominant strategy: yes, repeat-one beats random on the objective while its variety collapses.
+- **Hook flags:** none declared.
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 5 of 12 target-panel runs (42%) start session 3, 8.3 points short of the 50% line (1 more run needed).
+- Dominant strategy in self-play: repeat-one beats random on the objective while its variety collapses.
+- Left first: `arch-8` and `arch-9`, starting 2.7 of 5 sessions on average (the best in the target panel starts 3.7).

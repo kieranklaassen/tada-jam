@@ -20,16 +20,19 @@ Signature: pose (slack, taut, guess) times what was last heard (nothing, dead li
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-6, arch-7, arch-8, arch-9, arch-11 (15 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 1 of 15 runs (7%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 1, 0, 0 of 15.
+- **Play 5 against play 1:** change 1.43 (1.43 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 29 adopted, 8 made progress. Tried: probes down, probes up, solved down, solved up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective solved up; outcome variety 1.98 bits (by policy: greedy 1.28, random 2.56, repeat-one 1.28). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 6.7% with every hook on, 6.7% with all off):
+  - `stack-wakes`: not needed; without it 6.7%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
 
-_Filled after the panel run._
-
-Known before the run:
-
-- Personas tap at a steady pace, so they mostly send long-gap or short-gap runs by accident and rarely design a probe; the panel measures exploration, not the child's deliberate test.
-- The rule is re-dealt every session, so there is nothing to remember across visits except the method, which the sim cannot see.
-- A friend answers two exchanges before it can be named, but a determined child can still brute-force the seven chips (one wrong guess costs about five seconds).
-- Rhythm timing is quantised to short or long, which will feel coarse to a child who taps expressively.
+- Fails the depth gate: 1 of 15 target-panel runs (7%) start session 3, 43.3 points short of the 50% line (7 more runs needed).
+- Left first: `arch-7`, starting 1.0 of 5 sessions on average (the best in the target panel starts 2.0).

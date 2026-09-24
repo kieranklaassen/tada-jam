@@ -16,8 +16,22 @@ How the sim produces it: the round's crowned animal, its bank, and its blocker a
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: kaia, tess, arch-6, arch-7, arch-8, arch-9 (18 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 8 of 18 runs (44%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 8, 5, 2 of 18.
+- **Play 5 against play 1:** change 2.55 (2.55 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 48 adopted, 7 made progress. Tried: crossed down, crossed up, onBridge down, onBridge up, rounds down, rounds up, setbacks down, setbacks up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective crossed up; outcome variety 3.66 bits (by policy: greedy 3.56, random 3.70, repeat-one 3.56). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 44.4% with every hook on, 16.7% with all off):
+  - `stars`: inconclusive (the persona model has no reward response); without it 44.4%
+  - `levels`: needed; without it 16.7%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 8 of 18 target-panel runs (44%) start session 3, 5.6 points short of the 50% line (1 more run needed).
+- Hook ablation says little for `stars`: removing it changed nothing the personas can register.
+- Leans on hook `levels`: removing it drops session-3 return from 44.4% to 16.7%.
+- Left first: `arch-7`, starting 2.0 of 5 sessions on average (the best in the target panel starts 3.7).

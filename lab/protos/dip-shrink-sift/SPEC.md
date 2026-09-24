@@ -22,8 +22,20 @@ The signature names the machine's chain class (bare, plain, painted, shrunk, bot
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: tess, arch-6, arch-7, arch-8, arch-9 (15 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 3 of 15 runs (20%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 3, 3, 2 of 15.
+- **Play 5 against play 1:** change 0.39 (0.39 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 40 adopted, 11 made progress. Tried: chains down, chains up, content down, content up, order down, order up, pieces down, pieces up, purity up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective purity up; outcome variety 0.97 bits (by policy: greedy 0.00, random 1.41, repeat-one 0.00). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 20.0% with every hook on, 20.0% with all off):
+  - `orders`: inconclusive (the persona model has no reward response); without it 20.0%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 3 of 15 target-panel runs (20%) start session 3, 30.0 points short of the 50% line (5 more runs needed).
+- Hook ablation says little for `orders`: removing it changed nothing the personas can register.
+- Left first: `arch-6`, starting 1.0 of 5 sessions on average (the best in the target panel starts 2.7).

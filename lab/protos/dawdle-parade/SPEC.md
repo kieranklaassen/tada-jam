@@ -16,8 +16,19 @@ In the sim: each meadow is seeded, with the duckling order, the flowers, and the
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: kaia, tess, arch-3, arch-6 (12 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 2 of 12 runs (17%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 2, 1, 1 of 12.
+- **Play 5 against play 1:** change 1.75 (1.75 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 18 adopted, 2 made progress. Tried: cutter_place down, dawdling down, home up, hops down, hops up, spread down, spread up, stalls down, stalls up, together up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective together up; outcome variety 3.97 bits (by policy: greedy 3.63, random 4.30, repeat-one 1.41). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 16.7% with every hook on, 25.0% with all off):
+  - `pond`: not needed; without it 25.0%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 2 of 12 target-panel runs (17%) start session 3, 33.3 points short of the 50% line (4 more runs needed).
+- Left first: `arch-6` and `tess`, starting 1.3 of 5 sessions on average (the best in the target panel starts 3.0).

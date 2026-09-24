@@ -78,3 +78,38 @@ describe('the real catalog', () => {
     expect(validate(records, { expectedBuilt: 30 })).toEqual([])
   })
 })
+
+// The catalog and the prototypes must agree: every built idea has its folder,
+// and the prototype's meta matches the idea it was built from.
+describe('the built prototypes match the catalog', () => {
+  const built = records.filter((r) => r.decision?.status === 'built')
+
+  it('has a prototype folder with the recipe files for every built idea, and no extras', async () => {
+    const { existsSync, readdirSync } = await import('node:fs')
+    const { join } = await import('node:path')
+    const protos = join(import.meta.dirname, '..', 'protos')
+    const folders = readdirSync(protos, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name)
+      .sort()
+    expect(folders).toEqual(built.map((r) => r.decision!.protoKey!).sort())
+    for (const r of built) {
+      for (const file of ['meta.ts', 'sim.ts', 'view.ts', 'index.ts', 'sim.test.ts', 'SPEC.md']) {
+        expect(existsSync(join(protos, r.decision!.protoKey!, file)), `${r.decision!.protoKey}/${file}`).toBe(true)
+      }
+    }
+  })
+
+  it('keeps each meta.ts in step with its catalog entry', async () => {
+    for (const r of built) {
+      const key = r.decision!.protoKey!
+      const { meta } = await import(`../protos/${key}/meta.ts`)
+      expect(meta.key, key).toBe(key)
+      expect(meta.engine, key).toBe(r.engine)
+      expect(meta.lens, key).toBe(r.lens)
+      expect(meta.toy ?? null, key).toBe(r.toy)
+      expect(meta.verb.toLowerCase(), key).toBe(r.verb.toLowerCase())
+      expect(meta.ageBand, key).toEqual(r.ageBand)
+    }
+  })
+})

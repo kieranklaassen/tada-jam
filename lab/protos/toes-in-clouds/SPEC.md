@@ -16,8 +16,22 @@ How the sim produces it: two stacked skills with one physical rule each. Pumping
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: kaia, tess, arch-6, arch-7, arch-8, arch-9 (18 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 0 of 18 runs (0%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 0, 0, 0 of 18.
+- **Play 5 against play 1:** change 0.00 (0.00 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 27 adopted, 7 made progress. Tried: arc down, arc up, flights down, flights up, height down, height up, reach up, sync down, sync up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective arc up; outcome variety 1.79 bits (by policy: greedy 1.82, random 1.77, repeat-one 1.68). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 0.0% with every hook on, 0.0% with all off):
+  - `flag`: inconclusive (the persona model has no reward response); without it 0.0%
+  - `island`: inconclusive (the persona model has no reward response); without it 0.0%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 0 of 18 target-panel runs (0%) start session 3, 50.0 points short of the 50% line (9 more runs needed).
+- Hook ablation says little for `flag`, `island`: removing them changed nothing the personas can register.
+- Play 5 shows no measured change from play 1: no new signatures and no new action kinds.
+- Left first: `arch-6`, `arch-7`, `arch-8` and 1 more, starting 1.0 of 5 sessions on average (the best in the target panel starts 1.3).

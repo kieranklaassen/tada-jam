@@ -18,14 +18,21 @@ How the sim produces it: every session lays a new hidden layout from the seed (3
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: tess, arch-6, arch-7, arch-8, arch-9 (15 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 6 of 15 runs (40%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 6, 4, 3 of 15.
+- **Play 5 against play 1:** change 1.91 (1.91 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 47 adopted, 17 made progress. Tried: correct up, lifts down, lifts up, marks down, marks up, swept down, swept up, tested down, tested up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective correct up; outcome variety 4.10 bits (by policy: greedy 2.58, random 4.83, repeat-one 2.58). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 40.0% with every hook on, 40.0% with all off):
+  - `score`: inconclusive (the persona model has no reward response); without it 40.0%
+  - `level`: inconclusive (the persona model has no reward response); without it 40.0%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
 
-Builder notes, before the panel run:
-- The hand magnet snaps on an attractor at its exact centre, so the position of every attracting thing can be read from the snap alone; a child who learns to let go and watch the hand slide can skip the beads. Repellers are never snapped, so they are found only by beads and lurch.
-- `score` only counts right guesses after a lift and changes no affordance or signature, so the panel will read it as inconclusive.
-- The layout is fresh each session; nothing carries over between sessions, so any learning lives only in the persona.
-- Marking is by token drag with a tolerant 80 px match; a persona that never drags a token never reaches the lift feedback, which is the main teacher.
+- Fails the depth gate: 6 of 15 target-panel runs (40%) start session 3, 10.0 points short of the 50% line (2 more runs needed).
+- Hook ablation says little for `score`, `level`: removing them changed nothing the personas can register.
+- Left first: `arch-6`, starting 1.3 of 5 sessions on average (the best in the target panel starts 3.3).

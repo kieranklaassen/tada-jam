@@ -34,17 +34,21 @@ Hooks:
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-7, arch-8, arch-9, arch-11 (12 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** pass. 8 of 12 runs (67%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 8, 4, 3 of 12.
+- **Play 5 against play 1:** change 4.59 (4.59 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 54 adopted, 25 made progress. Tried: dodges down, dodges up, edge up, grip down, grip up, rounds down, rounds up, switchRate down, switchRate up.
+- **First 10 seconds:** clear. 78% of 148 cue-blind touches changed the sim, first change at tick 16 (about 0.5 s) on average, 3 action kinds tried.
+- **Self-play:** objective edge up; outcome variety 3.14 bits (by policy: greedy 2.11, random 3.16, repeat-one 2.46). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 66.7% with every hook on, 16.7% with all off):
+  - `match`: needed; without it 25.0%
+  - `crow`: needed; without it 33.3%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
 
-_Filled after the panel run._
-
-Builder's notes, before the panel run:
-
-- The rounds are independent taps, so the panel's learning-progress signal (predicting what a touch does from the touch alone) sees little to learn; the depth here lives in the creature's hidden habit, which the panel can only see through signature novelty and self-set aims on `edge`, `grip`, and `dodges`.
-- `switchRate`, `dodges`, and `rounds` are features a self-set aim can push without any mind-reading (tap fast to raise `rounds`), so aims on them will look like progress.
-- The Crow is only reachable through the `crow` hook, and unlocking it takes a dodge streak that only a child who has read a creature usually reaches; a persona that never reads may never meet it.
-- A 12 percent slip keeps habits from being machines but also makes a wrong-looking round easy to over-read; the ten-round visit gives a child a few rounds per creature per session to notice.
-- Touch targets are the four quarters of the field, so any tap chooses a paw; there is no way to tap "nothing". The history panel sits over the top right quarter and taps there choose the creature's right paw.
+- Leans on hook `match`: removing it drops session-3 return from 66.7% to 25.0%.
+- Leans on hook `crow`: removing it drops session-3 return from 66.7% to 33.3%.
+- Left first: `arch-9`, starting 2.3 of 5 sessions on average (the best in the target panel starts 3.7).

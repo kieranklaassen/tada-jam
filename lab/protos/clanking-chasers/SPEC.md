@@ -16,8 +16,20 @@ How the sim produces it: the robot rule never changes, but a runner never wins (
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: arch-6, arch-7, arch-8, arch-9, arch-11 (15 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 1 of 15 runs (7%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 1, 1, 0 of 15.
+- **Play 5 against play 1:** change 1.15 (1.08 new signatures per 100 actions plus 0.07 new action kinds).
+- **Self-set aims:** 37 adopted, 14 made progress. Tried: caught down, caught up, cleared down, cleared up, pile up, piles down, piles up, robots down, turns down, turns up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective robots down; outcome variety 2.83 bits (by policy: greedy 2.58, random 2.57, repeat-one 2.30). Dominant strategy: no (no policy dominates).
+- **Hook flags** (raw material for the guidelines; session 3 return 6.7% with every hook on, 0.0% with all off):
+  - `level`: not needed; without it 0.0%
+  - `stars`: not needed; without it 6.7%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 1 of 15 target-panel runs (7%) start session 3, 43.3 points short of the 50% line (7 more runs needed).
+- Left first: `arch-6`, `arch-7`, `arch-8` and 1 more, starting 1.3 of 5 sessions on average (the best in the target panel starts 2.3).

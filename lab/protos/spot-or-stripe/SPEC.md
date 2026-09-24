@@ -22,17 +22,18 @@ Nothing carries between sessions; the depth is in the rule, not in progression.
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: kaia, tess, arch-6, arch-7, arch-8, arch-9 (18 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 2 of 18 runs (11%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 2, 1, 0 of 18.
+- **Play 5 against play 1:** change 1.18 (1.13 new signatures per 100 actions plus 0.06 new action kinds).
+- **Self-set aims:** 44 adopted, 19 made progress. Tried: coatVariety up, coverage down, coverage up, dabs down, dabs up, spots down, spots up, stripes down, stripes up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective coatVariety up; outcome variety 3.07 bits (by policy: greedy 2.66, random 2.10, repeat-one 1.24). Dominant strategy: no (no policy dominates).
+- **Hook flags:** none declared.
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
 
-Builder's notes, known before any run:
-
-- The dye rule is knife-edged. A small change to the inhibition (0.33) turns "a row makes a stripe" into "every row runs on across the whole animal" or "every row breaks into beads". The numbers were found in a spike on an open field; the animal's outline shifts them a little (a wall term corrects most of it).
-- A scripted 8-drop row down the tail makes a clean stripe on roughly 7 animals in 10; on the rest the straight row still beads into 3 spots, so a child can do the right thing and be told "spots". That is honest emergence but can read as noise to a 5 year old.
-- Nothing draws the child to try a curve or a ring, so swirls are rare in random play; a persona has to stumble on them.
-- Stripes that reach a region border count towards both regions, so a long body stripe can make the legs read as striped.
-- Once the rule is known, the space of coats is explored quickly: a dominant plan (one long row per region, everything far apart) is likely.
-- The GO button and the auto-run after about 8 quiet seconds make the world answer a cue-blind child, but a child who plans slowly can be pre-empted by the auto-run.
+- Fails the depth gate: 2 of 18 target-panel runs (11%) start session 3, 38.9 points short of the 50% line (7 more runs needed).
+- Left first: `arch-6`, `arch-7`, `arch-9` and 1 more, starting 1.3 of 5 sessions on average (the best in the target panel starts 2.0).

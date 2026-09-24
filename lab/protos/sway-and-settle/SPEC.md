@@ -20,8 +20,20 @@ How the sim produces it: each session deals a different tray, cut from a random 
 
 ## Findings
 <!-- findings:start -->
-_The persona panel fills this in._
+_The panel numbers are model guesses at children, not measurements; real children check anything before it is polished into a cartridge. Target panel: kaia, tess, arch-3, arch-6, arch-7, arch-8 (18 runs). Thresholds u2-panel-1, master seed 1._
+
+- **Depth gate:** fail. 2 of 18 runs (11%) start session 3; the line is 50%. Runs starting session 3, 4, 5: 2, 0, 0 of 18.
+- **Play 5 against play 1:** change 0.42 (0.42 new signatures per 100 actions plus 0.00 new action kinds).
+- **Self-set aims:** 33 adopted, 10 made progress. Tried: balanced up, held down, held up, hung down, hung up, round down, round up, tilt down, tilt up, turning down, turning up.
+- **First 10 seconds:** not assessed (did not pass the depth gate).
+- **Self-play:** objective balanced up; outcome variety 0.00 bits (by policy: greedy 0.00, random 0.00, repeat-one 0.00). Dominant strategy: no (the objective never varied).
+- **Hook flags** (raw material for the guidelines; session 3 return 11.1% with every hook on, 11.1% with all off):
+  - `next-mobile`: inconclusive (the persona model has no reward response); without it 11.1%
+- **Crashes:** none.
 <!-- findings:end -->
 
 ## Known weaknesses
-_Filled after the panel run._
+
+- Fails the depth gate: 2 of 18 target-panel runs (11%) start session 3, 38.9 points short of the 50% line (7 more runs needed).
+- Hook ablation says little for `next-mobile`: removing it changed nothing the personas can register.
+- Left first: `arch-6` and `arch-7`, starting 1.0 of 5 sessions on average (the best in the target panel starts 1.7).
