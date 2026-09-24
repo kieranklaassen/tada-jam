@@ -42,6 +42,9 @@ const BROOM_TOP = 3
 /** A loose part slower than this (units/s, spin included) for `LOOSE_CALM_SECONDS` is put to sleep: parts in a pile can nudge each other just above cannon's own sleep limit for a long time. */
 const LOOSE_CALM_SPEED = 4
 const LOOSE_CALM_SECONDS = 1
+/** A part still stirring this long (s) after it last slept is only jittering against a neighbour, so it counts as calm below `LOOSE_RESTLESS_SPEED`. */
+const LOOSE_RESTLESS_SECONDS = 6
+const LOOSE_RESTLESS_SPEED = 3 * LOOSE_CALM_SPEED
 /** A loose part's sleep speed: cannon wakes a sleeping body when a neighbour moves faster than √2 times the neighbour's own, so only a part faster than `LOOSE_CALM_SPEED` wakes the pile it rests in. */
 const PART_SLEEP_SPEED = LOOSE_CALM_SPEED / Math.SQRT2
 const PART_BODY: Record<PartKind, { mass: number; damping: number }> = {
@@ -118,8 +121,8 @@ export class TablePhysics {
   private readonly brooms = new Map<number, CANNON.Body>()
   private panDrops: [number, number] = [0, 0]
   private readonly targets = new Map<CANNON.Body, Vec3>()
-  /** Loose parts, with how long each has been calm. */
-  private readonly calm = new Map<CANNON.Body, number>()
+  /** Loose parts, with how long each has been calm and how long awake. */
+  private readonly calm = new Map<CANNON.Body, { calm: number; awake: number }>()
   private impacts: number[] = []
   private accumulator = 0
   maxSubsteps = DEFAULT_MAX_SUBSTEPS
@@ -449,7 +452,7 @@ export class TablePhysics {
     })
     this.world.addBody(body)
     this.stones.set(id, { body, q: 4 })
-    this.calm.set(body, 0)
+    this.calm.set(body, { calm: 0, awake: 0 })
   }
 
   removeStone(id: number): void {
@@ -565,12 +568,18 @@ export class TablePhysics {
   }
 
   private settleLooseParts(): void {
-    for (const [body, seconds] of this.calm) {
-      if (body.type !== CANNON.Body.DYNAMIC || body.sleepState === CANNON.Body.SLEEPING) continue
+    for (const [body, timer] of this.calm) {
+      if (body.type !== CANNON.Body.DYNAMIC || body.sleepState === CANNON.Body.SLEEPING) {
+        timer.awake = 0
+        continue
+      }
+      timer.awake += STEP
+      const limit = timer.awake < LOOSE_RESTLESS_SECONDS ? LOOSE_CALM_SPEED : LOOSE_RESTLESS_SPEED
       const speedSquared = body.velocity.lengthSquared() + body.angularVelocity.lengthSquared()
-      const calm = speedSquared < LOOSE_CALM_SPEED ** 2 ? seconds + STEP : 0
-      this.calm.set(body, calm >= LOOSE_CALM_SECONDS ? 0 : calm)
-      if (calm >= LOOSE_CALM_SECONDS) body.sleep()
+      timer.calm = speedSquared < limit ** 2 ? timer.calm + STEP : 0
+      if (timer.calm < LOOSE_CALM_SECONDS) continue
+      timer.calm = 0
+      body.sleep()
     }
   }
 
