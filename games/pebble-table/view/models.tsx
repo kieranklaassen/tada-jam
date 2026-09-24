@@ -714,7 +714,7 @@ function useWarmup(materials: ClayMaterials): void {
 /** How high a guest being dragged is lifted: clear of the bowl, the plates and the stones on them. */
 const GUEST_CARRY = BOWL_PROFILE.reduce((top, [, h]) => Math.max(top, h), 0) * BOWL_SCALE + ON_RUG + 1
 
-function easeOutBack(t: number): number {
+export function easeOutBack(t: number): number {
   const c = 1.9
   return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2
 }
@@ -968,16 +968,20 @@ function drawPageMap(canvas: HTMLCanvasElement, page: AlbumPage | null): void {
  * page exists. Its cover shows the newest page as a dot map; tapping it sets
  * that table back. It hops whenever a page is kept or turned.
  */
+export const ALBUM_SCALE = 1.1
+
+export function albumGeometry(): THREE.BufferGeometry {
+  return merge([
+    piece(geo.roundedBox(10, 0.15), '#3f7d8c', { position: [0, 1.2, 0], scale: [11, 2.4, 13] }, { lump: 0.12, frequency: 0.5, seed: 51 }),
+    piece(geo.roundedBox(8, 0.1), '#fbf1de', { position: [0.5, 1.2, 0], scale: [10.2, 1.8, 12.4] }, { lump: 0.05, ground: null }),
+    piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, 3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
+    piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, -3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
+  ])
+}
+
 export function AlbumModel({ read }: { read: () => { pages: readonly AlbumPage[]; at: number | null; now: number } }) {
   const { clay } = useClay()
-  const book = once('album', () =>
-    merge([
-      piece(geo.roundedBox(10, 0.15), '#3f7d8c', { position: [0, 1.2, 0], scale: [11, 2.4, 13] }, { lump: 0.12, frequency: 0.5, seed: 51 }),
-      piece(geo.roundedBox(8, 0.1), '#fbf1de', { position: [0.5, 1.2, 0], scale: [10.2, 1.8, 12.4] }, { lump: 0.05, ground: null }),
-      piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, 3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
-      piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, -3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
-    ]),
-  )
+  const book = once('album', albumGeometry)
   const cover = useMemo(() => {
     const canvas = document.createElement('canvas')
     canvas.width = 128
@@ -1016,7 +1020,7 @@ export function AlbumModel({ read }: { read: () => { pages: readonly AlbumPage[]
     const hopAge = pose.at === null ? Infinity : pose.now - pose.at
     const hop = hopAge < 0.6 ? Math.sin((hopAge / 0.6) * Math.PI) * 3 : 0
     g.position.set(p.x, hop, p.z)
-    g.scale.setScalar(Math.max(0.01, easeOutBack(appear)) * 1.1)
+    g.scale.setScalar(Math.max(0.01, easeOutBack(appear)) * ALBUM_SCALE)
     g.rotation.set(0, -0.35 + Math.sin(pose.now * 0.8) * 0.04, 0)
   })
   return (
@@ -1348,7 +1352,7 @@ export function CarrierMice({ read }: { read: () => CarrierMouse[] }) {
 }
 
 /** A big clay token for an activity: a cushion to sit on, with a small model of the activity on top. */
-function chooserGeometry(mat: MatKey): THREE.BufferGeometry {
+export function chooserGeometry(mat: MatKey): THREE.BufferGeometry {
   const parts = [
     piece(geo.sphere(28), PALETTE.tile, { position: [0, 1.2, 0], scale: [7.2, 1.6, 7.2] }, { lump: 0.25, frequency: 0.5, seed: 11 }),
     piece(geo.torus(32, 0.12), PALETTE.shelf, { position: [0, 1.25, 0], rotation: [Math.PI / 2, 0, 0], scale: 7.1 }, { lump: 0.05, ground: null }),
@@ -1378,7 +1382,7 @@ function chooserGeometry(mat: MatKey): THREE.BufferGeometry {
   return merge(parts)
 }
 
-const CHOOSER_SCALE = 1.35
+export const CHOOSER_SCALE = 1.2
 
 /** The activity choosers: big tokens on the table's right margin that bob when the guidance points at them; tap or drag one onto the table to switch. */
 export function ShelfModel({ read }: { read: () => { mats: MatKey[]; drag: { mat: MatKey; at: Point } | null; glow: number; now: number } }) {
