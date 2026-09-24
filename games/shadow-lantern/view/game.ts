@@ -2,12 +2,13 @@ import * as THREE from 'three'
 import type { Companion, SparkSurface, TheatreController, Waking } from '../controller'
 import { CREATURES, type CreatureKind, buildCreature } from '../creatures'
 import { chaikinClosed, polygonArea, wobble, type Point } from '../geometry2d'
-import { SILHOUETTE_S, type CreaturePose, type Ring } from '../motion'
-import { LAMP, penumbra, PIN_HEIGHT, projectCardPoint, SCREEN, shadowScale, type CardPose } from '../projection'
+import { CREATURE_STACK, SILHOUETTE_S, WAKE_Z, type CreaturePose, type Ring } from '../motion'
+import { LAMP, onPaper, penumbra, PIN_HEIGHT, projectCardPoint, SCREEN, shadowScale, type CardPose } from '../projection'
 import { OUTLINE_POINTS, SHAPES, type ShapeKind } from '../shapes'
+import { STAND } from '../stands'
 import { PerfRing, startingTier, TierGovernor, TIERS } from '../tiers'
 import { cardGeometry, flatGeometry, glowRingTexture, GRAIN_REPEAT, grainTexture, paintCard, paintFlat, paper, softSpotTexture, withInstanceAlpha } from './paper'
-import { buildScenery, PALETTE } from './scenery'
+import { buildScenery, LAMP_CUP_Y, PALETTE } from './scenery'
 
 // The theatre drawn with raw three.js and one hand-written frame loop:
 // no reconciler, no post pass, no shadow maps. Static scenery is one merged
@@ -35,13 +36,13 @@ const RING_PTS = OUTLINE_POINTS
 const VERTS_PER_SLOT = RING_PTS * 2 + 4
 const SHADOW_ALPHA = 0.94
 const MIN_SOFT = 0.12
-const STICK_HALF = 0.17
-const CARD_DEPTH = 0.26
-const CARD_STAGGER = 0.3
-const CREATURE_DEPTH = 0.36
+const CARD_DEPTH = STAND.cardDepth
+/** Contact spots lie between the planks (y 0.03) and the feet's soles. */
+const SPOT_Y = 0.045
 /** How far a creature's backing card drops below it (world cm, like the scenery's). */
 const BACKING_DROP = 0.55
 const MAX_DOTS = 220
+const DOT_R = 0.34
 const MAX_RINGS = 44
 /** Sleep rings on the screen drawn bigger than they rise, so a six-year-old reads them from arm's length and they stay on the paper. */
 const SLEEP_RING_GROW = 2.2
@@ -82,6 +83,23 @@ function smooth(t: number): number {
 
 function recentre(outline: readonly Point[], cx: number, cy: number): Point[] {
   return outline.map((p) => ({ x: p.x - cx, y: p.y - cy }))
+}
+
+/**
+ * Puts a creature's card where its pose says. A turn (spin) or a turn-around
+ * (facing) happens in the card's own plane: it narrows onto its hinge edge
+ * and opens out mirrored, so its paper never leaves its layer, where it would
+ * sweep through a neighbour in the sky or the stands on the stage.
+ */
+export function placeCreature(group: THREE.Object3D, pose: CreaturePose): void {
+  const s = pose.scale
+  const h = pose.hinge * s
+  const turn = pose.facing * Math.cos(pose.spin)
+  const facing = Math.abs(turn) < 0.02 ? 0.02 * Math.sign(turn || 1) : turn
+  // Placed so the hinge edge stays put however the card is turned or mirrored about it.
+  group.position.set(pose.x + h - h * facing, pose.y, pose.z)
+  group.rotation.set(0, 0, pose.roll)
+  group.scale.set(pose.sx * s * facing, pose.sy * s, s)
 }
 
 export type ViewOptions = { overlay: boolean; tierOverride: number | null }
@@ -185,6 +203,7 @@ export class TheatreView {
     const { geometry: sceneryGeometry, anchors } = buildScenery()
     const sceneryMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, map: grain })
     const scenery = new THREE.Mesh(sceneryGeometry, sceneryMaterial)
+    scenery.name = 'scenery'
     scenery.matrixAutoUpdate = false
     this.scene.add(scenery)
     this.disposables.push(sceneryGeometry, sceneryMaterial)
@@ -196,9 +215,13 @@ export class TheatreView {
     this.scene.add(new THREE.HemisphereLight('#aab2ff', '#6a4a3c', 1.6))
 
     // --- shapes: lit cards, instanced sticks and feet, floor contact spots ------
+    // The audit's name for one stand: its card, its stick and foot, and its guide glow.
+    const standObjects = controller.shapes.map((_, i) => `stand#${i}`)
     for (const shape of controller.shapes) {
       const material = new THREE.MeshLambertMaterial({ vertexColors: true, map: grain, emissive: new THREE.Color('#ff9a3c'), emissiveIntensity: 0 })
       const mesh = new THREE.Mesh(this.cardFor(shape.kind), material)
+      mesh.name = `card-${shape.kind}`
+      mesh.userData.jamObject = standObjects[this.cards.length]
       mesh.matrixAutoUpdate = false
       this.cards.push(mesh)
       this.cardMaterials.push(material)
@@ -206,13 +229,16 @@ export class TheatreView {
       this.disposables.push(material)
     }
     {
-      const stick = paintFlat(new THREE.BoxGeometry(STICK_HALF * 2, PIN_HEIGHT, STICK_HALF * 2).toNonIndexed(), paper('#6b4a2e'))
-      stick.translate(0, PIN_HEIGHT / 2, -CARD_DEPTH)
-      const foot = paintCard(cardGeometry([{ x: -2.4, y: 0 }, { x: 2.4, y: 0 }, { x: 0, y: 1.5 }], 2.8, 0.05), paper('#e9dcc4'), paper('#e9dcc4'), paper('#cbbba0'))
-      foot.translate(0, 0, -CARD_DEPTH)
+      const stick = paintFlat(new THREE.BoxGeometry(STAND.stickHalf * 2, PIN_HEIGHT - STAND.sole, STAND.stickHalf * 2).toNonIndexed(), paper('#6b4a2e'))
+      stick.translate(0, (PIN_HEIGHT + STAND.sole) / 2, STAND.stickZ)
+      const w = STAND.footHalfWidth
+      const foot = paintCard(cardGeometry([{ x: -w, y: 0 }, { x: w, y: 0 }, { x: 0, y: STAND.footHeight }], STAND.footDepth, 0.05), paper('#e9dcc4'), paper('#e9dcc4'), paper('#cbbba0'))
+      foot.translate(0, STAND.sole, STAND.stickZ)
       const merged = mergeTwo(stick, foot)
       const material = new THREE.MeshLambertMaterial({ vertexColors: true, map: grain })
       this.sticks = new THREE.InstancedMesh(merged, material, controller.shapes.length)
+      this.sticks.name = 'sticks'
+      this.sticks.userData.jamInstanceObjects = standObjects
       this.sticks.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
       controller.shapes.forEach((shape, i) => this.sticks.setColorAt(i, this.c.set(SHAPES[shape.kind].color).lerp(paper('#ffffff'), 0.35)))
       this.scene.add(this.sticks)
@@ -221,8 +247,10 @@ export class TheatreView {
     {
       const geometry = new THREE.PlaneGeometry(1, 1)
       geometry.rotateX(-Math.PI / 2)
-      const material = new THREE.MeshBasicMaterial({ map: spot, color: PALETTE.dropShadow, transparent: true, depthWrite: false })
+      // A decal on the planks, under the feet it sits beneath.
+      const material = new THREE.MeshBasicMaterial({ map: spot, color: PALETTE.dropShadow, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })
       this.blobs = new THREE.InstancedMesh(geometry, material, controller.shapes.length + 1)
+      this.blobs.name = 'contact-spots'
       this.blobAlpha = withInstanceAlpha(material, this.blobs)
       this.blobs.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
       this.blobs.renderOrder = 1
@@ -236,6 +264,8 @@ export class TheatreView {
       // Normal blending: an additive glow vanishes against the warm stage floor behind most cards.
       const material = new THREE.MeshBasicMaterial({ map: ring, color: '#fff1b8', transparent: true, depthWrite: false })
       this.glows = new THREE.InstancedMesh(geometry, material, controller.shapes.length)
+      this.glows.name = 'guide-glows'
+      this.glows.userData.jamInstanceObjects = standObjects
       this.glowAlpha = withInstanceAlpha(material, this.glows)
       this.glows.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
       this.glows.frustumCulled = false
@@ -267,6 +297,7 @@ export class TheatreView {
     const clip = [new THREE.Plane(new THREE.Vector3(1, 0, 0), -SCREEN.left), new THREE.Plane(new THREE.Vector3(-1, 0, 0), SCREEN.right), new THREE.Plane(new THREE.Vector3(0, 1, 0), -SCREEN.bottom), new THREE.Plane(new THREE.Vector3(0, -1, 0), SCREEN.top)]
     const shadowMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, map: grain, clippingPlanes: clip })
     const shadows = new THREE.Mesh(this.shadowGeometry, shadowMaterial)
+    shadows.name = 'screen-shadows'
     shadows.renderOrder = 2
     shadows.frustumCulled = false
     shadows.matrixAutoUpdate = false
@@ -275,9 +306,10 @@ export class TheatreView {
 
     // --- the sleeping outline and its sleep rings -------------------------------
     {
-      const geometry = new THREE.CircleGeometry(0.34, 10)
+      const geometry = new THREE.CircleGeometry(DOT_R, 10)
       const material = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false })
       this.dots = new THREE.InstancedMesh(geometry, material, MAX_DOTS)
+      this.dots.name = 'outline-dots'
       this.dotAlpha = withInstanceAlpha(material, this.dots)
       this.dots.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
       this.dots.setColorAt(0, INK)
@@ -292,6 +324,7 @@ export class TheatreView {
       const geometry = new THREE.RingGeometry(0.64, 1, 22)
       const material = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false })
       this.rings = new THREE.InstancedMesh(geometry, material, MAX_RINGS)
+      this.rings.name = 'sleep-rings'
       this.ringAlpha = withInstanceAlpha(material, this.rings)
       this.rings.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
       this.rings.setColorAt(0, RING_INK)
@@ -318,6 +351,12 @@ export class TheatreView {
       const eye = new THREE.Mesh(empty, this.eyeMaterial)
       const dark = new THREE.Mesh(empty, this.darkMaterial)
       dark.renderOrder = 5
+      group.name = `creature-${i}`
+      body.name = 'body'
+      part.name = 'part'
+      eye.name = 'eye'
+      dark.name = 'backing'
+      group.userData.jamObject = `creature-${i}`
       group.add(body, part, eye, dark)
       group.visible = false
       this.scene.add(group)
@@ -337,10 +376,12 @@ export class TheatreView {
       const o = paintFlat(flatGeometry(outer), paper('#ff9a2e'))
       const n = paintFlat(flatGeometry(inner), paper('#fff3b0'))
       n.translate(0, 0, 0.05)
-      const geometry = mergeTwo(o, n)
+      // Stood on its foot, a hair above the cup, so it flickers and sways about it and never into the lamp.
+      const geometry = mergeTwo(o, n).translate(0, 1.1, 0)
       const material = new THREE.MeshBasicMaterial({ vertexColors: true })
       this.flame = new THREE.Mesh(geometry, material)
-      this.flame.position.set(LAMP.x, LAMP.y - 1, LAMP.z)
+      this.flame.name = 'flame'
+      this.flame.position.set(LAMP.x, LAMP_CUP_Y + 0.15, LAMP.z)
       this.scene.add(this.flame)
       this.disposables.push(geometry, material)
     }
@@ -348,6 +389,7 @@ export class TheatreView {
       const geometry = new THREE.PlaneGeometry(1, 1)
       this.haloMaterial = new THREE.MeshBasicMaterial({ map: spot, color: '#ffb866', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5 })
       this.halo = new THREE.Mesh(geometry, this.haloMaterial)
+      this.halo.name = 'flame-halo'
       this.halo.position.set(LAMP.x, LAMP.y, LAMP.z + 0.5)
       this.halo.renderOrder = 8
       this.scene.add(this.halo)
@@ -357,6 +399,7 @@ export class TheatreView {
       const geometry = new THREE.CircleGeometry(0.16, 6)
       const material = new THREE.MeshBasicMaterial({ color: '#ffe2a8', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
       this.motes = new THREE.InstancedMesh(geometry, material, TIERS[0].motes)
+      this.motes.name = 'dust-motes'
       this.moteAlpha = withInstanceAlpha(material, this.motes)
       this.motes.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
       this.motes.renderOrder = 7
@@ -383,6 +426,7 @@ export class TheatreView {
       this.twinkleAnchors = anchors.twinkles
       const fixed = anchors.twinkles.length / 4
       this.twinkles = new THREE.InstancedMesh(geometry, material, fixed + SPARK_STARS + WAKE_STARS)
+      this.twinkles.name = 'twinkle-stars'
       this.twinkleAlpha = withInstanceAlpha(material, this.twinkles)
       this.twinkles.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
       this.twinkles.frustumCulled = false
@@ -402,11 +446,14 @@ export class TheatreView {
       const geometry = handGeometry()
       this.handMaterial = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, depthTest: false, opacity: 0 })
       this.hand = new THREE.Mesh(geometry, this.handMaterial)
+      this.hand.name = 'ghost-hand'
       this.hand.renderOrder = 10
       this.hand.visible = false
       this.scene.add(this.hand)
-      this.ghostMaterial = new THREE.MeshBasicMaterial({ color: '#fff6e2', transparent: true, depthWrite: false, opacity: 0 })
+      // Drawn over the stage like the hand: it shows a move, so it never sits in (or fights) the card it copies.
+      this.ghostMaterial = new THREE.MeshBasicMaterial({ color: '#fff6e2', transparent: true, depthWrite: false, depthTest: false, opacity: 0 })
       this.ghost = new THREE.Mesh(this.cardFor(controller.shapes[0].kind), this.ghostMaterial)
+      this.ghost.name = 'ghost-card'
       this.ghost.renderOrder = 9
       this.ghost.visible = false
       this.ghost.matrixAutoUpdate = false
@@ -507,7 +554,11 @@ export class TheatreView {
     // The halo and hand face the camera; the flame turns to it about the vertical.
     this.halo.quaternion.copy(this.camera.quaternion)
     this.hand.quaternion.copy(this.camera.quaternion)
-    if (!this.running) this.render()
+    if (!this.running) {
+      // Posed first: a still frame (before the loop starts, or while put away) shows every stand where it stands.
+      this.update()
+      this.render()
+    }
   }
 
   private applyTier(): void {
@@ -624,8 +675,8 @@ export class TheatreView {
       const pose = shape.pose
       const card = this.cards[i]
       const landing = c.landing(shape)
-      // Each card stands a hair off its pin's depth, so two cards a child puts at one depth never cut through each other.
-      const z = pose.z + (i - (c.shapes.length - 1) / 2) * CARD_STAGGER
+      // Drawn where it stands: the controller keeps stands out of each other (stands.ts).
+      const z = pose.z
       this.e.set(0, pose.yaw, pose.angle, 'YXZ')
       this.q.setFromEuler(this.e)
       this.v.set(pose.x, PIN_HEIGHT + pose.lift, z)
@@ -643,7 +694,7 @@ export class TheatreView {
       // A soft contact spot under the foot that shrinks and fades as the stand lifts.
       const lift = Math.max(0, pose.lift)
       const size = 6.5 - lift * 0.8
-      this.m.makeScale(size, 1, size * 0.62).setPosition(pose.x, 0.06, z - CARD_DEPTH)
+      this.m.makeScale(size, 1, size * 0.62).setPosition(pose.x, SPOT_Y, z + STAND.stickZ)
       this.blobs.setMatrixAt(i, this.m)
       this.blobAlpha.setX(i, 0.5 / (1 + lift * 0.5))
       if (shape.glow > 0.01) {
@@ -662,7 +713,7 @@ export class TheatreView {
       this.glows.instanceMatrix.needsUpdate = true
       this.glowAlpha.needsUpdate = true
     }
-    this.m.makeScale(17, 1, 12).setPosition(LAMP.x, 0.05, LAMP.z)
+    this.m.makeScale(17, 1, 12).setPosition(LAMP.x, SPOT_Y, LAMP.z)
     this.blobs.setMatrixAt(c.shapes.length, this.m)
     this.blobAlpha.setX(c.shapes.length, 0.55)
     this.sticks.instanceMatrix.needsUpdate = true
@@ -803,10 +854,10 @@ export class TheatreView {
     const cy = Math.cos(pose.yaw)
     const sy = Math.sin(pose.yaw)
     for (let q = 0; q < 4; q++) {
-      const lx = q === 0 || q === 3 ? -STICK_HALF : STICK_HALF
+      const lx = q === 0 || q === 3 ? -STAND.stickHalf : STAND.stickHalf
       const ly = q < 2 ? pose.lift : top
-      const wx = pose.x + lx * cy
-      const wz = pose.z - CARD_DEPTH - lx * sy
+      const wx = pose.x + lx * cy + STAND.stickZ * sy
+      const wz = pose.z + STAND.stickZ * cy - lx * sy
       const kk = LAMP.z / (LAMP.z - wz)
       const o = (s + q) * 3
       pos[o] = LAMP.x + (wx - LAMP.x) * kk
@@ -861,7 +912,7 @@ export class TheatreView {
         y += (1 - dk) * 5 * Math.sin(d * 0.37 + t * 2)
         const lit = sleeper.dotLit[d]
         const flash = lit >= 0 ? 1 + 0.9 * (1 - lit) : 1
-        const size = flash * (covered[d] ? 1.12 : 1) * (1 + glow * 0.18 * Math.sin(t * 5 - d * 0.35))
+        const size = onPaper(x, y, DOT_R * flash * (covered[d] ? 1.12 : 1) * (1 + glow * 0.18 * Math.sin(t * 5 - d * 0.35))) / DOT_R
         this.m.makeScale(size, size, 1).setPosition(x, y, 0.07)
         this.dots.setMatrixAt(n, this.m)
         if (covered[d]) this.c.copy(GOLD)
@@ -889,7 +940,7 @@ export class TheatreView {
       const fade = 1 - w.fillIn
       for (let d = 0; d < w.built.dots.length && n < MAX_DOTS; d++) {
         const dot = w.built.dots[d]
-        const size = 1 + w.fillIn * 0.8
+        const size = onPaper(dot.x, dot.y, DOT_R * (1 + w.fillIn * 0.8)) / DOT_R
         this.m.makeScale(size, size, 1).setPosition(dot.x, dot.y, 0.4)
         this.dots.setMatrixAt(n, this.m)
         this.dots.setColorAt(n, GOLD)
@@ -917,13 +968,13 @@ export class TheatreView {
     const accent = paper(papers.accent)
     const edge = color.clone().multiplyScalar(0.72)
     const bodyOutline = wobble(recentre(built.bodyOutline, cx, cy), 0.07, 11)
-    const body = paintCard(cardGeometry(bodyOutline, CREATURE_DEPTH), color, color, edge)
+    const body = paintCard(cardGeometry(bodyOutline, CREATURE_STACK.body), color, color, edge)
     // The style's offset shadow card, riding just behind the body.
     const drop = paintFlat(flatGeometry(bodyOutline), paper(PALETTE.dropShadow))
-    drop.translate(0.7, -0.9, -CREATURE_DEPTH - 0.5)
+    drop.translate(0.7, -0.9, CREATURE_STACK.drop)
     const pivot = def.parts[0].pivot
     const partOutline = wobble(recentre(built.partOutlines[0], pivot.x, pivot.y), 0.07, 12)
-    const part = paintCard(cardGeometry(partOutline, CREATURE_DEPTH * 0.9), accent, accent, accent.clone().multiplyScalar(0.72))
+    const part = paintCard(cardGeometry(partOutline, CREATURE_STACK.part), accent, accent, accent.clone().multiplyScalar(0.72))
     const eyeWhite = paintFlat(flatGeometry(circleOutline(0, 0, 1.25, 16)), paper('#fffaf0'))
     const pupil = paintFlat(flatGeometry(circleOutline(0.3, 0.05, 0.68, 14)), paper('#1f1a33'))
     pupil.translate(0, 0, 0.02)
@@ -952,18 +1003,13 @@ export class TheatreView {
     const def = CREATURES[kind]
     const built = buildCreature(kind)
     const pivot = def.parts[0].pivot
-    rig.part.userData.base = { x: pivot.x - built.center.x, y: pivot.y - built.center.y, z: FRONT_PART[kind] ? CREATURE_DEPTH * 0.95 : -CREATURE_DEPTH * 0.95 }
-    rig.eye.position.set(def.eye.x - built.center.x, def.eye.y - built.center.y, CREATURE_DEPTH / 2 + 0.05)
+    rig.part.userData.base = { x: pivot.x - built.center.x, y: pivot.y - built.center.y, z: FRONT_PART[kind] ? CREATURE_STACK.partZ : -CREATURE_STACK.partZ }
+    rig.eye.position.set(def.eye.x - built.center.x, def.eye.y - built.center.y, CREATURE_STACK.eye)
   }
 
   private poseRig(rig: Rig, pose: CreaturePose): void {
-    const g = rig.group
     const s = pose.scale
-    const h = pose.hinge * s
-    g.position.set(pose.x + h - h * Math.cos(pose.spin), pose.y, pose.z - h * Math.sin(pose.spin))
-    g.rotation.set(0, -pose.spin, pose.roll, 'YXZ')
-    const facing = Math.abs(pose.facing) < 0.02 ? 0.02 * Math.sign(pose.facing || 1) : pose.facing
-    g.scale.set(pose.sx * s * facing, pose.sy * s, s)
+    placeCreature(rig.group, pose)
     const base = rig.part.userData.base as { x: number; y: number; z: number }
     rig.part.position.set(base.x, base.y + pose.partLift, base.z)
     rig.part.rotation.z = pose.part
@@ -974,9 +1020,9 @@ export class TheatreView {
     rig.eye.material = dark ? this.shadowEyeMaterial : this.eyeMaterial
     // In colour, the silhouette becomes the dark backing card every cut-paper piece has, glued behind and dropped a little.
     rig.dark.material = dark ? this.darkMaterial : this.backingMaterial
-    if (dark) rig.dark.position.set(0, 0, CREATURE_DEPTH / 2 + 0.06)
-    else rig.dark.position.set(0, -BACKING_DROP / s, -CREATURE_DEPTH * 1.6)
-    g.visible = true
+    if (dark) rig.dark.position.set(0, 0, CREATURE_STACK.darkFace)
+    else rig.dark.position.set(0, -BACKING_DROP / s, CREATURE_STACK.backing)
+    rig.group.visible = true
   }
 
   private updateCreatures(): void {
@@ -1006,7 +1052,7 @@ export class TheatreView {
       const snore = sleeper.built.def.snore
       const enter = c.enterProgress()
       const color = sleeper.kind === 'dragon' ? SMOKE : RING_INK
-      for (let i = 0; i < sleeper.ringCount && n < MAX_RINGS; i++) n = this.writeRing(n, sleeper.rings[i], snore.x, snore.y, 0.09, 1, color, enter, 1, SLEEP_RING_GROW)
+      for (let i = 0; i < sleeper.ringCount && n < MAX_RINGS; i++) n = this.writeRing(n, sleeper.rings[i], snore.x, snore.y, 0.09, 1, color, enter, 1, SLEEP_RING_GROW, true)
     }
     for (const companion of c.companions) {
       if (companion.ringCount === 0) continue
@@ -1024,9 +1070,11 @@ export class TheatreView {
     this.ringAlpha.needsUpdate = true
   }
 
-  private writeRing(n: number, ring: Ring, ox: number, oy: number, z: number, scale: number, color: THREE.Color, alpha: number, facing = 1, grow = 1): number {
-    const r = ring.r * scale * grow
-    this.m.makeScale(r, r, 1).setPosition(ox + ring.x * scale * facing, oy + ring.y * scale, z)
+  private writeRing(n: number, ring: Ring, ox: number, oy: number, z: number, scale: number, color: THREE.Color, alpha: number, facing = 1, grow = 1, paperOnly = false): number {
+    const x = ox + ring.x * scale * facing
+    const y = oy + ring.y * scale
+    const r = paperOnly ? onPaper(x, y, ring.r * scale * grow) : ring.r * scale * grow
+    this.m.makeScale(r, r, 1).setPosition(x, y, z)
     this.rings.setMatrixAt(n, this.m)
     this.rings.setColorAt(n, color)
     this.ringAlpha.setX(n, ring.alpha * alpha)
@@ -1099,10 +1147,14 @@ export class TheatreView {
         const size = 0.9 * (1 - sparkAge / SPARK_S) + 0.2
         const x = spark.x + Math.cos(angle) * reach
         const y = spark.y + (up ? 0.8 : 0) + Math.sin(angle) * reach
-        this.setBurstStar(count + k, sparking, x, y, spark.z + 0.5, size, 1 - sparkAge / SPARK_S)
+        const fit = spark.surface === 'screen' ? onPaper(x, y, size) : size
+        this.setBurstStar(count + k, sparking, x, y, up ? spark.z + 0.5 : spark.z, fit, 1 - sparkAge / SPARK_S)
       }
-      // The shadow comes alive: gold stars spring out of it and past the edge of its outline.
+      // The shadow comes alive: gold stars spring out of it and past the edge of
+      // its outline, over it as it lifts off the paper, and never off the paper.
       const burst = c.wakeBurst
+      const lifting = c.waking ? c.waking.pose : null
+      const over = (lifting ? lifting.z + CREATURE_STACK.front * lifting.scale : WAKE_Z + CREATURE_STACK.front) + 0.2
       const u = 1 - (1 - Math.min(1, wakeAge / WAKE_BURST_S)) ** 3
       for (let k = 0; k < WAKE_STARS; k++) {
         const angle = (k / WAKE_STARS) * Math.PI * 2 + (k % 2) * 0.2
@@ -1110,7 +1162,7 @@ export class TheatreView {
         const size = (k % 2 ? 1.5 : 2.1) * (1 - 0.55 * u)
         const x = burst.x + Math.cos(angle) * burst.rx * out
         const y = burst.y + Math.sin(angle) * burst.ry * out
-        this.setBurstStar(count + SPARK_STARS + k, waking, x, y, 0.8, size, 1 - u ** 3, (k % 2 ? -1 : 1) * u * 1.6)
+        this.setBurstStar(count + SPARK_STARS + k, waking, x, y, over, onPaper(x, y, size), 1 - u ** 3, (k % 2 ? -1 : 1) * u * 1.6)
       }
       this.burstsShown = sparking || waking
       dirty = true
@@ -1160,8 +1212,8 @@ export class TheatreView {
     const color = paper(spec.color)
     const card = paintCard(cardGeometry(spec.outline, CARD_DEPTH), color, color, color.clone().multiplyScalar(0.78))
     // The brass pin the card turns on.
-    const pin = paintCard(cardGeometry(circleOutline(0, 0, 0.42, 12), 0.2, 0.04), paper(PALETTE.brass), paper(PALETTE.brass), paper(PALETTE.brassDark))
-    pin.translate(0, 0, CARD_DEPTH / 2 + 0.1)
+    const pin = paintCard(cardGeometry(circleOutline(0, 0, STAND.pinRadius, 12), STAND.pinDepth, 0.04), paper(PALETTE.brass), paper(PALETTE.brass), paper(PALETTE.brassDark))
+    pin.translate(0, 0, CARD_DEPTH / 2 + STAND.pinDepth / 2)
     const geometry = mergeTwo(card, pin)
     this.cardGeometries.set(kind, geometry)
     return geometry

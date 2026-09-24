@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clampToStage, depthForScale, LAMP, penumbra, PIN_HEIGHT, projectCardPoint, projectToScreen, screenToCard, shadowScale, STAGE, type CardPose } from './projection'
+import { clampToStage, depthForScale, LAMP, onPaper, penumbra, PIN_HEIGHT, projectCardPoint, projectToScreen, SCREEN, screenToCard, shadowScale, STAGE, type CardPose } from './projection'
 
 describe('projection', () => {
   it('a card at the screen casts its own size; toward the lamp its shadow grows', () => {
@@ -49,6 +49,24 @@ describe('projection', () => {
       screenToCard(pose, shadow.x, shadow.y, back)
       expect(back.x).toBeCloseTo(u, 9)
       expect(back.y).toBeCloseTo(v, 9)
+    }
+  })
+
+  it('what lies on the paper shrinks into the frame edge instead of crossing it', () => {
+    expect(onPaper(0, 24, 1.5)).toBe(1.5)
+    expect(onPaper(SCREEN.right - 0.4, 24, 1.5)).toBeCloseTo(0.4, 9)
+    expect(onPaper(-10, SCREEN.top - 1, 3)).toBeCloseTo(1, 9)
+    expect(onPaper(-10, SCREEN.bottom + 0.2, 3)).toBeCloseTo(0.2, 9)
+    expect(onPaper(SCREEN.left - 2, 24, 1.5)).toBe(0)
+    for (let x = SCREEN.left - 5; x <= SCREEN.right + 5; x += 0.7) {
+      for (let y = SCREEN.bottom - 5; y <= SCREEN.top + 5; y += 0.7) {
+        const r = onPaper(x, y, 2)
+        if (r === 0) continue
+        expect(x - r).toBeGreaterThanOrEqual(SCREEN.left - 1e-9)
+        expect(x + r).toBeLessThanOrEqual(SCREEN.right + 1e-9)
+        expect(y - r).toBeGreaterThanOrEqual(SCREEN.bottom - 1e-9)
+        expect(y + r).toBeLessThanOrEqual(SCREEN.top + 1e-9)
+      }
     }
   })
 
