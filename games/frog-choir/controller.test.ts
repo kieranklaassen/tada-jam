@@ -399,6 +399,40 @@ describe('keeping things from passing through each other', () => {
     expect(problems.slice(0, 5)).toEqual([])
   })
 
+  it('carries frogs over other carried frogs that have already risen, however high they stack', () => {
+    const { pond } = makePond(8)
+    const problems: string[] = []
+    const step = (seconds: number) => {
+      for (let t = 0; t < seconds; t += 1 / 60) {
+        pond.step(1 / 60)
+        for (const a of pond.frogs) for (const b of pond.frogs) if (a.index < b.index && overlapping(a, b)) problems.push(`${a.index} ${a.mode} × ${b.index} ${b.mode} at ${pond.time.toFixed(2)}s`)
+      }
+    }
+    const carry = (pointer: number, frog: number, x: number, z: number) => {
+      const from = PADS[pond.state.frogs[frog]]
+      const a = screenOf(from.x, from.z)
+      const b = screenOf(x, z)
+      pond.pointerDown(pointer, a.x, a.y, (ms += 10))
+      for (let k = 1; k <= 40; k++) {
+        pond.pointerMove(pointer, a.x + ((b.x - a.x) * k) / 40, a.y + ((b.y - a.y) * k) / 40)
+        step(1 / 60)
+      }
+    }
+    step(1)
+    // Three fingers bring frogs in over one sitting frog, one after another: each floats risen over the ones before it.
+    const under = PADS[pond.state.frogs[1]]
+    carry(1, 0, under.x, under.z)
+    step(0.6)
+    carry(2, 3, under.x, under.z)
+    step(0.6)
+    carry(3, 4, under.x, under.z)
+    step(0.8)
+    expect(pond.frogs[0].baseY).toBeGreaterThan(pond.frogs[1].baseY)
+    expect(pond.frogs[3].baseY).toBeGreaterThan(pond.frogs[0].baseY)
+    expect(pond.frogs[4].baseY).toBeGreaterThan(pond.frogs[3].baseY)
+    expect(problems.slice(0, 5)).toEqual([])
+  })
+
   it('flies the firefly over every frog, however high a tapped frog leaps', () => {
     const problems: string[] = []
     busyPond((pond) => {
