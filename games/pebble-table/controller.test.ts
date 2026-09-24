@@ -64,7 +64,7 @@ describe('TableController', () => {
       const { table } = makeTable()
       tap(table, { x: BAG.x, y: BAG.y })
       run(table, 3)
-      lost += 10 - table.physics.stoneIds().length
+      lost += 10 - new Set([...table.physics.stoneIds(), ...table.flightViews().map((flight) => flight.id)]).size
     }
     expect(lost).toBe(0)
   }, 30_000)
