@@ -8,7 +8,7 @@ import { JAR_REACH, partDepth, partRest, STOOL_REACH, STOOL_TOP } from './partSh
 import { STONE_REACH, stoneRest } from './stoneShape'
 import { feedingFloor, surfaceUnder } from './surfaces'
 import { SaveCadence } from './saveCadence'
-import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
+import { creak, panDrops, panOf, restingBeam, stepBeam, targetTilt, type Beam, type Side } from './scale'
 import { cutPiece, placeFromBag, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
 import { chunk, clusterPieces, groupsFor, schedule } from './voice'
 import { comingOut, DOOR_SWING, doorwayGap, goingHome, houseGap, visitorGone, visitorHome, type VisitorTimes } from './visitors'
@@ -652,14 +652,25 @@ export class TableController {
 
   /** What each pan carries, in quarter-stones: stones by size, parts by their own weight. */
   private panLoad(): [number, number] {
-    const weights = panWeights(this.restingPieces())
+    const weights: [number, number] = [0, 0]
+    for (const piece of this.restingPieces()) {
+      const side = this.weighedBy(piece)
+      if (side !== null) weights[side] += piece.q
+    }
     const held = new Set(this.held.values())
     for (const part of this.state.parts) {
       if (held.has(part.id)) continue
-      const side = panOf(part)
+      const side = this.weighedBy(part)
       if (side !== null) weights[side] += PART_WEIGHT[part.kind]
     }
     return weights
+  }
+
+  /** The pan something weighs on: the one it lies in, not one whose rim it lies under on the table, or the beam would rock it for ever. */
+  private weighedBy(item: { id: number; x: number; y: number }): Side | null {
+    const side = panOf(item)
+    const body = this.physics.body(item.id)
+    return side !== null && body && body.position.y > this.physics.panFloor(side) ? side : null
   }
 
   private newPart(kind: PartKind, at: Point): Part {
