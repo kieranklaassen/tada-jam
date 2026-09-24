@@ -1597,8 +1597,16 @@ function pointingHandTexture(): THREE.Texture {
   return texture
 }
 
-/** A big friendly cartoon hand, always facing the camera, fingertip on the target; carries a ghost stone for drags. */
-export function GhostHand({ read, carry }: { read: () => { at: Point; press: number; opacity: number } | null; carry: () => boolean }) {
+/** How far the ghost stone reaches below its middle, and out from it. */
+export const GHOST_BELOW = stoneReachAlong(4, 0, -1, 0)
+export const GHOST_REACH = stoneReachOf(4)
+
+/**
+ * A big friendly cartoon hand, always facing the camera, fingertip on the
+ * target; carries a ghost stone for drags, lying on `floor` (cm): the stone
+ * it is lifted from, or what it is carried over.
+ */
+export function GhostHand({ read, carry, floor }: { read: () => { at: Point; press: number; opacity: number } | null; carry: () => boolean; floor: (at: Point) => number }) {
   const { stones } = useClay()
   const ghost = useMemo(() => {
     const material = stones.clone()
@@ -1624,7 +1632,7 @@ export function GhostHand({ read, carry }: { read: () => { at: Point; press: num
     material.opacity = pose.opacity
     if (stone.current) {
       stone.current.visible = carry() && pose.press > 0.5
-      stone.current.position.set(p.x, Math.max(1.4, p.y - 0.4), p.z)
+      if (stone.current.visible) stone.current.position.set(p.x, Math.max(1.4, p.y - 0.4, floor(pose.at) + GHOST_BELOW), p.z)
       ghost.opacity = pose.opacity * 0.65
     }
   })

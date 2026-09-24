@@ -26,6 +26,8 @@ import {
   doorSwing,
   easeOutBack,
   feedingShapes,
+  GHOST_BELOW,
+  GHOST_REACH,
   houseGeometry,
   HUB_RADIUS,
   MOUSE_SCALE,
@@ -42,6 +44,7 @@ import {
   type StoneMotion,
   type StoneState,
 } from './view/models'
+import { ghostFloor } from './view/game'
 import { comingOut, DOOR_HINGE, DOOR_SWING, doorwayGap, goingHome, houseGap, VISITOR_GAP, VISITOR_REACH, visitorGone, visitorPose, visitorWalk, type VisitorPose, type VisitorTimes } from './visitors'
 import { chunk } from './voice'
 
@@ -234,6 +237,45 @@ function stoneGeometry(q: Quarters): THREE.BufferGeometry {
   geometry.attributes.position.array.set(stoneVertices(STONE_CUTS[q], STONE_SEGMENTS))
   return geometry
 }
+
+describe('the guidance ghost stone lies on the stone it is lifted from', () => {
+  it('lays the ghost stone on top of every stone it would reach into, however they lie in a heap', () => {
+    const table = new TableController({ ...defaultTable(6), bag: 40, total: 40 }, { save: () => {} })
+    table.setProjector({ toScreen: (v) => toWorld2(v), toPlane: (screen) => screen })
+    let clock = 0
+    for (let i = 0; i < 10; i++) {
+      const to = { x: 560 + (i % 4) * 22, y: 640 + Math.floor(i / 4) * 22 }
+      table.pointerDown(2, BAG, (clock += 10))
+      for (let k = 1; k <= 10; k++) {
+        table.pointerMove(2, { x: BAG.x + ((to.x - BAG.x) * k) / 10, y: BAG.y + ((to.y - BAG.y) * k) / 10 }, (clock += 16))
+        table.step(1 / 60)
+      }
+      for (let t = 0; t < 0.2; t += 1 / 60) table.step(1 / 60)
+      table.pointerUp(2, to, (clock += 150))
+      for (let t = 0; t < 0.6; t += 1 / 60) table.step(1 / 60)
+    }
+    for (let t = 0; t < 3; t += 1 / 60) table.step(1 / 60)
+    const ghostLow = Math.min(...drawnPoints(4).map((p) => p.y))
+    const ids = table.physics.stoneIds()
+    let under = 0
+    for (const id of ids) {
+      const body = table.physics.body(id)!
+      const centre = new CANNON.Vec3(body.position.x, 0, body.position.z)
+      centre.y = Math.max(1.4, ghostFloor(table, toWorld2(centre)) + GHOST_BELOW)
+      for (const other of ids) {
+        const b = table.physics.body(other)!
+        const reached = drawnPoints(table.quartersOf(other))
+          .map((p) => toWorld(b, p))
+          .filter((p) => Math.hypot(p.x - centre.x, p.z - centre.z) < GHOST_REACH)
+        if (!reached.length) continue
+        under++
+        expect(centre.y + ghostLow).toBeGreaterThanOrEqual(Math.max(...reached.map((p) => p.y)) - 1e-6)
+      }
+    }
+    expect(ids.length).toBeGreaterThan(8)
+    expect(under).toBeGreaterThan(ids.length)
+  })
+})
 
 describe('loose parts are drawn on what they land on', () => {
   it('measures how far a turned part reaches down to within a hair of its drawing, and never past it', () => {

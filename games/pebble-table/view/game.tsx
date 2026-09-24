@@ -3,14 +3,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { TableController } from '../controller'
 import { QualityGovernor, startingTier, type QualitySettings } from '../quality'
 import { BAG, DOOR, FEEDING, SCALE, shelfTile, type Point } from '../layout'
-import { stoneRadius3, toWorld2 } from '../physics3d'
-import { stoneRest } from '../stoneShape'
+import { stoneRadius3, toWorld2, UNIT } from '../physics3d'
+import { stoneReachAlong, stoneReachOf, stoneRest } from '../stoneShape'
 import { partReachDown, STOOL_REACH } from '../partShape'
 import { panOf } from '../scale'
 import { feedingFloor, RUG, surfaceUnder } from '../surfaces'
 import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
 import { visitorHome } from '../visitors'
-import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, STONE_COVER, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type StoneState } from './models'
+import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GHOST_REACH, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, STONE_COVER, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type StoneState } from './models'
 import { guestFloor } from './guest'
 import { GrownUpOverlay } from './overlay'
 import { ProjectorBridge, Stage, type ProjectorHandle } from './stage'
@@ -90,6 +90,18 @@ function jarCounts(table: TableController): Record<PartKind, number> {
 
 function groundUnder(table: TableController, at: Point): number {
   return surfaceUnder(at, table.physics.surfaces(table.state.liveMat, table.state.seats))
+}
+
+/** What the guidance's ghost stone lies on at `at`: the top of any stone it would reach into, or the feeding mat's plates, bowl and rug. */
+export function ghostFloor(table: TableController, at: Point): number {
+  let floor = table.state.liveMat === 'feeding' ? groundUnder(table, at) : 0
+  for (const stone of stoneStates(table)) {
+    const p = toWorld2(stone.position)
+    if (Math.hypot(p.x - at.x, p.y - at.y) * UNIT >= GHOST_REACH + stoneReachOf(stone.q)) continue
+    const [x, y, z, w] = stone.quaternion
+    floor = Math.max(floor, stone.position.y + stoneReachAlong(stone.q, 2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)))
+  }
+  return floor
 }
 
 function shadows(table: TableController): Blob[] {
@@ -223,7 +235,7 @@ function World({ table }: { table: TableController }) {
       <ShelfModel read={() => ({ mats: table.shelfMats(), drag: table.shelfDrag, glow: table.guidance.glowShelf ? table.guidance.glow : 0, now: table.t })} />
       <AlbumModel read={() => ({ pages: table.state.album, at: table.albumAt, now: table.t })} />
       <Overlays kind="glow" capacity={32} read={() => glows(table)} surfaces={() => table.physics.surfaces(table.state.liveMat, table.state.seats)} />
-      <GhostHand read={() => table.guidance.hand} carry={() => table.guidance.hint?.kind === 'toPan' || table.guidance.hint?.kind === 'toGuest'} />
+      <GhostHand read={() => table.guidance.hand} carry={() => table.guidance.hint?.kind === 'toPan' || table.guidance.hint?.kind === 'toGuest'} floor={(at) => ghostFloor(table, at)} />
     </>
   )
 }
