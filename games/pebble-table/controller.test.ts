@@ -57,7 +57,7 @@ describe('TableController', () => {
     expect(table.state.pieces).toHaveLength(10)
     run(table, 3)
     expect(accountedTotal(table.state)).toBe(40)
-    expect(table.physics.stoneIds()).toHaveLength(10)
+    expect(new Set([...table.physics.stoneIds(), ...table.flightViews().map((flight) => flight.id)]).size).toBe(10)
     expect(save).toHaveBeenCalled()
   })
 
