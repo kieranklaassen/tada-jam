@@ -3,13 +3,13 @@ import { MeshBVH } from 'three-mesh-bvh'
 import { describe, expect, it } from 'vitest'
 import { crossings, preparePiece, type MaterialInfo } from '../../scripts/intersections/core'
 import { GardenController, RACK } from './controller'
-import { ARRIVE_DELAY, CREATURES, LEAVE_DELAY, Presence, TRAVEL_SECONDS, type CreatureKind } from './creatures'
+import { ARRIVE_DELAY, CREATURES, LEAVE_DELAY, napsLeft, Presence, TRAVEL_SECONDS, type CreatureKind } from './creatures'
 import type { Point } from './input'
-import { cellIndex, PLOTS, ROWS, type Cell } from './layout'
+import { cellIndex, COLS, PLOTS, ROWS, type Cell } from './layout'
 import { MotionDirector } from './motion'
 import type { Piece, PieceKind } from './pieces'
 import { STATE_VERSION, type GardenState } from './state'
-import { CreaturesView } from './view/creatures'
+import { CreaturesView, restSpot } from './view/creatures'
 import { CARRY_LIFT, PiecesView, WHEEL_Y, type DemoPiece, type ShadowSink } from './view/pieces'
 import { PlotsView } from './view/plots'
 import { Projector } from './view/projector'
@@ -28,7 +28,6 @@ const H = 820
 const FRAME = 1 / 30
 /** The audit lets a piece sink this share of its middle extent (its world bounding box) into another, or 2 mm. */
 const ALLOWED = 0.06
-/** Water running loose over a floor lies within this of it. */
 
 function projector(): Projector {
   const camera = new THREE.PerspectiveCamera(27, 1, 1, 100)
@@ -188,6 +187,20 @@ describe('visitors on the hillside', () => {
     const ends = Array.from({ length: ROWS }, (_, r) => [{ c: 0, r }, { c: 6, r }]).flat()
     // It circles as it arrives, is poked while it does, and each end tries two of eight ways it can react.
     expect(ends.flatMap((spot, i) => [1 + (i % 8), 1 + ((i + 4) % 8)].flatMap((seed) => visit('tanuki', spot, 12, seed, null, 11).slice(0, 2)))).toEqual([])
+  }, 120_000)
+
+  it('the tanuki goes round to the other end of the terraces when its wheel moves across, never through the beds or the bushes', () => {
+    const at = new THREE.Vector3()
+    for (let i = 0; i < COLS * ROWS; i++) {
+      const spot = { c: i % COLS, r: Math.floor(i / COLS) }
+      restSpot('tanuki', spot, at)
+      expect(at.x < 0).toBe(napsLeft(spot))
+    }
+    const moves = Array.from({ length: ROWS }, (_, r) => [
+      [{ c: 0, r }, { c: 6, r }],
+      [{ c: 6, r }, { c: 0, r }],
+    ]).flat()
+    expect(moves.flatMap(([from, to], i) => visit('tanuki', from, 28, 1 + (i % 8), to, 11).slice(0, 2))).toEqual([])
   }, 120_000)
 })
 
