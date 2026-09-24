@@ -1,4 +1,4 @@
-// Jam smoothness shim for the Alien Frontier showcase (see showcase/alien-frontier/PERF.md).
+// Jam smoothness shim for the Alien Frontier showcase (see showcases/alien-frontier/PERF.md).
 //
 // The game's source is not in this repo, so this file adjusts the built scene
 // at runtime without touching the prebuilt bundle. It runs once the game has

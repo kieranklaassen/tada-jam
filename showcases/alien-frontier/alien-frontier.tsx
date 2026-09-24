@@ -2,9 +2,10 @@ import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../../harness/contract'
 import { alienFrontierManifest } from './manifest'
 
-// SHOWCASE ONLY: Alien Frontier is a standalone keyboard-and-mouse space western
-// (source: ../../midwestalien, rebuilt into public/alien-frontier with
-// `npm run showcase:jam`). It runs in a same-origin iframe and does not follow
+// SHOWCASE, NOT A CARTRIDGE: Alien Frontier is a standalone keyboard-and-mouse
+// space western (source: the midwestalien repo, rebuilt into
+// public/alien-frontier with its `npm run showcase:jam`). It lives in
+// showcases/, outside cartridge discovery. It runs in a same-origin iframe and does not follow
 // the cartridge rules (it has XP, money and a range timer, and saves to
 // localStorage), so it is not meant to be ported to Tada. Its fonts are bundled.
 

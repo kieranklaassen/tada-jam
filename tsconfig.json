@@ -16,5 +16,5 @@
     "noUnusedParameters": true,
     "types": ["vite/client", "node"]
   },
-  "include": ["harness", "games", "showcase", "scripts", "test", "vite.config.ts"]
+  "include": ["harness", "games", "showcases", "scripts", "test", "vite.config.ts"]
 }
