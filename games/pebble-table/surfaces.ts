@@ -64,6 +64,19 @@ export const BOWL_WALL: readonly (readonly [number, number])[] = [
 /** How thick the bowl's wall is drawn, measured square to it. */
 export const BOWL_WALL_THICKNESS = 1
 
+/** The bowl's flared outside as (radius, height above its base) in cm, from its foot up to its widest. */
+export const BOWL_OUTSIDE: readonly (readonly [number, number])[] = BOWL_PROFILE.slice(1, 6).map(([r, h]) => [r * BOWL_SCALE, h * BOWL_SCALE])
+
+/** The radius of a (radius, height) outline rising up its points, at `height`; level with its ends below and above them. */
+export function radiusAt(line: readonly (readonly [number, number])[], height: number): number {
+  for (let i = 1; i < line.length; i++) {
+    const [r0, h0] = line[i - 1]
+    const [r1, h1] = line[i]
+    if (height <= h1) return r0 + ((Math.max(height, h0) - h0) / (h1 - h0)) * (r1 - r0)
+  }
+  return line[line.length - 1][0]
+}
+
 /** Scale pan profile (unit radius) and its drawn depth: a flat floor with a steep inner rim. */
 export const DISH_PROFILE: readonly [number, number][] = [
   [0, -0.05],

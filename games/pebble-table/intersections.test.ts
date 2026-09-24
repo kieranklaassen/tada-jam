@@ -1,7 +1,8 @@
 import * as CANNON from 'cannon-es'
 import { describe, expect, it } from 'vitest'
-import type { Quarters } from './layout'
-import { STEP, TablePhysics } from './physics3d'
+import { FEEDING, TABLE, type Quarters } from './layout'
+import { STOOL_REACH, STOOL_TOP } from './partShape'
+import { STEP, TablePhysics, toWorld2, UNIT } from './physics3d'
 import { STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneRest, stoneVertices } from './stoneShape'
 
 // What the intersection audit (npm run check:intersections -- pebble-table)
@@ -39,6 +40,15 @@ function depthInside(shape: CANNON.ConvexPolyhedron, p: CANNON.Vec3): number {
 }
 
 const toWorld = (body: CANNON.Body, local: CANNON.Vec3) => body.position.vadd(body.quaternion.vmult(local))
+
+/** The height of a body's lowest drawn point, from the vertical row of its rotation. */
+function lowest(body: CANNON.Body, points: readonly CANNON.Vec3[]): number {
+  const { x, y, z, w } = body.quaternion
+  const [rx, ry, rz] = [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)]
+  let low = Infinity
+  for (const p of points) low = Math.min(low, rx * p.x + ry * p.y + rz * p.z)
+  return body.position.y + low
+}
 const toLocal = (body: CANNON.Body, world: CANNON.Vec3) => body.quaternion.conjugate().vmult(world.vsub(body.position))
 
 describe('stones collide as they are drawn', () => {
@@ -94,4 +104,38 @@ describe('stones collide as they are drawn', () => {
     }
     expect(worst).toBeLessThan(0.12)
   })
+
+  it('lets a sweeping finger push stones against a stool and the bowl without pressing any into the table', () => {
+    const stool = FEEDING.seats[3].guest
+    const between = { x: (stool.x + FEEDING.bowl.x) / 2, y: (stool.y + FEEDING.bowl.y) / 2 }
+    const points = drawnPoints(4)
+    let seed = 11
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
+    let deepest = 0
+    for (let trial = 0; trial < 13; trial++) {
+      const physics = new TablePhysics()
+      physics.setMat('feeding')
+      physics.setFixture('stool', { ...stool, r: STOOL_REACH / UNIT }, STOOL_TOP)
+      for (let i = 0; i < 6; i++) {
+        const a = random() * Math.PI * 2
+        const d = 60 + random() * 90
+        physics.addStone(i + 1, 4, { x: between.x + Math.cos(a) * d, y: between.y + Math.sin(a) * d })
+      }
+      run(physics, 1)
+      const angle = random() * Math.PI * 2
+      const from = { x: between.x - Math.cos(angle) * 220, y: between.y - Math.sin(angle) * 220 }
+      for (let t = 0; t <= 1.8; t += 1 / 60) {
+        const k = Math.min(1, t / 0.9)
+        physics.setBroom(1, t <= 0.9 ? { x: from.x + Math.cos(angle) * 440 * k, y: from.y + Math.sin(angle) * 440 * k } : null)
+        physics.step(1 / 60)
+        for (let id = 1; id <= 6; id++) {
+          const body = physics.body(id)!
+          const at = toWorld2(body.position)
+          if (at.x < TABLE.x || at.x > TABLE.x + TABLE.w || at.y < TABLE.y || at.y > TABLE.y + TABLE.h) continue
+          deepest = Math.max(deepest, -lowest(body, points))
+        }
+      }
+    }
+    expect(deepest).toBeLessThan(0.8)
+  }, 30_000)
 })
