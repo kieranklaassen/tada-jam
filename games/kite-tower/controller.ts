@@ -1845,7 +1845,7 @@ export class KiteController {
       const x = slideClear(shape, 0, search.candidates[search.index++], placed)
       if (clampX(x, shape.half.x) !== x) continue
       if (loose && Math.abs(x - search.shapes[search.shape].x) < LEFTOVER_MOVE) continue
-      let rest = restHeight(shape, 0, x, placed)
+      let rest = slideRest.x === x ? slideRest.height : restHeight(shape, 0, x, placed)
       if (restSliver.left > 0 || restSliver.right > 0) rest = restSliver.over
       const y = rest - 0.06
       const base = y - baseDepth(shape)

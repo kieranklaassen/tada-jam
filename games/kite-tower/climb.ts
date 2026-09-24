@@ -52,6 +52,59 @@ function blocked(placed: readonly Placed[], x: number, from: number, to: number)
   return false
 }
 
+/** Past `spanAt`'s own hair of slack at a part's ends, so culling never drops wood it would have found. */
+const CULL_SLACK = 0.01
+
+/** The placed parts with their bounds, gathered once for the many columns the planner looks down against the same build. */
+class Wood {
+  private readonly parts: (readonly Vec2[])[] = []
+  private box = new Float64Array(64)
+  private count = 0
+
+  of(placed: readonly Placed[]): this {
+    this.count = 0
+    for (const piece of placed) {
+      for (const part of piece.parts) {
+        const k = this.count++
+        if (this.box.length < this.count * 4) {
+          const grown = new Float64Array(this.box.length * 2)
+          grown.set(this.box)
+          this.box = grown
+        }
+        let lx = Infinity
+        let hx = -Infinity
+        let ly = Infinity
+        let hy = -Infinity
+        for (const p of part) {
+          if (p.x < lx) lx = p.x
+          if (p.x > hx) hx = p.x
+          if (p.y < ly) ly = p.y
+          if (p.y > hy) hy = p.y
+        }
+        this.parts[k] = part
+        this.box[k * 4] = lx
+        this.box[k * 4 + 1] = hx
+        this.box[k * 4 + 2] = ly
+        this.box[k * 4 + 3] = hy
+      }
+    }
+    return this
+  }
+
+  /** `blocked`, reading only the parts whose bounds reach the column. */
+  blocked(x: number, from: number, to: number): boolean {
+    const box = this.box
+    for (let k = 0; k < this.count; k++) {
+      const b = k * 4
+      if (x < box[b] - CULL_SLACK || x > box[b + 1] + CULL_SLACK || box[b + 3] < from - CULL_SLACK || box[b + 2] > to + CULL_SLACK) continue
+      const span = spanAt(this.parts[k], x)
+      if (span && span[1] > from && span[0] < to) return true
+    }
+    return false
+  }
+}
+const wood = new Wood()
+
 const STAND_COLUMNS = [0, -STAND_HALF / 2, STAND_HALF / 2, -STAND_HALF, STAND_HALF]
 
 /** Her hem up to its widest, both sides, a few hundredths apart: offsets across and heights over her feet. Above it she narrows, so no ramp she stands on reaches her there first. */
@@ -71,9 +124,17 @@ const HEM_POINTS: readonly Vec2[] = HEM.slice(1).flatMap((b, i) => {
 
 /** Where her feet go standing over `part` at `x`: her flat hem on the highest of it under her, so on a ramp it rests on the high side instead of in it. */
 function feetOn(part: readonly Vec2[], x: number): number {
+  let lo = Infinity
+  let hi = -Infinity
+  for (const p of part) {
+    lo = Math.min(lo, p.x)
+    hi = Math.max(hi, p.x)
+  }
   let feet = -Infinity
   for (const p of HEM_POINTS) {
-    const span = spanAt(part, x + p.x)
+    const at = x + p.x
+    if (at < lo - 1e-9 || at > hi + 1e-9) continue
+    const span = spanAt(part, at)
     if (span) feet = Math.max(feet, span[1] - p.y)
   }
   return feet
@@ -86,7 +147,11 @@ function feetOn(part: readonly Vec2[], x: number): number {
  * only the ramp itself may rise past her feet, out beyond her hem.
  */
 export function roomy(placed: readonly Placed[], x: number, y: number, slope = 0, ground = y): boolean {
-  for (const dx of STAND_COLUMNS) if (blocked(placed, x + dx, Math.max(y, ground + dx * slope) + 0.05, y + CLEARANCE)) return false
+  return roomyIn(wood.of(placed), x, y, slope, ground)
+}
+
+function roomyIn(around: Wood, x: number, y: number, slope = 0, ground = y): boolean {
+  for (const dx of STAND_COLUMNS) if (around.blocked(x + dx, Math.max(y, ground + dx * slope) + 0.05, y + CLEARANCE)) return false
   return true
 }
 
@@ -98,8 +163,6 @@ const PATH_STEP = 0.08
 const pathPoint: Vec2 = { x: 0, y: 0 }
 const nearParts: Vec2[][] = []
 const nearPlaced: Placed[] = [{ id: -1, parts: nearParts }]
-/** Past `spanAt`'s own hair of slack at a part's ends, so culling never drops wood it would have found. */
-const CULL_SLACK = 0.01
 
 function partMeets(part: readonly Vec2[], x0: number, x1: number, y0: number, y1: number): boolean {
   let lx = Infinity
@@ -170,9 +233,13 @@ export function headroom(placed: readonly Placed[], x: number, y: number): numbe
 
 /** Where the doll could stand; never on piece `avoid`, which still stands in her way. */
 export function standableSpots(placed: readonly Placed[], avoid: number | null = null): Spot[] {
+  return spotsAmong(wood.of(placed), placed, avoid)
+}
+
+function spotsAmong(around: Wood, placed: readonly Placed[], avoid: number | null): Spot[] {
   const spots: Spot[] = []
   for (let x = FLOOR_MIN; x <= FLOOR_MAX + 1e-9; x += SPACING) {
-    if (roomy(placed, x, 0)) spots.push({ x, y: 0, on: null })
+    if (roomyIn(around, x, 0)) spots.push({ x, y: 0, on: null })
   }
   const minUp = Math.cos(MAX_SLOPE)
   for (const piece of placed) {
@@ -192,7 +259,7 @@ export function standableSpots(placed: readonly Placed[], avoid: number | null =
           const y = a.y + dy * t
           if (x < FLOOR_MIN || x > FLOOR_MAX || y < 0.05) continue
           const feet = feetOn(part, x)
-          if (roomy(placed, x, feet, dy / dx, y)) spots.push({ x, y: feet, on: piece.id })
+          if (roomyIn(around, x, feet, dy / dx, y)) spots.push({ x, y: feet, on: piece.id })
         }
       }
     }
@@ -203,26 +270,21 @@ export function standableSpots(placed: readonly Placed[], avoid: number | null =
 
 type Link = { to: number; kind: MoveKind; cost: number }
 
-function linkFor(placed: readonly Placed[], a: Spot, b: Spot): Link | null {
-  const link = moveFor(placed, a, b)
-  return link && headClearAlong(placed, link.kind, a, b) ? link : null
-}
-
-function moveFor(placed: readonly Placed[], a: Spot, b: Spot): Link | null {
+function moveFor(around: Wood, a: Spot, b: Spot): Link | null {
   const dx = Math.abs(b.x - a.x)
   const rise = b.y - a.y
   if (dx <= WALK_DX && Math.abs(rise) <= STEP_UP) return { to: -1, kind: 'walk', cost: dx + Math.abs(rise) }
   if (rise > STEP_UP && rise <= HOIST && dx <= HOIST_REACH) {
-    if (blocked(placed, a.x, a.y + 0.05, b.y + 1.1)) return null
+    if (around.blocked(a.x, a.y + 0.05, b.y + 1.1)) return null
     return { to: -1, kind: 'climb', cost: 1.2 + rise + dx }
   }
   if (dx > WALK_DX && dx <= HOP_GAP && Math.abs(rise) <= 0.5) {
     const top = Math.max(a.y, b.y)
-    if (blocked(placed, (a.x + b.x) / 2, top + 0.15, top + 1.1)) return null
+    if (around.blocked((a.x + b.x) / 2, top + 0.15, top + 1.1)) return null
     return { to: -1, kind: 'hop', cost: 1 + dx }
   }
   if (rise < -STEP_UP && rise >= -DROP && dx >= 0.2 && dx <= 1.1) {
-    if (blocked(placed, b.x, b.y + 0.05, a.y + 1)) return null
+    if (around.blocked(b.x, b.y + 0.05, a.y + 1)) return null
     return { to: -1, kind: 'drop', cost: 0.8 + dx - rise * 0.3 }
   }
   return null
@@ -238,14 +300,14 @@ export function spotValue(spot: Spot, kite: KiteTarget): number {
 }
 
 /** Wood above her shoulder within a hand's width on the kite side, where her reaching arm would go into it. */
-function crampedReach(placed: readonly Placed[], spot: Spot, kite: KiteTarget): boolean {
+function crampedReach(around: Wood, spot: Spot, kite: KiteTarget): boolean {
   const toward = Math.sign(kite.x - spot.x)
-  return toward !== 0 && blocked(placed, spot.x + toward * HAND_WIDTH, spot.y + SHOULDER, spot.y + DOLL_HEIGHT + 0.6)
+  return toward !== 0 && around.blocked(spot.x + toward * HAND_WIDTH, spot.y + SHOULDER, spot.y + DOLL_HEIGHT + 0.6)
 }
 
 /** Where to wait when the kite is out of reach: as good a spot as the build gives, but never pressed against a block she reaches into. */
-function waitValue(placed: readonly Placed[], spot: Spot, kite: KiteTarget): number {
-  return spotValue(spot, kite) - (crampedReach(placed, spot, kite) ? CRAMPED_COST : 0)
+function waitValue(around: Wood, spot: Spot, kite: KiteTarget): number {
+  return spotValue(spot, kite) - (crampedReach(around, spot, kite) ? CRAMPED_COST : 0)
 }
 
 function nearestSpot(spots: readonly Spot[], at: { x: number; y: number }, on: number | null): number {
@@ -267,7 +329,8 @@ function nearestSpot(spots: readonly Spot[], at: { x: number; y: number }, on: n
  * never stands on piece `avoid`.
  */
 export function planClimb(placed: readonly Placed[], doll: { x: number; y: number; on: number | null }, kite: KiteTarget, avoid: number | null = null): Plan | null {
-  const spots = standableSpots(placed, avoid)
+  const around = wood.of(placed)
+  const spots = spotsAmong(around, placed, avoid)
   const start = nearestSpot(spots, doll, doll.on)
   if (start < 0) return null
   const at: Spot = { x: doll.x, y: doll.y, on: doll.on }
@@ -289,17 +352,17 @@ export function planClimb(placed: readonly Placed[], doll: { x: number; y: numbe
     for (let j = current + 1; j < n && spots[j].x - from.x <= window; j++) relax(j)
     function relax(j: number): void {
       if (done[j]) return
-      const link = linkFor(placed, from, spots[j])
+      const link = moveFor(around, from, spots[j])
       if (!link) return
+      const next = cost[current] + link.cost
+      // Head room along the move is the costly check, so only for a move that would make a shorter way.
+      if (next >= cost[j] || !headClearAlong(placed, link.kind, from, spots[j])) return
       // Her route begins where she really stands, which a block set down by her can leave a little off
       // the nearest spot: a climb, hop or drop from there has to keep her head clear from there too.
       if (current === start && link.kind !== 'walk' && !headClearAlong(placed, link.kind, at, spots[j])) return
-      const next = cost[current] + link.cost
-      if (next < cost[j]) {
-        cost[j] = next
-        via[j] = current
-        kind[j] = link.kind
-      }
+      cost[j] = next
+      via[j] = current
+      kind[j] = link.kind
     }
   }
 
@@ -312,10 +375,10 @@ export function planClimb(placed: readonly Placed[], doll: { x: number; y: numbe
   if (goal >= 0) reachesKite = true
   else {
     goal = start
-    let bestValue = waitValue(placed, spots[start], kite) + 0.25
+    let bestValue = waitValue(around, spots[start], kite) + 0.25
     for (let i = 0; i < n; i++) {
       if (cost[i] === Infinity) continue
-      const value = waitValue(placed, spots[i], kite)
+      const value = waitValue(around, spots[i], kite)
       if (value > bestValue + 1e-6 || (Math.abs(value - bestValue) < 1e-6 && goal !== start && cost[i] < cost[goal])) {
         goal = i
         bestValue = value
