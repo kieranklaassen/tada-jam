@@ -277,6 +277,50 @@ describe('KiteController', () => {
     expect(sound.calls).toContain('turn')
   })
 
+  it('a tap on a piece holding another up leaves it where it is with a soft knock, so nothing falls into it', () => {
+    const tower: SavedPiece[] = [
+      { id: 6, tray: false, x: -3.3, y: 0.95, a: 0 },
+      { id: 10, tray: false, x: -1.6, y: 0.95, a: 0 },
+      { id: 4, tray: false, x: -2.45, y: 2.06, a: 0 },
+      { id: 3, tray: false, x: -2.45, y: 2.72, a: 0 },
+    ]
+    const leaning: SavedPiece[] = [
+      { id: 8, tray: false, x: 3, y: 0.5, a: 0 },
+      { id: 9, tray: false, x: 3, y: 1.4, a: 0 },
+      { id: 0, tray: false, x: 0.4, y: 0.5, a: 0 },
+      { id: 11, tray: false, x: 1.7, y: 1.6, a: 0.25 },
+    ]
+    for (const [pieces, tapped] of [
+      [tower, 10],
+      [tower, 4],
+      [leaning, 9],
+    ] as const) {
+      const { game, sound } = make(withPieces([...pieces]))
+      run(game, 3)
+      const poseOf = (id: number) => {
+        const body = game.physics.body(id)!
+        return { x: body.position.x, y: body.position.y, angle: angleOf(body) }
+      }
+      const before = pieces.map((p) => poseOf(p.id))
+      const at = game.physics.body(tapped)!.position
+      const heard = sound.calls.length
+      game.pointerDown(1, { x: at.x, y: at.y }, game.t * 1000)
+      game.pointerUp(1, { x: at.x, y: at.y }, game.t * 1000 + 100)
+      let deepest = 0
+      run(game, 2, () => {
+        expect(game.physics.isHeld(tapped)).toBe(false)
+        for (let i = 0; i < pieces.length; i++) for (let j = i + 1; j < pieces.length; j++) deepest = Math.max(deepest, outlineOverlap(pieceOutline(game, pieces[i].id), pieceOutline(game, pieces[j].id)))
+      })
+      pieces.forEach((p, i) => {
+        const now = poseOf(p.id)
+        expect(Math.hypot(now.x - before[i].x, now.y - before[i].y) + Math.abs(now.angle - before[i].angle), `piece ${p.id} after tapping ${tapped}`).toBeLessThan(0.02)
+      })
+      expect(deepest, `tapping ${tapped}`).toBeLessThan(0.02)
+      expect(sound.calls.slice(heard)).toContain('tok')
+      expect(sound.calls.slice(heard)).not.toContain('turn')
+    }
+  })
+
   it('a tap on a tray piece hops it onto the rug beside the doll', () => {
     const { game } = make(defaultState(5))
     run(game, 0.2)

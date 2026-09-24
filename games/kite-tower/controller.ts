@@ -98,6 +98,8 @@ export type ControllerDeps = { save: (state: KiteState) => void; sound?: KiteSou
 const LIFT = 1.1
 const FOLLOW = 18
 const TURN_SECONDS = 0.26
+/** How hard a tapped piece that holds another up knocks (as an impact speed): softly, as it stays put. */
+const HELD_DOWN_TOK = 1.2
 const GRAB_SECONDS = 0.8
 const FLIGHT_SECONDS = 7
 /** The kite's highest point in flight; any higher and its top leaves the picture. */
@@ -892,8 +894,19 @@ export class KiteController {
     this.version += 1
   }
 
+  /**
+   * A tapped piece turns a quarter where it lies. One holding another up stays
+   * put with a soft knock instead: a held piece passes through the build, so
+   * what it carried would fall into it, and a tap never brings a tower down.
+   */
   private startTurn(id: number): void {
     if (this.physics.isHeld(id) || this.turn) return
+    const placed = this.placedList()
+    const piece = placed.find((p) => p.id === id)
+    if (piece && carries(placed, piece)) {
+      this.sound?.tok(PIECES[id].kind, HELD_DOWN_TOK)
+      return
+    }
     const pose = this.physics.pose(id, this.poseScratch)
     this.supportLost(id)
     this.physics.hold(id)
