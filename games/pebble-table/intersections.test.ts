@@ -690,6 +690,47 @@ describe('the scale hangs together at every tilt', () => {
     expect(deepest).toBeLessThan(0.2)
   }, 60_000)
 
+  it('carries a stone over a pan riding high on the beam, never through its rolled rim', () => {
+    const table = new TableController({ ...defaultTable(6), bag: 40, total: 40 }, { save: () => {} })
+    table.setProjector({ toScreen: (v) => toWorld2(v), toPlane: (screen) => screen })
+    const [left, right] = SCALE.pans
+    let clock = 0
+    const carry = (path: readonly Point[], frames: number, each: () => void = () => {}) => {
+      table.pointerDown(2, path[0], (clock += 10))
+      for (let k = 1; k <= frames; k++) {
+        const f = (k / frames) * (path.length - 1)
+        const [a, b] = [path[Math.floor(f)], path[Math.min(path.length - 1, Math.floor(f) + 1)]]
+        table.pointerMove(2, { x: a.x + (b.x - a.x) * (f % 1), y: a.y + (b.y - a.y) * (f % 1) }, (clock += 16))
+        table.step(1 / 60)
+        each()
+      }
+    }
+    for (let i = 0; i < 4; i++) {
+      carry([BAG, { x: left.x + (i - 1.5) * 30, y: left.y }], 40)
+      table.pointerUp(2, { x: left.x + (i - 1.5) * 30, y: left.y }, (clock += 16))
+      for (let t = 0; t < 1; t += 1 / 60) table.step(1 / 60)
+    }
+    for (let t = 0; t < 3; t += 1 / 60) table.step(1 / 60)
+    expect(table.physics.panY(1) - PAN_REST_HEIGHT, 'the right pan never rode up, so this measures nothing').toBeGreaterThan(3)
+    let [deepest, met] = [0, 0]
+    const across = [BAG, { x: right.x - right.r - 60, y: right.y }, { x: right.x + right.r + 60, y: right.y }]
+    carry(across, 150, () => {
+      for (const stone of stoneStates(table).filter((stone) => stone.held)) {
+        const piece = auditPiece('stone', stoneGeometry(stone.q), stoneMatrix(still(stone), 1, new THREE.Matrix4()))
+        ;([0, 1] as const).forEach((side) => {
+          const at = to3(SCALE.pans[side])
+          const pan = drawnPan(side, at.x + table.physics.panSwung(side), table.physics.panY(side), at.z)
+          const [a, b] = [piece.box, pan.box]
+          if (a.max.x < b.min.x || a.min.x > b.max.x || a.max.z < b.min.z || a.min.z > b.max.z) return
+          met++
+          deepest = Math.max(deepest, pairDepth(piece, pan, CAMERA)?.depth ?? 0)
+        })
+      }
+    })
+    expect(met, 'the stone was never carried over a pan, so this measures nothing').toBeGreaterThan(20)
+    expect(deepest).toBe(0)
+  }, 60_000)
+
   it('swings each pan with what lies in it, never sliding its rim through a stone', () => {
     const table = new TableController({ ...defaultTable(6), bag: 40, total: 40 }, { save: () => {} })
     table.setProjector({ toScreen: (v) => toWorld2(v), toPlane: (screen) => screen })

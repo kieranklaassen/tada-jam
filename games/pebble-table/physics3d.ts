@@ -3,7 +3,7 @@ import { JAR_SCALE, JARS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, HOUSE_REACH, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 import { JAR_LIFT, JAR_MOUTH, JAR_REACH, JAR_TOP, jarLabelBox, NEST_SPAN, partCollider, partRest } from './partShape'
 import { outlineCorners, STONE_CUTS, stoneOutline, stoneRest } from './stoneShape'
-import { BOWL_FLOOR, BOWL_OUTSIDE, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, HEM_LINE, HEM_POINTS, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, panOutline, PLATE_TOP, radiusAt, RUG, RUG_HEM_REACH, RUG_HEM_TOP, type Surfaces } from './surfaces'
+import { BOWL_FLOOR, BOWL_OUTSIDE, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, HEM_LINE, HEM_POINTS, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, panOutline, panRimReach, PLATE_TOP, radiusAt, RUG, RUG_HEM_REACH, RUG_HEM_TOP, type Surfaces } from './surfaces'
 
 // Real stone physics (cannon-es) under the same world coordinates the game
 // rules use. One 3D unit is one centimetre and ten world units; the table
@@ -392,10 +392,15 @@ export class TablePhysics {
     this.tops.delete(key)
   }
 
-  /** How high (cm) something held at `at`, reaching `reach` (cm) round, must ride to clear the round fixtures under it: the top of the tallest, or 0. */
+  /** How high (cm) something held at `at`, reaching `reach` (cm) round, must ride to clear the round fixtures and the hanging pans' rims under it: the top of the tallest, or 0. */
   heldClearance(at: Point, reach: number): number {
     let top = 0
     for (const { circle, height } of this.tops.values()) if (Math.hypot(at.x - circle.x, at.y - circle.y) * UNIT < circle.r * UNIT + reach) top = Math.max(top, height)
+    this.pans.forEach((pan, side) => {
+      const rim = panRimReach(SCALE.pans[side].r * UNIT)
+      const hung = toWorld2(pan.position)
+      if (Math.hypot(at.x - hung.x, at.y - hung.y) * UNIT < rim.out + reach) top = Math.max(top, pan.position.y + rim.top)
+    })
     return top
   }
 
