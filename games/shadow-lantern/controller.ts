@@ -636,8 +636,15 @@ export class TheatreController {
     })
     const z = 21
     const x = Math.max(STAGE.xMin, Math.min(STAGE.xMax, LAMP.x + (center.x - LAMP.x) / shadowScale(z)))
+    const { kind } = this.shapes[index]
     const from = this.shapes[index].pose
-    return { index, from: { ...from, yaw: 0, lift: 0 }, to: { x, z, angle: from.angle, yaw: 0, lift: 0 }, turn: 0 }
+    // The middle is often where another stand already is: the shown rest steps
+    // aside to the nearest place this one can stand, and the shown slide stops
+    // where the stand would, the same as setting it down there.
+    if (!clearSpot(kind, x, z, from.angle, this.crowds, index, this.spot)) return null
+    const k = slideReach(kind, from.x, from.z, this.spot.x, this.spot.z, from.angle, this.crowds, index)
+    const to = { x: from.x + (this.spot.x - from.x) * k, z: from.z + (this.spot.z - from.z) * k, angle: from.angle, yaw: 0, lift: 0 }
+    return { index, from: { ...from, yaw: 0, lift: 0 }, to, turn: 0 }
   }
 
   // --- creatures ---------------------------------------------------------------
@@ -970,20 +977,21 @@ export class TheatreController {
       const b = this.sleeper.built.bounds
       if (onScreen.x > b.x0 - 1 && onScreen.x < b.x1 + 1 && onScreen.y > b.y0 - 1 && onScreen.y < b.y1 + 1) return { kind: 'sleeper' }
     }
-    // Companions in the sky.
-    const inSky = this.rayToPlaneZ(SKY_Z)
-    if (inSky) {
-      let nearest = -1
-      let nearestD = 9
-      this.companions.forEach((c, index) => {
-        const dist = Math.hypot(inSky.x - c.pose.x, inSky.y - c.pose.y)
-        if (!c.flight && dist < nearestD) {
-          nearest = index
-          nearestD = dist
-        }
-      })
-      if (nearest >= 0) return { kind: 'sky', index: nearest }
-    }
+    // Companions in the sky, each in the plane it is drawn in: one that landed
+    // short of its layer is still settling back onto it, well in front of it.
+    let nearest = -1
+    let nearestD = 9
+    this.companions.forEach((c, index) => {
+      if (c.flight) return
+      const at = this.rayToPlaneZ(c.pose.z)
+      if (!at) return
+      const dist = Math.hypot(at.x - c.pose.x, at.y - c.pose.y)
+      if (dist < nearestD) {
+        nearest = index
+        nearestD = dist
+      }
+    })
+    if (nearest >= 0) return { kind: 'sky', index: nearest }
     return { kind: 'backdrop' }
   }
 
