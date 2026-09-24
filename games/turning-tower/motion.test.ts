@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { BirdMotion, GREETS, LOOK_OUT_SECONDS, POKES, WandererMotion, type Greet, type Poke } from './motion'
+import { shoulderPitch } from './anatomy'
+import { BirdMotion, GREETS, HEAD_PITCH, LOOK_OUT_SECONDS, POKES, WandererMotion, type Greet, type Poke } from './motion'
 
 const FRAME = 1 / 60
 const CAMERA_HEADING = Math.PI / 4
@@ -161,5 +162,34 @@ describe('the two characters move differently', () => {
 
     expect(birdTime).toBeLessThan(0.12)
     expect(wandererTime).toBeGreaterThan(birdTime * 3)
+  })
+})
+
+describe('the bird looking back over its shoulder', () => {
+  it('looks down less the farther it turns, and never into its own back', () => {
+    const bird = new BirdMotion()
+    let now = playBird(bird, 0, 1)
+    let lowest = Infinity
+    let turned = 0
+    let deepest = 0
+    for (const [x, y, z] of [
+      [2, -1.5, -2],
+      [-2, -1.5, -2],
+      [0.4, -1.5, 2],
+      [2.5, -1.5, -0.2],
+    ]) {
+      bird.lookAt(x, y, z, now, 1.5)
+      for (let t = 0; t < 1.5; t += FRAME) {
+        now += FRAME
+        bird.update(FRAME, now, 0, 0, 0, 0, false)
+        const { headYaw, headPitch } = bird.pose
+        lowest = Math.min(lowest, headPitch - shoulderPitch(headYaw, HEAD_PITCH))
+        turned = Math.max(turned, Math.abs(headYaw))
+        deepest = Math.min(deepest, headPitch)
+      }
+    }
+    expect(lowest).toBeGreaterThanOrEqual(-1e-9)
+    expect(turned).toBeGreaterThan(1.5)
+    expect(deepest).toBeLessThan(-0.5)
   })
 })

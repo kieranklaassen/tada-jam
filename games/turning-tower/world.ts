@@ -25,6 +25,8 @@ export const FACE_NORMALS: readonly Vec3[] = [
   [0, 0, -1],
 ]
 export const UP = 2
+/** A path's paver stands this far proud of its cell face: feet and their shadows stand on the paver, not in it. */
+export const PAVER_RAISE = 0.055
 
 export type Tone = 'stone' | 'rose' | 'plinth' | 'trim' | 'rail' | 'handle'
 
@@ -110,6 +112,47 @@ export function pivotIsValid(group: TurnDef): boolean {
   const centre = frac.every((f) => Math.abs(f - 0.5) < 1e-9)
   const corner = frac.every((f) => f < 1e-9)
   return centre || corner
+}
+
+/** How close a turning corner may come to the boundary of the next cell out. */
+export const SWEEP_CLEARANCE = 0.01
+
+export type ArmFit = {
+  /** The two axes of the rotation plane. */
+  plane: readonly [number, number]
+  /** Along each, how much of every cell beyond the pivot cell is drawn (1 is all of it). */
+  scale: readonly [number, number]
+  /** The farthest any drawn corner comes from the axle. */
+  radius: number
+}
+
+/**
+ * A square arm turning about its pivot sweeps its corners out to √(L² + ½²),
+ * past the cell boundary L where the neighbouring block begins. Everything
+ * beyond the pivot cell is drawn a little shorter along each in-plane axis,
+ * so the whole sweep stays inside that boundary and a turning segment never
+ * cuts the blocks it swings past.
+ */
+export function armFit(group: TurnDef): ArmFit {
+  const plane: [number, number] = group.axis === 'x' ? [1, 2] : group.axis === 'y' ? [0, 2] : [0, 1]
+  const reach = [0, 0]
+  for (const cell of group.cells) {
+    plane.forEach((axis, k) => {
+      reach[k] = Math.max(reach[k], Math.abs(cell.at[axis] + 0.5 - group.pivot[axis]) + 0.5)
+    })
+  }
+  const scale: [number, number] = [0, 1].map((k) => {
+    const l = reach[k]
+    return l <= 0.5 ? 1 : (Math.sqrt((l - SWEEP_CLEARANCE) ** 2 - 0.25) - 0.5) / (l - 0.5)
+  }) as [number, number]
+  const drawn = (u: number, k: number): number => (Math.abs(u) <= 0.5 ? Math.abs(u) : 0.5 + (Math.abs(u) - 0.5) * scale[k])
+  let radius = 0
+  for (const cell of group.cells) {
+    const a = cell.at[plane[0]] + 0.5 - group.pivot[plane[0]]
+    const b = cell.at[plane[1]] + 0.5 - group.pivot[plane[1]]
+    for (const da of [-0.5, 0.5]) for (const db of [-0.5, 0.5]) radius = Math.max(radius, Math.hypot(drawn(a + da, 0), drawn(b + db, 1)))
+  }
+  return { plane, scale, radius }
 }
 
 /** Where a group moves a point that sits at `p` in its own quarter-0 / offset-0 frame. */
