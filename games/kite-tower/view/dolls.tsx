@@ -2,10 +2,12 @@ import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { Hero, KiteController, Watcher } from '../controller'
-import { ARM, ARM_R, BODY_PROFILE, BRIM, CUFF, DollGuard, FACE_CELL, FACE_SHELL, FACE_TOP, FLY_RAISE, HAND_R, HEAD_R, HEAD_Y, POM_R, POM_Y, SHOULDER, type HeadKind } from '../doll'
+import { ARM, ARM_R, BlockField, BODY_PROFILE, BRIM, CUFF, DollGuard, DUCK, FACE_CELL, FACE_SHELL, FACE_TOP, fitHead, FLY_GRIP, FLY_RAISE, GRIP_REACH, HAIR, HAND_R, HAND_REACH, HEAD_R, HEAD_Y, NECK_Y, POM_R, POM_Y, SHOULDER, SPOOL_ROOM, type DollPlace, type HeadKind, type HeadPose } from '../doll'
 import { WATCHERS } from '../layout'
 import { MotionDirector, type Activity, type Face, type PoseDelta } from '../motion'
+import { PIECES, SHAPES } from '../pieces'
 import { swayAngle, type Rock } from '../sway'
+import { drawnPose, type DrawnPose } from './pieces'
 import { merge, stained, woodLathe } from './shapes'
 import { atlasUv, woodMaterial } from './wood'
 
@@ -41,8 +43,6 @@ export const MOSS: DollSpec = { name: 'moss', row: 1, scale: 1.1, lower: '#6f9a7
 export const BEAN: DollSpec = { name: 'bean', row: 2, scale: 0.8, lower: '#3e72b8', upper: '#f3cf5e', band: '#3e72b8', hair: '#8a5a34', hat: '#d9473b', kind: 'beanie' }
 
 const SKIN = '#f4dcc0'
-/** Feet to fingertips with both arms straight up (the hero's hands on the kite string). */
-export const DOLL_HANDS = SHOULDER.y + ARM_R + ARM
 
 // ---- faces -------------------------------------------------------------------
 
@@ -310,12 +310,18 @@ class DollRig {
   private followPitch = 0
   private readonly turn = { pitch: 0, roll: 0 }
   readonly spec: DollSpec
-  /** Keeps the arms out of the head, hat, body and each other, and the face out of the body. */
+  /** Keeps the arms out of the head, hat, body, each other and the blocks, and the face out of the body. */
   readonly guard: DollGuard
+  private readonly blocks = new BlockField()
+  private readonly near = new BlockField()
+  private readonly nearRoom = (x: number, y: number, z: number) => this.near.roomDistance(x, y, z)
+  /** The head, its hat and pom as balls in the head's frame (the pom's follows it), for `fitLean`. */
+  private readonly balls: Ball[]
 
   constructor(spec: DollSpec, wood: THREE.Material, faces: THREE.Texture) {
     this.spec = spec
     this.guard = new DollGuard(spec.kind)
+    this.balls = headBalls(spec.kind)
     const body = bodyGeometry(spec)
     const head = headGeometry(spec)
     const face = faceGeometry(spec.kind)
@@ -395,9 +401,191 @@ class DollRig {
     this.head.rotation.set(turn.pitch, headYaw, turn.roll)
   }
 
+  /** Keep the arms out of the blocks as drawn this frame; call once the root and lean are posed, before `arms`. */
+  avoidBlocks(c: KiteController): void {
+    this.root.updateMatrixWorld(true)
+    const e = this.lean.matrixWorld.elements
+    const scale = this.spec.scale
+    const cx = e[4] * SHOULDER.y + e[12]
+    const cy = e[5] * SHOULDER.y + e[13]
+    gatherBlocks(c, this.blocks, cx, cy, (SHOULDER.x + ARM + HAND_R) * scale)
+    if (this.blocks.empty) {
+      this.guard.setObstacle(null)
+      return
+    }
+    const f = this.blocks.frame
+    f[0] = e[0]
+    f[1] = e[4]
+    f[2] = e[8]
+    f[3] = e[12]
+    f[4] = e[1]
+    f[5] = e[5]
+    f[6] = e[9]
+    f[7] = e[13]
+    f[8] = e[2]
+    f[9] = e[6]
+    f[10] = e[10]
+    f[11] = e[14]
+    this.guard.setObstacle(this.blocks.distance)
+  }
+
+  /** Fit the head among the blocks near it as drawn (see `fitHead`): feet at (x, y), `z` out from the build. */
+  fitHead(c: KiteController, x: number, y: number, z: number, pose: HeadPose): void {
+    const scale = this.spec.scale
+    gatherBlocks(c, this.near, x, y + HEAD_Y * pose.squash * scale, HEAD_ROOM_REACH * scale)
+    if (!this.near.empty) fitHead(this.nearRoom, x, y, z, scale, pose)
+  }
+
+  /**
+   * Bow, tilt, bob and stretch only as far as the blocks by the head, the
+   * cap's brim and the pom allow: first eased back toward upright, all
+   * together, and if upright is not clear either, ducked. Call with the root
+   * placed at feet height `y` (before `lift`) and turned, and after `look`,
+   * so the head's own turn is the one kept clear. Writes the pose it keeps.
+   */
+  fitLean(c: KiteController, y: number, pose: LeanPose): void {
+    const scale = this.spec.scale
+    const want = leanScratch
+    want.lift = pose.lift
+    want.bow = pose.bow
+    want.roll = pose.roll
+    want.squash = pose.squash
+    this.poseLean(y, want.lift, want.bow, want.roll, want.squash)
+    const e = this.head.matrixWorld.elements
+    gatherBlocks(c, this.near, e[12], e[13], LEAN_REACH * scale)
+    if (this.near.empty || this.ballsClear(want.squash)) return
+    const low = Math.min(1, want.squash)
+    const at = (k: number, squash: number) => {
+      this.poseLean(y, want.lift * k, want.bow * k, want.roll * k, squash)
+      return this.ballsClear(squash)
+    }
+    let k = 0
+    let squash = low
+    if (at(0, low)) {
+      let lo = 0
+      let hi = 1
+      for (let i = 0; i < 6; i++) {
+        const mid = (lo + hi) / 2
+        if (at(mid, low + (want.squash - low) * mid)) lo = mid
+        else hi = mid
+      }
+      k = lo
+      squash = low + (want.squash - low) * lo
+    } else {
+      let lo = Math.min(DUCK, low)
+      let hi = low
+      for (let i = 0; i < 6; i++) {
+        const mid = (lo + hi) / 2
+        if (at(0, mid)) lo = mid
+        else hi = mid
+      }
+      squash = lo
+    }
+    pose.lift = want.lift * k
+    pose.bow = want.bow * k
+    pose.roll = want.roll * k
+    pose.squash = squash
+    this.poseLean(y, pose.lift, pose.bow, pose.roll, pose.squash)
+  }
+
+  private poseLean(y: number, lift: number, bow: number, roll: number, squash: number): void {
+    this.root.position.y = y + lift
+    this.lean.rotation.set(bow, 0, roll)
+    const wide = 1 / Math.sqrt(squash)
+    this.lean.scale.set(wide, squash, wide)
+    this.root.updateMatrixWorld(true)
+  }
+
+  private ballsClear(squash: number): boolean {
+    const grow = this.spec.scale * Math.max(squash, 1 / Math.sqrt(squash))
+    const m = this.head.matrixWorld
+    const v = placeScratch
+    for (const b of this.balls) {
+      v.set(b.x, b.y, b.z).applyMatrix4(m)
+      if (this.near.roomDistance(v.x, v.y, v.z) < b.r * grow + LEAN_GAP) return false
+    }
+    if (this.pom) {
+      v.copy(this.pom.position).applyMatrix4(m)
+      if (this.near.roomDistance(v.x, v.y, v.z) < POM_R * grow + LEAN_GAP) return false
+    }
+    return true
+  }
+
+  /** Write where the posed doll's parts are in the room; call after `arms`. */
+  place(out: DollPlace): void {
+    this.root.updateMatrixWorld(true)
+    const v = placeScratch
+    const at = (object: THREE.Object3D, x: number, y: number, into: { x: number; y: number; z: number }) => {
+      v.set(x, y, 0).applyMatrix4(object.matrixWorld)
+      into.x = v.x
+      into.y = v.y
+      into.z = v.z
+    }
+    at(this.lean, 0, 0, out.feet)
+    at(this.lean, 0, NECK_Y, out.neck)
+    at(this.head, 0, 0, out.head)
+    at(this.armL, 0, 0, out.shoulderL)
+    at(this.armL, 0, -HAND_REACH, out.handL)
+    at(this.armR, 0, 0, out.shoulderR)
+    at(this.armR, 0, -HAND_REACH, out.handR)
+    at(this.armR, 0, -GRIP_REACH, out.grip)
+    out.scale = this.spec.scale
+    out.set = true
+  }
+
   dispose(): void {
     for (const g of this.geometries) g.dispose()
     this.texture.dispose()
+  }
+}
+
+/** Blocks this far from the head's middle upright are in reach of her lean, spring and stretch. */
+const HEAD_ROOM_REACH = HEAD_R + HAIR + 0.8
+/** Blocks this far across from the head's middle are in reach of a bow, the brim and the pom. */
+const LEAN_REACH = BRIM.z + BRIM.rz + 0.8
+const LEAN_GAP = 0.012
+
+type Ball = { x: number; y: number; z: number; r: number }
+type LeanPose = HeadPose & { bow: number }
+const leanScratch: LeanPose = { lift: 0, bow: 0, roll: 0, squash: 1 }
+
+/**
+ * The head and hair (out to the beanie's cuff), and the cap's brim as rings
+ * of small balls along its thin edge and across it: close enough that a
+ * block's corner between two of them stays within a hair of the brim.
+ */
+function headBalls(kind: HeadKind): Ball[] {
+  const balls: Ball[] = [{ x: 0, y: 0, z: 0, r: kind === 'beanie' ? CUFF.r : HEAD_R + HAIR }]
+  if (kind === 'cap') {
+    const y = BRIM.y + BRIM.thick / 2
+    const r = BRIM.thick / 2 + 0.01
+    for (const [reach, steps] of [
+      [1, 22],
+      [0.6, 10],
+    ] as const) {
+      for (let i = 0; i <= steps; i++) {
+        const a = -0.6 + ((Math.PI + 1.2) * i) / steps
+        balls.push({ x: Math.cos(a) * BRIM.rx * reach, y, z: BRIM.z + Math.sin(a) * BRIM.rz * reach, r })
+      }
+    }
+  }
+  return balls
+}
+
+const placeScratch = new THREE.Vector3()
+const drawn: DrawnPose = { x: 0, y: 0, angle: 0, scale: 1 }
+const drawnRock: Rock = { angle: 0, pivot: 0 }
+
+/** Every block on the build plane, as drawn, that comes within `reach` of (x, y). */
+export function gatherBlocks(c: KiteController, field: BlockField, x: number, y: number, reach: number): void {
+  field.clear()
+  for (const piece of PIECES) {
+    const id = piece.id
+    if (c.trayed[id] || !c.physics.has(id)) continue
+    drawnPose(c, id, drawn, drawnRock)
+    const shape = SHAPES[piece.kind]
+    if (Math.hypot(drawn.x - x, drawn.y - y) > reach + Math.hypot(shape.half.x, shape.half.y) * drawn.scale) continue
+    for (const part of shape.parts) field.add(part, drawn.x, drawn.y, drawn.angle, drawn.scale, shape.depth)
   }
 }
 
@@ -441,10 +629,11 @@ function smooth(t: number): number {
 
 // ---- the hero -------------------------------------------------------------------
 
-function HeroDoll({ controller, wood, faces }: { controller: KiteController; wood: THREE.Material; faces: THREE.Texture }) {
+function HeroDoll({ controller, place, wood, faces }: { controller: KiteController; place: DollPlace; wood: THREE.Material; faces: THREE.Texture }) {
   const rig = useRig(HERO, wood, faces)
   const cues = useDirector('pip', 1)
-  const scratch = useMemo(() => ({ rock: { angle: 0, pivot: 0 } as Rock, from: { x: 0, y: 0 }, yaw: 0, reachSide: 1 }), [])
+  const scratch = useMemo(() => ({ rock: { angle: 0, pivot: 0 } as Rock, from: { x: 0, y: 0 }, yaw: 0, reachSide: 1, head: { lift: 0, roll: 0, squash: 1 } as HeadPose, lean: { lift: 0, bow: 0, roll: 0, squash: 1 } as LeanPose }), [])
+  // After the game step (-1) and before the kite, which drapes its line and tail round where she is now.
   useFrame((_, dt) => {
     const c = controller
     const hero: Hero = c.hero
@@ -584,18 +773,36 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
         break
       }
       case 'tumble': {
-        const duration = 0.55 + Math.min(0.5, Math.max(0, hero.y) * 0.12)
-        if (age < duration) {
-          roll = hero.spin
-          raise = 1.6
-          expression = SURPRISED
-        } else {
-          // Sat on the rug, giggling.
-          const k = age - duration
-          squash = 0.82 + 0.04 * Math.sin(k * 14) * Math.exp(-k * 2)
-          roll = Math.sin(k * 11) * 0.12 * Math.exp(-k * 1.5)
-          raise = 0.9 + Math.sin(k * 14) * 0.3
-          expression = HAPPY
+        const since = t - hero.tumbleSince
+        switch (hero.tumble) {
+          case 'out':
+            // A startled hop toward the child.
+            squash = 1.06
+            raise = 1.6
+            expression = SURPRISED
+            break
+          case 'roll':
+            roll = hero.spin
+            raise = 1.6
+            expression = SURPRISED
+            break
+          case 'sit':
+            // Sat on the rug, giggling.
+            squash = 0.82 + 0.04 * Math.sin(since * 14) * Math.exp(-since * 2)
+            roll = Math.sin(since * 11) * 0.12 * Math.exp(-since * 1.5)
+            raise = 0.9 + Math.sin(since * 14) * 0.3
+            expression = HAPPY
+            break
+          case 'back':
+            // Hopping back into the build, like her walk.
+            squash = 0.94 + hero.hop * 0.6
+            raise = 0.35 + hero.hop * 3
+            expression = HAPPY
+            break
+          default: {
+            const never: never = hero.tumble
+            throw new Error(`unknown tumble phase ${String(never)}`)
+          }
         }
         break
       }
@@ -604,8 +811,11 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
         throw new Error(`unknown hero mode ${String(never)}`)
       }
     }
-    lift += pose.lift
-    roll += pose.roll
+    // Hanging, she stays where the controller hung her by the hand.
+    if (hero.mode !== 'fly') {
+      lift += pose.lift
+      roll += pose.roll
+    }
     squash += pose.squash
     yawGoal += pose.twist
     if (expression === OPEN) expression = faceOf(pose.face)
@@ -622,13 +832,24 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
         roll += rock.angle
       }
     }
+    // On her feet she leans, springs and stretches only as far as the blocks beside and above her head allow, and ducks under one lower than her head.
+    if (hero.mode !== 'fly' && (hero.mode !== 'tumble' || hero.tumble !== 'roll')) {
+      const head = scratch.head
+      head.lift = lift
+      head.roll = roll
+      head.squash = squash
+      rig.fitHead(c, x, y, hero.z, head)
+      lift = head.lift
+      roll = head.roll
+      squash = head.squash
+    }
     scratch.yaw += (yawGoal - scratch.yaw) * Math.min(1, dt * 8)
     rig.root.position.set(x, y + lift, hero.z)
     rig.root.rotation.set(0, scratch.yaw + pose.spin, 0)
     if (hero.mode === 'fly') {
       rig.root.rotation.set(0, 0, roll)
       rig.lean.rotation.set(0, scratch.yaw, 0)
-    } else if (hero.mode === 'tumble' && age < 0.55 + Math.min(0.5, Math.max(0, hero.y) * 0.12)) {
+    } else if (hero.mode === 'tumble' && hero.tumble === 'roll') {
       // Roll about the middle of the body rather than the feet.
       rig.root.position.y += 0.9
       rig.lean.position.set(0, -0.9, 0)
@@ -638,15 +859,32 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
       rig.lean.position.set(0, 0, 0)
       rig.lean.rotation.set(pose.bow, 0, roll)
     }
-    if (hero.mode !== 'tumble' || age >= 0.55 + Math.min(0.5, Math.max(0, hero.y) * 0.12)) rig.lean.position.set(0, 0, 0)
-    rig.lean.scale.set(1 / Math.sqrt(squash), squash, 1 / Math.sqrt(squash))
+    if (hero.mode !== 'tumble' || hero.tumble !== 'roll') rig.lean.position.set(0, 0, 0)
+    const wide = 1 / Math.sqrt(squash)
+    rig.lean.scale.set(wide, squash, wide)
+    if (hero.mode === 'fly') {
+      // Twist and stretch about the spool in her hand, not her feet, so the line's end stays put.
+      const across = FLY_GRIP.x * wide
+      rig.lean.position.set(FLY_GRIP.x - across * Math.cos(scratch.yaw), FLY_GRIP.y * (1 - squash), across * Math.sin(scratch.yaw))
+    }
     scratch.from.x = x
     scratch.from.y = y + 1.7
     rig.look(hero.look, scratch.from, scratch.yaw, hero.mode === 'fly' ? 0.3 : 1, cues.director.personality.lookRate, dt, pose)
+    if (hero.mode !== 'fly' && (hero.mode !== 'tumble' || hero.tumble !== 'roll')) {
+      const fit = scratch.lean
+      fit.lift = lift
+      fit.bow = pose.bow
+      fit.roll = roll
+      fit.squash = squash
+      rig.fitLean(c, y, fit)
+    }
+    rig.avoidBlocks(c)
+    rig.guard.hold(hero.mode === 'grab' || hero.mode === 'fly' ? 1 : 0, GRIP_REACH, SPOOL_ROOM)
     if (hero.mode === 'fly') rig.arms(raise + pose.raiseL, FLY_RAISE, forward + pose.forwardL, 0)
     else rig.arms(raise + raiseL + pose.raiseL, raise + raiseR + pose.raiseR, forward + forwardL + pose.forwardL, forward + forwardR + pose.forwardR)
     rig.setExpression(expression)
-  })
+    rig.place(place)
+  }, -0.5)
   return <primitive object={rig.root} />
 }
 
@@ -655,7 +893,7 @@ function HeroDoll({ controller, wood, faces }: { controller: KiteController; woo
 function MossDoll({ controller, wood, faces }: { controller: KiteController; wood: THREE.Material; faces: THREE.Texture }) {
   const rig = useRig(MOSS, wood, faces)
   const cues = useDirector('moss', 2)
-  const scratch = useMemo(() => ({ from: { x: 0, y: 0 }, yaw: 0.4 }), [])
+  const scratch = useMemo(() => ({ from: { x: 0, y: 0 }, yaw: 0.4, lean: { lift: 0, bow: 0, roll: 0, squash: 1 } as LeanPose }), [])
   useFrame((_, dt) => {
     const w: Watcher = controller.watchers[0]
     const t = controller.t
@@ -680,6 +918,13 @@ function MossDoll({ controller, wood, faces }: { controller: KiteController; woo
     scratch.from.y = 1.9
     // Hands over his eyes means he is not watching.
     rig.look(w.look, scratch.from, scratch.yaw, director.isPlaying('react', t) ? 0.3 : 1, director.personality.lookRate, dt, pose)
+    const fit = scratch.lean
+    fit.lift = pose.lift
+    fit.bow = pose.bow
+    fit.roll = pose.roll
+    fit.squash = squash
+    rig.fitLean(controller, 0, fit)
+    rig.avoidBlocks(controller)
     rig.arms(0.12 + pose.raiseL, 0.12 + pose.raiseR, pose.forwardL, pose.forwardR)
     rig.setExpression(faceOf(pose.face))
   })
@@ -691,7 +936,7 @@ function MossDoll({ controller, wood, faces }: { controller: KiteController; woo
 function BeanDoll({ controller, wood, faces }: { controller: KiteController; wood: THREE.Material; faces: THREE.Texture }) {
   const rig = useRig(BEAN, wood, faces)
   const cues = useDirector('bean', 3)
-  const scratch = useMemo(() => ({ from: { x: 0, y: 0 }, yaw: -0.4, pom: 0, pomV: 0, pomZ: 0, pomZV: 0, prevX: 0, prevLift: 0, prevRoll: 0, prevPitch: 0 }), [])
+  const scratch = useMemo(() => ({ from: { x: 0, y: 0 }, yaw: -0.4, pom: 0, pomV: 0, pomZ: 0, pomZV: 0, prevX: 0, prevLift: 0, prevRoll: 0, prevPitch: 0, lean: { lift: 0, bow: 0, roll: 0, squash: 1 } as LeanPose }), [])
   useFrame((_, dt) => {
     const w: Watcher = controller.watchers[1]
     const t = controller.t
@@ -741,13 +986,21 @@ function BeanDoll({ controller, wood, faces }: { controller: KiteController; woo
     scratch.from.x = w.x
     scratch.from.y = 1.4
     rig.look(w.look, scratch.from, scratch.yaw, 1, director.personality.lookRate, dt, pose)
+    const fit = scratch.lean
+    fit.lift = pose.lift
+    fit.bow = pose.bow
+    fit.roll = roll
+    fit.squash = squash
+    rig.fitLean(controller, 0, fit)
+    rig.avoidBlocks(controller)
     rig.arms(0.25 + pose.raiseL, 0.25 + pose.raiseR, pose.forwardL, pose.forwardR)
     rig.setExpression(faceOf(pose.face))
   })
   return <primitive object={rig.root} />
 }
 
-export function Dolls({ controller }: { controller: KiteController }) {
+/** The three dolls; `pip` is kept up to date with where the hero's parts are each frame. */
+export function Dolls({ controller, pip }: { controller: KiteController; pip: DollPlace }) {
   const { wood, faces } = useMemo(() => ({ wood: woodMaterial({ vertexColors: true }), faces: faceAtlas() }), [])
   useEffect(
     () => () => {
@@ -760,7 +1013,7 @@ export function Dolls({ controller }: { controller: KiteController }) {
     <>
       <MossDoll controller={controller} wood={wood} faces={faces} />
       <BeanDoll controller={controller} wood={wood} faces={faces} />
-      <HeroDoll controller={controller} wood={wood} faces={faces} />
+      <HeroDoll controller={controller} place={pip} wood={wood} faces={faces} />
     </>
   )
 }

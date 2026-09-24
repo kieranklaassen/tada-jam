@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import type { KiteController, Projector } from '../controller'
+import { DollPlace } from '../doll'
 import { TRAY, TRAY_SLOTS, trayToWorld, WATCHERS, type Vec3 } from '../layout'
 import { PIECES, SHAPES } from '../pieces'
 import { PerfRing, TierGovernor, tierOverride, type Tier } from '../quality'
@@ -50,6 +51,7 @@ function outlineExtent(id: number, x: number, y: number, angle: number): Float64
 
 function World({ controller }: { controller: KiteController }) {
   const geometries = useMemo(pieceGeometries, [])
+  const pip = useMemo(() => new DollPlace(), [])
   useEffect(
     () => () => {
       for (const g of Object.values(geometries)) g.dispose()
@@ -81,7 +83,7 @@ function World({ controller }: { controller: KiteController }) {
       }
       const hero = c.hero
       if (hero.mode === 'fly') add(hero.x, 0.008, hero.z, 1.1 + hero.y * 0.1, 0.9, 0.3 / (1 + hero.y * 0.15))
-      else if (hero.mode === 'tumble') add(hero.x, 0.008, 0, 1, 0.85, 0.4)
+      else if (hero.mode === 'tumble') add(hero.x, 0.008, hero.z, 1, 0.85, 0.4)
       else add(hero.x, hero.y + 0.012, 0, 0.95, 0.85, 0.6)
       for (let i = 0; i < c.watchers.length; i++) add(c.watchers[i].x, 0.008, WATCHERS[i].z, i === 0 ? 1.05 : 0.8, i === 0 ? 0.95 : 0.72, 0.55)
       if (c.kite.mode !== 'perched') add(c.kite.position.x, 0.008, c.kite.position.z, 1.8, 1.2, 0.16)
@@ -111,8 +113,8 @@ function World({ controller }: { controller: KiteController }) {
       <Room />
       <Blobs kind="shadow" capacity={24} write={shadows} />
       <Pieces controller={controller} geometries={geometries} />
-      <Dolls controller={controller} />
-      <Kite controller={controller} />
+      <Dolls controller={controller} pip={pip} />
+      <Kite controller={controller} pip={pip} />
       <Blobs kind="glow" capacity={4} write={glows} />
       <GhostHand controller={controller} geometries={geometries} />
     </>
