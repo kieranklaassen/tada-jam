@@ -57,7 +57,7 @@ async function doll(d: Driver, name: 'pip' | 'moss' | 'bean'): Promise<Frac> {
 }
 
 export default {
-  enforce: false,
+  enforce: true,
   childAge: 5,
   ignore: [
     // Clip-space colour grade: a full-screen triangle drawn with its own vertex shader.
