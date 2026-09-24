@@ -23,6 +23,12 @@ export type Driver = {
   find(pattern: string): Promise<Frac | null>
   // Take a sample now (moments end with one anyway).
   sample(): Promise<void>
+  // Write localStorage entries (a value of null removes the key; objects are
+  // stored as JSON), reload the page on the same paused clock, and wait for
+  // its first frame, so a moment can start from a saved state, say a full sky
+  // or a finished scarf. Each game's slot is `tada-jam:slot:<key>`; reloading
+  // with no entries keeps whatever the game saved so far.
+  reload(entries?: Record<string, string | object | null>): Promise<void>
 }
 
 export type Moment = { name: string; run: (driver: Driver) => Promise<void> }
