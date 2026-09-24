@@ -1343,6 +1343,8 @@ describe('stones leave the bag clear of it', () => {
   const stone = new THREE.SphereGeometry(reach, 20, 14)
   const inBag = insideOf(bag, new THREE.Matrix4())
   const shapeOf = (table: TableController) => bagShape(table.state.bag / table.state.total, bagTip(table.bagTipStart === null ? null : table.t - table.bagTipStart, table.bagShakesOut()))
+  /** How many stones lie on the table or hop across it (one come to rest leaning on a guest hops off it). */
+  const onTable = (table: TableController) => new Set([...table.physics.stoneIds(), ...table.flightViews().map((flight) => flight.id)]).size
   /** Every stone near the bag, drawn or in flight, over `seconds` of play: none may touch or sit in the bag as it is drawn at that moment. */
   const watch = (table: TableController, seconds: number, where: string) => {
     let near = 0
@@ -1418,13 +1420,13 @@ describe('stones leave the bag clear of it', () => {
       tapBag(lurch)
       expect(lurch.bagShakesOut()).toBe(false)
       expect(watch(lurch, 1.5, `run ${run}, a lurch`)).toBeGreaterThan(0)
-      expect(lurch.physics.stoneIds()).toHaveLength(10)
+      expect(onTable(lurch)).toBe(10)
       const shake = fresh()
       expect(watch(shake, 6, `run ${run}, the first-open story`)).toBeGreaterThan(0)
       tapBag(shake)
       expect(shake.bagShakesOut()).toBe(true)
       expect(watch(shake, 1.5, `run ${run}, a shake-out`)).toBeGreaterThan(0)
-      expect(shake.physics.stoneIds()).toHaveLength(10)
+      expect(onTable(shake)).toBe(10)
     }
   })
 
