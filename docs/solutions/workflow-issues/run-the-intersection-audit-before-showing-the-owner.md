@@ -18,9 +18,8 @@ applies_when:
   - An audit run is clean when you did not expect it, or a finding shows only at 0 s or as a whole-run pose
 symptoms:
   - The owner saw pieces going through each other in many games, and the first generic audit found 3 to 141 visible findings in each game then on main
-  - Moon Phases' audit was clean on main while its moments never reached the homes where the child sank into Earth, and its ignore list hid two solid rings
+  - Moon Phases' audit misled twice on main: its moments never reached the homes where the child sank into Earth (and its ignore list hid two solid rings), and its first sample sometimes caught a frame drawn before the first tick, with nine findings no child could see
   - A single reload into a saved Light Garden lost to the game's own save on unload and reopened the garden from before
-  - Moon Phases' first sample sometimes caught a frame drawn before the first tick, with nine findings no child could see
   - Hillside Spring's pass-30 code named no meshes, so the pass's regression tests could not even load on it
   - Pebble Table's enforced audit was clean twice on the VM and failed a CI shard on two stones no local run had caught, with 87 pieces where the local runs had 85
 root_cause: missing_workflow_step
