@@ -22,6 +22,16 @@ export const HOLD_HEIGHT = 11
 export const PAN_REST_HEIGHT = 6
 /** Catch-up substeps per frame by default. More would let one slow frame make the next one slower (a spiral), so an overloaded frame slows time slightly instead. */
 export const DEFAULT_MAX_SUBSTEPS = 3
+/**
+ * A shell or stick (a chain of balls with no prism) about to meet a stone or
+ * part moves at most this many of its biggest ball's radii in one step, the
+ * step cut finer while it does: cannon pushes a ball back out of a stone only
+ * while the ball's middle is outside it, so one landing at a centimetre a
+ * step sank in and stayed.
+ */
+const BALL_TRAVEL = 1
+/** The most pieces a step is cut into. */
+const MOST_PIECES = 6
 // Convex-convex collision cost grows with faces times edges, and a spill is
 // almost all stone-on-stone contacts, so colliders use few sides. The drawn
 // pebbles are separate meshes and stay round.
@@ -114,6 +124,8 @@ export class TablePhysics {
   private readonly woodMaterial = new CANNON.Material('wood')
   private readonly fixtures = new Map<string, CANNON.Body>()
   private readonly guests = new Set<CANNON.Body>()
+  /** Each shell's or stick's biggest ball radius (cm). */
+  private readonly balls = new Map<CANNON.Body, number>()
   /** When (world time) each stone last touched a seated guest. */
   private readonly touchedGuest = new Map<number, number>()
   /** The round fixtures something held must ride over, and how tall they stand. */
@@ -479,6 +491,7 @@ export class TablePhysics {
       body.addShape(shape, offset)
     }
     for (const ball of collider.balls) body.addShape(new CANNON.Sphere(ball.r), new CANNON.Vec3(ball.x, ball.y, ball.z))
+    if (!collider.prism) this.balls.set(body, Math.max(...collider.balls.map((ball) => ball.r)))
     const p = to3(at, options.y ?? partRest(kind))
     body.position.set(p.x, p.y, p.z)
     if (options.yaw) body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), options.yaw)
@@ -498,6 +511,7 @@ export class TablePhysics {
     if (!entry) return
     this.targets.delete(entry.body)
     this.calm.delete(entry.body)
+    this.balls.delete(entry.body)
     this.world.removeBody(entry.body)
     this.stones.delete(id)
     this.touchedGuest.delete(id)
@@ -653,7 +667,8 @@ export class TablePhysics {
       for (const [body, target] of this.targets) {
         body.velocity.set((target.x - body.position.x) / time, (target.y - body.position.y) / time, (target.z - body.position.z) / time)
       }
-      this.world.step(STEP)
+      const pieces = this.pieces()
+      for (let piece = 0; piece < pieces; piece++) this.world.step(STEP / pieces)
       this.noteLeaning()
       this.resistRolling()
       this.settleLooseParts()
@@ -673,6 +688,73 @@ export class TablePhysics {
     const impacts = this.impacts
     this.impacts = []
     return { fallen, impacts, moving }
+  }
+
+  /** How many pieces the next step is cut into, so no shell or stick about to meet a stone or part moves its balls further than BALL_TRAVEL allows in one. */
+  private pieces(): number {
+    let pieces = 1
+    for (const [body, reach] of this.balls) {
+      if (body.type !== CANNON.Body.DYNAMIC || body.sleepState === CANNON.Body.SLEEPING) continue
+      const travel = body.velocity.length() * STEP
+      const need = Math.ceil(travel / (reach * BALL_TRAVEL))
+      if (need > pieces && this.nearLoose(body, travel)) pieces = need
+    }
+    return Math.min(pieces, MOST_PIECES)
+  }
+
+  /** Whether a stone or part other than `body` lies within `reach` (cm) of its bounds. */
+  private nearLoose(body: CANNON.Body, reach: number): boolean {
+    if (body.aabbNeedsUpdate) body.updateAABB()
+    const { lowerBound: low, upperBound: high } = body.aabb
+    for (const { body: other } of this.stones.values()) {
+      if (other === body || other.type !== CANNON.Body.DYNAMIC) continue
+      if (other.aabbNeedsUpdate) other.updateAABB()
+      const { lowerBound: from, upperBound: to } = other.aabb
+      if (from.x - reach < high.x && to.x + reach > low.x && from.y - reach < high.y && to.y + reach > low.y && from.z - reach < high.z && to.z + reach > low.z) return true
+    }
+    return false
+  }
+
+  /**
+   * How far (cm) each of `bodies` lies sunk into the stones and parts it
+   * touches, as the way out along the contacts' normals: one landing fast goes
+   * up to a centimetre in within a step, before any contact is made, and its
+   * contacts push it back out over the next few. The world's own contacts are
+   * from before its last step moved things, so these are found afresh.
+   */
+  sunk(bodies: ReadonlySet<CANNON.Body>): Map<CANNON.Body, CANNON.Vec3> {
+    const out = new Map<CANNON.Body, CANNON.Vec3>()
+    if (bodies.size === 0) return out
+    const [first, second]: [CANNON.Body[], CANNON.Body[]] = [[], []]
+    this.world.broadphase.collisionPairs(this.world, first, second)
+    const [p1, p2]: [CANNON.Body[], CANNON.Body[]] = [[], []]
+    first.forEach((bi, i) => {
+      const bj = second[i]
+      if (bi.type !== CANNON.Body.DYNAMIC || bj.type !== CANNON.Body.DYNAMIC || !(bodies.has(bi) || bodies.has(bj))) return
+      p1.push(bi)
+      p2.push(bj)
+    })
+    if (p1.length === 0) return out
+    const contacts: CANNON.ContactEquation[] = []
+    this.world.narrowphase.getContacts(p1, p2, this.world, contacts, [], [], [])
+    const gap = new CANNON.Vec3()
+    const away = new CANNON.Vec3()
+    for (const { bi, bj, ri, rj, ni } of contacts) {
+      bj.position.vadd(rj, gap)
+      gap.vsub(bi.position, gap)
+      gap.vsub(ri, gap)
+      const depth = -gap.dot(ni)
+      if (depth <= 0) continue
+      for (const [body, side] of [[bi, -1], [bj, 1]] as const) {
+        if (!bodies.has(body)) continue
+        ni.scale(side, away)
+        let lift = out.get(body)
+        if (!lift) out.set(body, (lift = new CANNON.Vec3()))
+        const need = depth - lift.dot(away)
+        if (need > 0) lift.addScaledVector(need, away, lift)
+      }
+    }
+    return out
   }
 
   /** Notes when stones touch a seated guest: a stone resting against one touches it only now and then as it settles. */

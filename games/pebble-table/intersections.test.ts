@@ -393,6 +393,32 @@ describe('loose parts are drawn on what they land on', () => {
     }
   })
 
+  it('draws a part landing fast on a stone out of it, and never lets a shell or stick sink into one', () => {
+    for (const kind of PART_KINDS) {
+      const physics = new TablePhysics()
+      physics.addStone(1, 4, { x: 800, y: 700 })
+      run(physics, 1)
+      const stone = physics.body(1)!
+      const { shape, local } = collider(stone)
+      const v = partVertices(kind)
+      const points = Array.from({ length: v.length / 3 }, (_, i) => new CANNON.Vec3(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]))
+      physics.addPart(2, kind, { x: 800, y: 700 }, { y: stone.position.y + 8, velocity: { x: 0, y: -130, z: 0 } })
+      const part = physics.body(2)!
+      let [raw, drawn] = [0, 0]
+      for (let t = 0; t < 0.6; t += STEP) {
+        physics.step(STEP)
+        const lift = physics.sunk(new Set([part])).get(part) ?? new CANNON.Vec3()
+        for (const point of points) {
+          const at = toWorld(part, point)
+          raw = Math.max(raw, depthInside(shape, local(toLocal(stone, at))))
+          drawn = Math.max(drawn, depthInside(shape, local(toLocal(stone, at.vadd(lift)))))
+        }
+      }
+      if (!partCollider(kind).prism) expect(raw, `${kind}: how deep its balls sink (cm)`).toBeLessThan(0.2)
+      expect(drawn, `${kind}: how deep it is drawn in (cm)`).toBeLessThan(0.05)
+    }
+  })
+
   it("holds a shell's drawn back, belly and rim within a hair of its balls, and lays it down on its lowest point", () => {
     const { balls } = partCollider('shell')
     const points = surfacePoints(partPieceVertices('shell', 'body'), SHELL.body.segments, SHELL.body.rings, 0.05)

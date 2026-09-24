@@ -71,20 +71,25 @@ function carrierMice(table: TableController): CarrierMouse[] {
   return carriers
 }
 
-/** Parts as physics has them, but never drawn dipping into the table or a pan's floor for the frames physics takes to push a landing part back out. */
+/** Parts as physics has them, but never drawn dipping into the table, a pan's floor, a stone or another part for the frames physics takes to push a landing part back out. */
 function partStates(table: TableController): PartState[] {
   const states: PartState[] = []
   const surfaces = table.physics.surfaces(table.state.liveMat, table.state.seats)
-  for (const part of table.state.parts) {
+  const placed = table.state.parts.flatMap((part) => {
     const body = table.physics.body(part.id)
-    if (!body) continue
+    return body ? [{ part, body }] : []
+  })
+  const sunk = table.physics.sunk(new Set(placed.map(({ body }) => body)))
+  for (const { part, body } of placed) {
     const { x, y, z, w } = body.quaternion
     const under = surfaceUnder(toWorld2(body.position), surfaces)
     const ground = body.position.y > under ? under : 0
+    const lift = sunk.get(body)
+    const at = lift ? body.position.vadd(lift) : body.position
     states.push({
       id: part.id,
       kind: part.kind,
-      position: { x: body.position.x, y: Math.max(body.position.y, ground + partReachDown(part.kind, x, y, z, w)), z: body.position.z },
+      position: { x: at.x, y: Math.max(at.y, ground + partReachDown(part.kind, x, y, z, w)), z: at.z },
       quaternion: [x, y, z, w],
       held: table.isHeld(part.id),
     })
