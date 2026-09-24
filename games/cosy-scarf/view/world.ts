@@ -1,5 +1,6 @@
 import * as THREE from 'three'
-import { BASKET, FELT, groundY, LOOM, SCARF } from '../layout'
+import { BLANKET_XS, BLANKET_ZS, blanketHem, blanketVertexY, landHeight, SNOW, snowVertexY } from '../ground'
+import { BASKET, BASKET_PROFILE, BASKET_RIM, BLANKET, FELT, LOOM, SCARF } from '../layout'
 import { ball, capsule, cone, cylinder, lathe, merge, once, part, torus } from './shapes'
 import { PALETTE, type YarnMaterials } from './yarn'
 
@@ -9,26 +10,10 @@ import { PALETTE, type YarnMaterials } from './yarn'
 // wooden loom with a plain felt backboard (the calmest, darkest surface in
 // the scene, so the scarf's colours read at a glance), and the basket.
 
-/**
- * The play blanket: from in front of the loom, draped over the foot of the
- * slope, with a round rib all along its hem. Its back hem follows the hill's
- * swell, so the blanket meets the snow as a soft knitted edge, not a ruled line.
- */
-const BLANKET = { back: -28, front: 80, halfWidth: 150, rib: 4, lift: 0.2, ridge: 1 }
-/** How far the snow is pressed down under the blanket, so the coarse snow mesh never pokes through where the blanket bends up the slope. */
-const BLANKET_PRESS = 0.6
-
-const underBlanket = (x: number, z: number) => Math.abs(x) <= BLANKET.halfWidth && z > BLANKET.back && z < BLANKET.front + 3
-
-/** Extra rise of the far hills beyond the slope the animals stand on. */
-function farRise(x: number, z: number): number {
-  const far = THREE.MathUtils.smoothstep(-z, 110, 215)
-  return far * (13 + 9 * Math.sin(x * 0.012 + 1.3) + 5 * Math.sin(x * 0.033 + 0.4))
-}
-
-export function landHeight(x: number, z: number): number {
-  return groundY(x, z) + farRise(x, z)
-}
+// The play blanket's back hem follows the hill's swell, so it meets the snow
+// as a soft knitted edge, not a ruled line. The snow is pressed down under it,
+// so the coarse snow mesh never pokes through where the blanket bends up the slope.
+// Both meshes are built from ../ground, which the animals stand on.
 
 const snow = new THREE.Color(PALETTE.snow)
 const snowShade = new THREE.Color(PALETTE.snowShade)
@@ -38,9 +23,9 @@ const sky = new THREE.Color(PALETTE.sky)
 const skyTop = new THREE.Color(PALETTE.skyTop)
 
 function terrain(): THREE.BufferGeometry {
-  const g = new THREE.PlaneGeometry(760, 400, 76, 56)
+  const g = new THREE.PlaneGeometry(SNOW.width, SNOW.depth, SNOW.columns, SNOW.rows)
   g.rotateX(-Math.PI / 2)
-  g.translate(0, 0, -105)
+  g.translate(0, 0, SNOW.z)
   const position = g.attributes.position
   const uv = g.attributes.uv
   const colors = new Float32Array(position.count * 3)
@@ -48,7 +33,7 @@ function terrain(): THREE.BufferGeometry {
   for (let i = 0; i < position.count; i++) {
     const x = position.getX(i)
     const z = position.getZ(i)
-    position.setY(i, landHeight(x, z) - (underBlanket(x, z) ? BLANKET_PRESS : 0))
+    position.setY(i, snowVertexY(x, z))
     uv.setXY(i, x / 3.4, z / 4.6)
     const far = THREE.MathUtils.smoothstep(-z, 40, 230)
     c.copy(snow).lerp(hillFar, far * 0.75)
@@ -110,7 +95,7 @@ function knitSky(): THREE.BufferGeometry {
   return g
 }
 
-function landGeometry(): THREE.BufferGeometry {
+export function landGeometry(): THREE.BufferGeometry {
   return once('cosy-land', () => {
     const g = terrain()
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, -100), 2000)
@@ -160,26 +145,15 @@ function pineGeometry(): THREE.BufferGeometry {
   })
 }
 
-function blanketGeometry(): THREE.BufferGeometry {
+export function blanketGeometry(): THREE.BufferGeometry {
   return once('cosy-blanket', () => {
-    const { back, front, halfWidth, rib } = BLANKET
-    // Fine steps across the hem, so its rib is round; broad ones across the middle.
-    const steps = (from: number, to: number, broad: number) => {
-      const out: number[] = []
-      for (let at = from; at < from + rib; at += 0.5) out.push(at)
-      for (let at = from + rib; at < to - rib; at += broad) out.push(at)
-      for (let at = to - rib; at <= to + 1e-6; at += 0.5) out.push(at)
-      return out
-    }
-    const xs = steps(-halfWidth, halfWidth, 5)
-    const zs = steps(back, front, 3)
-    const hem = (x: number, z: number) => Math.min(halfWidth - Math.abs(x), z - back, front - z)
+    const xs = BLANKET_XS
+    const zs = BLANKET_ZS
     const positions: number[] = []
     const uvs: number[] = []
     for (const z of zs) {
       for (const x of xs) {
-        const d = hem(x, z)
-        positions.push(x, groundY(x, z) + BLANKET.lift + (d < rib ? BLANKET.ridge * Math.sin((Math.PI * d) / rib) : 0), z)
+        positions.push(x, blanketVertexY(x, z), z)
         uvs.push(x / 2.6, z / 1.9)
       }
     }
@@ -196,7 +170,7 @@ function blanketGeometry(): THREE.BufferGeometry {
     g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
     g.setIndex(index)
     g.computeVertexNormals()
-    return merge([part(g, { color: (p) => (hem(p.x, p.z) < rib - 0.25 ? PALETTE.blanketRib : PALETTE.blanket), underside: 0 })])
+    return merge([part(g, { color: (p) => (blanketHem(p.x, p.z) < BLANKET.rib - 0.25 ? PALETTE.blanketRib : PALETTE.blanket), underside: 0 })])
   })
 }
 
@@ -206,12 +180,12 @@ function loomGeometry(): THREE.BufferGeometry {
     const parts: THREE.BufferGeometry[] = []
     for (const side of [-1, 1]) {
       const x = LOOM.x + side * LOOM.postX
-      parts.push(part(cylinder(1.7, 2, height, 1.1, 12), { color: PALETTE.loom, at: [x, height / 2, LOOM.z], ground: 0 }))
+      parts.push(part(cylinder(LOOM.postTop, LOOM.postBottom, height, 1.1, 12), { color: PALETTE.loom, at: [x, height / 2, LOOM.z], ground: 0 }))
       parts.push(part(ball(2.7, 1, 14), { color: PALETTE.basketRim, at: [x, height + 2.1, LOOM.z] }))
       parts.push(part(torus(1.9, 0.7, 0.9), { color: PALETTE.loomDark, at: [x, height + 0.1, LOOM.z], rot: [Math.PI / 2, 0, 0] }))
-      parts.push(part(capsule(1.7, 11, 1), { color: PALETTE.loomDark, at: [x, 1.4, LOOM.z + 0.8], rot: [Math.PI / 2, 0, 0], ground: 0 }))
+      parts.push(part(capsule(LOOM.foot.radius, LOOM.foot.length, 1), { color: PALETTE.loomDark, at: [x, LOOM.foot.y, LOOM.z + LOOM.foot.z], rot: [Math.PI / 2, 0, 0], ground: 0 }))
     }
-    parts.push(part(cylinder(1.15, 1.15, LOOM.postX * 2 + 5, 1, 12), { color: PALETTE.needle, at: [LOOM.x, LOOM.rodY, SCARF.z], rot: [0, 0, Math.PI / 2] }))
+    parts.push(part(cylinder(LOOM.rod, LOOM.rod, LOOM.postX * 2 + 5, 1, 12), { color: PALETTE.needle, at: [LOOM.x, LOOM.rodY, SCARF.z], rot: [0, 0, Math.PI / 2] }))
     parts.push(part(cylinder(1.1, 1.1, LOOM.postX * 2, 1, 10), { color: PALETTE.loom, at: [LOOM.x, 3.6, LOOM.z - 0.4], rot: [0, 0, Math.PI / 2], ground: 0 }))
     return merge(parts).translate(-LOOM.x, 0, -LOOM.z)
   })
@@ -252,7 +226,7 @@ function backboardGeometry(): THREE.BufferGeometry {
       const y = bottom + FELT.roll * 2 + (i * runY) / dashesY
       parts.push(dash(x0 + inset, y, false), dash(x1 - inset, y, false))
     }
-    for (const side of [-1, 1]) parts.push(part(torus(1.9, 0.6, 0.8), { color: PALETTE.backboard, at: [side * (w / 2 - 1.6), LOOM.rodY, SCARF.z - LOOM.z], rot: [0, Math.PI / 2, 0], underside: 0 }))
+    for (const side of [-1, 1]) parts.push(part(torus(FELT.loop, FELT.loopTube, 0.8), { color: PALETTE.backboard, at: [side * (w / 2 - FELT.loopInset), LOOM.rodY, SCARF.z - LOOM.z], rot: [0, Math.PI / 2, 0], underside: 0 }))
     parts.push(part(cylinder(FELT.roll, FELT.roll, w + 0.6, 1, 14), { color: PALETTE.backboard, at: [0, bottom, FELT.roll - 0.2], rot: [0, 0, Math.PI / 2], underside: 0.1 }))
     return merge(parts)
   })
@@ -263,27 +237,18 @@ function basketGeometry(): THREE.BufferGeometry {
     const basket = new THREE.Color(PALETTE.basket)
     const dark = new THREE.Color(PALETTE.basket).multiplyScalar(0.8)
     const woven = (p: THREE.Vector3) => (Math.floor(p.y / 1.7) % 2 === 0 ? basket : dark)
-    const { radius, rimY } = BASKET
+    const { heap, handle } = BASKET
     const outer = lathe(
-      [
-        [0.2, 0.25],
-        [radius - 3.4, 0.3],
-        [radius - 1.6, 1.6],
-        [radius - 0.7, 4.6],
-        [radius - 0.1, rimY - 0.6],
-        [radius, rimY],
-        [radius - 1.2, rimY - 0.2],
-        [radius - 1.9, rimY - 3],
-      ],
+      BASKET_PROFILE.map(([r, y]) => [r, y]),
       1.2,
       30,
     )
     return merge([
       part(outer, { color: woven, at: [0, 0, 0], ground: 0, occlusion: 0.4 }),
-      part(torus(radius - 0.2, 1.35, 1), { color: PALETTE.basketRim, at: [0, rimY + 0.2, 0], rot: [Math.PI / 2, 0, 0] }),
-      part(ball(radius - 1.8, 1.4, 20), { color: '#7b4a3a', at: [0, rimY - 2.4, 0], scale: [1, 0.3, 1] }),
-      part(torus(3.6, 0.9, 1, Math.PI), { color: PALETTE.basketRim, at: [-radius + 0.2, rimY - 0.6, 0], rot: [0, Math.PI / 2, Math.PI / 2] }),
-      part(torus(3.6, 0.9, 1, Math.PI), { color: PALETTE.basketRim, at: [radius - 0.2, rimY - 0.6, 0], rot: [0, -Math.PI / 2, -Math.PI / 2] }),
+      part(torus(BASKET_RIM.ring, BASKET.rimTube, 1), { color: PALETTE.basketRim, at: [0, BASKET_RIM.y, 0], rot: [Math.PI / 2, 0, 0] }),
+      part(ball(heap.radius, 1.4, 20), { color: '#7b4a3a', at: [0, heap.y, 0], scale: [1, heap.height / heap.radius, 1] }),
+      part(torus(handle.ring, handle.tube, 1, Math.PI), { color: PALETTE.basketRim, at: [-handle.out, handle.y, 0], rot: [0, Math.PI / 2, Math.PI / 2] }),
+      part(torus(handle.ring, handle.tube, 1, Math.PI), { color: PALETTE.basketRim, at: [handle.out, handle.y, 0], rot: [0, -Math.PI / 2, -Math.PI / 2] }),
     ])
   })
 }
@@ -301,14 +266,17 @@ export function buildWorld(materials: YarnMaterials): World {
   // The backdrop draws after everything standing on it, nearest first (blanket, snow, sky), so the
   // depth test skips every pixel already covered instead of shading it twice.
   const land = new THREE.Mesh(landGeometry(), materials.land)
+  land.name = 'snow'
   land.matrixAutoUpdate = false
   land.renderOrder = 2
   const sky = new THREE.Mesh(skyGeometry(), materials.sky)
+  sky.name = 'sky'
   sky.matrixAutoUpdate = false
   sky.renderOrder = 3
   group.add(land, sky)
 
   const pines = new THREE.InstancedMesh(pineGeometry(), materials.crochetInstanced, PINES.length)
+  pines.name = 'pines'
   const m = new THREE.Matrix4()
   const q = new THREE.Quaternion()
   const tint = new THREE.Color()
@@ -325,17 +293,24 @@ export function buildWorld(materials: YarnMaterials): World {
   group.add(pines)
 
   const blanket = new THREE.Mesh(blanketGeometry(), materials.blanket)
+  blanket.name = 'blanket'
   blanket.matrixAutoUpdate = false
   blanket.renderOrder = 1
   group.add(blanket)
 
   const loom = new THREE.Group()
-  loom.add(new THREE.Mesh(loomGeometry(), materials.crochet))
-  loom.add(new THREE.Mesh(backboardGeometry(), materials.felt))
+  loom.name = 'loom'
+  loom.userData.jamObject = 'loom'
+  const frame = new THREE.Mesh(loomGeometry(), materials.crochet)
+  frame.name = 'frame'
+  const felt = new THREE.Mesh(backboardGeometry(), materials.felt)
+  felt.name = 'felt'
+  loom.add(frame, felt)
   loom.position.set(LOOM.x, 0, LOOM.z)
   group.add(loom)
 
   const basket = new THREE.Mesh(basketGeometry(), materials.crochet)
+  basket.name = 'basket'
   basket.position.set(BASKET.x, 0, BASKET.z)
   group.add(basket)
   return { group, basket, loom }

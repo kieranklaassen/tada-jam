@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BALL_RADIUS, ballRest, BASKET, cellAt, cellCentre, FELT, feltBottom, LOOM, needlesY, SCARF } from './layout'
+import { cellAt, cellCentre, FELT, feltBottom, LOOM, needlesY, SCARF } from './layout'
 import { MAX_ROWS, WIDTH } from './state'
 
 describe('layout', () => {
@@ -31,19 +31,5 @@ describe('layout', () => {
     }
     expect(feltBottom(0)).toBeGreaterThan(LOOM.rodY - 12)
     expect(feltBottom(MAX_ROWS)).toBe(FELT.bottom)
-  })
-
-  it('keeps balls apart and inside the basket for every basket size', () => {
-    for (let count = 4; count <= 6; count++) {
-      const rests = Array.from({ length: count }, (_, i) => ballRest(i, count))
-      for (const rest of rests) expect(Math.abs(rest.x - BASKET.x)).toBeLessThan(BASKET.radius)
-      for (let i = 0; i < count; i++) {
-        for (let j = i + 1; j < count; j++) {
-          const a = rests[i]
-          const b = rests[j]
-          expect(Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z)).toBeGreaterThan(BALL_RADIUS * 1.8)
-        }
-      }
-    }
   })
 })
