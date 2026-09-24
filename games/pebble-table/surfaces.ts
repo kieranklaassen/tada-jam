@@ -16,6 +16,9 @@ export const RUG_HEM = { tube: 0.42, flatten: 0.3 } as const
 export const RUG_HEM_Y = RUG_HEM.tube * RUG_HEM.flatten
 export const RUG_HEM_TOP = 2 * RUG_HEM_Y
 
+/** Where the plates and the bowl stand: a hair above the rug's top, so their flat bases never share its plane (which flickers). */
+export const ON_RUG = RUG.top + 0.05
+
 export function onRug(p: Point): boolean {
   const dx = (p.x - RUG.center.x) / RUG.rx
   const dy = (p.y - RUG.center.y) / RUG.rz
@@ -32,7 +35,7 @@ export const PLATE_PROFILE: readonly [number, number][] = [
   [0, 0.04],
 ]
 export const PLATE_HEIGHT = 3.5
-export const PLATE_TOP = RUG.top + 0.04 * PLATE_HEIGHT
+export const PLATE_TOP = ON_RUG + 0.04 * PLATE_HEIGHT
 
 /** Bowl profile (unit radius at the inner rim, drawn at the bowl's radius): a flat floor, a flared inner wall, a rolled lip. */
 export const BOWL_PROFILE: readonly [number, number][] = [
@@ -51,7 +54,7 @@ export const BOWL_PROFILE: readonly [number, number][] = [
 ]
 export const BOWL_SCALE = FEEDING.bowl.r * 0.1
 /** The bowl stands on the rug; its floor is this far above the table. */
-export const BOWL_FLOOR = RUG.top + 0.06 * BOWL_SCALE
+export const BOWL_FLOOR = ON_RUG + 0.06 * BOWL_SCALE
 /** The inner wall as (radius, height above the bowl's base) in cm: from the floor, up to the lip, over the lip's crown. */
 export const BOWL_WALL: readonly (readonly [number, number])[] = [
   [0.72 * BOWL_SCALE, 0.06 * BOWL_SCALE],

@@ -23,7 +23,7 @@ import {
   sphereGrid,
   type Lumped,
 } from '../partShape'
-import { BOWL_PROFILE, BOWL_SCALE, DISH_PROFILE, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y } from '../surfaces'
+import { BOWL_PROFILE, BOWL_SCALE, DISH_PROFILE, ON_RUG, PAN_DEPTH, PAN_ROLL, PLATE_HEIGHT, PLATE_PROFILE, RUG, RUG_HEM, RUG_HEM_Y } from '../surfaces'
 import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
 import { useQuality } from './quality'
 import { MotionDirector, PERSONALITIES, SEAT_SPECIES, type Species } from '../motion'
@@ -535,7 +535,7 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
     let plateCount = 0
     FEEDING.seats.forEach((seat, index) => {
       if (!seats[index]) return
-      const p = to3(seat.plate, RUG.top)
+      const p = to3(seat.plate, ON_RUG)
       scratch.m.makeTranslation(p.x, p.y, p.z)
       plates.current?.setMatrixAt(plateCount++, scratch.m)
     })
@@ -555,7 +555,7 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
       const wobble = age < 1.4 ? Math.sin(age * 22) * 0.07 * Math.exp(-age * 3) : 0
       bowlMesh.current.rotation.set(wobble * 0.6, 0, wobble)
       // It rocks on the edge of its flat base, which stays on the rug.
-      bowlMesh.current.position.y = RUG.top + BOWL_PROFILE[1][0] * BOWL_SCALE * Math.sin(Math.hypot(wobble * 0.6, wobble))
+      bowlMesh.current.position.y = ON_RUG + BOWL_PROFILE[1][0] * BOWL_SCALE * Math.sin(Math.hypot(wobble * 0.6, wobble))
     }
     const at = reveal.current.at
     if (at === null) return
@@ -569,7 +569,7 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
         <mesh name="rug" geometry={shapes.rug} material={rug} position={[0, RUG.bottom, 0]} scale={[RUG.rx * UNIT, (RUG.top - RUG.bottom) / 0.02, RUG.rz * UNIT]} />
         <mesh name="rug-rope" geometry={shapes.rugRope} material={clay} />
       </group>
-      <mesh name="bowl" ref={bowlMesh} geometry={shapes.bowl} material={clay} position={[bowl.x, RUG.top, bowl.z]} />
+      <mesh name="bowl" ref={bowlMesh} geometry={shapes.bowl} material={clay} position={[bowl.x, ON_RUG, bowl.z]} />
       <instancedMesh name="plates" ref={plates} args={[shapes.plate, clay, 5]} frustumCulled={false} />
       <instancedMesh name="stools" ref={stools} args={[shapes.stool, clay, 5]} frustumCulled={false} />
     </group>
