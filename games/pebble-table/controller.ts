@@ -3,7 +3,7 @@ import { freeSpotOnPlate, GUEST_ARM, GUEST_RADIUS, GUEST_REACH, GUEST_TOP, gazeT
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
 import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
-import { GRAVITY, HOLD_HEIGHT, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
+import { GRAVITY, HOLD_HEIGHT, LONGEST_FRAME, STEP, STEP_SLACK, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
 import { JAR_REACH, partDepth, partRest, STOOL_REACH, STOOL_TOP } from './partShape'
 import { STONE_REACH, stoneRest } from './stoneShape'
 import { feedingFloor, PAN_RIM, panRimReach, surfaceUnder } from './surfaces'
@@ -162,8 +162,11 @@ export class TableController {
   readonly arrivals = new Map<number, number>()
   /** When a guest was last tapped (they hop and nod back). */
   readonly nudges = new Map<number, number>()
-  /** Seconds of attended play; stands still while the table is put away. */
+  /** Seconds of attended play, in whole physics steps; stands still while the table is put away. */
   t = 0
+  /** Frame time (s) not yet stepped: the table moves in whole steps, so frames of any length play out the same. */
+  private unstepped = 0
+  private steps = 0
   /** Every random choice the table makes (how a spill or a pour is flung) draws from this, so sound and drawing cannot change them. */
   private readonly random: () => number
   beam: Beam = restingBeam()
@@ -267,8 +270,22 @@ export class TableController {
     this.cadence.settle(performance.now())
   }
 
+  /**
+   * Plays one frame: as many whole physics steps as its time makes up, with
+   * what is left over carried to the next frame. Only a frame longer than
+   * LONGEST_FRAME loses time.
+   */
   step(dt: number): void {
-    this.t += dt
+    this.unstepped = Math.min(this.unstepped + dt, LONGEST_FRAME)
+    const steps = Math.floor(this.unstepped / STEP + STEP_SLACK)
+    this.unstepped = Math.max(0, this.unstepped - steps * STEP)
+    for (let i = 0; i < steps; i++) this.tick()
+  }
+
+  private tick(): void {
+    const dt = STEP
+    this.steps += 1
+    this.t = this.steps * STEP
     const now = this.t
     for (const [pointerId, id] of this.held) {
       const screen = this.screens.get(pointerId)

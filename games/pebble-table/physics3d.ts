@@ -20,8 +20,16 @@ export const GRAVITY = -981
 export const STEP = 1 / 120
 export const HOLD_HEIGHT = 11
 export const PAN_REST_HEIGHT = 6
-/** Catch-up substeps per frame by default. More would let one slow frame make the next one slower (a spiral), so an overloaded frame slows time slightly instead. */
-export const DEFAULT_MAX_SUBSTEPS = 3
+/**
+ * The most time (s) one frame catches up, in whole steps: two display frames
+ * at 60 Hz and a leftover step never reach it, so an on-time frame never
+ * loses a step, whatever the quality tier. Only a genuinely long frame (a
+ * stall, or a device far behind) is cut short here, which slows game time
+ * instead of letting a slow frame make the next one slower (a spiral).
+ */
+export const LONGEST_FRAME = 1 / 20
+/** Against rounding in sums of frame times: this close to a whole step (in steps) still makes it. */
+export const STEP_SLACK = 1e-6
 /**
  * A shell or stick (a chain of balls with no prism) about to meet a stone or
  * part moves at most this many of its biggest ball's radii in one step, the
@@ -160,7 +168,6 @@ export class TablePhysics {
   private readonly calm = new Map<CANNON.Body, { calm: number; awake: number; asleep: number }>()
   private impacts: number[] = []
   private accumulator = 0
-  maxSubsteps = DEFAULT_MAX_SUBSTEPS
 
   constructor() {
     this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, GRAVITY, 0) })
@@ -826,11 +833,12 @@ export class TablePhysics {
   }
 
   step(elapsed: number): StepReport {
-    this.accumulator = Math.min(this.accumulator + elapsed, STEP * this.maxSubsteps)
+    this.accumulator = Math.min(this.accumulator + elapsed, LONGEST_FRAME)
     // What follows a target gets there evenly over this frame's substeps, not in a jump at twice its speed and a stop.
-    let substeps = Math.floor(this.accumulator / STEP)
-    while (this.accumulator >= STEP) {
-      const time = Math.max(1, substeps--) * STEP
+    const substeps = Math.floor(this.accumulator / STEP + STEP_SLACK)
+    this.accumulator = Math.max(0, this.accumulator - substeps * STEP)
+    for (let left = substeps; left > 0; left--) {
+      const time = left * STEP
       for (const [body, target] of this.targets) {
         body.velocity.set((target.x - body.position.x) / time, (target.y - body.position.y) / time, (target.z - body.position.z) / time)
       }
@@ -842,7 +850,6 @@ export class TablePhysics {
       this.noteLeaning()
       this.resistRolling()
       this.settleLooseParts()
-      this.accumulator -= STEP
     }
     // A pan at rest falls asleep and stops moving itself, so its bounds are stale until marked here.
     for (const [body, target] of this.targets) {

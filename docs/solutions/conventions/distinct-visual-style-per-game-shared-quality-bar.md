@@ -176,7 +176,7 @@ stone: '#c9683d',
   flat
   gl={{ antialias: false, powerPreference: 'high-performance', stencil: false }}
 >
-  <QualityProvider governor={governor} running={running} restingFor={restingFor} onSettings={onSettings}>
+  <QualityProvider governor={governor} running={running} restingFor={restingFor}>
   ...
 <EffectComposer multisampling={0} enableNormalPass={false}>
 ```

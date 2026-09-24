@@ -7,7 +7,7 @@ import type { Point } from '../layout'
 import { toWorld2, type Vec3 } from '../physics3d'
 import { PALETTE } from './clay'
 import { ClayFinishEffect, installClayToneMapping } from './finish'
-import type { QualityGovernor, QualitySettings } from '../quality'
+import type { QualityGovernor } from '../quality'
 import { ClayProvider } from './models'
 import { QualityProvider, useQuality } from './quality'
 
@@ -132,13 +132,11 @@ export function Stage({
   running,
   governor,
   restingFor,
-  onSettings,
   children,
 }: {
   running: boolean
   governor: QualityGovernor
   restingFor: () => number
-  onSettings: (settings: QualitySettings) => void
   children: ReactNode
 }) {
   return (
@@ -150,7 +148,7 @@ export function Stage({
       camera={{ fov: FOV, position: [0, 180, 120], near: 20, far: 1000 }}
       style={{ position: 'absolute', inset: 0, touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
     >
-      <QualityProvider governor={governor} running={running} restingFor={restingFor} onSettings={onSettings}>
+      <QualityProvider governor={governor} running={running} restingFor={restingFor}>
         <ClayProvider>
           <CameraRig />
           <Lights />

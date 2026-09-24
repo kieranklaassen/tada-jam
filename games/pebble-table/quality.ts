@@ -14,15 +14,13 @@ export type QualitySettings = {
   furShells: number
   /** full: tilt-shift blur plus grade; grade: grade and vignette only; off: tone mapping in the renderer, no post pass. */
   post: PostMode
-  /** Physics catch-up substeps per frame. */
-  physicsSubsteps: number
 }
 
 export const TIERS: readonly QualitySettings[] = [
-  { name: 'full', dpr: 2, furShells: 6, post: 'full', physicsSubsteps: 3 },
-  { name: 'balanced', dpr: 1.5, furShells: 3, post: 'full', physicsSubsteps: 3 },
-  { name: 'lean', dpr: 1.25, furShells: 0, post: 'grade', physicsSubsteps: 2 },
-  { name: 'minimal', dpr: 1, furShells: 0, post: 'off', physicsSubsteps: 2 },
+  { name: 'full', dpr: 2, furShells: 6, post: 'full' },
+  { name: 'balanced', dpr: 1.5, furShells: 3, post: 'full' },
+  { name: 'lean', dpr: 1.25, furShells: 0, post: 'grade' },
+  { name: 'minimal', dpr: 1, furShells: 0, post: 'off' },
 ]
 
 export const LOWEST_TIER = TIERS.length - 1

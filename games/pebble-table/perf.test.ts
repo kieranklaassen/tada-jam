@@ -150,7 +150,7 @@ describe('frame budget', () => {
     expect(total('steps') / frames, 'cannon steps a frame').toBeLessThan(2.2)
     expect(most('steps'), 'cannon steps in the busiest frame').toBeLessThanOrEqual(9)
     expect(total('tests') / frames, 'shape tests a frame').toBeLessThan(300)
-    expect(most('tests'), 'shape tests in the busiest frame').toBeLessThan(1100)
+    expect(most('tests'), 'shape tests in the busiest frame').toBeLessThan(1300)
     expect(total('sunkTests') / frames, "sunk's shape tests a frame").toBeLessThan(14)
     expect(most('contacts'), 'contacts in the busiest frame').toBeLessThan(200)
   })

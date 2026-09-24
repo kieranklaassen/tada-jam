@@ -2,7 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { TableController } from '../controller'
-import { QualityGovernor, startingTier, type QualitySettings } from '../quality'
+import { QualityGovernor, startingTier } from '../quality'
 import { BAG, DOOR, FEEDING, SCALE, shelfTile, type Point } from '../layout'
 import { stoneRadius3, toWorld2, UNIT } from '../physics3d'
 import { stoneReachAlong, stoneReachDown, stoneReachOf, stoneRest } from '../stoneShape'
@@ -224,7 +224,7 @@ function World({ table }: { table: TableController }) {
   const lastPlates = useRef<number[]>([...table.feeding.plates])
   const hops = useRef(new Map<number, number>())
   useFrame((_, dt) => {
-    table.step(Math.min(dt, 1 / 20))
+    table.step(dt)
     table.feeding.plates.forEach((total, seat) => {
       if (total > (lastPlates.current[seat] ?? 0)) hops.current.set(seat, table.t)
     })
@@ -339,15 +339,9 @@ function Input({ table }: { table: TableController }) {
 export function GameView({ table, running }: { table: TableController; running: boolean }) {
   const governor = useMemo(() => new QualityGovernor(startingTier(window.matchMedia?.('(pointer: coarse)').matches ?? false)), [])
   const restingFor = useCallback(() => table.restingFor(), [table])
-  const onSettings = useCallback(
-    (settings: QualitySettings) => {
-      table.physics.maxSubsteps = settings.physicsSubsteps
-    },
-    [table],
-  )
   return (
     <>
-      <Stage running={running} governor={governor} restingFor={restingFor} onSettings={onSettings}>
+      <Stage running={running} governor={governor} restingFor={restingFor}>
         <Input table={table} />
         <World table={table} />
       </Stage>
