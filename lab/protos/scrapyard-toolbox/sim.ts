@@ -446,6 +446,40 @@ function room(path: readonly PathPoint[], from: number, ok: (p: PathPoint) => bo
 
 const TRIES = 8
 
+// The go tap: a box round the chute mouth. A tap anywhere in it lets the ball
+// go. It wins over every tool body, so the answer can never hide under it.
+export const chuteRect = (y0: number): Rect => ({ x: 10, y: y0 - 10, w: 170, h: 110 })
+
+// How far a finger has to be from a tool's body to grab it.
+const GRAB_REACH = 28
+// A day keeps its known answer off the go tap: the tool's body stays at least
+// this far from the box. Release wins over tool bodies anyway; this keeps the
+// answer's middle, where a finger grabs it, out of the box. (A margin of the
+// grab reach plus 40 was tried and cut the days that need every tool from
+// about half to under a third.)
+const CHUTE_CLEAR = 12
+// A tool dropped with its middle in the go tap is moved this far past its edge.
+const CHUTE_PUSH = 40
+
+// How far a tool at `p` is from the go tap (0 when they touch), by the same
+// distToTool math the hit-test uses, sampled every 4 px over the box.
+export function chuteDistance(p: Placement, y0: number): number {
+  const box = chuteRect(y0)
+  // A tool reaches at most about 120 from its middle, the box about 101 from its own.
+  const far = Math.hypot(p.x - (box.x + box.w / 2), p.y - (box.y + box.h / 2)) - 230
+  if (far > 100) return far
+  const nx = Math.ceil(box.w / 4)
+  const ny = Math.ceil(box.h / 4)
+  let best = Infinity
+  for (let i = 0; i <= nx; i++) {
+    for (let j = 0; j <= ny; j++) {
+      best = Math.min(best, distToTool(p, box.x + (box.w * i) / nx, box.y + (box.h * j) / ny))
+      if (best === 0) return 0
+    }
+  }
+  return best
+}
+
 // One try at a day: a chute, a pillar, three dealt tools grown along the ball's
 // own path (each kept only if the ball touches it and leaves room for the next
 // step), then a shelf for the cat where the ball ends up. Null when it stalls.
@@ -469,7 +503,7 @@ export function attempt(rng: Rng): Candidate | null {
     let placed: Placement | null = null
     for (let tries = 0; tries < TRIES && next === null; tries++) {
       const p = placeOnPath(kind, run.path, options[int(rng, 0, options.length - 1)]!, rng)
-      if (!inYard(p) || reference.some((o) => Math.hypot(o.x - p.x, o.y - p.y) < 100)) continue
+      if (!inYard(p) || chuteDistance(p, chute.y0) < CHUTE_CLEAR || reference.some((o) => Math.hypot(o.x - p.x, o.y - p.y) < 100)) continue
       const r = runBall(bare, [...reference, p], { record: true })
       if (!r.touched.includes(kind)) continue
       if (room(r.path, r.lastToolTick + 4, lastOne ? catRoom : toolRoom).length < (lastOne ? 4 : 8)) continue
@@ -658,7 +692,7 @@ const knobPos = (t: Tool) => {
   return k
 }
 
-const distToTool = (t: Tool, x: number, y: number): number => {
+const distToTool = (t: Placement, x: number, y: number): number => {
   if (t.kind === 'bumper') return Math.max(0, Math.hypot(x - t.x, y - t.y) - SPEC.bumper.r)
   if (t.kind === 'fan') return Math.max(0, Math.hypot(x - t.x, y - t.y) - SPEC.fan.body)
   const s = SPEC[t.kind]
@@ -764,24 +798,33 @@ export const createSim: CreateSim<ScrapSnapshot> = (config): Sim<ScrapSnapshot> 
 
   const placedTools = () => tools.filter((t) => t.placed && !t.held)
 
-  const chuteBox = (): Rect => ({ x: 10, y: world.shape.chute.y0 - 10, w: 170, h: 110 })
+  const chuteBox = (): Rect => chuteRect(world.shape.chute.y0)
   const inside = (r: Rect, x: number, y: number) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h
 
-  // The sim's own hit-test. Knobs first, then tools in the yard (nearest), then
-  // tools in the tray, then the buttons. All forgiving for a young finger.
+  // The sim's own hit-test. The go tap first (nothing in the yard may steal it),
+  // then knobs (nearest), tools in the yard (nearest), tools in the tray, then
+  // the day button. All forgiving for a young finger.
   const hitTest = (x: number, y: number): Omit<Grab, 'startX' | 'startY' | 'lastX' | 'lastY'> | null => {
     const base = { tool: -1, offX: 0, offY: 0, origX: 0, origY: 0, fromTray: false }
-    for (let i = 0; i < tools.length; i++) {
-      const t = tools[i]!
+    if (inside(chuteBox(), x, y)) return { ...base, mode: 'chute' }
+    // Two knobs can sit close together: the one nearest the finger turns.
+    let knob = -1
+    let knobD = Infinity
+    tools.forEach((t, i) => {
       const k = t.placed && !t.held ? knobPos(t) : null
-      if (k && Math.hypot(x - k.x, y - k.y) <= 36) return { ...base, mode: 'rotate', tool: i }
-    }
+      const d = k ? Math.hypot(x - k.x, y - k.y) : Infinity
+      if (d <= 36 && d < knobD) {
+        knob = i
+        knobD = d
+      }
+    })
+    if (knob >= 0) return { ...base, mode: 'rotate', tool: knob }
     let best = -1
     let bestD = Infinity
     tools.forEach((t, i) => {
       if (!t.placed || t.held) return
       const d = distToTool(t, x, y)
-      if (d <= 28 && d < bestD) {
+      if (d <= GRAB_REACH && d < bestD) {
         best = i
         bestD = d
       }
@@ -794,7 +837,6 @@ export const createSim: CreateSim<ScrapSnapshot> = (config): Sim<ScrapSnapshot> 
       return { mode: 'move', tool: best, offX: t.x - x, offY: t.y - y, origX: t.x, origY: t.y, fromTray: !t.placed }
     }
     if (phase === 'reached' && inside(DAY_BOX, x, y)) return { ...base, mode: 'day' }
-    if (inside(chuteBox(), x, y)) return { ...base, mode: 'chute' }
     return null
   }
 
@@ -831,6 +873,10 @@ export const createSim: CreateSim<ScrapSnapshot> = (config): Sim<ScrapSnapshot> 
         t.placed = true
         t.x = clamp(t.x, 30, FIELD_W - 30)
         t.y = clamp(t.y, 30, 660)
+        // The go tap wins over tool bodies, so a tool's middle never rests in
+        // it: it is set just past the edge, where it can still be picked up.
+        const go = chuteBox()
+        if (inside(go, t.x, t.y)) t.x = go.x + go.w + CHUTE_PUSH
         emit('place')
       }
     }

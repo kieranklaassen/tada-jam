@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Sim } from '../../kit/sim.ts'
 import { meta } from './meta.ts'
-import { KINDS, createSim, runBall, worldFor } from './sim.ts'
+import { KINDS, chuteDistance, createSim, runBall, worldFor } from './sim.ts'
 import type { Placement, ScrapSnapshot } from './sim.ts'
 
 function start(overrides: { seed?: number; hooks?: readonly string[]; hints?: boolean } = {}) {
@@ -310,6 +310,82 @@ describe('the pointer', () => {
     expect(sim.observe().events.length).toBeLessThanOrEqual(64)
     expect(sim.observe().events).toHaveLength(0)
   })
+})
+
+describe('the go tap always wins', () => {
+  const inside = (r: { x: number; y: number; w: number; h: number }, x: number, y: number) =>
+    x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h
+  const angles = (sim: Sim<ScrapSnapshot>) => snap(sim).tools.map((t) => t.angle)
+
+  it('tapping the middle of the chute releases the ball with the day\'s known rig standing (these seeds used to turn a tool instead)', () => {
+    for (const seed of [4, 22, 38, 47, 57, 59, 65, 66, 69, 100]) {
+      const sim = start({ seed })
+      sim.observe()
+      rig(sim, worldFor(seed).reference)
+      const before = angles(sim)
+      release(sim)
+      expect(snap(sim).phase, `seed ${seed} released`).toBe('rolling')
+      expect(angles(sim), `seed ${seed} tools untouched`).toEqual(before)
+      runUntil(sim, (s) => s.phase !== 'rolling', 900)
+      expect(snap(sim).phase, `seed ${seed} woke the cat`).toBe('reached')
+    }
+  }, 60000)
+
+  it('a plank lying against the chute does not steal the release tap', () => {
+    const sim = start()
+    const box = snap(sim).chuteBox
+    const index = snap(sim).tools.findIndex((t) => t.kind === 'ramp' || t.kind === 'spring' || t.kind === 'sponge')
+    // Its centre is just outside the box, its near end reaches into the box.
+    dragTool(sim, index, box.x + box.w + 5, box.y + box.h / 2)
+    const tool = snap(sim).tools[index]!
+    expect(tool.placed).toBe(true)
+    expect(inside(box, tool.x, tool.y)).toBe(false)
+    const before = angles(sim)
+    release(sim)
+    expect(snap(sim).phase).toBe('rolling')
+    expect(angles(sim)).toEqual(before)
+  })
+
+  it('a tool dropped in the middle of the chute is moved just clear, so it can always be picked up again', () => {
+    for (let index = 0; index < 3; index++) {
+      const sim = start()
+      const box = snap(sim).chuteBox
+      dragTool(sim, index, box.x + box.w / 2, box.y + box.h / 2)
+      const tool = snap(sim).tools[index]!
+      expect(tool.placed).toBe(true)
+      expect(inside(box, tool.x, tool.y)).toBe(false)
+      // Grab it by its middle and it comes along.
+      sim.pointer({ id: 2, phase: 'down', x: tool.x, y: tool.y })
+      sim.pointer({ id: 2, phase: 'move', x: 600, y: 400 })
+      sim.pointer({ id: 2, phase: 'up', x: 600, y: 400 })
+      expect(Math.hypot(snap(sim).tools[index]!.x - 600, snap(sim).tools[index]!.y - 400)).toBeLessThan(1)
+    }
+  })
+
+  it('when two knobs sit close together, the one nearest the finger turns', () => {
+    const seed = Array.from({ length: 60 }, (_, i) => i + 1).find((n) => worldFor(n).deal.includes('ramp') && worldFor(n).deal.includes('fan'))!
+    const sim = start({ seed })
+    const tools = snap(sim).tools
+    const ramp = tools.findIndex((t) => t.kind === 'ramp')
+    const fan = tools.findIndex((t) => t.kind === 'fan')
+    dragTool(sim, ramp, 500, 400)
+    dragTool(sim, fan, 560, 420)
+    const k = snap(sim).tools
+    // The two knobs are within one grab of each other.
+    expect(Math.hypot(k[ramp]!.knob!.x - k[fan]!.knob!.x, k[ramp]!.knob!.y - k[fan]!.knob!.y)).toBeLessThan(36)
+    turnTool(sim, fan, Math.PI / 2)
+    expect(snap(sim).tools[fan]!.angle).toBeCloseTo(Math.PI / 2, 6)
+    expect(snap(sim).tools[ramp]!.angle).toBe(0)
+  })
+
+  it('the day generator keeps the known answer clear of the go tap (its body never touches the box)', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const world = worldFor(seed)
+      for (const p of world.reference) {
+        expect(chuteDistance(p, world.shape.chute.y0), `seed ${seed} ${p.kind}`).toBeGreaterThanOrEqual(12)
+      }
+    }
+  }, 60000)
 })
 
 describe('affordances', () => {
