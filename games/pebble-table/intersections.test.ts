@@ -1312,7 +1312,7 @@ function distanceToSegment(p: THREE.Vector2, [a, b]: Segment): number {
 
 describe('contact shadows and glow rings lie flat on what they are cast on', () => {
   const most = 15
-  /** Half a millimetre: how far the chords of a drawn lathe (a pan has 40 of them) fall inside the circle its profile is turned on. */
+  /** Half a millimetre: how far the chords of a drawn plate or bowl fall inside the circle its profile is turned on. */
   const chord = 0.05
   /** Decal centres every centimetre over an area of the table, in world units. */
   const grid = (from: { x: number; y: number }, to: { x: number; y: number }) => {
@@ -1320,15 +1320,15 @@ describe('contact shadows and glow rings lie flat on what they are cast on', () 
     for (let x = from.x; x <= to.x; x += 10) for (let y = from.y; y <= to.y; y += 10) points.push({ x, y })
     return points
   }
-  /** The first decal of `ground` that a rim or hem drawn higher than it reaches into, or null. */
-  const firstCrossed = (rims: { geometry: THREE.BufferGeometry; matrix: THREE.Matrix4 }[], centres: { x: number; y: number }[], ground: number, surfaces: Surfaces) => {
+  /** The first decal of `ground` that a rim or hem drawn higher than it reaches into by more than `slack` (cm), or null. */
+  const firstCrossed = (rims: { geometry: THREE.BufferGeometry; matrix: THREE.Matrix4 }[], centres: { x: number; y: number }[], ground: number, surfaces: Surfaces, slack = chord) => {
     const segments = rims.flatMap(({ geometry, matrix }) => crossings(geometry, matrix, ground + DECAL_LIFT))
     for (const at of centres) {
       const reach = decalReach(at, ground, surfaces, most)
       if (reach <= 0) continue
       const p = to3(at)
       const centre = new THREE.Vector2(p.x, p.z)
-      const into = segments.find((segment) => distanceToSegment(centre, segment) < reach - chord)
+      const into = segments.find((segment) => distanceToSegment(centre, segment) < reach - slack)
       if (into) return { at, ground, reach, by: reach - distanceToSegment(centre, into) }
     }
     return null
@@ -1350,7 +1350,7 @@ describe('contact shadows and glow rings lie flat on what they are cast on', () 
     }
   })
 
-  it('keeps every decal in a scale pan inside its flat floor, however far the beam tilts and the pans swing', () => {
+  it('keeps every decal in a scale pan inside its flat floor, sides and all, however far the beam tilts and the pans swing', () => {
     const shapes = scaleShapes()
     for (const angle of [-SCALE.maxTilt, 0, SCALE.maxTilt]) {
       for (const sway of [-SWAY_MOST, 0, SWAY_MOST]) {
@@ -1360,7 +1360,7 @@ describe('contact shadows and glow rings lie flat on what they are cast on', () 
         SCALE.pans.forEach((pan, side) => {
           const x = pan.x + sway / UNIT
           const centres = grid({ x: x - pan.r - 30, y: pan.y - pan.r - 30 }, { x: x + pan.r + 30, y: pan.y + pan.r + 30 })
-          expect(firstCrossed(rims, centres, surfaces.panFloors[side], surfaces), `pan ${side} at tilt ${angle}, swung ${sway}`).toBeNull()
+          expect(firstCrossed(rims, centres, surfaces.panFloors[side], surfaces, 0), `pan ${side} at tilt ${angle}, swung ${sway}`).toBeNull()
         })
       }
     }

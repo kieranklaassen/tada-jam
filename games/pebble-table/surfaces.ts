@@ -137,6 +137,8 @@ export const DISH_PROFILE: readonly [number, number][] = [
   [0, 0.03],
 ]
 export const PAN_DEPTH = 13
+/** How many sides a pan's dish is turned with. */
+export const PAN_SEGMENTS = 40
 /** A pan's floor above its hanging point. */
 export const PAN_FLOOR = 0.03 * PAN_DEPTH
 /** The rolled clay rim laid on a pan's edge: a ring (radius and tube as fractions of the pan's radius) at `y` cm above the hanging point. */
@@ -203,7 +205,8 @@ const BOWL_REACH = (Math.max(...BOWL_PROFILE.map(([r]) => r)) + BOWL_LUMP / 2) *
 /** The highest a plate's rim and the bowl's lip are drawn, lumps and all. */
 const PLATE_RIM_TOP = ON_RUG + (Math.max(...PLATE_PROFILE.map(([, h]) => h)) + PLATE_LUMP / 2) * PLATE_HEIGHT
 const BOWL_TOP = ON_RUG + (Math.max(...BOWL_PROFILE.map(([, h]) => h)) + BOWL_LUMP / 2) * BOWL_SCALE
-const PAN_FLAT = DISH_PROFILE[6][0]
+/** How far a pan's flat floor reaches out, as a fraction of its radius: to the middles of its turned sides, which fall inside the circle its profile is turned on. */
+const PAN_FLAT = DISH_PROFILE[6][0] * Math.cos(Math.PI / PAN_SEGMENTS)
 
 /**
  * How far (cm) a flat decal lying `DECAL_LIFT` above `ground`, centred at
