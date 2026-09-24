@@ -156,12 +156,178 @@ export function applyMove(ents: readonly Ent[], dx: number, dy: number): MoveRes
   return { ents: next, moved, pushed }
 }
 
+export const DIRS = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+] as const
+
 // A YOU thing shares a cell with a WIN thing (or is itself WIN).
 export function isWon(ents: readonly Ent[]): boolean {
   const flags = flagMap(parseRules(ents))
   const withProp = (p: Prop) => ents.filter((e) => e.kind === 'obj' && flags.get(e.name)?.has(p))
   const wins = withProp('win')
   return withProp('you').some((y) => wins.some((w) => w.x === y.x && w.y === y.y))
+}
+
+// How many distinct world states the solvability search will look at.
+export const SEARCH_CAP = 30000
+
+export interface Reach {
+  // 'won': a walk of steps reaches a win. 'dead': the whole reachable world was
+  // seen and none wins. 'cap': the search gave up.
+  verdict: 'won' | 'dead' | 'cap'
+  // For 'won', the steps as indices into DIRS, from the start to the win.
+  moves: number[]
+}
+
+const YOU_BIT = 1
+const PUSH_BIT = 2
+const STOP_BIT = 4
+const WIN_BIT = 8
+const PROP_BITS: Readonly<Record<string, number>> = { you: YOU_BIT, push: PUSH_BIT, stop: STOP_BIT, win: WIN_BIT }
+
+// A breadth-first search over whole-world states (where every tile and thing
+// stands), moving exactly as the frog can: one step at a time. A 'dead' room is
+// a trap: every state the child could ever reach was seen and none wins. A
+// 'cap' room was too open to exhaust before the cap.
+//
+// This is applyMove, parseRules, and isWon again on flat arrays, because the
+// room builder runs it for every room drawn and the object versions are about
+// ten times slower. The tests hold the two to the same answers.
+export function reachWin(start: readonly Ent[], cap: number = SEARCH_CAP): Reach {
+  const n = start.length
+  const cells = COLS * ROWS
+  const kind = new Uint8Array(n) // 0 thing, 1 noun, 2 is, 3 property
+  const name = new Int16Array(n).fill(-1) // interned noun name of a thing or noun tile
+  const bit = new Uint8Array(n) // the property a property tile spells
+  const ids = new Map<string, number>()
+  start.forEach((e, i) => {
+    kind[i] = e.kind === 'obj' ? 0 : e.kind === 'noun' ? 1 : e.kind === 'is' ? 2 : 3
+    if (e.kind === 'obj' || e.kind === 'noun') {
+      if (!ids.has(e.name)) ids.set(e.name, ids.size)
+      name[i] = ids.get(e.name)!
+    } else if (e.kind === 'prop') bit[i] = PROP_BITS[e.name] ?? 0
+  })
+
+  const grid = new Int16Array(cells)
+  // What each noun is, as property bits, for the world in `at`.
+  const flagsInto = (at: Uint8Array, out: Uint8Array) => {
+    grid.fill(-1)
+    out.fill(0)
+    for (let i = 0; i < n; i++) if (kind[i] !== 0) grid[at[i]!] = i
+    for (let i = 0; i < n; i++) {
+      if (kind[i] !== 1) continue
+      const c = at[i]!
+      const x = c % COLS
+      const y = (c - x) / COLS
+      for (let d = 0; d < 2; d++) {
+        const step = d === 0 ? 1 : COLS
+        if (d === 0 ? x + 2 >= COLS : y + 2 >= ROWS) continue
+        const is = grid[c + step]!
+        const prop = grid[c + 2 * step]!
+        if (is >= 0 && prop >= 0 && kind[is] === 2 && kind[prop] === 3) out[name[i]!] |= bit[prop]!
+      }
+    }
+  }
+  const chain = new Int16Array(n + 1)
+  // Every YOU thing steps (dx, dy) in `at`, pushing as applyMove does. Returns 0
+  // when nothing moved, 1 when something did, and 2 when a word tile was shoved
+  // (only then can the rules have changed).
+  const move = (at: Uint8Array, dx: number, dy: number, flags: Uint8Array): 0 | 1 | 2 => {
+    let moved: 0 | 1 | 2 = 0
+    const delta = dx + dy * COLS
+    for (let u = 0; u < n; u++) {
+      if (kind[u] !== 0 || !(flags[name[u]!]! & YOU_BIT)) continue
+      const ux = at[u]! % COLS
+      let cx = ux + dx
+      let cy = (at[u]! - ux) / COLS + dy
+      let len = 0
+      let blocked = false
+      for (;;) {
+        if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) {
+          blocked = true
+          break
+        }
+        const cell = cy * COLS + cx
+        let pushed = false
+        for (let e = 0; e < n; e++) {
+          if (e === u || at[e] !== cell) continue
+          const f = kind[e] === 0 ? flags[name[e]!]! : 0
+          const push = kind[e] !== 0 || (f & PUSH_BIT) !== 0
+          if (kind[e] === 0 && (f & STOP_BIT) !== 0 && !push) {
+            blocked = true
+            break
+          }
+          if (push) {
+            chain[len++] = e
+            pushed = true
+          }
+        }
+        if (blocked || !pushed) break
+        cx += dx
+        cy += dy
+      }
+      if (blocked) continue
+      for (let k = 0; k < len; k++) {
+        at[chain[k]!] += delta
+        if (kind[chain[k]!] !== 0) moved = 2
+      }
+      at[u] += delta
+      if (moved === 0) moved = 1
+    }
+    return moved
+  }
+  const wins = (at: Uint8Array, flags: Uint8Array): boolean => {
+    for (let i = 0; i < n; i++) {
+      if (kind[i] !== 0 || !(flags[name[i]!]! & YOU_BIT)) continue
+      for (let j = 0; j < n; j++) if (kind[j] === 0 && (flags[name[j]!]! & WIN_BIT) !== 0 && at[j] === at[i]) return true
+    }
+    return false
+  }
+
+  const first = Uint8Array.from(start, (e) => e.y * COLS + e.x)
+  const firstFlags = new Uint8Array(ids.size)
+  flagsInto(first, firstFlags)
+  if (wins(first, firstFlags)) return { verdict: 'won', moves: [] }
+  // Spreading a typed array into fromCharCode is several times slower than apply.
+  const keyOf = (at: Uint8Array) => String.fromCharCode.apply(null, at as unknown as number[])
+  const seen = new Set<string>([keyOf(first)])
+  const queue: Uint8Array[] = [first]
+  // The rules of each queued world (they only change when a word tile moves),
+  // and where each world came from, to read the steps back from a win.
+  const rules: Uint8Array[] = [firstFlags]
+  const from: number[] = [-1]
+  const via: number[] = [-1]
+  const scratch = new Uint8Array(n)
+  for (let q = 0; q < queue.length; q++) {
+    const here = queue[q]!
+    for (let d = 0; d < DIRS.length; d++) {
+      scratch.set(here)
+      const result = move(scratch, DIRS[d]![0], DIRS[d]![1], rules[q]!)
+      if (result === 0) continue
+      const key = keyOf(scratch)
+      if (seen.has(key)) continue
+      let flags = rules[q]!
+      if (result === 2) {
+        flags = new Uint8Array(ids.size)
+        flagsInto(scratch, flags)
+      }
+      if (wins(scratch, flags)) {
+        const moves = [d]
+        for (let at = q; from[at]! >= 0; at = from[at]!) moves.unshift(via[at]!)
+        return { verdict: 'won', moves }
+      }
+      if (seen.size >= cap) return { verdict: 'cap', moves: [] }
+      seen.add(key)
+      queue.push(scratch.slice())
+      rules.push(flags)
+      from.push(q)
+      via.push(d)
+    }
+  }
+  return { verdict: 'dead', moves: [] }
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +341,9 @@ export interface Room {
   key: number
   // True when a long way round leaves the barrier, so rewriting is a choice.
   gap: boolean
+  // A walk that wins, as steps (indices into DIRS) from the start. Filled by
+  // buildRoom once the search has found one; empty on a raw draw.
+  solution: number[]
 }
 
 // Loose tiles that make more rewrites possible, and more ways to go wrong.
@@ -190,14 +359,19 @@ const LOOSE: ReadonlyArray<readonly [EntKind, string]> = [
 // only doorway is plugged by a STOP rock. swap: the pad is behind an
 // unbreakable wall, so PAD IS WIN must become ROCK IS WIN. Each is solvable
 // with a few pushes and none can be walked around, unless `gap` says so.
-const DOES_NOT_FIT = new Error('room did not fit')
+export const DOES_NOT_FIT = new Error('room did not fit')
 
 export function buildRoom(rng: Rng, kind: RoomKind, index: number): Room {
-  // A crowded draw is thrown away and drawn again from the same stream; the
-  // last resorts are the plainest room, which always fits.
-  for (let t = 0; t < 40; t++) {
+  // A crowded draw is thrown away and drawn again from the same stream, and so
+  // is any room the search cannot prove winnable: a trap (the frog caged, or
+  // the key tile pinned) or one too open to search. Every room handed out has a
+  // walk that wins, kept in `solution`. Later draws fall back to the plainest
+  // room; the very last resort (about 50 misses in a row) is not checked.
+  for (let t = 0; t < 80; t++) {
     try {
-      return attemptRoom(rng, kind, t < 30 ? index : 0)
+      const room = attemptRoom(rng, kind, t < 30 ? index : 0)
+      const found = reachWin(room.ents)
+      if (found.verdict === 'won') return { ...room, solution: found.moves }
     } catch (e) {
       if (e !== DOES_NOT_FIT) throw e
     }
@@ -205,7 +379,9 @@ export function buildRoom(rng: Rng, kind: RoomKind, index: number): Room {
   return attemptRoom(rng, kind, 0)
 }
 
-function attemptRoom(rng: Rng, kind: RoomKind, index: number): Room {
+// One draw of a room, with no check that it can be won. Exported for the tests,
+// which count how many raw draws are traps; the game only calls buildRoom.
+export function attemptRoom(rng: Rng, kind: RoomKind, index: number): Room {
   const ents: Ent[] = []
   const occ = new Set<number>()
   let nextId = 1
@@ -321,7 +497,7 @@ function attemptRoom(rng: Rng, kind: RoomKind, index: number): Room {
       nextId--
     }
   }
-  return { kind, ents, key, gap: detour }
+  return { kind, ents, key, gap: detour, solution: [] }
 }
 
 // ---------------------------------------------------------------------------
@@ -347,13 +523,6 @@ export interface PushableSnapshot {
   restart: Rect
   undo: Rect
 }
-
-const DIRS = [
-  [1, 0],
-  [-1, 0],
-  [0, 1],
-  [0, -1],
-] as const
 
 const cellRect = (x: number, y: number): Rect => ({ x: OX + x * CELL, y: OY + y * CELL, w: CELL, h: CELL })
 const inside = (r: Rect, x: number, y: number) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h

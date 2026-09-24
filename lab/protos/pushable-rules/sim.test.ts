@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { createRng } from '../../kit/rng.ts'
 import type { Sim } from '../../kit/sim.ts'
 import { meta } from './meta.ts'
-import { CELL, COLS, OX, OY, RESTART, UNDO, applyMove, buildRoom, createSim, isWon, parseRules } from './sim.ts'
+import { CELL, COLS, DIRS, DOES_NOT_FIT, OX, OY, RESTART, UNDO, applyMove, attemptRoom, buildRoom, createSim, isWon, parseRules, reachWin } from './sim.ts'
 import type { Ent, PushableSnapshot, RoomKind } from './sim.ts'
 
 type SnapEnt = PushableSnapshot['ents'][number]
@@ -45,13 +45,6 @@ function tapCell(sim: Sim, x: number, y: number, id = 1): void {
 
 // A breadth-first solver over whole-world states, limited to a few pushes so it
 // stays small. It uses the same pure rules the sim does.
-const DIRS = [
-  [1, 0],
-  [-1, 0],
-  [0, 1],
-  [0, -1],
-] as const
-
 function solve(start: readonly Ent[], maxPushes = 3, cap = 400000): Array<readonly [number, number]> | null {
   interface Node {
     ents: readonly Ent[]
@@ -226,6 +219,129 @@ describe('the rooms', () => {
     const looks = new Set<string>()
     for (let seed = 1; seed <= 12; seed++) looks.add(JSON.stringify(start({ seed }).snapshot().ents))
     expect(looks.size).toBeGreaterThan(8)
+  })
+})
+
+// The same search written on the object rules (applyMove, isWon), one state at a
+// time. It is the oracle reachWin's flat-array version is held to.
+function slowVerdict(start: readonly Ent[], cap: number): 'won' | 'dead' | 'cap' {
+  const keyOf = (ents: readonly Ent[]) => ents.map((e) => e.y * COLS + e.x).join(',')
+  if (isWon(start)) return 'won'
+  const seen = new Set([keyOf(start)])
+  const queue: Array<readonly Ent[]> = [start]
+  for (let i = 0; i < queue.length; i++) {
+    for (const [dx, dy] of DIRS) {
+      const r = applyMove(queue[i]!, dx, dy)
+      if (!r.moved) continue
+      const key = keyOf(r.ents)
+      if (seen.has(key)) continue
+      if (isWon(r.ents)) return 'won'
+      if (seen.size >= cap) return 'cap'
+      seen.add(key)
+      queue.push(r.ents)
+    }
+  }
+  return 'dead'
+}
+
+// Walks the steps through the object rules and says whether the last one wins.
+function replayWins(start: readonly Ent[], moves: readonly number[]): boolean {
+  let ents: readonly Ent[] = start
+  for (const d of moves) {
+    const r = applyMove(ents, DIRS[d]![0], DIRS[d]![1])
+    if (!r.moved) return false
+    ents = r.ents
+  }
+  return isWon(ents)
+}
+
+const ALL_KINDS = ['wall', 'gate', 'swap'] as const
+
+describe('every room can be won', () => {
+  // A wall room where the only sentence that holds the wall lies along the
+  // bottom row: it can be shoved sideways but never taken apart, so the pad on
+  // the far side is out of reach for good.
+  const trap = (sentenceY: number): Ent[] => [
+    ...Array.from({ length: 7 }, (_, y) => ent(1 + y, 'obj', 'wall', 5, y)),
+    ...sentence(20, 'frog', 'you', 0, 0),
+    ...sentence(30, 'pad', 'win', 8, 0),
+    ...sentence(40, 'wall', 'stop', 1, sentenceY),
+    ent(50, 'obj', 'pad', 10, 3),
+    ent(51, 'obj', 'frog', 2, 3),
+  ]
+
+  it('the search calls a pinned barrier a trap and the same room a row higher winnable', () => {
+    expect(reachWin(trap(6)).verdict).toBe('dead')
+    const open = reachWin(trap(3))
+    expect(open.verdict).toBe('won')
+    expect(replayWins(trap(3), open.moves)).toBe(true)
+  })
+
+  it('the search says nothing is winnable when nothing is YOU', () => {
+    const noYou = trap(3).filter((e) => e.id < 20 || e.id >= 30)
+    expect(reachWin(noYou).verdict).toBe('dead')
+  })
+
+  it('the flat search answers exactly as the object rules do, on raw draws', () => {
+    const seen = { won: 0, dead: 0, cap: 0 }
+    for (const kind of ALL_KINDS) {
+      for (let index = 0; index <= 8; index += 2) {
+        for (let seed = 1; seed <= 18; seed++) {
+          let room
+          try {
+            room = attemptRoom(createRng(seed * 977 + index), kind, index)
+          } catch (e) {
+            if (e === DOES_NOT_FIT) continue
+            throw e
+          }
+          const label = `${kind} index ${index} seed ${seed}`
+          const fast = reachWin(room.ents, 1500)
+          expect(fast.verdict, label).toBe(slowVerdict(room.ents, 1500))
+          if (fast.verdict === 'won') expect(replayWins(room.ents, fast.moves), label).toBe(true)
+          seen[fast.verdict]++
+        }
+      }
+    }
+    // The sample must include winnable rooms and open ones, or it proves little.
+    expect(seen.won).toBeGreaterThan(20)
+    expect(seen.cap).toBeGreaterThan(5)
+  })
+
+  it('raw draws are sometimes traps, so the check is guarding something', () => {
+    let traps = 0
+    for (let index = 4; index <= 5; index++) {
+      for (let seed = 1; seed <= 60; seed++) {
+        try {
+          if (reachWin(attemptRoom(createRng(seed * 31 + index), 'swap', index).ents).verdict === 'dead') traps++
+        } catch (e) {
+          if (e !== DOES_NOT_FIT) throw e
+        }
+      }
+    }
+    expect(traps).toBeGreaterThan(0)
+  })
+
+  it('every room the builder hands out has a walk that wins, for every kind and index', () => {
+    for (const kind of ALL_KINDS) {
+      for (let index = 0; index <= 10; index++) {
+        for (let seed = 1; seed <= 30; seed++) {
+          const room = buildRoom(createRng(seed * 131 + index), kind, index)
+          const label = `${kind} index ${index} seed ${seed}`
+          // The walk the builder kept is replayed through the object rules.
+          expect(room.solution.length, label).toBeGreaterThan(0)
+          expect(replayWins(room.ents, room.solution), label).toBe(true)
+        }
+      }
+    }
+  }, 120_000)
+
+  it('the first room a session opens can be won, for many seeds', () => {
+    for (let seed = 1; seed <= 60; seed++) {
+      const ents = start({ seed }).snapshot().ents.map(({ live: _live, ...e }) => e)
+      const found = reachWin(ents)
+      expect(found.verdict, `seed ${seed}`).toBe('won')
+      expect(replayWins(ents, found.moves), `seed ${seed}`).toBe(true)
+    }
   })
 })
 

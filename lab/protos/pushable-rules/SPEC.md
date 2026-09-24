@@ -16,7 +16,7 @@ Three kinds of room are drawn at random, each with a barrier walking cannot get 
 - **gate**: the only doorway is plugged by a rock that is STOP. Break ROCK IS STOP (or turn it into something else with the loose PUSH tile).
 - **swap**: the pad is behind an unbreakable wall, so PAD IS WIN must become ROCK IS WIN by pushing a spare ROCK tile into the sentence, then the frog steps on a rock.
 
-Later rooms add loose tiles (more sentences to make and more ways to spoil one), sometimes put FROG IS YOU within reach of a careless push (nothing is YOU, so nothing moves until undo), and sometimes leave a long way round the wall so rewriting is a shortcut, not the only way.
+Every room is checked before it opens: a bounded search over every position the tiles and things could reach must find a way to win, otherwise the room is redrawn, so no room is a trap from the start (undo and restart always lead back to a winnable room). Later rooms add loose tiles (more sentences to make and more ways to spoil one), sometimes put FROG IS YOU within reach of a careless push (nothing is YOU, so nothing moves until undo), and sometimes leave a long way round the wall so rewriting is a shortcut, not the only way.
 
 ## What should vary on repeat play
 
