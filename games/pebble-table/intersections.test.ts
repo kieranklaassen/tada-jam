@@ -6,8 +6,8 @@ import { pairDepth, preparePiece, type CameraInfo, type MaterialInfo } from '../
 import { BAG_HEADING, bagExit, bagMouth, bagShape, bagTip, SACK_MOUTH, type BagShape } from './bag'
 import { TableController, yardSpots } from './controller'
 import { albumSlot, BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, SCALE, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
-import { GUEST_TOP } from './feeding'
-import { MotionDirector, SEAT_SPECIES, type ActionKind } from './motion'
+import { GUEST_ARM, GUEST_RADIUS, GUEST_REACH, guestArms, GUEST_TOP, guestYaw } from './feeding'
+import { MotionDirector, SEAT_SPECIES, type ActionKind, type MotionPose } from './motion'
 import { PART_PIECES, partCollider, partCover, partPieceVertices, partReachDown, partRest, partVertices, SHELL, STOOL_REACH, STOOL_TOP, surfacePoints, type Lumped } from './partShape'
 import { HOLD_HEIGHT, PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
 import { PART_KINDS, type PartKind } from './parts'
@@ -15,7 +15,7 @@ import { panDrops, SWAY_MOST } from './scale'
 import { defaultTable } from './state'
 import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneReachDown, stoneRest, stoneVertices } from './stoneShape'
 import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PAN_ROLL, panRimReach, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, ROPE_KNOT, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
-import { GUEST_SIZE, guestFloor, guestYaw, NECK_Y, soleDepth, speciesShapes } from './view/guest'
+import { ARM_AT, GUEST_SIZE, guestFloor, NECK_Y, poseGuest, soleDepth, speciesShapes } from './view/guest'
 import {
   ALBUM_SCALE,
   albumGeometry,
@@ -539,8 +539,47 @@ function guestBody(seat: number, pose: Pose = STILL): THREE.Vector3[] {
 
 const toPlane = (v: THREE.Vector3) => ({ x: v.x / UNIT + 800, y: v.z / UNIT + 500 })
 
+/** A seated guest's drawn arms in the world (cm) in motion pose `m`, stood on its floor the way the view does it. */
+function guestArmPoints(seat: number, m: MotionPose): THREE.Vector3[] {
+  const shapes = speciesShapes(SEAT_SPECIES[seat % SEAT_SPECIES.length])
+  const root = new THREE.Object3D()
+  const arms = [-1, 1].map((side) => {
+    const arm = new THREE.Object3D()
+    arm.position.set(side * ARM_AT[0], ARM_AT[1], ARM_AT[2])
+    root.add(arm)
+    return arm
+  })
+  const head = new THREE.Object3D()
+  head.position.set(0, NECK_Y, 0)
+  root.add(head)
+  poseGuest({ root, head, nose: new THREE.Object3D(), cheeks: [null, null], ears: [null, null], arms }, shapes, m, { yaw: 0, pitch: 0 }, 1)
+  root.updateMatrix()
+  const at = FEEDING.seats[seat].guest
+  root.position.y = guestFloor(seat, at) + soleDepth(shapes.sole, root.matrix) + Math.max(0, m.lift)
+  const place = new THREE.Object3D()
+  const p = to3(at)
+  place.position.set(p.x, 0, p.z)
+  place.rotation.y = guestYaw(seat)
+  place.add(root)
+  place.updateMatrixWorld(true)
+  return arms.flatMap((arm) => pointsOf(shapes.arm, arm.matrixWorld))
+}
+
+/** A guest's idling poses over a while, with and without a tummy rumble pushing its arms forward (models.tsx); a wave or a hop is left out, and a stone never rests where one reaches (controller.ts). */
+function idlePoses(seat: number): MotionPose[] {
+  const director = new MotionDirector(SEAT_SPECIES[seat % SEAT_SPECIES.length], seat, 0)
+  const poses: MotionPose[] = []
+  for (let t = 0; t < 12; t += 0.1) {
+    const m = director.sample(t, true, 0)
+    poses.push(m)
+    for (const k of [1, 0.4]) poses.push({ ...m, squash: m.squash + 0.06 * k, headPitch: m.headPitch + 0.22, armForward: [m.armForward[0] + 0.5 * k, m.armForward[1] + 0.5 * k] })
+  }
+  return poses
+}
+
 describe('guests stand on what is drawn under them', () => {
   const seats = FEEDING.seats.map((_, seat) => seat)
+  const floorOf = (seat: number) => feedingFloor(FEEDING.seats[seat].guest, GUEST_RADIUS * UNIT)
 
   it('keeps each seated guest clear of its plate, leaning in to eat or not', () => {
     const plateReach = FEEDING.plateRadius * UNIT * 1.04
@@ -596,6 +635,105 @@ describe('guests stand on what is drawn under them', () => {
       expect(tallest, species).toBeLessThanOrEqual(GUEST_TOP[species])
       expect(GUEST_TOP[species] - tallest, species).toBeLessThan(1)
     }
+  })
+
+  it('reaches no farther from a guest\'s middle than GUEST_REACH, however it waves, hops or springs in', () => {
+    const kinds: ActionKind[] = ['react', 'eat', 'poke', 'arrive', 'delight']
+    let farthest = 0
+    for (const species of new Set(SEAT_SPECIES)) {
+      const shapes = speciesShapes(species)
+      const root = new THREE.Object3D()
+      const arms = [-1, 1].map((side) => {
+        const arm = new THREE.Object3D()
+        arm.position.set(side * ARM_AT[0], ARM_AT[1], ARM_AT[2])
+        root.add(arm)
+        return arm
+      })
+      const head = new THREE.Object3D()
+      head.position.set(0, NECK_Y, 0)
+      root.add(head)
+      const rig = { root, head, nose: new THREE.Object3D(), cheeks: [null, null], ears: [null, null], arms }
+      const parts: [THREE.BufferGeometry, THREE.Object3D][] = [[shapes.body, root], ...arms.map((arm): [THREE.BufferGeometry, THREE.Object3D] => [shapes.arm, arm])]
+      const v = new THREE.Vector3()
+      for (let seed = 0; seed < 2; seed++) {
+        const director = new MotionDirector(species, seed, 0)
+        let [t, arrived] = [0, -Infinity]
+        for (let round = 0; round < 20; round++) {
+          const kind = kinds[round % kinds.length]
+          director.trigger(kind, t)
+          if (kind === 'arrive') arrived = t
+          for (let k = 0; k < 150; k += 4, t += 4 / 60) {
+            const since = (t - arrived) / 0.4
+            const pop = since < 1 ? Math.max(0.01, easeOutBack(since)) : 1
+            for (const reach of [0, 1]) {
+              const m = director.sample(t, reach > 0, reach)
+              for (const rumble of [0, 1]) {
+                const posed = { ...m, squash: m.squash + 0.06 * rumble, armForward: [m.armForward[0] + 0.5 * rumble, m.armForward[1] + 0.5 * rumble] as [number, number] }
+                poseGuest(rig, shapes, posed, { yaw: 0, pitch: 0 }, pop)
+                root.updateMatrixWorld(true)
+                for (const [geometry, node] of parts) {
+                  const position = geometry.attributes.position
+                  for (let i = 0; i < position.count; i += 2) farthest = Math.max(farthest, Math.hypot(v.fromBufferAttribute(position, i).applyMatrix4(node.matrixWorld).x, v.z))
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    expect(farthest).toBeLessThanOrEqual(GUEST_REACH)
+    expect(GUEST_REACH - farthest).toBeLessThan(0.5)
+  })
+
+  it('holds each seated guest\'s arms inside its collider as it idles and rumbles', () => {
+    for (const seat of seats) {
+      const floor = feedingFloor(FEEDING.seats[seat].guest, GUEST_RADIUS * UNIT)
+      const arms = guestArms(seat).map((arm) => to3(arm))
+      let out = -Infinity
+      for (const m of idlePoses(seat)) {
+        for (const v of guestArmPoints(seat, m)) {
+          const past = Math.min(...arms.map((arm) => Math.max(Math.hypot(v.x - arm.x, v.z - arm.z) - GUEST_ARM.r, floor + GUEST_ARM.low - v.y, v.y - floor - GUEST_ARM.high)))
+          out = Math.max(out, past)
+        }
+      }
+      expect(out, `seat ${seat}: an arm reaches this far out of its collider (cm)`).toBeLessThan(0)
+      expect(out, `seat ${seat}: the arm colliders stand this far off the arms (cm)`).toBeGreaterThan(-0.4)
+    }
+  })
+
+  it('leans a stone tipped against a guest\'s side on its arm, never around it', () => {
+    const drawn = new Map(SIZES.map((q) => [q, drawnPoints(q)]))
+    let leaned = 0
+    for (const seat of seats) {
+      const species = SEAT_SPECIES[seat % SEAT_SPECIES.length]
+      const guest = to3(FEEDING.seats[seat].guest)
+      const armPoints = idlePoses(seat).filter((_, i) => i % 6 === 0).flatMap((m) => guestArmPoints(seat, m))
+      guestArms(seat).forEach((arm, side) => {
+        for (const q of [4, 1] as const) {
+          const physics = new TablePhysics()
+          physics.setMat('feeding')
+          physics.setPlates(FEEDING.seats.map(() => true))
+          physics.setGuest(`guest-${seat}`, seat, GUEST_TOP[species])
+          const a = to3(arm)
+          const u = new THREE.Vector3(guest.x - a.x, 0, guest.z - a.z).normalize()
+          const r = stoneRadius3(q)
+          const start = new THREE.Vector3(a.x, a.y, a.z).addScaledVector(u, -(GUEST_ARM.r + r * 0.55 + 0.5))
+          // Stood on its edge, its face to the guest and its top tipped 20 degrees toward it.
+          const turn = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-u.z, 0, u.x), (70 * Math.PI) / 180)
+          physics.addStone(1, q, toPlane(start), { y: r + 0.2 })
+          const body = physics.body(1)!
+          body.quaternion.set(turn.x, turn.y, turn.z, turn.w)
+          body.position.y = r + 0.2
+          run(physics, 2.5)
+          const { shape, local } = collider(body)
+          const deepest = Math.max(...armPoints.map((v) => depthInside(shape, local(toLocal(body, new CANNON.Vec3(v.x, v.y, v.z))))))
+          expect(deepest, `seat ${seat} ${side ? 'right' : 'left'} arm, size ${q}: the arm sinks this deep into the stone (cm)`).toBeLessThan(0.1)
+          const top = Math.max(...drawn.get(q)!.map((p) => toWorld(body, p).y))
+          if (top > floorOf(seat) + GUEST_ARM.low) leaned++
+        }
+      })
+    }
+    expect(leaned, 'stones left standing tall enough to reach an arm').toBeGreaterThan(8)
   })
 
   it('never stands a guest in the rug, its hem or the table', () => {

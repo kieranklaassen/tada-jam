@@ -95,15 +95,45 @@ export const GUEST_RADIUS = 64
 /** How tall (cm) a seated guest of each kind stands at its tallest, on the rug, ears, stretch, hop and springy arrival included: its collider stands as tall, so what is carried or flicked over it clears it. */
 export const GUEST_TOP: Record<Species, number> = { rabbit: 36.5, bear: 28.5, hedgehog: 25.5 }
 
-/** A free spot on a plate, spiralling out from the center and keeping clear of the guest. */
+/** Which way the guest at `seat` faces: toward the bowl, turned partway to the child. */
+export function guestYaw(seat: number): number {
+  const facing = FEEDING.seats[seat].facing
+  return Math.atan2(-facing.x * 0.8, -facing.y + 1.5)
+}
+
+/**
+ * Where a seated guest's arms hang as it idles, in its own turn (cm; x
+ * mirrored by side, z toward its front), how far round, and between what
+ * heights above its floor: its collider holds them as well as its body, so a
+ * stone rolled or leaning up against its side meets the arm, not its inside.
+ */
+export const GUEST_ARM = { x: 6.8, z: 1.95, r: 2.45, low: 3, high: 9.3 } as const
+
+/** The farthest (cm) a seated guest's arms or body reach out from its middle in any of its motion, waving, hopping and springing included: a stone hopped off a guest it leaned on lands farther out, unless it lay on the guest's plate. */
+export const GUEST_REACH = 12
+
+/** The middles of the guest at `seat`'s arms on the table, left then right (layout units). */
+export function guestArms(seat: number): [Point, Point] {
+  const { guest } = FEEDING.seats[seat]
+  const turn = guestYaw(seat)
+  const at = (side: number): Point => {
+    const x = side * GUEST_ARM.x
+    return { x: guest.x + (x * Math.cos(turn) + GUEST_ARM.z * Math.sin(turn)) / 0.1, y: guest.y + (-x * Math.sin(turn) + GUEST_ARM.z * Math.cos(turn)) / 0.1 }
+  }
+  return [at(-1), at(1)]
+}
+
+/** A free spot on a plate, spiralling out from the center and keeping clear of the guest and its arms. */
 export function freeSpotOnPlate(seat: number, occupied: readonly Point[], radius: number): Point {
   const { plate: center, guest } = FEEDING.seats[seat]
+  const arms = guestArms(seat)
   for (let ring = 0; ring < 4; ring++) {
     const count = ring === 0 ? 1 : ring * 6
     for (let k = 0; k < count; k++) {
       const angle = (k / count) * Math.PI * 2 + ring * 0.4
       const spot = { x: center.x + Math.cos(angle) * ring * radius * 2, y: center.y + Math.sin(angle) * ring * radius * 2 }
       if (Math.hypot(guest.x - spot.x, guest.y - spot.y) < GUEST_RADIUS + radius) continue
+      if (arms.some((arm) => Math.hypot(arm.x - spot.x, arm.y - spot.y) < GUEST_ARM.r / 0.1 + radius)) continue
       if (occupied.every((p) => Math.hypot(p.x - spot.x, p.y - spot.y) > radius * 1.9)) return spot
     }
   }

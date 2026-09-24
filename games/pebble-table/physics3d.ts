@@ -1,9 +1,10 @@
 import * as CANNON from 'cannon-es'
+import { GUEST_ARM, GUEST_RADIUS, guestYaw } from './feeding'
 import { JAR_SCALE, JARS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, HOUSE_REACH, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 import { JAR_LIFT, JAR_MOUTH, JAR_REACH, JAR_TOP, jarLabelBox, NEST_SPAN, partCollider, partRest } from './partShape'
-import { outlineCorners, STONE_CUTS, stoneOutline, stoneRest } from './stoneShape'
-import { BOWL_FLOOR, BOWL_OUTSIDE, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, HEM_LINE, HEM_POINTS, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, panOutline, panRimReach, PLATE_TOP, radiusAt, RUG, RUG_HEM_REACH, RUG_HEM_TOP, type Surfaces } from './surfaces'
+import { outlineCorners, STONE_CUTS, stoneOutline, stoneReachAlong, stoneRest } from './stoneShape'
+import { BOWL_FLOOR, BOWL_OUTSIDE, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, feedingFloor, HEM_LINE, HEM_POINTS, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, panOutline, panRimReach, PLATE_TOP, radiusAt, RUG, RUG_HEM_REACH, RUG_HEM_TOP, type Surfaces } from './surfaces'
 
 // Real stone physics (cannon-es) under the same world coordinates the game
 // rules use. One 3D unit is one centimetre and ten world units; the table
@@ -112,6 +113,9 @@ export class TablePhysics {
   private readonly stoneMaterial = new CANNON.Material('stone')
   private readonly woodMaterial = new CANNON.Material('wood')
   private readonly fixtures = new Map<string, CANNON.Body>()
+  private readonly guests = new Set<CANNON.Body>()
+  /** When (world time) each stone last touched a seated guest. */
+  private readonly touchedGuest = new Map<number, number>()
   /** The round fixtures something held must ride over, and how tall they stand. */
   private readonly tops = new Map<string, { circle: Circle; height: number }>()
   private readonly openJars = new Set<PartKind>()
@@ -383,11 +387,28 @@ export class TablePhysics {
     if (!overhung) this.tops.set(key, { circle, height })
   }
 
+  /** A seated guest stands as a post as wide as its body and as tall as it ever stretches, with its idling arms held at its sides. */
+  setGuest(key: string, seat: number, height: number): void {
+    const at = FEEDING.seats[seat].guest
+    this.setFixture(key, { ...at, r: GUEST_RADIUS }, height)
+    const body = this.fixtures.get(key)!
+    const turn = guestYaw(seat)
+    const middle = feedingFloor(at, GUEST_RADIUS * UNIT) + (GUEST_ARM.low + GUEST_ARM.high) / 2
+    const corner = GUEST_ARM.r / Math.cos(Math.PI / FIXTURE_SIDES)
+    for (const side of [-1, 1]) {
+      const x = side * GUEST_ARM.x
+      const offset = new CANNON.Vec3(x * Math.cos(turn) + GUEST_ARM.z * Math.sin(turn), middle, -x * Math.sin(turn) + GUEST_ARM.z * Math.cos(turn))
+      body.addShape(new CANNON.Cylinder(corner, corner, GUEST_ARM.high - GUEST_ARM.low, FIXTURE_SIDES), offset)
+    }
+    this.guests.add(body)
+  }
+
   removeFixture(key: string): void {
     const body = this.fixtures.get(key)
     if (body) {
       this.world.removeBody(body)
       this.fixtures.delete(key)
+      this.guests.delete(body)
     }
     this.tops.delete(key)
   }
@@ -479,6 +500,7 @@ export class TablePhysics {
     this.calm.delete(entry.body)
     this.world.removeBody(entry.body)
     this.stones.delete(id)
+    this.touchedGuest.delete(id)
   }
 
   hasStone(id: number): boolean {
@@ -491,6 +513,26 @@ export class TablePhysics {
 
   body(id: number): CANNON.Body | undefined {
     return this.stones.get(id)?.body
+  }
+
+  /** Whether a stone has come to rest and been put to sleep. */
+  asleep(id: number): boolean {
+    return this.body(id)?.sleepState === CANNON.Body.SLEEPING
+  }
+
+  /** Whether a stone touched a seated guest as it came to rest: asleep, it leans on the guest. */
+  leansOnGuest(id: number): boolean {
+    const body = this.body(id)
+    const touched = this.touchedGuest.get(id)
+    return body !== undefined && touched !== undefined && touched >= body.timeLastSleepy
+  }
+
+  /** The height (cm) of a stone's highest drawn point, as it lies. */
+  stoneTop(id: number): number | null {
+    const entry = this.stones.get(id)
+    if (!entry) return null
+    const { x, y, z, w } = entry.body.quaternion
+    return entry.body.position.y + stoneReachAlong(entry.q, 2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x))
   }
 
   /** Where a stone is on the table plane, in world units. */
@@ -612,6 +654,7 @@ export class TablePhysics {
         body.velocity.set((target.x - body.position.x) / time, (target.y - body.position.y) / time, (target.z - body.position.z) / time)
       }
       this.world.step(STEP)
+      this.noteLeaning()
       this.resistRolling()
       this.settleLooseParts()
       this.accumulator -= STEP
@@ -630,5 +673,20 @@ export class TablePhysics {
     const impacts = this.impacts
     this.impacts = []
     return { fallen, impacts, moving }
+  }
+
+  /** Notes when stones touch a seated guest: a stone resting against one touches it only now and then as it settles. */
+  private noteLeaning(): void {
+    if (this.guests.size === 0) {
+      this.touchedGuest.clear()
+      return
+    }
+    const touching = new Set<CANNON.Body>()
+    for (const { bi, bj } of this.world.contacts) {
+      if (this.guests.has(bi)) touching.add(bj)
+      else if (this.guests.has(bj)) touching.add(bi)
+    }
+    if (touching.size === 0) return
+    for (const [id, { body }] of this.stones) if (touching.has(body)) this.touchedGuest.set(id, this.world.time)
   }
 }

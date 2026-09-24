@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { FEEDING, type Point } from '../layout'
+import type { Point } from '../layout'
 import { SEAT_SPECIES, type MotionPose, type Species } from '../motion'
 import { feedingFloor } from '../surfaces'
 import { lump, merge, PALETTE, piece } from './clay'
@@ -302,10 +302,4 @@ export function speciesShapes(species: Species): GuestShapes {
 /** What the guest at `seat` stands on at `at`: the highest the feeding mat is anywhere under its feet (cm). */
 export function guestFloor(seat: number, at: Point): number {
   return feedingFloor(at, speciesShapes(SEAT_SPECIES[seat % SEAT_SPECIES.length]).footReach)
-}
-
-/** Which way the guest at `seat` faces: toward the bowl, turned partway to the child. */
-export function guestYaw(seat: number): number {
-  const facing = FEEDING.seats[seat].facing
-  return Math.atan2(-facing.x * 0.8, -facing.y + 1.5)
 }
