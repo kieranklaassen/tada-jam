@@ -50,8 +50,20 @@ export const PART_REACH: Record<PartKind, number> = {
 /** The eye's white ball: its centre height above the eye base, and its radius. */
 export const EYE_BALL = { center: 1.05, radius: 1.3 } as const
 export const PUPIL_RADIUS = 0.6
-/** How far a foot spreads from the end of its leg, so a tipped leg's heel stays on the floor too. */
-const FOOT_RADIUS = 1.7
+/**
+ * Where each paw's sole spreads at the end of its leg, as (x, z) in the leg's frame: toes forward, heel back, and
+ * its sides (measured from the shapes), so a tipped or swung leg keeps its toes and heel on the floor too.
+ */
+const SOLE = {
+  legStub: solePoints(1.65, 2.45, 1.5),
+  legLong: solePoints(1.55, 2.85, 1.5),
+} as const
+const SOLE_GAP = 0.02
+const FLANK_LIFT = 1.5
+function solePoints(side: number, toes: number, heel: number): (readonly [number, number])[] {
+  const d = 0.75
+  return [[0, toes], [0, -heel], [side, 0], [-side, 0], [side * d, toes * d], [-side * d, toes * d], [side * d, -heel * d], [-side * d, -heel * d]]
+}
 /** How thick each part is around its tip, for a critter's footprint: a foot, an eyeball, the head's whole ball. */
 const PART_GIRTH: Record<PartKind, number> = {
   legStub: 2.2,
@@ -405,7 +417,7 @@ export class Rig {
       out.multiply(this.R.makeRotationX(swing + wiggle))
       const bend = pose.legBend[Math.min(legOrder, pose.legBend.length - 1)]
       out.multiply(this.T.makeScale(sxz, length * sy * (1 - 0.28 * bend), sxz))
-      return this.footOnFloor(out, LEG_LENGTH[kind as 'legStub' | 'legLong'])
+      return this.footOnFloor(out, kind as 'legStub' | 'legLong')
     }
     if (family === 'tail') {
       ellipsoidPoint(dir, this.rx, this.ry, this.rz, surface)
@@ -439,15 +451,24 @@ export class Rig {
   }
 
   /** A leg never reaches through what its critter stands on: splayed, tipped, or swung, it is shortened so its foot rests on top. */
-  private footOnFloor(out: THREE.Matrix4, legLength: number): THREE.Matrix4 {
+  private footOnFloor(out: THREE.Matrix4, kind: 'legStub' | 'legLong'): THREE.Matrix4 {
+    if (!this.feetOnFloor) return out
     const e = out.elements
-    const down = -e[5] * legLength
-    if (down <= 0 || !this.feetOnFloor) return out
-    const upright = -e[5] / Math.hypot(e[4], e[5], e[6])
-    const floor = this.floor + FOOT_RADIUS * Math.sqrt(Math.max(0, 1 - upright * upright))
-    const room = e[13] - floor
-    if (room >= down) return out
-    return out.multiply(this.T.makeScale(1, Math.max(0.15, room / down), 1))
+    const down = -e[5] * LEG_LENGTH[kind]
+    const room = e[13] - this.floor - SOLE_GAP
+    let fit = 1
+    if (down > 0) for (const [x, z] of SOLE[kind]) fit = Math.min(fit, (room + e[1] * x + e[9] * z) / down)
+    fit = Math.max(0.15, fit)
+    // A leg splayed out flat can't lift its paw by being shorter: it sits a little higher up its critter's flank
+    // (its collar sinks deeper into the clay), and only past that is its paw slimmed.
+    let low = 0
+    for (const [x, z] of SOLE[kind]) low = Math.min(low, e[1] * x + e[9] * z)
+    const left = room - fit * Math.max(0, down)
+    const lift = Math.min(FLANK_LIFT, Math.max(0, -(left + low)))
+    const girth = low < 0 ? Math.min(1, Math.max(0.3, (left + lift) / -low)) : 1
+    e[13] += lift
+    if (fit >= 1 && girth >= 1) return out
+    return out.multiply(this.T.makeScale(girth, fit, girth))
   }
 
   private readonly anim: Anim = { sy: 1, sxz: 1, out: 0, wiggle: 0 }
