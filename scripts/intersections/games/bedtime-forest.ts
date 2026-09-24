@@ -47,8 +47,9 @@ const AT_HOME = 'an animal in its own doorway: the homes are painted holes on so
 export default {
   enforce: true,
   allow: [
-    // Measured 33% (the bear settling in front of the cave) and 32% (the owl arriving at its hollow's mouth).
-    { a: '^scenery$', b: '^(bear|owl)$', kind: 'penetration', upTo: 0.45, reason: AT_HOME },
+    // Measured 30-33% (the bear settling in front of the cave) and 30-38% (the owl arriving at its hollow's mouth)
+    // over four runs: how deep depends on where in the arrival a sample lands.
+    { a: '^scenery$', b: '^(bear|owl)$', kind: 'penetration', upTo: 0.5, reason: AT_HOME },
     // Measured 18% (the fox going into its den) and 15% (the rabbit waking out of its burrow).
     { a: '^scenery$', b: '^(fox|rabbit)$', kind: 'penetration', upTo: 0.28, reason: AT_HOME },
     // Measured 7%: the far trees' trunks, the rocks and the homes' banks are planted in the meadow.

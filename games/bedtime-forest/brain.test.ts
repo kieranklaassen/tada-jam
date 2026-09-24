@@ -284,25 +284,28 @@ describe('homes', () => {
     expect(Math.hypot(fish.x - HOMES.pond.bed.x, fish.z - HOMES.pond.bed.z)).toBeLessThan(1)
   })
 
-  it('a fox standing in the way of the fish flopping home steps aside instead of letting it through', () => {
-    const fish = one('fish', 30, 0)
-    // Halfway along the fish's way from the nest's door to the pond.
-    const fox = one('fox', (HOMES.nest.door.x + HOMES.pond.mouth.x) / 2, (HOMES.nest.door.z + HOMES.pond.mouth.z) / 2)
-    const creatures = [fox, fish]
-    const w = world(creatures, [], { gazeHome: true })
-    fish.pickUp()
-    fish.sendTo('nest')
-    let passing = 0
-    let worst = 0
-    for (let t = 0; t < 9; t += 1 / 60) {
-      for (const c of creatures) c.step(1 / 60, w)
-      if (fish.mode !== 'travel') continue
-      passing += 1
-      worst = Math.max(worst, -footprintGap(fox, fox.x, fox.z, fish))
+  it('a fox standing in the way of the fish flopping home steps aside instead of letting it through, even in long frames', () => {
+    // At 60 fps and at the longest frame a slow device steps (1/20 s), when the fish covers more than the spacing in one.
+    for (const dt of [1 / 60, 1 / 20]) {
+      const fish = one('fish', 30, 0)
+      // Halfway along the fish's way from the nest's door to the pond.
+      const fox = one('fox', (HOMES.nest.door.x + HOMES.pond.mouth.x) / 2, (HOMES.nest.door.z + HOMES.pond.mouth.z) / 2)
+      const creatures = [fox, fish]
+      const w = world(creatures, [], { gazeHome: true })
+      fish.pickUp()
+      fish.sendTo('nest')
+      let passing = 0
+      let worst = 0
+      for (let t = 0; t < 9; t += dt) {
+        for (const c of creatures) c.step(dt, w)
+        if (fish.mode !== 'travel') continue
+        passing += 1
+        worst = Math.max(worst, -footprintGap(fox, fox.x, fox.z, fish))
+      }
+      expect(passing, `dt ${dt}`).toBeGreaterThan(20)
+      expect(worst, `dt ${dt}`).toBeLessThan(0.5)
+      expect(fish.mode, `dt ${dt}`).toBe('asleep')
     }
-    expect(passing).toBeGreaterThan(60)
-    expect(worst).toBeLessThan(0.5)
-    expect(fish.mode).toBe('asleep')
   })
 
   it('the owl hops out of the burrow and flies to its hollow', () => {

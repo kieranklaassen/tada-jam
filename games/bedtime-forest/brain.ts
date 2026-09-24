@@ -128,6 +128,9 @@ const SPACING = 0.6
 const HEADROOM = 1.2
 /** A carried animal looks this far ahead along its path (seconds), so it is already up when it reaches someone. */
 const LOOKAHEAD = 0.18
+/** The longest step a frame takes (view/stage.tsx); one passing along the ground can cover more than SPACING in it. */
+const LONGEST_STEP = 1 / 20
+const ahead: Point = { x: 0, z: 0 }
 /** The unit direction from the second footprint toward the first, written by `footprintGap`. */
 export const apart: Point = { x: 0, z: 0 }
 
@@ -658,6 +661,14 @@ export class Creature {
     return this.spec.size * 0.9
   }
 
+  /** Where an animal on its way along a path (travelling home, coming out) will be `seconds` from now. */
+  pathAhead(seconds: number, out: Point): void {
+    const k = clamp01((this.modeT + seconds) / this.arcSeconds)
+    const u = this.mode === 'travel' && this.spec.kind === 'fish' ? k : ease(k)
+    out.x = lerp(this.from.x, this.to.x, u)
+    out.z = lerp(this.from.z, this.to.z, u)
+  }
+
   private separate(world: BrainWorld): void {
     const creatures = world.creatures
     for (let i = 0; i < creatures.length; i++) {
@@ -670,11 +681,19 @@ export class Creature {
       const landed = other.mode === 'react' && other.stage === 2
       const passing = (other.mode === 'travel' || other.mode === 'exit') && other.y < this.spec.footprint.top
       if (!(shares || landed || passing)) continue
-      const gap = footprintGap(this, this.x, this.z, other) - SPACING
+      const share = shares ? 0.5 : 1
+      let gap = footprintGap(this, this.x, this.z, other) - SPACING
       if (gap < 0) {
-        const share = shares ? 0.5 : 1
         this.x -= apart.x * gap * share
         this.z -= apart.z * gap * share
+      }
+      if (!passing) continue
+      // Room where it will be after the next frame, too, since it keeps moving after this one steps.
+      other.pathAhead(LONGEST_STEP, ahead)
+      gap = footprintGap(other, ahead.x, ahead.z, this) - SPACING
+      if (gap < 0) {
+        this.x += apart.x * gap
+        this.z += apart.z * gap
       }
     }
     clampToClearing(this, 0)
