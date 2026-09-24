@@ -4,7 +4,7 @@ import { MeshBVH } from 'three-mesh-bvh'
 import { describe, expect, it } from 'vitest'
 import { BAG_HEADING, bagExit, bagMouth, bagShape, bagTip, SACK_MOUTH, type BagShape } from './bag'
 import { TableController, yardSpots } from './controller'
-import { albumSlot, BAG, DOOR, FEEDING, SCALE, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
+import { albumSlot, BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, SCALE, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
 import { GUEST_TOP } from './feeding'
 import { MotionDirector, SEAT_SPECIES, type ActionKind } from './motion'
 import { STOOL_REACH, STOOL_TOP } from './partShape'
@@ -21,7 +21,6 @@ import {
   CHOOSER_SCALE,
   chooserGeometry,
   DOOR_FARTHEST,
-  DOOR_HINGE,
   doorLeafGeometry,
   doorSwing,
   easeOutBack,
@@ -42,7 +41,7 @@ import {
   type StoneMotion,
   type StoneState,
 } from './view/models'
-import { comingOut, DOOR_SWING, goingHome, VISITOR_GAP, VISITOR_REACH, visitorGone, visitorPose, visitorWalk, type VisitorPose, type VisitorTimes } from './visitors'
+import { comingOut, DOOR_HINGE, DOOR_SWING, doorwayGap, goingHome, houseGap, VISITOR_GAP, VISITOR_REACH, visitorGone, visitorPose, visitorWalk, type VisitorPose, type VisitorTimes } from './visitors'
 import { chunk } from './voice'
 
 // What the intersection audit (npm run check:intersections -- pebble-table)
@@ -614,6 +613,33 @@ describe('Knock-Knock visitors come and go clear of the house, its door and each
   it('swings the door out clear of its frame and the walls, however far a knock rattles it', () => {
     for (const angle of swings) expect(meets(houseTree, houseAt, leaf, leafAt(angle)), `angle ${angle}`).toBe(false)
     expect(Math.min(...pointsOf(leaf, leafAt(0)).map((v) => v.y))).toBeGreaterThanOrEqual(-1e-6)
+  })
+
+  it('keeps the swinging door in the doorway stones are cleared from', () => {
+    for (const angle of swings) {
+      for (const v of pointsOf(leaf, leafAt(angle))) expect(doorwayGap(toPlane(v), []) <= 0 || houseGap(toPlane(v)) <= 0, `angle ${angle}: ${v.x.toFixed(2)}, ${v.z.toFixed(2)}`).toBe(true)
+    }
+  })
+
+  it('stands the house solid over its drawn walls and shut door, and no farther', () => {
+    /** Stones lie and stack below this (cm). */
+    const lying = 8.5
+    const s = DOOR.houseScale
+    const drawn = [...pointsOf(house, new THREE.Matrix4()), ...pointsOf(leaf, new THREE.Matrix4().makeTranslation(...DOOR_HINGE))].filter((v) => v.y * s < lying)
+    for (const v of drawn) expect(houseGap({ x: DOOR.house.x + (v.x * s) / UNIT, y: DOOR.house.y + (v.z * s) / UNIT }), `${v.x.toFixed(2)}, ${v.z.toFixed(2)}`).toBeLessThanOrEqual(0)
+    const [walls, porch] = HOUSE_FOOTPRINT
+    const beside = drawn.filter((v) => Math.abs(v.x) > porch.right)
+    const front = drawn.filter((v) => v.z > walls.front)
+    const faces: [string, number, number][] = [
+      ['walls left', Math.min(...drawn.map((v) => v.x)), walls.left],
+      ['walls right', Math.max(...drawn.map((v) => v.x)), walls.right],
+      ['walls back', Math.min(...drawn.map((v) => v.z)), walls.back],
+      ['walls front', Math.max(...beside.map((v) => v.z)), walls.front],
+      ['porch left', Math.min(...front.map((v) => v.x)), porch.left],
+      ['porch right', Math.max(...front.map((v) => v.x)), porch.right],
+      ['porch front', Math.max(...drawn.map((v) => v.z)), porch.front],
+    ]
+    for (const [face, drawnAt, solidAt] of faces) expect(Math.abs(drawnAt - solidAt), face).toBeLessThan(0.35)
   })
 
   it('stands every visitor clear of every other on its spot, however they wiggle', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import * as CANNON from 'cannon-es'
-import { silentSound, TableController, type Projector } from './controller'
+import { silentSound, TableController, yardSpots, type Projector } from './controller'
 import { IDLE_BEFORE_HINT } from './guidance'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, shelfTile } from './layout'
 import { JARS, PART_COUNTS } from './parts'
@@ -11,6 +11,7 @@ import { panOf } from './scale'
 import { GUEST_RADIUS, GUEST_TOP, plateOf } from './feeding'
 import { SEAT_SPECIES } from './motion'
 import { accountedTotal, defaultTable } from './state'
+import { doorwayGap, GATE, HINGE, houseGap } from './visitors'
 
 // A straight-down orthographic "camera": screen pixels are world units.
 const topDown: Projector = {
@@ -236,6 +237,43 @@ describe('Knock-Knock', () => {
     knock(table, 5)
     run(table, 6)
     expect(out(table)).toHaveLength(5)
+  })
+
+  it('hops every stone lying where the door swings or the visitors walk out of their way, as they come out and as they go home', () => {
+    const table = doorTable()
+    const r = stoneRadius3(4) / UNIT
+    const homes = yardSpots([[0, 1, 2]])
+    const far = { x: 300, y: 250 }
+    for (const at of [{ x: HINGE.x + 60, y: HINGE.y + 45 }, GATE, homes[2], far]) {
+      drag(table, { x: BAG.x, y: BAG.y }, at)
+      run(table, 1)
+    }
+    const inWay = (list: readonly { x: number; y: number }[]) => table.state.pieces.filter((piece) => doorwayGap(piece, list) < r)
+    expect(inWay(homes)).toHaveLength(3)
+    const [away] = table.state.pieces.filter((piece) => doorwayGap(piece, homes) > 300).map((piece) => ({ x: piece.x, y: piece.y }))
+    expect(away).toBeDefined()
+    const clear = () => {
+      const pieces = table.state.pieces
+      expect(pieces).toHaveLength(4)
+      expect(table.physics.stoneIds()).toHaveLength(4)
+      for (const [i, a] of pieces.entries()) for (const b of pieces.slice(i + 1)) expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(r * 1.9)
+      for (const piece of pieces) expect(houseGap(piece)).toBeGreaterThan(r)
+    }
+    knock(table, 3)
+    for (let t = 0; t < 4 && table.door.openAt === null; t += 1 / 60) table.step(1 / 60)
+    expect(table.door.openAt).not.toBeNull()
+    expect(table.flightViews()).toEqual([])
+    expect(inWay(homes)).toEqual([])
+    run(table, 5)
+    expect(out(table)).toHaveLength(3)
+    expect(table.state.pieces.some((piece) => piece.x === away.x && piece.y === away.y)).toBe(true)
+    clear()
+    drag(table, { x: BAG.x, y: BAG.y }, homes[0])
+    run(table, 1)
+    expect(inWay(homes)).toHaveLength(1)
+    knock(table, 1)
+    run(table, 1)
+    expect(inWay(homes)).toEqual([])
   })
 
   it('never lets more than ten out', () => {

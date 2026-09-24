@@ -1,6 +1,6 @@
 import * as CANNON from 'cannon-es'
 import { JAR_SCALE, JARS, type PartKind } from './parts'
-import { BAG, DOOR, FEEDING, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
+import { BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, HOUSE_REACH, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 import { JAR_LIFT, JAR_MOUTH, JAR_REACH, JAR_TOP, jarLabelBox, NEST_SPAN, partCollider, partRest } from './partShape'
 import { outlineCorners, STONE_CUTS, stoneOutline, stoneRest } from './stoneShape'
 import { BOWL_FLOOR, BOWL_OUTSIDE, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, PLATE_TOP, radiusAt, RUG, type Surfaces } from './surfaces'
@@ -31,6 +31,8 @@ const FIXTURE_SIDES = 10
 const RUG_SIDES = 16
 const BOWL_SEGMENTS = 14
 const FALL_LIMIT = -12
+/** How tall the little house stands, for what is carried over it (cm). */
+const HOUSE_TOP = 34
 /** How deep the table and what lies on it are solid: a thin collider lets a fast stone sink past its middle and be pushed out underneath. */
 const SLAB = 4
 /** A sweeping finger's collider reaches this high above the table, and as deep into it. */
@@ -222,7 +224,7 @@ export class TablePhysics {
     for (const kind of LIDDED_JARS) this.removeFixture(`jar-${kind}`)
     this.removeFixture('nest')
     if (mat === 'door') {
-      this.setFixture('house', { ...DOOR.house, r: 130 * DOOR.houseScale }, 34)
+      this.addHouse()
       return
     }
     if (mat === 'feeding') {
@@ -359,6 +361,21 @@ export class TablePhysics {
     let top = 0
     for (const { circle, height } of this.tops.values()) if (Math.hypot(at.x - circle.x, at.y - circle.y) * UNIT < circle.r * UNIT + reach) top = Math.max(top, height)
     return top
+  }
+
+  /** The little house stands solid over its drawn walls and shut door (HOUSE_FOOTPRINT), as far into the table as above it. */
+  private addHouse(): void {
+    this.removeFixture('house')
+    const body = new CANNON.Body({ mass: 0, material: this.woodMaterial })
+    const at = to3(DOOR.house)
+    const s = DOOR.houseScale
+    body.position.set(at.x, 0, at.z)
+    for (const box of HOUSE_FOOTPRINT) {
+      body.addShape(new CANNON.Box(new CANNON.Vec3(((box.right - box.left) * s) / 2, HOUSE_TOP, ((box.front - box.back) * s) / 2)), new CANNON.Vec3(((box.right + box.left) * s) / 2, 0, ((box.front + box.back) * s) / 2))
+    }
+    this.world.addBody(body)
+    this.fixtures.set('house', body)
+    this.tops.set('house', { circle: { ...DOOR.house, r: HOUSE_REACH }, height: HOUSE_TOP })
   }
 
   addBag(): void {

@@ -1,5 +1,5 @@
-import { DOOR, type Point } from './layout'
-import { to3 } from './physics3d'
+import { DOOR, HOUSE_FOOTPRINT, type Point } from './layout'
+import { to3, UNIT } from './physics3d'
 
 // Knock-Knock's visitors: clay mice that come out of the little house's door
 // one after another, walk to their spots in the yard, and go back in the same
@@ -23,6 +23,46 @@ export const VISITOR_SPACING = VISITOR_REACH * 20 + 10
 export const VISITOR_GAP = VISITOR_SPACING / VISITOR_SPEED
 /** How long the door takes to swing open or shut; visitors wait for it. */
 export const DOOR_SWING = 0.45
+
+/** The door's hinge, house-local: at the frame's left edge and just proud of it, so the leaf swings out clear of the frame and walls. */
+export const DOOR_HINGE: [number, number, number] = [-3.4, 0, 10.75]
+/** Where the hinge stands on the table, in world units. */
+export const HINGE: Point = { x: DOOR.house.x + (DOOR_HINGE[0] * DOOR.houseScale) / UNIT, y: DOOR.house.y + (DOOR_HINGE[2] * DOOR.houseScale) / UNIT }
+/** How far the drawn door leaf reaches across the table from its hinge, in world units, as it swings out in front of the house. */
+export const DOOR_REACH = 110
+/** How far behind its hinge the open door lies, back against the front wall (world units). */
+const DOOR_BACK = 10
+
+/** How far `at` lies outside the little house's walls and shut door, in world units (below zero inside). */
+export function houseGap(at: Point): number {
+  const x = ((at.x - DOOR.house.x) * UNIT) / DOOR.houseScale
+  const z = ((at.y - DOOR.house.y) * UNIT) / DOOR.houseScale
+  let gap = Infinity
+  for (const box of HOUSE_FOOTPRINT) {
+    const dx = Math.max(box.left - x, x - box.right)
+    const dz = Math.max(box.back - z, z - box.front)
+    gap = Math.min(gap, dx > 0 || dz > 0 ? Math.hypot(Math.max(dx, 0), Math.max(dz, 0)) : Math.max(dx, dz))
+  }
+  return (gap * DOOR.houseScale) / UNIT
+}
+
+function toSegment(at: Point, a: Point, b: Point): number {
+  const [dx, dy] = [b.x - a.x, b.y - a.y]
+  const k = dx === 0 && dy === 0 ? 0 : Math.min(1, Math.max(0, ((at.x - a.x) * dx + (at.y - a.y) * dy) / (dx * dx + dy * dy)))
+  return Math.hypot(at.x - a.x - k * dx, at.y - a.y - k * dy)
+}
+
+/**
+ * How far `at` lies outside the doorway, in world units (below zero inside):
+ * where the door swings, in front of the house, and where visitors walk from
+ * the doorstep out through the gate to `homes`, and stand there.
+ */
+export function doorwayGap(at: Point, homes: readonly Point[]): number {
+  let gap = Math.max(Math.hypot(at.x - HINGE.x, at.y - HINGE.y) - DOOR_REACH, HINGE.y - DOOR_BACK - at.y)
+  gap = Math.min(gap, toSegment(at, DOORSTEP, GATE) - VISITOR_REACH / UNIT)
+  for (const home of homes) gap = Math.min(gap, toSegment(at, GATE, home) - VISITOR_REACH / UNIT)
+  return gap
+}
 
 export type VisitorTimes = { home: Point; outAt: number; leaveAt: number | null; pokeAt: number | null }
 
