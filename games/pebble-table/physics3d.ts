@@ -116,6 +116,10 @@ export function stoneCollider(q: Quarters): Collider {
 }
 
 type StoneEntry = { body: CANNON.Body; q: Quarters }
+/** A body's shapes placed in the world, and the pose (position, then quaternion) they were placed at. */
+type Placed = { pose: number[]; at: CANNON.Vec3[]; turn: CANNON.Quaternion[] }
+/** One of cannon's narrowphase tests for a pair of shape types, called as its `getContacts` calls it. */
+type Resolver = (this: CANNON.Narrowphase, ...args: unknown[]) => boolean | void
 
 export type StepReport = {
   fallen: number[]
@@ -132,6 +136,8 @@ export class TablePhysics {
   private readonly guests = new Set<CANNON.Body>()
   /** Each shell's or stick's biggest ball radius (cm). */
   private readonly balls = new Map<CANNON.Body, number>()
+  private readonly placed = new WeakMap<CANNON.Body, Placed>()
+  private readonly surfacing = { local: new CANNON.Vec3(), out: new CANNON.Vec3(), way: new CANNON.Vec3(), back: new CANNON.Quaternion() }
   /** What sunk found last while everything lay asleep, and where everything lay. */
   private lastSunk: { bodies: ReadonlySet<CANNON.Body>; poses: readonly number[]; out: Map<CANNON.Body, CANNON.Vec3> } | null = null
   /** When (world time) each stone last touched a seated guest. */
@@ -162,60 +168,117 @@ export class TablePhysics {
   }
 
   /**
+   * A body's shapes where cannon places them in the world (the same sums in
+   * the same order), worked out again only once the body has moved: cannon
+   * places every shape of the second body again for each shape of the first,
+   * and a stick is 47 balls.
+   */
+  private place(body: CANNON.Body): Placed {
+    const { position: p, quaternion: q } = body
+    let placed = this.placed.get(body)
+    if (placed) {
+      const pose = placed.pose
+      if (pose[0] === p.x && pose[1] === p.y && pose[2] === p.z && pose[3] === q.x && pose[4] === q.y && pose[5] === q.z && pose[6] === q.w) return placed
+    } else {
+      placed = { pose: [], at: body.shapes.map(() => new CANNON.Vec3()), turn: body.shapes.map(() => new CANNON.Quaternion()) }
+      this.placed.set(body, placed)
+    }
+    for (let i = 0; i < body.shapes.length; i++) {
+      q.mult(body.shapeOrientations[i], placed.turn[i])
+      q.vmult(body.shapeOffsets[i], placed.at[i])
+      placed.at[i].vadd(p, placed.at[i])
+    }
+    placed.pose = [p.x, p.y, p.z, q.x, q.y, q.z, q.w]
+    return placed
+  }
+
+  /** A chain of balls' bounds from its placed balls: each ball's are its middle give or take its radius, as cannon's are. */
+  private ballBounds(body: CANNON.Body): void {
+    const { at } = this.place(body)
+    const { lowerBound: low, upperBound: high } = body.aabb
+    for (let i = 0; i < at.length; i++) {
+      const { x, y, z } = at[i]
+      const r = (body.shapes[i] as CANNON.Sphere).radius
+      if (i === 0) {
+        low.set(x - r, y - r, z - r)
+        high.set(x + r, y + r, z + r)
+        continue
+      }
+      low.set(Math.min(low.x, x - r), Math.min(low.y, y - r), Math.min(low.z, z - r))
+      high.set(Math.max(high.x, x + r), Math.max(high.y, y + r), Math.max(high.z, z + r))
+    }
+    body.aabbNeedsUpdate = false
+  }
+
+  /**
    * cannon tries every shape of one body against every shape of the other
    * whenever their bounds meet: a stick of 47 balls lying on another is two
    * thousand tries a step, and a pour lands dozens of parts on each other at
    * once. A shape whose bounding sphere stays clear of the other body's bounds
-   * can touch none of its shapes, so leaving it out changes no contact.
+   * can touch none of its shapes, so leaving it out changes no contact. Pairs
+   * with many shapes are tried here as cannon tries them, in its order, but
+   * with each body's shapes placed once (see `place`) and only those near.
    */
   private onlyNearShapes(): void {
     const narrowphase = this.world.narrowphase
     const contacts = narrowphase.getContacts.bind(narrowphase)
+    const resolvers = narrowphase as unknown as Record<number, Resolver | undefined>
     const one: [CANNON.Body[], CANNON.Body[]] = [[], []]
-    const near = [0, 1].map(() => ({ shapes: [] as CANNON.Shape[], offsets: [] as CANNON.Vec3[], orientations: [] as CANNON.Quaternion[] }))
-    const centre = new CANNON.Vec3()
-    const keep = (body: CANNON.Body, other: CANNON.Body, into: (typeof near)[number]): boolean => {
-      into.shapes.length = into.offsets.length = into.orientations.length = 0
+    const near: [number[], number[]] = [[], []]
+    const [xi, xj, qi, qj] = [new CANNON.Vec3(), new CANNON.Vec3(), new CANNON.Quaternion(), new CANNON.Quaternion()]
+    const keep = (body: CANNON.Body, at: readonly CANNON.Vec3[], other: CANNON.Body, into: number[]): boolean => {
+      into.length = 0
       const { lowerBound: low, upperBound: high } = other.aabb
       for (let i = 0; i < body.shapes.length; i++) {
-        const shape = body.shapes[i]
-        body.quaternion.vmult(body.shapeOffsets[i], centre)
-        centre.vadd(body.position, centre)
-        const reach = shape.boundingSphereRadius + NEAR_SHAPES_SLACK
+        const centre = at[i]
+        const reach = body.shapes[i].boundingSphereRadius + NEAR_SHAPES_SLACK
         const dx = Math.max(low.x - centre.x, 0, centre.x - high.x)
         const dy = Math.max(low.y - centre.y, 0, centre.y - high.y)
         const dz = Math.max(low.z - centre.z, 0, centre.z - high.z)
-        if (dx * dx + dy * dy + dz * dz > reach * reach) continue
-        into.shapes.push(shape)
-        into.offsets.push(body.shapeOffsets[i])
-        into.orientations.push(body.shapeOrientations[i])
+        if (dx * dx + dy * dy + dz * dz <= reach * reach) into.push(i)
       }
-      return into.shapes.length > 0
+      return into.length > 0
     }
-    const swap = (body: CANNON.Body, into: (typeof near)[number]): void => {
-      ;[body.shapes, into.shapes] = [into.shapes, body.shapes]
-      ;[body.shapeOffsets, into.offsets] = [into.offsets, body.shapeOffsets]
-      ;[body.shapeOrientations, into.orientations] = [into.orientations, body.shapeOrientations]
-    }
+    const { KINEMATIC, STATIC } = CANNON.Body
     narrowphase.getContacts = (p1, p2, world, result, oldcontacts, frictionResult, frictionPool) => {
       for (let k = 0; k < p1.length; k++) {
         const [a, b] = [p1[k], p2[k]]
-        one[0][0] = a
-        one[1][0] = b
         if (a.shapes.length * b.shapes.length < NEAR_SHAPES_FROM) {
+          one[0][0] = a
+          one[1][0] = b
           contacts(one[0], one[1], world, result, oldcontacts, frictionResult, frictionPool)
           continue
         }
         if (a.aabbNeedsUpdate) a.updateAABB()
         if (b.aabbNeedsUpdate) b.updateAABB()
-        if (!keep(a, b, near[0]) || !keep(b, a, near[1])) continue
-        swap(a, near[0])
-        swap(b, near[1])
-        try {
-          contacts(one[0], one[1], world, result, oldcontacts, frictionResult, frictionPool)
-        } finally {
-          swap(a, near[0])
-          swap(b, near[1])
+        const [placedA, placedB] = [this.place(a), this.place(b)]
+        if (!keep(a, placedA.at, b, near[0]) || !keep(b, placedB.at, a, near[1])) continue
+        narrowphase.contactPointPool = oldcontacts
+        narrowphase.frictionEquationPool = frictionPool
+        narrowphase.result = result
+        narrowphase.frictionResult = frictionResult
+        const material = (a.material && b.material && world.getContactMaterial(a.material, b.material)) || null
+        const justTest = Boolean((a.type & KINEMATIC && b.type & STATIC) || (a.type & STATIC && b.type & KINEMATIC) || (a.type & KINEMATIC && b.type & KINEMATIC))
+        for (const i of near[0]) {
+          const si = a.shapes[i]
+          for (const j of near[1]) {
+            const sj = b.shapes[j]
+            if (!(si.collisionFilterMask & sj.collisionFilterGroup && sj.collisionFilterMask & si.collisionFilterGroup)) continue
+            if (placedA.at[i].distanceTo(placedB.at[j]) > si.boundingSphereRadius + sj.boundingSphereRadius) continue
+            const shapeMaterial = (si.material && sj.material && world.getContactMaterial(si.material, sj.material)) || null
+            narrowphase.currentContactMaterial = shapeMaterial || material || world.defaultContactMaterial
+            const resolver = resolvers[si.type | sj.type]
+            if (!resolver) continue
+            xi.copy(placedA.at[i])
+            xj.copy(placedB.at[j])
+            qi.copy(placedA.turn[i])
+            qj.copy(placedB.turn[j])
+            const hit = si.type < sj.type ? resolver.call(narrowphase, si, sj, xi, xj, qi, qj, a, b, si, sj, justTest) : resolver.call(narrowphase, sj, si, xj, xi, qj, qi, b, a, si, sj, justTest)
+            if (hit && justTest) {
+              world.shapeOverlapKeeper.set(si.id, sj.id)
+              world.bodyOverlapKeeper.set(a.id, b.id)
+            }
+          }
         }
       }
     }
@@ -585,7 +648,10 @@ export class TablePhysics {
       body.addShape(shape, offset)
     }
     for (const ball of collider.balls) body.addShape(new CANNON.Sphere(ball.r), new CANNON.Vec3(ball.x, ball.y, ball.z))
-    if (!collider.prism) this.balls.set(body, Math.max(...collider.balls.map((ball) => ball.r)))
+    if (!collider.prism) {
+      this.balls.set(body, Math.max(...collider.balls.map((ball) => ball.r)))
+      body.updateAABB = () => this.ballBounds(body)
+    }
     const p = to3(at, options.y ?? partRest(kind))
     body.position.set(p.x, p.y, p.z)
     if (options.yaw) body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), options.yaw)
@@ -820,46 +886,48 @@ export class TablePhysics {
    * stick's twig or tip landing on a stone) stayed in.
    */
   private surfaceBalls(): void {
-    const local = new CANNON.Vec3()
-    const out = new CANNON.Vec3()
-    const way = new CANNON.Vec3()
-    const back = new CANNON.Quaternion()
+    const { local, out, way, back } = this.surfacing
+    const { DYNAMIC, SLEEPING } = CANNON.Body
     for (const body of this.balls.keys()) {
-      if (body.type !== CANNON.Body.DYNAMIC || body.sleepState === CANNON.Body.SLEEPING) continue
+      if (body.type !== DYNAMIC || body.sleepState === SLEEPING) continue
       if (body.aabbNeedsUpdate) body.updateAABB()
       for (const { body: other } of this.stones.values()) {
-        if (other === body || other.type !== CANNON.Body.DYNAMIC) continue
+        if (other === body || other.type !== DYNAMIC) continue
         if (other.aabbNeedsUpdate) other.updateAABB()
         if (!body.aabb.overlaps(other.aabb)) continue
         other.quaternion.conjugate(back)
-        other.shapes.forEach((shape, s) => {
-          if (!(shape instanceof CANNON.ConvexPolyhedron)) return
+        for (let s = 0; s < other.shapes.length; s++) {
+          const shape = other.shapes[s]
+          if (!(shape instanceof CANNON.ConvexPolyhedron)) continue
           let need = 0
-          body.shapes.forEach((ball, b) => {
-            if (!(ball instanceof CANNON.Sphere)) return
-            body.quaternion.vmult(body.shapeOffsets[b], local)
-            local.vadd(body.position, local)
-            local.vsub(other.position, local)
+          const balls = this.place(body).at
+          for (let b = 0; b < body.shapes.length; b++) {
+            const ball = body.shapes[b] as CANNON.Sphere
+            balls[b].vsub(other.position, local)
             back.vmult(local, local)
             local.vsub(other.shapeOffsets[s], local)
-            if (local.length() >= shape.boundingSphereRadius) return
-            let [least, face] = [-Infinity, 0]
-            shape.faces.forEach((corners, f) => {
+            if (local.length() >= shape.boundingSphereRadius) continue
+            let least = -Infinity
+            let face = 0
+            for (let f = 0; f < shape.faces.length; f++) {
               const normal = shape.faceNormals[f]
-              const side = normal.dot(local) - normal.dot(shape.vertices[corners[0]])
-              if (side > least) [least, face] = [side, f]
-            })
-            if (least >= 0 || ball.radius - least <= need) return
+              const side = normal.dot(local) - normal.dot(shape.vertices[shape.faces[f][0]])
+              if (side > least) {
+                least = side
+                face = f
+              }
+            }
+            if (least >= 0 || ball.radius - least <= need) continue
             need = ball.radius - least
             out.copy(shape.faceNormals[face])
-          })
-          if (need === 0) return
+          }
+          if (need === 0) continue
           other.quaternion.vmult(out, way)
           body.position.addScaledVector(need, way, body.position)
           body.aabbNeedsUpdate = true
           const inward = body.velocity.vsub(other.velocity).dot(way)
           if (inward < 0) body.velocity.addScaledVector(-inward, way, body.velocity)
-        })
+        }
       }
     }
   }

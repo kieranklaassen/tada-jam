@@ -175,7 +175,7 @@ describe('TablePhysics', () => {
     expect(again).toBeLessThan(1.5)
   })
 
-  it('lands every jar tipped out onto stones on the scale exactly where trying every shape of each pair against every other does', () => {
+  it("lands every jar tipped out onto stones on the scale exactly where trying every shape of each pair against every other, with cannon's own bounds, does", () => {
     const topDown = { toScreen: (v: { x: number; z: number }) => toWorld2(v), toPlane: (screen: { x: number; y: number }) => screen }
     const pour = (everyShape: boolean) => {
       let seed = 11
@@ -183,7 +183,14 @@ describe('TablePhysics', () => {
       try {
         const pieces = [0, 1, 2, 3].map((i) => ({ id: 500 + i, q: 4 as const, x: 700 + i * 60, y: 640 }))
         const table = new TableController({ ...defaultTable(6), liveMat: 'scale', pieces, bag: 36 }, { save: () => {} })
-        if (everyShape) delete (table.physics.world.narrowphase as { getContacts?: unknown }).getContacts
+        if (everyShape) {
+          delete (table.physics.world.narrowphase as { getContacts?: unknown }).getContacts
+          const addPart = table.physics.addPart.bind(table.physics)
+          table.physics.addPart = (id, ...rest) => {
+            addPart(id, ...rest)
+            delete (table.physics.body(id) as { updateAABB?: unknown }).updateAABB
+          }
+        }
         table.setProjector(topDown)
         let [clock, contacts] = [0, 0]
         for (const kind of PART_KINDS) {
