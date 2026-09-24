@@ -5,7 +5,8 @@ import { QualityGovernor, startingTier, type QualitySettings } from '../quality'
 import { BAG, DOOR, FEEDING, SCALE, shelfTile, type Point } from '../layout'
 import { stoneRadius3, toWorld2 } from '../physics3d'
 import { stoneRest } from '../stoneShape'
-import { STOOL_REACH } from '../partShape'
+import { partReachDown, STOOL_REACH } from '../partShape'
+import { panOf } from '../scale'
 import { feedingFloor, RUG, surfaceUnder } from '../surfaces'
 import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
 import { visitorHome } from '../visitors'
@@ -62,16 +63,21 @@ function carrierMice(table: TableController): CarrierMouse[] {
   return carriers
 }
 
+/** Parts as physics has them, but never drawn dipping into the table or a pan's floor for the frames physics takes to push a landing part back out. */
 function partStates(table: TableController): PartState[] {
   const states: PartState[] = []
+  const floors = [table.physics.panFloor(0), table.physics.panFloor(1)]
   for (const part of table.state.parts) {
     const body = table.physics.body(part.id)
     if (!body) continue
+    const { x, y, z, w } = body.quaternion
+    const side = panOf(toWorld2(body.position))
+    const floor = side !== null && body.position.y > floors[side] ? floors[side] : 0
     states.push({
       id: part.id,
       kind: part.kind,
-      position: { x: body.position.x, y: body.position.y, z: body.position.z },
-      quaternion: [body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w],
+      position: { x: body.position.x, y: Math.max(body.position.y, floor + partReachDown(part.kind, x, y, z, w)), z: body.position.z },
+      quaternion: [x, y, z, w],
       held: table.isHeld(part.id),
     })
   }

@@ -7,8 +7,9 @@ import { TableController, yardSpots } from './controller'
 import { albumSlot, BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, SCALE, shelfTile, TABLE, type MatKey, type Quarters } from './layout'
 import { GUEST_TOP } from './feeding'
 import { MotionDirector, SEAT_SPECIES, type ActionKind } from './motion'
-import { STOOL_REACH, STOOL_TOP } from './partShape'
+import { partReachDown, partVertices, STOOL_REACH, STOOL_TOP } from './partShape'
 import { PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
+import { PART_KINDS } from './parts'
 import { panDrops } from './scale'
 import { defaultTable } from './state'
 import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneRest, stoneVertices } from './stoneShape'
@@ -233,6 +234,25 @@ function stoneGeometry(q: Quarters): THREE.BufferGeometry {
   geometry.attributes.position.array.set(stoneVertices(STONE_CUTS[q], STONE_SEGMENTS))
   return geometry
 }
+
+describe('loose parts are drawn on what they land on', () => {
+  it('measures how far a turned part reaches down to within a hair of its drawing, and never past it', () => {
+    let seed = 5
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
+    for (const kind of PART_KINDS) {
+      const v = partVertices(kind)
+      for (let trial = 0; trial < 40; trial++) {
+        const q = new THREE.Quaternion(random() - 0.5, random() - 0.5, random() - 0.5, random() - 0.5).normalize()
+        const down = new THREE.Vector3(0, -1, 0).applyQuaternion(q.clone().invert())
+        let reach = -Infinity
+        for (let i = 0; i < v.length; i += 3) reach = Math.max(reach, v[i] * down.x + v[i + 1] * down.y + v[i + 2] * down.z)
+        const measured = partReachDown(kind, q.x, q.y, q.z, q.w)
+        expect(measured, kind).toBeLessThanOrEqual(reach + 1e-6)
+        expect(measured, kind).toBeGreaterThan(reach - 0.03)
+      }
+    }
+  })
+})
 
 describe('stones squash, rock and pop without sinking or swelling into a neighbour', () => {
   const geometries = new Map(SIZES.map((q) => [q, stoneGeometry(q)]))
