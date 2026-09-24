@@ -131,6 +131,8 @@ const CREATURE_LIFT = 6
 const KNOB_HIT_PX = 30
 const BODY_SLOP_PX = 14
 const HOME_SECONDS = 0.55
+/** How high the hop home arcs over the table at its peak (cm). */
+const HOME_RISE = 7
 const NUDGE_EVERY = 7
 const RIPPLES = 10
 /** Displayed centres closer than this (cm) ease apart; about the width of one drawn creature. */
@@ -153,9 +155,16 @@ const TRAY_SEAT = 0.15
 /** How far `value` lies outside [min, max] (signed), or 0 inside. */
 const excess = (value: number, min: number, max: number) => (value < min ? value - min : value > max ? value - max : 0)
 
-/** How high a piece's underside sits: seated in its slot, lifted, or hopping, and never under the panel. */
+/** How high the hop home carries a piece this far into its flight, the lift it left with easing out. */
+function homeArc(piece: PieceSim): number {
+  if (piece.flying === 0) return 0
+  const k = 1 - piece.flying / HOME_SECONDS
+  return Math.sin(k * Math.PI) * HOME_RISE + piece.fromLift * (1 - k * k * (3 - 2 * k))
+}
+
+/** How high a piece's underside sits: seated in its slot, lifted, hopping, or flying home, and never under the panel. */
 export function pieceHeight(piece: PieceSim): number {
-  return (piece.pose.inTray && piece.flying === 0 ? TRAY_SEAT : 0) + Math.max(0, Math.max(0, piece.lift.x) + piece.hop.x)
+  return (piece.pose.inTray && piece.flying === 0 ? TRAY_SEAT : 0) + Math.max(0, Math.max(0, piece.lift.x) + piece.hop.x + homeArc(piece))
 }
 
 /** Whether a piece's knob is out (or still folding away as it flies home). */
@@ -427,8 +436,10 @@ export class GardenController {
         const e = k * k * (3 - 2 * k)
         piece.x = piece.fromX + (pose.x - piece.fromX) * e
         piece.y = piece.fromY + (pose.y - piece.fromY) * e
-        piece.lift.x = Math.sin(k * Math.PI) * 7 + piece.fromLift * (1 - e)
         if (piece.flying === 0) {
+          // Seated in its slot, with nothing left on the way to hold it up.
+          piece.lift.x = 0
+          piece.lift.v = 0
           piece.squash.v -= 2.2
           this.sound.home()
           this.wantStale = true
@@ -526,7 +537,7 @@ export class GardenController {
 
   /**
    * No creature's glass dips under the panel, and whatever is carried or flying home passes over what
-   * ranks below it (`pieceRank`) instead of through it. A carried thing starts to float up a little
+   * ranks below it (`pieceRank`) instead of through it. A carried or flying thing starts to float up a little
    * before it would touch, and never sinks into what it is over; the lowest rank goes first so each
    * rises over heights already settled this frame.
    */
@@ -539,7 +550,12 @@ export class GardenController {
     for (let i = 0; i < pieces.length; i++) {
       const piece = pieces[i]
       if (piece.flying === 0) continue
-      floorAt(piece.lift, this.pieceClearance(piece, i, piece.x, piece.y, piece.angle.x + piece.wobble.x, 0) - piece.hop.x)
+      const angle = piece.angle.x + piece.wobble.x
+      const arc = homeArc(piece)
+      // Along the rest of the flight, not only underfoot, so it is already up when it gets there.
+      const early = this.pieceClearance(piece, i, piece.x, piece.y, angle, RISE_EARLY, piece.pose.x, piece.pose.y)
+      springStep(piece.lift, Math.max(0, early - arc), dt, 260, 17)
+      floorAt(piece.lift, this.pieceClearance(piece, i, piece.x, piece.y, angle, 0) - arc - piece.hop.x)
     }
     for (let i = 0; i < creatures.length; i++) {
       const creature = creatures[i]
@@ -561,13 +577,16 @@ export class GardenController {
     }
   }
 
-  /** How high a piece's underside must be at (x, y), turned to `angle`, to clear what ranks below it: its body and its knob. */
-  private pieceClearance(piece: PieceSim, order: number, x: number, y: number, angle: number, pad: number): number {
+  /**
+   * How high a piece's underside must be at (x, y), turned to `angle`, to clear what ranks below it: its body
+   * and its knob. Given a point further on, it answers for the whole way there, so a move can rise in advance.
+   */
+  private pieceClearance(piece: PieceSim, order: number, x: number, y: number, angle: number, pad: number, toX = x, toY = y): number {
     const rank = pieceRank(piece)
     const knob = KNOB[piece.spec.kind]
-    const kx = x + Math.cos(angle + knob.angle) * knob.distance
-    const ky = y + Math.sin(angle + knob.angle) * knob.distance
-    const body = this.clearance(rank, order, x, y, x, y, PIECE_BODY[piece.spec.kind].reach, pad)
+    const kx = toX + Math.cos(angle + knob.angle) * knob.distance
+    const ky = toY + Math.sin(angle + knob.angle) * knob.distance
+    const body = this.clearance(rank, order, x, y, toX, toY, PIECE_BODY[piece.spec.kind].reach, pad)
     return Math.max(body, this.clearance(rank, order, x, y, kx, ky, KNOB_BODY.bead, pad))
   }
 
@@ -1088,6 +1107,9 @@ export class GardenController {
     piece.fromX = piece.x
     piece.fromY = piece.y
     piece.fromLift = Math.max(0, piece.lift.x)
+    // The arc carries the lift it left with; the spring is free to rise over what is on the way home.
+    piece.lift.x = 0
+    piece.lift.v = 0
     piece.pose.x = slot.x
     piece.pose.y = slot.y
     piece.pose.angle = this.nearestTurn(piece.angle.x, trayAngle(piece.spec.kind))
