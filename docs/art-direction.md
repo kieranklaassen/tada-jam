@@ -48,6 +48,8 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Hillside Spring | Painterly, Ghibli-like: a hand-painted terraced garden, unlit painted scenery, cel-lit movers, afternoon light shafts, gold bamboo on sage | [`games/hillside-spring/ART.md`](../games/hillside-spring/ART.md) |
 | Cosy Scarf | Knitted and crocheted yarn 3D: amigurumi animals, a chunky striped scarf on a honey-wood loom with a plain felt backboard, faint knitted snow hills under a ribbed knit sky | [`games/cosy-scarf/ART.md`](../games/cosy-scarf/ART.md) |
 | Kite Tower | Rainbow wood 3D: sanded beech with grain on every face, saturated stains on the toys only, bevelled blocks and lathe peg dolls in a pale morning playroom | [`games/kite-tower/ART.md`](../games/kite-tower/ART.md) |
+| Bad Neighbours | Pixel-drawn city façades (canvas 2D): stacked apartment blocks with residents behind every window, warm façades on a pale midday sky | [`games/bad-neighbours/ART.md`](../games/bad-neighbours/ART.md) |
+| Moon Phases | Brass orrery by lamplight: turned brass and walnut on a varnished table in a dim room, one warm sun lamp with visible rays, the child's own sky in a porthole | [`games/moon-phases/ART.md`](../games/moon-phases/ART.md) |
 
 ## 4. Menu of unclaimed directions
 

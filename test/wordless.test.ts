@@ -44,6 +44,26 @@ describe('wordless check', () => {
     expect(rules(source)).toEqual([])
   })
 
+  it('allows attribute values written as template literals or expressions', () => {
+    const source = `export const A = ({ on, i }: { on: boolean; i: number }) => (
+      <button className={\`round \${on ? 'is-on' : ''}\`} aria-label={\`Phase \${i + 1} of 8\`} data-step={String(i)} />
+    )`
+    expect(rules(source)).toEqual([])
+  })
+
+  it('flags attributes the browser draws as text', () => {
+    expect(rules('export const A = () => <input placeholder="Your name" />')).toEqual(['kid-text-attribute'])
+    expect(rules('export const A = (n: number) => <img alt={`${n} stones`} />')).toEqual(['kid-text-attribute'])
+    expect(rules("export const A = () => <button title={'Tap me'} />")).toEqual(['kid-text-attribute'])
+    expect(rules('export const A = (n: number) => <input value={n.toFixed(1)} />')).toEqual(['kid-text-attribute'])
+    expect(rules('export const A = () => <img alt="" />')).toEqual([])
+  })
+
+  it('still scans JSX passed through an attribute', () => {
+    expect(rules('export const A = () => <Slot icon={<p>Hi</p>} />')).toEqual(['kid-text-jsx'])
+    expect(rules("export const A = () => <Slot icon={<p>{'Hi'}</p>} />")).toEqual(['kid-text-literal'])
+  })
+
   it('allows a deliberate exception marked wordless-ok', () => {
     expect(rules('// wordless-ok: grown-up corner behind a hold gesture\nexport const A = () => <p>Volume</p>')).toEqual([])
   })

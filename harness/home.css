@@ -1,0 +1,519 @@
+/* Jam home page. Values follow the tada.computer landing hero in Figma
+   (landing_kid › hero, and the "apps" dock for the tiles). */
+
+.home {
+  --home-ink: #003c35;
+  --home-body: #3c555a;
+  --home-label: #3c3113;
+  --home-cream: #fbf8e4;
+  --home-rim: #e8dcb9;
+  --home-dock: #f7f5e7;
+  --home-magenta: #d21ca4;
+  --home-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --home-out: cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 16px;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: var(--home-ink);
+  font-family: 'Albert Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+.home *,
+.home *::before,
+.home *::after {
+  box-sizing: border-box;
+}
+
+.home-frame {
+  --drift: 0;
+  position: relative;
+  min-height: calc(100vh - 32px);
+  min-height: calc(100svh - 32px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  border: 5px solid var(--home-rim);
+  border-radius: 40px;
+  background: var(--home-cream);
+  animation: home-frame-in 700ms var(--home-out) both;
+}
+
+/* Logo: mark plus wordmark, centred at the top. */
+.home-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+  color: #39274e;
+  font-size: 25.137px;
+  font-weight: 500;
+  letter-spacing: -0.2514px;
+  line-height: 1;
+  animation: home-drop 700ms var(--home-out) 250ms both;
+}
+
+.home-logo img {
+  display: block;
+}
+
+.home-logo-jam {
+  padding: 4px 10px 5px;
+  border-radius: 999px;
+  background-image: linear-gradient(-49.57deg, #ff8342 4.82%, #d11ba4 59.91%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.home-main {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 760px);
+  padding: 44px 24px calc(13vw + 24px);
+  text-align: center;
+}
+
+.home-eyebrow {
+  margin: 0 0 18px;
+  background-image: linear-gradient(267.85deg, #ff8342 26.28%, #d11ba4 84.81%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+  animation: home-pop 650ms var(--home-spring) 380ms both;
+}
+
+.home-title {
+  max-width: 694px;
+  margin: 0;
+  color: var(--home-ink);
+  font-size: 54px;
+  font-weight: 600;
+  letter-spacing: -1.62px;
+  line-height: 1.12;
+}
+
+/* Words rise one after another, unblurring as they land. */
+.home-word {
+  display: inline-block;
+  margin-right: 0.24em;
+  animation: home-word 700ms var(--home-out) calc(450ms + var(--w) * 60ms) both;
+}
+
+.home-word:last-child {
+  margin-right: 0;
+}
+
+.home-lede {
+  max-width: 527px;
+  margin: 20px 0 0;
+  color: var(--home-body);
+  font-size: 18px;
+  letter-spacing: -0.18px;
+  line-height: 1.38;
+  animation: home-rise 700ms var(--home-out) 1000ms both;
+}
+
+/* The dock and its tiles. */
+.home-dock {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 19.2px;
+  margin: 42px 0 0;
+  padding: 19.2px 24px 14px;
+  list-style: none;
+  border-radius: 32px;
+  background: var(--home-dock);
+  box-shadow: 0 1px 0 #ffffff inset, 0 18px 40px -24px #6b5a2466;
+  animation: home-dock 650ms var(--home-out) 1100ms both;
+}
+
+.home-tile-slot {
+  --i: 0;
+  display: flex;
+  animation:
+    home-tile-in 750ms var(--home-spring) calc(1200ms + var(--i) * 120ms) both,
+    home-float 5s ease-in-out calc(2200ms + var(--i) * 400ms) infinite;
+}
+
+.home-tile {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --gloss-x: 30%;
+  --gloss-y: 20%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7.8px;
+  width: 112px;
+  padding: 0 0 4px;
+  border: 0;
+  background: none;
+  color: var(--home-label);
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transform: perspective(600px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transition: transform 220ms var(--home-out);
+}
+
+.home-tile:focus-visible {
+  outline: none;
+}
+
+.home-tile:focus-visible .home-tile-face {
+  outline: 3px solid var(--home-magenta);
+  outline-offset: 4px;
+}
+
+.home-tile-face {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  overflow: hidden;
+  border: 2.162px solid rgba(255, 255, 255, 0.1);
+  border-radius: 19.2px;
+  background: linear-gradient(45deg, #d055b1 0%, #ea82d0 83%);
+  box-shadow: 8.108px 7.568px 21.622px 0 rgba(0, 0, 0, 0.2);
+  transition: transform 200ms var(--home-spring), box-shadow 200ms;
+}
+
+.home-tile-face::after {
+  content: '';
+  position: absolute;
+  inset: -2.162px;
+  border-radius: inherit;
+  box-shadow: inset 1.622px -1.622px 3.784px 0 rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
+
+.home-tile-face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.home-tile-emoji {
+  font-size: 44px;
+  line-height: 1;
+}
+
+/* A soft highlight that follows the finger across the glass. */
+.home-tile-gloss {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--gloss-x) var(--gloss-y), rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 55%);
+  opacity: 0;
+  transition: opacity 200ms;
+  pointer-events: none;
+}
+
+.home-tile:hover .home-tile-gloss {
+  opacity: 1;
+}
+
+.home-tile:hover .home-tile-face {
+  transform: translateY(-4px) scale(1.06);
+  box-shadow: 10px 14px 26px 0 rgba(0, 0, 0, 0.22);
+}
+
+.home-tile:active .home-tile-face {
+  transform: scale(0.94);
+  transition-duration: 80ms;
+}
+
+.home-tile-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  line-height: 1.25;
+}
+
+.home-tile-age {
+  margin-top: -5px;
+  color: #3c311380;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.home-tile-yours {
+  cursor: default;
+}
+
+.home-tile-yours .home-tile-dashed {
+  display: block;
+  animation: home-breathe 3.2s ease-in-out 2.4s infinite;
+}
+
+/* Opening a game: the tile bounces, then its glass floods the frame. */
+.home-tile.is-launching {
+  position: relative;
+  z-index: 5;
+}
+
+.home-tile.is-launching .home-tile-face {
+  animation: home-launch 420ms cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+.home-tile.is-chosen .home-tile-face {
+  animation: home-chosen 650ms var(--home-spring) both;
+}
+
+.home-tile.is-chosen.is-launching .home-tile-face {
+  animation: home-launch 420ms cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+.home-dock.is-choosing .home-tile:not(.is-chosen) {
+  opacity: 0.45;
+  transition: opacity 300ms;
+}
+
+/* The button from the hero, repurposed: open any game at random. */
+.home-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+  padding: 20px 36px;
+  border: 0;
+  border-radius: 18px;
+  background-image: linear-gradient(-49.57deg, #ff8342 4.82%, #d11ba4 59.91%);
+  color: #ffffff;
+  font: inherit;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.44px;
+  line-height: 1.3;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -12px #d11ba4aa;
+  transition: transform 200ms var(--home-spring), box-shadow 200ms;
+  animation: home-rise 700ms var(--home-out) calc(1500ms + 120ms * 3) both;
+}
+
+.home-cta-icon {
+  width: 26px;
+  height: 26px;
+  flex: none;
+}
+
+.home-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -12px #d11ba4cc;
+}
+
+.home-cta:active {
+  transform: scale(0.97);
+}
+
+/* The fox landscape rises from the bottom of the frame and drifts with the pointer. */
+.home-landscape {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  aspect-ratio: 1410 / 332;
+  overflow: hidden;
+  pointer-events: none;
+  animation: home-landscape 1100ms var(--home-out) 120ms both;
+}
+
+.home-landscape img {
+  position: absolute;
+  top: 0;
+  left: -1.5%;
+  width: 103%;
+  height: 112%;
+  max-width: none;
+  transform: translateX(calc(var(--drift) * -18px));
+  transition: transform 900ms var(--home-out);
+}
+
+@keyframes home-frame-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.975);
+  }
+}
+
+@keyframes home-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes home-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+@keyframes home-word {
+  from {
+    opacity: 0;
+    transform: translateY(0.55em) rotate(4deg);
+    filter: blur(8px);
+  }
+}
+
+@keyframes home-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes home-dock {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.92);
+  }
+}
+
+@keyframes home-tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.4) rotate(-14deg);
+  }
+}
+
+@keyframes home-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes home-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes home-landscape {
+  from {
+    opacity: 0;
+    transform: translateY(35%);
+  }
+}
+
+@keyframes home-chosen {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.22) rotate(-6deg);
+  }
+  60% {
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes home-launch {
+  0% {
+    transform: scale(1.1);
+  }
+  25% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(22);
+    border-radius: 4px;
+  }
+}
+
+@media (max-width: 900px) {
+  .home-title {
+    font-size: 42px;
+    letter-spacing: -1.2px;
+  }
+  .home-lede {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .home {
+    padding: 10px;
+  }
+  .home-frame {
+    min-height: calc(100svh - 20px);
+    border-radius: 28px;
+  }
+  .home-logo {
+    font-size: 20px;
+  }
+  .home-eyebrow {
+    font-size: 24px;
+  }
+  .home-title {
+    font-size: 32px;
+    letter-spacing: -0.8px;
+  }
+  .home-main {
+    padding-top: 28px;
+  }
+}
+
+/* Short landscape screens (phones on their side): tighter vertical rhythm. */
+@media (max-height: 560px) and (min-width: 561px) {
+  .home-logo {
+    margin-top: 16px;
+  }
+  .home-main {
+    padding-top: 18px;
+  }
+  .home-eyebrow {
+    margin-bottom: 6px;
+    font-size: 22px;
+  }
+  .home-title {
+    font-size: 34px;
+  }
+  .home-lede {
+    display: none;
+  }
+  .home-dock {
+    margin-top: 20px;
+  }
+  .home-cta {
+    margin-top: 16px;
+    padding: 12px 26px;
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home *,
+  .home-frame {
+    animation: none !important;
+    transition: none !important;
+  }
+}

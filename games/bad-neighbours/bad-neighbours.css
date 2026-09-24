@@ -1,0 +1,168 @@
+.bn-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #b7dfeb;
+  color: #233c50;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.bn-world {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.bn-root button {
+  color: inherit;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bn-root svg {
+  width: 26px;
+  height: 26px;
+  flex: none;
+}
+
+.bn-controls {
+  position: absolute;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.bn-dock {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid #243e503a;
+  border-radius: 10px;
+  background: #fff3d9;
+  box-shadow: 0 4px 0 #3850602a;
+}
+
+.bn-control {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  transition: transform 80ms ease-out, background-color 80ms;
+}
+
+.bn-control.is-held,
+.bn-control:active {
+  transform: translateY(2px) scale(0.96);
+  background: #d8d5bf;
+}
+
+.bn-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.bn-root .bn-drop {
+  width: 84px;
+  background: #233c50;
+  color: #fff3d9;
+}
+
+.bn-root .bn-drop.is-held,
+.bn-root .bn-drop:active {
+  background: #304b60;
+}
+
+.bn-glue {
+  width: 72px;
+  height: auto;
+  border: 1px solid #856e42;
+  background: #e8c473;
+  box-shadow: 0 4px 0 #856e4260;
+}
+
+.bn-glue.is-held,
+.bn-glue:active {
+  background: #d9b562;
+}
+
+.bn-clear {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  left: 16px;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid #233c5040;
+  border-radius: 50%;
+  background: #eef1e3aa;
+  overflow: hidden;
+}
+
+/* The hold fills from the bottom so a grown-up can see the clear coming. */
+.bn-clear::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #d9654766;
+  transform: translateY(100%);
+}
+
+.bn-clear.is-holding::before {
+  transform: translateY(0);
+  transition: transform 800ms linear;
+}
+
+.bn-clear svg {
+  position: relative;
+}
+
+/* Short landscape phones: move and act from the two bottom corners so the tower keeps the middle. */
+@media (max-height: 500px) {
+  .bn-controls {
+    left: max(16px, env(safe-area-inset-left));
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    transform: none;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 520px) {
+  .bn-controls,
+  .bn-actions {
+    gap: 6px;
+  }
+  .bn-control {
+    width: 50px;
+    height: 54px;
+  }
+  .bn-root .bn-drop {
+    width: 64px;
+  }
+  .bn-glue {
+    width: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bn-control,
+  .bn-clear.is-holding::before {
+    transition: none;
+  }
+}
