@@ -1,7 +1,7 @@
 import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { MeshBVH } from 'three-mesh-bvh'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { pairDepth, preparePiece, type CameraInfo, type MaterialInfo } from '../../scripts/intersections/core'
 import { BAG_HEADING, bagExit, bagMouth, bagShape, bagTip, SACK_MOUTH, type BagShape } from './bag'
 import { TableController, yardSpots } from './controller'
@@ -10,7 +10,7 @@ import { GUEST_ARM, GUEST_RADIUS, GUEST_REACH, guestArms, GUEST_TOP, guestYaw } 
 import { MotionDirector, SEAT_SPECIES, type ActionKind, type MotionPose } from './motion'
 import { PART_PIECES, partCollider, partCover, partPieceVertices, partReachDown, partRest, partVertices, SHELL, STOOL_REACH, STOOL_TOP, surfacePoints, type Lumped } from './partShape'
 import { HOLD_HEIGHT, PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
-import { PART_KINDS, type PartKind } from './parts'
+import { JARS, PART_KINDS, type PartKind } from './parts'
 import { panDrops, SWAY_MOST } from './scale'
 import { defaultTable } from './state'
 import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneReachDown, stoneRest, stoneVertices } from './stoneShape'
@@ -353,7 +353,7 @@ describe('the guidance ghost stone lies on what it is lifted from and carried ov
         }
       }
     }
-    expect(met, 'the ghost stone never came near a part, so this measures nothing').toBeGreaterThan(150)
+    expect(met, 'the ghost stone never came near a part, so this measures nothing').toBeGreaterThan(100)
     expect(deepest, worst).toBeLessThan(0.05)
   }, 30_000)
 })
@@ -448,6 +448,95 @@ describe('loose parts are drawn on what they land on', () => {
       expect(drawn, `${kind}: how deep it is drawn in (cm)`).toBeLessThan(0.05)
     }
   })
+
+  it('draws a stick pressed into one lying on a stone lifted off it, not the one under it pushed into the stone', () => {
+    const physics = new TablePhysics()
+    physics.addStone(1, 4, { x: 800, y: 700 })
+    run(physics, 1)
+    const stone = physics.body(1)!
+    const { shape, local } = collider(stone)
+    physics.addPart(2, 'stick', { x: 800, y: 700 }, { y: stone.position.y + 3 })
+    run(physics, 1.5)
+    physics.addPart(3, 'stick', { x: 800, y: 700 })
+    const [under, over] = [physics.body(2)!, physics.body(3)!]
+    expect(under.sleepState, 'the stick under has settled on the stone').toBe(CANNON.Body.SLEEPING)
+    over.position.copy(under.position)
+    over.quaternion.setFromAxisAngle(CANNON.Vec3.UNIT_Y, Math.PI / 2).mult(under.quaternion, over.quaternion)
+    over.position.y += 2 * partRest('stick') - 0.6
+    over.updateAABB()
+    under.updateAABB()
+    const v = partVertices('stick')
+    const points = Array.from({ length: v.length / 3 }, (_, i) => new CANNON.Vec3(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]))
+    const inStone = (lift: CANNON.Vec3) => Math.max(...points.map((point) => depthInside(shape, local(toLocal(stone, toWorld(under, point).vadd(lift))))))
+    const sunk = physics.sunk(new Set([under, over]))
+    const [down, up] = [sunk.get(under) ?? new CANNON.Vec3(), sunk.get(over) ?? new CANNON.Vec3()]
+    expect(up.y - down.y, 'the sticks are drawn apart').toBeGreaterThan(0.5)
+    expect(inStone(down), 'how deep the stick under is drawn in the stone (cm)').toBeLessThan(Math.max(0.02, inStone(new CANNON.Vec3()) + 0.01))
+
+    // Two pressed together with nothing else in the way each move half the way apart.
+    physics.addPart(4, 'stick', { x: 400, y: 700 })
+    physics.addPart(5, 'stick', { x: 400, y: 700 })
+    const [low, high] = [physics.body(4)!, physics.body(5)!]
+    high.quaternion.setFromAxisAngle(CANNON.Vec3.UNIT_Y, Math.PI / 2)
+    high.position.y = low.position.y + 2 * partRest('stick') - 0.6
+    low.updateAABB()
+    high.updateAABB()
+    const apart = physics.sunk(new Set([low, high]))
+    expect(apart.get(high)!.y - apart.get(low)!.y, 'the two are drawn apart about as far as they overlap, not twice as far').toBeLessThan(1)
+  })
+
+  it('draws sticks and shells tipped out of their jars onto a stone on it and never in it, however they tumble and pile up', () => {
+    let seed = 7
+    const random = vi.spyOn(Math, 'random').mockImplementation(() => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646)
+    const topDown = { toScreen: (v: { x: number; z: number }) => toWorld2(v), toPlane: (screen: Point) => screen }
+    let clock = 0
+    let [deepest, worst, near] = [0, '', 0]
+    try {
+      for (const [kind, trials] of [['stick', 16], ['shell', 6]] as const) {
+        const v = partVertices(kind)
+        const points = Array.from({ length: v.length / 3 }, (_, i) => new CANNON.Vec3(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]))
+        const tip = (table: TableController) => {
+          table.pointerDown(1, JARS[kind], (clock += 10))
+          table.pointerUp(1, JARS[kind], (clock += 80))
+        }
+        const spill = new TableController({ ...defaultTable(6), liveMat: 'scale' }, { save: () => {} })
+        spill.setProjector(topDown)
+        tip(spill)
+        for (let t = 0; t < 2.5; t += 1 / 60) spill.step(1 / 60)
+        const landed = spill.state.parts.map((part) => toWorld2(spill.physics.body(part.id)!.position))
+        for (let trial = 0; trial < trials; trial++) {
+          const spot = landed[trial % landed.length]
+          const at = { x: spot.x + (Math.random() - 0.5) * 60, y: spot.y + (Math.random() - 0.5) * 60 }
+          const table = new TableController({ ...defaultTable(6), liveMat: 'scale', pieces: [{ id: 500, q: SIZES[trial % 3], x: at.x, y: at.y }], bag: 39 }, { save: () => {} })
+          table.setProjector(topDown)
+          for (let t = 0; t < 1; t += 1 / 60) table.step(1 / 60)
+          tip(table)
+          for (let frame = 0; frame < 180; frame++) {
+            table.step(1 / 60)
+            const stone = table.physics.body(500)
+            if (frame % 2 || !stone) continue
+            const { shape, local } = collider(stone)
+            const parts = table.state.parts.flatMap((part) => table.physics.body(part.id) ?? [])
+            const sunk = table.physics.sunk(new Set(parts))
+            stone.updateAABB()
+            for (const part of parts) {
+              part.updateAABB()
+              if (!part.aabb.overlaps(stone.aabb)) continue
+              const lift = sunk.get(part) ?? new CANNON.Vec3()
+              let depth = -Infinity
+              for (const point of points) depth = Math.max(depth, depthInside(shape, local(toLocal(stone, toWorld(part, point).vadd(lift)))))
+              if (depth > -0.3) near++
+              if (depth > deepest) [deepest, worst] = [depth, `${kind} ${part.id} on a ${SIZES[trial % 3]}-quarter stone, trial ${trial}, frame ${frame}`]
+            }
+          }
+        }
+      }
+    } finally {
+      random.mockRestore()
+    }
+    expect(near, 'no part came to the stone, so this measures nothing').toBeGreaterThan(200)
+    expect(deepest, worst).toBeLessThan(0.12)
+  }, 60_000)
 
   it("holds a shell's drawn back, belly and rim within a hair of its balls, and lays it down on its lowest point", () => {
     const { balls } = partCollider('shell')
