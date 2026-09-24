@@ -226,6 +226,11 @@ export const createSim: CreateSim<PondSnapshot> = (config): Sim<PondSnapshot> =>
   let lines = 0
   let spacing = 0
   let lastLines = 0
+  // Recent raw readings of the still lines while the pair sits settled. The
+  // running energy keeps a faint ripple at twice the wave frequency, which
+  // switches the outermost, marginal line on and off every half period, so the
+  // published count is the peak over more than a full burst of ticks.
+  const recent: number[] = []
 
   const emit = (event: SimEvent) => {
     if (pending.length >= MAX_EVENTS) pending.shift()
@@ -404,14 +409,19 @@ export const createSim: CreateSim<PondSnapshot> = (config): Sim<PondSnapshot> =>
     pairState = 'none'
     lines = 0
     spacing = 0
+    if (steady.length !== 2) recent.length = 0
     if (steady.length === 2) {
       const [a, b] = steady as [Source, Source]
       const d = Math.hypot(b.x - a.x, b.y - a.y)
       spacing = d / wavelength
       const since = Math.min(tick - Math.max(a.born, a.movedAt), tick - Math.max(b.born, b.movedAt))
-      if (since < SETTLE_BASE + d / WAVE_PX_PER_TICK) pairState = 'settling'
-      else {
-        lines = dipsBetween(a, b)
+      if (since < SETTLE_BASE + d / WAVE_PX_PER_TICK) {
+        pairState = 'settling'
+        recent.length = 0
+      } else {
+        recent.push(dipsBetween(a, b))
+        if (recent.length > burstTicks + 4) recent.shift()
+        lines = Math.max(...recent)
         pairState = lines === 0 ? 'flat' : lines <= 2 ? 'l2' : lines <= 4 ? 'l4' : 'l6'
       }
     }

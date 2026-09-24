@@ -218,6 +218,44 @@ describe('the rule behind it', () => {
     expect(new Set([signatureFor(0.3), signatureFor(1.6), signatureFor(3.6)]).size).toBe(3)
   })
 
+  it('a pair held perfectly still reads the same pattern tick after tick, with no new "lines" events', () => {
+    // Seed 9 is the narrowest pond (84 px ripples). Two wavelengths apart the
+    // outermost line beside each stone is marginal: the running energy keeps a
+    // faint ripple at twice the wave rate, which used to switch it on and off
+    // every few ticks (264 signature changes in 700 ticks) while nothing moved.
+    const sim = start({ seed: 9 })
+    expect(sim.snapshot().wavelength).toBe(84)
+    // Corks out of the way, so a parked cork does not change the signature.
+    sim.snapshot().corks.forEach((c, i) => {
+      sim.pointer({ id: 30 + i, phase: 'down', x: c.x, y: c.y })
+      sim.pointer({ id: 30 + i, phase: 'move', x: 60 + i * 60, y: 60 })
+      sim.pointer({ id: 30 + i, phase: 'up', x: 60 + i * 60, y: 60 })
+    })
+    sim.observe()
+    const d = 2 * 84
+    sim.pointer({ id: 1, phase: 'down', x: CX - d / 2, y: CY })
+    sim.pointer({ id: 2, phase: 'down', x: CX + d / 2, y: CY })
+    // The pattern is read from about tick 50 and is fully built by about tick
+    // 80 (the running energy is still filling in); from tick 120 nothing is
+    // moving and the reading must not move either.
+    const BUILT = 120
+    const signatures = new Set<string>()
+    const lineCounts = new Set<number>()
+    let lineEvents = 0
+    for (let t = 1; t <= 700; t++) {
+      sim.step()
+      const o = sim.observe()
+      if (t < BUILT) continue
+      signatures.add(o.signature)
+      lineCounts.add(o.features.lines)
+      lineEvents += o.events.filter((e) => e.name === 'lines').length
+    }
+    expect([...signatures]).toHaveLength(1)
+    expect([...signatures][0]).toMatch(/^pair-l[246]\/p0$/)
+    expect(lineCounts.size).toBe(1)
+    expect(lineEvents).toBe(0)
+  })
+
   it('a pair that has only just been dropped reads as settling, not as a pattern', () => {
     const sim = start()
     holdPair(sim, 1.6, 20)
