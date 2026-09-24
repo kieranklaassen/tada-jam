@@ -5,6 +5,7 @@
 // check, the stacked friend's hook, and the shared contract points.
 
 import { describe, expect, it } from 'vitest'
+import { FIELD_H, FIELD_W } from '../../kit/sim.ts'
 import type { Sim } from '../../kit/sim.ts'
 import { meta } from './meta.ts'
 import { RULE_IDS, SINGLES, STACKS, applyRule, createSim, friendsFor, LONG_TICKS, SHORT_TICKS, STRING_LEN } from './sim.ts'
@@ -359,6 +360,63 @@ describe('determinism, affordances, hints', () => {
     sim.pointer({ id: 1, phase: 'up', x: 0, y: 0 })
     const c = snap(sim).friends[0]!
     expect(Math.hypot(c.can.x - c.ax, c.can.y - c.ay)).toBeLessThanOrEqual(STRING_LEN + 35)
+  })
+
+  it('every affordance stays inside the field after every step, even when a taut can is dragged to an edge and let go', () => {
+    const inField = (sim: Sim<AnswerSnapshot>, where: string) => {
+      for (const a of sim.affordances()) {
+        const at = `${where}: affordance ${JSON.stringify(a)}`
+        expect(a.w, at).toBeGreaterThan(0)
+        expect(a.h, at).toBeGreaterThan(0)
+        expect(a.x, at).toBeGreaterThanOrEqual(0)
+        expect(a.y, at).toBeGreaterThanOrEqual(0)
+        expect(a.x + a.w, at).toBeLessThanOrEqual(FIELD_W)
+        expect(a.y + a.h, at).toBeLessThanOrEqual(FIELD_H)
+      }
+    }
+    // Edges, corners and the exact spots that used to stretch a can off the top.
+    const targets: Array<[number, number]> = [
+      [800, 60],
+      [800, 20],
+      [800, -200],
+      [60, 60],
+      [60, 400],
+      [-300, -300],
+      [500, 60],
+      [900, 60],
+      [800, 640],
+      [800, 900],
+      [60, 640],
+      [1170, 10],
+      [1170, 400],
+    ]
+    for (const seed of [1, 2, 3]) {
+      for (let slot = 0; slot < 3; slot++) {
+        for (const [tx, ty] of targets) {
+          const sim = start({ seed })
+          const from = snap(sim).friends[slot]!.can
+          const where = `seed ${seed}, friend ${slot}, drag to ${tx},${ty}`
+          sim.pointer({ id: 1, phase: 'down', x: from.x, y: from.y })
+          inField(sim, where)
+          for (let s = 1; s <= 8; s++) {
+            sim.pointer({ id: 1, phase: 'move', x: from.x + ((tx - from.x) * s) / 8, y: from.y + ((ty - from.y) * s) / 8 })
+            inField(sim, where)
+            sim.step()
+            inField(sim, where)
+          }
+          sim.pointer({ id: 1, phase: 'up', x: tx, y: ty })
+          inField(sim, where)
+          for (let s = 0; s < 40; s++) {
+            sim.step()
+            inField(sim, where)
+          }
+          // The can is still reachable, and a taut can stays taut when let go.
+          const end = snap(sim).friends[slot]!
+          expect(end.can.y, where).toBeGreaterThanOrEqual(0)
+          expect(end.can.y, where).toBeLessThanOrEqual(FIELD_H)
+        }
+      }
+    }
   })
 
   it('hints ring something after a quiet spell, only when on, and never change the outcome', () => {

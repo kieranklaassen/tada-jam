@@ -338,12 +338,19 @@ export const createSim: CreateSim<AnswerSnapshot> = (config): Sim<AnswerSnapshot
     f.heldBy = null
     if (t.moved) {
       // Let go: a string that is tight enough pulls straight and stays tight.
+      // The stretch goes through place(), so the can stays inside the yard; if
+      // the yard's edge would leave it looser than it was, it stays where it is.
       if (f.taut) {
         const d = Math.hypot(f.x - f.ax, f.y - f.ay)
         if (d > 0) {
-          f.x = f.ax + ((f.x - f.ax) * STRING_LEN) / d
-          f.y = f.ay + ((f.y - f.ay) * STRING_LEN) / d
+          const keep = { x: f.x, y: f.y }
+          const dist = place(f, f.ax + ((f.x - f.ax) * STRING_LEN) / d, f.ay + ((f.y - f.ay) * STRING_LEN) / d)
+          if (dist < d) {
+            f.x = keep.x
+            f.y = keep.y
+          }
         }
+        updateTaut(f)
       }
     } else if (commit) knock(f, t.friend)
   }
