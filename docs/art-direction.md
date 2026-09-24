@@ -49,6 +49,8 @@ Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidanc
 | Cosy Scarf | Knitted and crocheted yarn 3D: amigurumi animals, a chunky striped scarf on a honey-wood loom with a plain felt backboard, faint knitted snow hills under a ribbed knit sky | [`games/cosy-scarf/ART.md`](../games/cosy-scarf/ART.md) |
 | Alien Frontier (showcase, owner-approved, not a cartridge) | Low-poly space western: a prebuilt open world at dusk, pink-violet skies over a golden prairie, bloom and shadowed light | [`showcase/alien-frontier/`](../showcase/alien-frontier/) |
 | Kite Tower | Rainbow wood 3D: sanded beech with grain on every face, saturated stains on the toys only, bevelled blocks and lathe peg dolls in a pale morning playroom | [`games/kite-tower/ART.md`](../games/kite-tower/ART.md) |
+| Bad Neighbours | Pixel-drawn city façades (canvas 2D): stacked apartment blocks with residents behind every window, warm façades on a pale midday sky | [`games/bad-neighbours/ART.md`](../games/bad-neighbours/ART.md) |
+| Moon Phases | Brass orrery by lamplight: turned brass and walnut on a varnished table in a dim room, one warm sun lamp with visible rays, the child's own sky in a porthole | [`games/moon-phases/ART.md`](../games/moon-phases/ART.md) |
 
 ## 4. Menu of unclaimed directions
 

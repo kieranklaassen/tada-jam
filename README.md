@@ -21,6 +21,17 @@ Open the printed URL (Vite binds to your LAN too, so an iPad on the same network
 
 Saved state lives in the browser's `localStorage` under `tada-jam:slot:<key>`, with the same 2-second debounce, flush-on-park, flush-on-hide, and 64 KB cap the Tada server enforces. Turning the device to portrait covers the game with a wordless "turn sideways" picture.
 
+## Deploy
+
+The jam is a static Vite site; `vercel.json` holds the build settings. From the repo root:
+
+```bash
+vercel          # preview deployment
+vercel --prod   # production
+```
+
+Routes are hash-based (`#/play/<key>`), so no rewrites are needed.
+
 ## Look
 
 Every game looks different, and every game meets the same quality bar. [`docs/art-direction.md`](docs/art-direction.md) holds the bar (alive at idle, motion and sound on every touch, weight and squash, kid-clear, wordless guidance, 60 fps on an iPad, no external assets), the registry of claimed styles (Pebble Table is claymation 3D), and a menu of unclaimed directions.
@@ -69,6 +80,8 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Game | Folder | Ages | What it is |
 | --- | --- | --- | --- |
 | Pebble Table | `games/pebble-table/` | 3–7 | A claymation table in 3D: a bag of ten clay stones, the Honest Scale, and Fair Feeding with clay guests, where quantity is felt through play. Plan: `docs/plans/2026-09-22-001-feat-pebble-table-plan.md`. |
+| Bad Neighbours | `games/bad-neighbours/` | 4–8 | Drop wobbly apartment buildings onto a construction slab and watch the residents live in them. Physics stacking (matter.js) with secured foundations; a fallen building parachutes its resident out and returns to the queue. No score, no lives. |
+| Moon Phases | `games/moon-phases/` | 6–10 | A brass orrery on a table in three.js: the sun lamp always lights half the moon, and a round window shows the sky from the child's home on a turning Earth, day or night, with the moon up or set and flipped south of the equator. |
 
 ## License
 

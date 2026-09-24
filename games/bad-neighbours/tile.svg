@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="red" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ef9a7a"/><stop offset="1" stop-color="#c45a45"/></linearGradient>
+    <linearGradient id="ochre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1d08e"/><stop offset="1" stop-color="#cf9f4f"/></linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9c4d6"/><stop offset="1" stop-color="#5f86a3"/></linearGradient>
+    <linearGradient id="slab" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a5e6b"/><stop offset="1" stop-color="#2d3c46"/></linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff4c9"/><stop offset="0.55" stop-color="#ffd978"/><stop offset="1" stop-color="#ffd978" stop-opacity="0"/></radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#1b3a4d" flood-opacity="0.35"/></filter>
+  </defs>
+  <circle cx="78" cy="21" r="15" fill="url(#sun)"/>
+  <ellipse cx="24" cy="26" rx="13" ry="4" fill="#ffffff" opacity="0.55"/>
+  <ellipse cx="30" cy="23" rx="7" ry="4.5" fill="#ffffff" opacity="0.55"/>
+  <g filter="url(#soft)">
+    <rect x="16" y="80" width="68" height="9" rx="2.5" fill="url(#slab)"/>
+    <rect x="16" y="80" width="68" height="3.2" rx="1.2" fill="#e6c469"/>
+    <!-- The red row: the long one at the bottom. -->
+    <rect x="20" y="63" width="60" height="17" rx="2.5" fill="url(#red)"/>
+    <rect x="20" y="63" width="60" height="2.6" rx="1.2" fill="#f8c2a6" opacity="0.8"/>
+    <g fill="#ffd98a"><rect x="25" y="68" width="7" height="8" rx="1"/><rect x="45" y="68" width="7" height="8" rx="1"/><rect x="65" y="68" width="7" height="8" rx="1"/></g>
+    <g fill="#35505f"><rect x="35" y="68" width="7" height="8" rx="1"/><rect x="55" y="68" width="7" height="8" rx="1"/></g>
+    <!-- The corner café, square and sensible. -->
+    <rect x="24" y="41" width="27" height="22" rx="2.5" fill="url(#ochre)"/>
+    <rect x="24" y="41" width="27" height="2.6" rx="1.2" fill="#fbe6b8" opacity="0.9"/>
+    <g fill="#ffd98a"><rect x="28" y="46" width="7" height="8" rx="1"/></g>
+    <g fill="#35505f"><rect x="40" y="46" width="7" height="8" rx="1"/></g>
+    <g><rect x="39" y="55" width="9" height="3" fill="#b95543"/><rect x="41" y="55" width="2" height="3" fill="#efdfb9"/><rect x="45" y="55" width="2" height="3" fill="#efdfb9"/></g>
+    <!-- The bluebird apartments, leaning with character. -->
+    <g transform="rotate(-9 64 42)">
+      <rect x="52" y="23" width="24" height="40" rx="2.5" fill="url(#blue)"/>
+      <rect x="52" y="23" width="24" height="2.6" rx="1.2" fill="#dbe7ef" opacity="0.9"/>
+      <g fill="#ffd98a"><rect x="56" y="29" width="6" height="7" rx="1"/><rect x="66" y="41" width="6" height="7" rx="1"/></g>
+      <g fill="#35505f"><rect x="66" y="29" width="6" height="7" rx="1"/><rect x="56" y="41" width="6" height="7" rx="1"/><rect x="56" y="53" width="6" height="7" rx="1"/><rect x="66" y="53" width="6" height="7" rx="1"/></g>
+    </g>
+  </g>
+  <!-- A houseplant taking the scenic route down. -->
+  <g transform="rotate(24 86 56)">
+    <rect x="83" y="56" width="6" height="5" rx="1" fill="#c0694a"/>
+    <path d="M86 56v-6M86 53l-3-2M86 52l3-2.5" stroke="#3f7a52" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>
