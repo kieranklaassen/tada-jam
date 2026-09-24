@@ -76,9 +76,34 @@ const BUSY_BENCH = {
 }
 
 export default {
-  enforce: false,
+  enforce: true,
   childAge: 4,
   query: 'tier=3&probe=1',
+  ignore: [
+    // Soft contact shadows under every clay piece: one instanced flat decal, depthWrite off and
+    // polygon-offset, drawn over the bench, the turntable and the tray under whatever casts it.
+    '^contact-shadows',
+  ],
+  allow: [
+    {
+      a: 'held-',
+      b: 'critter-',
+      upTo: 1.5,
+      reason:
+        'A part on the finger over a critter snaps to the socket it will take and shows itself pressed in there, as it will sit once let go ' +
+        '(the socket glow rings it): clay pressed into clay. It joins that critter the moment the finger lifts.',
+    },
+    {
+      a: '^clay-',
+      b: '^clay-',
+      kind: 'pose',
+      upTo: 1.6,
+      reason:
+        "Parts pressed into one critter's clay: how deep each sits changes as the body squashes, breathes, hops, and splays its legs. " +
+        'The tool keys pose history by instance index, and the clay batches hand their indices to other critters and parts as they are ' +
+        'pressed on and pulled off, so the baselines mix critters (tool note 1). Cross-critter contact is still checked as penetration.',
+    },
+  ],
   moments: [
     // The lump snores and reaches toward the tray; at 5 s the ghost hand presses a leg onto it.
     { name: 'idle-guidance', run: (d) => d.wait(8800) },
