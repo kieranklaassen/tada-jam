@@ -18,7 +18,23 @@ import {
   Vector3,
 } from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
-import { BURROW, groundY, HILL, PLOT_RADIUS, PLOTS, POUCH, POUCH_RADIUS, SEED_RADIUS } from '../layout'
+import {
+  BURROW,
+  BURROW_HOLE,
+  BUSHES,
+  groundY,
+  HILL,
+  PLOT_RADIUS,
+  PLOTS,
+  POUCH,
+  POUCH_INSIDE,
+  POUCH_PROFILE,
+  POUCH_RADIUS,
+  POUCH_RUFFLE_Y,
+  POUCH_STRING,
+  SEED_RADIUS,
+  STONES,
+} from '../layout'
 import { smoothstep } from '../math'
 import type { SeasonLook } from '../season'
 import { paint, PALETTE } from './felt'
@@ -28,7 +44,8 @@ import { paint, PALETTE } from './felt'
 // occlusion) baked into vertex colours; anything that repeats is instanced
 // by the models. Units are about a centimetre.
 
-export const SLAB = { bottom: -16, corner: 18, roll: 6 }
+/** `tuck`: how far the slab's sides run on below the paper floor, so none of the slab lies in the floor's plane. */
+export const SLAB = { bottom: -16, corner: 18, roll: 6, tuck: 2 }
 
 type Shade = (p: Vector3, n: Vector3, out: Color) => void
 
@@ -148,7 +165,7 @@ function axis(lo: number, hi: number, margin: number, inner: number, outer: numb
 
 /** The felt slab: the hill's top surface rolling over a soft rounded edge into straight sides. */
 export function hillGeometry(look: SeasonLook): BufferGeometry {
-  const { corner, roll, bottom } = SLAB
+  const { corner, roll, bottom, tuck } = SLAB
   const margin = roll * (Math.PI / 2) + 34
   const xs = axis(HILL.left, HILL.right, margin, 72, 14)
   const zs = axis(HILL.far, HILL.near, margin, 50, 14)
@@ -181,7 +198,7 @@ export function hillGeometry(look: SeasonLook): BufferGeometry {
         drop = d <= arc ? roll * (1 - Math.cos(d / roll)) : roll + (d - arc)
         x = ex + nx * out
         z = ez + nz * out
-        y = Math.max(bottom, groundY(ex, ez) - drop)
+        y = Math.max(bottom - tuck, groundY(ex, ez) - drop)
       }
       positions.push(x, y, z)
       uvs.push(X / 17, Z / 17)
@@ -205,19 +222,52 @@ export function hillGeometry(look: SeasonLook): BufferGeometry {
   }
   const width = xs.length
   const index: number[] = []
+  // The burrow's hole: the hill is cut away there, and the grass round the cut is drawn in under the soil ring, so
+  // the ring hides the cut's edge.
+  const fromBurrow = (v: number) => Math.hypot(positions[v * 3] - BURROW.x, positions[v * 3 + 2] - BURROW.z)
+  const cut = (v: number) => fromBurrow(v) < BURROW_HOLE.open
+  for (let j = 0; j < zs.length - 1; j++) {
+    for (let i = 0; i < width - 1; i++) {
+      const quad = [j * width + i, j * width + i + 1, (j + 1) * width + i, (j + 1) * width + i + 1]
+      if (!quad.some(cut)) continue
+      for (const v of quad) {
+        const r = fromBurrow(v)
+        if (cut(v) || r <= BURROW_HOLE.rim) continue
+        const x = BURROW.x + ((positions[v * 3] - BURROW.x) / r) * BURROW_HOLE.rim
+        const z = BURROW.z + ((positions[v * 3 + 2] - BURROW.z) / r) * BURROW_HOLE.rim
+        positions.splice(v * 3, 3, x, groundY(x, z), z)
+      }
+    }
+  }
+  // Past the sides the grid folds flat onto the slab's tucked bottom, under the paper floor: faces lying there are
+  // never seen and would only overlap each other.
+  const floor = (v: number) => positions[v * 3 + 1] <= bottom - tuck + 1e-6
+  const kept = (u: number, v: number, w: number) => !cut(u) && !cut(v) && !cut(w) && !(floor(u) && floor(v) && floor(w))
   for (let j = 0; j < zs.length - 1; j++) {
     for (let i = 0; i < width - 1; i++) {
       const a = j * width + i
       const b = a + 1
       const c = a + width
       const d = c + 1
-      index.push(a, c, b, b, c, d)
+      if (kept(a, c, b)) index.push(a, c, b)
+      if (kept(b, c, d)) index.push(b, c, d)
     }
   }
+  // Only the vertices still in use, so nothing of the hill is left over the hole.
+  const used: number[] = []
+  const renumber = new Map<number, number>()
+  for (let k = 0; k < index.length; k++) {
+    if (!renumber.has(index[k])) {
+      renumber.set(index[k], used.length)
+      used.push(index[k])
+    }
+    index[k] = renumber.get(index[k]) as number
+  }
+  const pick = (from: number[], n: number) => new Float32Array(used.flatMap((v) => from.slice(v * n, v * n + n)))
   const geometry = new BufferGeometry()
-  geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3))
-  geometry.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2))
-  geometry.setAttribute('color', new BufferAttribute(new Float32Array(colors), 3))
+  geometry.setAttribute('position', new BufferAttribute(pick(positions, 3), 3))
+  geometry.setAttribute('uv', new BufferAttribute(pick(uvs, 2), 2))
+  geometry.setAttribute('color', new BufferAttribute(pick(colors, 3), 3))
   geometry.setIndex(index)
   geometry.computeVertexNormals()
   return geometry
@@ -323,31 +373,19 @@ export function seedGeometry(): BufferGeometry {
 
 /** The cream drawstring pouch, sitting up with its mouth open toward the child. */
 export function pouchGeometry(): BufferGeometry {
-  const profile = [
-    [0.01, -0.8],
-    [4.6, -0.6],
-    [7.4, 0.7],
-    [9.0, 2.9],
-    [9.4, 5.3],
-    [8.8, 7.7],
-    [7.2, 9.5],
-    [5.9, 10.5],
-    [5.5, 11.0],
-    [6.2, 11.5],
-    [7.3, 11.9],
-    [8.0, 12.0],
-    [8.3, 11.6],
-  ].map(([r, y]) => new Vector2(r, y))
-  const body = new LatheGeometry(profile, 40)
+  const body = new LatheGeometry(
+    POUCH_PROFILE.map(([r, y]) => new Vector2(r, y)),
+    40,
+  )
   const position = body.getAttribute('position')
   for (let i = 0; i < position.count; i++) {
     tmpP.fromBufferAttribute(position, i)
     const angle = Math.atan2(tmpP.z, tmpP.x)
     const gather = 1 + 0.045 * Math.sin(angle * 14) * smoothstep(6.5, 10.2, tmpP.y) * (1 - smoothstep(10.8, 11.3, tmpP.y))
-    const ruffle = tmpP.y > 11.1 ? 1 + 0.07 * Math.sin(angle * 9) : 1
+    const ruffle = tmpP.y > POUCH_RUFFLE_Y ? 1 + 0.07 * Math.sin(angle * 9) : 1
     const sag = 1 + 0.04 * Math.sin(angle * 2 + 0.6) * (1 - smoothstep(4, 9, tmpP.y))
     const k = gather * ruffle * sag
-    position.setXYZ(i, tmpP.x * k, tmpP.y + (tmpP.y > 11.1 ? 0.3 * Math.sin(angle * 9 + 1) : 0), tmpP.z * k)
+    position.setXYZ(i, tmpP.x * k, tmpP.y + (tmpP.y > POUCH_RUFFLE_Y ? 0.3 * Math.sin(angle * 9 + 1) : 0), tmpP.z * k)
   }
   body.computeVertexNormals()
   tint(body, (p, _n, out) => {
@@ -356,8 +394,8 @@ export function pouchGeometry(): BufferGeometry {
     const base = 0.8 + 0.2 * smoothstep(-0.8, 3.5, p.y)
     mixHex(PALETTE.pouch, PALETTE.pouchShade, 1 - smoothstep(0, 6, p.y), out).multiplyScalar(fold * base)
   })
-  const inside = tint(place(sphere(1, 20, 8), 0, 10.9, 0, 0, 0, 0, 5.9, 0.35, 5.9), PALETTE.pouchInside)
-  const string = tint(place(new TorusGeometry(5.9, 0.45, 6, 36), 0, 10.75, 0, Math.PI / 2), PALETTE.string)
+  const inside = tint(place(sphere(1, 20, 8), 0, POUCH_INSIDE.y, 0, 0, 0, 0, POUCH_INSIDE.radius, POUCH_INSIDE.depth, POUCH_INSIDE.radius), PALETTE.pouchInside)
+  const string = tint(place(new TorusGeometry(POUCH_STRING.radius, POUCH_STRING.tube, 6, 36), 0, POUCH_STRING.y, 0, Math.PI / 2), PALETTE.string)
   const parts = [body, inside, string]
   for (const side of [-1, 1]) {
     const curve = new CatmullRomCurve3([
@@ -562,8 +600,12 @@ export function mouseHeadGeometry(): BufferGeometry {
   return merge(parts)
 }
 
+/** The mouse's tail root on its rump, in its own units from under the middle of its body: the tail swings from here. */
+export const TAIL_ROOT = { y: 1.5, z: -3.1 }
+
+/** The tail from its root, curling up behind. */
 export function mouseTailGeometry(): BufferGeometry {
-  const curve = new CatmullRomCurve3([new Vector3(0, 1.5, -3.1), new Vector3(0, 1.1, -5.2), new Vector3(1, 1.7, -7.2), new Vector3(2.3, 2.8, -8.1)])
+  const curve = new CatmullRomCurve3([new Vector3(0, 0, 0), new Vector3(0, -0.4, -2.1), new Vector3(1, 0.2, -4.1), new Vector3(2.3, 1.3, -5)])
   return tint(new TubeGeometry(curve, 16, 0.26, 5), PALETTE.mousePink)
 }
 
@@ -609,19 +651,41 @@ export function scatterGeometry(kind: SeasonLook['scatter']): BufferGeometry | n
   }
 }
 
-/** Static felt things on the hill: the mouse's burrow, bushes on the crest, two stones. */
+/**
+ * The mouse's burrow, in the hole cut in the hill: a dark shaft whose top flares out under the grass, and a
+ * lumpy soil ring round the mouth. Both follow the slope.
+ */
+export function burrowGeometry(): BufferGeometry {
+  const { rim, shaft, depth, ring, tube, squash, lift } = BURROW_HOLE
+  // From the flared lip under the grass (past the cut's edge) down the wall to the floor, so the lathe faces in
+  // toward the hole.
+  const profile = [
+    [rim + 0.3, -0.35],
+    [ring - 0.2, -0.4],
+    [shaft + 0.5, -0.75],
+    [shaft, -1.6],
+    [shaft, -depth],
+    [0.01, -depth],
+  ].map(([r, y]) => new Vector2(r, y))
+  const hole = tint(new LatheGeometry(profile, 28), (p, _n, out) => mixHex(0x24170f, PALETTE.soil, smoothstep(-6, -0.4, p.y) * 0.55, out))
+  const soil = tint(place(lumpy(new TorusGeometry(ring, tube, 8, 26), 0.3, 1, 5), 0, lift, 0, Math.PI / 2, 0, 0, 1, 1, squash), (p, _n, out) =>
+    paint(PALETTE.soil, out).multiplyScalar(0.8 + 0.2 * smoothstep(lift - tube * squash, lift + tube * squash, p.y)),
+  )
+  const burrow = merge([hole, soil])
+  const position = burrow.getAttribute('position')
+  for (let i = 0; i < position.count; i++) {
+    const x = BURROW.x + position.getX(i)
+    const z = BURROW.z + position.getZ(i)
+    position.setXYZ(i, x, position.getY(i) + groundY(x, z), z)
+  }
+  burrow.computeBoundingSphere()
+  return burrow
+}
+
+/** Static felt things on the hill: bushes on the crest, two stones. */
 export function decorGeometry(): BufferGeometry {
   const parts: BufferGeometry[] = []
-  const by = groundY(BURROW.x, BURROW.z)
-  parts.push(tint(place(sphere(1, 18, 8), BURROW.x, by + 0.05, BURROW.z, 0, 0, 0, 3.4, 0.3, 2.6), 0x24170f))
-  parts.push(tint(place(lumpy(new TorusGeometry(3.6, 1.05, 8, 22), 0.3, 1, 5), BURROW.x, by + 0.2, BURROW.z, Math.PI / 2, 0, 0, 1, 0.8, 1), PALETTE.soil))
-  const bushes: [number, number, number][] = [
-    [-84, -58, 7],
-    [-66, -62, 5.5],
-    [70, -60, 6.5],
-    [86, -54, 5],
-  ]
-  for (const [x, z, size] of bushes) {
+  for (const [x, z, size] of BUSHES) {
     for (let k = 0; k < 4; k++) {
       const a = k * 2.1
       const r = size * (0.75 - k * 0.1)
@@ -632,10 +696,7 @@ export function decorGeometry(): BufferGeometry {
       parts.push(tint(ball, (p, _n, out) => mixHex(PALETTE.bush, PALETTE.bushLight, smoothstep(-r, r, p.y - groundY(bx, bz)), out)))
     }
   }
-  for (const [x, z, s] of [
-    [-86, 34, 3.2],
-    [80, 32, 2.6],
-  ] as const) {
+  for (const [x, z, s] of STONES) {
     const stone = lumpy(sphere(s, 14, 10), s * 0.18, 0.5, x)
     place(stone, x, groundY(x, z) + s * 0.25, z, 0, x, 0, 1.2, 0.55, 1)
     parts.push(tint(stone, (p, _n, out) => paint(PALETTE.stone, out).multiplyScalar(0.8 + 0.2 * smoothstep(-s, s, p.y - groundY(x, z)))))

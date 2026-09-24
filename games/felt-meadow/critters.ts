@@ -1,4 +1,4 @@
-import { BURROW, CHILD, plotAt, SNAIL_PATH } from './layout'
+import { BURROW, BURROW_STAND, CHILD, MOUSE_AREA, plotAt, SNAIL_PATH } from './layout'
 import { seeded, spring, STEADY_STEP, toward, wrapAngle, type Spring } from './math'
 import { Director, type PokeName } from './motion'
 
@@ -203,13 +203,24 @@ export class Snail {
 
 export type MouseMode = 'home' | 'emerge' | 'dart' | 'freeze' | 'rear' | 'poked' | 'flee' | 'dive'
 
-/** Right of the molehills and clear of them, so the mouse never crowds the one the meadow is pointing at. */
-const MOUSE_AREA = { left: 52, right: 76, far: -30, near: 10 }
 const MOUSE_PLOT_BERTH = 9
+/** Its runs keep this far from the burrow's middle, so it never scurries over the hole or through the soil ring. */
+const BURROW_BERTH = BURROW_STAND - 0.5
 /** After a knock on its burrow, the mouse comes out this many seconds later. */
 const KNOCK_ANSWER = 0.35
 /** It stays in at least this long after going home, knock or no knock. */
 const KNOCK_MIN_HOME = 1.2
+const DIVE = 0.45
+const EMERGE = 0.65
+
+/** How close the run from (ax, az) to (bx, bz) comes to the burrow's middle. */
+function nearestToBurrow(ax: number, az: number, bx: number, bz: number): number {
+  const dx = bx - ax
+  const dz = bz - az
+  const length = dx * dx + dz * dz
+  const k = length > 0 ? Math.max(0, Math.min(1, ((BURROW.x - ax) * dx + (BURROW.z - az) * dz) / length)) : 0
+  return Math.hypot(ax + dx * k - BURROW.x, az + dz * k - BURROW.z)
+}
 
 export class Mouse {
   x = BURROW.x
@@ -254,7 +265,7 @@ export class Mouse {
 
   /** Tapped: one of its frights (never the same twice running), or null if it is already on its way home. */
   poke(): PokeName<'mouse'> | null {
-    if (this.mode === 'home' || this.mode === 'dive' || this.mode === 'flee' || this.mode === 'poked') return null
+    if (this.mode === 'home' || this.mode === 'emerge' || this.mode === 'dive' || this.mode === 'flee' || this.mode === 'poked') return null
     this.motion.interrupt()
     const variant = this.motion.trigger('poke')
     this.pokeVariant = variant
@@ -286,12 +297,18 @@ export class Mouse {
     switch (this.mode) {
       case 'home':
         this.out = 0
-        if (this.modeT > this.duration) this.enter('emerge', 0.55)
+        if (this.modeT > this.duration) {
+          // Out nose first up the shaft, facing about toward the child, and over the soil ring onto the grass.
+          this.yaw = Math.atan2(CHILD.x - BURROW.x, CHILD.z - BURROW.z) + (this.random() - 0.5) * 1.2
+          this.enter('emerge', EMERGE)
+        }
         break
       case 'emerge':
         this.out = Math.min(1, this.modeT / this.duration)
         this.look = Math.sin(this.modeT * 9) * 0.3
         if (this.modeT >= this.duration) {
+          this.x = BURROW.x + Math.sin(this.yaw) * BURROW_STAND
+          this.z = BURROW.z + Math.cos(this.yaw) * BURROW_STAND
           this.darts = 3 + Math.floor(this.random() * 3)
           this.pickTarget()
         }
@@ -311,7 +328,11 @@ export class Mouse {
         stretchTarget = 0.22
         this.look *= 0.8
         if (distance < 0.6) {
-          if (this.darts <= 0) this.enter('dive', 0.35)
+          if (this.darts <= 0) {
+            // At the ring's edge, facing the hole: in it goes, head first.
+            this.yaw = Math.atan2(BURROW.x - this.x, BURROW.z - this.z)
+            this.enter('dive', DIVE)
+          }
           else if (this.random() < 0.3) this.enter('rear', 1.4)
           else this.enter('freeze', 0.6 + this.random() * 1.1)
         }
@@ -388,7 +409,7 @@ export class Mouse {
         // A startled leap (stretch up), then a spin toward the burrow and a fast run.
         stretchTarget = this.modeT < 0.18 ? 0.5 : 0.25
         this.hop = this.modeT < 0.3 ? Math.sin((this.modeT / 0.3) * Math.PI) * 4 : 0
-        const want = Math.atan2(BURROW.x - this.x, BURROW.z - this.z)
+        const want = Math.atan2(this.tx - this.x, this.tz - this.z)
         this.yaw += wrapAngle(want - this.yaw) * Math.min(1, dt * 18)
         if (this.modeT >= this.duration) {
           this.darts = 0
@@ -420,8 +441,16 @@ export class Mouse {
 
   private runHome(): void {
     this.enter('flee', 0.3)
-    this.tx = BURROW.x
-    this.tz = BURROW.z
+    this.homeTarget()
+  }
+
+  /** Home is the spot at the soil ring's edge on its side of the burrow, where it dives from. */
+  private homeTarget(): void {
+    const away = Math.hypot(this.x - BURROW.x, this.z - BURROW.z)
+    const ux = away > 1e-3 ? (this.x - BURROW.x) / away : 0
+    const uz = away > 1e-3 ? (this.z - BURROW.z) / away : 1
+    this.tx = BURROW.x + ux * BURROW_STAND
+    this.tz = BURROW.z + uz * BURROW_STAND
   }
 
   private enter(mode: MouseMode, duration: number): void {
@@ -432,15 +461,15 @@ export class Mouse {
 
   private pickTarget(): void {
     this.darts -= 1
-    if (this.darts <= 0) {
-      this.tx = BURROW.x
-      this.tz = BURROW.z
-    } else {
-      for (let tries = 0; tries < 8; tries++) {
-        this.tx = MOUSE_AREA.left + this.random() * (MOUSE_AREA.right - MOUSE_AREA.left)
-        this.tz = MOUSE_AREA.far + this.random() * (MOUSE_AREA.near - MOUSE_AREA.far)
-        if (plotAt(this.tx, this.tz, MOUSE_PLOT_BERTH) < 0) break
-      }
+    let found = false
+    for (let tries = 0; tries < 12 && this.darts > 0 && !found; tries++) {
+      this.tx = MOUSE_AREA.left + this.random() * (MOUSE_AREA.right - MOUSE_AREA.left)
+      this.tz = MOUSE_AREA.far + this.random() * (MOUSE_AREA.near - MOUSE_AREA.far)
+      found = plotAt(this.tx, this.tz, MOUSE_PLOT_BERTH) < 0 && nearestToBurrow(this.x, this.z, this.tx, this.tz) > BURROW_BERTH
+    }
+    if (!found) {
+      this.darts = 0
+      this.homeTarget()
     }
     this.mode = 'dart'
     this.modeT = 0

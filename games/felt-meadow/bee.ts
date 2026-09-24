@@ -1,4 +1,5 @@
-import { CHILD, groundY, PLOTS, STEM_HEIGHT } from './layout'
+import { FACE_TILT, faceRise } from './flowers'
+import { CHILD, groundY, PLOTS, SEED_RADIUS, STEM_HEIGHT } from './layout'
 import { clamp, smoothstep, toward, wrapAngle } from './math'
 import { Director, type PokeName } from './motion'
 
@@ -29,6 +30,11 @@ export type BeeWorld = {
   readyToMix(): boolean
   /** Where the mixed seed should land (beside an empty molehill if there is one), written into `out`. */
   dropSpot(out: Vec3): void
+  /**
+   * The flower standing at `plot` (growing or in bloom): its head written into `out`, and the height its face
+   * reaches right now returned; -Infinity if nothing stands there.
+   */
+  berth(plot: number, out: Vec3): number
   /** An empty molehill to hover over while the child is idle, or -1. */
   pointAt: number
   /** Seconds of wandering between visits the bee chooses for itself. */
@@ -45,7 +51,14 @@ export type BeeEvents = {
 
 /** The felt bee's size relative to its modelled parts; heights below are for this size. */
 export const BEE_SCALE = 1.2
-const SIT_HEIGHT = 3.5
+/** Where each pollen ball rides, on a back leg, in the bee's own units (before BEE_SCALE). */
+export const POLLEN_LEGS = { x: 1.9, y: -3.3, z: -1 }
+export const POLLEN_RADIUS = 1.15
+/** Past this much merge the two balls are one, and it swells downward into a seed the size of a real one. */
+export const MERGED_AT = 0.55
+const MIXED_SIZE = SEED_RADIUS / (POLLEN_RADIUS * BEE_SCALE)
+/** High enough over the level face that the bee stands on it on its feet: legs, belly, and nodding face clear of the felt. */
+export const SIT_HEIGHT = 6.6
 const HOVER_HEIGHT = 8.5
 const HOVER_SECONDS = 0.5
 const LAND_SECONDS = 0.36
@@ -65,12 +78,40 @@ const POINT_SIDE = 9
 const POINT_BACK = 9
 const POINT_HEIGHT = 14
 const POINT_DIP = 3
+/**
+ * How far from a flower's head the flying bee keeps unless it is over the face: a petal's reach plus the bee's own
+ * (its nose and spread wings reach about 8.6 from its middle).
+ */
+const FLOWER_BERTH = 16.5
+/** How far over a face's highest petal tip the bee's middle keeps: its legs reach 4.5 below it. */
+const BERTH_BELOW = 5.6
+/** The same with the mixed seed hanging under it. */
+const CARRY_BELOW = 10.2
+/** How fast the bee is eased out of a flower's berth it found itself in (a flower that opened around it). */
+const BERTH_PUSH = 30
+/** Over this much beyond the berth, a flight target is eased up over the flower, so the path rises smoothly. */
+const BERTH_EASE = 14
 /** How far to the side of a new flower the bee watches it from, clear of the petals and its own wobble. */
-const WATCH_SIDE = 16
+const WATCH_SIDE = FLOWER_BERTH + 3
 
 const target: Vec3 = { x: 0, y: 0, z: 0 }
 const head: Vec3 = { x: 0, y: 0, z: 0 }
 const dropAt: Vec3 = { x: 0, y: 0, z: 0 }
+const ball: Vec3 = { x: 0, y: 0, z: 0 }
+
+/**
+ * Pollen ball `side` (1 or -1) under the bee, 0..1 through the merge, in the bee's own units, written into `out`;
+ * returns its size. The balls slide together under the belly and drop a little, then the one ball swells downward
+ * from its top, so it never grows into the belly.
+ */
+export function pollenAt(side: number, merge: number, out: Vec3): number {
+  const k = Math.min(1, merge / MERGED_AT)
+  const size = merge > MERGED_AT ? 1 + Math.min(1, (merge - MERGED_AT) / 0.3) * (MIXED_SIZE - 1) : 1
+  out.x = side * POLLEN_LEGS.x * (1 - k)
+  out.y = POLLEN_LEGS.y - k * 1.2 - (size - 1) * POLLEN_RADIUS
+  out.z = POLLEN_LEGS.z
+  return size
+}
 
 function easeInOut(t: number): number {
   return smoothstep(0, 1, t)
@@ -108,6 +149,8 @@ export class Bee {
   t = 0
   /** True from a flower tap until the visit it asked for is over, the sip and any mix and drop included. */
   answering = false
+  /** The flower the bee last sat on, until it has flown clear of it; its face stays level till then. */
+  perch = -1
   private jitter = 1
   private lastPlot = -1
   private pending = -1
@@ -155,6 +198,38 @@ export class Bee {
     return this.mode === 'land' || this.mode === 'sip' || (this.mode === 'takeoff' && this.modeT < TAKEOFF_SECONDS * 0.4)
   }
 
+  /** True while the bee is on its way to the flower at `plot`, on it, or not yet clear of it after. */
+  visiting(plot: number): boolean {
+    if (plot === this.perch) return true
+    if (plot !== this.plot) return false
+    return this.mode === 'approach' || this.mode === 'hover' || this.mode === 'land' || this.mode === 'sip' || this.mode === 'takeoff'
+  }
+
+  /** A point in the bee's own units (as the view draws it, squash included), in the world, written into `out`. */
+  toWorld(local: Vec3, out: Vec3): Vec3 {
+    const s = this.squash
+    let x = local.x * BEE_SCALE * (1 + s * 0.45)
+    let y = local.y * BEE_SCALE * (1 - s)
+    let z = local.z * BEE_SCALE * (1 + s * 0.45)
+    // Rotation order YXZ: roll about z, then pitch about x, then yaw about y.
+    const cr = Math.cos(this.roll)
+    const sr = Math.sin(this.roll)
+    const x1 = x * cr - y * sr
+    y = x * sr + y * cr
+    x = x1
+    const cp = Math.cos(this.pitch)
+    const sp = Math.sin(this.pitch)
+    const y1 = y * cp - z * sp
+    z = y * sp + z * cp
+    y = y1
+    const cy = Math.cos(this.yaw)
+    const sy = Math.sin(this.yaw)
+    out.x = this.x + x * cy + z * sy
+    out.y = this.y + y
+    out.z = this.z - x * sy + z * cy
+    return out
+  }
+
   step(dt: number, world: BeeWorld): void {
     this.t += dt
     this.modeT += dt
@@ -183,6 +258,7 @@ export class Bee {
           flap = 22
         } else {
           this.wanderTarget(target)
+          this.overFlowers(world, target, BERTH_BELOW)
           this.fly(target, delight === 'glance' ? 5 : 22, dt, delight === null || delight === 'waggle-dance')
         }
         if (delight !== null) {
@@ -333,6 +409,7 @@ export class Bee {
         spread = 1 - k * 0.3
         if (this.modeT >= LAND_SECONDS) {
           this.kick(0.32)
+          this.perch = this.plot
           this.events.land(this.plot)
           this.enter('sip')
         }
@@ -406,15 +483,18 @@ export class Bee {
       }
       case 'carry': {
         this.merge = 1
-        target.x = this.carryTo.x
+        // It steers the seed hanging under it, not itself, over the spot; the seed starts from there at its full
+        // size, so the bee simply lets go.
+        pollenAt(0, 1, ball)
+        this.toWorld(ball, dropAt)
+        target.x = this.carryTo.x + this.x - dropAt.x
         target.y = this.carryTo.y + CARRY_HEIGHT
-        target.z = this.carryTo.z
+        target.z = this.carryTo.z + this.z - dropAt.z
+        this.overFlowers(world, target, CARRY_BELOW)
         this.fly(target, 26, dt)
         flap = 32
-        if (Math.hypot(target.x - this.x, target.z - this.z) < 2.2 && Math.abs(target.y - this.y) < 3) {
-          dropAt.x = this.x
-          dropAt.y = this.y - 3.2 * BEE_SCALE
-          dropAt.z = this.z
+        this.toWorld(ball, dropAt)
+        if (Math.hypot(this.carryTo.x - dropAt.x, this.carryTo.z - dropAt.z) < 2.2 && Math.abs(target.y - this.y) < 3) {
           this.kick(-0.3)
           this.events.drop(dropAt)
           this.vy = 14
@@ -487,6 +567,7 @@ export class Bee {
       }
     }
 
+    this.keepOffFlowers(world, dt)
     const floor = groundY(this.x, this.z) + FLOOR
     if (!this.sitting() && this.y < floor) {
       this.y = floor
@@ -542,6 +623,56 @@ export class Bee {
     out.x = p.x + side * WATCH_SIDE + Math.sin(this.t * 1.1) * 0.8
     out.z = p.z - 3
     out.y = groundY(p.x, p.z) + STEM_HEIGHT + 4
+  }
+
+  /**
+   * Keeps the flying bee (and a seed hanging under it) out of a column around every flower's head that reaches
+   * just over its face: it slides around the column or rises over it, whichever is the smaller move. The flower it
+   * is sizing up or sitting on is left to the visit.
+   */
+  private keepOffFlowers(world: BeeWorld, dt: number): void {
+    if (this.sitting()) return
+    const below = this.merge > 0 || this.mode === 'carry' ? CARRY_BELOW : BERTH_BELOW
+    for (let plot = 0; plot < PLOTS.length; plot++) {
+      const top = world.berth(plot, head)
+      if (top === -Infinity) {
+        if (plot === this.perch) this.perch = -1
+        continue
+      }
+      const dx = this.x - head.x
+      const dz = this.z - head.z
+      const out = Math.hypot(dx, dz)
+      if (plot === this.perch && (out > FLOWER_BERTH || this.y > head.y + faceRise(FACE_TILT, 0) + below)) this.perch = -1
+      if (plot === this.plot && this.mode === 'hover') continue
+      const up = top + below - this.y
+      const side = FLOWER_BERTH - out
+      if (up <= 0 || side <= 0) continue
+      const most = BERTH_PUSH * dt
+      if (side < up && out > 1e-3) {
+        const push = Math.min(side, most)
+        this.x += (dx / out) * push
+        this.z += (dz / out) * push
+        const inward = (this.vx * dx + this.vz * dz) / out
+        if (inward < 0) {
+          this.vx -= (dx / out) * inward
+          this.vz -= (dz / out) * inward
+        }
+      } else {
+        this.y += Math.min(up, most)
+        if (this.vy < 0) this.vy = 0
+      }
+    }
+  }
+
+  /** Lifts a flight target over any flower it is near, easing up as it nears the flower's berth. */
+  private overFlowers(world: BeeWorld, out: Vec3, below: number): void {
+    for (let plot = 0; plot < PLOTS.length; plot++) {
+      const top = world.berth(plot, head)
+      if (top === -Infinity) continue
+      const near = 1 - smoothstep(FLOWER_BERTH, FLOWER_BERTH + BERTH_EASE, Math.hypot(out.x - head.x, out.z - head.z))
+      const over = top + below + 1.5
+      if (near > 0 && over > out.y) out.y += (over - out.y) * near
+    }
   }
 
   private wanderTarget(out: Vec3): void {
