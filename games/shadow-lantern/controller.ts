@@ -11,18 +11,22 @@ import {
   peelPose,
   PERSONALITIES,
   restPose,
+  SETTLE_S,
   SILHOUETTE_S,
   SKY_HOMES,
   SKY_Z,
   skyDepth,
   skyScale,
+  SPARK_Z,
+  WAKE_Z,
   type CreaturePose,
   type Ring,
   type SleepPose,
 } from './motion'
-import { clampToStage, clearOfProscenium, LAMP, PIN_HEIGHT, PROSCENIUM, SCREEN, shadowScale, STAGE, type CardPose, type Vec3 } from './projection'
+import { clampToStage, clearOfProscenium, LAMP, PIN_HEIGHT, SCREEN, shadowScale, STAGE, type CardPose, type Vec3 } from './projection'
 import { SaveCadence } from './saveCadence'
 import { SHAPE_KINDS, SHAPES, type ShapeKind } from './shapes'
+import { clearSpot, slideReach, standBlocked, standsClash, standTooFront, type Stand } from './stands'
 import { INVITE_SHAPE, normalizeAngle, serialize, wakeCreature, type SkyCreature, type TheatreState } from './state'
 
 // The theatre while it is on screen: rules, touch, springs, coverage, the
@@ -125,8 +129,9 @@ export type Flight = {
   start: number
   fromX: number
   fromY: number
-  /** Half the creature's larger extent at full size, to keep it in front of the frame while it crosses. */
-  radius: number
+  /** Half the creature's width and height at full size, to keep it in front of the frame while it crosses. */
+  halfWidth: number
+  halfHeight: number
 }
 
 export type Companion = {
@@ -144,6 +149,9 @@ export type Companion = {
   leavingAt: number
   /** Set while it is still on its way home; null once it has arrived. */
   flight: Flight | null
+  /** When it landed short of its sky layer, and at what depth; −Infinity once settled. */
+  settleAt: number
+  settleFrom: number
 }
 
 /** Where a tap's little burst of stars lands: the sky (or the frame), the plank floor and meadow, or the lit screen. */
@@ -160,6 +168,10 @@ export const MOON = { x: 62, y: 46, z: SKY_Z - 8 }
 const LEAVE_S = 3.2
 const HINT_BUDGET_MS = 0.6
 const SEARCH_AFTER_S = 0.6
+/** How much of its speed a set-down stand keeps when its foot meets the stage. */
+const FLOOR_BOUNCE = 0.45
+/** Moves smaller than this (cm or radians) are the springs settling: no stand can be carried into another by them. */
+const SETTLING = 1e-6
 
 function blankRings(): Ring[] {
   return [0, 1, 2, 3].map(() => ({ x: 0, y: 0, r: 0, alpha: 0 }))
@@ -190,6 +202,7 @@ export class TheatreController {
   /** Seconds of attended play; stands still while the theatre is put away. */
   t = 0
   lampFlareAt = -Infinity
+  /** A tap on nothing in particular: where its stars fly (z is the plane they fly in) and when. */
   readonly spark: { x: number; y: number; z: number; at: number; surface: SparkSurface } = { x: 0, y: 0, z: 0, at: -Infinity, surface: 'sky' }
   /** Stars that spring off the outline's edge the moment the shadow opens its eye: centre and half-size on the screen (cm). */
   readonly wakeBurst = { x: 0, y: 0, rx: 0, ry: 0, at: -Infinity }
@@ -206,6 +219,10 @@ export class TheatreController {
   private projector: Projector | null = null
   private readonly screens = new Map<number, Point>()
   private readonly placed: Placed[]
+  /** Each shape's target as a stand, so a turn or a set-down can be checked against where the others are going. */
+  private readonly aims: Stand[]
+  private readonly crowds: (readonly Stand[])[]
+  private readonly spot = { x: 0, z: 0 }
   private readonly measured: Float64Array
   private readonly prevCovered = new Uint8Array(512)
   private holdFor = 0
@@ -243,6 +260,9 @@ export class TheatreController {
       glow: 0,
     }))
     this.placed = this.shapes.map((shape) => ({ kind: shape.kind, pose: shape.pose }))
+    this.aims = this.shapes.map((shape) => ({ kind: shape.kind, pose: shape.target }))
+    this.crowds = [this.placed, this.aims]
+    this.standApart()
     this.measured = new Float64Array(this.shapes.length * 3).fill(NaN)
     this.state.sky.forEach((creature, index) => this.companions.push(this.companion(creature, index * 2.3)))
     this.setSleeper(state.sleeping, -ENTER_S)
@@ -306,27 +326,88 @@ export class TheatreController {
       const liftTarget = held ? 1.4 : pressed + hop
       for (let s = 0; s < substeps; s++) {
         // Position: a stiff critically damped spring while held, softer when free.
+        // A stand meets the others as solid paper: each move that would carry
+        // it into one stops there, so it slides along whatever it meets.
         const w = held ? 26 : 16
         shape.vx += (w * w * (shape.target.x - pose.x) - 2 * w * shape.vx) * h
         shape.vz += (w * w * (shape.target.z - pose.z) - 2 * w * shape.vz) * h
-        pose.x += shape.vx * h
-        pose.z += shape.vz * h
+        if (!this.moveStand(i, 'x', pose.x + shape.vx * h)) shape.vx = 0
+        if (!this.moveStand(i, 'z', pose.z + shape.vz * h)) shape.vz = 0
         // Turning overshoots a touch, like stiff card on a pin.
         const wa = 13
         shape.va += (wa * wa * (shape.target.angle - pose.angle) - 2 * 0.52 * wa * shape.va) * h
-        pose.angle += shape.va * h
+        if (!this.moveStand(i, 'angle', pose.angle + shape.va * h)) shape.va = 0
         // The card swings on its wire against the direction of travel, and settles with a wobble.
         const yawTarget = Math.max(-0.45, Math.min(0.45, -shape.vx * 0.012 + shape.vz * 0.004))
         const wy = 11
         shape.yawV += (wy * wy * (yawTarget - pose.yaw) - 2 * 0.28 * wy * shape.yawV) * h
-        pose.yaw += shape.yawV * h
-        // Lift: up while held, a pressed card rises a little, and a set-down card bounces.
+        if (!this.moveStand(i, 'yaw', pose.yaw + shape.yawV * h)) shape.yawV = 0
+        // Lift: up while held, a pressed card rises a little, and a set-down card bounces on its foot.
         const wl = held ? 18 : 15
         shape.liftV += (wl * wl * (liftTarget - pose.lift) - 2 * (held ? 0.9 : 0.32) * wl * shape.liftV) * h
         pose.lift += shape.liftV * h
+        if (pose.lift < 0) {
+          pose.lift = 0
+          if (shape.liftV < 0) shape.liftV *= -FLOOR_BOUNCE
+        }
       }
       if (held) this.sound.slide(Math.hypot(shape.vx, shape.vz))
     }
+  }
+
+  /**
+   * Set one of shape i's pose values, unless that carries its stand into
+   * another stand it was clear of, or too near the screen. Returns false
+   * (and leaves the pose as it was) when blocked.
+   */
+  private moveStand(i: number, key: 'x' | 'z' | 'angle' | 'yaw', value: number): boolean {
+    const stand = this.placed[i]
+    const pose = stand.pose
+    const was = pose[key]
+    pose[key] = value
+    if (Math.abs(value - was) < SETTLING) return true
+    let blocked = false
+    if (standTooFront(stand)) {
+      pose[key] = was
+      blocked = !standTooFront(stand)
+      pose[key] = value
+    }
+    for (let j = 0; j < this.placed.length && !blocked; j++) {
+      if (j === i || !standsClash(stand, this.placed[j])) continue
+      pose[key] = was
+      blocked = !standsClash(stand, this.placed[j])
+      pose[key] = value
+    }
+    if (blocked) pose[key] = was
+    return !blocked
+  }
+
+  /**
+   * Where shape i was aimed (a tap-turn, a twist, a saved layout) meets
+   * another stand or the screen: it steps aside to the nearest clear place.
+   * Returns false when there is none.
+   */
+  private settleTarget(i: number): boolean {
+    const shape = this.shapes[i]
+    if (!standBlocked(this.aims[i], this.placed, i) && !standBlocked(this.aims[i], this.aims, i)) return true
+    if (!clearSpot(shape.kind, shape.target.x, shape.target.z, shape.target.angle, this.crowds, i, this.spot)) return false
+    shape.target.x = this.spot.x
+    shape.target.z = this.spot.z
+    return true
+  }
+
+  /** A saved layout from before stands kept apart may have two in one place: each steps aside, and starts where it stands. */
+  private standApart(): void {
+    for (let i = 0; i < this.shapes.length; i++) {
+      const shape = this.shapes[i]
+      if (standBlocked(this.aims[i], this.aims, i) && clearSpot(shape.kind, shape.target.x, shape.target.z, shape.target.angle, [this.aims], i, this.spot)) {
+        shape.target.x = this.spot.x
+        shape.target.z = this.spot.z
+      }
+      shape.pose.x = shape.target.x
+      shape.pose.z = shape.target.z
+    }
+    this.syncState()
   }
 
   private followFinger(shape: ShapeRuntime): void {
@@ -398,7 +479,7 @@ export class TheatreController {
     restPose(pose)
     pose.x = center.x
     pose.y = center.y
-    pose.z = 0.3
+    pose.z = WAKE_Z
     pose.scale = 1
     const openAt = SILHOUETTE_S
     const peelAt = openAt + ANTICIPATE_S
@@ -429,7 +510,7 @@ export class TheatreController {
       const companion = this.companion(waking, 0)
       companion.pose.facing = -1
       companion.facingTarget = SKY_HOMES[waking.slot].x >= fromX ? 1 : -1
-      companion.flight = { start: waking.start + flyAt, fromX, fromY: center.y, radius: Math.max(bounds.x1 - bounds.x0, bounds.y1 - bounds.y0) / 2 }
+      companion.flight = { start: waking.start + flyAt, fromX, fromY: center.y, halfWidth: (bounds.x1 - bounds.x0) / 2, halfHeight: (bounds.y1 - bounds.y0) / 2 }
       this.companions.push(companion)
       this.waking = null
       this.version++
@@ -443,6 +524,10 @@ export class TheatreController {
     if (k >= 1) {
       c.flight = null
       c.seed = -this.t
+      if (Math.abs(c.pose.z - skyDepth(c.slot)) > 0.01) {
+        c.settleAt = this.t
+        c.settleFrom = c.pose.z
+      }
       this.version++
       this.sound.voice(c.kind)
       return false
@@ -452,7 +537,7 @@ export class TheatreController {
     restPose(pose)
     personality.gait(k, flight.fromX, flight.fromY, home.x, home.y, pose)
     pose.scale = flightScale(c.kind, k)
-    pose.z = flightDepth(k, pose.x, pose.y, flight.radius * pose.scale, skyDepth(c.slot))
+    pose.z = flightDepth(k, pose.x, pose.y, flight.halfWidth * pose.scale, flight.halfHeight * pose.scale, skyDepth(c.slot))
     pose.facing += (c.facingTarget - pose.facing) * Math.min(1, dt * 5)
     c.ringCount = 0
     return true
@@ -471,6 +556,11 @@ export class TheatreController {
       pose.facing = facing
       personality.idle(t + c.seed, home.x, home.y, pose)
       pose.z = skyDepth(c.slot)
+      if (c.settleAt > -Infinity) {
+        const u = (t - c.settleAt) / SETTLE_S
+        if (u >= 1) c.settleAt = -Infinity
+        else pose.z = lerp(c.settleFrom, pose.z, smooth(u))
+      }
       pose.scale = skyScale(c.kind)
       if (c.reactAt > -Infinity) {
         const k = (t - c.reactAt) / personality.reactSeconds
@@ -576,7 +666,7 @@ export class TheatreController {
   private companion({ kind, slot, paper }: SkyCreature, seed: number): Companion {
     const pose = blankPose()
     pose.facing = SKY_HOMES[slot].x > 0 ? -1 : 1
-    return { kind, slot, paper, seed, pose, reactAt: -Infinity, flipped: false, facingTarget: pose.facing, rings: blankRings(), ringCount: 0, leavingAt: -Infinity, flight: null }
+    return { kind, slot, paper, seed, pose, reactAt: -Infinity, flipped: false, facingTarget: pose.facing, rings: blankRings(), ringCount: 0, leavingAt: -Infinity, flight: null, settleAt: -Infinity, settleFrom: 0 }
   }
 
   private startWake(sleeper: Sleeper): void {
@@ -674,6 +764,8 @@ export class TheatreController {
         case 'twist': {
           const shape = this.shapes[intent.index]
           shape.target.angle -= intent.delta
+          // A twist stops where the card would turn into a neighbour.
+          if (standBlocked(this.aims[intent.index], this.placed, intent.index)) shape.target.angle += intent.delta
           this.arm()
           this.cadence.change(performance.now())
           break
@@ -739,6 +831,14 @@ export class TheatreController {
   private release(shape: ShapeRuntime, withSound: boolean): void {
     shape.heldBy = null
     shape.dropAt = this.t
+    // Set down where the stand can get to: short of whatever stands between it and the finger.
+    const i = this.shapes.indexOf(shape)
+    const pose = shape.pose
+    const target = shape.target
+    const k = slideReach(shape.kind, pose.x, pose.z, target.x, target.z, target.angle, this.crowds, i)
+    target.x = pose.x + (target.x - pose.x) * k
+    target.z = pose.z + (target.z - pose.z) * k
+    this.settleTarget(i)
     if (withSound) this.sound.drop(shape.pose.lift)
     this.arm()
     this.cadence.change(performance.now(), true)
@@ -746,6 +846,8 @@ export class TheatreController {
 
   private turnShape(shape: ShapeRuntime, by: number): void {
     shape.target.angle += by
+    // Turned into a neighbour, it steps aside; with nowhere to go it stays as it was.
+    if (!this.settleTarget(this.shapes.indexOf(shape))) shape.target.angle -= by
     shape.pulseAt = this.t
     this.sound.turn()
     this.arm()
@@ -775,7 +877,7 @@ export class TheatreController {
   }
 
   private anyFlying(): boolean {
-    for (const c of this.companions) if (c.flight) return true
+    for (const c of this.companions) if (c.flight || c.settleAt > -Infinity) return true
     return false
   }
 
@@ -803,21 +905,22 @@ export class TheatreController {
     if (toScreen < toFloor && sy > 0 && clearOfProscenium(sx, sy, 0) < 0) {
       const onScreen = sx > SCREEN.left && sx < SCREEN.right && sy > SCREEN.bottom && sy < SCREEN.top
       spark.surface = onScreen ? 'screen' : 'sky'
-      spark.x = sx
-      spark.y = sy
-      spark.z = onScreen ? 0.1 : PROSCENIUM.front
+      spark.z = onScreen ? SPARK_Z.screen : SPARK_Z.proscenium
+      const k = (spark.z - o.z) / d.z
+      spark.x = o.x + d.x * k
+      spark.y = o.y + d.y * k
     } else if (toFloor < Infinity && o.z + d.z * toFloor > GROUND_BACK) {
       spark.surface = 'floor'
       spark.x = o.x + d.x * toFloor
       spark.y = 0
       spark.z = o.z + d.z * toFloor
     } else {
-      const hit = this.rayToPlaneZ(SKY_Z)
+      const hit = this.rayToPlaneZ(SPARK_Z.sky)
       if (!hit) return
       spark.surface = 'sky'
       spark.x = hit.x
       spark.y = hit.y
-      spark.z = SKY_Z
+      spark.z = SPARK_Z.sky
     }
     spark.at = t
   }
