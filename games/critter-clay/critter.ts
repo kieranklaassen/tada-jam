@@ -26,7 +26,7 @@ import { PARTS_BEFORE_NOSE } from './guidance'
 import { blocksTurntable, clampWalk, TRAY, TURNTABLE, WAKE_LANDING, type Point } from './layout'
 import { bodyLift, type Part, type Vec3 } from './parts'
 import type { CritterSave } from './state'
-import { advance, arrived, headingTo, pickTarget, random, steer, type Mover, type Random } from './wander'
+import { advance, apartDistance, arrived, BODY_CLEARANCE, clearSpot, headingTo, meetDistance, pickTarget, random, steer, type Mover, type Random } from './wander'
 
 // One critter while it is on screen: what it is doing (its mode), where it
 // is, and the pose the rig draws. Modes layer the motion routines from
@@ -67,16 +67,21 @@ export type CritterWorld = {
   body: Vec3
   /** Rough radius of the body in world units, for finger hits. */
   bodyR: number
+  /** How far the body and its parts reach across the bench from the body's middle: its footprint. */
+  reach: number
   nose: Vec3
   /** Centre of each part (parallel to save.parts). */
   parts: Float32Array
   /** Where each leg meets the ground, for contact shadows. */
   feet: Float32Array
   feetCount: number
+  /** The highest any of it reaches (body or part), and the lowest, in bench units. */
+  top: number
+  bottom: number
 }
 
 function createWorld(): CritterWorld {
-  return { body: [0, 0, 0], bodyR: 6, nose: [0, 0, 0], parts: new Float32Array(MAX_PARTS * 3), feet: new Float32Array(MAX_LEGS * 3), feetCount: 0 }
+  return { body: [0, 0, 0], bodyR: 6, reach: BODY_CLEARANCE, nose: [0, 0, 0], parts: new Float32Array(MAX_PARTS * 3), feet: new Float32Array(MAX_LEGS * 3), feetCount: 0, top: 12, bottom: 0 }
 }
 export const CARRY_HEIGHT = 15
 const BLEND_SECONDS = 0.24
@@ -151,6 +156,8 @@ export class Critter {
   profile: GaitProfile
   /** The resting height of the body centre above the ground, on its legs. */
   standLift: number
+  /** Carried or dropping: the controller keeps its ground at least this high, over the friends under it. */
+  carryFloor = 0
   mode: Mode
   modeT = 0
   /** Seconds this critter has existed on screen (drives breathing so neighbours don't breathe in sync). */
@@ -209,7 +216,7 @@ export class Critter {
     this.standLift = bodyLift(save.parts)
     this.mode = mode
     this.rand = { s: save.seed >>> 0 }
-    this.mover = { x: save.x, z: save.z, heading: save.heading }
+    this.mover = { x: save.x, z: save.z, heading: save.heading, reach: BODY_CLEARANCE }
     for (let i = 0; i < save.parts.length; i++) this.partAge.push(10)
     this.blinkIn = 1.5 + random(this.rand) * 3
     this.age = random(this.rand) * 10
@@ -312,10 +319,11 @@ export class Critter {
     this.setMode('carried')
   }
 
-  setDown(): void {
+  /** Let go of a carried critter: it drops beside the first `count` of `others` rather than onto them. */
+  setDown(others: readonly Mover[], count: number): void {
     this.from.x = this.carryAt.x
     this.from.z = this.carryAt.z
-    clampWalk(this.carryAt, 2, this.target)
+    clearSpot(this.carryAt, this.mover.reach, others, count, this.target)
     this.setMode('landing')
   }
 
@@ -334,6 +342,7 @@ export class Critter {
   }
 
   update(dt: number, world: WorldView): void {
+    this.mover.reach = this.world.reach
     this.modeT += dt
     this.age += dt
     this.cooldown = Math.max(0, this.cooldown - dt)
@@ -417,7 +426,7 @@ export class Critter {
         carriedPose(this.profile.temperament, this.modeT, pose)
         this.mover.x = this.carryAt.x
         this.mover.z = this.carryAt.z
-        this.ground = CARRY_HEIGHT - this.standLift
+        this.ground = Math.max(CARRY_HEIGHT - this.standLift, this.carryFloor)
         moving = true
         break
       case 'landing':
@@ -483,9 +492,11 @@ export class Critter {
     const { touches, seconds, weight } = LAND_TIMING[this.profile.temperament]
     landPose(this.profile.temperament, t, this.pose)
     const k = Math.min(1, t / touches[0])
-    this.ground = (CARRY_HEIGHT - this.standLift) * (1 - k * k)
-    this.mover.x = mix(this.from.x, this.target.x, smooth(k))
-    this.mover.z = mix(this.from.z, this.target.z, smooth(k))
+    this.ground = Math.max((CARRY_HEIGHT - this.standLift) * (1 - k * k), this.carryFloor)
+    // it slides clear of any friend it was held over before it drops low
+    const aside = smooth(Math.min(1, k * 1.6))
+    this.mover.x = mix(this.from.x, this.target.x, aside)
+    this.mover.z = mix(this.from.z, this.target.z, aside)
     for (let i = 0; i < touches.length; i++) {
       if (t < touches[i] || t - dt >= touches[i]) continue
       const level = weight / (1 + 2 * i)
@@ -595,8 +606,9 @@ export class Critter {
         scratchPoint.z = this.mover.z + Math.cos(away) * 30
         return this.startWalking(scratchPoint)
       case 'curious':
-        scratchPoint.x = partner.mover.x - Math.sin(away) * 12
-        scratchPoint.z = partner.mover.z - Math.cos(away) * 12
+        // right up close, footprint to footprint
+        scratchPoint.x = partner.mover.x - Math.sin(away) * Math.max(12, apartDistance(this.mover, partner.mover) + 1)
+        scratchPoint.z = partner.mover.z - Math.cos(away) * Math.max(12, apartDistance(this.mover, partner.mover) + 1)
         return this.startWalking(scratchPoint)
       case 'bouncy':
         return this.startWalking(null)
@@ -818,7 +830,7 @@ export function findGreetings(critters: readonly Critter[], radius: number, visi
     for (let j = i + 1; j < critters.length; j++) {
       const b = critters[j]
       if (!free(b)) continue
-      if (Math.hypot(a.mover.x - b.mover.x, a.mover.z - b.mover.z) < radius) {
+      if (Math.hypot(a.mover.x - b.mover.x, a.mover.z - b.mover.z) < Math.max(radius, meetDistance(a.mover, b.mover))) {
         visit(a, b)
         break
       }

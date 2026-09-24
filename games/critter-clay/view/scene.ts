@@ -102,9 +102,13 @@ export class WorkshopScene {
   ) {
     this.shapes = buildPartShapes()
     this.bench = new THREE.Mesh(buildBench(), materials.props)
+    this.bench.name = 'bench'
+    this.bench.userData.jamObject = 'bench'
     this.bench.matrixAutoUpdate = false
     this.root.add(this.bench)
     this.turntable = new THREE.Mesh(buildTurntableTop(), materials.props)
+    this.turntable.name = 'turntable'
+    this.turntable.userData.jamObject = 'turntable'
     this.turntable.position.set(TURNTABLE.x, 0, TURNTABLE.z)
     this.root.add(this.turntable)
 
@@ -112,6 +116,8 @@ export class WorkshopScene {
       const batch = rig.batches[key]
       const geometry = this.shapes[key]
       const mesh = new THREE.InstancedMesh(geometry, materials.critters, batch.capacity)
+      mesh.name = `clay-${key}`
+      mesh.userData.jamInstanceObjects = batch.owners
       mesh.instanceMatrix = new THREE.InstancedBufferAttribute(batch.matrices, 16).setUsage(THREE.DynamicDrawUsage)
       mesh.instanceColor = new THREE.InstancedBufferAttribute(batch.colors, 3).setUsage(THREE.DynamicDrawUsage)
       const boil = new THREE.InstancedBufferAttribute(batch.boil, 2).setUsage(THREE.DynamicDrawUsage)
@@ -124,9 +130,12 @@ export class WorkshopScene {
     }
 
     this.shadows = this.overlayMesh(rig.shadows, materials.shadow, RENDER_ORDER.shadows)
+    this.shadows.mesh.name = 'contact-shadows'
     this.glows = this.overlayMesh(rig.glows, materials.glow, RENDER_ORDER.glows)
+    this.glows.mesh.name = 'glows'
 
     this.ghost = new THREE.Mesh(this.shapes.legStub, materials.ghost)
+    this.ghost.name = 'ghost-part'
     this.ghost.matrixAutoUpdate = false
     this.ghost.renderOrder = RENDER_ORDER.ghost
     this.ghost.visible = false
@@ -135,6 +144,7 @@ export class WorkshopScene {
 
     this.handMaterial = new THREE.SpriteMaterial({ map: handTexture(), transparent: true, depthTest: false, depthWrite: false, toneMapped: false })
     this.hand = new THREE.Sprite(this.handMaterial)
+    this.hand.name = 'ghost-hand'
     this.hand.center.set(58 / 256, 1 - 24 / 256)
     this.hand.renderOrder = RENDER_ORDER.hand
     this.hand.visible = false
@@ -144,6 +154,7 @@ export class WorkshopScene {
     this.overlayGeometry = new THREE.BufferGeometry()
     this.overlayGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3))
     this.overlay = new THREE.Mesh(this.overlayGeometry, materials.overlay)
+    this.overlay.name = 'finish-overlay'
     this.overlay.frustumCulled = false
     this.overlay.renderOrder = RENDER_ORDER.overlay
     this.overlay.matrixAutoUpdate = false

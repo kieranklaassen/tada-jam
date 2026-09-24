@@ -30,7 +30,7 @@ declare global {
  */
 export type CritterClayProbe = {
   tray(kind: PartKind): Screen | null
-  critters(): { id: number; mode: string; awake: boolean; parts: number; nose: Screen | null; body: Screen | null }[]
+  critters(): { id: number; mode: string; awake: boolean; parts: number; nose: Screen | null; body: Screen | null; spots: (Screen | null)[] }[]
   socket(critterId: number, kind: PartKind): Screen | null
   turntable(): Screen | null
 }
@@ -61,6 +61,7 @@ function probeFor(controller: WorkshopController, projector: Projector): Critter
           parts: critter.save.parts.length,
           nose: screen(critter.world.nose[0], critter.world.nose[1], critter.world.nose[2]),
           body: screen(critter.world.body[0], critter.world.body[1], critter.world.body[2]),
+          spots: critter.save.parts.map((_, i) => screen(critter.world.parts[i * 3], critter.world.parts[i * 3 + 1], critter.world.parts[i * 3 + 2])),
         }))
     },
     socket(critterId, kind) {
