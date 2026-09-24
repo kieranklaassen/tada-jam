@@ -347,6 +347,19 @@ describe('theatre controller', () => {
     expect(ctrl.companions.every((c) => c.leavingAt === -Infinity)).toBe(true)
   })
 
+  it('a saved sky opens with every friend already at home, before the first step', () => {
+    const state = defaultTheatre(6)
+    state.sky = Array.from({ length: SKY_SLOTS }, (_, slot) => ({ kind: CREATURE_ORDER[slot % CREATURE_ORDER.length], slot, paper: slot < CREATURE_ORDER.length ? 0 : 1 }))
+    const { ctrl } = theatre(state, true)
+    expect(ctrl.companions).toHaveLength(SKY_SLOTS)
+    ctrl.companions.forEach((friend) => {
+      const home = SKY_HOMES[friend.slot]
+      expect(Math.hypot(friend.pose.x - home.x, friend.pose.y - home.y), `${friend.kind} in slot ${friend.slot} at home`).toBeLessThan(4)
+      expect(friend.pose.z).toBeCloseTo(skyDepth(friend.slot), 6)
+      expect(friend.pose.scale).toBeCloseTo(skyScale(friend.kind), 6)
+    })
+  })
+
   it('a creature flying to a home by the crest keeps in front of the proscenium over it, then settles back onto its sky layer at home', () => {
     const state = defaultTheatre(6)
     state.sky = CREATURE_ORDER.slice(0, 5).map((kind, slot) => ({ kind, slot, paper: 0 as const }))
