@@ -345,6 +345,26 @@ describe('GardenController', () => {
     expect(filter.pose.inTray).toBe(false)
   })
 
+  it('a piece flying home floats up over the tall pieces in the tray in time, instead of popping up over them', () => {
+    const { garden } = makeGarden(7)
+    const lamp = piece(garden, 'lampA')
+    const found: string[] = []
+    const heights: number[] = []
+    // Let go over the far end of the tray, so it flies home over every other slot, the other lamp's last.
+    carry(garden, { x: lamp.x, y: lamp.y }, [{ x: 20, y: 20 }, { x: 48, y: 46 }], () => {
+      found.push(...throughs(garden))
+      if (lamp.flying > 0) heights.push(pieceHeight(lamp))
+    })
+    // How sharply its height ever changes course from one frame to the next: the arc and a float up are gentle,
+    // a pop up over the other lamp or a snap back down past it is not.
+    let jolt = 0
+    for (let f = 2; f < heights.length; f++) jolt = Math.max(jolt, Math.abs(heights[f] - 2 * heights[f - 1] + heights[f - 2]))
+    expect(found.slice(0, 3)).toEqual([])
+    expect(heights.length).toBeGreaterThan(30)
+    expect(jolt).toBeLessThan(0.3)
+    expect(lamp.pose.inTray).toBe(true)
+  })
+
   it('a carried creature floats over the pieces it passes, and none ever dips under the panel', () => {
     const state = defaultGarden(7)
     Object.assign(state.pieces.find((p) => p.id === 'mirror1')!, { x: -40, y: -6, angle: Math.PI, inTray: false })
