@@ -131,7 +131,7 @@ It reads Frame work, the current tier, and the draw counts from a grown-up handl
 ### Intersection audit
 The jam's shared headless check that plays a game's production build on a paused, seeded clock through the game's own scripted stretches of play, and reports what a child would see pass through something: two pieces crossing, a piece sunk into what it rests on or hidden inside another, a Pose finding, coplanar faces that flicker, and anything cut by the camera.
 
-It reads the live 3D scene's positions on the processor at intervals, so motion done only in a shader, anything that happens between two samples, and games drawn without a 3D scene are outside what it sees; those are covered by tests on the game's own model. A game is enforced once its pass is clean, and from then on any visible finding that is not an Intended contact fails CI. A clean run proves only the states its script reached.
+It reads the live 3D scene's positions on the processor at intervals, so motion done only in a shader, anything that happens between two samples, and games drawn without a 3D scene are outside what it sees; those are covered by tests on the game's own model. A game is enforced once its pass is clean, and from then on any visible finding that is not an Intended contact fails CI. So an enforced game must give the same run every time, with the same samples, pieces and findings however busy the machine is: a finding that shows in one run and not the next fails CI at random, and no cap absorbs it. A clean run proves only the states its script reached.
 
 ### Pose finding
 A finding where two parts of one object cross deeper, at some moment, than they did at their shallowest in the same run, such as a wing swinging through its body.
