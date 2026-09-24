@@ -46,7 +46,7 @@ The jam's intersection audit (`npm run check:intersections -- bedtime-forest`) p
 | Seen | Change |
 | --- | --- |
 | The owl standing inside the fox's head and chest, and almost swallowed by the bear; the fox's tail in the bear's arm; the fish in the rabbit. All of it happened while everyone played tricks or stood gazing home | Each animal has a footprint fitted to its drawn body (`layout.ts` `footprint`: a capsule along its facing, so the fox is 33 units nose to tail rather than a 10-unit circle). Everyone on their feet keeps those footprints apart: idle, walking, yawning and in the middle of a trick. Before, only idle and walking animals made room |
-| A rabbit carried to its burrow straight through the bear | A carried animal rides up over anyone it would pass through, feet just over their heads. It looks a little ahead, so it is already up when it gets there, and comes back down at its own pace after. Let go over someone, it slides off them on the way down |
+| A rabbit carried to its burrow straight through the bear | A carried animal rides up over anyone it would pass through, feet just over their heads. It looks a little ahead, so it is already up when it gets there, and comes back down at its own pace after. A bird flying over higher than its head it passes under. Let go over someone, it slides off them on the way down |
 | The fish flopping home from the nest along the grass, through the fox | Anyone standing in the way of an animal passing along the ground (a fish flopping home, a sleeper coming out at dawn) steps aside. It clears where the passer will be after the next frame too: in one of the longest frames a slow device steps (1/20 s), the fish covers more ground than the air kept between them |
 
 Two kinds of contact are allowed, with reasons in the config:
@@ -57,11 +57,12 @@ Two things are ignored:
 - **The ink lines.** They are inverted hulls with their own geometry, so the audit's hull check misses them.
 - **The sky.** It is a full-screen triangle placed in clip space.
 
-After the pass the audit is clean: no open findings in 300 samples and 5 allowed. A replay of the first run's 53 photographed findings finds none of them still there, and the config now enforces. `view/animals.test.ts` holds the footprints to the models. `brain.test.ts` covers five cases:
+After the pass the audit is clean: no open findings in 300 samples and 5 allowed. A replay of the first run's 53 photographed findings finds none of them still there, and the config now enforces. `view/animals.test.ts` holds the footprints to the models. `brain.test.ts` covers six cases:
 - the six crowded together in their tricks
 - the fox and the bear nose to tail
 - the carry over the bear
-- the drop onto it
+- the carry under the owl flying home
+- the drop onto the bear
 - the fish flopping past the fox, at 60 fps and in the longest frames
 
 One test changed: "an animal hidden behind a bigger one" had put the songbird inside the fox's drawn tail, so the fox there now stands side-on.
