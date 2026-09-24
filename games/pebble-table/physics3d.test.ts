@@ -123,7 +123,7 @@ describe('TablePhysics', () => {
     expect(physics.position2(1)!.x).toBeLessThan(800 - 46 - 25)
   })
 
-  it('lets a loose part jittering against a neighbour for long fall asleep, but not a part that has just landed', () => {
+  it('lets a loose part jittering against a neighbour for long fall asleep, and again straight after a neighbour wakes it, but not a part that has just landed', () => {
     const physics = new TablePhysics()
     physics.addPart(1, 'shell', { x: 700, y: 500 })
     run(physics, 1)
@@ -140,5 +140,16 @@ describe('TablePhysics', () => {
     }
     expect(slept).toBeGreaterThan(5)
     expect(slept).toBeLessThan(8)
+    run(physics, 0.1)
+    body.wakeUp()
+    let again = Infinity
+    for (let t = 0; t < 3 && again === Infinity; t += STEP) {
+      const sign = Math.round(t / STEP) % 2 ? 1 : -1
+      body.position.set(at.x, at.y + 1, at.z)
+      body.velocity.set(5 * sign, 0, 0)
+      physics.step(STEP)
+      if (body.sleepState === CANNON.Body.SLEEPING) again = t
+    }
+    expect(again).toBeLessThan(1.5)
   })
 })
