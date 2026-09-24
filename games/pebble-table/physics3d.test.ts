@@ -75,6 +75,25 @@ describe('TablePhysics', () => {
     expect(panOf(physics.position2(1)!)).toBe(0)
   })
 
+  it('lets a pan swinging on after the beam stops wake only what lies in or against it', () => {
+    const physics = new TablePhysics()
+    physics.setMat('scale')
+    physics.addStone(1, 4, SCALE.pans[0], { y: 12 })
+    physics.addPart(2, 'shell', { x: 700, y: 820 })
+    run(physics, 3)
+    const [inPan, away] = [physics.body(1)!, physics.body(2)!]
+    expect(panOf(physics.position2(1)!)).toBe(0)
+    let [panAwake, awayAwake] = [0, 0]
+    for (let t = 0; t < 2; t += STEP) {
+      physics.setPanDrops([0, 0], Math.sin(t * 6) * 0.6)
+      physics.step(STEP)
+      if (inPan.sleepState !== CANNON.Body.SLEEPING) panAwake++
+      if (away.sleepState !== CANNON.Body.SLEEPING) awayAwake++
+    }
+    expect(panAwake, 'steps the stone in the swinging pan was awake').toBeGreaterThan(200)
+    expect(awayAwake, 'steps the shell lying away from the scale was awake').toBe(0)
+  })
+
   it('holds a stone in the air and throws it with the finger on release', () => {
     const physics = new TablePhysics()
     physics.addStone(1, 4, { x: 600, y: 500 })
