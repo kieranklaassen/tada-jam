@@ -7,6 +7,8 @@
 // Both write into preallocated pose objects so the frame loop allocates
 // nothing.
 
+import { BIRD, shoulderPitch, WANDERER_HEM, WANDERER_SCALE } from './anatomy'
+
 export class Spring {
   value: number
   velocity = 0
@@ -102,6 +104,12 @@ export type WandererPose = {
   /** Extra tilt from a platform turning about x or z under the wanderer. */
   tiltAxis: 0 | 1 | 2
   tilt: number
+  /** 1 is full size; it grows smaller as it steps into the door's light. Set by the controller. */
+  scale: number
+  /** How much of its round shadow's width it keeps: less right at the door, which stands closer than the shadow is wide. Set by the controller. */
+  shadow: number
+  /** The surface under it; `y` rises above this while it rocks on its hem. */
+  ground: number
 }
 
 const STRIDE = 0.15
@@ -111,6 +119,9 @@ const LANTERN_OMEGA2 = 70
 const LANTERN_DAMPING = 3.2
 /** Seconds for the lantern to swing from one side to the other. */
 export const LANTERN_HALF_SWING = Math.PI / Math.sqrt(LANTERN_OMEGA2)
+/** Swung in toward the body, the lantern knocks back off the hood this far out; any further and it would sink into it. */
+export const LANTERN_SWING_IN = 0.42
+const LANTERN_KNOCK = 0.35
 
 export class WandererMotion {
   readonly pose: WandererPose = {
@@ -132,6 +143,9 @@ export class WandererMotion {
     glow: 1,
     tiltAxis: 0,
     tilt: 0,
+    scale: 1,
+    shadow: 1,
+    ground: 0,
   }
   /** Set true on the frame a foot comes down. */
   stepped = false
@@ -238,6 +252,9 @@ export class WandererMotion {
     this.px = x
     this.py = y
     this.pz = z
+    this.pose.x = x
+    this.pose.z = z
+    this.pose.ground = y
     this.vx = 0
     this.vz = 0
     this.swingF = 0.25
@@ -385,15 +402,23 @@ export class WandererMotion {
       this.swingSv += accS * hh
       this.swingF += this.swingFv * hh
       this.swingS += this.swingSv * hh
+      if (this.swingS > LANTERN_SWING_IN) {
+        this.swingS = LANTERN_SWING_IN
+        if (this.swingSv > 0) this.swingSv *= -LANTERN_KNOCK
+      }
     }
 
     pose.x = x
-    pose.y = y
     pose.z = z
     pose.heading = h
     pose.squash = this.squash.value
     pose.lean = this.lean.value
     pose.roll = stepWave * 0.11 * gait + sway * (1 - gait) + greetRoll + (riding ? clamp(-aSide * 0.01, -0.15, 0.15) : 0)
+    // A rolling or leaning body rocks up onto the rim of its hem instead of dipping the hem into the floor.
+    const upright = Math.cos(pose.roll) * Math.cos(pose.lean)
+    const hem = (WANDERER_HEM * WANDERER_SCALE * pose.scale) / Math.sqrt(pose.squash)
+    pose.ground = y
+    pose.y = y + hem * Math.sqrt(Math.max(0, 1 - upright * upright))
     pose.headYaw = this.headYaw.value
     pose.headPitch = this.headPitch.value
     pose.arm = this.arm.value
@@ -419,10 +444,52 @@ export type BirdPose = {
   headTilt: number
   /** Wing beat angle; 0 is folded. */
   wing: number
+  /** Each wing's opening as drawn: the beat, stopped short of anything beside it. */
+  wingLeft: number
+  wingRight: number
   tail: number
   /** 0..1 feathers fluffed up: the whole body swells. */
   puff: number
+  /** 1 is full size; it grows smaller as it flies into the door's light. Set by the controller. */
+  scale: number
+  /** The surface under its feet; `y` rises above this while it tips onto its toes or heels. */
+  ground: number
 }
+
+/**
+ * How far the bird may turn its head, open each wing, and whether it may peck,
+ * before any of it would meet a wall. The controller works this out from the
+ * lattice around the bird every frame; the motion stays inside it.
+ */
+export type BirdReach = {
+  yawLo: number
+  yawHi: number
+  pitchLo: number
+  pitchHi: number
+  wingLeft: number
+  wingRight: number
+  peck: boolean
+  /** Room to fluff up, crouch deep and rock back; without it a poke's answer stays small. */
+  swell: boolean
+}
+
+/**
+ * How far its body squashes, fluffs and rocks back, overshoot included: `SNUG`
+ * where there is no room to swell (a crouch, a landing, a rider's step, a
+ * small fluff and a shallow bob all fit), `SWELL` where there is.
+ */
+export const SNUG = { squash: [0.9, 1.1], puff: 0.33, rock: -0.17 } as const
+export const SWELL = { squash: [0.71, 1.15], puff: 1.3, rock: -0.22 } as const
+/** The furthest a peck tips it forward. */
+export const PECK_PITCH = 0.46
+const SNUG_FLUFF = 0.24
+
+const HEAD_YAW = 1.6
+/** The farthest its head looks up or down (radians). */
+export const HEAD_PITCH = 0.6
+/** Carrying the wanderer, it keeps its head forward and low, clear of the rider. */
+const CARRY_YAW = 0.9
+const CARRY_PITCH = 0.15
 
 export class BirdMotion {
   readonly pose: BirdPose = {
@@ -438,11 +505,26 @@ export class BirdMotion {
     headPitch: 0,
     headTilt: 0,
     wing: 0,
+    wingLeft: 0,
+    wingRight: 0,
     tail: 0,
     puff: 0,
+    scale: 1,
+    ground: 0,
+  }
+  readonly reach: BirdReach = {
+    yawLo: -HEAD_YAW,
+    yawHi: HEAD_YAW,
+    pitchLo: -HEAD_PITCH,
+    pitchHi: HEAD_PITCH,
+    wingLeft: BIRD.wingOpen,
+    wingRight: BIRD.wingOpen,
+    peck: true,
+    swell: true,
   }
   /** Set true on the frame a wing comes down (for the flap sound). */
   flapped = false
+  private carrying = false
   private readonly rng = new Rng(29)
   // Snappy: a fixation change completes in well under a tenth of a second.
   private readonly headYaw = new Spring(0, 900, 48)
@@ -484,7 +566,7 @@ export class BirdMotion {
   /** Deep crouch before a hop (anticipation). */
   crouch(now: number): void {
     this.crouchUntil = now + 0.09
-    this.squash.target = 0.72
+    this.squash.target = this.reach.swell ? 0.72 : SNUG.squash[0]
   }
 
   /** Beat the wings for a while (hop, hover, excitement). */
@@ -522,7 +604,7 @@ export class BirdMotion {
         this.ruffle(now)
         break
       case 'puff':
-        this.puff.target = 1
+        this.puff.target = this.reach.swell ? 1 : SNUG_FLUFF
         this.puffUntil = now + PUFF_SECONDS
         this.tail.velocity += 12
         this.headTilt.velocity -= 10
@@ -530,7 +612,7 @@ export class BirdMotion {
       case 'bob':
         this.crouch(now)
         this.flap(now, 0.24)
-        this.pitch.velocity -= 5
+        if (!this.carrying && this.reach.swell) this.pitch.velocity -= 5
         break
       default: {
         const unreachable: never = kind
@@ -540,30 +622,39 @@ export class BirdMotion {
     return kind
   }
 
-  update(dt: number, now: number, x: number, y: number, z: number, heading: number, hovering: boolean): void {
+  update(dt: number, now: number, x: number, y: number, z: number, heading: number, hovering: boolean, carrying = false): void {
     const pose = this.pose
+    const reach = this.reach
     this.flapped = false
+    this.carrying = carrying
+    const yawLo = carrying ? Math.max(reach.yawLo, -CARRY_YAW) : reach.yawLo
+    const yawHi = carrying ? Math.min(reach.yawHi, CARRY_YAW) : reach.yawHi
+    const pitchLo = reach.pitchLo
+    const pitchHi = carrying ? Math.min(reach.pitchHi, CARRY_PITCH) : reach.pitchHi
     if (now >= this.nextSaccade) {
       this.nextSaccade = now + this.rng.range(0.45, 1.35)
       if (now < this.lookUntil) {
         const dx = this.lookX - x
         const dz = this.lookZ - z
-        this.headYaw.target = clamp(wrapAngle(Math.atan2(dx, dz) - heading), -1.6, 1.6)
-        this.headPitch.target = clamp(Math.atan2(this.lookY - (y + 0.6), Math.hypot(dx, dz)), -0.6, 0.6)
+        this.headYaw.target = clamp(wrapAngle(Math.atan2(dx, dz) - heading), -HEAD_YAW, HEAD_YAW)
+        this.headPitch.target = clamp(Math.atan2(this.lookY - (y + 0.6), Math.hypot(dx, dz)), -HEAD_PITCH, HEAD_PITCH)
       } else {
         this.headYaw.target = this.rng.range(-1.3, 1.3)
         this.headPitch.target = this.rng.range(-0.3, 0.25)
       }
       this.headTilt.target = this.rng.next() < 0.3 ? this.rng.range(-0.35, 0.35) : 0
     }
+    this.headYaw.target = clamp(this.headYaw.target, yawLo, yawHi)
+    this.headPitch.target = clamp(this.headPitch.target, Math.max(pitchLo, shoulderPitch(this.headYaw.target, HEAD_PITCH)), pitchHi)
     if (now >= this.nextFlick) {
       this.nextFlick = now + this.rng.range(1.8, 4.6)
       this.tail.velocity += this.rng.next() < 0.5 ? 7 : -7
     }
     if (now >= this.nextPeck && !hovering) {
       this.nextPeck = now + this.rng.range(5, 9)
-      this.peckAt = now
+      if (!carrying && reach.peck) this.peckAt = now
     }
+    if (carrying) this.peckAt = -10
     if (this.crouchUntil >= 0 && now >= this.crouchUntil) {
       this.crouchUntil = -1
       this.squash.target = 1
@@ -572,6 +663,10 @@ export class BirdMotion {
     if (this.puffUntil >= 0 && now >= this.puffUntil) {
       this.puffUntil = -1
       this.puff.target = 0
+    }
+    if (!reach.swell) {
+      this.puff.target = Math.min(this.puff.target, SNUG_FLUFF)
+      this.squash.target = clamp(this.squash.target, SNUG.squash[0], SNUG.squash[1])
     }
 
     const flapping = hovering || now < this.flapUntil
@@ -584,7 +679,8 @@ export class BirdMotion {
     }
 
     const peck = now - this.peckAt
-    this.pitch.target = peck >= 0 && peck < 0.35 ? Math.sin((peck / 0.35) * Math.PI) * 0.45 : flapping ? -0.15 : 0
+    // Carrying, its back stays level under the rider's feet.
+    this.pitch.target = peck >= 0 && peck < 0.35 ? Math.sin((peck / 0.35) * Math.PI) * 0.45 : flapping && !carrying ? -0.15 : 0
     this.headYaw.step(dt)
     this.headPitch.step(dt)
     this.headTilt.step(dt)
@@ -592,9 +688,15 @@ export class BirdMotion {
     this.squash.step(dt)
     this.pitch.step(dt)
     this.puff.step(dt)
+    stayWithin(this.headYaw, yawLo, yawHi)
+    stayWithin(this.headPitch, Math.max(pitchLo, shoulderPitch(this.headYaw.value, HEAD_PITCH)), pitchHi)
+    if (!reach.swell) {
+      stayWithin(this.squash, SNUG.squash[0], SNUG.squash[1])
+      stayWithin(this.puff, -1, SNUG.puff)
+      stayWithin(this.pitch, SNUG.rock, PECK_PITCH)
+    }
 
     pose.x = x
-    pose.y = y
     pose.z = z
     pose.heading = heading
     pose.bob = hovering ? Math.sin(now * 7.5 * Math.PI * 2) * 0.03 + 0.05 : Math.max(0, Math.sin(now * 3.1)) * 0.008
@@ -604,7 +706,21 @@ export class BirdMotion {
     pose.headPitch = this.headPitch.value
     pose.headTilt = this.headTilt.value
     pose.wing = flapping ? 0.55 + Math.sin(this.flapPhase) * 0.6 : 0
+    pose.wingLeft = clamp(pose.wing, 0, reach.wingLeft)
+    pose.wingRight = clamp(pose.wing, 0, reach.wingRight)
     pose.tail = this.tail.value
     pose.puff = this.puff.value
+    // A pitched body tips onto its toes or heels, not through the floor.
+    const tip = Math.sin(pose.pitch)
+    const sole = ((1 + pose.puff * 0.14) / Math.sqrt(pose.squash)) * pose.scale
+    pose.ground = y
+    pose.y = y + Math.max(0, BIRD.toe * tip, -BIRD.heel * tip) * sole
+  }
+}
+
+function stayWithin(spring: Spring, lo: number, hi: number): void {
+  if (spring.value < lo || spring.value > hi) {
+    spring.value = clamp(spring.value, lo, hi)
+    spring.velocity = 0
   }
 }
