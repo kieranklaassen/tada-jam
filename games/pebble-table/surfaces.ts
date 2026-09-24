@@ -144,6 +144,23 @@ export const PAN_ROLL = { radius: 1.03, tube: 0.08, y: 1.6 } as const
 /** Where pieces in a pan stop against its rim, as a fraction of its radius: inside the rolled rim's inner edge. */
 export const PAN_RIM = PAN_ROLL.radius * (1 - PAN_ROLL.tube) - 0.01
 
+/**
+ * The outline (radius, height above the hanging point; cm) a pan of radius `r`
+ * is solid along: up from its floor to where pieces in it stop, over the rolled
+ * rim in chords through its drawn tube, and down under it to the dish's flared
+ * outside. What is in a pan stops at the rim, and what rolls over the rim or
+ * leans on the pan from outside meets the clay instead of sinking into it.
+ */
+export function panOutline(r: number): [number, number][] {
+  const reach = r * PAN_ROLL.radius
+  const tube = reach * PAN_ROLL.tube
+  const around = [120, 60, 0, -60].map((degrees): [number, number] => {
+    const a = (degrees * Math.PI) / 180
+    return [reach + tube * Math.cos(a), PAN_ROLL.y + tube * Math.sin(a)]
+  })
+  return [[r * PAN_RIM, PAN_FLOOR], [r * PAN_RIM, PAN_ROLL.y], ...around, [DISH_PROFILE[1][0] * r, DISH_PROFILE[1][1] * PAN_DEPTH]]
+}
+
 export type Surfaces = { mat: MatKey; seats: readonly boolean[]; panFloors: readonly [number, number] }
 
 /** The height of what a piece lying at `at` rests on: a pan's floor, the bowl's floor, a seated plate, the rug, or the table. */

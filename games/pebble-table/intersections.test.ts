@@ -14,7 +14,7 @@ import { PART_KINDS } from './parts'
 import { panDrops } from './scale'
 import { defaultTable } from './state'
 import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneReachDown, stoneRest, stoneVertices } from './stoneShape'
-import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
+import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PAN_ROLL, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
 import { GUEST_SIZE, guestFloor, guestYaw, NECK_Y, soleDepth, speciesShapes } from './view/guest'
 import {
   ALBUM_SCALE,
@@ -636,6 +636,97 @@ describe('the scale hangs together at every tilt', () => {
       expect(Math.max(...depths) - Math.min(...depths), key).toBeLessThan(0.15)
     }
   })
+
+  const panPieces = new Map<string, ReturnType<typeof auditPiece>>()
+  /** A pan drawn where it hangs, measured once for each place it hangs. */
+  const drawnPan = (side: 0 | 1, x: number, y: number, z: number) => {
+    const key = [side, x, y, z].map((v) => v.toFixed(4)).join()
+    let piece = panPieces.get(key)
+    if (!piece) panPieces.set(key, (piece = auditPiece('pan', shapes.pans[side], new THREE.Matrix4().makeTranslation(x, y, z))))
+    return piece
+  }
+
+  it('lets a stone let go over either rolled rim, at any tilt, roll off it without sinking into the clay', () => {
+    const SEGMENTS = 14
+    let [deepest, met] = [0, 0]
+    // Tilted one way, one pan rides up and the other down.
+    for (const angle of [0, SCALE.maxTilt]) {
+      for (const q of [4, 1] as const) {
+        for (const half of [0, 0.5]) {
+          const physics = new TablePhysics()
+          physics.setMat('scale')
+          physics.setPanDrops(panDrops(angle))
+          run(physics, 0.1)
+          ;([0, 1] as const).forEach((side) => {
+            const pan = SCALE.pans[side]
+            const top = physics.panY(side) + PAN_ROLL.y + pan.r * UNIT * PAN_ROLL.radius * PAN_ROLL.tube
+            for (let i = 0; i < SEGMENTS; i++) {
+              const a = ((i + half) / SEGMENTS) * Math.PI * 2
+              const at = { x: pan.x + Math.cos(a) * pan.r * PAN_ROLL.radius, y: pan.y + Math.sin(a) * pan.r * PAN_ROLL.radius }
+              physics.addStone(side * 100 + i + 1, q, at, { y: top + stoneRest(q) + 0.2 })
+            }
+          })
+          for (let frame = 0; frame < 60; frame++) {
+            physics.step(1 / 60)
+            if (frame % 3) continue
+            ;([0, 1] as const).forEach((side) => {
+              const at = to3(SCALE.pans[side])
+              const drawn = drawnPan(side, at.x, physics.panY(side), at.z)
+              for (let i = 0; i < SEGMENTS; i++) {
+                const body = physics.body(side * 100 + i + 1)
+                if (!body) continue
+                const stone = stoneAt(side * 100 + i + 1, q, body.position, body.quaternion)
+                const piece = auditPiece('stone', stoneGeometry(q), stoneMatrix(still(stone), 1, new THREE.Matrix4()))
+                if (!piece.box.intersectsBox(drawn.box)) continue
+                met++
+                deepest = Math.max(deepest, pairDepth(piece, drawn, CAMERA)?.depth ?? 0)
+              }
+            })
+          }
+        }
+      }
+    }
+    expect(met, 'no stone came near a pan, so this measures nothing').toBeGreaterThan(1000)
+    expect(deepest).toBeLessThan(0.2)
+  }, 60_000)
+
+  it('swings each pan with what lies in it, never sliding its rim through a stone', () => {
+    const table = new TableController({ ...defaultTable(6), bag: 40, total: 40 }, { save: () => {} })
+    table.setProjector({ toScreen: (v) => toWorld2(v), toPlane: (screen) => screen })
+    const [left, right] = SCALE.pans
+    let [deepest, swung, met, clock] = [0, 0, 0, 0]
+    // Carried out of the bag, held over the spot, then let go.
+    const drop = (to: Point, settle: number) => {
+      table.pointerDown(2, BAG, (clock += 10))
+      for (let k = 1; k <= 40; k++) {
+        const f = Math.min(1, k / 30)
+        table.pointerMove(2, { x: BAG.x + (to.x - BAG.x) * f, y: BAG.y + (to.y - BAG.y) * f }, (clock += 16))
+        table.step(1 / 60)
+      }
+      table.pointerUp(2, to, (clock += 16))
+      for (let t = 0; t < settle; t += 1 / 60) {
+        table.step(1 / 60)
+        ;([0, 1] as const).forEach((side) => {
+          const sway = table.physics.panSwung(side)
+          swung = Math.max(swung, Math.abs(sway))
+          const at = to3(SCALE.pans[side])
+          const pan = auditPiece('pan', shapes.pans[side], new THREE.Matrix4().makeTranslation(at.x + sway, table.physics.panY(side), at.z))
+          for (const stone of stoneStates(table)) {
+            if (stone.held) continue
+            const piece = auditPiece('stone', stoneGeometry(stone.q), stoneMatrix(still(stone), 1, new THREE.Matrix4()))
+            if (!piece.box.intersectsBox(pan.box)) continue
+            met++
+            deepest = Math.max(deepest, pairDepth(piece, pan, CAMERA)?.depth ?? 0)
+          }
+        })
+      }
+    }
+    for (const a of [0, Math.PI, 0.4, Math.PI - 0.4]) drop({ x: left.x + Math.cos(a) * left.r * 0.6, y: left.y + Math.sin(a) * left.r * 0.6 }, 1.2)
+    for (let i = 0; i < 6; i++) drop({ x: right.x, y: right.y }, 1.6)
+    expect(swung, 'the pans never swung, so this measures nothing').toBeGreaterThan(1)
+    expect(met, 'no stone lay in a pan, so this measures nothing').toBeGreaterThan(1000)
+    expect(deepest).toBeLessThan(0.1)
+  }, 60_000)
 
   it('turns the beam on its round hub, so the post meets the beam only there', () => {
     const inPost = insideOf(shapes.post, postAt)
