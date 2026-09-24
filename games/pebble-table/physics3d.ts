@@ -134,7 +134,7 @@ export function stoneCollider(q: Quarters): Collider {
 
 type StoneEntry = { body: CANNON.Body; q: Quarters }
 /** A body's shapes placed in the world, and the pose (position, then quaternion) they were placed at. */
-type Placed = { pose: number[]; at: CANNON.Vec3[]; turn: CANNON.Quaternion[] }
+type Placed = { pose: number[]; at: CANNON.Vec3[]; turn: CANNON.Quaternion[]; low: CANNON.Vec3[]; high: CANNON.Vec3[]; bounded: boolean[] }
 /** A contact `sunk` found between two bodies: how deep one lies in the other, along the contact's normal. */
 type SunkContact = { bi: CANNON.Body; bj: CANNON.Body; ni: CANNON.Vec3; depth: number }
 /** The contacts `sunk` found between one pair of bodies, and where the two lay (position, then quaternion, of each). */
@@ -203,9 +203,11 @@ export class TablePhysics {
       const pose = placed.pose
       if (pose[0] === p.x && pose[1] === p.y && pose[2] === p.z && pose[3] === q.x && pose[4] === q.y && pose[5] === q.z && pose[6] === q.w) return placed
     } else {
-      placed = { pose: [], at: body.shapes.map(() => new CANNON.Vec3()), turn: body.shapes.map(() => new CANNON.Quaternion()) }
+      const vectors = () => body.shapes.map(() => new CANNON.Vec3())
+      placed = { pose: [], at: vectors(), turn: body.shapes.map(() => new CANNON.Quaternion()), low: vectors(), high: vectors(), bounded: [] }
       this.placed.set(body, placed)
     }
+    placed.bounded = body.shapes.map(() => false)
     for (let i = 0; i < body.shapes.length; i++) {
       q.mult(body.shapeOrientations[i], placed.turn[i])
       q.vmult(body.shapeOffsets[i], placed.at[i])
@@ -213,6 +215,18 @@ export class TablePhysics {
     }
     placed.pose = [p.x, p.y, p.z, q.x, q.y, q.z, q.w]
     return placed
+  }
+
+  /** Whether two placed shapes' world bounds meet, each worked out once at its body's pose: shapes whose bounds miss cannot touch. */
+  private boundsMeet(a: CANNON.Body, placedA: Placed, i: number, b: CANNON.Body, placedB: Placed, j: number): boolean {
+    for (const [body, placed, k] of [[a, placedA, i], [b, placedB, j]] as const) {
+      if (placed.bounded[k]) continue
+      body.shapes[k].calculateWorldAABB(placed.at[k], placed.turn[k], placed.low[k], placed.high[k])
+      placed.bounded[k] = true
+    }
+    const [lowA, highA, lowB, highB] = [placedA.low[i], placedA.high[i], placedB.low[j], placedB.high[j]]
+    const slack = NEAR_SHAPES_SLACK
+    return lowA.x <= highB.x + slack && lowB.x <= highA.x + slack && lowA.y <= highB.y + slack && lowB.y <= highA.y + slack && lowA.z <= highB.z + slack && lowB.z <= highA.z + slack
   }
 
   /** A chain of balls' bounds from its placed balls: each ball's are its middle give or take its radius, as cannon's are. */
@@ -240,7 +254,8 @@ export class TablePhysics {
    * once. A shape whose bounding sphere stays clear of the other body's bounds
    * can touch none of its shapes, so leaving it out changes no contact. Pairs
    * with many shapes are tried here as cannon tries them, in its order, but
-   * with each body's shapes placed once (see `place`) and only those near.
+   * with each body's shapes placed once (see `place`) and only those near,
+   * and two shapes tried only if their bounds meet (see `boundsMeet`).
    */
   private onlyNearShapes(): void {
     const narrowphase = this.world.narrowphase
@@ -263,6 +278,7 @@ export class TablePhysics {
       return into.length > 0
     }
     const { KINEMATIC, STATIC } = CANNON.Body
+    const SPHERE = CANNON.Shape.types.SPHERE
     narrowphase.getContacts = (p1, p2, world, result, oldcontacts, frictionResult, frictionPool) => {
       for (let k = 0; k < p1.length; k++) {
         const [a, b] = [p1[k], p2[k]]
@@ -288,6 +304,7 @@ export class TablePhysics {
             const sj = b.shapes[j]
             if (!(si.collisionFilterMask & sj.collisionFilterGroup && sj.collisionFilterMask & si.collisionFilterGroup)) continue
             if (placedA.at[i].distanceTo(placedB.at[j]) > si.boundingSphereRadius + sj.boundingSphereRadius) continue
+            if (!(si.type & sj.type & SPHERE) && !this.boundsMeet(a, placedA, i, b, placedB, j)) continue
             const shapeMaterial = (si.material && sj.material && world.getContactMaterial(si.material, sj.material)) || null
             narrowphase.currentContactMaterial = shapeMaterial || material || world.defaultContactMaterial
             const resolver = resolvers[si.type | sj.type]

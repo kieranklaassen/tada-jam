@@ -145,14 +145,15 @@ describe('frame budget', () => {
     expect(mostTilt, 'the beam tipped').toBeGreaterThan(0.05)
     expect(awake, 'parts left awake after the table settles').toBe(0)
     // Seeded, so these are the same on any machine. Trying every shape of a
-    // pair against every other costs four times the shape tests, and `sunk`
-    // finding every pair afresh a sixth more of its own. Steps cut finer while
-    // stones and parts close on each other (so none lands inside another) are
-    // about a seventh of the steps here.
+    // pair against every other costs eight times the shape tests, trying
+    // shapes whose bounds miss twice, and `sunk` finding every pair afresh a
+    // sixth more of its own. Steps cut finer while stones and parts close on
+    // each other (so none lands inside another) are about a seventh of the
+    // steps here.
     expect(total('steps') / frames, 'cannon steps a frame').toBeLessThan(2.5)
     expect(most('steps'), 'cannon steps in the busiest frame').toBeLessThanOrEqual(18)
-    expect(total('tests') / frames, 'shape tests a frame').toBeLessThan(300)
-    expect(most('tests'), 'shape tests in the busiest frame').toBeLessThan(2200)
+    expect(total('tests') / frames, 'shape tests a frame').toBeLessThan(160)
+    expect(most('tests'), 'shape tests in the busiest frame').toBeLessThan(1200)
     expect(total('sunkTests') / frames, "sunk's shape tests a frame").toBeLessThan(14)
     expect(most('contacts'), 'contacts in the busiest frame').toBeLessThan(200)
   })
