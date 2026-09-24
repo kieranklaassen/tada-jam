@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { FEEDING, type Point } from '../layout'
-import { SEAT_SPECIES, type Species } from '../motion'
+import { SEAT_SPECIES, type MotionPose, type Species } from '../motion'
 import { feedingFloor } from '../surfaces'
 import { merge, PALETTE, piece } from './clay'
 import { quillGeometry, quillLayout, withShells } from './fur'
@@ -73,6 +73,35 @@ export function soleDepth(sole: Float32Array, matrix: THREE.Matrix4): number {
 
 /** Where a guest's head sits on its body, in the model's units. */
 export const NECK_Y = 7.4
+/** Where the parts that move on their own hang on the body and the head (model units; arms and ears mirrored by side). */
+export const ARM_AT: V3 = [3.9, 4.7, 0.9]
+export const EAR_AT: V3 = [1.4, 5.6, -0.3]
+export const CHEEKS_AT: V3 = [0, 2.3, 2.5]
+
+/** The nodes of a guest that move: the root turns and squashes the whole guest, the head sits on it, and the rest hang on the head or the body. */
+export type GuestRig = {
+  root: THREE.Object3D
+  head: THREE.Object3D
+  nose: THREE.Object3D
+  cheeks: THREE.Object3D
+  ears: readonly (THREE.Object3D | null)[]
+  arms: readonly (THREE.Object3D | null)[]
+}
+
+/** Poses a guest's moving parts for motion `m`, looking by `look` (radians) and popped in by `pop`; the root's height is left to the caller. */
+export function poseGuest(rig: GuestRig, shapes: GuestShapes, m: MotionPose, look: { yaw: number; pitch: number }, pop: number): void {
+  const vertical = 1 - m.squash
+  const horizontal = 1 + m.squash * 0.6
+  rig.root.scale.set(GUEST_SIZE * horizontal * pop, GUEST_SIZE * vertical * pop, GUEST_SIZE * horizontal * pop)
+  rig.root.rotation.set(m.lean, m.twist, m.roll)
+  rig.head.position.y = NECK_Y - m.headDrop
+  rig.head.rotation.set(look.pitch + m.headPitch, look.yaw + m.headYaw, m.headRoll)
+  rig.nose.position.y = shapes.noseAt[1] + m.nose * 0.22
+  rig.nose.scale.set(1 + Math.abs(m.nose) * 0.18, 1 - Math.abs(m.nose) * 0.2, 1)
+  rig.cheeks.scale.set(1 + m.cheeks * 0.12, 1 + m.cheeks * 0.45, 1 + m.cheeks * 0.6)
+  rig.ears.forEach((ear, side) => ear?.rotation.set(-0.05 - m.ears[side] * 0.9, 0, (side === 0 ? 1 : -1) * m.ears[side] * 0.15))
+  rig.arms.forEach((arm, side) => arm?.rotation.set(-m.armForward[side], 0, (side === 0 ? -1 : 1) * (0.45 + m.armUp[side])))
+}
 
 export type GuestShapes = {
   body: THREE.BufferGeometry
