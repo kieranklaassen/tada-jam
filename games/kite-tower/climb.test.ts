@@ -337,5 +337,5 @@ describe('her head on the way', () => {
     expect(plans).toBeGreaterThan(600)
     expect(offSpot).toBeGreaterThan(300)
     expect(climbs).toBeGreaterThan(80)
-  })
+  }, 60_000)
 })

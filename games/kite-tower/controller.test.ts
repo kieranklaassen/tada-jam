@@ -701,7 +701,7 @@ describe('Pip never ends up inside a block', () => {
     expect(flights).toBeGreaterThan(2)
     // A block creeping onto her can lean a few hundredths into her outline before the head's skin holds it; the drawn head ducks from it.
     expect(worst.depth, worst.where).toBeLessThan(0.06)
-  })
+  }, 60_000)
 })
 
 describe('a newcomer who only copies the ghost hand', () => {

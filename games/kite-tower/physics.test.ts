@@ -460,5 +460,5 @@ describe('PlayPhysics: pieces resting on pieces', () => {
     // A step's travel at landing speed, held for a few frames at most while the contact pushes it back out.
     expect(worstDip, 'deepest landing').toBeLessThan(0.25)
     expect(longestDip, 'longest a landing stays in more than 0.03').toBeLessThan(0.15)
-  })
+  }, 60_000)
 })

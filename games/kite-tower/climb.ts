@@ -54,9 +54,10 @@ function blocked(placed: readonly Placed[], x: number, from: number, to: number)
 
 const STAND_COLUMNS = [0, -STAND_HALF / 2, STAND_HALF / 2, -STAND_HALF, STAND_HALF]
 
-/** Her lathed outline, both sides, a few hundredths apart: offsets across and heights over her feet. */
-const BODY_POINTS: readonly Vec2[] = BODY_PROFILE.slice(1).flatMap((b, i) => {
-  const a = BODY_PROFILE[i]
+/** Her hem up to its widest, both sides, a few hundredths apart: offsets across and heights over her feet. Above it she narrows, so no ramp she stands on reaches her there first. */
+const HEM = BODY_PROFILE.slice(0, BODY_PROFILE.findIndex((p) => p.x === BODY_R) + 1)
+const HEM_POINTS: readonly Vec2[] = HEM.slice(1).flatMap((b, i) => {
+  const a = HEM[i]
   const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 0.04))
   return Array.from({ length: n + 1 }, (_, k) => {
     const x = a.x + ((b.x - a.x) * k) / n
@@ -71,7 +72,7 @@ const BODY_POINTS: readonly Vec2[] = BODY_PROFILE.slice(1).flatMap((b, i) => {
 /** Where her feet go standing over `part` at `x`: her flat hem on the highest of it under her, so on a ramp it rests on the high side instead of in it. */
 function feetOn(part: readonly Vec2[], x: number): number {
   let feet = -Infinity
-  for (const p of BODY_POINTS) {
+  for (const p of HEM_POINTS) {
     const span = spanAt(part, x + p.x)
     if (span) feet = Math.max(feet, span[1] - p.y)
   }

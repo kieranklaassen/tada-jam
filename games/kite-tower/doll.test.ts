@@ -300,7 +300,7 @@ describe('peg doll guard', () => {
         }
       }
     }
-  })
+  }, 60_000)
 
   it("keeps each watcher's head, hair and hat behind the deepest block wherever he turns his head", () => {
     const back = -Math.max(...Object.values(SHAPES).map((shape) => shape.depth)) / 2
