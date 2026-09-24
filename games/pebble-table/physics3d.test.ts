@@ -1,3 +1,4 @@
+import * as CANNON from 'cannon-es'
 import { describe, expect, it } from 'vitest'
 import { FEEDING, SCALE, TABLE } from './layout'
 import { panOf } from './scale'
@@ -120,5 +121,24 @@ describe('TablePhysics', () => {
     physics.body(1)!.velocity.set(90, 0, 0)
     run(physics, 2)
     expect(physics.position2(1)!.x).toBeLessThan(800 - 46 - 25)
+  })
+
+  it('lets a loose part jittering against a neighbour for long fall asleep, but not a part that has just landed', () => {
+    const physics = new TablePhysics()
+    physics.addPart(1, 'shell', { x: 700, y: 500 })
+    run(physics, 1)
+    const body = physics.body(1)!
+    const at = body.position.clone()
+    body.wakeUp()
+    let slept = Infinity
+    for (let t = 0; t < 10 && slept === Infinity; t += STEP) {
+      const sign = Math.round(t / STEP) % 2 ? 1 : -1
+      body.position.set(at.x, at.y + 1, at.z)
+      body.velocity.set(5 * sign, 0, 0)
+      physics.step(STEP)
+      if (body.sleepState === CANNON.Body.SLEEPING) slept = t
+    }
+    expect(slept).toBeGreaterThan(5)
+    expect(slept).toBeLessThan(8)
   })
 })
