@@ -35,7 +35,8 @@ export type Moment = { name: string; run: (driver: Driver) => Promise<void> }
 
 // A contact the game means (a stem planted in soil, a fish under the water
 // surface). `a` and `b` are regular expressions against piece ids, labels, and
-// object keys; `upTo` caps the depth allowed, as a fraction of the smaller
+// object keys, each also tried without its colour suffix and child indices
+// (`frog>outline #574373` as `frog>outline`, `frog:5/outline:1` as `frog/outline`); `upTo` caps the depth allowed, as a fraction of the smaller
 // piece's middle extent. Every entry says why it is intended.
 export type Allowance = { a: string; b?: string; kind?: Kind; upTo?: number; reason: string }
 
