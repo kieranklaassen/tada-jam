@@ -22,6 +22,13 @@ const SUN_R = 0.85
 /** The engraved scale under the moon's path. */
 export const SCALE_INNER = ORBIT_R - 0.22
 export const SCALE_OUTER = ORBIT_R + 0.22
+/** The moon's support: a riser up from the arm's beam, and a shallow cradle just outside the moon from `rim` (from the top) down. */
+export const RISER = { top: 0.028, bottom: 0.034 }
+export const CRADLE = { radius: MOON_R + 0.01, rim: Math.PI * 0.78 }
+/** The halves' rings round the moon: the blue half's rim, and the gold day-night edge between the cradle and it. */
+export const HALVES = { seen: { radius: MOON_R * 1.14, tube: 0.01 }, lit: { radius: MOON_R * 1.07, tube: 0.012 } }
+/** Half the angle either side of straight down that a halves ring leaves open, so it passes clear of the riser. */
+export const riserGap = ({ radius, tube }: { radius: number; tube: number }) => Math.asin((RISER.bottom + tube + 0.004) / radius)
 const TABLE_R = 8.4
 const MODEL = 1
 const SKY = 2
@@ -273,6 +280,8 @@ export class OrreryScene {
     for (const instanced of [this.medallionBodies, this.medallionFaces]) {
       instanced.frustumCulled = false
       instanced.name = instanced === this.medallionBodies ? 'medallion-bodies' : 'medallion-faces'
+      // For the intersection audit: a medallion's body and face are one piece.
+      instanced.userData.jamInstanceObjects = Array.from({ length: PHASE_COUNT }, (_, i) => `medallion-${i + 1}`)
       this.scene.add(inModel(instanced))
     }
     for (let i = 0; i < PHASE_COUNT; i++) {
@@ -358,13 +367,13 @@ export class OrreryScene {
     }
     this.moon.position.set(ORBIT_R, PLANE_Y, 0)
     const armHeight = 0.62
-    const cradleRadius = MOON_R + 0.01
+    const cradleRadius = CRADLE.radius
     // The arm turns as one piece: beam, riser, cradle, collar and counterweight are one draw.
     const armMetal = new THREE.Mesh(track(merged([
       tinted(new THREE.CylinderGeometry(0.04, 0.04, ORBIT_R + 0.9, 20).rotateZ(Math.PI / 2).translate((ORBIT_R - 0.9) / 2, armHeight, 0), BRASS),
-      tinted(new THREE.CylinderGeometry(0.028, 0.034, PLANE_Y - cradleRadius - armHeight, 20).translate(ORBIT_R, (PLANE_Y - cradleRadius + armHeight) / 2, 0), BRASS),
+      tinted(new THREE.CylinderGeometry(RISER.top, RISER.bottom, PLANE_Y - cradleRadius - armHeight, 20).translate(ORBIT_R, (PLANE_Y - cradleRadius + armHeight) / 2, 0), BRASS),
       // A shallow cradle just outside the moon, so the moon rests in it rather than through it.
-      tinted(new THREE.SphereGeometry(cradleRadius, 32, 8, 0, TAU, Math.PI * 0.78, Math.PI * 0.22).translate(ORBIT_R, PLANE_Y, 0), DARK_BRASS),
+      tinted(new THREE.SphereGeometry(cradleRadius, 32, 8, 0, TAU, CRADLE.rim, Math.PI - CRADLE.rim).translate(ORBIT_R, PLANE_Y, 0), DARK_BRASS),
       tinted(new THREE.CylinderGeometry(0.15, 0.15, 0.14, 32).translate(0, armHeight, 0), DARK_BRASS),
       tinted(new THREE.SphereGeometry(0.16, 32, 24).translate(-0.9, armHeight, 0), BLACKENED),
     ])), metal)
@@ -505,18 +514,26 @@ export class OrreryScene {
       vertexShader: 'varying vec3 vN; varying vec3 vView; void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vView = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }',
       fragmentShader: 'uniform float opacity; varying vec3 vN; varying vec3 vView; void main() { float rim = pow(1.0 - abs(dot(vN, vView)), 2.0); gl_FragColor = vec4(vec3(0.35, 0.7, 1.0) * (0.15 + rim * 0.9) * opacity, 1.0); }',
     }))
-    const cap = new THREE.Mesh(track(new THREE.SphereGeometry(MOON_R * 1.14, 64, 32, 0, TAU, 0, Math.PI / 2)), seenMaterial)
+    // Each ring stands upright round the moon and leaves a gap straight down, where the riser comes up to the cradle.
+    const ring = (size: { radius: number; tube: number }) => {
+      const gap = riserGap(size)
+      return new THREE.TorusGeometry(size.radius, size.tube, 8, 96, TAU - 2 * gap).rotateZ(gap - Math.PI / 2)
+    }
+    const cap = new THREE.Mesh(track(new THREE.SphereGeometry(HALVES.seen.radius, 64, 32, 0, TAU, 0, Math.PI / 2)), seenMaterial)
     cap.rotation.z = Math.PI / 2
-    const seenRing = new THREE.Mesh(track(new THREE.TorusGeometry(MOON_R * 1.14, 0.01, 8, 96)), track(new THREE.MeshBasicMaterial({ color: new THREE.Color(0.8, 1.6, 3.0), transparent: true, toneMapped: false })))
+    const seenRing = new THREE.Mesh(track(ring(HALVES.seen)), track(new THREE.MeshBasicMaterial({ color: new THREE.Color(0.8, 1.6, 3.0), transparent: true, toneMapped: false })))
     seenRing.rotation.y = Math.PI / 2
     this.seenHalf.add(cap, seenRing)
-    const litRing = new THREE.Mesh(track(new THREE.TorusGeometry(MOON_R * 1.06, 0.012, 8, 96)), track(new THREE.MeshBasicMaterial({ color: new THREE.Color(3.2, 2.2, 0.8), transparent: true, toneMapped: false })))
+    const litRing = new THREE.Mesh(track(ring(HALVES.lit)), track(new THREE.MeshBasicMaterial({ color: new THREE.Color(3.2, 2.2, 0.8), transparent: true, toneMapped: false })))
     litRing.rotation.y = Math.PI / 2
     this.halves.add(this.seenHalf, litRing)
+    cap.name = 'seen-cap'; seenRing.name = 'seen-ring'; litRing.name = 'lit-ring'
     this.halves.name = 'halves'
     this.scene.add(inModel(this.halves))
 
     this.setMoon(0)
+    // A resize draws before the first tick: without this, that frame has the child and the halves at the origin.
+    this.update(0)
   }
 
   setMoon(elongation: number) {
@@ -633,8 +650,16 @@ export class OrreryScene {
     // The child stands at home, faces the moon's direction and points at it
     // while it is up; after moving house they give a little hop.
     const toMoon = moonPos.clone().sub(feet)
-    const forward = toMoon.addScaledVector(up, -toMoon.dot(up)).normalize()
-    const right = new THREE.Vector3().crossVectors(up, forward).normalize()
+    const forward = toMoon.addScaledVector(up, -toMoon.dot(up))
+    if (forward.lengthSq() < 1e-10) {
+      // The moon straight overhead leaves no way along the ground to face; any will do.
+      forward.set(up.y, -up.x, 0)
+      if (forward.lengthSq() < 1e-6) forward.set(1, 0, 0)
+    }
+    // Right, up and back must be a right-handed set of unit vectors at right angles: anything else is no
+    // rotation, and its quaternion tips the child over, into the globe, or squashes it flat.
+    const right = new THREE.Vector3().crossVectors(forward, up).normalize()
+    forward.crossVectors(up, right)
     this.kid.quaternion.setFromRotationMatrix(this.m.makeBasis(right, up, forward.clone().negate()))
     this.kidHop = Math.max(0, this.kidHop - dt * 2.5)
     this.kid.position.copy(feet).addScaledVector(up, Math.abs(Math.sin(t * 3)) * 0.008 + Math.sin(this.kidHop * Math.PI) * 0.12)
