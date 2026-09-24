@@ -62,7 +62,45 @@ function lowestFootGap(workshop: WorkshopController): number {
   return worst
 }
 
+/** How far the lowest nose or painted-face vertex of a lump on the turntable sits above its top. */
+function lowestFaceGap(workshop: WorkshopController): number {
+  const owners = new Set(workshop.critters.filter((c) => !c.gone && c.mode !== 'carried' && onTurntable(c.mover, 1)).map((c) => OWNER.critter(c.save.id)))
+  const m = new THREE.Matrix4()
+  const v = new THREE.Vector3()
+  let worst = Infinity
+  for (const kind of ['nose', 'mark', 'crescent'] as const) {
+    const batch = workshop.rig.batches[kind]
+    const position = SHAPES[kind].getAttribute('position')
+    for (let i = 0; i < batch.count; i++) {
+      if (!owners.has(batch.owners[i])) continue
+      m.fromArray(batch.matrices, i * 16)
+      for (let p = 0; p < position.count; p++) worst = Math.min(worst, v.fromBufferAttribute(position, p).applyMatrix4(m).y - TURNTABLE.height)
+    }
+  }
+  return worst
+}
+
 describe('feet', () => {
+  it('a new lump plops onto the turntable and squashes without its nose or face dipping through the top', () => {
+    const sleeper = { id: 1, hue: 1, parts: parts('eye', 'legStub'), x: 0, z: 0, heading: 0, seed: 5 }
+    const workshop = new WorkshopController(deserialize({ v: 1, sleeper, awake: [], tray: {}, nextHue: 2, nextId: 2 }), { save: vi.fn() })
+    workshop.setProjector(topDown)
+    for (let t = 0; t < 1; t += 1 / 60) workshop.step(1 / 60)
+    const nose = workshop.sleeper!.world.nose
+    const at = { x: nose[0] * 10 + 600, y: nose[2] * 10 + 400 }
+    workshop.pointerDown(1, at, 1000)
+    workshop.pointerUp(1, at, 1080)
+    let plopped = false
+    let worst = Infinity
+    for (let t = 0; t < 8; t += 1 / 60) {
+      workshop.step(1 / 60)
+      plopped ||= workshop.critters.some((c) => c.mode === 'plopping')
+      worst = Math.min(worst, lowestFaceGap(workshop))
+    }
+    expect(plopped).toBe(true)
+    expect(worst).toBeGreaterThan(-0.05)
+  })
+
   it.each(['legStub', 'legLong'] as const)('a lump asleep on six %s legs rests them on the turntable, not through it', (kind) => {
     const state = deserialize({ v: 1, sleeper: { id: 1, hue: 1, parts: [...six(kind), ...parts('eye')], x: 0, z: 0, heading: 0, seed: 5 }, awake: [], tray: {}, nextHue: 2, nextId: 2 })
     const workshop = new WorkshopController(state, { save: vi.fn() })

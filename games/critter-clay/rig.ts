@@ -60,6 +60,16 @@ const SOLE = {
 } as const
 const SOLE_GAP = 0.02
 const FLANK_LIFT = 1.5
+type FaceBox = { readonly min: Vec3; readonly max: Vec3 }
+/**
+ * The local bounds of the shapes painted or pressed onto a body's face (measured from the shapes). The body's own
+ * belly is flattened where it rests, so a nose or mouth low on a squashed lump would otherwise dip under it.
+ */
+const FACE_BOX: Record<'nose' | 'mark' | 'crescent', FaceBox> = {
+  nose: { min: [-1.55, -0.6, -1.25], max: [1.55, 1.7, 1.25] },
+  mark: { min: [-1.05, -0.25, -1.05], max: [1.05, 0.3, 1.05] },
+  crescent: { min: [-1.25, -0.15, -0.8], max: [1.25, 0.25, 0.5] },
+}
 function solePoints(side: number, toes: number, heel: number): (readonly [number, number])[] {
   const d = 0.75
   return [[0, toes], [0, -heel], [side, 0], [-side, 0], [side * d, toes * d], [-side * d, toes * d], [side * d, -heel * d], [-side * d, -heel * d]]
@@ -554,6 +564,7 @@ export class Rig {
     this.W.multiply(this.basis(n[0], n[1], n[2], UP, this.R))
     const nose = (1 + 0.1 * Math.max(0, -critter.wobble) * 4) * (1 + 0.4 * critter.itch)
     this.W.multiply(this.T.makeScale(nose, nose, nose))
+    this.offFloor(this.W, FACE_BOX.nose)
     this.batches.nose.push(this.W, COLORS, hueAt(noseHue(critter.save.hue)), boil, seed + 0.5, this.owner)
     this.v.set(0, 0.8, 0).applyMatrix4(this.W)
     world.nose[0] = this.v.x
@@ -577,7 +588,17 @@ export class Rig {
     this.M.copy(this.F).multiply(this.T.makeTranslation(p[0], p[1], p[2]))
     this.M.multiply(this.basis(n[0], n[1], n[2], UP, this.R))
     this.M.multiply(this.T.makeScale(width, 1, height))
+    this.offFloor(this.M, FACE_BOX[key])
     this.batches[key].push(this.M, COLORS, WHITE, boil * 0.5, seed, this.owner)
+  }
+
+  /** Moves a face feature up (into its body) until its lowest point clears the floor, as a squashed body's belly does. */
+  private offFloor(m: THREE.Matrix4, box: FaceBox): void {
+    const e = m.elements
+    let low = e[13]
+    for (let j = 0; j < 3; j++) low += Math.min(e[j * 4 + 1] * box.min[j], e[j * 4 + 1] * box.max[j])
+    const below = this.floor + SOLE_GAP - low
+    if (below > 0) e[13] += below
   }
 
   /** Pupils that look around (a glint painted in), and clay lids in the body's colour that close over the eye. */
