@@ -374,6 +374,38 @@ export function partReach(kind: PartKind): number {
   return reach
 }
 
+const SUPPORT_DIRECTIONS = 600
+const supports = new Map<PartKind, Float32Array>()
+
+/** The drawn vertices standing farthest out along each of a spread of directions: how far the part reaches any way, within a hair, from far fewer points. */
+function partSupport(kind: PartKind): Float32Array {
+  let support = supports.get(kind)
+  if (!support) {
+    const v = partVertices(kind)
+    const keep = new Set<number>()
+    for (let k = 0; k < SUPPORT_DIRECTIONS; k++) {
+      const dy = 1 - (2 * (k + 0.5)) / SUPPORT_DIRECTIONS
+      const a = k * Math.PI * (3 - Math.sqrt(5))
+      const [dx, dz] = [Math.cos(a) * Math.sqrt(1 - dy * dy), Math.sin(a) * Math.sqrt(1 - dy * dy)]
+      let best = 0
+      for (let i = 3; i < v.length; i += 3) if (v[i] * dx + v[i + 1] * dy + v[i + 2] * dz > v[best] * dx + v[best + 1] * dy + v[best + 2] * dz) best = i
+      keep.add(best)
+    }
+    support = Float32Array.from([...keep].flatMap((i) => [v[i], v[i + 1], v[i + 2]]))
+    supports.set(kind, support)
+  }
+  return support
+}
+
+/** How far (cm) a drawn part reaches below its origin when turned by the quaternion (x, y, z, w). */
+export function partReachDown(kind: PartKind, x: number, y: number, z: number, w: number): number {
+  const [rx, ry, rz] = [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)]
+  const v = partSupport(kind)
+  let low = Infinity
+  for (let i = 0; i < v.length; i += 3) low = Math.min(low, rx * v[i] + ry * v[i + 1] + rz * v[i + 2])
+  return -low
+}
+
 // --- jars and the nest ------------------------------------------------------
 
 /**
