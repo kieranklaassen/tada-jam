@@ -11,7 +11,7 @@ import { panDrops } from './scale'
 import { STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneRest, stoneVertices } from './stoneShape'
 import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, ON_RUG, PAN_FLOOR, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_TOP, type Surfaces } from './surfaces'
 import { GUEST_SIZE, guestFloor, guestYaw, soleDepth, speciesShapes } from './view/guest'
-import { ALBUM_SCALE, albumGeometry, CHOOSER_SCALE, chooserGeometry, DOOR_FARTHEST, DOOR_HINGE, doorLeafGeometry, doorSwing, easeOutBack, feedingShapes, houseGeometry, HUB_RADIUS, MOUSE_SCALE, mouseGeometry, panHang, PIVOT_Y, ROPE_KNOT, ropeMatrix, scaleShapes } from './view/models'
+import { ALBUM_SCALE, albumGeometry, CHOOSER_SCALE, chooserGeometry, DOOR_FARTHEST, DOOR_HINGE, doorLeafGeometry, doorSwing, easeOutBack, feedingShapes, houseGeometry, HUB_RADIUS, MOUSE_SCALE, mouseGeometry, panHang, PIVOT_Y, POST_LIFT, ROPE_KNOT, ropeMatrix, scaleShapes } from './view/models'
 import { comingOut, DOOR_SWING, goingHome, VISITOR_GAP, VISITOR_REACH, visitorGone, visitorPose, visitorWalk, type VisitorPose, type VisitorTimes } from './visitors'
 import { chunk } from './voice'
 
@@ -240,7 +240,7 @@ function distanceTo(geometry: THREE.BufferGeometry, matrix: THREE.Matrix4): (p: 
 describe('the scale hangs together at every tilt', () => {
   const shapes = scaleShapes()
   const post = to3(SCALE.post)
-  const postAt = new THREE.Matrix4().makeTranslation(post.x, 0, post.z)
+  const postAt = new THREE.Matrix4().makeTranslation(post.x, POST_LIFT, post.z)
   const beamAt = (angle: number) => new THREE.Matrix4().makeTranslation(post.x, PIVOT_Y, post.z).multiply(new THREE.Matrix4().makeRotationZ(-angle))
   const tilts = [-SCALE.maxTilt, 0, SCALE.maxTilt]
   const hangs = (angle: number, sway: number) =>
@@ -291,9 +291,10 @@ describe('the scale hangs together at every tilt', () => {
     }
   })
 
-  it('draws the post as a closed solid standing flat on the table', () => {
-    const points = pointsOf(shapes.post, postAt)
-    expect(Math.min(...points.map((v) => v.y))).toBeGreaterThanOrEqual(-1e-6)
+  it('draws the post as a closed solid standing flat on the table, a hair above its contact shadow', () => {
+    const lowest = Math.min(...pointsOf(shapes.post, postAt).map((v) => v.y))
+    expect(lowest).toBeGreaterThan(DECAL_LIFT)
+    expect(lowest).toBeLessThan(0.1)
     const position = shapes.post.attributes.position
     const at = (v: number) => Math.round(v * 1e4) + 0
     const key = (i: number) => `${at(position.getX(i))},${at(position.getY(i))},${at(position.getZ(i))}`
