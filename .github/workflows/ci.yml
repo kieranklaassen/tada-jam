@@ -33,3 +33,37 @@ jobs:
         run: npm run build
       - name: Egress check (built assets)
         run: npm run egress:built
+
+  # Plays every game's production build headless and fails on pieces passing
+  # through each other (scripts/jam-intersections.mjs). Games are dealt to the
+  # shards by name, so a new game needs no change here.
+  intersections:
+    name: Intersection audit (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    concurrency:
+      group: intersections-${{ github.ref }}-${{ matrix.shard }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Playwright Chromium
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: Build
+        run: npm run build
+      - name: Intersection audit
+        run: npm run check:intersections -- --all --ci --shard ${{ matrix.shard }}/4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: intersections-${{ matrix.shard }}
+          path: test-results/intersections
+          retention-days: 14
