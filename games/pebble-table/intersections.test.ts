@@ -35,7 +35,9 @@ import {
   MOUSE_SCALE,
   mouseGeometry,
   panHang,
+  partBalls,
   partGeometry,
+  type PartState,
   PIVOT_Y,
   POST_LIFT,
   ROPE_REACH,
@@ -716,6 +718,40 @@ describe('stones squash, rock and pop without sinking or swelling into a neighbo
     expect(depthInto(motions[1], 1, still(under), 1)).toBe(0)
     expect(stoneRoom(motions[0], [motions[0], still(over)])).toBe(0)
   })
+
+  // The audit caught a stick 15% into the stone under it while the scale
+  // counted that stone: the beat's pop swelled it up into the stick.
+  it('never swells a stone into a loose part lying on or against it', () => {
+    const parts = new Map(PART_KINDS.map((kind) => [kind, partGeometry(kind)]))
+    let [cases, reached] = [0, 0]
+    for (const q of SIZES) {
+      for (const kind of ['stick', 'shell', 'acorn'] as const) {
+        for (const aside of [0, 0.7, 1.2]) {
+          const physics = new TablePhysics()
+          physics.addStone(1, q, { x: 800, y: 700 })
+          run(physics, 1)
+          const body = physics.body(1)!
+          physics.addPart(2, kind, { x: 800 + (aside * stoneRadius3(q)) / UNIT, y: 700 }, { y: body.position.y + 3, yaw: 0.6 })
+          run(physics, 2)
+          const partBody = physics.body(2)!
+          const lifted = partBody.position.vadd(physics.sunk(new Set([partBody])).get(partBody) ?? new CANNON.Vec3())
+          const part: PartState = { id: 2, kind, position: { x: lifted.x, y: lifted.y, z: lifted.z }, quaternion: [partBody.quaternion.x, partBody.quaternion.y, partBody.quaternion.z, partBody.quaternion.w], held: false }
+          const drawnPart = auditPiece(kind, parts.get(kind)!, new THREE.Matrix4().compose(new THREE.Vector3(lifted.x, lifted.y, lifted.z), new THREE.Quaternion(...part.quaternion), new THREE.Vector3(1, 1, 1)))
+          const stone = stoneAt(1, q, body.position, body.quaternion)
+          const depth = (motion: StoneMotion, keep: number) => pairDepth(auditPiece('stone', geometries.get(q)!, stoneMatrix(motion, keep, new THREE.Matrix4())), drawnPart, CAMERA)?.depth ?? 0
+          const rest = depth(still(stone), 1)
+          const beat: StoneMotion = { stone, amount: 0, rock: 0, pop: 1.22 }
+          for (const motion of [beat, ...[0, 1, 2, 3, 4, 5].map((k) => loudest(stone, k))]) {
+            const where = `${kind} ${aside} of the way out on a ${q}-quarter stone, ${motion.amount} squashed, ${motion.rock} rocked, ${motion.pop} popped`
+            cases++
+            if (depth(motion, 1) > rest + 0.05) reached++
+            expect(depth(motion, stoneRoom(motion, [motion], partBalls([part]))), where).toBeLessThan(rest + 0.01)
+          }
+        }
+      }
+    }
+    expect(reached, 'no swell reached a part, so this measures nothing').toBeGreaterThan(cases / 3)
+  }, 60_000)
 
   it('draws no shadow or glow wholly inside the stone lying on it', () => {
     const lyingStones = [...SIZES.map((q, i) => stoneAt(i + 1, q, { x: 0, y: stoneRest(q), z: 0 }, new THREE.Quaternion())), ...settledHeap()].filter((stone) => lowestOf(still(stone)) < 0.05)

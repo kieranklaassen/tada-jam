@@ -10,7 +10,7 @@ import { partCover, partReachDown, STOOL_REACH } from '../partShape'
 import { feedingFloor, feedingRest, RUG, surfaceUnder } from '../surfaces'
 import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
 import { visitorHome } from '../visitors'
-import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GHOST_REACH, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, STONE_COVER, stoneCover, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type RopeBall, type StoneState } from './models'
+import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GHOST_REACH, GhostHand, Guest, HELD_PART_GROWTH, KnifeModel, Overlays, ScaleModel, ShelfModel, STONE_COVER, stoneCover, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type RopeBall, type StoneState } from './models'
 import { guestFloor } from './guest'
 import { GrownUpOverlay } from './overlay'
 import { ProjectorBridge, Stage, type ProjectorHandle } from './stage'
@@ -97,8 +97,6 @@ function partStates(table: TableController): PartState[] {
   return states
 }
 
-/** A held part is drawn this much bigger than it lies, about its body's origin. */
-const HELD_GROWTH = 1.12
 /**
  * A held stone is drawn stretched by at most this share of how far each point
  * lies from its body's origin (see `stoneMatrix`), and lifted by at most
@@ -122,7 +120,7 @@ export function heldBalls(table: TableController): RopeBall[][] {
     turn.set(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w)
     const part = table.state.parts.find((p) => p.id === id)
     const grown = part
-      ? partCover(part.kind).map((ball) => ({ at: at.set(ball.x, ball.y, ball.z).applyQuaternion(turn).multiplyScalar(HELD_GROWTH).clone(), radius: ball.r * HELD_GROWTH }))
+      ? partCover(part.kind).map((ball) => ({ at: at.set(ball.x, ball.y, ball.z).applyQuaternion(turn).multiplyScalar(HELD_PART_GROWTH).clone(), radius: ball.r * HELD_PART_GROWTH }))
       : stoneCover(table.quartersOf(id)).map((ball) => {
           const reach = Math.hypot(ball.x, ball.y, ball.z)
           return { at: at.set(ball.x, ball.y, ball.z).applyQuaternion(turn).clone(), radius: ball.r + (reach + ball.r) * HELD_STRETCH + HELD_LIFT }
@@ -291,7 +289,7 @@ function World({ table }: { table: TableController }) {
           <KnifeModel read={() => ({ at: table.knife.at, visible: table.feeding.leftover || table.knife.pointerId !== null, held: table.knife.pointerId !== null, now: table.t })} />
         </>
       )}
-      <StonesModel read={() => stoneStates(table)} />
+      <StonesModel read={() => stoneStates(table)} parts={() => partStates(table)} />
       <CarrierMice read={() => carrierMice(table)} />
       <ShelfModel read={() => ({ mats: table.shelfMats(), drag: table.shelfDrag, glow: table.guidance.glowShelf ? table.guidance.glow : 0, now: table.t })} />
       <AlbumModel read={() => ({ pages: table.state.album, at: table.albumAt, now: table.t })} />

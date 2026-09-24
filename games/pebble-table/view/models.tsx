@@ -205,15 +205,34 @@ function stoneStretch(stone: StoneState, amount: number, rock: number, pop: numb
   return { lift, out: stoneReachOf(stone.q) * grow + Math.abs(lift) }
 }
 
+const stirred = (m: StoneMotion) => m.amount !== 0 || m.rock !== 0 || m.pop !== 1
+
+/** A held part is drawn this much bigger than it lies, about its body's origin. */
+export const HELD_PART_GROWTH = 1.12
+
+/** The balls of each loose part's cover, placed and grown as the part is drawn. */
+export function partBalls(parts: readonly PartState[]): Ball[] {
+  const balls: Ball[] = []
+  for (const part of parts) {
+    scratch.q.set(...part.quaternion)
+    const grow = part.held ? HELD_PART_GROWTH : 1
+    for (const { x, y, z, r } of partCover(part.kind)) {
+      const at = scratch.p.set(x, y, z).applyQuaternion(scratch.q).multiplyScalar(grow)
+      balls.push({ x: part.position.x + at.x, y: part.position.y + at.y, z: part.position.z + at.z, r: r * grow })
+    }
+  }
+  return balls
+}
+
 /**
  * How much of a stone's squash, rock and pop it keeps (0 to 1) so it never
- * swells into a stone beside it. A still stone lying wholly below it cannot
- * be reached: everything turns and scales about the stone's lowest point,
- * which stays put.
+ * swells into a stone beside it, or into a loose part (the balls of `parts`)
+ * lying on or against it. Anything still lying wholly below it cannot be
+ * reached: everything turns and scales about the stone's lowest point, which
+ * stays put.
  */
-export function stoneRoom(motion: StoneMotion, motions: readonly StoneMotion[]): number {
+export function stoneRoom(motion: StoneMotion, motions: readonly StoneMotion[], parts: readonly Ball[] = []): number {
   const { stone } = motion
-  const moving = (m: StoneMotion) => m.amount !== 0 || m.rock !== 0 || m.pop !== 1
   const full = stoneStretch(stone, motion.amount, motion.rock, motion.pop).out
   if (full === 0) return 1
   const reach = stoneReachOf(stone.q)
@@ -224,9 +243,14 @@ export function stoneRoom(motion: StoneMotion, motions: readonly StoneMotion[]):
     const p = other.stone.position
     const gap = Math.hypot(p.x - stone.position.x, p.y - stone.position.y, p.z - stone.position.z) - reach - stoneReachOf(other.stone.q)
     if (gap >= full) continue
-    const still = !moving(other)
+    const still = !stirred(other)
     if (still && p.y + reachUpright(other.stone.q, scratch.q.set(...other.stone.quaternion), 1) <= bottom) continue
     room = Math.min(room, still ? gap : gap / 2)
+  }
+  for (const ball of parts) {
+    const gap = Math.hypot(ball.x - stone.position.x, ball.y - stone.position.y, ball.z - stone.position.z) - reach - ball.r
+    if (gap >= full || ball.y + ball.r <= bottom) continue
+    room = Math.min(room, gap)
   }
   if (room >= full) return 1
   let keep = Math.max(0, room / full)
@@ -266,8 +290,8 @@ export function stoneMatrix(motion: StoneMotion, keep: number, out: THREE.Matrix
   return out.makeTranslation(stone.position.x, stone.position.y + lift, stone.position.z).multiply(squashScale).multiply(stoneRotation).multiply(shapeScale)
 }
 
-/** Stones in three instanced draws (whole, half, quarter): physics pose plus squash on landing and stretch on pickup. */
-export function StonesModel({ read }: { read: () => StoneState[] }) {
+/** Stones in three instanced draws (whole, half, quarter): physics pose plus squash on landing and stretch on pickup, held back from the stones and `parts` around them. */
+export function StonesModel({ read, parts }: { read: () => StoneState[]; parts: () => PartState[] }) {
   const { stones } = useClay()
   const meshes = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)]
   const squash = useRef(new Map<number, Squash>())
@@ -307,13 +331,14 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
       const pop = 1 + stone.pulse * 0.22 + stone.glow * 0.06
       moving.push({ stone, amount: Math.abs(amount) < 1e-4 ? 0 : amount, rock: Math.abs(rock) < 1e-4 ? 0 : rock, pop })
     }
+    const around = moving.some(stirred) ? partBalls(parts()) : []
     for (const motion of moving) {
       const { stone } = motion
       const slot = PIECE_SIZES.indexOf(stone.q)
       const instanced = meshes[slot].current
       if (!instanced || counts[slot] >= MAX_STONES) continue
       const i = counts[slot]++
-      instanced.setMatrixAt(i, stoneMatrix(motion, stoneRoom(motion, moving), scratch.m))
+      instanced.setMatrixAt(i, stoneMatrix(motion, stoneRoom(motion, moving, around), scratch.m))
       const bright = 1 + stone.pulse * 0.28 + stone.glow * 0.18
       instanced.setColorAt(i, scratch.c.setRGB(bright, bright, bright))
     }
@@ -1386,7 +1411,7 @@ export function PartsModel({ read }: { read: () => PartState[] }) {
       const instanced = refs[slot].current
       if (!instanced) continue
       scratch.q.set(...part.quaternion)
-      const grow = part.held ? 1.12 : 1
+      const grow = part.held ? HELD_PART_GROWTH : 1
       scratch.m.compose(scratch.p.set(part.position.x, part.position.y, part.position.z), scratch.q, scratch.s.set(grow, grow, grow))
       instanced.setMatrixAt(counts[slot]++, scratch.m)
     }
