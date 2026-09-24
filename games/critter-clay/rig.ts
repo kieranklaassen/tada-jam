@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { Critter } from './critter'
-import { CAMERA, TRAY, traySlot } from './layout'
+import { CAMERA, TRAY, traySlot, TRAY_SLOT_RISE } from './layout'
 import {
   BODY,
   canTake,
@@ -44,12 +44,15 @@ export const PART_REACH: Record<PartKind, number> = {
   earFlop: 5,
   tailCurl: 4.2,
   tailLong: 8,
-  head: 0,
+  head: 4.845,
   horn: 3.4,
 }
 /** The eye's white ball: its centre height above the eye base, and its radius. */
 export const EYE_BALL = { center: 1.05, radius: 1.3 } as const
 export const PUPIL_RADIUS = 0.6
+/** The head's neck runs from its centre toward the body along this (unit) direction. */
+const NECK_LENGTH = Math.hypot(0.87, 0.5)
+export const HEAD_NECK: Vec3 = [0, -0.87 / NECK_LENGTH, -0.5 / NECK_LENGTH]
 
 export type BatchKey = PartKind | 'body' | 'nose' | 'pupil' | 'lid' | 'mark' | 'crescent'
 export const BATCH_KEYS: readonly BatchKey[] = [...PART_KINDS, 'body', 'nose', 'pupil', 'lid', 'mark', 'crescent']
@@ -204,7 +207,8 @@ function displayMatrix(kind: PartKind, out: THREE.Matrix4): THREE.Matrix4 {
     case 'tail':
       return out.makeRotationFromEuler(new THREE.Euler(tilt * 0.6, kind === 'tailLong' ? 0.6 : 0, kind === 'tailLong' ? -0.9 : 0)).multiply(scale)
     case 'head':
-      return out.copy(scale)
+      // stood on its neck, face tipped up toward the child
+      return out.makeRotationX(-Math.atan2(-HEAD_NECK[2], -HEAD_NECK[1])).multiply(scale)
     default: {
       const unreachable: never = FAMILY[kind]
       return unreachable
@@ -212,25 +216,28 @@ function displayMatrix(kind: PartKind, out: THREE.Matrix4): THREE.Matrix4 {
   }
 }
 
+/**
+ * How far each part reaches below its origin as it lies in the tray (display pose and size): its
+ * collar's rim, a leg's side, the head's neck. Measured from view/shapes.ts; tray.test.ts holds them
+ * to the geometry, so a part rests on its slot instead of sinking into it.
+ */
+export const DISPLAY_FOOT: Record<PartKind, number> = {
+  legStub: 2.373,
+  legLong: 1.767,
+  eye: 2.127,
+  earRound: 1.314,
+  earPoint: 1.112,
+  earFlop: 1.119,
+  tailCurl: 1.384,
+  tailLong: 1.317,
+  head: 4.845,
+  horn: 1.414,
+}
+const REST_GAP = 0.02
+
 /** The height at which a displayed part's base sits above the surface it rests on. */
 export function displayBase(kind: PartKind): number {
-  const s = DISPLAY_SCALE[kind]
-  switch (FAMILY[kind]) {
-    case 'legs':
-      return 1.3 * s
-    case 'head':
-      return HEAD_RADIUS * 0.8 * s
-    case 'tail':
-      return (kind === 'tailLong' ? 1.4 : 0.9) * s
-    case 'eyes':
-    case 'ears':
-    case 'horns':
-      return 0.4 * s
-    default: {
-      const unreachable: never = FAMILY[kind]
-      return unreachable
-    }
-  }
+  return TRAY_SLOT_RISE + DISPLAY_FOOT[kind] + REST_GAP
 }
 
 export type Anim = { sy: number; sxz: number; out: number; wiggle: number }
@@ -243,7 +250,7 @@ export class Rig {
   readonly batches: Record<BatchKey, Batch>
   readonly shadows = new OverlayBatch(72)
   readonly glows = new OverlayBatch(48)
-  /** The tray's resting matrices, one per part kind (without the regrow scale). */
+  /** The tray's resting matrices, one per part kind, from the slot's surface (without the regrow scale). */
   private readonly trayRest: Record<PartKind, THREE.Matrix4>
   readonly display: Record<PartKind, THREE.Matrix4>
 
@@ -274,8 +281,7 @@ export class Rig {
     this.trayRest = {} as Record<PartKind, THREE.Matrix4>
     for (const kind of PART_KINDS) {
       this.display[kind] = displayMatrix(kind, new THREE.Matrix4())
-      const slot = traySlot(kind)
-      this.trayRest[kind] = new THREE.Matrix4().makeTranslation(slot.x, TRAY.height + displayBase(kind), slot.z).multiply(this.display[kind])
+      this.trayRest[kind] = new THREE.Matrix4().makeTranslation(0, displayBase(kind) - TRAY_SLOT_RISE, 0).multiply(this.display[kind])
     }
   }
 
@@ -565,12 +571,13 @@ export class Rig {
 
   // --- the tray, loose parts -----------------------------------------------------
 
-  /** A part resting in its tray slot, growing back (`grow` 0..1) and hopping (`hop` in bench units). */
+  /** A part resting in its tray slot, growing back (`grow` 0..1) and hopping (`hop` in bench units); it squashes and grows about where it touches the slot. */
   trayPart(kind: PartKind, hue: Hue, grow: number, hop: number, squash: number, boil: number): void {
     const g = Math.max(0.001, grow)
     const sy = g * (1 - squash)
     const sxz = g * (1 + squash * 0.6)
-    this.W.makeTranslation(0, hop, 0).multiply(this.trayRest[kind]).multiply(this.T.makeScale(sxz, sy, sxz))
+    const slot = traySlot(kind)
+    this.W.makeTranslation(slot.x, TRAY.height + TRAY_SLOT_RISE + hop, slot.z).multiply(this.T.makeScale(sxz, sy, sxz)).multiply(this.trayRest[kind])
     this.loose(kind, hue, this.W, boil, PART_KINDS.indexOf(kind) * 0.1, OWNER.tray(kind))
   }
 

@@ -1,8 +1,8 @@
 import * as THREE from 'three'
-import { BOARD, TRAY, traySlot, TRAY_SLOT_RADIUS, TURNTABLE } from '../layout'
+import { BOARD, TRAY, traySlot, TRAY_SLOT_RADIUS, TRAY_SLOT_RISE, TURNTABLE } from '../layout'
 import { BODY, HEAD_RADIUS, PART_KINDS } from '../parts'
 import { HUE_HEX, PALETTE } from '../palette'
-import { EYE_BALL, PART_REACH, PUPIL_RADIUS, type BatchKey } from '../rig'
+import { EYE_BALL, HEAD_NECK, PART_REACH, PUPIL_RADIUS, type BatchKey } from '../rig'
 import { collar, lump, merge, noise, paint, place, taperedTube, type Paint, type Placement } from './clay'
 
 // Every clay shape in the workshop, built once. Parts are modelled in the
@@ -161,7 +161,7 @@ function tailLong(): THREE.BufferGeometry {
 function head(): THREE.BufferGeometry {
   const r = HEAD_RADIUS
   const neck = new THREE.CylinderGeometry(r * 0.66, r * 0.9, r * 1.1, 24, 3, true)
-  const toBody = new THREE.Vector3(0, -0.87, -0.5).normalize()
+  const toBody = new THREE.Vector3(...HEAD_NECK)
   neck.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), toBody))
   neck.translate(toBody.x * r * 0.7, toBody.y * r * 0.7, toBody.z * r * 0.7)
   const cheek = (side: number) => {
@@ -402,7 +402,7 @@ export function buildBench(): THREE.BufferGeometry {
   // the parts tray, with a dimple for each kind of part
   for (const kind of PART_KINDS) {
     const slot = traySlot(kind)
-    pieces.push(shape(new THREE.CylinderGeometry(TRAY_SLOT_RADIUS, TRAY_SLOT_RADIUS * 0.94, 0.16, 28), { paint: { color: PALETTE.slot, uvScale: 0.4 }, at: { at: [slot.x, TRAY.height + 0.04, slot.z] } }))
+    pieces.push(shape(new THREE.CylinderGeometry(TRAY_SLOT_RADIUS, TRAY_SLOT_RADIUS * 0.94, 0.16, 28), { paint: { color: PALETTE.slot, uvScale: 0.4 }, at: { at: [slot.x, TRAY.height + TRAY_SLOT_RISE - 0.08, slot.z] } }))
   }
   const rim = roundedRect(TRAY.halfWidth + 0.2, TRAY.halfDepth + 0.2, 4.2)
   rim.holes.push(roundedRect(TRAY.halfWidth - 1.3, TRAY.halfDepth - 1.3, 3))
