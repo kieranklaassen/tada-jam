@@ -5,7 +5,7 @@ import { chooseHint, friendsCheer, handPose, HintScheduler, PARTS_BEFORE_NOSE, p
 import { GestureTracker, type Intent, type Screen } from './input'
 import { onTurntable, TRAY, traySlot, TRAY_SLOT_RADIUS, TURNTABLE, type Point } from './layout'
 import { PART_KINDS, type Hue, type Part, type PartKind } from './parts'
-import { displayBase, GLOW_SHAPE, Rig, SHADOW_SHAPE } from './rig'
+import { displayBase, GLOW_SHAPE, OWNER, Rig, SHADOW_SHAPE } from './rig'
 import { SaveCadence } from './saveCadence'
 import { attach, detach, putToSleep, serialize, takeFromTray, turntableFree, wake, type CritterSave, type WorkshopState } from './state'
 import { MEET_RADIUS } from './wander'
@@ -1003,7 +1003,7 @@ export class WorkshopController {
     for (const drag of this.drags) {
       if (drag.type !== 'part') continue
       this.dragMatrix(drag, this.m)
-      rig.loose(drag.part.kind, drag.part.hue, this.m, 1, drag.pointerId * 0.13, Math.sin(this.t * 3) * 0.8, 0.3)
+      rig.loose(drag.part.kind, drag.part.hue, this.m, 1, drag.pointerId * 0.13, OWNER.held(drag.pointerId), Math.sin(this.t * 3) * 0.8, 0.3)
       rig.shadow(drag.at.x, 0, drag.at.z, 2.6, 0.3, SHADOW_SHAPE.blob, 1)
       // every body with room shows where this part would go
       for (const critter of this.critters) {
@@ -1014,7 +1014,8 @@ export class WorkshopController {
       }
     }
     // parts flying home to the tray
-    for (const flight of this.flights) {
+    for (let f = 0; f < this.flights.length; f++) {
+      const flight = this.flights[f]
       const k = Math.min(1, (this.t - flight.t0) / flight.duration)
       const slot = traySlot(flight.part.kind)
       const e = k * k * (3 - 2 * k)
@@ -1025,7 +1026,7 @@ export class WorkshopController {
       this.m.makeRotationY(flight.spin * k).premultiply(this.m2.makeTranslation(x, y, z)).multiply(this.rig.display[flight.part.kind])
       const shrink = 1 - 0.35 * Math.sin(Math.PI * k)
       this.m.multiply(this.m2.makeScale(shrink, shrink, shrink))
-      rig.loose(flight.part.kind, flight.part.hue, this.m, 1, 0.3)
+      rig.loose(flight.part.kind, flight.part.hue, this.m, 1, 0.3, OWNER.flying(f))
       rig.shadow(x, k > 0.7 ? TRAY.height : 0, z, 2.4, 0.25)
     }
     // the ghost part in the demonstration hand

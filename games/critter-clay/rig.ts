@@ -73,22 +73,44 @@ const CAPACITY: Record<BatchKey, number> = {
   crescent: 32,
 }
 
-/** One instanced draw's worth of clay: matrices, colours, and per-instance boil (amount, seed). */
+function interned(prefix: string): (id: number | string) => string {
+  const keys = new Map<number | string, string>()
+  return (id) => {
+    let key = keys.get(id)
+    if (key === undefined) {
+      key = `${prefix}-${id}`
+      keys.set(id, key)
+    }
+    return key
+  }
+}
+
+/**
+ * Which thing on the bench an instance belongs to: a critter with every part pressed on it, a part in
+ * its tray slot, on a finger, or flying home. Interned, so the frame loop allocates nothing; the view
+ * hands them to the intersection audit as each mesh's `userData.jamInstanceObjects`.
+ */
+export const OWNER = { critter: interned('critter'), tray: interned('tray'), held: interned('held'), flying: interned('flying') } as const
+
+/** One instanced draw's worth of clay: matrices, colours, per-instance boil (amount, seed), and owner. */
 export class Batch {
   readonly matrices: Float32Array
   readonly colors: Float32Array
   readonly boil: Float32Array
+  readonly owners: string[]
   count = 0
 
   constructor(readonly capacity: number) {
     this.matrices = new Float32Array(capacity * 16)
     this.colors = new Float32Array(capacity * 3).fill(1)
     this.boil = new Float32Array(capacity * 2)
+    this.owners = new Array<string>(capacity).fill('')
   }
 
-  push(matrix: THREE.Matrix4, color: ArrayLike<number>, colorAt: number, boil: number, seed: number): void {
+  push(matrix: THREE.Matrix4, color: ArrayLike<number>, colorAt: number, boil: number, seed: number, owner: string): void {
     if (this.count >= this.capacity) return
     const i = this.count++
+    this.owners[i] = owner
     matrix.toArray(this.matrices, i * 16)
     this.colors[i * 3] = color[colorAt]
     this.colors[i * 3 + 1] = color[colorAt + 1]
@@ -242,6 +264,7 @@ export class Rig {
   private ry: number = BODY.ry
   private rz: number = BODY.rz
   private faceIsHead = false
+  private owner = ''
 
   constructor() {
     const batches = {} as Record<BatchKey, Batch>
@@ -422,8 +445,9 @@ export class Rig {
     const seed = (critter.save.seed % 997) / 997
     const pose = critter.pose
     const hue = hueAt(critter.save.hue)
+    this.owner = OWNER.critter(critter.save.id)
     this.W.copy(this.B).multiply(this.T.makeScale(this.rx / BODY.rx, this.ry / BODY.ry, this.rz / BODY.rz))
-    this.batches.body.push(this.W, COLORS, hue, boil, seed)
+    this.batches.body.push(this.W, COLORS, hue, boil, seed, this.owner)
     this.v.setFromMatrixPosition(this.B)
     world.body[0] = this.v.x
     world.body[1] = this.v.y
@@ -439,7 +463,7 @@ export class Rig {
       const socket = socketFor(parts, i, socketScratch)
       const isLeg = FAMILY[part.kind] === 'legs'
       this.place(critter, part.kind, socket.dir, legOrder, this.animFor(critter, i), this.W)
-      this.batches[part.kind].push(this.W, COLORS, hueAt(part.hue), boil, seed + i * 0.07)
+      this.batches[part.kind].push(this.W, COLORS, hueAt(part.hue), boil, seed + i * 0.07, this.owner)
       const reach = PART_REACH[part.kind] * 0.55
       this.v.set(0, reach, 0).applyMatrix4(this.W)
       world.parts[i * 3] = this.v.x
@@ -466,7 +490,7 @@ export class Rig {
     this.W.multiply(this.basis(n[0], n[1], n[2], UP, this.R))
     const nose = (1 + 0.1 * Math.max(0, -critter.wobble) * 4) * (1 + 0.4 * critter.itch)
     this.W.multiply(this.T.makeScale(nose, nose, nose))
-    this.batches.nose.push(this.W, COLORS, hueAt(noseHue(critter.save.hue)), boil, seed + 0.5)
+    this.batches.nose.push(this.W, COLORS, hueAt(noseHue(critter.save.hue)), boil, seed + 0.5, this.owner)
     this.v.set(0, 0.8, 0).applyMatrix4(this.W)
     world.nose[0] = this.v.x
     world.nose[1] = this.v.y
@@ -489,7 +513,7 @@ export class Rig {
     this.M.copy(this.F).multiply(this.T.makeTranslation(p[0], p[1], p[2]))
     this.M.multiply(this.basis(n[0], n[1], n[2], UP, this.R))
     this.M.multiply(this.T.makeScale(width, 1, height))
-    this.batches[key].push(this.M, COLORS, WHITE, boil * 0.5, seed)
+    this.batches[key].push(this.M, COLORS, WHITE, boil * 0.5, seed, this.owner)
   }
 
   /** Pupils that look around (a glint painted in), and clay lids in the body's colour that close over the eye. */
@@ -501,14 +525,14 @@ export class Rig {
     const wide = Math.max(1, Math.min(1.25, lids))
     this.W.multiply(this.T.makeScale(wide, 1, wide))
     // under a mostly shut lid the pupil's glint would poke through; a lash line shows the eye is closed instead
-    if (lids > 0.3) this.batches.pupil.push(this.W, COLORS, WHITE, boil * 0.5, seed)
+    if (lids > 0.3) this.batches.pupil.push(this.W, COLORS, WHITE, boil * 0.5, seed, this.owner)
     else {
       this.W.copy(this.M).multiply(this.T.makeTranslation(0, EYE_BALL.radius * 1.12, 0)).multiply(this.T.makeScale(0.85, 1, 0.85))
-      this.batches.crescent.push(this.W, COLORS, WHITE, boil * 0.5, seed)
+      this.batches.crescent.push(this.W, COLORS, WHITE, boil * 0.5, seed, this.owner)
     }
     if (lids < 0.995) {
       this.M.multiply(this.R.makeRotationX(Math.max(0, lids) * Math.PI))
-      this.batches.lid.push(this.M, COLORS, hueAt(lidHue), boil, seed)
+      this.batches.lid.push(this.M, COLORS, hueAt(lidHue), boil, seed, this.owner)
     }
   }
 
@@ -547,12 +571,13 @@ export class Rig {
     const sy = g * (1 - squash)
     const sxz = g * (1 + squash * 0.6)
     this.W.makeTranslation(0, hop, 0).multiply(this.trayRest[kind]).multiply(this.T.makeScale(sxz, sy, sxz))
-    this.loose(kind, hue, this.W, boil, PART_KINDS.indexOf(kind) * 0.1)
+    this.loose(kind, hue, this.W, boil, PART_KINDS.indexOf(kind) * 0.1, OWNER.tray(kind))
   }
 
   /** A part on its own (in the tray, on a finger, or flying home), with its eye extras when it is an eye. */
-  loose(kind: PartKind, hue: Hue, matrix: THREE.Matrix4, boil: number, seed: number, lookX = 0, lookY = 0): void {
-    this.batches[kind].push(matrix, COLORS, hueAt(hue), boil, seed)
+  loose(kind: PartKind, hue: Hue, matrix: THREE.Matrix4, boil: number, seed: number, owner: string, lookX = 0, lookY = 0): void {
+    this.owner = owner
+    this.batches[kind].push(matrix, COLORS, hueAt(hue), boil, seed, owner)
     if (kind === 'eye') this.eyeExtras(matrix, lookX, lookY, 1, hue, boil, seed)
   }
 
