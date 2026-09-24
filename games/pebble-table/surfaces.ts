@@ -161,12 +161,16 @@ export function panOutline(r: number): [number, number][] {
   return [[r * PAN_RIM, PAN_FLOOR], [r * PAN_RIM, PAN_ROLL.y], ...around, [DISH_PROFILE[1][0] * r, DISH_PROFILE[1][1] * PAN_DEPTH]]
 }
 
-export type Surfaces = { mat: MatKey; seats: readonly boolean[]; panFloors: readonly [number, number] }
+/** What pieces rest on: the live mat, which feeding seats are taken, and where the pans hang (their floors' heights, and how far in cm both have swung sideways). */
+export type Surfaces = { mat: MatKey; seats: readonly boolean[]; panFloors: readonly [number, number]; panSway: number }
+
+/** Which pan, where it hangs now, a point lies in. */
+const swungPanOf = (at: Point, panSway: number) => panOf({ x: at.x - panSway / 0.1, y: at.y })
 
 /** The height of what a piece lying at `at` rests on: a pan's floor, the bowl's floor, a seated plate, the rug, or the table. */
-export function surfaceUnder(at: Point, { mat, seats, panFloors }: Surfaces): number {
+export function surfaceUnder(at: Point, { mat, seats, panFloors, panSway }: Surfaces): number {
   if (mat === 'scale') {
-    const side = panOf(at)
+    const side = swungPanOf(at, panSway)
     return side === null ? 0 : panFloors[side]
   }
   if (mat !== 'feeding') return 0
@@ -195,13 +199,13 @@ const PAN_FLAT = DISH_PROFILE[6][0]
  * plate or the bowl it lies above the foot of. Never more than `most`; below zero when
  * the centre is already past a rim.
  */
-export function decalReach(at: Point, ground: number, { mat, seats, panFloors }: Surfaces, most: number): number {
+export function decalReach(at: Point, ground: number, { mat, seats, panFloors, panSway }: Surfaces, most: number): number {
   const level = ground + DECAL_LIFT
   const cm = (to: Point) => Math.hypot(at.x - to.x, at.y - to.y) * 0.1
   if (mat === 'scale') {
-    const pan = SCALE.pans.reduce((near, p) => (cm(p) < cm(near) ? p : near))
-    const side = SCALE.pans.indexOf(pan)
-    return ground > panFloors[side] - 0.01 ? Math.min(most, PAN_FLAT * pan.r * 0.1 - cm(pan)) : most
+    const hung = SCALE.pans.map((p) => ({ x: p.x + panSway / 0.1, y: p.y }))
+    const side = cm(hung[0]) < cm(hung[1]) ? 0 : 1
+    return ground > panFloors[side] - 0.01 ? Math.min(most, PAN_FLAT * SCALE.pans[side].r * 0.1 - cm(hung[side])) : most
   }
   if (mat !== 'feeding') return most
   if (ground === BOWL_FLOOR) return Math.min(most, BOWL_WALL[0][0] - cm(FEEDING.bowl))
@@ -231,7 +235,7 @@ export function feedingRest(at: Point, reach: number, seats: readonly boolean[])
   const cm = (to: Point) => Math.hypot(at.x - to.x, at.y - to.y) * 0.1
   const plateR = FEEDING.plateRadius * 0.1
   const plates = FEEDING.seats.filter((_, index) => seats[index]).map((seat) => cm(seat.plate))
-  const ground = surfaceUnder(at, { mat: 'feeding', seats, panFloors: [0, 0] })
+  const ground = surfaceUnder(at, { mat: 'feeding', seats, panFloors: [0, 0], panSway: 0 })
   if (ground === BOWL_FLOOR) return cm(FEEDING.bowl) + reach < BOWL_WALL[0][0] ? ground : BOWL_TOP
   if (ground === PLATE_TOP) return Math.min(...plates) + reach < PLATE_FLAT * plateR ? ground : PLATE_RIM_TOP
   let top = Math.max(ground, feedingFloor(at, reach))

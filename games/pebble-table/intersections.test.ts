@@ -11,7 +11,7 @@ import { MotionDirector, SEAT_SPECIES, type ActionKind } from './motion'
 import { partReachDown, partVertices, STOOL_REACH, STOOL_TOP } from './partShape'
 import { PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
 import { PART_KINDS } from './parts'
-import { panDrops } from './scale'
+import { panDrops, SWAY_MOST } from './scale'
 import { defaultTable } from './state'
 import { pebbleRings, STONE_CUTS, STONE_DRAWN_RADIUS, STONE_SEGMENTS, stoneReachAlong, stoneReachDown, stoneRest, stoneVertices } from './stoneShape'
 import { BOWL_FLOOR, DECAL_LIFT, decalReach, feedingFloor, HEM_LINE, hemAt, ON_RUG, PAN_FLOOR, PAN_ROLL, PLATE_HEIGHT, PLATE_PROFILE, PLATE_TOP, RUG, RUG_HEM_REACH, RUG_HEM_TOP, surfaceUnder, type Surfaces } from './surfaces'
@@ -848,20 +848,23 @@ describe('contact shadows and glow rings lie flat on what they are cast on', () 
     ]
     const centres = grid({ x: RUG.center.x - RUG.rx - 40, y: RUG.center.y - RUG.rz - 40 }, { x: RUG.center.x + RUG.rx + 40, y: RUG.center.y + RUG.rz + 40 })
     for (const ground of [0, RUG.top, RUG_HEM_TOP, PLATE_TOP, BOWL_FLOOR]) {
-      expect(firstCrossed(rims, centres, ground, { mat: 'feeding', seats, panFloors: [0, 0] }), `ground ${ground}`).toBeNull()
+      expect(firstCrossed(rims, centres, ground, { mat: 'feeding', seats, panFloors: [0, 0], panSway: 0 }), `ground ${ground}`).toBeNull()
     }
   })
 
-  it('keeps every decal in a scale pan inside its flat floor, however far the beam tilts', () => {
+  it('keeps every decal in a scale pan inside its flat floor, however far the beam tilts and the pans swing', () => {
     const shapes = scaleShapes()
     for (const angle of [-SCALE.maxTilt, 0, SCALE.maxTilt]) {
-      const panY = panDrops(angle).map((drop) => PAN_REST_HEIGHT - drop * UNIT)
-      const rims = SCALE.pans.map((pan, side) => ({ geometry: shapes.pans[side], matrix: new THREE.Matrix4().makeTranslation(to3(pan).x, panY[side], to3(pan).z) }))
-      const surfaces: Surfaces = { mat: 'scale', seats: [], panFloors: [panY[0] + PAN_FLOOR, panY[1] + PAN_FLOOR] }
-      SCALE.pans.forEach((pan, side) => {
-        const centres = grid({ x: pan.x - pan.r - 30, y: pan.y - pan.r - 30 }, { x: pan.x + pan.r + 30, y: pan.y + pan.r + 30 })
-        expect(firstCrossed(rims, centres, surfaces.panFloors[side], surfaces), `pan ${side} at tilt ${angle}`).toBeNull()
-      })
+      for (const sway of [-SWAY_MOST, 0, SWAY_MOST]) {
+        const panY = panDrops(angle).map((drop) => PAN_REST_HEIGHT - drop * UNIT)
+        const rims = SCALE.pans.map((pan, side) => ({ geometry: shapes.pans[side], matrix: new THREE.Matrix4().makeTranslation(to3(pan).x + sway, panY[side], to3(pan).z) }))
+        const surfaces: Surfaces = { mat: 'scale', seats: [], panFloors: [panY[0] + PAN_FLOOR, panY[1] + PAN_FLOOR], panSway: sway }
+        SCALE.pans.forEach((pan, side) => {
+          const x = pan.x + sway / UNIT
+          const centres = grid({ x: x - pan.r - 30, y: pan.y - pan.r - 30 }, { x: x + pan.r + 30, y: pan.y + pan.r + 30 })
+          expect(firstCrossed(rims, centres, surfaces.panFloors[side], surfaces), `pan ${side} at tilt ${angle}, swung ${sway}`).toBeNull()
+        })
+      }
     }
   })
 })
