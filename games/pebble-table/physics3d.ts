@@ -1,5 +1,5 @@
 import * as CANNON from 'cannon-es'
-import { GUEST_ARM, GUEST_RADIUS, guestYaw } from './feeding'
+import { GUEST_ARM, GUEST_RADIUS, GUEST_REACH, guestYaw } from './feeding'
 import { JAR_SCALE, JARS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, HOUSE_REACH, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 import { JAR_LIFT, JAR_MOUTH, JAR_REACH, JAR_TOP, jarLabelBox, NEST_SPAN, partCollider, partRest } from './partShape'
@@ -136,8 +136,8 @@ export class TablePhysics {
   private lastSunk: { bodies: ReadonlySet<CANNON.Body>; poses: readonly number[]; out: Map<CANNON.Body, CANNON.Vec3> } | null = null
   /** When (world time) each stone last touched a seated guest. */
   private readonly touchedGuest = new Map<number, number>()
-  /** The round fixtures something held must ride over, and how tall they stand. */
-  private readonly tops = new Map<string, { circle: Circle; height: number }>()
+  /** The round fixtures something held must ride over, how tall they stand, and (a guest) how far out its head reaches, which what rides over it clears before coming down. */
+  private readonly tops = new Map<string, { circle: Circle; height: number; over?: number }>()
   private readonly openJars = new Set<PartKind>()
   private readonly pans: CANNON.Body[] = []
   private readonly brooms = new Map<number, CANNON.Body>()
@@ -499,6 +499,7 @@ export class TablePhysics {
       body.addShape(new CANNON.Cylinder(corner, corner, GUEST_ARM.high - GUEST_ARM.low, FIXTURE_SIDES), offset)
     }
     this.guests.add(body)
+    this.tops.set(key, { circle: { ...at, r: GUEST_RADIUS }, height, over: GUEST_REACH / UNIT })
   }
 
   removeFixture(key: string): void {
@@ -511,10 +512,17 @@ export class TablePhysics {
     this.tops.delete(key)
   }
 
-  /** How high (cm) something held at `at`, reaching `reach` (cm) round, must ride to clear the round fixtures and the hanging pans' rims and rope knots under it: the top of the tallest, or 0. */
-  heldClearance(at: Point, reach: number): number {
+  /**
+   * How high (cm) something held at `at`, reaching `reach` (cm) round, must
+   * ride to clear the round fixtures and the hanging pans' rims and rope knots
+   * under it: the top of the tallest, or 0. Something already `riding` above
+   * the hold height stays up over a guest until it is clear of the guest's
+   * head, which reaches out well past its body, so it never comes down
+   * through a face or a nose.
+   */
+  heldClearance(at: Point, reach: number, riding = false): number {
     let top = 0
-    for (const { circle, height } of this.tops.values()) if (Math.hypot(at.x - circle.x, at.y - circle.y) * UNIT < circle.r * UNIT + reach) top = Math.max(top, height)
+    for (const { circle, height, over } of this.tops.values()) if (Math.hypot(at.x - circle.x, at.y - circle.y) * UNIT < ((riding && over) || circle.r) * UNIT + reach) top = Math.max(top, height)
     this.pans.forEach((pan, side) => {
       const rim = panRimReach(SCALE.pans[side].r * UNIT)
       const hung = toWorld2(pan.position)
