@@ -409,6 +409,9 @@ export function ropeMatrix(from: THREE.Vector3, to: THREE.Vector3, out: THREE.Ma
 
 const UP = new THREE.Vector3(0, 1, 0)
 
+/** How far the post is drawn above the table: clear of the contact shadow under it too, so its flat foot fights neither for the same depth. */
+export const POST_LIFT = DECAL_LIFT * 2
+
 export function postGeometry(): THREE.BufferGeometry {
   const turned = new THREE.LatheGeometry(
     [
@@ -511,7 +514,7 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
   })
   return (
     <group userData={{ jamObject: 'scale' }}>
-      <mesh name="scale-post" geometry={shapes.post} material={clay} position={[post.x, 0, post.z]} />
+      <mesh name="scale-post" geometry={shapes.post} material={clay} position={[post.x, POST_LIFT, post.z]} />
       <group ref={beam} position={[post.x, PIVOT_Y, post.z]}>
         <mesh name="scale-beam" geometry={shapes.beam} material={clay} />
       </group>
