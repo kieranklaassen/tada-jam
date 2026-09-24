@@ -1,5 +1,5 @@
 import type { FrogMode } from '../controller'
-import { BONE, LID_CLOSED, LID_OPEN, type Character, type FrogRig } from './frog'
+import { armRestOut, BONE, bodyBottom, BUBBLE_MIN, LEG_SCALE, legBottom, LID_CLOSED, LID_OPEN, REST_BOTTOM, type BodyTurn, type Character, type FrogRig } from './frog'
 
 // Five frogs, five ways of being alive. Each personality is its own
 // routine for idle, anticipation (a finger resting on it), singing, the tap
@@ -61,6 +61,8 @@ export type Pose = {
   rootPitch: number
   rootYaw: number
   rootRoll: number
+  /** Raises the body off the legs, frog units. */
+  bodyY: number
   bodySX: number
   bodySY: number
   bodySZ: number
@@ -100,6 +102,7 @@ export function restPose(): Pose {
     rootPitch: 0,
     rootYaw: 0,
     rootRoll: 0,
+    bodyY: 0,
     bodySX: 1,
     bodySY: 1,
     bodySZ: 1,
@@ -184,6 +187,14 @@ function volume(pose: Pose, sy: number): void {
   const side = 1 / Math.sqrt(sy)
   pose.bodySX *= side
   pose.bodySZ *= side
+}
+
+/** Moves the root so `angle` of its pitch turns the frog about a point `height` above its feet instead of about the feet. */
+function turnAboutMiddle(pose: Pose, height: number, angle: number): void {
+  const swing = -height * Math.sin(angle)
+  pose.rootY += height * (1 - Math.cos(angle))
+  pose.rootX += swing * Math.sin(pose.rootYaw)
+  pose.rootZ += swing * Math.cos(pose.rootYaw)
 }
 
 function gaze(pose: Pose, m: FrogMoment, reach: number): void {
@@ -410,6 +421,9 @@ function sleepy(m: FrogMoment, p: Pose, s: SleepyState): void {
 
 // The bouncy one: sky blue and spotted, on long legs.
 
+/** Its backflip turns about its middle, as a real one does, so its head never swings through the pad. */
+const FLIP_MIDDLE = 0.6
+
 type BouncyState = { turn: Spring; kick: number }
 
 function bouncy(m: FrogMoment, p: Pose, s: BouncyState): void {
@@ -442,14 +456,17 @@ function bouncy(m: FrogMoment, p: Pose, s: BouncyState): void {
   p.rootY += bump(sing, 0, 0.3) * 0.22
   p.legL = p.legR = Math.max(p.legL, bump(sing, 0, 0.3) * 1.2)
   p.mouth = bit * 0.3
-  // Tapped: a big backflip.
+  // Tapped: a big backflip. It rises and turns on top of whatever else the
+  // frog is doing, so a flip that starts on the pad finishes in the hand or mid-hop.
   const tap = m.tap
+  let flipRise = 0
+  let flip = 0
   if (tap < 1.1) {
     const crouch = bump(tap, 0, 0.14)
     volume(p, 1 - crouch * 0.22)
     const flight = clamp01((tap - 0.1) / 0.62)
-    p.rootY += Math.sin(flight * Math.PI) * 0.95
-    p.rootPitch = -smooth(flight) * TAU
+    flipRise = Math.sin(flight * Math.PI) * 0.95
+    flip = flight < 1 ? -smooth(flight) * TAU : 0
     p.legL = p.legR = Math.max(p.legL, bump(tap, 0.1, 0.72) * 1.6)
     p.armLOut += bump(tap, 0.1, 0.72) * 1.4
     p.armROut += bump(tap, 0.1, 0.72) * 1.4
@@ -472,6 +489,9 @@ function bouncy(m: FrogMoment, p: Pose, s: BouncyState): void {
     p.rootPitch = -0.4 * Math.sin(m.hop * Math.PI)
     volume(p, 1 + 0.25 * bump(m.hop, 0, 1))
   }
+  p.rootY += flipRise
+  p.rootPitch += flip
+  turnAboutMiddle(p, FLIP_MIDDLE, flip)
   // Landing: boing, boing, boing.
   if (m.land < 1.3) {
     const bounce = Math.abs(Math.sin(m.land * 3.4 * Math.PI)) * Math.exp(-m.land * 3.2)
@@ -609,7 +629,7 @@ export function animatorFor(character: Character): Animator {
  * them: before the first touch the nearest frog puffs its throat and
  * bounces toward the child. A splash is a plain physical surprise.
  */
-export function overlays(m: FrogMoment, p: Pose): void {
+export function overlays(m: FrogMoment, p: Pose, character: Character): void {
   if (m.invite !== null) {
     const puff = bump(m.invite, 0.05, 0.75)
     p.bubble = Math.max(p.bubble, puff * 0.85)
@@ -637,9 +657,65 @@ export function overlays(m: FrogMoment, p: Pose): void {
   if (m.mode === 'splash') {
     p.lidL = p.lidR = 0
     p.mouth = 0.8
-    p.armLOut = p.armROut = 2.2 + Math.sin(m.time * 30) * 0.3
+    // Both arms flung up to the same height, counted from where each arm
+    // rests, so a parasol already held overhead stays up instead of swinging
+    // over the head.
+    const flung = 2.2 + Math.sin(m.time * 30) * 0.3
+    p.armLOut = flung - armRestOut(character, 'armL')
+    p.armROut = flung - armRestOut(character, 'armR')
     volume(p, 1.12)
   }
+  settle(m, p, character)
+}
+
+const turn: BodyTurn = { pitch: 0, yaw: 0, roll: 0, sx: 1, sy: 1, sz: 1, bubble: 0, armLFwd: 0, armLOut: 0, armRFwd: 0, armROut: 0 }
+
+function bodyLowest(character: Character, p: Pose, pitch: number): number {
+  turn.pitch = pitch
+  turn.yaw = p.bodyYaw
+  turn.roll = p.bodyRoll
+  turn.sx = p.bodySX
+  turn.sy = p.bodySY
+  turn.sz = p.bodySZ
+  turn.bubble = p.bubble
+  turn.armLFwd = p.armLFwd
+  turn.armLOut = p.armLOut
+  turn.armRFwd = p.armRFwd
+  turn.armROut = p.armROut
+  return bodyBottom(character, turn)
+}
+
+/**
+ * A sitting frog stays on top of its pad, however the layers above add up.
+ * Hind legs that swing down push it up onto its toes; a bow goes only as
+ * deep as the belly, the puffed throat, and the hands allow, and the neck
+ * nods the rest; a lean or a squash that would dip the belly or a hand lifts
+ * the body off the legs.
+ * A tumbling frog (the backflip) only gets the push from its legs as it
+ * takes off; after that it is in the air.
+ */
+function settle(m: FrogMoment, p: Pose, character: Character): void {
+  if (m.mode !== 'sit') return
+  const legs = LEG_SCALE[character]
+  const kick = legBottom(legs, 0) - Math.min(legBottom(legs, p.legL), legBottom(legs, p.legR))
+  p.rootY = Math.max(p.rootY, kick)
+  if (p.rootPitch !== 0) return
+  const floor = REST_BOTTOM - p.rootY
+  if (p.bodyPitch > 0) {
+    const deepest = Math.min(floor, bodyLowest(character, p, 0))
+    if (bodyLowest(character, p, p.bodyPitch) < deepest) {
+      let lo = 0
+      let hi = p.bodyPitch
+      for (let i = 0; i < 10; i++) {
+        const mid = (lo + hi) / 2
+        if (bodyLowest(character, p, mid) >= deepest) lo = mid
+        else hi = mid
+      }
+      p.headPitch += (p.bodyPitch - lo) * 0.8
+      p.bodyPitch = lo
+    }
+  }
+  p.bodyY = Math.max(0, floor - bodyLowest(character, p, p.bodyPitch))
 }
 
 export function applyPose(rig: FrogRig, p: Pose): void {
@@ -648,6 +724,8 @@ export function applyPose(rig: FrogRig, p: Pose): void {
   const restR = rig.restRotation
   b[BONE.root].position.set(p.rootX, p.rootY, p.rootZ)
   b[BONE.root].rotation.set(p.rootPitch, p.rootYaw, p.rootRoll, 'YXZ')
+  b[BONE.body].position.copy(restP[BONE.body])
+  b[BONE.body].position.y += p.bodyY
   b[BONE.body].scale.set(p.bodySX, p.bodySY, p.bodySZ)
   b[BONE.body].rotation.set(p.bodyPitch, p.bodyYaw, p.bodyRoll)
   const head = b[BONE.head]
@@ -662,7 +740,7 @@ export function applyPose(rig: FrogRig, p: Pose): void {
   pupils.position.y += p.pupilY
   const mouth = clamp01(p.mouth)
   b[BONE.mouth].scale.set(0.4 + 0.6 * mouth, Math.max(0.03, mouth), 0.4 + 0.6 * mouth)
-  const bubble = Math.max(0.14, p.bubble)
+  const bubble = Math.max(BUBBLE_MIN, p.bubble)
   b[BONE.bubble].scale.set(bubble * 1.04, bubble * 0.96, bubble)
   const armL = restR[BONE.armL]
   const armR = restR[BONE.armR]

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
-import { PADS, POND } from '../layout'
+import { BANK_DEPTH, BANK_Z, PAD_RIM, PAD_TOP, PAD_UNDERSIDE, PADS, POND } from '../layout'
+import { flatDisc, RING_REACH } from './overlays'
 import { PALETTE } from './palette'
 import { mergeParts, part, paintedPart, shapes, type Part } from './parts'
 import { padTexture, rippleTexture, skyTexture } from './textures'
@@ -10,9 +11,7 @@ import { FIRE_BANDS, outlineMaterial, toonMaterial, type SharedUniforms } from '
 // backdrop is fitted to the camera on resize so the sky always fills the
 // top of the screen above the bank, like a diorama.
 
-export const BANK_Z = POND.farZ - 0.9
 export const BACKDROP_Z = BANK_Z - 3.2
-export const PAD_TOP = 0.06
 
 export type PondSet = {
   group: THREE.Group
@@ -33,7 +32,7 @@ function bank(shared: SharedUniforms, gradient: THREE.Texture): [THREE.Mesh, THR
   const side = new THREE.Color(PALETTE.bank)
   const mound = (x: number, z: number, w: number, h: number, d: number) =>
     parts.push(paintedPart(shapes.sphere(1), (p, _, out) => out.copy(side).lerp(top, THREE.MathUtils.smoothstep(p.y, 0.2, 0.6)), { position: [x, 0, z], scale: [w, h, d] }))
-  for (let i = -7; i <= 7; i++) mound(i * 2.1 + (i % 2) * 0.4, BANK_Z - 0.25 * (i % 3), 1.7 + (i % 3) * 0.3, 0.55 + ((i + 7) % 4) * 0.08, 1.2)
+  for (let i = -7; i <= 7; i++) mound(i * 2.1 + (i % 2) * 0.4, BANK_Z - 0.25 * (i % 3), 1.7 + (i % 3) * 0.3, 0.55 + ((i + 7) % 4) * 0.08, BANK_DEPTH)
   const bushLight = new THREE.Color(PALETTE.bush)
   const bushDark = new THREE.Color(PALETTE.bushDark)
   const bush = (x: number, z: number, r: number) => {
@@ -74,6 +73,8 @@ function bank(shared: SharedUniforms, gradient: THREE.Texture): [THREE.Mesh, THR
   const geometry = mergeParts(parts)
   const mesh = new THREE.Mesh(geometry, toonMaterial(shared, gradient))
   const hull = new THREE.Mesh(geometry, outlineMaterial(shared, 0.035))
+  mesh.name = 'bank'
+  hull.name = 'bank-outline'
   return [mesh, hull]
 }
 
@@ -125,6 +126,8 @@ function reeds(shared: SharedUniforms, gradient: THREE.Texture): [THREE.Mesh, TH
   const geometry = mergeParts(parts, { sway: true })
   const mesh = new THREE.Mesh(geometry, toonMaterial(shared, gradient, { sway: true }))
   const hull = new THREE.Mesh(geometry, outlineMaterial(shared, 0.022, { sway: true }))
+  mesh.name = 'reeds'
+  hull.name = 'reeds-outline'
   return [mesh, hull]
 }
 
@@ -190,6 +193,7 @@ function water(shared: SharedUniforms): THREE.Mesh {
     },
   })
   const mesh = new THREE.Mesh(geometry, material)
+  mesh.name = 'water'
   mesh.renderOrder = -1
   return mesh
 }
@@ -202,9 +206,17 @@ function padGeometry(): THREE.BufferGeometry {
   shape.lineTo(Math.cos(notch), Math.sin(notch))
   shape.absarc(0, 0, 1, notch, Math.PI * 2 - notch, false)
   shape.lineTo(0, 0)
-  const geometry = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.035, bevelSegments: 2, curveSegments: 20 })
+  const bevel = 0.03
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: PAD_TOP - PAD_UNDERSIDE - bevel * 2,
+    bevelEnabled: true,
+    bevelThickness: bevel,
+    bevelSize: PAD_RIM - 1,
+    bevelSegments: 2,
+    curveSegments: 20,
+  })
   geometry.rotateX(-Math.PI / 2)
-  geometry.translate(0, PAD_TOP - 0.08, 0)
+  geometry.translate(0, PAD_UNDERSIDE + bevel, 0)
   geometry.computeVertexNormals()
   const position = geometry.getAttribute('position')
   const normal = geometry.getAttribute('normal')
@@ -229,8 +241,10 @@ const ROW_TINTS = ['#d8ccf6', '#e6d9fb', '#f3e6ff', '#fdebf8', '#ffeff1']
 
 export function buildPond(shared: SharedUniforms, gradient: THREE.Texture): PondSet {
   const group = new THREE.Group()
+  group.name = 'pond'
 
   const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: skyTexture(), fog: false, depthWrite: false }))
+  backdrop.name = 'sky'
   backdrop.renderOrder = -2
   group.add(backdrop)
 
@@ -250,9 +264,10 @@ export function buildPond(shared: SharedUniforms, gradient: THREE.Texture): Pond
     color: new THREE.Color('#ffffff').multiplyScalar(0.05),
     fog: false,
   })
-  const ringGeometry = new THREE.PlaneGeometry(1, 1)
-  ringGeometry.rotateX(-Math.PI / 2)
-  const padRings = new THREE.InstancedMesh(ringGeometry, ringMaterial, PADS.length)
+  const padRings = new THREE.InstancedMesh(flatDisc(RING_REACH), ringMaterial, PADS.length)
+  pads.name = 'pads'
+  padOutlines.name = 'pad-outlines'
+  padRings.name = 'pad-ripples'
   padRings.renderOrder = 1
   const padTints = PADS.map((pad) => new THREE.Color(ROW_TINTS[pad.row]))
   for (let i = 0; i < PADS.length; i++) pads.setColorAt(i, padTints[i])

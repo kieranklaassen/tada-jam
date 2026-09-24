@@ -78,7 +78,7 @@ function busyCost(frames: number): Busy {
       const slot = slots[index]
       fill(slot.moment, pond, pond.frogs[index], CAST[index].scale)
       slot.animate(slot.moment, resetPose(slot.pose))
-      overlays(slot.moment, slot.pose)
+      overlays(slot.moment, slot.pose, CAST[index].character)
     }
   }
   for (let i = 0; i < 30; i++) frame()

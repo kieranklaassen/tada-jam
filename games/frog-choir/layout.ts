@@ -110,3 +110,15 @@ export const POND = {
 }
 
 export const FROG_COUNT = 5
+
+/** How high a lily pad's top floats above the water, and how deep its underside sits. */
+export const PAD_TOP = 0.06
+export const PAD_UNDERSIDE = -0.05
+/** A pad's bevelled rim reaches this much past its radius. */
+export const PAD_RIM = 1.035
+/** The far bank's front mounds are centred on this line. */
+export const BANK_Z = POND.farZ - 0.9
+/** How far a bank mound reaches toward the pads at the waterline. */
+export const BANK_DEPTH = 1.2
+/** Where the shore starts: the front mounds and the reeds planted at their foot. Shadows and splashes stay nearer than this. */
+export const SHORE_Z = BANK_Z + 1.45
