@@ -223,7 +223,7 @@ function World({ table }: { table: TableController }) {
         />
       ) : live === 'scale' ? (
         <>
-          <ScaleModel read={() => ({ angle: table.beam.angle, panY: [table.physics.panY(0), table.physics.panY(1)], now: table.t })} />
+          <ScaleModel read={() => ({ angle: table.beam.angle, panY: [table.physics.panY(0), table.physics.panY(1)], panSway: [table.physics.panSwung(0), table.physics.panSwung(1)], now: table.t })} />
           <JarsModel read={() => ({ tips: table.jarTips, full: jarCounts(table), glow: table.state.parts.length === 0 ? table.guidance.glow : 0, now: table.t })} />
           <PartsModel read={() => partStates(table)} />
         </>

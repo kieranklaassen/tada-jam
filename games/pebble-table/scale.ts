@@ -60,6 +60,37 @@ export function panDrops(angle: number): [number, number] {
   return [-drop, drop]
 }
 
+/**
+ * How far (cm) the pans have swung sideways on their ropes, and how fast:
+ * when the beam turns they lag behind it, then swing back and settle. The
+ * pans' colliders swing with their drawings, so what lies in a pan rides
+ * along instead of the rim sliding through it.
+ */
+export type Sway = { x: number; v: number }
+
+/** How hard a turning beam swings the pans, and how they spring back. */
+const SWAY_KICK = 300
+const SWAY_STIFFNESS = 26
+const SWAY_DAMPING = 2.6
+/** The farthest the pans swing out (cm). */
+export const SWAY_MOST = 1.6
+
+export function stepSway(sway: Sway, turning: number, dt: number): Sway {
+  let { x, v } = sway
+  const steps = Math.max(1, Math.round(dt / (1 / 240)))
+  const h = dt / steps
+  for (let i = 0; i < steps; i++) {
+    v += (-SWAY_KICK * turning - SWAY_STIFFNESS * x - SWAY_DAMPING * v) * h
+    x += v * h
+  }
+  return { x, v }
+}
+
+/** Where the swing puts the pans: out by no more than `SWAY_MOST`. */
+export function swayOf(sway: Sway): number {
+  return Math.max(-SWAY_MOST, Math.min(SWAY_MOST, sway.x))
+}
+
 /** The creak follows the beam: louder while it moves, higher as it tilts, silent at rest. */
 export function creak(beam: Beam): { gain: number; pitch: number } {
   const gain = Math.min(1, Math.abs(beam.velocity) / 0.8)

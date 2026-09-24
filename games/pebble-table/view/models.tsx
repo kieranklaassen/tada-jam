@@ -428,7 +428,8 @@ export function BagModel({ read }: { read: () => BagPose }) {
 
 // --- scale -------------------------------------------------------------------
 
-export type ScalePose = { angle: number; panY: [number, number]; now: number }
+/** The beam's tilt, and where the pans hang and how far they have swung on their ropes (cm, as the physics holds them). */
+export type ScalePose = { angle: number; panY: [number, number]; panSway: [number, number]; now: number }
 
 /** The pan ropes and their knots are part of the scale they hang from (for the intersection audit). */
 const ROPE_OBJECTS = Array.from({ length: 6 }, () => 'scale')
@@ -558,19 +559,13 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
   const knots = useRef<THREE.InstancedMesh>(null)
   const post = to3(SCALE.post)
   const shapes = once('scale', scaleShapes)
-  const swing = useRef({ last: 0, pans: [{ x: 0, v: 0 }, { x: 0, v: 0 }] as Spring[] })
-  useFrame((_, dt) => {
+  useFrame(() => {
     const pose = read()
     const angle = pose.angle + Math.sin(pose.now * 0.9) * 0.003
     if (beam.current) beam.current.rotation.z = -angle
-    // Pans hang on ropes: when the beam moves they lag, then swing back and settle.
-    const turn = dt > 0 ? (angle - swing.current.last) / dt : 0
-    swing.current.last = angle
+    // Pans hang on ropes: when the beam moves they lag, then swing back and settle (see `stepSway`).
     SCALE.pans.forEach((_, side) => {
-      const spring = swing.current.pans[side]
-      spring.v -= turn * 5
-      const sway = THREE.MathUtils.clamp(springStep(spring, 0, dt, 26, 2.6), -1.6, 1.6)
-      const hang = panHang(side as 0 | 1, angle, pose.panY[side], sway)
+      const hang = panHang(side as 0 | 1, angle, pose.panY[side], pose.panSway[side])
       pans[side].current?.position.copy(hang.center)
       knots.current?.setMatrixAt(side * 4, scratch.m.makeTranslation(hang.top))
       hang.rims.forEach((rim, k) => {
