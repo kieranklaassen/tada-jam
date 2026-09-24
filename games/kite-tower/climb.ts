@@ -1,4 +1,4 @@
-import { BODY_R, HAIR, HEAD_R, HEAD_Y } from './doll'
+import { BODY_PROFILE, BODY_R, HAIR, HEAD_R, HEAD_Y } from './doll'
 import { movePoint } from './hero'
 import { PLAY_MAX_X, PLAY_MIN_X, spanAt, type Placed, type Vec2 } from './pieces'
 
@@ -54,13 +54,38 @@ function blocked(placed: readonly Placed[], x: number, from: number, to: number)
 
 const STAND_COLUMNS = [0, -STAND_HALF / 2, STAND_HALF / 2, -STAND_HALF, STAND_HALF]
 
+/** Her lathed outline, both sides, a few hundredths apart: offsets across and heights over her feet. */
+const BODY_POINTS: readonly Vec2[] = BODY_PROFILE.slice(1).flatMap((b, i) => {
+  const a = BODY_PROFILE[i]
+  const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 0.04))
+  return Array.from({ length: n + 1 }, (_, k) => {
+    const x = a.x + ((b.x - a.x) * k) / n
+    const y = a.y + ((b.y - a.y) * k) / n
+    return [
+      { x, y },
+      { x: -x, y },
+    ]
+  }).flat()
+})
+
+/** Where her feet go standing over `part` at `x`: her flat hem on the highest of it under her, so on a ramp it rests on the high side instead of in it. */
+function feetOn(part: readonly Vec2[], x: number): number {
+  let feet = -Infinity
+  for (const p of BODY_POINTS) {
+    const span = spanAt(part, x + p.x)
+    if (span) feet = Math.max(feet, span[1] - p.y)
+  }
+  return feet
+}
+
 /**
- * Room for the doll to stand: nothing anywhere in her outline (columns closer
- * than any block is wide), above the surface under her feet, which rises
- * `slope` per unit across.
+ * Room for the doll to stand with her feet at `y`: nothing anywhere in her
+ * outline (columns closer than any block is wide). Standing on a ramp whose
+ * surface is at `ground` under her middle and rises `slope` per unit across,
+ * only the ramp itself may rise past her feet, out beyond her hem.
  */
-export function roomy(placed: readonly Placed[], x: number, y: number, slope = 0): boolean {
-  for (const dx of STAND_COLUMNS) if (blocked(placed, x + dx, y + 0.05 + Math.max(0, dx * slope), y + CLEARANCE)) return false
+export function roomy(placed: readonly Placed[], x: number, y: number, slope = 0, ground = y): boolean {
+  for (const dx of STAND_COLUMNS) if (blocked(placed, x + dx, Math.max(y, ground + dx * slope) + 0.05, y + CLEARANCE)) return false
   return true
 }
 
@@ -128,7 +153,8 @@ export function standableSpots(placed: readonly Placed[], avoid: number | null =
           const x = a.x + dx * t
           const y = a.y + dy * t
           if (x < FLOOR_MIN || x > FLOOR_MAX || y < 0.05) continue
-          if (roomy(placed, x, y, dy / dx)) spots.push({ x, y, on: piece.id })
+          const feet = feetOn(part, x)
+          if (roomy(placed, x, feet, dy / dx, y)) spots.push({ x, y: feet, on: piece.id })
         }
       }
     }

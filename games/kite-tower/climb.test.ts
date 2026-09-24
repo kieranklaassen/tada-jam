@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { canGrab, CLEARANCE, headClearAlong, headroom, planClimb, standableSpots, type MoveKind, type Spot } from './climb'
-import { HAIR, HEAD_R, HEAD_Y } from './doll'
+import { BODY_PROFILE, HAIR, HEAD_R, HEAD_Y } from './doll'
 import { movePoint } from './hero'
 import { PIECES, pieceShape, pointInConvex, restHeight, SHAPES, worldParts, type Placed, type Vec2 } from './pieces'
 
@@ -180,7 +180,49 @@ describe('standableSpots: room for her whole outline', () => {
     expect(standableSpots(placed).some((s) => s.on === 0)).toBe(true)
     expect(standableSpots(placed, 0).some((s) => s.on === 0)).toBe(false)
   })
+
+  it('stands her flat hem on a ramp, touching its high side, never dug into it', () => {
+    for (const angle of [0.08, 0.2, 0.35, -0.35, 0.5, -0.6]) {
+      const placed = [place(4, 0, 1.5, angle)]
+      const spots = standableSpots(placed).filter((s) => s.on === 4)
+      expect(spots.length, `spots on a plank at ${angle}`).toBeGreaterThan(2)
+      for (const s of spots) {
+        const depth = bodyDepth(placed, s)
+        expect(depth, `hem in a plank at ${angle}, spot ${s.x.toFixed(2)}`).toBeLessThan(0.01)
+        expect(depth, `hem touching a plank at ${angle}, spot ${s.x.toFixed(2)}`).toBeGreaterThan(-0.02)
+      }
+    }
+  })
 })
+
+/** How far her lathed body, drawn with its feet at `p`, reaches into `placed` (negative: the gap to the nearest wood). */
+function bodyDepth(placed: readonly Placed[], p: Vec2): number {
+  const outline = [...BODY_PROFILE, ...[...BODY_PROFILE].reverse().map((q) => ({ x: -q.x, y: q.y }))]
+  let deepest = -Infinity
+  for (let i = 0; i + 1 < outline.length; i++) {
+    const a = outline[i]
+    const b = outline[i + 1]
+    const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 0.01))
+    for (let k = 0; k <= n; k++) {
+      const at = { x: p.x + a.x + ((b.x - a.x) * k) / n, y: p.y + a.y + ((b.y - a.y) * k) / n }
+      for (const piece of placed) {
+        for (const part of piece.parts) {
+          let edge = Infinity
+          for (let j = 0; j < part.length; j++) {
+            const c = part[j]
+            const d = part[(j + 1) % part.length]
+            const dx = d.x - c.x
+            const dy = d.y - c.y
+            const t = Math.max(0, Math.min(1, ((at.x - c.x) * dx + (at.y - c.y) * dy) / (dx * dx + dy * dy)))
+            edge = Math.min(edge, Math.hypot(at.x - c.x - dx * t, at.y - c.y - dy * t))
+          }
+          deepest = Math.max(deepest, pointInConvex(part, at) ? edge : -edge)
+        }
+      }
+    }
+  }
+  return deepest
+}
 
 /** How far a head drawn with its feet at `p` reaches into `placed` (0 when clear), measured on the round outline itself. */
 function headDepth(placed: readonly Placed[], p: Vec2): number {
