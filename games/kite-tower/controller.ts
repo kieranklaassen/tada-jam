@@ -1,12 +1,13 @@
 import type { Doll, KiteSound } from './audio'
-import { planClimb, spotValue, standableSpots, type Spot } from './climb'
+import { headClearAlong, headroom, planClimb, roomy, spotValue, standableSpots, type MoveKind, type Spot } from './climb'
+import { FLY_GRIP, PIP_CLEAR } from './doll'
 import { chooseHint, handPose, handTravel, HintClock, type HandPose, type Hint, type PlayroomSummary } from './guidance'
 import { buildRoute, routePose, type RoutePose, type Segment } from './hero'
 import { Gestures, type Intent, type Target } from './input'
 import { slotCenter, TRAY, TRAY_SLOTS, trayToWorld, WATCHERS, type Vec3 } from './layout'
 import { kiteTarget, nextPerch, PERCHES } from './perches'
 import { DOLL_WEIGHT, PlayPhysics } from './physics'
-import { clampX, PIECES, PLAY_MAX_X, PLAY_MIN_X, pieceShape, pointInConvex, restHeight, SHAPES, skylineAt, spanAt, transformInto, type PieceShape, type Placed, type Pose, type Vec2 } from './pieces'
+import { clampX, HELD_SCALE, PIECES, PLAY_MAX_X, PLAY_MIN_X, pieceShape, pointInConvex, popScale, restHeight, restSliver, SHAPES, skylineAt, slideClear, spanAt, transformInto, type PieceShape, type Placed, type Pose, type Vec2 } from './pieces'
 import { SaveCadence } from './saveCadence'
 import { serialize, type KiteState, type SavedPiece } from './state'
 import { findStacks, type Stack } from './sway'
@@ -27,6 +28,8 @@ export type Projector = {
 }
 
 export type HeroMode = 'stand' | 'travel' | 'grab' | 'fly' | 'land' | 'tumble'
+/** A tumble: a hop toward the child out of the build, the roll down in front of it, a giggle on the rug, and a hop back in once all is still. */
+export type TumblePhase = 'out' | 'roll' | 'sit' | 'back'
 export type WatcherMode = 'idle' | 'walk' | 'react' | 'cheer'
 export type KiteMode = 'perched' | 'flying' | 'drifting'
 
@@ -46,6 +49,11 @@ export type Hero = {
   segment: RoutePose
   /** Tumble spin, radians. */
   spin: number
+  tumble: TumblePhase
+  /** When the tumble's current phase began. */
+  tumbleSince: number
+  /** How high she bounces over the ground she is headed for, hopping back into the build. */
+  hop: number
   boopAt: number
   /** Where the doll is looking. */
   look: Vec3
@@ -81,6 +89,8 @@ export type GuidanceView = {
   hand: HandPose | null
   peek: number | null
   buildAt: Vec2
+  /** The piece the search found helps at `buildAt` (from the tray or left over), or -1 for the ghost hand's usual pick. */
+  buildWith: number
 }
 
 export type ControllerDeps = { save: (state: KiteState) => void; sound?: KiteSound }
@@ -96,8 +106,32 @@ const FLIGHT_CEILING = 8.0
 const MAX_SWING = 0.5
 const LAND_SECONDS = 0.9
 const DRIFT_SECONDS = 3.4
-const STRING = 1.5
-const HANDS = 2.05
+/**
+ * How far a tumbling doll first hops toward the child: past the front of the
+ * deepest block (1 deep) by her own round (head and hair 0.41) and a little,
+ * so she rolls down in front of the build and never through it.
+ */
+export const TUMBLE_OUT = 1.0
+const OUT_SECONDS = 0.18
+const SIT_SECONDS = 0.9
+/** How fast she scoots across the front of the build to the rug spot she hops back into. */
+const SCOOT_SPEED = 3
+const BACK_SECONDS = 0.3
+/** With the rug full she hops back onto a block no higher than a cube, springing up in front of it first. */
+const BACK_UP = 1.05
+const RISE_SECONDS = 0.28
+/** Bare rug wins over a block top unless it is this much further away. */
+const BACK_UP_COST = 2
+const BACK_LOOK_SECONDS = 0.3
+const LAND_OUT_SECONDS = 0.6
+const OUT_BUMP = 0.12
+const BACK_BUMP = 0.18
+/** The kite's flying line, from the bridle down to the middle of the spool (shared with the view). */
+export const KITE_LINE = 1.9
+/** Where the line is tied on, from the kite's middle (shared with the view). */
+export const KITE_BRIDLE = { y: 0.2, z: 0.06 }
+/** From the bridle to the dangling doll's middle, for how fast she swings. */
+const SWING_LENGTH = 2.73
 /** How far the doll's support may shift (units, radians) before the doll loses its footing. */
 const SUPPORT_SHIFT = 0.14
 const SUPPORT_TURN = 0.12
@@ -105,6 +139,12 @@ const HIT_PAD = 0.32
 /** Hard knocks (a decaying count, four a second) that make a crash the watchers flinch at: three close together. A block set down, even across two others, makes one or two. */
 const CRASH_KNOCKS = 2.5
 const HINT_BATCH = 3
+/** Space the ghost hand leaves between a block and the one it sets down flush beside it. */
+const FLUSH_GAP = 0.01
+/** A leftover piece the ghost hand moves goes at least this far, or it is no move at all. */
+const LEFTOVER_MOVE = 1.2
+/** A piece whose top is this close under another's underside is carrying it. */
+const CARRY_TOUCH = 0.1
 /** How long everyone keeps watching a piece the child has just let go of. */
 const NOTICE_SECONDS = 1.4
 /** A watcher closer than this to the doll while she is after the kite is where her reach ends, so he steps aside. */
@@ -116,9 +156,55 @@ const HIDDEN_BY = 1.1
 const HIDE_SAMPLES = [-0.4, 0, 0.4]
 const ASIDE_STEPS = 8
 
-type Drag = { pointer: number; id: number; offset: Vec2; goal: Vec2; at: Vec2; lastX: number; vx: number }
-type Turn = { id: number; start: number; from: number; to: number }
-type HintSearch = { shape: PieceShape; candidates: number[]; index: number; best: Vec2; bestScore: number }
+/** A dragged piece leans into the drag, this much per unit a second of sideways speed, up to MAX_LEAN, easing at LEAN_RATE. */
+const LEAN = 0.025
+const MAX_LEAN = 0.16
+const LEAN_RATE = 10
+
+/**
+ * `angle` is the piece's turn when it was picked up; `lean` rides on top of it
+ * and is let go with it. `free` is where the finger would hold it if Pip were
+ * not in the way, and `raised` says she is lifting it higher than that.
+ */
+type Drag = { pointer: number; id: number; offset: Vec2; goal: Vec2; at: Vec2; lastX: number; vx: number; angle: number; lean: number; free: number; raised: boolean }
+/** A piece let go of near Pip: it stays in the air while she is under it, then sets down to `y` and falls from there. */
+type Pending = { id: number; since: number; y: number }
+/** Longest a let-go piece waits over Pip; she is always out well before this. */
+const PENDING_SECONDS = 2.5
+/** Close enough to the height a waiting piece sets down to. */
+const SET_DOWN = 0.02
+/** How far Pip's outline slopes out at her feet for a dragged piece, which rides up her sides instead of jumping over her. */
+const PIP_SLOPE = 0.8
+/** Room kept between Pip's outline and a piece she hops away from. */
+const DODGE_ROOM = 0.02
+/** From Pip's middle to the near side of a piece tapped out of the tray beside her: past her hands hanging at her sides. */
+const HOP_OUT_GAP = 0.62
+const NOTHING: readonly Placed[] = []
+/** `y` is the piece's height when the turn began. */
+type Turn = { id: number; start: number; from: number; to: number; y: number }
+/** A piece the ghost hand could carry: from the tray, or `loose` from where it lies at `x`. */
+type HintPiece = { id: number; shape: PieceShape; loose: boolean; x: number }
+/**
+ * `from` is where the doll will stand when the search is done: she may be
+ * partway up a climb while it runs. `shapes` are the pieces worth trying,
+ * the one the ghost hand would pick first leading, then the other tray
+ * shapes, then pieces left over from an earlier build; the next is tried only
+ * when nothing the current one could do gives her a way on. `fallback` is
+ * the spot nearest the kite where a piece at least sits still, off Pip, for
+ * when no piece helps.
+ */
+type HintSearch = {
+  from: Spot
+  shapes: HintPiece[]
+  shape: number
+  candidates: number[]
+  index: number
+  best: Vec2
+  bestWith: number
+  bestScore: number
+  fallback: Vec2 | null
+  fallbackWith: number
+}
 
 function lcg(seed: number): () => number {
   let s = seed >>> 0
@@ -172,6 +258,42 @@ function balanced(placed: readonly Placed[], x: number, base: number, halfWidth:
   return x > left + 0.2 && x < right - 0.2
 }
 
+/** Whether another placed piece rests on `piece`: moving it would bring that one down. */
+function carries(placed: readonly Placed[], piece: Placed): boolean {
+  const [lo, hi] = extentOf(piece)
+  for (const other of placed) {
+    if (other === piece) continue
+    const [olo, ohi] = extentOf(other)
+    const a = Math.max(lo, olo)
+    const b = Math.min(hi, ohi)
+    for (let i = 0; i <= 4 && a < b; i++) {
+      const at = a + ((b - a) * i) / 4
+      let top = -Infinity
+      for (const part of piece.parts) {
+        const span = spanAt(part, at)
+        if (span && span[1] > top) top = span[1]
+      }
+      let bottom = Infinity
+      for (const part of other.parts) {
+        const span = spanAt(part, at)
+        if (span && span[0] < bottom) bottom = span[0]
+      }
+      if (Math.abs(bottom - top) < CARRY_TOUCH) return true
+    }
+  }
+  return false
+}
+
+function extentOf(piece: Placed): [number, number] {
+  let lo = Infinity
+  let hi = -Infinity
+  for (const part of piece.parts) for (const p of part) {
+    lo = Math.min(lo, p.x)
+    hi = Math.max(hi, p.x)
+  }
+  return [lo, hi]
+}
+
 export class KiteController {
   readonly physics = new PlayPhysics()
   readonly state: KiteState
@@ -191,7 +313,7 @@ export class KiteController {
   stackKick: number[] = []
   /** When something last toppled or crashed loudly enough for everyone to react. */
   toppleAt = -Infinity
-  readonly guidance: GuidanceView = { glow: 0, hint: null, hand: null, peek: null, buildAt: { x: 0, y: 0 } }
+  readonly guidance: GuidanceView = { glow: 0, hint: null, hand: null, peek: null, buildAt: { x: 0, y: 0 }, buildWith: -1 }
 
   private readonly deps: ControllerDeps
   private readonly sound: KiteSound | null
@@ -200,7 +322,15 @@ export class KiteController {
   private readonly clock: HintClock
   private projector: Projector | null = null
   private readonly drags: Drag[] = []
+  private readonly pending: Pending[] = []
   private readonly heldPool: Held[] = PIECES.map(() => ({ id: 0, x: 0, y: 0, angle: 0, landY: 0 }))
+  private readonly pipPlaced: Placed = { id: -1, parts: [[0, 1, 2, 3].map(() => ({ x: 0, y: 0 }))] }
+  private readonly pipList: readonly Placed[] = [this.pipPlaced]
+  private readonly spanOut = { lo: 0, hi: 0, bottom: 0 }
+  private landing = 0
+  private liftX = 0
+  /** The piece that last tipped under the doll: she won't stand on it again until the child moves something. */
+  private wobbly: number | null = null
   private hintChecked = false
   private turn: Turn | null = null
   private route: Segment[] = []
@@ -208,7 +338,17 @@ export class KiteController {
   private planReaches = false
   private wantPlan = true
   private tumbleFrom: Vec2 = { x: 0, y: 0 }
-  private tumbleTo: Vec2 = { x: 0, y: 0 }
+  private tumbleTo: Spot = { x: 0, y: 0, on: null }
+  /** Whether the spot she is scooting to was looked at again before she hops in. */
+  private backChecked = false
+  /** No sooner than this does a doll sat out in front look again for somewhere to hop back into. */
+  private backLookAt = 0
+  /** How high the tumble's hop out and hop back in bob her: no higher than the wood over her allows. */
+  private outBump = OUT_BUMP
+  private backBump = BACK_BUMP
+  /** Whether the kite sets her down out in front of the build, and how far it has swung out toward there. */
+  private landOut = false
+  private landOutK = 0
   private flightPath: Vec3[] = []
   private driftFrom: Vec3 = { x: 0, y: 0, z: 0 }
   private readonly kitePrev: Vec3 = { x: 0, y: 0, z: 0 }
@@ -265,6 +405,9 @@ export class KiteController {
       reach: 0,
       segment: { x: startX, y: 0, facing: -side, kind: null, phase: 0, hops: 1, index: 0, done: true },
       spin: 0,
+      tumble: 'out',
+      tumbleSince: 0,
+      hop: 0,
       boopAt: -Infinity,
       look: { x: perch.kite.x, y: perch.kite.y, z: perch.kite.z },
     }
@@ -355,13 +498,150 @@ export class KiteController {
     list.length = 0
     for (let id = 0; id < PIECES.length; id++) {
       if (id === exclude || this.trayed[id] || !this.physics.has(id) || this.physics.isHeld(id)) continue
-      const shape = pieceShape(id)
-      const pose = this.physics.pose(id, this.poseScratch)
-      const cache = this.partCache[id]
-      for (let k = 0; k < shape.parts.length; k++) transformInto(shape.parts[k], pose, cache[k])
-      list.push(this.placedCache[id])
+      list.push(this.placedOf(id))
     }
     return list
+  }
+
+  /** Piece `id` with world parts where physics has it now (reused per piece). */
+  private placedOf(id: number): Placed {
+    const shape = pieceShape(id)
+    const pose = this.physics.pose(id, this.poseScratch)
+    const cache = this.partCache[id]
+    for (let k = 0; k < shape.parts.length; k++) transformInto(shape.parts[k], pose, cache[k])
+    return this.placedCache[id]
+  }
+
+  /** How high the ghost hand's piece `id`, carried upright near (x, y), is drawn: never lower than it would rest there on the rug, the build or over Pip. */
+  ghostY(id: number, x: number, y: number): number {
+    const shape = pieceShape(id)
+    return Math.max(y, restHeight(shape, 0, x, this.placedList(id)), restHeight(shape, 0, x, this.pipOutline(PIP_SLOPE)))
+  }
+
+  /** Pip's outline as one more block, its sides sloping out by `slope` at her feet; nothing while she is up with the kite or out in front of the build. The list is reused. */
+  pipOutline(slope = 0): readonly Placed[] {
+    const hero = this.hero
+    if (hero.mode === 'fly' || hero.z >= TUMBLE_OUT) return NOTHING
+    const [a, b, c, d] = this.pipPlaced.parts[0]
+    a.x = hero.x - PIP_CLEAR.half - slope
+    b.x = hero.x + PIP_CLEAR.half + slope
+    c.x = hero.x + PIP_CLEAR.half
+    d.x = hero.x - PIP_CLEAR.half
+    a.y = b.y = hero.y
+    c.y = d.y = hero.y + PIP_CLEAR.top
+    return this.pipList
+  }
+
+  /**
+   * Where piece `id`, turned `angle` and drawn at `scale`, rides near `x`:
+   * clear of the placed pieces and of Pip (her outline sloping out by
+   * `slope`). It rides at `liftX`, which is `x` or a sliver aside to sit flush
+   * with a neighbour instead of falling onto its corner; where it cannot slide
+   * (a wall, or another neighbour), it rides over that corner. Where it would
+   * come to rest once let go, over the placed pieces alone, is left in
+   * `landing`.
+   */
+  private lift(id: number, angle: number, x: number, scale: number, slope = 0): number {
+    const shape = pieceShape(id)
+    const placed = this.placedList(id)
+    const slid = slideClear(shape, angle, x, placed, scale)
+    const reach = Math.abs(Math.cos(angle)) * shape.half.x + Math.abs(Math.sin(angle)) * shape.half.y
+    this.liftX = clampX(slid, reach) === slid ? slid : x
+    this.landing = restHeight(shape, angle, this.liftX, placed, scale)
+    if (restSliver.left > 0 || restSliver.right > 0) this.landing = restSliver.over
+    return Math.max(this.landing, restHeight(shape, angle, this.liftX, this.pipOutline(slope), scale))
+  }
+
+  /** How large piece `id` is drawn while held (bigger in the hand, and still popping in if it just left the tray). */
+  private heldScale(id: number): number {
+    return HELD_SCALE * popScale(this.t - this.popAt[id])
+  }
+
+  /** How far piece `id` reaches across the plane and its lowest point, where physics has it now (the result is reused). */
+  private pieceSpan(id: number): { lo: number; hi: number; bottom: number } {
+    const pose = this.physics.pose(id, this.poseScratch)
+    const c = Math.cos(pose.angle)
+    const s = Math.sin(pose.angle)
+    const out = this.spanOut
+    out.lo = Infinity
+    out.hi = -Infinity
+    out.bottom = Infinity
+    for (const part of pieceShape(id).parts) {
+      for (const p of part) {
+        const x = pose.x + p.x * c - p.y * s
+        const y = pose.y + p.x * s + p.y * c
+        if (x < out.lo) out.lo = x
+        if (x > out.hi) out.hi = x
+        if (y < out.bottom) out.bottom = y
+      }
+    }
+    return out
+  }
+
+  /** Whether piece `id`, let go of now, would come down on Pip rather than on a block above her head. */
+  private overPip(id: number): boolean {
+    const hero = this.hero
+    if (hero.mode === 'fly' || !this.physics.has(id)) return false
+    const span = this.pieceSpan(id)
+    if (span.hi <= hero.x - PIP_CLEAR.half || span.lo >= hero.x + PIP_CLEAR.half || span.bottom < hero.y + 0.05) return false
+    const pose = this.physics.pose(id, this.poseScratch)
+    const below = pose.y - span.bottom
+    return restHeight(pieceShape(id), pose.angle, pose.x, this.placedList(id)) - below < hero.y + PIP_CLEAR.top
+  }
+
+  /**
+   * Let a held piece fall from where it would be without Pip, height `y`. Over
+   * her, it waits in the air while she hops out from under it; lifted over
+   * her, it first sets down to `y`.
+   */
+  private letGo(id: number, vx: number, y: number): void {
+    const high = this.physics.pose(id, this.poseScratch).y > y + SET_DOWN
+    if (high || this.overPip(id)) this.pending.push({ id, since: this.t, y })
+    else this.physics.release(id, vx)
+    this.dodgeIfUnder(id)
+  }
+
+  private updatePending(dt: number): void {
+    const k = 1 - Math.exp(-dt * FOLLOW)
+    for (let i = this.pending.length - 1; i >= 0; i--) {
+      const p = this.pending[i]
+      if (!this.physics.has(p.id)) {
+        this.pending.splice(i, 1)
+        continue
+      }
+      const late = this.t - p.since >= PENDING_SECONDS
+      if (!late && this.overPip(p.id)) {
+        if (this.hero.mode === 'stand') this.dodgeIfUnder(p.id)
+        continue
+      }
+      const pose = this.physics.pose(p.id, this.poseScratch)
+      if (!late && pose.y > p.y + SET_DOWN) {
+        this.physics.moveHeld(p.id, pose.x, pose.y + (p.y - pose.y) * k, pose.angle)
+        continue
+      }
+      this.pending.splice(i, 1)
+      this.physics.release(p.id, 0)
+      this.noticeDrop(p.id)
+      this.saves.change(this.t, true)
+    }
+  }
+
+  /** Take piece `id` back from those waiting to fall, for a finger that catches it; false if it was not waiting. */
+  private unpend(id: number): boolean {
+    const index = this.pending.findIndex((p) => p.id === id)
+    if (index < 0) return false
+    this.pending.splice(index, 1)
+    return true
+  }
+
+  /** Whether floor spot `x` leaves Pip out from under every piece waiting to fall. */
+  private clearOfPending(x: number): boolean {
+    for (const p of this.pending) {
+      if (!this.physics.has(p.id)) continue
+      const span = this.pieceSpan(p.id)
+      if (x > span.lo - PIP_CLEAR.half - DODGE_ROOM && x < span.hi + PIP_CLEAR.half + DODGE_ROOM) return false
+    }
+    return true
   }
 
   get kiteGoal(): { x: number; grabY: number } {
@@ -374,7 +654,7 @@ export class KiteController {
 
   /** Seconds the playroom has been untouched and entirely still; the view renders at half rate after a while. */
   restingFor(): number {
-    if (this.hero.mode !== 'stand' || this.kite.mode !== 'perched' || this.drags.length > 0 || this.turn || !this.physics.isResting || this.guidance.hand) return 0
+    if (this.hero.mode !== 'stand' || this.kite.mode !== 'perched' || this.drags.length > 0 || this.pending.length > 0 || this.turn || !this.physics.isResting || this.guidance.hand) return 0
     return Math.min(this.clock.idle(this.t), this.t - this.calmSince)
   }
 
@@ -407,6 +687,13 @@ export class KiteController {
         const distance = distanceToPiece(piece, p)
         if (distance < bestDistance) {
           best = piece.id
+          bestDistance = distance
+        }
+      }
+      for (const waiting of this.pending) {
+        const distance = distanceToPiece(this.placedOf(waiting.id), p)
+        if (distance < bestDistance) {
+          best = waiting.id
           bestDistance = distance
         }
       }
@@ -516,19 +803,20 @@ export class KiteController {
       const x = clampX(p.x, shape.half.x)
       this.trayed[id] = false
       this.popAt[id] = this.t
-      this.physics.add(id, { x, y: restHeight(shape, 0, x, this.placedList(id)), angle: 0 })
+      const y = this.lift(id, 0, x, this.heldScale(id), PIP_SLOPE)
+      this.physics.add(id, { x: this.liftX, y, angle: 0 })
       this.physics.hold(id)
-      this.drags.push({ pointer, id, offset: { x: 0, y: 0 }, goal: { x, y: 0 }, at: { x, y: 0 }, lastX: x, vx: 0 })
+      this.drags.push({ pointer, id, offset: { x: 0, y: 0 }, goal: { x, y: 0 }, at: { x, y }, lastX: x, vx: 0, angle: 0, lean: 0, free: y, raised: false })
       this.sound?.pickup()
       this.version += 1
     } else if (target.kind === 'piece') {
       const id = target.id
-      if (this.physics.isHeld(id)) return
+      if (this.physics.isHeld(id) && !this.unpend(id)) return
       if (this.turn?.id === id) this.turn = null
       const pose = this.physics.pose(id, this.poseScratch)
       this.supportLost(id)
       this.physics.hold(id)
-      this.drags.push({ pointer, id, offset: { x: pose.x - p.x, y: pose.y - p.y }, goal: { x: pose.x, y: pose.y }, at: { x: pose.x, y: pose.y }, lastX: pose.x, vx: 0 })
+      this.drags.push({ pointer, id, offset: { x: pose.x - p.x, y: pose.y - p.y }, goal: { x: pose.x, y: pose.y }, at: { x: pose.x, y: pose.y }, lastX: pose.x, vx: 0, angle: pose.angle, lean: 0, free: pose.y, raised: false })
       this.sound?.pickup()
     } else return
     this.onDragMove(pointer, at)
@@ -571,15 +859,15 @@ export class KiteController {
 
   private drop(drag: Drag): void {
     this.removeDrag(drag)
-    this.physics.release(drag.id, drag.vx * 0.35)
+    this.letGo(drag.id, drag.vx * 0.35, drag.raised ? Math.min(drag.at.y, drag.free) : drag.at.y)
     this.noticeDrop(drag.id)
-    this.dodgeIfUnder(drag.id)
     this.saves.change(this.t, true)
   }
 
   private noticeDrop(id: number): void {
     this.dropId = id
     this.dropAt = this.t
+    this.wobbly = null
   }
 
   /** The piece the child just let go of, while everyone is still watching it land, into `out`. */
@@ -596,6 +884,7 @@ export class KiteController {
   private putAway(id: number): void {
     this.physics.remove(id)
     this.trayed[id] = true
+    this.wobbly = null
     this.sound?.putAway()
     this.saves.change(this.t, true)
     this.version += 1
@@ -606,23 +895,46 @@ export class KiteController {
     const pose = this.physics.pose(id, this.poseScratch)
     this.supportLost(id)
     this.physics.hold(id)
-    this.turn = { id, start: this.t, from: pose.angle, to: pose.angle + Math.PI / 2 }
+    this.turn = { id, start: this.t, from: pose.angle, to: pose.angle + Math.PI / 2, y: pose.y }
+    this.wobbly = null
     this.sound?.turn()
   }
 
   private hopOutOfTray(id: number): void {
     const shape = pieceShape(id)
     const goal = this.kiteGoal
-    const dir = Math.sign(goal.x - this.hero.x) || 1
-    const x = clampX(this.hero.x + dir * (shape.half.x + 0.62), shape.half.x)
+    const hero = this.hero
+    const dir = Math.sign(goal.x - hero.x) || 1
+    // Beside her on the kite's side; against a wall, the other side; with no room either side, over her (and she hops out from under it).
+    const reach = shape.half.x + HOP_OUT_GAP
+    let x = clampX(hero.x + dir * reach, shape.half.x)
+    if (Math.abs(x - hero.x) < reach) {
+      const other = clampX(hero.x - dir * reach, shape.half.x)
+      if (Math.abs(other - hero.x) > Math.abs(x - hero.x)) x = other
+    }
     this.trayed[id] = false
     this.popAt[id] = this.t
-    this.physics.add(id, { x, y: restHeight(shape, 0, x, this.placedList(id)) + 0.9, angle: 0 })
+    const y = this.lift(id, 0, x, 1) + 0.9
+    this.physics.add(id, { x: this.liftX, y, angle: 0 })
+    this.physics.hold(id)
+    this.letGo(id, 0, this.landing + 0.9)
     this.noticeDrop(id)
-    this.dodgeIfUnder(id)
     this.sound?.pickup()
     this.saves.change(this.t, true)
     this.version += 1
+  }
+
+  /**
+   * A loose piece knocked hard into the doll (it bounced off her). Standing
+   * still, she startles where she is and thinks again once it settles; on the
+   * move, she tumbles out of its way, unhurt, rather than walk on into it.
+   */
+  private knocked(): void {
+    const hero = this.hero
+    if (hero.mode === 'stand' || hero.mode === 'grab') {
+      hero.boopAt = this.t
+      this.wantPlan = true
+    } else if (hero.mode === 'travel' || hero.mode === 'land') this.startTumble()
   }
 
   /** The piece the doll stands on is being moved: the doll tumbles off, unhurt. */
@@ -630,26 +942,35 @@ export class KiteController {
     if (this.hero.on === id && (this.hero.mode === 'stand' || this.hero.mode === 'travel' || this.hero.mode === 'grab')) this.startTumble()
   }
 
-  /** A piece is about to land on the doll: it hops aside if it can, otherwise tumbles clear. */
+  /** A piece is about to land on the doll: she hops aside, her whole outline out from under it, if she can, otherwise tumbles clear. */
   private dodgeIfUnder(id: number): void {
     const hero = this.hero
     if (hero.mode !== 'stand' && hero.mode !== 'travel') return
-    const body = this.physics.body(id)
-    if (!body) return
-    const shape = pieceShape(id)
-    const lo = body.position.x - shape.half.x - 0.3
-    const hi = body.position.x + shape.half.x + 0.3
-    if (this.stopShortOf(lo, hi)) return
-    if (hero.x < lo || hero.x > hi || body.position.y - shape.half.y > hero.y + 2.2) return
+    if (!this.physics.has(id)) return
+    const span = this.pieceSpan(id)
+    const lo = span.lo - PIP_CLEAR.half - DODGE_ROOM
+    const hi = span.hi + PIP_CLEAR.half + DODGE_ROOM
+    if (this.stopShortOf(lo, hi) || !this.overPip(id)) return
     const placed = this.placedList(id)
-    const spots = standableSpots(placed).filter((s) => (s.x < lo || s.x > hi) && Math.abs(s.y - hero.y) < 0.45 && Math.abs(s.x - hero.x) < 2.6)
-    if (!spots.length) {
+    const spots = standableSpots(placed, this.wobbly).filter((s) => (s.x < lo || s.x > hi) && Math.abs(s.y - hero.y) < 0.45 && Math.abs(s.x - hero.x) < 2.6)
+    // Her head clear all the way there, of the build and of the piece waiting over her: a hop if it fits, else a walk.
+    const around = [...placed, this.placedOf(id)]
+    const from: Spot = { x: hero.x, y: hero.y, on: hero.on }
+    let best: Spot | null = null
+    let kind: MoveKind = 'hop'
+    for (const s of spots) {
+      if (best && Math.abs(s.x - hero.x) >= Math.abs(best.x - hero.x)) continue
+      const way: MoveKind | null = headClearAlong(around, 'hop', from, s) ? 'hop' : headClearAlong(around, 'walk', from, s) ? 'walk' : null
+      if (way) {
+        best = s
+        kind = way
+      }
+    }
+    if (!best) {
       this.startTumble()
       return
     }
-    let best = spots[0]
-    for (const s of spots) if (Math.abs(s.x - hero.x) < Math.abs(best.x - hero.x)) best = s
-    this.startRoute(buildRoute({ x: hero.x, y: hero.y }, [{ kind: 'hop', to: best }]), false)
+    this.startRoute(buildRoute({ x: hero.x, y: hero.y }, [{ kind, to: best }]), false)
   }
 
   /**
@@ -681,7 +1002,13 @@ export class KiteController {
     const t = this.t
     this.updateHeld(dt)
     this.updateTurn()
+    this.updatePending(dt)
+    const hero = this.hero
+    const stepping = hero.mode === 'travel' ? this.route[hero.segment.index] : undefined
+    const from = stepping && hero.segment.index > 0 ? this.route[hero.segment.index - 1].on : hero.on
+    this.physics.setDoll(hero.x, hero.y, hero.mode !== 'fly' && hero.z < TUMBLE_OUT, from, stepping ? stepping.on : null)
     const report = this.physics.step(dt)
+    if (report.dollHit >= 0) this.knocked()
     let loudest = -1
     for (let i = 0; i < report.impacts; i++) {
       const id = report.impactIds[i]
@@ -728,28 +1055,28 @@ export class KiteController {
       const drag = this.drags[i]
       const id = drag.id
       const shape = pieceShape(id)
-      const angle = this.physics.body(id) ? this.heldAngle(id) : 0
       const x = clampX(drag.at.x + (drag.goal.x - drag.at.x) * k, shape.half.x)
-      const rest = restHeight(shape, angle, x, this.placedList(id))
-      const goalY = Math.min(rest + LIFT, Math.max(rest, drag.goal.y))
-      drag.at.y = Math.max(rest, drag.at.y + (goalY - drag.at.y) * k)
       drag.vx = drag.vx * 0.7 + ((x - drag.lastX) / dt) * 0.3
       drag.lastX = x
+      const lean = Math.max(-MAX_LEAN, Math.min(MAX_LEAN, -drag.vx * LEAN))
+      drag.lean += (lean - drag.lean) * Math.min(1, dt * LEAN_RATE)
+      const angle = drag.angle + drag.lean
+      const rest = this.lift(id, angle, x, this.heldScale(id), PIP_SLOPE)
+      const goalY = Math.min(rest + LIFT, Math.max(rest, drag.goal.y))
+      drag.at.y = Math.max(rest, drag.at.y + (goalY - drag.at.y) * k)
       drag.at.x = x
-      this.physics.moveHeld(id, x, drag.at.y, angle)
+      drag.free = Math.min(this.landing + LIFT, Math.max(this.landing, drag.goal.y))
+      drag.raised = rest > this.landing + 1e-4
+      this.physics.moveHeld(id, this.liftX, drag.at.y, angle)
       const entry = this.heldPool[i]
       entry.id = id
-      entry.x = x
+      entry.x = this.liftX
       entry.y = drag.at.y
       entry.angle = angle
-      entry.landY = rest - 0.06
+      entry.landY = this.landing - 0.06
       held.push(entry)
     }
     if (held.length) this.clock.touch(this.t)
-  }
-
-  private heldAngle(id: number): number {
-    return this.physics.pose(id, this.poseScratch).angle
   }
 
   private updateTurn(): void {
@@ -760,10 +1087,10 @@ export class KiteController {
     const angle = turn.from + (turn.to - turn.from) * smooth(p)
     const pose = this.physics.pose(turn.id, this.poseScratch)
     const x = clampX(pose.x, Math.max(shape.half.x, shape.half.y))
-    const rest = restHeight(shape, angle, x, this.placedList(turn.id))
-    this.physics.moveHeld(turn.id, x, Math.max(pose.y, rest), angle)
+    const rest = this.lift(turn.id, angle, x, this.heldScale(turn.id))
+    this.physics.moveHeld(turn.id, this.liftX, Math.max(pose.y, rest), angle)
     if (p >= 1) {
-      this.physics.release(turn.id, 0)
+      this.letGo(turn.id, 0, Math.max(turn.y, this.landing))
       this.turn = null
       this.saves.change(this.t, true)
     }
@@ -820,27 +1147,149 @@ export class KiteController {
     this.hero.since = this.t
   }
 
+  /** The doll hops out in front of the build and falls, unhurt, toward the nearest bare rug, never under a piece waiting to fall. */
   private startTumble(): void {
     const hero = this.hero
     this.tumbleFrom = { x: hero.x, y: hero.y }
     this.route = []
-    const floor = standableSpots(this.placedList()).filter((s) => s.y === 0)
-    let to = { x: hero.x, y: 0 }
-    if (floor.length) {
-      let best = floor[0]
-      for (const s of floor) if (Math.abs(s.x - hero.x) < Math.abs(best.x - hero.x)) best = s
-      to = { x: best.x, y: 0 }
-    }
-    this.tumbleTo = to
+    this.tumbleTo = { x: this.backSpot(hero.x)?.x ?? hero.x, y: 0, on: null }
+    this.outBump = Math.min(OUT_BUMP, headroom(this.placedList(), hero.x, hero.y))
     hero.on = null
     this.physics.setLoad(null)
     this.setHero('tumble')
+    this.setTumble('out')
     this.sound?.whee()
     this.watchersReact()
   }
 
+  /**
+   * Where the doll hops back into the build, nearest `x`: bare rug, else the
+   * top of a low block, out from under any piece waiting to fall. Null when
+   * nowhere has room for her, and she stays sat out in front until it does.
+   */
+  private backSpot(x: number): Spot | null {
+    let best: Spot | null = null
+    let bestCost = Infinity
+    for (const s of standableSpots(this.placedList())) {
+      if (s.y > BACK_UP) continue
+      const cost = Math.abs(s.x - x) + (s.y > 0 ? BACK_UP_COST + s.y : 0) + (this.clearOfPending(s.x) ? 0 : 100)
+      if (cost < bestCost) {
+        best = s
+        bestCost = cost
+      }
+    }
+    return best
+  }
+
+  private setTumble(phase: TumblePhase): void {
+    this.hero.tumble = phase
+    this.hero.tumbleSince = this.t
+  }
+
+  private hopBackTo(spot: Spot): void {
+    this.tumbleFrom = { x: this.hero.x, y: 0 }
+    this.tumbleTo = spot
+    this.backBump = Math.min(BACK_BUMP, headroom(this.placedList(), spot.x, spot.y))
+    this.backChecked = false
+    this.setTumble('back')
+  }
+
   private tumbleSeconds(): number {
     return 0.55 + Math.min(0.5, this.tumbleFrom.y * 0.12)
+  }
+
+  private updateTumble(): void {
+    const hero = this.hero
+    const since = this.t - hero.tumbleSince
+    const from = this.tumbleFrom
+    const to = this.tumbleTo
+    switch (hero.tumble) {
+      case 'out': {
+        const k = Math.min(1, since / OUT_SECONDS)
+        hero.z = TUMBLE_OUT * smooth(k)
+        hero.y = from.y + Math.sin(k * Math.PI) * this.outBump
+        if (k >= 1) this.setTumble('roll')
+        break
+      }
+      case 'roll': {
+        const duration = this.tumbleSeconds()
+        const p = Math.min(1, since / duration)
+        hero.x = from.x + (to.x - from.x) * smooth(p)
+        hero.y = from.y + (to.y - from.y) * p * p + Math.sin(p * Math.PI) * 0.45
+        hero.spin = p * Math.PI * 2 * Math.sign(to.x - from.x || 1)
+        hero.reach = 0.6 * Math.sin(p * Math.PI)
+        if (p >= 1) {
+          hero.spin = 0
+          hero.x = to.x
+          hero.y = 0
+          this.sound?.giggle(0)
+          this.setTumble('sit')
+        }
+        break
+      }
+      case 'sit': {
+        // Back in only once nothing is moving, so the spot she hops into is still bare when she lands.
+        if (since < SIT_SECONDS || !this.physics.isResting || this.pending.length || this.t < this.backLookAt) break
+        const spot = this.backSpot(hero.x)
+        if (!spot) {
+          this.backLookAt = this.t + BACK_LOOK_SECONDS
+          break
+        }
+        this.hopBackTo(spot)
+        break
+      }
+      case 'back': {
+        // Across the front of the build first, up in front of a block she hops onto, then straight back in.
+        const scoot = Math.abs(to.x - from.x) / SCOOT_SPEED
+        const rise = to.y > 0 ? RISE_SECONDS : 0
+        if (since < scoot) {
+          const k = since / scoot
+          hero.x = from.x + (to.x - from.x) * smooth(k)
+          hero.hop = Math.abs(Math.sin(k * Math.PI * Math.max(1, Math.round(scoot * 4)))) * 0.14
+          hero.y = hero.hop
+          hero.facing = Math.sign(to.x - from.x) || hero.facing
+          break
+        }
+        if (!this.backChecked) {
+          // A block set down on the way may have taken the spot: look again before hopping in.
+          this.backChecked = true
+          const spot = this.physics.isResting && !this.pending.length ? this.backSpot(hero.x) : null
+          if (!spot || Math.abs(spot.x - to.x) > 0.05 || Math.abs(spot.y - to.y) > 0.05) {
+            hero.x = to.x
+            hero.y = 0
+            hero.hop = 0
+            if (spot) this.hopBackTo(spot)
+            else this.setTumble('sit')
+            break
+          }
+        }
+        hero.x = to.x
+        if (since < scoot + rise) {
+          const k = (since - scoot) / rise
+          hero.hop = Math.sin(k * Math.PI) * 0.2
+          hero.y = to.y * smooth(k) + hero.hop
+          break
+        }
+        const k = Math.min(1, (since - scoot - rise) / BACK_SECONDS)
+        hero.z = TUMBLE_OUT * (1 - smooth(k))
+        hero.hop = Math.sin(k * Math.PI) * this.backBump
+        hero.y = to.y + hero.hop
+        if (k >= 1) {
+          hero.y = to.y
+          hero.z = 0
+          hero.hop = 0
+          hero.on = to.on
+          if (to.on !== null) this.recordSupports()
+          this.setHero('stand')
+          this.wantPlan = true
+        }
+        break
+      }
+      default: {
+        const never: never = hero.tumble
+        throw new Error(`unknown tumble phase ${String(never)}`)
+      }
+    }
   }
 
   private updateHero(dt: number): void {
@@ -851,10 +1300,11 @@ export class KiteController {
     switch (hero.mode) {
       case 'stand': {
         if (hero.on !== null && this.supportMoved(hero.on)) {
+          this.wobbly = hero.on
           this.startTumble()
           return
         }
-        if (this.wantPlan && this.physics.isResting && !this.turn && this.kite.mode === 'perched') this.plan()
+        if (this.wantPlan && this.physics.isResting && !this.turn && this.pending.length === 0 && this.kite.mode === 'perched') this.plan()
         const near = Math.abs(hero.x - goal.x) < 2.4
         const target = this.kite.mode === 'perched' ? (near ? 1 : 0.25 + 0.2 * Math.max(0, Math.sin(t * 0.9))) : 0
         hero.reach += (target - hero.reach) * (1 - Math.exp(-dt * 5))
@@ -868,6 +1318,7 @@ export class KiteController {
         hero.reach += (0 - hero.reach) * (1 - Math.exp(-dt * 8))
         const segment = this.route[pose.index]
         if (segment?.on !== undefined && segment.on !== null && pose.phase > 0.3 && this.supportMoved(segment.on)) {
+          this.wobbly = segment.on
           this.startTumble()
           return
         }
@@ -914,23 +1365,9 @@ export class KiteController {
         }
         break
       }
-      case 'tumble': {
-        const duration = this.tumbleSeconds()
-        const p = Math.min(1, age / duration)
-        hero.x = this.tumbleFrom.x + (this.tumbleTo.x - this.tumbleFrom.x) * smooth(p)
-        hero.y = this.tumbleFrom.y + (this.tumbleTo.y - this.tumbleFrom.y) * p * p + Math.sin(p * Math.PI) * 0.45
-        hero.spin = p * Math.PI * 2 * Math.sign(this.tumbleTo.x - this.tumbleFrom.x || 1)
-        hero.reach = 0.6 * Math.sin(p * Math.PI)
-        if (p >= 1 && age < duration + dt * 1.5) this.sound?.giggle(0)
-        if (age >= duration + 0.9) {
-          hero.spin = 0
-          hero.x = this.tumbleTo.x
-          hero.y = 0
-          this.setHero('stand')
-          this.wantPlan = true
-        }
+      case 'tumble':
+        this.updateTumble()
         break
-      }
       default: {
         const never: never = hero.mode
         throw new Error(`unknown hero mode ${String(never)}`)
@@ -964,14 +1401,14 @@ export class KiteController {
     this.wantPlan = false
     if (this.kite.mode === 'flying') return
     const hero = this.hero
-    const plan = planClimb(this.placedList(), { x: hero.x, y: hero.y, on: hero.on }, this.kiteGoal)
+    const plan = planClimb(this.placedList(), { x: hero.x, y: hero.y, on: hero.on }, this.kiteGoal, this.wobbly)
     if (!plan) {
       this.startTumble()
       return
     }
     if (hero.on !== null) this.physics.setLoad(hero.on, hero.x, hero.y)
     this.recordSupports()
-    this.startHintSearch()
+    this.startHintSearch(plan.goal)
     if (plan.moves.length) this.startRoute(buildRoute({ x: hero.x, y: hero.y }, plan.moves), plan.reachesKite)
     else if (plan.reachesKite && this.kite.mode === 'perched') this.setHero('grab')
   }
@@ -995,7 +1432,7 @@ export class KiteController {
       if (tried.length >= LANDING_TRIES) break
       if (tried.some((x) => Math.abs(x - spot.x) < 0.75)) continue
       tried.push(spot.x)
-      const plan = planClimb(placed, spot, next)
+      const plan = planClimb(placed, spot, next, this.wobbly)
       if (plan && (plan.reachesKite || spotValue(plan.goal, next) > -0.5)) return spot
     }
     return floor[0]
@@ -1008,7 +1445,9 @@ export class KiteController {
     const s = kite.position
     // The loop round the room ends on the landing's side, so the last swoop is short.
     const side = Math.sign(landing.x) || 1
-    const lift = HANDS + STRING
+    // The last point hangs her, straight down from the bridle by the spool in her hand, feet on the landing.
+    const over = landing.x + FLY_GRIP.x
+    const lift = FLY_GRIP.y + KITE_LINE - KITE_BRIDLE.y
     // High enough that the dangling doll's feet pass well over the watchers' heads.
     this.flightPath = [
       { x: s.x, y: s.y, z: s.z },
@@ -1018,10 +1457,12 @@ export class KiteController {
       { x: -2.0 * side, y: FLIGHT_CEILING - 1.1, z: 0.9 },
       { x: 2.6 * side, y: FLIGHT_CEILING - 0.2, z: 0.6 },
       { x: 5.0 * side, y: FLIGHT_CEILING - 0.8, z: 0.3 },
-      { x: landing.x + 1.2 * Math.sign(landing.x - 5.0 * side), y: lift + 1.4, z: 0.3 },
-      { x: landing.x, y: lift, z: 0 },
+      { x: over + 1.2 * Math.sign(landing.x - 5.0 * side), y: lift + 1.4, z: 0.3 },
+      { x: over, y: lift, z: -KITE_BRIDLE.z },
     ]
-    this.tumbleTo = { x: landing.x, y: 0 }
+    this.tumbleTo = { x: landing.x, y: 0, on: null }
+    this.landOut = false
+    this.landOutK = 0
     this.kitePrev.x = s.x
     this.kitePrev.y = s.y
     this.kitePrev.z = s.z
@@ -1064,6 +1505,12 @@ export class KiteController {
         const f = Math.min(1, age / FLIGHT_SECONDS)
         const eased = f < 0.5 ? 2 * f * f : 1 - 2 * (1 - f) * (1 - f)
         catmull(this.flightPath, (0.15 * f + 0.85 * eased) * (this.flightPath.length - 1), p)
+        // A block the child sets down where she was to land: the kite brings her down out in front of the build instead.
+        if (!this.landOut && !roomy(this.placedList(), this.tumbleTo.x, 0)) this.landOut = true
+        if (this.landOut) {
+          this.landOutK = Math.min(1, this.landOutK + dt / LAND_OUT_SECONDS)
+          p.z = Math.max(p.z, TUMBLE_OUT * smooth(this.landOutK) - KITE_BRIDLE.z)
+        }
         this.updateHanging(dt, f)
         if (f >= 1) {
           kite.mode = 'drifting'
@@ -1072,9 +1519,17 @@ export class KiteController {
           const hero = this.hero
           hero.x = this.tumbleTo.x
           hero.y = 0
-          hero.z = 0
           hero.swing = 0
-          this.setHero('land')
+          if (this.landOut) {
+            // Sat on the rug out front, where she hops back in from once there is room.
+            hero.z = TUMBLE_OUT
+            this.tumbleFrom = { x: hero.x, y: 0 }
+            this.setHero('tumble')
+            this.setTumble('sit')
+          } else {
+            hero.z = 0
+            this.setHero('land')
+          }
           this.sound?.land()
           this.sound?.wind(false)
           this.clock.restart(this.t)
@@ -1121,12 +1576,12 @@ export class KiteController {
     }
   }
 
-  /** The doll hangs from the kite string like a pendulum pushed by the kite's sideways acceleration. */
+  /** The doll hangs by the spool in her right hand from the kite's line, like a pendulum pushed by the kite's sideways acceleration. */
   private updateHanging(dt: number, progress: number): void {
     const hero = this.hero
     const kite = this.kite
     const ax = dt > 0 ? ((kite.position.x - this.kitePrev.x) / dt - kite.velocity.x) / dt : 0
-    const length = STRING + HANDS * 0.6
+    const length = SWING_LENGTH
     const steps = Math.max(1, Math.ceil(dt / (1 / 120)))
     const h = dt / steps
     for (let i = 0; i < steps; i++) {
@@ -1142,9 +1597,13 @@ export class KiteController {
     hero.swing *= 1 - settle
     const s = Math.sin(hero.swing)
     const c = Math.cos(hero.swing)
-    hero.x = kite.position.x + s * (STRING + HANDS)
-    hero.y = kite.position.y - c * (STRING + HANDS)
-    hero.z = kite.position.z
+    // The grip hangs the line's length from the bridle along the swing; her feet are FLY_GRIP below it, turned with her.
+    const gripX = kite.position.x + s * KITE_LINE
+    const gripY = kite.position.y + KITE_BRIDLE.y - c * KITE_LINE
+    hero.x = gripX - (FLY_GRIP.x * c - FLY_GRIP.y * s)
+    hero.y = gripY - (FLY_GRIP.x * s + FLY_GRIP.y * c)
+    // Never back inside the shelf or behind the build, where the kite starts: the line slants back to it instead.
+    hero.z = Math.max(0, kite.position.z + KITE_BRIDLE.z)
     hero.reach = 1
     hero.facing = kite.velocity.x >= 0 ? 1 : -1
   }
@@ -1279,52 +1738,135 @@ export class KiteController {
 
   // ---- guidance ----------------------------------------------------------
 
-  /** Where one more block would help the doll most, found by asking the planner about a few spots near the kite, a few per frame. */
-  private startHintSearch(): void {
-    const goal = this.kiteGoal
-    const candidates: number[] = []
-    for (let x = goal.x - 3.5; x <= goal.x + 3.5 + 1e-6; x += 0.5) {
-      if (x > PLAY_MIN_X + 0.6 && x < PLAY_MAX_X - 0.6) candidates.push(x)
-    }
-    this.hintSearch = { shape: this.hintShape(), candidates, index: 0, best: { x: goal.x - Math.sign(goal.x) * 0.6, y: 0 }, bestScore: -Infinity }
+  /** Where the doll will stand once her current move ends: the end of her route, where her tumble lands, or where she is. */
+  private restingSpot(): Spot {
+    const hero = this.hero
+    const last = this.route[this.route.length - 1]
+    if (hero.mode === 'travel' && last) return { x: last.to.x, y: last.to.y, on: last.on }
+    if (hero.mode === 'tumble') return { x: this.tumbleTo.x, y: this.tumbleTo.y, on: this.tumbleTo.on }
+    return { x: hero.x, y: hero.y, on: hero.on }
   }
 
-  /** The piece the ghost hand will carry (the rule in `chooseHint`: the first cube left in the tray, else the first piece), so the search tries that shape. */
-  private hintShape(): PieceShape {
-    let first = -1
-    for (const piece of PIECES) {
-      if (!this.trayed[piece.id]) continue
-      if (piece.kind === 'cube') return SHAPES.cube
-      if (first < 0) first = piece.id
+  /** Where one more block would help the doll most (standing at `from`), found by asking the planner about a few spots near the kite, a few per frame. */
+  private startHintSearch(from: Spot = this.restingSpot()): void {
+    const shapes = this.hintShapes(from)
+    this.hintSearch = {
+      from,
+      shapes,
+      shape: 0,
+      candidates: this.hintCandidates(shapes[0].shape),
+      index: 0,
+      best: { x: 0, y: 0 },
+      bestWith: -1,
+      bestScore: -Infinity,
+      fallback: null,
+      fallbackWith: -1,
     }
-    return first >= 0 ? pieceShape(first) : SHAPES.cube
+  }
+
+  /** Where the search tries `shape`: every half unit near the kite, and flush against each side of every block, where a child builds a stair or a wall. */
+  private hintCandidates(shape: PieceShape): number[] {
+    const goal = this.kiteGoal
+    const candidates: number[] = []
+    // Only where the piece fits between the walls: a drag stops it there, so the ghost hand must too.
+    const fits = (x: number) => Math.abs(x - goal.x) <= 3.5 + 1e-6 && x > PLAY_MIN_X + 0.6 && x < PLAY_MAX_X - 0.6 && clampX(x, shape.half.x) === x
+    for (let x = goal.x - 3.5; x <= goal.x + 3.5 + 1e-6; x += 0.5) if (fits(x)) candidates.push(x)
+    for (const piece of this.placedList()) {
+      let lo = Infinity
+      let hi = -Infinity
+      for (const part of piece.parts) for (const p of part) {
+        lo = Math.min(lo, p.x)
+        hi = Math.max(hi, p.x)
+      }
+      for (const x of [lo - shape.half.x - FLUSH_GAP, hi + shape.half.x + FLUSH_GAP]) if (fits(x)) candidates.push(x)
+    }
+    return candidates
+  }
+
+  /**
+   * The pieces the search tries, one of each shape: first the one the ghost
+   * hand picks by itself (the rule in `chooseHint`: the first cube left in
+   * the tray, else the first piece), then the other tray pieces in order,
+   * then pieces left over from an earlier build: standing upright (the hand
+   * carries a piece as it lies), carrying nothing, and not under Pip. With
+   * none of those, a cube stands in for whichever loose piece it moves.
+   */
+  private hintShapes(from: Spot): HintPiece[] {
+    const shapes: HintPiece[] = []
+    const add = (id: number, loose: boolean, x: number) => {
+      const shape = pieceShape(id)
+      if (!shapes.some((s) => s.shape === shape)) shapes.push({ id, shape, loose, x })
+    }
+    const cube = PIECES.find((p) => this.trayed[p.id] && p.kind === 'cube')
+    if (cube) add(cube.id, false, 0)
+    for (const piece of PIECES) if (this.trayed[piece.id]) add(piece.id, false, 0)
+    const placed = this.placedList()
+    for (const piece of placed) {
+      const id = piece.id
+      if (id === this.hero.on || id === from.on) continue
+      const pose = this.physics.pose(id, this.poseScratch)
+      const upright = PIECES[id].kind === 'cube' ? Math.abs(Math.sin(pose.angle * 2)) < 0.1 : Math.cos(pose.angle) > 0.995
+      if (upright && !carries(placed, piece)) add(id, true, pose.x)
+    }
+    if (!shapes.length) shapes.push({ id: -1, shape: SHAPES.cube, loose: false, x: 0 })
+    return shapes
   }
 
   private stepHintSearch(): void {
     const search = this.hintSearch
     if (!search) return
     const goal = this.kiteGoal
-    const hero = this.hero
-    const shape = search.shape
-    for (let n = 0; n < HINT_BATCH && search.index < search.candidates.length; n++, search.index++) {
-      const x = search.candidates[search.index]
-      const placed = this.placedList()
-      const y = restHeight(shape, 0, x, placed) - 0.06
+    const from = search.from
+    for (let n = 0; n < HINT_BATCH; n++) {
+      if (search.index >= search.candidates.length) {
+        if (search.bestScore > -Infinity || search.shape + 1 >= search.shapes.length) break
+        search.shape += 1
+        search.candidates = this.hintCandidates(search.shapes[search.shape].shape)
+        search.index = 0
+        continue
+      }
+      const { id, shape, loose } = search.shapes[search.shape]
+      const placed = this.placedList(loose ? id : -1)
+      const x = slideClear(shape, 0, search.candidates[search.index++], placed)
+      if (clampX(x, shape.half.x) !== x) continue
+      if (loose && Math.abs(x - search.shapes[search.shape].x) < LEFTOVER_MOVE) continue
+      let rest = restHeight(shape, 0, x, placed)
+      if (restSliver.left > 0 || restSliver.right > 0) rest = restSliver.over
+      const y = rest - 0.06
       const base = y - baseDepth(shape)
       if (!balanced(placed, x, base, shape.half.x)) continue
+      // Never shown landing on or against Pip where she will stand: she would have to get out from under it first.
+      const crowds = Math.abs(x - from.x) < shape.half.x + PIP_CLEAR.half && y + shape.half.y > from.y && base < from.y + PIP_CLEAR.top
+      if (crowds) continue
+      if (!search.fallback || Math.abs(x - goal.x) < Math.abs(search.fallback.x - goal.x)) {
+        search.fallback = { x, y: base }
+        search.fallbackWith = id
+      }
       const probe: Placed = { id: -1, parts: shape.parts.map((part) => transformInto(part, { x, y, angle: 0 }, [])) }
-      const plan = planClimb([...placed, probe], { x: hero.x, y: hero.y, on: hero.on }, goal)
+      const plan = planClimb([...placed, probe], from, goal, this.wobbly)
       if (!plan) continue
-      const score = (plan.reachesKite ? 100 : spotValue(plan.goal, goal)) - Math.abs(x - hero.x) * 0.05 - base * 0.02
+      const score = (plan.reachesKite ? 100 : spotValue(plan.goal, goal)) - Math.abs(x - from.x) * 0.05 - base * 0.02
       if (score > search.bestScore) {
         search.bestScore = score
         search.best = { x, y: base }
+        search.bestWith = id
       }
     }
-    if (search.index >= search.candidates.length) {
-      this.guidance.buildAt = search.best
-      this.hintSearch = null
+    if (search.index < search.candidates.length || (search.bestScore === -Infinity && search.shape + 1 < search.shapes.length)) return
+    const g = this.guidance
+    if (search.bestScore > -Infinity) {
+      g.buildAt = search.best
+      g.buildWith = search.bestWith
+    } else if (search.fallback) {
+      g.buildAt = search.fallback
+      g.buildWith = search.fallbackWith
+    } else {
+      const shape = search.shapes[0].shape
+      const x = clampX(goal.x - Math.sign(goal.x) * 0.6, shape.half.x)
+      g.buildAt = { x, y: restHeight(shape, 0, x, this.placedList()) - 0.06 - baseDepth(shape) }
+      g.buildWith = -1
     }
+    this.hintSearch = null
   }
 
   private summary(): PlayroomSummary {
@@ -1336,7 +1878,7 @@ export class KiteController {
       const pose = this.physics.pose(piece.id, this.poseScratch)
       loose.push({ id: piece.id, x: pose.x, y: pose.y })
     }
-    return { flying: this.kite.mode !== 'perched', tray, loose, buildAt: this.guidance.buildAt }
+    return { flying: this.kite.mode !== 'perched', tray, loose, buildAt: this.guidance.buildAt, buildWith: this.guidance.buildWith }
   }
 
   private clearDemo(): void {

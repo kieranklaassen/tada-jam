@@ -18,11 +18,17 @@ export type PlayroomSummary = {
   loose: readonly { id: number; x: number; y: number }[]
   /** Where one more piece would help the doll most (the top of the best spot under the kite). */
   buildAt: Vec2
+  /** The piece that helps at `buildAt` (from the tray, or one left over from an earlier build), when the usual pick (the first cube, else the first piece) would not. */
+  buildWith?: number
 }
 
 /** The one move worth showing now, chosen from the state. */
 export function chooseHint(room: PlayroomSummary): Hint | null {
   if (room.flying) return null
+  const chosen = room.tray.find((p) => p.id === room.buildWith)
+  if (chosen) return { kind: 'fromTray', id: chosen.id, to: room.buildAt }
+  const leftover = room.loose.find((p) => p.id === room.buildWith)
+  if (leftover) return { kind: 'loose', id: leftover.id, from: { x: leftover.x, y: leftover.y }, to: room.buildAt }
   const fromTray = room.tray.find((p) => p.cube) ?? room.tray[0]
   if (fromTray) return { kind: 'fromTray', id: fromTray.id, to: room.buildAt }
   let far: PlayroomSummary['loose'][number] | null = null
