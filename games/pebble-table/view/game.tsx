@@ -139,7 +139,7 @@ function groundUnder(table: TableController, at: Point): number {
   return surfaceUnder(at, table.physics.surfaces(table.state.liveMat, table.state.seats))
 }
 
-/** What the guidance's ghost stone lies on at `at`: the top of any stone it would reach into, or of the feeding mat's plates, bowl and rug. */
+/** What the guidance's ghost stone lies on at `at`: the top of any stone or loose part it would reach into, or of the feeding mat's plates, bowl and rug. */
 export function ghostFloor(table: TableController, at: Point): number {
   let floor = table.state.liveMat === 'feeding' ? feedingRest(at, GHOST_REACH, table.state.seats) : 0
   for (const stone of stoneStates(table)) {
@@ -147,6 +147,17 @@ export function ghostFloor(table: TableController, at: Point): number {
     if (Math.hypot(p.x - at.x, p.y - at.y) * UNIT >= GHOST_REACH + stoneReachOf(stone.q)) continue
     const [x, y, z, w] = stone.quaternion
     floor = Math.max(floor, stone.position.y + stoneReachAlong(stone.q, 2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)))
+  }
+  const turn = new THREE.Quaternion()
+  const ball = new THREE.Vector3()
+  for (const part of partStates(table)) {
+    if (part.held) continue
+    turn.set(...part.quaternion)
+    for (const { x, y, z, r } of partCover(part.kind)) {
+      ball.set(x, y, z).applyQuaternion(turn).add(part.position)
+      const p = toWorld2(ball)
+      if (Math.hypot(p.x - at.x, p.y - at.y) * UNIT < GHOST_REACH + r) floor = Math.max(floor, ball.y + r)
+    }
   }
   return floor
 }

@@ -326,6 +326,36 @@ describe('the guidance ghost stone lies on what it is lifted from and carried ov
     expect(ids.length).toBeGreaterThan(8)
     expect(under).toBeGreaterThan(ids.length)
   })
+
+  it('lays the ghost stone over a loose acorn, shell, stick or boulder it is carried over, however it came to lie', () => {
+    let seed = 5
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
+    const parts = PART_KINDS.map((kind, i) => ({ id: 900 + i, kind, x: 560 + i * 60, y: 660 }))
+    const table = new TableController({ ...defaultTable(6), liveMat: 'scale', parts }, { save: () => {} })
+    for (const part of parts) table.physics.addPart(part.id, part.kind, part, { y: 4, spin: (random() - 0.5) * 6, yaw: random() * Math.PI * 2 })
+    for (let t = 0; t < 2; t += 1 / 60) table.step(1 / 60)
+    const pebble = geo.pebble(20)
+    const size = new THREE.Vector3().setScalar(stoneRadius3(4))
+    let [deepest, met, worst] = [0, 0, '']
+    for (const part of parts) {
+      const body = table.physics.body(part.id)!
+      const drawn = auditPiece(part.kind, partGeometry(part.kind), new THREE.Matrix4().compose(new THREE.Vector3(body.position.x, body.position.y, body.position.z), new THREE.Quaternion(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w), new THREE.Vector3(1, 1, 1)))
+      const middle = toWorld2(body.position)
+      for (let dx = -100; dx <= 100; dx += 10) {
+        for (let dy = -100; dy <= 100; dy += 10) {
+          const at = { x: middle.x + dx, y: middle.y + dy }
+          const p = to3(at, Math.max(1.4, ghostFloor(table, at) + GHOST_BELOW))
+          const ghost = auditPiece('ghost', pebble, new THREE.Matrix4().makeTranslation(p.x, p.y, p.z).scale(size))
+          if (!ghost.box.intersectsBox(drawn.box)) continue
+          met++
+          const depth = pairDepth(ghost, drawn, CAMERA)?.depth ?? 0
+          if (depth > deepest) [deepest, worst] = [depth, `${part.kind} at ${dx}, ${dy}`]
+        }
+      }
+    }
+    expect(met, 'the ghost stone never came near a part, so this measures nothing').toBeGreaterThan(150)
+    expect(deepest, worst).toBeLessThan(0.05)
+  }, 30_000)
 })
 
 describe('stones are drawn on what they land on', () => {
