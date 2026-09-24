@@ -3,7 +3,7 @@ import { JAR_SCALE, JARS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, HOUSE_REACH, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 import { JAR_LIFT, JAR_MOUTH, JAR_REACH, JAR_TOP, jarLabelBox, NEST_SPAN, partCollider, partRest } from './partShape'
 import { outlineCorners, STONE_CUTS, stoneOutline, stoneRest } from './stoneShape'
-import { BOWL_FLOOR, BOWL_OUTSIDE, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, HEM_LINE, HEM_POINTS, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, PLATE_TOP, radiusAt, RUG, RUG_HEM_REACH, RUG_HEM_TOP, type Surfaces } from './surfaces'
+import { BOWL_FLOOR, BOWL_OUTSIDE, BOWL_WALL, BOWL_WALL_THICKNESS, DISH_PROFILE, HEM_LINE, HEM_POINTS, ON_RUG, PAN_DEPTH, PAN_FLOOR, PAN_RIM, panOutline, PLATE_TOP, radiusAt, RUG, RUG_HEM_REACH, RUG_HEM_TOP, type Surfaces } from './surfaces'
 
 // Real stone physics (cannon-es) under the same world coordinates the game
 // rules use. One 3D unit is one centimetre and ten world units; the table
@@ -19,8 +19,6 @@ export const GRAVITY = -981
 export const STEP = 1 / 120
 export const HOLD_HEIGHT = 11
 export const PAN_REST_HEIGHT = 6
-/** How far a pan's rim rises above its floor, as drawn. */
-export const PAN_WALL = 0.13 * PAN_DEPTH - PAN_FLOOR
 /** Catch-up substeps per frame by default. More would let one slow frame make the next one slower (a spiral), so an overloaded frame slows time slightly instead. */
 export const DEFAULT_MAX_SUBSTEPS = 3
 // Convex-convex collision cost grows with faces times edges, and a spill is
@@ -157,6 +155,9 @@ export class TablePhysics {
    * A wall of boxes around the y axis whose inner face runs along `line`
    * ((radius, height) points up the wall) and whose inner corners touch it,
    * so nothing resting against the wall reaches into what is drawn there.
+   * Where the line turns back down the outside, the boxes' faces look away
+   * from the axis and lie as far inside what is drawn at their middles as
+   * they stand off it at their corners.
    */
   private wall(body: CANNON.Body, line: readonly (readonly [number, number])[], thickness: number, baseY = 0): void {
     const inset = Math.cos(Math.PI / BOWL_SEGMENTS)
@@ -166,7 +167,8 @@ export class TablePhysics {
       const length = Math.hypot(r1 - r0, h1 - h0)
       const along = { r: (r1 - r0) / length, h: (h1 - h0) / length }
       const out = { r: along.h, h: -along.r }
-      const centre = { r: ((r0 + r1) / 2) * inset + (out.r * thickness) / 2, h: baseY + (h0 + h1) / 2 + (out.h * thickness) / 2 }
+      const ring = out.r < 0 ? (2 * inset) / (1 + inset) : inset
+      const centre = { r: ((r0 + r1) / 2) * ring + (out.r * thickness) / 2, h: baseY + (h0 + h1) / 2 + (out.h * thickness) / 2 }
       const half = new CANNON.Vec3(thickness / 2, length / 2, Math.tan(Math.PI / BOWL_SEGMENTS) * (Math.max(r0, r1) + thickness))
       const tilt = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 0, 1), Math.atan2(-along.r, along.h))
       for (let i = 0; i < BOWL_SEGMENTS; i++) {
@@ -263,7 +265,7 @@ export class TablePhysics {
       body.position.set(at.x, PAN_REST_HEIGHT, at.z)
       const r = pan.r * UNIT
       this.disc(body, r * PAN_RIM, DISH_PROFILE[0][1] * PAN_DEPTH, PAN_FLOOR)
-      this.wall(body, [[r * PAN_RIM, PAN_FLOOR], [r * PAN_RIM, PAN_FLOOR + PAN_WALL]], 0.8)
+      this.wall(body, panOutline(r), 0.8)
       this.world.addBody(body)
       this.pans.push(body)
     }
