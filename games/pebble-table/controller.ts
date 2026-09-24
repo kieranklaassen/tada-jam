@@ -11,6 +11,7 @@ import { SaveCadence } from './saveCadence'
 import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
 import { cutPiece, placeFromBag, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
 import { chunk, clusterPieces, groupsFor, schedule } from './voice'
+import { comingOut, DOOR_SWING, goingHome, visitorGone, visitorHome, type VisitorTimes } from './visitors'
 import { SEAT_SPECIES } from './motion'
 import { keepPage, pageOf, turnPage } from './album'
 import { inJar, JAR_SCALE, jarAt, JARS, PART_KINDS, PART_RADIUS, PART_WEIGHT, POUR_GAP, spillFrom, type Part, type PartKind } from './parts'
@@ -65,13 +66,12 @@ const RUMBLE_GAP = 8
 const MAX_RUMBLES = 3
 
 const KNOCK_PAUSE = 1.1
-const VISITOR_WALK = 0.6
 const PEEK_AFTER = 2
 const PEEK_GAP = 7
 const PEEK_LENGTH = 1.8
 const MAX_PEEKS = 3
 
-export type Visitor = { home: Point; outAt: number; leaveAt: number | null; pokeAt: number | null; group: number }
+export type Visitor = VisitorTimes & { group: number }
 
 type DoorState = {
   knocks: number[]
@@ -89,7 +89,7 @@ export function yardSpots(groups: readonly (readonly number[])[]): (Point & { gr
   const width = 230
   groups.forEach((group, g) => {
     const cx = DOOR.yard.x + (g - (groups.length - 1) / 2) * width
-    const cluster = group.length === 1 ? [[0, 0]] : group.length === 2 ? [[-48, 0], [48, 0]] : [[-52, 30], [52, 30], [0, -50]]
+    const cluster = group.length === 1 ? [[0, 0]] : group.length === 2 ? [[-48, 0], [48, 0]] : [[-54, 40], [54, 40], [0, -50]]
     for (let i = 0; i < group.length; i++) spots.push({ x: cx + cluster[i % cluster.length][0], y: DOOR.yard.y + cluster[i % cluster.length][1], group: g })
   })
   return spots
@@ -714,8 +714,7 @@ export class TableController {
     if (this.door.answer) return
     const home = this.door.visitors.filter((visitor) => visitor.leaveAt === null)
     if (home.length > 0) {
-      for (const visitor of home) visitor.leaveAt = this.t + Math.random() * 0.15
-      this.door.closeAt = this.t + VISITOR_WALK + 0.2
+      this.door.closeAt = goingHome(home, this.t) + 0.1
     }
     this.door.knocks.push(this.t)
     this.door.knockAt = this.t
@@ -724,8 +723,8 @@ export class TableController {
 
   private updateDoor(now: number): void {
     const door = this.door
-    door.visitors = door.visitors.filter((visitor) => visitor.leaveAt === null || now - visitor.leaveAt < VISITOR_WALK)
-    if (door.closeAt !== null && now >= door.closeAt && door.visitors.length === 0) {
+    door.visitors = door.visitors.filter((visitor) => !visitorGone(visitor, now))
+    if (door.closeAt !== null && now >= door.closeAt + DOOR_SWING && door.visitors.length === 0) {
       door.openAt = null
       door.closeAt = null
     }
@@ -754,7 +753,8 @@ export class TableController {
       door.closeAt = null
       this.sound.whoosh()
       const spots = yardSpots(answer.groups)
-      spots.forEach((home, i) => door.visitors.push({ home, outAt: now + 0.25 + i * 0.2, leaveAt: null, pokeAt: null, group: home.group }))
+      const outAt = comingOut(spots, now)
+      spots.forEach((home, i) => door.visitors.push({ home, outAt: outAt[i], leaveAt: null, pokeAt: null, group: home.group }))
     }
     this.updateDoorPeek(now)
   }
@@ -1076,7 +1076,7 @@ export class TableController {
     if (this.state.liveMat === 'door') {
       for (let index = 0; index < this.door.visitors.length; index++) {
         const visitor = this.door.visitors[index]
-        if (visitor.leaveAt === null && this.t > visitor.outAt + VISITOR_WALK && within(to3(visitor.home, 4), 5) < Infinity) return { kind: 'visitor', index }
+        if (visitor.leaveAt === null && visitorHome(visitor, this.t) && within(to3(visitor.home, 4), 5) < Infinity) return { kind: 'visitor', index }
       }
       if (within(to3(DOOR.door, 6), DOOR.doorRadius * UNIT) < Infinity) return { kind: 'door' }
     }

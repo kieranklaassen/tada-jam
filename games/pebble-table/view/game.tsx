@@ -8,6 +8,7 @@ import { stoneRest } from '../stoneShape'
 import { STOOL_REACH } from '../partShape'
 import { feedingFloor, RUG, surfaceUnder } from '../surfaces'
 import { inJar, JARS, PART_RADIUS, type PartKind } from '../parts'
+import { visitorHome } from '../visitors'
 import { AlbumModel, BagModel, CarrierMice, DoorModel, FeedingSetting, JarsModel, PartsModel, GhostHand, Guest, KnifeModel, Overlays, ScaleModel, ShelfModel, StonesModel, TableModel, type Blob, type CarrierMouse, type GuestPose, type PartState, type StoneState } from './models'
 import { guestFloor } from './guest'
 import { GrownUpOverlay } from './overlay'
@@ -94,7 +95,7 @@ function shadows(table: TableController): Blob[] {
   blobs.push({ at: { x: BAG.x + 25, y: BAG.y - 20 }, ground: 0, radius: 12, strength: 0.5, stretch: 3 })
   if (table.state.liveMat === 'door') {
     blobs.push({ at: DOOR.house, ground: 0, radius: 17 * DOOR.houseScale, strength: 0.45, stretch: 1.5 })
-    for (const visitor of table.door.visitors) if (visitor.leaveAt === null && table.t > visitor.outAt + 0.6) blobs.push({ at: visitor.home, ground: 0, radius: 5.5, strength: 0.45, stretch: 1 })
+    for (const visitor of table.door.visitors) if (visitorHome(visitor, table.t)) blobs.push({ at: visitor.home, ground: 0, radius: 5.5, strength: 0.45, stretch: 1 })
   } else if (table.state.liveMat === 'scale') {
     blobs.push({ at: SCALE.post, ground: 0, radius: 8.5, strength: 0.55, stretch: 2 })
     for (const kind of Object.keys(JARS) as PartKind[]) blobs.push({ at: JARS[kind], ground: 0, radius: 8, strength: 0.45, stretch: 2 })

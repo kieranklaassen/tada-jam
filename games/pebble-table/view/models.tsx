@@ -2,6 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
+import { DOOR_SWING, visitorPose } from '../visitors'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
 import { stoneRest } from '../stoneShape'
 import { createClayMaterials, merge, paint, PALETTE, piece, type ClayMaterials, type Hold } from './clay'
@@ -1263,9 +1264,17 @@ function houseParts(scale: number, offset: V3): THREE.BufferGeometry[] {
   ]
 }
 
-function mouseGeometry(): THREE.BufferGeometry {
+/** A merged shape raised so its lowest point, wherever its lumps put it, stands on y = 0. */
+function standing(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
+  const position = geometry.attributes.position
+  let lowest = Infinity
+  for (let i = 0; i < position.count; i++) lowest = Math.min(lowest, position.getY(i))
+  return geometry.translate(0, -lowest, 0)
+}
+
+export function mouseGeometry(): THREE.BufferGeometry {
   const sphere = geo.sphere(16)
-  return merge([
+  return standing(merge([
     piece(sphere, MOUSE.fur, { position: [0, 1.4, 0], scale: [1.7, 1.45, 2.1] }, { lump: 0.12, seed: 31 }),
     piece(sphere, MOUSE.fur, { position: [0, 2.2, 1.9], scale: [1.15, 1.05, 1.25] }, { lump: 0.08, ground: null }),
     ...[-1, 1].flatMap((side) => [
@@ -1275,15 +1284,29 @@ function mouseGeometry(): THREE.BufferGeometry {
     ]),
     piece(sphere, MOUSE.nose, { position: [0, 2.05, 3.15], scale: 0.22 }, { ground: null }),
     piece(geo.capsule(8), MOUSE.ear, { position: [0, 0.9, -2.6], rotation: [1.1, 0, 0], scale: [0.18, 1.6, 0.18] }, { ground: null }),
-  ])
+  ]))
 }
 
-function houseGeometry(): THREE.BufferGeometry {
+export function houseGeometry(): THREE.BufferGeometry {
   return merge(houseParts(1, [0, 0, 0]))
 }
 
-function doorLeafGeometry(): THREE.BufferGeometry {
-  return merge([piece(geo.roundedBox(8, 0.18), HOUSE.door, { position: [3, 4.8, 0], scale: [6, 9.6, 0.9] }, { lump: 0.1, ground: null }), piece(geo.sphere(10), HOUSE.frame, { position: [5.2, 4.8, 0.6], scale: 0.45 }, { ground: null })])
+/** The door's hinge, house-local: at the frame's left edge and just proud of it, so the leaf swings out clear of the frame and walls. */
+export const DOOR_HINGE: V3 = [-3.4, 0, 10.75]
+/** The open door's angle: swung round flat against the front wall, not quite touching it. */
+export const DOOR_OPEN = -Math.PI + 0.12
+/** The farthest a knock can rattle the door round. */
+export const DOOR_FARTHEST = -Math.PI + 0.1
+
+export function doorLeafGeometry(): THREE.BufferGeometry {
+  return standing(merge([piece(geo.roundedBox(8, 0.18), HOUSE.door, { position: [3.4, 4.8, 0], scale: [6.8, 9.6, 0.9] }, { lump: 0.1, ground: null }), piece(geo.sphere(10), HOUSE.frame, { position: [5.9, 4.8, 0.6], scale: 0.45 }, { ground: null })]))
+}
+
+/** How far round the door has swung at `now`: 0 shut, DOOR_OPEN open; it opens at `openAt` and shuts at `closeAt`, each over DOOR_SWING. */
+export function doorSwing(openAt: number | null, closeAt: number | null, now: number): number {
+  if (openAt === null) return 0
+  const opening = THREE.MathUtils.smoothstep(now - openAt, 0, DOOR_SWING)
+  return DOOR_OPEN * (closeAt === null ? opening : Math.min(opening, 1 - THREE.MathUtils.smoothstep(now - closeAt, 0, DOOR_SWING)))
 }
 
 export type DoorPose = {
@@ -1296,9 +1319,8 @@ export type DoorPose = {
   now: number
 }
 
-const DOOR_OPEN = -1.75
-const MOUSE_SCALE = 2.2
-const VISITOR_WALK_TIME = 0.6
+/** How much bigger than their model the mice are drawn; a drawn visitor must still reach no farther than VISITOR_REACH. */
+export const MOUSE_SCALE = 2.2
 
 /**
  * The Knock-Knock house. Knocks shake the door; the house's answer shakes it
@@ -1314,22 +1336,22 @@ export function DoorModel({ read }: { read: () => DoorPose }) {
   const leaf = useRef<THREE.Group>(null)
   const face = useRef<THREE.Mesh>(null)
   const mice = useRef<THREE.InstancedMesh>(null)
-  const swing = useRef<Spring>({ x: 0, v: 0 })
+  const rattle = useRef<Spring>({ x: 0, v: 0 })
   const lastKnock = useRef<number | null>(null)
   const p = to3(DOOR.house)
-  const threshold = to3(DOOR.door)
   useFrame((_, dt) => {
     const pose = read()
     const now = pose.now
+    // Knocks and the house's answer only ever rattle the door outwards, so it never swings into its frame.
     if (pose.knockAt !== null && pose.knockAt !== lastKnock.current) {
-      swing.current.v -= 3
+      rattle.current.v -= 3
       lastKnock.current = pose.knockAt
     }
     const answering = pose.answerTimes.some((t) => now >= t && now - t < 0.05)
-    if (answering) swing.current.v += 2.4
-    const open = pose.openAt !== null && (pose.closeAt === null || now < pose.closeAt - 0.3) ? DOOR_OPEN : 0
-    const angle = springStep(swing.current, open, dt, 60, 8)
-    if (leaf.current) leaf.current.rotation.y = angle
+    if (answering) rattle.current.v -= 2.4
+    springStep(rattle.current, 0, dt, 60, 8)
+    if (rattle.current.x > 0) rattle.current.x = rattle.current.v = 0
+    if (leaf.current) leaf.current.rotation.y = Math.max(DOOR_FARTHEST, doorSwing(pose.openAt, pose.closeAt, now) + rattle.current.x)
     if (face.current) {
       const k = pose.peek === null ? 0 : Math.sin(pose.peek * Math.PI)
       face.current.visible = k > 0.02
@@ -1340,21 +1362,11 @@ export function DoorModel({ read }: { read: () => DoorPose }) {
     if (!instanced) return
     let count = 0
     for (const visitor of pose.visitors) {
-      const out = (now - visitor.outAt) / VISITOR_WALK_TIME
-      if (out < 0) continue
-      const back = visitor.leaveAt === null ? 0 : Math.min(1, (now - visitor.leaveAt) / VISITOR_WALK_TIME)
-      const k = Math.min(1, out) * (1 - back)
-      const home = to3(visitor.home)
-      const x = threshold.x + (home.x - threshold.x) * k
-      const z = threshold.z + 2 + (home.z - threshold.z - 2) * k
-      const walking = (out < 1 || back > 0) && k > 0 && k < 1
-      const hop = walking ? Math.abs(Math.sin(k * Math.PI * 3)) * 3 : 0
-      const pokeAge = visitor.pokeAt === null ? Infinity : now - visitor.pokeAt
-      const poke = pokeAge < 0.5 ? Math.sin((pokeAge / 0.5) * Math.PI) * 4 : 0
-      const wiggle = walking ? 0 : Math.sin(now * 5 + count * 1.7) * 0.12
-      const facing = walking && back > 0 ? Math.atan2(threshold.x - home.x, threshold.z - home.z) : 0
-      scratch.q.setFromEuler(scratch.e.set(0, facing + wiggle, 0))
-      scratch.m.compose(scratch.p.set(x, hop + poke, z), scratch.q, scratch.s.set(MOUSE_SCALE, MOUSE_SCALE * (1 - poke * 0.02), MOUSE_SCALE))
+      const at = visitorPose(visitor, count, now)
+      if (!at) continue
+      const s = MOUSE_SCALE * at.grow
+      scratch.q.setFromEuler(scratch.e.set(0, at.facing, 0))
+      scratch.m.compose(scratch.p.set(at.x, at.y, at.z), scratch.q, scratch.s.set(s, s * at.squash, s))
       instanced.setMatrixAt(count++, scratch.m)
     }
     instanced.count = count
@@ -1364,7 +1376,7 @@ export function DoorModel({ read }: { read: () => DoorPose }) {
     <group>
       <group position={[p.x, 0, p.z]} scale={DOOR.houseScale} userData={{ jamObject: 'house' }}>
         <mesh name="house" geometry={house} material={clay} />
-        <group ref={leaf} position={[-3, 0, 9.9]}>
+        <group ref={leaf} position={DOOR_HINGE}>
           <mesh name="house-door" geometry={doorLeaf} material={clay} />
         </group>
         <mesh name="window-mouse" ref={face} geometry={mouse} material={clay} scale={0.9} visible={false} />
