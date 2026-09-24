@@ -118,6 +118,10 @@ export function stoneCollider(q: Quarters): Collider {
 type StoneEntry = { body: CANNON.Body; q: Quarters }
 /** A body's shapes placed in the world, and the pose (position, then quaternion) they were placed at. */
 type Placed = { pose: number[]; at: CANNON.Vec3[]; turn: CANNON.Quaternion[] }
+/** A contact `sunk` found between two bodies: how deep one lies in the other, along the contact's normal. */
+type SunkContact = { bi: CANNON.Body; bj: CANNON.Body; ni: CANNON.Vec3; depth: number }
+/** The contacts `sunk` found between one pair of bodies, and where the two lay (position, then quaternion, of each). */
+type SunkPair = { pose: number[]; found: SunkContact[] }
 /** One of cannon's narrowphase tests for a pair of shape types, called as its `getContacts` calls it. */
 type Resolver = (this: CANNON.Narrowphase, ...args: unknown[]) => boolean | void
 
@@ -140,6 +144,8 @@ export class TablePhysics {
   private readonly surfacing = { local: new CANNON.Vec3(), out: new CANNON.Vec3(), way: new CANNON.Vec3(), back: new CANNON.Quaternion() }
   /** What sunk found last while everything lay asleep, and where everything lay. */
   private lastSunk: { bodies: ReadonlySet<CANNON.Body>; poses: readonly number[]; out: Map<CANNON.Body, CANNON.Vec3> } | null = null
+  /** What sunk found for each pair of bodies it tried last time, and where the two lay. */
+  private sunkPairs = new Map<string, SunkPair>()
   /** When (world time) each stone last touched a seated guest. */
   private readonly touchedGuest = new Map<number, number>()
   /** The round fixtures something held must ride over, how tall they stand, and (a guest) how far out its head reaches, which what rides over it clears before coming down. */
@@ -950,7 +956,8 @@ export class TablePhysics {
     const last = this.lastSunk
     if (still && last && last.bodies.size === bodies.size && [...bodies].every((body) => last.bodies.has(body)) && still.length === last.poses.length && still.every((v, i) => v === last.poses[i])) return last.out
     this.lastSunk = still ? { bodies: new Set(bodies), poses: still, out } : null
-    const [p1, p2]: [CANNON.Body[], CANNON.Body[]] = [[], []]
+    const pairs = new Map<string, SunkPair>()
+    const sunk: SunkContact[] = []
     for (const body of bodies) {
       if (body.type !== CANNON.Body.DYNAMIC) continue
       if (body.aabbNeedsUpdate) body.updateAABB()
@@ -958,24 +965,16 @@ export class TablePhysics {
         if (other === body || other.type !== CANNON.Body.DYNAMIC || (bodies.has(other) && other.id < body.id)) continue
         if (other.aabbNeedsUpdate) other.updateAABB()
         if (!body.aabb.overlaps(other.aabb)) continue
-        p1.push(body)
-        p2.push(other)
+        const key = `${body.id} ${other.id}`
+        const pair = this.sunkPair(this.sunkPairs.get(key), body, other)
+        pairs.set(key, pair)
+        for (const contact of pair.found) {
+          sunk.push(contact)
+          for (const touched of [contact.bi, contact.bj]) if (bodies.has(touched) && !out.has(touched)) out.set(touched, new CANNON.Vec3())
+        }
       }
     }
-    if (p1.length === 0) return out
-    const contacts: CANNON.ContactEquation[] = []
-    this.world.narrowphase.getContacts(p1, p2, this.world, contacts, [], [], [])
-    const gap = new CANNON.Vec3()
-    const sunk: { bi: CANNON.Body; bj: CANNON.Body; ni: CANNON.Vec3; depth: number }[] = []
-    for (const { bi, bj, ri, rj, ni } of contacts) {
-      bj.position.vadd(rj, gap)
-      gap.vsub(bi.position, gap)
-      gap.vsub(ri, gap)
-      const depth = -gap.dot(ni)
-      if (depth <= 0) continue
-      sunk.push({ bi, bj, ni, depth })
-      for (const body of [bi, bj]) if (bodies.has(body) && !out.has(body)) out.set(body, new CANNON.Vec3())
-    }
+    this.sunkPairs = pairs
     // A part pressed between two things is lifted out of both where it can
     // be; two lifted parts pressed together each move half the way apart.
     for (let pass = 0; pass < SUNK_PASSES; pass++) {
@@ -989,6 +988,24 @@ export class TablePhysics {
       }
     }
     return out
+  }
+
+  /** How far one pair lies sunk into each other: what was found last if neither has moved since, else found afresh. */
+  private sunkPair(last: SunkPair | undefined, body: CANNON.Body, other: CANNON.Body): SunkPair {
+    const pose = [body, other].flatMap(({ position: p, quaternion: q }) => [p.x, p.y, p.z, q.x, q.y, q.z, q.w])
+    if (last && pose.every((v, i) => v === last.pose[i])) return last
+    const contacts: CANNON.ContactEquation[] = []
+    this.world.narrowphase.getContacts([body], [other], this.world, contacts, [], [], [])
+    const gap = new CANNON.Vec3()
+    const found: SunkContact[] = []
+    for (const { bi, bj, ri, rj, ni } of contacts) {
+      bj.position.vadd(rj, gap)
+      gap.vsub(bi.position, gap)
+      gap.vsub(ri, gap)
+      const depth = -gap.dot(ni)
+      if (depth > 0) found.push({ bi, bj, ni, depth })
+    }
+    return { pose, found }
   }
 
   /** Where every stone and part lies, while all of them sleep: nothing sunk can change until one moves. */
