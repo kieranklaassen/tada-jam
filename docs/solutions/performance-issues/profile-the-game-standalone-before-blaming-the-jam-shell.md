@@ -51,7 +51,7 @@ Counting what the game drew answered it. Hooking `drawElements`/`drawArrays` in 
 
 **The shell, by construction rather than by measurement.** `ctx.storage.save()` re-armed a timer on every call, so a game saving every frame armed 60 a second, though it never serialized until the debounce fired. It now records the state and arms at most one timer. When the timer fires it re-arms for whatever quiet time is left, and the write runs in `requestIdleCallback` where the browser has it (`harness/storage.ts`). `harness/shell.perf.test.tsx` counts it: 600 saves at 16 ms intervals serialize nothing, write nothing and arm a handful of timers, and a mounted dummy game that saves every frame is never re-rendered by the shell.
 
-**The game, with a runtime shim.** The source is not in the repo, so `public/alien-frontier/jam-smooth.js` runs after the boot loader's `__bootDone` and adjusts the built scene; the minified bundle is untouched. `showcase/alien-frontier/PERF.md` lists each change for the game's source. The biggest wins, from a ce-optimize run of six experiments:
+**The game, with a runtime shim.** The source is not in the repo, so `public/alien-frontier/jam-smooth.js` runs after the boot loader's `__bootDone` and adjusts the built scene; the minified bundle is untouched. `showcases/alien-frontier/PERF.md` lists each change for the game's source. The biggest wins, from a ce-optimize run of six experiments:
 
 - **Merge still scenery by material, but only after watching play.** Snapshot every mesh's world matrix once play has started, wait 2 s, and merge only top-level groups where nothing moved and nothing is held by a game system. Watching the title screen was not enough: windmills and signs only move in play, and a merge there froze them. 797 meshes became 85.
 - **Draw far characters from their largest parts.** Beyond 50 m each rig keeps its five largest meshes. The rest go off the camera's render layer, so the game's own `visible` flags are never touched.
@@ -85,4 +85,4 @@ A same-origin iframe shares its host page's main thread, so the shell is a fair 
 
 - [Measure on the target device and ship adaptive quality](measure-on-the-target-device-and-ship-adaptive-quality.md): the governor rules the shim's governor follows, and the four-times-the-pixels stress test.
 - [Frame-budget tests that hold on a shared CI runner](../test-failures/frame-budget-tests-that-hold-on-a-shared-ci-runner.md): why the shim's test counts draws and decisions instead of timing them.
-- `showcase/alien-frontier/PERF.md`: the showcase's own record, for porting the changes into the game's source.
+- `showcases/alien-frontier/PERF.md`: the showcase's own record, for porting the changes into the game's source.

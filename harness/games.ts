@@ -1,4 +1,4 @@
-import type { JamGame } from './contract'
+import type { JamGame, JamShowcase } from './contract'
 
 // Every games/<key>/index.ts exports `game: JamGame`. Adding a folder is the
 // whole registration step in the jam; Tada's four touchpoints come at port time.
@@ -8,12 +8,11 @@ export const games: readonly JamGame[] = Object.values(modules)
   .map((module) => module.game)
   .sort((a, b) => a.cartridge.manifest.name.localeCompare(b.cartridge.manifest.name))
 
-// Owner-approved showcases live in showcase/<key>/ and export `showcase: JamGame`.
-// They are not cartridges (they do not follow the kid-side rules), so the
-// home page lists them apart from the games and the cartridge checks skip them.
-const showcaseModules = import.meta.glob<{ showcase: JamGame }>('../showcase/*/index.ts', { eager: true })
+// Showcases (showcases/<key>/index.ts exporting `showcase`) are not cartridges:
+// they open in the same shell but are listed apart and never ported to Tada.
+const showcaseModules = import.meta.glob<{ showcase: JamShowcase }>('../showcases/*/index.ts', { eager: true })
 
-export const showcases: readonly JamGame[] = Object.values(showcaseModules)
+export const showcases: readonly JamShowcase[] = Object.values(showcaseModules)
   .map((module) => module.showcase)
   .sort((a, b) => a.cartridge.manifest.name.localeCompare(b.cartridge.manifest.name))
 

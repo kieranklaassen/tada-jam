@@ -6,7 +6,7 @@ import '@fontsource/albert-sans/700.css'
 import foxLandscape from './assets/fox-landscape.webp'
 import tadaMark from './assets/tada-mark.svg'
 import yourApp from './assets/your-app.svg'
-import type { JamGame } from './contract'
+import type { JamGame, JamShowcase } from './contract'
 import './home.css'
 
 // The jam's home page, after the tada.computer landing hero (Figma
@@ -15,6 +15,16 @@ import './home.css'
 // choreographed sequence; reduced motion shows the finished page at once.
 
 const HEADLINE = "Tiny games your kids can't break. Build together"
+// Games without their own tile art still get a colour of their own, picked from the key.
+const TILE_COLOURS: readonly [string, string][] = [
+  ['#d055b1', '#ea82d0'], ['#2f7fd8', '#7fc0f5'], ['#2f9c7a', '#8fdcb4'], ['#e0763a', '#f7c16a'],
+  ['#7a5bd6', '#b9a4f5'], ['#c9453e', '#f29a7a'], ['#3a8f9e', '#8fd3d6'], ['#b5842c', '#f0d27a'],
+]
+function fallbackColours(key: string) {
+  let hash = 0
+  for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+  return TILE_COLOURS[hash % TILE_COLOURS.length]
+}
 const LAUNCH_MS = 420
 
 /** Two crossing arrows: a child who cannot read the button still sees it picks something for them. */
@@ -28,7 +38,7 @@ function ShuffleIcon() {
   )
 }
 
-function Tile({ game, index, chosen, onPick }: { game: JamGame; index: number; chosen: boolean; onPick: (key: string) => void }) {
+function Tile({ game, index, chosen, requires, onPick }: { game: JamGame; index: number; chosen: boolean; requires?: string; onPick: (key: string) => void }) {
   const { cartridge, emoji, tile } = game
   const ref = useRef<HTMLButtonElement>(null)
   const [launching, setLaunching] = useState(false)
@@ -60,7 +70,8 @@ function Tile({ game, index, chosen, onPick }: { game: JamGame; index: number; c
     return () => window.clearTimeout(timer)
   }, [chosen])
 
-  const face: CSSProperties = tile ? { backgroundImage: `linear-gradient(45deg, ${tile.from} 0%, ${tile.to} 83%)` } : {}
+  const [from, to] = tile ? [tile.from, tile.to] : fallbackColours(cartridge.manifest.key)
+  const face: CSSProperties = { backgroundImage: `linear-gradient(45deg, ${from} 0%, ${to} 83%)` }
   return (
     <li className="home-tile-slot" style={{ '--i': index } as CSSProperties}>
       <button
@@ -77,13 +88,17 @@ function Tile({ game, index, chosen, onPick }: { game: JamGame; index: number; c
           <span className="home-tile-gloss" aria-hidden />
         </span>
         <span className="home-tile-name">{cartridge.manifest.name}</span>
-        <span className="home-tile-age">ages {cartridge.manifest.ageBand[0]}–{cartridge.manifest.ageBand[1]}</span>
+        {requires ? (
+          <span className="home-tile-requires">{requires}</span>
+        ) : (
+          <span className="home-tile-age">ages {cartridge.manifest.ageBand[0]}–{cartridge.manifest.ageBand[1]}</span>
+        )}
       </button>
     </li>
   )
 }
 
-export function GameList({ games, showcases = [], onPick }: { games: readonly JamGame[]; showcases?: readonly JamGame[]; onPick: (key: string) => void }) {
+export function GameList({ games, showcases = [], onPick }: { games: readonly JamGame[]; showcases?: readonly JamShowcase[]; onPick: (key: string) => void }) {
   const [surprise, setSurprise] = useState<number | null>(null)
   const frameRef = useRef<HTMLDivElement>(null)
 
@@ -137,6 +152,17 @@ export function GameList({ games, showcases = [], onPick }: { games: readonly Ja
             </li>
           </ul>
 
+          {showcases.length > 0 && (
+            <section className="home-showcases" aria-label="Showcases">
+              <p className="home-showcases-label">Showcase · not a Tada cartridge</p>
+              <ul className="home-dock home-dock-showcase">
+                {showcases.map((showcase, i) => (
+                  <Tile key={showcase.cartridge.manifest.key} game={showcase} index={games.length + 1 + i} chosen={false} requires={showcase.requires} onPick={onPick} />
+                ))}
+              </ul>
+            </section>
+          )}
+
           {games.length > 0 && (
             <button type="button" className="home-cta" onClick={surpriseMe}>
               <ShuffleIcon />
@@ -144,17 +170,6 @@ export function GameList({ games, showcases = [], onPick }: { games: readonly Ja
             </button>
           )}
 
-          {showcases.length > 0 && (
-            // Owner-approved showcases are not cartridges: listed apart, and never picked by "Surprise me".
-            <section className="home-showcases" aria-label="Showcase">
-              <p className="home-eyebrow">Showcase, not a cartridge</p>
-              <ul className="home-dock home-dock-showcase">
-                {showcases.map((game, i) => (
-                  <Tile key={game.cartridge.manifest.key} game={game} index={games.length + 1 + i} chosen={false} onPick={onPick} />
-                ))}
-              </ul>
-            </section>
-          )}
         </main>
 
         <div className="home-landscape" aria-hidden>

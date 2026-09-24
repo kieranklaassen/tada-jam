@@ -19,7 +19,7 @@ import { join } from 'node:path'
 // stand-in for a weaker GPU); BUSY and QUIET set the play and rest seconds;
 // OUT sets the results folder (one JSON line per run in results.jsonl, plus a
 // screenshot).
-// Showcases (showcase/<key>/, such as Alien Frontier) run in a same-origin
+// Showcases (showcases/<key>/, such as Alien Frontier) run in a same-origin
 // iframe and are played with the keyboard and mouse: the probe measures inside
 // the iframe and drives the showcase's own scripted play-through (SHOWCASE_PLAY).
 // STANDALONE=1 opens a showcase's page directly instead of through the shell;

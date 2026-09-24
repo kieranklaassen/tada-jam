@@ -75,7 +75,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: min(100%, 760px);
+  width: min(100%, 980px);
   padding: 44px 24px calc(13vw + 24px);
   text-align: center;
 }
@@ -518,15 +518,37 @@
   }
 }
 
-/* Showcases (owner-approved, not cartridges) sit in their own small dock under the games. */
+/* Showcases: finished games that are not Tada cartridges, listed apart from the dock. */
 .home-showcases {
-  margin-top: 1.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  margin-top: 22px;
+  animation: home-rise 700ms var(--home-out) 1500ms both;
+}
+
+.home-showcases-label {
+  margin: 0 0 8px;
+  color: #3c311399;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .home-dock-showcase {
   margin-top: 0;
+  padding: 14px 20px 10px;
+  animation: none;
+}
+
+.home-tile-requires {
+  margin-top: -3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #3c311314;
+  color: #3c3113b3;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
 }
