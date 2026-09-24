@@ -276,35 +276,43 @@ function pieceSurface(kind: PartKind, piece: string, step: number): number[] {
   return surfacePoints(partPieceVertices(kind, piece), pieces[piece].segments, pieces[piece].rings, step)
 }
 
-/** A shell's collider: a ring of `count` balls of radius `radius`, `at` of the way out to its rim, round one in its middle. */
-const SHELL_BALLS = { count: 8, at: 0.72, radius: 0.45 } as const
+/** A shell's collider: a ball in its middle and rings of `count` balls `at` of the way out to its rim. */
+const SHELL_RINGS: readonly { count: number; at: number }[] = [{ count: 6, at: 0.3 }, { count: 10, at: 0.6 }, { count: 16, at: 0.87 }]
 
 /**
  * A shell as balls: stacked thin prisms rock in cannon where balls settle.
- * The middle ball is as thick as the shell's middle; the ring's balls stand
- * on the shell's lowest point. Its rim reaches past the ring by a few
- * millimetres, but only where it is thinner than that, so nothing can sink
- * into it further than the audit forgives.
+ * Each ball sits halfway up the shell where it is and holds the drawn
+ * surface nearest it, but reaches no lower than the shell's lowest point, so
+ * the shell lies on the table as drawn and nothing presses into its back,
+ * belly or rim further than the audit forgives.
  */
 function shellBalls(): Ball[] {
-  const v = partVertices('shell')
+  const points = pieceSurface('shell', 'body', 0.05)
   let [bottom, reachX, reachZ] = [Infinity, 0, 0]
-  let [middleBottom, middleTop] = [Infinity, -Infinity]
-  for (let i = 0; i < v.length; i += 3) {
-    bottom = Math.min(bottom, v[i + 1])
-    reachX = Math.max(reachX, Math.abs(v[i]))
-    reachZ = Math.max(reachZ, Math.abs(v[i + 2]))
-    if (Math.hypot(v[i], v[i + 2]) < 0.3) {
-      middleBottom = Math.min(middleBottom, v[i + 1])
-      middleTop = Math.max(middleTop, v[i + 1])
-    }
+  for (let i = 0; i < points.length; i += 3) {
+    bottom = Math.min(bottom, points[i + 1])
+    reachX = Math.max(reachX, Math.abs(points[i]))
+    reachZ = Math.max(reachZ, Math.abs(points[i + 2]))
   }
-  const { count, at, radius } = SHELL_BALLS
-  const ring = Array.from({ length: count }, (_, k) => {
-    const a = (k / count) * Math.PI * 2
-    return { x: Math.cos(a) * reachX * at, y: bottom + radius, z: Math.sin(a) * reachZ * at, r: radius }
-  })
-  return [{ x: 0, y: (middleBottom + middleTop) / 2, z: 0, r: (middleTop - middleBottom) / 2 }, ...ring]
+  const halfway = (x: number, z: number): V3 => {
+    let [low, high] = [Infinity, -Infinity]
+    for (let i = 0; i < points.length; i += 3) {
+      if (Math.hypot(points[i] - x, points[i + 2] - z) > 0.25) continue
+      low = Math.min(low, points[i + 1])
+      high = Math.max(high, points[i + 1])
+    }
+    return [x, (low + high) / 2, z]
+  }
+  const centres = [
+    halfway(0, 0),
+    ...SHELL_RINGS.flatMap(({ count, at }) =>
+      Array.from({ length: count }, (_, k) => {
+        const a = (k / count) * Math.PI * 2
+        return halfway(Math.cos(a) * reachX * at, Math.sin(a) * reachZ * at)
+      }),
+    ),
+  ]
+  return fitBalls(points, centres, BALL_SLACK).map((ball) => ({ ...ball, r: Math.min(ball.r, ball.y - bottom) }))
 }
 
 const colliders = new Map<PartKind, PartCollider>()

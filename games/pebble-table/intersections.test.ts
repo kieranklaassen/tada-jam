@@ -8,7 +8,7 @@ import { TableController, yardSpots } from './controller'
 import { albumSlot, BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, SCALE, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
 import { GUEST_TOP } from './feeding'
 import { MotionDirector, SEAT_SPECIES, type ActionKind } from './motion'
-import { partReachDown, partVertices, STOOL_REACH, STOOL_TOP } from './partShape'
+import { partCollider, partPieceVertices, partReachDown, partVertices, SHELL, STOOL_REACH, STOOL_TOP, surfacePoints } from './partShape'
 import { PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
 import { PART_KINDS } from './parts'
 import { panDrops, SWAY_MOST } from './scale'
@@ -34,6 +34,7 @@ import {
   MOUSE_SCALE,
   mouseGeometry,
   panHang,
+  partGeometry,
   PIVOT_Y,
   POST_LIFT,
   ROPE_KNOT,
@@ -388,6 +389,46 @@ describe('loose parts are drawn on what they land on', () => {
       }
     }
   })
+
+  it("holds a shell's drawn back, belly and rim within a hair of its balls, and lays it down on its lowest point", () => {
+    const { balls } = partCollider('shell')
+    const points = surfacePoints(partPieceVertices('shell', 'body'), SHELL.body.segments, SHELL.body.rings, 0.05)
+    let [outside, lowest] = [0, Infinity]
+    for (let i = 0; i < points.length; i += 3) {
+      lowest = Math.min(lowest, points[i + 1])
+      outside = Math.max(outside, Math.min(...balls.map((b) => Math.hypot(points[i] - b.x, points[i + 1] - b.y, points[i + 2] - b.z) - b.r)))
+    }
+    expect(outside).toBeLessThan(0.13)
+    expect(Math.min(...balls.map((b) => b.y - b.r))).toBeCloseTo(lowest, 6)
+  })
+
+  it('settles spilled acorns, shells and sticks against and on one another without one drawn inside another', () => {
+    let seed = 11
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
+    const kinds = (['acorn', 'shell', 'stick', 'shell', 'acorn', 'shell'] as const).flatMap((kind) => [kind, kind])
+    const drawn = new Map(PART_KINDS.map((kind) => [kind, partGeometry(kind)]))
+    let [deepest, met, worst] = [0, 0, '']
+    for (let heap = 0; heap < 3; heap++) {
+      const physics = new TablePhysics()
+      kinds.forEach((kind, i) => physics.addPart(i + 1, kind, { x: 700 + (random() - 0.5) * 80, y: 500 + (random() - 0.5) * 80 }, { y: 2 + i * 1.2, spin: (random() - 0.5) * 6, yaw: random() * Math.PI * 2 }))
+      run(physics, 4)
+      const pieces = kinds.map((kind, i) => {
+        const body = physics.body(i + 1)!
+        const matrix = new THREE.Matrix4().compose(new THREE.Vector3(body.position.x, body.position.y, body.position.z), new THREE.Quaternion(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w), new THREE.Vector3(1, 1, 1))
+        return { kind, piece: auditPiece(`${kind} ${i + 1}`, drawn.get(kind)!, matrix) }
+      })
+      pieces.forEach((a, i) =>
+        pieces.slice(i + 1).forEach((b) => {
+          if (!a.piece.box.intersectsBox(b.piece.box)) return
+          met++
+          const depth = pairDepth(a.piece, b.piece, CAMERA)?.depth ?? 0
+          if (depth > deepest) [deepest, worst] = [depth, `${a.piece.id} in ${b.piece.id}, heap ${heap}`]
+        }),
+      )
+    }
+    expect(met, 'no two parts came to lie together, so this measures nothing').toBeGreaterThan(20)
+    expect(deepest, worst).toBeLessThan(0.25)
+  }, 60_000)
 })
 
 describe('stones squash, rock and pop without sinking or swelling into a neighbour', () => {
