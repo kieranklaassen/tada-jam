@@ -105,6 +105,7 @@
       depthWrite: any((x) => x.depthWrite !== false),
       polygonOffset: list.every((x) => x.polygonOffset && ((x.polygonOffsetFactor ?? 0) !== 0 || (x.polygonOffsetUnits ?? 0) !== 0)),
       colorWrite: any((x) => x.colorWrite !== false),
+      overlay: list.every((x) => x.depthTest === false),
       customVertex: any((x) => x.isShaderMaterial || x.isRawShaderMaterial || typeof x.onBeforeCompile === 'function' && x.onBeforeCompile.toString().includes('vertex')),
       renderOrder: o.renderOrder || 0,
     }
@@ -184,7 +185,8 @@
       if (!visibleChain(o)) return
       if (o.layers && camera.layers && !camera.layers.test(o.layers)) return
       const mat = materialInfo(o)
-      if (!mat.colorWrite || (mat.transparent && mat.opacity < 0.05)) return
+      // Drawn over everything regardless of depth, so nothing can visibly cross it.
+      if (!mat.colorWrite || mat.overlay || (mat.transparent && mat.opacity < 0.05)) return
       if (o.userData && o.userData.jamAuditIgnore) return
       const path = pathOf(o, scene, cache)
       const label = labelOf(o, scene)
@@ -253,11 +255,19 @@
       const object = objectOf(m)
       const instances = o.isInstancedMesh ? Math.min(o.count, options.maxInstances ?? 256) : 0
       const e = o.matrixWorld.elements
+      // World-space clipping planes (three.js discards where the signed
+      // distance is negative): the renderer's, plus the material's when local
+      // clipping is on.
+      const planes = [...(renderer.clippingPlanes ?? [])]
+      if (renderer.localClippingEnabled) {
+        for (const mm of Array.isArray(o.material) ? o.material : [o.material]) planes.push(...(mm.clippingPlanes ?? []))
+      }
       const base = {
         mesh: m.path,
         label: m.label,
         material: m.mat,
         instanced: o.isInstancedMesh ? o.count : 0,
+        clip: planes.map((p) => [p.normal.x, p.normal.y, p.normal.z, p.constant]),
       }
       const geomKey = g.uuid + ':' + pos.version + ':' + (g.index ? g.index.version : 0) + ':' + start + ':' + end
       const local = () => {
@@ -270,8 +280,11 @@
         return { count: pos.count, getX: (i) => out[i * 3], getY: (i) => out[i * 3 + 1], getZ: (i) => out[i * 3 + 2], array: out }
       }
       const emit = (id, obj, matrix) => {
-        const version = geomKey + ':' + (deformed ? audit.frames : '') + ':' + matrix.map((v) => v.toFixed(5)).join(',')
-        const piece = { ...base, id, object: obj, version }
+        const version = geomKey + ':' + (deformed ? audit.frames : '') + ':' + matrix.map((v) => v.toFixed(5)).join(',') + (base.clip.length ? '|' + base.clip.flat().map((v) => v.toFixed(4)).join(',') : '')
+        // Where the piece is, without the geometry's identity, so a reload that
+        // rebuilds the same scene does not look like everything moved.
+        const pose = pos.version + ':' + (deformed ? audit.frames : '') + ':' + matrix.map((v) => v.toFixed(5)).join(',')
+        const piece = { ...base, id, object: obj, version, pose }
         if (audit.sent.get(id) !== version) {
           audit.sent.set(id, version)
           const src = local()

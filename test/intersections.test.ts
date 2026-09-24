@@ -1,7 +1,7 @@
 import { BoxGeometry, BufferGeometry, Matrix4, PerspectiveCamera, PlaneGeometry, SphereGeometry, Vector3 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { describe, expect, it } from 'vitest'
-import { analyseMoment, canFight, depthResolution, preparePiece, splitComponents, type CameraInfo, type MaterialInfo, type PieceInput, type PoseTrack } from '../scripts/intersections/core.ts'
+import { analyseMoment, canFight, clipToPlanes, depthResolution, preparePiece, splitComponents, type CameraInfo, type MaterialInfo, type PieceInput, type PoseTrack } from '../scripts/intersections/core.ts'
 
 const camera = (() => {
   const cam = new PerspectiveCamera(30, 1180 / 820, 1, 200)
@@ -108,6 +108,17 @@ describe('intersection audit core', () => {
   it('finds coplanar overlapping faces inside one merged mesh', () => {
     const merged = mergeGeometries([new PlaneGeometry(2, 2).rotateX(-Math.PI / 2), new PlaneGeometry(1, 1).rotateX(-Math.PI / 2).translate(0.3, 0, 0)].map((g) => g.toNonIndexed()))
     expect(run([piece('batch', merged, [0, 0, 0])]).map((f) => f.kind)).toEqual(['zfight'])
+  })
+
+  it('checks only what a clipping plane leaves drawn', () => {
+    const wall = piece('wall', new BoxGeometry(0.2, 2, 2), [0, 1, 0])
+    const shadow = piece('shadow', new PlaneGeometry(4, 1), [0, 1, 0.5])
+    expect(run([wall, shadow]).map((f) => f.kind)).toContain('penetration')
+    // Keep only x < -0.5: the part of the shadow through the wall is discarded.
+    const clipped = clipToPlanes(shadow, [[-1, 0, 0, -0.5]])!
+    expect(Math.max(...Array.from(clipped.positions).filter((_, i) => i % 3 === 0))).toBeCloseTo(-0.5, 5)
+    expect(run([wall, clipped])).toEqual([])
+    expect(clipToPlanes(shadow, [[-1, 0, 0, -3]])).toBeNull()
   })
 
   it('splits a merged batch into its separate things', () => {

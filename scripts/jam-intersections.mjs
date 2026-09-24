@@ -28,7 +28,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { chromium } from 'playwright'
-import { DEFAULT_TOLERANCE, analyseMoment, pairKey, preparePiece, splitComponents } from './intersections/core.ts'
+import { DEFAULT_TOLERANCE, analyseMoment, clipToPlanes, pairKey, preparePiece, splitComponents } from './intersections/core.ts'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const W = 1180
@@ -174,20 +174,23 @@ async function auditGame(browser, base, game, opts) {
   }, config.childAge ?? 5)
   const query = config.query ?? (game === 'pebble-table' ? '' : `tier=${COUNTS_UP.has(game) ? 3 : 0}`)
   await page.goto(`${base}/?chrome=0${query ? '&' + query : ''}#/play/${game}`)
-  for (let i = 0; ; i++) {
-    if (await page.evaluate(() => (window.__jamAudit?.main()?.calls ?? 0) > 0)) break
-    if (i > 120) {
-      // A canvas-2D, SVG or DOM game has no three.js scene to read: say so
-      // and leave it to its own tests, rather than failing every CI run.
-      const renderers = await page.evaluate(() => window.__jamAudit?.renderers.length ?? 0)
-      if (renderers > 0) throw new Error(`${game}: no frame drawn after 4 s of game time`)
-      await context.close()
-      const result = { game, enforce: !!config.enforce, notAudited: 'no three.js scene', skipped: [], counts: { reportable: 0, open: 0, allowed: 0, hidden: 0 }, samples: 0, pieces: 0, seconds: 0, errors, findings: [], moments: [] }
-      writeFileSync(join(out, 'report.json'), JSON.stringify(result, null, 1))
-      writeFileSync(join(out, 'report.md'), `# Intersection audit: ${game}\n\nSkipped: the game drew no three.js scene within 4 s of game time (a canvas-2D, SVG, or DOM game). Cover its overlaps with tests on its own model.\n`)
-      return result
+  const firstFrame = async () => {
+    for (let i = 0; i <= 120; i++) {
+      if (await page.evaluate(() => (window.__jamAudit?.main()?.calls ?? 0) > 0)) return true
+      await page.clock.runFor(STEP)
     }
-    await page.clock.runFor(STEP)
+    return false
+  }
+  if (!(await firstFrame())) {
+    // A canvas-2D, SVG or DOM game has no three.js scene to read: say so
+    // and leave it to its own tests, rather than failing every CI run.
+    const renderers = await page.evaluate(() => window.__jamAudit?.renderers.length ?? 0)
+    if (renderers > 0) throw new Error(`${game}: no frame drawn after 4 s of game time`)
+    await context.close()
+    const result = { game, enforce: !!config.enforce, notAudited: 'no three.js scene', skipped: [], counts: { reportable: 0, open: 0, allowed: 0, hidden: 0 }, samples: 0, pieces: 0, seconds: 0, errors, findings: [], moments: [] }
+    writeFileSync(join(out, 'report.json'), JSON.stringify(result, null, 1))
+    writeFileSync(join(out, 'report.md'), `# Intersection audit: ${game}\n\nSkipped: the game drew no three.js scene within 4 s of game time (a canvas-2D, SVG, or DOM game). Cover its overlaps with tests on its own model.\n`)
+    return result
   }
 
   const positions = new Map()
@@ -229,15 +232,16 @@ async function auditGame(browser, base, game, opts) {
     const pieces = []
     for (const p of snap.pieces) {
       if (!versions.has(p.id)) versions.set(p.id, new Set())
-      if (versions.get(p.id).size < 3) versions.get(p.id).add(p.version)
+      if (versions.get(p.id).size < 3) versions.get(p.id).add(p.pose)
       if (p.positions) {
         const pos = decode(p.positions, Float32Array)
         let index = p.index ? decode(p.index, Uint32Array) : null
         if (!index && p.range) index = Uint32Array.from({ length: p.range[1] - p.range[0] }, (_, i) => p.range[0] + i)
-        positions.set(p.id, { version: p.version, positions: pos.slice(), index: index ? index.slice() : null })
+        const clipped = clipToPlanes({ positions: pos.slice(), index: index ? index.slice() : null }, p.clip ?? [])
+        positions.set(p.id, { version: p.version, positions: clipped?.positions ?? null, index: clipped?.index ?? null })
       }
       const stored = positions.get(p.id)
-      if (!stored || stored.version !== p.version) continue
+      if (!stored || stored.version !== p.version || !stored.positions) continue
       if (p.material.customVertex) customVertex.add(p.mesh)
       if (ignoreRes.some((re) => re.test(p.id) || re.test(p.label))) continue
       const input = { id: p.id, mesh: p.mesh, label: p.label, object: p.object, positions: stored.positions, index: stored.index, material: p.material, version: p.version }
@@ -346,6 +350,17 @@ async function auditGame(browser, base, game, opts) {
       await driver.release()
     },
     find: (pattern) => page.evaluate((p) => window.__jamAudit.find(p), pattern),
+    reload: async (entries = {}) => {
+      await page.evaluate((e) => {
+        for (const [k, v] of Object.entries(e)) {
+          if (v === null) localStorage.removeItem(k)
+          else localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v))
+        }
+      }, entries)
+      await page.reload()
+      if (!(await firstFrame())) throw new Error(`${game}: no frame drawn after reloading`)
+      await sample()
+    },
   }
 
   const contactShots = async (label) => {
