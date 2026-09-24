@@ -2,7 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { Hero, KiteController, Watcher } from '../controller'
-import { ARM, ARM_R, BlockField, BODY_PROFILE, BRIM, CUFF, DollGuard, DUCK, FACE_CELL, FACE_SHELL, FACE_TOP, fitHead, FLY_GRIP, FLY_RAISE, GRIP_REACH, HAIR, HAND_R, HAND_REACH, HEAD_R, HEAD_Y, NECK_Y, POM_R, POM_Y, SHOULDER, SPOOL_ROOM, type DollPlace, type HeadKind, type HeadPose } from '../doll'
+import { ARM, ARM_R, BlockField, BODY_PROFILE, BRIM, CUFF, DollGuard, DUCK, FACE_CELL, FACE_SHELL, FACE_TOP, fitHead, FLY_GRIP, FLY_RAISE, GRIP_REACH, HAIR, HAND_R, HAND_REACH, HEAD_R, HEAD_Y, LEAN_AWAY, LEAN_AWAY_STEP, NECK_Y, POM_R, POM_Y, SHOULDER, SPOOL_ROOM, type DollPlace, type HeadKind, type HeadPose } from '../doll'
 import { WATCHERS } from '../layout'
 import { MotionDirector, type Activity, type Face, type PoseDelta } from '../motion'
 import { PIECES, SHAPES } from '../pieces'
@@ -378,9 +378,10 @@ class DollRig {
     const guard = this.guard
     guard.beginArms()
     const right = guard.arm(1, raiseR, forwardR)
+    const swingR = guard.swing
     const left = guard.arm(-1, raiseL, forwardL)
-    this.armL.rotation.set(forwardL, 0, -left)
-    this.armR.rotation.set(forwardR, 0, right)
+    this.armL.rotation.set(guard.swing, 0, -left)
+    this.armR.rotation.set(swingR, 0, right)
   }
 
   /**
@@ -427,6 +428,39 @@ class DollRig {
     f[10] = e[10]
     f[11] = e[14]
     this.guard.setObstacle(this.blocks.distance)
+  }
+
+  /**
+   * `avoidBlocks`, then `arms`. A block resting against her side can leave an
+   * arm no room even tucked, because the shoulder it hangs from is in the way;
+   * then she leans away from it about her feet, a step at a time up to
+   * LEAN_AWAY, until the arm hangs clear, as long as her head stays clear.
+   * Call once the root and lean are posed.
+   */
+  armsAmong(c: KiteController, raiseL: number, raiseR: number, forwardL = 0, forwardR = 0): void {
+    this.avoidBlocks(c)
+    this.arms(raiseL, raiseR, forwardL, forwardR)
+    const side = this.guard.boxed
+    if (side === 0) return
+    const roll = this.lean.rotation.z
+    for (let step = 1; step * LEAN_AWAY_STEP <= LEAN_AWAY + 1e-9; step++) {
+      this.lean.rotation.z = roll + side * step * LEAN_AWAY_STEP
+      this.root.updateMatrixWorld(true)
+      if (!this.headRoom(c)) break
+      this.avoidBlocks(c)
+      this.arms(raiseL, raiseR, forwardL, forwardR)
+      if (this.guard.boxed === 0) return
+    }
+    this.lean.rotation.z = roll
+    this.avoidBlocks(c)
+    this.arms(raiseL, raiseR, forwardL, forwardR)
+  }
+
+  /** Whether the head, its hat and pom are clear of the blocks as posed now. */
+  private headRoom(c: KiteController): boolean {
+    const e = this.head.matrixWorld.elements
+    gatherBlocks(c, this.near, e[12], e[13], LEAN_REACH * this.spec.scale)
+    return this.near.empty || this.ballsClear(this.lean.scale.y)
   }
 
   /** Fit the head among the blocks near it as drawn (see `fitHead`): feet at (x, y), `z` out from the build. */
@@ -878,10 +912,9 @@ function HeroDoll({ controller, place, wood, faces }: { controller: KiteControll
       fit.squash = squash
       rig.fitLean(c, y, fit)
     }
-    rig.avoidBlocks(c)
     rig.guard.hold(hero.mode === 'grab' || hero.mode === 'fly' ? 1 : 0, GRIP_REACH, SPOOL_ROOM)
-    if (hero.mode === 'fly') rig.arms(raise + pose.raiseL, FLY_RAISE, forward + pose.forwardL, 0)
-    else rig.arms(raise + raiseL + pose.raiseL, raise + raiseR + pose.raiseR, forward + forwardL + pose.forwardL, forward + forwardR + pose.forwardR)
+    if (hero.mode === 'fly') rig.armsAmong(c, raise + pose.raiseL, FLY_RAISE, forward + pose.forwardL, 0)
+    else rig.armsAmong(c, raise + raiseL + pose.raiseL, raise + raiseR + pose.raiseR, forward + forwardL + pose.forwardL, forward + forwardR + pose.forwardR)
     rig.setExpression(expression)
     rig.place(place)
   }, -0.5)
@@ -924,8 +957,7 @@ function MossDoll({ controller, wood, faces }: { controller: KiteController; woo
     fit.roll = pose.roll
     fit.squash = squash
     rig.fitLean(controller, 0, fit)
-    rig.avoidBlocks(controller)
-    rig.arms(0.12 + pose.raiseL, 0.12 + pose.raiseR, pose.forwardL, pose.forwardR)
+    rig.armsAmong(controller, 0.12 + pose.raiseL, 0.12 + pose.raiseR, pose.forwardL, pose.forwardR)
     rig.setExpression(faceOf(pose.face))
   })
   return <primitive object={rig.root} />
@@ -992,8 +1024,7 @@ function BeanDoll({ controller, wood, faces }: { controller: KiteController; woo
     fit.roll = roll
     fit.squash = squash
     rig.fitLean(controller, 0, fit)
-    rig.avoidBlocks(controller)
-    rig.arms(0.25 + pose.raiseL, 0.25 + pose.raiseR, pose.forwardL, pose.forwardR)
+    rig.armsAmong(controller, 0.25 + pose.raiseL, 0.25 + pose.raiseR, pose.forwardL, pose.forwardR)
     rig.setExpression(faceOf(pose.face))
   })
   return <primitive object={rig.root} />

@@ -158,6 +158,8 @@ const GAP = 0.012
 /** Out to the side, clear of head and body whatever the swing: where the search starts. */
 const HOME_RAISE = 1.2
 const HANGING = 0.15
+/** The furthest a boxed-in arm swings forward or back to hang clear. */
+const TUCK_SWING = 1.5
 /** How far before a touch an arm starts to slow into it, so a wave that reaches past the head still rises and falls instead of stopping flat. */
 const EASE = 0.35
 
@@ -177,6 +179,10 @@ export class DollGuard {
   private pomZ = 0
   private pom = false
   private obstacle: Obstacle | null = null
+  /** The swing the last arm asked for ended up at. */
+  swing = 0
+  /** The side of an arm this frame that found no clear pose at all, even tucked (0 for none). */
+  boxed: -1 | 0 | 1 = 0
   private readonly held = { side: 0, reach: 0, room: 0 }
   private readonly dir = { x: 0, y: 0, z: 0 }
   private readonly other = { set: false, ax: 0, ay: 0, az: 0, bx: 0, by: 0, bz: 0 }
@@ -229,6 +235,7 @@ export class DollGuard {
   /** Start a frame's arms: the first arm asked for is not yet in the way of the second. */
   beginArms(): void {
     this.other.set = false
+    this.boxed = 0
   }
 
   /** Signed distance from a doll-frame point to the head, hat and pom. */
@@ -269,10 +276,20 @@ export class DollGuard {
     return true
   }
 
-  /** The raise this arm may take toward `raise` at swing `forward`; remembered so the other arm keeps clear of it. */
+  /**
+   * The raise this arm may take toward `raise` at swing `forward`; remembered so the other arm keeps clear of it.
+   * Boxed in at that swing (a block leaning on her side), the arm hangs straight down, swung just far enough to
+   * fit; `swing` is the swing the arm ends up at. With no room even for that, `boxed` says which side.
+   */
   arm(side: -1 | 1, raise: number, forward: number): number {
     let home = HOME_RAISE
     if (!this.armClear(side, home, forward)) home = this.armClear(side, HANGING, forward) ? HANGING : this.nearestClear(side, raise, forward)
+    if (Number.isNaN(home)) {
+      const tuck = this.tuck(side, forward)
+      if (!Number.isNaN(tuck)) return this.place(side, 0, tuck)
+      this.boxed = side
+      home = raise
+    }
     let out = raise
     if (home !== raise) {
       const dir = raise > home ? 1 : -1
@@ -302,7 +319,13 @@ export class DollGuard {
         }
       }
     }
-    const d = armDirection(side, out, forward, this.dir)
+    return this.place(side, out, forward)
+  }
+
+  /** Settle an arm at this raise and swing, and keep the other arm clear of it. */
+  private place(side: -1 | 1, raise: number, forward: number): number {
+    this.swing = forward
+    const d = armDirection(side, raise, forward, this.dir)
     const other = this.other
     other.set = true
     other.ax = side * SHOULDER.x
@@ -311,10 +334,10 @@ export class DollGuard {
     other.bx = other.ax + d.x * HAND_REACH
     other.by = other.ay + d.y * HAND_REACH
     other.bz = d.z * HAND_REACH
-    return out
+    return raise
   }
 
-  /** The clear raise nearest `raise` (a block beside the doll can leave neither out nor hanging free), or `raise` if there is none. */
+  /** The clear raise nearest `raise` (a block beside the doll can leave neither out nor hanging free), or NaN if there is none. */
   private nearestClear(side: -1 | 1, raise: number, forward: number): number {
     for (let step = 1; step * STEP <= Math.PI; step++) {
       const below = raise - step * STEP
@@ -322,7 +345,18 @@ export class DollGuard {
       const above = raise + step * STEP
       if (above <= Math.PI && this.armClear(side, above, forward)) return above
     }
-    return raise
+    return Number.NaN
+  }
+
+  /** The swing nearest `forward` at which the arm hangs straight down clear of everything (back behind her first), or NaN. */
+  private tuck(side: -1 | 1, forward: number): number {
+    for (let step = 1; step * STEP <= TUCK_SWING; step++) {
+      const back = forward + step * STEP
+      if (this.armClear(side, 0, back)) return back
+      const front = forward - step * STEP
+      if (this.armClear(side, 0, front)) return front
+    }
+    return Number.NaN
   }
 
   /** Whether the painted face and the lowest hair stay out of the body at this head turn. */
@@ -520,6 +554,9 @@ export type HeadPose = { lift: number; roll: number; squash: number }
 
 /** The lowest squash a doll ducks to under a block that comes down lower than her head. */
 export const DUCK = 0.78
+/** The furthest a doll leans away (about her feet) from a block against her side that leaves an arm no room, and the steps she leans in. */
+export const LEAN_AWAY = 0.12
+export const LEAN_AWAY_STEP = 0.02
 /** Room kept between a doll's head and a block. */
 const HEAD_GAP = 0.012
 

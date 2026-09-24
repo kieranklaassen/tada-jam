@@ -17,6 +17,8 @@ import {
   HAND_REACH,
   HEAD_R,
   HEAD_Y,
+  LEAN_AWAY,
+  LEAN_AWAY_STEP,
   NECK_Y,
   POM_R,
   POM_Y,
@@ -89,8 +91,9 @@ function guarded(kind: HeadKind, turn: Turn, ask: Arms): { turn: Turn; arms: Arm
   const head = guard.turnHead(turn.pitch, turn.yaw, turn.roll, { pitch: 0, roll: 0 })
   guard.beginArms()
   const raiseR = guard.arm(1, ask.raiseR, ask.forwardR)
+  const forwardR = guard.swing
   const raiseL = guard.arm(-1, ask.raiseL, ask.forwardL)
-  return { turn: { pitch: head.pitch, yaw: turn.yaw, roll: head.roll }, arms: { raiseL, raiseR, forwardL: ask.forwardL, forwardR: ask.forwardR } }
+  return { turn: { pitch: head.pitch, yaw: turn.yaw, roll: head.roll }, arms: { raiseL, raiseR, forwardL: guard.swing, forwardR } }
 }
 
 /** How the watchers' heads follow what they look at, at the ends of the neck's range. */
@@ -482,5 +485,79 @@ describe('DollGuard.hold', () => {
     guard.hold(0)
     guard.beginArms()
     expect(guard.arm(1, FLY_RAISE, 0), 'let go').toBe(FLY_RAISE)
+  })
+})
+
+describe('DollGuard with a block against her side', () => {
+  const cube = SHAPES.cube.parts[0]
+
+  /** A cube turned `tilt` with its top toward her, its nearest point `at` out from her middle, its middle `y` up (or its nearest corner at `corner`). */
+  function cubeBeside(side: -1 | 1, tilt: number, at: number, place: { y: number } | { corner: number }): BlockField {
+    const angle = side * tilt
+    const turned = cube.map((p) => ({ x: p.x * Math.cos(angle) - p.y * Math.sin(angle), y: p.x * Math.sin(angle) + p.y * Math.cos(angle) }))
+    const near = turned.reduce((a, b) => (side * b.x < side * a.x ? b : a))
+    const field = new BlockField()
+    field.add(cube, side * at - near.x, 'y' in place ? place.y : place.corner - near.y, angle, 1, SHAPES.cube.depth)
+    return field
+  }
+
+  function expectArmClear(field: BlockField, side: -1 | 1, raise: number, swing: number, where: string): void {
+    for (const { p, r } of armAxis(side, raise, swing)) {
+      expect(field.distance(p.x, p.y, p.z) - r, `${where}: arm to the block`).toBeGreaterThan(0)
+      expect(bodyDistance(p.x, p.y, p.z) - (r - ARM_JOINT), `${where}: arm to the body`).toBeGreaterThan(-0.005)
+    }
+  }
+
+  it('hangs a boxed-in arm straight down, swung just clear, beside a block too tall to reach over', () => {
+    for (const side of [-1, 1] as const) {
+      // Upright, just outside the room the climb planner leaves her, from her hip to above her shoulder.
+      const field = cubeBeside(side, 0, HEAD_R + HAIR + 0.015, { y: 0.8 })
+      const guard = new DollGuard('bob')
+      guard.head(0, 0, 0)
+      guard.setObstacle(field.distance)
+      const where = side > 0 ? 'right' : 'left'
+      expect(guard.armClear(side, REST.pip, 0), `${where}: the resting arm is in the block`).toBe(false)
+      guard.beginArms()
+      const raise = guard.arm(side, REST.pip, 0)
+      expect(raise, where).toBe(0)
+      expect(guard.swing, where).not.toBe(0)
+      expect(Math.abs(guard.swing), where).toBeLessThan(1)
+      expect(guard.boxed, where).toBe(0)
+      expectArmClear(field, side, raise, guard.swing, where)
+      guard.setObstacle(null)
+      guard.beginArms()
+      expect(guard.arm(side, REST.pip, 0), `${where}, once the block is gone`).toBe(REST.pip)
+      expect(guard.swing).toBe(0)
+    }
+  })
+
+  it('reports an arm with no room even tucked, and a small lean away about her feet frees it', () => {
+    for (const side of [-1, 1] as const) {
+      for (const tilt of [0, 0.15, 0.3]) {
+        // Resting against her where the physics stops a block (her body's width), touching at the shoulder.
+        const field = cubeBeside(side, tilt, BODY_R, tilt === 0 ? { y: 0.8 } : { corner: SHOULDER.y })
+        const guard = new DollGuard('bob')
+        guard.head(0, 0, 0)
+        guard.setObstacle(field.distance)
+        const where = `${side > 0 ? 'right' : 'left'} side, leaning ${tilt}`
+        guard.beginArms()
+        guard.arm(side, REST.pip, 0)
+        expect(guard.boxed, `${where}: boxed in upright`).toBe(side)
+        // As the rig does: lean the doll's frame away a step at a time until the arm finds room.
+        let roll = 0
+        let raise = Number.NaN
+        while (roll < LEAN_AWAY - 1e-9) {
+          roll += LEAN_AWAY_STEP
+          const c = Math.cos(side * roll)
+          const s = Math.sin(side * roll)
+          field.frame.set([c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0])
+          guard.beginArms()
+          raise = guard.arm(side, REST.pip, 0)
+          if (guard.boxed === 0) break
+        }
+        expect(guard.boxed, `${where}: free within ${LEAN_AWAY}`).toBe(0)
+        expectArmClear(field, side, raise, guard.swing, `${where}, leaning away ${roll.toFixed(2)}`)
+      }
+    }
   })
 })
