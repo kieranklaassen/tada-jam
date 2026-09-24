@@ -621,6 +621,44 @@ export function nearClipFinding(a: Piece, camera: CameraInfo): Finding | null {
   }
 }
 
+// --- clipping planes ------------------------------------------------------------
+
+// Cut a piece to the half-spaces three.js keeps (signed distance >= 0 for
+// every plane), so geometry a clipping plane discards is never checked.
+export function clipToPlanes<T extends { positions: Float32Array; index: Uint32Array | null }>(input: T, planes: ReadonlyArray<readonly [number, number, number, number]>): T | null {
+  if (!planes.length) return input
+  const tris = triangleCount(input)
+  const idx = input.index
+  const out: number[] = []
+  const dist = (p: number[], q: readonly [number, number, number, number]) => q[0] * p[0] + q[1] * p[1] + q[2] * p[2] + q[3]
+  for (let t = 0; t < tris; t++) {
+    let poly: number[][] = []
+    for (let c = 0; c < 3; c++) {
+      const v = idx ? idx[t * 3 + c] : t * 3 + c
+      poly.push([input.positions[v * 3], input.positions[v * 3 + 1], input.positions[v * 3 + 2]])
+    }
+    for (const plane of planes) {
+      const next: number[][] = []
+      for (let i = 0; i < poly.length; i++) {
+        const p = poly[i]
+        const q = poly[(i + 1) % poly.length]
+        const dp = dist(p, plane)
+        const dq = dist(q, plane)
+        if (dp >= 0) next.push(p)
+        if ((dp >= 0) !== (dq >= 0)) {
+          const k = dp / (dp - dq)
+          next.push([p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k, p[2] + (q[2] - p[2]) * k])
+        }
+      }
+      poly = next
+      if (poly.length < 3) break
+    }
+    for (let i = 1; i + 1 < poly.length; i++) out.push(...poly[0], ...poly[i], ...poly[i + 1])
+  }
+  if (!out.length) return null
+  return { ...input, positions: new Float32Array(out), index: null }
+}
+
 // --- connected components -----------------------------------------------------
 
 // Split a merged mesh into its connected parts (by welded vertices), for
