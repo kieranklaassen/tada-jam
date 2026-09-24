@@ -78,6 +78,16 @@ export type JamTile = {
   to: string
 }
 
+/**
+ * A showcase: a finished game shown in the jam but not a Tada cartridge (it may
+ * need a keyboard and mouse, or keep its own saves). It lives in showcases/,
+ * outside cartridge discovery, and the home page lists it separately.
+ */
+export type JamShowcase = JamGame & {
+  /** What a grown-up should know before opening it, shown on the home page. */
+  requires: string
+}
+
 /** The jam's launcher entry: a cartridge plus the emoji Tada keeps in CARTRIDGE_EMOJI. */
 export type JamGame = {
   cartridge: Cartridge

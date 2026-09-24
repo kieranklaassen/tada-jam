@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="dome" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8fff0"/><stop offset="1" stop-color="#4fcfb8"/></linearGradient>
+    <linearGradient id="hull" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef1f4"/><stop offset="1" stop-color="#8a9098"/></linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6affd0" stop-opacity="0.55"/><stop offset="1" stop-color="#6affd0" stop-opacity="0"/></linearGradient>
+    <linearGradient id="hat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a2c1c"/><stop offset="1" stop-color="#2a170e"/></linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#140c18" flood-opacity="0.45"/></filter>
+  </defs>
+  <g fill="#fff6e0"><circle cx="18" cy="16" r="0.9"/><circle cx="80" cy="12" r="0.8"/><circle cx="88" cy="34" r="0.7"/><circle cx="12" cy="40" r="0.7"/></g>
+  <!-- Mesas on the horizon. -->
+  <path d="M0 78 L14 78 L18 70 L30 70 L33 78 L62 78 L66 66 L80 66 L84 78 L100 78 L100 100 L0 100 Z" fill="#7a3a4a" opacity="0.8"/>
+  <path d="M0 86 C20 82 40 88 60 84 S90 82 100 85 L100 100 L0 100 Z" fill="#3a2230"/>
+  <!-- The saucer, beaming down, wearing a cowboy hat. -->
+  <path d="M40 50 L60 50 L74 86 L26 86 Z" fill="url(#beam)"/>
+  <g filter="url(#soft)">
+    <ellipse cx="50" cy="48" rx="31" ry="8.5" fill="url(#hull)"/>
+    <ellipse cx="50" cy="50.5" rx="31" ry="4.5" fill="#6c737c"/>
+    <path d="M36 44 Q50 22 64 44 Z" fill="url(#dome)"/>
+    <g fill="#6affd0"><circle cx="26" cy="49" r="2"/><circle cx="38" cy="51.5" r="2"/><circle cx="50" cy="52.5" r="2"/><circle cx="62" cy="51.5" r="2"/><circle cx="74" cy="49" r="2"/></g>
+    <ellipse cx="50" cy="31.5" rx="17" ry="4" fill="url(#hat)"/>
+    <path d="M42 31 Q42 19 50 19 Q58 19 58 31 Z" fill="url(#hat)"/>
+    <rect x="42" y="27.5" width="16" height="2.4" fill="#c7563f"/>
+  </g>
+</svg>

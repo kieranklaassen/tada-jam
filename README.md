@@ -83,6 +83,14 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Bad Neighbours | `games/bad-neighbours/` | 4–8 | Drop wobbly apartment buildings onto a construction slab and watch the residents live in them. Physics stacking (matter.js) with secured foundations; a fallen building parachutes its resident out and returns to the queue. No score, no lives. |
 | Moon Phases | `games/moon-phases/` | 6–10 | A brass orrery on a table in three.js: the sun lamp always lights half the moon, and a round window shows the sky from the child's home on a turning Earth, day or night, with the moon up or set and flipped south of the equator. |
 
+## Showcases
+
+`showcases/<key>/` holds finished games that are shown in the jam but are **not** Tada cartridges: they may need a keyboard and mouse or keep their own saves, so they are never ported. They open in the same shell, are listed apart on the home page with what they need, and get the same no-outside-requests check as the harness.
+
+| Showcase | Folder | Needs | What it is |
+| --- | --- | --- | --- |
+| Alien Frontier | `showcases/alien-frontier/` (build in `public/alien-frontier/`) | keyboard & mouse | An open-world space western: an alien crash-lands in the 1880s Midwest and sets out to become a cowboy. Built from the `midwestalien` repo with `npm run showcase:jam` and run in a same-origin iframe. |
+
 ## License
 
 [O'Saasy](LICENSE), matching Tada. The harness is an independent re-implementation of the cartridge contract's behavior; nothing here is copied from Tada's pre-rebuild (AGPL) history.
