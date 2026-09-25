@@ -81,6 +81,13 @@ export default {
       upTo: 0.22,
       reason: 'Modelling, never moves: the knitted sky wall stands down into the snow hill far behind the land, where the hill hides the join (measured 19%).',
     },
+    {
+      a: '^bunny>body',
+      b: '^bunny>feet',
+      kind: 'pose',
+      upTo: 0.1,
+      reason: 'The bunny squashes as it hops and plays, pressing its knitted body a little onto its own feet (measured 6.6% at the peak of a squash): knit on knit, part of the squash.',
+    },
   ],
   ignore: [
     // Drawn entirely by their vertex shaders: the CPU geometry is a parameter grid (a flat patch

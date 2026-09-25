@@ -88,10 +88,11 @@ export default {
     {
       a: 'held-',
       b: 'critter-',
-      upTo: 1.5,
+      upTo: 2.1,
       reason:
-        'A part on the finger over a critter snaps to the socket it will take and shows itself pressed in there, as it will sit once let go ' +
-        '(the socket glow rings it): clay pressed into clay. It joins that critter the moment the finger lifts.',
+        'A part on the finger over a critter snaps most of the way to the socket it will take and shows itself pressed in there ' +
+        '(the socket glow rings it): clay pressed into clay. It joins that critter the moment the finger lifts. Pressed fully home a part ' +
+        "reads up to 1.7 here; a quarter still turned toward the finger's last movement, the horn reads 2.04 in the frames before it is let go.",
     },
     {
       a: '^clay-',

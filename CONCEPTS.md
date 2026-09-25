@@ -97,10 +97,10 @@ Variants of an action are picked without repeating back to back, with randomized
 ## Performance
 
 ### Quality tier
-One of a few rendering levels a game steps between at runtime, each trading look for rendering cost (pixel density, fur, the post pass, physics catch-up), chosen by the game's Governor rather than by guessing the device.
+One of a few rendering levels a game steps between at runtime, each trading look for rendering cost (pixel density, fur, the post pass), chosen by the game's Governor rather than by guessing the device.
 *Avoid:* graphics preset, LOD level
 
-The lowest tier must still look like the game. A grown-up overlay can pin a tier to judge it on a device. On a machine that renders in software, a working Governor settles at the lowest tier, so a measurement there describes the lowest look unless a tier is pinned.
+A tier changes how the game is drawn, not what happens in it: one that sheds physics steps or simulation detail makes the outcome depend on the device and the tier. The lowest tier must still look like the game. A grown-up overlay can pin a tier to judge it on a device. On a machine that renders in software, a working Governor settles at the lowest tier, so a measurement there describes the lowest look unless a tier is pinned.
 
 ### Governor
 The part of a game that watches its own frame intervals and Frame work and moves between Quality tiers to fit whatever device it runs on.

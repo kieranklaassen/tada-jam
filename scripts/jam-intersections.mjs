@@ -188,11 +188,23 @@ async function auditGame(browser, base, game, opts) {
     const deadline = Date.now() + MOUNT_WAIT_MS
     while (Date.now() < deadline && !(await page.evaluate(() => (window.__jamAudit?.renderers.length ?? 0) > 0))) await new Promise((resolve) => setTimeout(resolve, 25))
   }
+  const drawn = () => page.evaluate(() => window.__jamAudit?.main()?.calls ?? 0)
+  // The game mounts when its code has loaded, in real time, so the frame it
+  // first draws falls anywhere on the audit's 33 ms grid. Running on to the
+  // next drawn frame a millisecond at a time puts the audit's zero on a frame,
+  // so every tap lands on the same game frame from run to run.
+  const onNextFrame = async () => {
+    const n = await drawn()
+    for (let i = 0; i < 4 * STEP && (await drawn()) <= n; i++) await page.clock.runFor(1)
+  }
   const firstFrame = async () => {
     for (let i = 0; i <= 120; i++) {
       // Two frames, not one: a game may draw once from its resize handler
       // before its own loop has placed anything.
-      if (await page.evaluate(() => (window.__jamAudit?.main()?.calls ?? 0) > 1)) return true
+      if ((await drawn()) > 1) {
+        await onNextFrame()
+        return true
+      }
       await page.clock.runFor(STEP)
     }
     return false
