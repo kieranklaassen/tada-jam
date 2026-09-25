@@ -1,5 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import type { TableController } from '../controller'
 import { QualityGovernor, startingTier } from '../quality'
@@ -71,6 +72,9 @@ function carrierMice(table: TableController): CarrierMouse[] {
   return carriers
 }
 
+/** Each part's last lift out of what it sank into, kept while it sleeps: a sleeping part neither moves nor is moved without waking. */
+const restingLift = new WeakMap<CANNON.Body, CANNON.Vec3 | undefined>()
+
 /** Parts as physics has them, but never drawn dipping into the table, a pan's floor, a stone or another part for the frames physics takes to push a landing part back out. */
 function partStates(table: TableController): PartState[] {
   const states: PartState[] = []
@@ -79,12 +83,15 @@ function partStates(table: TableController): PartState[] {
     const body = table.physics.body(part.id)
     return body ? [{ part, body }] : []
   })
-  const sunk = table.physics.sunk(new Set(placed.map(({ body }) => body)))
+  // Only awake parts are looked at afresh: working out every part's contacts every frame was a tenth of a busy frame.
+  const sunk = table.physics.sunk(new Set(placed.flatMap(({ body }) => (body.sleepState === CANNON.Body.SLEEPING ? [] : [body]))))
   for (const { part, body } of placed) {
     const { x, y, z, w } = body.quaternion
     const under = surfaceUnder(toWorld2(body.position), surfaces)
     const ground = body.position.y > under ? under : 0
-    const lift = sunk.get(body)
+    let lift = sunk.get(body)
+    if (body.sleepState === CANNON.Body.SLEEPING) lift = restingLift.get(body)
+    else restingLift.set(body, lift?.clone())
     const at = lift ? body.position.vadd(lift) : body.position
     states.push({
       id: part.id,

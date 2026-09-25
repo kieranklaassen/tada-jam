@@ -37,6 +37,7 @@ import {
 } from '../partShape'
 import { BOWL_LUMP, BOWL_PROFILE, BOWL_SCALE, DECAL_LIFT, decalReach, DISH_PROFILE, feedingFloor, HEM_POINTS, hemAt, ON_RUG, PAN_DEPTH, PAN_ROLL, PAN_SEGMENTS, PLATE_HEIGHT, PLATE_LUMP, PLATE_PROFILE, ROPE_KNOT, RUG, RUG_HEM, RUG_HEM_Y, type Surfaces } from '../surfaces'
 import { furTime, MAX_SHELLS } from './fur'
+import { installClayToneMapping } from './finish'
 import { ARM_AT, CHEEK_AT, EAR_AT, GUEST_SIZE, guestFloor, NECK_Y, poseGuest, soleDepth, speciesShapes } from './guest'
 import { useQuality } from './quality'
 import { MotionDirector, PERSONALITIES, SEAT_SPECIES } from '../motion'
@@ -990,6 +991,23 @@ function compileBothWays(gl: THREE.WebGLRenderer, warm: THREE.Scene, camera: THR
 }
 
 /**
+ * The minimal tier draws without a post pass, tone mapping inside every
+ * material (three's custom tone mapping), which is part of each material's
+ * program: compile those programs now, while the game loads, so a step down
+ * to it later never stalls a frame compiling every material on the table.
+ */
+function compileToneMapped(gl: THREE.WebGLRenderer, warm: THREE.Scene, camera: THREE.Camera, scene: THREE.Scene): void {
+  installClayToneMapping()
+  const [previousTarget, previousToneMapping] = [gl.getRenderTarget(), gl.toneMapping]
+  gl.setRenderTarget(null)
+  gl.toneMapping = THREE.CustomToneMapping
+  void gl.compileAsync(warm, camera, scene).catch(() => {})
+  void gl.compileAsync(scene, camera).catch(() => {})
+  gl.toneMapping = previousToneMapping
+  gl.setRenderTarget(previousTarget)
+}
+
+/**
  * Draw the warm-up objects once inside the live scene, into a 1x1 target like the post pass's (half float, no
  * multisampling): WebKit finishes a shader's GPU pipeline only at its first real draw, which a compile cannot reach.
  */
@@ -1020,6 +1038,7 @@ function useWarmup(materials: ClayMaterials): void {
       } else {
         const warm = warmupScene(materials)
         compileBothWays(gl, warm, camera, scene)
+        compileToneMapped(gl, warm, camera, scene)
         timer = setTimeout(() => drawOnce(gl, warm, camera, scene), WARMUP_GAP_MS)
       }
     }, WARMUP_START_MS)
