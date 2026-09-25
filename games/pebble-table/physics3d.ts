@@ -1,6 +1,6 @@
 import * as CANNON from 'cannon-es'
 import { GUEST_ARM, GUEST_RADIUS, GUEST_REACH, guestYaw } from './feeding'
-import { JAR_SCALE, JARS, type PartKind } from './parts'
+import { JAR_SCALE, JARS, PART_KINDS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, HOUSE_REACH, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
 import { JAR_LIFT, JAR_MOUTH, JAR_REACH, JAR_TOP, jarLabelBox, NEST_SPAN, partCollider, partRest } from './partShape'
 import { outlineCorners, STONE_CUTS, stoneOutline, stoneReachAlong, stoneRest } from './stoneShape'
@@ -225,6 +225,8 @@ export class TablePhysics {
     this.world.addContactMaterial(new CANNON.ContactMaterial(this.stoneMaterial, this.woodMaterial, { friction: 0.45, restitution: 0.12 }))
     this.world.addContactMaterial(new CANNON.ContactMaterial(this.stoneMaterial, this.stoneMaterial, { friction: 0.35, restitution: 0.22 }))
     this.addTable()
+    // Fitting a part's balls to its drawn shape is slow the first time for each kind: do it now, while the game loads, not on the frame a child first tips a jar.
+    for (const kind of PART_KINDS) partCollider(kind)
   }
 
   /**
