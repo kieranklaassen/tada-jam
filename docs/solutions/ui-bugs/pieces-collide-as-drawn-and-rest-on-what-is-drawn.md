@@ -35,7 +35,7 @@ In a game with physics or hand-written collision, two shapes describe every piec
 ## Symptoms
 
 - Kite Tower (merged from the bundle branch `cursor/kite-tower-intersections-bundle`): blocks through Pip's body, head, face and arms as they were set down beside her, fell on her or toppled onto her (27), and blocks through blocks (3).
-- Pebble Table (pending, branch `cursor/pebble-table-intersections-2526`): a shell's drawn rim, back and belly lay up to 0.36 cm outside its collider, so an acorn pushed against it, or a shell tipped onto a stick, sank in. In CI a shell poured from its jar landed 28% into a stone, because at over a metre a second a part moves a centimetre per physics step and was inside the stone before any contact was made.
+- Pebble Table (merged as "Merge cursor/pebble-table-rapier-cceb"): a shell's drawn rim, back and belly lay up to 0.36 cm outside its collider, so an acorn pushed against it, or a shell tipped onto a stick, sank in. In CI a shell poured from its jar landed 28% into a stone, because at over a metre a second a part moves a centimetre per physics step and was inside the stone before any contact was made. Spilled stones did the same to each other: cannon has no continuous collision, so a fast, spinning stone meets its neighbour only once it is inside, and over six seeded spills neighbours sank up to 272% of the audit's tolerance into each other for a frame. Its final pass on cannon-es cut the step while two awake stones or parts were within a step of each other (0.15 of the smaller one's radius per piece, up to 12 pieces), which took the deepest landing to 21% of the tolerance but made the spill miss its 0.75 ms frame budget in CI (0.82 ms). The merged game moved to Rapier instead, where continuous collision (full, and soft for bodies about to meet) replaces the cut steps; with cheaper part colliders (one hull for a shell or an acorn, a chain of capsules for a stick, flat pieces whose faces have at most four corners) and Rapier's SIMD build, the seeded busy scale costs 0.37 ms a frame in Node against cannon's 0.55, and the spill's 0.75 ms budget holds (`games/pebble-table/REFINEMENT.md`, "Rapier pass"; `games/pebble-table/perf.test.ts`).
 - Bad Neighbours (PR #21, canvas 2D, checked by its own vitest): scaffold ties flung braced buildings through each other and the slab (worst 41.1 px, lasting up to 39.8 s). Thrown props bounced with their centre 2 px above the deck whatever their turn, so their painted outlines dipped into the slab.
 - Bedtime Forest (PR #29): animals were kept apart by a circle, and only while idle or walking. A long fox was a 10-unit circle, and a bear mid-trick made no room at all.
 - Turning Tower (PR #30): a segment landing on its support dipped into it, and the wanderer riding it sank too.
@@ -69,7 +69,7 @@ export type PieceShape = {
 
 - Turning Tower's `games/turning-tower/anatomy.ts` holds "the characters' proportions, shared by the rigs that draw them and the controller that keeps them clear of the lattice".
 - Bad Neighbours' `PROP_OUTLINES` holds the rectangles the renderer paints, and a test says so by name: "the outline the deck holds a prop up by is the outline the renderer paints" (`games/bad-neighbours/intersections.test.ts`). Other tests there hold every sprite and the slab's paint to their colliders.
-- Pebble Table's pending branch builds parts, jars and the nest "from one set of dimensions" (`partShape.ts` on that branch), "so each part's collider is fitted to its drawn vertices".
+- Pebble Table builds parts, jars and the nest "from one set of dimensions" (`games/pebble-table/partShape.ts`), "so each part's collider is fitted to its drawn vertices".
 - Shadow Lantern's stands have one set of dimensions for the view and the controller (the z-fighting doc).
 
 In cannon-es, a `Box` takes half extents, not full sizes (checked in cannon-es 0.20.0). Passing full sizes makes a collider twice as big, and the piece floats.
@@ -127,12 +127,11 @@ In cannon-es, a `Box` takes half extents, not full sizes (checked in cannon-es 0
 - Write tests against the drawn geometry. Sweep many drops, turns and timings in the unit test, because each physics run lands a little differently. In Pebble Table's pass, one audit run in five caught a real contact the others missed, and the game's own sweep over 22 jar tips found more.
 - Take every rest, stand and spawn height from the drawn geometry's lowest point at the current turn.
 - Fit footprints to the drawn body, and test that every drawn vertex lies inside.
-- Allow landing dips only up to the bound a physics test proves.
-- For Pebble Table, whose pass is still pending, start from these rules.
+- Allow landing dips only up to the bound a physics test proves, and where a fast landing sinks deeper than that, use continuous collision (or cut the step while pieces close) rather than raising the bound; then measure what it costs against the frame budget.
 
 ## Related Issues
 
 - [Animation clipping through bodies and furniture](animation-clipping-limbs-props-and-poses-through-bodies-and-furniture.md): heights measured from meshes, carried things rising over others, and characters following surfaces.
 - [Coplanar faces and flat overlays z-fight](z-fighting-from-coplanar-faces-decals-and-flat-overlays.md): flush parts, and Shadow Lantern's one set of dimensions for its stands.
 - [Run the intersection audit before showing the owner](../workflow-issues/run-the-intersection-audit-before-showing-the-owner.md): capped allow rules, and why runs differ.
-- The game passes: PR #20 Frog Choir, PR #21 Bad Neighbours, PR #24 Felt Meadow, PR #26 Light Garden, PR #29 Bedtime Forest, PR #30 Turning Tower, and Kite Tower's, merged from a bundle as "Merge cursor/kite-tower-intersections-bundle". Pebble Table's pass is pending on `cursor/pebble-table-intersections-2526`.
+- The game passes: PR #20 Frog Choir, PR #21 Bad Neighbours, PR #24 Felt Meadow, PR #26 Light Garden, PR #29 Bedtime Forest, PR #30 Turning Tower, and Kite Tower's, merged from a bundle as "Merge cursor/kite-tower-intersections-bundle". Pebble Table's, merged as "Merge cursor/pebble-table-rapier-cceb".
