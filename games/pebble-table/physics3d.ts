@@ -445,6 +445,7 @@ export class TablePhysics {
 
   /** Whether a pair may touch at all: the table, the rug and the pan floors are planes that hold only what lies over them. */
   private mayTouch(a: CANNON.Body, b: CANNON.Body): boolean {
+    if (a.type !== CANNON.Body.DYNAMIC && b.type !== CANNON.Body.DYNAMIC) return false
     for (const [plane, other] of [[a, b], [b, a]] as const) {
       if (plane === this.table && !overTable(other)) return false
       if (plane === this.rug && !this.overRug(other)) return false
@@ -629,8 +630,9 @@ export class TablePhysics {
       this.targets.set(pan, { x: at.x + sway, y: PAN_REST_HEIGHT - drops[side] * UNIT, z: at.z })
       if (floors[side]) this.targets.set(floors[side], { x: at.x + sway, y: PAN_REST_HEIGHT - drops[side] * UNIT + PAN_FLOOR, z: at.z })
     })
-    if (tilted) for (const { body } of this.stones.values()) body.wakeUp()
-    else if (swung) {
+    // Only what lies in or on a pan feels it move: waking the whole table every
+    // frame the beam swings kept every part and stone on it awake and stepped.
+    if (tilted || swung) {
       for (const pan of this.pans) {
         if (pan.aabbNeedsUpdate) pan.updateAABB()
         for (const { body } of this.stones.values()) {
