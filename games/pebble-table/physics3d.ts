@@ -950,6 +950,25 @@ export class TablePhysics {
     }
   }
 
+  /**
+   * A body still asleep that Rapier moved anyway (part of its island woke,
+   * so it falls without meeting what it lies on) is put back where it lay,
+   * and it and everything it lies against are woken to meet it next step.
+   */
+  private keepSleepersStill(): void {
+    for (const { body } of this.stones.values()) {
+      const rigid = body.rigid
+      if (!body.asleep || body.held || !rigid.isSleeping()) continue
+      const p = rigid.translation()
+      if (p.x === body.position.x && p.y === body.position.y && p.z === body.position.z) continue
+      rigid.setTranslation(body.position, false)
+      rigid.setRotation(body.quaternion, false)
+      rigid.setLinvel({ x: 0, y: 0, z: 0 }, false)
+      rigid.setAngvel({ x: 0, y: 0, z: 0 }, false)
+      this.wake(body)
+    }
+  }
+
   /** The speed of every contact that began this step, from how fast its bodies were closing before it. */
   private noteImpacts(): void {
     this.events.drainCollisionEvents((h1, h2, started) => {
@@ -1020,6 +1039,7 @@ export class TablePhysics {
       this.world.step(this.events)
       this.time += STEP
       this.steps += 1
+      this.keepSleepersStill()
       this.noteImpacts()
       this.noteLeaning()
       this.resistRolling()
