@@ -50,6 +50,8 @@ export const STEP_SLACK = 1e-6
  * step sank in and stayed.
  */
 const BALL_TRAVEL = 1
+/** And never more than this (cm) a step while about to meet a stone or part: a stick's twig balls are far thinner than its biggest. */
+const BALL_MOST_TRAVEL = 0.18
 /** The most pieces a step is cut into. */
 const MOST_PIECES = 6
 /**
@@ -68,7 +70,7 @@ const MOST_STONE_PIECES = 12
  * made the next frame slow too. Pieces are shared out under this; a frame
  * always runs at least its whole steps.
  */
-const MOST_FRAME_STEPS = 12
+const MOST_FRAME_STEPS = 2
 /** How many times sunk goes over the contacts it finds, so lifting a part out of one does not leave it in another. */
 const SUNK_PASSES = 4
 /** Pairs of bodies with at least this many pairs of shapes between them are handed to cannon with only the shapes that reach the other. */
@@ -1009,9 +1011,14 @@ export class TablePhysics {
     let pieces = 1
     for (const [body, reach] of this.balls) {
       if (body.type !== CANNON.Body.DYNAMIC || body.sleepState === CANNON.Body.SLEEPING) continue
-      const travel = body.velocity.length() * STEP
-      const need = Math.ceil(travel / (reach * BALL_TRAVEL))
-      if (need > pieces && this.nearLoose(body, travel)) pieces = need
+      const speed = body.velocity.length()
+      const travel = speed * STEP
+      const most = Math.min(reach * BALL_TRAVEL, BALL_MOST_TRAVEL)
+      // About to meet a stone or part faster than one ball's radius a step, a
+      // shell or stick is slowed to that for this step instead of the whole
+      // world's step being cut finer for it (a pour of shells onto stones did
+      // that dozens of times a second): it meets what it lands on a step later.
+      if (travel > most && this.nearLoose(body, travel)) body.velocity.scale(most / travel, body.velocity)
     }
     pieces = Math.min(pieces, MOST_PIECES)
     const { DYNAMIC, SLEEPING } = CANNON.Body

@@ -227,7 +227,9 @@ describe('TablePhysics', () => {
     }
     const near = pour(false)
     const every = pour(true)
-    expect(near.contacts).toBeGreaterThan(5000)
+    // Still thousands of contacts, so the two ways are compared on a busy pour
+    // (fewer since only what lies in a pan wakes when the beam moves).
+    expect(near.contacts).toBeGreaterThan(2000)
     expect(near.contacts).toBe(every.contacts)
     expect(near.poses).toEqual(every.poses)
   }, 60_000)
