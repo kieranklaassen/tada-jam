@@ -28,6 +28,18 @@ export const PAN_REST_HEIGHT = 6
  * instead of letting a slow frame make the next one slower (a spiral).
  */
 export const LONGEST_FRAME = 1 / 20
+/**
+ * A frame longer than this (s) is a device falling behind, not a dropped frame:
+ * longer than two 60 Hz frames and a leftover step, and than the 33 ms frames
+ * the intersection audit steps its clock by. Such a frame catches up only
+ * SLOW_FRAME_STEPS whole steps and runs at most SLOW_FRAME_WORK world steps,
+ * and the rest of its time is let go. Catching up in full made each slow
+ * frame slower than the last (a pour at 6x CPU never climbed back), and on
+ * time frames and the audit's never reach this, so their game time is whole.
+ */
+export const SLOW_FRAME = 5 * STEP
+const SLOW_FRAME_STEPS = 2
+const SLOW_FRAME_WORK = 4
 /** Against rounding in sums of frame times: this close to a whole step (in steps) still makes it. */
 export const STEP_SLACK = 1e-6
 /**
@@ -954,16 +966,18 @@ export class TablePhysics {
   }
 
   step(elapsed: number): StepReport {
-    this.accumulator = Math.min(this.accumulator + elapsed, LONGEST_FRAME)
+    const slow = elapsed > SLOW_FRAME + STEP_SLACK * STEP
+    this.accumulator = Math.min(this.accumulator + elapsed, slow ? SLOW_FRAME_STEPS * STEP : LONGEST_FRAME)
     // What follows a target gets there evenly over this frame's substeps, not in a jump at twice its speed and a stop.
     const substeps = Math.floor(this.accumulator / STEP + STEP_SLACK)
+    const work = slow ? SLOW_FRAME_WORK : MOST_FRAME_STEPS
     this.accumulator = Math.max(0, this.accumulator - substeps * STEP)
     for (let left = substeps; left > 0; left--) {
       const time = left * STEP
       for (const [body, target] of this.targets) {
         body.velocity.set((target.x - body.position.x) / time, (target.y - body.position.y) / time, (target.z - body.position.z) / time)
       }
-      const pieces = Math.max(1, Math.min(this.pieces(), Math.floor(MOST_FRAME_STEPS / substeps)))
+      const pieces = Math.max(1, Math.min(this.pieces(), Math.floor(work / substeps)))
       for (let piece = 0; piece < pieces; piece++) {
         this.world.step(STEP / pieces)
         this.surfaceBalls()
