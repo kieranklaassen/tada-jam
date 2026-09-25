@@ -11,6 +11,17 @@ import { GameView } from './view/game'
 
 /** Build the sound graph this long after load: past the first frames, well before a child's first tap usually lands. */
 const AUDIO_PREPARE_MS = 1500
+/** Longest the first idle moment may be waited for before Rapier starts loading anyway (ms). */
+const PHYSICS_PRELOAD_MS = 2000
+
+// Rapier's WebAssembly loads in the first idle moment after the jam opens,
+// while a child is still choosing a game, so opening the table does not wait
+// for it; a table opened straight from a link waits for it with its save.
+if (typeof window !== 'undefined') {
+  const idle = window as { requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number }
+  if (idle.requestIdleCallback) idle.requestIdleCallback(() => void physicsReady(), { timeout: PHYSICS_PRELOAD_MS })
+  else setTimeout(() => void physicsReady(), PHYSICS_PRELOAD_MS)
+}
 
 // A thin Mount: load the saved table, build the controller, render the 3D
 // view, and forward attention. The table itself is the whole UI.
@@ -35,7 +46,6 @@ function PebbleTableMount({ ctx }: { ctx: CartridgeContext }) {
     let disposed = false
     let created: TableController | null = null
     let prepareTimer: ReturnType<typeof setTimeout> | undefined
-    // Rapier starts while the save loads: both are the loading moment before the first frame.
     void Promise.all([storage.load<unknown>().catch(() => null), physicsReady()])
       .then(([saved]) => {
         if (disposed) return
