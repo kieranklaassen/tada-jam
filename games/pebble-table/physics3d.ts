@@ -128,6 +128,12 @@ export type Collider = { shape: CANNON.ConvexPolyhedron; offset: CANNON.Vec3 }
 const TABLE_LOW = to3({ x: TABLE.x, y: TABLE.y })
 const TABLE_HIGH = to3({ x: SHELF.x + SHELF.w, y: TABLE.y + TABLE.h })
 
+/** Whether `pose` (position, then quaternion) from `at` on is where a body lies now. */
+function samePose(pose: readonly number[], at: number, body: CANNON.Body): boolean {
+  const { position: p, quaternion: q } = body
+  return pose[at] === p.x && pose[at + 1] === p.y && pose[at + 2] === p.z && pose[at + 3] === q.x && pose[at + 4] === q.y && pose[at + 5] === q.z && pose[at + 6] === q.w
+}
+
 /** Whether a body's middle lies over the table top or the shelf beside it. */
 function overTable(body: CANNON.Body): boolean {
   const { x, z } = body.position
@@ -1171,8 +1177,8 @@ export class TablePhysics {
 
   /** How far one pair lies sunk into each other: what was found last if neither has moved since, else found afresh. */
   private sunkPair(last: SunkPair | undefined, body: CANNON.Body, other: CANNON.Body): SunkPair {
+    if (last && samePose(last.pose, 0, body) && samePose(last.pose, 7, other)) return last
     const pose = [body, other].flatMap(({ position: p, quaternion: q }) => [p.x, p.y, p.z, q.x, q.y, q.z, q.w])
-    if (last && pose.every((v, i) => v === last.pose[i])) return last
     const contacts: CANNON.ContactEquation[] = []
     this.world.narrowphase.getContacts([body], [other], this.world, contacts, [], [], [])
     const gap = new CANNON.Vec3()
