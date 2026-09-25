@@ -168,8 +168,7 @@ this.kid.quaternion.setFromRotationMatrix(this.m.makeBasis(right, up, forward.cl
 
 ## Related Issues
 
-- The game passes: PR #19 Shadow Lantern, PR #20 Frog Choir, PR #22 Moon Phases, PR #24 Felt Meadow, PR #26 Light Garden, PR #27 Hillside Spring, PR #28 Cosy Scarf, PR #29 Bedtime Forest, PR #30 Turning Tower, and Kite Tower's and Critter Clay's, merged from bundles as "Merge cursor/kite-tower-intersections-bundle" and "Merge cursor/critter-clay-intersections-bundle". The audit: PR #16, and tool v4 (PR #23) for the first-frame wait.
-- Pending pass: Pebble Table.
+- The game passes: PR #19 Shadow Lantern, PR #20 Frog Choir, PR #22 Moon Phases, PR #24 Felt Meadow, PR #26 Light Garden, PR #27 Hillside Spring, PR #28 Cosy Scarf, PR #29 Bedtime Forest, PR #30 Turning Tower, and Kite Tower's, Critter Clay's and Pebble Table's, merged from bundles as "Merge cursor/kite-tower-intersections-bundle", "Merge cursor/critter-clay-intersections-bundle" and "Merge cursor/pebble-table-rapier-cceb". The audit: PR #16, and tool v4 (PR #23) for the first-frame wait.
 - [Give every character its own motion personality](../design-patterns/motion-personality-per-character.md): each extra variant or delight is another set of poses to sweep here.
 - [Pieces collide as drawn and rest on what is drawn](pieces-collide-as-drawn-and-rest-on-what-is-drawn.md) covers physics colliders, rest heights and spawn footprints taken from the drawn geometry.
 - [Coplanar faces and flat overlays z-fight](z-fighting-from-coplanar-faces-decals-and-flat-overlays.md) covers the flat pieces that dip or settle onto a surface (Frog Choir's struck pad, blob shadows over moving pads).
