@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { TableController, type Projector } from './controller'
 import { BAG } from './layout'
-import { LONGEST_FRAME, STEP, toWorld2 } from './physics3d'
+import { LONGEST_FRAME, physicsReady, STEP, toWorld2 } from './physics3d'
 import { QualityGovernor, TIERS } from './quality'
 import { seededRandom } from './random'
 import { defaultTable } from './state'
@@ -10,6 +10,8 @@ import { defaultTable } from './state'
 // fling, bounce and settle every stone the same way whether frames come at
 // 120 Hz, 60 Hz, 30 Hz, jitter between, or a quality tier slows them. The
 // intersection audit and a recorded walkthrough both rely on it.
+
+await physicsReady()
 
 const topDown: Projector = { toScreen: (v) => toWorld2(v), toPlane: (screen) => screen }
 
@@ -62,7 +64,7 @@ function openingSpill(frames: Frames, tier = 0) {
   playUntil(TAP_AT + WATCH)
   const watched = { pieces: table.state.pieces.length, bag: table.state.bag }
   playUntil(TAP_AT + WATCH + SETTLE)
-  const bodies = table.physics.world.bodies.map((body) => [...body.position.toArray(), ...body.quaternion.toArray()])
+  const bodies = table.physics.poses()
   return { t: table.t, watched, pieces: table.state.pieces.length, bag: table.state.bag, spots: table.state.pieces.map((p) => [p.id, p.x, p.y]), bodies }
 }
 

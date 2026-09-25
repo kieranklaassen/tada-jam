@@ -1,9 +1,8 @@
-import * as CANNON from 'cannon-es'
 import { describe, expect, it, vi } from 'vitest'
 import { TableController } from './controller'
 import { BAG, SCALE, type Point } from './layout'
 import { JARS, PART_COUNTS, PART_KINDS } from './parts'
-import { toWorld2 } from './physics3d'
+import { physicsReady, toWorld2 } from './physics3d'
 import { defaultTable } from './state'
 
 // Frame-time budget for the CPU side of a frame. The heaviest thing the
@@ -13,6 +12,8 @@ import { defaultTable } from './state'
 // on a CI runner. The budget is loose enough not to flake on a busy runner
 // and tight enough to catch a collider or substep regression, which cost
 // several times this.
+
+await physicsReady()
 
 const FRAME = 1 / 60
 const topDown = { toScreen: (v: { x: number; z: number }) => toWorld2(v), toPlane: (screen: Point) => screen }
@@ -32,7 +33,7 @@ function spillFrameTimes(frames: number): number[] {
   return times
 }
 
-type ScaleWork = { steps: number; tests: number; sunkTests: number; contacts: number }
+type ScaleWork = { steps: number; awake: number; contacts: number }
 
 /**
  * The Honest Scale at its busiest, seeded: four stones on the mat, every jar
@@ -40,9 +41,9 @@ type ScaleWork = { steps: number; tests: number; sunkTests: number; contacts: nu
  * balls) carried onto one pan and the other, so both pans swing with parts
  * in them, one carried back off, and the table left to settle. Each frame is
  * what the view asks of physics too: the controller's step, then `sunk` for
- * every part. Counts, per frame, cannon's steps, the shape-against-shape tests
- * its narrowphase runs (in steps and in `sunk`), and the contacts it hands
- * the solver.
+ * every awake stone and every awake part. Counts, per frame, the physics
+ * steps, the bodies awake (asleep they cost nothing), and the contacts the
+ * solver works on, all the same on any machine.
  */
 function busyScale() {
   let seed = 5
@@ -52,31 +53,23 @@ function busyScale() {
     const table = new TableController({ ...defaultTable(6), liveMat: 'scale', pieces, bag: 36 }, { save: () => {} })
     table.setProjector(topDown)
     const { physics } = table
-    const world = physics.world
-    const tally = { tests: 0, sunk: false, sunkTests: 0 }
-    const narrowphase = world.narrowphase as unknown as Record<number, (...args: unknown[]) => unknown>
-    for (const type of Object.values(CANNON.COLLISION_TYPES)) {
-      const test = narrowphase[type]
-      if (!test) continue
-      Object.defineProperty(narrowphase, type, {
-        value: function (this: unknown, ...args: unknown[]) {
-          if (tally.sunk) tally.sunkTests++
-          else tally.tests++
-          return test.apply(this, args)
-        },
-      })
-    }
     const work: ScaleWork[] = []
     let [clock, mostTilt, mostOnPans] = [0, 0, [0, 0]]
     const onPan = (at: Point) => SCALE.pans.findIndex((pan) => Math.hypot(at.x - pan.x, at.y - pan.y) < pan.r)
     const frame = () => {
-      const [steps, before] = [world.stepnumber, tally.tests]
+      const steps = physics.steps
       table.step(FRAME)
-      tally.sunk = true
-      tally.sunkTests = 0
-      physics.sunk(new Set(table.state.parts.flatMap((part) => physics.body(part.id) ?? [])))
-      tally.sunk = false
-      work.push({ steps: world.stepnumber - steps, tests: tally.tests - before, sunkTests: tally.sunkTests, contacts: world.contacts.length })
+      const bodies = [...table.state.pieces, ...table.state.parts].flatMap((item) => physics.body(item.id) ?? [])
+      for (const items of [table.state.pieces, table.state.parts]) physics.sunk(new Set(items.flatMap((item) => physics.body(item.id) ?? []).filter((body) => !body.asleep && !body.held)))
+      let contacts = 0
+      for (const body of bodies) {
+        if (body.asleep) continue
+        for (let i = 0; i < body.rigid.numColliders(); i++) {
+          const collider = body.rigid.collider(i)
+          physics.world.contactPairsWith(collider, (other) => physics.world.contactPair(collider, other, (manifold) => (contacts += manifold.numSolverContacts())))
+        }
+      }
+      work.push({ steps: physics.steps - steps, awake: bodies.filter((body) => !body.asleep).length, contacts })
       mostTilt = Math.max(mostTilt, Math.abs(table.beam.angle))
       const lying = [0, 1].map((side) => table.state.parts.filter((part) => !table.isHeld(part.id) && onPan(part) === side).length)
       mostOnPans = lying.map((n, side) => Math.max(n, mostOnPans[side]))
@@ -111,7 +104,7 @@ function busyScale() {
     const back = table.state.parts.find((p) => onPan(p) === 0)
     if (back) carry(back, { x: 800, y: 330 })
     wait(3)
-    const awake = table.state.parts.filter((part) => physics.body(part.id)?.sleepState !== CANNON.Body.SLEEPING).length
+    const awake = table.state.parts.filter((part) => !physics.body(part.id)?.asleep).length
     return { work, out, mostTilt, mostOnPans, awake }
   } finally {
     random.mockRestore()
@@ -130,31 +123,26 @@ describe('frame budget', () => {
     expect(average).toBeLessThan(0.75)
   })
 
-  it('the Honest Scale at its busiest does a counted amount of collision work a frame', () => {
+  it('the Honest Scale at its busiest does a counted amount of physics work a frame', () => {
     const { work, out, mostTilt, mostOnPans, awake } = busyScale()
     const total = (key: keyof ScaleWork) => work.reduce((sum, frame) => sum + frame[key], 0)
     const most = (key: keyof ScaleWork) => Math.max(...work.map((frame) => frame[key]))
     const frames = work.length
     console.log(
       `busy scale: ${frames} frames, ${out} parts out, tilt ${mostTilt.toFixed(3)}, most on pans ${mostOnPans.join('/')}, awake at end ${awake}; ` +
-        `steps ${total('steps')} (most ${most('steps')}), shape tests ${total('tests')} (most ${most('tests')}), ` +
-        `sunk tests ${total('sunkTests')} (most ${most('sunkTests')}), contacts most ${most('contacts')}`,
+        `steps ${total('steps')} (most ${most('steps')}), awake bodies ${total('awake')} (most ${most('awake')}), contacts ${total('contacts')} (most ${most('contacts')})`,
     )
     expect(out, 'every jar tipped out').toBe(Object.values(PART_COUNTS).reduce((a, b) => a + b, 0))
     expect(mostOnPans.every((n) => n >= 2), 'parts lying in both pans').toBe(true)
     expect(mostTilt, 'the beam tipped').toBeGreaterThan(0.05)
     expect(awake, 'parts left awake after the table settles').toBe(0)
-    // Seeded, so these are the same on any machine. Trying every shape of a
-    // pair against every other costs eight times the shape tests, trying
-    // shapes whose bounds miss twice, and `sunk` finding every pair afresh a
-    // sixth more of its own. Steps cut finer while stones and parts close on
-    // each other (so none lands inside another) are about a seventh of the
-    // steps here.
-    expect(total('steps') / frames, 'cannon steps a frame').toBeLessThan(2.5)
-    expect(most('steps'), 'cannon steps in the busiest frame').toBeLessThanOrEqual(18)
-    expect(total('tests') / frames, 'shape tests a frame').toBeLessThan(160)
-    expect(most('tests'), 'shape tests in the busiest frame').toBeLessThan(1200)
-    expect(total('sunkTests') / frames, "sunk's shape tests a frame").toBeLessThan(14)
-    expect(most('contacts'), 'contacts in the busiest frame').toBeLessThan(200)
-  })
+    // Seeded, so these are the same on any machine. Steps are whole and fixed:
+    // a 60 Hz frame is two. Bodies asleep cost nothing; the beam swinging used
+    // to wake every part and stone on the table, not just what lies in its pans.
+    expect(total('steps') / frames, 'physics steps a frame').toBeLessThan(2.1)
+    expect(most('steps'), 'physics steps in the busiest frame').toBeLessThanOrEqual(3)
+    expect(total('awake') / frames, 'bodies awake a frame').toBeLessThan(17)
+    expect(total('contacts') / frames, 'solver contacts a frame').toBeLessThan(430)
+    expect(most('contacts'), 'solver contacts in the busiest frame').toBeLessThan(650)
+  }, 30_000)
 })

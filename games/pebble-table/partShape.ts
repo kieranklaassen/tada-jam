@@ -239,7 +239,7 @@ export function surfacePoints(vertices: Float32Array, segments: number, rings: n
 /**
  * A drawn capsule (stretched, so its ends taper) as a chain of balls along
  * its axis, `spacing` apart: each as thick as the rod is where it sits, less
- * `slack`. A row of balls stacks and settles in cannon where a thin prism
+ * `slack`. A row of balls stacks and settles in physics where a thin prism
  * rocks; `spacing` keeps the dip between two balls well under the audit's
  * tolerance.
  */
@@ -310,7 +310,7 @@ function pieceSurface(kind: PartKind, piece: string, step: number): number[] {
 const SHELL_RINGS: readonly { count: number; at: number }[] = [{ count: 6, at: 0.3 }, { count: 10, at: 0.6 }, { count: 16, at: 0.87 }]
 
 /**
- * A shell as balls: stacked thin prisms rock in cannon where balls settle.
+ * A shell as balls: stacked thin prisms rock in physics where balls settle.
  * Each ball sits halfway up the shell where it is and holds the drawn
  * surface nearest it, but reaches no lower than the shell's lowest point, so
  * the shell lies on the table as drawn and nothing presses into its back,

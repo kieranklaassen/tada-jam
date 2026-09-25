@@ -3,6 +3,7 @@ import type { Cartridge, CartridgeContext } from '../types'
 import { TableAudio } from './audio'
 import { TableController } from './controller'
 import { pebbleTableManifest } from './manifest'
+import { physicsReady } from './physics3d'
 import { seededRandom } from './random'
 import { deserialize } from './state'
 import { PALETTE } from './view/clay'
@@ -34,10 +35,9 @@ function PebbleTableMount({ ctx }: { ctx: CartridgeContext }) {
     let disposed = false
     let created: TableController | null = null
     let prepareTimer: ReturnType<typeof setTimeout> | undefined
-    void storage
-      .load<unknown>()
-      .catch(() => null)
-      .then((saved) => {
+    // Rapier starts while the save loads: both are the loading moment before the first frame.
+    void Promise.all([storage.load<unknown>().catch(() => null), physicsReady()])
+      .then(([saved]) => {
         if (disposed) return
         const sound = new TableAudio()
         // Sound and three.js draw from Math.random at moments the audio clock and shader compiles decide, so how a spill is flung keeps a stream of its own.

@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { silentSound, TableController, yardSpots, type Projector } from './controller'
 import { IDLE_BEFORE_HINT } from './guidance'
 import { albumSlot, BAG, DOOR, FEEDING, MAT_KEYS, SCALE, shelfTile } from './layout'
 import { JARS, PART_COUNTS } from './parts'
 import { STOOL_REACH } from './partShape'
-import { stoneRadius3, to3, toWorld2, UNIT } from './physics3d'
+import { physicsReady, stoneRadius3, to3, toWorld2, UNIT } from './physics3d'
+import { Quat, V3 } from './vec'
 import { stoneRest } from './stoneShape'
 import { feedingFloor } from './surfaces'
 import { panOf } from './scale'
@@ -16,6 +16,8 @@ import { accountedTotal, defaultTable, type Piece } from './state'
 import { doorwayGap, GATE, HINGE, houseGap } from './visitors'
 import { chooserGeometry, CHOOSER_SCALE } from './view/models'
 import { cameraProjector, placeCamera } from './view/stage'
+
+await physicsReady()
 
 // A straight-down orthographic "camera": screen pixels are world units.
 const topDown: Projector = {
@@ -232,10 +234,8 @@ describe('one obvious want', () => {
         const spot = { x: arm.x - u.x * back, y: arm.y - u.y * back }
         const piece = drop({ x: spot.x - u.x * 40, y: spot.y - u.y * 40 })
         const body = table.physics.body(piece.id)!
-        body.quaternion.setFromAxisAngle(new CANNON.Vec3(-u.y, 0, u.x), (70 * Math.PI) / 180)
-        body.position.set((spot.x - 800) * UNIT, floor(spot) + stoneRadius3(4) + 0.2, (spot.y - 500) * UNIT)
-        body.velocity.setZero()
-        body.angularVelocity.setZero()
+        body.place(new V3((spot.x - 800) * UNIT, floor(spot) + stoneRadius3(4) + 0.2, (spot.y - 500) * UNIT), new Quat().setFromAxisAngle(new V3(-u.y, 0, u.x), (70 * Math.PI) / 180))
+        body.halt()
         body.wakeUp()
         let leaning: number | null = null
         for (let t = 0; t < 3; t += 0.05) {
@@ -428,9 +428,7 @@ describe('jars of loose parts', () => {
     run(table, 1)
     const [stone] = table.state.pieces.filter((piece) => piece.y < 880 - 60)
     const body = table.physics.body(stone.id)!
-    body.position.x = (pan.x - pan.r * 0.998 - 800) * UNIT
-    body.position.z = (pan.y - 500) * UNIT
-    body.wakeUp()
+    body.place({ x: (pan.x - pan.r * 0.998 - 800) * UNIT, y: body.position.y, z: (pan.y - 500) * UNIT })
     run(table, 3)
     expect(Math.hypot(stone.x - pan.x, stone.y - pan.y)).toBeLessThan(pan.r)
     expect(table.beam.angle).toBe(0)
@@ -441,7 +439,7 @@ describe('jars of loose parts', () => {
       const table = scaleTable()
       for (const kind of Object.keys(JARS) as (keyof typeof JARS)[]) tap(table, JARS[kind])
       run(table, 10)
-      const awake = table.state.parts.filter((part) => table.physics.body(part.id)?.sleepState !== CANNON.Body.SLEEPING)
+      const awake = table.state.parts.filter((part) => !table.physics.body(part.id)?.asleep)
       expect(awake.map((part) => part.kind)).toEqual([])
     }
   }, 30_000)
@@ -544,7 +542,7 @@ describe('hidden delights', () => {
   const knockOff = (table: TableController, id: number) => {
     const body = table.physics.body(id)
     if (!body) throw new Error('no body')
-    body.position.set(body.position.x, -20, body.position.z)
+    body.place({ x: body.position.x, y: -20, z: body.position.z })
     table.step(1 / 60)
   }
 

@@ -1,11 +1,11 @@
 import { useFrame } from '@react-three/fiber'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import type { TableController } from '../controller'
 import { QualityGovernor, startingTier } from '../quality'
 import { BAG, DOOR, FEEDING, SCALE, shelfTile, type Point } from '../layout'
-import { stoneRadius3, toWorld2, UNIT } from '../physics3d'
+import { stoneRadius3, toWorld2, UNIT, type TableBody } from '../physics3d'
+import type { V3 } from '../vec'
 import { stoneReachAlong, stoneReachDown, stoneReachOf, stoneRest } from '../stoneShape'
 import { partCover, partReachDown, STOOL_REACH } from '../partShape'
 import { feedingFloor, feedingRest, RUG, surfaceUnder } from '../surfaces'
@@ -25,9 +25,13 @@ const STONE_LYING = 0.5
 export function stoneStates(table: TableController): StoneState[] {
   const states: StoneState[] = []
   const surfaces = table.physics.surfaces(table.state.liveMat, table.state.seats)
-  for (const id of table.visibleStoneIds()) {
+  const lying = table.visibleStoneIds().flatMap((id) => {
     const body = table.physics.body(id)
-    if (!body) continue
+    return body ? [{ id, body }] : []
+  })
+  // Stones flung together, or one wedged under another against a guest, can lie a little inside each other for the frames physics takes to push them apart; they are drawn apart.
+  const sunk = table.physics.sunk(new Set(lying.flatMap(({ body }) => (body.asleep || body.held ? [] : [body]))))
+  for (const { id, body } of lying) {
     const q = table.quartersOf(id)
     const { x, y, z, w } = body.quaternion
     // A stone landing fast dips into what it lands on for a step before the
@@ -35,10 +39,12 @@ export function stoneStates(table: TableController): StoneState[] {
     // lies on the table.
     const under = surfaceUnder(toWorld2(body.position), surfaces)
     const ground = body.position.y > under ? under : 0
+    const lift = liftOf(body, sunk)
+    const at = lift ? body.position.vadd(lift) : body.position
     states.push({
       id,
       q,
-      position: { x: body.position.x, y: Math.max(body.position.y, ground + stoneReachDown(q, x, y, z, w)), z: body.position.z },
+      position: { x: at.x, y: Math.max(at.y, ground + stoneReachDown(q, x, y, z, w)), z: at.z },
       quaternion: [x, y, z, w],
       velocityY: body.velocity.y,
       held: table.isHeld(id),
@@ -72,8 +78,16 @@ function carrierMice(table: TableController): CarrierMouse[] {
   return carriers
 }
 
-/** Each part's last lift out of what it sank into, kept while it sleeps: a sleeping part neither moves nor is moved without waking. */
-const restingLift = new WeakMap<CANNON.Body, CANNON.Vec3 | undefined>()
+/** Each stone's and part's last lift out of what it sank into, kept while it sleeps: a sleeping body neither moves nor is moved without waking. */
+const restingLift = new WeakMap<TableBody, V3 | undefined>()
+
+/** How far a body is drawn from where physics has it, out of what it has sunk into: found afresh while it is awake (`sunk`), kept while it sleeps. */
+function liftOf(body: TableBody, sunk: ReadonlyMap<TableBody, V3>): V3 | undefined {
+  if (body.asleep) return restingLift.get(body)
+  const lift = sunk.get(body)
+  restingLift.set(body, lift?.clone())
+  return lift
+}
 
 /** Parts as physics has them, but never drawn dipping into the table, a pan's floor, a stone or another part for the frames physics takes to push a landing part back out. */
 function partStates(table: TableController): PartState[] {
@@ -84,14 +98,12 @@ function partStates(table: TableController): PartState[] {
     return body ? [{ part, body }] : []
   })
   // Only awake parts are looked at afresh: working out every part's contacts every frame was a tenth of a busy frame.
-  const sunk = table.physics.sunk(new Set(placed.flatMap(({ body }) => (body.sleepState === CANNON.Body.SLEEPING ? [] : [body]))))
+  const sunk = table.physics.sunk(new Set(placed.flatMap(({ body }) => (body.asleep ? [] : [body]))))
   for (const { part, body } of placed) {
     const { x, y, z, w } = body.quaternion
     const under = surfaceUnder(toWorld2(body.position), surfaces)
     const ground = body.position.y > under ? under : 0
-    let lift = sunk.get(body)
-    if (body.sleepState === CANNON.Body.SLEEPING) lift = restingLift.get(body)
-    else restingLift.set(body, lift?.clone())
+    const lift = liftOf(body, sunk)
     const at = lift ? body.position.vadd(lift) : body.position
     states.push({
       id: part.id,

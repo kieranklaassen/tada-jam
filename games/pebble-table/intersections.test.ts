@@ -1,4 +1,3 @@
-import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { MeshBVH } from 'three-mesh-bvh'
 import { describe, expect, it, vi } from 'vitest'
@@ -9,7 +8,8 @@ import { albumSlot, BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, SCALE, shelfTile, TABLE
 import { GUEST_ARM, GUEST_RADIUS, GUEST_REACH, guestArms, GUEST_TOP, guestYaw } from './feeding'
 import { MotionDirector, SEAT_SPECIES, type ActionKind, type MotionPose } from './motion'
 import { PART_PIECES, partCollider, partCover, partPieceVertices, partReachDown, partRest, partVertices, SHELL, STOOL_REACH, STOOL_TOP, surfacePoints, type Lumped } from './partShape'
-import { HOLD_HEIGHT, PAN_REST_HEIGHT, STEP, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
+import { HOLD_HEIGHT, PAN_REST_HEIGHT, physicsReady, STEP, stoneHullPoints, stoneRadius3, TablePhysics, to3, toWorld2, UNIT } from './physics3d'
+import { Quat, V3 } from './vec'
 import { JARS, PART_KINDS, type PartKind } from './parts'
 import { panDrops, SWAY_MOST } from './scale'
 import { seededRandom } from './random'
@@ -61,47 +61,64 @@ import { chunk } from './voice'
 // found drawn pieces doing, pinned at the level of the shapes and physics
 // that caused it: each test fails against the code the audit first ran on.
 
+await physicsReady()
+
 const SIZES: readonly Quarters[] = [4, 2, 1]
 
 const run = (physics: TablePhysics, seconds: number) => {
   for (let t = 0; t < seconds; t += STEP) physics.step(STEP)
 }
 
-function drawnPoints(q: Quarters): CANNON.Vec3[] {
+function drawnPoints(q: Quarters): V3[] {
   const vertices = stoneVertices(STONE_CUTS[q], STONE_SEGMENTS)
-  const points: CANNON.Vec3[] = []
-  for (let i = 0; i < vertices.length; i += 3) points.push(new CANNON.Vec3(vertices[i], vertices[i + 1], vertices[i + 2]).scale(STONE_DRAWN_RADIUS))
+  const points: V3[] = []
+  for (let i = 0; i < vertices.length; i += 3) points.push(new V3(vertices[i], vertices[i + 1], vertices[i + 2]).scale(STONE_DRAWN_RADIUS))
   return points
 }
 
-/** A stone's collider, and a function taking body-space points into its space. */
-function collider(body: CANNON.Body): { shape: CANNON.ConvexPolyhedron; local: (p: CANNON.Vec3) => CANNON.Vec3 } {
-  const shape = body.shapes[0]
-  if (!(shape instanceof CANNON.ConvexPolyhedron)) throw new Error('stone collider is not convex')
-  const offset = body.shapeOffsets[0]
-  return { shape, local: (p) => p.vsub(offset) }
+/** A convex collider as its face planes: each outward normal and a point on the face. */
+type Hull = { planes: { normal: V3; point: V3 }[] }
+
+/** A stone's collider (the prism physics3d.ts gives it) in body space, and a function taking body-space points into its space. */
+function collider(q: Quarters): { shape: Hull; local: (p: V3) => V3 } {
+  const points = stoneHullPoints(q)
+  const [bottom, top] = [points[0].y, points[1].y]
+  const corners = points.filter((_, i) => i % 2 === 0)
+  const planes = [
+    { normal: new V3(0, 1, 0), point: new V3(0, top, 0) },
+    { normal: new V3(0, -1, 0), point: new V3(0, bottom, 0) },
+    ...corners.map((a, k) => {
+      const b = corners[(k + 1) % corners.length]
+      const normal = new V3(b.z - a.z, 0, a.x - b.x)
+      const length = normal.length()
+      normal.set(normal.x / length, 0, normal.z / length)
+      if (normal.x * a.x + normal.z * a.z < 0) normal.negate(normal)
+      return { normal, point: new V3(a.x, 0, a.z) }
+    }),
+  ]
+  return { shape: { planes }, local: (p) => p }
 }
 
 /** How deep a body-space point sits inside a convex collider; negative outside. */
-function depthInside(shape: CANNON.ConvexPolyhedron, p: CANNON.Vec3): number {
+function depthInside(shape: Hull, p: V3): number {
   let depth = Infinity
-  shape.faces.forEach((face, i) => {
-    depth = Math.min(depth, -shape.faceNormals[i].dot(p.vsub(shape.vertices[face[0]])))
-  })
+  for (const { normal, point } of shape.planes) depth = Math.min(depth, -normal.dot(p.vsub(point)))
   return depth
 }
 
-const toWorld = (body: CANNON.Body, local: CANNON.Vec3) => body.position.vadd(body.quaternion.vmult(local))
+type Posed = { position: V3; quaternion: Quat }
+
+const toWorld = (body: Posed, local: V3) => body.position.vadd(body.quaternion.vmult(local))
 
 /** The height of a body's lowest drawn point, from the vertical row of its rotation. */
-function lowest(body: CANNON.Body, points: readonly CANNON.Vec3[]): number {
+function lowest(body: Posed, points: readonly V3[]): number {
   const { x, y, z, w } = body.quaternion
   const [rx, ry, rz] = [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)]
   let low = Infinity
   for (const p of points) low = Math.min(low, rx * p.x + ry * p.y + rz * p.z)
   return body.position.y + low
 }
-const toLocal = (body: CANNON.Body, world: CANNON.Vec3) => body.quaternion.conjugate().vmult(world.vsub(body.position))
+const toLocal = (body: Posed, world: V3) => body.quaternion.conjugate().vmult(world.vsub(body.position))
 
 const CLAY: MaterialInfo = { type: 'MeshStandardMaterial', side: THREE.FrontSide, transparent: false, opacity: 1, depthTest: true, depthWrite: true, polygonOffset: false, colorWrite: true, customVertex: false, renderOrder: 0 }
 // The pieces measured here are closed shapes, so no camera has to say which side of one is inside.
@@ -121,13 +138,13 @@ describe('stones collide as they are drawn', () => {
   it('draws every size inside its collider, and the collider touches the drawing on every side', () => {
     const physics = new TablePhysics()
     SIZES.forEach((q, i) => physics.addStone(i + 1, q, { x: 400 + i * 200, y: 500 }))
-    SIZES.forEach((q, i) => {
-      const { shape, local } = collider(physics.body(i + 1)!)
+    SIZES.forEach((q) => {
+      const { shape, local } = collider(q)
       const points = drawnPoints(q).map(local)
       const outside = Math.max(...points.map((p) => -depthInside(shape, p)))
       expect(outside, `size ${q}: drawn stone pokes out of its collider`).toBeLessThan(1e-4)
-      shape.faces.forEach((face, f) => {
-        const gap = Math.min(...points.map((p) => -shape.faceNormals[f].dot(p.vsub(shape.vertices[face[0]]))))
+      shape.planes.forEach(({ normal, point }, f) => {
+        const gap = Math.min(...points.map((p) => -normal.dot(p.vsub(point))))
         expect(gap, `size ${q}: collider face ${f} stands off the drawing`).toBeLessThan(1e-3)
       })
     })
@@ -164,7 +181,7 @@ describe('stones collide as they are drawn', () => {
       for (let b = 1; b <= sizes.length; b++) {
         if (a === b) continue
         const bodyB = physics.body(b)!
-        const { shape, local } = collider(bodyB)
+        const { shape, local } = collider(sizes[b - 1])
         for (const p of points) worst = Math.max(worst, depthInside(shape, local(toLocal(bodyB, p))))
       }
     }
@@ -314,7 +331,7 @@ describe('the guidance ghost stone lies on what it is lifted from and carried ov
     let under = 0
     for (const id of ids) {
       const body = table.physics.body(id)!
-      const centre = new CANNON.Vec3(body.position.x, 0, body.position.z)
+      const centre = new V3(body.position.x, 0, body.position.z)
       centre.y = Math.max(1.4, ghostFloor(table, toWorld2(centre)) + GHOST_BELOW)
       for (const other of ids) {
         const b = table.physics.body(other)!
@@ -368,9 +385,8 @@ describe('stones are drawn on what they land on', () => {
     for (const q of SIZES) {
       const points = drawnPoints(q)
       for (let trial = 0; trial < 20; trial++) {
-        const turn = new CANNON.Quaternion(random() - 0.5, random() - 0.5, random() - 0.5, random() - 0.5).normalize()
-        const body = new CANNON.Body({ mass: 0 })
-        body.quaternion.copy(turn)
+        const turn = new Quat(random() - 0.5, random() - 0.5, random() - 0.5, random() - 0.5).normalize()
+        const body: Posed = { position: new V3(), quaternion: turn }
         expect(stoneReachDown(q, turn.x, turn.y, turn.z, turn.w), `size ${q}`).toBeCloseTo(-lowest(body, points), 4)
       }
     }
@@ -403,7 +419,8 @@ describe('stones are drawn on what they land on', () => {
         }
       }
     }
-    expect(dipped, 'no stone dipped into the table as it landed, so this measures nothing').toBeLessThan(-0.1)
+    expect(dipped, 'continuous collision lands even a hard drop on the table, not a step inside it').toBeGreaterThan(-0.1)
+    expect(dipped, 'no stone came to the table, so this measures nothing').toBeLessThan(0.05)
     expect(drawn).toBeGreaterThan(-1e-6)
   })
 })
@@ -432,15 +449,15 @@ describe('loose parts are drawn on what they land on', () => {
       physics.addStone(1, 4, { x: 800, y: 700 })
       run(physics, 1)
       const stone = physics.body(1)!
-      const { shape, local } = collider(stone)
+      const { shape, local } = collider(4)
       const v = partVertices(kind)
-      const points = Array.from({ length: v.length / 3 }, (_, i) => new CANNON.Vec3(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]))
+      const points = Array.from({ length: v.length / 3 }, (_, i) => new V3(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]))
       physics.addPart(2, kind, { x: 800, y: 700 }, { y: stone.position.y + 8, velocity: { x: 0, y: -130, z: 0 } })
       const part = physics.body(2)!
       let [raw, drawn] = [0, 0]
       for (let t = 0; t < 0.6; t += STEP) {
         physics.step(STEP)
-        const lift = physics.sunk(new Set([part])).get(part) ?? new CANNON.Vec3()
+        const lift = physics.sunk(new Set([part])).get(part) ?? new V3()
         for (const point of points) {
           const at = toWorld(part, point)
           raw = Math.max(raw, depthInside(shape, local(toLocal(stone, at))))
@@ -457,33 +474,26 @@ describe('loose parts are drawn on what they land on', () => {
     physics.addStone(1, 4, { x: 800, y: 700 })
     run(physics, 1)
     const stone = physics.body(1)!
-    const { shape, local } = collider(stone)
+    const { shape, local } = collider(4)
     physics.addPart(2, 'stick', { x: 800, y: 700 }, { y: stone.position.y + 3 })
     run(physics, 1.5)
     physics.addPart(3, 'stick', { x: 800, y: 700 })
     const [under, over] = [physics.body(2)!, physics.body(3)!]
-    expect(under.sleepState, 'the stick under has settled on the stone').toBe(CANNON.Body.SLEEPING)
-    over.position.copy(under.position)
-    over.quaternion.setFromAxisAngle(CANNON.Vec3.UNIT_Y, Math.PI / 2).mult(under.quaternion, over.quaternion)
-    over.position.y += 2 * partRest('stick') - 0.6
-    over.updateAABB()
-    under.updateAABB()
+    expect(under.asleep, 'the stick under has settled on the stone').toBe(true)
+    over.place(under.position.vadd(new V3(0, 2 * partRest('stick') - 0.6, 0)), new Quat().setFromAxisAngle(new V3(0, 1, 0), Math.PI / 2).mult(under.quaternion))
     const v = partVertices('stick')
-    const points = Array.from({ length: v.length / 3 }, (_, i) => new CANNON.Vec3(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]))
-    const inStone = (lift: CANNON.Vec3) => Math.max(...points.map((point) => depthInside(shape, local(toLocal(stone, toWorld(under, point).vadd(lift))))))
+    const points = Array.from({ length: v.length / 3 }, (_, i) => new V3(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]))
+    const inStone = (lift: V3) => Math.max(...points.map((point) => depthInside(shape, local(toLocal(stone, toWorld(under, point).vadd(lift))))))
     const sunk = physics.sunk(new Set([under, over]))
-    const [down, up] = [sunk.get(under) ?? new CANNON.Vec3(), sunk.get(over) ?? new CANNON.Vec3()]
+    const [down, up] = [sunk.get(under) ?? new V3(), sunk.get(over) ?? new V3()]
     expect(up.y - down.y, 'the sticks are drawn apart').toBeGreaterThan(0.5)
-    expect(inStone(down), 'how deep the stick under is drawn in the stone (cm)').toBeLessThan(Math.max(0.02, inStone(new CANNON.Vec3()) + 0.01))
+    expect(inStone(down), 'how deep the stick under is drawn in the stone (cm)').toBeLessThan(Math.max(0.02, inStone(new V3()) + 0.01))
 
     // Two pressed together with nothing else in the way each move half the way apart.
     physics.addPart(4, 'stick', { x: 400, y: 700 })
     physics.addPart(5, 'stick', { x: 400, y: 700 })
     const [low, high] = [physics.body(4)!, physics.body(5)!]
-    high.quaternion.setFromAxisAngle(CANNON.Vec3.UNIT_Y, Math.PI / 2)
-    high.position.y = low.position.y + 2 * partRest('stick') - 0.6
-    low.updateAABB()
-    high.updateAABB()
+    high.place(new V3(high.position.x, low.position.y + 2 * partRest('stick') - 0.6, high.position.z), new Quat().setFromAxisAngle(new V3(0, 1, 0), Math.PI / 2))
     const apart = physics.sunk(new Set([low, high]))
     expect(apart.get(high)!.y - apart.get(low)!.y, 'the two are drawn apart about as far as they overlap, not twice as far').toBeLessThan(1)
   })
@@ -497,7 +507,7 @@ describe('loose parts are drawn on what they land on', () => {
     try {
       for (const [kind, trials] of [['stick', 16], ['shell', 6]] as const) {
         const v = partVertices(kind)
-        const points = Array.from({ length: v.length / 3 }, (_, i) => new CANNON.Vec3(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]))
+        const points = Array.from({ length: v.length / 3 }, (_, i) => new V3(v[i * 3], v[i * 3 + 1], v[i * 3 + 2]))
         const tip = (table: TableController) => {
           table.pointerDown(1, JARS[kind], (clock += 10))
           table.pointerUp(1, JARS[kind], (clock += 80))
@@ -518,18 +528,16 @@ describe('loose parts are drawn on what they land on', () => {
             table.step(1 / 60)
             const stone = table.physics.body(500)
             if (frame % 2 || !stone) continue
-            const { shape, local } = collider(stone)
+            const { shape, local } = collider(SIZES[trial % 3])
             const parts = table.state.parts.flatMap((part) => table.physics.body(part.id) ?? [])
             const sunk = table.physics.sunk(new Set(parts))
-            stone.updateAABB()
             for (const part of parts) {
-              part.updateAABB()
-              if (!part.aabb.overlaps(stone.aabb)) continue
-              const lift = sunk.get(part) ?? new CANNON.Vec3()
+              if (part.position.distanceTo(stone.position) > part.boundingRadius + stone.boundingRadius) continue
+              const lift = sunk.get(part) ?? new V3()
               let depth = -Infinity
               for (const point of points) depth = Math.max(depth, depthInside(shape, local(toLocal(stone, toWorld(part, point).vadd(lift)))))
               if (depth > -0.3) near++
-              if (depth > deepest) [deepest, worst] = [depth, `${kind} ${part.id} on a ${SIZES[trial % 3]}-quarter stone, trial ${trial}, frame ${frame}`]
+              if (depth > deepest) [deepest, worst] = [depth, `${kind} ${part.rigid.handle} on a ${SIZES[trial % 3]}-quarter stone, trial ${trial}, frame ${frame}`]
             }
           }
         }
@@ -619,10 +627,9 @@ describe('spilled stones land on one another without sinking in', () => {
     return { frames, touching, stones: table.state.pieces.length }
   }
 
-  // Cannon meets a stone only once it is inside another, as deep as it closed
-  // in one step; flying out of the bag, stones closed a whole step's worth
-  // (up to 272% of the tolerance in these spills) before the step was cut
-  // finer for stones closing on each other.
+  // Stones fly out of the bag fast and spinning, and one that hits a guest
+  // is pushed up into the one stacked on it; physics pushes the two apart
+  // over a few steps, and they are drawn apart meanwhile.
   it('never sinks one drawn stone into another beyond the audit tolerance, and parts any two within two frames', () => {
     for (const frame of [1 / 60, 0.016]) {
       for (const seed of [1, 2, 3, 4, 5, 6]) {
@@ -634,7 +641,7 @@ describe('spilled stones land on one another without sinking in', () => {
         frames.forEach((pairs, k) => {
           for (const { pair, depth, tolerance } of pairs) {
             expect(depth / tolerance, `${where}: ${pair} at frame ${k}`).toBeLessThan(1)
-            // Cannon pushes a stone out over a few steps; the last thousandths of a centimetre are not a stone inside another.
+            // Physics pushes a stone out over a few steps; the last thousandths of a centimetre are not a stone inside another.
             if (depth < tolerance / 10) continue
             runs.set(pair, (runs.get(pair) ?? 0) + 1)
             expect(runs.get(pair), `${where}: ${pair} still inside at frame ${k}`).toBeLessThanOrEqual(2)
@@ -734,7 +741,7 @@ describe('stones squash, rock and pop without sinking or swelling into a neighbo
           physics.addPart(2, kind, { x: 800 + (aside * stoneRadius3(q)) / UNIT, y: 700 }, { y: body.position.y + 3, yaw: 0.6 })
           run(physics, 2)
           const partBody = physics.body(2)!
-          const lifted = partBody.position.vadd(physics.sunk(new Set([partBody])).get(partBody) ?? new CANNON.Vec3())
+          const lifted = partBody.position.vadd(physics.sunk(new Set([partBody])).get(partBody) ?? new V3())
           const part: PartState = { id: 2, kind, position: { x: lifted.x, y: lifted.y, z: lifted.z }, quaternion: [partBody.quaternion.x, partBody.quaternion.y, partBody.quaternion.z, partBody.quaternion.w], held: false }
           const drawnPart = auditPiece(kind, parts.get(kind)!, new THREE.Matrix4().compose(new THREE.Vector3(lifted.x, lifted.y, lifted.z), new THREE.Quaternion(...part.quaternion), new THREE.Vector3(1, 1, 1)))
           const stone = stoneAt(1, q, body.position, body.quaternion)
@@ -979,11 +986,10 @@ describe('guests stand on what is drawn under them', () => {
           const turn = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-u.z, 0, u.x), (70 * Math.PI) / 180)
           physics.addStone(1, q, toPlane(start), { y: r + 0.2 })
           const body = physics.body(1)!
-          body.quaternion.set(turn.x, turn.y, turn.z, turn.w)
-          body.position.y = r + 0.2
+          body.place(new V3(body.position.x, r + 0.2, body.position.z), turn)
           run(physics, 2.5)
-          const { shape, local } = collider(body)
-          const deepest = Math.max(...armPoints.map((v) => depthInside(shape, local(toLocal(body, new CANNON.Vec3(v.x, v.y, v.z))))))
+          const { shape, local } = collider(q)
+          const deepest = Math.max(...armPoints.map((v) => depthInside(shape, local(toLocal(body, new V3(v.x, v.y, v.z))))))
           expect(deepest, `seat ${seat} ${side ? 'right' : 'left'} arm, size ${q}: the arm sinks this deep into the stone (cm)`).toBeLessThan(0.1)
           const top = Math.max(...drawn.get(q)!.map((p) => toWorld(body, p).y))
           if (top > floorOf(seat) + GUEST_ARM.low) leaned++
