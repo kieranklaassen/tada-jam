@@ -107,7 +107,7 @@ Rounds of cannon-es optimisation followed on `cursor/pebble-table-final-perf-cce
 
 ## Why This Matters
 
-The fair probe drove every build with the same screen positions from the shared layout and a seeded save, on a Mac mini M4 under Playwright at the automatic quality tier. No iPad was measured. Numbers are average fps with the worst one-second window in brackets. "`main`" is `main` before the Rapier merge: still cannon-es, with the older, simpler colliders that the audit did not pass.
+The fair probe (`npm run perf:pebble-scale`, see [drive a build-comparison probe by layout screen positions](../workflow-issues/drive-a-build-comparison-perf-probe-by-layout-screen-positions-not-object-names.md)) drove every build with the same screen positions from the shared layout and a seeded save, on a Mac mini M4 under Playwright at the automatic quality tier. No iPad was measured. Numbers are average fps with the worst one-second window in brackets. "`main`" is `main` before the Rapier merge: still cannon-es, with the older, simpler colliders that the audit did not pass.
 
 | Honest Scale | cannon original (`506b1c4`) | cannon best (`ae6bb75`) | Rapier | `main` |
 | --- | --- | --- | --- | --- |

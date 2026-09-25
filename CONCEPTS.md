@@ -124,7 +124,7 @@ It has to hold on a shared, busy machine that adds time to random frames. Where 
 The jam's shared browser script that plays any game's production build through the same scripted touches and hands-off pauses, and reports its frame rate, its worst second, Frame work, draw counts, and the Quality tiers it visited.
 *Avoid:* jam probe
 
-It reads Frame work, the current tier, and the draw counts from a grown-up handle each game publishes on the page, so a game publishes that handle in the one shape the probe expects. It can pin a Quality tier or leave the choice to the Governor, and it can throttle the CPU or enlarge the page to stand in for a weaker device. Its numbers describe the machine and browser it ran on, not a child's device.
+Its touches are fixed screen positions, never objects found by name, so builds whose scenes differ get the same input. It reads Frame work, the current tier, and the draw counts from a grown-up handle each game publishes on the page, so a game publishes that handle in the one shape the probe expects. It can pin a Quality tier or leave the choice to the Governor, and it can throttle the CPU or enlarge the page to stand in for a weaker device. Its numbers describe the machine and browser it ran on, not a child's device.
 
 ## Physics
 
