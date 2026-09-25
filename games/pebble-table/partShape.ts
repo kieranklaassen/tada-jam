@@ -296,7 +296,7 @@ const TIP_BALLS = [0.2, 0.55] as const
 /** How far drawn points may lie outside a ball: well under the audit's tolerance and about a pixel on screen. */
 export const BALL_SLACK = 0.08
 /** Balls along a stick's bark this far apart dip about 0.05 cm between each other where the bark is thickest: a stone's cut edge lying across a stick settled into the 0.3 cm dip between balls twice as far apart. */
-const STICK_SPACING = 0.5
+const STICK_SPACING = 0.6
 /** A stick's balls are this much thinner than its lumpiest bark: it lies on its balls, so its lumps barely touch the table. */
 const STICK_SLACK = 0.03
 
