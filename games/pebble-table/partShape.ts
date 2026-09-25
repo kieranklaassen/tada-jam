@@ -296,7 +296,7 @@ const TIP_BALLS = [0.2, 0.55] as const
 /** How far drawn points may lie outside a ball: well under the audit's tolerance and about a pixel on screen. */
 export const BALL_SLACK = 0.08
 /** Balls along a stick's bark this far apart dip about 0.05 cm between each other where the bark is thickest: a stone's cut edge lying across a stick settled into the 0.3 cm dip between balls twice as far apart. */
-const STICK_SPACING = 0.4
+const STICK_SPACING = 0.5
 /** A stick's balls are this much thinner than its lumpiest bark: it lies on its balls, so its lumps barely touch the table. */
 const STICK_SLACK = 0.03
 
@@ -307,7 +307,7 @@ function pieceSurface(kind: PartKind, piece: string, step: number): number[] {
 }
 
 /** A shell's collider: a ball in its middle and rings of `count` balls `at` of the way out to its rim. */
-const SHELL_RINGS: readonly { count: number; at: number }[] = [{ count: 6, at: 0.3 }, { count: 10, at: 0.6 }, { count: 16, at: 0.87 }]
+const SHELL_RINGS: readonly { count: number; at: number }[] = [{ count: 5, at: 0.3 }, { count: 8, at: 0.6 }, { count: 12, at: 0.87 }]
 
 /**
  * A shell as balls: stacked thin prisms rock in cannon where balls settle.
