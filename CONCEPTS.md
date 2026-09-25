@@ -126,6 +126,14 @@ The jam's shared browser script that plays any game's production build through t
 
 It reads Frame work, the current tier, and the draw counts from a grown-up handle each game publishes on the page, so a game publishes that handle in the one shape the probe expects. It can pin a Quality tier or leave the choice to the Governor, and it can throttle the CPU or enlarge the page to stand in for a weaker device. Its numbers describe the machine and browser it ran on, not a child's device.
 
+## Physics
+
+### Settled body
+A loose physics body that has been calm long enough for the game to treat it as asleep: it counts as at rest for the rules and is held still each step, while the physics engine's own sleeping takes it.
+*Avoid:* sleeping body (for the game's notion), put to sleep
+
+A settled body becomes loose again the moment it comes out of a step moving faster than calm (hit, pushed, or left with nothing under it) or when something wakes it. Bodies are settled rather than put to sleep by hand, because an engine that is told a body sleeps while its neighbours move can stop meeting what that body lies on. A moving thing wakes only what it can reach, so a swinging part does not unsettle the whole table; a sweeping finger, which can reach anything, still wakes every body.
+
 ## Mechanics
 
 ### Depth engine
