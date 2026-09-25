@@ -1,4 +1,4 @@
-import type * as RapierModule from '@dimforge/rapier3d-compat'
+import type * as RapierModule from '@dimforge/rapier3d-simd-compat'
 import { GUEST_ARM, GUEST_RADIUS, GUEST_REACH, guestYaw } from './feeding'
 import { JAR_SCALE, JARS, PART_KINDS, type PartKind } from './parts'
 import { BAG, DOOR, FEEDING, HOUSE_FOOTPRINT, HOUSE_REACH, RADIUS_BY_QUARTERS, SCALE, SHELF, TABLE, WORLD, type Circle, type MatKey, type Point, type Quarters } from './layout'
@@ -11,8 +11,8 @@ import { Quat, V3 } from './vec'
 // the game rules use. One 3D unit is one centimetre and ten world units; the
 // table top is y = 0 and the world's centre is the origin. Stones are low
 // hulls around their drawn outline (stoneShape.ts) so they lie flat, stack,
-// and touch where they are drawn; parts are the balls and hulls partShape.ts
-// fits to their drawing; the rug, plates, bowl, and pans are solid at the
+// and touch where they are drawn; parts are the hulls, capsules and balls
+// partShape.ts fits to their drawing; the rug, plates, bowl, and pans are solid at the
 // heights they are drawn (surfaces.ts), and walls make the bowl and pans hold
 // what falls into them; anything that leaves the table top falls and is
 // reported so it can go home to the bag. Continuous collision keeps a fast
@@ -27,13 +27,19 @@ type ColliderDesc = RapierModule.ColliderDesc
 let rapier: Rapier | null = null
 let loading: Promise<void> | null = null
 
+/** A tiny WebAssembly module with one SIMD instruction: it validates only where SIMD runs. */
+const SIMD_PROBE = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])
+
 /**
  * Loads and starts Rapier (its WebAssembly is bundled with the game, never
- * fetched from elsewhere). Call once, while the game loads, before making a
- * TablePhysics; later calls return the same promise.
+ * fetched from elsewhere): the build that steps a busy table about a third
+ * faster where WebAssembly SIMD runs, and the plain build on older iPads.
+ * Call once, while the game loads, before making a TablePhysics; later calls
+ * return the same promise.
  */
 export function physicsReady(): Promise<void> {
-  loading ??= import('@dimforge/rapier3d-compat').then(async (module) => {
+  const simd = typeof WebAssembly === 'object' && WebAssembly.validate(SIMD_PROBE)
+  loading ??= (simd ? import('@dimforge/rapier3d-simd-compat') : import('@dimforge/rapier3d-compat')).then(async (module) => {
     const loaded = ((module as { default?: unknown }).default ?? module) as unknown as Rapier
     await loaded.init()
     rapier = loaded
@@ -75,14 +81,20 @@ export const STEP_SLACK = 1e-6
  * calm speed) falls asleep, and contacts are resolved to about 0.01 cm.
  */
 const LENGTH_UNIT = 10
+/** How far (cm) Rapier lets two resting things overlap without pushing them apart: under what the audit or the eye can see. */
+const ALLOWED_OVERLAP = 0.005
 /**
- * How far ahead (cm) a loose body looks for what it is about to meet, so two
- * stones flung at each other meet at their surfaces instead of a step inside
- * each other: about as far as a thrown stone travels in a step. (Full
- * continuous collision only starts once a body moves more than its own
- * thickness in a step.)
+ * How far ahead (cm) a stone looks for what it is about to meet, so two
+ * flung at each other meet at their surfaces instead of a step inside each
+ * other: about as far as a thrown stone travels in a step (further, and a
+ * spill's stones brace against each other before they touch). Parts, lighter
+ * and poured faster, look further. (Full continuous collision only starts
+ * once a body moves more than its own thickness in a step.)
  */
-const SOFT_CCD = 1
+const STONE_LOOK_AHEAD = 1
+const PART_LOOK_AHEAD = 1.5
+/** How much further (cm) than two steps' travel a moving body wakes what it is coming to (see `wakeAhead`). */
+const WAKE_MARGIN = 0.5
 /** A contact faster than this (cm/s) along its normal makes a sound. */
 const IMPACT_HEARD = 25
 /**
@@ -104,7 +116,7 @@ const HOUSE_TOP = 34
 const SLAB = 4
 /** A sweeping finger's collider reaches this high above the table, and as deep into it. */
 const BROOM_TOP = 3
-/** A loose body slower than this (units/s, spin included) for `LOOSE_CALM_SECONDS` is put to sleep, with whatever it lies against (see `settleLoose`). */
+/** A loose body slower than this (units/s, spin included) for `LOOSE_CALM_SECONDS` settles (see `settleLoose`). */
 const LOOSE_CALM_SPEED = 4
 const LOOSE_CALM_SECONDS = 1
 /** A body still stirring this long (s) since it last slept is only jittering against its neighbours, so it counts as calm below `LOOSE_RESTLESS_SPEED`. */
@@ -193,8 +205,10 @@ export class TableBody {
   readonly quaternion = new Quat()
   readonly velocity = new V3()
   readonly angularVelocity = new V3()
-  /** Whether it has come to rest and been put to sleep. */
+  /** Whether it has come to rest: settled (see `TablePhysics.settleLoose`), or asleep in Rapier. */
   asleep = false
+  /** Whether it settled, calm long enough to count as asleep and be held still. */
+  settled = false
   /** Whether a finger holds it (it follows the finger and meets nothing). */
   held = false
   /** Its bounding radius (cm) about its origin. */
@@ -202,10 +216,10 @@ export class TableBody {
 
   constructor(
     readonly rigid: RigidBody,
-    boundingRadius: number,
-    private readonly wakeAll: (body: TableBody) => void,
+    /** Each of its shapes, with a sphere (centre in its own frame, radius) that holds it. */
+    readonly shapes: readonly Shape[],
   ) {
-    this.boundingRadius = boundingRadius
+    this.boundingRadius = Math.max(...shapes.map(({ center, r }) => center.length() + r))
     this.sync()
   }
 
@@ -215,7 +229,7 @@ export class TableBody {
     this.quaternion.copy(b.rotation())
     this.velocity.copy(b.linvel())
     this.angularVelocity.copy(b.angvel())
-    this.asleep = b.isSleeping()
+    this.asleep = this.settled || b.isSleeping()
   }
 
   /** Puts it where `position` and `quaternion` say (test and tooling use). */
@@ -241,12 +255,14 @@ export class TableBody {
     this.sync()
   }
 
-  /** Wakes it, and everything asleep that it lies against. */
   wakeUp(): void {
-    this.wakeAll(this)
+    this.settled = false
+    this.rigid.wakeUp()
+    this.asleep = false
   }
 }
 
+type Shape = { collider: Collider; center: V3; r: number }
 type StoneEntry = { body: TableBody; q: Quarters }
 /** A contact `sunk` found between two bodies: how deep one lies in the other, along the normal from the first to the second. */
 type SunkContact = { bi: TableBody; bj: TableBody; ni: V3; depth: number }
@@ -297,10 +313,12 @@ export class TablePhysics {
     this.world = new R.World({ x: 0, y: GRAVITY, z: 0 })
     this.world.timestep = STEP
     this.world.lengthUnit = LENGTH_UNIT
+    this.world.integrationParameters.normalizedAllowedLinearError = ALLOWED_OVERLAP / LENGTH_UNIT
+    this.world.integrationParameters.maxCcdSubsteps = Number((globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.CCDSUB ?? 1)
     this.events = new R.EventQueue(true)
     this.contact = new R.ShapeContact(0, { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 0 })
     this.addTable()
-    // Fitting a part's balls to its drawn shape is slow the first time for each kind: do it now, while the game loads.
+    // Fitting a part's collider to its drawn shape is slow the first time for each kind: do it now, while the game loads.
     for (const kind of PART_KINDS) partCollider(kind)
   }
 
@@ -629,13 +647,13 @@ export class TablePhysics {
     this.setFixture('bag', { x: BAG.x, y: BAG.y + 10, r: 72 }, 14)
   }
 
-  private loose(at: Vec3, options: { velocity?: Vec3; spin?: number; yaw?: number }, lossPerSecond: number, spinLossPerSecond: number): RigidBody {
+  private loose(at: Vec3, options: { velocity?: Vec3; spin?: number; yaw?: number }, lossPerSecond: number, spinLossPerSecond: number, lookAhead: number): RigidBody {
     const desc = this.R.RigidBodyDesc.dynamic()
       .setTranslation(at.x, at.y, at.z)
       .setLinearDamping(damping(lossPerSecond))
       .setAngularDamping(damping(spinLossPerSecond))
       .setCcdEnabled(true)
-      .setSoftCcdPrediction(SOFT_CCD)
+      .setSoftCcdPrediction(lookAhead)
       .setCanSleep(true)
     if (options.yaw) desc.setRotation(new Quat().setFromAxisAngle({ x: 0, y: 1, z: 0 }, options.yaw))
     if (options.velocity) desc.setLinvel(options.velocity.x, options.velocity.y, options.velocity.z)
@@ -665,8 +683,15 @@ export class TablePhysics {
     rigid.setAdditionalMassProperties(mass, { x: 0, y: 0, z: 0 }, { x: (mass * (y * y + z * z)) / 12, y: (mass * (x * x + z * z)) / 12, z: (mass * (x * x + y * y)) / 12 }, { x: 0, y: 0, z: 0, w: 1 }, true)
   }
 
-  private enter(id: number, rigid: RigidBody, q: Quarters, reach: number): TableBody {
-    const body = new TableBody(rigid, reach, (woken) => this.wake(woken))
+  /** A hull of `points` on a loose body, and the sphere that holds it. */
+  private hull(rigid: RigidBody, points: readonly V3[]): Shape {
+    const collider = this.world.createCollider(this.stoneSurface(this.R.ColliderDesc.convexHull(flat(points))!), rigid)
+    const center = points.reduce((sum, p) => sum.vadd(p, sum), new V3()).scale(1 / points.length)
+    return { collider, center, r: Math.max(...points.map((p) => p.distanceTo(center))) }
+  }
+
+  private enter(id: number, rigid: RigidBody, q: Quarters, shapes: readonly Shape[]): TableBody {
+    const body = new TableBody(rigid, shapes)
     this.stones.set(id, { body, q })
     this.byRigid.set(rigid.handle, body)
     this.calm.set(body, { calm: 0, awake: 0, asleep: 0 })
@@ -675,36 +700,51 @@ export class TablePhysics {
 
   addStone(id: number, q: Quarters, at: Point, options: { y?: number; velocity?: Vec3; spin?: number } = {}): void {
     this.removeStone(id)
-    const rigid = this.loose(to3(at, options.y ?? stoneRest(q)), options, 0.35, 0.75)
+    const rigid = this.loose(to3(at, options.y ?? stoneRest(q)), options, 0.35, 0.75, STONE_LOOK_AHEAD)
     const pieces = stonePieces(q)
-    for (const points of pieces) this.world.createCollider(this.stoneSurface(this.R.ColliderDesc.convexHull(flat(points))!), rigid)
-    const points = pieces.flat()
-    this.weigh(rigid, q, points)
-    this.enter(id, rigid, q, Math.max(...points.map((p) => p.length())))
+    const shapes = pieces.map((points) => this.hull(rigid, points))
+    this.weigh(rigid, q, pieces.flat())
+    this.enter(id, rigid, q, shapes)
   }
 
   /** A loose part (acorn, shell, stick, boulder) with its own shape and weight; it moves, holds, and falls like a stone. */
   addPart(id: number, kind: PartKind, at: Point, options: { y?: number; velocity?: Vec3; spin?: number; yaw?: number } = {}): void {
     this.removeStone(id)
     const { mass, damping: loss } = PART_BODY[kind]
-    const rigid = this.loose(to3(at, options.y ?? partRest(kind)), options, loss, 0.9)
+    const rigid = this.loose(to3(at, options.y ?? partRest(kind)), options, loss, 0.9, PART_LOOK_AHEAD)
     const collider = partCollider(kind)
     const bounds: Vec3[] = []
-    let reach = 0
+    const shapes: Shape[] = []
     if (collider.prism) {
       for (const points of prismPieces(outlineCorners(collider.prism.reach), collider.prism.bottom, collider.prism.top)) {
-        this.world.createCollider(this.stoneSurface(this.R.ColliderDesc.convexHull(flat(points))!), rigid)
-        reach = Math.max(reach, ...points.map((p) => p.length()))
+        shapes.push(this.hull(rigid, points))
         bounds.push(...points)
       }
     }
+    for (const hull of collider.hulls) {
+      const points = hull.map(([x, y, z]) => new V3(x, y, z))
+      shapes.push(this.hull(rigid, points))
+      bounds.push(...points)
+    }
+    for (const { a, b, r } of collider.capsules) {
+      const [from, to] = [new V3(...a), new V3(...b)]
+      const along = to.vsub(from)
+      const half = along.length() / 2
+      const center = from.vadd(to).scale(0.5)
+      const up = new V3(0, 1, 0)
+      const axis = up.cross(along)
+      const turn = axis.length() > 1e-9 ? new Quat().setFromAxisAngle(axis.scale(1 / axis.length()), Math.acos(Math.max(-1, Math.min(1, along.y / (2 * half))))) : new Quat()
+      const shape = this.world.createCollider(this.stoneSurface(this.R.ColliderDesc.capsule(half, r).setTranslation(center.x, center.y, center.z).setRotation(turn)), rigid)
+      shapes.push({ collider: shape, center, r: half + r })
+      bounds.push(...[from, to].flatMap((p) => [new V3(p.x - r, p.y - r, p.z - r), new V3(p.x + r, p.y + r, p.z + r)]))
+    }
     for (const ball of collider.balls) {
-      this.world.createCollider(this.stoneSurface(this.R.ColliderDesc.ball(ball.r).setTranslation(ball.x, ball.y, ball.z)), rigid)
-      reach = Math.max(reach, Math.hypot(ball.x, ball.y, ball.z) + ball.r)
+      const shape = this.world.createCollider(this.stoneSurface(this.R.ColliderDesc.ball(ball.r).setTranslation(ball.x, ball.y, ball.z)), rigid)
+      shapes.push({ collider: shape, center: new V3(ball.x, ball.y, ball.z), r: ball.r })
       bounds.push({ x: ball.x - ball.r, y: ball.y - ball.r, z: ball.z - ball.r }, { x: ball.x + ball.r, y: ball.y + ball.r, z: ball.z + ball.r })
     }
     this.weigh(rigid, mass, bounds)
-    this.enter(id, rigid, 4, reach)
+    this.enter(id, rigid, 4, shapes)
   }
 
   removeStone(id: number): void {
@@ -780,6 +820,7 @@ export class TablePhysics {
     rigid.setAngvel({ x: 0, y: 0, z: 0 }, true)
     rigid.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true)
     body.held = true
+    body.settled = false
     body.sync()
   }
 
@@ -858,14 +899,15 @@ export class TablePhysics {
   }
 
   /**
-   * Loose bodies calm for a while are put to sleep: a pile can nudge itself
-   * just above Rapier's own sleep limit for a long time. Only a whole group
-   * of touching bodies sleeps at once, and only when nothing awake touches
-   * it: one body put to sleep while something touching it is awake is left
-   * out of its neighbours' contacts, and it sinks or floats where it lies.
+   * A loose body calm for a while settles: it counts as asleep, and it is held
+   * still every step, so Rapier's own sleeping soon takes it and its pile (a
+   * pile can nudge itself just above Rapier's limit for a long time). One
+   * that comes out of a step moving faster than calm (hit, pushed, or left
+   * with nothing under it) is loose again. Bodies are never put to sleep by
+   * hand: Rapier then stops meeting what they lie on while still moving them,
+   * and they sink, float, or let what lands on them in.
    */
   private settleLoose(): void {
-    const calm = new Set<TableBody>()
     for (const [body, timer] of this.calm) {
       const rigid = body.rigid
       if (body.held || rigid.isSleeping()) {
@@ -873,99 +915,47 @@ export class TablePhysics {
         if (timer.asleep >= LOOSE_CALM_SECONDS) timer.awake = 0
         continue
       }
-      timer.asleep = 0
-      timer.awake += STEP
       const limit = timer.awake < LOOSE_RESTLESS_SECONDS ? LOOSE_CALM_SPEED : LOOSE_RESTLESS_SPEED
       const [v, w] = [rigid.linvel(), rigid.angvel()]
-      const speedSquared = v.x * v.x + v.y * v.y + v.z * v.z + w.x * w.x + w.y * w.y + w.z * w.z
-      timer.calm = speedSquared < limit ** 2 ? timer.calm + STEP : 0
-      if (timer.calm >= LOOSE_CALM_SECONDS) calm.add(body)
-    }
-    const grouped = new Set<TableBody>()
-    for (const first of calm) {
-      if (grouped.has(first)) continue
-      grouped.add(first)
-      const group = [first]
-      let restless = false
-      for (let k = 0; k < group.length; k++) {
-        this.touching(group[k], (other) => {
-          if (other === 'kinematic') {
-            restless = true
-            return
-          }
-          if (other.held || other.rigid.isSleeping() || grouped.has(other)) return
-          if (!calm.has(other)) {
-            restless = true
-            return
-          }
-          grouped.add(other)
-          group.push(other)
-        })
+      const calm = v.x * v.x + v.y * v.y + v.z * v.z + w.x * w.x + w.y * w.y + w.z * w.z < limit ** 2
+      if (body.settled) {
+        if (calm) {
+          timer.asleep += STEP
+          if (timer.asleep >= LOOSE_CALM_SECONDS) timer.awake = 0
+          rigid.setLinvel({ x: 0, y: 0, z: 0 }, false)
+          rigid.setAngvel({ x: 0, y: 0, z: 0 }, false)
+          continue
+        }
+        body.settled = false
+        timer.calm = 0
       }
-      if (restless) continue
-      for (const body of group) {
-        this.calm.get(body)!.calm = 0
-        body.rigid.sleep()
-      }
-    }
-  }
-
-  /**
-   * Wakes `body` and every sleeping body it lies against, and every one they
-   * lie against, and so on: waking one body of a pile put to sleep together
-   * leaves the rest asleep but moved with it, never meeting what they lie on.
-   */
-  private wake(body: TableBody): void {
-    const woken = [body]
-    const seen = new Set(woken)
-    for (let k = 0; k < woken.length; k++) {
-      const next = woken[k]
-      next.rigid.wakeUp()
-      next.asleep = false
-      this.touching(next, (other) => {
-        if (other === 'kinematic' || seen.has(other) || !other.rigid.isSleeping()) return
-        seen.add(other)
-        woken.push(other)
-      })
-    }
-  }
-
-  /**
-   * Calls `visit` with every stone and part near enough `body` to have a
-   * contact pair with it, touching or not (everything Rapier may count as in
-   * its island), and with 'kinematic' for each pan or sweeping finger still
-   * awake from moving: Rapier moves what it touches with it, asleep or not.
-   */
-  private touching(body: TableBody, visit: (other: TableBody | 'kinematic') => void): void {
-    const rigid = body.rigid
-    for (let i = 0; i < rigid.numColliders(); i++) {
-      this.world.contactPairsWith(rigid.collider(i), (other) => {
-        const parent = other.parent()
-        if (!parent) return
-        const neighbour = this.byRigid.get(parent.handle)
-        if (neighbour) {
-          if (neighbour !== body) visit(neighbour)
-        } else if (parent.isKinematic() && !parent.isSleeping()) visit('kinematic')
-      })
-    }
-  }
-
-  /**
-   * A body still asleep that Rapier moved anyway (part of its island woke,
-   * so it falls without meeting what it lies on) is put back where it lay,
-   * and it and everything it lies against are woken to meet it next step.
-   */
-  private keepSleepersStill(): void {
-    for (const { body } of this.stones.values()) {
-      const rigid = body.rigid
-      if (!body.asleep || body.held || !rigid.isSleeping()) continue
-      const p = rigid.translation()
-      if (p.x === body.position.x && p.y === body.position.y && p.z === body.position.z) continue
-      rigid.setTranslation(body.position, false)
-      rigid.setRotation(body.quaternion, false)
+      timer.asleep = 0
+      timer.awake += STEP
+      timer.calm = calm ? timer.calm + STEP : 0
+      if (timer.calm < LOOSE_CALM_SECONDS) continue
+      timer.calm = 0
+      body.settled = true
       rigid.setLinvel({ x: 0, y: 0, z: 0 }, false)
       rigid.setAngvel({ x: 0, y: 0, z: 0 }, false)
-      this.wake(body)
+    }
+  }
+
+  /**
+   * Wakes every sleeping stone and part a moving one could reach within two
+   * steps, before it does: Rapier meets a sleeping body only on the step that
+   * wakes it and not on the next, so what lands on it falls a step's worth in.
+   */
+  private wakeAhead(): void {
+    for (const [handle, velocity] of this.before) {
+      const speed = velocity.length()
+      if (speed < LOOSE_CALM_SPEED) continue
+      const mover = this.byRigid.get(handle)
+      if (!mover || mover.held) continue
+      for (const { body } of this.stones.values()) {
+        if (body === mover || !body.rigid.isSleeping()) continue
+        const reach = mover.boundingRadius + body.boundingRadius + 2 * speed * STEP + WAKE_MARGIN
+        if (mover.position.distanceSquared(body.position) <= reach * reach) body.wakeUp()
+      }
     }
   }
 
@@ -1036,10 +1026,10 @@ export class TablePhysics {
       }
       this.before.clear()
       for (const { body } of this.stones.values()) if (!body.rigid.isSleeping()) this.before.set(body.rigid.handle, new V3().copy(body.rigid.linvel()))
+      this.wakeAhead()
       this.world.step(this.events)
       this.time += STEP
       this.steps += 1
-      this.keepSleepersStill()
       this.noteImpacts()
       this.noteLeaning()
       this.resistRolling()
@@ -1071,15 +1061,15 @@ export class TablePhysics {
     this.world.propagateModifiedBodyPositionsToColliders()
     const pairs = new Map<string, SunkPair>()
     const sunk: SunkContact[] = []
+    const placed = new Map<TableBody, PlacedShape[]>()
     for (const body of bodies) {
       if (body.held) continue
-      const rigid = body.rigid
-      for (const { body: neighbour } of this.stones.values()) {
-        if (neighbour === body || neighbour.held || (bodies.has(neighbour) && neighbour.rigid.handle < rigid.handle)) continue
-        const reach = body.boundingRadius + neighbour.boundingRadius + SUNK_PREDICTION
-        if (body.position.distanceSquared(neighbour.position) > reach * reach) continue
-        const key = `${rigid.handle} ${neighbour.rigid.handle}`
-        const pair = this.sunkPair(this.sunkPairs.get(key), body, neighbour)
+      for (const [neighbour, shapes] of this.nearShapes(body, placed)) {
+        if (neighbour.held) continue
+        const [first, second] = body.rigid.handle < neighbour.rigid.handle ? [body, neighbour] : [neighbour, body]
+        const key = `${first.rigid.handle} ${second.rigid.handle}`
+        if (pairs.has(key)) continue
+        const pair = this.sunkPair(this.sunkPairs.get(key), first, second, first === body ? shapes : shapes.map(([a, b]) => [b, a]))
         pairs.set(key, pair)
         for (const contact of pair.found) {
           sunk.push(contact)
@@ -1103,21 +1093,54 @@ export class TablePhysics {
     return out
   }
 
-  /** How far one pair lies sunk into each other: what was found last if neither has moved since, else found afresh. */
-  private sunkPair(last: SunkPair | undefined, body: TableBody, other: TableBody): SunkPair {
+  /**
+   * The stones and parts near `body`, each with the pairs of their shapes
+   * whose spheres meet (body's shape first). `placed` keeps each body's
+   * shape spheres where they lie now, found once a call.
+   */
+  private nearShapes(body: TableBody, placed: Map<TableBody, PlacedShape[]>): Map<TableBody, [Collider, Collider][]> {
+    const near = new Map<TableBody, [Collider, Collider][]>()
+    for (const { body: neighbour } of this.stones.values()) {
+      if (neighbour === body) continue
+      const reach = body.boundingRadius + neighbour.boundingRadius + SUNK_PREDICTION
+      if (body.position.distanceSquared(neighbour.position) > reach * reach) continue
+      const [mine, theirs] = [placedShapes(body, placed), placedShapes(neighbour, placed)]
+      const pairs: [Collider, Collider][] = []
+      for (const a of mine) {
+        for (const b of theirs) {
+          const r = a.r + b.r + SUNK_PREDICTION
+          if (a.at.distanceSquared(b.at) <= r * r) pairs.push([a.collider, b.collider])
+        }
+      }
+      if (pairs.length) near.set(neighbour, pairs)
+    }
+    return near
+  }
+
+  /** How far one pair lies sunk into each other: what was found last if neither has moved since, else found afresh from the pairs of their shapes whose bounds meet. */
+  private sunkPair(last: SunkPair | undefined, body: TableBody, other: TableBody, shapes: readonly [Collider, Collider][]): SunkPair {
     if (last && samePose(last.pose, 0, body) && samePose(last.pose, 7, other)) return last
     const pose = [body, other].flatMap(({ position: p, quaternion: q }) => [p.x, p.y, p.z, q.x, q.y, q.z, q.w])
     const found: SunkContact[] = []
-    for (let i = 0; i < body.rigid.numColliders(); i++) {
-      const mine: Collider = body.rigid.collider(i)
-      for (let j = 0; j < other.rigid.numColliders(); j++) {
-        const hit = mine.contactCollider(other.rigid.collider(j), SUNK_PREDICTION, this.contact)
-        if (!hit || hit.distance >= 0) continue
-        found.push({ bi: body, bj: other, ni: new V3(hit.normal1.x, hit.normal1.y, hit.normal1.z), depth: -hit.distance })
-      }
+    for (const [mine, theirs] of shapes) {
+      const hit = mine.contactCollider(theirs, SUNK_PREDICTION, this.contact)
+      if (!hit || hit.distance >= 0) continue
+      found.push({ bi: body, bj: other, ni: new V3(hit.normal1.x, hit.normal1.y, hit.normal1.z), depth: -hit.distance })
     }
     return { pose, found }
   }
+}
+
+type PlacedShape = { collider: Collider; at: V3; r: number }
+
+/** A body's shape spheres where it lies now, found once per `placed` map. */
+function placedShapes(body: TableBody, placed: Map<TableBody, PlacedShape[]>): PlacedShape[] {
+  let shapes = placed.get(body)
+  if (!shapes) {
+    shapes = body.shapes.map(({ collider, center, r }) => ({ collider, at: body.quaternion.vmult(center).vadd(body.position), r }))
+    placed.set(body, shapes)
+  }
+  return shapes
 }
 
 /** Whether `pose` (position, then quaternion) from `at` on is where a body lies now. */

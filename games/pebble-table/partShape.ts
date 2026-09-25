@@ -183,8 +183,93 @@ export function partVertices(kind: PartKind): Float32Array {
 
 export type Ball = { x: number; y: number; z: number; r: number }
 
-/** A part collides as an upright prism around its outline (as a stone does), plus small balls for thin bits that stand out of it. */
-export type PartCollider = { prism: Outline | null; balls: Ball[] }
+export type Capsule = { a: V3; b: V3; r: number }
+
+/** A part collides as an upright prism around its outline (as a stone does), as hulls around its rounded pieces, or as chains of capsules along its rods, plus small balls for thin bits that stand out of them. */
+export type PartCollider = { prism: Outline | null; hulls: V3[][]; capsules: Capsule[]; balls: Ball[] }
+
+/** How many capsules hold a stick's bark, and its twig, along their length. */
+const BARK_CAPSULES = 6
+const TWIG_CAPSULES = 2
+
+/**
+ * A drawn rod (a stretched capsule, lumpy, tapering to its tips) as a chain
+ * of `count` capsules along its axis, each as thick as the rod reaches in its
+ * stretch, so no lump stands outside it. Neighbours overlap where they meet;
+ * the first and last end in round caps where the rod's tips end, which hold
+ * the tips' longer taper.
+ */
+function rodCapsules(points: ArrayLike<number>, rod: Lumped, count: number): Capsule[] {
+  const [ax, ay, az] = turn(0, 1, 0, rod.rotation ?? [0, 0, 0])
+  const [ox, oy, oz] = rod.position.map((p) => p * PART_DRAW_SCALE)
+  const along: number[] = []
+  const out: number[] = []
+  let [low, high] = [Infinity, -Infinity]
+  for (let i = 0; i < points.length; i += 3) {
+    const [dx, dy, dz] = [points[i] - ox, points[i + 1] - oy, points[i + 2] - oz]
+    const t = dx * ax + dy * ay + dz * az
+    along.push(t)
+    out.push(Math.hypot(dx - ax * t, dy - ay * t, dz - az * t))
+    low = Math.min(low, t)
+    high = Math.max(high, t)
+  }
+  const step = (high - low) / count
+  const r = new Array<number>(count).fill(0)
+  along.forEach((t, i) => {
+    const k = Math.min(count - 1, Math.floor((t - low) / step))
+    r[k] = Math.max(r[k], out[i])
+  })
+  const at = (t: number): V3 => [ox + ax * t, oy + ay * t, oz + az * t]
+  return r.map((rk, k) => {
+    const [start, end] = [low + k * step, low + (k + 1) * step]
+    const middle = (start + end) / 2
+    return { a: at(k === 0 ? Math.min(start + rk, middle) : start), b: at(k === count - 1 ? Math.max(end - rk, middle) : end), r: rk }
+  })
+}
+
+/** How many directions a hull is sampled in: its corners are the drawn points reaching farthest along each. */
+const HULL_DIRECTIONS = 96
+
+/**
+ * The corners of a hull that holds a rounded piece within a hair, with few
+ * enough corners that meeting it stays cheap: along each of HULL_DIRECTIONS
+ * spread evenly over the sphere, the point reaching farthest once the piece
+ * is stretched to as wide as it is tall and deep. Unstretched, a flat shell's
+ * corners would all crowd its rim and leave its belly and back to long flat
+ * faces inside the drawing. A few hulls meet everything for a fraction of
+ * what dozens of balls fitted to the same drawing cost.
+ */
+function hullOf(points: ArrayLike<number>): V3[] {
+  const low = [Infinity, Infinity, Infinity]
+  const high = [-Infinity, -Infinity, -Infinity]
+  for (let i = 0; i < points.length; i += 3) {
+    for (let axis = 0; axis < 3; axis++) {
+      low[axis] = Math.min(low[axis], points[i + axis])
+      high[axis] = Math.max(high[axis], points[i + axis])
+    }
+  }
+  const middle = low.map((l, axis) => (l + high[axis]) / 2)
+  const half = low.map((l, axis) => (high[axis] - l) / 2)
+  const picked = new Set<number>()
+  // Its six extremes first, so it lies as low and reaches as far as drawn.
+  const axes = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+  const spread = Array.from({ length: HULL_DIRECTIONS }, (_, k) => {
+    const y = 1 - (2 * (k + 0.5)) / HULL_DIRECTIONS
+    const around = Math.sqrt(1 - y * y)
+    const a = k * Math.PI * (3 - Math.sqrt(5))
+    return [Math.cos(a) * around, y, Math.sin(a) * around]
+  })
+  for (const [dx, dy, dz] of [...axes, ...spread]) {
+    const direction = [dx / half[0], dy / half[1], dz / half[2]]
+    let [best, most] = [0, -Infinity]
+    for (let i = 0; i < points.length; i += 3) {
+      const d = (points[i] - middle[0]) * direction[0] + (points[i + 1] - middle[1]) * direction[1] + (points[i + 2] - middle[2]) * direction[2]
+      if (d > most) [best, most] = [i, d]
+    }
+    picked.add(best)
+  }
+  return [...picked].sort((a, b) => a - b).map((i): V3 => [points[i], points[i + 1], points[i + 2]])
+}
 
 /**
  * Balls at `centres`, each as big as the farthest point nearest to it, less
@@ -236,113 +321,10 @@ export function surfacePoints(vertices: Float32Array, segments: number, rings: n
   return out
 }
 
-/**
- * A drawn capsule (stretched, so its ends taper) as a chain of balls along
- * its axis, `spacing` apart: each as thick as the rod is where it sits, less
- * `slack`. A row of balls stacks and settles in physics where a thin prism
- * rocks; `spacing` keeps the dip between two balls well under the audit's
- * tolerance.
- */
-function rodBalls(points: ArrayLike<number>, rod: Lumped, spacing: number, slack: number): Ball[] {
-  const [ax, ay, az] = turn(0, 1, 0, rod.rotation ?? [0, 0, 0])
-  const [ox, oy, oz] = rod.position.map((p) => p * PART_DRAW_SCALE)
-  const half = rod.scale[1] * PART_DRAW_SCALE
-  const count = Math.max(1, Math.round((2 * half) / spacing))
-  const step = (2 * half) / count
-  const radius = new Array<number>(count).fill(0)
-  for (let i = 0; i < points.length; i += 3) {
-    const [dx, dy, dz] = [points[i] - ox, points[i + 1] - oy, points[i + 2] - oz]
-    const t = dx * ax + dy * ay + dz * az
-    const slot = Math.min(count - 1, Math.max(0, Math.floor((t + half) / step)))
-    if (Math.abs(t - (-half + step * (slot + 0.5))) > step / 4) continue
-    radius[slot] = Math.max(radius[slot], Math.hypot(dx - ax * t, dy - ay * t, dz - az * t))
-  }
-  return radius.flatMap((r, k) => {
-    const t = -half + step * (k + 0.5)
-    return r - slack > 0.05 ? [{ x: ox + ax * t, y: oy + ay * t, z: oz + az * t, r: r - slack }] : []
-  })
-}
-
-/**
- * Balls holding a rod's pointed ends past the first and last of its balls
- * (`rod`, in order along it), each as big as the farthest of `points` nearest
- * to it, less `slack`: rodBalls sets its end balls half a spacing in from the
- * tips, where the rod is still thick, and a tip lying on a stone went into it.
- */
-function tipBalls(points: ArrayLike<number>, rod: readonly Ball[], slack: number): Ball[] {
-  const [first, last] = [rod[0], rod[rod.length - 1]]
-  const length = Math.hypot(last.x - first.x, last.y - first.y, last.z - first.z)
-  const [ax, ay, az] = [(last.x - first.x) / length, (last.y - first.y) / length, (last.z - first.z) / length]
-  return ([[first, -1], [last, 1]] as const).flatMap(([end, side]) => {
-    const beyond: number[] = []
-    let [far, tip]: [number, V3 | null] = [0, null]
-    for (let i = 0; i < points.length; i += 3) {
-      const t = side * ((points[i] - end.x) * ax + (points[i + 1] - end.y) * ay + (points[i + 2] - end.z) * az)
-      if (t <= 0) continue
-      beyond.push(points[i], points[i + 1], points[i + 2])
-      if (t > far) [far, tip] = [t, [points[i], points[i + 1], points[i + 2]]]
-    }
-    if (!tip) return []
-    const [tx, ty, tz] = tip
-    const centres = TIP_BALLS.map((f): V3 => [tx + (end.x - tx) * f, ty + (end.y - ty) * f, tz + (end.z - tz) * f])
-    // The end ball takes the points nearest it; only the balls between it and the tip are new.
-    return fitBalls(beyond, [[end.x, end.y, end.z], ...centres], slack).filter((ball) => ball.x !== end.x || ball.y !== end.y || ball.z !== end.z)
-  })
-}
-
-/** Where tipBalls sets its balls, as shares of the way from a tip back to the end ball. */
-const TIP_BALLS = [0.2, 0.55] as const
-
-/** How far drawn points may lie outside a ball: well under the audit's tolerance and about a pixel on screen. */
-export const BALL_SLACK = 0.08
-/** Balls along a stick's bark this far apart dip about 0.05 cm between each other where the bark is thickest: a stone's cut edge lying across a stick settled into the 0.3 cm dip between balls twice as far apart. */
-const STICK_SPACING = 0.6
-/** A stick's balls are this much thinner than its lumpiest bark: it lies on its balls, so its lumps barely touch the table. */
-const STICK_SLACK = 0.03
-
 /** A piece's drawn surface, sampled `step` apart. */
 function pieceSurface(kind: PartKind, piece: string, step: number): number[] {
   const pieces: Record<string, Lumped> = PART_PIECES[kind]
   return surfacePoints(partPieceVertices(kind, piece), pieces[piece].segments, pieces[piece].rings, step)
-}
-
-/** A shell's collider: a ball in its middle and rings of `count` balls `at` of the way out to its rim. */
-const SHELL_RINGS: readonly { count: number; at: number }[] = [{ count: 6, at: 0.3 }, { count: 10, at: 0.6 }, { count: 16, at: 0.87 }]
-
-/**
- * A shell as balls: stacked thin prisms rock in physics where balls settle.
- * Each ball sits halfway up the shell where it is and holds the drawn
- * surface nearest it, but reaches no lower than the shell's lowest point, so
- * the shell lies on the table as drawn and nothing presses into its back,
- * belly or rim further than the audit forgives.
- */
-function shellBalls(): Ball[] {
-  const points = pieceSurface('shell', 'body', 0.05)
-  let [bottom, reachX, reachZ] = [Infinity, 0, 0]
-  for (let i = 0; i < points.length; i += 3) {
-    bottom = Math.min(bottom, points[i + 1])
-    reachX = Math.max(reachX, Math.abs(points[i]))
-    reachZ = Math.max(reachZ, Math.abs(points[i + 2]))
-  }
-  const halfway = (x: number, z: number): V3 => {
-    let [low, high] = [Infinity, -Infinity]
-    for (let i = 0; i < points.length; i += 3) {
-      if (Math.hypot(points[i] - x, points[i + 2] - z) > 0.25) continue
-      low = Math.min(low, points[i + 1])
-      high = Math.max(high, points[i + 1])
-    }
-    return [x, (low + high) / 2, z]
-  }
-  const centres = [
-    halfway(0, 0),
-    ...SHELL_RINGS.flatMap(({ count, at }) =>
-      Array.from({ length: count }, (_, k) => {
-        const a = (k / count) * Math.PI * 2
-        return halfway(Math.cos(a) * reachX * at, Math.sin(a) * reachZ * at)
-      }),
-    ),
-  ]
-  return fitBalls(points, centres, BALL_SLACK).map((ball) => ({ ...ball, r: Math.min(ball.r, ball.y - bottom) }))
 }
 
 const colliders = new Map<PartKind, PartCollider>()
@@ -352,29 +334,30 @@ export function partCollider(kind: PartKind): PartCollider {
   if (collider) return collider
   switch (kind) {
     case 'acorn': {
-      // The prism holds the nut and cap; one small ball holds the stem where it stands above the cap.
-      const prism = outlineOf(joined([partPieceVertices('acorn', 'nut'), partPieceVertices('acorn', 'cap')]), 8)
+      // A hull holds the nut and cap; one small ball holds the stem where it stands above the cap.
+      const nut = hullOf([...pieceSurface('acorn', 'nut', 0.05), ...pieceSurface('acorn', 'cap', 0.05)])
+      const top = Math.max(...nut.map(([, y]) => y))
       const stem = pieceSurface('acorn', 'stem', 0.05)
       const above: number[] = []
-      for (let i = 0; i < stem.length; i += 3) if (stem[i + 1] > prism.top) above.push(stem[i], stem[i + 1], stem[i + 2])
+      for (let i = 0; i < stem.length; i += 3) if (stem[i + 1] > top) above.push(stem[i], stem[i + 1], stem[i + 2])
       const tip = (ACORN.stem.position[1] + ACORN.stem.scale[1]) * PART_DRAW_SCALE
-      collider = { prism, balls: fitBalls(above, [[0, (prism.top + tip) / 2, 0]]) }
+      collider = { prism: null, hulls: [nut], capsules: [], balls: fitBalls(above, [[0, (top + tip) / 2, 0]]) }
       break
     }
     case 'shell':
-      collider = { prism: null, balls: shellBalls() }
+      collider = { prism: null, hulls: [hullOf(pieceSurface('shell', 'body', 0.05))], capsules: [], balls: [] }
       break
-    case 'stick': {
-      // Rows of balls along the bark, out to its tips, and the side twig; twig balls buried in the bark are left out.
-      const surface = pieceSurface('stick', 'bark', 0.05)
-      const bark = rodBalls(surface, STICK.bark, STICK_SPACING, STICK_SLACK)
-      const twig = rodBalls(pieceSurface('stick', 'twig', 0.05), STICK.twig, STICK_SPACING, STICK_SLACK)
-      const buried = (b: Ball) => bark.some((c) => Math.hypot(b.x - c.x, b.y - c.y, b.z - c.z) + b.r <= c.r)
-      collider = { prism: null, balls: [...bark, ...tipBalls(surface, bark, STICK_SLACK), ...twig.filter((b) => !buried(b))] }
+    case 'stick':
+      // The twig's lower end lies inside the bark.
+      collider = {
+        prism: null,
+        hulls: [],
+        capsules: [...rodCapsules(pieceSurface('stick', 'bark', 0.05), STICK.bark, BARK_CAPSULES), ...rodCapsules(pieceSurface('stick', 'twig', 0.05), STICK.twig, TWIG_CAPSULES)],
+        balls: [],
+      }
       break
-    }
     case 'boulder':
-      collider = { prism: outlineOf(partVertices('boulder'), 12), balls: [] }
+      collider = { prism: outlineOf(partVertices('boulder'), 12), hulls: [], capsules: [], balls: [] }
       break
     default: {
       const unknown: never = kind
@@ -387,14 +370,14 @@ export function partCollider(kind: PartKind): PartCollider {
 
 /** Height of a resting part's origin above what it rests on: its collider's lowest reach. */
 export function partRest(kind: PartKind): number {
-  const { prism, balls } = partCollider(kind)
-  return -Math.min(prism?.bottom ?? Infinity, ...balls.map((b) => b.y - b.r))
+  const { prism, hulls, capsules, balls } = partCollider(kind)
+  return -Math.min(prism?.bottom ?? Infinity, ...hulls.flat().map(([, y]) => y), ...capsules.flatMap(({ a, b, r }) => [a[1] - r, b[1] - r]), ...balls.map((b) => b.y - b.r))
 }
 
 /** How tall a part stands, resting as it is spawned. */
 export function partHeight(kind: PartKind): number {
-  const { prism, balls } = partCollider(kind)
-  return Math.max(prism?.top ?? -Infinity, ...balls.map((b) => b.y + b.r)) + partRest(kind)
+  const { prism, hulls, capsules, balls } = partCollider(kind)
+  return Math.max(prism?.top ?? -Infinity, ...hulls.flat().map(([, y]) => y), ...capsules.flatMap(({ a, b, r }) => [a[1] + r, b[1] + r]), ...balls.map((b) => b.y + b.r)) + partRest(kind)
 }
 
 /** How far a part reaches from its origin along its own z, either way. */

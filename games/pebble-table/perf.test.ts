@@ -141,8 +141,8 @@ describe('frame budget', () => {
     // to wake every part and stone on the table, not just what lies in its pans.
     expect(total('steps') / frames, 'physics steps a frame').toBeLessThan(2.1)
     expect(most('steps'), 'physics steps in the busiest frame').toBeLessThanOrEqual(3)
-    expect(total('awake') / frames, 'bodies awake a frame').toBeLessThan(17)
-    expect(total('contacts') / frames, 'solver contacts a frame').toBeLessThan(430)
-    expect(most('contacts'), 'solver contacts in the busiest frame').toBeLessThan(650)
+    expect(total('awake') / frames, 'bodies awake a frame').toBeLessThan(14)
+    expect(total('contacts') / frames, 'solver contacts a frame').toBeLessThan(240)
+    expect(most('contacts'), 'solver contacts in the busiest frame').toBeLessThan(400)
   }, 30_000)
 })

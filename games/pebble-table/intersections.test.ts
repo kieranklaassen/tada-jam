@@ -549,16 +549,21 @@ describe('loose parts are drawn on what they land on', () => {
     expect(deepest, worst).toBeLessThan(0.12)
   }, 60_000)
 
-  it("holds a shell's drawn back, belly and rim within a hair of its balls, and lays it down on its lowest point", () => {
-    const { balls } = partCollider('shell')
+  it("holds a shell's drawn back, belly and rim within a hair of its hull, and lays it down on its lowest point", () => {
+    const physics = new TablePhysics()
+    physics.addPart(1, 'shell', { x: 800, y: 500 }, { y: 10 })
+    const body = physics.body(1)!
+    const hull = body.rigid.collider(0)
     const points = surfacePoints(partPieceVertices('shell', 'body'), SHELL.body.segments, SHELL.body.rings, 0.05)
     let [outside, lowest] = [0, Infinity]
     for (let i = 0; i < points.length; i += 3) {
       lowest = Math.min(lowest, points[i + 1])
-      outside = Math.max(outside, Math.min(...balls.map((b) => Math.hypot(points[i] - b.x, points[i + 1] - b.y, points[i + 2] - b.z) - b.r)))
+      const at = { x: points[i] + body.position.x, y: points[i + 1] + body.position.y, z: points[i + 2] + body.position.z }
+      const nearest = hull.projectPoint(at, true)!.point
+      outside = Math.max(outside, Math.hypot(at.x - nearest.x, at.y - nearest.y, at.z - nearest.z))
     }
-    expect(outside).toBeLessThan(0.13)
-    expect(Math.min(...balls.map((b) => b.y - b.r))).toBeCloseTo(lowest, 6)
+    expect(outside).toBeLessThan(0.08)
+    expect(Math.min(...partCollider('shell').hulls[0].map(([, y]) => y))).toBeCloseTo(lowest, 6)
   })
 
   it('settles spilled acorns, shells and sticks against and on one another without one drawn inside another', () => {
