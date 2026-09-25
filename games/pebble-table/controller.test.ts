@@ -34,6 +34,18 @@ const run = (table: TableController, seconds: number) => {
   for (let t = 0; t < seconds; t += 1 / 60) table.step(1 / 60)
 }
 
+/** A seeded random stream whose draws are spread evenly from the first (mulberry32): consecutive seeds give unrelated spills. */
+function spread(seed: number): () => number {
+  let a = seed >>> 0
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0
+    let t = a
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
 let clock = 0
 const tap = (table: TableController, at: { x: number; y: number }) => {
   table.pointerDown(1, at, (clock += 10))
@@ -62,15 +74,20 @@ describe('TableController', () => {
   })
 
   it('keeps every spilled stone on the table across many random spills', () => {
-    let lost = 0
-    for (let n = 0; n < 40; n++) {
-      const { table } = makeTable()
+    // Seeded spills, so one that throws a stone off the table names its seed
+    // and can be replayed: unseeded, a rare escape could not be traced.
+    // A stone that leaves the table is flown home to the bag within about
+    // 1.4 s, so after 3 s it is neither on the table nor in flight.
+    const off: number[] = []
+    for (let seed = 1; seed <= 120; seed++) {
+      const table = new TableController(defaultTable(4), { save: () => {}, random: spread(seed) })
+      table.setProjector(topDown)
       tap(table, { x: BAG.x, y: BAG.y })
       run(table, 3)
-      lost += 10 - new Set([...table.physics.stoneIds(), ...table.flightViews().map((flight) => flight.id)]).size
+      if (new Set([...table.physics.stoneIds(), ...table.flightViews().map((flight) => flight.id)]).size < 10) off.push(seed)
     }
-    expect(lost).toBe(0)
-  }, 30_000)
+    expect(off, 'seeds whose spill threw a stone off the table').toEqual([])
+  }, 60_000)
 
   it('invites on an empty scale with one stone on a pan, and a stone on the other pan levels it', () => {
     const { table } = makeTable(6)
