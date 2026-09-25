@@ -193,6 +193,25 @@ describe('TablePhysics', () => {
     expect(again).toBeLessThan(1.5)
   })
 
+  it('sounds a shell or stick landing fast on a stone, though it is slowed just before it lands', () => {
+    for (const kind of ['shell', 'stick'] as const) {
+      const physics = new TablePhysics()
+      physics.addStone(1, 4, { x: 800, y: 700 })
+      for (let t = 0; t < 1; t += STEP) physics.step(STEP)
+      const top = physics.stoneTop(1)!
+      physics.addPart(2, kind, { x: 800, y: 700 }, { y: top + 8, velocity: { x: 0, y: -130, z: 0 } })
+      const part = physics.body(2)!
+      let first: { speed: number; height: number } | null = null
+      for (let t = 0; t < 0.5 && !first; t += STEP) {
+        const { impacts } = physics.step(STEP)
+        if (impacts.length) first = { speed: Math.max(...impacts), height: part.position.y }
+      }
+      expect(first, `${kind}: a landing is heard`).not.toBeNull()
+      expect(first!.height, `${kind}: the first sound is its landing on the stone, not the table`).toBeGreaterThan(top - 1)
+      expect(first!.speed, `${kind}: heard as fast as it came in`).toBeGreaterThan(25)
+    }
+  })
+
   it("lands every jar tipped out onto stones on the scale exactly where trying every shape of each pair against every other, with cannon's own bounds, does", () => {
     const topDown = { toScreen: (v: { x: number; z: number }) => toWorld2(v), toPlane: (screen: { x: number; y: number }) => screen }
     const pour = (everyShape: boolean) => {

@@ -52,6 +52,8 @@ export const STEP_SLACK = 1e-6
 const BALL_TRAVEL = 1
 /** And never more than this (cm) a step while about to meet a stone or part: a stick's twig balls are far thinner than its biggest. */
 const BALL_MOST_TRAVEL = 0.18
+/** How long (s) after a shell or stick is slowed to land its first contact still sounds at the speed it came in. */
+const APPROACH_HEARD = 0.1
 /** The most pieces a step is cut into. */
 const MOST_PIECES = 6
 /**
@@ -194,6 +196,8 @@ export class TablePhysics {
   /** Each shell's or stick's biggest ball radius (cm). */
   private readonly balls = new Map<CANNON.Body, number>()
   private readonly closing: CANNON.Body[] = []
+  /** How fast a shell or stick was coming before it was slowed to land (see `pieces`), and until when (world time) that counts for the sound of its landing. */
+  private readonly approach = new Map<CANNON.Body, { speed: number; until: number }>()
   private readonly placed = new WeakMap<CANNON.Body, Placed>()
   private readonly surfacing = { local: new CANNON.Vec3(), out: new CANNON.Vec3(), way: new CANNON.Vec3(), back: new CANNON.Quaternion() }
   /** What sunk found last while everything lay asleep, and where everything lay. */
@@ -817,7 +821,11 @@ export class TablePhysics {
     if (options.velocity) body.velocity.set(options.velocity.x, options.velocity.y, options.velocity.z)
     if (options.spin) body.angularVelocity.set(0, options.spin, 0)
     body.addEventListener('collide', (event: { contact: CANNON.ContactEquation }) => {
-      const speed = Math.abs(event.contact.getImpactVelocityAlongNormal())
+      // Slowed just before it landed, it still sounds as fast as it came in.
+      const came = this.approach.get(body)
+      const early = came && this.world.time <= came.until ? came.speed : 0
+      if (came) this.approach.delete(body)
+      const speed = Math.max(Math.abs(event.contact.getImpactVelocityAlongNormal()), early)
       if (speed > 25) this.impacts.push(speed)
     })
     this.world.addBody(body)
@@ -828,6 +836,7 @@ export class TablePhysics {
   removeStone(id: number): void {
     const entry = this.stones.get(id)
     if (!entry) return
+    this.approach.delete(entry.body)
     this.targets.delete(entry.body)
     this.calm.delete(entry.body)
     this.balls.delete(entry.body)
@@ -1029,7 +1038,10 @@ export class TablePhysics {
       // shell or stick is slowed to that for this step instead of the whole
       // world's step being cut finer for it (a pour of shells onto stones did
       // that dozens of times a second): it meets what it lands on a step later.
-      if (travel > most && this.nearLoose(body, travel)) body.velocity.scale(most / travel, body.velocity)
+      if (travel > most && this.nearLoose(body, travel)) {
+        if (!this.approach.has(body)) this.approach.set(body, { speed, until: this.world.time + APPROACH_HEARD })
+        body.velocity.scale(most / travel, body.velocity)
+      }
     }
     pieces = Math.min(pieces, MOST_PIECES)
     const { DYNAMIC, SLEEPING } = CANNON.Body
