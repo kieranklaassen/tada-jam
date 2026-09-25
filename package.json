@@ -18,6 +18,7 @@
     "wordless:check": "node scripts/wordless-check.ts",
     "serve:lan": "vite build && vite preview --host 0.0.0.0 --port 4173 --strictPort",
     "perf:pebble": "node scripts/pebble-perf.mjs",
+    "perf:pebble-scale": "node scripts/pebble-scale-probe.mjs",
     "perf:jam": "node scripts/jam-perf.mjs",
     "check:intersections": "node scripts/jam-intersections.mjs",
     "lab:dev": "vite --config lab/vite.config.ts",
