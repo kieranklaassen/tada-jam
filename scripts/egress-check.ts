@@ -36,6 +36,7 @@ export const ALLOWED_GAME_PACKAGES = [
   'react-dom',
   'tone',
   'matter-js',
+  '@dimforge/rapier3d-compat', // Rapier, WebAssembly inlined in the package: nothing is fetched
   'three',
   'pixi.js',
   'gsap',

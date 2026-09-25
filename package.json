@@ -33,6 +33,7 @@
     "check": "npm run typecheck && npm run test && npm run egress:check && npm run wordless:check"
   },
   "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.20.0",
     "@fontsource/albert-sans": "^5.3.0",
     "@react-three/fiber": "^9.8.0",
     "@react-three/postprocessing": "^3.1.2",
