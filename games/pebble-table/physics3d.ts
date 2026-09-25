@@ -649,14 +649,17 @@ export class TablePhysics {
     // Only what lies in or on a pan feels it move: waking the whole table every
     // frame the beam swings kept every part and stone on it awake and stepped.
     if (tilted || swung) {
-      for (const pan of this.pans) {
-        if (pan.aabbNeedsUpdate) pan.updateAABB()
+      // A pan's reach: its round footprint and the height it hangs over, without working out its many walls' bounds each frame.
+      this.pans.forEach((pan, side) => {
+        const reach = SCALE.pans[side].r * UNIT + 1
+        const top = pan.position.y + PAN_DEPTH
         for (const { body } of this.stones.values()) {
           if (body.sleepState !== CANNON.Body.SLEEPING) continue
-          if (body.aabbNeedsUpdate) body.updateAABB()
-          if (body.aabb.overlaps(pan.aabb)) body.wakeUp()
+          const [dx, dz] = [body.position.x - pan.position.x, body.position.z - pan.position.z]
+          const r = reach + body.boundingRadius
+          if (dx * dx + dz * dz <= r * r && body.position.y - body.boundingRadius <= top) body.wakeUp()
         }
-      }
+      })
     }
     this.panDrops = [drops[0], drops[1]]
     this.panSway = sway
@@ -1072,9 +1075,12 @@ export class TablePhysics {
     const { DYNAMIC, SLEEPING } = CANNON.Body
     for (const body of this.balls.keys()) {
       if (body.type !== DYNAMIC || body.sleepState === SLEEPING) continue
-      if (body.aabbNeedsUpdate) body.updateAABB()
       for (const { body: other } of this.stones.values()) {
         if (other === body || other.type !== DYNAMIC) continue
+        // Bounding spheres first: a stick's bounds are its 47 balls placed afresh, not worth working out for what lies nowhere near.
+        const reach = body.boundingRadius + other.boundingRadius
+        if (body.position.distanceSquared(other.position) > reach * reach) continue
+        if (body.aabbNeedsUpdate) body.updateAABB()
         if (other.aabbNeedsUpdate) other.updateAABB()
         if (!body.aabb.overlaps(other.aabb)) continue
         other.quaternion.conjugate(back)
