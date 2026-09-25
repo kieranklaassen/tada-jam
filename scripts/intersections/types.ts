@@ -46,6 +46,10 @@ export type GameAudit = {
   // Query string added to the game URL, e.g. 'tier=0' to pin the full look.
   query?: string
   childAge?: number
+  // The game fetches and starts something (Pebble Table's WebAssembly physics)
+  // before it makes its renderer: the audit waits for the renderer in real
+  // time, with the page's clock paused.
+  mountsAfterLoading?: boolean
   // Game time between scene samples.
   sampleMs?: number
   moments?: Moment[]

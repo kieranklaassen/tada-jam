@@ -1,5 +1,8 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import { SACK_PROFILE, sackSlump } from '../bag'
+import { pebbleRings, stoneVertices, type Cut } from '../stoneShape'
+import { BOWL_PROFILE, DISH_PROFILE, PLATE_PROFILE } from '../surfaces'
 
 // Primitive and lathe shapes for Pebble Table's props, cached by key. Big,
 // simple silhouettes are part of the jam quality bar (docs/art-direction.md).
@@ -35,19 +38,11 @@ export function torus(segments: number, tube = 0.12): THREE.BufferGeometry {
   return cached(`torus:${segments}:${tube}`, () => new THREE.TorusGeometry(1, tube, Math.max(4, Math.round(segments / 3)), segments))
 }
 
-/** A pebble: a squashed sphere with a slightly flattened belly, unit radius. */
-export function pebble(segments: number): THREE.BufferGeometry {
-  return cached(`pebble:${segments}`, () => {
-    const geometry = new THREE.SphereGeometry(1, segments, Math.max(4, Math.round(segments * 0.7)))
+function stone(segments: number, cut: Cut): THREE.BufferGeometry {
+  return cached(`stone:${cut}:${segments}`, () => {
+    const geometry = new THREE.SphereGeometry(1, segments, pebbleRings(segments))
     const position = geometry.attributes.position
-    for (let i = 0; i < position.count; i++) {
-      const y = position.getY(i)
-      const flatten = y < 0 ? 0.3 : 0.47
-      position.setY(i, y * flatten)
-      const wobble = 1 + Math.sin(position.getX(i) * 3.1 + position.getZ(i) * 2.3) * 0.03 + Math.sin(position.getZ(i) * 5.7 + y * 4) * 0.012
-      position.setX(i, position.getX(i) * wobble)
-      position.setZ(i, position.getZ(i) * 0.94 * wobble)
-    }
+    position.array.set(stoneVertices(cut, segments))
     geometry.computeVertexNormals()
     const colors = new Float32Array(position.count * 3)
     for (let i = 0; i < position.count; i++) {
@@ -60,7 +55,28 @@ export function pebble(segments: number): THREE.BufferGeometry {
   })
 }
 
-function lathe(key: string, points: [number, number][], segments: number): THREE.BufferGeometry {
+/** A shape pressed from clay on a sphere's grid (partShape.ts): what the physics measures is what is drawn. */
+export function fromGrid(vertices: Float32Array, segments: number, rings: number): THREE.BufferGeometry {
+  const geometry = new THREE.SphereGeometry(1, segments, rings)
+  geometry.attributes.position.array.set(vertices)
+  geometry.computeVertexNormals()
+  return geometry
+}
+
+/** A ring pressed from clay (partShape.ts), on a torus's grid. */
+export function fromRing(vertices: Float32Array, tube: number, radial: number, tubular: number): THREE.BufferGeometry {
+  const geometry = new THREE.TorusGeometry(1, tube, radial, tubular)
+  geometry.attributes.position.array.set(vertices)
+  geometry.computeVertexNormals()
+  return geometry
+}
+
+/** A pebble: a squashed sphere with a slightly flattened belly, unit radius (see stoneShape.ts). */
+export function pebble(segments: number): THREE.BufferGeometry {
+  return stone(segments, 'whole')
+}
+
+function lathe(key: string, points: readonly (readonly [number, number])[], segments: number): THREE.BufferGeometry {
   return cached(`lathe:${key}:${segments}`, () => {
     const geometry = new THREE.LatheGeometry(
       points.map(([x, y]) => new THREE.Vector2(x, y)),
@@ -71,93 +87,30 @@ function lathe(key: string, points: [number, number][], segments: number): THREE
   })
 }
 
-/** Bowl: a deep flared body with a rolled lip, unit radius at the inner rim, open at the top. */
+/** Bowl: a deep flared body with a rolled lip, unit radius at the inner rim (surfaces.ts). */
 export function bowl(segments: number): THREE.BufferGeometry {
-  return lathe(
-    'bowl-deep',
-    [
-      [0, 0.0],
-      [0.62, 0.0],
-      [0.82, 0.05],
-      [0.98, 0.2],
-      [1.1, 0.4],
-      [1.17, 0.47],
-      [1.13, 0.52],
-      [1.05, 0.5],
-      [0.99, 0.42],
-      [0.88, 0.22],
-      [0.72, 0.08],
-      [0, 0.06],
-    ],
-    segments,
-  )
+  return lathe('bowl-deep', BOWL_PROFILE, segments)
 }
 
 /** A pebble cut in half (keep = 'half') or in quarters: the cut faces are flat, so the piece reads as part of a stone. */
 export function cutPebble(segments: number, keep: 'half' | 'quarter'): THREE.BufferGeometry {
-  return cached(`cut:${keep}:${segments}`, () => {
-    const geometry = pebble(segments).clone()
-    const position = geometry.attributes.position
-    for (let i = 0; i < position.count; i++) {
-      position.setX(i, Math.min(position.getX(i), 0) + (keep === 'half' ? 0.22 : 0.18))
-      if (keep === 'quarter') position.setZ(i, Math.min(position.getZ(i), 0) + 0.18)
-    }
-    geometry.computeVertexNormals()
-    return geometry
-  })
+  return stone(segments, keep)
 }
 
-/** A shallow scale pan with a lip, unit radius. */
+/** A shallow scale pan with a lip, unit radius (surfaces.ts). */
 export function dish(segments: number): THREE.BufferGeometry {
-  return lathe(
-    'dish',
-    [
-      [0, -0.05],
-      [0.85, -0.04],
-      [1.02, 0.08],
-      [1.06, 0.13],
-      [1.0, 0.13],
-      [0.9, 0.05],
-      [0, 0.02],
-    ],
-    segments,
-  )
+  return lathe('dish', DISH_PROFILE, segments)
 }
 
-/** A plate with a raised rim, unit radius. */
+/** A plate with a raised rim, unit radius (surfaces.ts). */
 export function plate(segments: number): THREE.BufferGeometry {
-  return lathe(
-    'plate',
-    [
-      [0, 0],
-      [0.95, 0],
-      [1, 0.05],
-      [0.98, 0.09],
-      [0.74, 0.04],
-      [0, 0.04],
-    ],
-    segments,
-  )
+  return lathe('plate', PLATE_PROFILE, segments)
 }
 
 /** The cloth bag: round bottom, gathered neck, ruffled top; unit radius, about 1.25 tall. */
 export function sack(segments: number): THREE.BufferGeometry {
   return cached(`sack:${segments}`, () => {
-    const profile: [number, number][] = [
-      [0, 0],
-      [0.55, 0.03],
-      [0.9, 0.2],
-      [1.0, 0.45],
-      [0.92, 0.72],
-      [0.62, 0.92],
-      [0.4, 1.0],
-      [0.42, 1.06],
-      [0.58, 1.18],
-      [0.62, 1.24],
-      [0.54, 1.24],
-      [0.36, 1.1],
-    ]
-    const smooth = new THREE.SplineCurve(profile.map(([x, y]) => new THREE.Vector2(x, y))).getPoints(56)
+    const smooth = new THREE.SplineCurve(SACK_PROFILE.map(([x, y]) => new THREE.Vector2(x, y))).getPoints(56)
     const geometry = new THREE.LatheGeometry(smooth, segments)
     const position = geometry.attributes.position
     for (let i = 0; i < position.count; i++) {
@@ -166,7 +119,7 @@ export function sack(segments: number): THREE.BufferGeometry {
       const y = position.getY(i)
       const angle = Math.atan2(z, x)
       const folds = 1 + Math.sin(angle * 7) * 0.035 * Math.min(1, y) + Math.sin(angle * 13 + y * 4) * 0.015
-      const slump = 1 + Math.max(0, 0.5 - y) * 0.12
+      const slump = sackSlump(y)
       position.setX(i, x * folds * slump)
       position.setZ(i, z * folds * slump)
     }

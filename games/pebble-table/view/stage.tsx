@@ -7,14 +7,14 @@ import type { Point } from '../layout'
 import { toWorld2, type Vec3 } from '../physics3d'
 import { PALETTE } from './clay'
 import { ClayFinishEffect, installClayToneMapping } from './finish'
-import type { QualityGovernor, QualitySettings } from '../quality'
+import type { QualityGovernor } from '../quality'
 import { ClayProvider } from './models'
 import { QualityProvider, useQuality } from './quality'
 
 // The claymation stage: a fixed camera at a slight angle over the table, a
 // warm key light with a cool bounce from the table, no shadow maps (blob
-// shadows do that job), and at most one post pass. DPR, the post pass, fur,
-// and physics substeps follow the adaptive quality tier.
+// shadows do that job), and at most one post pass. DPR, the post pass, and
+// fur follow the adaptive quality tier; physics never does.
 
 const TARGET = new THREE.Vector3(1, 0, 2)
 const PITCH = (46 * Math.PI) / 180
@@ -22,21 +22,27 @@ const FOV = 27
 const HALF_WIDTH = 82
 const HALF_DEPTH = 46
 
+/** Stands `camera` where the stage's stands for a view `aspect` (width over height) wide, the whole table in sight. */
+export function placeCamera(camera: THREE.PerspectiveCamera, aspect: number): void {
+  const vHalf = THREE.MathUtils.degToRad(FOV / 2)
+  const hHalf = Math.atan(Math.tan(vHalf) * aspect)
+  const distance = Math.max(HALF_WIDTH / Math.tan(hHalf), HALF_DEPTH / Math.tan(vHalf))
+  camera.fov = FOV
+  camera.aspect = aspect
+  camera.near = 20
+  camera.far = distance * 5
+  camera.position.set(TARGET.x, TARGET.y + Math.sin(PITCH) * distance, TARGET.z + Math.cos(PITCH) * distance)
+  camera.lookAt(TARGET)
+  camera.updateProjectionMatrix()
+  camera.updateMatrixWorld()
+}
+
 function CameraRig() {
   const camera = useThree((state) => state.camera) as THREE.PerspectiveCamera
   const size = useThree((state) => state.size)
   useEffect(() => {
     if (size.width === 0 || size.height === 0) return
-    const aspect = size.width / size.height
-    const vHalf = THREE.MathUtils.degToRad(FOV / 2)
-    const hHalf = Math.atan(Math.tan(vHalf) * aspect)
-    const distance = Math.max(HALF_WIDTH / Math.tan(hHalf), HALF_DEPTH / Math.tan(vHalf))
-    camera.fov = FOV
-    camera.near = 20
-    camera.far = distance * 5
-    camera.position.set(TARGET.x, TARGET.y + Math.sin(PITCH) * distance, TARGET.z + Math.cos(PITCH) * distance)
-    camera.lookAt(TARGET)
-    camera.updateProjectionMatrix()
+    placeCamera(camera, size.width / size.height)
   }, [camera, size])
   return null
 }
@@ -91,31 +97,33 @@ export type ProjectorHandle = {
   toPlane(screen: Point, height: number): Point | null
 }
 
+/** Screen pixels (in a view `size` big) to and from the world, as `camera` sees it. */
+export function cameraProjector(camera: THREE.Camera, size: { width: number; height: number }): ProjectorHandle {
+  const raycaster = new THREE.Raycaster()
+  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
+  const hit = new THREE.Vector3()
+  return {
+    toScreen(point) {
+      const v = new THREE.Vector3(point.x, point.y, point.z).project(camera)
+      if (v.z > 1) return null
+      return { x: ((v.x + 1) / 2) * size.width, y: ((1 - v.y) / 2) * size.height }
+    },
+    toPlane(screen, height) {
+      raycaster.setFromCamera(new THREE.Vector2((screen.x / size.width) * 2 - 1, -(screen.y / size.height) * 2 + 1), camera)
+      plane.constant = -height
+      const point = raycaster.ray.intersectPlane(plane, hit)
+      return point ? toWorld2(point) : null
+    },
+  }
+}
+
 /** Exposes the camera as a projector so game logic can hit-test in screen space. */
 export function ProjectorBridge({ onReady }: { onReady: (projector: ProjectorHandle, element: HTMLCanvasElement) => void }) {
   const camera = useThree((state) => state.camera)
   const size = useThree((state) => state.size)
   const gl = useThree((state) => state.gl)
   useEffect(() => {
-    const raycaster = new THREE.Raycaster()
-    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
-    const hit = new THREE.Vector3()
-    onReady(
-      {
-        toScreen(point) {
-          const v = new THREE.Vector3(point.x, point.y, point.z).project(camera)
-          if (v.z > 1) return null
-          return { x: ((v.x + 1) / 2) * size.width, y: ((1 - v.y) / 2) * size.height }
-        },
-        toPlane(screen, height) {
-          raycaster.setFromCamera(new THREE.Vector2((screen.x / size.width) * 2 - 1, -(screen.y / size.height) * 2 + 1), camera)
-          plane.constant = -height
-          const point = raycaster.ray.intersectPlane(plane, hit)
-          return point ? toWorld2(point) : null
-        },
-      },
-      gl.domElement,
-    )
+    onReady(cameraProjector(camera, size), gl.domElement)
   }, [camera, size, gl, onReady])
   return null
 }
@@ -124,13 +132,11 @@ export function Stage({
   running,
   governor,
   restingFor,
-  onSettings,
   children,
 }: {
   running: boolean
   governor: QualityGovernor
   restingFor: () => number
-  onSettings: (settings: QualitySettings) => void
   children: ReactNode
 }) {
   return (
@@ -142,7 +148,7 @@ export function Stage({
       camera={{ fov: FOV, position: [0, 180, 120], near: 20, far: 1000 }}
       style={{ position: 'absolute', inset: 0, touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
     >
-      <QualityProvider governor={governor} running={running} restingFor={restingFor} onSettings={onSettings}>
+      <QualityProvider governor={governor} running={running} restingFor={restingFor}>
         <ClayProvider>
           <CameraRig />
           <Lights />

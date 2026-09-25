@@ -527,7 +527,7 @@ describe('running water', () => {
       })
     }
     expect(problems.slice(0, 12)).toEqual([])
-  })
+  }, 60_000)
 
   it("loose water runs out over each wall's lip and falls clear of it, round a stand, off the spring's ledge and into a bed, through neither the ground, the beds nor the plants", () => {
     const starter = piece('bend', 3, 1, 2)

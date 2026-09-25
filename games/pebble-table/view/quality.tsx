@@ -4,7 +4,7 @@ import { TIERS, type QualityGovernor, type QualitySettings } from '../quality'
 
 // Applies the quality governor inside the canvas: measures every frame
 // (interval since the last frame and the CPU time this frame took), feeds
-// the governor, and applies its tier (DPR, post mode, fur, physics). The
+// the governor, and applies its tier (DPR, post mode, fur; never physics). The
 // canvas runs on demand, driven by a pacer that renders every display frame
 // while anything happens and every other frame once the table has rested a
 // while, which spares an iPad's battery and heat without visible cost.
@@ -22,13 +22,11 @@ export function QualityProvider({
   governor,
   running,
   restingFor,
-  onSettings,
   children,
 }: {
   governor: QualityGovernor
   running: boolean
   restingFor: () => number
-  onSettings: (settings: QualitySettings) => void
   children: ReactNode
 }) {
   const [tier, setTier] = useState(governor.tier)
@@ -41,9 +39,8 @@ export function QualityProvider({
   useEffect(() => {
     setDpr(Math.min(window.devicePixelRatio || 1, settings.dpr))
     gl.domElement.dataset.quality = settings.name
-    onSettings(settings)
     frame.current.skip = 2
-  }, [settings, gl, setDpr, onSettings])
+  }, [settings, gl, setDpr])
 
   useEffect(() => {
     if (!running) return

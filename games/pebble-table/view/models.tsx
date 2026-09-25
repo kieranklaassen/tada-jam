@@ -2,11 +2,46 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import * as THREE from 'three'
 import { albumSlot, BAG, DOOR, FEEDING, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from '../layout'
+import { DOOR_HINGE, DOOR_SWING, visitorPose } from '../visitors'
+import { BAG_HEADING, BAG_LENGTH, bagShape, bagTip } from '../bag'
 import { stoneRadius3, to3, UNIT, type Vec3 } from '../physics3d'
-import { createClayMaterials, merge, PALETTE, piece, type ClayMaterials } from './clay'
-import { furTime, MAX_SHELLS, quillGeometry, quillLayout, withShells } from './fur'
+import { pebbleRings, STONE_CUTS, STONE_SEGMENTS, stoneReachAlong, stoneReachOf, stoneVertices } from '../stoneShape'
+import { createClayMaterials, merge, paint, PALETTE, piece, type ClayMaterials, type Hold } from './clay'
+import {
+  coverOf,
+  JAR,
+  JAR_LID_CLOSED,
+  JAR_LIFT,
+  JAR_WOBBLE,
+  jarBody,
+  jarLidOpen,
+  labelTurn,
+  NEST,
+  NEST_LIFT,
+  nestBed,
+  nestRing,
+  PART_DRAW_SCALE,
+  PART_PIECES,
+  partCover,
+  partPieceVertices,
+  shellRib,
+  sphereGrid,
+  STOOL,
+  STOOL_LIFT,
+  STOOL_REACH,
+  stoolButton,
+  stoolCushion,
+  stoolRim,
+  type Ball,
+  type Lumped,
+} from '../partShape'
+import { BOWL_LUMP, BOWL_PROFILE, BOWL_SCALE, DECAL_LIFT, decalReach, DISH_PROFILE, feedingFloor, HEM_POINTS, hemAt, ON_RUG, PAN_DEPTH, PAN_ROLL, PAN_SEGMENTS, PLATE_HEIGHT, PLATE_LUMP, PLATE_PROFILE, ROPE_KNOT, RUG, RUG_HEM, RUG_HEM_Y, type Surfaces } from '../surfaces'
+import { furTime, MAX_SHELLS } from './fur'
+import { installClayToneMapping } from './finish'
+import { ARM_AT, CHEEK_AT, EAR_AT, GUEST_SIZE, guestFloor, NECK_Y, poseGuest, soleDepth, speciesShapes } from './guest'
 import { useQuality } from './quality'
-import { MotionDirector, PERSONALITIES, SEAT_SPECIES, type Species } from '../motion'
+import { MotionDirector, PERSONALITIES, SEAT_SPECIES } from '../motion'
+import { guestYaw } from '../feeding'
 import { JAR_SCALE, JARS, PART_COUNTS, PART_KINDS, type PartKind } from '../parts'
 import type { AlbumPage } from '../album'
 import * as geo from './geometry'
@@ -97,8 +132,8 @@ export function TableModel() {
   }, [clay])
   return (
     <>
-      <mesh geometry={slab} material={tableClay} />
-      <mesh material={floor} position={[0, -SLAB_THICKNESS - 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh name="table-top" geometry={slab} material={tableClay} />
+      <mesh name="floor" material={floor} position={[0, -SLAB_THICKNESS - 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[600, 48]} />
       </mesh>
     </>
@@ -136,12 +171,132 @@ const rockTurn = new THREE.Quaternion()
 const MAX_STONES = 64
 
 const PIECE_SIZES: readonly Quarters[] = [4, 2, 1]
+const STONE_NAMES = ['stone-whole', 'stone-half', 'stone-quarter'] as const
 
-/** Stones in three instanced draws (whole, half, quarter): physics pose plus squash on landing and stretch on pickup. */
-export function StonesModel({ read }: { read: () => StoneState[] }) {
+/** A stone's squash, rock and pop this frame, before its neighbours hold them back. */
+export type StoneMotion = { stone: StoneState; amount: number; rock: number; pop: number }
+
+const turned = new THREE.Quaternion()
+const along = new THREE.Vector3()
+
+/** How far (cm) a drawn piece reaches below its origin (`sign` -1) or above it (1) when turned by `turn`. */
+function reachUpright(q: Quarters, turn: THREE.Quaternion, sign: 1 | -1): number {
+  along.set(0, sign, 0).applyQuaternion(turned.copy(turn).invert())
+  return stoneReachAlong(q, along.x, along.y, along.z)
+}
+
+/** The drawn turn of a stone: its body's, rocked by `rock` about an axis of its own. */
+function stoneTurn(stone: StoneState, rock: number, out: THREE.Quaternion): THREE.Quaternion {
+  rockAxis.set(Math.cos(stone.id * 2.39), 0, Math.sin(stone.id * 2.39))
+  rockTurn.setFromAxisAngle(rockAxis, THREE.MathUtils.clamp(rock, -0.35, 0.35))
+  return out.set(...stone.quaternion).premultiply(rockTurn)
+}
+
+/**
+ * How far a stone's squash (`amount`), rock and pop move it from where its
+ * body lies: they turn and scale it about its middle, and it is lifted so its
+ * lowest point stays where the body's is. Returns the lift, and how far past
+ * its reach it may now stick out from its body's origin (cm).
+ */
+function stoneStretch(stone: StoneState, amount: number, rock: number, pop: number): { lift: number; out: number } {
+  if (amount === 0 && rock === 0 && pop === 1) return { lift: 0, out: 0 }
+  const below = reachUpright(stone.q, stoneTurn(stone, rock, scratch.q), -1) * (1 - amount) * pop
+  const lift = below - reachUpright(stone.q, scratch.q.set(...stone.quaternion), -1)
+  const grow = Math.max(0, (1 + Math.abs(amount) * 0.6) * pop - 1, (1 - amount) * pop - 1)
+  return { lift, out: stoneReachOf(stone.q) * grow + Math.abs(lift) }
+}
+
+const stirred = (m: StoneMotion) => m.amount !== 0 || m.rock !== 0 || m.pop !== 1
+
+/** A held part is drawn this much bigger than it lies, about its body's origin. */
+export const HELD_PART_GROWTH = 1.12
+
+/** The balls of each loose part's cover, placed and grown as the part is drawn. */
+export function partBalls(parts: readonly PartState[]): Ball[] {
+  const balls: Ball[] = []
+  for (const part of parts) {
+    scratch.q.set(...part.quaternion)
+    const grow = part.held ? HELD_PART_GROWTH : 1
+    for (const { x, y, z, r } of partCover(part.kind)) {
+      const at = scratch.p.set(x, y, z).applyQuaternion(scratch.q).multiplyScalar(grow)
+      balls.push({ x: part.position.x + at.x, y: part.position.y + at.y, z: part.position.z + at.z, r: r * grow })
+    }
+  }
+  return balls
+}
+
+/**
+ * How much of a stone's squash, rock and pop it keeps (0 to 1) so it never
+ * swells into a stone beside it, or into a loose part (the balls of `parts`)
+ * lying on or against it. Anything still lying wholly below it cannot be
+ * reached: everything turns and scales about the stone's lowest point, which
+ * stays put.
+ */
+export function stoneRoom(motion: StoneMotion, motions: readonly StoneMotion[], parts: readonly Ball[] = []): number {
+  const { stone } = motion
+  const full = stoneStretch(stone, motion.amount, motion.rock, motion.pop).out
+  if (full === 0) return 1
+  const reach = stoneReachOf(stone.q)
+  const bottom = stone.position.y - reachUpright(stone.q, scratch.q.set(...stone.quaternion), -1)
+  let room = Infinity
+  for (const other of motions) {
+    if (other === motion) continue
+    const p = other.stone.position
+    const gap = Math.hypot(p.x - stone.position.x, p.y - stone.position.y, p.z - stone.position.z) - reach - stoneReachOf(other.stone.q)
+    if (gap >= full) continue
+    const still = !stirred(other)
+    if (still && p.y + reachUpright(other.stone.q, scratch.q.set(...other.stone.quaternion), 1) <= bottom) continue
+    room = Math.min(room, still ? gap : gap / 2)
+  }
+  for (const ball of parts) {
+    const gap = Math.hypot(ball.x - stone.position.x, ball.y - stone.position.y, ball.z - stone.position.z) - reach - ball.r
+    if (gap >= full || ball.y + ball.r <= bottom) continue
+    room = Math.min(room, gap)
+  }
+  if (room >= full) return 1
+  let keep = Math.max(0, room / full)
+  while (keep > 0.01 && stoneStretch(stone, motion.amount * keep, motion.rock * keep, 1 + (motion.pop - 1) * keep).out > room) keep *= 0.7
+  return keep > 0.01 ? keep : 0
+}
+
+const shapeScale = new THREE.Matrix4()
+const squashScale = new THREE.Matrix4()
+const stoneRotation = new THREE.Matrix4()
+const stoneQuaternion = new THREE.Quaternion()
+
+/** Where a stone is drawn: its body's pose, with `keep` of its squash, rock and pop. */
+const stoneCovers = new Map<Quarters, Ball[]>()
+
+/** A stone's cover (see `coverOf`), about its body's origin, as `stoneMatrix` draws it resting and unturned. */
+export function stoneCover(q: Quarters): Ball[] {
+  let cover = stoneCovers.get(q)
+  if (!cover) {
+    const r = stoneRadius3(4)
+    cover = coverOf([{ vertices: stoneVertices(STONE_CUTS[q], STONE_SEGMENTS).map((v) => v * r), segments: STONE_SEGMENTS, rings: pebbleRings(STONE_SEGMENTS) }])
+    stoneCovers.set(q, cover)
+  }
+  return cover
+}
+
+export function stoneMatrix(motion: StoneMotion, keep: number, out: THREE.Matrix4): THREE.Matrix4 {
+  const { stone } = motion
+  const amount = motion.amount * keep
+  const rock = motion.rock * keep
+  const pop = 1 + (motion.pop - 1) * keep
+  const r = stoneRadius3(4) * pop
+  const { lift } = stoneStretch(stone, amount, rock, pop)
+  stoneRotation.makeRotationFromQuaternion(stoneTurn(stone, rock, stoneQuaternion))
+  shapeScale.makeScale(r, r, r)
+  squashScale.makeScale(1 + amount * 0.6, 1 - amount, 1 + amount * 0.6)
+  return out.makeTranslation(stone.position.x, stone.position.y + lift, stone.position.z).multiply(squashScale).multiply(stoneRotation).multiply(shapeScale)
+}
+
+/** Stones in three instanced draws (whole, half, quarter): physics pose plus squash on landing and stretch on pickup, held back from the stones and `parts` around them. */
+export function StonesModel({ read, parts }: { read: () => StoneState[]; parts: () => PartState[] }) {
   const { stones } = useClay()
   const meshes = [useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null), useRef<THREE.InstancedMesh>(null)]
   const squash = useRef(new Map<number, Squash>())
+  const motions = useRef<StoneMotion[]>([])
   const geometries = useMemo(() => [geo.pebble(28), geo.cutPebble(28, 'half'), geo.cutPebble(28, 'quarter')], [])
   useEffect(() => {
     for (const ref of meshes) {
@@ -155,11 +310,9 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
     const list = read()
     const seen = new Set<number>()
     const counts = [0, 0, 0]
+    const moving = motions.current
+    moving.length = 0
     for (const stone of list) {
-      const slot = PIECE_SIZES.indexOf(stone.q)
-      const instanced = meshes[slot].current
-      if (!instanced || counts[slot] >= MAX_STONES) continue
-      const i = counts[slot]++
       seen.add(stone.id)
       let s = squash.current.get(stone.id)
       if (!s) {
@@ -176,16 +329,17 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
       s.lastVy = stone.velocityY
       const amount = THREE.MathUtils.clamp(springStep(s, stone.held ? -0.07 : 0, dt, feel.stiffness, feel.damping), -0.3, 0.35)
       const rock = springStep(s.rock, 0, dt, feel.rockStiffness, feel.rockDamping)
-      const r = stoneRadius3(4)
       const pop = 1 + stone.pulse * 0.22 + stone.glow * 0.06
-      rockAxis.set(Math.cos(stone.id * 2.39), 0, Math.sin(stone.id * 2.39))
-      rockTurn.setFromAxisAngle(rockAxis, THREE.MathUtils.clamp(rock, -0.35, 0.35))
-      const rotation = scratch.m2.makeRotationFromQuaternion(scratch.q.set(...stone.quaternion).premultiply(rockTurn))
-      const shapeScale = scratch.m3.makeScale(r * pop, r * pop, r * pop)
-      const squashScale = scratch.m4.makeScale(1 + amount * 0.6, 1 - amount, 1 + amount * 0.6)
-      const lift = amount > 0 ? -amount * r * 0.35 : 0
-      scratch.m.makeTranslation(stone.position.x, stone.position.y + lift, stone.position.z).multiply(squashScale).multiply(rotation).multiply(shapeScale)
-      instanced.setMatrixAt(i, scratch.m)
+      moving.push({ stone, amount: Math.abs(amount) < 1e-4 ? 0 : amount, rock: Math.abs(rock) < 1e-4 ? 0 : rock, pop })
+    }
+    const around = moving.some(stirred) ? partBalls(parts()) : []
+    for (const motion of moving) {
+      const { stone } = motion
+      const slot = PIECE_SIZES.indexOf(stone.q)
+      const instanced = meshes[slot].current
+      if (!instanced || counts[slot] >= MAX_STONES) continue
+      const i = counts[slot]++
+      instanced.setMatrixAt(i, stoneMatrix(motion, stoneRoom(motion, moving, around), scratch.m))
       const bright = 1 + stone.pulse * 0.28 + stone.glow * 0.18
       instanced.setColorAt(i, scratch.c.setRGB(bright, bright, bright))
     }
@@ -201,7 +355,7 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
   return (
     <>
       {geometries.map((geometry, slot) => (
-        <instancedMesh key={slot} ref={meshes[slot]} args={[geometry, stones, MAX_STONES]} frustumCulled={false} />
+        <instancedMesh key={slot} name={STONE_NAMES[slot]} ref={meshes[slot]} args={[geometry, stones, MAX_STONES]} frustumCulled={false} />
       ))}
     </>
   )
@@ -209,12 +363,22 @@ export function StonesModel({ read }: { read: () => StoneState[] }) {
 
 // --- blob shadows and glows ----------------------------------------------------
 
-export type Blob = { at: Point; ground: number; radius: number; strength: number; stretch?: number }
+/** A blob shadow or glow; `cover` (cm) is how small it can shrink and still show past what casts it, when that rests on it. */
+export type Blob = { at: Point; ground: number; radius: number; strength: number; stretch?: number; cover?: number }
 
 const LIGHT_OFFSET = { x: 0.32, z: -0.12 }
+/** Decals smaller than this (cm), or than their blob's `cover`, are not drawn: they would hide under what casts them. */
+const DECAL_SMALLEST = 0.2
+/** A lying stone hides a shadow or glow shrunk to under this much of its radius. */
+export const STONE_COVER = 0.5
+const decalAt: Point = { x: 0, y: 0 }
 
-/** Soft blob shadows: the height above the ground widens and fades them. */
-export function Overlays({ kind, read, capacity }: { kind: 'shadow' | 'glow'; read: () => Blob[]; capacity: number }) {
+/**
+ * Soft blob shadows and glow rings: the height above the ground widens and
+ * fades a shadow. Each is a flat disc (its texture fades out at the disc's
+ * edge) shrunk so it never reaches up into a rim or hem beside it.
+ */
+export function Overlays({ kind, read, surfaces, capacity }: { kind: 'shadow' | 'glow'; read: () => Blob[]; surfaces: () => Surfaces; capacity: number }) {
   const { shadow, glow } = useClay()
   const mesh = useRef<THREE.InstancedMesh>(null)
   useEffect(() => {
@@ -226,35 +390,35 @@ export function Overlays({ kind, read, capacity }: { kind: 'shadow' | 'glow'; re
   useFrame(() => {
     const instanced = mesh.current
     if (!instanced) return
-    const blobs = read().slice(0, capacity)
-    blobs.forEach((blob, i) => {
-      const p = to3(blob.at, blob.ground + (kind === 'shadow' ? 0.06 : 0.12))
-      const lift = Math.max(0, blob.strength)
+    const blobs = read()
+    const under = surfaces()
+    let count = 0
+    for (const blob of blobs) {
+      if (count === capacity) break
       const offset = kind === 'shadow' ? blob.stretch ?? 0 : 0
-      scratch.m.compose(
-        scratch.p.set(p.x + LIGHT_OFFSET.x * offset, p.y, p.z + LIGHT_OFFSET.z * offset),
-        scratch.q.setFromEuler(scratch.e.set(-Math.PI / 2, 0, 0)),
-        scratch.s.set(blob.radius * 2, blob.radius * 2, 1),
-      )
-      instanced.setMatrixAt(i, scratch.m)
-      instanced.setColorAt(i, scratch.c.setRGB(lift, 0, 0))
-    })
-    instanced.count = blobs.length
+      decalAt.x = blob.at.x + (LIGHT_OFFSET.x * offset) / UNIT
+      decalAt.y = blob.at.y + (LIGHT_OFFSET.z * offset) / UNIT
+      const radius = decalReach(decalAt, blob.ground, under, blob.radius)
+      if (radius < Math.max(DECAL_SMALLEST, blob.cover ?? 0)) continue
+      const p = to3(decalAt, blob.ground + DECAL_LIFT)
+      scratch.m.compose(scratch.p.set(p.x, p.y, p.z), scratch.q.setFromEuler(scratch.e.set(-Math.PI / 2, 0, 0)), scratch.s.set(radius * 2, radius * 2, 1))
+      instanced.setMatrixAt(count, scratch.m)
+      instanced.setColorAt(count, scratch.c.setRGB(Math.max(0, blob.strength), 0, 0))
+      count++
+    }
+    instanced.count = count
     instanced.instanceMatrix.needsUpdate = true
     if (instanced.instanceColor) instanced.instanceColor.needsUpdate = true
   })
-  const plane = useMemo(() => new THREE.PlaneGeometry(1, 1), [])
-  return <instancedMesh ref={mesh} args={[plane, kind === 'shadow' ? shadow : glow, capacity]} frustumCulled={false} renderOrder={kind === 'shadow' ? 1 : 3} />
+  const disc = useMemo(() => new THREE.CircleGeometry(0.5, 32), [])
+  return <instancedMesh name={kind === 'shadow' ? 'shadow-decals' : 'glow-rings'} ref={mesh} args={[disc, kind === 'shadow' ? shadow : glow, capacity]} frustumCulled={false} renderOrder={kind === 'shadow' ? 1 : 3} />
 }
 
 // --- bag ---------------------------------------------------------------------
 
-export type BagPose = { fullness: number; tipAge: number | null; peek: number | null; now: number }
+export type BagPose = { fullness: number; tipAge: number | null; shakeOut: boolean; peek: number | null; now: number }
 
-const BAG_LENGTH = 11.5
-const BAG_GIRTH = 7.2
-
-function bagGeometry(): THREE.BufferGeometry {
+export function bagGeometry(): THREE.BufferGeometry {
   return merge([
     piece(geo.sack(40), PALETTE.bag, {}, { lump: 0.05, frequency: 3.1, seed: 4, ground: null }),
     piece(geo.torus(32, 0.1), PALETTE.cord, { position: [0, 1.02, 0], rotation: [Math.PI / 2, 0, 0], scale: 0.43 }, { ground: null }),
@@ -272,32 +436,21 @@ export function BagModel({ read }: { read: () => BagPose }) {
   const pebble = useMemo(() => geo.pebble(20), [])
   const settle = useRef<Spring>({ x: 0, v: 0 })
   const lastTip = useRef<number | null>(null)
-  const tips = useRef(0)
   const p = to3(BAG)
   useFrame((_, dt) => {
     const pose = read()
     const group = body.current
     if (group) {
-      if (pose.tipAge !== null && pose.tipAge < dt * 1.5 && lastTip.current !== pose.tipAge) {
-        settle.current.v += 7
-        tips.current += 1
-      }
+      if (pose.tipAge !== null && pose.tipAge < dt * 1.5 && lastTip.current !== pose.tipAge) settle.current.v += 7
       lastTip.current = pose.tipAge
-      const t = pose.tipAge ?? 10
-      // Two ways to tip, alternating: a big lurch forward, or a shake-out that
-      // jiggles the stones loose side to side.
-      const shakeOut = tips.current % 2 === 0
-      const anticipation = t < 0.12 ? Math.sin((t / 0.12) * Math.PI) * (shakeOut ? 0.08 : 0.12) : 0
-      const lurch = t >= 0.12 && t < 0.55 ? Math.sin(((t - 0.12) / 0.43) * Math.PI) * (shakeOut ? 0.26 : 0.42) : 0
-      const shake = shakeOut && t >= 0.12 && t < 0.8 ? Math.sin((t - 0.12) * 42) * 0.12 * Math.sin(((t - 0.12) / 0.68) * Math.PI) : 0
       // An empty bag is floppy: softer spring, longer wobble.
       const wobble = springStep(settle.current, 0, dt, 55 + pose.fullness * 45, 4 + pose.fullness * 4)
-      const girth = 0.7 + pose.fullness * 0.32
       const breathe = 1 + Math.sin(pose.now * 1.4) * 0.014
       const invite = pose.peek === null ? 0 : Math.sin(pose.peek * Math.PI * 6) * 0.1 * Math.sin(pose.peek * Math.PI)
-      group.scale.set(BAG_GIRTH * girth * breathe * (1 + anticipation), BAG_LENGTH * (1 - anticipation * 0.6), BAG_GIRTH * girth * breathe * (1 + anticipation) * 1.1)
-      group.position.y = BAG_GIRTH * girth * 0.88
-      group.rotation.set(invite + wobble * 0.04 + shake, 0, -1.42 - lurch + anticipation * 0.6 + wobble * 0.02)
+      const shape = bagShape(pose.fullness, bagTip(pose.tipAge, pose.shakeOut), breathe)
+      group.scale.set(...shape.scale)
+      group.position.y = shape.y
+      group.rotation.set(shape.roll + invite + wobble * 0.04, 0, shape.lie + wobble * 0.02)
     }
     if (peek.current) {
       const k = pose.peek === null ? 0 : Math.sin(pose.peek * Math.PI)
@@ -307,25 +460,229 @@ export function BagModel({ read }: { read: () => BagPose }) {
     }
   })
   return (
-    <group position={[p.x, 0, p.z]} rotation={[0, 0.82, 0]}>
-      <group ref={body}>
-        <mesh geometry={geometry} material={clay} />
+    <group position={[p.x, 0, p.z]} rotation={[0, BAG_HEADING, 0]}>
+      <group ref={body} userData={{ jamObject: 'bag' }}>
+        <mesh name="bag" geometry={geometry} material={clay} />
       </group>
-      <mesh ref={peek} geometry={pebble} material={stones} scale={stoneRadius3(4)} />
+      <mesh name="bag-peek-stone" ref={peek} geometry={pebble} material={stones} scale={stoneRadius3(4)} />
     </group>
   )
 }
 
 // --- scale -------------------------------------------------------------------
 
-export type ScalePose = { angle: number; panY: [number, number]; now: number }
+/** One ball of a held stone or part as the pan ropes see it: they are laid over it. */
+export type RopeBall = { center: Vec3; radius: number }
 
-const PIVOT_Y = 25
+/**
+ * The beam's tilt, where the pans hang and how far they have swung on their
+ * ropes (cm, as the physics holds them), and the held stones and parts the
+ * ropes are laid over, each as the balls it fills.
+ */
+export type ScalePose = { angle: number; panY: [number, number]; panSway: [number, number]; held: readonly (readonly RopeBall[])[]; now: number }
 
-function postGeometry(): THREE.BufferGeometry {
+/** The most straight pieces a rope is drawn in, laid over what is held in its way. */
+const ROPE_PIECES = 8
+/** The pan ropes and their knots are part of the scale they hang from (for the intersection audit). */
+const ROPE_OBJECTS = Array.from({ length: 6 * ROPE_PIECES }, () => 'scale')
+const KNOT_OBJECTS = Array.from({ length: 8 }, () => 'scale')
+
+export const PIVOT_Y = 25
+/** The balls on the beam's ends that the pan ropes hang from. */
+export const BEAM_END_RADIUS = 2.1
+/** The smooth ball the beam turns on, part of the beam: the post's column and knob meet it the same way at every tilt. */
+export const HUB_RADIUS = 2.1
+/** The knob on top of the pivot ball, high enough that the beam's own thickness clears it at full tilt. */
+const KNOB = { y: PIVOT_Y + 3, radius: 1.1 }
+/**
+ * Clay knots the pan ropes are tied into, one under each beam end and one on
+ * a pan's rim per rope, each pressed this far into what it hangs from or sits
+ * on. A rope ends at a knot's middle, so it meets the knot the same way
+ * however the beam tilts and the pan swings.
+ */
+/** How thick the pan ropes are drawn, as a scale on the unit coil. */
+const ROPE_THICKNESS = 0.95
+
+const PAN_ANGLES = [0.5, 0.5 + (Math.PI * 2) / 3, 0.5 + (Math.PI * 4) / 3]
+
+/** Where a pan hangs: its centre, the knot under its beam end, and the knots its ropes are tied into on its rim. */
+export function panHang(side: 0 | 1, angle: number, panY: number, sway: number): { center: THREE.Vector3; top: THREE.Vector3; rims: THREE.Vector3[] } {
+  const post = to3(SCALE.post)
+  const pan = SCALE.pans[side]
+  const half = SCALE.beamHalf * UNIT
+  const sign = side === 0 ? -1 : 1
+  const at = to3(pan, panY)
+  const center = new THREE.Vector3(at.x + sway, at.y, at.z)
+  const hang = BEAM_END_RADIUS + ROPE_KNOT.radius - ROPE_KNOT.press
+  const top = new THREE.Vector3(post.x + Math.cos(angle) * half * sign, PIVOT_Y - Math.sin(angle) * half * sign - hang, post.z)
+  const reach = pan.r * UNIT * PAN_ROLL.radius
+  const sit = PAN_ROLL.y + reach * PAN_ROLL.tube + ROPE_KNOT.radius - ROPE_KNOT.press
+  const rims = PAN_ANGLES.map((a) => new THREE.Vector3(center.x + Math.cos(a) * reach, center.y + sit, center.z + Math.sin(a) * reach))
+  return { center, top, rims }
+}
+
+/** How far a rope's drawing reaches from its line: the unit coil's widest twist, at the rope's thickness. */
+export const ROPE_REACH = 0.5 * 1.28 * ROPE_THICKNESS
+/** A rope passes this much farther than touching round a held ball. */
+const ROPE_ROOM = 0.05
+
+/** A held ball's slice through the plane a rope is laid in is drawn as a polygon of this many sides round it. */
+const ROPE_SIDES = 8
+/** A point in the plane a rope is laid in: along the straight rope from its top knot, and out from it. */
+type Flat = [number, number]
+
+/**
+ * The way from (0, 0) to (length, 0) round every point on the far side of the
+ * line between them (s > 0): the far side of the convex hull of them all,
+ * which may reach past either end.
+ */
+function over(points: readonly Flat[], length: number): Flat[] {
+  const [start, end]: Flat[] = [[0, 0], [length, 0]]
+  const all = [start, end, ...points.filter((p) => p[1] > 0)].sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  const half = (list: readonly Flat[]) => {
+    const hull: Flat[] = []
+    for (const p of list) {
+      while (hull.length >= 2) {
+        const [o, a] = [hull[hull.length - 2], hull[hull.length - 1]]
+        if ((a[0] - o[0]) * (p[1] - o[1]) - (a[1] - o[1]) * (p[0] - o[0]) > 0) break
+        hull.pop()
+      }
+      hull.push(p)
+    }
+    return hull.slice(0, -1)
+  }
+  // Counter-clockwise from the rim knot round to the top knot is the way over them, backwards.
+  const ring = [...half(all), ...half([...all].reverse())]
+  const way: Flat[] = []
+  for (let i = ring.indexOf(end), k = 0; k < ring.length; i = (i + 1) % ring.length, k++) {
+    way.push(ring[i])
+    if (ring[i] === start) return way.reverse()
+  }
+  return [start, end]
+}
+
+/**
+ * How far above its rim knot's middle, and below its top knot's, a rope stays
+ * between them: so it passes over the rolled rim and under the beam end clear.
+ */
+const ROPE_KNOT_CLEAR = ROPE_REACH + ROPE_ROOM - (ROPE_KNOT.radius - ROPE_KNOT.press)
+/** The sides a rope is tried laid over a held thing, turned about its line from straight off the thing's middle: nearest first. */
+const ROPE_TURNS = [0, 1, -1, 2, -2, 3, -3, 4].map((k) => (k * Math.PI) / 4)
+
+/**
+ * A way over the top of things cut to at most `most` pieces: again and again,
+ * the piece whose two neighbours, run on along their lines to where they meet,
+ * take in least room is left out for them. The way only ever moves outward,
+ * so it still passes over everything. Null if it cannot be cut so.
+ */
+function fewer(way: readonly Flat[], most: number): Flat[] | null {
+  const out = [...way]
+  while (out.length - 1 > most) {
+    let [best, least, meet]: [number, number, Flat | null] = [-1, Infinity, null]
+    for (let i = 1; i + 2 < out.length; i++) {
+      const [a, b, c, d] = [out[i - 1], out[i], out[i + 1], out[i + 2]]
+      const [ux, uy, vx, vy, wx, wy] = [b[0] - a[0], b[1] - a[1], c[0] - d[0], c[1] - d[1], c[0] - b[0], c[1] - b[1]]
+      const det = vx * uy - ux * vy
+      if (Math.abs(det) < 1e-12) continue
+      const [p, q] = [(vx * wy - vy * wx) / det, (ux * wy - uy * wx) / det]
+      if (p < 0 || q < 0) continue
+      const m: Flat = [b[0] + ux * p, b[1] + uy * p]
+      const room = Math.abs((m[0] - b[0]) * wy - (m[1] - b[1]) * wx) / 2
+      if (room < least) [best, least, meet] = [i, room, m]
+    }
+    if (!meet) return null
+    out.splice(best, 2, meet)
+  }
+  return out
+}
+
+/** A held ball as a rope passes it: its middle, from the rope's top knot, and how far the rope's line keeps from it. */
+type Clearance = { at: THREE.Vector3; room: number }
+
+/**
+ * The way a rope from `top` along `u` for `length` runs over `balls` on the
+ * `n` side of its line: the shortest way from knot to knot, in the plane of
+ * the rope and `n`, that passes every ball sliced by that plane (drawn as a
+ * polygon round the slice) on that side, cut to ROPE_PIECES pieces (see
+ * `fewer`). Null if it cannot be.
+ */
+function wayOver(top: THREE.Vector3, rim: THREE.Vector3, u: THREE.Vector3, length: number, n: THREE.Vector3, balls: readonly Clearance[]): THREE.Vector3[] | null {
+  const m = new THREE.Vector3().crossVectors(u, n)
+  const slices: Flat[] = []
+  for (const { at, room } of balls) {
+    const aside = at.dot(m)
+    if (Math.abs(aside) >= room) continue
+    const size = Math.sqrt(room * room - aside * aside) / Math.cos(Math.PI / ROPE_SIDES)
+    const [t, s] = [at.dot(u), at.dot(n)]
+    for (let k = 0; k < ROPE_SIDES; k++) slices.push([t + Math.cos(((k + 0.5) * Math.PI * 2) / ROPE_SIDES) * size, s + Math.sin(((k + 0.5) * Math.PI * 2) / ROPE_SIDES) * size])
+  }
+  const way = fewer(over(slices, length), ROPE_PIECES)
+  if (!way) return null
+  return way.map(([t, s], i) => (i === 0 ? top : i === way.length - 1 ? rim : top.clone().addScaledVector(u, t).addScaledVector(n, s)))
+}
+
+/**
+ * The points a pan rope runs through from `top` to `rim`: straight, or, where
+ * a held stone or part stands in its way, laid over every ball of what it cuts
+ * (see `wayOver`): pushed straight off the middle of the thing it would cut
+ * deepest, or, if that would take it past a knot's height, turned about its
+ * line as little as keeps it between them. A ball reaching a knot is passed
+ * only as far off as leaves the knot outside its slice.
+ */
+export function ropeRun(top: THREE.Vector3, rim: THREE.Vector3, held: readonly (readonly RopeBall[])[]): THREE.Vector3[] {
+  const toRim = new THREE.Vector3().subVectors(rim, top)
+  const length = toRim.length()
+  const u = toRim.clone().divideScalar(length)
+  const clearance = (ball: RopeBall): Clearance => {
+    const at = new THREE.Vector3(ball.center.x, ball.center.y, ball.center.z).sub(top)
+    const knot = Math.min(at.length(), at.distanceTo(toRim))
+    return { at, room: Math.min(ball.radius + ROPE_REACH + ROPE_ROOM, (knot - ROPE_ROOM) * Math.cos(Math.PI / ROPE_SIDES)) }
+  }
+  const inWay: Clearance[] = []
+  let deepest: Clearance[] | null = null
+  let share = 1
+  for (const balls of held) {
+    const clear = balls.map(clearance).filter((ball) => ball.room > 0)
+    let cut = 1
+    for (const { at, room } of clear) cut = Math.min(cut, u.clone().multiplyScalar(THREE.MathUtils.clamp(at.dot(u), 0, length)).sub(at).length() / room)
+    if (cut >= 1) continue
+    inWay.push(...clear)
+    if (cut < share) [deepest, share] = [clear, cut]
+  }
+  if (!deepest) return [top, rim]
+  const off = new THREE.Vector3()
+  for (const { at } of deepest) off.sub(at)
+  off.divideScalar(deepest.length)
+  off.addScaledVector(u, -off.dot(u))
+  if (off.lengthSq() < 1e-8) off.copy(UP).addScaledVector(u, -UP.dot(u))
+  off.normalize()
+  const [low, high] = [rim.y + ROPE_KNOT_CLEAR, top.y - ROPE_KNOT_CLEAR]
+  let first: THREE.Vector3[] | null = null
+  for (const turn of ROPE_TURNS) {
+    const way = wayOver(top, rim, u, length, off.clone().applyAxisAngle(u, turn), inWay)
+    if (!way) continue
+    first ??= way
+    if (way.every((p, i) => i === 0 || i === way.length - 1 || (p.y >= low && p.y <= high))) return way
+  }
+  return first ?? [top, rim]
+}
+
+/** A rope's instance matrix: the unit coil stretched from one knot's middle to another's. */
+export function ropeMatrix(from: THREE.Vector3, to: THREE.Vector3, out: THREE.Matrix4): THREE.Matrix4 {
+  const dir = scratch.p2.subVectors(to, from)
+  const length = dir.length()
+  return out.compose(from, scratch.q.setFromUnitVectors(UP, dir.divideScalar(length)), scratch.s.set(ROPE_THICKNESS, length, ROPE_THICKNESS))
+}
+
+const UP = new THREE.Vector3(0, 1, 0)
+
+/** How far the post is drawn above the table: clear of the contact shadow under it too, so its flat foot fights neither for the same depth. */
+export const POST_LIFT = DECAL_LIFT * 2
+
+export function postGeometry(): THREE.BufferGeometry {
   const turned = new THREE.LatheGeometry(
     [
-      [0.01, 0],
+      [0, 0],
       [7.4, 0],
       [7.6, 0.9],
       [6.4, 1.8],
@@ -338,27 +695,32 @@ function postGeometry(): THREE.BufferGeometry {
       [2, 20],
       [1.5, 21.5],
       [1.6, 23],
-      [0.01, 23.2],
+      [0, 23.2],
     ].map(([x, y]) => new THREE.Vector2(x, y)),
     28,
   )
   return merge([
-    piece(turned, PALETTE.scaleWood, {}, { lump: 0.18, frequency: 0.5, seed: 2 }),
-    piece(geo.sphere(20), PALETTE.scaleWood, { position: [0, PIVOT_Y, 0], scale: 2.1 }, { lump: 0.15, ground: null }),
-    piece(geo.sphere(14), PALETTE.scaleWood, { position: [0, PIVOT_Y + 2.6, 0], scale: 1.1 }, { ground: null }),
+    // Its foot stays flat on the table while the rest is lumped.
+    piece(turned, PALETTE.scaleWood, {}, { lump: 0.18, frequency: 0.5, seed: 2, hold: holdLathe([], [[0, 0], [7.4, 0]]) }),
+    piece(geo.sphere(14), PALETTE.scaleWood, { position: [0, KNOB.y, 0], scale: KNOB.radius }, { ground: null }),
   ])
 }
 
-function beamGeometry(half: number): THREE.BufferGeometry {
+export function beamGeometry(half: number): THREE.BufferGeometry {
   const collars = [-0.72, -0.4, 0.4, 0.72].map((t) =>
     piece(geo.torus(20, 0.45), PALETTE.pan, { position: [t * half, 0, 0], rotation: [0, Math.PI / 2, 0], scale: 1.25 }, { lump: 0.06, ground: null }),
   )
   return merge([
     piece(geo.capsule(18), PALETTE.scaleWood, { rotation: [0, 0, Math.PI / 2], scale: [2.5, half, 2.5] }, { lump: 0.18, frequency: 0.7, ground: null }),
-    piece(geo.sphere(18), PALETTE.scaleWood, { position: [-half, 0, 0], scale: 2.1 }, { lump: 0.12, ground: null }),
-    piece(geo.sphere(18), PALETTE.scaleWood, { position: [half, 0, 0], scale: 2.1 }, { lump: 0.12, ground: null }),
+    piece(geo.sphere(20), PALETTE.scaleWood, { scale: HUB_RADIUS }, { ground: null }),
+    piece(geo.sphere(18), PALETTE.scaleWood, { position: [-half, 0, 0], scale: BEAM_END_RADIUS }, { lump: 0.12, ground: null }),
+    piece(geo.sphere(18), PALETTE.scaleWood, { position: [half, 0, 0], scale: BEAM_END_RADIUS }, { lump: 0.12, ground: null }),
     ...collars,
   ])
+}
+
+export function knotGeometry(): THREE.BufferGeometry {
+  return merge([piece(geo.sphere(12), PALETTE.pan, { scale: ROPE_KNOT.radius }, { lump: 0.05, ground: null })])
 }
 
 /** A twisted clay rope, unit length along +y, for the pan hangers. */
@@ -381,8 +743,8 @@ function coilGeometry(): THREE.BufferGeometry {
 
 function panGeometry(radius: number): THREE.BufferGeometry {
   return merge([
-    piece(geo.dish(40), PALETTE.pan, { scale: [radius, 13, radius] }, { lump: 0.3, frequency: 0.35, seed: 5, ground: null }),
-    piece(geo.torus(40, 0.08), PALETTE.pan, { position: [0, 1.6, 0], rotation: [Math.PI / 2, 0, 0], scale: radius * 1.03 }, { lump: 0.12, frequency: 0.5, ground: null }),
+    piece(geo.dish(PAN_SEGMENTS), PALETTE.pan, { scale: [radius, PAN_DEPTH, radius] }, { lump: 0.3, frequency: 0.35, seed: 5, ground: null, hold: holdLathe(DISH_PROFILE.slice(4)) }),
+    piece(geo.torus(40, PAN_ROLL.tube), PALETTE.pan, { position: [0, PAN_ROLL.y, 0], rotation: [Math.PI / 2, 0, 0], scale: radius * PAN_ROLL.radius }, { lump: 0.04, frequency: 0.5, ground: null }),
   ])
 }
 
@@ -391,82 +753,88 @@ export function ScaleModel({ read }: { read: () => ScalePose }) {
   const beam = useRef<THREE.Group>(null)
   const pans = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
   const chains = useRef<THREE.InstancedMesh>(null)
-  const half = SCALE.beamHalf * UNIT
+  const knots = useRef<THREE.InstancedMesh>(null)
   const post = to3(SCALE.post)
   const shapes = once('scale', scaleShapes)
-  const swing = useRef({ last: 0, pans: [{ x: 0, v: 0 }, { x: 0, v: 0 }] as Spring[] })
-  useFrame((_, dt) => {
+  // The ropes are laid over held stones and parts as their covers: made now, not on the first hold.
+  once('covers', () => [...PART_KINDS.map(partCover), ...([1, 2, 4] as const).map(stoneCover)])
+  useFrame(() => {
     const pose = read()
     const angle = pose.angle + Math.sin(pose.now * 0.9) * 0.003
     if (beam.current) beam.current.rotation.z = -angle
-    const instanced = chains.current
-    // Pans hang on ropes: when the beam moves they lag, then swing back and settle.
-    const turn = dt > 0 ? (angle - swing.current.last) / dt : 0
-    swing.current.last = angle
-    SCALE.pans.forEach((pan, side) => {
-      const spring = swing.current.pans[side]
-      spring.v -= turn * 5
-      const sway = THREE.MathUtils.clamp(springStep(spring, 0, dt, 26, 2.6), -1.6, 1.6)
-      const center = to3(pan, pose.panY[side])
-      center.x += sway
-      pans[side].current?.position.set(center.x, center.y, center.z)
-      const sign = side === 0 ? -1 : 1
-      const end = new THREE.Vector3(post.x + Math.cos(angle) * half * sign, PIVOT_Y - Math.sin(angle) * half * sign, post.z)
-      for (let k = 0; k < 3; k++) {
-        const a = (k / 3) * Math.PI * 2 + 0.5
-        const rim = new THREE.Vector3(center.x + Math.cos(a) * pan.r * UNIT * 0.96, center.y + 1.6, center.z + Math.sin(a) * pan.r * UNIT * 0.96)
-        const dir = rim.clone().sub(end)
-        const length = dir.length()
-        scratch.m.compose(end, scratch.q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()), scratch.s.set(0.95, length, 0.95))
-        instanced?.setMatrixAt(side * 3 + k, scratch.m)
-      }
+    // Pans hang on ropes: when the beam moves they lag, then swing back and settle (see `stepSway`).
+    let pieces = 0
+    SCALE.pans.forEach((_, side) => {
+      const hang = panHang(side as 0 | 1, angle, pose.panY[side], pose.panSway[side])
+      pans[side].current?.position.copy(hang.center)
+      knots.current?.setMatrixAt(side * 4, scratch.m.makeTranslation(hang.top))
+      hang.rims.forEach((rim, k) => {
+        const run = ropeRun(hang.top, rim, pose.held)
+        for (let i = 0; i + 1 < run.length; i++) chains.current?.setMatrixAt(pieces++, ropeMatrix(run[i], run[i + 1], scratch.m))
+        knots.current?.setMatrixAt(side * 4 + 1 + k, scratch.m.makeTranslation(rim))
+      })
     })
-    if (instanced) instanced.instanceMatrix.needsUpdate = true
+    if (chains.current) {
+      chains.current.count = pieces
+      chains.current.instanceMatrix.needsUpdate = true
+    }
+    if (knots.current) knots.current.instanceMatrix.needsUpdate = true
   })
   return (
-    <group>
-      <mesh geometry={shapes.post} material={clay} position={[post.x, 0, post.z]} />
+    <group userData={{ jamObject: 'scale' }}>
+      <mesh name="scale-post" geometry={shapes.post} material={clay} position={[post.x, POST_LIFT, post.z]} />
       <group ref={beam} position={[post.x, PIVOT_Y, post.z]}>
-        <mesh geometry={shapes.beam} material={clay} />
+        <mesh name="scale-beam" geometry={shapes.beam} material={clay} />
       </group>
       {shapes.pans.map((geometry, side) => (
-        <mesh key={side} ref={pans[side]} geometry={geometry} material={clay} />
+        <mesh key={side} name={side === 0 ? 'scale-pan-left' : 'scale-pan-right'} ref={pans[side]} geometry={geometry} material={clay} />
       ))}
-      <instancedMesh ref={chains} args={[shapes.chain, clay, 6]} frustumCulled={false} />
+      <instancedMesh name="scale-ropes" ref={chains} args={[shapes.chain, clay, 6 * ROPE_PIECES]} frustumCulled={false} userData={{ jamInstanceObjects: ROPE_OBJECTS }} />
+      <instancedMesh name="scale-knots" ref={knots} args={[shapes.knot, clay, 8]} frustumCulled={false} userData={{ jamInstanceObjects: KNOT_OBJECTS }} />
     </group>
   )
 }
 
 // --- Fair Feeding --------------------------------------------------------------
 
-/** A rolled clay rope that follows the rug's scalloped elliptical hem. */
-function ellipseRope(rx: number, rz: number): THREE.BufferGeometry {
+/** A rolled clay rope along the rug's scalloped elliptical hem, around the rug's centre. */
+function hemRope(): THREE.BufferGeometry {
   const points: THREE.Vector3[] = []
-  for (let i = 0; i < 160; i++) {
-    const a = (i / 160) * Math.PI * 2
-    const scallop = 1 + Math.abs(Math.sin(a * 14)) * 0.02
-    points.push(new THREE.Vector3(Math.cos(a) * rx * scallop, 0, Math.sin(a) * rz * scallop))
+  for (let i = 0; i < HEM_POINTS; i++) {
+    const at = hemAt(i / HEM_POINTS)
+    points.push(new THREE.Vector3((at.x - RUG.center.x) * UNIT, 0, (at.y - RUG.center.y) * UNIT))
   }
-  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 240, 0.42, 8, true)
+  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points, true), 240, RUG_HEM.tube, 8, true)
 }
 
-function feedingShapes() {
+/** Keep a lathe's named profile points (radius, height) true while the rest of it is lumped. */
+function holdLathe(fixed: readonly (readonly [number, number])[], level: readonly (readonly [number, number])[] = []): Hold {
+  const on = (points: readonly (readonly [number, number])[], x: number, y: number, z: number) =>
+    points.some(([r, h]) => Math.abs(Math.hypot(x, z) - r) < 1e-4 && Math.abs(y - h) < 1e-4)
+  return (x, y, z) => (on(fixed, x, y, z) ? 'fixed' : on(level, x, y, z) ? 'level' : null)
+}
+
+export function feedingShapes() {
   return {
     rug: geo.cloth(40),
-    bowl: merge([piece(geo.bowl(48), PALETTE.bowl, { scale: FEEDING.bowl.r * UNIT }, { lump: 0.22, frequency: 0.4, seed: 8, occlusion: 0.42 })]),
-    plate: merge([piece(geo.plate(36), PALETTE.plate, { scale: [FEEDING.plateRadius * UNIT, 5, FEEDING.plateRadius * UNIT] }, { lump: 0.15, frequency: 0.5, seed: 3, occlusion: 0.15 })]),
-    stool: merge([
-      piece(geo.sphere(28), PALETTE.stool, { position: [0, 1.5, 0], scale: [4.5, 1.7, 4.5] }, { lump: 0.3, frequency: 0.6, seed: 6 }),
-      piece(geo.sphere(14), '#c79a45', { position: [0, 3.05, 0], scale: [0.9, 0.35, 0.9] }, { ground: null }),
-      piece(geo.torus(32, 0.16), '#c79a45', { position: [0, 1.55, 0], rotation: [Math.PI / 2, 0, 0], scale: 4.35 }, { lump: 0.05, ground: null }),
+    bowl: merge([
+      piece(geo.bowl(48), PALETTE.bowl, { scale: BOWL_SCALE }, { lump: BOWL_LUMP, frequency: 0.4, seed: 8, occlusion: 0.42, hold: holdLathe(BOWL_PROFILE.slice(8), BOWL_PROFILE.slice(0, 3)) }),
     ]),
-    rugRope: merge([piece(ellipseRope(42, 30), '#d8c39c', {}, { lump: 0.12, frequency: 0.5, ground: null })]),
+    plate: merge([
+      piece(geo.plate(36), PALETTE.plate, { scale: [FEEDING.plateRadius * UNIT, PLATE_HEIGHT, FEEDING.plateRadius * UNIT] }, { lump: PLATE_LUMP, frequency: 0.5, seed: 3, occlusion: 0.15, hold: holdLathe(PLATE_PROFILE.slice(4), PLATE_PROFILE.slice(0, 2)) }),
+    ]),
+    stool: merge([
+      paint(geo.fromGrid(stoolCushion(), STOOL.cushion.segments, STOOL.cushion.rings), PALETTE.stool, -STOOL_LIFT),
+      paint(geo.fromGrid(stoolButton(), STOOL.button.segments, STOOL.button.rings), '#c79a45', null),
+      paint(geo.fromRing(stoolRim(), STOOL.rim.tube, STOOL.rim.radial, STOOL.rim.tubular), '#c79a45', null),
+    ]).translate(0, STOOL_LIFT, 0),
+    rugRope: merge([piece(hemRope(), '#d8c39c', { position: [0, RUG_HEM_Y, 0], scale: [1, RUG_HEM.flatten, 1] }, { lump: 2 * RUG_HEM.lump, frequency: 0.5, ground: null })]),
   }
 }
 
 export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonly boolean[]; showStools: boolean; readBowl: () => { dingAt: number | null; now: number } }) {
   const { clay, rug } = useClay()
-  const center = to3({ x: 780, y: 470 })
+  const center = to3(RUG.center)
   const bowl = to3(FEEDING.bowl)
   const shapes = once('feeding', feedingShapes)
   const plates = useRef<THREE.InstancedMesh>(null)
@@ -479,7 +847,7 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
     FEEDING.seats.forEach((seat, index) => {
       if (seats[index] || !showStools) return
       const p = to3(seat.guest)
-      scratch.m.makeTranslation(p.x, 0, p.z).multiply(scratch.m2.makeScale(scale, scale, scale))
+      scratch.m.makeTranslation(p.x, feedingFloor(seat.guest, STOOL_REACH), p.z).multiply(scratch.m2.makeScale(scale, scale, scale))
       stools.current?.setMatrixAt(stoolCount++, scratch.m)
     })
     if (stools.current) {
@@ -491,7 +859,7 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
     let plateCount = 0
     FEEDING.seats.forEach((seat, index) => {
       if (!seats[index]) return
-      const p = to3(seat.plate, 0.12)
+      const p = to3(seat.plate, ON_RUG)
       scratch.m.makeTranslation(p.x, p.y, p.z)
       plates.current?.setMatrixAt(plateCount++, scratch.m)
     })
@@ -510,6 +878,8 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
     if (bowlMesh.current) {
       const wobble = age < 1.4 ? Math.sin(age * 22) * 0.07 * Math.exp(-age * 3) : 0
       bowlMesh.current.rotation.set(wobble * 0.6, 0, wobble)
+      // It rocks on the edge of its flat base, which stays on the rug.
+      bowlMesh.current.position.y = ON_RUG + BOWL_PROFILE[1][0] * BOWL_SCALE * Math.sin(Math.hypot(wobble * 0.6, wobble))
     }
     const at = reveal.current.at
     if (at === null) return
@@ -519,11 +889,13 @@ export function FeedingSetting({ seats, showStools, readBowl }: { seats: readonl
   })
   return (
     <group>
-      <mesh geometry={shapes.rug} material={rug} position={[center.x, 0.04, center.z]} scale={[42, 4, 30]} />
-      <mesh geometry={shapes.rugRope} material={clay} position={[center.x, 0.3, center.z]} />
-      <mesh ref={bowlMesh} geometry={shapes.bowl} material={clay} position={[bowl.x, 0, bowl.z]} />
-      <instancedMesh ref={plates} args={[shapes.plate, clay, 5]} frustumCulled={false} />
-      <instancedMesh ref={stools} args={[shapes.stool, clay, 5]} frustumCulled={false} />
+      <group userData={{ jamObject: 'rug' }} position={[center.x, 0, center.z]}>
+        <mesh name="rug" geometry={shapes.rug} material={rug} position={[0, RUG.bottom, 0]} scale={[RUG.rx * UNIT, (RUG.top - RUG.bottom) / 0.02, RUG.rz * UNIT]} />
+        <mesh name="rug-rope" geometry={shapes.rugRope} material={clay} />
+      </group>
+      <mesh name="bowl" ref={bowlMesh} geometry={shapes.bowl} material={clay} position={[bowl.x, ON_RUG, bowl.z]} />
+      <instancedMesh name="plates" ref={plates} args={[shapes.plate, clay, 5]} frustumCulled={false} />
+      <instancedMesh name="stools" ref={stools} args={[shapes.stool, clay, 5]} frustumCulled={false} />
     </group>
   )
 }
@@ -545,104 +917,13 @@ export type GuestPose = {
   now: number
 }
 
-const NECK_Y = 7.4
-
-type GuestShapes = {
-  body: THREE.BufferGeometry
-  head: THREE.BufferGeometry
-  eyes: THREE.BufferGeometry
-  mouth: THREE.BufferGeometry
-  arm: THREE.BufferGeometry
-  /** Parts that move on their own: nose (wiggles), cheeks (puff), rabbit ears (flick, left then right, built around their base). */
-  nose: THREE.BufferGeometry
-  cheeks: THREE.BufferGeometry
-  ears: [THREE.BufferGeometry, THREE.BufferGeometry] | null
-  noseAt: V3
-  /** Shell geometry for clay-tuft fur (rabbit, bear), or null. */
-  furBody: THREE.BufferGeometry | null
-  furHead: THREE.BufferGeometry | null
-  /** Hedgehog quills: one shared quill and where each instance sits, for the body and the head. */
-  quill: THREE.BufferGeometry | null
-  quillsBody: THREE.Matrix4[]
-  quillsHead: THREE.Matrix4[]
-}
-
-function guestShapes(species: Species): GuestShapes {
-  const fur = species === 'rabbit' ? PALETTE.rabbit : species === 'bear' ? PALETTE.bear : PALETTE.hedgehog
-  const light = species === 'bear' ? PALETTE.bearMuzzle : '#f7ead3'
-  const sphere = geo.sphere(26)
-  const body = [
-    piece(sphere, fur, { position: [0, 4, 0], scale: [4.4, 4.1, 4.1] }, { lump: 0.3, frequency: 0.55, seed: 1 }),
-    piece(sphere, light, { position: [0, 3.5, 2.6], scale: [2.9, 2.8, 1.8] }, { lump: 0.15, frequency: 0.7 }),
-    piece(sphere, fur, { position: [-2, 0.6, 2.2], scale: [1.5, 0.8, 1.9] }, { lump: 0.1 }),
-    piece(sphere, fur, { position: [2, 0.6, 2.2], scale: [1.5, 0.8, 1.9] }, { lump: 0.1 }),
-  ]
-  if (species === 'rabbit') body.push(piece(sphere, '#fbf4e8', { position: [0, 2.2, -3.8], scale: 1.4 }, { lump: 0.2 }))
-
-  const headSphere: V3 = [0, 3.1, 0.2]
-  const head = [piece(sphere, fur, { position: headSphere, scale: species === 'hedgehog' ? [3.4, 3.1, 3.3] : [3.5, 3.3, 3.3] }, { lump: 0.22, frequency: 0.7, seed: 3, ground: null })]
-  const muzzle = species === 'hedgehog' ? { position: [0, 2.3, 3.4] as V3, scale: [1.5, 1.3, 1.9] as V3 } : { position: [0, 2.3, 2.9] as V3, scale: [1.8, 1.3, 1.1] as V3 }
-  head.push(piece(sphere, light, muzzle, { lump: 0.08, ground: null }))
-  const nose = merge([piece(sphere, PALETTE.nose, { position: [0, 0, 0], scale: [0.55, 0.42, 0.4] }, { ground: null })])
-  const cheeks = merge([-1, 1].map((side) => piece(sphere, PALETTE.cheek, { position: [side * 2.4, 0, 0], scale: [0.8, 0.5, 0.35] }, { ground: null })))
-  const ears =
-    species === 'rabbit'
-      ? ([-1, 1].map((side) =>
-          merge([
-            piece(geo.capsule(14), fur, { position: [0, 2, 0], rotation: [-0.12, 0, -side * 0.16], scale: [1.4, 3.3, 0.9] }, { lump: 0.12, ground: null }),
-            piece(geo.capsule(12), PALETTE.rabbitInner, { position: [0, 2.1, 0.55], rotation: [-0.12, 0, -side * 0.16], scale: [0.75, 2.6, 0.35] }, { ground: null }),
-          ]),
-        ) as [THREE.BufferGeometry, THREE.BufferGeometry])
-      : null
-  for (const side of [-1, 1]) {
-    if (species === 'bear') {
-      head.push(piece(sphere, fur, { position: [side * 2.7, 5.9, 0], scale: [1.35, 1.35, 0.9] }, { lump: 0.1, ground: null }))
-      head.push(piece(sphere, PALETTE.bearMuzzle, { position: [side * 2.7, 5.9, 0.6], scale: [0.75, 0.75, 0.4] }, { ground: null }))
-    } else if (species === 'hedgehog') {
-      head.push(piece(sphere, fur, { position: [side * 2.4, 5.2, 0.2], scale: [0.8, 0.8, 0.5] }, { ground: null }))
-    }
-  }
-
-  const eyes = [-1, 1].flatMap((side) => [
-    piece(sphere, PALETTE.eye, { position: [side * 1.42, 0, 2.9], scale: [0.78, 0.9, 0.55] }, { ground: null }),
-    piece(sphere, PALETTE.shine, { position: [side * 1.42 + 0.26, 0.32, 3.38], scale: 0.26 }, { ground: null }),
-    piece(sphere, PALETTE.shine, { position: [side * 1.42 - 0.2, -0.28, 3.4], scale: 0.1 }, { ground: null }),
-  ])
-  return {
-    body: merge(body),
-    head: merge(head),
-    eyes: merge(eyes),
-    mouth: merge([piece(geo.capsule(10), PALETTE.mouth, { rotation: [0, 0, Math.PI / 2], scale: [0.3, 0.7, 0.3] }, { ground: null })]),
-    arm: merge([piece(geo.capsule(12), fur, { position: [0, -1.5, 0], scale: [1.2, 1.6, 1.2] }, { lump: 0.08, ground: null })]),
-    nose,
-    cheeks,
-    ears,
-    noseAt: [0, 2.8, muzzle.position[2] + muzzle.scale[2] * 0.85],
-    furBody: species === 'hedgehog' ? null : withShells(piece(sphere, fur, { position: [0, 4, 0], scale: [4.4, 4.1, 4.1] }, { lump: 0.3, frequency: 0.55, seed: 1 })),
-    furHead: species === 'hedgehog' ? null : withShells(piece(sphere, fur, { position: headSphere, scale: [3.5, 3.3, 3.3] }, { lump: 0.22, frequency: 0.7, seed: 3, ground: null })),
-    quill: species === 'hedgehog' ? quillGeometry(PALETTE.spikes, '#c9a27a') : null,
-    quillsBody: species === 'hedgehog' ? quillLayout(70, [0, 4.2, 0], 4.0, 1, 0.12, 1.8) : [],
-    quillsHead: species === 'hedgehog' ? quillLayout(26, headSphere, 3.2, 5, 0.15, 1.15) : [],
-  }
-}
-
-const shapeCache = new Map<Species, GuestShapes>()
-
-function speciesShapes(species: Species): GuestShapes {
-  let cached = shapeCache.get(species)
-  if (!cached) {
-    cached = guestShapes(species)
-    shapeCache.set(species, cached)
-  }
-  return cached
-}
-
-function scaleShapes() {
+export function scaleShapes() {
   return {
     post: postGeometry(),
     beam: beamGeometry(SCALE.beamHalf * UNIT),
     pans: SCALE.pans.map((pan) => panGeometry(pan.r * UNIT)),
     chain: coilGeometry(),
+    knot: knotGeometry(),
   }
 }
 
@@ -710,6 +991,23 @@ function compileBothWays(gl: THREE.WebGLRenderer, warm: THREE.Scene, camera: THR
 }
 
 /**
+ * The minimal tier draws without a post pass, tone mapping inside every
+ * material (three's custom tone mapping), which is part of each material's
+ * program: compile those programs now, while the game loads, so a step down
+ * to it later never stalls a frame compiling every material on the table.
+ */
+function compileToneMapped(gl: THREE.WebGLRenderer, warm: THREE.Scene, camera: THREE.Camera, scene: THREE.Scene): void {
+  installClayToneMapping()
+  const [previousTarget, previousToneMapping] = [gl.getRenderTarget(), gl.toneMapping]
+  gl.setRenderTarget(null)
+  gl.toneMapping = THREE.CustomToneMapping
+  void gl.compileAsync(warm, camera, scene).catch(() => {})
+  void gl.compileAsync(scene, camera).catch(() => {})
+  gl.toneMapping = previousToneMapping
+  gl.setRenderTarget(previousTarget)
+}
+
+/**
  * Draw the warm-up objects once inside the live scene, into a 1x1 target like the post pass's (half float, no
  * multisampling): WebKit finishes a shader's GPU pipeline only at its first real draw, which a compile cannot reach.
  */
@@ -740,6 +1038,7 @@ function useWarmup(materials: ClayMaterials): void {
       } else {
         const warm = warmupScene(materials)
         compileBothWays(gl, warm, camera, scene)
+        compileToneMapped(gl, warm, camera, scene)
         timer = setTimeout(() => drawOnce(gl, warm, camera, scene), WARMUP_GAP_MS)
       }
     }, WARMUP_START_MS)
@@ -747,9 +1046,10 @@ function useWarmup(materials: ClayMaterials): void {
   }, [gl, camera, scene, materials])
 }
 
-const GUEST_SIZE = 1.5
+/** How high a guest being dragged is lifted: clear of the bowl, the plates and the stones on them. */
+const GUEST_CARRY = BOWL_PROFILE.reduce((top, [, h]) => Math.max(top, h), 0) * BOWL_SCALE + ON_RUG + 1
 
-function easeOutBack(t: number): number {
+export function easeOutBack(t: number): number {
   const c = 1.9
   return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2
 }
@@ -761,7 +1061,7 @@ function easeOutBack(t: number): number {
  * turns toward what matters use the species' own spring, so the bear turns
  * lazily and the rabbit snaps.
  */
-export function Guest({ seat, at, read }: { seat: number; at: Point; read: () => GuestPose }) {
+export function Guest({ seat, at, carried, read }: { seat: number; at: Point; carried: boolean; read: () => GuestPose }) {
   const { clay, fur, quill } = useClay()
   const furCap = useQuality().furShells
   const camera = useThree((state) => state.camera)
@@ -779,14 +1079,13 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
   const eyes = useRef<THREE.Mesh>(null)
   const mouth = useRef<THREE.Mesh>(null)
   const nose = useRef<THREE.Mesh>(null)
-  const cheeks = useRef<THREE.Mesh>(null)
+  const cheeks = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
   const ears = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
   const arms = [useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
-  const springs = useRef({ yaw: { x: 0, v: 0 }, pitch: { x: 0, v: 0 } })
-  const facing = FEEDING.seats[seat].facing
-  const face = new THREE.Vector2(-facing.x * 0.8, -facing.y + 1.5).normalize()
-  const yaw = Math.atan2(face.x, face.y)
+  const springs = useRef({ yaw: { x: 0, v: 0 }, pitch: { x: 0, v: 0 }, carry: { x: 0, v: 0 } })
+  const yaw = guestYaw(seat)
   const p = to3(at)
+  const floor = useMemo(() => guestFloor(seat, at), [seat, at])
 
   useEffect(() => {
     ;[shapes.quillsBody, shapes.quillsHead].forEach((matrices, i) => {
@@ -846,58 +1145,45 @@ export function Guest({ seat, at, read }: { seat: number; at: Point; read: () =>
     }
     const arrive = pose.arriveAt === null ? 1 : THREE.MathUtils.clamp((now - pose.arriveAt) / 0.4, 0, 1)
     const pop = pose.arriveAt === null || arrive >= 1 ? 1 : Math.max(0.01, easeOutBack(arrive))
-    const vertical = 1 - m.squash
-    const horizontal = 1 + m.squash * 0.6
 
-    if (root.current) {
-      root.current.position.y = Math.max(0, m.lift)
-      root.current.scale.set(GUEST_SIZE * horizontal * pop, GUEST_SIZE * vertical * pop, GUEST_SIZE * horizontal * pop)
-      root.current.rotation.set(m.lean, m.twist, m.roll)
-    }
-    if (head.current) {
-      head.current.position.y = NECK_Y - m.headDrop
-      head.current.rotation.set(s.pitch.x + m.headPitch, s.yaw.x + m.headYaw, m.headRoll)
+    const carry = springStep(s.carry, carried ? GUEST_CARRY : 0, dt, 160, 18)
+    if (root.current && head.current && nose.current) {
+      const rig = { root: root.current, head: head.current, nose: nose.current, cheeks: cheeks.map((ref) => ref.current), ears: ears.map((ref) => ref.current), arms: arms.map((ref) => ref.current) }
+      poseGuest(rig, shapes, m, { yaw: s.yaw.x, pitch: s.pitch.x }, pop)
+      root.current.position.y = 0
+      root.current.updateMatrix()
+      // It rocks and leans on its lowest point, which stays on the highest thing under it.
+      root.current.position.y = floor + soleDepth(shapes.sole, root.current.matrix) + Math.max(0, m.lift, carry)
     }
     if (eyes.current) eyes.current.scale.set(1 + Math.max(0, m.eyes - 1) * 0.5, m.eyes, 1)
     if (mouth.current) mouth.current.scale.set(personality.mouthWidth * (1 + m.mouth * 0.35), 1 + m.mouth * 3.4, 1 + m.mouth * 0.5)
-    if (nose.current) {
-      nose.current.position.y = shapes.noseAt[1] + m.nose * 0.22
-      nose.current.scale.set(1 + Math.abs(m.nose) * 0.18, 1 - Math.abs(m.nose) * 0.2, 1)
-    }
-    if (cheeks.current) cheeks.current.scale.set(1 + m.cheeks * 0.12, 1 + m.cheeks * 0.45, 1 + m.cheeks * 0.6)
-    ears.forEach((ref, side) => {
-      if (ref.current) ref.current.rotation.set(-0.05 - m.ears[side] * 0.9, 0, (side === 0 ? 1 : -1) * m.ears[side] * 0.15)
-    })
     for (const ref of quillParts) if (ref.current) ref.current.scale.setScalar(1 + m.quills * 0.22)
-    arms.forEach((ref, side) => {
-      if (!ref.current) return
-      const sign = side === 0 ? -1 : 1
-      ref.current.rotation.set(-m.armForward[side], 0, sign * (0.45 + m.armUp[side]))
-    })
   })
 
   return (
-    <group position={[p.x, 0, p.z]} rotation={[0, yaw, 0]}>
+    <group position={[p.x, 0, p.z]} rotation={[0, yaw, 0]} userData={{ jamObject: `guest-${species}-${seat}` }}>
       <group ref={root}>
-        <mesh geometry={shapes.body} material={clay} />
-        {shapes.furBody && <instancedMesh ref={furParts[0]} args={[shapes.furBody, fur, MAX_SHELLS]} frustumCulled={false} />}
-        {shapes.quill && <instancedMesh ref={quillParts[0]} args={[shapes.quill, quill, shapes.quillsBody.length]} frustumCulled={false} />}
+        <mesh name="guest-body" geometry={shapes.body} material={clay} />
+        {shapes.furBody && <instancedMesh name="guest-fur-body" ref={furParts[0]} args={[shapes.furBody, fur, MAX_SHELLS]} frustumCulled={false} />}
+        {shapes.quill && <instancedMesh name="guest-quills-body" ref={quillParts[0]} args={[shapes.quill, quill, shapes.quillsBody.length]} frustumCulled={false} />}
         {[-1, 1].map((side, i) => (
-          <group key={side} ref={arms[i]} position={[side * 3.9, 4.7, 0.9]}>
-            <mesh geometry={shapes.arm} material={clay} />
+          <group key={side} ref={arms[i]} position={[side * ARM_AT[0], ARM_AT[1], ARM_AT[2]]}>
+            <mesh name={side < 0 ? 'guest-arm-left' : 'guest-arm-right'} geometry={shapes.arm} material={clay} />
           </group>
         ))}
         <group ref={head} position={[0, NECK_Y, 0]}>
-          <mesh geometry={shapes.head} material={clay} />
-          {shapes.furHead && <instancedMesh ref={furParts[1]} args={[shapes.furHead, fur, MAX_SHELLS]} frustumCulled={false} />}
-          {shapes.quill && <instancedMesh ref={quillParts[1]} args={[shapes.quill, quill, shapes.quillsHead.length]} frustumCulled={false} />}
-          <mesh ref={eyes} geometry={shapes.eyes} material={clay} position={[0, 3.7, 0]} />
-          <mesh ref={mouth} geometry={shapes.mouth} material={clay} position={[0, 1.65, species === 'hedgehog' ? 4.9 : 3.85]} />
-          <mesh ref={nose} geometry={shapes.nose} material={clay} position={shapes.noseAt} />
-          <mesh ref={cheeks} geometry={shapes.cheeks} material={clay} position={[0, 2.3, 2.5]} />
+          <mesh name="guest-head" geometry={shapes.head} material={clay} />
+          {shapes.furHead && <instancedMesh name="guest-fur-head" ref={furParts[1]} args={[shapes.furHead, fur, MAX_SHELLS]} frustumCulled={false} />}
+          {shapes.quill && <instancedMesh name="guest-quills-head" ref={quillParts[1]} args={[shapes.quill, quill, shapes.quillsHead.length]} frustumCulled={false} />}
+          <mesh name="guest-eyes" ref={eyes} geometry={shapes.eyes} material={clay} position={[0, 3.7, 0]} />
+          <mesh name="guest-mouth" ref={mouth} geometry={shapes.mouth} material={clay} position={[0, 1.65, species === 'hedgehog' ? 4.9 : 3.85]} />
+          <mesh name="guest-nose" ref={nose} geometry={shapes.nose} material={clay} position={shapes.noseAt} />
+          {cheeks.map((ref, i) => (
+            <mesh key={i} name={i === 0 ? 'guest-cheek-left' : 'guest-cheek-right'} ref={ref} geometry={shapes.cheek} material={clay} position={[(i === 0 ? -1 : 1) * CHEEK_AT[0], CHEEK_AT[1], CHEEK_AT[2]]} />
+          ))}
           {shapes.ears?.map((geometry, i) => (
-            <group key={i} ref={ears[i]} position={[(i === 0 ? -1 : 1) * 1.4, 5.6, -0.3]}>
-              <mesh geometry={geometry} material={clay} />
+            <group key={i} ref={ears[i]} position={[(i === 0 ? -1 : 1) * EAR_AT[0], EAR_AT[1], EAR_AT[2]]}>
+              <mesh name={i === 0 ? 'guest-ear-left' : 'guest-ear-right'} geometry={geometry} material={clay} />
             </group>
           ))}
         </group>
@@ -945,7 +1231,7 @@ export function KnifeModel({ read }: { read: () => { at: Point; visible: boolean
   })
   return (
     <group ref={ref}>
-      <mesh geometry={geometry} material={clay} />
+      <mesh name="knife" geometry={geometry} material={clay} />
     </group>
   )
 }
@@ -1000,16 +1286,20 @@ function drawPageMap(canvas: HTMLCanvasElement, page: AlbumPage | null): void {
  * page exists. Its cover shows the newest page as a dot map; tapping it sets
  * that table back. It hops whenever a page is kept or turned.
  */
+export const ALBUM_SCALE = 1.1
+
+export function albumGeometry(): THREE.BufferGeometry {
+  return merge([
+    piece(geo.roundedBox(10, 0.15), '#3f7d8c', { position: [0, 1.2, 0], scale: [11, 2.4, 13] }, { lump: 0.12, frequency: 0.5, seed: 51 }),
+    piece(geo.roundedBox(8, 0.1), '#fbf1de', { position: [0.5, 1.2, 0], scale: [10.2, 1.8, 12.4] }, { lump: 0.05, ground: null }),
+    piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, 3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
+    piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, -3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
+  ])
+}
+
 export function AlbumModel({ read }: { read: () => { pages: readonly AlbumPage[]; at: number | null; now: number } }) {
   const { clay } = useClay()
-  const book = once('album', () =>
-    merge([
-      piece(geo.roundedBox(10, 0.15), '#3f7d8c', { position: [0, 1.2, 0], scale: [11, 2.4, 13] }, { lump: 0.12, frequency: 0.5, seed: 51 }),
-      piece(geo.roundedBox(8, 0.1), '#fbf1de', { position: [0.5, 1.2, 0], scale: [10.2, 1.8, 12.4] }, { lump: 0.05, ground: null }),
-      piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, 3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
-      piece(geo.torus(16, 0.3), '#e0a13c', { position: [-5.3, 1.3, -3.5], rotation: [0, 0, Math.PI / 2], scale: 0.9 }, { ground: null }),
-    ]),
-  )
+  const book = once('album', albumGeometry)
   const cover = useMemo(() => {
     const canvas = document.createElement('canvas')
     canvas.width = 128
@@ -1048,13 +1338,13 @@ export function AlbumModel({ read }: { read: () => { pages: readonly AlbumPage[]
     const hopAge = pose.at === null ? Infinity : pose.now - pose.at
     const hop = hopAge < 0.6 ? Math.sin((hopAge / 0.6) * Math.PI) * 3 : 0
     g.position.set(p.x, hop, p.z)
-    g.scale.setScalar(Math.max(0.01, easeOutBack(appear)) * 1.1)
+    g.scale.setScalar(Math.max(0.01, easeOutBack(appear)) * ALBUM_SCALE)
     g.rotation.set(0, -0.35 + Math.sin(pose.now * 0.8) * 0.04, 0)
   })
   return (
-    <group ref={group} visible={false}>
-      <mesh geometry={book} material={clay} />
-      <mesh material={cover.material} position={[0.5, 2.45, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+    <group ref={group} visible={false} userData={{ jamObject: 'album' }}>
+      <mesh name="album" geometry={book} material={clay} />
+      <mesh name="album-cover" material={cover.material} position={[0.5, 2.45, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[9.6, 11.8]} />
       </mesh>
     </group>
@@ -1063,62 +1353,62 @@ export function AlbumModel({ read }: { read: () => { pages: readonly AlbumPage[]
 
 // --- loose parts and their jars ---------------------------------------------------
 
-const PARTS = { nut: '#a8703d', cap: '#6e4a2c', shell: '#f4d3c0', rib: '#e3a98f', bark: '#7a5238', twig: '#8f6644', rock: '#8d8176' }
-/** Part meshes are modelled small; drawn at this size they match their colliders. */
-const PART_DRAW_SCALE = 1.45
+const PART_COLORS = {
+  acorn: { nut: '#a8703d', cap: '#6e4a2c', stem: '#6e4a2c' },
+  shell: { body: '#f4d3c0' },
+  stick: { bark: '#7a5238', twig: '#8f6644' },
+  boulder: { rock: '#8d8176' },
+} as const satisfies { [K in PartKind]: Record<keyof (typeof PART_PIECES)[K], string> }
+const SHELL_RIB = '#e3a98f'
 const JAR_COLORS: Record<PartKind, string> = { acorn: '#d9a441', shell: '#5f9fb8', stick: '#5d8a5a', boulder: '#d8b36a' }
+const JAR_LID = '#fbe7cf'
+const NEST_BED = '#c9a45c'
 
-function partGeometry(kind: PartKind): THREE.BufferGeometry {
-  const sphere = geo.sphere(16)
-  switch (kind) {
-    case 'acorn':
-      return merge([
-        piece(sphere, PARTS.nut, { position: [0, -0.15, 0], scale: [0.85, 1.0, 0.85] }, { lump: 0.06, ground: null }),
-        piece(sphere, PARTS.cap, { position: [0, 0.45, 0], scale: [0.98, 0.5, 0.98] }, { lump: 0.1, ground: null }),
-        piece(geo.capsule(6), PARTS.cap, { position: [0, 0.95, 0], scale: [0.14, 0.35, 0.14] }, { ground: null }),
-      ])
-    case 'shell':
-      return merge([
-        piece(sphere, PARTS.shell, { scale: [1.35, 0.32, 1.15] }, { lump: 0.05, ground: null }),
-        ...[-0.5, 0, 0.5].map((angle) => piece(geo.capsule(6), PARTS.rib, { position: [Math.sin(angle) * 0.55, 0.22, Math.cos(angle) * 0.35], rotation: [Math.PI / 2, angle, 0], scale: [0.12, 1.2, 0.12] }, { ground: null })),
-      ])
-    case 'stick':
-      return merge([
-        piece(geo.capsule(8), PARTS.bark, { rotation: [0, 0, Math.PI / 2], scale: [0.62, 5, 0.62] }, { lump: 0.1, frequency: 1.2, ground: null }),
-        piece(geo.capsule(6), PARTS.twig, { position: [0.8, 0.35, 0.4], rotation: [0.6, 0, 0.9], scale: [0.3, 1.4, 0.3] }, { ground: null }),
-      ])
-    case 'boulder':
-      return merge([piece(sphere, PARTS.rock, { scale: [3.3, 1.9, 3.1] }, { lump: 0.35, frequency: 0.8, seed: 41, ground: null })])
-    default: {
-      const unknown: never = kind
-      return unknown
-    }
+/** A part at its drawn size, from the same vertices its collider is fitted to (partShape.ts). */
+export function partGeometry(kind: PartKind): THREE.BufferGeometry {
+  const pieces: Record<string, Lumped> = PART_PIECES[kind]
+  const colors: Record<string, string> = PART_COLORS[kind]
+  return merge(
+    Object.entries(pieces).map(([name, p]) => {
+      const g = paint(geo.fromGrid(partPieceVertices(kind, name), p.segments, p.rings), colors[name], null)
+      if (kind === 'shell') ribbed(g, sphereGrid(p.segments, p.rings))
+      return g
+    }),
+  )
+}
+
+/** A shell's pressed ribs take a deeper colour than its back. */
+function ribbed(geometry: THREE.BufferGeometry, normals: Float32Array): void {
+  const color = geometry.attributes.color
+  const rib = new THREE.Color(SHELL_RIB)
+  for (let i = 0; i < color.count; i++) {
+    const k = shellRib(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2])
+    color.setXYZ(i, THREE.MathUtils.lerp(color.getX(i), rib.r, k), THREE.MathUtils.lerp(color.getY(i), rib.g, k), THREE.MathUtils.lerp(color.getZ(i), rib.b, k))
   }
 }
 
-function jarGeometry(kind: PartKind): { body: THREE.BufferGeometry; lid: THREE.BufferGeometry } {
-  const sphere = geo.sphere(24)
+function jarGeometry(kind: PartKind): { body: THREE.BufferGeometry; lid: THREE.BufferGeometry | null } {
   const color = JAR_COLORS[kind]
   if (kind === 'boulder') {
+    const { ring, bed } = NEST
     return {
-      body: merge([
-        piece(geo.torus(28, 0.35), color, { position: [0, 0.9, 0], rotation: [Math.PI / 2, 0, 0], scale: 4.6 }, { lump: 0.3, frequency: 1.4, seed: 44 }),
-        piece(sphere, '#c9a45c', { position: [0, 0.3, 0], scale: [4.4, 0.5, 4.4] }, { lump: 0.2, frequency: 1.2 }),
-      ]),
-      lid: merge([piece(sphere, color, { scale: 0.01 }, { ground: null })]),
+      body: merge([paint(geo.fromRing(nestRing(), ring.tube, ring.radial, ring.tubular), color, -NEST_LIFT), paint(geo.fromGrid(nestBed(), bed.segments, bed.rings), NEST_BED, -NEST_LIFT)]),
+      lid: null,
     }
   }
-  const label = partGeometry(kind)
-  const labelPiece = label.clone().applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(0, 4.2, 3.4), new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2 - 0.3, 0, kind === 'stick' ? 0.4 : 0)), new THREE.Vector3(0.8, 0.8, 0.8)))
+  const { body, neck, lid, label } = JAR
+  const labelPiece = partGeometry(kind).applyMatrix4(
+    new THREE.Matrix4().compose(new THREE.Vector3(...label.position), new THREE.Quaternion().setFromEuler(new THREE.Euler(...labelTurn(kind))), new THREE.Vector3().setScalar(label.scale / PART_DRAW_SCALE)),
+  )
   return {
     body: merge([
-      piece(sphere, color, { position: [0, 3.8, 0], scale: [3.6, 3.9, 3.6] }, { lump: 0.18, frequency: 0.6, seed: 45 }),
-      piece(geo.cylinder(20), color, { position: [0, 7.6, 0], scale: [2.3, 1.2, 2.3] }, { lump: 0.08, ground: null }),
+      paint(geo.fromGrid(jarBody(), body.segments, body.rings), color, -JAR_LIFT),
+      piece(geo.cylinder(20), color, { position: [0, neck.y, 0], scale: [neck.radius, neck.height, neck.radius] }, { lump: neck.lump, ground: null }),
       labelPiece,
     ]),
     lid: merge([
-      piece(geo.cylinder(20), '#fbe7cf', { scale: [2.7, 0.6, 2.7] }, { lump: 0.08, ground: null }),
-      piece(sphere, '#fbe7cf', { position: [0, 0.6, 0], scale: 0.7 }, { ground: null }),
+      piece(geo.cylinder(20), JAR_LID, { scale: [lid.radius, lid.height, lid.radius] }, { lump: lid.lump, ground: null }),
+      piece(geo.sphere(24), JAR_LID, { position: [0, lid.height, 0], scale: lid.knob }, { ground: null }),
     ]),
   }
 }
@@ -1140,7 +1430,7 @@ export function PartsModel({ read }: { read: () => PartState[] }) {
       const instanced = refs[slot].current
       if (!instanced) continue
       scratch.q.set(...part.quaternion)
-      const grow = (part.held ? 1.12 : 1) * PART_DRAW_SCALE
+      const grow = part.held ? HELD_PART_GROWTH : 1
       scratch.m.compose(scratch.p.set(part.position.x, part.position.y, part.position.z), scratch.q, scratch.s.set(grow, grow, grow))
       instanced.setMatrixAt(counts[slot]++, scratch.m)
     }
@@ -1153,18 +1443,27 @@ export function PartsModel({ read }: { read: () => PartState[] }) {
   return (
     <>
       {PART_KINDS.map((kind, slot) => (
-        <instancedMesh key={kind} ref={refs[slot]} args={[geometries[slot], clay, PART_COUNTS[kind]]} frustumCulled={false} />
+        <instancedMesh key={kind} name={`part-${kind}`} ref={refs[slot]} args={[geometries[slot], clay, PART_COUNTS[kind]]} frustumCulled={false} />
       ))}
     </>
   )
 }
 
-/** The jars on the scale mat's back row: each wobbles when tipped or when a part comes home, and its lid lies open once it is empty. */
+/** How much the nest squashes at the height of its wobble: tipped like a jar, its wide ring would dip into the table. */
+const NEST_SQUASH = 0.06
+
+/**
+ * The jars on the scale mat's back row: each wobbles about where it stands
+ * when tipped or when a part comes home, and once it is empty its lid stands
+ * on edge against it. The nest squashes instead.
+ */
 export function JarsModel({ read }: { read: () => { tips: ReadonlyMap<PartKind, number>; full: Record<PartKind, number>; glow: number; now: number } }) {
   const { clay } = useClay()
   const shapes = PART_KINDS.map(jarShapes)
   const refs = [useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null), useRef<THREE.Group>(null)]
-  const lids = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
+  const closedLids = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
+  const openLids = [useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null), useRef<THREE.Mesh>(null)]
+  const openAt = useMemo(() => PART_KINDS.map((kind) => (kind === 'boulder' ? null : jarLidOpen(kind))), [])
   const wobble = useRef(PART_KINDS.map(() => ({ x: 0, v: 0 }) as Spring))
   const seen = useRef(new Map<PartKind, number>())
   useFrame((_, dt) => {
@@ -1175,31 +1474,42 @@ export function JarsModel({ read }: { read: () => { tips: ReadonlyMap<PartKind, 
         wobble.current[i].v += 7
         seen.current.set(kind, tipped)
       }
-      const w = springStep(wobble.current[i], 0, dt, 70, 5)
+      const w = THREE.MathUtils.clamp(springStep(wobble.current[i], 0, dt, 70, 5), -1, 1)
       const group = refs[i].current
       if (group) {
         const hop = pose.full[kind] > 0 ? pose.glow * Math.max(0, Math.sin(pose.now * 3 + i)) * 0.6 : 0
-        group.rotation.set(w * 0.05, 0, w * 0.08)
+        if (kind === 'boulder') group.scale.set(1, 1 - Math.abs(w) * NEST_SQUASH, 1)
+        else group.rotation.set(w * JAR_WOBBLE[0], w * JAR_WOBBLE[1], w * JAR_WOBBLE[2])
         group.position.y = hop
       }
-      const lid = lids[i].current
-      if (lid) {
-        const open = pose.full[kind] === 0
-        lid.position.set(open ? 4.2 : 0, open ? 0.4 : 8.4 + Math.abs(w) * 0.05, open ? 1.5 : 0)
-        lid.rotation.set(open ? 0.3 : 0, 0, open ? 1.3 : 0)
+      const open = pose.full[kind] === 0
+      const closed = closedLids[i].current
+      if (closed) {
+        closed.visible = !open
+        closed.position.y = JAR_LID_CLOSED + Math.abs(w) * 0.05
       }
+      const lying = openLids[i].current
+      if (lying) lying.visible = open
     })
   })
   return (
     <>
       {PART_KINDS.map((kind, i) => {
         const at = to3(JARS[kind])
+        const lift = kind === 'boulder' ? NEST_LIFT : JAR_LIFT
+        const lid = shapes[i].lid
+        const leaning = openAt[i]
         return (
-          <group key={kind} position={[at.x, 0, at.z]} scale={JAR_SCALE}>
+          <group key={kind} position={[at.x, 0, at.z]} scale={JAR_SCALE} userData={{ jamObject: `jar-${kind}` }}>
             <group ref={refs[i]}>
-              <mesh geometry={shapes[i].body} material={clay} />
+              <group position-y={lift}>
+                <mesh name={kind === 'boulder' ? 'boulder-nest' : `jar-${kind}`} geometry={shapes[i].body} material={clay} />
+                {lid && <mesh name={`jar-lid-${kind}`} ref={closedLids[i]} geometry={lid} material={clay} />}
+              </group>
             </group>
-            {kind !== 'boulder' && <mesh ref={lids[i]} geometry={shapes[i].lid} material={clay} />}
+            {lid && leaning && (
+              <mesh name={`jar-lid-open-${kind}`} ref={openLids[i]} geometry={lid} material={clay} visible={false} position={[leaning.position[0], leaning.position[1] + lift, leaning.position[2]]} rotation={leaning.rotation} />
+            )}
           </group>
         )
       })}
@@ -1226,9 +1536,17 @@ function houseParts(scale: number, offset: V3): THREE.BufferGeometry[] {
   ]
 }
 
-function mouseGeometry(): THREE.BufferGeometry {
+/** A merged shape raised so its lowest point, wherever its lumps put it, stands on y = 0. */
+function standing(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
+  const position = geometry.attributes.position
+  let lowest = Infinity
+  for (let i = 0; i < position.count; i++) lowest = Math.min(lowest, position.getY(i))
+  return geometry.translate(0, -lowest, 0)
+}
+
+export function mouseGeometry(): THREE.BufferGeometry {
   const sphere = geo.sphere(16)
-  return merge([
+  return standing(merge([
     piece(sphere, MOUSE.fur, { position: [0, 1.4, 0], scale: [1.7, 1.45, 2.1] }, { lump: 0.12, seed: 31 }),
     piece(sphere, MOUSE.fur, { position: [0, 2.2, 1.9], scale: [1.15, 1.05, 1.25] }, { lump: 0.08, ground: null }),
     ...[-1, 1].flatMap((side) => [
@@ -1238,15 +1556,27 @@ function mouseGeometry(): THREE.BufferGeometry {
     ]),
     piece(sphere, MOUSE.nose, { position: [0, 2.05, 3.15], scale: 0.22 }, { ground: null }),
     piece(geo.capsule(8), MOUSE.ear, { position: [0, 0.9, -2.6], rotation: [1.1, 0, 0], scale: [0.18, 1.6, 0.18] }, { ground: null }),
-  ])
+  ]))
 }
 
-function houseGeometry(): THREE.BufferGeometry {
+export function houseGeometry(): THREE.BufferGeometry {
   return merge(houseParts(1, [0, 0, 0]))
 }
 
-function doorLeafGeometry(): THREE.BufferGeometry {
-  return merge([piece(geo.roundedBox(8, 0.18), HOUSE.door, { position: [3, 4.8, 0], scale: [6, 9.6, 0.9] }, { lump: 0.1, ground: null }), piece(geo.sphere(10), HOUSE.frame, { position: [5.2, 4.8, 0.6], scale: 0.45 }, { ground: null })])
+/** The open door's angle: swung round flat against the front wall, not quite touching it. */
+export const DOOR_OPEN = -Math.PI + 0.12
+/** The farthest a knock can rattle the door round. */
+export const DOOR_FARTHEST = -Math.PI + 0.1
+
+export function doorLeafGeometry(): THREE.BufferGeometry {
+  return standing(merge([piece(geo.roundedBox(8, 0.18), HOUSE.door, { position: [3.4, 4.8, 0], scale: [6.8, 9.6, 0.9] }, { lump: 0.1, ground: null }), piece(geo.sphere(10), HOUSE.frame, { position: [5.9, 4.8, 0.6], scale: 0.45 }, { ground: null })]))
+}
+
+/** How far round the door has swung at `now`: 0 shut, DOOR_OPEN open; it opens at `openAt` and shuts at `closeAt`, each over DOOR_SWING. */
+export function doorSwing(openAt: number | null, closeAt: number | null, now: number): number {
+  if (openAt === null) return 0
+  const opening = THREE.MathUtils.smoothstep(now - openAt, 0, DOOR_SWING)
+  return DOOR_OPEN * (closeAt === null ? opening : Math.min(opening, 1 - THREE.MathUtils.smoothstep(now - closeAt, 0, DOOR_SWING)))
 }
 
 export type DoorPose = {
@@ -1259,9 +1589,8 @@ export type DoorPose = {
   now: number
 }
 
-const DOOR_OPEN = -1.75
-const MOUSE_SCALE = 2.2
-const VISITOR_WALK_TIME = 0.6
+/** How much bigger than their model the mice are drawn; a drawn visitor must still reach no farther than VISITOR_REACH. */
+export const MOUSE_SCALE = 2.2
 
 /**
  * The Knock-Knock house. Knocks shake the door; the house's answer shakes it
@@ -1277,22 +1606,22 @@ export function DoorModel({ read }: { read: () => DoorPose }) {
   const leaf = useRef<THREE.Group>(null)
   const face = useRef<THREE.Mesh>(null)
   const mice = useRef<THREE.InstancedMesh>(null)
-  const swing = useRef<Spring>({ x: 0, v: 0 })
+  const rattle = useRef<Spring>({ x: 0, v: 0 })
   const lastKnock = useRef<number | null>(null)
   const p = to3(DOOR.house)
-  const threshold = to3(DOOR.door)
   useFrame((_, dt) => {
     const pose = read()
     const now = pose.now
+    // Knocks and the house's answer only ever rattle the door outwards, so it never swings into its frame.
     if (pose.knockAt !== null && pose.knockAt !== lastKnock.current) {
-      swing.current.v -= 3
+      rattle.current.v -= 3
       lastKnock.current = pose.knockAt
     }
     const answering = pose.answerTimes.some((t) => now >= t && now - t < 0.05)
-    if (answering) swing.current.v += 2.4
-    const open = pose.openAt !== null && (pose.closeAt === null || now < pose.closeAt - 0.3) ? DOOR_OPEN : 0
-    const angle = springStep(swing.current, open, dt, 60, 8)
-    if (leaf.current) leaf.current.rotation.y = angle
+    if (answering) rattle.current.v -= 2.4
+    springStep(rattle.current, 0, dt, 60, 8)
+    if (rattle.current.x > 0) rattle.current.x = rattle.current.v = 0
+    if (leaf.current) leaf.current.rotation.y = Math.max(DOOR_FARTHEST, doorSwing(pose.openAt, pose.closeAt, now) + rattle.current.x)
     if (face.current) {
       const k = pose.peek === null ? 0 : Math.sin(pose.peek * Math.PI)
       face.current.visible = k > 0.02
@@ -1303,21 +1632,11 @@ export function DoorModel({ read }: { read: () => DoorPose }) {
     if (!instanced) return
     let count = 0
     for (const visitor of pose.visitors) {
-      const out = (now - visitor.outAt) / VISITOR_WALK_TIME
-      if (out < 0) continue
-      const back = visitor.leaveAt === null ? 0 : Math.min(1, (now - visitor.leaveAt) / VISITOR_WALK_TIME)
-      const k = Math.min(1, out) * (1 - back)
-      const home = to3(visitor.home)
-      const x = threshold.x + (home.x - threshold.x) * k
-      const z = threshold.z + 2 + (home.z - threshold.z - 2) * k
-      const walking = (out < 1 || back > 0) && k > 0 && k < 1
-      const hop = walking ? Math.abs(Math.sin(k * Math.PI * 3)) * 3 : 0
-      const pokeAge = visitor.pokeAt === null ? Infinity : now - visitor.pokeAt
-      const poke = pokeAge < 0.5 ? Math.sin((pokeAge / 0.5) * Math.PI) * 4 : 0
-      const wiggle = walking ? 0 : Math.sin(now * 5 + count * 1.7) * 0.12
-      const facing = walking && back > 0 ? Math.atan2(threshold.x - home.x, threshold.z - home.z) : 0
-      scratch.q.setFromEuler(scratch.e.set(0, facing + wiggle, 0))
-      scratch.m.compose(scratch.p.set(x, hop + poke, z), scratch.q, scratch.s.set(MOUSE_SCALE, MOUSE_SCALE * (1 - poke * 0.02), MOUSE_SCALE))
+      const at = visitorPose(visitor, count, now)
+      if (!at) continue
+      const s = MOUSE_SCALE * at.grow
+      scratch.q.setFromEuler(scratch.e.set(0, at.facing, 0))
+      scratch.m.compose(scratch.p.set(at.x, at.y, at.z), scratch.q, scratch.s.set(s, s * at.squash, s))
       instanced.setMatrixAt(count++, scratch.m)
     }
     instanced.count = count
@@ -1325,14 +1644,14 @@ export function DoorModel({ read }: { read: () => DoorPose }) {
   })
   return (
     <group>
-      <group position={[p.x, 0, p.z]} scale={DOOR.houseScale}>
-        <mesh geometry={house} material={clay} />
-        <group ref={leaf} position={[-3, 0, 9.9]}>
-          <mesh geometry={doorLeaf} material={clay} />
+      <group position={[p.x, 0, p.z]} scale={DOOR.houseScale} userData={{ jamObject: 'house' }}>
+        <mesh name="house" geometry={house} material={clay} />
+        <group ref={leaf} position={DOOR_HINGE}>
+          <mesh name="house-door" geometry={doorLeaf} material={clay} />
         </group>
-        <mesh ref={face} geometry={mouse} material={clay} scale={0.9} visible={false} />
+        <mesh name="window-mouse" ref={face} geometry={mouse} material={clay} scale={0.9} visible={false} />
       </group>
-      <instancedMesh ref={mice} args={[mouse, clay, 10]} frustumCulled={false} />
+      <instancedMesh name="visitor-mice" ref={mice} args={[mouse, clay, 10]} frustumCulled={false} />
     </group>
   )
 }
@@ -1356,11 +1675,11 @@ export function CarrierMice({ read }: { read: () => CarrierMouse[] }) {
     instanced.count = count
     instanced.instanceMatrix.needsUpdate = true
   })
-  return <instancedMesh ref={mice} args={[mouse, clay, 2]} frustumCulled={false} />
+  return <instancedMesh name="carrier-mice" ref={mice} args={[mouse, clay, 2]} frustumCulled={false} />
 }
 
 /** A big clay token for an activity: a cushion to sit on, with a small model of the activity on top. */
-function chooserGeometry(mat: MatKey): THREE.BufferGeometry {
+export function chooserGeometry(mat: MatKey): THREE.BufferGeometry {
   const parts = [
     piece(geo.sphere(28), PALETTE.tile, { position: [0, 1.2, 0], scale: [7.2, 1.6, 7.2] }, { lump: 0.25, frequency: 0.5, seed: 11 }),
     piece(geo.torus(32, 0.12), PALETTE.shelf, { position: [0, 1.25, 0], rotation: [Math.PI / 2, 0, 0], scale: 7.1 }, { lump: 0.05, ground: null }),
@@ -1390,7 +1709,7 @@ function chooserGeometry(mat: MatKey): THREE.BufferGeometry {
   return merge(parts)
 }
 
-const CHOOSER_SCALE = 1.35
+export const CHOOSER_SCALE = 1.2
 
 /** The activity choosers: big tokens on the table's right margin that bob when the guidance points at them; tap or drag one onto the table to switch. */
 export function ShelfModel({ read }: { read: () => { mats: MatKey[]; drag: { mat: MatKey; at: Point } | null; glow: number; now: number } }) {
@@ -1426,7 +1745,7 @@ export function ShelfModel({ read }: { read: () => { mats: MatKey[]; drag: { mat
     <group>
       {mats.map((mat, i) => (
         <group key={mat} ref={refs[i]}>
-          <mesh geometry={tokens[i]} material={clay} />
+          <mesh name={`chooser-${mat}`} geometry={tokens[i]} material={clay} />
         </group>
       ))}
     </group>
@@ -1478,8 +1797,16 @@ function pointingHandTexture(): THREE.Texture {
   return texture
 }
 
-/** A big friendly cartoon hand, always facing the camera, fingertip on the target; carries a ghost stone for drags. */
-export function GhostHand({ read, carry }: { read: () => { at: Point; press: number; opacity: number } | null; carry: () => boolean }) {
+/** How far the ghost stone reaches below its middle, and out from it. */
+export const GHOST_BELOW = stoneReachAlong(4, 0, -1, 0)
+export const GHOST_REACH = stoneReachOf(4)
+
+/**
+ * A big friendly cartoon hand, always facing the camera, fingertip on the
+ * target; carries a ghost stone for drags, lying on `floor` (cm): the stone
+ * it is lifted from, or what it is carried over.
+ */
+export function GhostHand({ read, carry, floor }: { read: () => { at: Point; press: number; opacity: number } | null; carry: () => boolean; floor: (at: Point) => number }) {
   const { stones } = useClay()
   const ghost = useMemo(() => {
     const material = stones.clone()
@@ -1505,14 +1832,14 @@ export function GhostHand({ read, carry }: { read: () => { at: Point; press: num
     material.opacity = pose.opacity
     if (stone.current) {
       stone.current.visible = carry() && pose.press > 0.5
-      stone.current.position.set(p.x, Math.max(1.4, p.y - 0.4), p.z)
+      if (stone.current.visible) stone.current.position.set(p.x, Math.max(1.4, p.y - 0.4, floor(pose.at) + GHOST_BELOW), p.z)
       ghost.opacity = pose.opacity * 0.65
     }
   })
   return (
     <>
-      <mesh ref={stone} geometry={pebble} material={ghost} scale={stoneRadius3(4)} renderOrder={9} />
-      <sprite ref={sprite} material={material} center={[0.5, 0.02]} scale={[15, 18.75, 1]} renderOrder={10} />
+      <mesh name="ghost-stone" ref={stone} geometry={pebble} material={ghost} scale={stoneRadius3(4)} renderOrder={9} />
+      <sprite name="ghost-hand" ref={sprite} material={material} center={[0.5, 0.02]} scale={[15, 18.75, 1]} renderOrder={10} />
     </>
   )
 }

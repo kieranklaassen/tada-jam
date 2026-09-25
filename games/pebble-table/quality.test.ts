@@ -8,12 +8,12 @@ const feed = (governor: QualityGovernor, frames: number, intervalMs: number, wor
 }
 
 describe('quality tiers', () => {
-  it('step down in cost: pixels, fur, post, physics', () => {
+  it('step down in cost: pixels, fur, post, and nothing else', () => {
     for (let i = 1; i < TIERS.length; i++) {
       expect(TIERS[i].dpr).toBeLessThanOrEqual(TIERS[i - 1].dpr)
       expect(TIERS[i].furShells).toBeLessThanOrEqual(TIERS[i - 1].furShells)
-      expect(TIERS[i].physicsSubsteps).toBeLessThanOrEqual(TIERS[i - 1].physicsSubsteps)
     }
+    for (const tier of TIERS) expect(Object.keys(tier).sort()).toEqual(['dpr', 'furShells', 'name', 'post'])
     expect(TIERS[LOWEST_TIER]).toMatchObject({ dpr: 1, furShells: 0, post: 'off' })
   })
 

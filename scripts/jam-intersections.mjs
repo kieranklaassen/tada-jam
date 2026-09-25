@@ -139,6 +139,9 @@ function reportable(f) {
   return f.pixels >= 1.5
 }
 
+/** Longest (real ms) a game that mounts after loading may take to make its renderer. */
+const MOUNT_WAIT_MS = 15000
+
 const slug = (s) => s.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').slice(0, 60).toLowerCase()
 
 async function auditGame(browser, base, game, opts) {
@@ -177,6 +180,14 @@ async function auditGame(browser, base, game, opts) {
   }, config.childAge ?? 5)
   const query = config.query ?? (game === 'pebble-table' ? '' : `tier=${COUNTS_UP.has(game) ? 3 : 0}`)
   await page.goto(`${base}/?chrome=0${query ? '&' + query : ''}#/play/${game}`)
+  // A game that fetches and starts something before it makes its renderer
+  // (Pebble Table's WebAssembly physics) is waited for in real time, with the
+  // page's clock still paused, so its first frame falls at the same game time
+  // on every run.
+  if (config.mountsAfterLoading) {
+    const deadline = Date.now() + MOUNT_WAIT_MS
+    while (Date.now() < deadline && !(await page.evaluate(() => (window.__jamAudit?.renderers.length ?? 0) > 0))) await new Promise((resolve) => setTimeout(resolve, 25))
+  }
   const firstFrame = async () => {
     for (let i = 0; i <= 120; i++) {
       // Two frames, not one: a game may draw once from its resize handler

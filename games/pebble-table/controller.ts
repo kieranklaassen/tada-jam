@@ -1,16 +1,21 @@
 import type { TableAudio } from './audio'
-import { freeSpotOnPlate, GUEST_RADIUS, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, wantingSeat, type FeedingView } from './feeding'
+import { freeSpotOnPlate, GUEST_ARM, GUEST_RADIUS, GUEST_REACH, GUEST_TOP, gazeTarget, inBowl, nextSeat, plateOf, viewFeeding, wantingSeat, type FeedingView } from './feeding'
 import { chooseHint, guestsShouldReach, handPose, HintScheduler, type HandPose, type Hint, type TableSummary } from './guidance'
 import { GestureTracker, type Intent, type Target } from './input'
 import { albumSlot, BAG, BAG_MOUTH, DOOR, FEEDING, MAT_KEYS, SCALE, SHELF, shelfTile, TABLE, type MatKey, type Point, type Quarters } from './layout'
-import { HOLD_HEIGHT, PAN_REST_HEIGHT, stoneHeight3, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
+import { GRAVITY, HOLD_HEIGHT, LONGEST_FRAME, STEP, STEP_SLACK, stoneRadius3, TablePhysics, to3, toWorld2, UNIT, type Vec3 } from './physics3d'
+import { JAR_REACH, partDepth, partRest, STOOL_REACH, STOOL_TOP } from './partShape'
+import { STONE_REACH, stoneRest } from './stoneShape'
+import { feedingFloor, PAN_RIM, panRimReach, surfaceUnder } from './surfaces'
 import { SaveCadence } from './saveCadence'
-import { creak, panDrops, panOf, panWeights, restingBeam, stepBeam, targetTilt, type Beam } from './scale'
+import { creak, panDrops, panOf, restingBeam, stepBeam, stepSway, SWAY_MOST, swayOf, targetTilt, type Beam, type Side, type Sway } from './scale'
 import { cutPiece, placeFromBag, pullFromBag, returnToBag, serialize, swapMat, tipBag, type Piece, type TableState } from './state'
 import { chunk, clusterPieces, groupsFor, schedule } from './voice'
+import { comingOut, DOOR_SWING, doorwayGap, goingHome, houseGap, visitorGone, visitorHome, type VisitorTimes } from './visitors'
+import { bagExit, bagShape, bagTip } from './bag'
 import { SEAT_SPECIES } from './motion'
 import { keepPage, pageOf, turnPage } from './album'
-import { inJar, jarAt, JARS, PART_RADIUS, PART_WEIGHT, spillFrom, type Part, type PartKind } from './parts'
+import { inJar, JAR_SCALE, jarAt, JARS, PART_KINDS, PART_RADIUS, PART_WEIGHT, POUR_GAP, spillFrom, type Part, type PartKind } from './parts'
 
 // The table while it is on screen: game rules, real physics, touch, sound,
 // saving, and guidance. It knows nothing about rendering; the 3D view reads
@@ -62,13 +67,16 @@ const RUMBLE_GAP = 8
 const MAX_RUMBLES = 3
 
 const KNOCK_PAUSE = 1.1
-const VISITOR_WALK = 0.6
+/** Room (world units) a stone keeps from where the door swings and the visitors walk. */
+const DOORWAY_ROOM = 5
+/** Room (world units) a stone the scale comes out over keeps inside a pan's rim, or from under where a pan can swing. */
+const PAN_ROOM = 2
 const PEEK_AFTER = 2
 const PEEK_GAP = 7
 const PEEK_LENGTH = 1.8
 const MAX_PEEKS = 3
 
-export type Visitor = { home: Point; outAt: number; leaveAt: number | null; pokeAt: number | null; group: number }
+export type Visitor = VisitorTimes & { group: number }
 
 type DoorState = {
   knocks: number[]
@@ -86,7 +94,7 @@ export function yardSpots(groups: readonly (readonly number[])[]): (Point & { gr
   const width = 230
   groups.forEach((group, g) => {
     const cx = DOOR.yard.x + (g - (groups.length - 1) / 2) * width
-    const cluster = group.length === 1 ? [[0, 0]] : group.length === 2 ? [[-48, 0], [48, 0]] : [[-52, 30], [52, 30], [0, -50]]
+    const cluster = group.length === 1 ? [[0, 0]] : group.length === 2 ? [[-48, 0], [48, 0]] : [[-54, 40], [54, 40], [0, -50]]
     for (let i = 0; i < group.length; i++) spots.push({ x: cx + cluster[i % cluster.length][0], y: DOOR.yard.y + cluster[i % cluster.length][1], group: g })
   })
   return spots
@@ -115,6 +123,28 @@ type PendingVoice = { groups: () => number[][]; deadline: number }
 const HIT_SLOP_PX = 14
 const MUNCH_DELAY = 0.9
 const BAG_TOP = 11
+/** Room (cm) a held stone or part keeps above what it is carried over. */
+const HOLD_ROOM = 1
+/** The highest a held thing rides, however tall what it is carried over. */
+const HOLD_CEILING = 50
+/** How far an empty seat's stool reaches (layout units) at the top of its springy pop-in, which overshoots its size by an eighth. */
+const STOOL_CLEAR = (STOOL_REACH / UNIT) * 1.125
+/** Room (cm) a poured part keeps from its jar's pot, for the little it turns in flight. */
+const POUR_ROOM = 1.5
+/** How far (cm) each spilled stone starts out from the bag's mouth toward where it is flung, and how far above the one before (a stone is not as thick). */
+const SPILL_OUT = 1.2
+const SPILL_STACK = 2.6
+
+/**
+ * How fast (cm/s) a part thrown sideways out of its jar's mouth at `speed`,
+ * turned side-on to the throw, must also rise to arc clear of the pot before
+ * it falls back to the mouth: an open jar's collider is the pot out to its
+ * widest, up to the mouth. Damping slows it in flight, so throws rise a
+ * fifth faster than this or more.
+ */
+function pourLift(kind: PartKind, speed: number): number {
+  return (-GRAVITY * (JAR_REACH * JAR_SCALE + partDepth(kind) + POUR_ROOM)) / (2 * speed)
+}
 
 export class TableController {
   readonly state: TableState
@@ -132,10 +162,18 @@ export class TableController {
   readonly arrivals = new Map<number, number>()
   /** When a guest was last tapped (they hop and nod back). */
   readonly nudges = new Map<number, number>()
-  /** Seconds of attended play; stands still while the table is put away. */
+  /** Seconds of attended play, in whole physics steps; stands still while the table is put away. */
   t = 0
+  /** Frame time (s) not yet stepped: the table moves in whole steps, so frames of any length play out the same. */
+  private unstepped = 0
+  private steps = 0
+  /** Every random choice the table makes (how a spill or a pour is flung) draws from this, so sound and drawing cannot change them. */
+  private readonly random: () => number
   beam: Beam = restingBeam()
+  sway: Sway = { x: 0, v: 0 }
   bagTipStart: number | null = null
+  /** How many times the bag has been tipped: tips alternate between a lurch and a shake-out. */
+  private bagTips = 0
   matSlideStart: number | null = null
   munchStart: number | null = null
   shelfDrag: { pointerId: number; mat: MatKey; at: Point } | null = null
@@ -165,15 +203,18 @@ export class TableController {
   private story: Story | null = null
   /** When each jar was last tipped or touched, for its wobble. */
   readonly jarTips = new Map<PartKind, number>()
+  /** Parts tipped out of a jar that have not yet left its mouth. */
+  private pouring: { id: number; kind: PartKind; at: Point; y: number; velocity: Vec3; spin: number; yaw: number; due: number }[] = []
   /** When a page was last kept or turned, for the album's hop. */
   albumAt: number | null = null
   private restoring = false
   /** Knock-Knock: the child's knocks waiting for an answer, the house's answer, and the visitors in the yard. */
   readonly door: DoorState = { knocks: [], knockAt: null, answer: null, openAt: null, closeAt: null, visitors: [], peekStretch: { lastIdle: 0, count: 0, next: PEEK_AFTER, at: null } }
 
-  constructor(state: TableState, options: { save: (state: TableState) => void; sound?: Sound }) {
+  constructor(state: TableState, options: { save: (state: TableState) => void; sound?: Sound; random?: () => number }) {
     this.state = state
     this.sound = options.sound ?? silentSound
+    this.random = options.random ?? (() => Math.random())
     this.cadence = new SaveCadence(() => options.save(serialize(this.state)))
     this.tracker = new GestureTracker(() => this.hitTest())
     this.scheduler = new HintScheduler(0)
@@ -229,22 +270,41 @@ export class TableController {
     this.cadence.settle(performance.now())
   }
 
+  /**
+   * Plays one frame: as many whole physics steps as its time makes up, with
+   * what is left over carried to the next frame. Only a frame longer than
+   * LONGEST_FRAME loses time.
+   */
   step(dt: number): void {
-    this.t += dt
+    this.unstepped = Math.min(this.unstepped + dt, LONGEST_FRAME)
+    const steps = Math.floor(this.unstepped / STEP + STEP_SLACK)
+    this.unstepped = Math.max(0, this.unstepped - steps * STEP)
+    for (let i = 0; i < steps; i++) this.tick()
+  }
+
+  private tick(): void {
+    const dt = STEP
+    this.steps += 1
+    this.t = this.steps * STEP
     const now = this.t
     for (const [pointerId, id] of this.held) {
       const screen = this.screens.get(pointerId)
-      const at = screen && this.projector?.toPlane(screen, HOLD_HEIGHT)
-      if (at) this.physics.moveHeld(id, at, HOLD_HEIGHT, 1 - Math.exp(-dt * 22))
+      const held = screen && this.heldAt(screen, id)
+      if (!held) continue
+      // Climbing over what it is carried across, it keeps right up with the finger; otherwise it trails a little, which reads as weight.
+      const climbing = held.height > HOLD_HEIGHT && held.height > (this.physics.body(id)?.position.y ?? 0)
+      this.physics.moveHeld(id, held.at, held.height, climbing ? 1 : 1 - Math.exp(-dt * 22))
     }
     for (const pointerId of this.brooms) {
       const screen = this.screens.get(pointerId)
       const at = screen && this.projector?.toPlane(screen, 1.5)
       if (at) this.physics.setBroom(pointerId, at)
     }
+    this.pour()
     if (this.state.liveMat === 'scale') {
       this.beam = stepBeam(this.beam, targetTilt(this.panLoad()), dt)
-      this.physics.setPanDrops(panDrops(this.beam.angle))
+      this.sway = stepSway(this.sway, this.beam.velocity, dt)
+      this.physics.setPanDrops(panDrops(this.beam.angle), swayOf(this.sway))
       const sound = creak(this.beam)
       this.sound.creak(sound.gain, sound.pitch)
     }
@@ -268,7 +328,10 @@ export class TableController {
 
     const resting = this.restingPieces()
     this.feeding = viewFeeding(resting, this.state.seats)
-    if (this.state.liveMat === 'feeding') this.updateFeeding(now)
+    if (this.state.liveMat === 'feeding') {
+      this.updateFeeding(now)
+      this.clearGuests(resting)
+    }
     this.updateStory(now)
     if (this.state.liveMat === 'door') this.updateDoor(now)
     this.updateWanting()
@@ -306,6 +369,7 @@ export class TableController {
       this.sound.chord()
       if (!this.stoolsShown) {
         this.stoolsShown = true
+        this.clearStools()
         this.syncGuests()
         this.changed()
       }
@@ -353,6 +417,11 @@ export class TableController {
   isHeld(id: number): boolean {
     for (const held of this.held.values()) if (held === id) return true
     return false
+  }
+
+  /** The stones and parts under a finger now. */
+  heldIds(): number[] {
+    return [...this.held.values()]
   }
 
   pulse(id: number): number {
@@ -442,14 +511,15 @@ export class TableController {
         const plate = FEEDING.seats[seat].plate
         const away = Math.hypot(BAG_MOUTH.x - plate.x, BAG_MOUTH.y - plate.y) || 1
         const rest = { x: plate.x + ((BAG_MOUTH.x - plate.x) / away) * 120, y: plate.y + ((BAG_MOUTH.y - plate.y) / away) * 120 }
-        this.bagTipStart = now
+        const from = this.leaveBag()
+        this.tipTheBag()
         this.sound.rustle()
         Object.assign(story, { phase: 'rolling', at: now, stoneId: piece.id, from: rest, seat })
         this.flights.push({
           id: piece.id,
           q: piece.q,
-          from: to3(BAG_MOUTH, 4),
-          to: to3(rest, stoneHeight3(piece.q) / 2 + 0.2),
+          from,
+          to: to3(rest, this.restHeight(rest, piece.q) + 0.15),
           t0: now,
           duration: 0.95,
           arc: 5,
@@ -458,7 +528,7 @@ export class TableController {
             if (!this.pieceById(piece.id)) return
             piece.x = rest.x
             piece.y = rest.y
-            this.addPieceBody(piece, { y: stoneHeight3(piece.q) / 2 + 0.2 })
+            this.addPieceBody(piece, { y: this.restHeight(rest, piece.q) + 0.15 })
             this.sound.clack(0.4)
             if (this.story?.phase === 'rolling') Object.assign(this.story, { phase: 'resting', at: this.t })
           },
@@ -487,7 +557,7 @@ export class TableController {
           id: piece.id,
           q: piece.q,
           from,
-          to: to3(spot, stoneHeight3(piece.q) / 2 + 0.6),
+          to: to3(spot, this.restHeight(spot, piece.q) + 0.55),
           t0: now,
           duration: STORY_CARRY,
           arc: 4,
@@ -496,7 +566,7 @@ export class TableController {
             if (!this.pieceById(piece.id)) return
             piece.x = spot.x
             piece.y = spot.y
-            this.addPieceBody(piece, { y: stoneHeight3(piece.q) / 2 + 0.6 })
+            this.addPieceBody(piece, { y: this.restHeight(spot, piece.q) + 0.55 })
             this.dealCursor = seat
             this.sound.touch(1)
             this.pendingVoice = { groups: this.voiceFor(piece.id), deadline: this.t + 1 }
@@ -571,6 +641,9 @@ export class TableController {
 
   /** Set the newest page back on the table: today's stones go home to the bag, then fly out to where they were. */
   private restorePage(): void {
+    const landing = this.flights.filter((flight) => flight.carriesPiece)
+    this.flights = this.flights.filter((flight) => !flight.carriesPiece)
+    for (const flight of landing) flight.land()
     const page = turnPage(this.state.album, pageOf(this.state.liveMat, this.restingPieces()))
     if (!page) return
     this.albumAt = this.t
@@ -583,12 +656,11 @@ export class TableController {
     page.stones.forEach((stone, index) => {
       const piece = placeFromBag(this.state, stone.q, stone)
       if (!piece) return
-      const rest = stoneHeight3(piece.q) / 2 + 0.6
       this.flights.push({
         id: piece.id,
         q: piece.q,
         from: to3(BAG, BAG_TOP),
-        to: to3(stone, rest + (this.state.liveMat === 'scale' && panOf(stone) !== null ? PAN_REST_HEIGHT : 0)),
+        to: to3(stone, this.restHeight(stone, piece.q) + 0.55),
         t0: this.t + 0.45 + index * 0.09,
         duration: 0.55,
         arc: 14,
@@ -597,7 +669,7 @@ export class TableController {
           if (!this.pieceById(piece.id)) return
           piece.x = stone.x
           piece.y = stone.y
-          this.addPieceBody(piece, { y: this.restHeight(piece) + 0.4 })
+          this.addPieceBody(piece, { y: this.restHeight(piece, piece.q) + 0.35 })
           this.sound.clack(0.3)
         },
       })
@@ -615,14 +687,25 @@ export class TableController {
 
   /** What each pan carries, in quarter-stones: stones by size, parts by their own weight. */
   private panLoad(): [number, number] {
-    const weights = panWeights(this.restingPieces())
+    const weights: [number, number] = [0, 0]
+    for (const piece of this.restingPieces()) {
+      const side = this.weighedBy(piece)
+      if (side !== null) weights[side] += piece.q
+    }
     const held = new Set(this.held.values())
     for (const part of this.state.parts) {
       if (held.has(part.id)) continue
-      const side = panOf(part)
+      const side = this.weighedBy(part)
       if (side !== null) weights[side] += PART_WEIGHT[part.kind]
     }
     return weights
+  }
+
+  /** The pan something weighs on: the one it lies in, not one whose rim it lies under on the table, or the beam would rock it for ever. */
+  private weighedBy(item: { id: number; x: number; y: number }): Side | null {
+    const side = panOf(item)
+    const body = this.physics.body(item.id)
+    return side !== null && body && body.position.y > this.physics.panFloor(side) ? side : null
   }
 
   private newPart(kind: PartKind, at: Point): Part {
@@ -642,19 +725,32 @@ export class TableController {
     }
     this.sound.rustle()
     for (let i = 0; i < count; i++) {
-      const { at, direction } = spillFrom(kind, i, count)
+      const { at, y, direction } = spillFrom(kind, i, count)
       const part = this.newPart(kind, at)
-      const speed = kind === 'boulder' ? 45 : 60 + Math.random() * 30
-      this.physics.addPart(part.id, kind, at, { y: 5 + i * 1.5, velocity: { x: direction.x * speed, y: 18 + Math.random() * 12, z: direction.y * speed }, spin: (Math.random() - 0.5) * 8 })
+      const speed = kind === 'boulder' ? 45 : 60 + this.random() * 30
+      const lift = kind === 'boulder' ? 18 + this.random() * 12 : pourLift(kind, speed) * (1.2 + this.random() * 0.2)
+      const velocity = { x: direction.x * speed, y: lift, z: direction.y * speed }
+      this.pouring.push({ id: part.id, kind, at, y, velocity, spin: this.random() - 0.5, yaw: Math.atan2(direction.x, direction.y), due: this.t + i * POUR_GAP })
     }
+    this.syncJars()
+    this.pour()
     this.changed()
     this.cadence.change(performance.now(), true)
+  }
+
+  /** Parts come out of a tipped jar's mouth when their turn comes, if they are still out (a mat change sends them home first). */
+  private pour(): void {
+    const due = this.pouring.filter((item) => item.due <= this.t)
+    if (due.length === 0) return
+    this.pouring = this.pouring.filter((item) => item.due > this.t)
+    for (const { id, kind, at, y, velocity, spin, yaw } of due) if (this.partById(id)) this.physics.addPart(id, kind, at, { y, velocity, spin, yaw })
   }
 
   private pullFromJar(kind: PartKind, at: Point): Part | null {
     if (inJar(this.state.parts, kind) === 0) return null
     this.jarTips.set(kind, this.t)
     const part = this.newPart(kind, at)
+    this.syncJars()
     this.physics.addPart(part.id, kind, at, { y: HOLD_HEIGHT })
     this.physics.hold(part.id)
     this.sound.touch(1.1)
@@ -669,6 +765,7 @@ export class TableController {
     if (!part) return
     this.physics.removeStone(id)
     this.state.parts = this.state.parts.filter((p) => p.id !== id)
+    this.syncJars()
     this.jarTips.set(part.kind, this.t)
     this.sound.clatter(1)
     this.changed()
@@ -682,8 +779,8 @@ export class TableController {
     if (this.door.answer) return
     const home = this.door.visitors.filter((visitor) => visitor.leaveAt === null)
     if (home.length > 0) {
-      for (const visitor of home) visitor.leaveAt = this.t + Math.random() * 0.15
-      this.door.closeAt = this.t + VISITOR_WALK + 0.2
+      this.door.closeAt = goingHome(home, this.t) + 0.1
+      this.clearDoorway(home.map((visitor) => visitor.home))
     }
     this.door.knocks.push(this.t)
     this.door.knockAt = this.t
@@ -692,8 +789,8 @@ export class TableController {
 
   private updateDoor(now: number): void {
     const door = this.door
-    door.visitors = door.visitors.filter((visitor) => visitor.leaveAt === null || now - visitor.leaveAt < VISITOR_WALK)
-    if (door.closeAt !== null && now >= door.closeAt && door.visitors.length === 0) {
+    door.visitors = door.visitors.filter((visitor) => !visitorGone(visitor, now))
+    if (door.closeAt !== null && now >= door.closeAt + DOOR_SWING && door.visitors.length === 0) {
       door.openAt = null
       door.closeAt = null
     }
@@ -714,6 +811,7 @@ export class TableController {
       }
       const openAt = cursor + 0.2
       door.answer = { times, groups, openAt }
+      this.clearDoorway(yardSpots(groups))
     }
     const answer = door.answer
     if (answer && now >= answer.openAt) {
@@ -722,7 +820,8 @@ export class TableController {
       door.closeAt = null
       this.sound.whoosh()
       const spots = yardSpots(answer.groups)
-      spots.forEach((home, i) => door.visitors.push({ home, outAt: now + 0.25 + i * 0.2, leaveAt: null, pokeAt: null, group: home.group }))
+      const outAt = comingOut(spots, now)
+      spots.forEach((home, i) => door.visitors.push({ home, outAt: outAt[i], leaveAt: null, pokeAt: null, group: home.group }))
     }
     this.updateDoorPeek(now)
   }
@@ -766,12 +865,13 @@ export class TableController {
     if (this.state.liveMat !== 'scale' || this.state.bag <= 0) return
     if (this.state.pieces.some((piece) => panOf(piece) !== null)) return
     const pan = SCALE.pans[0]
+    const from = this.leaveBag()
     const piece = pullFromBag(this.state, pan)
     if (!piece) return
     this.flights.push({
       id: piece.id,
       q: piece.q,
-      from: to3(BAG_MOUTH, 4),
+      from,
       to: to3(pan, 12),
       t0: this.t + 0.5,
       duration: 0.8,
@@ -781,7 +881,7 @@ export class TableController {
         if (!this.pieceById(piece.id) || this.state.liveMat !== 'scale') return
         piece.x = pan.x
         piece.y = pan.y
-        this.addPieceBody(piece, { y: this.restHeight(piece) + 3 })
+        this.addPieceBody(piece, { y: this.restHeight(piece, piece.q) + 3 })
         this.sound.clack(0.5)
         this.cadence.change(performance.now(), true)
       },
@@ -856,30 +956,33 @@ export class TableController {
     return this.state.pieces.find((piece) => piece.id === id)
   }
 
-  private restHeight(piece: Piece): number {
-    const half = stoneHeight3(piece.q) / 2
-    if (this.state.liveMat === 'scale') {
-      const side = panOf(piece)
-      if (side !== null) return this.physics.panTop(side) + half + 0.2
-    }
-    return half + 0.05
+  /** Where a stone of size `q` lying at `at` has its centre: on whatever is under it, a hair above. */
+  private restHeight(at: Point, q: Quarters): number {
+    return surfaceUnder(at, this.physics.surfaces(this.state.liveMat, this.state.seats)) + stoneRest(q) + 0.05
   }
 
   private addPieceBody(piece: Piece, options: { y?: number; velocity?: Vec3; spin?: number } = {}): void {
-    this.physics.addStone(piece.id, piece.q, piece, { y: options.y ?? this.restHeight(piece), velocity: options.velocity, spin: options.spin })
+    this.physics.addStone(piece.id, piece.q, piece, { y: options.y ?? this.restHeight(piece, piece.q), velocity: options.velocity, spin: options.spin })
   }
 
   private enterMat(): void {
     this.physics.setMat(this.state.liveMat)
+    this.syncJars()
     this.syncGuests()
   }
 
+  /** Empty jars stand with their lids off, the rest with them on. */
+  private syncJars(): void {
+    for (const kind of PART_KINDS) this.physics.setJarOpen(kind, inJar(this.state.parts, kind) === 0)
+  }
+
   private syncGuests(): void {
+    this.physics.setPlates(this.state.liveMat === 'feeding' ? this.state.seats : [])
     FEEDING.seats.forEach((seat, index) => {
       const key = `guest-${index}`
       if (this.state.liveMat !== 'feeding') this.physics.removeFixture(key)
-      else if (this.state.seats[index] && this.guestDrag?.seat !== index) this.physics.setFixture(key, { ...seat.guest, r: GUEST_RADIUS }, 10)
-      else if (!this.state.seats[index] && this.stoolsShown) this.physics.setFixture(key, { ...seat.guest, r: 42 }, 3)
+      else if (this.state.seats[index] && this.guestDrag?.seat !== index) this.physics.setGuest(key, index, GUEST_TOP[SEAT_SPECIES[index]])
+      else if (!this.state.seats[index] && this.stoolsShown) this.physics.setFixture(key, { ...seat.guest, r: STOOL_REACH / UNIT }, feedingFloor(seat.guest, STOOL_REACH) + STOOL_TOP)
       else if (!this.state.seats[index]) this.physics.removeFixture(key)
       else this.physics.removeFixture(key)
     })
@@ -899,7 +1002,7 @@ export class TableController {
     this.physics.removeStone(id)
     returnToBag(this.state, id)
     this.changed()
-    const half = stoneHeight3(piece.q) / 2
+    const half = stoneRest(piece.q)
     const distance = Math.hypot(edge.x - BAG.x, edge.y - BAG.y)
     this.sound.squeak()
     this.flights.push({
@@ -1028,20 +1131,26 @@ export class TableController {
       return distance <= projected.r + slop ? distance : Infinity
     }
 
+    // The shelf's tokens stand close enough, seen at the table's angle, for a
+    // tap on a tall one's top to fall within reach of the one behind it.
+    let shelf: { target: Target; distance: number } | null = null
     if (this.state.album.length > 0) {
       const slot = albumSlot()
-      if (within(to3(slot, slot.height + 3), 9) < Infinity) return { kind: 'album' }
+      const distance = within(to3(slot, slot.height + 3), 9)
+      if (distance < Infinity) shelf = { target: { kind: 'album' }, distance }
     }
     const mats = this.shelfMats()
     for (let i = 0; i < mats.length; i++) {
       const tile = shelfTile(i)
-      if (within(to3(tile, tile.height + 3), 10) < Infinity) return { kind: 'shelf', mat: mats[i] }
+      const distance = within(to3(tile, tile.height + 3), 10)
+      if (distance < (shelf?.distance ?? Infinity)) shelf = { target: { kind: 'shelf', mat: mats[i] }, distance }
     }
+    if (shelf) return shelf.target
     if (this.state.liveMat === 'feeding' && this.feeding.leftover && within(to3(this.knife.at, 1), 6) < Infinity) return { kind: 'knife' }
     if (this.state.liveMat === 'door') {
       for (let index = 0; index < this.door.visitors.length; index++) {
         const visitor = this.door.visitors[index]
-        if (visitor.leaveAt === null && this.t > visitor.outAt + VISITOR_WALK && within(to3(visitor.home, 4), 5) < Infinity) return { kind: 'visitor', index }
+        if (visitor.leaveAt === null && visitorHome(visitor, this.t) && within(to3(visitor.home, 4), 5) < Infinity) return { kind: 'visitor', index }
       }
       if (within(to3(DOOR.door, 6), DOOR.doorRadius * UNIT) < Infinity) return { kind: 'door' }
     }
@@ -1289,7 +1398,8 @@ export class TableController {
       this.physics.release(id, { x: 0, y: 0 })
       return this.sendHome(id)
     }
-    const catcher = at ? this.catcher(at) : null
+    // A stone let go over a guest's head, or just short of the asking guest's plate, is caught onto the guest's plate.
+    const catcher = at ? (this.guestUnder(at) ?? this.catcher(at)) : null
     if (catcher !== null) {
       this.physics.release(id, { x: 0, y: 0 })
       this.sound.hop()
@@ -1298,6 +1408,35 @@ export class TableController {
     this.physics.release(id, velocity)
     if (speak) this.pendingVoice = { groups: this.voiceFor(id), deadline: this.t + 2.5 }
     this.cadence.change(performance.now(), true)
+  }
+
+  /**
+   * Where a held stone or part rides under the finger: at the hold height, or
+   * as little higher up the finger's line of sight as carries it clear over
+   * whatever stands under it (a guest, the bag, a jar, the house), and not
+   * lower than clears what stands under where it is now, so it comes down
+   * only once past: past a guest's head, if it is up riding over one.
+   */
+  private heldAt(screen: Point, id: number): { at: Point; height: number } | null {
+    const piece = this.pieceById(id)
+    const part = piece ? undefined : this.partById(id)
+    const reach = piece ? stoneRadius3(piece.q) : part ? PART_RADIUS[part.kind] * UNIT : 0
+    const rest = piece ? stoneRest(piece.q) : part ? partRest(part.kind) : 0
+    const riding = (this.physics.body(id)?.position.y ?? 0) > HOLD_HEIGHT + 0.5
+    const clear = (at: Point) => this.physics.heldClearance(at, reach, riding) + rest + HOLD_ROOM
+    const now = this.physics.position2(id)
+    for (let height = Math.max(HOLD_HEIGHT, now ? clear(now) : 0); ; height += 0.5) {
+      const at = this.projector?.toPlane(screen, height)
+      if (!at) return null
+      if (height >= HOLD_CEILING || clear(at) <= height) return { at, height }
+    }
+  }
+
+  /** The seated guest a stone let go at `at` falls onto, if any. */
+  private guestUnder(at: Point): number | null {
+    if (this.state.liveMat !== 'feeding') return null
+    const seat = FEEDING.seats.findIndex((seat, index) => this.state.seats[index] && this.guestDrag?.seat !== index && Math.hypot(at.x - seat.guest.x, at.y - seat.guest.y) < GUEST_RADIUS)
+    return seat < 0 ? null : seat
   }
 
   /** A stone dropped just short of the asking guest's plate: small hands miss, so the guest catches it. */
@@ -1311,28 +1450,44 @@ export class TableController {
   private tipBag(): void {
     this.keepPage()
     const spilled = tipBag(this.state)
-    this.bagTipStart = this.t
+    this.tipTheBag()
     if (spilled.length === 0) {
       this.sound.sigh()
       return
     }
     this.sound.rustle()
+    // The stones leave in a flat stack just past the mouth, each a little way out along where it is flung.
+    const exit = this.leaveBag()
     spilled.forEach((piece, index) => {
       const spread = (index / Math.max(1, spilled.length - 1) - 0.5) * 1.2
-      const angle = -0.6 + spread + (Math.random() - 0.5) * 0.3
-      const speed = 70 + Math.random() * 55
-      piece.x += Math.cos(angle) * 12
-      piece.y += Math.sin(angle) * 12
+      const angle = -0.6 + spread + (this.random() - 0.5) * 0.3
+      const speed = 70 + this.random() * 55
+      Object.assign(piece, toWorld2({ x: exit.x + Math.cos(angle) * SPILL_OUT, z: exit.z + Math.sin(angle) * SPILL_OUT }))
       this.addPieceBody(piece, {
-        y: 6 + index * 2.6,
-        velocity: { x: Math.cos(angle) * speed, y: 28 + Math.random() * 22, z: Math.sin(angle) * speed },
-        spin: (Math.random() - 0.5) * 14,
+        y: exit.y + index * SPILL_STACK,
+        velocity: { x: Math.cos(angle) * speed, y: 28 + this.random() * 22, z: Math.sin(angle) * speed },
+        spin: (this.random() - 0.5) * 14,
       })
     })
     const ids = spilled.map((piece) => piece.id)
     this.pendingVoice = { groups: () => groupsFor(this.placed(this.restingPieces().filter((p) => ids.includes(p.id)))), deadline: this.t + 3.5 }
     this.changed()
     this.cadence.change(performance.now(), true)
+  }
+
+  private tipTheBag(): void {
+    this.bagTipStart = this.t
+    this.bagTips += 1
+  }
+
+  bagShakesOut(): boolean {
+    return this.bagTips % 2 === 0
+  }
+
+  /** Where a stone leaves the bag's mouth right now (world, cm). */
+  private leaveBag(): Vec3 {
+    const age = this.bagTipStart === null ? null : this.t - this.bagTipStart
+    return bagExit(bagShape(this.state.bag / this.state.total, bagTip(age, this.bagShakesOut())), STONE_REACH)
   }
 
   private bringOut(mat: MatKey): void {
@@ -1345,10 +1500,14 @@ export class TableController {
     this.knife.pointerId = null
     this.guestDrag = null
     this.resetDoor()
+    const lying = new Set(this.state.pieces.map((piece) => piece.id))
     swapMat(this.state, mat)
+    this.pouring = []
     for (const id of this.physics.stoneIds()) this.physics.removeStone(id)
     this.beam = restingBeam()
+    this.sway = { x: 0, v: 0 }
     this.enterMat()
+    if (mat === 'scale') this.clearPans(this.state.pieces.filter((piece) => lying.has(piece.id)))
     for (const piece of this.state.pieces) this.addPieceBody(piece)
     this.matSlideStart = this.t
     this.dealCursor = null
@@ -1398,7 +1557,7 @@ export class TableController {
       id: piece.id,
       q: piece.q,
       from,
-      to: to3(spot, stoneHeight3(piece.q) / 2 + 0.6),
+      to: to3(spot, this.restHeight(spot, piece.q) + 0.55),
       t0: this.t,
       duration: 0.42,
       arc: 9,
@@ -1407,12 +1566,172 @@ export class TableController {
         if (!this.pieceById(piece.id)) return
         piece.x = spot.x
         piece.y = spot.y
-        this.addPieceBody(piece, { y: stoneHeight3(piece.q) / 2 + 0.6 })
+        this.addPieceBody(piece, { y: this.restHeight(spot, piece.q) + 0.55 })
         this.sound.touch(1)
         this.pendingVoice = { groups: this.voiceFor(piece.id), deadline: this.t + 1 }
         this.cadence.change(performance.now(), true)
       },
     })
+  }
+
+  /** The stools pop up where the table was bare: a stone lying where one stands hops out beside it as it rises. */
+  private clearStools(): void {
+    const stools = FEEDING.seats.flatMap((seat, index) => (this.state.seats[index] ? [] : [seat.guest]))
+    const resting = this.restingPieces()
+    const taken = new Map(resting.map((piece) => [piece.id, { x: piece.x, y: piece.y, r: stoneRadius3(piece.q) / UNIT }]))
+    for (const piece of resting) {
+      const r = stoneRadius3(piece.q) / UNIT
+      const stool = stools.find((at) => Math.hypot(piece.x - at.x, piece.y - at.y) < STOOL_CLEAR + r)
+      if (!stool) continue
+      taken.delete(piece.id)
+      const spot = this.besideStool(stool, piece, r, stools, [...taken.values()])
+      taken.set(piece.id, { ...spot, r })
+      this.hopAside(piece, spot)
+    }
+  }
+
+  /**
+   * The scale comes out over the stones left `lying` on the table: one caught
+   * across a pan's rim is laid in that pan, inside the rim, if there is room
+   * for it there, and one under a pan, which would come down on it as the
+   * beam tips, or with no room in the pan, is set down beside it, clear of
+   * wherever either pan can swing.
+   */
+  private clearPans(lying: readonly Piece[]): void {
+    const taken = new Map(this.state.pieces.map((piece) => [piece.id, { x: piece.x, y: piece.y, r: stoneRadius3(piece.q) / UNIT }]))
+    const off = (at: Point, to: Point) => Math.hypot(at.x - to.x, at.y - to.y)
+    const swing = SCALE.pans.map((pan) => panRimReach(pan.r * UNIT).out / UNIT + SWAY_MOST / UNIT + PAN_ROOM)
+    for (const piece of lying) {
+      const r = stoneRadius3(piece.q) / UNIT
+      const side = panOf(piece)
+      const inPan = (at: Point) => side !== null && panOf(at) === side && off(at, SCALE.pans[side]) + r <= SCALE.pans[side].r * PAN_RIM - PAN_ROOM
+      const beside = (at: Point) => SCALE.pans.every((pan, k) => off(at, pan) - r >= swing[k])
+      if (inPan(piece) || beside(piece)) continue
+      taken.delete(piece.id)
+      const others = [...taken.values()]
+      const settle = (fits: (at: Point) => boolean) => this.spotNear(piece, r, (at) => fits(at) && others.every((stone) => off(at, stone) >= stone.r + r + 2))
+      const inside = side === null ? null : settle(inPan)
+      const spot = inside && inPan(inside) ? inside : settle(beside)
+      taken.set(piece.id, { ...spot, r })
+      piece.x = spot.x
+      piece.y = spot.y
+    }
+  }
+
+  /** A lying stone hops out of the way to `spot`. */
+  private hopAside(piece: Piece, spot: Point): void {
+    const body = this.physics.body(piece.id)
+    const from = body ? { x: body.position.x, y: body.position.y, z: body.position.z } : to3(piece, 1)
+    this.physics.removeStone(piece.id)
+    this.flights.push({
+      id: piece.id,
+      q: piece.q,
+      from,
+      to: to3(spot, this.restHeight(spot, piece.q) + 0.15),
+      t0: this.t,
+      duration: 0.42,
+      arc: 9,
+      carriesPiece: true,
+      land: () => {
+        if (!this.pieceById(piece.id)) return
+        piece.x = spot.x
+        piece.y = spot.y
+        this.addPieceBody(piece, { y: this.restHeight(spot, piece.q) + 0.15 })
+        this.sound.clack(0.3)
+        this.cadence.change(performance.now(), true)
+      },
+    })
+  }
+
+  /**
+   * Fair Feeding: a stone come to rest leaning on a seated guest, standing
+   * taller than its idling arms hang low, hops off it: out of its reach, or
+   * onto a free spot clear of its arms if it lies on the guest's plate, so a
+   * wave or a hop never swings into it.
+   */
+  private clearGuests(resting: readonly Piece[]): void {
+    const guests = FEEDING.seats.flatMap((seat, index) => (this.state.seats[index] && this.guestDrag?.seat !== index ? [{ at: seat.guest, floor: feedingFloor(seat.guest, GUEST_RADIUS * UNIT) }] : []))
+    const near = (at: Point, r: number, room = 0) => guests.some((guest) => Math.hypot(at.x - guest.at.x, at.y - guest.at.y) < GUEST_REACH / UNIT + r + room)
+    let taken: Map<number, Point & { r: number }> | null = null
+    for (const piece of resting) {
+      const r = stoneRadius3(piece.q) / UNIT
+      if (!near(piece, r) || !this.physics.asleep(piece.id) || !this.physics.leansOnGuest(piece.id)) continue
+      const top = this.physics.stoneTop(piece.id)
+      if (top === null || guests.every((guest) => top - guest.floor <= GUEST_ARM.low)) continue
+      taken ??= new Map(resting.map((other) => [other.id, { x: other.x, y: other.y, r: stoneRadius3(other.q) / UNIT }]))
+      taken.delete(piece.id)
+      const others = [...taken.values()]
+      const plate = plateOf(piece)
+      const clear = (at: Point) => !near(at, r, 2) && this.offDishes(at, r) && others.every((stone) => Math.hypot(at.x - stone.x, at.y - stone.y) >= stone.r + r + 2)
+      const spot = plate !== null && this.state.seats[plate] ? freeSpotOnPlate(plate, others.filter((stone) => plateOf(stone) === plate), r) : this.spotNear(piece, r, clear)
+      taken.set(piece.id, { ...spot, r })
+      this.hopAside(piece, spot)
+    }
+  }
+
+  /** Whether a stone of radius `r` lying at `at` is clear of the seated guests' plates, the bowl and the empty seats' stools. */
+  private offDishes(at: Point, r: number): boolean {
+    if (Math.hypot(at.x - FEEDING.bowl.x, at.y - FEEDING.bowl.y) < FEEDING.bowl.r + r) return false
+    return FEEDING.seats.every(({ plate, guest }, index) =>
+      this.state.seats[index] ? Math.hypot(at.x - plate.x, at.y - plate.y) >= FEEDING.plateRadius + r : !this.stoolsShown || Math.hypot(at.x - guest.x, at.y - guest.y) >= STOOL_CLEAR + r,
+    )
+  }
+
+  /** Knock-Knock: a stone lying where the door swings or the visitors walk to and from `homes` hops out of their way. */
+  private clearDoorway(homes: readonly Point[]): void {
+    if (this.state.liveMat !== 'door') return
+    const resting = this.restingPieces()
+    const taken = new Map(resting.map((piece) => [piece.id, { x: piece.x, y: piece.y, r: stoneRadius3(piece.q) / UNIT }]))
+    for (const piece of resting) {
+      const r = stoneRadius3(piece.q) / UNIT
+      if (doorwayGap(piece, homes) >= r + DOORWAY_ROOM) continue
+      taken.delete(piece.id)
+      const others = [...taken.values()]
+      const spot = this.spotNear(piece, r, (at) => doorwayGap(at, homes) >= r + DOORWAY_ROOM && houseGap(at) >= r + DOORWAY_ROOM && others.every((stone) => Math.hypot(at.x - stone.x, at.y - stone.y) >= stone.r + r + 2))
+      taken.set(piece.id, { ...spot, r })
+      this.hopAside(piece, spot)
+    }
+  }
+
+  /** The nearest spot to `from` on the table, off the bag, where a stone of radius `r` passes `clear`; searched in rings outward. */
+  private spotNear(from: Point, r: number, clear: (at: Point) => boolean): Point {
+    const bare = (at: Point) => at.x > TABLE.x + r && at.x < TABLE.x + TABLE.w - r && at.y > TABLE.y + r && at.y < TABLE.y + TABLE.h - r && Math.hypot(at.x - BAG.x, at.y - BAG.y) >= BAG.r + r && clear(at)
+    for (let ring = 1; ring <= 40; ring++) {
+      const distance = ring * r * 0.5
+      for (let k = 0; k < 24; k++) {
+        const angle = (k / 24) * Math.PI * 2
+        const at = { x: from.x + Math.cos(angle) * distance, y: from.y + Math.sin(angle) * distance }
+        if (bare(at)) return at
+      }
+    }
+    return { x: from.x, y: from.y }
+  }
+
+  /** The nearest bare spot just outside a stool, on the side the stone lay: off every plate, the bowl, the bag, the guests, the stools and the other stones. */
+  private besideStool(stool: Point, from: Point, r: number, stools: readonly Point[], stones: readonly (Point & { r: number })[]): Point {
+    const bare = (at: Point) =>
+      at.x > TABLE.x + r &&
+      at.x < TABLE.x + TABLE.w - r &&
+      at.y > TABLE.y + r &&
+      at.y < TABLE.y + TABLE.h - r &&
+      Math.hypot(at.x - FEEDING.bowl.x, at.y - FEEDING.bowl.y) >= FEEDING.bowl.r + r &&
+      Math.hypot(at.x - BAG.x, at.y - BAG.y) >= BAG.r + r &&
+      stools.every((other) => Math.hypot(at.x - other.x, at.y - other.y) >= STOOL_CLEAR + r) &&
+      FEEDING.seats.every(
+        ({ plate, guest }, index) =>
+          Math.hypot(at.x - plate.x, at.y - plate.y) >= FEEDING.plateRadius + r && (!this.state.seats[index] || Math.hypot(at.x - guest.x, at.y - guest.y) >= GUEST_RADIUS + r),
+      ) &&
+      stones.every((stone) => Math.hypot(at.x - stone.x, at.y - stone.y) >= stone.r + r + 2)
+    const away = Math.atan2(from.y - stool.y, from.x - stool.x)
+    for (let ring = 0; ring < 6; ring++) {
+      const distance = STOOL_CLEAR + r + 3 + ring * r * 2
+      for (let k = 0; k < 16; k++) {
+        const angle = away + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (Math.PI / 8)
+        const at = { x: stool.x + Math.cos(angle) * distance, y: stool.y + Math.sin(angle) * distance }
+        if (bare(at)) return at
+      }
+    }
+    return { x: stool.x + Math.cos(away) * (STOOL_CLEAR + r + 3), y: stool.y + Math.sin(away) * (STOOL_CLEAR + r + 3) }
   }
 
   private dropKnife(): void {
@@ -1430,7 +1749,7 @@ export class TableController {
     if (halves.length === 0) return
     this.physics.removeStone(target.piece.id)
     halves.forEach((half, index) => {
-      this.addPieceBody(half, { y: stoneHeight3(half.q) / 2 + 0.4, velocity: { x: (index === 0 ? -1 : 1) * 12, y: 6, z: 0 } })
+      this.addPieceBody(half, { y: this.restHeight(half, half.q) + 0.35, velocity: { x: (index === 0 ? -1 : 1) * 12, y: 6, z: 0 } })
       this.pulses.set(half.id, this.t)
     })
     this.sound.snick()
