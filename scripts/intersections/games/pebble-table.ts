@@ -78,6 +78,7 @@ const [right, left] = [FEEDING.seats[1], FEEDING.seats[4]]
 
 export default {
   enforce: true,
+  mountsAfterLoading: true,
   childAge: 4,
   // Fur shells and hedgehog quills are pushed out and swayed in their vertex
   // shaders, so the CPU copy the audit reads is not what is drawn, and each
