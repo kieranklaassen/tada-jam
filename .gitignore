@@ -7,3 +7,9 @@ test-results/
 .context/
 .vercel
 .env*
+
+# Arcade round screenshots from lab/arcade/shot.mjs
+lab/arcade/shots/
+
+# A lab build made beside the served one before it is swapped in
+lab/.dist-next/

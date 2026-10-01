@@ -1,0 +1,110 @@
+{
+  "animal-tower": {
+    "stars": 0,
+    "verdict": "no",
+    "note": "",
+    "at": "2026-10-01T00:35:27.026Z"
+  },
+  "balloon-pop-parade": {
+    "stars": 4,
+    "verdict": "build",
+    "note": "",
+    "at": "2026-10-01T00:34:21.126Z"
+  },
+  "boo-boo-vet": {
+    "stars": 0,
+    "verdict": "build",
+    "note": "",
+    "at": "2026-10-01T01:16:58.397Z"
+  },
+  "campfire-nights": {
+    "stars": 0,
+    "verdict": "build",
+    "note": "",
+    "at": "2026-10-01T01:21:52.288Z"
+  },
+  "choo-choo-draw": {
+    "stars": 0,
+    "verdict": "maybe",
+    "note": "",
+    "at": "2026-10-01T01:29:47.930Z"
+  },
+  "claw-machine": {
+    "stars": 0,
+    "verdict": "build",
+    "note": "",
+    "at": "2026-10-01T01:26:31.747Z"
+  },
+  "draw-a-bridge": {
+    "stars": 0,
+    "verdict": "maybe",
+    "note": "",
+    "at": "2026-10-01T01:33:12.824Z"
+  },
+  "feed-the-monster": {
+    "stars": 0,
+    "verdict": "no",
+    "note": "",
+    "at": "2026-10-01T01:27:41.315Z"
+  },
+  "fire-truck-hero": {
+    "stars": 0,
+    "verdict": "build",
+    "note": "",
+    "at": "2026-10-01T00:37:17.060Z"
+  },
+  "fruit-slicer": {
+    "stars": 0,
+    "verdict": "build",
+    "note": "",
+    "at": "2026-10-01T01:25:53.657Z"
+  },
+  "monster-pizza": {
+    "stars": 5,
+    "verdict": "build",
+    "note": "",
+    "at": "2026-10-01T01:20:00.662Z"
+  },
+  "muddy-truck-wash": {
+    "stars": 0,
+    "verdict": "build",
+    "note": "",
+    "at": "2026-10-01T01:14:59.523Z"
+  },
+  "mutant-garden": {
+    "stars": 0,
+    "verdict": "maybe",
+    "note": "",
+    "at": "2026-10-01T01:23:44.023Z"
+  },
+  "peg-blaster": {
+    "stars": 0,
+    "verdict": "no",
+    "note": "",
+    "at": "2026-10-01T01:34:00.686Z"
+  },
+  "slingshot-smash": {
+    "stars": 0,
+    "verdict": "no",
+    "note": "",
+    "at": "2026-10-01T01:35:16.073Z"
+  },
+  "surprise-eggs": {
+    "stars": 0,
+    "verdict": "maybe",
+    "note": "",
+    "at": "2026-10-01T01:24:41.627Z"
+  },
+  "whack-a-mole": {
+    "stars": 0,
+    "verdict": "no",
+    "note": "",
+    "at": "2026-10-01T01:28:46.441Z"
+  },
+  "wild-hair-salon": {
+    "stars": 0,
+    "verdict": "build",
+    "note": "",
+    "at": "2026-10-01T01:31:39.547Z"
+  }
+}

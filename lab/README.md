@@ -4,6 +4,8 @@ Throwaway game loops, built to find out which ones have **depth on repeat play**
 
 Everything here is **exempt from the jam's rules**: no cartridge shape, no wordless or egress checks, and words, scores, wins, and timers are allowed. Graphics are flat shapes on purpose. Nothing under `lab/` imports from `games/` or `harness/`, and the jam's checks do not look inside it.
 
+**Round 2 is the demos**, in [`arcade/`](arcade/README.md): prototypes that each test one idea, judged by a person playing and rating them at `/arcade/` of the same build. They are grouped by type in `arcade/catalog.ts`, and the jam's own build publishes this lab under `dist/lab/` so the jam's home page can list and open them. Everything below describes round 1.
+
 ## Play it
 
 ```bash

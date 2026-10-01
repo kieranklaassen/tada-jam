@@ -56,6 +56,10 @@ export function renderList(host: HTMLElement, entries: readonly RegistryEntry[])
   const count = entries.filter((e) => e.key !== 'example').length
   const found = count === 0 ? 'No prototypes yet, only the reference.' : `${count} prototype${count === 1 ? '' : 's'} plus the reference.`
   page.append(el('p', 'list-note', `${found} Add ?chrome=0 to a play link to hide the grown-up strip.`))
+  // The second round lives on its own page of the same build.
+  const arcade = el('a', 'list-note', 'Round 2: the demos to play and rate →')
+  arcade.href = './arcade/index.html'
+  page.append(arcade)
   const grid = el('div', 'grid')
   for (const entry of sortEntries(entries)) grid.append(card(entry))
   page.append(grid)
