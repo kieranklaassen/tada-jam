@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open the printed URL (Vite binds to your LAN too, so an iPad on the same network can open it), pick a game, and play. The strip above the game holds grown-up controls that stand in for the Tada shell:
+Open the printed URL (Vite binds to your LAN too, so an iPad on the same network can open it), expand **More from the jam**, pick a game, and play. The strip above the game holds grown-up controls that stand in for the Tada shell:
 
 - **Age** and **Language** set `ctx.childAge` and `ctx.language` (changing them reopens the game, as in Tada).
 - **Attended** toggles `ctx.attention.attended`, to check that loops and sound pause.
@@ -20,6 +20,12 @@ Open the printed URL (Vite binds to your LAN too, so an iPad on the same network
 **Judging smoothness on an iPad: use a production build.** The dev server serves unbundled modules with React in development mode and HMR, which is slower and not what a child would run. `npm run serve:lan` builds and serves the production bundle on your LAN at port 4173 (open `http://<this-machine's-LAN-IP>:4173/?chrome=0#/play/<key>` on the iPad). Pebble Table has a hidden grown-up overlay for frame rate and quality tier: triple-tap the top-left corner. `npm run perf:pebble` profiles it in Chrome, WebKit, or a software GPU against that server.
 
 Saved state lives in the browser's `localStorage` under `tada-jam:slot:<key>`, with the same 2-second debounce, flush-on-park, flush-on-hide, and 64 KB cap the Tada server enforces. Turning the device to portrait covers the game with a wordless "turn sideways" picture.
+
+## Home page
+
+The home page keeps the Tada branding and puts the arcade demos first: six featured tiles, a random demo button, and a library with search and category filters. It reads the catalog from the lab build and opens each demo in its own player. Original cartridges and the showcase are under **More from the jam**; their existing links still work.
+
+Use `npm run serve:lan` to preview the complete home page. The development server does not serve the lab catalog; it shows a retry message while the original games remain available.
 
 ## Deploy
 
