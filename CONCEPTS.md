@@ -148,6 +148,12 @@ A throwaway build of one game loop with simple graphics, made to find out whethe
 
 A mechanic prototype is never a cartridge: a winner is rebuilt to fit the jam and the Tada contract before it goes into the kid shell.
 
+### Demo
+A second-round mechanic prototype (`lab/arcade/`): one idea, made to feel good in the hand, judged by a person playing it and not by the persona panel. The jam's home page lists the demos by type with what each is testing.
+*Avoid:* game, cartridge
+
+A demo is grouped in the catalog by what it tests. A **gentle** demo follows `lab/arcade/GENTLE.md` (calm, child-paced, no rewards, a natural ending); an **arcade** demo is one of the first 31, which borrow loops and hooks from hit games.
+
 ### Child persona
 A simulated child defined by age, touch precision, attention span and what draws them, who plays prototypes the way a child does (imprecise touches, short attention, distractible, inventing their own aims) and comes back, or does not.
 *Avoid:* bot, test user

@@ -7,6 +7,7 @@ import foxLandscape from './assets/fox-landscape.webp'
 import tadaMark from './assets/tada-mark.svg'
 import yourApp from './assets/your-app.svg'
 import type { JamGame, JamShowcase } from './contract'
+import { DemoShelf } from './DemoShelf'
 import './home.css'
 
 // The jam's home page, after the tada.computer landing hero (Figma
@@ -169,6 +170,8 @@ export function GameList({ games, showcases = [], onPick }: { games: readonly Ja
               Surprise me
             </button>
           )}
+
+          <DemoShelf />
 
         </main>
 
