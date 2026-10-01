@@ -1,6 +1,9 @@
-// The lab is its own island. It changes no existing check (the root configs
-// name no lab path), imports nothing from the jam, is imported by nothing in
-// the jam, and builds into lab/ only.
+// The lab is its own island in code. It changes no existing check (the root
+// configs name no lab path), imports nothing from the jam, and is imported by
+// nothing in the jam. Its own build lands in lab/. The one bridge is at
+// publish time: the jam's `npm run build` also builds the lab into dist/lab/,
+// so the jam's home page can link to the demos; the home page reads a JSON
+// catalog that build writes and shares no code with the lab.
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join, relative, resolve, sep } from 'node:path'
@@ -115,6 +118,16 @@ describe('the lab builds into lab/', () => {
     const outDir = resolve(root, labViteConfig.build?.outDir ?? 'dist')
     expect(underDir(outDir, LAB)).toBe(true)
     expect(outDir).not.toBe(join(ROOT, 'dist'))
+  })
+
+  it('the jam build publishes the lab under dist/lab and nowhere else', () => {
+    const scripts = (JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as { scripts: Record<string, string> }).scripts
+    expect(scripts['build']).toContain('lab:publish')
+    expect(scripts['lab:publish']).toContain('lab/vite.config.ts')
+    expect(scripts['lab:publish']).toContain('--outDir ../dist/lab')
+    // The lab's own build and serve still use its default output directory.
+    expect(scripts['lab:build']).not.toContain('--outDir')
+    expect(scripts['lab:serve']).not.toContain('--outDir')
   })
 
   it('the lab scripts point at lab/ configs', () => {
