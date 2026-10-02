@@ -1,7 +1,7 @@
 ---
 title: Every jam game is understandable at the youngest age in its declared age band, through wordless cues alone
 date: 2026-09-22
-last_updated: 2026-09-23
+last_updated: 2026-10-02
 category: conventions
 module: game-design
 problem_type: convention
@@ -15,7 +15,7 @@ applies_when:
   - Adding a new game under games/ in tada-jam, choosing its manifest ageBand, or planning its first playable slice
   - Designing or reviewing any kid-side interaction, onboarding, or feedback in a jam game
   - Before showing any slice to the owner, or when the owner or a playtester says it is not clear what to do or what is needed
-  - Tempted to add text, numerals, or voice instructions to explain a mechanic
+  - Adding numerals or mathematics symbols to a game, or tempted to add text or voice instructions to explain a mechanic
   - Tuning difficulty or defaults for different ages within one game
 symptoms:
   - Owner feedback on Pebble Table that it was not super clear what to do
@@ -40,7 +40,9 @@ The owner said "not clear" twice. The first time ("it's not super clear what to 
 So the convention has two halves:
 
 1. Every game declares who it is for. The manifest's `ageBand` names one audience in whole years (`games/pebble-table/manifest.ts` declares `ageBand: [3, 7]`).
-2. Every interaction must be understandable at the youngest age in that band through wordless cues. No words or numerals on the kid side, no spoken instructions. The child works out what to do from what they see, hear, and touch.
+2. Every interaction must be understandable at the youngest age in that band through wordless cues. No words on the kid side, no spoken instructions, and no numerals or symbols unless the band starts at 6 or above. The child works out what to do from what they see, hear, and touch.
+
+On 2026-10-02 the owner amended the second half for learning games: numerals and mathematics symbols may appear from about age 6, and games for the youngest stay free of words and numerals. Mathematics for ages 9 to 12 needs symbols, and the youngest children cannot read. The amended rule is "Symbols by the band's first age" below. It withdraws the optional numeral this convention used to allow at 5 to 6.
 
 The Pebble Table work and the enforcement live in [PR #1](https://github.com/kieranklaassen/tada-jam/pull/1) on branch `cursor/pebble-table-cceb` (in PR #1, unmerged as of writing). The research behind the age thresholds comes from the Pebble Table ideation doc (Project store, `docs/ideation-math-game-4yo.md`), which lives outside the repo.
 
@@ -48,7 +50,29 @@ The Pebble Table work and the enforcement live in [PR #1](https://github.com/kie
 
 ### The rule
 
-Design for the youngest age in `ageBand`. If a 3-year-old is in the band, a 3-year-old has to be able to find the next act from cues alone. Older children in the band get more options and optional symbols, but nothing they need to progress may rely on reading, numerals, icon literacy, or being told.
+Design for the youngest age in `ageBand`. If a 3-year-old is in the band, a 3-year-old has to be able to find the next act from cues alone. Older children in the band get more options, but nothing they need to progress may rely on reading a word or a numeral, on icon literacy, or on being told. Whether a numeral or a symbol may be shown at all depends on the band's first age.
+
+### Symbols by the band's first age
+
+The rule is keyed on the first age of the manifest's `ageBand`:
+
+| The band starts | What the kid side may show |
+| --- | --- |
+| below 6 | No word, letter, numeral or symbol, optional or not. |
+| at 6 or above | Numerals and the mathematics symbols listed below, each laid on or beside the quantity it stands for. |
+| at any age | No letter and no written word, until the owner decides otherwise. A symbol standing alone, so that play depends on reading it, is held for the owner as well. |
+
+The rule follows the game's manifest band and never the child's age at run time. `ctx.childAge` changes nothing about it: a `[4, 7]` game shows no numeral to a seven-year-old, and a `[6, 10]` game may show its numerals whatever age the shell reports.
+
+**What counts as a symbol.** The digits; the signs for plus, minus, times, divide, equals, less than and greater than; the fraction bar; the decimal mark; and the percent sign.
+
+**What does not.** Unit abbreviations, a letter standing for a number, ordinals and currency names are words, so they stay off the kid side at every age. Emoji are not art: an emoji is text from the system font, no exception class exists for emoji, and one that pictures a numeral is that numeral.
+
+**Where symbols live.** In one module per game, `games/<key>/symbols.ts`, directly in the game folder. Its drawing functions take numbers or a small typed value (a fraction as two integers) and never a string from the caller, so the module cannot be handed a word. Each text call in it carries the comment `wordless-ok: numeral <reason>` on the same or the previous line. A reviewer sees every kid-side symbol of a game by reading that file and the game's grown-up overlay files.
+
+**What the check cannot see**, and so stays on the reviewer's list: a numeral drawn as path data, geometry, a sprite or a committed image; CSS `content`; a bare `{count}` child; an emoji that pictures a numeral; a letter held in a constant or built at run time inside `symbols.ts`; and kid-side text placed behind the plain exception in a file named `overlay` or `perf`. Whether a symbol is laid on or beside its quantity is a reviewer's question too.
+
+What the check does enforce is under "Enforced vs documented only" below.
 
 ### Give every scene one obvious want
 
@@ -91,7 +115,7 @@ Work through this in order when building a game. Each item says whether a check 
 
 1. **Declare the band.** In `games/<key>/manifest.ts`, set `ageBand: [min, max]` with whole years, `min >= 2`, `max <= 12`, and `max - min <= 5` (enforced by `test/games.test.ts`). If the idea spans a wider range, split it into faces or a second game, as the test's failure message says.
 2. **Find the row.** Look up the youngest age of the band in the age-band cue table below and treat that row's "Avoid" column as hard constraints.
-3. **No words or numerals on screen.** Kid-side code renders no JSX text, string children, DOM or canvas text, or text components (enforced by `npm run wordless:check`). Values formatted as text, such as `{String(n)}` or `{n.toFixed(1)}`, are flagged too. A bare `{count}` child is not (without types the check cannot tell a number from an element), so never render one (see "Enforced vs documented" below).
+3. **No words on screen, and numerals only by the band.** Kid-side code renders no JSX text, string children, DOM or canvas text, or text components (enforced by `npm run wordless:check`). Values formatted as text, such as `{String(n)}` or `{n.toFixed(1)}`, are flagged too, and so is a mathematics sign written as text. A band that starts below 6 shows no numeral or symbol, optional or not. A band that starts at 6 or above draws its numerals and signs in `games/<key>/symbols.ts`, each laid on or beside the quantity it stands for, behind a `wordless-ok: numeral <reason>` comment (see "Symbols by the band's first age"). A bare `{count}` child is not flagged (without types the check cannot tell a number from an element), so never render one (see "Enforced vs documented" below).
 4. **No voice instructions.** Speech, if any, is for number words or sounds the child asked for, never "tap the bag" or "try again". Not machine-checked: the Δ3 allowance permits `speechSynthesis` and committed clips for spoken number words (`AGENTS.md`).
 5. **Touchable things look touchable.** Big silhouettes, targets around 48 px or larger, and a "touch here" cue that reads on every surface in the scene. Pebble Table's first glow disappeared on the cream rug and was replaced by a golden ring (`games/pebble-table/REFINEMENT.md`; `games/pebble-table/view/clay.ts`, "reads as 'touch here' on light and dark surfaces alike").
 6. **One next act at a time.** Offer one thing to do next, and let tools appear only when the state makes them meaningful. Pebble Table's knife is only there while a leftover sits in the bowl (`games/pebble-table/feeding.ts`; hit-testing gated at `games/pebble-table/controller.ts`; the knife returns to its rest when there is no leftover).
@@ -110,9 +134,9 @@ The "Basis" column separates what the cited research supports from defaults chos
 
 | Youngest age in band | What the child can use | Cues that work | Avoid | Simultaneous options | Symbols | Basis |
 | --- | --- | --- | --- | --- | --- | --- |
-| 3–4 | Direct handling of objects; seeing small quantities at a glance (perceptual subitizing to 4 lands at about age 4); cause and effect from the world's response | A ghost hand or character demonstrating one move; a breathing glow on what can be touched now; state-revealed tools (the knife appears with a leftover); characters gazing and reaching; self-correcting materials (a beam that tilts, plates that visibly match) | Any text, numerals, or pictorial icons that must be decoded; spoken instructions; verdicts; several activities live at once; tools present before they mean anything | One next act offered; one live activity at a time; at most three fingers acting | None required, none shown by default | Research: Clements & Sarama (subitizing ages); Toca Boca, Sago Mini, Tinybop ship "no goals, levels, points, timers, or text"; Montessori isolation of difficulty ("one problem at a time") and control of error in the material; Marsh et al. 2018, successful preschool apps have "one or two clear functions"; Tunnel Train was rejected because pictorial dials "need icon literacy a 4-year-old lacks"; iPadOS reserves four- and five-finger gestures. Owner/agent default: the ghost hand itself and its timings |
-| 5–6 | Conceptual subitizing (seeing 2+3 as 5) arrives around 5; recognizing numerals 0–10 is a US Pre-K expectation; symbols start to mean something | Everything in the 3–4 row, plus more options open at once and richer materials (unequal weights, halves) | Requiring a numeral or word to progress; numerals that appear unasked; voice instructions; answer-giving hints | More than one affordance may be live at once (still one clear function per activity) | Optional numerals the child reaches for, never required, and self-correcting (the ideation doc's numeral sticker that flutters off when the set changes). Kid-side numerals need a `wordless-ok: <reason>` exception | Research: Clements & Sarama (conceptual subitizing about 5); Texas 2022 orders concrete, then pictorial, then abstract, and the doc notes "symbols jump sharply between 4 and 5". Owner/agent default: how many simultaneous options, and routing optional numerals through the escape hatch |
-| 7+ | Reading is emerging; pictorial icons and composed rules are usable (the doc places Tunnel Train's dials at "a 6+ toy") | The same wordless cues; light iconography where a picture carries a real choice | Instruction text that the game depends on; timers, points, or verdict chrome; long hint chains | Several at once is fine if each reads at a glance | Optional light iconography; text still not required to play | Mostly owner/agent default. The research in the doc targets ages 4–6; the only nearby evidence is the Tunnel Train rejection placing icon literacy at 6+ |
+| 3–4 | Direct handling of objects; seeing small quantities at a glance (perceptual subitizing to 4 lands at about age 4); cause and effect from the world's response | A ghost hand or character demonstrating one move; a breathing glow on what can be touched now; state-revealed tools (the knife appears with a leftover); characters gazing and reaching; self-correcting materials (a beam that tilts, plates that visibly match) | Any text, numerals, or pictorial icons that must be decoded; spoken instructions; verdicts; several activities live at once; tools present before they mean anything | One next act offered; one live activity at a time; at most three fingers acting | None | Research: Clements & Sarama (subitizing ages); Toca Boca, Sago Mini, Tinybop ship "no goals, levels, points, timers, or text"; Montessori isolation of difficulty ("one problem at a time") and control of error in the material; Marsh et al. 2018, successful preschool apps have "one or two clear functions"; Tunnel Train was rejected because pictorial dials "need icon literacy a 4-year-old lacks"; iPadOS reserves four- and five-finger gestures. Owner/agent default: the ghost hand itself and its timings |
+| 5–6 | Conceptual subitizing (seeing 2+3 as 5) arrives around 5; recognizing numerals 0–10 is a US Pre-K expectation; symbols start to mean something | Everything in the 3–4 row, plus more options open at once and richer materials (unequal weights, halves) | Any word or letter; any numeral or symbol when the band starts at 5; a numeral or symbol the child must read in order to progress when it starts at 6; voice instructions; answer-giving hints | More than one affordance may be live at once (still one clear function per activity) | Band starts at 5: none. Band starts at 6: numerals and the listed symbols, each laid on or beside its quantity (see "Symbols by the band's first age"). ~~Optional numerals the child reaches for, never required~~ (withdrawn 2026-10-02: a band that starts below 6 shows none) | Research: Clements & Sarama (conceptual subitizing about 5); Texas 2022 orders concrete, then pictorial, then abstract, and the doc notes "symbols jump sharply between 4 and 5". Owner decision (2026-10-02): numerals and mathematics symbols from about age 6, read as a band that starts at 6 or above. Owner/agent default: how many simultaneous options |
+| 7+ | Reading is emerging; pictorial icons and composed rules are usable (the doc places Tunnel Train's dials at "a 6+ toy") | The same wordless cues; light iconography where a picture carries a real choice | Any written word or letter; a symbol standing alone that play depends on reading; timers, points, or verdict chrome; long hint chains | Several at once is fine if each reads at a glance | Numerals and the listed symbols, each laid on or beside its quantity; optional light iconography; no letters or written words | Mostly owner/agent default. The research in the doc targets ages 4–6; the only nearby evidence is the Tunnel Train rejection placing icon literacy at 6+ |
 
 Rows below 3 are not covered: the manifest test allows a band starting at 2, but no research in the doc speaks to 2-year-olds. If a game starts at 2, treat the 3–4 row as the ceiling and cut further (fewer objects, larger targets, no drag if a tap works).
 
@@ -135,17 +159,37 @@ From `games/pebble-table/guidance.ts`:
 | Rule | How it is held |
 | --- | --- |
 | `ageBand` is whole years, 2 to 12, at most five years wide | Enforced: `test/games.test.ts` |
-| No JSX text, string or template children, DOM/canvas text APIs, or `<Text>`, `<Text3D>`, `<Html>` in kid-side code | Enforced: `scripts/wordless-check.ts`, run by `npm run check` (`package.json`) and in CI (`.github/workflows/ci.yml`); the test "every jam game is wordless on the kid side" in `test/wordless.test.ts` asserts every jam game passes |
+| No JSX text, string or template children, DOM/canvas text APIs, or `<Text>`, `<Text3D>`, `<Html>` in kid-side code. A letter, a digit or a mathematics sign (keyboard or Unicode form) counts as text | Enforced: `scripts/wordless-check.ts`, run by `npm run check` (`package.json`) and in CI (`.github/workflows/ci.yml`); the test "every jam game is wordless on the kid side" in `test/wordless.test.ts` asserts every jam game passes |
 | Values formatted as text children (`{String(n)}`, `.toFixed()`, `.toLocaleString()`, `.format()`, `.join()`) | Enforced: the `kid-text-number` rule in `scripts/wordless-check.ts` |
+| The plain exception, `wordless-ok: <reason>`, only in a grown-up overlay file | Enforced: the finding `plain-exception-misplaced` |
+| The numeral exception, `wordless-ok: numeral <reason>`, only in `games/<key>/symbols.ts`, only when the manifest band starts at 6 or above, and never on a literal that holds a letter | Enforced: the findings `numeral-exception-misplaced`, `numeral-exception-band` (it names the band) and `numeral-exception-letter` |
+| The band comes from the game's manifest, never from the child's age | Enforced: the check imports `games/<key>/manifest.ts`; a manifest that cannot be imported or exports no usable `ageBand` is the finding `manifest-age-band` |
 | A bare `{count}` child that renders a number | Documented only: without types the check cannot tell a number from an element |
 | No voice instructions | Documented only: speech is allowed for number words under Δ3 (`AGENTS.md`), so the check does not ban it |
-| Icons, letters, or numerals baked into images or canvas textures drawn with paths | Documented only: the check cannot see pixels |
+| A numeral drawn as path data, geometry, a sprite or a committed image; CSS `content`; an emoji that pictures a numeral; icons or letters baked into images or canvas textures | Documented only: the check cannot see pixels or style sheets |
+| A letter held in a constant or built at run time inside `symbols.ts` | Documented only: the check reads the literals in the text call, not the values that reach it |
+| Kid-side text placed behind the plain exception in a file named `overlay` or `perf` | Documented only: the check trusts the file name |
+| Each symbol laid on or beside the quantity it stands for; no symbol standing alone | Documented only |
 | One affordance at a time; state-revealed tools | Documented only |
 | Cues are actually understandable at the youngest declared age | Documented only: needs an idle screenshot, a scripted walkthrough, or a playtest |
 | One obvious want per scene (checklist item 13) | Documented only |
 | Cold playtest proxy before the owner sees a build (checklist item 14) | Documented only |
 
-The check scans only `games/**`, skipping tests and each game's top-level `manifest.ts` and `index.ts` (`isKidSideFile` in `scripts/wordless-check.ts`); the harness is outside `games/`. Attributes such as `aria-label` are allowed because they are not on-screen text. A deliberate exception, such as a Δ4 grown-up corner behind a hold gesture (`AGENTS.md`), carries a `wordless-ok: <reason>` comment on the same or the previous line (the `allowed` check in `scanWordless`).
+The check scans only `games/**`, skipping tests and each game's top-level `manifest.ts` and `index.ts` (`isKidSideFile` in `scripts/wordless-check.ts`); the harness is outside `games/`. Attributes such as `aria-label` are allowed because they are not on-screen text.
+
+There are two exceptions, each a comment on the same or the previous line. The plain one, `wordless-ok: <reason>`, is for grown-up text such as a performance overlay or a Δ4 grown-up corner behind a hold gesture (`AGENTS.md`). The numeral one, `wordless-ok: numeral <reason>`, is for the numerals and signs of a game whose band starts at 6 or above. A grown-up overlay file is one named `overlay` or `perf` with a script extension, plus `games/felt-meadow/view/view.ts`, which is listed by path in the check with its reason (its frame-rate readout is drawn inside the view module). What the check accepts, by file, comment and band:
+
+| A text finding in | carries | band starts | Result |
+| --- | --- | --- | --- |
+| a grown-up overlay file | `wordless-ok: <reason>` | any | accepted |
+| a grown-up overlay file | `wordless-ok: numeral <reason>` | any | finding: the numeral exception belongs in `symbols.ts` |
+| `games/<key>/symbols.ts` | `wordless-ok: numeral <reason>` | 6 or above | accepted |
+| `games/<key>/symbols.ts` | `wordless-ok: numeral <reason>` | below 6 | finding, naming the band |
+| `games/<key>/symbols.ts` | `wordless-ok: numeral <reason>`, and the text is a literal that holds a letter | any | finding |
+| `games/<key>/symbols.ts` | plain `wordless-ok: <reason>` | any | finding |
+| any other kid-side file | either comment | any | finding |
+| any kid-side file | no comment | any | finding |
+| a game whose manifest cannot be imported | | | one finding for the game |
 
 ## Why This Matters
 
@@ -157,7 +201,7 @@ There is a real tension here. Bonawitz et al. (2011) found that pedagogical demo
 
 Kidd and Poli's findings (attention peaks at intermediate complexity and follows learning progress) are why the table is a dial rather than a switch: defaults change with age, but every child can reach every activity.
 
-The enforcement makes the easy failure impossible to merge (a stray label or a numeral in a HUD) and leaves the judgment calls to the checklist. The ideation doc rejected an earlier "Numeral Ban" idea as an over-correction and kept "the defensible half" as a "no digits or inputs in the core loop" test. The wordless check is that half: text is off by default, and a reasoned `wordless-ok` exception stays available for the grown-up corner or an optional numeral the 5–6-year-old reaches for.
+The enforcement makes the easy failure impossible to merge (a stray label or a numeral in a HUD) and leaves the judgment calls to the checklist. The ideation doc rejected an earlier "Numeral Ban" idea as an over-correction and kept "the defensible half" as a "no digits or inputs in the core loop" test. The wordless check is that half: text is off by default, a reasoned `wordless-ok` exception stays available for the grown-up corner, and from a band that starts at 6 the numeral exception admits numerals and signs in one module that a reviewer can read whole.
 
 ## When to Apply
 
@@ -165,7 +209,8 @@ The enforcement makes the easy failure impossible to merge (a stray label or a n
 - Reviewing a game PR against the quality bar line "Wordless clarity for the declared age" (`docs/art-direction.md`) and "Wordless guidance" ().
 - Owner or playtest feedback of the form "it's not clear what to do": walk the checklist, starting with items 5, 6, and 8.
 - Changing a game's `ageBand`, especially lowering its youngest age: re-read the row for the new youngest age.
-- Adding symbols, numerals, or icons to an existing game: confirm the band's youngest age can ignore them without losing anything.
+- Adding numerals or symbols to a game: check the band's first age against "Symbols by the band's first age" and draw them in `symbols.ts`.
+- Adding icons to an existing game: confirm the band's youngest age can ignore them without losing anything.
 - Adding a second character, tool, or activity to a scene: check that one next act is still clear.
 - Building the first playable slice of any game: put the want and the guidance ladder in before the first build reaches the owner, then run the cold playtest proxy.
 - Feedback like "it's not clear what's even needed" when guidance already exists: the missing piece is usually the reason to act, not the hint; check item 13 before tuning the ladder, and diff a before and after cold playtest.
@@ -213,17 +258,33 @@ games/number-meadow/hud.tsx:5  kid-text-number  {String(c)}
 games/number-meadow/hud.tsx:6  kid-text-literal  {`${a} new`}
 games/number-meadow/hud.tsx:11  kid-text-api  el.textContent = n > 0 ? `${n} new` : 'all seen'
 
-wordless check failed: 4 finding(s). Kid-side code shows no words or numerals; use cues (motion, glow, demonstration, sound). A deliberate grown-up exception needs a "wordless-ok: <reason>" comment.
+wordless check failed: 4 finding(s). Kid-side code shows no words, letters, numerals or mathematics signs; use cues (motion, glow, demonstration, sound). A game whose band starts at 6 or above may draw numerals and signs in games/<key>/symbols.ts behind a "wordless-ok: numeral <reason>" comment. Grown-up text belongs in a file named overlay or perf, behind a "wordless-ok: <reason>" comment.
 ```
 
 The digit buttons on line 5 are caught by `kid-text-number`. Written as a bare `{c}`, they would pass, which is why checklist item 3 still asks for a review of any `{...}` child that could render a number.
 
-A legitimate exception looks like this (a fixture in `test/wordless.test.ts`):
+The two legitimate exceptions look like this (fixtures in `test/wordless.test.ts`). Grown-up text, in a file named `overlay` or `perf` such as `games/<key>/view/overlay.tsx`:
 
 ```tsx
 // wordless-ok: grown-up corner behind a hold gesture
 export const A = () => <p>Volume</p>
 ```
+
+A fraction drawn from two integers, in `games/<key>/symbols.ts` of a game whose band is `[9, 12]`:
+
+```ts
+export function drawFraction(g: CanvasRenderingContext2D, top: number, bottom: number, x: number, y: number): void {
+  g.fillText(`${top}/${bottom}`, x, y) // wordless-ok: numeral a fraction laid on the strip it measures
+}
+```
+
+The same file in a game whose band is `[4, 7]` fails, and the finding names the band:
+
+```text
+games/number-meadow/symbols.ts:2  numeral-exception-band  g.fillText(`${top}/${bottom}`, x, y)  (band [4, 7] starts below 6)
+```
+
+The first fixture moved to a file such as `games/<key>/view.tsx` fails with `plain-exception-misplaced`, and the second moved out of `symbols.ts` fails with `numeral-exception-misplaced`.
 
 ### Declaring the band in a manifest
 

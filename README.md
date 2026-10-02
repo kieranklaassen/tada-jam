@@ -48,7 +48,7 @@ The intersection audit (`scripts/jam-intersections.mjs`, needs `npx playwright i
 
 The egress scan (`scripts/egress-check.ts`) fails on any external URL, CDN font, network or browser-storage API, sample player that loads URLs, import from `harness/` or another game, or package outside the Tada tech menu.
 
-The wordless check (`scripts/wordless-check.ts`) parses kid-side game code and fails on words or numerals rendered on screen: JSX text, string children, DOM or canvas text APIs, and text components. Games for pre-readers explain themselves with cues, not text.
+The wordless check (`scripts/wordless-check.ts`) parses kid-side game code and fails on words, letters, numerals or mathematics signs rendered on screen: JSX text, string children, DOM or canvas text APIs, and text components. Games for pre-readers explain themselves with cues, not text. A game whose age band starts at 6 or above may draw numerals and mathematics symbols in its `symbols.ts`, each laid on or beside the quantity it stands for; grown-up text lives in a file named `overlay` or `perf`.
 
 ## Add a game
 
@@ -59,7 +59,7 @@ The wordless check (`scripts/wordless-check.ts`) parses kid-side game code and f
 3. `games/<key>/<key>.tsx` — export a `Cartridge` (`{ manifest, Mount }`). The Mount receives `{ ctx: CartridgeContext }`. Import contract types from `../types`.
 4. `games/<key>/index.ts` — `export const game: JamGame = { cartridge, emoji: '🪨' }`.
 5. Put game logic in pure modules with tests next to them (`*.test.ts`). Read saved state through a defensive `deserialize`.
-6. Design for the youngest age in `ageBand`: every interaction must be understandable from wordless cues (see the age-band cue table in [`docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md`](docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md)).
+6. Design for the youngest age in `ageBand`: every interaction must be understandable from wordless cues, and symbols follow the band's first age (see the age-band cue table and the symbol rule in [`docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md`](docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md)).
 7. Take the look reserved for the game in the menu in [`docs/art-direction.md`](docs/art-direction.md) (a ledger: the lead reserves rows before a builder starts and marks one claimed after the merge), spike it on the game's real scene (screenshot at 1180×820, measure fps at DPR 2), write `games/<key>/ART.md`, and add the game to the claimed-styles registry.
 8. `npm run check`, then open a PR. Say how the game meets each line of the quality bar, with the measured frame rate. See `AGENTS.md` for the full rule list.
 

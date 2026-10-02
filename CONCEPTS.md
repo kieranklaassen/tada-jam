@@ -43,12 +43,12 @@ A game declares one audience, so a band stays narrow; an idea that spans a wider
 ### Kid side
 Everything a child sees and touches while playing a game, as opposed to the jam shell and any grown-up corner.
 
-The kid side shows no words or numerals by default and gives no spoken instructions. A documented exception may show text in a grown-up corner reached by a deliberate hold gesture, or an optional numeral that an older child in the Age band reaches for and never needs.
+The kid side shows no words or letters at any age and gives no spoken instructions. A game whose Age band starts below 6 shows no numeral or symbol either, optional or not. A game whose Age band starts at 6 or above may show numerals and mathematics symbols (the digits, the signs for plus, minus, times, divide, equals, less than and greater than, the fraction bar, the decimal mark and the percent sign), each laid on or beside the quantity it stands for. The band decides this, never the child's age while playing. Text meant for a grown-up, such as a performance overlay or a grown-up corner reached by a deliberate hold gesture, is a documented exception and is kept apart from the kid side.
 
 ### Wordless clarity
 The Quality bar property that a child at the youngest age of a game's Age band can work out every interaction from cues alone: what can be touched looks touchable, one next act is offered at a time, and the world answers physically.
 
-Which cues work depends on age: demonstration and one affordance at a time for the youngest children, more simultaneous options and optional symbols (never required) as the band gets older.
+Which cues work depends on age: demonstration and one affordance at a time for the youngest children, more simultaneous options as the band gets older. Where the Kid side may show numerals and mathematics symbols, they sit on or beside the quantities they stand for, and play does not depend on reading one.
 
 ### Guidance ladder
 The escalating, idle-only hints a game gives when the child stops: first a glow on what can be touched, then a demonstration (a ghost hand or a character) of one possible next act, backing off with growing gaps and stopping after a few tries.
