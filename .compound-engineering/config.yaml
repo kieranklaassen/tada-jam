@@ -9,3 +9,10 @@ compound:
         max_items: 5
   audit:
     strict: true
+
+# Compound Packs: prescriptive knowledge that the Compound Engineering
+# brainstorm, plan and review skills read on their own and cite as
+# `(pack: <id>, <file>)`. One entry per pack.
+packs:
+  - source: compound-packs/game-design
+  - source: education

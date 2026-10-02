@@ -13,3 +13,7 @@ lab/arcade/shots/
 
 # A lab build made beside the served one before it is swapped in
 lab/.dist-next/
+
+# The education pack's wording store lives outside the repo; these only guard a stray local copy
+education/.store/
+education/.cache/

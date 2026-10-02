@@ -154,6 +154,34 @@ A second-round mechanic prototype (`lab/arcade/`): one idea, made to feel good i
 
 A demo is grouped in the catalog by what it tests. A **gentle** demo follows `lab/arcade/GENTLE.md` (calm, child-paced, no rewards, a natural ending); an **arcade** demo is one of the first 31, which borrow loops and hooks from hit games.
 
+### Education pack
+The reference corpus of official learning standards for California and the Netherlands (`education/`) that game designers read while planning a game with a learning goal: one record per official statement, per Lane, with its official code, source and Standing, its official wording or (where the source is Description-only) a summary in the pack's own words, and design notes kept apart as the pack's inference. It is used only while designing and building; no game reads it while it runs and no child sees it.
+*Avoid:* curriculum (the pack records standards, it does not sequence lessons), content pack (that is a game's own per-language content)
+
+The folder is also a Compound Pack: its top-level rule files say what a game that claims a school skill must honour, and the planning and review flows read them by themselves. Records are found with the lookup (`npm run education:find`), and a game cites a record by pack id or by official code with its jurisdiction, never by link.
+
+### Lane
+One jurisdiction, level and subject inside the Education pack, for example `us-ca/grade-4/mathematics` (California grade 4 mathematics) or `nl/fase-3/mathematics` (Dutch rekenen-wiskunde for groep 7 and 8). Lanes stand alone: a record in one lane is never stated to equal a record in another.
+
+A level is a grade or band as the jurisdiction publishes it, not an age: the Dutch school levels are the curriculum institute's bands of several groepen (fase 1 to 3), not single groepen, and each jurisdiction has one level that the lookup returns beside a school child's own level (California's cross-grade lanes, the Dutch end-of-primary goals). A lane holds a frame, which says what it covers and how it is checked, its records, and a review file.
+
+### Standing
+What the publisher or the law says an official statement is, recorded on every Education pack record from a closed list per jurisdiction: in California a State Board-adopted standard, a department-published foundation or voluntary guidance; in the Netherlands a legal core goal, a legal reference level, a legal aim for childcare, curriculum-institute guidance or a draft not yet in force.
+*Avoid:* status (every record's `status` is `draft`, a term of the Tada record format that says nothing about standing or checking)
+
+A claim about a game uses the words of the standing, so guidance or a draft is never called a standard or the law. A Dutch core goal also carries a regime (2006, 2026 or the 2027 draft), because the 2006 goals for Dutch and arithmetic were replaced in 2026 and may still be used until 1 August 2031.
+
+### Check state
+Whether an Education pack record has passed its second check against the official source: confirmed, unconfirmed with a reason from a closed list, stale (the record changed after its verdict) or unchecked.
+*Avoid:* reviewed (Tada reserves it for a registered human reviewer)
+
+The state is computed each time from the verdicts in the review files, which are bound to the record's text by hash, and is never written onto the record. A claim that rests on a record that is not confirmed says so.
+
+### Description-only
+The reuse policy of a source whose terms do not grant this repo the right to reproduce its wording: the record commits the official code, the locator and a hash of the wording, with a summary in the pack's own words, and the wording itself stays in a store outside the repo. Every California record is description-only; every Dutch record is verbatim, with the wording in the record and a source line under it.
+
+The line is held by a check that compares the committed pages under `education/` with the stored wording, on the working tree and on each commit before a push.
+
 ### Child persona
 A simulated child defined by age, touch precision, attention span and what draws them, who plays prototypes the way a child does (imprecise touches, short attention, distractible, inventing their own aims) and comes back, or does not.
 *Avoid:* bot, test user
