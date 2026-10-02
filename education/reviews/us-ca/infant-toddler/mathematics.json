@@ -1,0 +1,63 @@
+{
+  "lane": "us-ca/infant-toddler/mathematics",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.infant-toddler.mathematics.objective.cognitive-development-strand-2-0-emergent-mathematical-thinking-2-1",
+      "wording_sha256": "b7f9e8166c9229413bc1826ab429d8a11024f3b169b4096cc4fb918782440bf5",
+      "text_sha256": "10a773cae4b6437b2b1b10286510e61fa3551ca609f48597e3635a81314c4775",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 34,
+        "offset": 63
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.mathematics.objective.cognitive-development-strand-2-0-emergent-mathematical-thinking-2-1",
+      "wording_sha256": "b7f9e8166c9229413bc1826ab429d8a11024f3b169b4096cc4fb918782440bf5",
+      "text_sha256": "4c17c018b6029333e38d0c6439f36e3649d7fb3adead133b7189109788d32b3d",
+      "verdict": "confirmed",
+      "note": "Round 2, a second reading on the page image of the foundation's own page (page 145), after a fix to the Summary and to one sentence of Limits. The script's place is the first printing of the foundation's general statement, in the introduction's list (page 34), which gives it the same number and title; the indicator is printed once, on page 145, where the script finds it too. On page 145 the heading bar gives the number 2.1 and the title, the general statement stands under it, and the cell for 23 through 36 months holds the indicator's two sentences and nothing else above the rule (the examples under the rule are not recorded, by the lane's design). Record and page agree word for word, the bracketed example of a miscount included. The point of the fix, checked on the page: the indicator's first verb is a general verb of using, not a verb of speaking, and the document's introduction (page 25) says that its choice of verbs is meant to take in any form of communication, signed language among them. The Summary and Limits now have the same general verb for the number words and no longer limit them to speech. For its second sentence the indicator has a verb of reciting; the Summary's 'go through stretches of the counting sequence' keeps the producing of the list in its order and names no mode: judged faithful. The example is described rightly (the count leaves out three). Not a near copy: the first sentence takes the indicator's two cases in their order and keeps a few of its terms; the rest, and all of the second sentence, are the pack's own words. Limits holds: no number range and no end of the count list is named, mistakes are allowed for, nothing in the indicator says the word must match the amount, and it mentions neither counting objects one by one nor written numerals; it describes typical development and is no requirement. The worked examples and Common mistakes show a child saying and chanting; they are the pack's illustrations in one mode and deny no other.",
+      "rendition": "same-file",
+      "place": {
+        "page": 34,
+        "offset": 63
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.mathematics.objective.cognitive-development-strand-2-0-emergent-mathematical-thinking-2-2",
+      "wording_sha256": "e318751759a96eb9943e549e4356ecafcbe0812847849da8a0f7c2519f1668ee",
+      "text_sha256": "753019b203a3da237f5fd5b2648377a51f633d64ad3bfbfe720fee8e01ac5f16",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 34,
+        "offset": 74
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.infant-toddler.mathematics.objective.cognitive-development-strand-2-0-emergent-mathematical-thinking-2-3",
+      "wording_sha256": "17c9f041de74d5b0988dad8af2663442295351e4f29f11f4e9a0a4caab9ab18b",
+      "text_sha256": "698bd468991a5d8996dad83a672af61ea41af4fedfc9857c7aec1ae88d3d1325",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 34,
+        "offset": 88
+      },
+      "matched_by": "script",
+      "checker": "us-ca/infant-toddler/mathematics",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

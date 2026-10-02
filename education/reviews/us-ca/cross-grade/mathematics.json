@@ -1,0 +1,218 @@
+{
+  "lane": "us-ca/cross-grade/mathematics",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-1",
+      "wording_sha256": "87bc52f4ef4b9113b74bec8e5e335534171a0d2371a14405c75bc33041e98d85",
+      "text_sha256": "1a35a9a8469315e46476364d9757f96081e9bc0ba3fceda35bf10442481ce2e4",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code and bounds are right (page 13: the practice is printed as 1 with a closing bracket, its boldface name is the record's first sentence, and the paragraph ends where the record ends, directly before practice 2). The Summary leaves out behaviours the text states and narrows one. (1) Missing altogether: the sentence in the middle of the paragraph, between the remark about older students and the remark about younger students, which says that proficient students can say how different ways of representing a problem match up (it names four kinds of representation), or draw a diagram of what matters, plot data, and look for patterns. Nothing in the Summary stands for it. (2) Missing: forming a guess about what the answer will look like and mean (the first half of the third sentence of the description); the Summary keeps only the planning half of that sentence. (3) Narrowed: the closing sentence speaks of following how other people tackle hard problems in general and of seeing what different ways of solving have in common; the Summary makes it how others solved the same problem and drops the comparison. Fix: add the representations sentence and the conjectures, and restate the last clause without tying it to one problem. Design notes do not contradict the text.",
+      "rendition": "same-file",
+      "place": {
+        "page": 13,
+        "offset": 126
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-1",
+      "wording_sha256": "87bc52f4ef4b9113b74bec8e5e335534171a0d2371a14405c75bc33041e98d85",
+      "text_sha256": "da4ca7c8cb15812581d5feabe5661a810ccc01012f6d43c2003499812206b693",
+      "verdict": "confirmed",
+      "note": "Round 2. The three faults of round 1 are resolved. Read sentence by sentence against page 13: every sentence of the description has its counterpart in the Summary, including the one about how different ways of representing a problem match up (with the diagram, the data and the patterns), the guess about the kind of answer and what it will mean, and the closing sentence, which is no longer tied to one problem and keeps the comparison of approaches. The two age-bound remarks stand at the end as examples by age, each kept as a possibility, the one about older students with its condition and both of its alternatives. Nothing is added that changes scope. Two connectives are the pack's own ordering and are recorded here for that reason: the Summary places the content of the first three sentences of the description before an attempt, and that of the next two during the work. The text says so outright only for its opening and for the planning, and gives no time for the study of what is given or for the similar and simpler problems; the Summary follows the order of the paragraph and attaches no condition to it. Not a near copy: about a quarter of the text's words recur in order (longest shared run five words) and the age examples are moved to the end; the clause on older students stays closest to the text, a little over half of its words, where the terms leave little room. Wording, code and bounds equal the page image (printed as 1 with a closing bracket, boldface name first, ends directly before practice 2). Design notes do not contradict the text.",
+      "rendition": "same-file",
+      "place": {
+        "page": 13,
+        "offset": 126
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-2",
+      "wording_sha256": "8bec2aebd42fb77fc3ce832efc51a98c5b7624d1c7fa176952e91f5d8c6ef4c2",
+      "text_sha256": "a423f0a0db4b32bab0cd4d6da6639dd8a542126b3108354c99bc05113c3b652a",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 13, printed as 2 with a closing bracket; the boldface name is the record's first sentence and the paragraph ends where the record ends, directly before practice 3. The PDF prints two em dashes around the inserted clause of the second sentence and the record has hyphens there: form. One word is broken at a line end with a hyphen; the record holds it whole. Summary keeps both abilities and all four habits.",
+      "rendition": "same-file",
+      "place": {
+        "page": 13,
+        "offset": 334
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-3",
+      "wording_sha256": "af5ae93dcfe3a4acbcf0b0d69a09c43043bef7d42e63ad60164bc650d74cbe9f",
+      "text_sha256": "df203d78079c330cb9347734a2117a72113948221db8907597cf3a0fe82835b0",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: the practice starts on page 13 (printed as 3 with a closing bracket) and runs over to the top of page 14; the page break falls inside a sentence and the record joins the two halves correctly. Both corrections are right: what they remove is the running footer of page 13 (page number, bar and section name), which the text layer puts between the two halves; no word of the statement is lost. The record ends on the last sentence of the common text. Directly after it, in the same paragraph on page 14, the PDF prints one more sentence in boldface, followed by its own code (CA 3.1) and a bracketed remark that limits it to higher mathematics: a California addition with a code of its own, which the frame lists as left out; it is entered under unrecorded. The record and its Design notes do not mention it; a line in Limits saying that California adds a sentence here, limited to higher mathematics, would help a designer. The PDF prints two em dashes in one sentence where the record has hyphens: form. Summary faithful; what it leaves out (where an argument applies) is in Limits.",
+      "rendition": "same-file",
+      "place": {
+        "page": 13,
+        "offset": 462
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/cross-grade/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-3",
+      "wording_sha256": "af5ae93dcfe3a4acbcf0b0d69a09c43043bef7d42e63ad60164bc650d74cbe9f",
+      "text_sha256": "d3924d98823c962a498b84f3f46677054c7d6179fd319626fd30bb9c18d6bb8b",
+      "verdict": "confirmed",
+      "note": "Round 2. The sentence added to Limits is true on the page: on page 14, in the same paragraph and directly after the last sentence of this practice, the adopted document prints one more sentence in boldface, with a code of its own (CA 3.1) and a bracketed remark that restricts it to higher mathematics. The Limits sentence says where it stands, that it is California's own, that it is so restricted and that the pack does not record it; it says nothing of what the addition asks, so nothing of it is paraphrased. One nuance: the printed code numbers the addition under practice 3 (an addition to this practice, as the frame calls it, not a ninth practice), so calling it a further practice is loose; it misleads no one about what the pack holds. The entry under unrecorded stands. The rest was read again as for a first check: the wording equals pages 13 and 14 (it starts at the boldface name after the printed 3 with a closing bracket, crosses the page inside a sentence, and ends on the last sentence of the common text); both corrections are right (they remove the running footer of page 13, which the text layer puts between the two halves; no word of the statement is lost); two em dashes in the PDF are hyphens in the record: form. Summary faithful and of the pack's own shape (about a fifth of the text's words in order); the one sentence it leaves out, on where an argument applies, is in Limits.",
+      "rendition": "same-file",
+      "place": {
+        "page": 13,
+        "offset": 462
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/cross-grade/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-4",
+      "wording_sha256": "df511915b88946dbb9edd9d479ecc2eabecd7628d36f9591f3f15436100a6ac6",
+      "text_sha256": "6ef895166ccc8f67faf9e52461b5c210955beb242afa26799c0c67b90a424c20",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 14, printed as 4 with a closing bracket; the paragraph begins after the boldface name and ends where the record ends, directly before practice 5. Summary keeps the three examples by age as examples.",
+      "rendition": "same-file",
+      "place": {
+        "page": 14,
+        "offset": 47
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-5",
+      "wording_sha256": "b4506d7ccbcaf1ae1f602df329946a83907d0812818b55f2399d90705c1337f7",
+      "text_sha256": "080f5e7b723b724f9514d881f554805b9bccddad1aedf66b03b829ba81b26ed0",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, code and bounds are right (page 14: printed as 5 with a closing bracket; the paragraph ends where the record ends, directly before practice 6). Scope changed in the Summary: catching likely errors by estimating is stated as something the student does in general. In the text that sentence belongs to the worked example: the example opens by naming high school students, and the two sentences after it (the one about detecting errors and the one about models and technology) continue with a pronoun that refers to them; the text widens again to students of every grade level only in the sentence after those. So the Summary lifts one part of the high school example out of the example and drops its marking, and the record's own Limits says the one worked example is about high school students. Fix: give the error-catching as part of the high school example (as the Summaries of the other practices do with their age-bound examples), or leave it out. Everything else in the Summary is faithful; Design notes do not contradict the text.",
+      "rendition": "same-file",
+      "place": {
+        "page": 14,
+        "offset": 230
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-5",
+      "wording_sha256": "b4506d7ccbcaf1ae1f602df329946a83907d0812818b55f2399d90705c1337f7",
+      "text_sha256": "552d222d2186cd77100a181300a33642a3cca6342e884d202af47f7c0e7f7b10",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Round 2. Near copy, in one place only. The fault of round 1 is resolved: catching errors by estimating and the sentence on models and technology now stand inside the worked example about high school students, and the widening to students of several grade levels comes only after it, as on the page. Every sentence of the description is represented and nothing is added. What is new: the first clause of the Summary's last sentence (from its opening up to the comma before its second half) is the text's second-to-last sentence in the same frame and word order. Twenty of the clause's twenty-three words are the text's words in the text's order, with one shared run of seven words; three words are swapped (the verb, the adjective before the resources, and the first of the two closing verbs) and the rest of the difference is words left out. That clause is not the pack's own wording. Fix: recast that one clause in another shape (for example start from the resources or from what they are used for) and leave the rest. Taken as a whole the Summary is otherwise the pack's own: about four in ten of the text's words recur in order, most of them names of tools and the terms of the example. Smaller points, none a fault by itself: the three kinds of software the text lists are gathered under one name; where the text names a second unit beside the grade for the tools a student should know, the Summary names the grade only; the errors in the example get a stronger adjective than the text gives them. Wording, code and bounds equal the page image (page 14, printed as 5 with a closing bracket, ends directly before practice 6). Design notes do not contradict the text; Limits is right that the one worked example is about high school students.",
+      "rendition": "same-file",
+      "place": {
+        "page": 14,
+        "offset": 230
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-5",
+      "wording_sha256": "b4506d7ccbcaf1ae1f602df329946a83907d0812818b55f2399d90705c1337f7",
+      "text_sha256": "aff0c324f1c987e86468cd1f4f68b3511e3b9953913250c0238fe3a3d0ea4b45",
+      "verdict": "confirmed",
+      "note": "Round 3. The round 2 reason is resolved. The first part of the Summary's last sentence is recast: it now starts from the resources, gives the website material as one example in a phrase of its own, and brings in the students and what they do with the resources at the end. Against the text's second-to-last sentence it shares about a third of that sentence's words in order and no run longer than three words, where round 2 counted twenty of twenty-three and a run of seven; it is the pack's own shape. It is still faithful: the resources are mathematical, from outside and relevant; the website material is an example; the students are those at various grade levels; they pick the resources out and use them to set problems or solve them. The second half of the sentence (technology used to explore ideas and understand them more deeply) is unchanged and faithful. Read whole: the high school example still holds the catching of errors and the sentence on models and technology, and the widening to several grade levels comes only after it, as on the page; every sentence of the description is represented and nothing is added. The smaller points of round 2 stand unchanged and are still not counted faults: the three kinds of software gathered under one name; the grade named without the second unit the text gives beside it; a stronger adjective for the errors than the text's. Second reading on the page image (page 14): printed as 5 with a closing bracket, a heading sentence and one paragraph, ending directly before practice 6; the record holds exactly that. Design notes do not contradict the text; Limits is right that the one worked example is about high school students.",
+      "rendition": "same-file",
+      "place": {
+        "page": 14,
+        "offset": 230
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/mathematics round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-6",
+      "wording_sha256": "a71dc492748a4d0a7ee2bd5d112bbcc364e200c781585a229c215d82fcd767a1",
+      "text_sha256": "1b1eff67e55122b1ebeb3be421adf571a1f17fbf5d358b19ca3e53ab8d0a8b87",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 14, printed as 6 with a closing bracket; the paragraph ends where the record ends, directly before practice 7. Summary keeps the two age-bound remarks as such.",
+      "rendition": "same-file",
+      "place": {
+        "page": 14,
+        "offset": 412
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-7",
+      "wording_sha256": "2c006adff0f40792144dc7a2a6e961b6fce42974866fcedbc37a5de35f0e9da9",
+      "text_sha256": "38059e55e414b96d7ffdb15a90eb4180129c16d616844cad54af445a359f3c98",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: the practice starts on page 14 (printed as 7 with a closing bracket) and runs over to the top of page 15; the page break falls between two sentences. All four corrections are right. Two remove the running footer of page 14 (section name, bar and page number), which the text layer puts between the two halves. Two restore raised exponents: the page really prints a raised 2 after the letter in the expression of the fifth sentence (page 14, last line) and a raised 2 after the closing parenthesis in the expression of the last sentence (page 15), and the text layer flattens both to plain digits. Tolerant match for that reason and for one word broken at a line end. The record ends where the paragraph ends, directly before practice 8. Multiplication signs, numbers and the minus signs (en dashes in the PDF, hyphens in the record: form) are equal.",
+      "rendition": "same-file",
+      "place": {
+        "page": 14,
+        "offset": 526
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/cross-grade/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-7",
+      "wording_sha256": "2c006adff0f40792144dc7a2a6e961b6fce42974866fcedbc37a5de35f0e9da9",
+      "text_sha256": "5353c403c499726b95db074ed8815d64065d6ecfb1e8b2a5b91eb3d4ceef5a8b",
+      "verdict": "confirmed",
+      "note": "Round 2. The changed word is right. On the page the description names its general subject once, in the sentence after the boldface name; the next three sentences name young students, later students and older students in turn; and every sentence after the one about older students (the one on lines in a geometric figure, the one on stepping back and changing perspective, the one on complicated things, and the closing worked example) has as its subject a pronoun whose nearest antecedent is the older students. The text does not return to its general subject by naming it again, as practices 1 and 5 do, and the closing example (an algebraic expression in two variables over the real numbers) fits older students. So the Summary's last sentence now carries the text's own reference and no longer states those behaviours of every student; the record's Limits agrees with it. Two compressions inside the age-bound illustrations are recorded here and not judged faults: of the sentence on lines in a geometric figure the Summary keeps the drawing of a helping line and leaves out the seeing of what a line already there means, and it leaves out the closing worked example. Not a near copy (about a quarter of the text's words in order, longest shared run four words). The wording equals pages 14 and 15 (printed as 7 with a closing bracket; the page break falls between two sentences; it ends directly before practice 8). All four corrections are right on the page images: two remove the running footer of page 14, and two restore raised exponents (one in the expression in the last line of page 14, one after the closing parenthesis of the expression on page 15) that the text layer flattens; tolerant match for that reason. Minus signs are en dashes in the PDF and hyphens in the record: form.",
+      "rendition": "same-file",
+      "place": {
+        "page": 14,
+        "offset": 526
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/cross-grade/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.cross-grade.mathematics.objective.standards-for-mathematical-practice-8",
+      "wording_sha256": "2604c754df8e49b2ca8e11d0f181884b23931c6bc2298fd78ac05d201f2e98fd",
+      "text_sha256": "f85ccb87a9d7923196b147023ac488b4f83a2d5b85fb2171463cb6293a89c4c8",
+      "verdict": "confirmed",
+      "note": "Second reading on the page image: page 15, printed as 8 with a closing bracket; the paragraph ends where the record ends. What follows on the page is a boldface heading and three paragraphs about connecting the practices to the content standards: commentary, no part of any practice, rightly not in a record. Both corrections are right: in the sentence about expanding three products the page really prints a raised 2 in the second product and a raised 3 and a raised 2 in the third, and the text layer flattens them to plain digits. The point, the slope and the equation of the middle school example are equal on the page image (minus signs are en dashes in the PDF, hyphens in the record: form). Tolerant match because of the exponents and one word broken at a line end.",
+      "rendition": "same-file",
+      "place": {
+        "page": 15,
+        "offset": 96
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/cross-grade/mathematics",
+      "round": 1
+    }
+  ],
+  "unrecorded": [
+    {
+      "rendition": "same-file",
+      "code": "CA 3.1",
+      "place": {
+        "page": 14
+      },
+      "explained": "A California addition printed in boldface at the end of the paragraph of practice 3, with its own code and a printed remark that limits it to higher mathematics. Not a statement for the ages of this pack; the frame lists it as left out. Count by eye on pages 13 to 15: eight practices, numbered 1 to 8 with a closing bracket, one record each; no other numbered statement in the section."
+    }
+  ]
+}

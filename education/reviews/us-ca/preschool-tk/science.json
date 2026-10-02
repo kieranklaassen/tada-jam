@@ -1,0 +1,505 @@
+{
+  "lane": "us-ca/preschool-tk/science",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-1",
+      "wording_sha256": "429486a62628bad44907a44060419a66933ec2e3b8cf97a3e403f82957bd54a7",
+      "text_sha256": "2823fd22d1e271fdcca90df9cea9851ce85357951de11363b6e101045ff25d58",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 35,
+        "offset": 40
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-10",
+      "wording_sha256": "a8cdb85d550551f5d8c7d0c3708ba005a0d7e32a6863e604bc1b1c6eafe63a84",
+      "text_sha256": "7e31da4082fc463566d5075e16ea794198b4b53db7a73dc36701c68062c307e9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 37,
+        "offset": 185
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-10",
+      "wording_sha256": "a8cdb85d550551f5d8c7d0c3708ba005a0d7e32a6863e604bc1b1c6eafe63a84",
+      "text_sha256": "a01467b96ca5246cedd21a4cc81d04bd3116a9d8199ac44c7ec6dea9ad9f3088",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix replaced the telling verb in the Summary and in Limits with the statement's own general verb. No mode is added, and \"to others\" names no particular recipient. Both things that are formulated and communicated, both settings, and simple against more detailed and more precise are kept. Not a near copy. Remark, not a fault: the third item of Common mistakes still gives not putting a solution into words as the shortfall, while the statement's verb is not tied to speech; a designer should read it as not sharing the solution with the other children. Wording, code and title equal the At-a-Glance PDF (page 37; domain PDF page 37); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 37,
+        "offset": 185
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-2",
+      "wording_sha256": "a3e1f22228928b07ed722d65c12ba10d224fb247eeb9e959ab8ba9e4e74fa584",
+      "text_sha256": "165b8ab33aff876af53b8e3574f4b3583cc389e86947e00171a323711e2e5142",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 35,
+        "offset": 89
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-3",
+      "wording_sha256": "262d3d214acfa4167dcc393f60e830e2bb0e3d038f6426b98589c787a35a4aa8",
+      "text_sha256": "ea76848aa21155da34668f32f528dfcc931296b880ed055f1b2b4b3caad80a73",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 35,
+        "offset": 141
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-4",
+      "wording_sha256": "4cb6f817898b4343660601b62d81d8c15562d6926f6d3d338d3bf56c0d0b0017",
+      "text_sha256": "e3487f3bd25d9a8b2a5dcd99415ceac75f77205e2e0bcddadc435a296662a667",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition, in the Summary and repeated as a limit in Limits. The official statement names two settings for the problems at both ages: play, and the child's day-to-day dealings, with no word on whom or what those dealings are with. The Summary renders the second as \"daily dealings with others\" and Limits as \"everyday dealings with others\", which narrows it to dealings with people. The domain PDF's introduction (page 6, printed 5), where it describes the related engineering strand, speaks of problems met in dealings with other people and with the surroundings. Drop \"with others\" in both places. The separate phrase about working alone or together with children and adults is right and stays; simple against multistep is right.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 35,
+        "offset": 190
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-4",
+      "wording_sha256": "4cb6f817898b4343660601b62d81d8c15562d6926f6d3d338d3bf56c0d0b0017",
+      "text_sha256": "3b37075e42251e99ed49c5814e22871da4b65e5d90d6349f46ebdab0dcc639bb",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: \"with others\" is gone from the Summary and from Limits, so the second setting is now the child's everyday dealings with no word on whom or what they are with, as in the statement. Working alone or together with other children and adults is kept at both ages, and simple solutions against solutions of several steps. Limits is right that trying a solution is what is asked. Not a near copy: a third of the statement's words in order, no shared run longer than two. Wording, code and title equal the At-a-Glance PDF (page 35; domain PDF page 25); each age box holds exactly the stored statement, and nothing is printed under the boxes on the domain page.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 35,
+        "offset": 190
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-5",
+      "wording_sha256": "7b0c152e2e16ccc310b0e635a593ccf2935cab5f068c4d0ce9c68013d1458031",
+      "text_sha256": "7f1497e753afbac189aecd45e161c8235fe4c8b864e4ad332eeb6407cdea49cd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 36,
+        "offset": 27
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-6",
+      "wording_sha256": "cf05e340a08503525ad002bb32fe94550bd9984513511db3236415dd97ea96b1",
+      "text_sha256": "00abc9446d7b11198f6a927fe063d3d31d6b09bfcccfcf49805918f3bba55137",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 36,
+        "offset": 97
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-7",
+      "wording_sha256": "889795627689a81cd532fa0f30ddf6c3121569205a7a4011f4d3d1779b63db80",
+      "text_sha256": "cac4eaad15bfd3acc24a0ef96d18d6845376939fa145d31372dce0fe2946d0e6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 36,
+        "offset": 172
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-8",
+      "wording_sha256": "f52fda0a4acfd4db72dfd785f3f8c764af117f59e3ebdb5870ea477d25b8ef67",
+      "text_sha256": "e6a8a26f603c8ad5f8df852bb67453a91a9e319ec68d06c61be7097cb2da4298",
+      "verdict": "confirmed",
+      "note": "The script matched with tolerance because the At-a-Glance breaks one hyphenated compound at a line end in its Later box. Both documents print that compound with its hyphen (the At-a-Glance Early box and the domain PDF page 34 print it on one line), as the record has it.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 37,
+        "offset": 36
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-9",
+      "wording_sha256": "433fa8e2294e38069134a72656670fc31101be889c67e1420dbcf289eee4d32a",
+      "text_sha256": "9fc35035729b7b5f8d3d1a951de4932a7cccfcaa8bee4a08b3f8dfd02df45830",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 37,
+        "offset": 120
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-1",
+      "wording_sha256": "92f652829968f7fef2ab3a1dfba9aab621b4da0a09137eda904d502900b528af",
+      "text_sha256": "b711067560f7ee9360fcb8e49279b08172dbd3c5ad7afc6200ace08ae7f6f527",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 38,
+        "offset": 45
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-2",
+      "wording_sha256": "41aea02e178506e36344f56b93938b7b8333f5e82a930a4323ecc59f0f2f2bc6",
+      "text_sha256": "352861a61b2acb5287478f7da1149e472cfd9508bf4b996fab6c69d22b1b3980",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 38,
+        "offset": 118
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-3",
+      "wording_sha256": "cf126c6399ed968a7433348ff4a939e22bfd88cd87057c201796cd4163b60ab9",
+      "text_sha256": "e25be6b332ec8c1da04ab6e4497779b591e368d58fe69f64420a28c71ef8c433",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 38,
+        "offset": 191
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-4",
+      "wording_sha256": "795d044f345fd5be834046f4f7cb097321e08621cd01deddc1ef56d4159a887f",
+      "text_sha256": "f29c29f271946797d40cc949ee3c94acf01d516b062490594bd6e7a90a39c4ea",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 39,
+        "offset": 28
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-5",
+      "wording_sha256": "83a875db76a6a2bd493da5fae3798746326396f0e655b7856f381347189c35ef",
+      "text_sha256": "8a30bc7855ce99f266ea7ca344fe6c667814974c7e38670693a8d96d892ed473",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 39,
+        "offset": 114
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-3-0-life-science-3-1",
+      "wording_sha256": "9140e006358d756345c561ec64b0ef89ed5569c6563d90153882ef787be6d200",
+      "text_sha256": "bebc95bd5fae8a035b4770b1bdda8faaf7f1881f85ad7aeb16c7300cd8637757",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 39,
+        "offset": 193
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-3-0-life-science-3-2",
+      "wording_sha256": "f996c69974c3402021e594f36258d72ad105ab0a9d727d6f352906737c3d4f3f",
+      "text_sha256": "f52ba85e1c8399b222c568fb41b936e921f28991955dc98bd224d0cb5f8b1869",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 40,
+        "offset": 27
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-3-0-life-science-3-3",
+      "wording_sha256": "9fdcbda832a61af7f5b01fbd3ae060626b9c89858744a12f7cbb27e0111fc3d6",
+      "text_sha256": "286bf36b1b85b49cdaad37bacd895514aa71cbf43d5f24bbdb25457cd76eda7b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 40,
+        "offset": 86
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-3-0-life-science-3-4",
+      "wording_sha256": "03744e1a6b76635d2d78103c227f3b03feb25115839d5fa7a479766cc8cb144c",
+      "text_sha256": "bf3fbda7dacaccaa183005d0330cd762aa468694f30887df933764ae6caa31b2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 40,
+        "offset": 159
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-3-0-life-science-3-4",
+      "wording_sha256": "03744e1a6b76635d2d78103c227f3b03feb25115839d5fa7a479766cc8cb144c",
+      "text_sha256": "2c7a12675cae70104334ac411b127c4d63eeddd156044a4ca08cc34cac53950c",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix replaced the saying and stating verbs at the later age. The Summary now has the child make the expectation known, and Limits has the child express it: mode-neutral and faithful to the statement's verb. The earlier age keeps the statement's own two verbs, grown animals with humans included, and what the child observes; the later age keeps animals and plants and the same kind. Limits is right that plants are absent at the earlier age and that no reason for the resemblance is asked. Not a near copy. Wording, code and title equal the At-a-Glance PDF (page 40; domain PDF page 57); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 40,
+        "offset": 159
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-3-0-life-science-3-5",
+      "wording_sha256": "f214ff952abe5a7ec94690a7f8db173c06f089cab9379487ebe7e54286fe8119",
+      "text_sha256": "4fe1831d592e59c5f33831e48f2ffdcc02e15acdb94e3da395d1c5c35026af1c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 40,
+        "offset": 213
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-3-0-life-science-3-5",
+      "wording_sha256": "f214ff952abe5a7ec94690a7f8db173c06f089cab9379487ebe7e54286fe8119",
+      "text_sha256": "d1c8cf8fc1925d25a0da2127f1b01ba7752253bd1333b33feba8b2062ed09216",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix replaced the saying and naming verbs at the earlier age with the statement's own first verb. The second half of the earlier age (making clear an understanding that habitats differ) was already mode-neutral. People and familiar animals and plants are kept at the earlier age; the later age keeps habitats that fit the particular needs of what lives in them. Limits is right that the later wording drops the word for familiar and that no habitats or species are named. Not a near copy: half of the earlier statement's words in order, no shared run longer than two. Wording, code and title equal the At-a-Glance PDF (page 40; domain PDF page 59); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 40,
+        "offset": 213
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-3-0-life-science-3-6",
+      "wording_sha256": "96eb891cde0942be57416815fb579bbdb9c4f1dbf46c35b2e0b6f56cc1e020b1",
+      "text_sha256": "c09fdd32b8ce5c49af8e4133f923836f7fa64946989343c5fdfc4bf6f833fc6f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 41,
+        "offset": 40
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-3-0-life-science-3-7",
+      "wording_sha256": "72d6b54baa92c73c12bf753a74fde7454666f5eaaef3d50a71a3e597c4913a41",
+      "text_sha256": "75c220667845756eef9a5899982b6d97e030807957bc688bf36d386a20dd5a09",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 41,
+        "offset": 127
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-4-0-earth-and-space-science-4-1",
+      "wording_sha256": "e5c40bd1a46e6d5ee95767bb7759a9f0bd6e48650a7c2c13d0fe7b576b9f45e1",
+      "text_sha256": "0a02e55cb4db81c94d33f1303044affa85fe138e4b9822469ee7e9928297d1c4",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 41,
+        "offset": 208
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-4-0-earth-and-space-science-4-2",
+      "wording_sha256": "fcb3783b69f297f79b9e73f13ce44f6bb871579b7a302afadf1cd5969b443cda",
+      "text_sha256": "fa4f17e9b7832a7d15391c944ab8e42e09f9848d9c7e01e7993ec9fdd075d087",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 42,
+        "offset": 38
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-4-0-earth-and-space-science-4-3",
+      "wording_sha256": "6fff57293e3a8d39e15a2f79d16015ca79e296515a54aa9403231b0a5fb68f2c",
+      "text_sha256": "c44bf7a47ee187dc573a570825436812ffe77e572fac6a850a3593fa16501fdd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 42,
+        "offset": 90
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-4-0-earth-and-space-science-4-3",
+      "wording_sha256": "6fff57293e3a8d39e15a2f79d16015ca79e296515a54aa9403231b0a5fb68f2c",
+      "text_sha256": "04ddf5b244ea22b0d5058d29dd59f0d43902e6811dfebb25510b28e022dc5191",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix removed \"in words\" from the end of Limits, so giving examples at the later age is no longer tied to speech. Limits now agrees with the statements: noticing the effects at the earlier age and giving examples of them at the later; the child's own life, plants and animals at both. Remark, not a fault under the fix round's rule (the official verb in question is the describing verb, not a communicating one): the Summary still gives the earlier-age describing as the child \"says so\", and uses \"describes\" at the later age. The statements use one describing verb at both ages, so the Summary's two verbs should not be read as a difference between the ages, nor as a limit to speech (one earlier-age example under this foundation in the domain PDF, page 70, has a child show the weather with a picture card). Not a near copy. The Early box holds two sentences and the record has both. Wording, code and title equal the At-a-Glance PDF (page 42; domain PDF page 70); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 42,
+        "offset": 90
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-4-0-earth-and-space-science-4-3",
+      "wording_sha256": "6fff57293e3a8d39e15a2f79d16015ca79e296515a54aa9403231b0a5fb68f2c",
+      "text_sha256": "96a6dd058c4ae556fa526741fb40abd94a88c537fb287015d561e5ad9987364e",
+      "verdict": "confirmed",
+      "note": "Round 3. Confirmed in rounds 1 and 2; the only change since is in the Summary, which now uses the describing verb at the earlier age as it does at the later. The remark of round 2 is met: the two ages no longer differ by verb, and the earlier age is no longer tied to speech. Read whole again: at the earlier age, noticing and describing changes in the weather, and noticing what weather and seasonal change do to the child's own life, to plants and to animals; at the later age, observing and describing, and giving examples of those effects. Nothing added or dropped; not a near copy (about half of the words recur in order, longest shared run three). Limits agrees with both statements, and what it lists as absent (kinds of weather, named seasons, measuring, forecasting) is absent. Wording, code and title equal the At-a-Glance PDF (page 42, page image); the Early box holds two sentences and the Later box one, and the record has all three.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 42,
+        "offset": 90
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-4-0-earth-and-space-science-4-4",
+      "wording_sha256": "03195aad4be64cff88503c2adac6d60f60211ca68a1411a38d1006c1c24150e7",
+      "text_sha256": "4db170adff107c1b6e1926faeca3aea6d0dd05c6b5a1e277e36a0883a30af2e2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 42,
+        "offset": 159
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-5-0-engineering-technology-and-applications-of-science-5-1",
+      "wording_sha256": "b9d2cbc37ae73f4f74a1637084e43d72f6e72ab39afeeed2345485f710024204",
+      "text_sha256": "0940df35689178c6ccebbd064f5e108902d0e33960d4b1e9f14720fdd50490fc",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 43,
+        "offset": 41
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-5-0-engineering-technology-and-applications-of-science-5-2",
+      "wording_sha256": "e5e709b00f3200c8c5b196cca5d4223cb25117686611b38cf00fba8f6eb40a52",
+      "text_sha256": "a1b0bdd53b6a69406ccf70b8f831de8f3457a7ef6a8324cc92f2c15b21674679",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 43,
+        "offset": 146
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.science.objective.science-strand-5-0-engineering-technology-and-applications-of-science-5-3",
+      "wording_sha256": "f3df14807854148a8b80fa63109952a3cf820582af108b04e0b4811501eb2810",
+      "text_sha256": "35c8cefe80487e5b53800272a72b822d6f491f6a31b738752e0c43f6e49ce43c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 43,
+        "offset": 221
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/science",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

@@ -1,0 +1,1004 @@
+{
+  "lane": "us-ca/grade-1/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-1-g",
+      "wording_sha256": "5e8abe9fc723ad6a3a1c1b2f194d7b0a261d73671d30018b535971345d919fa0",
+      "text_sha256": "25d8e6a45ccdd1d349fdb75edb374f1e0c9e5e87fd44b9a9ebaa4421da766afe",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 15,
+        "offset": 12
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-1-p",
+      "wording_sha256": "938a2694c24efce6da550cc35b9a505829b5fe9b1dd0830688a381b996b2d59b",
+      "text_sha256": "cb4395d9248a3df5a3833ba816ae362c4b6bb59395e54dd8bbeb6529dd6642b3",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 119
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-1-s",
+      "wording_sha256": "b2d0fbd448dec8158964224c756e0e0a7810ac0750a693aa1380230d32006ac1",
+      "text_sha256": "a1442d9f58ef7cc43dc9f019100ad2b4e76c2e111cb9dc5231be4e3ae56eeb07",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 13
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-10-s",
+      "wording_sha256": "ccd09d6dcb0e14234a9c9e2a5b46d1dc4edeac9261f894c27014d1977b40c45e",
+      "text_sha256": "e2d0f8028b78c79ff60e7ad17aabe2a5bcc863e2f048a8691092e1547e1fc862",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds who acts: the ways are \"things a passenger does\". The standard does not say whose ways they are, so what a driver or another adult does to make the ride safer is covered too. A small narrowing; \"things people do\", as in the Summary of 1.1.5.S, would be faithful. The example is kept as an example, which is right. Wording, code and Limits are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 166
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-10-s",
+      "wording_sha256": "ccd09d6dcb0e14234a9c9e2a5b46d1dc4edeac9261f894c27014d1977b40c45e",
+      "text_sha256": "f8bc611cfe655fc2e6e5337376385e23136cfacd31e1b1f357bf5e4605c548b3",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary now says \"things people do\", with no word for who acts, and keeps the example as an example. Remark on Limits, not a fault of what it says about this statement: it describes the neighbouring 1.1.8.S as about \"a car with air bags\", and that statement has a wider word that takes in any vehicle with air bags; \"a vehicle\" would be exact. The pointer to 1.5.4.S is right (PDF page 17). Wording and code equal the PDF (page 16, tenth statement, two lines, the bracketed example included), complete.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 166
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-11-s",
+      "wording_sha256": "160205de182d7cfa6f8abee85f3fbb6ee202a15364309c83e0a46a1f431f8e4d",
+      "text_sha256": "874204de6be684214e7590131b273d5b546dba13f32af98970ef87209d505d43",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits states a limit the standard does not: \"Only bags for school are named\". The standard names two kinds of bag and does not say that either is for school; the first kind is carried for many purposes. The Summary (\"school bag or backpack\") is faithful. The rest of Limits, the wording and the code are in order. A small fault.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 189
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-11-s",
+      "wording_sha256": "160205de182d7cfa6f8abee85f3fbb6ee202a15364309c83e0a46a1f431f8e4d",
+      "text_sha256": "afc09a267572f5ec03a557a9d31702c30849885985d3fd94b51dcde253e2ba8d",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: Limits no longer says the bags are for school; it names the two kinds as the statement has them, says both are heavy, and says rightly that lifting in general is not named. Remark, not counted as a fault: the Summary calls one of the two kinds a \"school bag\" where the statement names that kind by what it holds; in everyday use the two names mean the same bag, and the Summary sets no place for the lifting. Wording and code equal the PDF (page 16, eleventh statement, two lines), complete.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 189
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-12-s",
+      "wording_sha256": "9f53a003b6621bab0ca6bcebaf4a784155ef52feb7d274ebfa07ae9b5f8a9dd4",
+      "text_sha256": "68917b255f3aff26794c1a6c25c054b05b2f305be9c2e1b0ba9736becad3a4fc",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 205
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-13-s",
+      "wording_sha256": "8e8ef87bdb647e954875ccae43c086efac71b3c76d2a781a6605888580b013dc",
+      "text_sha256": "e3418221419f7383c5bf3b59bfd128702211c6cf48cf8fb14f6b1141ca615cef",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 213
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-2-g",
+      "wording_sha256": "46febba0bbc4c5087333dfdc5aab6364e1e4517886c6628f7f799efaaa9f36ee",
+      "text_sha256": "f19fded01fa2bae5d80ba9b22d1ced4f42b8cb1eb9fc20c3dff47eb9a79bcc12",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 15,
+        "offset": 22
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-2-p",
+      "wording_sha256": "6eef434a856cfc1949376d129a10c3f54ac3838d92829f3a7689cd0e0ea96b53",
+      "text_sha256": "024a2e186f6b75eb02202fff10edc69c19dad4a28e5546ebc8ddd7522f6477d6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 132
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-2-s",
+      "wording_sha256": "ea3bfecc568c28265998d0eb8b511e73cf5d1b558fdbb66e584c0ca9fcd8ea8e",
+      "text_sha256": "2f36c50d0188da6dfeb3238979eca8bcd302ec45348ff0882b8ccc06e35526c3",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds where the labels are, and narrows it: \"on bottles, boxes and other packaging\". The standard speaks of the labels of products in general, so a label fixed to the thing itself (a toy, a tool, an appliance) is covered too; bottles and boxes are the writer's examples, not the standard's. Limits does not repeat the fault (it says no products are named). Wording and code are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 23
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-2-s",
+      "wording_sha256": "ea3bfecc568c28265998d0eb8b511e73cf5d1b558fdbb66e584c0ca9fcd8ea8e",
+      "text_sha256": "c55b3f718e6386366b771fc569ce7ec718bf803293788b0dc0ce84be0922c806",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary no longer says where the labels are; it speaks of product labels in general and keeps both kinds of information the labels give. The containers in \"In a child's hands\" are the pack's examples. Limits holds, and its pointer to 1.1.3.S is right. Wording and code equal the PDF (page 16, second statement), complete.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 23
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-3-g",
+      "wording_sha256": "05423c0361236bf3b94c0af9d07514cc9b9ebc8d73bd072e64409777221fbd37",
+      "text_sha256": "9992f39bc8f0186056802ce2b601f998f24e2bc18b8febaf02d90f5e90c168ba",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds \"the body\": the things a person does \"help the body grow and develop well\". The standard does not say that the growing and developing it names are bodily, so habits that serve a child's social or emotional development fall under it too. Common mistakes leans the same way (\"without linking the habit to the body\"). \"A person\" in place of \"the body\" would be faithful. Wording, code and Limits are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 15,
+        "offset": 35
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-3-g",
+      "wording_sha256": "05423c0361236bf3b94c0af9d07514cc9b9ebc8d73bd072e64409777221fbd37",
+      "text_sha256": "cb460528acbceed40a6e738c7c7adb6ea6e5365bece08a8bcce1de1b4c530703",
+      "verdict": "confirmed",
+      "note": "Round 2. The first verdict's reason is resolved: the Summary now has \"a person\" where it had the body, so nothing confines the growing and developing to the body, and Common mistakes now ends on growing and developing well. \"In a child's hands\" still speaks of the body in its activities; those are the pack's examples and state no limit. The Summary is not a near copy. Wording and code equal the PDF (page 15, the third statement under the first standard), and the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 15,
+        "offset": 35
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-3-p",
+      "wording_sha256": "efae872f6ebf36e498ebbd5ac63b0384d2d157c5bc8fc29233454edd291a3a50",
+      "text_sha256": "d98607fe8aa5e21a822e446ee83e091e17332f2c8aa9de445eb968b8adf055ec",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds a route: germs passing \"from one person to another\". The standard does not say from what to what germs are passed, so germs picked up from food, animals, soil or surfaces are covered too. A small narrowing; \"keep germs from spreading\" would be faithful. Limits does not repeat the fault. Wording and code are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 141
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-3-p",
+      "wording_sha256": "efae872f6ebf36e498ebbd5ac63b0384d2d157c5bc8fc29233454edd291a3a50",
+      "text_sha256": "1f658ce32efc4359becdb33c1e8f3b07802675ad36e3feaabf1f78f8033da76c",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary gives no route any more; it speaks of germs spreading in general. The person-to-person cases in \"In a child's hands\" are the pack's examples and state no limit. Limits holds; its pointers to 1.1.4.P and 1.7.2.P are right. Wording and code equal the PDF (page 17, third statement of the content area), complete.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 141
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-3-s",
+      "wording_sha256": "e35b07b2033d0fb51ce3f52856f16f711b4f64ee96e5cfbdc8e29a689974d2a4",
+      "text_sha256": "a3ae2020a00a9305ce364222d554181949969610b7d7e0ecb8c2aea75e628c17",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 37
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-4-g",
+      "wording_sha256": "fb56e38d5f4f45b62a522c76f7ac14a3c3f7f476581a975e85c3608808e84964",
+      "text_sha256": "0cc00a02c0c2eb517e4c00f36c52cdbd022db8c16d5378a20e95d8ba3e94999a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 15,
+        "offset": 49
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-4-p",
+      "wording_sha256": "83bbb9de6706b16a8fbf1cd8f4e059ab37df37ca213b597fec438f70540043af",
+      "text_sha256": "e248827c6d209b3ede0a5c33f18480411afca9688f4c1500887c7164f3957986",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-4-s",
+      "wording_sha256": "f0936a32a68ea1a62166ee0ee13199d32d37f5a58bae800b59dae062cc915a66",
+      "text_sha256": "937b736875a029ebe96b608e44a4f433d6506c2586355e1870f9e4ca229779c5",
+      "verdict": "confirmed",
+      "note": "The Summary gives the three settings as the child's own (\"where they live, their school, and the community around them\"); the standard names them without an owner. Judged the natural reading and too small to change what a designer builds, so confirmed.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 52
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-5-p",
+      "wording_sha256": "289afe4c00ca40b60521a3be1dde8ea76861fa8a795678b0c1c1f1c8877e3a1c",
+      "text_sha256": "883d1f833035fe6bb8b5431f261bc1d569b4825e29f9ab00569418693c8a731d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 165
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-5-s",
+      "wording_sha256": "8c9604989023d682ff9b0c734f5e1716e70b39a33479120aa4b27923b679baf5",
+      "text_sha256": "2c2072c2bdfd145db6b1ea745c7ab6442cc011bc4a017abc69f5899edc588754",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 67
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-6-p",
+      "wording_sha256": "9b0a59bd9a65f611bc23317b99c24c9e51b927222156d97b64a395779e63f4ed",
+      "text_sha256": "078e761232fe973b84917054e7920796691a1d18ddda8b041a17d6374e536f63",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "The second-last word of the record's sentence differs from the adopted PDF (page 17): the record has it as a prefix, a hyphen and a space, then the rest of the word; the PDF prints one solid word with no hyphen and no space. The hyphen followed by a space looks like a line-break hyphen that the export kept from another layout. The record equals the export's Description cell, so this is a difference between the two official renditions and not an importer fault; whether the record should follow the adopted PDF here is for the importer or the manifest to settle. Every other word, and the start and the end of the sentence, are equal. The script matched with tolerance. The code, the Summary and the Design notes are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 186
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-6-p",
+      "wording_sha256": "9b0a59bd9a65f611bc23317b99c24c9e51b927222156d97b64a395779e63f4ed",
+      "text_sha256": "078e761232fe973b84917054e7920796691a1d18ddda8b041a17d6374e536f63",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Round 2. (1) The wording is no longer the reason. Under the lead's ruling on compounds the difference is one of form: the second-last word is one closed word in the adopted PDF (page 17), and in the export, which the record follows, it is the prefix with a hyphen and a space before the rest. The letters are the same and nothing else differs; the statement starts and ends where the record does, and the code matches. The script matched with tolerance and I read the page image and the export's cell. (2) A fault of the Summary that round 1 did not record: it explains the first kind of disease as one that \"spreads from person to person\". The statement sets no such route, and the document's own glossary (PDF page 67) defines that kind without limiting it to people: any living thing can pass it on. So an illness caught from an animal belongs to the first kind, and as the Summary stands it falls into neither of its two groups. It is the same narrowing that was the round 1 reason for 1.1.3.P in this lane. Fix: describe the first kind with no route, for example \"a disease that can be caught\" against \"one that cannot be caught\". Limits and the rest of the Design notes are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 186
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-6-p",
+      "wording_sha256": "9b0a59bd9a65f611bc23317b99c24c9e51b927222156d97b64a395779e63f4ed",
+      "text_sha256": "a9cc422ec20e8e38e328171134dc630f72138be483f8f110b26327ee2ffca654",
+      "verdict": "confirmed",
+      "note": "Round 3. The round 2 reason is resolved: the Summary now tells the two kinds apart only by whether the disease can be passed on, with no route and no word for who or what passes it on, which agrees with the document's glossary (PDF page 67), where the first kind is not limited to people. Read whole: the Summary keeps explaining the difference between the two kinds and adds nothing else; not a near copy. Limits: two groups and no named diseases, right; the neighbouring statement 1.1.3.P is the one about germs (checked on the page). The sorting cards are the pack's examples. Wording: a difference of form only, as round 2 recorded under the ruling on compounds. The second-last word is one closed word in the adopted PDF (page 17, page image); the export, which the record follows, has the prefix, a hyphen and a space before the rest. The letters are the same, nothing else differs, and the statement starts and ends where the record does; the script matched with tolerance. For the lead: the space after the hyphen is a defect of the export's cell, of the kind the importer already corrects from the adopted document for other rows; this row could join that list. Code equal (printed without the grade under the first standard of the content area).",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 186
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-6-s",
+      "wording_sha256": "345c904faeff2a6ca617e9a9e9b7c7af8e988c4c34aa59607f48ec6a516102e5",
+      "text_sha256": "174fc646cf6436a01d6e10e0370dcbdb8821c2b4c0f71ab09577c9e232512dcd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 85
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-7-p",
+      "wording_sha256": "d957a41fbc4c6f6a9c9d846f6674c02fe4dde7308987c3256b0dc3d2a5f7670a",
+      "text_sha256": "30f6f1a627ab688cfc686d1791471e4c84e9799bc40bfa31d549021f83cece88",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 198
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-7-s",
+      "wording_sha256": "198ee414b220131d859bfe694568d4f46e01a91814795e6060e0513584a7d578",
+      "text_sha256": "410cb2a3a1adfffb29fc234161a0c6f9eea8e7ee13208d5d14c504d84bb56ad6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 103
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-8-p",
+      "wording_sha256": "ea33196a64d0d776eb906e5d7005ff8c98bdf9a549ad3f60e3b1245754d332de",
+      "text_sha256": "ab93de264ec76708b4949efcfc264e0d9e35e218f3b83bac9b9a2e448a113e5e",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 210
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-8-s",
+      "wording_sha256": "fb5b232739865a4b3a1a9020b3abb094365f38a22e7020373fcc43367ce7e04c",
+      "text_sha256": "bfc0be94c24d30390205d8ecb4338896b8c7540e381cbcda2e235cf21fbf6aab",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows two general terms: it says \"a car\" where the standard has a wider word that takes in any vehicle with air bags (a van, a pick-up), and \"children\" where the standard has a wider word for the young. Both are small; the Limits note already has \"vehicles\". The added \"and not in the front\" is implied and is not a fault. Wording, code and Limits are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 112
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-8-s",
+      "wording_sha256": "fb5b232739865a4b3a1a9020b3abb094365f38a22e7020373fcc43367ce7e04c",
+      "text_sha256": "13e10b7050954c1dcaf539cf15f5cd18d08b8acc2a3e7398fca7ab5775c91a3f",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary now uses the wide word for what the child rides in and the wide term for the young, so neither general term is narrowed. The added \"and not in the front\" is implied. Not a near copy: the sentence is turned round, with the people first and the seat after. Limits holds (it says vehicles; its pointer to the example of 1.1.10.S is right). Wording and code equal the PDF (page 16, eighth statement, two lines), complete.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 112
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-9-p",
+      "wording_sha256": "8e5e95066c9f29157b6320bab6f3166b9a21c774e8a833d0fd328f55e8e83ea7",
+      "text_sha256": "3ec263a6aebcf903b0a04a084f7b700c08511c74e2f060ffaa3aca1c7d5b8e44",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-9-s",
+      "wording_sha256": "2698fefc287d444d77cde5303188d63fc422e7edabe3ce339525d05915331067",
+      "text_sha256": "4b5da4ecdc24d338c315b8daeea4f8a418a963aa9fec068ceeea8de37d194e63",
+      "verdict": "confirmed",
+      "note": "The PDF prints a raised footnote marker after the closing full stop (a control character in its text layer); the record's wording leaves the marker out, so the sentence is equal word for word. The footnote at the foot of page 16 equals the record's accompanying text, apart from the export's bracketed marker at its start. Limits says only that the footnote cites the Education Code; the footnote also names the Glossary (PDF page 71), and both are given for a legal definition of the statement's key noun, which is a general description with one exclusion and no list of kinds. Limits does not contradict it, but a designer may want to know the definition exists.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 138
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-1-9-s",
+      "wording_sha256": "2698fefc287d444d77cde5303188d63fc422e7edabe3ce339525d05915331067",
+      "text_sha256": "10a8059e6a52068935847c7ff8d7f49f59e9fc489601ac782f65a719b632cb1c",
+      "verdict": "confirmed",
+      "note": "Round 2. The remark of round 1 is resolved: Limits now says the footnote points to both places the footnote names, and that both are given for how the law defines the key noun. Form: the PDF prints a raised footnote digit after the closing full stop; the record's wording leaves the marker out, so the sentence is equal word for word. The footnote at the foot of page 16 equals the accompanying text apart from the export's bracketed marker at its start. The Summary is faithful: both parts of the task, both seeing and hearing. The pointer to 1.5.3.S is right (PDF page 17). Code matches (page 16, ninth statement).",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 138
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-2-1-g",
+      "wording_sha256": "372c6f417c1562a8085cc96ff619436be654abd48634b8e1e1c6fde8c2eb3abc",
+      "text_sha256": "bb64e184190ce3004f4b06724bbfc1bb5e4362ec3a6b6d13c63dd8fe81f88008",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary makes it \"a body\" that needs the two things \"in order to grow as it should and stay well\". The standard does not tie the two benefits it names to the body: the second is health in general, which takes in mood and attention (the record's own \"In a child's hands\" uses those). A slight narrowing; \"a person\" would be faithful. Wording, code and Limits are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 15,
+        "offset": 69
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-2-1-g",
+      "wording_sha256": "372c6f417c1562a8085cc96ff619436be654abd48634b8e1e1c6fde8c2eb3abc",
+      "text_sha256": "548ee805801d4852757485aff7064f5bd7db1c9e1ca931b9a6edaa73620b91d6",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary now has \"a person\", not a body, as the one who needs the two things, and it keeps both of them and both benefits. Limits holds (no hours, no bedtime; the code's standard is the one on analysing influences). Wording and code equal the PDF (page 15, the only statement under the second standard), complete.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 15,
+        "offset": 69
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-2-1-p",
+      "wording_sha256": "bf04f23f93777bb071a733d383ca1d1955012057401e454cd3c77f6359ebdf34",
+      "text_sha256": "4c06965206593d09a3f73d0d382a51201f72b51ed816d22f35a63c2d5be03cf5",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 239
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-2-1-s",
+      "wording_sha256": "706c828257a01ddcf516989f1a81c04ddd3e4cc534a2cff7425ce55ff3bbe119",
+      "text_sha256": "9134f4fbcd6bbe8ca4fb3c0c2b09c65c1daaf0509e9d1ac5fc42838e2035fc26",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 242
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-3-1-g",
+      "wording_sha256": "4c9774ea82de152e60409d8406bf24451537572ee8f25506fb92839b64613636",
+      "text_sha256": "064bf96d8dd0ea41fc737156411228c47d8d0e982743e05d1e1719fb16b92267",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows what the information is about to the child's own body (\"how their body is growing and changing\"). The standard names the subject in general and says neither whose it is nor that it is bodily: a question about a baby in the family, a pet or a plant, or about growing up in a wider sense, is covered too. Limits does not repeat the fault. Wording and code are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 15,
+        "offset": 90
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-3-1-g",
+      "wording_sha256": "4c9774ea82de152e60409d8406bf24451537572ee8f25506fb92839b64613636",
+      "text_sha256": "909f38b13d23cfb66f3e6ff87b00da4179cd88efdb3f2dc7e3191b2fd2bac1a5",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary now names the subject of the information in general (\"growing and developing\"), with no owner and no word for the body, and keeps all three kinds of adult. Remark, not counted as a fault: the Summary makes the third kind a grown-up \"they trust\", so the child is the one who trusts; the statement and the document's glossary (PDF page 70) do not say who does the trusting. That is the ordinary reading and changes nothing a designer would rely on. Limits holds. Wording and code equal the PDF (page 15, the only statement under the third standard, two lines), complete.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 15,
+        "offset": 90
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-3-1-p",
+      "wording_sha256": "bd4ad0317ca88b9e8aec6b2fd626b2d66f89070744dbb8b42e7f113f1517b0a6",
+      "text_sha256": "a7cb4801ae02dbb9cade0c0764b2ebabfdd7c293c78d06e8106446c64eba555a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 256
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-3-1-s",
+      "wording_sha256": "a39a31990113c68581e25772edd1fd64daf844ba7239f9f7cfa8818911d226ce",
+      "text_sha256": "ffd465cdf764327c54f3af19329f74cd9f79c0adccf3fd4dbbe485a590e69c7a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 264
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-3-2-p",
+      "wording_sha256": "46f03d7f125dd4aa27315fa236eca176d9e4dde8235ba6f6d28a20960eed832d",
+      "text_sha256": "bc3e26fa12cf85daa861f3d6e3a87c79b4383e3b96b914e8ac0910918263bf5f",
+      "verdict": "confirmed",
+      "note": "Near-copy check: of the lane's Summaries this one stays closest to the official sentence (about three quarters of its words kept, the same clause order, two pairs turned round). About half the words stand in the official order, so it is not flagged; the terms it shares are ones a faithful summary has to keep.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 271
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-4-1-p",
+      "wording_sha256": "d44d62701b3153ce82d2a1ce309099c933cf1b5062263369acffdd0e120d347d",
+      "text_sha256": "df1dd79c4ba00f2b17ba733c9e975501ec30b0480e56808dd7481bf404bd4ab9",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds a condition: \"when something is wrong with their health\" makes the problem the child's own. The standard does not say whose problem it is, so asking for help for someone else is covered too (the same fault as was found in the kindergarten record K.4.1.P). The Summary also reduces the standard's unnamed skills, in the plural, to asking \"clearly\"; the Limits note itself says no particular skills are named. Limits does not repeat the first fault. Wording and code are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 9
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-4-1-p",
+      "wording_sha256": "d44d62701b3153ce82d2a1ce309099c933cf1b5062263369acffdd0e120d347d",
+      "text_sha256": "4cfb3b0a05f97c6c33ab580ccbb146ad23241334f5d7a4aa81ee02e9c802718c",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved on both points: the Summary no longer says whose problem it is (\"a problem to do with health\", no owner), and it keeps the skills plural and unnamed. Limits agrees (no skills named, nobody named to ask). Not a near copy: the two clauses are in the other order. Wording and code equal the PDF (page 18, first statement, two lines), complete.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 9
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-4-1-s",
+      "wording_sha256": "2f60215cdc2c0dd6af1a200fdf1967a798a68f4928cc2748b0201726d71746c0",
+      "text_sha256": "9002e8d9e037ef0604394b4ac4f10ec84cc10ab667714d53d59e75afc159164c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 286
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-4-2-p",
+      "wording_sha256": "da796d2000592fc7c895e99984900b2a77e586da623de00d4e8a266cfb6e5356",
+      "text_sha256": "ef465ea22ab011d9f13a84640e1fada01dc0b402ed383f2973173dfff476ea29",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the standard's skills to one: \"give a clear message\". The standard asks for skills of communicating, in the plural and unnamed (the Limits note says so itself), which takes in listening, answering questions and getting an adult's attention as well as giving a message; the record's own \"In a child's hands\" has the child answer questions and stay on the line. Wording and code are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-4-2-p",
+      "wording_sha256": "da796d2000592fc7c895e99984900b2a77e586da623de00d4e8a266cfb6e5356",
+      "text_sha256": "e5e692a574977952eec2d16c5cc29bf5ad890be57922cae3713c33087019540d",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary keeps the skills plural and unnamed and no longer reduces them to giving a message. Limits holds; its pointer to 1.1.9.P is right (PDF page 17). Wording and code equal the PDF (page 18, second statement), complete.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-4-2-s",
+      "wording_sha256": "d2d48db547857276e49a43f07a5b029fd3ee33a1f0eeb937a3e6acdad304d9fe",
+      "text_sha256": "0f7d1cfa2379df74111586240cdc29c66fc2b1178b8c7b9beb371ac3a9bfee74",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 292
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-5-1-p",
+      "wording_sha256": "ce422cfb6066d6053e2d065622bcae4cb1a28c4b1a44ef78b1af789ec904f401",
+      "text_sha256": "04ec795585fad2cdfd5afcacd8fec79496f077836803ed1dac1363a8da89d2fd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 39
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-5-1-s",
+      "wording_sha256": "931f09d7f888bca2418da815db063f764ed86e514cfe945a5a1f0ada7d053c84",
+      "text_sha256": "0ead6fef4f4fed7a04562614dc7bf9b1addbd3ea6a2fc080f6854c9f01ad262a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 305
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-5-2-s",
+      "wording_sha256": "bae93dc44ca6ebe5299ea99392a55e5786863407187637bd81bf37b6310d8bba",
+      "text_sha256": "5d0410a9c951da72332b4c4ccaec037cb1beac0d17c649f5421f32db3a566148",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 16,
+        "offset": 318
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-5-3-s",
+      "wording_sha256": "af440b58c6fac939cc4dfd0e973d1d6cd366445957e068b7aa4a06ce841830e0",
+      "text_sha256": "3ec1683a75f41db518ee57227904fba50b010602151ab38ba930b60b2f084cbb",
+      "verdict": "confirmed",
+      "note": "The PDF prints a raised footnote marker after the closing full stop (a control character in its text layer); the record's wording leaves the marker out, so the sentence is equal word for word. The footnote at the foot of page 17 equals the record's accompanying text, apart from the export's bracketed marker at its start.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 5
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-5-4-s",
+      "wording_sha256": "062fc6d64c71285879088f7a7987566f7ba75dc7d7d584e13ecdfe449f370df1",
+      "text_sha256": "e9afd802dfc894c430b42ebbd4eb2fb450311e31a50f3950ef81120f37fee3ca",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 14
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-6-1-p",
+      "wording_sha256": "50972422e03bb2e13d612421fbd1ffd063ce9ccb4e63a8620809dafb6a1d77b8",
+      "text_sha256": "9227608f82c1dfded1951b6e5e6e9688f25ea2d7f78de6bc73e062e25e1b828d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 60
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-7-1-p",
+      "wording_sha256": "ffc351848731e8ef54855cd2e0b9b447bcbf6513722cd463a30396107aa2204f",
+      "text_sha256": "5346ca3b1e36298905eff68e8b00bfed089518a816b9175bd908241953842bbc",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "The third and fourth words of the record are one closed compound word in the adopted PDF (page 18), which prints them with no space between them. The record equals the export's Description cell, so this is a difference between the two official renditions and not an importer fault; whether the record should follow the adopted PDF here is for the importer or the manifest to settle. Every other word, and the start and the end of the sentence, are equal. The script matched with tolerance. The code, the Summary and the Design notes are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 78
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-7-1-p",
+      "wording_sha256": "ffc351848731e8ef54855cd2e0b9b447bcbf6513722cd463a30396107aa2204f",
+      "text_sha256": "5346ca3b1e36298905eff68e8b00bfed089518a816b9175bd908241953842bbc",
+      "verdict": "confirmed",
+      "note": "Round 2. Form only, under the lead's ruling on compounds: the third and fourth words of the record are one closed compound in the adopted PDF (page 18) and two words in the export, which the record follows. Kind of difference: open in the export, closed in the PDF, the same letters. Nothing else differs: every other word is equal, the statement starts and ends where the record does, and the code matches. The script matched with tolerance and I read the page image and the export's cell. The Summary is faithful (both techniques kept); its \"their teeth\" is the idiom, and the record's own activity includes a model of a mouth. Limits holds.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 78
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-7-1-s",
+      "wording_sha256": "caad8b227c9af6dd7bd5a8ba8cb42edd500366798badaae6463b0ad9d2f5495f",
+      "text_sha256": "a93284b5a8c73be9eac5c274c7f5865502a9303971b27abf93b0b3c4b7b8fe33",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 52
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-7-2-p",
+      "wording_sha256": "7333fe03f58c73232e5ce0c3fb6ee691d10ecbba7c46489f2f897d11c002d988",
+      "text_sha256": "8ad3e64808219906ff9c0b40d2cb9cee95348f8dd167470be56951c9b312f25b",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "The last two words inside the bracketed examples (the two before the closing bracket) are one closed compound word in the adopted PDF (page 18), which prints them with no space between them. The record equals the export's Description cell, so this is a difference between the two official renditions and not an importer fault; whether the record should follow the adopted PDF here is for the importer or the manifest to settle. Every other word, and the start and the end of the sentence, are equal. The script matched with tolerance. The code, the Summary and the Design notes are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 87
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-7-2-p",
+      "wording_sha256": "7333fe03f58c73232e5ce0c3fb6ee691d10ecbba7c46489f2f897d11c002d988",
+      "text_sha256": "8ad3e64808219906ff9c0b40d2cb9cee95348f8dd167470be56951c9b312f25b",
+      "verdict": "confirmed",
+      "note": "Round 2. Form only, under the lead's ruling on compounds: the last two words inside the brackets are one closed compound in the adopted PDF (page 18) and two words in the export, which the record follows. Kind of difference: open in the export, closed in the PDF, the same letters. Nothing else differs: every other word and the punctuation are equal, the statement starts and ends where the record does (two lines in the PDF), and the code matches. The script matched with tolerance and I read the page image and the export's cell. The Summary is faithful and keeps both examples as examples. Limits holds; its pointer to 1.1.4.P is right.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 87
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-7-2-s",
+      "wording_sha256": "5b9b9d86f9c393efe1552d1111801497b1420924859896c348fc5337dc55634d",
+      "text_sha256": "ee25b78681ff4d38b5bf92dfdcdb8a287f872bfdae216462cf074caa94cb5210",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 68
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-7-3-p",
+      "wording_sha256": "76c1997aa3eb2a92225395a0565ffb745b22dd920e3bedc28958b694b1108dfb",
+      "text_sha256": "f8331461eb8ebbf3d732b22d4eaef67249716a702e60ce66d5b6519eab2a3ea0",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 104
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-7-3-s",
+      "wording_sha256": "3079756b27b910aa3ebd5909eae5dcb68139cf04b541a99228c517dedd39c7ea",
+      "text_sha256": "12482040b24e0b64d30b02e00ac5e3df22f5774d48b2fd723aa14bbcb34efd33",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 82
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-7-4-p",
+      "wording_sha256": "c4646e87d6ec8355ac0af7a589898e099f2d97a3db8afd2283bad689688830a8",
+      "text_sha256": "f49b617edf8a42a07eb94a5916973a67a42cb815be9b571dd2693a3d15f04a7a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 123
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-8-1-p",
+      "wording_sha256": "1bf4db09fb9ddd8d43825794338ac4e6046f692fbcaac4206122b1773e2fb898",
+      "text_sha256": "b3c7340da1c9e5391be98fdf2b9137d4d1d3fd0b88350ad8edce415ce008f3d5",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 142
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-8-1-s",
+      "wording_sha256": "e10df4418b05218e4c4de441b05c0ac8c828490508c2873aa87d0b5a28f29559",
+      "text_sha256": "241a6b3de10f8d7b376881de1e501528c938376da777a46f9e2e21cedf32e6f8",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 17,
+        "offset": 95
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.practical-life-feelings.objective.1-8-2-p",
+      "wording_sha256": "25687bffd0f296fb4b98deea3e0464aa4ea2cba9c244b2144112e512852f2fa2",
+      "text_sha256": "1afe5d77153910129bb809a06498d1555f02a83e67aa94ee4999a5181a198f98",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 18,
+        "offset": 157
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/practical-life-feelings",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

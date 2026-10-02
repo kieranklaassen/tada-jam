@@ -1,0 +1,445 @@
+{
+  "lane": "us-ca/preschool-tk/reading-language",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-1-0-listening-and-speaking-1-1",
+      "wording_sha256": "ed168ec889b35043635e6ae044970d6514261d1be77bc4cbf4310fa0a4f6a5c7",
+      "text_sha256": "e35d01b84a5a3090d9250a269ae82dd8899876bdcf5a2c6be301cbd8c1bc5bf7",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 13,
+        "offset": 58
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-1-0-listening-and-speaking-1-2",
+      "wording_sha256": "1823e528a7a20e1e90e2f5d5af6f13084e655e6ae871cd19d68bfe6ed14082c0",
+      "text_sha256": "3922074cc5b21cf1a2d83752a3e91e62a30b10713ab0781e55525f8883361860",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 13,
+        "offset": 124
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-1-0-listening-and-speaking-1-3",
+      "wording_sha256": "7e4bb91c16ac53a4e597faf64084cca0ffe7cd99cd03847c6df9522a02a56548",
+      "text_sha256": "a3d8040fdb768344bc7e0161a189fe29a3558e6202d805551d741edabda76655",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 13,
+        "offset": 174
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-1-0-listening-and-speaking-1-4",
+      "wording_sha256": "297157b9ea4ecc65f484b906ea31fdeb890f82336223f5124033519c043ab57f",
+      "text_sha256": "95225992d4f2b1238ad23e4237a8b833a71d740d21e41a60859a4355caf5ec55",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 14,
+        "offset": 36
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-1-0-listening-and-speaking-1-5",
+      "wording_sha256": "72fe075a661f5c9f082e76979aef3fbd6ed432632325939f45a66b21b60abb4b",
+      "text_sha256": "f4d7ec88ae0cb701e78b9ec13cb4ac650bc1c62f2957c5c21dcccfdeba3e6ab2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 14,
+        "offset": 82
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-1-0-listening-and-speaking-1-6",
+      "wording_sha256": "1800687ddf0b05ab6220dacae275a0a9d9cdbca005543bd3bd488dc6f2889705",
+      "text_sha256": "c40950003e88b85d96329da6e33ce4034eaad669cfd55d93bcb805ec572b45ef",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 14,
+        "offset": 125
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-1-0-listening-and-speaking-1-7",
+      "wording_sha256": "2d14d8057df9e13dbb5bf8d110c6bc49aaa4b237939116d63fe567101dae74cc",
+      "text_sha256": "f6d4baf887a51b39a1921d6237f582dd6a3e09574baea74084a870d031d00cf5",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 14,
+        "offset": 169
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-1-0-listening-and-speaking-1-7",
+      "wording_sha256": "2d14d8057df9e13dbb5bf8d110c6bc49aaa4b237939116d63fe567101dae74cc",
+      "text_sha256": "552c70b8082571cc4deb72a439d0f97b0d8b7da528d5875c1a721fe74237506f",
+      "verdict": "confirmed",
+      "note": "Round 2, after a fix of two words (Summary: a verb of expressing where a verb of saying stood; Limits: three kinds of communicating where three kinds of talk stood). Read on the page image of the At-a-Glance (page 14): Foundation 1.7 with its title and no asterisk; the Early cell and the Later cell hold one short sentence each and nothing else. The script's place is this record's own cell. The same two sentences stand in the two boxes of the foundation's page in the canonical file (page 35), above the examples. Both statements have one general verb of sharing and name no mode; the Summary and Limits now name none either. Summary faithful: the three things shared are there at both ages; the later statement differs by one adjective, which the Summary takes as applying to all three, as the statement's grammar allows and the later examples on the canonical page bear out. The opinion is given as the child's own: taken as what sharing an opinion means, not as an added owner. Not a near copy (the three things stand in another order with verbs of the pack's own). Limits holds: no topic, length or number of details is named, adult support is in neither statement, the three kinds are counted rightly, and the single word it quotes is the one the later statement adds.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 14,
+        "offset": 169
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-1-0-listening-and-speaking-1-8",
+      "wording_sha256": "9f2096ce86b78b864a989361006e07bf60912073a68a9d0e3ad288b54c6cbf80",
+      "text_sha256": "92896b2b0a2dad0bf77cc62eee9fe9bc0308890ce8012b14d95e40d42d0bccff",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 15,
+        "offset": 30
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-2-0-foundational-literacy-skills-2-1",
+      "wording_sha256": "1771423815904056a14c0c8928aa7743872eb9830968d488098fd9c7c2b3b415",
+      "text_sha256": "f32336caabed0f4473be6b34765bbb7f8ae18d9420ec9fb2c636bd11b85b9f18",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 15,
+        "offset": 102
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-2-0-foundational-literacy-skills-2-2",
+      "wording_sha256": "332f87f0899697033e27d9d003c26414c555fa8e2376c128eaa6463238f6cfb6",
+      "text_sha256": "03c0d2cf0e11c77fad9801e3c6d32984b3dba29ad45f0ec67f5cbb39df3fd694",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 15,
+        "offset": 160
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-2-0-foundational-literacy-skills-2-2",
+      "wording_sha256": "332f87f0899697033e27d9d003c26414c555fa8e2376c128eaa6463238f6cfb6",
+      "text_sha256": "d58a948601fa78037f67467ccbf3f3df86a8033579e80a847143a6b863116d16",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix added one sentence to Limits about the commentary the domain PDF prints inside the panel under the two age boxes (page 44, printed 43). Read on the page image: the sentence is true to it: languages differ in how long their compound words are; a child whose language lacks short ones may not show the earlier-age skill; and of the three languages the page names, which two have short compounds commonly and which one mostly has longer ones. Nothing is added. It leaves out the page's other point (that languages also differ in how syllables are divided) and its example words. It is the pack's own words: no shared run longer than four words, about half of one short page sentence's words in order. The Summary is unchanged and faithful. It has the child hear the parts, which is the ordinary sense here: the sub-strand's own footnote (domain PDF page 41) defines the skill by spoken language. The At-a-Glance PDF (page 15) marks this title with an asterisk that points to the full document for this commentary. Wording, code and title equal the At-a-Glance PDF (page 15); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 15,
+        "offset": 160
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-2-0-foundational-literacy-skills-2-3",
+      "wording_sha256": "5b79561eed30d2cc3931a9e469686f2ccf6dbc6efe5501309ae01d1cec4dc882",
+      "text_sha256": "627f5cce388d96a258ada8adf9e81b5056275aea90bab975a7dba2a96e9218aa",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 15,
+        "offset": 233
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-2-0-foundational-literacy-skills-2-4",
+      "wording_sha256": "639f9f28d9be02131565f2ffa5400b44cd49462f98311a0a774c464a51cf1201",
+      "text_sha256": "725ddb848ddf3d7f4569bfdc5a31570cedd9f8c772543c5fbd1387c3443e5ac9",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits says: \"For other writing systems only 'some' and 'many' are stated.\" That presents the foundation as reaching writing systems beyond the alphabets it names. The domain PDF (page 50, printed 49) prints a note inside this foundation's panel, under the two age boxes, which limits the foundation to languages written with an alphabet and places languages written in Chinese characters outside it. The record does not hold that note (it stands outside both age statements, and the At-a-Glance replaces it with an asterisk on the title that points to the full document), but the Limits sentence contradicts it. Say \"other alphabets\" instead of \"other writing systems\", or state that the document limits this foundation to languages written with an alphabet. Second, smaller point in the same section: \"What changes with age\" gives the uppercase and lowercase amounts as the general change, while the statements give those amounts only for the alphabets they name and, for the rest, only the two general quantity words. Wording, code and Summary are right: each age is two paragraphs in both renditions and is stored as two labelled paragraphs; every amount and the uppercase/lowercase split in the Summary match the statements.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 16,
+        "offset": 34
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-2-0-foundational-literacy-skills-2-4",
+      "wording_sha256": "639f9f28d9be02131565f2ffa5400b44cd49462f98311a0a774c464a51cf1201",
+      "text_sha256": "2960619b44f430fed24c4bd2a0608431073ef53556c3ac6ecd5731e98b9a8399",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason, in both points. (1) Limits now says \"other alphabets\" and reports the commentary the domain PDF prints inside the panel under the two age boxes (page 50, printed 49). Read on the page image: the sentence is true to it (the foundation is for languages written with an alphabet; the four languages the page gives as examples; the two languages written in characters, which are not an alphabet), adds nothing, and is the pack's own words: reordered, no shared run longer than three words. (2) \"What changes with age\" now gives the general change first and the uppercase and lowercase amounts only for the alphabets the statements name. The Summary is unchanged and every amount in it equals the statements. Each age is two paragraphs in both renditions and is stored as two labelled paragraphs. The At-a-Glance PDF (page 16) marks the title with an asterisk that points to the full document. Wording, code and title equal the At-a-Glance PDF (page 16); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 16,
+        "offset": 34
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-2-0-foundational-literacy-skills-2-5",
+      "wording_sha256": "2dde7602cb9752bd6661ce4b8aa621d1beaa1caef5ef4d4d83ab662d94ff5654",
+      "text_sha256": "d02574bb5221b9eb05bdecb16fe8a633e7f6bade71f6873dcd6cf70907447d13",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Adult support at the later age. The official Later statement has two sentences (two paragraphs in both renditions): adult support is named in the first, general one; the second, about the alphabets it names, does not name it. The Summary opens its sentence about those alphabets with \"this means\", which makes it a restatement of the sentence before and so carries \"with adult support\" over to the about-half amount, a link the official text does not make. The record's own Limits states the distinction correctly (\"Adult support is stated in the general sentence and is not repeated in the sentence about those alphabets\"). Reword the Summary's last sentence so it stands by itself, as Limits does. Everything else matches the statements: the earlier age, letters or characters, identifying or producing, the unspecific quantity word in the general sentence, about half for the named alphabets, the example language. Form only: the two Later paragraphs are stored run on in one labelled paragraph; the content is equal.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 16,
+        "offset": 151
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-2-0-foundational-literacy-skills-2-5",
+      "wording_sha256": "2dde7602cb9752bd6661ce4b8aa621d1beaa1caef5ef4d4d83ab662d94ff5654",
+      "text_sha256": "f39907722afca1b920746b39dd06ce63a026b56339eba49d9a5230077d52e040",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Summary's last sentence now stands by itself as a separate sentence about the alphabets it names, and says for itself that the sounds are correctly picked out or said. Adult support is no longer carried over to the about-half amount; it stays with the general sentence, as in the statement and as Limits says. The earlier age, letters or characters, identifying or producing, the unspecific quantity word and about half are all kept. Near copy looked at and not found: the sentence about the general later statement keeps a little under half of that statement's words in order, with its verbs and its order of conditions changed. Form only, as in round 1: the Later box prints two paragraphs in both renditions (At-a-Glance page 16; domain PDF page 52) and the record stores them run on in one labelled paragraph; the content is equal. Nothing is printed under the boxes on the domain page. Wording, code and title equal the At-a-Glance PDF.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 16,
+        "offset": 151
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-2-0-foundational-literacy-skills-2-6",
+      "wording_sha256": "3684f9299f6a0ea5ee92c65482c4232e60369010c88af8c7d06925490dc8e276",
+      "text_sha256": "02b277f2d75e70e40cafe648b96c88c43dd460efd1cb828409f74250c979e0c9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 16,
+        "offset": 227
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-2-0-foundational-literacy-skills-2-7",
+      "wording_sha256": "8ad529a1358086ae570201eb6e60c1ac5dba020442352c21f480debc2c5a1d87",
+      "text_sha256": "836d2f3405ee81a0fdee7e53feae5f977d4a49a4393b337aa1b559c7035b4878",
+      "verdict": "confirmed",
+      "note": "Correction verified on the domain PDF page 58 (printed 57): the Later statement breaks its line at the hyphen of the compound, and the Early statement prints the same compound with its hyphen on one line. The At-a-Glance breaks the same word at a line end in its Later box, which is why the script matched with tolerance.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 17,
+        "offset": 30
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-3-0-reading-3-1",
+      "wording_sha256": "919a294cdbfb5ff47d3e9d692a0e312fb027dbfa49b7a29c4ea8948917c1a9c8",
+      "text_sha256": "4019ac84e77286bd2bdf96fbb7b450b32ae2f8b7f112ce4f106fdcebd3a5fc8f",
+      "verdict": "confirmed",
+      "note": "Correction verified on the domain PDF page 60 (printed 59): the Early statement breaks its line at the hyphen of the compound; the Later statement and the At-a-Glance print it with the hyphen on one line.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 17,
+        "offset": 114
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-3-0-reading-3-1",
+      "wording_sha256": "919a294cdbfb5ff47d3e9d692a0e312fb027dbfa49b7a29c4ea8948917c1a9c8",
+      "text_sha256": "3c09cff0d95ba087618c952e07139ede7388b26ec1d091c1451c9babb9ffe6a1",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix added one sentence to Limits about the commentary the domain PDF prints inside the panel under the two age boxes (page 60, printed 59). Read on the page image: the page lists seven kinds of activity; the sentence gives all seven, in reverse order and in the pack's own words (no shared run longer than two words), and adds none. Two remarks, not faults. One of the seven is given as \"handling books\", where the page has a wider word for what a child does with books; it should not be read as limited to holding a book and turning its pages. And \"What changes with age\" gives the later statement's growing independence as less adult help; the statement does not say whose help. The Summary is unchanged and faithful: interest and taking part at both ages, for longer and more independently at the later. Correction verified on the same page image: the Early statement breaks its line at the hyphen of the compound, the Later statement prints the compound on one line, and the At-a-Glance PDF (page 17) prints it with its hyphen within a line in both. A box above the foundation on the domain page says in which language a multilingual learner shows this interest; it belongs to the sub-strand, not to this foundation, and is rightly not in the record. Wording, code and title equal the At-a-Glance PDF (page 17); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 17,
+        "offset": 114
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/preschool-tk/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-3-0-reading-3-2",
+      "wording_sha256": "ad75c39a0ecd79cf18205d4660de7959adc8bee7776d45d0c37ee815894176b1",
+      "text_sha256": "0f12c487871f9e61bc061cfc64c07d491b14c48ca6fc2937ccfae8e3d3727fe9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 17,
+        "offset": 172
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-3-0-reading-3-3",
+      "wording_sha256": "3345eab15fb57a653963366bca37f1ca59bafffd355084f746ea9853fb274c14",
+      "text_sha256": "8ab10b7772d7f0294394b7dc83adff91ce2252537dbaeb59e25e84c81db7c75e",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 18,
+        "offset": 30
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-4-0-writing-4-1",
+      "wording_sha256": "1e30f62eefd1541492c701d19289015c5072a3d322b8eab572cd7f605ccb36df",
+      "text_sha256": "e707278938e0d0dd84aee086e0565ef0ff3ffb8dadb69a1d9b9c1b2c4a83af45",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 18,
+        "offset": 95
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-4-0-writing-4-2",
+      "wording_sha256": "bbb3dafe7f650a8348d012efc7f3c27115c283e0ae92d37fcf60616e17c55e65",
+      "text_sha256": "ec7e4b86013d7e5aadfc88f69596c2a7f7829076b3a10b0713b32365265723ea",
+      "verdict": "confirmed",
+      "note": "Both renditions print the earlier-age placeholder in parentheses inside the Early box, as the record has it; the Later box holds one sentence. The domain PDF (page 70, printed 69) prints two paragraphs inside the foundation's panel under the two age boxes: that the foundation applies only to languages written with an alphabet, and why nothing is expected at the earlier age. They are outside both age statements and are rightly not in the record; the Summary and notes agree with them.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 18,
+        "offset": 145
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-4-0-writing-4-2",
+      "wording_sha256": "bbb3dafe7f650a8348d012efc7f3c27115c283e0ae92d37fcf60616e17c55e65",
+      "text_sha256": "47e18c7602f9b3d974205a3012316f0768100283f2ddd0e9a225672ce164d5e6",
+      "verdict": "confirmed",
+      "note": "Round 2. Round 1 confirmed this record; the fix added one sentence to Limits about the two commentary paragraphs the domain PDF prints inside the panel under the two age boxes (page 70, printed 69). Read on the page image: the sentence is true to both. First, the foundation is for languages written with an alphabet, and the two languages written in characters are outside it. Second, nothing is expected at the earlier age because the skill rests on other skills that younger children are still building; the three skills the page names are given in plain words of the pack's own, and each matches the page's term. Nothing is added; the page's list of example languages is left out. No shared run longer than three words. The Summary is unchanged and faithful: no foundation at the earlier age; at the later age a small number of recognisable letters, with adult support, meant to stand for their sounds. Both renditions print the earlier-age placeholder in parentheses inside the Early box, as the record has it. The At-a-Glance PDF (page 18) marks the title with an asterisk that points to the full document. Wording, code and title equal the At-a-Glance PDF (page 18); each age box holds exactly the stored statement.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 18,
+        "offset": 145
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-4-0-writing-4-3",
+      "wording_sha256": "7e2f09945d1e49acd71821483457b6ae731f6fa26a066514d05b5db8fdfaf072",
+      "text_sha256": "4b70fd4fefffb4b4892fe26a9644fb2cf4b0fb3a23fcfc8eac99a0b81a831fae",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 18,
+        "offset": 187
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-4-0-writing-4-4",
+      "wording_sha256": "6a6b2d188eedc3f921e4281a2d91afad55b242bad938e6b8095fca742bf5fb28",
+      "text_sha256": "30c2bb9e92aa21975b79896e18bab86482f253386ef05bac72fba358696e098f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 19,
+        "offset": 33
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-4-0-writing-4-5",
+      "wording_sha256": "0137776717f171955ada30bf9874e21089575b03094c4bb52cba5862d95fa72f",
+      "text_sha256": "74ccf31e5b3d8a4f1371d5501cecbf528926ee0bbeebbffb7713bfa1a826417e",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added detail at the earlier age: the Summary says the child \"puts marks on paper\". The official earlier statement names no surface or medium, and the examples printed under this foundation in the domain PDF (page 76, printed 75) include marks made on something other than paper. Drop \"on paper\". The later-age sentence and the Design notes are faithful; Limits already says \"any marks the child means as their name\".",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 19,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-4-0-writing-4-5",
+      "wording_sha256": "0137776717f171955ada30bf9874e21089575b03094c4bb52cba5862d95fa72f",
+      "text_sha256": "e495d01b2e6ebab6c3961d53293e057f1304262a7d345a9e58e0894581c20bcd",
+      "verdict": "confirmed",
+      "note": "Round 2. The fix resolved the first verdict's reason: the Summary no longer names a surface; it says only that the child makes marks that stand for their name. The later age keeps the statement's qualifier (almost, not fully, correct). Limits is right that the statement mentions neither first nor full name, letter case, adult support nor a model. The two statements are six and five words long, so the Summary follows their content; its words are its own. Wording, code and title equal the At-a-Glance PDF (page 19; domain PDF page 76); each age box holds exactly the stored statement, and nothing is printed under the boxes on the domain page.",
+      "rendition": "us-ca-ptklf-2024-at-a-glance",
+      "place": {
+        "page": 19,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "checker": "us-ca/preschool-tk/reading-language round 2",
+      "round": 2
+    }
+  ],
+  "unrecorded": []
+}

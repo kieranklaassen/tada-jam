@@ -1,0 +1,1353 @@
+{
+  "lane": "us-ca/grade-6/reading-language",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.l-6-1",
+      "wording_sha256": "95fe1c33736b42d85038646fd185c5dfc49f48f5ea97af2becf18402d3a328a3",
+      "text_sha256": "279d6f4a9edfd12317d5e5540a8c20ea9e291d98491edb3c2a8c2889dcfd7360",
+      "verdict": "confirmed",
+      "note": "Stem and parts a to e, in order, nothing else in the cell. California addition, as the PDF boldface shows it: in part b only, the second to fourth words of the part and its last word with the closing mark; the stem and the other parts are plain. The flag (true) is right and Limits places the addition in the right part. Asterisks are printed on parts c, d and e. The sentence that explains them (the record's accompanying text) stands word for word in the introduction to the Language standards on this same page; the introduction goes on with one more sentence, a pointer to the table of progressive skills (PDF page 82, also printed on page 46), which lists these three parts with their full codes. Limits reflects the sentence and names the right parts. A phrase of part b is in italics, which is form.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 77,
+        "offset": 127
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.l-6-2",
+      "wording_sha256": "e09302eda979508bd787e77ddd453ab4b81c4e1475934c801261bfa79feec79c",
+      "text_sha256": "b1f606769e31bf2a3b710dc2788d8406ef79a153cbfebab3f8e0f44fbf1d7212",
+      "verdict": "confirmed",
+      "note": "Stem and parts a and b, in order; no boldface, as the flag says. The asterisk on part a is printed in the cell; the sentence that explains it stands word for word in the introduction on this page, and Limits reflects it and names the right part. In part a the PDF breaks the slash pair over a line after the slash; the record has the pair closed, which is right.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 77,
+        "offset": 218
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.l-6-3",
+      "wording_sha256": "d76e59a8d92d03f26a2c6f831b1781657976ed4d03c8ce633467a7ba5ba469f0",
+      "text_sha256": "234a10dba144060261265be4ea246e372b5dfa73d8a03c794434d938f922d9d0",
+      "verdict": "confirmed",
+      "note": "Stem and parts a and b, in order; no boldface. Asterisks are printed on both parts, as Limits says; the explaining sentence stands in the introduction to the Language standards on page 77. In part a the PDF breaks the slash pair over a line after the slash; the record has the pair closed, which is right. For a designer, not a fault of the record: the table of progressive skills (PDF page 82, also page 46) gives part a one more mark, whose note says the skill is subsumed by a part of a Language standard for grades 11 and 12; that note is not in the grade 6 cell. The Summary says the style and tone stay the same \"throughout a piece\"; the statement names no unit, and this is read as the ordinary sense of consistency, not as a limit.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 78,
+        "offset": 14
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.l-6-3",
+      "wording_sha256": "d76e59a8d92d03f26a2c6f831b1781657976ed4d03c8ce633467a7ba5ba469f0",
+      "text_sha256": "55f2571d75b4dc16c93c496e69b39c660985cc46bdb9eb83ed7bb67fadfff717",
+      "verdict": "confirmed",
+      "note": "Round 2. Read on the page image: number 3 in the grade 6 column of the Language table, page 78: the opening line and parts a and b in order, nothing else in the cell, no boldface. Both parts carry an asterisk; the sentence that explains it stands in the introduction above the table on page 77 (Limits calls it a footnote; its content is given rightly). In part a the PDF breaks the slash pair over a line after the slash; the record has the pair closed, which is right. The added Limits sentence was checked against the table of progressive language skills (PDF page 82, printed again on page 46): the row for part a carries a mark of three asterisks, and the note to that mark under the table says the skill is subsumed by part a of Language standard 3 for grades 11 and 12. The sentence says this in the pack's own words and adds nothing; the row for part b has no such mark. The Summary says tone and style stay the same \"throughout a piece\"; the statement names no unit, and this is read as what consistency ordinarily means, not as a limit. Not a near copy.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 78,
+        "offset": 14
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.l-6-4",
+      "wording_sha256": "692c8be3383960bd4b50ee0e102acd6c43d143350702b245d6d274e9851238f1",
+      "text_sha256": "2c2f52b04dba942ca1133fb1476f6f14b93e75db1a45a7c0c17428cfe6562235",
+      "verdict": "confirmed",
+      "note": "Stem and parts a to d, in order. No boldface in the grade 6 cell (the grade 7 and grade 8 cells carry a California addition in part c; this one does not), so the flag (false) is right. Phrases in italics are form.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 78,
+        "offset": 46
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.l-6-5",
+      "wording_sha256": "9b671639108eea636ec04f72b1935b8b0329a7900f6f058e0d10c53f56bf91cc",
+      "text_sha256": "9d104f95104b152bf8472762442d251fbb361dae33b88eb8d033b0e58cefb333",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "An example list is made the complete set. Part b of the statement gives three kinds of relationship between words in a parenthesis that opens with the mark for examples. The Summary's third sentence gives the same three in a parenthesis with nothing that says they are examples, so it reads as the full list of relationships meant; every other example in this Summary and in the lane's other Summaries is marked (\"for example\", \"such as\", \"as with\"). The same sentence also speaks of \"two words\" and \"both words\" where the statement gives no number of words. The record's own Limits has it right (it calls the three \"examples\"). Fix: mark the three relationships as examples in the Summary and drop the number two. Not a near copy. Everything else holds: wording and code equal the PDF (stem and parts a to c, nothing else in the cell, no boldface, the flag false is right; example words in italics are form); the rest of the Summary and the Design notes are faithful.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 79,
+        "offset": 12
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.l-6-5",
+      "wording_sha256": "9b671639108eea636ec04f72b1935b8b0329a7900f6f058e0d10c53f56bf91cc",
+      "text_sha256": "d24f7e483e819be08973aef24888735dfacf6c8abc7ccd27bfa76a31352503e9",
+      "verdict": "confirmed",
+      "note": "Round 2. Read on the page image: number 5 in the grade 6 column of the Language table, page 79: the opening line and parts a to c in order, nothing else in the cell, no boldface; the example words in italics are form. The round 1 fault is gone: the Summary now marks the three word relationships as examples and puts no number on the words. Every example in the Summary is marked as one (the figure of speech, the three relationships, the five words). \"Explains what a figure of speech means\" stands for the statement's verb of interpreting, whose plain sense that is. Not a near copy. Limits gives the one figure of speech and the three relationships as examples, as the cell does. For a designer, not a fault: Limits says figures of speech are \"read where they occur in a text\"; the statement asks only that they be taken where they occur and names no mode or medium, so a figure of speech that is heard is not excluded by it.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 79,
+        "offset": 12
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.l-6-6",
+      "wording_sha256": "0658ef1f9c71af712598bebd80ab731bcf9edd1a954714c5b6b7933f0ca576a1",
+      "text_sha256": "0c5b900d946830f2cea8493266aadacd66095a7672643cd693c40b763c266548",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "A general term is narrowed. The statement's second half names two general things a word or phrase can be important to, with no object and no mode: taking language in, and putting it out. The Summary gives the first as \"understanding a text\", which limits it to something read (in the Language strand it covers listening as well), and the second as \"saying something well\", which can be read as speech only and adds \"well\". Fix: name the two things without an object, for example understanding and expressing oneself. The first half of the Summary (both kinds of vocabulary, suited to the grade, learned and used accurately) is faithful, and it is not a near copy. Everything else holds: wording and code equal the PDF; one sentence, nothing else in the cell, no boldface. The same words stand in the grade 7 and grade 8 columns of the row (offsets 173 and 260); the script's place is the grade 6 cell.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 79,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.l-6-6",
+      "wording_sha256": "0658ef1f9c71af712598bebd80ab731bcf9edd1a954714c5b6b7933f0ca576a1",
+      "text_sha256": "1748ab8bffe2113bac87c10bcdb1251b68c3cb3363e4f3dcb2caf6f9314f16c6",
+      "verdict": "confirmed",
+      "note": "Round 2. Read on the page image: number 6 in the grade 6 column of the Language table, page 79: one sentence, nothing else in the cell, no boldface. The same words stand in the grade 7 and grade 8 cells of the row; the script's place is the grade 6 cell. The round 1 fault is gone: the Summary now names the two things a word or phrase can matter for in general terms, with no object and no mode added. Both kinds of vocabulary, the fit to the grade and accurate use are kept. Not a near copy. Design notes are in order.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 79,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-1",
+      "wording_sha256": "dab1e214dc04bc66ea3bfefb6e195d474bb7a608c9cd9f98a92c6e7feaf842a5",
+      "text_sha256": "56737987afe88373e0ea0a9d3a3cdab207fd6e2a35c28c2205726f2e0c308907",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 1 in the Grades 6–8 column of the history/social studies reading table, page 87; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The two cells to its right begin with the same words and go on (offsets 222 and 379); the script's place is the Grades 6–8 cell. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 87,
+        "offset": 82
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-10",
+      "wording_sha256": "e3ccdfd47f7d9e54d3b1660144dd7eeadbcb2ab7f2a7933e36214fe3d9e454f0",
+      "text_sha256": "83cd2691ba9548bc296b33d3302b62c351b4fefdf4c72170e032c1b3ca9ee625",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 10 in the Grades 6–8 column of the history/social studies reading table, page 88; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The PDF writes the band inside the sentence with an en dash and the record with a hyphen: form. The Summary and Limits set the target at the end of grade 8 and place a grade 6 child at the start of the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 88,
+        "offset": 73
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-2",
+      "wording_sha256": "2872a144ad76c7a34ce71f9362874a5d7362203ef0bfd6c19e26a03fe828cfea",
+      "text_sha256": "4e34fe72bb452a66cf12c9c43ecdfed116f03d255ba83bf3e7043ff3a382e338",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 2 in the Grades 6–8 column of the history/social studies reading table, page 87; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 87,
+        "offset": 95
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-3",
+      "wording_sha256": "d709bea51237543400cc4607d4ae160e9474ba00f685d5055201ffade3bc8a35",
+      "text_sha256": "22e645738388b9533e7db19801e1f5078bdf3f7543f81f1576d0ecd09e267c72",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 3 in the Grades 6–8 column of the history/social studies reading table, page 87; one sentence with its two examples in brackets, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The Summary and Limits keep the two as examples. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 87,
+        "offset": 121
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-4",
+      "wording_sha256": "7d8033f8704b8f99a89c8dfc114fb3a7a5b87aad4e20ce4cba13f8135e126910",
+      "text_sha256": "30802f0360f93f158128668743170cb2fb32e5f2875bdf876b4bcebec87b696d",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 4 in the Grades 6–8 column of the history/social studies reading table, page 87; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 87,
+        "offset": 151
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-5",
+      "wording_sha256": "3256f3808fe8c1d8faf686bd3ef519b63bfb18209724a72ac13f627d0a98494f",
+      "text_sha256": "ea5a51e70e1ab5eb04f290eeb6f49a2fbaeafa4392ef5d4f0c24966229aab7c1",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 5 in the Grades 6–8 column of the history/social studies reading table, page 87; one sentence with three examples in brackets, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits says the three are examples and other structures are not excluded. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 87,
+        "offset": 176
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-6",
+      "wording_sha256": "04b7c197057b89ad79e954033760a544506f98a12b4dc87ba2d2c34e1a04b0b2",
+      "text_sha256": "6d0d54ad8044d95676e032c1b298404a4d1433aec7fa7fd373b5419cb6fd38d5",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 6 in the Grades 6–8 column of the history/social studies reading table, page 87; one sentence with two examples in brackets, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 87,
+        "offset": 188
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-7",
+      "wording_sha256": "05bd041f93c874f12052a558ba8563ab028ffc5abcd604c2c22494af392974ff",
+      "text_sha256": "3ea7735100b2d2a106d985df6461bcbfffd7dc07d94fa513b8b1b141fb4d9b66",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 7 in the Grades 6–8 column of the history/social studies reading table, page 88; one sentence with five examples in brackets, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The statement joins the two kinds of text with the word for both; the Summary joins them with the word for either. No scope changes. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 88,
+        "offset": 27
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-7",
+      "wording_sha256": "05bd041f93c874f12052a558ba8563ab028ffc5abcd604c2c22494af392974ff",
+      "text_sha256": "d383dc1d7e7cd222899cd014cf2e00e7326809b76b66dcc7759a5da043f33242",
+      "verdict": "confirmed",
+      "note": "Round 2. Read on the page image: number 7 in the column for grades 6–8 of the history/social studies reading table, page 88: one sentence with five examples in brackets, nothing else in the cell, no boldface. The PDF prints only the number; the strand comes from the table title and the band from the column header, and they agree with the code. The Summary now joins the two kinds of text as the statement joins them; it is faithful and not a near copy. Limits still says the texts \"may be print or digital\". Judged not a fault that unconfirms the record: the sentence says that neither kind is excluded, which is true of the statement, and it denies nothing the statement says. It is looser than the statement, which names the two kinds together, and it now differs from the record's own Summary; the joining word would serve Limits better. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 88,
+        "offset": 27
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-7",
+      "wording_sha256": "05bd041f93c874f12052a558ba8563ab028ffc5abcd604c2c22494af392974ff",
+      "text_sha256": "3927279d1d53f8e2d8b72c42e2f721739e8320082241bc4405ec40399d0b7baf",
+      "verdict": "confirmed",
+      "note": "Round 3, after a fix of one sentence in Limits. Read on the page image: number 7 in the column for grades 6–8 of the history/social studies reading table, page 88: one sentence with five examples in brackets, nothing else in the cell, no boldface. The PDF prints only the number; the strand comes from the table title and the band from the column header, and they agree with the code. Limits now says the texts are print and digital, joined as the statement joins them and as the record's own Summary has them; the looser wording with the word for either, which round 2 remarked on, is gone. Read whole: the Summary is faithful (what is shown visually is put together with the other information in texts of both kinds; the five kinds of visual kept as examples) and not a near copy (two sentences, the examples in reverse order). Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, counts the five examples rightly and says rightly that no number of sources is set. The worked example (a map read with a paragraph) stays inside the statement.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 88,
+        "offset": 27
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-8",
+      "wording_sha256": "401e06d677d173f2499d5f68e66a63b15d9609a44fff4c4da39be000e4a1ca43",
+      "text_sha256": "d9ef86c8c63439de576becf91b9b8c99a54718d2e3147df62d6af3dc9deaa50e",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 8 in the Grades 6–8 column of the history/social studies reading table, page 88; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 88,
+        "offset": 48
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rh-6-8-9",
+      "wording_sha256": "37b21e995c02499546e9a256844bd842b7042750f400650096b9288ad04630ff",
+      "text_sha256": "c87616fe939d1de69063b450f94c55bb0e50753cdbfcbccbf5ce3853375aa657",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 9 in the Grades 6–8 column of the history/social studies reading table, page 88; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 88,
+        "offset": 59
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.ri-6-1",
+      "wording_sha256": "75870a64cb41cf20bb7646a8a642f74787151c64278a7524ff8696f020fc9251",
+      "text_sha256": "8d281f682d53f828fd1217fbf9fd7756ed8594a8a9bae0df32370307ba8a882d",
+      "verdict": "confirmed",
+      "note": "The script's place (page 53, offset 83) is number 1 of the literature table, which has the same wording; this record's own cell is number 1 in the grade 6 column of the informational text table on page 57 (offset 17), read there on the page image: one sentence, nothing else in the cell, no boldface. The statement does not say who draws the inferences; the Summary reads it as the student, the natural reading.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 57,
+        "offset": 17
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.ri-6-10",
+      "wording_sha256": "f65e6eb526524aa6988978ddc81d8ae2a66266efa8d505be9b9added7167143a",
+      "text_sha256": "3a0dd95a519919be5932fc87777a3f217cbe7854aecf07c9a36fef7034bf11e6",
+      "verdict": "confirmed",
+      "note": "Own cell, number 10 in the grade 6 column; the grade 7 cell beside it holds the same words (offset 235).",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 58,
+        "offset": 104
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.ri-6-2",
+      "wording_sha256": "b9dfdab532a6fcde5d64b7497ad898e741778fbf335bd4647840905709096aca",
+      "text_sha256": "bfc78dc79d8c774eed4451a31d7b48ab9f931f5b80330dcf76a0f59c842c94f5",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 57,
+        "offset": 38
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.ri-6-2",
+      "wording_sha256": "b9dfdab532a6fcde5d64b7497ad898e741778fbf335bd4647840905709096aca",
+      "text_sha256": "be1a565422ad89c6a014bc400175061cded93493795093d2cef094b0b88b186c",
+      "verdict": "confirmed",
+      "note": "Round 2, after a small fix that brought the Summary's first sentence into line with that of RL.6.2. Wording and code hold: number 2 in the grade 6 column of the informational text table, page 57, read on the page image: one sentence in two halves, nothing else in the cell, no boldface; the script's place is this record's own cell. The Summary's first sentence now puts both things under one verb of working out, as the statement does: a central idea, and the way particular details carry it. Before the fix the second thing was a showing of which details carry it, which is another act than the statement's. 'One central idea' gives the statement's singular; Limits says the same and is right (the next grade's cell in the same row asks for more than one). Second sentence faithful (the student's own opinions and judgments left out of the summary). Not a near copy: the halves come in the statement's order and its prescribed terms recur, but the build of the sentences and every verb and connective are the pack's. Design notes in order: no length is set for text or summary, as Limits says; the pointer to RL.6.2 is right (that statement names a theme beside the central idea); the worked example has the student write the main point and highlight details, which fits working out.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 57,
+        "offset": 38
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.ri-6-3",
+      "wording_sha256": "30c53899d9f918e989bfec03df94683813391260c9e32752498434a8a0e8174c",
+      "text_sha256": "582ca0afa6b93c25a37d6fadde8af834bfbdce30309fe70ef82b04fcc749963a",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 57,
+        "offset": 66
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.ri-6-4",
+      "wording_sha256": "d661d523e5b3d6b3dacc56b7980ca25dc174a9ef7698ec34bf47e8bd5ee5854f",
+      "text_sha256": "3d61819c033a5de15088574fb01053fc8532353b88b3656d7345f11dfdc0320e",
+      "verdict": "confirmed",
+      "note": "California addition, as the PDF boldface shows it: the whole parenthetical cross-reference that follows the first sentence, and the closing mark; the first sentence is plain. The flag (true) is right. Limits says only that the record does not show which words are California's, which is true of the stored wording.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 57,
+        "offset": 91
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.ri-6-5",
+      "wording_sha256": "1a7413363c37c7d668f5abf3467ee40951d6e1d85af038a9a9d9e31dae4ea2c5",
+      "text_sha256": "df01aae40f53a30b05b4ddc37875382d00ddec3dea2bd434889a323a8cbdb336",
+      "verdict": "confirmed",
+      "note": "Opening sentence and one lettered part. California addition, as the PDF boldface shows it: the whole of part a with its closing mark; the opening sentence is plain. The flag (true) is right and Limits places the addition in part a.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 57,
+        "offset": 123
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.ri-6-6",
+      "wording_sha256": "55576f9d9dcd2e90c39ef5566256bb3b3b62e04389619ac5380d77ecb95c1a3f",
+      "text_sha256": "6a21bdbfc695c8d7f494c5d3d9521b1a3fe1e643360df0b0ec6157f9686cda0f",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 57,
+        "offset": 165
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.ri-6-7",
+      "wording_sha256": "41a1f15e5d5eb638a75c27de73c36536b465a3668b4b47e737068d7cb22a65d9",
+      "text_sha256": "f783ed50e41363b4bcb9c5fd60d3cc1020812152d16d2e7c5ebfc483c0c8626a",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 58,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.ri-6-8",
+      "wording_sha256": "fb6294cd3c5a9bc02f8d7bce16bb6d968aebf980afe65256862912f698ddd513",
+      "text_sha256": "ff3205274be5d5f6b5700fdc75139f4dc6467e6bf35a96867996767de49e146f",
+      "verdict": "confirmed",
+      "note": "Own cell, number 8 in the grade 6 column on page 58. Part b of writing standard 9 (page 66) quotes this standard word for word; the script's place is the statement itself, not the quotation.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 58,
+        "offset": 52
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.ri-6-9",
+      "wording_sha256": "e82df4b6de18c1055fc6fb3d44bdc0edf28fbb22298b94a95a890eada1feee4f",
+      "text_sha256": "a12ea00a147794a315c466ccc323c6083b8a001a5681d86f063c128a154496be",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 58,
+        "offset": 78
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rl-6-1",
+      "wording_sha256": "75870a64cb41cf20bb7646a8a642f74787151c64278a7524ff8696f020fc9251",
+      "text_sha256": "c198be2dd1711c26cf7ee40d9d7660251aea9373ceb141777d50d56206bbca69",
+      "verdict": "confirmed",
+      "note": "The same wording stands as number 1 of the informational text table on page 57; the script's place is this record's own cell, number 1 in the grade 6 column of the literature table on page 53. The statement does not say who draws the inferences; the Summary reads it as the student, the natural reading.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 53,
+        "offset": 83
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rl-6-10",
+      "wording_sha256": "20e8ac5c818f45afe669b1134d270b06939c1c037ac9b15022b02e418d96a07a",
+      "text_sha256": "60c69a5ad726bc14b3ebc8f2d2f730d6024c3a42313289cbf40ae14f246f20ee",
+      "verdict": "confirmed",
+      "note": "The script's place (page 54, offset 225) is the grade 7 cell, which holds the same words; this record's own cell is number 10 in the grade 6 column on page 54 (offset 105), read there on the page image: one sentence, nothing else in the cell, no boldface. In the grade 6 cell the PDF breaks an ordinary word (the 23rd of the statement) at a line end with a printed hyphen; the record holds the word whole: form. That break is why the script's exact pass found the grade 7 cell first.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 54,
+        "offset": 105
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rl-6-2",
+      "wording_sha256": "4c12b3fab1e4039bc442108d4b61a857bce849e435184bb9de04243414e8e99e",
+      "text_sha256": "44166d068214e1a94c1da8aeca5bbabf6b62a34d8b401514ce7f6b62d0b9f74c",
+      "verdict": "confirmed",
+      "note": "Tolerant match looked at on the page: the PDF breaks an ordinary word (the 24th of the statement) at a line end with a printed hyphen; the record holds the word whole: form. Near-copy check: the Summary follows the order of the two halves and keeps about two thirds of the statement's content words in order; those are the terms the statement prescribes, and every verb and connective is the pack's own. Judged not a near copy, narrowly.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 53,
+        "offset": 104
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rl-6-2",
+      "wording_sha256": "4c12b3fab1e4039bc442108d4b61a857bce849e435184bb9de04243414e8e99e",
+      "text_sha256": "c10080f8e40c5efd7e1122425bc6a5eaa0236dbd6ef699370857bec75fd0bf53",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Round 2. Wording and code hold: number 2 in the grade 6 column of the literature table, page 53, read on the page image: one sentence in two halves, nothing else in the cell, no boldface; the PDF breaks one ordinary word of the second half at a line end with a printed hyphen and the record holds it whole (form; the script's match is tolerant for that reason). The Summary's first sentence is not faithful: a verb is changed. The statement has one verb of working out, and it governs two things: the theme or central idea itself, and the way the details carry it. The Summary makes the second an explanation (\"explains how\"), which is another act: a student who has worked out which details carry the theme, and how, has met the statement without explaining anything, and the same table uses the verb of explaining as a demand of its own (number 6 in the same column). For a designer the difference is real: working out can be shown by choosing or marking, as the record's own \"In a child's hands\" has it; explaining cannot. The verb stood in the Summary before the recast too. The recast adds to it by moving the finding of the theme into a relative clause in the past (\"that the student has identified\"), so that the only thing the sentence asks for outright is the explanation. Fix: let the student work out both: the theme or the central idea, and how the details carry it. The rest holds: either of the two will do, as Limits says; the second sentence (a summary kept free of the student's own opinions and judgments) is faithful; the content is otherwise complete, nothing else is added, and the recast is not a near copy. Design notes are in order; RL.6.10, cited in Limits, names the three kinds of literature as said.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 53,
+        "offset": 104
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rl-6-2",
+      "wording_sha256": "4c12b3fab1e4039bc442108d4b61a857bce849e435184bb9de04243414e8e99e",
+      "text_sha256": "6fb4beba5d7c5949f052b0cb6f369770d4285c3ee52da9685b985c7aac896d28",
+      "verdict": "confirmed",
+      "note": "Round 3, after the fix of the fault round 2 found. Wording and code hold: number 2 in the grade 6 column of the literature table, page 53, read on the page image: one sentence in two halves, nothing else in the cell, no boldface; the PDF breaks one ordinary word of the second half at a line end with a printed hyphen and the record holds it whole (form; the script's match is tolerant for that reason). The Summary's first sentence now has ONE verb of working out, and it governs both things the statement puts under its one verb: the theme or central idea itself, and the way the details carry it. No explaining is asked for any more, and the finding of the theme is no longer pushed into a relative clause in the past. Either of the two (a theme, a central idea) will do, as Limits says. The Summary calls the text literary where the statement has only the general word; the kind comes from the table the statement stands in, so it is the strand's scope and not an added condition. Second sentence faithful (the student's own opinions and judgments stay out of the summary). Not a near copy: the two halves come in the statement's order and its prescribed terms recur, but the build of both sentences (a list after a colon, a second full sentence) and every verb and connective are the pack's. Design notes in order: the worked example has the student write the theme and mark moments that show it, which fits working out; RL.6.10, cited in Limits, names the three kinds of literature as said.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 53,
+        "offset": 104
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rl-6-3",
+      "wording_sha256": "3ca2c5324e2799835d3007954d5d5f2333f04a8cf2b5a959b01e470121b7fc79",
+      "text_sha256": "82e80d5cfd1d9b31da3cfadbd6281171af54e721ff29c5404389a28b0e89b26f",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 53,
+        "offset": 135
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rl-6-4",
+      "wording_sha256": "6a09730d1dfe57f017413ed40962849900cdb7ccd8751799d0b657a352181d29",
+      "text_sha256": "730b2fb5c1a737d29e318b45f4b32e0b4a08561a95b42ff99b8b99472b72f8db",
+      "verdict": "confirmed",
+      "note": "California addition, as the PDF boldface shows it: the whole parenthetical cross-reference that follows the first sentence, and the closing mark; the first sentence is plain. The flag (true) is right. Limits says only that the record does not show which words are California's, which is true of the stored wording.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 53,
+        "offset": 166
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rl-6-5",
+      "wording_sha256": "12dc7c44b35481d8b123bcc74a77588523d334a80dcd6e21ffb127ec313ccfcc",
+      "text_sha256": "02aa2c70c74feb259001ee7865f0419a5daa5b705c637ba5bab285fe45a35145",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 53,
+        "offset": 209
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rl-6-6",
+      "wording_sha256": "aa6c7d8371c7794073dc9b4d8f80d5ceea4ec07f86384fbee3983f08f4132de2",
+      "text_sha256": "8575e0e614c174a064fb14a323d7b37a31ed1157cf2acfb909eeda8ad5902beb",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 53,
+        "offset": 238
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rl-6-7",
+      "wording_sha256": "dc609da5258543aa559f85f144ba3494cb4ea31e116b6134b22ab5815a944e9c",
+      "text_sha256": "aff21254a66366eb0299df7e10d2ba8553c65d93a4c27ed253cc68419e475010",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 54,
+        "offset": 23
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rl-6-9",
+      "wording_sha256": "3841ebc1de06e2d815641574bc32063623afdeb1fe7ebd73ff60ae2fbfe5d89b",
+      "text_sha256": "dafd06851b8ae6477454a26399c669adc38111ff4de1860b74f22ebbb1b30b73",
+      "verdict": "confirmed",
+      "note": "Own cell, number 9 in the grade 6 column on page 54. Part a of writing standard 9 (page 66) quotes this standard, with the inner parenthesis in square brackets; the script's place is the statement itself, not the quotation.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 54,
+        "offset": 75
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rst-6-8-1",
+      "wording_sha256": "3c1eb11d66cb9a0e14480a72cd44021cd81c5801ccbcc8c6d0ece4a001214b55",
+      "text_sha256": "bec2b7b665c7fe8048d00ba1891c3e0d2125c55744adaa3fe1f2082a88564b92",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 1 in the Grades 6–8 column of the science and technical reading table, page 89; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The two cells to its right begin with the same words and go on (offsets 161 and 331); the script's place is the Grades 6–8 cell. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 89,
+        "offset": 21
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rst-6-8-10",
+      "wording_sha256": "22583793af0c890a8a69897396ad976a1ca407660199cfcafa81a0eda59114c5",
+      "text_sha256": "1aae7921bd77809834c802b1fc6fcd6d6a40fbf93ae59bf5e113843b32cac574",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 10 in the Grades 6–8 column of the science and technical reading table, page 90; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The PDF writes the band inside the sentence with an en dash and the record with a hyphen: form. The Summary and Limits set the target at the end of grade 8 and place a grade 6 child at the start of the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 90,
+        "offset": 98
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rst-6-8-2",
+      "wording_sha256": "87b4148b8902310497c339c3fd387386d91a1fcfec668890f318fe8cbb919974",
+      "text_sha256": "7feae5bfec45bf4cb3c6f0e879e2c8d174351b53973dc25c9d81675e4d1fd70a",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 2 in the Grades 6–8 column of the science and technical reading table, page 89; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 89,
+        "offset": 34
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rst-6-8-3",
+      "wording_sha256": "7f20672e681fbec68f73573ed68d08b08932d2c17aa8b179f8c9f75bc71b0aac",
+      "text_sha256": "9c738daa4f7831406f7eb4937076a76e86372291dcda5d5a7baeb97dc9cad84e",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 3 in the Grades 6–8 column of the science and technical reading table, page 89; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 89,
+        "offset": 57
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rst-6-8-4",
+      "wording_sha256": "866f59a21da80ce81fbe5dc314b4d2df01191346900a4ccbc6cdfa2899a48f3a",
+      "text_sha256": "098bc731d03da9cce56faef46e00f9338c620f68bbf0f01b770b7bb062ee9ac8",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 4 in the Grades 6–8 column of the science and technical reading table, page 89; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The closing phrase that names the band is in italics, and the PDF writes the band with an en dash where the record has a hyphen: form. The first sentence of the Summary follows the order of the statement, which its list forces, with the band moved into a second sentence; not judged a near copy. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 89,
+        "offset": 73
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rst-6-8-5",
+      "wording_sha256": "a81ea03054b20a8c29000a1dc8ce176963fa22188a35824ba67365d1ee32de66",
+      "text_sha256": "47fc64b9800ba4553b525dec51211370283a94b70d538f76f9181fbe77255e82",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 5 in the Grades 6–8 column of the science and technical reading table, page 89; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The Summary gives the understanding an owner (the reader) that the statement leaves unnamed; no scope changes. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 89,
+        "offset": 107
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rst-6-8-5",
+      "wording_sha256": "a81ea03054b20a8c29000a1dc8ce176963fa22188a35824ba67365d1ee32de66",
+      "text_sha256": "031dce49957ffda65cee4c5c11a52725cb192dfbf1d2318f9e19cd295e7b9bc6",
+      "verdict": "confirmed",
+      "note": "Round 2. Read on the page image: number 5 in the column for grades 6–8 of the science and technical reading table, page 89: one sentence, nothing else in the cell, no boldface. The PDF prints only the number; the strand comes from the page tab and the table title and the band from the column header, and they agree with the code. The Summary no longer gives the understanding an owner. It is faithful: how the author has organised the text, and what the main sections add to the whole and to understanding the topic. It follows the statement's order and keeps about half of its words in order, the most of the twelve records of this round, with the pack's own verbs and build: judged not a near copy. Title and code scope: the name of the domain now ends with the word the export cut off, the word the title of the table on pages 89 and 90 has in that place. The name is in the export's form (the strand, a colon, the name) and is not the title as printed, which has two more words after the strand and the span of grades at its end; the other domains of the lane are named in the same form. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 89,
+        "offset": 107
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rst-6-8-6",
+      "wording_sha256": "b0b53e66fcc7b828e6beb951044798050c0e76627a634b924cc39fb0ad7dd675",
+      "text_sha256": "0fe4cfdf0765e6377f48dc362745335e64866bbe2677ca4858c4b2f3517d313e",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 6 in the Grades 6–8 column of the science and technical reading table, page 89; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The two cells to its right begin with the same words and go on (offsets 298 and 470); the script's place is the Grades 6–8 cell. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 89,
+        "offset": 134
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rst-6-8-7",
+      "wording_sha256": "d60f86f516fcd4b9c86c522c5bccd8281575a84faf439bf6ed68309d7477798b",
+      "text_sha256": "f596a9004ecac5c5f7abc1b0c9d9fdf3c5aada1d5b50a7a44e9c687a9d2603c1",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 7 in the Grades 6–8 column of the science and technical reading table, page 90; one sentence with five examples in brackets, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The Summary and Limits keep the five as examples. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 90,
+        "offset": 28
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rst-6-8-8",
+      "wording_sha256": "d2045d9602d44cec9b8a5b91b99933550bcc5cfc36d8fcf9a54a98ca9ccb7edc",
+      "text_sha256": "62870d2bda1614d82239de38e8cc3e5d360b9c8e6bf064008b20220c38ea30d2",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 8 in the Grades 6–8 column of the science and technical reading table, page 90; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 90,
+        "offset": 58
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.rst-6-8-9",
+      "wording_sha256": "1430d2688dce19f014ad6454aa53f1323e43dc3289fee267cc564a8a352684c3",
+      "text_sha256": "39978304fe55e90ec6533a65ece996c5ac06977dcf06c0d6af93fd1296c1b07b",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 9 in the Grades 6–8 column of the science and technical reading table, page 90; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 90,
+        "offset": 73
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.sl-6-1",
+      "wording_sha256": "defe5d131bfbf956b113e955ee6df13343c48e87c34f4fcbaf6bdc032ed051ec",
+      "text_sha256": "3ff62170378e61431c805e48b90cf351ef49422c8a3adafc1350c5d80a777e92",
+      "verdict": "confirmed",
+      "note": "Opening line and parts a to d, in order, nothing else in the cell, no boldface. In the parenthesis of the opening line the PDF breaks the third kind of discussion, a hyphenated compound, at a line end after its hyphen; the record has the compound with its hyphen, and the grade 8 cell prints the same compound on one line with the hyphen, so the two renditions agree. A phrase of the opening line is in italics, which is form. In part a the Summary says \"pointing to evidence\" and leaves out what the evidence is on (the statement names three things); the three are named in the Summary's first sentence as what the discussions are about, so this is not read as a dropped condition.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 72,
+        "offset": 68
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.sl-6-2",
+      "wording_sha256": "26766c1c076bdad66bd466ed540ead82503d9c38f83bf50e0a5f7343f4225634",
+      "text_sha256": "24073fefed51c0c1f9473cacc60cb20692beb3a928798859e3721afae8984b14",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 72,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.sl-6-3",
+      "wording_sha256": "d577e81299550f6c8ca97998bcfd454941232d347330e337d85b211883ed24a6",
+      "text_sha256": "3076f726bf4469b61aa26f8d72e6361f2d56421aa511e212f82cd84a6f7fa3a9",
+      "verdict": "confirmed",
+      "note": "One sentence, no boldface in the grade 6 cell (the grade 7 cell beside it carries a California addition; this one does not), so the flag (false) is right.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 72,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.sl-6-4",
+      "wording_sha256": "43883c0f087611d05026887a67b8ae025c876c67e5310379a85a6aaa89890592",
+      "text_sha256": "0eabda60dc582b5e0b24015579f2de170eb73951047cdf6925d1993a1ec6e45b",
+      "verdict": "confirmed",
+      "note": "Opening statement and one lettered part. California addition, as the PDF boldface shows it: in the opening statement the list of example kinds of presentation inside the parenthesis, the three words that add a further kind of element just before the purpose clause, and the closing mark; then the whole of part a with its closing mark. The flag (true) is right, and Limits names both places. In part a the compound for the vocabulary of a subject is printed open, as two words, in the PDF, and the record has it so too (writing standard 2, part d, has the same compound with a hyphen in both renditions).",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 73,
+        "offset": 14
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.sl-6-5",
+      "wording_sha256": "837993603db6a46da3948a24c97a5b94fc3733134b3ffc2cca7097e0a2f96828",
+      "text_sha256": "33bdb1587e6310cf5d607fa385cd5cc1014696c5b56ea49383c4e8f5d2cc28b1",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 73,
+        "offset": 95
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.sl-6-6",
+      "wording_sha256": "6d89957c60f279172995197a7f605928ad07192fdf485bc4e0d8f49e18e85688",
+      "text_sha256": "ce181548730619fd7435f83e528079a424e7d3d3daa57a8f29d5adddfa3e3981",
+      "verdict": "confirmed",
+      "note": "The sentence and its parenthetical cross-reference, both plain: no boldface, so the flag (false) is right.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 73,
+        "offset": 113
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-1",
+      "wording_sha256": "db949de496168f087f46354a02e3a552c602b139a89062fdf8f3f37f76076aff",
+      "text_sha256": "fb02856554cb023c52d8876c66f7f36cb6e898519ad4c18e3f35bc322aa36eb6",
+      "verdict": "confirmed",
+      "note": "Stem and parts a to e, in order, all on page 62; no boldface in the grade 6 cell (the grade 7 cell carries additions; this one does not). The Summary says the style is formal \"from the first line\"; the statement has no such place, and this is read as the pack's way of saying the style is set up and then kept, not as a condition.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 62,
+        "offset": 128
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-10",
+      "wording_sha256": "b2d9b57844c7186eca72f8367da12fc3e145f30967570e7bf32a73913a37b245",
+      "text_sha256": "d709dedf0bfa1314502eeae7f7a5154b2082a4aa2b6235d8a7827526e2273514",
+      "verdict": "confirmed",
+      "note": "The script's place (page 28, offset 179) is the grade 2 cell of the writing table for kindergarten to grade 2, which holds the same words; this record's own cell is number 10 in the grade 6 column on page 66 (offset 107), read there on the page image: one sentence, nothing else in the cell, no boldface. The grade 7 and grade 8 cells of the row hold the same words (offsets 240 and 375).",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 66,
+        "offset": 107
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-2",
+      "wording_sha256": "edee0bafff3a179dfa38501fd2a028b02d2b9461e7685e80196b04224d5fb2df",
+      "text_sha256": "66884a28746c3f2674a065c07cc45cbadbfb568cb03b67365b16e5c5483a720c",
+      "verdict": "confirmed",
+      "note": "Stem and parts a to f, in order. California addition, as the PDF boldface shows it: in part a only, the fourth to sixth words of the part (with the semicolon that follows them) and the closing mark at the end of the part; everything else is plain. The flag (true) is right and Limits places the addition in part a.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 63,
+        "offset": 12
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-3",
+      "wording_sha256": "216eeaa6ea1f32fef819cfc7f5a966fea95491f41ab5380d8135b519b1439d14",
+      "text_sha256": "ff2131165d41ed751e4d766cb41aa8646b994ebc6af58263f244a8562a2e0f71",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 64,
+        "offset": 12
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-4",
+      "wording_sha256": "e85a9f2d1ff54a24351ca9525e79a6458635bceaa04814b92a3d075c09802c36",
+      "text_sha256": "fe663a4a7824257122725271da7ef7191f5c097895328d9151bff865de49c9d6",
+      "verdict": "confirmed",
+      "note": "Own cell, number 4 in the grade 6 column; the grade 7 and grade 8 cells of the row hold the same words (offsets 190 and 374). The sentence and its parenthetical note, both plain.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 65,
+        "offset": 19
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-5",
+      "wording_sha256": "b14d1a723f38c73b3bc6d6328c61b2e06281b0ce25e3f6eb95a49a9c56b54b31",
+      "text_sha256": "c316879ced40bfa6b3d6cf4a331867ed4cdc8a8855d5425a4563109f51419c45",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Two things. (1) A general term is narrowed: the statement names two groups the help comes from: adults, and a second group named by a general word for the student's equals. The Summary gives the second group as \"classmates\", which is smaller (a student of the same age outside the class is not a classmate); the record's own Limits uses the general word. Fix: use the general word in the Summary. (2) Near copy: the Summary's first sentence has the same frame as the statement's first sentence, clause for clause in the same order (the support and its givers, the two verbs, the condition of need, the list of five ways), with words swapped one for one and two pairs turned round; its second sentence follows the parenthetical note almost word for word. About seven in ten of the statement's content words survive in order by my count with the overlap tool's word forms, the highest in the batch. Fix: recast the sentence in the pack's own shape. Nothing is missing in content. Everything else holds: wording and code equal the PDF (the sentence and its parenthetical note, nothing else in the cell, no boldface); the Design notes are in order.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 65,
+        "offset": 52
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-5",
+      "wording_sha256": "b14d1a723f38c73b3bc6d6328c61b2e06281b0ce25e3f6eb95a49a9c56b54b31",
+      "text_sha256": "a95e6dbf2135a17782b3d64fb532be57a89b3af87616f01094b3029a34e15a10",
+      "verdict": "confirmed",
+      "note": "Round 2. Read on the page image: number 5 in the grade 6 column of the Writing table, page 65: one sentence and a remark in brackets after it, nothing else in the cell, no boldface. The PDF writes the span of Language standards with an en dash and the store has a hyphen: form. The rewritten Summary: the helpers are now named with the general word, so the narrowing is gone; the support stays partial and comes from both groups; both verbs, the condition of need, the five ways joined as alternatives, and the bracketed remark with its span of standards and of grades are kept; nothing is added. It is no longer a near copy: the frame is the pack's own (what the student does, then the helpers and the ways, then the remark), and under half of the statement's words survive in order by the overlap tool's word forms; the list of five ways keeps the statement's terms with two turned round, which a faithful summary cannot avoid. Design notes are in order: starting again from a different opening is the pack's illustration of one of the ways, not part of the standard.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 65,
+        "offset": 52
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-6",
+      "wording_sha256": "f6333b4baf4c6202fefd287790d2e1edede78d6bff4ac12d2e197b28135999c2",
+      "text_sha256": "d49ce4a7c7bac57c9bc429be97832e2735c6d3d96b94e16bcac808cdd9363b2d",
+      "verdict": "confirmed",
+      "note": "Tolerant match looked at on the page: the PDF breaks an ordinary word (the 15th of the statement) at a line end with a printed hyphen; the record holds the word whole: form. Limits is right that this statement names no help from other people.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 65,
+        "offset": 95
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-7",
+      "wording_sha256": "dbe6312a1b513d6dfc1e971a321378d3a42591aa0b143628bfe1f641cb9f99bb",
+      "text_sha256": "c18483973a5fab4266917e99c4a6e85ff4eafe554cd1af26861e103bd556a2fb",
+      "verdict": "confirmed",
+      "note": "Near-copy check: a short one-sentence statement; the Summary follows its order in two sentences and keeps about six in ten of its content words in order, all of them terms the statement prescribes; every verb and connective is the pack's own. Judged not a near copy, narrowly.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 65,
+        "offset": 133
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-7",
+      "wording_sha256": "dbe6312a1b513d6dfc1e971a321378d3a42591aa0b143628bfe1f641cb9f99bb",
+      "text_sha256": "d2516ae16bc56d1a66762c5746b06c9f9f0f997af8105cc110c84fc47461ba13",
+      "verdict": "confirmed",
+      "note": "Round 2. Read on the page image: number 7 in the grade 6 column of the Writing table, page 65: one sentence, nothing else in the cell, no boldface. The recast Summary is complete: brief research projects, the aim of answering a question, several sources, and a change of focus when that is appropriate; nothing is added. It no longer follows the statement's order. Limits' pointer to W.6.8 for judging and crediting sources agrees with number 8 below this cell.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 65,
+        "offset": 133
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-8",
+      "wording_sha256": "6bdd3fa4b6a36f88eea073161b8d52c1e4d14049321db6d6c02a498023ea6a25",
+      "text_sha256": "c6266ab1d5d929724d2d8221b64cdbb2c70f68a28ebb8f36b4f0013283ab730e",
+      "verdict": "confirmed",
+      "note": "Compared word for word with its own cell in the grade 6 column and read on the page image: the cell holds the statement and nothing else.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 65,
+        "offset": 152
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.w-6-9",
+      "wording_sha256": "1f136735a973cfa3948398593011f6a690dae89f6a244fa28fd393a680a23735",
+      "text_sha256": "d5bbdeb916236965147efe73a1ffc412148d8b1d5ba966e584ff0dc60fb2e247",
+      "verdict": "confirmed",
+      "note": "Stem and parts a and b, in order. The two quoted standards equal the cells of the literature and informational text tables (pages 54 and 58) word for word, the first with its inner parenthesis in square brackets, as the record has it. Phrases in italics are form. No boldface.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 66,
+        "offset": 18
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language english-language-arts",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-1",
+      "wording_sha256": "3eddecf84a68df6edc7f81c6b0e189b1729f0f6049b769308909452eb791af8f",
+      "text_sha256": "7972cbd31d97bfd489272e675ca08e0259d5c9264aeab49e5367fa02875bab8f",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 1 in the Grades 6–8 column of the writing table for history/social studies, science and technical subjects, page 92; the opening line and parts a to e in order, none missing or added, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The last two words of the opening line are in italics: form. The Summary keeps each part, including that the conclusion must do both of the two things part e asks of it (the cells to the right join the two with the word for either). Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 92,
+        "offset": 79
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-10",
+      "wording_sha256": "79370a50999e25c9ff75bb7569d6b100bb50871e630120e825a88153baddf0ca",
+      "text_sha256": "51bccb16dc0f51cf91ff8f46eda9910b162e8e2b21980b84ef858a45eb815827",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 10 in the Grades 6–8 column of the writing table for history/social studies, science and technical subjects, page 95; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. The two cells to its right hold the same words (offsets 183 and 292); the script's place is the Grades 6–8 cell. The Summary says \"many\" where the statement speaks of a range, a variety; no condition is lost. Limits names reflecting and revising as what the longer time frame leaves time for, which is what this cell prints (the grade 6 writing standard with the same number, on page 66, names one more use). Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 95,
+        "offset": 86
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-10",
+      "wording_sha256": "79370a50999e25c9ff75bb7569d6b100bb50871e630120e825a88153baddf0ca",
+      "text_sha256": "039c70488de509236c66c5884d0c0d6bc1f65087e9aaad7994b991e0b719a3ed",
+      "verdict": "confirmed",
+      "note": "Round 2. Read on the page image: number 10 in the column for grades 6–8 of the writing table for history/social studies, science and technical subjects, page 95: one sentence, nothing else in the cell, no boldface. The two cells to its right hold the same words; the script's place is the cell for grades 6–8. The Summary now speaks of a range where it said \"many\". It keeps the regular habit, both time spans with what the statement says of each, and the tasks, purposes and audiences of the subjects. It calls the pieces of the shorter span \"short\" and says at once that this is their time (\"in one sitting or within a couple of days\"); Limits says no length is set, so it is not read as a length. Not a near copy. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 95,
+        "offset": 86
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-2",
+      "wording_sha256": "ddcf4befe57f6f9f7d9a962454c2e5f25ca660991b47fb435837bc880e010bf6",
+      "text_sha256": "1cfc23c17cbba307919a56cac8e8c3035b107959f3baadfa5e0ee3bbd136f669",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 2 in the Grades 6–8 column of the writing table for history/social studies, science and technical subjects, page 93; the opening line and parts a to f in order, none missing or added, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. In part d the PDF breaks a hyphenated compound at a line end after its hyphen; the record has the compound with its hyphen, which is right (the cell to the right prints it on one line with the hyphen). Number 3, below this cell, is the placeholder row the frame lists; the note it points to is printed under the table on page 94 and belongs to that row, not to this record. Limits' sentence on narration agrees with the opening line and with that note. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 93,
+        "offset": 22
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-2",
+      "wording_sha256": "ddcf4befe57f6f9f7d9a962454c2e5f25ca660991b47fb435837bc880e010bf6",
+      "text_sha256": "da98e0424a5f3519f0c3a956ef8cedda9ef9a7498158ba7e05e907c76144b607",
+      "verdict": "confirmed",
+      "note": "Round 2. Read on the page image: number 2 in the column for grades 6–8 of the writing table for history/social studies, science and technical subjects, page 93: the opening line and parts a to f in order, nothing else in the cell, no boldface. The PDF prints only the number; the strand comes from the table title and the band from the column header, and they agree with the code. In part d the PDF breaks a hyphenated compound at a line end after its hyphen; the record has it with its hyphen, which is right. The added Limits sentence was checked against the note printed under the table on page 94, to which the placeholder row for number 3 (below this cell) points. It is true to the note: the general requirement for arguments and for texts that inform or explain, the form it takes in history/social studies and the form it takes in science and technical subjects are given as the note gives them, and the sentence says rightly that the note belongs to the placeholder row and not to this record. It adds nothing. It is the pack's own words: one sentence of the pack's own build that follows the note's order; under half of the note's words survive in order by the overlap tool's word forms, and the longest run of words shared with the note is five. Three things in the note are left out, and none changes a limit: its opening sentence, which sets no requirement; one word of manner in the general requirement (how well the narrative elements are brought in); and that the procedures to be described are the students' own, from the work they do. Summary and the other Design notes are faithful. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 93,
+        "offset": 22
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-4",
+      "wording_sha256": "5bc394d5cc3ad72a43d34273c6b4b83110c5da5683a3b4cc87f37fe7a3eaff33",
+      "text_sha256": "2fd998b855f9e65943abd573fbafc17990ae4206397fa4674c4ee245ce56646e",
+      "verdict": "confirmed",
+      "note": "The script's place (page 26, offset 157) is the anchor standard for writing with the same number, which has the same words (they also stand at the start of number 4 in each grade column of the Writing standards table on page 65). This record's own cell is number 4 in the Grades 6–8 column of the writing table for history/social studies, science and technical subjects, page 94 (offset 36), read there on the page image: one sentence, nothing else in the cell (the cells of page 65 add a bracketed remark; this cell has none), no boldface (the flag false is right). The PDF prints only the number; the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 94,
+        "offset": 36
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-5",
+      "wording_sha256": "59dfceb035ee7494f838fc787998613aa1134b548d86730ae0e1d226206d7071",
+      "text_sha256": "07d15121231afed34b43b696c9b7fc049ea2d19a875cb54e90a512e1a1870dee",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording and code agree with the record's own cell: number 5 in the Grades 6–8 column of the writing table for history/social studies, science and technical subjects, page 94 (offset 56), read there on the page image: one sentence, nothing else in the cell, no boldface (the flag false is right). The script's place (page 65, offset 223) is number 5 in the grade 7 column of the Writing standards table, which begins with the same words and then adds a bracketed remark. The Summary is unfaithful in two places. (1) Added: the last of the five ways is given as \"starting over in a different way\"; the statement names only an attempt at another approach and has no word about beginning again or setting the piece aside. (2) Narrowed: the help is said to come from adults and \"classmates\"; the statement names the child's equals in general, not only those of the same class (Limits has the general term). Say that the fifth way is to try another approach, and use the general term for the helpers. The rest is faithful: the help is partial, the work is done where the piece needs it, and the attention is on audience and purpose. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 94,
+        "offset": 56
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-5",
+      "wording_sha256": "59dfceb035ee7494f838fc787998613aa1134b548d86730ae0e1d226206d7071",
+      "text_sha256": "24d6feeff3c811314f613ef56c03b725b31cefccf9724f1f0e434a005b790aaf",
+      "verdict": "confirmed",
+      "note": "Round 2. The record's own cell is number 5 in the column for grades 6–8 of the writing table for history/social studies, science and technical subjects, page 94, read on the page image: one sentence, nothing else in the cell, no boldface; the code agrees (the number from the cell, the strand from the table title, the band from the column header). The script's place (page 65) is a cell of the Writing table for grades 6 to 8 that begins with the same words and goes on with a bracketed remark, so the place is given by hand. The two round 1 faults are gone: the fifth way is now trying another approach, with nothing about beginning again, and the helpers are named with the general word. The Summary keeps the partial help from both groups, the condition of need, the five ways as alternatives and the attention to audience and purpose. It gives the statement's pair of verbs as one (\"improves\"); read as covering both, no condition is lost. Not a near copy. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 94,
+        "offset": 56
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-6",
+      "wording_sha256": "0bddb72bb7e8f81d52cd91fb83d63a1f8312acad1b3d86e97c208f210dd54185",
+      "text_sha256": "37e7c39e8e4a48a04a33b03c330380510373719ff26e309314c76d75023ddffd",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 6 in the Grades 6–8 column of the writing table for history/social studies, science and technical subjects, page 94; one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number: the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits is right that this statement, unlike the grade 6 writing standard with the same number, mentions neither keyboarding nor working with others. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 94,
+        "offset": 92
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-7",
+      "wording_sha256": "987b4b6c648472c37637674d53aa503a4c2f82e130bf7eb40c3d0ef8e4c9af23",
+      "text_sha256": "a3eb1440c150b5940234642d06cfcccbfae3910a65afbf5ef79cb887c347177e",
+      "verdict": "confirmed",
+      "note": "The script's place (page 65, offset 489) is number 7 in the grade 8 column of the Writing standards table, which has the same words. This record's own cell is number 7 in the Grades 6–8 column of the writing table for history/social studies, science and technical subjects, page 94 (offset 114), read there on the page image: one sentence, nothing else in the cell, no boldface (the flag false is right). The PDF prints only the number; the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 94,
+        "offset": 114
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-8",
+      "wording_sha256": "a97acdb329972516dcc6240428f0dffd267a79232b3cf61c6221658446e92ba8",
+      "text_sha256": "b268b493be5057c8c1e6c8228ee0978868dd836098357aee2fc610e45f4fdf93",
+      "verdict": "confirmed",
+      "note": "Read on the page image: number 8 in the Grades 6–8 column of the writing table for history/social studies, science and technical subjects, page 95; one sentence and the closing mark, nothing else in the cell. California addition, as the PDF boldface shows it: the bracketed pair of source kinds that follows the ninth word (the tenth to twelfth words, with the comma after the bracket) and the closing mark; everything else is plain. The flag (true) is right. Limits says only that the wording does not show which words are California's, which is true of the stored wording; a designer can be told that the addition is the bracket. The PDF prints only the number; the strand letters come from the page tab and the band from the column header, and they agree with the code. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 95,
+        "offset": 28
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-9",
+      "wording_sha256": "b36a808bedd80be42025a5c3489a6a95539ef5909d98d0f62d6f475739d7e985",
+      "text_sha256": "3ea5ed36d200db18595224cc4decb024f331fb4448b470d669c0cb80d30b79fa",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "Punctuation only, no word differs. The PDF (page 95, number 9 in the Grades 6–8 column of the writing table for history/social studies, science and technical subjects, and the same in the two cells to its right) prints a comma after the eighth word of the statement, the first of the three things the evidence is to support; the record has no comma there, so the first two of the three run together as if they were one term. The export row itself lacks that comma, so the importer copied its source faithfully: a slip of the export and a real difference between the two official renditions, not an importer fault. The script compares words and could not see it. Everything else is equal: one sentence, nothing else in the cell, no boldface (the flag false is right); the code agrees. The Summary and Limits read the three as separate, as the PDF prints them, and are faithful. The wording itself can only become right when the importer may correct the export from the PDF; until then Limits could say that the adopted PDF separates the three with commas. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 95,
+        "offset": 74
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/reading-language, batch literacy-grades-6-to-8",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.reading-language.objective.whst-6-8-9",
+      "wording_sha256": "90a4d2d408fa2136be3b52a6ff4feab172b50a80ffd5b3d6004d027a98c085b3",
+      "text_sha256": "3ea5ed36d200db18595224cc4decb024f331fb4448b470d669c0cb80d30b79fa",
+      "verdict": "confirmed",
+      "note": "Round 2. Read on the page image: number 9 in the column for grades 6–8 of the writing table for history/social studies, science and technical subjects, page 95: one sentence, nothing else in the cell, no boldface. The stored wording is the export's as corrected at one place from the adopted document: a comma the export lacks is supplied. It now equals the cell mark for mark: the comma stands after the eighth word, where the page prints it, so the three things the evidence is to support are three separate terms. That is the one correction the manifest lists for this code, and it is right. The same words stand in the two cells to the right; the script's place is the cell for grades 6–8. Summary and Limits read the three as separate and are faithful. Limits gives the standard as one for the band of grades 6 to 8, recorded at grade 6, and the code scope names the band.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 95,
+        "offset": 74
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/reading-language round 2",
+      "round": 2
+    }
+  ],
+  "unrecorded": [
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "L.6.1c",
+      "place": {
+        "page": 46
+      },
+      "explained": "sub-part inside its parent's record"
+    },
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "L.6.1d",
+      "place": {
+        "page": 46
+      },
+      "explained": "sub-part inside its parent's record"
+    },
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "L.6.1e",
+      "place": {
+        "page": 46
+      },
+      "explained": "sub-part inside its parent's record"
+    },
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "L.6.2a",
+      "place": {
+        "page": 46
+      },
+      "explained": "sub-part inside its parent's record"
+    },
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "L.6.3a",
+      "place": {
+        "page": 46
+      },
+      "explained": "sub-part inside its parent's record"
+    },
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "L.6.3b",
+      "place": {
+        "page": 46
+      },
+      "explained": "sub-part inside its parent's record"
+    },
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "RL.6.8",
+      "place": {
+        "page": 54
+      },
+      "explained": "Placeholder the manifest skips, listed in the frame: number 8 in the grade 6 column of the literature table holds only a bracketed remark that the standard does not apply to literature. Found by eye: the PDF prints the number, not the full code."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "WHST.6-8.3",
+      "place": {
+        "page": 93
+      },
+      "explained": "Placeholder row the manifest skips, listed in the frame: number 3 in the Grades 6–8 column of the writing table for history/social studies, science and technical subjects holds only a bracketed remark that it is not a separate requirement and a pointer to a note, which is printed under the table on page 94. Found by eye: the PDF prints the number, not the full code."
+    }
+  ]
+}

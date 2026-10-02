@@ -1,0 +1,604 @@
+{
+  "lane": "us-ca/grade-4/mathematics",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-g-1",
+      "wording_sha256": "05b723f4e23d5dc90cf67e8f3eb2b9a24bc33a4322cc22c70a55f4ff46563fa3",
+      "text_sha256": "a63b6e1da988ae68854a1bc358592324addd3956d96058a7c05dd395c83bc2c2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 40,
+        "offset": 23
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-g-2",
+      "wording_sha256": "576fc6807cea941e5fafe2f9f48d151f91c7caaefb98d30883f12ba8333c35ef",
+      "text_sha256": "387e207672adb8b2dd08dc51d59c18c31f44449debc6e0be3cc5ca7912c23e50",
+      "verdict": "confirmed",
+      "note": "The California addition (the boldface sentence in brackets with the marker at the end, page 40) is in the record, flagged, and named as an addition in the Summary.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 40,
+        "offset": 45
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-g-3",
+      "wording_sha256": "7b2dfc57778b45623f2a8cc84ee485e7413bddafa8c7d8d37ec11c055c1e75c8",
+      "text_sha256": "417bcfab30e3ff06891643e3fc65bda12adb3f95261dd730d05f3fcd30c6e087",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 40,
+        "offset": 105
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-md-1",
+      "wording_sha256": "6e7aea1e3a3fa6186caa456375757fb7f708358416838a236d2fe79f21148db2",
+      "text_sha256": "9bc537f5366c42fc70fe084ab7a386b9e529152ff4579d4e6e31e3c357eb0550",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 39,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-md-2",
+      "wording_sha256": "9fb85430767366bd0b45dd9a333eb2ad1d468b4b1834b22a9510157eb5b8aae3",
+      "text_sha256": "32e4654955a9b0597680dd56c878f182f235b15d94cae2fe17a9722f4efa4f32",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 39,
+        "offset": 170
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-md-3",
+      "wording_sha256": "a7c92bd45548cbd79a6a5f5a51eb571f01aad4fea6d8338b3444ec73b9885d5d",
+      "text_sha256": "2006e53760b2a6663199da876bcd9af02bbcfa176eb574c1f4ba545031111d5c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 39,
+        "offset": 230
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-md-4",
+      "wording_sha256": "e9964dca1982d0cd1671c51c85283cbebda5597390c5003697079ae054b2ecf9",
+      "text_sha256": "751fbb2c6e4b1123ddbef1e388e7b578b79ec12614e9c34d41c73c137aafbf21",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 39,
+        "offset": 280
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-md-5-a",
+      "wording_sha256": "d51c5ab8b055386b68e066595f1539a6e21726662e2ea2a67da1a458ef4a8ef1",
+      "text_sha256": "296b3d16fc50f73d86c9c4ab624dfca75eae6d64b70a52cd000c83bb6dcf54e5",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 39,
+        "offset": 350
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-md-5-b",
+      "wording_sha256": "56329da3603b23201bdd0cdd0e236382af85558daf97e8732ad3098903e6be57",
+      "text_sha256": "39c9af46f1292d7b8a86b8426433694a4197f9e4ba57cad4bd2b569ec395c9a9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 39,
+        "offset": 350
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-md-6",
+      "wording_sha256": "3f88ec84fc6a474cb26edcf649c2f7c33c6341f74df700f67e8fa1d52cad7f91",
+      "text_sha256": "84060668ee4bdaee709d36d0d8daa2be1bda4b9770d871f604d405295cbe2502",
+      "verdict": "confirmed",
+      "note": "The PDF prints this standard's number without the period; the statement itself is equal.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 39,
+        "offset": 453
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-md-7",
+      "wording_sha256": "4add41f24de05b4ad27a48affa8048bebcd1f17d023de6b1bb0daf1644a8db91",
+      "text_sha256": "517f486d9e66221413ed8ec15d08666b3e512febe98dd85f0f29d00f10e7c14b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 39,
+        "offset": 468
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nbt-1",
+      "wording_sha256": "206fbd36ad56bd16ac7234d11366a4231a239d5f369dbc36c973425d5ba614c9",
+      "text_sha256": "56e6682c28c0629cd8230d7b4b8d25f81954bbc3486445ace6e3326810296d39",
+      "verdict": "confirmed",
+      "note": "The footnote this record carries is marked on the domain heading on page 37, not on this standard: it applies to all six standards of the domain alike. The Limits state it exactly (whole numbers up to and including 1,000,000) and call it a footnote to the domain.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 308
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nbt-2",
+      "wording_sha256": "b4589a9a3b08187769c211ae4a737cb17b579d1fd1d2740013dabedbc7219c58",
+      "text_sha256": "a8a61b66fa683a62409b317b5f6c7d5442d84e835749a8ad8443088a65469ee6",
+      "verdict": "confirmed",
+      "note": "Form: where the record writes one word of the second sentence without a hyphen, the PDF breaks that word across two lines at a hyphen (and hyphenates the same word everywhere else on the page). The record follows the export, which writes it closed. Nothing else differs.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 349
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nbt-3",
+      "wording_sha256": "895db4c5be22c7f617b7bf4382d8ab565548b68484dffba3b11add34175e86e6",
+      "text_sha256": "38917466967b927a105bd8850c6585ad194415c720aa610c9394b57262ebb9aa",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 388
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nbt-4",
+      "wording_sha256": "daf2c642b50f6ccafe22635c9ac22ad70a3c03eff526b249847bb135c0648b08",
+      "text_sha256": "484670feb87d048cada8dbc7fe04581753b793ca627d62120c72a7446bb15758",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 415
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nbt-5",
+      "wording_sha256": "92f66edd5501f4fe9e6f6b79b95172cb86b079efb9455101264ca638ac038598",
+      "text_sha256": "5e5530658c4c46108ab6fba20f0503ce20644f81cbd5bba9a4fd59c367119d42",
+      "verdict": "confirmed",
+      "note": "The Limits do not repeat the domain footnote (whole numbers up to 1,000,000) that the Limits of 4.NBT.1 to 4.NBT.4 state; the limits it does state (four digits by one digit, two digits by two digits) lie inside it, so nothing is contradicted.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 428
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nbt-5",
+      "wording_sha256": "92f66edd5501f4fe9e6f6b79b95172cb86b079efb9455101264ca638ac038598",
+      "text_sha256": "dae90fb4bbe8e095cdae998546f593a99e138c431d0795441da1b875245febae",
+      "verdict": "confirmed",
+      "note": "Round 2, after one sentence was added to Limits to report the domain footnote. On the page image (PDF page 37, printed page 30): number 5 under the second cluster heading of the base-ten domain: two sentences and nothing else in the item; the record's wording equals it, and the cluster heading is the one printed above numbers 4 to 6. The footnote: its raised mark (2) stands on the domain's name in the heading bar, not on any one standard, and the footnote is printed at the foot of the same page; it equals the record's accompanying text. The new sentence gives the footnote's number exactly (1,000,000 as the largest whole number, which takes in the number itself, as the footnote does), says rightly that the footnote stands on the whole domain and so covers this statement, adds no other limit, and is the pack's own words (the overlap check passes; no run of eight shared words). Remark, not counted a fault: the footnote bounds what is expected in this domain, and the sentence says 'expected in grade 4' and gives the domain only as the place where the footnote stands. For this statement the limit is the same; read by itself, the first half of the sentence is wider than the footnote. Read whole: Summary faithful (the two cases; strategies resting on place value and on the properties of operations; showing and explaining with any of the three kinds of model, or several) and not a near copy. The limits Limits draws from the statement (four digits by one, two by two) lie inside the footnote's. Worked example right (the four parts of 34 × 26 are 600, 180, 80 and 24).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 428
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nbt-6",
+      "wording_sha256": "dc60b28f6d5a45f14d64e76c1deded560fa1ea9a7639f580f3737ca30853f279",
+      "text_sha256": "cc29640a4dbb91b1f12b572919ac62ceb131bed98feefd14b4867ac8d8f2dbff",
+      "verdict": "confirmed",
+      "note": "The Limits do not repeat the domain footnote (whole numbers up to 1,000,000) that the Limits of 4.NBT.1 to 4.NBT.4 state; the limits it does state (dividend of at most four digits, one-digit divisor) lie inside it, so nothing is contradicted. The text layer of the PDF has a stray digit fused to the last word of this statement; the page image prints none.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 475
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nbt-6",
+      "wording_sha256": "dc60b28f6d5a45f14d64e76c1deded560fa1ea9a7639f580f3737ca30853f279",
+      "text_sha256": "b30acc096fc54bd1844c0fe1bdd7be0aafc61c672176584d1bcef109ba365bb7",
+      "verdict": "confirmed",
+      "note": "Round 2, after one sentence was added to Limits to report the domain footnote. On the page image (PDF page 37, printed page 30): number 6, the last under the second cluster heading of the base-ten domain: two sentences and nothing else in the item (the stray digit the text layer has at its end is not printed); the record's wording equals it, and the cluster heading is the one printed above numbers 4 to 6. The footnote: its raised mark (2) stands on the domain's name in the heading bar, not on any one standard, and the footnote is printed at the foot of the same page; it equals the record's accompanying text. The new sentence gives the footnote's number exactly (1,000,000 as the largest whole number, which takes in the number itself, as the footnote does), says rightly that the footnote stands on the whole domain and so covers this statement, adds no other limit, and is the pack's own words (the overlap check passes; no run of eight shared words). Remark, not counted a fault: the footnote bounds what is expected in this domain, and the sentence says 'expected in grade 4' and gives the domain only as the place where the footnote stands. For this statement the limit is the same; read by itself, the first half of the sentence is wider than the footnote. Read whole: Summary faithful (dividend of at most four digits, one-digit divisor, whole-number quotient and remainder; the three grounds for the strategies joined as the statement joins them; showing and explaining with any of the three kinds of model, or several) and not a near copy. The limits Limits draws from the statement lie inside the footnote's. Worked examples right (4 × 339 is 1,356; 824 ÷ 8 is 103).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 475
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-1",
+      "wording_sha256": "a59293bab5f6b3abf37451e8423e7d7bb41a97eaae8e1c73aa16877aa03df7ff",
+      "text_sha256": "11a5d21f3e09cbb141103771b6b20f2c7b57d686e2b84214b9a2653406fab276",
+      "verdict": "confirmed",
+      "note": "The footnote this record carries is marked on the domain heading on page 38, not on this standard: it applies to all twelve records of the domain alike. The Limits list the footnote's nine denominators exactly, each checked against the page, and call it a footnote of the domain.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38,
+        "offset": 18
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-2",
+      "wording_sha256": "06a08ca4a9aaa463fd2b5a96f22507ada0994ffc9503bc8f3cd8fe827ae70764",
+      "text_sha256": "96d317077d7494a8eb898917279c2af780f6ccec69e1eba94377fcccccaab256",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38,
+        "offset": 70
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-3-a",
+      "wording_sha256": "dd1a9a12ecc3300540419593530ebbbd732110a9ada516619482e4be28ef733d",
+      "text_sha256": "be3539f381c988e3bdab296e2a32e295d4a2db8c774502f48f7bed70fb70ceca",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38,
+        "offset": 150
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-3-b",
+      "wording_sha256": "16f9f427b08f77118b4d7065ba2ef18d0ea9f31ae3c3e9757dbad168f8dfdb39",
+      "text_sha256": "ea921b45997e98d2cf6f10b2ad5b331abb0bf36cd3315d22737a45430ff39172",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38,
+        "offset": 150
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-3-c",
+      "wording_sha256": "a286c515a959d5eae9d552cefc2a8217640c33a5e7d8db25fe038fc29783d5ed",
+      "text_sha256": "7c0b3999c041fd2f5e72511529580a298aabb5d2ab5fb1c258a25a2d10286b88",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38,
+        "offset": 150
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-3-d",
+      "wording_sha256": "ce1e746812c58799991cc4afea5f864b2c64f4d7175514dcebbc9638ea82a003",
+      "text_sha256": "10ea5e74fe8f0b7f72a9a2c8eae100116e7fc30b55a0c588288bf3db47e98223",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38,
+        "offset": 150
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-4-a",
+      "wording_sha256": "9ea8d3d3c194383b156f3692baac6dd50c9fc6175c75367f709c356c775399d3",
+      "text_sha256": "0b76bd24652b19147fce895e22ab544617dd1a5d8b8641632ae5ca32e3e29a48",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38,
+        "offset": 311
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-4-b",
+      "wording_sha256": "5469aebc8d31783356bed49c4831b113a5e8c6780d4007773af1581b2174fdb6",
+      "text_sha256": "3a8b1c7c5fcc21c57da79b2821d89406a75126164ffb79375a3aa56dfbed09fc",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38,
+        "offset": 311
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-4-c",
+      "wording_sha256": "5b71b2a1107eace8b4c91ed49873d4a1752885d73a0bd0e305658dba6fe4d6df",
+      "text_sha256": "53c73f744f3e423b0db089eb716a1d601879ef233fa030cd43b0071ff74e2983",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38,
+        "offset": 311
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-5",
+      "wording_sha256": "460917af24e3af0e23c453497d3cd1b66f8ca6b2d2d0f6d4b3ae9e44466f6564",
+      "text_sha256": "645b7979cfe1699e216bfabe70f3130d10766288e014f350cb4efa917d553f89",
+      "verdict": "confirmed",
+      "note": "Compared by eye on the image of page 38. The only difference is form: the PDF prints a raised footnote digit after the first sentence, in the middle of the statement, and the record has none; every word, number and sign is equal, and the statement begins and ends where the record does. The footnote that digit points to is the one this record carries, and the Limits restate it correctly. The text layer also has a stray digit fused to the last token of the statement that the page image does not print. Offset left out: the script could not align this record.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-5",
+      "wording_sha256": "460917af24e3af0e23c453497d3cd1b66f8ca6b2d2d0f6d4b3ae9e44466f6564",
+      "text_sha256": "fb03d75686d75df793eddb809ff56b4934dca2e260defa127ebd4e44671686ce",
+      "verdict": "confirmed",
+      "note": "Round 2, after one sentence was added to Limits to report the domain footnote. Compared by eye on the image of PDF page 38 (printed page 31): number 5, the first under the third cluster heading of the fractions domain. The only difference from the record is form: the PDF prints a raised footnote digit (4) after the first sentence, inside the statement, and the record has none; every word, number and sign is equal, the example included, and the statement begins and ends where the record does. The script cannot align the record for that reason, so the offset is left out. The record carries two footnotes and Limits reports both rightly. Its own (mark 4, on this standard): Limits says that children who can make equivalent fractions can work out ways of adding fractions whose denominators differ, and that adding and subtracting such fractions in general is not required in grade 4; that is what the footnote says. The domain's (mark 3, on the domain's name in the heading bar, printed first at the foot of the same page): the new last sentence of Limits names every denominator on the footnote's list, each once and in rising order, nine in all, with none missing and none added; it says that this is another footnote than the first, that it stands on the whole domain and so covers this statement; it adds no other limit and is the pack's own words (the overlap check passes; no run of eight shared words). Remark, not counted a fault: the footnote bounds what is expected in this domain, and the sentence speaks of 'a grade 4 fraction' and gives the domain only as the place where the footnote stands. For this statement the limit is the same; read by itself, the first half of the sentence is wider than the footnote (another domain of the grade has a fraction with a denominator that is not on the list). Read whole: Summary faithful (tenths rewritten as hundredths, and that step used to add one fraction in tenths to one in hundredths; the example kept as an example) and not a near copy. The statement's own two denominators are both on the footnote's list. The cluster heading is given rightly. Worked example right (three tenths are thirty hundredths; with four more, thirty-four).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-4/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-6",
+      "wording_sha256": "59f96ea1e14aaf9752fad93489d108406e6e045ab51ef8f6d4e1e9256a149d06",
+      "text_sha256": "657a4e397c26e892eb6331905c0fef3be044ad64ac659d9d2cb2ba50abf3eb7c",
+      "verdict": "confirmed",
+      "note": "The Limits do not repeat the domain footnote on denominators; the statement itself allows only 10 and 100, both on the footnote's list.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38,
+        "offset": 548
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-6",
+      "wording_sha256": "59f96ea1e14aaf9752fad93489d108406e6e045ab51ef8f6d4e1e9256a149d06",
+      "text_sha256": "22bc57d34ace091a193d5605cfb14232485339041e2b95d5b1827c4fa8632d74",
+      "verdict": "confirmed",
+      "note": "Round 2, after one sentence was added to Limits to report the domain footnote. On the page image (PDF page 38, printed page 31): number 6, the last item on the page, under the third cluster heading of the fractions domain: one sentence and its example in italics, nothing else in the item; the record's wording equals it. The footnote: its raised mark (3) stands on the domain's name in the heading bar, not on any one standard, and the footnote is printed at the foot of the same page; it equals the record's accompanying text. The other footnote on the page (mark 4) belongs to number 5 only and is rightly not with this record. The new sentence names every denominator on the footnote's list, each once and in rising order, nine in all, with none missing and none added; it says rightly that the footnote stands on the whole domain and so covers this statement, adds no other limit, and is the pack's own words (the overlap check passes; no run of eight shared words). Remark, not counted a fault: the footnote bounds what is expected in this domain, and the sentence speaks of 'a grade 4 fraction' and gives the domain only as the place where the footnote stands. For this statement the limit is the same; read by itself, the first half of the sentence is wider than the footnote (another domain of the grade has a fraction with a denominator that is not on the list). Read whole: Summary faithful (fractions in tenths or hundredths written as decimals; the three examples kept as examples with their number) and not a near copy. The statement's own two denominators are both on the footnote's list. Limits says rightly that thousandths are not mentioned and that the statement does not settle decimals above 1. Worked example right (62 cm is 0.62 m).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 38,
+        "offset": 548
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-7",
+      "wording_sha256": "041a829405e2c0d26e5c002038ac24976e3193a7aa46d8385855ce23909bc19c",
+      "text_sha256": "7d2813279f95265563b6b8006fe18d843011d5619ba95056edabdf248b48e23b",
+      "verdict": "confirmed",
+      "note": "The Limits do not repeat the domain footnote on denominators; the statement is about decimals to hundredths, which is inside it. The California addition (printed in boldface on page 39, with the marker at the end) is in the record and flagged.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 39,
+        "offset": 4
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-nf-7",
+      "wording_sha256": "041a829405e2c0d26e5c002038ac24976e3193a7aa46d8385855ce23909bc19c",
+      "text_sha256": "b51cea188251d7b411a4737b5cf69e1083546fe9937ccbf3ab7e43ef0ec8d850",
+      "verdict": "confirmed",
+      "note": "Round 2, after one sentence was added to Limits to report the domain footnote. On the page image (PDF page 39, printed page 32): number 7 at the top of the page, the last standard of the fractions domain, which runs over from the page before under the third cluster heading printed there: three sentences, nothing else in the item; the record's wording equals it. A few words of the last sentence and the marker after it are in boldface: the California addition, which the record holds and flags. The footnote: its raised mark (3) stands on the domain's name in the heading bar on page 38, not on any one standard, and the footnote is printed at the foot of that page; it equals the record's accompanying text. The new sentence names every denominator on the footnote's list, each once and in rising order, nine in all, with none missing and none added; it says rightly that the footnote stands on the whole domain and so covers this statement, adds no other limit, and is the pack's own words (the overlap check passes; no run of eight shared words). Remark, not counted a fault: the footnote bounds what is expected in this domain, and the sentence speaks of 'a grade 4 fraction' and gives the domain only as the place where the footnote stands. For this statement the limit is the same; read by itself, the first half of the sentence is wider than the footnote (another domain of the grade has a fraction with a denominator that is not on the list). Read whole: Summary faithful (two decimals as far as hundredths compared by their size; valid only for one same whole; the result written with one of the three signs and a reason given; the number line and other visual models kept as examples) and not a near copy. Limits is right on the two digits after the point, the same whole and the California addition. Worked example right (40 hundredths against 27).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 39,
+        "offset": 4
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-oa-1",
+      "wording_sha256": "3337b0d95a6824c9f2f1b3b56254fe196ba12debf1525b74c88ec3e815368545",
+      "text_sha256": "c2fb2104c829bc306c63f99111af67fd75ce3e02043d12c0ebb87ed0b091001a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 20
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-oa-2",
+      "wording_sha256": "aed98348796733a992b09a9a90213c94048aeb6ec1340071021e11161341dfaf",
+      "text_sha256": "3ab3d30b7856e36646371ccb4c8538dfa1fd523bc2e08a0e30917e97517b7749",
+      "verdict": "confirmed",
+      "note": "The footnote this record carries is marked at the end of this standard on page 37 and is only a pointer to a table in the glossary; the Limits say so.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 62
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-oa-3",
+      "wording_sha256": "a03d172075d30332960e4d452a46dfe2fabe5d79724f00a0146c7d302f2a82fb",
+      "text_sha256": "3e6d121022e7856dd83ad41af67c0a9e5fff332676eef29ddae16ccd067bdd48",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 98
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-oa-4",
+      "wording_sha256": "a8579511ed58c893c66ecde4ffdde47322fb0ebb0d82f03499893159569c3a4b",
+      "text_sha256": "9df0221ae804b215f1ce9c367fc3780aeb59716761e60c5bbcc85c74f5ba4da8",
+      "verdict": "confirmed",
+      "note": "En dashes in the three number ranges of the PDF are hyphens in the record: form.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 156
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-4.mathematics.objective.4-oa-5",
+      "wording_sha256": "92a8090645c27787d172d2f722f45e1342669c8fcc806529f8d5857b5fc649fa",
+      "text_sha256": "3f193cd316d28b97e1aee191f84c6ff113a5e16038e62e7736a99274e7c877c6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 37,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-4/mathematics",
+      "round": 1
+    }
+  ],
+  "unrecorded": [
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "4.NF.3",
+      "place": {
+        "page": 38,
+        "offset": 150
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 3 under the 4.NF domain bar with parts a, b, c and d beneath; its stem stands at the head of each of those records. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "4.NF.4",
+      "place": {
+        "page": 38,
+        "offset": 311
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 4 under the 4.NF domain bar with parts a, b and c beneath; its stem stands at the head of each of those records. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "4.MD.5",
+      "place": {
+        "page": 39,
+        "offset": 350
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 5 under the 4.MD domain bar with parts a and b beneath; its stem stands at the head of each of those records. Found by eye: the PDF prints no full codes."
+    }
+  ]
+}

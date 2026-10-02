@@ -1,0 +1,789 @@
+{
+  "lane": "us-ca/grade-6/mathematics",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-1",
+      "wording_sha256": "e75d09f58ce41937dd2a5bd95f9598d01ee72d71500b7c092f71010c007e9277",
+      "text_sha256": "444dd7df19ed8d61ba5d97b87e3796111c776495e7d5396f4a14d76775a3a8c3",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 450
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-2-a",
+      "wording_sha256": "c69b961f479f9d1cae8143fe3998d264863b54dfc77d804258c1728cb43ceafb",
+      "text_sha256": "2280a83fc509cb28f186b026095da46a0611b85c20d445da601edbd68e4f5390",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 460
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-2-b",
+      "wording_sha256": "ac94549618fac6ebc0a43136042c59f0eef0a07074cbb0d0a15f0c0ae9223806",
+      "text_sha256": "00c26f6d1bfd1336f7b4061d57162b58a5ef7c580a25f759a66976d2b14b2e1c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 460
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-2-c",
+      "wording_sha256": "28939a970dcfec5276f31c119b6057d744377df35d32a860710554d7a9fbee6e",
+      "text_sha256": "407dd74e82b03003d799fa6f02b8e771df70b1d39173f249f07febfc0c7d2930",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "Two digits differ in form in a way that changes the mathematics. In the example sentence that ends part c (PDF page 51, printed page 44, first lines of the page), the adopted PDF prints two raised digits: in the first formula (the volume) the digit 3 directly after the letter s is raised, an exponent, so s to the third power; in the second formula (the surface area) the digit 2 directly after the letter s is raised, so s to the second power. The stored wording has both as ordinary digits on the line, so each reads as a letter followed by a digit. Nothing else in the statement is raised: the 6 before the second s is on the baseline with a space after it, and the side length at the end is a fraction written inline with a slash. The export holds plain bytes for both digits with no marker of raising, so the damage is in the export file, not the importer. The PDF text layer flattens them as well; only the page image and the smaller font of those two runs show the raising. These are the only raised digits inside a statement on the grade 6 pages (the third raised digit is the footnote marker on 6.RP.2). The script's tolerance on this record was for a different thing: a hyphenated compound that the PDF breaks at a line end. Apart from the two digits the wording equals the page: the stem stands once on PDF page 50 (number 2 under the 6.EE bar), part c is at the top of page 51, and only parts a and b and the page furniture stand between them. The cluster heading is right. The pack's own text holds: the Summary writes both formulas with raised exponents, as the adopted document does, keeps every condition and is not a near copy; Limits is exact. Fix: correct the import so the two exponents are marked; no change to the Summary or notes is needed.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 460
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-2-c",
+      "wording_sha256": "aa39632a664038f6aaf19274e4d158610726d4cb8c274c4468f0ae231ac46bf6",
+      "text_sha256": "407dd74e82b03003d799fa6f02b8e771df70b1d39173f249f07febfc0c7d2930",
+      "verdict": "confirmed",
+      "note": "Round 2. The wording is the export's as corrected from the adopted document at two places (at each, an exponent the export had flattened is restored as a raised digit). It now equals the page images: the stem stands once on PDF page 50 (number 2 under the bar of the domain), part c is at the top of page 51, and only parts a and b and the page furniture stand between them. In the closing example the digit after the letter in the first formula and the digit after the letter in the second formula are raised on the page, and nothing else is: the multiplier in the second formula is on the baseline with a space after it, and the side length is a fraction written inline with a slash. Compared by eye for the raised digits, which the PDF's text layer flattens; the script's tolerant match at this place is for a hyphenated compound that the PDF breaks at a line end. Cluster heading right (page 50). Summary faithful (the stem; values put in for the variables; expressions from formulas used for real problems, as an inclusion; the conventional order where no parentheses fix one, powers with whole-number exponents included; the cube as an example, with both formulas and the side length) and not a near copy (three in ten of the text's words in order, longest shared run three words). Limits exact. The sums in the notes are right.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 460
+      },
+      "matched_by": "agent",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-2-c",
+      "wording_sha256": "aa39632a664038f6aaf19274e4d158610726d4cb8c274c4468f0ae231ac46bf6",
+      "text_sha256": "ba3d52d96f2622c3c2717093aabcbe9ab2e8883c3e574909b05f253e148ce0d5",
+      "verdict": "confirmed",
+      "note": "Round 3. Confirmed in round 2; the only change since is one new sentence at the end of Limits, which says that the stored wording is the export's as corrected from the adopted document at two places and that two raised exponents were restored. That is what the importer's list holds for this code, and both corrections are right on the page image (PDF page 51, part c at the top of the page): in the closing example the digit after the letter in the volume formula and the digit after the letter in the surface-area formula are raised, and nothing else is (the multiplier is on the baseline with a space after it; the side length is a fraction written inline with a slash). Compared by eye for the raised digits, which the PDF's text layer flattens; the script's tolerant match at this place is for a hyphenated compound that the PDF breaks at a line end. The stem stands once on page 50 (number 2 under the bar of the domain), and only parts a and b and the page furniture stand between it and part c. Cluster heading right (page 50). Read whole: Summary faithful and not a near copy; Limits exact, the new sentence included; the sums in the notes are right (14; 20 for the left-to-right error; 12 against 34).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 460
+      },
+      "matched_by": "agent",
+      "granularity_differs": true,
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/mathematics round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-3",
+      "wording_sha256": "ab00be1e594a748d2c59c21a5111173b84ce08dac7f55c84d2d6b8b541b84906",
+      "text_sha256": "a59ffaadcb1b1b7cd2e1a5f616014b92bd764bd8fc2c4ed162be8a286d1eaca4",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 51,
+        "offset": 77
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-4",
+      "wording_sha256": "244e65fa17f0d65eae92fc01019c4f0088d6191ade6d846358f5d024066159e1",
+      "text_sha256": "6fa633e19ed3b086709129c3e68c0cf3eef17a515f34c775c6f3c28412810975",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 51,
+        "offset": 137
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-5",
+      "wording_sha256": "6989fc8539144d8abf5c17ef006f5a7b019d941cae6b4b6f4361cd446567f165",
+      "text_sha256": "32e287b82762b7b1f8afaee165b5ed89cf684ac05c544cf967009a31f76df129",
+      "verdict": "confirmed",
+      "note": "The question mark is a real one on the page.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 51,
+        "offset": 195
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-6",
+      "wording_sha256": "8fba916f46f8fc544e7ede83ca54f8d397b7543eab452f236a3bf7b84e87b906",
+      "text_sha256": "55e656e70c6a20478835b1e2d129c33a3083bb1a5bb63251bae734c3c49f08ed",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 51,
+        "offset": 241
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-7",
+      "wording_sha256": "a07a793d6689ada405446d9f00bdb61b8d945746cff82a5f9c07ebebe25219f4",
+      "text_sha256": "f56a8f5002e88f6763610a9204bad908694832161864c51d1e3916faf11d46fd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 51,
+        "offset": 280
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-8",
+      "wording_sha256": "5db5f69b8e252f963d41df3b5e2b57294aae651e2193f289cbd78a1dc34ff434",
+      "text_sha256": "e16dafe755f903aa036bfec70c85f3b774ca8902fdb2904e06b5ddff71e862bc",
+      "verdict": "confirmed",
+      "note": "The page prints the two strict signs (greater than, less than) in all four places, as the record has them.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 51,
+        "offset": 314
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ee-9",
+      "wording_sha256": "0dd19fb8c234139c3432d77203827aa8817657c67f509404d45b8b2b993cf503",
+      "text_sha256": "40e3da6b299b9e0ba8bcf54f264c3fd755185713b93896827210ccbcba9c604f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 51,
+        "offset": 373
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-g-1",
+      "wording_sha256": "8539c041638f02f558b7c6795c6e40ffafbd45a377159501ed1ac22bb1ab09b9",
+      "text_sha256": "98f7990e8e6ae2e7e6a6f8300067b3783a994bb4fcc76b59bb58efed4c80a95b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 51,
+        "offset": 484
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-g-2",
+      "wording_sha256": "d3dd4a73f435e571a63ab0f823b30efa9c43bf0ff72bf8f1f6ff98dbf97d17a4",
+      "text_sha256": "ae44bd41ec1afbb0dfe5a2a48e562068e954c98018e444e06ee240fc18bb0faf",
+      "verdict": "confirmed",
+      "note": "Limits reads the second formula's first letter as the area of the base; the statement prints only the letters. That is the pack's reading and it contradicts nothing.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 51,
+        "offset": 521
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-g-3",
+      "wording_sha256": "1639d00c138c21098e2a0d1b1239d3c7aae1ff10cd63df1b64daf7ce6f3e2e7e",
+      "text_sha256": "9923ce882999a43c9a4abb0a56087b762022ad6952f6f33449377a355b120f39",
+      "verdict": "confirmed",
+      "note": "Limits says lengths are found only for sides whose endpoints share a coordinate. The statement defines the task with that condition, so this is the statement's own scope and not an added limit (compare 6.NS.8, where the matching sentence is worded as an inclusion).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 52,
+        "offset": 4
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-g-4",
+      "wording_sha256": "d72bb511bb0744138071272557933c1ec0f887a1ac8c69797faeabe7bc814377",
+      "text_sha256": "4a5166580e21465d1211f6c2bbe825bb4315a3054f358d7109adbd52282e7cda",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 52,
+        "offset": 50
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-1",
+      "wording_sha256": "e1accaf8ad61f13688dade23813cb227fc0b134db945be643a4f4486073bd750",
+      "text_sha256": "a901f91380ae90fc2b6311792c2e135bc3537a62fe4fe649741099f1057e31e9",
+      "verdict": "confirmed",
+      "note": "The division signs are kept. All three question marks are real ones on the page.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 333
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-2",
+      "wording_sha256": "a19f93700809f66665d1301aa4677ce7791df9f426635cf80f65f81e4db128b7",
+      "text_sha256": "4c1a551e22fbd5c1d1680244135489251697ca7a1d8164e259c7a9c39a903a68",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 480
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-3",
+      "wording_sha256": "5255aa11a9e26891af75e848f09348c0aceb0885e64e9f4e922627c8b51ccc6f",
+      "text_sha256": "a51d8cf7090d2116d95b6dedf719cb001d6dae22d5ca17910198f5e22655f3ac",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 490
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-4",
+      "wording_sha256": "a9d34f324c9a4f4f7c54427ee4e123681aa72a79fa8ef59c56be8fc6a6fcd610",
+      "text_sha256": "06a1c3a1450ab21b2eb69d4beee95d91f851e468b36013ddd9f93e25b85aba7a",
+      "verdict": "confirmed",
+      "note": "Form only: the PDF prints the number range with an en dash (stored as a hyphen) and breaks one word over a line end with a hyphen that is not part of the word. The three numbers in Limits (100, 12, and the range from 1 to 100) equal the page.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 507
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-5",
+      "wording_sha256": "5cca7f61dbac1746771a7b45f65efe2abc0096a24d094da199c80d967bf5a9ed",
+      "text_sha256": "ea204e6b799fe235a7600823eccd3024553c20c1bdebc9273835ba4c7302c96b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 17
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-6-a",
+      "wording_sha256": "62b4feb8f24da0b25f3e2698b39051f44cc0fbeb86be59f6e7f7e8f021cdb7a9",
+      "text_sha256": "5d0fcc37cd0b92d2d10e0a57b65c31e2b0fa5d508148d87b02c7f21b897c675f",
+      "verdict": "confirmed",
+      "note": "Form only: the PDF prints the negative signs as dashes; the store holds hyphens.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 72
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-6-b",
+      "wording_sha256": "b037e71266d0ac374ccd8181f0f56c575720cacd0c1976b3c4d0ab8ed4c3d46a",
+      "text_sha256": "870b4dca8e10d5b1f2ebc2fbdf4ec2af6fe81ff0a07fbf6c534943db54f7c3a1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 72
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-6-c",
+      "wording_sha256": "538c87f0f8c0eafc151d1841ed86a43e5edfdde9171140f4fe7255e3fe6f38be",
+      "text_sha256": "c34655cb9927a73c1fff9b7e74014c885cbc0cb98518cdedf22d1ec5d7782c35",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 72
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-7-a",
+      "wording_sha256": "f50f3d50fb8ba266e9d4cf260b207eac41e01889b2a4b530855b6244e9d7fcf6",
+      "text_sha256": "9e7460609f976fb254a3438c5fda977b464eec2aaf9390260e8eef9d18517751",
+      "verdict": "confirmed",
+      "note": "Form only: the PDF prints the negative signs as dashes; the store holds hyphens.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 224
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-7-b",
+      "wording_sha256": "3c0bb514b38acc83becc97dd847b0f85fe65d0453bebff3106107064f243c6da",
+      "text_sha256": "db3ade58a2f09716abf1f108ebfe2165db8eed7d953899456ecd23be508821d5",
+      "verdict": "confirmed",
+      "note": "Form only: the PDF prints the negative signs as dashes; the store holds hyphens. The degree sign is kept.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 224
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-7-c",
+      "wording_sha256": "53cc5634e7b27736e37aa69cbe7b6780d5d65b8efa7b4a027589b6728b9b0122",
+      "text_sha256": "f5b72d54bc6d34374610d3959d1080c0d859ae48e62acb0485aad0b69d1bd2ad",
+      "verdict": "confirmed",
+      "note": "Form only: the PDF prints the negative signs as dashes; the store holds hyphens. The two vertical bars of the absolute value are kept.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 224
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-7-d",
+      "wording_sha256": "a554ffa8ad88b5bd6a5faffa0e9f3cb453d6b71ee9d4e3a2408af6221f33a709",
+      "text_sha256": "9317ed84bbe7e993c36457e4a825bb766ed47d9a25edaf099038331c4f470f00",
+      "verdict": "confirmed",
+      "note": "Form only: the PDF prints the negative sign as a dash; the store holds a hyphen.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 224
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-8",
+      "wording_sha256": "112d9d37341ebb389587366fbbc62454558fcaa426d0b3664aedec5e190a9d92",
+      "text_sha256": "66c6d3b0271a4c489a74e258127a49da9b3c9a77470a7aa41049a00b7656f558",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, second sentence: it says distances are found \"only\" between points that share one coordinate and that slanted distances \"are not in scope\". The statement's second sentence is worded as an inclusion: it says the problem solving takes in the use of coordinates and absolute value for distances between points that share their first or their second coordinate. It has no word that restricts or excludes, so the note states a limit the official text does not state. What the note says about which distances are named (points on one horizontal or vertical line) is right. Fix: say that the statement names, as included, distances between points that share a coordinate, and that slanted distances are not mentioned. Everything else holds: wording and code match the PDF (number 8 under the 6.NS bar, PDF page 50, complete, nothing else in its paragraph); the cluster heading is the one printed above standards 5 to 8; the Summary is faithful (it keeps \"includes\") and is not a near copy.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 395
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-ns-8",
+      "wording_sha256": "112d9d37341ebb389587366fbbc62454558fcaa426d0b3664aedec5e190a9d92",
+      "text_sha256": "84ff4fe6f9afdd83df705798a156cea6ba350bc7d817a30f97d0b63cb76aa6e4",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: Limits now says the statement names those distances as included and that slanted distances are not mentioned; the words \"only\" and \"not in scope\" are gone, so it no longer states a limit the statement does not state. The rest of Limits holds (any quadrant, no number range, no restriction to integers, the cluster heading). The worked example is right: the two points share their second coordinate and the distance is 8; the common mistake gives 2. The Summary is faithful and keeps the second sentence as an inclusion. On shape: its first sentence stays close to the statement's first, since the technical terms leave little room, and its second is recast with the method at the end; taken as a whole it is not a near copy. Wording and code equal the PDF (number 8 under the domain's cluster heading for standards 5 to 8, page 50, three lines, nothing else in its paragraph).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 50,
+        "offset": 395
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-rp-1",
+      "wording_sha256": "d79eee71ecf9f06b09f807887cede8754a8e1c127a9ec96fca335893c460e446",
+      "text_sha256": "739c1acb80d261a07b2755202936e2085ecf539a49c327c4bf07df1e83b75570",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 20
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-rp-2",
+      "wording_sha256": "fa9ec697765a605f5b79ac0a9c95f57447872036d9a0354c36068165aac86cc8",
+      "text_sha256": "bec5d8d3b7d78093c01442979a6ddafdcb416e56fe3c94f25aff65b017760335",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "One character differs. In the first sentence, between the letter b and the digit 0 that follow the ratio written with a colon, the stored wording has a question mark. The adopted PDF (PDF page 49, printed page 42, standard 2 under the 6.RP bar) prints the not-equal-to sign there (U+2260, the equals sign with a stroke through it, set in the Symbol font; the PDF text layer holds the same character). So the condition reads: b is not equal to 0. The department's export holds the byte 0x3F, a literal question mark, at that place, so the damage is in the export file itself and not in the importer's decoding. The script reported a match because it compares word tokens and neither character is one. Nothing else differs: the statement starts and ends where the record does, both examples are complete, and every other question mark in this lane is a real one on the page. Footnote: the raised digit 1 stands on this standard itself, directly after the closing quotation mark of its last example; the footnote is printed at the foot of the same page and equals the record's accompanying text. It is not on a parent stem or on the domain bar. The cluster heading is the one printed above standards 1 to 3. The pack's own text already reads the condition correctly (b is not zero) and holds: the Summary is faithful and not a near copy, and Limits states the footnote and the non-zero condition exactly. Fix: correct the import at that one character; no change to the Summary or notes is needed.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 78
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-rp-2",
+      "wording_sha256": "185769795b448fbfa93efc34b38b6441e4e29a589f3259cad22bb4beadef5ad6",
+      "text_sha256": "bec5d8d3b7d78093c01442979a6ddafdcb416e56fe3c94f25aff65b017760335",
+      "verdict": "confirmed",
+      "note": "Round 2. The wording is the export's as corrected from the adopted document at one place (a symbol the export had lost is restored). It now equals the page image (PDF page 49, number 2 under the cluster heading of the domain): the sign between the letter and the zero in the first sentence is the not-equal-to sign, as printed; both quoted examples are complete, with the same numbers, dollar signs and inline fraction; the statement starts and ends where the record does. Compared by eye: the script's token match holds at this place but does not see the sign. The raised digit after the last closing quotation mark is the footnote marker and is rightly not in the wording; the footnote at the foot of the same page equals the accompanying text, and Limits restates it faithfully. Cluster heading right. Summary faithful (the non-zero condition, the unit rate that goes with the ratio, rate language; both examples kept as examples with their numbers) and not a near copy (the examples stand in the other order; under four in ten of the text's words recur in order). Limits: the sentence that says what a complex fraction is, is the pack's explanation and not the footnote's, and it is correct. The worked example is right (75 shared among 15 is 5).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 78
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-6/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-rp-2",
+      "wording_sha256": "185769795b448fbfa93efc34b38b6441e4e29a589f3259cad22bb4beadef5ad6",
+      "text_sha256": "8a43bdd0b5748af864893914a92789703978d152b64537614a59a69965245124",
+      "verdict": "confirmed",
+      "note": "Round 3. Confirmed in round 2; the only change since is one new sentence at the end of Limits, which says that the stored wording is the export's as corrected from the adopted document at one place and that one symbol was restored. That is what the importer's list holds for this code, and the correction is right on the page image (PDF page 49, number 2 under the cluster heading of the domain): the sign between the letter and the zero in the first sentence is the not-equal-to sign. Compared by eye; the script's token match holds at this place but does not see the sign. Both quoted examples are complete, with the same numbers, dollar signs and inline fraction; the statement starts and ends where the record does. The raised digit after the last closing quotation mark is the footnote marker and is rightly not in the wording; the footnote at the foot of the same page equals the accompanying text, and Limits restates it faithfully. Cluster heading right. Read whole: Summary faithful (the non-zero condition, the unit rate that goes with the ratio, rate language; both examples kept as examples with their numbers) and not a near copy (the examples stand in the other order; under four in ten of the words recur in order). Remark, not counted a fault: for the use of rate language the Summary has a verb of speaking where the statement's verb is general; a verb of using would keep it as open as the statement. The worked example is right (75 shared among 15 is 5).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 78
+      },
+      "matched_by": "agent",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/mathematics round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-rp-2",
+      "wording_sha256": "185769795b448fbfa93efc34b38b6441e4e29a589f3259cad22bb4beadef5ad6",
+      "text_sha256": "c55400c75e197afdec16669ba20d1d898709b405bcb8a9dfdf76b6822a03dab0",
+      "verdict": "confirmed",
+      "note": "Round 4, after a fix of one clause of the Summary: for the rate language it now has a verb of using, as general as the statement's own; the verb of speaking that round 3 remarked on is gone. Checked whole again. Wording compared by eye with the page image (PDF page 49, number 2 under the cluster heading of the domain): the sign between the letter and the zero in the first sentence is the not-equal-to sign, as the importer's one correction for this code restores it (the script's token match holds at this place but does not see the sign); both quoted examples are complete, with the same numbers, dollar signs and inline fraction; the statement starts and ends where the record does. The raised digit after the last closing quotation mark is the footnote marker and is rightly not in the wording; the footnote at the foot of the same page equals the accompanying text, it stands on this standard and not on the domain, and Limits restates it faithfully. Cluster heading right. Summary faithful (the non-zero condition, the unit rate that goes with the ratio, the use of rate language in a ratio situation; both examples kept as examples with their numbers) and not a near copy (the first clause is turned round and the examples stand in the other order). Limits: the sentence that says what a complex fraction is, is the pack's explanation and is correct; the last sentence says rightly that the stored wording is the export's with one symbol restored from the adopted document. The worked example is right (75 shared among 15 is 5), and the swapped rate under Common mistakes is indeed the wrong way round.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 78
+      },
+      "matched_by": "agent",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/mathematics round 4",
+      "round": 4
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-rp-3-a",
+      "wording_sha256": "3605ec3d0b185066bcb09d9899aadac42f7bd47f4616575c1bba0cfe7bbf4ecc",
+      "text_sha256": "0989697887e17358659a9f83e7b377ab83faabab2fc009fff049581d738f8c3d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-rp-3-b",
+      "wording_sha256": "5cca13a028951d2b8c17252664daa9b77ca859d6512f25e6ddd21ab367cf992e",
+      "text_sha256": "2a8b113af53fdf5cb6711832e47e357ee6ad3b2da143dc822e3561a1fde397e9",
+      "verdict": "confirmed",
+      "note": "Both question marks are real ones on the page. Limits cites the footnote of 6.RP.2 as a neighbouring statement's footnote, which is where the page marks it (on standard 2, not on the stem of standard 3 or the domain bar).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-rp-3-c",
+      "wording_sha256": "602cc1caf5b8e7f697fd29afbae6ae188ae58b560da9307c805a0fd837554d13",
+      "text_sha256": "22584787e87fcd74353aa736f5689315f58819d0e6e8a781be35b72142e76cb5",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-rp-3-d",
+      "wording_sha256": "aff18fa5fcffbad2cb44d87f7252dd58aab2b9ef883c6de88318bfe5b1691318",
+      "text_sha256": "46a3a7e0ba75938293de95a3c1ec3d1e07bc6d12601fc576bb886e53aa64126d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 49,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-sp-1",
+      "wording_sha256": "dbc5c84db496f32b0a400065a97b3cc69e34641ca22172430d9c4be5dbb18c3a",
+      "text_sha256": "04d825b81c1f27d83a6596afad8d3b425e17ef4724d328e89ff24cdc654d167c",
+      "verdict": "confirmed",
+      "note": "Both question marks are real ones on the page.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 52,
+        "offset": 98
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-sp-2",
+      "wording_sha256": "dd4385d3b20be1b3a6fd7464ccea35717ac2f6264b652f733fe4147acde14836",
+      "text_sha256": "117f25b2ce1d751167f46ad69edc32121d00cd9a567f6230dca9425a469599bf",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 52,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-sp-3",
+      "wording_sha256": "baa7031b8e94b89e7ecafb2739133b2a577f2b9dfb5cbbfce4c04c381a81d1d4",
+      "text_sha256": "634a142c6f1a70b51490bc30e565770a0530dd8004b8eb26221e5817ccf8eaf9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 52,
+        "offset": 180
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-sp-4",
+      "wording_sha256": "c0ba1fe006bcef128573e709a8feb654ea02efe301e95cea268678f2ad95f280",
+      "text_sha256": "603799df842ee8e01168c17f618952027cce72844a109ffc5402192a9f29827d",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Near copy. The Summary is one sentence with the same frame as the official one-sentence statement: the same clause order and nearly all of its words, with three swapped (the opening verb, the preposition before the number line, and the word that introduces the list) and the three kinds of plot given in reverse order. Nothing is missing or added, so the content is faithful; the fault is only that the sentence is not the pack's own. Fix: recast the sentence in another shape (for example start from the number line, or name the three kinds first). Everything else holds: wording and code match the PDF (number 4 under the 6.SP bar, PDF page 52, first statement under the second cluster heading of the domain, which is the heading the record carries); Limits is exact (numerical data, a number line, three kinds named as included).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 52,
+        "offset": 219
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-sp-4",
+      "wording_sha256": "c0ba1fe006bcef128573e709a8feb654ea02efe301e95cea268678f2ad95f280",
+      "text_sha256": "f42e3fccdb38b68b72d27fa59e1c1b9c8852af33b5237bf18feb0ed57e095cce",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary is recast. It now starts from the three kinds of plot, has them as \"among\" the plots on a number line, and ends on the data, so it no longer keeps the frame of the official sentence. Content complete: numerical data, on a number line, three kinds named as included. Limits holds (the list is open, no data in categories, the cluster heading, the pointer to 6.SP.5). Wording and code equal the PDF (number 4, the first statement under the second cluster heading of the domain, page 52, one line), complete.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 52,
+        "offset": 219
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-sp-5-a",
+      "wording_sha256": "9d0a3d94eaf2c3126ba4b3d68d17bd3446f4d9453304b8ee70c2049ec8577418",
+      "text_sha256": "321fe576326c3ca1fde3c7db974f8b07de902cfd16e68055abba5bacff9d8e99",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 52,
+        "offset": 236
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-sp-5-b",
+      "wording_sha256": "39daddc4a2c50c16a07fa2a904fadb4929c73cef2c801493fe17acc138e3691d",
+      "text_sha256": "aff9bcb2c157ecc9e858002804bd9ad8e79714a09165af4273186e27cdd9935f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 52,
+        "offset": 236
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-sp-5-c",
+      "wording_sha256": "544a420e32f0f186f80269ebd71493c09612c4b68f3dc478a15b27432c76dea6",
+      "text_sha256": "2e892167a709c47248af55947bb4e16c7db6c7d24380d4954cce98d5e268e5e6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 52,
+        "offset": 236
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.mathematics.objective.6-sp-5-d",
+      "wording_sha256": "2653024d74f3a6d5ddc45b8de39f023e5620e788f20dfa3670573dcd3e0a2ef8",
+      "text_sha256": "16d7e497b94775e0898db2100605a1c6f36452913015521f094281d52f642dc4",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 52,
+        "offset": 236
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/grade-6/mathematics",
+      "round": 1
+    }
+  ],
+  "unrecorded": [
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "6.RP.3",
+      "place": {
+        "page": 49,
+        "offset": 153
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 3 under the 6.RP domain bar with parts a, b, c and d beneath; its stem stands at the head of each of those sub-part records. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "6.NS.6",
+      "place": {
+        "page": 50,
+        "offset": 72
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 6 under the 6.NS domain bar with parts a, b and c beneath; its stem stands at the head of each of those sub-part records. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "6.NS.7",
+      "place": {
+        "page": 50,
+        "offset": 224
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 7 under the 6.NS domain bar with parts a, b, c and d beneath; its stem stands at the head of each of those sub-part records. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "6.EE.2",
+      "place": {
+        "page": 50,
+        "offset": 460
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 2 under the 6.EE domain bar with parts a, b and c (part c at the top of the next page) beneath; its stem stands at the head of each of those sub-part records. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "6.SP.5",
+      "place": {
+        "page": 52,
+        "offset": 236
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 5 under the 6.SP domain bar with parts a, b, c and d beneath; its stem stands at the head of each of those sub-part records. Found by eye: the PDF prints no full codes."
+    }
+  ]
+}

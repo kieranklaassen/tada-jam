@@ -1,0 +1,744 @@
+{
+  "lane": "nl/einde-po/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.156d3f88-03e0-458f-87f1-c624219ec99f",
+      "wording_sha256": "f573fb42a4aeb29f849917306edd3705242682e3499cb9c24ef16ed850c30ef6",
+      "text_sha256": "06bca519c7f3ba832c7f08d72f35033b9ca5f6210c19a3c7bb314ac17e7da3db",
+      "verdict": "confirmed",
+      "note": "Compared by eye. The record equals the legal text (bijlage, onderdeel 38, read in the XML). The check rendition differs, as the frame says: the open data (node \"PO Kerndoel 38\", field title) has one clause more after \"een belangrijke rol spelen\": \", en ze leren respectvol om te gaan met verschillen in opvattingen van mensen\". The law does not have it; the record is right, and its Limits names the difference.",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "156d3f88-03e0-458f-87f1-c624219ec99f"
+      },
+      "matched_by": "agent",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.45885286-dc4b-4648-b4b3-16f14ebf262f",
+      "wording_sha256": "1e9cddeddf805959cb8ad7fe82782691370336eecd79313ad2934f03e85f58da",
+      "text_sha256": "20cb96774d8271b382a83913fefc2b5eaf0810af38200fa670880d50c597e6aa",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "45885286-dc4b-4648-b4b3-16f14ebf262f",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.45dbe23d-61b7-4332-872d-a5280d7a17b0",
+      "wording_sha256": "d6a821cebe5bd97082508d19b086f7802251b6203df54d1afd33c63a4c1340a0",
+      "text_sha256": "07cfc9f54d89547ea5a3036280015cee62a782a4ed2d15c86d7ecdd7a43ac3c0",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "45dbe23d-61b7-4332-872d-a5280d7a17b0",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.7f6e0edc-e38f-43bb-a7f8-82d0cab137ad",
+      "wording_sha256": "efe69ff7130e696b7a69f5a379dcbbf205115cfd2c27d30c17fe5cc117d6e9a6",
+      "text_sha256": "bfa4bafa84415408b28d6a4aef6d572b6db64a3e338f0b705e432b0027f2ab3d",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "7f6e0edc-e38f-43bb-a7f8-82d0cab137ad",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.82c7db22-1b7f-4890-8720-dd2aa8373b56",
+      "wording_sha256": "3d9f80955d01ff54de81e579a99aa48738fd0968f51a8cb383197457ad089ecd",
+      "text_sha256": "19167e36634c0564e123a58f5b6a2435d6a01e48e27d3d0fda53eab6eac0691b",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-curriculum-kerndoelen",
+      "place": {
+        "node": "82c7db22-1b7f-4890-8720-dd2aa8373b56",
+        "offset": 0
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-democratische-oefenplaats-kerndoel-19-19",
+      "wording_sha256": "bb551bdd1479436dde26975a45b73465e9067d037aca698eeccb903de79583e7",
+      "text_sha256": "fc91879933672627384a3309f54b256d096b4501a95bf79e31751d54ae214033",
+      "verdict": "confirmed",
+      "note": "The bundle prints the sentence twice: in the overview on PDF page 23 (without the closing full stop) and in the goal box on page 24 (printed page 46), which is the record's own place and the one given here. Canonical draft, page 3, read on the page image: the row under \"Kerndoel 19\" holds this sentence and nothing else.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 9
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-democratische-oefenplaats-kerndoel-19-19-a",
+      "wording_sha256": "cb4c2db7cc81acbccc3c74e3ee4a63ffc29d1362d514e46c623032b29402a57a",
+      "text_sha256": "807ec77dfc41da527e7dc5d05d1765e360a394056e9621019673d97663b49708",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 18
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-democratische-oefenplaats-kerndoel-19-19-a-a",
+      "wording_sha256": "053d7cd6f7cbad93e8902616f84598481d85492938485af8644039d0e54553e4",
+      "text_sha256": "eb43dae2fd768a54ef520d763fc07161a8b1a9329e3d83a57dda7897a5e3aa57",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 31
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-democratische-oefenplaats-kerndoel-19-19-a-b",
+      "wording_sha256": "669290ffd15a5a049712c06ab019ca86a32be3c9b511d9dcf487fd96ee92c222",
+      "text_sha256": "d7415ec9739ddc6cc36994755d101ceed59a0ea71a1ff8c7e383f95eb70ef3d9",
+      "verdict": "confirmed",
+      "note": "The paragraph under \"In a child's hands\" describes the child's own conduct and does not name the school, unlike 19, 19 A, 19 A d, 28 D and 28 D d (\"At a school that does this\", \"an activity that the school offers\", \"takes part in lessons\"); Limits in this record does say that the item is what the school does and not a requirement on the pupil, so nothing is contradicted. For the lead: the opening could be brought in line.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 52
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-democratische-oefenplaats-kerndoel-19-19-a-c",
+      "wording_sha256": "57b1ec02b97bf4709ad89828fb5e209034c15904d3dbd9cebeec66c98d6e32a5",
+      "text_sha256": "374b49d529d77158d06edd5e404872c58962f9669059f332e6f2c2ded13da951",
+      "verdict": "confirmed",
+      "note": "Compared by eye. The script found no match because the text layer of the bundle has \"oﬄ ine\" (a ligature and a space) on page 24; the page itself prints \"stimuleren van respectvolle communicatie, offline en online;\" as the third bullet under 19A, word for word as the record and as item c on page 3 of the draft. The paragraph under \"In a child's hands\" describes the child's own conduct and does not name the school, unlike 19, 19 A, 19 A d, 28 D and 28 D d (\"At a school that does this\", \"an activity that the school offers\", \"takes part in lessons\"); Limits in this record does say that the item is what the school does and not a requirement on the pupil, so nothing is contradicted. For the lead: the opening could be brought in line.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24
+      },
+      "matched_by": "agent",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-democratische-oefenplaats-kerndoel-19-19-a-d",
+      "wording_sha256": "694261cf6567aa13204d98b2f349ab34d8abb048b7daf97e39dc392ea01e83da",
+      "text_sha256": "94a639942431d2598c596b0e587de978e5690a920696372c2d2fc7ff9f2a9b50",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 67
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20",
+      "wording_sha256": "c2ac65b47cc0a995d6905c027113e9327f5a8981901c51924973e0c915589856",
+      "text_sha256": "b60ffe148752803d5840cb6d0d9f56f13654d4591783398742f066cd9791274a",
+      "verdict": "confirmed",
+      "note": "The bundle prints the sentence twice: in the overview on PDF page 23 (without the closing full stop) and in the goal box on page 24, which is the record's own place and the one given here. Canonical draft, page 3, read on the page image: the row under \"Kerndoel 20\" holds this sentence and nothing else.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 84
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-a",
+      "wording_sha256": "3428b0f862c476d5d9e5e0314fb0aa887fd2c6839abfd7cb49f47a2e06f2ef63",
+      "text_sha256": "8d86d087db19f8a7955452428a2508583eb2497bcf9ade1e6642a37480c532fc",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 94
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-a-a",
+      "wording_sha256": "2025423a4f539977b37978abb8a6bacdd6dfa4d876dfdd7d9ceac3008725d453",
+      "text_sha256": "451da5e57bcfaee9fc33af1c705bfddc0e03eca374996145f3f6b968fa91019c",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 110
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-a-b",
+      "wording_sha256": "a16a500c8b5817597a906b0e69d13960ea387747b32ef8d0f1adea4e7a899c27",
+      "text_sha256": "3b79ebf73d8c455a15819f627d47a84d4a6ecdf3b832aa7025aec231eb6f1c20",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 124
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-a-c",
+      "wording_sha256": "06324966382c12e0e62d4d38588eae18932d236d970993ba8c74e204495ea279",
+      "text_sha256": "00df1bd518963313ec3eb6d2cc258451df8c416ffa97aaa2fd5c46286d7c77ae",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 138
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-a-d",
+      "wording_sha256": "87f89bfd1b317ab9885eb8946eb7af2abf08b61100cfdf4149456e095d880dcd",
+      "text_sha256": "0cfb60c367eba995b667d0b5ac8ad5e2d96f0d968512b0d6aa77f30aa3d94ba0",
+      "verdict": "confirmed",
+      "note": "The match is tolerant only because the text layer of the bundle has \"confl icten\" (a ligature); the page prints \"conflicten\". The gloss sets a comma before \"and treatment as equals\" and so reads three things after \"ervaringen opdoen met\"; the Dutch has no comma there, but the three-part reading is the natural one and Limits says \"Three things are named\".",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 152
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-a-e",
+      "wording_sha256": "596c0f5bf06a63cc67bdb14bcbce2d04b336dfb075e61963d278679a2908460f",
+      "text_sha256": "67a8d87e75514692a955179a3cbfbabf6c982b130806d674b0a4282e3b341515",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 166
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-b",
+      "wording_sha256": "28f456b5b05ea03334ec7dfe0fb2eebd3100b760192af097f907246b237507fe",
+      "text_sha256": "1ed9ebb250d85e233c5a199f4291745e4d6f594d256727f9b65675c3ee3e3b0e",
+      "verdict": "confirmed",
+      "note": "The Dutch \"die\" names no sex; the gloss writes \"he or she\", which chooses neither, and Limits says so in as many words. For the lead: \"he or she\" still names two sexes where the Dutch names none.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 186
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-b-a",
+      "wording_sha256": "d0c91b3bee0caabbe7227441d3bdb79072ad3d89dfe608b9b830555cb705c05b",
+      "text_sha256": "582f84ab016de54f801cb78cc2c074688963c07d64e1c93c7e00f7527ad736e8",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 202
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-b-b",
+      "wording_sha256": "2ff5ee611846fc2f2e477e9301917189ef6ba3addece4bb7baac9fa3689ddfbb",
+      "text_sha256": "1431109da9f8e5e4c4287d5f37b293cbf5791f7aeb48454fc12b1cc15f74c2d5",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 217
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-b-c",
+      "wording_sha256": "360d908f9a37c2e0a3b7e3efdb368ac8ea7a6cf46d095d0741107dffef437484",
+      "text_sha256": "b21e98b0ee1a785f066ab7f66d3bb25952f70646a78771c3861cabc0b7f620e2",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 228
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-b-d",
+      "wording_sha256": "0c30e1af9814660cd2d7d8752a868c514f66253881d61caf79b6e055e3f02930",
+      "text_sha256": "8f5a08a4e2a0a666d784b9b09700e9b06fb4f3c7767bd9c267855b7dd080dc85",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 236
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-c-burgerschap-domein-samenleven-in-een-democratische-rechtsstaat-kerndoel-20-20-b-e",
+      "wording_sha256": "7e0538aacd4fd0d208eb9b65c9eae9b7a3db26a66bdff1e5f9abe58d76b56dad",
+      "text_sha256": "0c5a0b627c422a05596e2c942388c58780220cfe6bc31f2f41cd71fa973c215d",
+      "verdict": "confirmed",
+      "note": "The open list is kept open in the gloss and Limits says which attachment the wording leaves open. *Mogelijkheden* is given with both readings (possibilities or abilities), and both are real.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 24,
+        "offset": 245
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28",
+      "wording_sha256": "f135355fca0e94f019e0fa38ec75ccc7471c0670a756ba9832d269ca18059eb4",
+      "text_sha256": "4b4e6e87e25928819d8924ae8c7584fb69668456fa66dbcf093dd8165d0495e6",
+      "verdict": "confirmed",
+      "note": "The bundle prints the sentence three times: in the overview on PDF page 32 (without the full stop), in the goal box on page 34 (printed page 67, above 28A to 28D), and repeated on page 35 above 28E. Page 34 is the record's own place. Canonical draft, page 9, read on the page image: the row under \"Kerndoel 28\" holds this sentence only; the table of doelzinnen starts on page 10. Limits says rightly that A, D and E are in this lane and that B and C are not recorded in the pack.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 336
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-a",
+      "wording_sha256": "512d91bb2bd94e328bef46f4b3c8efb8ec1f6c115d1cf94ab8caed1411a9c371",
+      "text_sha256": "cf6760361f067c4475fc6a1c9bc184bcbe1cac9998e35d0a6fcbf0dfa74d137c",
+      "verdict": "confirmed",
+      "note": "Limits lists what the items name and says \"borrowing\" for *lenen* of item 28 A d; see the verdict on 28 A d (the Dutch word also means lending). If that gloss is changed, this list follows it.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 344
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-a",
+      "wording_sha256": "512d91bb2bd94e328bef46f4b3c8efb8ec1f6c115d1cf94ab8caed1411a9c371",
+      "text_sha256": "ea52ab247b0a38a7ffd9dea3708dba366ee3e5bdfa8b72dc0c0e2f4bb7408b96",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. Read again on the page image of SLO's bundle (July 2026), PDF page 34 (printed page 67): the sentence printed beside \"28A\", same words; and on page 10 of the draft decree, doelzin A of kerndoel 28. Round 1's remark is resolved: the list of what the items name now has \"*lenen* (borrowing or lending)\", the same as the record of 28 A d. The list was checked against the five items on the page (work and income; cooperation; what influences choices; receipts, expenses, saving, *lenen* and risks; consequences of consumption) and is right. Whole record read again: the gloss follows the Dutch word for word; \"possible\" is kept; kerndoel 28 is about how people live together (\"hoe mensen met elkaar samenleven\"); the standing sentence agrees with the frame.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 344
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-a-a",
+      "wording_sha256": "25a824b78202028e2f93a4cd85ba4a369fc3913f015e4c1865288b29f56a0438",
+      "text_sha256": "31184e5ce74bada0cb98a98354fa5e542d98ac4eb8747d9afb2704869a0cf301",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 358
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-a-b",
+      "wording_sha256": "a0b18ea598d5fab958fe9ee4b5ba7bf8d5c664d18f4e7da8c963d9a72c394fa2",
+      "text_sha256": "6900cdceb6b520934dc2d15fdb77365976d1d0c6b2e37fdff494bfdf52825356",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 369
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-a-c",
+      "wording_sha256": "a4b5f526a448afb777f0419164af2019bd72dc66b24d5eaf93b04095f8622689",
+      "text_sha256": "ec6e8a8cc5e184f8a11a892dd0d011e424da2c5af02ef839d9be9dd214439b0a",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 378
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-a-d",
+      "wording_sha256": "87b767ab78869e6d59adde8ad4996ae49499b460710f9fff697b398b027a849d",
+      "text_sha256": "101eb5715b8d9203f801b7cd5fb8b2965c01505f8d26cad237c50c196f8e67b6",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording and place are right (draft page 10, item d; the bundle has the same words; both print \"risico’s\" with a curly apostrophe, which is form). The gloss renders \"lenen\" as \"borrowing\" without saying that the Dutch word has two readings: *lenen* is both to borrow and to lend, and the item (\"keuzes en hun gevolgen ten aanzien van ontvangsten, uitgaven, sparen, lenen en risico's\") does not settle which. The gloss should keep it open, for example \"*lenen* (borrowing or lending)\". The same choice is repeated in Limits (\"Five subjects are named: money received, expenses, saving, borrowing and risks\") and under \"In a child's hands\" (\"borrowing from someone and paying back\"). Second point, in Limits: \"names no products such as an account or a loan\": a loan falls inside *lenen*, which the item does name, so the sentence denies something a term of the item covers; drop \"or a loan\" or say that no particular kind of loan is named. The open attachment of \"in de eigen omgeving\" is kept open rightly.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 390
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-a-d",
+      "wording_sha256": "87b767ab78869e6d59adde8ad4996ae49499b460710f9fff697b398b027a849d",
+      "text_sha256": "cac94b3fbbea1935175701c74d148e45a1b153b0b300d46f83ba0e249f0aa76a",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. Read again on the page image of SLO's bundle (July 2026), PDF page 34 (printed page 67): the fourth bullet under 28A, same words; and on page 10 of the draft decree, item d. of doelzin A of kerndoel 28. Both print \"risico’s\" with a curly apostrophe: form. Round 1's reason is resolved on both points. *Lenen* is kept open: the gloss has \"*lenen* (borrowing or lending)\", Limits has \"*Lenen* means both borrowing and lending, and the item does not choose\", and the illustration shows both (\"borrowing from someone and paying back, or lending to someone and getting it back later\"). Limits no longer denies a loan: it says \"names no product such as an account and no particular kind of loan\", which is true. Whole record read again: five subjects named, as the Dutch has them; the open attachment of \"in de eigen omgeving\" is kept open; the parent 28 A was opened; the standing sentence (draft, not yet in force) agrees with the frame.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 390
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-a-e",
+      "wording_sha256": "7043702fcdc563c40fa40038f9a6bdb8842e790281bbe3229c23df83a17cef10",
+      "text_sha256": "8521c4789d7087ac402b517a700505716849293f547dd65aaafc29bd9c1fc074",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 409
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-d",
+      "wording_sha256": "4771dc21de5d215a12c0ec054c70cd7ae37e064ee6512c31e5a599f4d325a683",
+      "text_sha256": "7b5404ff5e3a6974d1a1769ec097c20ac691666c56075c1bbde0a396f8fe5364",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 589
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-d-a",
+      "wording_sha256": "ca1e57cb63125aa60c75329f48943201d1e469c1fdc3c5f49f69a21cc1736b50",
+      "text_sha256": "df0fac2ffeae741de59e4b2dd6ab48be7412916f6954969fc3f0fb711d25ce87",
+      "verdict": "confirmed",
+      "note": "The paragraph under \"In a child's hands\" describes the child's own conduct and does not name the school, unlike 19, 19 A, 19 A d, 28 D and 28 D d (\"At a school that does this\", \"an activity that the school offers\", \"takes part in lessons\"); Limits in this record does say that the item is what the school does and not a requirement on the pupil, so nothing is contradicted. For the lead: the opening could be brought in line.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 611
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-d-b",
+      "wording_sha256": "35f6fe87bd2e108fc9fe2bcb7533ec35089b1d5bbd7fce5ea7f7bd9305e38c71",
+      "text_sha256": "d2e21e614b12239dbb4c57982352796357642f106cac9e6a2bec3989c721e666",
+      "verdict": "confirmed",
+      "note": "The paragraph under \"In a child's hands\" describes the child's own conduct and does not name the school, unlike 19, 19 A, 19 A d, 28 D and 28 D d (\"At a school that does this\", \"an activity that the school offers\", \"takes part in lessons\"); Limits in this record does say that the item is what the school does and not a requirement on the pupil, so nothing is contradicted. For the lead: the opening could be brought in line. *Mogelijkheden* (possibilities or abilities) and *beperkingen* (limitations or impairments) are each given with both readings, and both are real.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 620
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-d-c",
+      "wording_sha256": "13ce5c7ed5b9a052e7867953e8097c05972d566aef756f588b3a6192dcc47ea4",
+      "text_sha256": "57b42bc8134b6515577a4321dd7ad0cc7795a81073c2feb2142f7d4520356baf",
+      "verdict": "confirmed",
+      "note": "The match is tolerant only because the text layer of the bundle has \"confl icthantering\" (a ligature); the page prints \"conflicthantering\". *Weerbaarheid* is given with both readings (being able to stand up for oneself, or resilience), and both are real. The paragraph under \"In a child's hands\" describes the child's own conduct and does not name the school, unlike 19, 19 A, 19 A d, 28 D and 28 D d (\"At a school that does this\", \"an activity that the school offers\", \"takes part in lessons\"); Limits in this record does say that the item is what the school does and not a requirement on the pupil, so nothing is contradicted. For the lead: the opening could be brought in line.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 628
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-d-d",
+      "wording_sha256": "645ce491781908a3a674f40146d46a8f7cca7434daad04b9e1948351b32f1afd",
+      "text_sha256": "41c49833217d6ff27098f5244cb4269f29e8ff99ce3c2172855c6010e70b2134",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 638
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-d-e",
+      "wording_sha256": "6eee38cfe10558a2a384924b3b356060b4c2a76e720365f48ebd8d6a2c331719",
+      "text_sha256": "c21b21d1c3508e506d04b6aa25eac11911f792194baa0b1e8500b8142c1e33f7",
+      "verdict": "confirmed",
+      "note": "The paragraph under \"In a child's hands\" describes the child's own conduct and does not name the school, unlike 19, 19 A, 19 A d, 28 D and 28 D d (\"At a school that does this\", \"an activity that the school offers\", \"takes part in lessons\"); Limits in this record does say that the item is what the school does and not a requirement on the pupil, so nothing is contradicted. For the lead: the opening could be brought in line.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 34,
+        "offset": 645
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-e",
+      "wording_sha256": "ac3c599511ad743924a6032edc582534cb43f4b9e09a71b5e67e79c05a4af6fa",
+      "text_sha256": "b041e59d7ca64eb4aef0d804a6d860e82908e97ea88f28f2fb4594755ab980fa",
+      "verdict": "confirmed",
+      "note": "In the canonical draft the sentence is split by a page break: \"De leerling neemt op een veilige en\" at the foot of page 10 and \"verantwoorde wijze deel aan het verkeer.\" at the top of page 11, with the page footer between them. The record holds the whole sentence and nothing of the footer. The bundle prints it on one line (PDF page 35, 28E).",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 35,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-e-a",
+      "wording_sha256": "6ace1d00aa8cd4eb5d3d5a1352443d8acf79df2f87d4a492bb561a563106e079",
+      "text_sha256": "87966cbbdcf3c87fd8445fb5b0b2890d4b9d37145b3cc62c8b753407cf2ab15c",
+      "verdict": "confirmed",
+      "note": "The match is tolerant only because the text layer of the bundle has \"fi etsers\" (a ligature); the page prints \"fietsers\". In the draft this item stands on page 10 and items b to d on page 11; the record's locator says page 10.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 35,
+        "offset": 41
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-e-b",
+      "wording_sha256": "892ce7058094b737eacbbca8be6af6853d7aa4e21ca7ee92395c95c0bb078268",
+      "text_sha256": "ba464a14c92678932760841ce90e2d25de624ad89d570ace150b852ff80f7a4e",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 35,
+        "offset": 55
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-e-c",
+      "wording_sha256": "45ca941505987f669ab17bbd8cb9387cc31fb304a396f4723dbe2f97e651d36e",
+      "text_sha256": "ccec2297c41ab9ed40a5f3be96dac821330d0ff094dc42344001828f6d85185f",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 35,
+        "offset": 64
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-e-mens-en-maatschappij-domein-mens-en-samenleving-kerndoel-28-28-e-d",
+      "wording_sha256": "244326df89e3f483cb269b9c29b4e2e4aaac4bcc6a14b0f3ab73af860a8e0748",
+      "text_sha256": "234d9456d13386beffe7712d3d078f011a6a7c8e4e2b7bc0fb85387c0eb9d343",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 35,
+        "offset": 74
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-b",
+      "wording_sha256": "0a0001721fabdc456e37f36a839037b9aad18f8f4b19ef74f0420cc1d24d6eb7",
+      "text_sha256": "56b0b5393e99863f88b4e4687e35a22d61df479af8196e756ecb13ff0558cb6a",
+      "verdict": "confirmed",
+      "note": "Limits says rightly that the sentence of core goal 31 and goal sentence 31 A are records of the science lane (they exist there: 31, 31 A and 31 A a to e).",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 109
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-b-a",
+      "wording_sha256": "68a612585ed06cd35c6a97f207c7f6f976169641c2a76372e44c0e37bcef6ca4",
+      "text_sha256": "3051b011a3ae2d32edf4c9a5394b59495ddb00b2bd2e765088507bee9fa8c808",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording and place are right (draft page 13, item a; the bundle has the same words). The gloss renders \"oriënteren op\" as \"getting a first orientation on\": \"first\" is not in the Dutch. Limits then states it as the item's content: \"The verb is getting a first orientation on (*oriënteren op*), which asks for a first acquaintance and names no result\". \"Oriënteren op\" is to orient oneself on, to get one's bearings in; it sets no \"first\" level and is another verb than \"kennismaken met\". Gloss it without \"first\" (for example \"orienting on\" or \"getting an orientation on\") and let Limits say only that the verb names no result or level. The same phrase stands in the science lane (29 A e, 29 C a).",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 126
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-b-a",
+      "wording_sha256": "68a612585ed06cd35c6a97f207c7f6f976169641c2a76372e44c0e37bcef6ca4",
+      "text_sha256": "915cdb685e7ea791b47b4aef439739afdd10e04c29ea5490da2388c6917cb274",
+      "verdict": "confirmed",
+      "note": "Round 2, after the fix round. Read again on the page image of SLO's bundle (July 2026), PDF page 40 (printed page 78): the first bullet under 31B, same words; and on page 13 of the draft decree, item a. of doelzin B of kerndoel 31. Round 1's reason (\"getting a first orientation on\", and Limits saying the verb \"asks for a first acquaintance\") is resolved (lead ruling 6): the gloss has \"getting an orientation on\", and Limits says the verb \"names no result and no level\", which is true of \"oriënteren op\"; \"first\" and \"acquaintance\" stand nowhere in the record. Whole record read again: seven influences and two kinds of health, as the Dutch has them; no amounts stated; the parent 31 B was opened and reads \"toont inzicht in leefstijl, gezondheid en ziekte en verkent keuzes hierin\"; the standing sentence agrees with the frame.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 126
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-b-b",
+      "wording_sha256": "ebed555099f68605ed0c6e4001d93703ca0e3951c2d2a0d6271dc97068f66101",
+      "text_sha256": "3c1989570c46e8f960e1734439448b500dd39641dac9f91c609f4c02454d0dd6",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 144
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-b-c",
+      "wording_sha256": "929cef9232e3bbfa194dbce4a0f8d2605a6be11b25eb12c7a4b17383775232b8",
+      "text_sha256": "93e177871284f56557e584a910bff892d8ee7e45a121909ca889b3bd02cb2bba",
+      "verdict": "confirmed",
+      "note": "Both renditions print \"voorkómen\" with the accent here, as the record and its Limits say.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 159
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-b-d",
+      "wording_sha256": "14584bd1cbf444fa5abc134d505556a7a51fc44afab907a5104481b8fc2551c7",
+      "text_sha256": "2445d4acbdd2be37351264481e720c4e836651ccc361487ac9fd7b14e67fed07",
+      "verdict": "confirmed",
+      "note": "Both renditions print \"voorkomen\" without an accent here, as the record and its Limits say.",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 171
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.einde-po.practical-life-feelings.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-organismen-en-gezondheid-kerndoel-31-31-b-e",
+      "wording_sha256": "7a3f3ff6da67f283b1472c8c584dac286828e1ea37e1f52b1ffc72a29e1498fc",
+      "text_sha256": "6afc04215c510bac286f8ac950fb8623ab34cc31dd95a5ca413439b7baa9c0ca",
+      "verdict": "confirmed",
+      "rendition": "nl-slo-kerndoelen-po-bundel",
+      "place": {
+        "page": 40,
+        "offset": 178
+      },
+      "matched_by": "script",
+      "checker": "nl/einde-po/practical-life-feelings",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

@@ -1,0 +1,96 @@
+{
+  "lane": "us-ca/cross-grade/science",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.cross-grade.science.objective.3-5-ets1-1",
+      "wording_sha256": "3a8897250fa59d66dea61b56c0e6af03cf787d30939efd68bad7e4d21fc26aef",
+      "text_sha256": "379288dea431cdff2b7f58116b0b27c201177b83ae9d526b5f69a45092607501",
+      "verdict": "confirmed",
+      "note": "The PDF prints the code with an en dash after its first character; form only. The expectation has no clarification or boundary in either rendition.",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 14,
+        "offset": 19
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.science.objective.3-5-ets1-2",
+      "wording_sha256": "82b7876648b714f07e75ee4564f3334105670b7c0c6da9e79ca0edd6e8efcf82",
+      "text_sha256": "6a54317567c6015aa91ef2bccaca5303cc65b6393bec03cd6f88cee94dcf72ea",
+      "verdict": "confirmed",
+      "note": "The PDF prints the code with an en dash after its first character; form only. The expectation has no clarification or boundary in either rendition.",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 14,
+        "offset": 47
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.science.objective.3-5-ets1-3",
+      "wording_sha256": "8f3f9245bc2efe0705bf5efa3d7787221f6e168b2ca18e34deeaddfbd3088773",
+      "text_sha256": "4826c215190b9598fdb7302d60eb0efeb82dbb77db66104b973f214870c3509d",
+      "verdict": "confirmed",
+      "note": "The PDF prints the code with an en dash after its first character; form only. The expectation has no clarification or boundary in either rendition.",
+      "rendition": "us-ca-cde-ngss-grade4-dci-pdf",
+      "place": {
+        "page": 14,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.science.objective.k-2-ets1-1",
+      "wording_sha256": "411e0f9802bc76634b4c9ca996d12111e0943134bfb99fa55cef32c2c88b4fb4",
+      "text_sha256": "aab81e1afc8bee56f6c9f9a257422670bd024a694c44b986488c4c08a54f6519",
+      "verdict": "confirmed",
+      "note": "The PDF prints the code with an en dash after its first character; form only. The expectation has no clarification or boundary in either rendition.",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 12,
+        "offset": 18
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.science.objective.k-2-ets1-2",
+      "wording_sha256": "2934583175cbda7b0adb1d7ae1cce235f775fb131db4581439fd7504c01f1ce5",
+      "text_sha256": "cec9d2dea53a76cc48e70c53e0fb97f4eadd9878ba935a0575b21a2196084e53",
+      "verdict": "confirmed",
+      "note": "The PDF prints the code with an en dash after its first character; form only. The expectation has no clarification or boundary in either rendition.",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 12,
+        "offset": 56
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.cross-grade.science.objective.k-2-ets1-3",
+      "wording_sha256": "cb47f336945995960a76d88de7f8f8904508892a9e32318609ced8c7c33bd998",
+      "text_sha256": "60052a62723b07947186668ca66de8aea4c699d520a7f21cb79a645f8b9d036d",
+      "verdict": "confirmed",
+      "note": "The PDF prints the code with an en dash after its first character; form only. The expectation has no clarification or boundary in either rendition.",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 12,
+        "offset": 86
+      },
+      "matched_by": "script",
+      "checker": "us-ca/cross-grade/science",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

@@ -1,0 +1,151 @@
+{
+  "lane": "us-ca/kindergarten/science",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.kindergarten.science.objective.k-ess2-1",
+      "wording_sha256": "9209b0c17dc70c48c85f792aee800983afd6f2bb39fa8e65377544ee19d920ef",
+      "text_sha256": "2e99f6631ee25222797b307c0f61c1b1bfddea6b63d5efb92c59e672464edbaa",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. In the assessment boundary the PDF (page 4) has one more word, a linking verb directly after the fourth word of the boundary sentence and before the word that states the limit; the export lacks it. Nothing else differs and the meaning is the same. No double asterisk on the statement: the flag false is right. Code equal. Summary and Limits state the export's version faithfully.",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 4
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/kindergarten/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.science.objective.k-ess2-2",
+      "wording_sha256": "923bf3a0f650c414e23644fec0624f8922b63eae8b9ae2baaf4cdcb921cad27d",
+      "text_sha256": "7ac6c77206737884597759e2e91ec2fb7995e5edf82b27f5ac73a1bb575e599c",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. In the clarification the PDF (page 4) has one more word, a connecting word that introduces the first example, directly after the two-word verb phrase that opens the examples; the export lacks it. Nothing else differs and the meaning is the same. No double asterisk on the statement: the flag false is right. Code equal. Summary and Limits state the export's version faithfully.",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 4
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/kindergarten/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.science.objective.k-ess3-1",
+      "wording_sha256": "3d2aff9bd522890a33c4622678728e199ffc972891ba3881e15998eefcc53619",
+      "text_sha256": "0e74966167ac72df5f4de780d49fd9297377142f693295255dce8d06188a96be",
+      "verdict": "confirmed",
+      "note": "The export has a comma after the conjunction that follows the semicolon in the clarification; the PDF has none. Punctuation only.",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 6,
+        "offset": 20
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.science.objective.k-ess3-2",
+      "wording_sha256": "c9ca6050b6b4100beebe90e7554d27c4e9a4b4918435f8db459ddf255d66837c",
+      "text_sha256": "669ed76f888bf5717bbad7346d11e29d6e95c3edbe2e79f36af3dd3de55bbee1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 6,
+        "offset": 84
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.science.objective.k-ess3-3",
+      "wording_sha256": "4ed00db2b918d46531dd6b83d607785636d3a66a9761d264acd7fb045cd7ed6a",
+      "text_sha256": "a4d67526e811e53e8bf2c5b294c8e1441d585ddef37403d5ed5db311c6af98fa",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 6,
+        "offset": 116
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.science.objective.k-ls1-1",
+      "wording_sha256": "dd3243c5b15d8a8e16a10e748a86f0cd5c3673bf9ae10a8599279dc5f4b2f2f8",
+      "text_sha256": "48fc8f98a21267d4b88f7ad2d0519abb68a581f9dabb30856f4554a21c936fd3",
+      "verdict": "confirmed",
+      "note": "The script did not find it because the text layer of the PDF has a stray space inside the second word of the expectation; the page image prints the word whole. The export has a comma after the conjunction before the last example of the clarification and the PDF has none: punctuation only. Content equal word for word on the page image; the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 2
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/kindergarten/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.science.objective.k-ps2-1",
+      "wording_sha256": "1a3f0c14d2ec2936bf4fcc8b535277211d4d4adb555e18184f650a7b70c72bf7",
+      "text_sha256": "3d4405bbcdc97bcc32c6a43bdb14c85ede58b5ac8fb5c9f4e0baa3e9107480ff",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 8,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.science.objective.k-ps2-2",
+      "wording_sha256": "b5037e0d82bcbbdc6c2f9930fc0cce1bc1b9f03bc7bf86545c11efdcf597d34a",
+      "text_sha256": "0fb9a48ab3eb2dc0a427be96b327cf350e7dd30488c3b6ec3d41fc1b86510857",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 8,
+        "offset": 123
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.science.objective.k-ps3-1",
+      "wording_sha256": "b860ed5bf66d0b0d88371eee676b0d3a11744a003d319f719740fa44186a4d68",
+      "text_sha256": "e67103985b7e05348a1d6433a3324675297c3e7b81665fd01a055d989bb6b462",
+      "verdict": "confirmed",
+      "note": "The PDF ends the clarification with a full stop before the closing bracket; the export has none. Punctuation only.",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 10,
+        "offset": 14
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.science.objective.k-ps3-2",
+      "wording_sha256": "21089cd8d7e983b60072e1ffff7a1b7330020a11b65eb80a11a0b0efa60a4530",
+      "text_sha256": "9727d33f1ed76ec1320503c19b70baacdc85b207035308b8456a080bc71b3834",
+      "verdict": "confirmed",
+      "note": "The summary renders the expectation's general word for the place to be shaded as a patch of ground; the official wording names no kind of place. Judged a paraphrase, not a change of scope, but a reader should know.",
+      "rendition": "us-ca-cde-ngss-kindergarten-dci-pdf",
+      "place": {
+        "page": 10,
+        "offset": 55
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/science",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

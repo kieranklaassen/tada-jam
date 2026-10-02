@@ -1,0 +1,624 @@
+{
+  "lane": "us-ca/grade-6/science",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ess2-earth-s-systems-ms-ess2-4",
+      "wording_sha256": "bf49053b578a315e7795ac89f5beef16194b6cf7e7f93659be8f6fc2fcae9bd1",
+      "text_sha256": "cba56b1dabdda805c1e0a1e93908df335a46f72607495dbfe58068b0ccb797b6",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. Code equal.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 35095
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ess2-earth-s-systems-ms-ess2-5",
+      "wording_sha256": "03cc0a291abf5c983983ed52fe01e70356f375222aa7d7e1edef3a816ef69d06",
+      "text_sha256": "93d597763d32bc96e6b01baf64d5a1f88ec3cdffefc2936f838e3cc978d3031d",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the grade 6 PDF, and equals it on the page image (page 8). In the expectation sentence one word differs by one letter: the sixteenth word, the verb, ends in s in the PDF and in the record and has no s in the export (the export's form agrees in number with the plural subject of the clause). Nothing else differs: the clarification and the assessment boundary are equal word for word, and the export's paragraph begins and ends where the record does. Code equal. The line-break correction is right: page 8 breaks the first word of the second sentence of the clarification across two lines at a hyphen. Summary and Limits are faithful and do not depend on the differing letter. Nothing to fix in the record.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "node": "MS-ESS2-5"
+      },
+      "matched_by": "agent",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ess2-earth-s-systems-ms-ess2-6",
+      "wording_sha256": "3220b87479421bcc4b9744355e3e4276a7fb4934d2db3dc8d52f4fdebeaa63c1",
+      "text_sha256": "018f9853188ab3fc9b6f4b7fa8a19b8ab3a2e087421e2a98be3d161a2fe047dc",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. Code equal. The line-break correction is right: page 8 breaks one word of the second sentence of the clarification across two lines at a hyphen.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 35887
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ess3-earth-and-human-activity-ms-ess3-3",
+      "wording_sha256": "7c7e050abd78da5e15479ae0a4f03098e57e20ddd9b45e528da1d515e91c3227",
+      "text_sha256": "5f86424776171252c7b1e48ae324e1a6c525e8f6fb28bb20115d2f9cdad489ac",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. Both renditions print the single asterisk after the expectation sentence (engineering integration); Limits reports it. Code equal. The line-break correction is right: page 11 breaks the last word of the second line of the row across two lines at a hyphen. No assessment boundary in either rendition.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 37412
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ess3-earth-and-human-activity-ms-ess3-5",
+      "wording_sha256": "85c25dd1f6e0b1888ab1ebdd558a20691832a18d8f130bedfbbed446f81189cd",
+      "text_sha256": "89e7d71e54388fe4a1160beac6ed3e93297e121b7542154249b48f8d226ad192",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. The PDF prints this code with an en dash before the last number (page 11): form. No assessment boundary in either rendition.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 38590
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ets1-engineering-design-ms-ets1-1",
+      "wording_sha256": "547d17965d86b7233a28dd1b635d29e63246f3e0803a31d0e72b8043c393760f",
+      "text_sha256": "a75595d4d6206621d680f0d32ad755344b6fe07c49bd1149c7b332928e3f7322",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. No clarification statement and no assessment boundary in either rendition. The export's Title line gives the domain a longer name than the heading of the PDF (page 17), which is the record's group; the expectation itself is equal. The line-break correction is right: page 17 breaks one word at the end of the first line of the row at a hyphen.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 39015
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ets1-engineering-design-ms-ets1-2",
+      "wording_sha256": "7aac28bb32590262ab6c27ffef64e60526f6cf6febdcddd54595d3ce7a9aa579",
+      "text_sha256": "d6b1d396d12839c14f1a10ceb0ec26ef521f56192ad8392ac7814d5d9f09259b",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. No clarification statement and no assessment boundary in either rendition. The export's Title line gives the domain a longer name than the heading of the PDF (page 17), which is the record's group; the expectation itself is equal. ",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 39425
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ets1-engineering-design-ms-ets1-3",
+      "wording_sha256": "c90915f39d0e8e11e4871652436e749193e7c994a9654bc69964e62556feee34",
+      "text_sha256": "3204f3c19d9b1db1ec218a0ea62fb3fffc0deba5df6a97c369ffc702ef4f0117",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. No clarification statement and no assessment boundary in either rendition. The export's Title line gives the domain a longer name than the heading of the PDF (page 17), which is the record's group; the expectation itself is equal. ",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 39691
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ets1-engineering-design-ms-ets1-4",
+      "wording_sha256": "12d5bda20a4491f59440da1e1dfb1fbb4ba82b1a7d7b360c2f2296f758b2d753",
+      "text_sha256": "e0d691bbb06a57ac76a0201e6906a6a77bf87dad849d8bc24ce765b1be6a9208",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. No clarification statement and no assessment boundary in either rendition. The export's Title line gives the domain a longer name than the heading of the PDF (page 17), which is the record's group; the expectation itself is equal. ",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 40072
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ls1-from-molecules-to-organisms-structures-and-processes-ms-ls1-1",
+      "wording_sha256": "1337dd2e3e0e6e4e1f787e81317b613b7600d724e6344ef7b84f7128d3afe6d8",
+      "text_sha256": "8680fa3d2f738d303f104709f5414da6653c53e21a84a4b201a7e6ad0c771324",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the grade 6 PDF, and equals it on the page image (page 1). (1) The export lacks five words in a row that the PDF prints in the first sentence of the clarification: a parenthesis directly after the eighth word of the clarification's text (not counting its label), which names three groups that living things include. (2) The PDF prints a double asterisk at the start of that parenthesis and another at the start of the last sentence of the clarification, and sets both passages in boldface: both are California clarification statements. The export has neither mark (the frame says so) and keeps the last sentence word for word. Nothing else differs; the export's paragraph begins and ends where the record does, and neither rendition has an assessment boundary. Code: the export's identifier has a trailing space. To report: the record has no california_addition field (no record of this lane has one), although the PDF marks two passages of this clarification as California's own; this is the only expectation of the grade 6 document with a double asterisk in its row. The Summary calls the last sentence a note marked with two asterisks but gives the parenthesis without saying it is marked too. Summary and Limits are otherwise faithful to the PDF. Nothing to fix in the wording.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "node": "MS-LS1-1"
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ls1-from-molecules-to-organisms-structures-and-processes-ms-ls1-2",
+      "wording_sha256": "a9941527204b7d079469f730244bf96d894c790c3eeddc541867014a08099b57",
+      "text_sha256": "8f7370b65ec41a198b6ec51447dc503d6d830c9ecf77ca6a22249494640466ae",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the grade 6 PDF, and equals it on the page image (page 1). In the expectation sentence the export has one more word: a definite article directly after the seventeenth word, before the noun for the components of a cell. The PDF and the record have no article there. Nothing else differs: the clarification (five named parts) and the assessment boundary (three sentences) are equal word for word, and the export's paragraph begins and ends where the record does. Code equal. The line-break correction is right: page 1 breaks the first word of the clarification's text across two lines at a hyphen. Summary and Limits are faithful under either reading. Nothing to fix in the record.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "node": "MS-LS1-2"
+      },
+      "matched_by": "agent",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ls1-from-molecules-to-organisms-structures-and-processes-ms-ls1-3",
+      "wording_sha256": "37d995814daf0a112518f67bfd7f50ddbe22b41a2ad12287579d2b0d0fc7e932",
+      "text_sha256": "a9f9e3e0a331884d6373a7a166ce85ad3d274d3dc798ebb3cf6e9659bf815ed3",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. The export's identifier has a trailing space; the code is equal. Limits lists the six systems of the assessment boundary exactly.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 41190
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ls1-from-molecules-to-organisms-structures-and-processes-ms-ls1-4",
+      "wording_sha256": "c5026d345ccd2ab6d64b113477c7b51cde0cf7536ad670536db94c00a7354454",
+      "text_sha256": "effccac0ab33411dea96caa46466ef010e8b957bbd18b377491dbf2c85b40043",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation begins and ends where the record does, and every word is equal. Punctuation only: in the second sentence of the clarification the PDF and the record have a semicolon before the conjunction that joins the two examples and a comma after it; the export has a comma before the conjunction and none after. The export's identifier has a trailing space; the code is equal. The line-break correction is right: page 2 breaks one word of the last sentence of the clarification across two lines at a hyphen. No assessment boundary in either rendition.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 41647
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ls1-from-molecules-to-organisms-structures-and-processes-ms-ls1-5",
+      "wording_sha256": "c39b14b1c6ffc04113b0054789fb93da504653c7f4bff7d69e14e314b7345cad",
+      "text_sha256": "1ea053c451c63117c79db7d31a36f20c54ddeed4a7bfcc3913953f91236a17cd",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. The export's identifier has a trailing space; the code is equal. The line-break correction is right: page 2 breaks the second word of the clarification's label across two lines at a hyphen.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 42065
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ls1-from-molecules-to-organisms-structures-and-processes-ms-ls1-8",
+      "wording_sha256": "c1b7a663d134bbec8cfd50c1a3498f9082ae6586c67268294279076cd046a7ee",
+      "text_sha256": "ce3aa7ec4804a80dedc9f4875ecec45d79c77770a78166e7e68cae84d001d453",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. Code equal. No clarification statement in either rendition. The line-break correction is right: page 2 breaks the last word of the expectation sentence across two lines at a hyphen.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 43433
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ls3-heredity-inheritance-and-variation-of-traits-ms-ls3-2",
+      "wording_sha256": "23e4d9525d7554a45b53480a644081671f99b409cbbc13f8278b883336d7bf13",
+      "text_sha256": "99f8e813d520a0e1e6c18fdc7b9f8cd76c505000ad61978d2cc317f5136cab6b",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. Code equal. No assessment boundary in either rendition.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 46763
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ps3-energy-ms-ps3-3",
+      "wording_sha256": "1d51a61ea8529c3108a0afedc49d512d60127510323fce19f7cfd72c5a409b02",
+      "text_sha256": "8d530daaf37797df1cb58566e35514480e3f54292707772d5bb6b548b9df5096",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. Both renditions print the single asterisk after the expectation sentence (engineering integration); Limits reports it. Code equal. The line-break correction is right: page 14 breaks the first word of the clarification's text across two lines at a hyphen.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 55012
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ps3-energy-ms-ps3-4",
+      "wording_sha256": "743114de79c14a5187f44a05aecc852f1ec78ad7d9bdc472903a30ed8231317b",
+      "text_sha256": "a3f21d28bf5bcd8122bd078040dc3cb8fbe10e7571e6c6b4c94f73bd9e040610",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. The export's identifier has a trailing full stop and space; the code is equal. The three example experiments are all in the Summary, as examples.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 55442
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.science.objective.ms-ps3-energy-ms-ps3-5",
+      "wording_sha256": "9113d3915eb14e688c4380069b69972085b440380d7e7305d5a03f98a723f96a",
+      "text_sha256": "0a54282a20afb23b9bcc3bec37a302984e65ff720d83a90eb61b6343424c903a",
+      "verdict": "confirmed",
+      "note": "Row of the export read: the paragraph labelled Performance Expectation holds exactly this text, from its first word to its last bracket, and the next paragraph of the cell is a new label. The PDF prints this code with an en dash before the last number (page 14): form.",
+      "rendition": "us-ca-cde-cacs-science-export",
+      "place": {
+        "page": 1,
+        "offset": 55936
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/science",
+      "round": 1
+    }
+  ],
+  "unrecorded": [
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-ESS1-1",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-ESS1-2",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-ESS1-3",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-ESS1-4",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-ESS2-1",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-ESS2-2",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-ESS2-3",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-ESS3-1",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-ESS3-2",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-ESS3-4",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS1-6",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS2-5",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS1-6",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS1-7",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS2-1",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS2-2",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS2-3",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS2-4",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS3-1",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS4-1",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS4-2",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS4-3",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS4-4",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS4-5",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-LS4-6",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS1-1",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS1-2",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS1-3",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS1-4",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS1-5",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS2-1",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS2-2",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS2-3",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS2-4",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS2-5",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS3-1",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS3-2",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS4-1",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS4-2",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    },
+    {
+      "rendition": "us-ca-cde-cacs-science-export",
+      "code": "MS-PS4-3",
+      "place": {
+        "page": 1
+      },
+      "explained": "A middle school expectation that belongs to grade 7 or grade 8 in the integrated model, per the manifest: the export holds all 59 expectations of the 6-8 band without saying which grade each belongs to. The grade 6 document of the Preferred Integrated Course Model prints 19 codes at the head of a row (counted on its 19 pages) and this code is not among them."
+    }
+  ]
+}

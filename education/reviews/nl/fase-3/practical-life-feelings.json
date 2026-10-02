@@ -1,0 +1,1120 @@
+{
+  "lane": "nl/fase-3/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.00334ae2-c135-46d2-b4a7-2e6e24bc31bb",
+      "wording_sha256": "6eb2171f5b3be94f69199bf9937b3348c85770bf46666fde27cb67ac69d98d83",
+      "text_sha256": "7f053b427d56e59666e5d4cd3b1544031727cd6996b7f86582c8256bfcd2f43d",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 2): fase 3 column, cluster \"Deelnemen aan het verkeer\", first dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. Limits says the statement states no safety condition, and it states none. The neighbour cited (ojw/ds/4/02/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 357
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.0845d13b-8809-459a-b9ac-1be3a308180c",
+      "wording_sha256": "fb324ae3319c1f386ffc8b9cdcf4303ef3fc230dc46afd0e1e1cf0d457b1223b",
+      "text_sha256": "113897d75317a3efca02aacd6fbc6759cd0f933492f986ea3a1c9b591cc5ff07",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Samen leven en samenwerken\", third dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The gloss keeps *zelfbewuste* open (self-aware, or self-assured): both are real readings. The scripted sentences in \"In a child's hands\" (\"no, I do not want that\", \"thank you\") illustrate what the brackets of the goal name (refusing requests, accepting compliments).",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 529
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.0fa83ee2-a81a-4078-8b13-3c9fe799d454",
+      "wording_sha256": "936d98ddcfd3ec71643680b950c40ef78f2e63677da70a608bcb7c60cd8267a3",
+      "text_sha256": "a15adbe807527c51237183a925920be85c6b98c560416f9702586cf3fb237666",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 2): fase 3 column, cluster \"Deelnemen aan het verkeer\", fourth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. An awareness goal (\"beseffen\"), glossed as realising. Limits says the statement states no safety condition, and it states none.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 395
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.18f369b3-d5b1-46d1-953c-e8addb6704d2",
+      "wording_sha256": "e8eda014c580d35d1f1bc83a5ed1abb5fc11570882541b37b234fe75fd207466",
+      "text_sha256": "8687455c7037b44d75c7c9cf25a73d42830440c0219f822a09dc30772d20c9eb",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Relaties en seksualiteit*\", first dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. Limits says the statement names nothing beyond what it prints and sets no level of detail; \"In a child's hands\" stays with the talk the goal names and gives no advice, script or rule. The PDF marks this cluster heading with an asterisk (\"Relaties en seksualiteit*\") and prints under the table a note that the open data does not hold: \"* Scholen zijn verplicht aandacht te besteden aan het thema relaties en seksualiteit, dat valt onder kerndoel 38, maar mogen zelf kiezen welke leerlijnen en tussendoelen per bouw zij formuleren.\" No record carries it (the frame quotes it); Limits does not contradict it and does not mention it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 492
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.1d390ba0-cd32-484c-9a54-c9fc0ae1f436",
+      "wording_sha256": "def6cdba68e84fa8e119723eb52c813e06df8e4b38fd9bdc75111091497884ec",
+      "text_sha256": "405e1b529e325afaf6b4e358477dc2ce3e83a995fca090ef46d7bfb60d5b4038",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Gevoelens, wensen en opvattingen\", eighth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 462
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.1f41e471-9eab-47fa-81e9-04fa03305530",
+      "wording_sha256": "856aa86145a447fe941435721b0f783648f6fef16fe1cc36ed91da30bd9f9398",
+      "text_sha256": "7c2e55f72f2af3438447aae0c3ee25a09633011424973bf5fdedfa4ee86b874c",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De ruimte om je heen, 04-2018, page 2): fase 3 column, cluster \"Omgaan met het milieu\", third dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 525
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.28d813df-c0dc-41dd-bae1-0da90de0602b",
+      "wording_sha256": "38b23907e5d43c6c51f8a7b2df574bfac93f6bb75c175c86e07f70430b4d253b",
+      "text_sha256": "12d73299e556bd34f17f6f72948e7140caf916019f7d1285dec82b1b2b3c43d7",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Gevoelens, wensen en opvattingen\", first dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the same sentence a second time, as the second dash of the fase 2 column of this cluster; the script's first place was that one, and the place given here is the printing in the fase 3 column.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 380
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.2ef57903-1287-4a2a-826b-2041c9a97309",
+      "wording_sha256": "1eeff6c04194bde1aa16a4ea1f11c21c50cdc1d886102e5fff1cf952b5586e13",
+      "text_sha256": "ade471d53d628d083868b41a2747ab70da63c701474c4752397578c19ef5325f",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Samen leven en samenwerken\", eighth dash of the cluster, the second on page 2, where the cell continues from page 1; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. The neighbour cited (ojw/ja/1/07/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 429
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.301ac926-62f9-40e1-b148-8960fb33da90",
+      "wording_sha256": "2c5920893de225174ff365d7b604ba58c0c475e2e5334bfc6f76b7c34824a4cf",
+      "text_sha256": "e27f7540e56b6cd494a42719586c211bf4a6b2d9de5e84fb658c29df7cc7e1aa",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 4): fase 3 column, cluster \"Gezondheid en hygiëne\", tenth dash of the cluster, the third on page 4, where the cell continues from page 3; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The gloss keeps *het voorkomen* open (the occurrence, or the preventing): both are real readings of the written word. Limits says the source prints \"verkennen m.b.t.\" without a word for what is explored; the PDF prints it so too. \"In a child's hands\" has the child grow what is on a hand or a door handle on growth medium or bread; Limits has no sentence on a safety condition, and the goal states none.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 4,
+        "offset": 124
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.301ac926-62f9-40e1-b148-8960fb33da90",
+      "wording_sha256": "2c5920893de225174ff365d7b604ba58c0c475e2e5334bfc6f76b7c34824a4cf",
+      "text_sha256": "1015d50d08a046b6c00f394c16498a64b4415a59c625c1119cd5d15a22440b9a",
+      "verdict": "confirmed",
+      "note": "Round 2 (ojw/pdm/2/10/fase3). Round 1 confirmed the record and noted that the child grew what is on a hand or a door handle while Limits had no sentence on a safety condition. The illustration now has the child only look, \"without opening them\", at closed containers with slices of bread touched with a hand, a door handle and a telephone, and Limits ends \"states no safety condition\", which is true of the wording. The illustration still has \"The child makes yoghurt, or finds out how cheese is made, and so meets bacteria that people use\": that fits \"het gebruik van bacteriën\" in the goal, is ordinary food preparation, and states nothing unsafe as a norm. The gloss keeps *het voorkomen* open (the occurrence, or the preventing) and the unfinished \"verkennen m.b.t.\" as the source prints it; the brackets (infectie, griep, inenten) are kept without \"bijv.\", as Limits says. Looked up again on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 4): fase 3 column, cluster \"Gezondheid en hygiëne\", third dash on the page (the tenth of the cluster), word for word equal, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 4,
+        "offset": 124
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.31f992e9-00a5-44ce-a5f2-f1cc4927ab7c",
+      "wording_sha256": "37eb4171d26217b8400e2209b2f089607ebc8abd1031648f0269f4b892d9a986",
+      "text_sha256": "62ca2451e7774f6927bb39e693b6e6f7ab09bbe5380ed67792b772c88b80cda2",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 2): fase 3 column, cluster \"Consument zijn\", fourth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 467
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.351d9a4a-5f07-4672-8581-ce82a7147540",
+      "wording_sha256": "8b36e2331097fcc207359c84787f18bb3020a543a3d5b7a6e2ecfa72174ec986",
+      "text_sha256": "a1c9f545a9d9380004721ad5b0823bf09baa8dd55deb9efe4c46ed2bb94516dc",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De ruimte om je heen, 04-2018, page 2): fase 3 column, cluster \"Omgaan met het milieu\", first dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The example \"(bijv. afvalprobleem)\" is in the record and in the PDF, and Limits calls it an example. The neighbour cited (ojw/rojh/6/04/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 501
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.35db3174-ac58-45eb-bc78-c7d50755f5ae",
+      "wording_sha256": "1930cc1c00f49ec16982467b3ba2c1cdc6c59f97e1ce9691c8abaa841d2ecdef",
+      "text_sha256": "5139ce97b0515e2e36fa7de6090b5507a3a41a2358deaa80926d9a19826dd91a",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "A goal about privacy. \"In a child's hands\", last sentence: \"A child of 10 says what he or she wants to keep to himself or herself, and asks before sharing a photo of another person\". The Dutch is \"onderzoeken wat privacy is en hoe hiermee om te gaan in een veranderende samenleving\": the verb is investigating, and the record's own Limits says the statement names \"no technology, rule, law or situation and no way of dealing with privacy\". \"asks before sharing a photo of another person\" is not investigating: it shows one way of dealing with privacy as what a child of 10 does, which reads as a rule of conduct the text does not give (\"Common mistakes\" then counts sharing photos of others without asking as the mistake). Show a child of 10 who investigates instead (for example one who finds out who can see a photo once it is shared), and give no rule. The rest of the illustration (listing what others can know, looking at the settings of an app or a form, asking an older person) is investigating, though it is set wholly in apps, accounts and chats, which the goal does not name. Wording and gloss are right. Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 1): fase 3 column, cluster \"(Veilige) leefomgeving\", fifth dash; word for word equal to the record, nothing else in the dash.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 422
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.35db3174-ac58-45eb-bc78-c7d50755f5ae",
+      "wording_sha256": "1930cc1c00f49ec16982467b3ba2c1cdc6c59f97e1ce9691c8abaa841d2ecdef",
+      "text_sha256": "ea37ce1511ac8c8aca2fc894b8745a444564ef62f327c1809c6d8eeca5ac5d96",
+      "verdict": "confirmed",
+      "note": "Round 2 (ojw/ds/1/05/fase3). Round 1 (notes-contradict: the child of 10 \"asks before sharing a photo of another person\", a rule of conduct where the verb is \"onderzoeken\") is resolved: the child of 10 now \"finds out who can see a photo once it has been shared\", which is investigating, and the last common mistake is a misunderstanding (privacy thought of as one's own only), no longer a breach of a rule. Limits is unchanged and true: two things are investigated, the statement does not say what is changing, and names no technology, rule, law, situation or way of dealing with privacy. The illustration is set in apps, accounts, forms and chats, which the goal does not name; they are the pack's and Limits says the statement names no technology. Looked up again on the page image of the content-line PDF (De samenleving, 04-2018, page 1): fase 3 column, cluster \"(Veilige) leefomgeving\", fifth dash, word for word equal, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 422
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.44ac9293-0e6c-4d83-9f94-0cd25adf4129",
+      "wording_sha256": "439b21887d675272b9acd0a41ad8739499d9c212ff3f94ecde445c0b2d6f428e",
+      "text_sha256": "f08e98ca82a0ce4bc4197b5e6aa4cc1c70cf4b766380c2e08c1c8738e8a859c3",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Samen leven en samenwerken\", first dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 504
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.47b6917c-3372-4e09-9ed2-896a91c00859",
+      "wording_sha256": "f03e9900fba387f1e2dd1e19542f988a526a7a97c722b3f1a275f30d7e82cabc",
+      "text_sha256": "77271ac148471e07b336d9c1dc12e7cdea0d6912597a44ff1ab3953d6538572f",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Samen leven en samenwerken\", fifth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. A goal about discrimination. Limits says the statement names no groups of people, no examples and no ways of dealing with it, and sets no level of detail; \"In a child's hands\" stays with recognising and with the talk about how to deal with it. The neighbour cited (ojw/ds/1/07/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 569
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.4e26c63c-b46a-4481-952b-e31ae01b9632",
+      "wording_sha256": "477954ff4d325fcf9338df3eee07226a081e6a80c76a86629d60fa3ebf328918",
+      "text_sha256": "9fb857394cd97ed6831f8c51a54f6daa7808a92c17708df235bab1bd81f54839",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 3): fase 3 column, cluster \"Gezondheid en hygiëne\", seventh dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 488
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.54c6ee82-98e9-40a0-b0b5-2fb552599ce1",
+      "wording_sha256": "5f35ec416a7f82f74087d51278a642d745a3bdba0ddb3b4ad1b9c73f2582d292",
+      "text_sha256": "fd9a1cc36751b8724d177b08dac1ac8de90cb656738ab30c48724892cc4d3b29",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 1): fase 3 column, cluster \"(Veilige) leefomgeving\", fourth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The gloss has \"technology (*techniek*)\" and Limits says what the Dutch word covers. Limits says the statement states no safety condition, and it states none.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 404
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.58d9bb5c-2b11-4bbe-b3f2-f22e6769db14",
+      "wording_sha256": "f62192d0828c5bb3316856dc98d3671e70993ad14e228ffd830ad7df83bbca0b",
+      "text_sha256": "c617df713d9c0e80366e3e5ef12a0c62325d5db40f2e02b520bd7beb4f5303bd",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 1): fase 3 column, cluster \"(Veilige) leefomgeving\", seventh dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. A goal about discrimination. Limits says the statement names no forms, no causes and no groups of people and sets no level of detail; \"In a child's hands\" stays with the talk the goal names (forms, and through what discrimination can arise). The neighbour cited (ojw/ja/3/05/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 443
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.5d1a4b68-2792-43b7-972a-4480d6592cb3",
+      "wording_sha256": "37aabffbce349ab262dc251695e3773e3edf785a1f435582831d696c41ba71cb",
+      "text_sha256": "6664a5b610a4be32cfe6e5f7eece868bdd138e1b892cf31034033216cb8e2136",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Relaties en seksualiteit*\", third dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. Limits says the statement names nothing beyond what it prints and sets no level of detail; \"In a child's hands\" stays with the talk the goal names and gives no advice, script or rule. The PDF marks this cluster heading with an asterisk (\"Relaties en seksualiteit*\") and prints under the table a note that the open data does not hold: \"* Scholen zijn verplicht aandacht te besteden aan het thema relaties en seksualiteit, dat valt onder kerndoel 38, maar mogen zelf kiezen welke leerlijnen en tussendoelen per bouw zij formuleren.\" No record carries it (the frame quotes it); Limits does not contradict it and does not mention it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 510
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.5e4732a6-874b-4719-8b15-e620ebc72b41",
+      "wording_sha256": "9888d767ef020e6a66c9af592b1b35b79b94478c6dbb7d83736457ee7c3970f9",
+      "text_sha256": "104fc2ba2f4c9f8a4b2c46f500eff29be75cdee61ec4ccf852c0018425bfa2b1",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 2): fase 3 column, cluster \"Consument zijn\", second dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 421
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.61ea479d-33c9-4fd6-8dbf-828822b73206",
+      "wording_sha256": "14bd0918e5de13e4cd24693558dbd0edb2f34382b12728550b80e0726b704fec",
+      "text_sha256": "9a3ebb0285574e1e5446f58edd8e5432e4e19719058079330022f2a01f5b6124",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 1): fase 3 column, cluster \"(Veilige) leefomgeving\", eighth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. Form only: the PDF breaks \"kinderrechten/mensen-\" and \"rechten\" over two lines with a hyphen at the line end; the record has \"mensenrechten\", one word.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 455
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.62aebb76-f8b5-4e56-b6ea-6c4b404d5901",
+      "wording_sha256": "d3d3ed27364a8e28ae32faf0e41320d59a05cb2995227e5f7045c8bbacd78aab",
+      "text_sha256": "3c9e6f82fc8f78516bbad9d6e2a3cd33a3205e7ff06f321b35314ab1f661d9a6",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 3): fase 3 column, cluster \"Gezondheid en hygiëne\", second dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. Form only: the record writes the hyphen in \"(mede-)verantwoordelijkheid\" as a non-breaking hyphen (U+2011), as the open data has it; the PDF prints the same word with its hyphen.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 407
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.66be2ea2-7865-4520-8a5f-a14b3915d4e8",
+      "wording_sha256": "d5e8671ca85d7971628c2604337ba978d75f63e1874cf4d85b181b42f33fa887",
+      "text_sha256": "e1ab1cb607d2325d427a93ad6d6c628d1312c446c4f091105e3c77a91577d47c",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 4): fase 3 column, cluster \"Gezondheid en hygiëne\", ninth dash of the cluster, the second on page 4, where the cell continues from page 3; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF breaks \"eerste-\" and \"hulpvaardigheden\" over two lines at the hyphen of the word itself. Limits says the statement states no safety condition, and it states none. The skills in \"In a child's hands\" are the pack's illustration; Limits says the statement names none.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 4,
+        "offset": 119
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.6a0b3f55-585c-4251-a17f-45a980e9f4bc",
+      "wording_sha256": "2e648b551ae70961e06c70de3b37606d82635e93b4cd90e3d3554ce7396e9516",
+      "text_sha256": "27c1d6e70406796719206b174abff376d70844f3422fe841259d910a751e86d6",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 1): fase 3 column, cluster \"(Veilige) leefomgeving\", second dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. Limits says the statement states no safety condition, and it states none. \"In a child's hands\" shows practised steps (leaving at a fire alarm, the call to the emergency number); the goal itself asks for dealing with dangerous situations, so the illustration stays inside it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 382
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.6e8d7c53-2728-4b1e-8022-38521338df36",
+      "wording_sha256": "82b87f5b6d3db4445338df0a299045d35f4923a43fd768ff2099589e55c93f2d",
+      "text_sha256": "d16a7dcd6c5dc4f27701e84a62c5a2cf8ee067db9a879d5487f5a4036463537f",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Gevoelens, wensen en opvattingen\", sixth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. The neighbour cited (ojw/ja/1/02/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 442
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.72227c9a-8fdd-4a1a-ba1e-edb8d2659e65",
+      "wording_sha256": "79e3d81a94e2b3fefa1556b397633fcaa7da492cdfc879f7f5b0c7a93c13fa7a",
+      "text_sha256": "50fd5dd1dfc5350ab3f7016ff75df07d83405f69088c1bd6c8c193cdf01077e0",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "\"In a child's hands\" goes past what the statement names. The Dutch is \"beseffen van het belang van (seksuele) integriteit\": the verb is realising, an awareness goal, and the record's own Limits says it \"names no parts of the body, situations or acts and sets no level of detail\". The illustration then gives a script and rules of conduct as if they were the goal: \"A child says which touch or closeness he or she wants and does not want, says \"stop, I do not want that\", and stops at once when another person says it. The child asks before touching someone, and accepts a \"no\" without asking for a reason\", and for the child of 10 \"that every person decides about his or her own body\". That is a prescribed sentence, three rules and a scenario (touch) the text does not have, and it turns realising an importance into behaviour. It also settles what the gloss and Limits rightly leave open: *integriteit* is kept in Dutch with two readings (a person's inviolability, or acting uprightly; both are real, and \"(seksuele)\" stands in brackets), and the illustration shows only the first, in its bodily sense. Keep the illustration to a child who comes to see why integrity matters, with no sentence to say and no rule to follow. \"Common mistakes\" brings in a scenario of its own (\"they must accept a touch from someone who is older or in charge\"). The wording itself is right: the PDF prints the same sentence a second time, as the sixth dash of the fase 2 column of this cluster; the script's first place was that one, and the place given here is the printing in the fase 3 column. The PDF marks this cluster heading with an asterisk (\"Relaties en seksualiteit*\") and prints under the table a note that the open data does not hold: \"* Scholen zijn verplicht aandacht te besteden aan het thema relaties en seksualiteit, dat valt onder kerndoel 38, maar mogen zelf kiezen welke leerlijnen en tussendoelen per bouw zij formuleren.\" No record carries it (the frame quotes it); Limits does not contradict it and does not mention it. Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Relaties en seksualiteit*\", ninth dash; word for word equal to the record, nothing else in the dash.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 587
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.72227c9a-8fdd-4a1a-ba1e-edb8d2659e65",
+      "wording_sha256": "79e3d81a94e2b3fefa1556b397633fcaa7da492cdfc879f7f5b0c7a93c13fa7a",
+      "text_sha256": "ee359749fb8dfb04f38d8e6451dca68b1fcaf5f95c0d935e699623f717a7994c",
+      "verdict": "confirmed",
+      "note": "Round 2 (ojw/ja/2/09/fase3). Round 1 (notes-contradict: a sentence to say, rules of conduct and a touch scenario in the illustration; only one reading of *integriteit* shown) is resolved. The illustration is now two short stories, one for each reading the gloss keeps open (a person's body and person treated as his or her own; a person who acts uprightly although nobody would have noticed), and the child says what this meant for the people in them: that is \"beseffen van het belang\", with no sentence to say, no advice, no rule and no scenario of harm (the question \"what would have been lost for them if it had gone differently\" asks for the importance and describes no case). The age sentence sets no count (\"says that it matters\" against \"gives reasons why it matters\"). \"Common mistakes\" no longer has a touch scenario; its last sentence (\"it counts for less when the other person is older or in charge\") is a misunderstanding and contradicts nothing. Gloss and Limits keep *integriteit* open with both readings and \"(seksuele)\" in brackets. Looked up again on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Relaties en seksualiteit*\", ninth and last dash, \"beseffen van het belang van (seksuele) integriteit\", word for word equal, nothing else in the dash. The same sentence is printed a second time as the last dash of the fase 2 column (the script's first place); the place given here is the printing in the fase 3 column. The PDF prints no codes. The PDF marks this cluster heading with an asterisk (\"Relaties en seksualiteit*\") and prints a note under the table that no record carries (the frame quotes it); Limits does not contradict it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 587
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.7670f5b1-896a-46d3-8610-635d293645bd",
+      "wording_sha256": "db4bbb33895e3d33d8cbffcca6a7398fb80474497a84ea65f54564327c82e2b8",
+      "text_sha256": "2952103259a882653089e537ad03ead47ae18d016cb08dfc6e2ef05653133655",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Samen leven en samenwerken\", twelfth dash of the cluster, the sixth on page 2, where the cell continues from page 1; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. The PDF prints the same sentence a second time, as the last dash of the fase 2 column of this cluster (page 2); the script's first place was that one, and the place given here is the printing in the fase 3 column.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 484
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.78dafd54-c548-4152-a8e3-7b41ea91488d",
+      "wording_sha256": "af5fb63698f018a1bc010e5297207cd72e1c2a38ee3109bd80ebd460d62fccc4",
+      "text_sha256": "1327e7b27efffb8a2ae4ca14f99a7284e36a0bd205c6275935323172b08790cb",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 4): fase 3 column, cluster \"Gezondheid en hygiëne\", eighth dash of the cluster, the first on page 4, where the cell continues from page 3; word for word equal to the record, nothing else in the dash. The PDF prints no codes. A goal about medicines. Limits says the statement names no medicines, illnesses or doses, sets no level of detail, is about discussing and not about handling or taking a medicine, and states no safety condition. \"In a child's hands\" stays with the talk about what medicines do and gives no advice or rule; for the lead to weigh: it has the group read in a package leaflet \"how much is taken\", which is past the effect the goal names.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 4,
+        "offset": 112
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.78dafd54-c548-4152-a8e3-7b41ea91488d",
+      "wording_sha256": "af5fb63698f018a1bc010e5297207cd72e1c2a38ee3109bd80ebd460d62fccc4",
+      "text_sha256": "e6cb50871c61426ebe88ff088e8f8d163d3526ad4f021a349767000576901e23",
+      "verdict": "confirmed",
+      "note": "Round 2 (ojw/pdm/2/08/fase3). Round 1 confirmed the record and left one point to weigh (\"how much is taken\" read in a package leaflet, which is past the effect the goal names); that phrase is gone: the group now finds in the leaflet \"what it is for and which side effects are listed\", both of them effects. The illustration gives no advice and no rule, the age sentence sets no count, and Limits is true of \"bespreken wat het effect is van geneesmiddelen\": no medicines, illnesses or doses named, wanted or unwanted effects not told apart, discussing and not handling or taking, no safety condition stated. Looked up again on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 4): fase 3 column, cluster \"Gezondheid en hygiëne\", first dash on the page, where the cell continues from page 3 (the eighth of the cluster), word for word equal, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 4,
+        "offset": 112
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.793430ed-ff54-408d-a747-3e5fe82e7052",
+      "wording_sha256": "bb9d8fb9c04364f59d1dafe4cd66928dff8b08d914855fd189eb2c5c3a2dfacb",
+      "text_sha256": "efd0635026b759a8b5571b52fd1b030ef8d053c1a49f7089260d7498ededd54d",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 2): fase 3 column, cluster \"Deelnemen aan het verkeer\", fifth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The gloss keeps *jongeren en ouderen* open (the young and the elderly, or people younger and older than the child): both are real readings. Limits says the statement states no safety condition, and it states none.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 408
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.7b26ba1c-69da-4f24-80be-ff4356fc25f3",
+      "wording_sha256": "05ed07bb006f32a114970684a305b3849bf39e64cb868b73d43b5f1a5a10d717",
+      "text_sha256": "e308813c15387639bacf5b8268add28688ae6943b6f1f08ae3b36cd446979c34",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Gevoelens, wensen en opvattingen\", second dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the same sentence a second time, as the first dash of the fase 2 column of this cluster; the script's first place was that one, and the place given here is the printing in the fase 3 column.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 393
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.851c5205-247e-4463-b44a-2e210f7504f0",
+      "wording_sha256": "10ae4ee8e314f862285f6b1f183fa945f7136061d5788a93105326de06d5cfcb",
+      "text_sha256": "9c27b900a5752d8634136c9ca2af0df7f24103dab92e7e4eb4adae2a8232782f",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Samen leven en samenwerken\", sixth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 586
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.8efc2239-0e5c-46a4-b99e-cdb34a128977",
+      "wording_sha256": "33f2c710e7bf90afbc4b0de5e4a8387e95168241e11bbe22484d834c917540e4",
+      "text_sha256": "bb1fb49c70838832a48d4a6f0288de95ba448b3383c7c70513db94e24d984032",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 4): fase 3 column, cluster \"Gezondheid en hygiëne\", eleventh dash of the cluster, the fourth on page 4, where the cell continues from page 3; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The six names stand in the PDF as in the record, after \"bijv.\". Limits explains each from the pack's own knowledge, and each explanation is right: GGD (the municipal public health service), Riagg (regional institutions for outpatient mental health care; the name has largely been replaced), Leger des Heils (the Salvation Army), Kindertelefoon (a free helpline for children, by telephone or chat), Longfonds (a charity for lung diseases), Diabetesfonds (a charity for diabetes). They are marked as the pack's only by the marker line over the design notes and by the words \"kept as the goal names them\" before the list; the sentence itself does not say that the explanations in brackets are the pack's and not the goal's. For the lead to weigh.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 4,
+        "offset": 146
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.8efc2239-0e5c-46a4-b99e-cdb34a128977",
+      "wording_sha256": "33f2c710e7bf90afbc4b0de5e4a8387e95168241e11bbe22484d834c917540e4",
+      "text_sha256": "32258d04364bfb9e45c83727dbe40cd9f7ffdbdec05ebf0e3a657d01822cf435",
+      "verdict": "confirmed",
+      "note": "Round 2 (ojw/pdm/2/11/fase3). Round 1 confirmed the record and left one point to weigh (the sentence did not say that the explanations in brackets are the pack's); Limits now says \"the goal gives the names only, and the explanations in brackets in this sentence are the pack's\". The six names stand in the PDF as in the record, after \"bijv.\", and each explanation is right (GGD, the municipal public health service; Riagg, regional institutions for outpatient mental health care, a name now largely replaced; Leger des Heils, the Salvation Army; Kindertelefoon, a free helpline for children by telephone or chat; Longfonds and Diabetesfonds, charities for lung diseases and diabetes). The gloss keeps \"bekend zijn met\" as being familiar with and \"bijv.\" as \"for example\". Looked up again on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 4): fase 3 column, cluster \"Gezondheid en hygiëne\", fourth and last dash on the page (the eleventh of the cluster), word for word equal, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 4,
+        "offset": 146
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.8fe19724-a3f0-46a7-98e2-f6cb1ffdc952",
+      "wording_sha256": "ef7269af6c8bd30976c49f631289bc4c50e025bc9a4575ec678ac6c8bc0deef3",
+      "text_sha256": "ae37ac8d84137bd2987bf269947e13f9b68365b7266a66ea15e3202fe6bebb5d",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 1): fase 3 column, cluster \"(Veilige) leefomgeving\", third dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF underlines \"grenzen en identiteit\" and \"oorlog en vrede\" as two terms; Limits reads the brackets as two pairs, which fits.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 390
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.9793a803-76fd-40aa-bda6-18ee12e7efec",
+      "wording_sha256": "04dd680ea14c5b62e1f4ccc112afac857248f7552aac76448bdad3bc71235a95",
+      "text_sha256": "b42e9325d97fdfb6c485eecf272cc2d1ca3085de957067b7b6602e2fa1d80289",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Samen leven en samenwerken\", fourth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. A goal about bullying. Limits says the statement names no forms of bullying, no solutions and no situations and does not say what makes a solution adequate (it does not use the words \"level of detail\"); \"In a child's hands\" stays with recognising and with working on solutions, and gives no script and no person to report to.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 556
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.9f55893c-9559-4d1d-93ab-d8b0a21919ab",
+      "wording_sha256": "7830b8434da0f31478bfc64c7c7af1e109714683b2c63c30189c87b11584ea43",
+      "text_sha256": "c2fe61c95b21c8b561e97ec1e068f278cbb145191c1cd2d1a6d21047096bdb8a",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 3): fase 3 column, cluster \"Gezondheid en hygiëne\", third dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints \"bevorderd\" as the open data does; Limits says the source prints it so where \"bevordert\" is plainly meant. An awareness goal (\"realiseren\"), glossed as realising.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 430
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.a3bacf7e-ab37-42e0-b7fc-65cb3d298c01",
+      "wording_sha256": "91e8e20718d19113a2e29bd8fca219e42966fe2f92b1aa3917b1c6943879029c",
+      "text_sha256": "666b997a0b15825e707e6bcf56fd9e0053ca3a701172a5d3aae7cb6adc160d0b",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Relaties en seksualiteit*\", fourth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The gloss keeps *gewoonten* open (customs of a group, or habits of a person): both are real readings beside \"opvattingen\". An awareness goal (\"realiseren\"), glossed as realising. Limits says the statement names nothing beyond what it prints and sets no level of detail; \"In a child's hands\" stays with the talk the goal names and gives no advice, script or rule. The PDF marks this cluster heading with an asterisk (\"Relaties en seksualiteit*\") and prints under the table a note that the open data does not hold: \"* Scholen zijn verplicht aandacht te besteden aan het thema relaties en seksualiteit, dat valt onder kerndoel 38, maar mogen zelf kiezen welke leerlijnen en tussendoelen per bouw zij formuleren.\" No record carries it (the frame quotes it); Limits does not contradict it and does not mention it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 521
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.a569b575-3019-460e-8e71-03bd7e2d7c18",
+      "wording_sha256": "7e7585a2bb33e683cce6adf1275f16f73bc4857007e51aa19ea94d8687f33b30",
+      "text_sha256": "8663ab6d97efb958bba67e92dcd978ffd4d202b286122c4ce88b05d19edd677e",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Samen leven en samenwerken\", seventh dash of the cluster, the first on page 2, where the cell continues from page 1; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. An attitude goal (\"zich medeverantwoordelijk voelen\"), glossed as feeling jointly responsible; Limits says it is about a feeling. The neighbour cited (ojw/ds/1/08/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 415
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.a8e7eba1-e302-47b0-b8ff-cddba1bf0e7e",
+      "wording_sha256": "6fb6e78c384454f58b9ae1ae69cc53d7f3fb06e68bf8babeae453bc1e62032d2",
+      "text_sha256": "e33dc5f6cac355e1cf34b9e91a9ef486c92a8d841330c0656ee94e11ee7c4509",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Gevoelens, wensen en opvattingen\", tenth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints \"gedachten\" at the end of a line and \"experimenten)\" on the next without a hyphen, so it too prints two words; Limits says the source prints \"gedachten experimenten\" where \"gedachte-experimenten\" is plainly meant.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 487
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.ab535e06-7b69-44c1-808e-6ee74db707db",
+      "wording_sha256": "c0b39b7b54dbe7af0fc793d288f224a5975a5565e0fbc6c08aaeed92beb73259",
+      "text_sha256": "ff9b4dda2e4a3f45dc00da43c586c65dc87d8b57450d8a08272db12331fcf806",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Gevoelens, wensen en opvattingen\", fifth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 426
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.af0818dc-1b0e-4c93-869d-e31c9c38cc86",
+      "wording_sha256": "5fb3f3bf5884c45071b486f97d83e043b155b8e5a6e09db23a58d59ff0361bcd",
+      "text_sha256": "fb4fc669fadc863e86ebe92ca09cb87d4be87a08ae0bd35a9b8fbde97f42e81a",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, last sentence: \"Price is not among the aspects it names.\" The Dutch is \"aspecten als gezondheid, veiligheid en stevigheid (maar ook duurzaamheid) bij de keuze van een product\": \"aspecten als\" opens a list of examples, as the same Limits says two sentences earlier (\"given as examples of aspects\"), so price falls inside the open list as much as any aspect that is not named; singled out, the sentence reads as a limit the wording does not set (the record's own \"In a child's hands\" has the child of 12 compare the aspects \"with the price\"). Say only that the list is open and names four aspects, or drop the sentence. The rest is right: wording equal on the page, and the gloss keeps *duurzaamheid* open (sustainability, or durability: both are real readings beside \"stevigheid\") and keeps \"ervaren\" as experiencing. Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 2): fase 3 column, cluster \"Consument zijn\", third dash; word for word equal to the record, nothing else in the dash.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 446
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.af0818dc-1b0e-4c93-869d-e31c9c38cc86",
+      "wording_sha256": "5fb3f3bf5884c45071b486f97d83e043b155b8e5a6e09db23a58d59ff0361bcd",
+      "text_sha256": "d6b35847c2f68af6fe4b86ebd0f8716be73725e1002d53033d899e9a7a4281e8",
+      "verdict": "confirmed",
+      "note": "Round 2 (ojw/ds/2/03/fase3). Round 1 (notes-contradict: \"Price is not among the aspects it names\", a limit the open list does not set) is resolved: Limits now ends \"The list is open: the wording names these four aspects and does not give them as complete.\" That is what the Dutch says: \"aspecten als gezondheid, veiligheid en stevigheid (maar ook duurzaamheid)\", where \"aspecten als\" opens a list of examples and the brackets add a fourth. The gloss keeps \"ervaren\" as experiencing and *duurzaamheid* open (sustainability, or durability). The illustration's \"compares them with the price\" is now inside the open list. Looked up again on the page image of the content-line PDF (De samenleving, 04-2018, page 2): fase 3 column, cluster \"Consument zijn\", third dash, word for word equal, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 446
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.afaa6e09-f9ad-43b8-9a7e-4f07faa6b562",
+      "wording_sha256": "3a02a6124bd9b42c2a0e628f30f32f8d8c09d71baf629a1c8d1e1a52d163f3d9",
+      "text_sha256": "75a983d7d81792273815c5e9ae7fa60f079c7dd746a7343b7065d3e1198aea08",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 2): fase 3 column, cluster \"Consument zijn\", first dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF underlines \"geld\" (a reference to its list of knowledge topics). The neighbour cited (ojw/ds/2/05/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 416
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.b0c0fab3-6d2c-487a-8e6c-a17e35b9a5cc",
+      "wording_sha256": "0e5723f117e8936f9d7c2076b308c9546d92af753fc2aeab8a78ca457cd7cac4",
+      "text_sha256": "6d7c26587e8227fdb0c04e375a72b5ee4e4eb564f54603d3736792785a388934",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De ruimte om je heen, 04-2018, page 2): fase 3 column, cluster \"Omgaan met het milieu\", fourth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 543
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.b7f7a06d-9cbd-47d7-b02b-4c46d2ce4cbe",
+      "wording_sha256": "4821bd69573cf4f5d37b32eec99b25efff00e8825bdbdcd1263c61000b52d517",
+      "text_sha256": "3490dc8514aa033ff93038726ce35e955dc17d4d4ea2ee49de6935fbd5624b72",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 2): fase 3 column, cluster \"Deelnemen aan het verkeer\", third dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. Limits says the statement states no safety condition, and it states none.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 383
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.bd0ccf7c-15a1-4dd1-9719-a734105d1def",
+      "wording_sha256": "edc8d60a94e1e16790b257efeb6533034b1a7eef19b67f85f1524c7e42901ac6",
+      "text_sha256": "d1cad3892da443a1c8bad71f22a23f0c6c9f53b1dad87cd8f6f0246748789aee",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De ruimte om je heen, 04-2018, page 2): fase 3 column, cluster \"Omgaan met het milieu\", second dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. An awareness goal (\"beseffen\"), glossed as realising; Limits says it is about awareness, not an action. The neighbours cited (ojw/rojh/6/03/fase3, ojw/rojh/6/04/fase3) say what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 517
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.c32a073e-37bb-41eb-831b-434b729a14fc",
+      "wording_sha256": "c83cbbb7382bb2a72cde9c6f2a5551803081b77e561a002669ce467d78dfd082",
+      "text_sha256": "1e15cac8c7739f305dbedf88ede25068132e27713cfb26700feb5d0a8e14e14f",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Gevoelens, wensen en opvattingen\", fourth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. The gloss keeps *inspelen op* open (responding to, or anticipating): both are real readings.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 415
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.c3cf1107-6715-4f49-8320-3aefc26a86f9",
+      "wording_sha256": "46b17801ed4b36505445fbb0a34dcb548a1c1d978f78b37df09f3fe0800fa486",
+      "text_sha256": "009cc62bbbd97c90e8e3a5f6d8c70ec7160b16f340ea1ccc02ccb325db9d92fc",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 2): fase 3 column, cluster \"Deelnemen aan het verkeer\", second dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. Limits says the statement states no safety condition, and it states none. The neighbour cited (ojw/ds/4/03/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 368
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.c491baa2-38a5-44e3-8b6a-d22214da27dc",
+      "wording_sha256": "076d0ad940985baf9619850b74fe4fa9bff918a520625669036250ff4eb1c16b",
+      "text_sha256": "b541ea85665373205473936d8da53a9961fa8afc43807557b0e479233d554f02",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Relaties en seksualiteit*\", sixth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. Limits says the statement names nothing beyond what it prints and sets no level of detail; \"In a child's hands\" stays with the talk the goal names and gives no advice, script or rule. The PDF marks this cluster heading with an asterisk (\"Relaties en seksualiteit*\") and prints under the table a note that the open data does not hold: \"* Scholen zijn verplicht aandacht te besteden aan het thema relaties en seksualiteit, dat valt onder kerndoel 38, maar mogen zelf kiezen welke leerlijnen en tussendoelen per bouw zij formuleren.\" No record carries it (the frame quotes it); Limits does not contradict it and does not mention it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 546
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.c9cbbb13-feba-4604-b97a-510aa8c45087",
+      "wording_sha256": "7fbbe7bdee388e3a9e60144682ca7336489ae615e222093b9b748af9c05c43b3",
+      "text_sha256": "89887a4f641a8126abccf8d3791b9ae5b288af38ee2fa47ec308b98d9f5a9a38",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Samen leven en samenwerken\", ninth dash of the cluster, the third on page 2, where the cell continues from page 1; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. The gloss keeps *samenlevingsvormen* open (forms of living together, or forms of society): both are real readings; the \"zoals\" list is called examples in Limits.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 445
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.c9fc6634-3306-449a-b86a-1c0ba9b36c66",
+      "wording_sha256": "6e50db6d22829e8a932071a4e074aaca017033c652f060dcaee12f72e85bc4d9",
+      "text_sha256": "f1d9bdd9b7c7b2697412e7e4bcf994e0b10557a0d002bd2c179879154556f25a",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 3): fase 3 column, cluster \"Gezondheid en hygiëne\", sixth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The neighbour cited (ojw/pdm/2/11/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 483
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.cc860531-c197-464b-9776-ff43ca67959a",
+      "wording_sha256": "a0e698c09902c78cc798a0c618fd5b458d4f58c788907c24fc204bcf59f02a4e",
+      "text_sha256": "9520709541c50d050d08b17b90e22bc0507e0205916ae3f49de2efec31b51368",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Relaties en seksualiteit*\", second dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. Limits says the statement names nothing beyond what it prints and sets no level of detail; \"In a child's hands\" stays with the talk the goal names and gives no advice, script or rule. The PDF marks this cluster heading with an asterisk (\"Relaties en seksualiteit*\") and prints under the table a note that the open data does not hold: \"* Scholen zijn verplicht aandacht te besteden aan het thema relaties en seksualiteit, dat valt onder kerndoel 38, maar mogen zelf kiezen welke leerlijnen en tussendoelen per bouw zij formuleren.\" No record carries it (the frame quotes it); Limits does not contradict it and does not mention it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 499
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.cd363825-b753-4bfb-8a09-e45eac498443",
+      "wording_sha256": "3aa622e4c0f097f0c69a0324fc82de7baa91f7a896bf7fe2e5d5b5cc5e1d1c9c",
+      "text_sha256": "6e62dcdbc02be0b59667ff5afb9c5896d2c422025ffece208f52cc55d2c2702f",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Gevoelens, wensen en opvattingen\", seventh dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. The neighbour cited (ojw/ja/3/08/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 454
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.d623c084-038b-4fc5-875d-f7e90a9242a3",
+      "wording_sha256": "3a5786537f0fd6a9293eef42534d65945fb2cbbfc46f28b64a52a079e186a001",
+      "text_sha256": "1e4b627d674269342d22cb5379a593fb5f1fb41f93ec022cc05b9ac253ae7a1b",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Samen leven en samenwerken\", second dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The gloss keeps *zelfbewuste* open (self-aware, or self-assured): both are real readings, and the brackets add \"zelfvertrouwen\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 513
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.dd3c188a-b6ea-41c3-961d-f34968f545ba",
+      "wording_sha256": "556e12551e1b20b25d1c5f6e2e6f0bbd40f83a84b731a0e92b89b55c546fde61",
+      "text_sha256": "67dcf0b8c2dfac521791214a1fa09749edb0c7b2641df7a77ec6a4a8f52db5dc",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 1): fase 3 column, cluster \"(Veilige) leefomgeving\", first dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. An awareness goal (\"bewust worden\"), glossed as becoming aware. Limits says the statement states no safety condition, and it states none. The neighbour cited (ojw/ds/1/02/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1,
+        "offset": 372
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.e3bb8128-c17f-47f4-8e2c-11b940f88aa7",
+      "wording_sha256": "1b677cc9616e7b73065405b06602909014c9a29bc3951c433a72e275672ac0a0",
+      "text_sha256": "dcc70fe37dadf37ad8536846588ccd57d704d00be3822822cf5675dd96356e0a",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De ruimte om je heen, 04-2018, page 2): fase 3 column, cluster \"Omgaan met het milieu\", fifth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The brackets print \"duurzame ontwikkeling\", glossed as sustainable development, the fixed term.",
+      "rendition": "nl-slo-inhoudslijn-ojw-ruimte",
+      "place": {
+        "page": 2,
+        "offset": 547
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.e603fbd1-df4b-4ef6-a2bc-4811ab860b08",
+      "wording_sha256": "f561f6ed96fc57f58bd2ee7dcc0f5c23105170e2e86d542629376cfe7915e0a2",
+      "text_sha256": "403d708284f5e24c44c05a8af85c4f89b99e781ecd9ba5b9c32e866fb1050a4f",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 3): fase 3 column, cluster \"Gezondheid en hygiëne\", fourth dash; the goal is word for word equal to the record. The PDF prints no codes. The PDF prints more in this dash than the record's wording holds: after \"als mens\" it goes on, on a new line inside the same dash, with \"(bijv. roken, alcohol, drugs, gokken, computer)\". The open data's goal title ends at \"als mens\". The record carries the example as accompanying official text, under its label, word for word as the page prints it, and names the PDF, page 3 and the fase 3 column in its source line: checked on the page image, right. Limits reflects it: \"The content-line PDF prints an example in brackets after the goal (*bijv.*), which the open data leaves out: smoking, alcohol, drugs, gambling, computer; it is an example, not a list of what is treated\", and denies nothing the example names. A goal about addictive habits: an awareness goal (\"besef hebben van\"), glossed as having an awareness; Limits says it is not a skill and sets no level of detail; \"In a child's hands\" names no substance and gives no advice, script or rule. The gloss renders \"het ontstaan van verslavende gewoonten\" as \"how addictive habits arise\"; the Dutch has the noun (the arising of) and no \"hoe\", which the gloss covers closely enough. The PDF underlines \"mens\".",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 450
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.e62e9024-0783-4f42-8351-c0a8915053f5",
+      "wording_sha256": "a423ae6e5c39be1f5df5d53022cf50e70e7eb3e5b430ce56c11630650ff2aed0",
+      "text_sha256": "1ab8d3a903aa763b54ba36468b5f113b178510123f479a23f8aac85b65fc3100",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Relaties en seksualiteit*\", fifth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. Limits says the Dutch can be read as social pressure from others and from the media, or as two influences (social pressure from others, and the media); both readings are real and the gloss leaves it open. Limits says the statement names nothing beyond what it prints and sets no level of detail; \"In a child's hands\" stays with the talk the goal names and gives no advice, script or rule. The PDF marks this cluster heading with an asterisk (\"Relaties en seksualiteit*\") and prints under the table a note that the open data does not hold: \"* Scholen zijn verplicht aandacht te besteden aan het thema relaties en seksualiteit, dat valt onder kerndoel 38, maar mogen zelf kiezen welke leerlijnen en tussendoelen per bouw zij formuleren.\" No record carries it (the frame quotes it); Limits does not contradict it and does not mention it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 531
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.e766e0b7-e4dc-4d4a-a6c6-a527dbdaf86c",
+      "wording_sha256": "bb36a55105749df97f8665b4cdb3f237a25708a9bd67a2d4d331c0ed2df50b69",
+      "text_sha256": "f6225fd31138a9eb5b6cccda9d74d165f33de3915e4f2e1ba88949f489d3172a",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Samen leven en samenwerken\", eleventh dash of the cluster, the fifth on page 2, where the cell continues from page 1; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. The PDF prints the same sentence three times in this cluster: in the fase 1 column (page 1), in the fase 2 column (page 2) and in the fase 3 column (page 2); the script's first place was the fase 1 printing, and the place given here is the printing in the fase 3 column.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 474
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.e7d184ba-e3cd-4691-bac9-53c0343d523b",
+      "wording_sha256": "db211622501d84c4ba281e1917e0db84822586cff516d57d078b228fa02f0c28",
+      "text_sha256": "089b6e855281a878e26b10d87c3a0b56fc7445884697e05e4cbaa0bab39498b8",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "The two renditions differ in the marker at the end. Record (open data, goal title): \"beseffen van het belang van vrije meningsuiting (b)\". PDF (De samenleving, 04-2018), page 1, fase 3 column, cluster \"(Veilige) leefomgeving\", sixth dash: \"beseffen van het belang van vrije meningsuiting\", with no \"(b)\"; the next dash starts directly after \"meningsuiting\" (seen on the page image and in the text layer). The seventh and eighth dashes of the same cell do end in \"(b)\", and so do the related goals in the other columns (\"bespreken van het recht op 'vrijheid van meningsuiting' (b)\" in fase 1), so the PDF has left the marker off this one goal or the data has added it. The record equals the open data and keeps it. What depends on it: the gloss ends in \"(b)\" and Limits says \"The wording ends with the printed marker (b)\"; that holds for the open data only, and Limits should say that the content-line PDF prints this goal without the marker. The words of the goal are otherwise equal, the gloss (\"realising the importance of free expression of opinion\") is faithful, an awareness goal glossed as realising, and the neighbours cited (ojw/ds/1/07/fase3, ojw/ds/1/08/fase3) say what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1
+      },
+      "matched_by": "agent",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.e7d184ba-e3cd-4691-bac9-53c0343d523b",
+      "wording_sha256": "db211622501d84c4ba281e1917e0db84822586cff516d57d078b228fa02f0c28",
+      "text_sha256": "00977a880459dc376a4d0f9aef7db2e8c5d52fecc50046037596a25b5ea9a92f",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "Round 2 (ojw/ds/1/06/fase3). The difference between the two renditions stands, by design: the record keeps the open data. Open data (doelen.json of curriculum-basis, doel 1eed77fc-744c-4538-96c2-48ac759fd5df, aanbodid OJW.3.037): \"beseffen van het belang van vrije meningsuiting (b)\". PDF (De samenleving, 04-2018), page 1, fase 3 column, cluster \"(Veilige) leefomgeving\", sixth dash, seen on the page image: \"beseffen van het belang van vrije meningsuiting\", with no \"(b)\"; the seventh and eighth dashes of the same cell do end in \"(b)\". What round 1 asked of the record is done: Limits now says \"The open data carries the marker (b), the curriculum institute's sign for an aspect of citizenship (*burgerschap*), on this goal, and the content-line document does not print it there.\" Both halves are right: the PDF explains the marker at its head (\"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\") and prints none on this goal. Nothing is left for a fixer: the words of the goal are otherwise equal, the gloss (\"realising the importance of free expression of opinion (b)\") is faithful to the data's wording, and the neighbours cited say what is claimed (ojw/ds/1/07/fase3 is about discrimination, ojw/ds/1/08/fase3 about children's rights and human rights). The script reports the record not found because of the marker; compared by eye.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 1
+      },
+      "matched_by": "agent",
+      "checker": "nl/fase-3/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.ea9be558-52f6-491d-9d5b-011259be5c1b",
+      "wording_sha256": "25b622e9a2c880ca6ff66f03113d1f1100e2ee83eeaebe14efda2ca5539c265e",
+      "text_sha256": "8ba55f4bd6fa4b868d566ecc2d17c6d404023994fd71aeefc0a90965abce84c3",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Samen leven en samenwerken\", tenth dash of the cluster, the fourth on page 2, where the cell continues from page 1; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship. The neighbour cited (ojw/ja/3/06/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 461
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.f0ed2d35-0de0-4b9e-a57b-9e2f9a02998a",
+      "wording_sha256": "1154c047d2fd9f36e9da04fc082216c6955f2a374d7deeee1d604010c5f215f9",
+      "text_sha256": "bfc6894d6def8e38dbd0989130a47ccff09d0f0e7eb38b7625c4e25ad8be90af",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (De samenleving, 04-2018, page 2): fase 3 column, cluster \"Consument zijn\", fifth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The neighbour cited (ojw/ds/2/01/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-samenleving",
+      "place": {
+        "page": 2,
+        "offset": 479
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.f3811ed1-6464-4916-bb78-176e517f258a",
+      "wording_sha256": "23d268040af60d1061a2e45127d151e9898dc81ac71e1579b53a793076c6a961",
+      "text_sha256": "f99ee3b604d82dca8732510e7a1833e1c0b92f0e7a17b65c7d5e256c937a01f7",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Gevoelens, wensen en opvattingen\", ninth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the \"(b)\" at the end of this goal and, over the table on page 1, the legend \"NB Aspecten die betrekking hebben op burgerschap zijn met (b) aangegeven\"; the gloss keeps \"(b)\" and Limits has the fixed sentence about citizenship.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 476
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.f3ff9b24-64f0-440b-94f4-acceecbeb4f2",
+      "wording_sha256": "449d67c5a3c83124e8af86d238f9afa895151174fb00bfb9ae4312ddd46a40c5",
+      "text_sha256": "d5a98305a4f29ac567ffdcc9acaf8ce6f340ff4f588e2f261013936173ddbffc",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Relaties en seksualiteit*\", eighth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. The PDF prints the same sentence a second time, as the fifth dash of the fase 2 column of this cluster; the script's first place was that one, and the place given here is the printing in the fase 3 column. Limits says the statement names no acts, persons or situations, names nobody to ask for help and sets no level of detail. \"In a child's hands\" stays with the talk the goal names (what sexual abuse is, in what way help can be asked for) and gives no sentence to say; for the lead to weigh: it has the child name \"adults he or she trusts\", where the goal names nobody, and \"Common mistakes\" brings in claims of its own that the goal does not make (that abuse comes from someone known or of the child's own age; that a child who did not say no or kept it secret is not to blame). Neither contradicts the wording. The PDF marks this cluster heading with an asterisk (\"Relaties en seksualiteit*\") and prints under the table a note that the open data does not hold: \"* Scholen zijn verplicht aandacht te besteden aan het thema relaties en seksualiteit, dat valt onder kerndoel 38, maar mogen zelf kiezen welke leerlijnen en tussendoelen per bouw zij formuleren.\" No record carries it (the frame quotes it); Limits does not contradict it and does not mention it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 574
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.f3ff9b24-64f0-440b-94f4-acceecbeb4f2",
+      "wording_sha256": "449d67c5a3c83124e8af86d238f9afa895151174fb00bfb9ae4312ddd46a40c5",
+      "text_sha256": "8a71c14a8b8fa637cb3f8c422afdf5ff7c8f60e249dfeb989191fdd6f844da77",
+      "verdict": "confirmed",
+      "note": "Round 2 (ojw/ja/2/08/fase3). Round 1 confirmed the record and left two points to weigh; both are taken up. The age sentence now reads \"names a way of asking for help\" (no \"adults he or she trusts\", where the goal names nobody, and no count), and \"Common mistakes\" no longer makes claims about who commits abuse or about blame: it says that children leave out the second part of the goal and think there is only one way to ask for help. The illustration stays with the verb (in a group talk the child hears what sexual abuse is, says what he or she has understood, and says in what ways help can be asked for); it has no script, no scenario and no rule; \"such as writing or telephoning\" are the pack's examples of a way. Limits: two things are discussed, nobody to ask is named, no acts, persons or situations, no level of detail: all true of \"bespreken wat seksueel misbruik inhoudt en op welke manier hulp te vragen is\". Looked up again on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Relaties en seksualiteit*\", eighth dash, word for word equal, nothing else in the dash. The same sentence is printed a second time as the fifth dash of the fase 2 column (the script's first place); the place given here is the printing in the fase 3 column. The PDF prints no codes. The PDF marks this cluster heading with an asterisk (\"Relaties en seksualiteit*\") and prints a note under the table that no record carries (the frame quotes it); Limits does not contradict it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 574
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.f40f3750-2807-4811-85a5-4fcb8231ee14",
+      "wording_sha256": "613c77a3dfb548b79e9847de2b7e97e84481c2ae8e8b4dcd8b6cbf149754c8b3",
+      "text_sha256": "8cb382a4bdbee2ac6323277aac82cd733be2218ab81b8fd95f9fde17559b9d1b",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 1): fase 3 column, cluster \"Gevoelens, wensen en opvattingen\", third dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. An awareness goal (\"beseffen\"), glossed as realising; Limits says it is about awareness. The neighbour cited (ojw/ja/1/05/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 1,
+        "offset": 403
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.f96f0107-ca34-4057-97b9-bf4ed010a510",
+      "wording_sha256": "c486782bff49f3cd20e437b17f6f19b1f5af383c5930caec33cac2fd3ed8255d",
+      "text_sha256": "2ebeb43a300f8f766927223d73e9966e56478e42a2b27ceff3148018f007cd4c",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 3): fase 3 column, cluster \"Gezondheid en hygiëne\", fifth dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. Limits says the statement states no safety condition, and it states none. \"In a child's hands\" names small problems and what a child does about them, and has the child of 10 tell an adult about anything more than a small cut or bruise; that is the pack's illustration of \"omgaan met\", not part of the goal. The neighbour cited (ojw/pdm/2/09/fase3) says what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 473
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.fc79b4c8-a12e-4c60-967f-7d96d0725786",
+      "wording_sha256": "6b235092175c9f5751f63f03efeb5a7ca300d0ef9232e7a91b7fe5ab0d050fa5",
+      "text_sha256": "05fd6f961680ebe698b708fb34054b9307321523bdbb2db395ae9ade1e837305",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 3): fase 3 column, cluster \"Gezondheid en hygiëne\", first dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. An awareness goal (\"beseffen\"), glossed as realising; Limits says it is about awareness, not about carrying hygiene out. \"In a child's hands\" has the child grow what is on unwashed and washed fingers on bread or growth medium; Limits has no sentence on a safety condition, and the goal states none. The neighbours cited (ojw/pdm/2/03/fase3, ojw/pdm/2/10/fase3) say what is claimed.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 400
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings society-environment-health",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.fc79b4c8-a12e-4c60-967f-7d96d0725786",
+      "wording_sha256": "6b235092175c9f5751f63f03efeb5a7ca300d0ef9232e7a91b7fe5ab0d050fa5",
+      "text_sha256": "f7f4fdd25f7bfff98fe25524bb13577c0d494e5b8b56aa0cff051d7726519759",
+      "verdict": "confirmed",
+      "note": "Round 2 (ojw/pdm/2/01/fase3). Round 1 confirmed the record and noted that the child grew what is on unwashed and washed fingers on bread or growth medium while Limits had no sentence on a safety condition. The illustration now has the child only look, \"without opening them\", at two closed containers with the two slices of bread, and Limits says \"The text states no safety condition\", which is true of \"beseffen van het belang van goede hygiëne\". An awareness goal glossed as realising; Limits says it is about awareness, not about carrying hygiene out. The neighbours cited say what is claimed: ojw/pdm/2/03/fase3 is \"realiseren dat een combinatie van gezonde voeding, beweging, hygiëne en rust de gezondheid bevorderd en de kans op ziektes vermindert\", ojw/pdm/2/10/fase3 is about bacteria and viruses. Looked up again on the page image of the content-line PDF (Planten, dieren en de mens, 04-2018, page 3): fase 3 column, cluster \"Gezondheid en hygiëne\", first dash, word for word equal, nothing else in the dash. The PDF prints no codes.",
+      "rendition": "nl-slo-inhoudslijn-ojw-planten-dieren-mens",
+      "place": {
+        "page": 3,
+        "offset": 400
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.fase-3.practical-life-feelings.objective.fe532f10-d0bf-4427-96c8-4e15bb26b9b6",
+      "wording_sha256": "5714afd9c6120dc9326e9f8679842dd7d4fb78b4fbb3d90da1a2ebbf2c9985ed",
+      "text_sha256": "75f20e124a39ba02e39702fecf15e2c6d2d81d047e9bbb1c4d7454b530c850df",
+      "verdict": "confirmed",
+      "note": "Looked up on the page image of the content-line PDF (Jezelf en de ander, 12-2018, page 2): fase 3 column, cluster \"Relaties en seksualiteit*\", seventh dash; word for word equal to the record, nothing else in the dash. The PDF prints no codes. An awareness goal (\"beseffen\"), glossed as realising. Limits says the statement names nothing beyond what it prints and sets no level of detail; \"In a child's hands\" stays with the talk the goal names and gives no advice, script or rule. The PDF marks this cluster heading with an asterisk (\"Relaties en seksualiteit*\") and prints under the table a note that the open data does not hold: \"* Scholen zijn verplicht aandacht te besteden aan het thema relaties en seksualiteit, dat valt onder kerndoel 38, maar mogen zelf kiezen welke leerlijnen en tussendoelen per bouw zij formuleren.\" No record carries it (the frame quotes it); Limits does not contradict it and does not mention it.",
+      "rendition": "nl-slo-inhoudslijn-ojw-jezelf",
+      "place": {
+        "page": 2,
+        "offset": 559
+      },
+      "matched_by": "script",
+      "checker": "nl/fase-3/practical-life-feelings self-and-others",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

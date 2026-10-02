@@ -1,0 +1,490 @@
+{
+  "lane": "us-ca/kindergarten/mathematics",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-cc-1",
+      "wording_sha256": "4b235139588be4389d1708ba7b7246e0f46db749a59159697e38717d234496fe",
+      "text_sha256": "eb1e8b0cbca951d896d7ae97601f54a4b71673f36d9618a4a10833d432bb3705",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 15
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-cc-2",
+      "wording_sha256": "874fd45dab948b4f2675fcaef04609cafc83d78eec05a8c43c6820fedaaac000",
+      "text_sha256": "d2d72ad5112c5f56d9be1e7adb6f84cd9fabf785d9a082af2abf79909ebd8416",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-cc-3",
+      "wording_sha256": "779c9a6a99661a20f4f5c59890e2d18f311a6f63c9b1ea3a7b471bdc3b49ab2e",
+      "text_sha256": "865b9699a3e06f3afa694df84714aa037b1eb9cc65031e73599f9575aba2600f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 43
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-cc-4-a",
+      "wording_sha256": "2405950d75a215d52eef9e8999c1a2ec9c9adcad7a0fc0d012c4648b3c28e790",
+      "text_sha256": "a974f6207bc9d9338ca73132f858859a06c7864cd68d3d44776e2d9e4a3225f6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-cc-4-b",
+      "wording_sha256": "4bcbe567f897addca0f0727dda79ebea678390fcfe1ae606ba5a2ecb2bf90515",
+      "text_sha256": "b8cbfa4db3c52a2a72795bf9b13b6f3fa4596854f8a7baf542c1d1615028601f",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "A condition is narrowed. The official sentence says the total does not depend on two things: how the objects are arranged, and the order of the count as a whole. The summary keeps the first and turns the second into \"whichever one is counted first\", which covers only the starting point, not any order of counting. Fix: speak of the order in which the things are counted. Wording and code match the PDF (stem printed once on page 19, sub-part b below it).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-cc-4-b",
+      "wording_sha256": "4bcbe567f897addca0f0727dda79ebea678390fcfe1ae606ba5a2ecb2bf90515",
+      "text_sha256": "b7c29ed7da8eb4f24bab01074e11c88ddc7b7eaf2f6e525f5eb8d23fcc0b90ee",
+      "verdict": "confirmed",
+      "note": "The round 1 fault is fixed: the Summary now speaks of the order of the whole count, not of the starting point, and both conditions (arrangement, order of counting) are kept. Checked on the page image: the stem is printed once on page 19 with part b under it, and only part a stands between them.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/kindergarten/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-cc-4-c",
+      "wording_sha256": "32eb7aa3093e0dd295d9d38e607e70a031d6fdcc85cc4faac95043b5f0b1eefb",
+      "text_sha256": "5f14fae9be6ebd711b5fe05de8933555f6f2dba96fcd6aa8f337cd33fe0c4386",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "granularity_differs": true,
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-cc-5",
+      "wording_sha256": "4f4cb75faf79d26a0085f57dcf5b9c83f1de5cfd3e2aeed12d43a6cf09635f8e",
+      "text_sha256": "fe2662ea15e295d49a16889cd0e71475060535972ffface5431b2127f27ec85c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 168
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-cc-6",
+      "wording_sha256": "f792b9078348a04e08dc0e7b20b513d64a8d1ffbf04637e1ba54beb90ac35cc4",
+      "text_sha256": "c5145c81550c21483f90e05dcd7c4f463b90e4385677ba724fb7f16d1ee6c720",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, first sentence: it says the footnote \"limits\" the statement to groups of no more than ten things. The footnote (PDF page 19, footnote 1) is worded as what the statement takes in, with ten as the largest group size it mentions; it has no word of limitation. The lane's K.MD.3 record shows the contrast: its footnote is worded as an instruction to limit, and the pack uses the same verb for both footnotes. The number (ten) and what it applies to (the size of a group) are right. Fix: report the footnote as saying what is included, not as a cap. Wording and code match the PDF; the summary is faithful.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 214
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-cc-6",
+      "wording_sha256": "f792b9078348a04e08dc0e7b20b513d64a8d1ffbf04637e1ba54beb90ac35cc4",
+      "text_sha256": "48652580972146a9af7b8ae9ffdcb48c83f5349dca2a6184cfa9f63f725d6d94",
+      "verdict": "confirmed",
+      "note": "The round 1 fault is fixed: Limits now reports the footnote (page 19, footnote 1, marked at the end of this statement) as saying what the statement takes in, with ten as the largest group size it mentions, and no longer as a cap.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 214
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-cc-7",
+      "wording_sha256": "111b5f9bcee01d40e27a9e7c2d336b34e3752ae1eedfe9427ad2e2239d491380",
+      "text_sha256": "7386687df73f2ef3a6aa8db5aa5f61d30bbcf6f8f5a59915334ce04bcd3c8a92",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 248
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-g-1",
+      "wording_sha256": "24818459516c509a2688e9aeb9882e8bed7cabf591941a4cc2101fcb68a8eb12",
+      "text_sha256": "90ed7c32b22ef2b84c8330e568f2c575377609464e49ceb4fc3b797234d50a34",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits: \"The statement names no particular shapes\". That is true of the sentence alone, but the adopted PDF (page 20) prints this statement under a cluster heading that lists nine shapes by name (five flat, four solid) as what the cluster is about, and the record carries that heading nowhere. A designer reading Limits is told the standard leaves the shapes open when the official page names them. Fix: say that the statement itself names none and that its cluster heading in the standards does, or carry the heading. Wording and code match the PDF; the summary is faithful.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 202
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-g-1",
+      "wording_sha256": "24818459516c509a2688e9aeb9882e8bed7cabf591941a4cc2101fcb68a8eb12",
+      "text_sha256": "5bbe55e00b4ce62c57e4ade89b088cd8c46ccec33476990b36ef14f4de95ba0c",
+      "verdict": "confirmed",
+      "note": "The round 1 fault is fixed: Limits now says the statement itself names no shapes and reports the nine shapes of the cluster heading it stands under (page 20). All nine are there; sorting them into five flat and four solid is the pack's, not the heading's.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 202
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-g-2",
+      "wording_sha256": "95e5a7f1f25808510e8046081bd85575895e32046ec2a50e8e9307f73f94b721",
+      "text_sha256": "da87a9bbfd7b41d4b31fa97b6070b63ac2b6d8661fe5672cbb8cd2f3934d4ec5",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits: \"The statement does not say which shapes\". That is true of the sentence alone, but the adopted PDF (page 20) prints this statement under a cluster heading that lists nine shapes by name (five flat, four solid) as what the cluster is about, and the record carries that heading nowhere. A designer reading Limits is told the standard leaves the shapes open when the official page names them. Fix: say that the statement itself names none and that its cluster heading in the standards does, or carry the heading. Wording and code match the PDF; the summary is faithful.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 234
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-g-2",
+      "wording_sha256": "95e5a7f1f25808510e8046081bd85575895e32046ec2a50e8e9307f73f94b721",
+      "text_sha256": "2452940e49687b5b0fb1bb9f865bd46b207b8453d41510414ccda681e3429588",
+      "verdict": "confirmed",
+      "note": "The round 1 fault is fixed: Limits now says the statement itself names no shapes and reports the nine shapes of the cluster heading it stands under (page 20). All nine are there; sorting them into five flat and four solid is the pack's, not the heading's.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 234
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-g-3",
+      "wording_sha256": "ac5c2b3300c460863e43d11ddf55f8fb02dd91276721207f844960353d3f467d",
+      "text_sha256": "9ee72240203598259346b48b8c1ebf0356b16bceeede7fb6aa5d35b9db5f179e",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits: \"It lists no particular shapes\". That is true of the sentence alone, but the adopted PDF (page 20) prints this statement under a cluster heading that lists nine shapes by name (five flat, four solid) as what the cluster is about, and the record carries that heading nowhere. A designer reading Limits is told the standard leaves the shapes open when the official page names them. Fix: say that the statement itself names none and that its cluster heading in the standards does, or carry the heading. Wording and code match the PDF; the summary is faithful.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 245
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-g-3",
+      "wording_sha256": "ac5c2b3300c460863e43d11ddf55f8fb02dd91276721207f844960353d3f467d",
+      "text_sha256": "92a75905aaaaaccfccdb0d62a753fc2c8e58fd9ecc664d6b95e6fd51f5861c0d",
+      "verdict": "confirmed",
+      "note": "The round 1 fault is fixed: Limits now says the statement itself lists no shapes and reports the nine shapes of the cluster heading it stands under (page 20). All nine are there; sorting them into five flat and four solid is the pack's, not the heading's. The Summary shares the statement's technical terms but leads with the everyday pair, so its shape is its own.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 245
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-g-4",
+      "wording_sha256": "a302ad4f112eeca083e4ca7f385262be23265346c4e2645f66ec334b5abaaa3f",
+      "text_sha256": "1745a67a4c84346057692b486c75b226776251945aa07e672d91588c5b6c6da1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 266
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-g-5",
+      "wording_sha256": "fbd2d98d4a943ce5869f72329a65711642b9e26e44099c54eb635f0bcbad9e67",
+      "text_sha256": "1f10ef36562597f7f1f56d86139b229dad116e2873d79f523f96cf62d069b473",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 307
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-g-6",
+      "wording_sha256": "c3b3ec83259f15c823f367df9106273657953c022efcdedd21af2cbe5358aacd",
+      "text_sha256": "a10e84ccd9a8d26968e4dd94b1c336c2479467179ab9db603f3531316460a9ca",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 327
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-md-1",
+      "wording_sha256": "a75050e95f85c06b0467f75b949b7e4c9dcaafbf1a5adbdfc795cd3b20631478",
+      "text_sha256": "6c9abb19be70e7fbcaf4155d271ffe4d4265155440954d3a44141c09d52c6434",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 92
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-md-2",
+      "wording_sha256": "9701bf071d746a87c8eff9dfa11eaa415e55a61cfe26d6d2cd407a6fe5488eb5",
+      "text_sha256": "7bd744e646ed87468ae07546dfb4fa9f583e49a44cbd0107e3f1c46c5eec98a7",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 111
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-md-3",
+      "wording_sha256": "da9a2de173ae26f649e300f1c0c1638084b995f9ce28aa785cd08018abb2d1c0",
+      "text_sha256": "5b0c9faeff5f0ed2a5e446611705e0592f11c46c84cfc69f875231614ed12ab4",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 164
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-nbt-1",
+      "wording_sha256": "0b1e4232f87d31ae906c2c6a7f6fecca9ef0d0c73e689f6cd8ee59e11ceb5105",
+      "text_sha256": "adb03f85be19dae560899b44ed48c39f2bae082f2e4ff6ecd702b9969a31693e",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Near copy. The summary follows the official statement clause by clause in the same order, both halves, with the example equation in the same slot and words swapped one for one; about six in ten of the official words survive in order and one run of six words is shared. Second point: the summary says \"one group of ten ones\"; the official text has no grouping word, and the record's own Limits says the wording does not treat the ten as a single unit. Fix: restate in the pack's own structure and drop \"one group of\". Wording and code match the PDF (page 20).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 22
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-nbt-1",
+      "wording_sha256": "0b1e4232f87d31ae906c2c6a7f6fecca9ef0d0c73e689f6cd8ee59e11ceb5105",
+      "text_sha256": "3526c99f35b49f03f439570527aad8c5861799a5d318fe673f8e5a1e3bd4a9c2",
+      "verdict": "confirmed",
+      "note": "Both round 1 faults are fixed: the Summary is restated in its own structure (the understanding first, then building and splitting, then the recording; about three in ten of the official words survive in order, down from about six in ten) and the grouping word is gone. Every condition is kept: the range, both directions, the example method, the two ways of recording and the example equation. Limits does not contradict the cluster heading.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 20,
+        "offset": 22
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-oa-1",
+      "wording_sha256": "09dba7e715298ec799d53f58d864d155effca338a28a47421320247a7f5a7e08",
+      "text_sha256": "42877411baacb0b74454efe45dbf738d53ef0530512bca9149523085c3562c36",
+      "verdict": "confirmed",
+      "note": "The script did not find it because the PDF prints the raised footnote marker 2 inside the statement, directly after the comma that follows the fourth item of its list. Compared by eye on the page image of page 19 and word by word on the text layer with that one digit removed: the content is equal, nothing missing or added. The footnote itself (page 19, footnote 2) equals the record's accompanying text, and Limits reports it faithfully.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-oa-2",
+      "wording_sha256": "156f1330da993332a5fb12afe75ac5c4485a08934cee4278ce944ffcaf5d8ebd",
+      "text_sha256": "8b209b6538ad652fe5606f57e9ee0c32f8a04d20d5b54797028f71d709da4f05",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 307
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-oa-2",
+      "wording_sha256": "156f1330da993332a5fb12afe75ac5c4485a08934cee4278ce944ffcaf5d8ebd",
+      "text_sha256": "cd80b962111d4897e61bf05605ab4da08c133847969e7bef5c79a73358e54890",
+      "verdict": "confirmed",
+      "note": "Limits now adds what the cluster heading says about the two operations (two readings of each); the paraphrase agrees with the heading printed above this statement on page 19, and Limits keeps apart what the statement says and what the heading says. Summary unchanged and faithful.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 307
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-oa-3",
+      "wording_sha256": "b7af7212d53b4f3e087b19d7adbb069ad567edf38acabdfcf6b8ca10fcaf1919",
+      "text_sha256": "16c4239e17de15a4b7e31de3d57054109ddd12ca014a756f564fdaf4f7559256",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 331
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-oa-4",
+      "wording_sha256": "86e80f735745d183995ca0a1175898824d425d76b5b7e535ef98e0ff86c93c91",
+      "text_sha256": "cc6f36675b492120f184d5129bb3657cdb234285d73fafde547dfb966bd17934",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Near copy. The summary keeps every clause of the official sentence in the same order; about seven in ten of the official words survive in order, and the closing clause about recording shares a run of seven consecutive words with the statement, one short of what the automated check rejects. Nothing is missing or added in content. Fix: restate in the pack's own structure. Wording and code match the PDF (page 19).",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 372
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-oa-4",
+      "wording_sha256": "86e80f735745d183995ca0a1175898824d425d76b5b7e535ef98e0ff86c93c91",
+      "text_sha256": "66ac6a3ec1cad1baee3455951aab9544d786236dd433b489ec09b0809c5b83a2",
+      "verdict": "confirmed",
+      "note": "The round 1 fault is fixed: the Summary is restated in three sentences of its own structure (about four in ten of the official words survive in order, down from about seven in ten; longest shared run four words). Every condition is kept: the range of the given number, the total, the example method and the two ways of recording.",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 372
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.mathematics.objective.k-oa-5",
+      "wording_sha256": "d13edbaf7e95d72c4be0bb2b29a0df0c81f62008d93fb7766fa6079521994a68",
+      "text_sha256": "795aa3496d63fa8c70cdc468de73c4c5b67fa144dee49e71eb09845b8a9bfb10",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "place": {
+        "page": 19,
+        "offset": 408
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/mathematics",
+      "round": 1
+    }
+  ],
+  "unrecorded": [
+    {
+      "rendition": "us-ca-cde-ccss-math-pdf",
+      "code": "K.CC.4",
+      "place": {
+        "page": 19,
+        "offset": 76
+      },
+      "explained": "parent of sub-part records; the source has no row for it. The PDF prints it as number 4 under the K.CC domain bar with parts a, b and c beneath; its stem stands at the head of the records K.CC.4.a, K.CC.4.b and K.CC.4.c. Found by eye: the PDF prints no full codes."
+    }
+  ]
+}

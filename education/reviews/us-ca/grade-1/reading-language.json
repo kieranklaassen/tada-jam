@@ -1,0 +1,687 @@
+{
+  "lane": "us-ca/grade-1/reading-language",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.l-1-1",
+      "wording_sha256": "b2f66a33a67e6fb505c1bf4208e50ac653588a83f7e49f7f36c154b0847032a0",
+      "text_sha256": "086f45474ae864096c791794f104c1ed534e1b202e5d76a9c8fadfdbd18d8f5c",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits says California adds the pronoun part and names all three pronoun kinds as the addition. The adopted PDF (page 38, grade 1 column, part d) sets in boldface only words three and four of part d, the two-word bracket that follows the first pronoun kind, and the state mark at the end of the part; the three pronoun kinds and the bracketed examples are in regular type, so the PDF does not show them as California additions. A designer would wrongly take the whole pronoun part as particular to California. The california_addition flag (true) is right. Wording, code and Summary check out: the opening line and all ten lettered parts a to j are present, in order, with nothing else in the cell.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 38,
+        "offset": 221
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.l-1-1",
+      "wording_sha256": "b2f66a33a67e6fb505c1bf4208e50ac653588a83f7e49f7f36c154b0847032a0",
+      "text_sha256": "32c4d681762281f75ea7932cbd24af92b9bf2b130ca0e8f48f75a33c3c77825e",
+      "verdict": "confirmed",
+      "note": "Round 2, read on the page image (page 38, grade 1 column, item 1 of the Language standards). The cell holds the opening line and parts a to j and nothing else; the state mark closes part d. In part d the boldface covers only the two-word bracket that follows the first pronoun kind, with its comma, and the state mark; the pronoun kinds and the example list are in regular type. Limits now says exactly that: the addition is a short bracketed insertion after the first pronoun kind, and the kinds and their examples are not additions. It agrees with the page. The Summary is faithful and keeps the bracketed word lists as examples.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 38,
+        "offset": 221
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.l-1-2",
+      "wording_sha256": "8b1b11de09fdceb76c399a6ec620515f593e4ec76284f352dd10a0b55654f382",
+      "text_sha256": "e9ce126783f045c5c92d500b19b392978c0ec0700f1725e7a6cb33e7ca5b57f3",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "One punctuation mark differs and no word. The PDF (page 39, grade 1 column, number 2) closes the opening line with a full stop; the record has no full stop between the last word of the opening line and part a. The export row the record was read from lacks it too, while the same row of every other grade (kindergarten and grades 2 to 6) has it, so this is a difference between the two official renditions and not an importer fault. Everything else is equal character for character: parts a to e present and in order, nothing after part e in the cell, no boldface. Summary and Design notes are faithful.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 39,
+        "offset": 82
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.l-1-2",
+      "wording_sha256": "012dcd423873461658a03eb45c044113336cec0a9e4a06e260619af1ca3779dc",
+      "text_sha256": "e9ce126783f045c5c92d500b19b392978c0ec0700f1725e7a6cb33e7ca5b57f3",
+      "verdict": "confirmed",
+      "note": "Round 2, after the importer's correction. The wording is the export's as corrected from the adopted document at one place: a closing full stop restored at the end of the opening line, before part a. Read whole in number 2 of the grade 1 column on PDF page 39 (page image): the opening line and parts a to e now equal the cell, punctuation included, in order; nothing else stands in the cell and nothing is in boldface (the flag false is right). The correction is right and nothing else differs, so the round 1 difference is resolved. Code equal. Summary and Design notes judged again against the corrected wording: faithful, no near copy; the defect was a punctuation mark only and nothing in the pack's text follows it. Noted, not counted: the Summary's last sentence speaks of the spelling conventions the child knows, where the statement names spelling conventions without a qualifier; no condition changes.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 39,
+        "offset": 82
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/grade-1/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.l-1-4",
+      "wording_sha256": "724d93d6790d788ecc8c89a7e5d7e62b8551cd060f3cf74ac70444c6ca826ae9",
+      "text_sha256": "7ec3d45be7f32668cb9f220fdd7622a96624d785cc27b1057b476a1679673b61",
+      "verdict": "confirmed",
+      "note": "Parts a to c present and in order; no boldface.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 40,
+        "offset": 86
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.l-1-5",
+      "wording_sha256": "add9d31d5a6f451587faaad7d0d36275634fbec0819913743cd595298cceba09",
+      "text_sha256": "008c854a6d56ddf5b295134592e5428ea1166a071dbfbcd6ab4cb5f41976bb60",
+      "verdict": "confirmed",
+      "note": "Parts a to d present and in order; no boldface.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 41,
+        "offset": 125
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.l-1-6",
+      "wording_sha256": "691b523ccaea4afe895044cbdafa80934525f0a234a0e1badda3757e2e9204f0",
+      "text_sha256": "64921e3371d680d4ee3a98d40868da1857d2e4420172883bcae14b880e433d16",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 41,
+        "offset": 247
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rf-1-1",
+      "wording_sha256": "159eead2511e862c459a990a817078e64be0fc8f8c7ffa99a363278e80955ead",
+      "text_sha256": "29d5d3aad9d7c6df68e61a5eaa0fee393816e7babc178c5f529d5b8fd5fbbad5",
+      "verdict": "confirmed",
+      "note": "One lettered part (a) in the cell, as in the record; no boldface. The example list in part a is kept as examples in Summary and Limits.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 23,
+        "offset": 330
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rf-1-2",
+      "wording_sha256": "621f318c70cf2e1e248e761f3494c449651d5d8d3e2fe2002023d405e2e19840",
+      "text_sha256": "36c7acba2bbb4545eca5599dfc551a5db2d64b438d6da515a1e41f6731899a38",
+      "verdict": "confirmed",
+      "note": "Parts a to d present and in order; no boldface. The text that follows the cell in the column reading is the tail of a kindergarten footnote that runs across the foot of page 23; on the page image it stands outside the table and is not part of this statement. Summary and Limits name exactly what the parts name: long against short vowel sounds, blending with consonant blends included, first, middle-vowel and last sounds, full segmenting, all in spoken one-syllable words.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 23,
+        "offset": 356
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rf-1-3",
+      "wording_sha256": "8ad23b556bdbf26c2e6d1cc4c6f85c9092224cdbe03b7fd66b9607039b167df9",
+      "text_sha256": "e5daf55a5fa74168a1de3c245479c1a0c147a2525eb65de31f0cc4d748738d62",
+      "verdict": "confirmed",
+      "note": "Parts a to g present and in order. PDF boldface (page 24): the last six words of the opening line and the state mark after them are the California addition; parts a to g are in regular type. Limits places the addition in the opening line without naming the words, which agrees with the boldface. Summary and Limits name exactly what the parts name (common consonant digraphs; regularly spelled one-syllable words; final -e and common vowel teams for long vowels; a vowel sound in every syllable, used to count syllables in a printed word; two-syllable words of basic patterns; inflectional endings; grade-appropriate irregular words) and add no examples to a statement that gives none.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 24,
+        "offset": 185
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rf-1-4",
+      "wording_sha256": "bc4d1d2932f25f7158fc3deecb1a7e74ad7fc821dd13dacd559f384a07d3ca7e",
+      "text_sha256": "5295fa3836950ed966944e729550a8d0c9411213909e43b744b03653c3a03da4",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Parts a and b name the text by a level term that the statement does not define: it does not say whose level or which level is meant. The Summary turns it into text at the child's level, and Limits states it outright as the child's own reading level (In a child's hands repeats it). That is a condition the statement does not state; the term can as well mean the level of the grade, which is how the neighbouring RL.1.10 and RI.1.10 set text difficulty. A designer would take from the record that text difficulty follows the individual child. Keep the term neutral, or say in Limits that the statement leaves the level undefined. The rest of the Summary and Limits is faithful (accuracy, rate and expression on repeated oral readings; context used to confirm or self-correct; rereading only as needed). Wording and code check out: the opening line and parts a to c are present, in order, with nothing else in the cell and no boldface.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 24,
+        "offset": 287
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rf-1-4",
+      "wording_sha256": "bc4d1d2932f25f7158fc3deecb1a7e74ad7fc821dd13dacd559f384a07d3ca7e",
+      "text_sha256": "e1a415cb28d72d7d0f4cb496520b0723afbe8fdf022e98e3a453a8c4f1de08ca",
+      "verdict": "confirmed",
+      "note": "Round 2, read on the page image (page 24, grade 1 column, item 4, under Fluency). The cell holds the opening line and parts a to c and nothing else, with no boldface. The Summary now keeps the statement's level term as printed, Limits says the statement does not define it (neither whose level nor which), and In a child's hands no longer ties the text to the child's own level. The rest is faithful: purpose and understanding; accuracy, rate and expression on repeated oral readings; context used to confirm or correct; rereading only as needed.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 24,
+        "offset": 287
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.ri-1-1",
+      "wording_sha256": "86cf9182fc4599884408f10a32b0c1c34e7c07a5f3327a8f42ff2905e27419a5",
+      "text_sha256": "6c96c3a23ff08d310e4506d4671c7556a8fb33fec7d0f802b5ed554d0bd12bd7",
+      "verdict": "confirmed",
+      "note": "Place given by eye: number 1 in the grade 1 column of the informational text table on page 20, read on the page image and found whole there by the column reading. The script reported page 17, offset 93, which is the identically worded literature standard RL.1.1.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.ri-1-10",
+      "wording_sha256": "6d07132c9c3f485070aa2bfdaf65647aaf7bf63e59f2ecc8bd85bbaee251e287",
+      "text_sha256": "70e76d01c1078655f7a5f0b1dd93e19975757c5145a282ab5b7aa4e65b553eba",
+      "verdict": "confirmed",
+      "note": "Parts a and b present and in order. PDF boldface (page 21): both lettered parts, whole, with their state marks; the opening line is in regular type. Limits says the same.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 21,
+        "offset": 53
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.ri-1-2",
+      "wording_sha256": "e323ee463570ea4c613084c3a9eff9132d251b1cd2cfedb2b0c33e844ce0ef78",
+      "text_sha256": "59135b099f4276c5957aca8303154fe6176e2f4a8d1a74960747363e78fbf10d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 42
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.ri-1-3",
+      "wording_sha256": "b4fddd572e2b7a610dc660dd78e614e109e0e231e92e1cf9dc0562eb4609602c",
+      "text_sha256": "0a19289e7b632892a93821d819b03a8256634f71a3f7e31c4369771d80d7ad0d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 58
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.ri-1-4",
+      "wording_sha256": "a3f2749d86c0584736a7b7aeb403213c1664663a2eb6425494393e8f907a62ab",
+      "text_sha256": "9bab7ad2518c6ed2f1f90ba0ccea479a030381de57113523c496ae9597cfd0b8",
+      "verdict": "confirmed",
+      "note": "PDF boldface (page 20): the whole bracketed cross-reference sentence at the end, with the state mark, is the California addition; the sentence before it is in regular type. Limits says where the mark stands and does not name the added words. Limits also describes the cross-reference as pointing to strategies, where the statement gives it for additional expectations: loose, not a contradiction. The PDF writes the range of standards with an en dash (form).",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 253
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.ri-1-5",
+      "wording_sha256": "dfc544a4febb76b3ae58231a51228b8241d6d75be6dec73321983ba258da1b4e",
+      "text_sha256": "2acbbda2374c71c908397479470d618c17bad26edb3c6043cd876ed6855bcb93",
+      "verdict": "confirmed",
+      "note": "PDF boldface (page 20): words six to ten of the statement (the first of the two things to know and use, its bracketed example, and the two words that join it to the second) and the state mark at the end are the California addition; the text features, their examples and the purpose are in regular type. Limits says the stored wording does not show which words are added, which is true of the export. Both example lists are kept as examples.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 283
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.ri-1-6",
+      "wording_sha256": "9bad604e66a2e5fd96bba0566275fab0384d6b3e6d8fc842205b15b551b3c54c",
+      "text_sha256": "f48072ce4aa7945a7d0bcf2819d2cc19e4c046b5072ab4b260be245b3b14bbc8",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 316
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.ri-1-7",
+      "wording_sha256": "7a863959bd418e8233c486d359066a2d1a2bad67e738998005ec3ce28976b406",
+      "text_sha256": "be3f4bff42487368ca83236dcd3225e2c4fe51ac8e76db4b72df095feeaf9453",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 335
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.ri-1-8",
+      "wording_sha256": "84c50f43339c7feb849678ebe17b62f9cb05bc795a2d9070813f2e3fdfd035fc",
+      "text_sha256": "eea8d60ff9cf433f266a350e6c33de1af7a89303b0fd556d4ae25003ba304324",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 171
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.ri-1-9",
+      "wording_sha256": "3164a090b3ea5cb059e261706749a11c0e63ffee961b9a24646bc473df59982b",
+      "text_sha256": "326ac9cb7c1e23c342469a291054124d77fdfe388527c90d2740aebb106a98d1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 188
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rl-1-1",
+      "wording_sha256": "86cf9182fc4599884408f10a32b0c1c34e7c07a5f3327a8f42ff2905e27419a5",
+      "text_sha256": "148c538bc2f82f974c888fd58a491cd766f22e66ea0f5a243098eee55b88e092",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 93
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rl-1-10",
+      "wording_sha256": "23ba5b84040c887417eb6639c6eba963d3827ab89559b4ac4575f3dadad72d05",
+      "text_sha256": "e2d4c0a43dff7afd4c142d2cbfb0d8ef57d570a0da7d3d9aba8226092debf66b",
+      "verdict": "confirmed",
+      "note": "Parts a and b present and in order. PDF boldface (page 18): both lettered parts, whole, with their state marks; the opening line is in regular type. Limits says the same.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 18,
+        "offset": 51
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rl-1-2",
+      "wording_sha256": "6e5fc2e174cc0376c6a8a69a9e9fe69b790b76677435af0184eacc196cab4821",
+      "text_sha256": "903f91661e09529f35eeb4add3510a1acd6d53a5e7d58cf7e7d3f09e67477682",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 252
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rl-1-3",
+      "wording_sha256": "b1a8cda747485d5451212928fb01f1dce1481bbc1c9978575061d4b76159ee42",
+      "text_sha256": "80a2c1313d68da2956c1334039310003c92e22f8f5ec1f832b3dd5ee4f0c4191",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 267
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rl-1-4",
+      "wording_sha256": "f157f67fb88878041e85589d67965df1ef06d71cb8b72d33c216ac6a33ad22ed",
+      "text_sha256": "9cb88d0663ed7c1cab3a210b1b01728f5358f6bcdd2950a0c274c4b637e3a490",
+      "verdict": "confirmed",
+      "note": "PDF boldface (page 17): the whole bracketed cross-reference sentence at the end, with the state mark, is the California addition; the sentence before it is in regular type. Limits says where the mark stands and does not name the added words. The PDF writes the range of standards with an en dash (form).",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 280
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rl-1-5",
+      "wording_sha256": "a7c5a3d709aa4fc6379d5bdf724ca16889e40855833bf14c1a24861501848ca5",
+      "text_sha256": "4be3507bbd9fa22f1577d5881c52987de4cfe7b363c1a8f26cc69f3147ff4e3f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 308
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rl-1-6",
+      "wording_sha256": "bd4c94b40baba44e96b37e73ee577c98a8a3e06ae650a06df29b709b86f0808f",
+      "text_sha256": "789b6e754269c4d6453df64bc3136c37322b02b61f8a537fd602d22875d4511e",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 333
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rl-1-7",
+      "wording_sha256": "c5fdcd8904effc8b6fe6ac9b28fa4d2fa296f9480ef4cd6b9281678f2752ca2c",
+      "text_sha256": "dc91fbe04ae97e5a16a433c09cd87391deee7a2db8e9f0cc421e83433530d011",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 346
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.rl-1-9",
+      "wording_sha256": "4c3854eb91abc2c51c29f8f8b806bc3ddbcf8c57ba3ac66cdcd87823ad00e394",
+      "text_sha256": "bd5cf04ba12ef829890c534917d09c20c5ed99179a612d4f4bf73b6db03cbe23",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 366
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.sl-1-1",
+      "wording_sha256": "3802393e4f62579af55e2e7fab90134bac7238dce7dcbea500955281f105335d",
+      "text_sha256": "7ecbdbf062dad65a79dd1e65f9c8d88356e9a0f8b8045d1e23513a771f12483b",
+      "verdict": "confirmed",
+      "note": "Parts a to c present and in order; no boldface. The PDF sets three words of the opening line in italics (form).",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 33,
+        "offset": 185
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.sl-1-2",
+      "wording_sha256": "ef6d7c9cf29d7bed5361c57516fefe61fee96297c5bbeb9d3a5ba022e87bda67",
+      "text_sha256": "ec0186faf1d5bb0cddecbee9252b3101e827a2b69de65be9b6490893ac22eb08",
+      "verdict": "confirmed",
+      "note": "One lettered part (a). PDF boldface (page 33): part a, whole, with its state mark; the opening line is in regular type. Limits says the same.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 33,
+        "offset": 266
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.sl-1-3",
+      "wording_sha256": "16dec8681e77de30ac199d185bfe20394476c76ccca7c4f7f59d4c45cb84d365",
+      "text_sha256": "6cb984d6ef8c5b4d3e98f78c2b079bdfbf55ec0b39e1bed192191f99d064b0d4",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 33,
+        "offset": 297
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.sl-1-4",
+      "wording_sha256": "b591d85646acb82d0107a3138aa2974cbd41b226b4ec56c25bf8371ce45504c4",
+      "text_sha256": "d23ef028b93e92633fd3f5cba6354f312782424e439d540a307fc160b632e053",
+      "verdict": "confirmed",
+      "note": "One lettered part (a). PDF boldface (page 34): part a, whole, with its state mark; the opening line is in regular type. Limits says the same.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 34,
+        "offset": 60
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.sl-1-5",
+      "wording_sha256": "e4e5e40c5c8c2a14dd884ebda7d1c9273a60142186f7d1e8ced274d391bab9d7",
+      "text_sha256": "c2b65b3b0cb9831ba27dbab6f8787d6864ed769a94341fcb1b73bc1be44a2a6d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 34,
+        "offset": 86
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.sl-1-6",
+      "wording_sha256": "e49c8bc82d0983e5cb1943f4e48b8931c5821280bbd07c3b4e0c93f34563de50",
+      "text_sha256": "cccfb57bc61bdf0943d8b237ba76d7b5b0158f4f1773d9f71a52d50277e48f7a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 34,
+        "offset": 103
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.w-1-1",
+      "wording_sha256": "2ba93b0ede8391ae345129f050868d51cfc057501e49ead126180b9b7639d3ad",
+      "text_sha256": "c72a71d0197a79b288636f1da0d095fbde5899780afb5b48270756aec30edeae",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 27,
+        "offset": 301
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.w-1-2",
+      "wording_sha256": "46632d586a0f32aa8e1b2484a98b2ca7a22d3b2a182b0e282c22ffdb0a49aa4e",
+      "text_sha256": "bfbbbe88328a16fe2c0d375a9f95304c37e7d7d3514145d615bdea4914b0efc9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 27,
+        "offset": 334
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.w-1-3",
+      "wording_sha256": "fa37c70830e677419b04b2df7bc469b4e9b3fe0b64c45b545a43d243ad39d53e",
+      "text_sha256": "7e5350f2c8cadae787f7abb1cf23f7fa97f144496761562811381cc632a94dcb",
+      "verdict": "confirmed",
+      "note": "The PDF breaks one word at a line end with a hyphen (form); otherwise equal character for character.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 27,
+        "offset": 357
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.w-1-5",
+      "wording_sha256": "2a344a0b8f975234292575b4c1fcc7c9ee6691921281d30ba5f98f0e44cdbd1e",
+      "text_sha256": "0ab3b3c3472dab30d3be52d815ba33d599a284a588a44dddc092dc260f69b8c6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 27,
+        "offset": 396
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.w-1-6",
+      "wording_sha256": "31554b5d45a5b05d348a02840503237469b7554869540268fd84bec09cc81e8e",
+      "text_sha256": "163c2de56650f85c825a3d02f3410c326025e0e8da93a912f1c2336fbd110ca6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 27,
+        "offset": 422
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.w-1-7",
+      "wording_sha256": "060a0015c4631b2e27e2052879299a4c5bb2478f79e77a2973ffa0632cd37337",
+      "text_sha256": "7c756a723a10d8c49f545ebf39115208217d8de8c5f243451ba509d7c2b47a5e",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 28,
+        "offset": 71
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-1.reading-language.objective.w-1-8",
+      "wording_sha256": "6211a039a048f269eb2f1e2bf3c27fc1145a25e2121a277c03226cc6a817ed79",
+      "text_sha256": "e05ca959d8df7661b2b1e6c609f0d8dc08538d7a20b74f4bbb31ffa5abe0861f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 28,
+        "offset": 39
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-1/reading-language",
+      "round": 1
+    }
+  ],
+  "unrecorded": [
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "RL.1.8",
+      "place": {
+        "page": 17
+      },
+      "explained": "Placeholder row the manifest skips, listed in the frame: number 8 in the grade 1 column of the literature table holds only a bracketed remark that the standard does not apply to literature. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "W.1.4",
+      "place": {
+        "page": 27
+      },
+      "explained": "Placeholder row the manifest skips, listed in the frame: number 4 in the grade 1 column of the writing table holds only a bracketed remark that the standard begins in a later grade; the grade in it and a state mark are in boldface. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "W.1.9",
+      "place": {
+        "page": 28
+      },
+      "explained": "Placeholder row the manifest skips, listed in the frame: number 9 in the grade 1 column of the writing table holds only a bracketed remark that the standard begins in a later grade. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "W.1.10",
+      "place": {
+        "page": 28
+      },
+      "explained": "Placeholder row the manifest skips, listed in the frame: number 10 in the grade 1 column of the writing table holds only a bracketed remark that the standard begins in a later grade; the grade in it and a state mark are in boldface. Found by eye: the PDF prints no full codes."
+    },
+    {
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "code": "L.1.3",
+      "place": {
+        "page": 39
+      },
+      "explained": "Placeholder row the manifest skips, listed in the frame: number 3 in the grade 1 column of the language table holds only a bracketed remark that the standard begins in a later grade. Found by eye: the PDF prints no full codes."
+    }
+  ]
+}

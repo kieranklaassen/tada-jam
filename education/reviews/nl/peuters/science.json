@@ -1,0 +1,308 @@
+{
+  "lane": "nl/peuters/science",
+  "verdicts": [
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-de-ruimte-om-je-heen-weer-klimaat-en-hemellichamen-1",
+      "wording_sha256": "4b8f530e5a44c436cd0493652722deb4cf8bb455c12232cba38bbd436c29fe61",
+      "text_sha256": "f923f118da931551a1fb22b6bb4f3be3c46ff7d00cb98d27e7cd1a1633d83b6f",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 344
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-de-ruimte-om-je-heen-weer-klimaat-en-hemellichamen-2",
+      "wording_sha256": "9a33a5cb0201504115415a9f7eb1a101d6b1fdc75b964ec261969f6899c2e5b0",
+      "text_sha256": "f52cd91dfb78a9739bca06c6a919387285ec59e5a4f040e0c00e19eff5230518",
+      "verdict": "confirmed",
+      "note": "Compared on the rendered page. The script could not match because the recognised text of the file ends this bullet at \"seizoenen op de\": the last word stands alone on the bullet's second line and was not recognised. The page prints \"praten over de invloed van weer en seizoenen op de / mens\", so the locator's correction (\"seizoenen op de\" to \"seizoenen op de mens\") is right and the record is complete.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1
+      },
+      "matched_by": "agent",
+      "corrections_verified": true,
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-de-ruimte-om-je-heen-weer-klimaat-en-hemellichamen-3",
+      "wording_sha256": "df8fbb3be35fcd711cc9ea295b8b3a49aff35c6a472d0417df4230e03877da42",
+      "text_sha256": "c56a1d13725b9d9a9a1d92d14025f5a0f38db9656664455dbe87d22321956451",
+      "verdict": "confirmed",
+      "note": "Limits says the statement \"does not mention the earth, planets\": true of the words, but the card gives zon, maan en sterren as examples (\"begrippen als\") under the sub-heading \"Weer, klimaat en hemellichamen\", so the list is open; Limits says so itself one sentence earlier. Not counted as a fault.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 369
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-de-mens-1",
+      "wording_sha256": "37cea27f3a0ffbd7b3fd231f94b87781743dac1fed689b99663b02a60547abed",
+      "text_sha256": "97938ee8feeaa14d158682206341c8a34cf34539dd4ce61c88dfa84a666506b1",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Wording, heading and position are right on the rendered page, and the gloss is faithful. Limits, last sentence: \"It does not mention parts inside the body or what a part is for.\" The Dutch is \"onderdelen van het eigen lichaam\", a general term with no list: parts inside the body fall inside it as much as outer ones, so the sentence reads as a limit the card does not set. Say only that the statement names no parts (as the sentence before already does), or drop \"parts inside the body\"; \"what a part is for\" can stay.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 550
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-de-mens-1",
+      "wording_sha256": "37cea27f3a0ffbd7b3fd231f94b87781743dac1fed689b99663b02a60547abed",
+      "text_sha256": "20310328e3702679ac3d62f63b3b06d0f7a8201ed054a5f3f63c547864f78822",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (column Planten, dieren en de mens, De mens, first bullet). The round 1 fault is resolved: Limits no longer says the statement does not mention parts inside the body; it now says \"It names no body parts and sets no number of them. It does not mention what a part is for\", which leaves the general term \"onderdelen van het eigen lichaam\" whole.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 550
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-de-mens-2",
+      "wording_sha256": "1e7824c64db52fb696c7ebd82c54b5e8457d0488aba977a718d9f5731f4dfcb3",
+      "text_sha256": "e6dc4d396452dcd7cdaccef9d28a70e21a3c0c0c5f2492e830b34f771dc273fd",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 559
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-groeien-bloeien-en-voortplanten-1",
+      "wording_sha256": "0d464c468eb77ce42772788565f270c9896d4718a16b6ea20dc32d1cb4f9ccc3",
+      "text_sha256": "f09a653d847f8d78de69cc225c8cf4a92c3273836118139bac540f8fff2b0df1",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 579
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-groeien-bloeien-en-voortplanten-2",
+      "wording_sha256": "c1c8b3ef823707ec9157a6c877ee00d4397dddf1860f67721be9d7e1ab034cc3",
+      "text_sha256": "418edbb0fcacecef4fabc41e063745cd525ce06e2f85cff81ebedbbac063b512",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 585
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-groeien-bloeien-en-voortplanten-3",
+      "wording_sha256": "9fd657917af8067bd72070a929790a395d15e8bdb1ac6973962ed172f9e46998",
+      "text_sha256": "c134896f26a981a3a003cef82911971254eac8dc5df8735dc15e254d24f611e2",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 590
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-groeien-bloeien-en-voortplanten-4",
+      "wording_sha256": "166e307109d8457e2e13073eb6026169905968d15e16c07ae901e295ab623929",
+      "text_sha256": "3370920fdfcfebb3285e037248ba495c904c7f8664b30ec987c7098c53af0327",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 601
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-omgaan-met-de-natuur-1",
+      "wording_sha256": "91c706804685e06f2a09dcf321a3850e4a7627bfdb512948a25806fb043e9050",
+      "text_sha256": "d4899967cb6f2e21bf3c9cfc49c18731cc565a0e7782626121161355d19b797e",
+      "verdict": "confirmed",
+      "note": "In a child's hands has a child of 2 who \"wants to touch\" what was found, a mushroom among it. It is the pack's illustration and is not presented as the card's demand; Limits does not say that the card sets no safety condition (it sets none).",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 466
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-omgaan-met-de-natuur-2",
+      "wording_sha256": "0498c44db581da7103481df45478c8dcdb412714e6bbd5609ed7a15ded58ddcd",
+      "text_sha256": "6bcf97528ef9d92ca109b7d53086f081b78716e9e30a7aaa9e3f03ea5ba60c36",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 480
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-omgaan-met-de-natuur-3",
+      "wording_sha256": "572b8513470933a447be8633b93104731dc2d34edc9a866a8d2118c74577870b",
+      "text_sha256": "2747915f03f37ee0a5aa7048dc3de4bc3cd59dc585a1c820c84d44adbdd238fa",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 492
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-omgaan-met-de-natuur-4",
+      "wording_sha256": "ceccb9fa9b6a40ad7c4c352565306598a5a61a80a3e5e043f1f36553c71c5331",
+      "text_sha256": "d1f7f74d9f82faec47034f951f33bdb0bd774b1700ffe87bd49e937bb2e88a1b",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 501
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-omgaan-met-de-natuur-5",
+      "wording_sha256": "5bb470e8b12851e7f3fa80e220b5cfac965e19d0d02b47878e053dc0ec96a119",
+      "text_sha256": "24b151cd9929dc423e71d5570119c75bbf55a97a7292c8c969ddbf4605baad0d",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 513
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-planten-en-dieren-1",
+      "wording_sha256": "eff5606a771139acf6da889205920ac6329a024bf205a7920b546c2f74c123dd",
+      "text_sha256": "fe5503921a4e713d99b1bec7fb1033d6ee1ef0a60b83fcbe4d168cd62ac22341",
+      "verdict": "confirmed",
+      "note": "Limits reads \"herkenbare\" as \"parts a young child can make out\": the card does not say to whom the parts are recognisable. A reasonable reading for a card for peuters, not counted as a fault.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 523
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-planten-en-dieren-2",
+      "wording_sha256": "c82244d55f2427d7210f01cf1865f8995c3832bcf6838880c90125afffb36548",
+      "text_sha256": "d967062ef7a2d684932c564e8e0155f1786af2fb6eae2a84664cc4a65b3a6f82",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 534
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-verschijnselen-uit-natuurkunde-en-techniek-materialen-stoffen-en-voorwerpen-1",
+      "wording_sha256": "b1a27bdc1b3a8b093e5fe04eb995800d43fedd5fecad0e79e251dfb269eb3465",
+      "text_sha256": "66669c5ee10831eb5f9ec51aad4cd2f59084b05732333680c9d7def7649d0d91",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 753
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-verschijnselen-uit-natuurkunde-en-techniek-natuurkundige-verschijnselen-1",
+      "wording_sha256": "045873c4f2142c83d8c976c3a571da745959d22c056042b3c6a412af803be9b3",
+      "text_sha256": "59174294d41780ffc450fecbee4ae30818f563086785982b2818bf3ff7c1182e",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 710
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-verschijnselen-uit-natuurkunde-en-techniek-natuurkundige-verschijnselen-2",
+      "wording_sha256": "df296fc8fe1c0c276d28b3e87f5606b6b21e01d4807c77a55a8da980e45ea454",
+      "text_sha256": "8994f8da6feedb5e7549aa9be4b8e75c7d2e8596d2e2fd0aaa80533118d19780",
+      "verdict": "confirmed",
+      "note": "In a child's hands has the child pick up paper clips with a magnet (small parts for a child of 2). The card names \"kracht (van water, van magneten)\" and sets no safety condition; Limits says so for electricity and warmth only. The pack's illustration, not presented as the card's demand.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 728
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-verschijnselen-uit-natuurkunde-en-techniek-technische-principes-en-systemen-1",
+      "wording_sha256": "180bbc1652c9071a88ebb21e643b64c85af218dd2833f5a9781287e278975066",
+      "text_sha256": "6f8bc79558f7fca8e587d6dabd5d9d4ffd78bb4b4dd6d372c0456cc85d64d8ac",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 764
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/science",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

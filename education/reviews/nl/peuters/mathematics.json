@@ -1,0 +1,779 @@
+{
+  "lane": "nl/peuters/mathematics",
+  "verdicts": [
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-bewerkingen-bewerkingen-1",
+      "wording_sha256": "b0a0542e05440e00ade09105f9b18bcd9dee14b8ae9787df1b53cbbb5d5723ab",
+      "text_sha256": "fadb710f210c783904634445f0bc56bd32408faff0be7c343d203b2e4b5d08f8",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 216
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-bewerkingen-bewerkingen-2",
+      "wording_sha256": "67c50c7bbd3b99208d7d64787ea3427f0a0f96c1a73b7685dca8429dd7c5b2e2",
+      "text_sha256": "178fcc3b84127a59c408ff5da41d92a2be98d495c7a85251e2fa558e22a4fd99",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 249
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-bewerkingen-bewerkingen-3",
+      "wording_sha256": "4e3dae269dede38b62ad4a6934676bcf176d1268acc7d4cc312f61853a1cc17e",
+      "text_sha256": "5c4edc64e012cf2f48086058f005d454c610da14a6d9e0e998c955a99cb775dc",
+      "verdict": "confirmed",
+      "note": "Wording, heading and position equal the card (column 2, Bewerkingen, third bullet). Noted, not counted: Limits says the statement \"is about spoken words in use\"; the Dutch says \"omgaan met begrippen\" and names no manner. The sibling records Hoeveelheden / 5 and Inhoud / 3 say \"words in use\" without \"spoken\".",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 265
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-bewerkingen-bewerkingen-3",
+      "wording_sha256": "4e3dae269dede38b62ad4a6934676bcf176d1268acc7d4cc312f61853a1cc17e",
+      "text_sha256": "c1fda1b5c367651aadd1774f0c7179c5c8f4acc619f4f1ad5d025b736acd73d1",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (column 2, Bewerkingen, third bullet). The round 1 remark is met: Limits now says \"words in use\" without \"spoken\", as the Dutch \"omgaan met begrippen\" names no manner. Noted, not counted: \"evenveel\" is glossed \"the same number\" with the Dutch beside it; the word also covers an equal amount of something not counted.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 265
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-getallen-1",
+      "wording_sha256": "7cc179a93b042f6fa2d940e74be70c6fd8be404d47bae38559572b5ce389ae48",
+      "text_sha256": "c39d8fd7a35c22e6e4c04d5fd019098039d5056d677d0487049847eb67d8e977",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 160
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-getallen-2",
+      "wording_sha256": "fed8a5a7aebe17fc8a725e1e598d74f8bd8dff12872a0ecd53d88dc2d627a0ab",
+      "text_sha256": "ae2af219581eea74919d500a7c5580709a344859c9abddacb01c80289981efbd",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 168
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-1",
+      "wording_sha256": "289597983f2e62a785609550870a30048a6723c18c040ba2c40483f942523697",
+      "text_sha256": "dd16e3ba9d1ba5b4693cd5d05a2a0f40701624b715d65ec14713fcb909634ac0",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 44
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-2",
+      "wording_sha256": "177a699e204079ac8bd41ade1ffaf6ae3567bd9fb51903fcf3a89e541ffd0847",
+      "text_sha256": "c865971cddcad4ae6be2f6e4e49e7f16e6e452fdea9d0b191a1776a941ee665a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 48
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-3",
+      "wording_sha256": "ba81894273e70b1497c085150620fc0aec33497b4ad9c2e4ca8343074c7c033a",
+      "text_sha256": "cf3517036a0d693178d96164d289622d46f8cb210427aff7ff35edafde48e64a",
+      "verdict": "confirmed",
+      "note": "The card itself prints \"eén-één\" (accent on the second letter of the first word, read on the page image at 600 dpi); the record reproduces it and Limits says so. Not a recognition error.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 64
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-4",
+      "wording_sha256": "bd701b269c71a849e9c26ba7085940bc34c985edca0414e6e79af48ed882f7c0",
+      "text_sha256": "b454012df0525939e1ad66f8ac2121b012bbc16fe4b4b671ed068cbb09224b4e",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 89
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-5",
+      "wording_sha256": "e34a56ecd8237859890e4ed4e4e5f11cc4b11341f7e19e4c90baf89d1f790a06",
+      "text_sha256": "633590cc4a1199b856a3bbff0cb00f4796de741d77487ec8d42d7da9368bc38d",
+      "verdict": "confirmed",
+      "note": "The gloss gives the countable reading (\"more/fewer\", \"few/many\") and Limits says that meer, veel and weinig are used for amounts too; under the heading Getalbegrip / Hoeveelheden that reading fits, and it is not silent.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 115
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-6",
+      "wording_sha256": "b515092bebc5e996bbb339db390c4d2084db12a01753a52d73dee407707315b0",
+      "text_sha256": "2889dad727c4589dee7c048875f4c2ada24ddf41aa7a645476000384b49bd966",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 130
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-7",
+      "wording_sha256": "7eacfa96c2ec4da3b7d307823193a6da35e08dca5c85bbb0f997d1db0b84768a",
+      "text_sha256": "71fd46d5999d374c8550203fa10e1889fa1d19c57b42836be52e0164bdba587d",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 139
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-8",
+      "wording_sha256": "99c16516ac7d655586b06291a973ec2f2bbd862f99569bc64832ec9294dd7109",
+      "text_sha256": "36f9da2939c6fa5259d8fa92397f00c25b45bcb61c72902b6a45bd7ec29a1782",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 150
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-relaties-tussen-telrij-hoeveelheden-en-getallen-1",
+      "wording_sha256": "4ddfe10a1fe3e61199d46c9afdac9213c6af8a54752069a2c01da3f3dfebc7ce",
+      "text_sha256": "b4fad8583dc24b521c989ae2d7a1375dcb4d8d5108dfac26a3152b00f615a90a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 196
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-telrij-1",
+      "wording_sha256": "1a984b5db6f8ffa4d0e97126908bbe5466b7c012aff342d33af950113dc8348f",
+      "text_sha256": "93a2fdd05bf4e83d5a97acb3a27c2f48cd4c279f0c0a35d17c1b59c4047210c2",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 16
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-telrij-2",
+      "wording_sha256": "579323995ae56dec3e2615353a3c5318a6f31cf77b2e633c626d91290e40495d",
+      "text_sha256": "cb9b4bb5b813ce67ccb5ac2e270d501f9eefecb84326c84bd3e15c43bc8eac0a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 26
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-construeren-1",
+      "wording_sha256": "4b4fb2ea846f6b565bacfeab21593cfb6b5783cbcc0dc73b5f9277ca8d4b8e3b",
+      "text_sha256": "b9eb9e5ff8f60a62b47a82100c4d5c153432e7e66c6215b16bb1e189c333fc58",
+      "verdict": "confirmed",
+      "note": "The card prints \"constructie materiaal\" as two words here and \"constructiemateriaal\" as one word in Construeren / 2; each record follows its bullet.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 739
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-construeren-2",
+      "wording_sha256": "5e4cd0ef3ab7a28df992662d4e625252d6b1b75c71c7ebf9c1a9cb0fc1ef5301",
+      "text_sha256": "38ee1e20306f5bf1ce820e14f82355073434c2309e76f06399fb7e8a41b46e5e",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 751
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-construeren-3",
+      "wording_sha256": "20ac9a4bf0fef58cff227a21eaf1760dbe70a12eff42165eb8a7ca57dc051936",
+      "text_sha256": "d34c43acd61ae476b28f5464325c16849cbacbc1d61debcd25e8fbd19664d44d",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 762
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-construeren-4",
+      "wording_sha256": "48555ffcbddfe59b63c228781790a70cc794a2b8ccd5656c383e50c7bd5d3abc",
+      "text_sha256": "8985401599589b4c1699e67f6d418adb66ebafb94b107dfcbb785a0daed2cf68",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 767
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-opereren-met-vormen-en-figuren-1",
+      "wording_sha256": "76f0d8b3c3fdba928ff2c9990d4bf61bf145dad9b3fb6b8c851c46d8914845e2",
+      "text_sha256": "883f5b8ea0bb71fd74d40f76ca32269166227c23f4120317d5c8b3c316fed8f0",
+      "verdict": "confirmed",
+      "note": "The card breaks the line after \"(=\" and prints \"classificeren)\" on the next line; the record's \"(= classificeren)\" is that text. Noted, not counted: \"inhoud\" is glossed \"capacity\"; in a list of properties of objects the Dutch term also covers volume.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 782
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-opereren-met-vormen-en-figuren-1",
+      "wording_sha256": "76f0d8b3c3fdba928ff2c9990d4bf61bf145dad9b3fb6b8c851c46d8914845e2",
+      "text_sha256": "36eb9759724496e8f20845864e02dc4d63586e60078a26fa4dd339106f730bf5",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (column 4, Opereren met vormen en figuren, first bullet); the card breaks the line after \"(=\" and the record's \"(= classificeren)\" is that text. The round 1 remark is met: the gloss now keeps the Dutch open, \"*inhoud* (capacity or volume)\", and Limits says the wording does not choose between the two.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 782
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-opereren-met-vormen-en-figuren-2",
+      "wording_sha256": "0bc595c3b61c4201335b71c02390cda299379722fe61bcac23f6be9f2238c7a4",
+      "text_sha256": "e5642624813afbb168ce947f5b135ac6be99b6914c19c5d63641a0484d6f30a5",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 801
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-opereren-met-vormen-en-figuren-3",
+      "wording_sha256": "4fc03cdb2d7112a36b2285ca1099eb7b3b04c44673fca6bc94bc5856e890ce76",
+      "text_sha256": "39eeeeccf14eaf452b15c4ccccc41240e4f8b6a1e1540818782b1df4769dd4ab",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 812
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-opereren-met-vormen-en-figuren-4",
+      "wording_sha256": "205bf6d77e355b29766ffbd7d2ba09cc843a300bc9229e1f07409219e45c2398",
+      "text_sha256": "b38ec5539673b056d8da683226c30aa3aff03b2a6dc619998e6a9f66bf92f58c",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 822
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-orienteren-in-de-ruimte-1",
+      "wording_sha256": "e058ba57a635c0d491c1c65b11b89ec9afd8326708ad404f2081012cc8685d60",
+      "text_sha256": "7bb9bd3f6ad455f5028b28574f28ef8a2bc74d8cbe1898d6355bf65cfd7b9f4d",
+      "verdict": "confirmed",
+      "note": "The card prints \"in relatie tot jezelf en t.o.v. jezelf\" (both phrases, read on the page image); the record reproduces it and Limits says so.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 667
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-orienteren-in-de-ruimte-2",
+      "wording_sha256": "6ce7055f6bcab30bad36b68d042c88bbbd78c3c0c5c9cfe03615592d6c4d7160",
+      "text_sha256": "b6f31087d03e49567dedbbbc4829e9ef09dcb38eb87cb0976b8dec027692532b",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 699
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-orienteren-in-de-ruimte-3",
+      "wording_sha256": "1d48c1373fadc30be1735ae9eb0001c2e1b828597d93b888e27bed43c5231612",
+      "text_sha256": "66b0677b2a24860d6e1634198ced79561441b6cc679090d284cd7175208dade4",
+      "verdict": "confirmed",
+      "note": "Correction verified on the page image: the card prints \"(=voorstellingsvermogen)\" with the equals sign and no space, as the record has it.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 716
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-geld-1",
+      "wording_sha256": "8aeb2c07eb33473521ac68a121f90e43e190e4148fd5989ddbd36cb2b058a687",
+      "text_sha256": "28501e1883def5511ecea106b47ad991abd89b063efcbb6d2516c0a8ecb31fc7",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 620
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-geld-2",
+      "wording_sha256": "a5ac2d2ec1a13e7f98982b9ef57637cbc13ed9d5659b2fd82638d095553ab924",
+      "text_sha256": "53bc78a353add223aee05c566089bcdd0f064af58bf8e619b908ebe6f0035669",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 632
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-geld-3",
+      "wording_sha256": "36129f010ab3fefc56f746a4732844bbe5453e7e70d21d355f951175ee2e6b85",
+      "text_sha256": "7c3e85874c1b652a63b4010572d7f4a186750252f4e61ccbdf1a7789f11c507b",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 650
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-gewicht-1",
+      "wording_sha256": "ec6acf0a6eeffaf1865c021a783bd1ff9f418a1737b6cbe6ef1b4e0637fcdcca",
+      "text_sha256": "229fd2cd48be2421f0a838626c4a17e2937cc65daa62a7f3adfee782a27d4dc3",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 485
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-gewicht-2",
+      "wording_sha256": "f7125f9e5b6cc5657c3ccd386bc6308dde71eb4edc663e8ad07ae8d42477ebf4",
+      "text_sha256": "0b3d1ff974655f21af6852ab38bdc876eb43e15524f2058954afaf02296355dd",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 500
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-gewicht-3",
+      "wording_sha256": "bdf322cccac3c3c8586ddd6592eee9196128c76dd7bce27855b7568584faab57",
+      "text_sha256": "1b171f1cb8c723eb2cbea80976e7d645cfb276ef3b3fd21b74414628a7cee58a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 526
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-inhoud-1",
+      "wording_sha256": "bd8a23f8f28152c501c432026886efaf018d8c9344adedf9cc08833b63aba080",
+      "text_sha256": "128a1feac65f2718c61522461146829f3122463493de5b90a8a555ed52b9a60e",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 410
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-inhoud-2",
+      "wording_sha256": "1d32059edb99624ba72ea64feb2cc2526ba848d95480c533d41ce3a797cff98b",
+      "text_sha256": "3c8ab31939beaaaa46250202545b20212c7824f501ab882377f3e6572da6a6a9",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 423
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-inhoud-3",
+      "wording_sha256": "f5631241baf259d8ad7ebcab07146d95676cf502ce4373cd10e3ff5bc4c8a3ec",
+      "text_sha256": "cba9bd9ae67765f221163a9ca88d2c7ece90404a2fbcc1f263337ee8bdc0d297",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 449
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-inhoud-4",
+      "wording_sha256": "420bd6371ba6b595a203575f9389d875092ae8240e606135a4b4bfb0bc4cf486",
+      "text_sha256": "74e1b088282090933a7c8f0e7a37e865306ad67bccb0457f4b158678a0b2f9ff",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 470
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-lengte-omtrek-en-oppervlakte-1",
+      "wording_sha256": "c22701c0bea1c71861ac0da988379e0f67e0e74be080ca609944451d8b92ba41",
+      "text_sha256": "8578c40d3fba84704e222f8ccc72a109809ab1f76f4f08cf6bd5f2ce5c18027c",
+      "verdict": "confirmed",
+      "note": "The script found no match because the recognised text splits the first word (\"verge lijken\") and loses the closing quote of 'op het oog'. Read on the page image: column 3 (METEN & MEETKUNDE: Meten), first bullet under Lengte, omtrek en oppervlakte. The card prints \"vergelijken\" as one word and \"'op het oog',\" with both quotes before the comma, so both corrections are right. The bullet starts and ends where the record does.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1
+      },
+      "matched_by": "agent",
+      "corrections_verified": true,
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-lengte-omtrek-en-oppervlakte-2",
+      "wording_sha256": "c36e32254730fabfc2623a6ea84006592a89469fe66d53cafbdaebdde0d01125",
+      "text_sha256": "777e3e01bbf39860118cfd47e00c917a7b3d7bff623b008e3748df88e2edf88c",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 348
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-lengte-omtrek-en-oppervlakte-3",
+      "wording_sha256": "274cb5039efd44fec0db00d6374b328bf2c0b4745162f5316cc1303e7249fbd1",
+      "text_sha256": "b96012e098df0ec95e6c446cd5d435128736d8c0058ec4d40994ba4422d13d5b",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 361
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-lengte-omtrek-en-oppervlakte-4",
+      "wording_sha256": "4762c0077ea8a1d06edbc60f7cf8b441839c048e0847a68b857780412c493661",
+      "text_sha256": "7c082d9eaa2a10ce89a3643fcdd6464749605ffda95421106b7d7b205cb1e975",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 375
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-lengte-omtrek-en-oppervlakte-5",
+      "wording_sha256": "89d762a0dfa38cd38c35b7de97e72239de2ee7ddc242dc42909070851c151154",
+      "text_sha256": "290c2909cc36258497f04f0135a556d1546355be7808bdd50af3f3b8df97ed89",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 392
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-tijd-1",
+      "wording_sha256": "766df841b8e1a0b04f0349cb36103c56e995d64d3ecd2fdaff23cc4a25890754",
+      "text_sha256": "3c9c07fe780a38453537482353d227386077085b06390b43bff0c47809e7de8a",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 541
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-tijd-2",
+      "wording_sha256": "348a7479cbe6797a9f3c22997f51875ea071da74a43c7ee50543ffc40c277c1d",
+      "text_sha256": "b7d78b03342885c698bc559a36d019143d733e7924efbaf35b7590808aa76308",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 563
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-tijd-3",
+      "wording_sha256": "4c1a7cec8f53a5d5da568cdbe1faf1bf738bf3a08af5b0dbba77263482b6a6b8",
+      "text_sha256": "78219530cfef9545f8d3e3f4c2c04d4511b723799a8a38562f87aff277482b8b",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 570
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-tijd-4",
+      "wording_sha256": "8bf89520ce8e01962e0433e072f2faf4bf68ab48290bf19b55694f3de360c11d",
+      "text_sha256": "e65aaa5666c04215cb30999c6cce59384cba6725546451f8e2e3bf27f85e7e27",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 594
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-verbanden-1",
+      "wording_sha256": "06bbfa7f47445a3f12bcbff3f54ca62db6837afe7460996a7bbe76b814883491",
+      "text_sha256": "1851db62ad14bc656b0776543bf64c16a81b01b0c76ee19c3db10bac602ed331",
+      "verdict": "confirmed",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 845
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-verbanden-2",
+      "wording_sha256": "f3ab00b09d6f44d0dbe8eefd5f89d8b34b1392224e8a30a04d18f7078606dc74",
+      "text_sha256": "70f2f1d9aa18cecc4a822f079fd34ac4ea4f14af84c1112aea17d963d875fd86",
+      "verdict": "confirmed",
+      "note": "Wording, heading and position equal the card (column 5, Verbanden, second bullet). Noted, not counted: Limits says \"No numbers ... are mentioned\"; the card's example does say the diagram shows \"hoeveel kinderen\" (how many children), so the sentence is true of numerals only.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 864
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-verbanden-2",
+      "wording_sha256": "f3ab00b09d6f44d0dbe8eefd5f89d8b34b1392224e8a30a04d18f7078606dc74",
+      "text_sha256": "7ca0344a74005f0bc064455aaf966042c35a3168b5e43bacf955f1ea0a7dbf2c",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (column 5, Verbanden, second bullet; the bullet ends at \"met de auto)\"). The round 1 remark is met: Limits now says \"No numerals, axes or tally marks are mentioned\", which no longer denies the \"hoeveel kinderen\" of the example.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 864
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-verhoudingen-1",
+      "wording_sha256": "00b6ca5bdde366932e4061041f783cec3e79090fbc463d9e7439ee76a6b88912",
+      "text_sha256": "9c0f12f67a3f6436f4f341bfd5d95815986e0019a05b998dd8fbf4cf2ce8e276",
+      "verdict": "confirmed",
+      "note": "The gloss explains \"verhoudingen\" as \"how sizes relate to each other\", which is one reading; Limits adds that the word can also be read as ratios, so the record as a whole keeps it open.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 281
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-verhoudingen-2",
+      "wording_sha256": "39a48cff7d0e3c59e2b24b8c81184942372e75053c49efffb07221a0af8cd594",
+      "text_sha256": "b7ef61bb901e12820ab2b8094e11ff9c16e009b7fd50dcc1bd2a99bb2bce919d",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Wording, heading and position equal the card (column 2, Verhoudingen, second bullet). Gloss fault: the Dutch general term is \"verhoudingen\" (\"gesprekjes voeren over verhoudingen\"), and the gloss renders it \"proportions (*verhoudingen*, how sizes relate to each other)\". The bracket fixes the term to sizes, which is what the card's example (\"bijv. ... Wat is groter, een muis of een olifant?\") is about; the term itself also covers ratios between amounts, and an example is not a limit. The sibling record Verhoudingen / 1 has the same bracket but says in Limits \"Verhoudingen can also be read as ratios; the example given is about sizes\"; this record says so nowhere. Fix: give both readings in the bracket (for example \"how sizes or amounts relate to each other\"), or add to Limits the sentence Verhoudingen / 1 has.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 291
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics",
+      "round": 1
+    },
+    {
+      "id": "edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-verhoudingen-2",
+      "wording_sha256": "39a48cff7d0e3c59e2b24b8c81184942372e75053c49efffb07221a0af8cd594",
+      "text_sha256": "5208037c1c4e54e670c52a0e68d7e0539b36b23259bb487cde5ef9adbef62b0c",
+      "verdict": "confirmed",
+      "note": "Round 2. Wording, heading and position equal the card on the rendered page (column 2, the orange bar Verhoudingen, second bullet; the bullet ends at \"olifantje?)\"). The round 1 fault is resolved: the gloss bracket now reads \"how sizes or amounts relate to each other\" and Limits says \"*Verhoudingen* covers how sizes relate and also ratios between amounts; the example questions are about sizes\", which keeps the general term open and the example an example. No number stands in the notes.",
+      "rendition": "same-file",
+      "place": {
+        "page": 1,
+        "offset": 291
+      },
+      "matched_by": "script",
+      "checker": "nl/peuters/mathematics round 2",
+      "round": 2
+    }
+  ],
+  "unrecorded": []
+}

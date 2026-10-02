@@ -1,0 +1,1111 @@
+{
+  "lane": "us-ca/grade-5/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-1-g",
+      "wording_sha256": "be70b81129f90df379495b215d96d51e4b44d42ca41d41e5742e4dc14c17dcc7",
+      "text_sha256": "e3b0e93ad1713e009203078cdd7fce28c7fbd039b049ce3b3d6363f31ec353ba",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 202
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-1-n",
+      "wording_sha256": "732645caab23054f7088b1728a65f62a42273961aed2c6ce3aeec10c25baaeaa",
+      "text_sha256": "ea9058042378b31b8ae53b112c1e63f0e0f943301ad911f5236ff69b5be37db9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 13
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-1-p",
+      "wording_sha256": "84f315b89d0cca5917006a47880f46ae4beb97b84cfb412bf4d829d84cdc9593",
+      "text_sha256": "644b43bc8c36657fc5d65cc7f7b42cfa36d882a5a3ac3ed84e0efdebdb163424",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. Two of the examples in the bracket are spaced differently: the fourth example (the washing habit) and the first half of the last, joined example (the brushing habit) are each ONE closed compound word in the adopted PDF (page 35; neither is broken across lines, so no line-break hyphen is involved), and each is TWO words in the record, as the export row has them. The second half of the last example is two words in both. A space inside a word is not form under the pack's rules. The script matched with tolerance because it took each closed compound for a dropped line-break hyphen; it is not one. Every other word, the punctuation and the code are equal, and the statement starts and ends where the record does. The Summary is faithful and keeps the examples as examples; the Design notes are in order. The record can only be made equal to the PDF if the importer may correct the export from the PDF.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 64
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-1-p",
+      "wording_sha256": "84f315b89d0cca5917006a47880f46ae4beb97b84cfb412bf4d829d84cdc9593",
+      "text_sha256": "644b43bc8c36657fc5d65cc7f7b42cfa36d882a5a3ac3ed84e0efdebdb163424",
+      "verdict": "confirmed",
+      "note": "Round 2. Form only, under the lead's ruling on compounds: two of the bracketed examples are written differently in the two official renditions. The fourth example and the first half of the last, joined example are each one closed compound in the adopted PDF (page 35) and each two words in the export, which the record follows; the second half of the last example is two words in both. Kind of difference: open in the export, closed in the PDF, the same letters. Nothing else differs: every other word and the punctuation are equal, the statement starts and ends where the record does (three lines in the PDF), and the code matches. The script matched with tolerance and I read the page image and the export's cell. The Summary is faithful and keeps all six examples as examples; Limits holds, and its pointer to 5.7.1.P to 5.7.3.P is right.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 64
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-10-g",
+      "wording_sha256": "d2510bb4260c306df9e057799c6df228794b968b3a516d2aee3346abacb4b544",
+      "text_sha256": "f432fb57dc59088761f6df50ad5051899dafd3ebe07598d74a62c02d6a3a0804",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 78
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-10-n",
+      "wording_sha256": "65bdbf2f7beb6869504bf92addff2da96bdcb07b624e17ab16096ee719f23131",
+      "text_sha256": "527b1f10c263c039fe9a55dbc745c070aaf46653868b0c964de01bb018bd8880",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 140
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-11-n",
+      "wording_sha256": "e6e38d659bada9c1ade50986d85060bd4ecc3f066e3d89dc36ec7ce375611f88",
+      "text_sha256": "5416f0c80786a1e741a75e6094a4d7e3c25fcfafd463a59c06d099443a8602dd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 152
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-2-g",
+      "wording_sha256": "f9d35ea53b6e147abdd83004f70eb8412798b52ee71e083ebb674b04ce79fd8c",
+      "text_sha256": "f83fbc7b39d8c9491759f2b7ab018132ffef9b4f50fc7e4b154e7d73a76b9f85",
+      "verdict": "confirmed",
+      "note": "Remark, not a fault of this record's own wording: Limits says the life-cycle statement (5.1.1.G) names pregnancy or birth; that statement names birth and reproduction and does not name pregnancy. Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 216
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-2-g",
+      "wording_sha256": "f9d35ea53b6e147abdd83004f70eb8412798b52ee71e083ebb674b04ce79fd8c",
+      "text_sha256": "e0d72a3ee505481ed634d266634444de5745a216431d8e014519792f14776a7a",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Round 2. The remark of round 1 is resolved: Limits now says rightly what the life-cycle statement (5.1.1.G) names and what it does not. A fault remains in the Limits sentence before it, which round 1 did not record: \"It does not mention pregnancy or birth.\" Standing under Limits, it reads as putting both outside this statement. The statement asks the child to explain what the system does, in a general term, and carrying and bearing a child is part of what that system and its main parts are for (the record's own Summary has the child say \"what the system and its parts do\"). So both fall inside a general term the statement uses, and the note denies a scope the official text gives: a designer would wrongly leave out what one of the main parts is for. Fix: drop the sentence, or say that the statement does not name the two as topics of their own while what the system does takes them in. Everything else holds: wording and code equal the PDF (page 33, second statement of the content area), complete; the Summary is faithful and not a near copy. Footnote, as in round 1: the PDF marks it once, as a raised digit on the content area heading (page 33), and prints it at the foot of page 33; the statement carries no marker in the PDF or in the record, and the footnote equals the accompanying text except in form (the export puts the marker digit in square brackets in front and a space before the bracketed letters).",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 216
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-2-g",
+      "wording_sha256": "f9d35ea53b6e147abdd83004f70eb8412798b52ee71e083ebb674b04ce79fd8c",
+      "text_sha256": "96f8dc7f232b6807f200fc36db587c7fc937750851b6124b62f4af6df065b4a1",
+      "verdict": "confirmed",
+      "note": "Round 3. The round 2 reason is resolved: the Limits sentence that put pregnancy and birth outside the statement is gone, and nothing else in the record denies what the statement's general term for what the system does takes in. Limits now says what the statement asks (the main parts, how they are arranged, what they do), that it does not say which parts count as main, what the life-cycle statement 5.1.1.G names and does not name (checked on the page: right), and that a footnote cites the Education Code. Read whole: Summary faithful (how the system is built, its main parts, what the system and its parts do) and not a near copy. Wording and code equal the PDF (page 33, second statement of the content area, page image), complete. Footnote, as in rounds 1 and 2: the PDF marks it once, as a raised digit on the content area heading, and prints it at the foot of page 33; the statement carries no marker in the PDF or in the record, and the footnote equals the accompanying text except in form (the export puts the marker digit in square brackets in front and a space before the bracketed letters).",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 216
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-2-n",
+      "wording_sha256": "ce61828c4ef23dd0541f013bb69f282b71ab0a0d774c6caf62cfe451aaef6eca",
+      "text_sha256": "4893f3cba5958717810ecf0b2540333c799c74ad5a9421d3051f7646d29d1709",
+      "verdict": "confirmed",
+      "note": "Form: the PDF prints curly quotation marks around the label's name, the record straight ones.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 29
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-2-p",
+      "wording_sha256": "258d202221b299051f3fd506052397ddbc9f9d00f0e9cbbdcfc1530640baf78e",
+      "text_sha256": "9979dfc298ef9517538ae0bd8f65e868f9225afb951423daed8a70484f3e79ef",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 92
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-3-g",
+      "wording_sha256": "f135391fde2adf5fd8bd715362825a73d5d985ec650ca2fc10292c95160b7572",
+      "text_sha256": "ff2f432ce84faeaa0dfc940f83ba6bad37a147cbbd070acadfe01c12e1d3ba16",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 231
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-3-n",
+      "wording_sha256": "ea883f072a4a72b257fb19891b5bbe19de9aa98250f89e10319d0863716ef7ab",
+      "text_sha256": "81bc49f1d342b4e27a06d1d9af48c7c132b6db049c4572a7a56b6f1c2a52be4a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 40
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-3-p",
+      "wording_sha256": "ee7146ac0afb127c90236eb87114ce9977f01e3d6036ba31445c8ebb3e445b56",
+      "text_sha256": "d84625b04dac8910dee1cd3629f7cbea4f0416425ffae3c30a51e48969146147",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 107
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-4-g",
+      "wording_sha256": "87e349ad795704bcedb1e5a1e40e078a27923547bb8820fa8c45d043ae90c65e",
+      "text_sha256": "71862b701375969ba5a5543bebcc7eaca4cad3bd83d08974ad8dae087aee4cea",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 245
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-4-n",
+      "wording_sha256": "bd2512f459097286c8b856e497bb68820119e7c80787b5dc58824a0a5d607ff4",
+      "text_sha256": "b804bf2f294d644d3aea4f015d7a7af341111b9e4f4d1b8d8daabd541e6cd991",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 53
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-4-p",
+      "wording_sha256": "3f34b21c5e475379026510d178bb5061f0004b6546edb6a273fcdd113ca6d3a9",
+      "text_sha256": "10b2c6cef1fb2b47e5dbc6d86733215f7bf62cffe5eead9407727d20d2007112",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 117
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-5-g",
+      "wording_sha256": "99f463da897a3c03c59f3d4f2739bb0e97712f924c4dde4fad6131f410c1b2c5",
+      "text_sha256": "ef21a14797bfde0461db67c36f62f847fa4beb25eaf1becff90f9ba073b15748",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 5
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-5-n",
+      "wording_sha256": "629e23f7a5f2d950904f604df6605643f9ac31caa6f1972c007289691812226e",
+      "text_sha256": "947d590a08035f8ee2faa05d1c3631a4af7513313c3664caa28eaa203ce501d6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 72
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-5-p",
+      "wording_sha256": "895f347bc17dd026cccd361ebea49ebfed084fbf3cd0c85d477b7b39a6bb1072",
+      "text_sha256": "9b8b0fcfbe381bc4efd11b102de3a1ead1b9b3542eafd908e03859f9caab6d3b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 131
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-6-g",
+      "wording_sha256": "59cffe41271fb290c143f3fe032ad96abf5091da8c7c1f651e22d3947cd6e15c",
+      "text_sha256": "26226b7a873a1a65b0fa9a4aba62e2b3bf3c8c7a7726bce14582be8eca72c550",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the first of the three areas of difference the statement names. The statement names that area with two general nouns and does not say it is bodily; the Summary makes it how people's \"bodies grow and mature\", which leaves out differences in how people develop emotionally and socially (the neighbouring 5.1.3.G counts those among the changes of puberty). Looks are the statement's second area, so the body is already covered there. Take \"their bodies\" out so the first area stays general. Wording and code match the PDF (page 34), the statement starts and ends where the record does, and the Design notes are in order. Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 16
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-6-g",
+      "wording_sha256": "59cffe41271fb290c143f3fe032ad96abf5091da8c7c1f651e22d3947cd6e15c",
+      "text_sha256": "052c5f0491a4bc3d617123bfb053c3590d6a9f9aa688fe9bbf753ad9f175b344",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary's first area is now general (\"how they grow and mature\"), with no word for the body, and all three areas are kept. Not a near copy. Limits holds; its pointer to 5.1.9.G is right (PDF page 34). Wording and code equal the PDF (page 34, second statement on the page, two lines), complete. Footnote, as in round 1: the PDF marks it once, as a raised digit on the content area heading (page 33), and prints it at the foot of page 33; the statement carries no marker in the PDF or in the record, and the footnote equals the accompanying text except in form (the export puts the marker digit in square brackets in front and a space before the bracketed letters).",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 16
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-6-n",
+      "wording_sha256": "e9641024bc39af55db630efa433afaea4a5b1f8696dc45200d5012598fe31b5d",
+      "text_sha256": "bdfcc6f4e517a991db7fc80db8b8d9423fd0630df5b4ab2b7fb0fb862cd00671",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 82
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-6-p",
+      "wording_sha256": "833fc30201008aad9c184df4e237e507ca35ceb89f46cfdb1cbe00c049898032",
+      "text_sha256": "9318a53e039f73f994513a45bdc10b76461a1e60cabca26f2693a87ea7bc3de9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 145
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-7-g",
+      "wording_sha256": "71683f750cfc9d0933aee491366897a6363bf40c5b75e7101801ad735df3bb71",
+      "text_sha256": "4e4ba765dae16bbe0d805f47af99b584ef124d0c0996e5ca4f078bd233d0c1f0",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 34
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-7-n",
+      "wording_sha256": "8912a2c44432cc09f1566c592b0b5478a7ca26227906429e820a98ec78f3ceee",
+      "text_sha256": "b70d6a1cb281063c670481ab5ed0a59fa4dc8b2caf58b7dd5591d2cc08cfb469",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 95
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-8-g",
+      "wording_sha256": "d9dec3a22c7acd32fc8618e020df0b48b11115f02cc1277c84b7acf06a80faca",
+      "text_sha256": "ee231d1138678e63349759bdaa205b41e89362d8ebea39ba3d0f4d1453eee812",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 47
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-8-n",
+      "wording_sha256": "69fd8d94fb0768a91966a78f804f90dcf50cdf9eac5fc95eb1f07c4dc77f7c16",
+      "text_sha256": "14e0e0f2f9fe28bd5418d207f8e025e27b2fceaad081a6fe683bda73d1ce3eb6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 105
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-9-g",
+      "wording_sha256": "9ad0bdfa70c0cd8192d25aabec46f391619676fbb45a2f2098a491e80774869d",
+      "text_sha256": "71d5fc2e874302570adf831482b5355df376c5948332a3bb3ffbc12107779178",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 62
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-1-9-n",
+      "wording_sha256": "6e5367535254f1abf7de72529b469b4fa56fe49dfaccea1065ffbb9c8cd17299",
+      "text_sha256": "43686069a49563c37a7a0123c102e5fbb68ace26524d9671e53cc3cb5ac89539",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 124
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-2-1-g",
+      "wording_sha256": "7f086bc579bd0c3ba254fb1d09567b059f18792bc5da7171847dec5ece9ce610",
+      "text_sha256": "fca8e120d9ca2eb860937abe80b72ae5c4e87ea62805a73c67b2767e576f36fb",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 108
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-2-1-n",
+      "wording_sha256": "1ae45fde3fa2224838b0b99dd0c44f4a4d571476eece5534eb18d4ac5ac4d48a",
+      "text_sha256": "169ce9a09a19914ed0c5b814848a459aee5733eb5b85a71cbb1e4368fe69dbdd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 170
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-2-1-p",
+      "wording_sha256": "ad4b99ee1f257d8b3455445f158d0f10cfce11178098a54b83fb2cc91aac9a50",
+      "text_sha256": "bab1476fbf05438e12bfe851ad0ab1cfaf28f04e97350805d512731d765fe5d2",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 165
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-2-2-g",
+      "wording_sha256": "f6a79efdfbf41ee7220a3b202786d7f13eb82fc3f4eaf039279c1f66638cb385",
+      "text_sha256": "bae56e5b293356f4a40a6e8c78e84d20927f505ac6293956de969441b0748d0f",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 127
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-2-2-n",
+      "wording_sha256": "5bd1241f8fab658e8a50d19b38eaa0913ed68630962c963ad6936aa918ccd125",
+      "text_sha256": "9554956a6e640d0f74278760252e9e883f315673141b1aef8abb713b3f7d4972",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 185
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-2-3-g",
+      "wording_sha256": "4499fd9a25d53d71fda5273368696e63b7163859c298138d57e652ae1c021eae",
+      "text_sha256": "f56bdd448c9b8cf1bd26b3f79fc12aaad168f459f44161d2675f860c42168017",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 137
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-2-3-n",
+      "wording_sha256": "9585ae3fdd98a5d5fc180f489170d1ee007e479afeb7f1d5d10a533cd97cb768",
+      "text_sha256": "3164882e63ab9377e7cad5e5a7aa057c314476cb1c76512c9e1f66cb96b50fed",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 197
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-3-1-g",
+      "wording_sha256": "db623bbf0a31f1c94e7ad4cf7926ea18e0abc3dad819c7a2d88f6783433eac4f",
+      "text_sha256": "a428e522da0ad9917108b6f13b5b5fee0be1a24f641991d324e735f3e3e1b481",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 155
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-3-1-n",
+      "wording_sha256": "c2a3e3a4e03200f4e2dcc15aa651364086f1d0ba27e4eccba30fa40e6b71c6b8",
+      "text_sha256": "1f1e168c74aac5b887561ff3db8242c45743194906a3b129c8b6bc8141e25dcf",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 218
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-3-1-p",
+      "wording_sha256": "662723859fe9d989a449cdb488d01fb74227a5e7f147cc8205be9d67848db1cc",
+      "text_sha256": "352e123ab70b8823b31d3058510ff2e2c13c783bc38ffefd5be9696c135b3c7b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 183
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-3-2-g",
+      "wording_sha256": "9b8316331e21cf261e06adc83eabc23821b1ccab8813173deb11fd02249e31d7",
+      "text_sha256": "7e2e695ea448152173c6f83cca9b31f764f991e8ba70ebae24de368cba8b91cc",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 171
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-3-2-n",
+      "wording_sha256": "5b7cdf03be5ac5721857eedd567f2fc075900807c147d401b92799923c2718a2",
+      "text_sha256": "f4945ba40a111a969ec98f77c4159ee0ae86945f9bddb76659b4d41968c5a306",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 32,
+        "offset": 230
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-3-2-p",
+      "wording_sha256": "bb38e2e0612f1bf7f89b4d6b4a8b16c6fbb1edd95b3b95584f87a0eec357d4bc",
+      "text_sha256": "829d9e5739348d53ed5a8aab25f87fb3b6b2f9f9c226474f81755f2b82ff3ec3",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 197
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-4-1-g",
+      "wording_sha256": "53f8f94b320b4d6128230141af993ea29d62f842e442e7421048651f070394ba",
+      "text_sha256": "da7e83d6262378281d894992279afb1fda5b6efafae9680376765ae8eca352f1",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 188
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-4-1-n",
+      "wording_sha256": "29b5737f6e836896fd908fdf8b3082c856a89fdbb0d684e9c7fdde36ef17ef93",
+      "text_sha256": "7c63c39ea187f02c61f83994ba98d2b2606cb0b84469f25ec208c11d545736d9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 9
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-4-1-p",
+      "wording_sha256": "466badd1383c72d31b773bffdff811f0ee2d75fcd24d4a9e37302f1bea1ddf8c",
+      "text_sha256": "8a9b7ce8e8de7066d5612c3d2d790ec7458a9838ae5c3251134d9eb7b0bfb356",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the statement's verb to rehearsal (\"rehearses\"), and Limits states it as a limit (\"asks for practice, so the child rehearses\"). The statement's first word covers both exercising the skills in a rehearsal and using them for real, and nothing in the statement confines it to role play: a child who really asks an adult for help with a health problem meets it too. The same verb opens 5.7.1.P and 5.7.3.P, where the pack reads it as doing. Use a verb that leaves both open and take the rehearsal claim out of Limits. Wording and code match the PDF (the last statement on page 35; the text layer puts the page number between the code and the sentence, the page image does not), and the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 226
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-4-1-p",
+      "wording_sha256": "466badd1383c72d31b773bffdff811f0ee2d75fcd24d4a9e37302f1bea1ddf8c",
+      "text_sha256": "528a9c918d11e60be075ef5ff2dd8d907988396feafbee09969d1b7df207c1e4",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary's verb now leaves open both rehearsing and real use, and Limits says outright that the statement confines it to neither. Remark, not counted as a fault: the Summary gives the manner as \"clearly and well\"; the second word keeps the statement's general demand and clarity is implied by it, so the unnamed skills are not reduced to one (Limits says the skills are not listed). Both occasions are kept. Wording and code equal the PDF (the last statement on page 35, two lines), complete.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 226
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-4-2-g",
+      "wording_sha256": "80dca19fdd3959d3906a06b881e9de47889c3161109cd958099cea7b7c88391c",
+      "text_sha256": "d900514774479032a0403a45abf25cb77a64d0375f6cd327ea5f0accb2286950",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 210
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-4-3-g",
+      "wording_sha256": "83ff5c998c266c2d3b451807c2138725207b5740ef9eb080deeac6f72d028c05",
+      "text_sha256": "155bfa8a70f5d808d6361138447bad9ecaa042ec9e5aafdcdbea1b3c87331785",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 224
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-5-1-g",
+      "wording_sha256": "2a3e4c99527757a237b7362ae791c2121354ee2429b0760b88da31470ba99e05",
+      "text_sha256": "e4769d5112504d9cbbc34511e7b76fc3a0c2a146586eceb8bba1fe123db5cc36",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 238
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-5-1-n",
+      "wording_sha256": "4c4ad5f36485a4c1ddcbac39a69a846e4bd6a97fd657aa1ff340672a9d378a9d",
+      "text_sha256": "ad5602abb03624a47c3d2fa4d9dab561f11b99ab71e90601b72ff806aacc7fea",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 34
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-5-1-p",
+      "wording_sha256": "aa7cb3b2aa3482bd946808d9c1eef4113b9c81b71f5f4875ec7b1666159b4b55",
+      "text_sha256": "10fcff47bd6ac7147498f4a86808beed65c29cb0a678c3ce46efe9774448f93b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 36,
+        "offset": 9
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-5-2-g",
+      "wording_sha256": "bcdeb66ec0d8cb2a50cb0f6221f4d1c5ad8d1fd76077444d0c04d3ce08894b00",
+      "text_sha256": "cdb96064324dc8de3eef674ad967f692075c723860e08a80c7b01a11221df1fc",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 248
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-5-2-n",
+      "wording_sha256": "b2fc1352b59790fd0b0f8e8619243414b079ccbc41e9c7e0bdd9c178f5754f49",
+      "text_sha256": "58d0ee0966368eed07590ef27ce6e4ed40d0d5b3c2f4bf16a185072047c94ce6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 50
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-5-2-p",
+      "wording_sha256": "cdc0c12d073bea17b3a0eb74ea1fd34fac808fc0d72661b6fe42f837c04df33e",
+      "text_sha256": "9113211e878b662d4c4f443066774f28748d24dd3d276b36146d06bfe0238f5f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 36,
+        "offset": 28
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-5-3-n",
+      "wording_sha256": "e4aacf0fc73357e8e236db6e3695811f656226e4f2d3146a0ff20946b791db36",
+      "text_sha256": "e1f59481eded93de84dbfe6595466f364f37c96765a9d72aa9ae7919daeea275",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 65
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-6-1-g",
+      "wording_sha256": "678716f53cf165cd91204cf75e31aa2e045a8b56b8ae17c254fd9afaeb225d6d",
+      "text_sha256": "b136ed57ed50f1b1a41dd7041b3d75771af872547f714ebc1d0be27b394e9ac4",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 273
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-6-1-n",
+      "wording_sha256": "d12054ce13cc08a9bf66931cd59a7d2e9c6f25206ab295b6c1e5a1e690096fc4",
+      "text_sha256": "23bce8bfb581a8f4bcbcbe4029a181fc0b3e7d22eb1df66df46ed474e61c05aa",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 84
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-6-1-p",
+      "wording_sha256": "fc18686aa72e1bc6f7f87d58cbc8967d14d757582e0715981e4f21deb0ae17f3",
+      "text_sha256": "c6f953fcbfb1e4a3ef0e81056b2c47a3f33ad2f9668414c5af7d7ad2cc18b6e8",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 36,
+        "offset": 47
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-6-2-g",
+      "wording_sha256": "30466911d198b53b2135ca64d3612deb8c01702765b3ceea462947e6647bd95f",
+      "text_sha256": "c52ce45b163c22868de0f47a5c0d1c0ef43066bf3e840c308798f1d7a1ea9386",
+      "verdict": "confirmed",
+      "note": "Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 34, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 34,
+        "offset": 288
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-6-2-n",
+      "wording_sha256": "ddbc203255a3c5cec817b69aa33453baa51718faceeca4c519a5baa63a6c983b",
+      "text_sha256": "a2ba88bbd8bf322f666655b42a16eb497e7543f009f6f22b5633f69e281e5fac",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 94
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-6-2-p",
+      "wording_sha256": "14c4a5d6e03c9eba5ed15c1da4179d773056dbe48ac58812f9c08f8af5c46733",
+      "text_sha256": "6898779f9585e9723ce9481f4ba8bea9156910809df7935c61e5b6d9542614a6",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds who set the goal: it says the child \"has set\" the aim. The statement presupposes a goal and does not say who set it; the record's own Limits says only that a goal already exists, and the sibling records 5.6.1.P and 5.6.1.N say outright that the statement does not say who sets it. Write \"has an aim\", as those records do. Wording and code match the PDF (page 36), the statement starts and ends where the record does, and the Design notes are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 36,
+        "offset": 60
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-6-2-p",
+      "wording_sha256": "14c4a5d6e03c9eba5ed15c1da4179d773056dbe48ac58812f9c08f8af5c46733",
+      "text_sha256": "e4a3ac67ce75517daf1216e4088a4280d3ebf2b9b1d0ae43b3e9bd07ee5e639c",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary now says the child \"has an aim\", with no word for who set it, and keeps that the aim is for the child's own health. Limits holds; its pointer to 5.6.1.P is right. Wording and code equal the PDF (page 36, second statement under the sixth standard), complete.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 36,
+        "offset": 60
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-7-1-g",
+      "wording_sha256": "c2e4d12ce4d6cd7f7547d64fbc772438f5dbaba911204c29d3c9260528373b69",
+      "text_sha256": "2314c8b6ac51f45f5fbae6759342466106d66e6df3284ba41a6d00b9e4dbaee8",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds \"a body\". The statement is about growing and developing healthily during puberty in general and does not limit it to the body; the record's own \"In a child's hands\" includes talking to a trusted adult about a worrying change, which is not bodily. Say that the child does what helps them grow and develop well in puberty, without \"a body\". Wording and code match the PDF (page 35, the first statement on the page), the statement starts and ends where the record does, and the Design notes are in order. Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 35, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 11
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-7-1-g",
+      "wording_sha256": "c2e4d12ce4d6cd7f7547d64fbc772438f5dbaba911204c29d3c9260528373b69",
+      "text_sha256": "6fba35c75ab5333e360cbcbb5b28e9117aceb267fb1df43bc5deb595221beb1f",
+      "verdict": "confirmed",
+      "note": "Round 2. Resolved: the Summary no longer has \"a body\"; it says the child does what helps them grow and develop well, and keeps the time (puberty). Limits holds (the standard is the one on practising behaviours; no behaviours are named). Wording and code equal the PDF (page 35, the first statement on the page), complete. Footnote, as in round 1: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 35, and prints it at the foot of page 33; the statement carries no marker in the PDF or in the record, and the footnote equals the accompanying text except in form (the export puts the marker digit in square brackets in front and a space before the bracketed letters).",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 11
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-7-1-n",
+      "wording_sha256": "dee6a332acb30d1f4b8c6348073d0a055bf418f707617c8025df13bd4081c700",
+      "text_sha256": "47155f6e8588f490664ecf3fab8e1906ebd56b1447573d33ee9bd12dc141a768",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 111
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-7-1-p",
+      "wording_sha256": "b2a3a42ca704dcde3551de9ab1c68c6600ad0e34135c68651bf0001360c56d34",
+      "text_sha256": "713e65e2838533174e5e9f1915c82131a87e02e9a57938bdddb29e1dee458639",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 36,
+        "offset": 76
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-7-2-g",
+      "wording_sha256": "6d81cddd4d5c290dc123ba6e391b8bf8e3aa5a57e88d3d7332e819254bb78af6",
+      "text_sha256": "301e140bb8f4a02bc9390a719c815a24cc2d518f395d88c8c9a25aeddfa69317",
+      "verdict": "confirmed",
+      "note": "Directly under this statement the PDF prints, under the heading of standard 8, one line saying that no skills are identified for this content area until the middle grades. It is not a statement and has no code; no record is expected for it. Footnote: the PDF marks it once, as a raised digit on the content area heading (page 33), not on the statement, which stands on page 35, and prints the footnote at the foot of page 33; the statement carries no marker in the PDF or in the record. The footnote text equals the record's accompanying text except in form: the export puts the marker digit in square brackets in front and a space before the bracketed subsection letters, which the PDF prints closed up.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 35,
+        "offset": 25
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-7-2-n",
+      "wording_sha256": "d5421be1f83f65865c469e428c323ca89401ff6dc52d5dc130d70968ed1ab735",
+      "text_sha256": "f9079431c6376fec2ee80d0c0687cf02d0277e5c13bdd0825c6e3ff049a63fe9",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 126
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-7-2-p",
+      "wording_sha256": "7270d79e85a2c2d2ea1fb843640c16f34a12957ec5ca19dbc3dbcad574ae5fdd",
+      "text_sha256": "16fb5a586c2ad523daea11c09e9e4feb5842e75de59ef6542e3c7cd37d4f720f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 36,
+        "offset": 85
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-7-3-n",
+      "wording_sha256": "e7af823febc11835e277eb864530e965534c47639e6d2926640cd19c7f137075",
+      "text_sha256": "748129145dd912dfb2d9f2d0511c835cd6fe8681f6bd4ef4d868952381cfab67",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 145
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-7-3-p",
+      "wording_sha256": "ac72ec32a6a9c35f7c267fa7097896b11de06856b41d01fa6fc4d579b1e80168",
+      "text_sha256": "6cdf9c250ad277f1162aebbd8d917f2187e0296ab16648f2401abf5315140a64",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 36,
+        "offset": 94
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-7-4-n",
+      "wording_sha256": "487cebdfd959e21160714f8b4f72b2022fd7b171d62056bd4de47082a27bb05e",
+      "text_sha256": "4060779386f3b3c650689ba8ce2b548a835032ec2caa643946bffc6855458835",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 158
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-8-1-n",
+      "wording_sha256": "84871d50bde53f507b844f4352cd6db8d4427bff3afd78f1d807d9a1f8596def",
+      "text_sha256": "87318e13e7140951adfbae8be8b09b54f2caa259b6d18321ab6efd6d50cc9270",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 33,
+        "offset": 174
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.practical-life-feelings.objective.5-8-1-p",
+      "wording_sha256": "e9a1b51b68e3c14be29b68b2b035ed1497449f63192be05b9b12a31c4bb07664",
+      "text_sha256": "173cdc5d94e3930ae385f601e4ec34b184ec96e849b59ebdade25c3ec25da7bb",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 36,
+        "offset": 112
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/practical-life-feelings",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

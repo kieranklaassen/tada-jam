@@ -1,0 +1,210 @@
+{
+  "lane": "us-ca/grade-5/science",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ess1-1",
+      "wording_sha256": "29719bd6de42d5d609511d6364786af2cfa15f1c5b2f52e77e6efec1eefafdd0",
+      "text_sha256": "28ba7711a8ed27e8a18509e0dab48a28d4f3d3c8cf76c36e5bbd147732050ca4",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. In the first sentence of the clarification the PDF (page 5) has one more word, a preposition between the last two words of that sentence as the export prints them; the export's sentence is ungrammatical without it and means the same. Nothing else differs. The PDF marks the whole clarification with a double asterisk: california_addition: true is right. Code equal. Summary and Limits state the export's version faithfully.",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 5
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ess1-2",
+      "wording_sha256": "2ef5fd43d032ed707e25e5919fe2f417d6fb848f0375dbd0ca8a0a5fb94245bf",
+      "text_sha256": "55de97f48158f18f5468e4837bd00b83e63689c19ab9314ba447f8ee625ad57f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 5,
+        "offset": 115
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ess2-1",
+      "wording_sha256": "dc6ed5041f68e8ef171511389380518bb642d019ed8fd715b5994fa72ed25a52",
+      "text_sha256": "c90c3fae5479e3226ba69f85dcf74e03ce320be4906f8b21d858065b18486e2c",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. In the first sentence of the clarification the PDF (page 7) has four more words in a row, directly after the tenth word of the clarification's text. Without them the export's sentence runs two clauses together; the PDF says that each of the four is a system and that each is part of the whole. Nothing else differs. That first sentence is the part the PDF marks with a double asterisk (and prints bold) as California's own; the rest of the clarification is unmarked. california_addition: true is right. Code equal. The Summary reads the export's broken sentence in the sense the PDF prints, and with the Limits is faithful.",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 7
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ess2-2",
+      "wording_sha256": "d844b86a31ec268317ac9763636a3dfb3fe0ca1d0b94633eb37c2aa5cd003bef",
+      "text_sha256": "80531f6caaa8ef448d19237e4de863ad61b10c3b57bae04b9cdfd2958edf4208",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. Two differences in the expectation sentence, PDF page 7. (1) Directly after the fifth word (the noun for how much) the PDF has two more words, which add percentages to what is described and graphed. (2) The export has an adjective before the first of the two kinds of water (the salty kind) that the PDF lacks, so the PDF pairs water in general with fresh water. The assessment boundary is equal. No clarification in either. No double asterisk: the flag false is right. Code equal. The Summary follows the export: amounts only, salt and fresh.",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 7
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ess2-2",
+      "wording_sha256": "d844b86a31ec268317ac9763636a3dfb3fe0ca1d0b94633eb37c2aa5cd003bef",
+      "text_sha256": "958e803729f72b18c302c7bbadc2e1116a5733148d0e97cef6765390099aa4a8",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "Round 2. A real difference between two official renditions, which the fix round leaves as it is; the record follows its canonical source, the export. Two differences in the expectation sentence, PDF page 7. (1) Directly after the fifth word (the noun for how much) the PDF has two more words, which add percentages to what is described and graphed. (2) The export has an adjective before the first of the two kinds of water (the salty kind) that the PDF lacks, so the PDF sets water in general beside fresh water. The assessment boundary is equal, neither has a clarification, there is no double asterisk on this expectation (the flag false is right), and the code is equal. The sentence added to Limits is true against the page image and in the pack's own words, and it covers both differences: percentages as well as amounts, and water in general beside fresh water where the export names the salty and the fresh kind. The Summary is faithful to the export: amounts only, both kinds of water; Limits lists the six reservoirs of the boundary and the exclusion of the atmosphere correctly.",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 7
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-5/science, round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ess3-1",
+      "wording_sha256": "57c9c41c6c928284395c5d15a0cda3dd9785c50979dcc70fea566a48172079ea",
+      "text_sha256": "869906f2ac78a55641c04fd4621d22fea36e7008869e39d6e2f286d8a879d000",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 9,
+        "offset": 20
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ls1-1",
+      "wording_sha256": "de7e3751fbeec256671a3b8ab74bf4458e1d88afd6175ff584ae83529e4ff57c",
+      "text_sha256": "aba79774b328c7abd974e318d89522626e6740654d42261bbaac691c8f089f1b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 1,
+        "offset": 123
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ls2-1",
+      "wording_sha256": "285fb56ed953b4ee50d5b8ec6b9e0feb3ea2811aed62c02b969d6a75ae6a8a80",
+      "text_sha256": "380bf34a6a862482a45890acd40d5b74f34ece87c7c6c6876229e879461469b3",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 3,
+        "offset": 22
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ps1-1",
+      "wording_sha256": "344a763136148bec7a8fec20546245a7f1afa3d27bdc725228aa9e0a2f9966cf",
+      "text_sha256": "4e64a952071c3d90ed993f8dc6f93919401d8607f886397ee7983489e4cea2de",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 11,
+        "offset": 20
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ps1-2",
+      "wording_sha256": "85d774f3d0e0c7939b391bf51e41fadff27c5998eae81d9eefa8c40a47bcadf5",
+      "text_sha256": "beefd31da2ccd654e8633332d9106fafa6d1ecc15f26140a1a7453166efdcefd",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. In the clarification one word differs by one letter: the verb of the last example, the third word from the end of the clarification, is plural in the export and singular in the PDF (page 11). In the export it can be read as covering all three examples, in the PDF only the last. Nothing else differs. No double asterisk: the flag false is right. Code equal. Summary and Limits state the export's version faithfully.",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 11
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ps1-3",
+      "wording_sha256": "d4ea7137e3802801b7e6d2422f8cb8907c6a850f046dfe0813928a23be37770f",
+      "text_sha256": "8a9a79d0afcdf68cc0b7ebe76422754d4416754bb7da3b20c2a9a1f381552a32",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 11,
+        "offset": 147
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ps1-4",
+      "wording_sha256": "725af1c5950d45e6767f879fa2290d38e7ad0824d2903dc466c411e4b61c9ecd",
+      "text_sha256": "fcbf653b61a40e2a62ba9e1e8a6a8ba65eec02d48e6f287ff7084ad6dbec4d3f",
+      "verdict": "confirmed",
+      "note": "The label of the clarification has its second word in lower case in the export and capitalised in the PDF: case only. The PDF marks the whole clarification with a double asterisk: california_addition: true is right.",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 11,
+        "offset": 218
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ps2-1",
+      "wording_sha256": "bd43893b087d2cb405793650479612080ae7944bd656c573886a490831b3edcf",
+      "text_sha256": "e70dc78dcbdf016a8f40abeddfbd3ce75b2c2d0ef61a89634b735a114208ec49",
+      "verdict": "confirmed",
+      "note": "The PDF prints this code without the full stop that follows the other codes on its pages; the code is equal.",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 14,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-5.science.objective.5-ps3-1",
+      "wording_sha256": "88ba2613dd3ae3bccee5ed3818eeefe19788890d843d8c36a2e9aeeeae3a4a2e",
+      "text_sha256": "1e509e636fe187adc85993a1ed38b32a70682e8ba2a9ed01b71dcaf246c4ea25",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "A real difference between two official renditions; the record follows its canonical source, the export. Inside the parenthesis of the expectation sentence the export has one more word than the PDF (page 15): a conjunction before the third of the four listed uses of the energy. The meaning is the same. The clarification is equal. No double asterisk: the flag false is right. Code equal. Summary and Limits state the export's version faithfully.",
+      "rendition": "us-ca-cde-ngss-grade5-dci-pdf",
+      "place": {
+        "page": 15
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/grade-5/science",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

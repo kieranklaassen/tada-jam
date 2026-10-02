@@ -1,0 +1,935 @@
+{
+  "lane": "us-ca/kindergarten/reading-language",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.l-k-1",
+      "wording_sha256": "1e3ee753dce16daf64885f40b92db5256b2ac51161f911533f8ef3b1f0eca1cc",
+      "text_sha256": "3d638cf8d7f74144fa24b3dd52ec30f2148ecacd2c31b925cd8fcda00e59ebc6",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Scope of part b narrowed. The Summary says the child uses the verbs and nouns \"that come up most often\". Part b asks for nouns and verbs that occur frequently and has no superlative; part e (prepositions) is the part that has one, and the Summary keeps it there (\"the commonest\"). The statement words the two parts differently and the Summary makes them alike. Limits repeats the slip for part d: it calls the listed question words examples \"of the most common ones\", and part d has no such qualifier either. Fix: for part b say frequent or common nouns and verbs; in Limits attach \"most common\" to the prepositions only. Wording and code match the PDF (page 38, kindergarten column, number 1); the cell holds nothing beyond the record. Six parts, in the record's order.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 38,
+        "offset": 127
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.l-k-1",
+      "wording_sha256": "1e3ee753dce16daf64885f40b92db5256b2ac51161f911533f8ef3b1f0eca1cc",
+      "text_sha256": "36e8d814fec523e0a1c64dbbd02a102ccc28e81a1653d7e552a16bef8b294eee",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary now gives part b a plain degree of frequency and keeps the superlative for the prepositions of part e only, as the statement does; Limits now calls the question words of part d examples and attaches the superlative to the prepositions alone. All six parts and the opening line are in the Summary with their conditions (many letters and not all, plurals regular and spoken, sentences in shared activities); the examples stay examples. Wording and code match the PDF (page 38, kindergarten column, number 1); the cell holds nothing beyond the record. Six parts, in the record's order.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 38,
+        "offset": 127
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.l-k-2",
+      "wording_sha256": "5814559e7aee51335dae3f4435c799bacc6c9d577acf70d6e1f40079af775be9",
+      "text_sha256": "7a71107cf84a10cb804f338019f581aaa630ec7dd610e7964149e11701cbd4ce",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 39,
+        "offset": 15
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.l-k-4",
+      "wording_sha256": "922e49e4898e3400f7fc2771d6030a97f0bb5ca71fefa7880a1014c3b4d1193b",
+      "text_sha256": "b7f12d7df8fa23399868cfc897fabd8a67b91bf070466f7cad63ee822c111d42",
+      "verdict": "unconfirmed",
+      "reason": "wording-differs",
+      "note": "Punctuation only, on the wording the writer flagged: the PDF (page 40, number 4, read on the page image at high resolution and in the text layer) closes lettered part b with a full stop after its last word; the record's part b ends without one. Every word is equal, and the stem and part a are identical, punctuation included. The export row itself lacks that full stop, so the importer copied its source faithfully: this is a difference between the two official renditions, not an importer fault, and the meaning is unaffected. The script could not see it, because it compares words and not punctuation. The code matches, two parts stand in the cell in the record's order, and the Summary and Design notes are faithful.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 40,
+        "offset": 11
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.l-k-4",
+      "wording_sha256": "1f944d99dbed372e816d6f4c1c5d109ef33a3ee6b3a898cb1522b680d78b0333",
+      "text_sha256": "b7f12d7df8fa23399868cfc897fabd8a67b91bf070466f7cad63ee822c111d42",
+      "verdict": "confirmed",
+      "note": "Round 2, after the importer's correction. The wording is the export's as corrected from the adopted document at one place: a closing full stop restored at the end of lettered part b. Read whole in number 4 of the kindergarten column on PDF page 40 (page image): the opening line, part a and part b now equal the cell, punctuation included; the example word parts in part b are the same seven in the same order; nothing else stands in the cell and nothing is in boldface (the flag false is right). The correction is right and nothing else differs, so the round 1 difference is resolved. Code equal. Summary and Design notes judged again against the corrected wording: faithful, the word parts kept as examples, no near copy; the defect was a punctuation mark only and nothing in the pack's text follows it.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 40,
+        "offset": 11
+      },
+      "matched_by": "script",
+      "corrections_verified": true,
+      "checker": "us-ca/kindergarten/reading-language round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.l-k-5",
+      "wording_sha256": "4e8dd2111d6a8887097bc5b9dfd2c4a6730173b69537601a4f1640bea4775b01",
+      "text_sha256": "4ee5744fd9c961f7abbc31fd3b9ab5e49d5b3ea254fced63c0e0746db20a2e12",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 41,
+        "offset": 12
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.l-k-6",
+      "wording_sha256": "a04c1e8216968db3d6ab35872e51fd49ea1d572ea398f30f8df04b5e2492ec37",
+      "text_sha256": "f88001f9245d2fe3bf9a2d8445edb7ce47f2be56b01bca25ed5dbe6b7dc177cd",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 41,
+        "offset": 105
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rf-k-1",
+      "wording_sha256": "72cd3aeb825f1351687c5f08a09f692c67b2baad5d2b4da6ff0b1b6f2471b2ff",
+      "text_sha256": "37adfcfa0533399f3ecd21aaddc1564da684ce7193abb7fb9ef7cc29d1d20a92",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 23,
+        "offset": 149
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rf-k-1",
+      "wording_sha256": "72cd3aeb825f1351687c5f08a09f692c67b2baad5d2b4da6ff0b1b6f2471b2ff",
+      "text_sha256": "4ca5719aaadf500d4a493d5239f1f60b84061f8ec48666899d748a4a453c94bb",
+      "verdict": "confirmed",
+      "note": "Round 1 confirmed this record; the fix added one sentence at the end of Limits about the note the adopted document prints above the foundational skills table. Read on the page image (page 23; the same note stands on pages 23 and 24, outside every cell, addressed to kindergarten): the sentence is true to it (it reports who the note is about, which areas it covers and that what is expected there is described as increasing, and adds no inference), and it is the pack's own words: recast and reordered, about a third of the note's words in order and no run longer than three shared, by the pack's own overlap measures applied by hand since the note is not in the store. The note is not part of any statement, so the record's wording is not at fault for not holding it. Four parts in the cell, in the record's order. Wording and code match the PDF (page 23, kindergarten column, number 1); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 23,
+        "offset": 149
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rf-k-2",
+      "wording_sha256": "b13fd0a22025a9267cd4f0f192542e65ca9e42b996a48be46857fc62aa749b76",
+      "text_sha256": "51c62ff14b83d27905576a0e2ac635bde591d73b3cf20b4f2ea4dde0ef4860ee",
+      "verdict": "confirmed",
+      "note": "California addition, as the PDF boldface shows it (page 23, number 2): lettered part f in full, with the mark; the stem and parts a to e are plain. The flag (true) is right, and Limits says exactly this. Six parts in the cell, in the record's order. The asterisk in part d and the footnote at the foot of page 23 equal the record's marker and accompanying text.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 23,
+        "offset": 211
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rf-k-2",
+      "wording_sha256": "b13fd0a22025a9267cd4f0f192542e65ca9e42b996a48be46857fc62aa749b76",
+      "text_sha256": "74ab14434d24e3a8e73037137eeef2784c16b2b2b4f36ed2c20894b603e21b98",
+      "verdict": "confirmed",
+      "note": "Round 1 confirmed this record; the fix added one sentence at the end of Limits about the note the adopted document prints above the foundational skills table. Read on the page image (page 23; the same note stands on pages 23 and 24, outside every cell, addressed to kindergarten): the sentence is true to it (it reports who the note is about, which areas it covers and that what is expected there is described as increasing, and adds no inference), and it is the pack's own words: recast and reordered, about a third of the note's words in order and no run longer than three shared, by the pack's own overlap measures applied by hand since the note is not in the store. The note is not part of any statement, so the record's wording is not at fault for not holding it. Six parts in the cell, in the record's order; part f in boldface with the state's mark, so the flag (true) is right; the asterisk in part d and the footnote at the foot of the page equal the record's marker and accompanying text. Wording and code match the PDF (page 23, kindergarten column, number 2); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 23,
+        "offset": 211
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rf-k-3",
+      "wording_sha256": "d25be253db3c4ca0861718be142728f15077c85fb50f0e5be0bc95ca81f55fd4",
+      "text_sha256": "074437171701029c25a86d857a29726fed23ed799146e98584330887911764c3",
+      "verdict": "confirmed",
+      "note": "California additions, as the PDF boldface shows them (page 24, number 3): in the opening line, its last five words (the phrase that follows the words about decoding) with the mark; in part b, the whole bracketed note of two sentences that follows the first sentence, with the mark. Parts a, c and d and the rest of the opening line and of part b are plain. The flag (true) is right; Limits is consistent with both (it describes the bracketed note of part b and says the record does not show which words of the opening line are added). Four parts in the cell, in the record's order.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 24,
+        "offset": 32
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rf-k-3",
+      "wording_sha256": "d25be253db3c4ca0861718be142728f15077c85fb50f0e5be0bc95ca81f55fd4",
+      "text_sha256": "96684127fa4d79eb661ffbf5dc9eccfb8d06a0948a147ef2c10b01c33e6d40de",
+      "verdict": "confirmed",
+      "note": "Round 1 confirmed this record; the fix added one sentence at the end of Limits about the note the adopted document prints above the foundational skills table. Read on the page image (page 24; the same note stands on pages 23 and 24, outside every cell, addressed to kindergarten): the sentence is true to it (it reports who the note is about, which areas it covers and that what is expected there is described as increasing, and adds no inference), and it is the pack's own words: recast and reordered, about a third of the note's words in order and no run longer than three shared, by the pack's own overlap measures applied by hand since the note is not in the store. The note is not part of any statement, so the record's wording is not at fault for not holding it. Four parts in the cell, in the record's order; boldface with the state's mark on the end of the opening line and on the bracketed note of part b, so the flag (true) is right and Limits is consistent with both. Wording and code match the PDF (page 24, kindergarten column, number 3); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 24,
+        "offset": 32
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rf-k-4",
+      "wording_sha256": "9ed36abbf8b4387e9a481f487d72938b95c448a5e67b55ccff8388396cb583fd",
+      "text_sha256": "d0a90e1508588b46a40496566a717783f901678eb1adadff53c88f5ddfb25107",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 24,
+        "offset": 170
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rf-k-4",
+      "wording_sha256": "9ed36abbf8b4387e9a481f487d72938b95c448a5e67b55ccff8388396cb583fd",
+      "text_sha256": "49d7695dfecd76adf1fee1b8bb9561a71b22a48b5422ebcc2d4c306c6dcf0a55",
+      "verdict": "confirmed",
+      "note": "Round 1 confirmed this record; the fix added one sentence at the end of Limits about the note the adopted document prints above the foundational skills table. Read on the page image (page 24; the same note stands on pages 23 and 24, outside every cell, addressed to kindergarten): the sentence is true to it (it reports who the note is about, which areas it covers and that what is expected there is described as increasing, and adds no inference), and it is the pack's own words: recast and reordered, about a third of the note's words in order and no run longer than three shared, by the pack's own overlap measures applied by hand since the note is not in the store. The note is not part of any statement, so the record's wording is not at fault for not holding it. The statement is one sentence with no lettered parts. Wording and code match the PDF (page 24, kindergarten column, number 4); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 24,
+        "offset": 170
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-1",
+      "wording_sha256": "b9250db1c3e4ed6fb0ea5e1bde7060fc85e00c4378df192bfc059b1932778884",
+      "text_sha256": "9d115ad1295fb97f63bc1cd377872083cb433dd88eb57d75eda3ff6add1badc3",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"when an adult prompts and helps\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 20, kindergarten column, number 1); the cell holds nothing beyond the record. Place: the script reported page 17, offset 89, which is the identically worded Literature statement (RL.K.1); this record's own cell is the first row of the Informational Text table on page 20, read there on the page image, where the scripted place check also holds.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 23
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-1",
+      "wording_sha256": "b9250db1c3e4ed6fb0ea5e1bde7060fc85e00c4378df192bfc059b1932778884",
+      "text_sha256": "2173ffe330edd778e75c304d3043f1fa9fafe99a915e93e051be85049c375e0c",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them; Limits states the condition without a giver, and the adult in the pack's example stays an example. Summary and Limits read against the statement: same scope, nothing added or dropped; not a near copy. Wording and code match the PDF (page 20, kindergarten column, number 1); the cell holds nothing beyond the record. Place: the script reports page 17, offset 89, which is the identically worded Literature statement (RL.K.1); this record's own cell is the first row of the Informational Text table on page 20, read there on the page image.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 23
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-1",
+      "wording_sha256": "b9250db1c3e4ed6fb0ea5e1bde7060fc85e00c4378df192bfc059b1932778884",
+      "text_sha256": "7122e4aef35648b188bab4d4d36b865513c6310c57d537c3771af72de19083e8",
+      "verdict": "confirmed",
+      "note": "Round 3. Confirmed in round 2; the only change since is in the Summary, which no longer names anyone who asks the questions the child answers (the statement names no asker). Read whole again: the Summary keeps prompting and support without a giver, asking and answering, and the important details; nothing added or dropped; not a near copy. Limits: the condition, the informational-text scope with its twin record under literature, and the two absences (reading or hearing; a number of questions or details) are right. Wording and code equal the PDF (page 20, kindergarten column, number 1, page image); the cell holds nothing beyond the record. Place: the script reports page 17, offset 89, which is the identically worded Literature statement; this record's own cell is the first row of the Informational Text table on page 20, read there on the page image.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 23
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/kindergarten/reading-language round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-10",
+      "wording_sha256": "8e2d4ed8a4409386e5cfc9d9fbb3844890d2676d980252bb0279d81d9dd93f60",
+      "text_sha256": "cffb54b035b47b2575302f2a2dd9ca5504b0a02a7d7dd57a59ada1cef26aec11",
+      "verdict": "confirmed",
+      "note": "Place: the script reported page 18, offset 16, which is the identically worded Literature statement (RL.K.10); this record's own cell is number 10 of the Informational Text table on page 21, read there on the page image, where the scripted place check also holds. California addition, as the PDF boldface shows it: both lettered parts, a and b, in full, each with the mark; the stem is plain. The flag (true) is right, and Limits says exactly this.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 21,
+        "offset": 18
+      },
+      "matched_by": "agent",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-2",
+      "wording_sha256": "4dde46545d7c3cb40321d97d171ef4b02cba8c0cd9c262bc5bcf465dd061359e",
+      "text_sha256": "eadb7cef3c1a127943706094be75fd51b7dfa8b27796c6e25e2f971edd7ef357",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"Prompted and supported by an adult\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 20, kindergarten column, number 2); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 38
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-2",
+      "wording_sha256": "4dde46545d7c3cb40321d97d171ef4b02cba8c0cd9c262bc5bcf465dd061359e",
+      "text_sha256": "49e9519882aafe827e54bcf5c2a69b0d4345b1d1ed2321216ffd29993a8ebe14",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them; Limits states the condition without a giver, and the adult in the pack's example stays an example. Summary and Limits read against the statement: same scope, nothing added or dropped; not a near copy. Wording and code match the PDF (page 20, kindergarten column, number 2); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 38
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-3",
+      "wording_sha256": "9d08b86e3e16998400a644da3f5c477dff8c5ad722c784ee02a5605df8f219d1",
+      "text_sha256": "adf80390477f5a9c7a8d951a7475ff7cde8c6441beed0a926666b34b697cd8b3",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"when an adult prompts and supports\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 20, kindergarten column, number 3); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 54
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-3",
+      "wording_sha256": "9d08b86e3e16998400a644da3f5c477dff8c5ad722c784ee02a5605df8f219d1",
+      "text_sha256": "b3766da3d550954f5d62ff25f249a73e107fae47f8784f2f782702f547b614a7",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them; Limits states the condition without a giver, and the adult in the pack's example stays an example. Summary and Limits read against the statement: same scope, nothing added or dropped; not a near copy. Wording and code match the PDF (page 20, kindergarten column, number 3); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 54
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-4",
+      "wording_sha256": "ef6afaf108052d768aa576db54169095923761d62ebaa1f9f58fef796cda483f",
+      "text_sha256": "29dacfe9cdd32da26eb6e304ade13f0267a7005d608c48c0de9a853dac5e8a28",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"With an adult's prompts and help\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 20, kindergarten column, number 4); the cell holds nothing beyond the record. On the wording the writer flagged: the bracketed cross-reference reads as if a word had dropped out before its last two words. The PDF prints it the same way in this cell (page 20, number 4, read on the page image at high resolution), and so does the export, so the record equals both official renditions and the wording is not at fault; the Literature twin (RL.K.4) has the word in both. California addition, as the boldface shows it: the second sentence, that is the whole bracketed cross-reference with the mark; the first sentence is plain. The flag (true) is right and Limits is consistent with it.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 74
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-4",
+      "wording_sha256": "ef6afaf108052d768aa576db54169095923761d62ebaa1f9f58fef796cda483f",
+      "text_sha256": "0b6242192bf465ab97769861bd27fac9bf8aeb28b56e780d4ec7bc9fcfc097f8",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them; Limits states the condition without a giver, and the adult in the pack's example stays an example. Summary and Limits read against the statement: same scope, nothing added or dropped; not a near copy. Wording and code match the PDF (page 20, kindergarten column, number 4); the cell holds nothing beyond the record. The bracketed cross-reference is printed in this cell exactly as the record has it (it lacks a word that the Literature twin has; the page prints it so). California addition, as the boldface shows it: the bracketed cross-reference with the mark; the flag (true) is right and Limits is consistent with it.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 74
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-5",
+      "wording_sha256": "88a5e19ad76000c0ec82504822ccc13af7244b58bc2e71ec602a7217d9e47cbd",
+      "text_sha256": "22e1e2b0504b06104ad4467c21d5f6fd147dc51c7ae627925a6dcd798f7da336",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added manner. The Summary opens with \"Handling a book\" and has the child \"show\" the parts. The statement asks only that the child identify three named parts of a book; it names no handling and no way of showing, so a book in an adult's hands or on a screen meets it as well. Fix: drop the handling from the Summary (it belongs, as it already stands, in \"In a child's hands\"). Wording and code match the PDF (page 20, kindergarten column, number 5); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 99
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-5",
+      "wording_sha256": "88a5e19ad76000c0ec82504822ccc13af7244b58bc2e71ec602a7217d9e47cbd",
+      "text_sha256": "5882d9bd56b9c4853f25205faaa7b4c2a35c9552edadb2ae12d739c6903c9910",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary no longer has the child handle the book or show its parts; it says only that the child can tell the three named parts, which is the statement's scope. The handling stays in the pack's own example, where it belongs. Limits adds no limit the statement lacks. Wording and code match the PDF (page 20, kindergarten column, number 5); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 99
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-6",
+      "wording_sha256": "fdd3ebb31540df80978a99e417b2c4d7895107b8a1c514ae7f3cac2c8f30fb75",
+      "text_sha256": "50d679939ae94518dfdbc074c461a5e8fb4665f52ee49e489e79712545187a34",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 112
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-7",
+      "wording_sha256": "9dfd9fe2781c633256833574900c6d3e757bcac0a9b7e5fc3abc37d2eae54d2d",
+      "text_sha256": "ffee7d33996a7783b690981ff98f45a28c2dda8819432e91f816219c4c537e42",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"With an adult's prompting and support\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 20, kindergarten column, number 7); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 136
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-7",
+      "wording_sha256": "9dfd9fe2781c633256833574900c6d3e757bcac0a9b7e5fc3abc37d2eae54d2d",
+      "text_sha256": "a7bbffaee72ca484b7a1d09260df7038c8829d6aa0d78ab2f91c6e28e0373e98",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them; Limits states the condition without a giver, and the adult in the pack's example stays an example. Summary and Limits read against the statement: same scope, nothing added or dropped; not a near copy. Wording and code match the PDF (page 20, kindergarten column, number 7); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 136
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-8",
+      "wording_sha256": "085c6d882d6aa5ef7e32162fddd642a820db0e35f0c6819843f6cab9ef4b036b",
+      "text_sha256": "4738b3d51ec69c5206ec11702edb6d21ddb58581cd16c8cf83a52b92e3969874",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"with an adult prompting and helping\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 20, kindergarten column, number 8); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 167
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-8",
+      "wording_sha256": "085c6d882d6aa5ef7e32162fddd642a820db0e35f0c6819843f6cab9ef4b036b",
+      "text_sha256": "88111293dd26868410547f4a92934aad4b8dfcd382b94e0a3c1489777516602e",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them; Limits states the condition without a giver, and the adult in the pack's example stays an example. Summary and Limits read against the statement: same scope, nothing added or dropped; not a near copy. Wording and code match the PDF (page 20, kindergarten column, number 8); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 167
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.ri-k-9",
+      "wording_sha256": "cbe2786052524afac6969a6655af4ad540f369b642f41f5d7b3f9534bf7b3810",
+      "text_sha256": "902623b1dfc65dadfedbd2a089085c5685fe28e8d09a95d2c19aced69b09860b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 20,
+        "offset": 184
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-1",
+      "wording_sha256": "b9250db1c3e4ed6fb0ea5e1bde7060fc85e00c4378df192bfc059b1932778884",
+      "text_sha256": "3ecb8b01986eb99f38cd4e7e5fdfaf0ae2269f6cb3e23d49748ba4c78a0bc6f4",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"with an adult's prompting and support\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 17, kindergarten column, number 1); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 89
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-1",
+      "wording_sha256": "b9250db1c3e4ed6fb0ea5e1bde7060fc85e00c4378df192bfc059b1932778884",
+      "text_sha256": "dabbbaed70892daae376b50d7122bdc89753a4bbe2c208eb831b30dbd16514fb",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "New in round 2, not caused by the fix. Limits says that because the record belongs to literature the text is a story or a poem. The statement names only a text, and the adopted document's table of text types for kindergarten to grade 5 (PDF page 47) puts three kinds under Literature: stories, drama and poetry. The note leaves drama out, so it states a narrower limit than the official document does, and a designer would read a short play as outside the record. Fix: name all three kinds, or say only that the text is literature. The round 1 reason is resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them. Summary faithful and not a near copy. Wording and code match the PDF (page 17, kindergarten column, number 1); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 89
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-1",
+      "wording_sha256": "b9250db1c3e4ed6fb0ea5e1bde7060fc85e00c4378df192bfc059b1932778884",
+      "text_sha256": "0ce28b4b3fb351374a4d1947896825c1caf9ca79be9cd436ab1fc56e56bd3afc",
+      "verdict": "confirmed",
+      "note": "Round 3. The round 2 reason is resolved: Limits now names the three kinds that the adopted document's table of text types for kindergarten to grade 5 puts under Literature (PDF page 47: three columns under that heading, in the order the note gives them), so a short play is no longer left out. The Summary no longer names anyone who asks the questions the child answers; the statement names no asker. Record read whole against the page: the Summary keeps the condition of prompting and support without a giver, both asking and answering, and the important details; nothing added or dropped; not a near copy (the condition stands at the end and the two actions are split into two clauses). Limits is right that a record with the same wording covers informational text, and that neither a number of questions nor reading or listening is fixed. The adult in the pack's example stays an example. Wording and code equal the PDF (page 17, kindergarten column, number 1, page image); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 89
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-10",
+      "wording_sha256": "8e2d4ed8a4409386e5cfc9d9fbb3844890d2676d980252bb0279d81d9dd93f60",
+      "text_sha256": "c0297e62e9dc73eb291136418e46f52e0509eebda6272f26b207f2ec178a3043",
+      "verdict": "confirmed",
+      "note": "California addition, as the PDF boldface shows it (page 18, number 10): both lettered parts, a and b, in full, each with the mark; the stem is plain. The flag (true) is right, and Limits says exactly this. Two parts in the cell, in the record's order.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 18,
+        "offset": 16
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-2",
+      "wording_sha256": "57e4e16bfcfb60259ccdbcc8f4955fc71e0a7de5ade84607eb77c287faf5049d",
+      "text_sha256": "caaa53800eab4986fa9fa77b03bbe864b82886f9dc30f8665061a8e1f56cbef1",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"Prompted and helped by an adult\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 17, kindergarten column, number 2); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 104
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-2",
+      "wording_sha256": "57e4e16bfcfb60259ccdbcc8f4955fc71e0a7de5ade84607eb77c287faf5049d",
+      "text_sha256": "adaf0291208838ff02ad87170aa8c72dd78ec7637e4aead3470edb915fa6d135",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them; Limits states the condition without a giver, and the adult in the pack's example stays an example. Summary and Limits read against the statement: same scope, nothing added or dropped; not a near copy. Wording and code match the PDF (page 17, kindergarten column, number 2); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 104
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-3",
+      "wording_sha256": "eac8297250ffc0b5e474d8d67bfa59eb3ebe94bc3456f596f56fc6f2fd076683",
+      "text_sha256": "1033a2e90ebb3ca34177e3a78d89fc6cea74020fa26a2e330648580dd3fb12fe",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"With an adult prompting and supporting\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 17, kindergarten column, number 3); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 115
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-3",
+      "wording_sha256": "eac8297250ffc0b5e474d8d67bfa59eb3ebe94bc3456f596f56fc6f2fd076683",
+      "text_sha256": "a437b2f3a28212963998ea6f4948154b03ef68867b78b5dc058901ecb4a5f81d",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them; Limits states the condition without a giver, and the adult in the pack's example stays an example. Summary and Limits read against the statement: same scope, nothing added or dropped; not a near copy. Wording and code match the PDF (page 17, kindergarten column, number 3); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 115
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-4",
+      "wording_sha256": "56aeef2b258c16ad71cce42f6855bf5d5f17eef521342bf11bf432ecd11ae768",
+      "text_sha256": "791306eb82f1e4f06316931b3cf3efaeea645465388af132d0cda9282601df1f",
+      "verdict": "confirmed",
+      "note": "California addition, as the PDF boldface shows it (page 17, number 4): the second sentence, that is the whole bracketed cross-reference to the language standards with the closing mark; the first sentence is plain. The flag (true) is right and Limits is consistent with it (it says the record does not show which words are added). The cross-reference here is complete in both renditions, unlike the one in RI.K.4.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 129
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-5",
+      "wording_sha256": "9e42f55e8a5e8209caaaac55d3d2c72c54ecf4dd62f71f4d7700e11472c0258a",
+      "text_sha256": "37e91fdcc8976aea22646c885df644edbbb11ec77e28fbbdcacdc0c600ccfaa3",
+      "verdict": "confirmed",
+      "note": "California addition, as the PDF boldface shows it (page 17, number 5): the last two of the four examples inside the brackets (the third and the fourth), with the closing bracket, the full stop and the mark; everything before them is plain. The flag (true) is right and Limits is consistent with it.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 151
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-6",
+      "wording_sha256": "9e6b1015b1d50495dabb830cca7131d29bda937fbe9c7d567c3e4a4aadb8259b",
+      "text_sha256": "de22ec0fc9813fcb211db821b352331c034ce8056cad5a651fc958147a9e34f1",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"when an adult prompts and helps\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 17, kindergarten column, number 6); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 165
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-6",
+      "wording_sha256": "9e6b1015b1d50495dabb830cca7131d29bda937fbe9c7d567c3e4a4aadb8259b",
+      "text_sha256": "6e3199976991d7f746b254eb50c4f11ea767644939741128d3eae99184ea1996",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them; Limits states the condition without a giver, and the adult in the pack's example stays an example. Summary and Limits read against the statement: same scope, nothing added or dropped; not a near copy. Wording and code match the PDF (page 17, kindergarten column, number 6); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 165
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-7",
+      "wording_sha256": "89b13a3e3f6a894723449930b744464f3b354d7d8255c5cb65d0432796367bc7",
+      "text_sha256": "45cb384eee54b0077de58d37e550467c22f0f89ab47c5fa99a79154ee3e30876",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"With an adult's prompting and support\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 17, kindergarten column, number 7); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 188
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-7",
+      "wording_sha256": "89b13a3e3f6a894723449930b744464f3b354d7d8255c5cb65d0432796367bc7",
+      "text_sha256": "0ad6b8c91261deb34a041a2f9df56f0107a0291070569e5a73a481633deb27fa",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them; Limits states the condition without a giver, and the adult in the pack's example stays an example. Summary and Limits read against the statement: same scope, nothing added or dropped; not a near copy. Wording and code match the PDF (page 17, kindergarten column, number 7); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 188
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-9",
+      "wording_sha256": "e5aa0ad5d1f2c32b31b1ece20879c46368b98f6e7b6e57d328ee1c1dd830ab10",
+      "text_sha256": "55ad52be6e6054d8bffab8cd1fd5316b907fcdb45b90413d7b784b0d6828e233",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Added condition. The Summary says the prompting and support come from an adult (\"when an adult prompts and supports\"). The statement's opening condition names no one who gives them, and the adopted document defines no giver anywhere; where this grade's standards mean adults they say so (W.K.5, W.K.6, W.K.8, L.K.5), and the lane's own summaries of RI.K.9 and SL.K.4 keep the same condition without a giver. A designer reads from it that a grown-up has to be present, which the standard does not say. Fix: keep the condition and drop the adult from the Summary (Limits already states it without one; the adult in \"In a child's hands\" is the pack's example and can stay). Wording and code match the PDF (page 17, kindergarten column, number 9); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 220
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.rl-k-9",
+      "wording_sha256": "e5aa0ad5d1f2c32b31b1ece20879c46368b98f6e7b6e57d328ee1c1dd830ab10",
+      "text_sha256": "925557975b8bdb6c4c846a03dc7c6354cea87acf457331a0d26f90059ab23fc7",
+      "verdict": "confirmed",
+      "note": "Round 1 reason resolved: the Summary keeps the condition of prompting and support and no longer names anyone who gives them; Limits states the condition without a giver, and the adult in the pack's example stays an example. Summary and Limits read against the statement: same scope, nothing added or dropped; not a near copy. Wording and code match the PDF (page 17, kindergarten column, number 9); the cell holds nothing beyond the record.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 17,
+        "offset": 220
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.sl-k-1",
+      "wording_sha256": "a8416f6b29208c6c84219dedbb7137bf47a8dcd789f97cbb676f7439b02bb676",
+      "text_sha256": "4c882c6ba334a05df30d2049d38cd4b4ef5d362ca428cd0bb51cacbc5d37d1da",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 33,
+        "offset": 66
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.sl-k-2",
+      "wording_sha256": "01a59c32d1c4a6e285f4fcbbcf0723b242af3267d245bb7c12cc721e0a30d7ac",
+      "text_sha256": "f0fa1103a2e2c4e24a6fbf866756bed795efe955e4aac2eedc2411389579b8c0",
+      "verdict": "confirmed",
+      "note": "California addition, as the PDF boldface shows it (page 33, number 2): lettered part a in full, with the mark; the stem is plain. The flag (true) is right, and Limits says exactly this. Form: the PDF breaks the second hyphenated number word of part a over a line at its own hyphen.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 33,
+        "offset": 118
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.sl-k-3",
+      "wording_sha256": "ae0966ff9c130e94a22ea86515ba39a87341a0540a1dfcc0579cecb3c466014e",
+      "text_sha256": "5604dbf11b254e51730e60fa7c79f2b204a8d6195222cd3b25367b9c00195084",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 33,
+        "offset": 161
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.sl-k-4",
+      "wording_sha256": "5a7bc8c2f5e7000f989d5122ab10fbc3c5f0f0a6df138bbc0809f32d073b33f9",
+      "text_sha256": "ce2893d37573740e096aef4401af9a74eee1f1a4b9e7968b0cfdcd744a436f7a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 34,
+        "offset": 14
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.sl-k-5",
+      "wording_sha256": "2ac3ad147acdb0ff6e48aec887333bda6dd52c8f9802ad7ef6cde9a22bccb935",
+      "text_sha256": "ec5a78a2f8109c1090d650e5487aac7fd8b30a266ef1942ef36b2024a2c651fc",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 34,
+        "offset": 30
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.sl-k-6",
+      "wording_sha256": "6a30c66dd242b423f531aa29bdb17c618a01af2c96b95115c400e867cbb7649f",
+      "text_sha256": "c29571edaebfd5553158bb9ce14d3f583b0b4267711ea0ca58f3862d165e1c49",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 34,
+        "offset": 45
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.w-k-1",
+      "wording_sha256": "d719032bfa40ebaa5bef0f12242ddab689ab8a269c511a646b12a8b19bc76ff5",
+      "text_sha256": "f829096c7feeda3860fa26199ddfcf0645499831479f1d2dabc17cfd7de5afaa",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 27,
+        "offset": 133
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.w-k-2",
+      "wording_sha256": "45e98bfc1544b83860058ca1bbbf5331584bd19a47d9b12a4f0429294444d0b9",
+      "text_sha256": "d08d68633d55e1cba79116ae14608afd583260b88537b8e191f7279270cf2410",
+      "verdict": "confirmed",
+      "note": "Form only, on the wording the writer flagged: the stored wording has a line break in the middle of the sentence (after the slash-joined pair of adjectives, before the noun they describe); the export row has the same break. The PDF (page 27, number 2) prints one unbroken sentence with no lettered parts, and the cell holds nothing else. A line break is whitespace, which the pack's normalisation collapses, so the wording is equal; a reader should not take the second line for a sub-part.",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 27,
+        "offset": 181
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.w-k-3",
+      "wording_sha256": "cd54d9f53105c1778b8a2d438def6ceb86204ccf566ab1c55eb3205c4e1800b0",
+      "text_sha256": "9337c775c473853532cf2d81bc594b43a6f5f8f1dd913745abc4ba7d7d573784",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 27,
+        "offset": 211
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.w-k-5",
+      "wording_sha256": "a19edb8f7730f4db00236d30df1e4d8fdbd0d69d747088ffe20f9ced40b4ff0b",
+      "text_sha256": "031af49760cd436036fabc2ef8e7d8092472ddf89cbec98cbdf5be9b4ec3133e",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 27,
+        "offset": 254
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.w-k-6",
+      "wording_sha256": "13e09fcf0f466be3ed7901c2aac951110207cbb9d09f3b024bbb21c76ae3fff8",
+      "text_sha256": "dbf8fb1104be879694e9fa5b8aef1a59c1c1ddd6901eee6cb2a3ca8b0e014efb",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 27,
+        "offset": 276
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.w-k-7",
+      "wording_sha256": "832334ec8b7ce4f517afd086b2de8db710f6e422c89cd4c62a742a5cf1a623e1",
+      "text_sha256": "698e49da13c1c48dd9670901ccb183a2da59519ea7ee0284113cc1616095dea4",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 28,
+        "offset": 15
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.kindergarten.reading-language.objective.w-k-8",
+      "wording_sha256": "6211a039a048f269eb2f1e2bf3c27fc1145a25e2121a277c03226cc6a817ed79",
+      "text_sha256": "a4262e9953fc99d84487e86b648a9b24b312ca15fbcc26792afb285a707bd87a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-ccss-ela-pdf",
+      "place": {
+        "page": 28,
+        "offset": 39
+      },
+      "matched_by": "script",
+      "checker": "us-ca/kindergarten/reading-language",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}

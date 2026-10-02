@@ -1,0 +1,1599 @@
+{
+  "lane": "us-ca/grade-6/practical-life-feelings",
+  "verdicts": [
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-1-a",
+      "wording_sha256": "423e321b6ffcd8a7e870af4cc512ede7f8e0f332182593441738c0cd50fb547c",
+      "text_sha256": "b5ebf8bb7a4f635ede0e8887135c90da8b35f563180fce4a2683beb25e0fea2b",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows whom the consequences fall on. The statement speaks of the effects of use in general and adds three wider kinds of consequence without saying for whom. The Summary makes the effects what use \"does to a person\" and the three wider kinds what use means for \"the person's dealings\" with other people, the law and money, so only the user's own consequences remain; what use costs a family or other people, which the statement's general terms cover, is left out. Fix: give the effects and the three kinds of consequence without tying them to the user. Limits is in order. Not a near copy. Wording and code equal the PDF (page 38, printed as 1.1.A under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 226
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-1-a",
+      "wording_sha256": "423e321b6ffcd8a7e870af4cc512ede7f8e0f332182593441738c0cd50fb547c",
+      "text_sha256": "e6d2ee21d77d0d2d3b3b35c544787a853eaf11af9d534adc9ec22b261fe546b0",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the Summary no longer ties the effects, or the three wider kinds of consequence, to the user; it says what comes of use and what use means among people, before the law and in money. All four groups of substances and both time spans are kept. Not a near copy. Remark, not a fault: Limits calls the three wider kinds \"beyond health\"; the statement has no word for health, and the phrase sets no limit. Wording and code equal the PDF, read on the page image (page 38, printed without the grade under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 226
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-1-m",
+      "wording_sha256": "4642e5272af48f6d570045a171bccb0ebf203ff19979df1ef4bda9d1f4f8d0db",
+      "text_sha256": "ed2740c9a32fd36f21184c61df1d2a0ceddaf6bba94f6cb60ebef0ea7e3e1822",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "\"In a child's hands\" adds clinical claims the statement does not contain. Its last sentence has the child say how sadness after a loss differs from \"depression that lasts\": the statement asks for three things about each of the three matters it names; it does not ask the child to tell two of them apart, and it gives no criterion, such as how long it lasts, for the third. The bracketed list of what can bring them on also ends in \"no clear cause\", a claim about the third matter that the statement does not make. Take the differentiating sentence out, or keep the activity to what the statement asks for each of the three (how it shows, what brings it on, what it does to health). Smaller: Limits calls all three \"conditions\"; the second is an event in a life, not a condition. Wording and code match the PDF (page 40, printed as 1.1.M under Standard 1; the statement starts and ends where the record does). The Summary is faithful and is not a near copy.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 55
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-1-m",
+      "wording_sha256": "4642e5272af48f6d570045a171bccb0ebf203ff19979df1ef4bda9d1f4f8d0db",
+      "text_sha256": "cd37e9194ed7a0cf1cf11fb5115a53ab65fc8391063e1c6c7e170e273c83a5c9",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the sentence that had the child tell sadness after a loss from lasting depression is gone, and so is \"no clear cause\"; Limits now says three subjects. Looked through the whole record for clinical claims, durations and warning signs: no duration and no criterion remains. What remains is examples of the things the statement asks for (signs and causes in brackets, pooled over the three subjects) and, in Common mistakes, two points of the pack's own: that children use \"depressed\" for any sad day, and that stress shows in the body. Both stand under the pack's-inference heading and contradict nothing; reported to the lead. The Summary is faithful and not a near copy. Limits is right about 6.5.2.M. Wording and code equal the PDF, read on the page image (page 40, printed without the grade under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 55
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-1-s",
+      "wording_sha256": "4408fc843f067298ab1fa58b16df7077c909a66b098f48932803833ea3b83559",
+      "text_sha256": "d0633983a8cb3accaa48db1a4f4d9073135f5a9113851193051713c35d50ee23",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary weakens the verb. The statement asks the child to explain the methods, which is more than saying which methods exist; the Summary has the child tell \"which ways there are\", which is naming them. The record's own Limits and example have the child explain. Fix: have the child tell how the three things can be brought down, or explain the ways. All three problems are kept, and Limits is right that settling a disagreement in practice is 6.7.1.S. Not a near copy. Wording and code equal the PDF (page 37, printed as 1.1.S under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 13
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-1-s",
+      "wording_sha256": "4408fc843f067298ab1fa58b16df7077c909a66b098f48932803833ea3b83559",
+      "text_sha256": "e05b6f0f95e1d37f2ea5bcf904141940d05e1a361ab0398c9332f0e68143dd01",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the child now explains the ways and does not only tell which exist. All three problems are kept, in the reverse order. Near copy looked at: the statement is eight words; the verb and the three named problems are kept, the noun for the ways and the verb for lessening are the pack's. Close, not counted. Limits is right that settling a disagreement in practice is 6.7.1.S. Wording and code equal the PDF, read on the page image (page 37, printed without the grade under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 13
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-2-a",
+      "wording_sha256": "e9ff5e569852a7b710291e8b09cd9e94fa8ac325edc927b55edb0846ac86c94b",
+      "text_sha256": "853ba4a554fef5fff3e43f8c5b604f6fcb12d76923d2eb3b7e59aedf7ce7fde9",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary gives the second of the three substances as \"smoking\": the statement names the substance itself, and using it covers more than smoking (it is also chewed and sniffed); \"smoking\" also stops naming the substance, since other things are smoked too. The Summaries of 6.1.1.A, 6.2.1.A, 6.3.1.A and 6.8.1.A in this lane, and the grade 4 lane throughout, keep the substance's name. Fix: name the substance (\"using tobacco\"). Otherwise faithful: \"names\" for the statement's verb is read as saying what the alternatives are, and Limits is right that doing them is 6.7.1.A. Not a near copy. Wording and code equal the PDF (page 38, printed as 1.2.A under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 249
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-2-a",
+      "wording_sha256": "e9ff5e569852a7b710291e8b09cd9e94fa8ac325edc927b55edb0846ac86c94b",
+      "text_sha256": "4cb00c2abb1c7c08c7211ad541900a30193b200c6eb1e564c67db2c9d9fbf690",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the Summary names the second substance and no longer gives one way of using it. Near copy looked at: the statement is ten words, five of them the names of the substances; the Summary keeps those and one adjective and turns the noun for the options into a clause. Not a near copy. Limits is right that doing them is 6.7.1.A. Wording and code equal the PDF, read on the page image (page 38, printed without the grade under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 249
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-2-m",
+      "wording_sha256": "dcddc78f4cbb8548a2cc167726bd00c341f2f5dc924f9aca2463771d8906e730",
+      "text_sha256": "d94cd3c8e5e22f13403c6acca2118c5b4d5ae1b9de0d93b55914890ad06d6466",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 70
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-2-s",
+      "wording_sha256": "548a3317a3c29b16fa73a126cd13ccb285850a84b6318ac0838f704da0495241",
+      "text_sha256": "0932962e7278b8b721f0c6cfb1bd718362c6dc3003cea005d6fb5f39e7cd0208",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 24
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-3-a",
+      "wording_sha256": "6d2a16a29250518febc96d6efa8b6a977fdad850226440c23bf10aef16204071",
+      "text_sha256": "6a3a21a044454919918523b43252f0f24cd995572ec2d368ab01b8888e9022c7",
+      "verdict": "confirmed",
+      "note": "Summary: the first kind of medicine is given as one \"a doctor prescribes\"; the statement's word does not say who prescribes. Read as the usual sense of the word and not as a limit. The plain text layer prints the page's two footnotes after this statement (the last on page 38); they belong to 4.2.S and 4.3.S, and on the page image nothing else stands in this statement's row.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 262
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-3-m",
+      "wording_sha256": "8737016b6326334df4e5e6cad07711c7c8ee9dcddd16131e91e20cd1ca089c75",
+      "text_sha256": "f1478866fde01808857b8f675cd878ef197e5ab4797eee881111ea7816fffa78",
+      "verdict": "confirmed",
+      "note": "\"In a child's hands\" has the child say the changes \"are normal\"; that reassurance is the pack's, not the statement's. It names no condition and gives no advice, so confirmed.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 82
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-3-m",
+      "wording_sha256": "8737016b6326334df4e5e6cad07711c7c8ee9dcddd16131e91e20cd1ca089c75",
+      "text_sha256": "dcbfa9eaae79dce7d5f4755d03889e020e880e592854517b3b0740d4cbf9f12b",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 remark is taken up: the reassurance is now marked as the pack's example, something a child might add and not something the statement says. Nothing else changed. The Summary is faithful and not a near copy; Limits holds. Wording and code equal the PDF, read on the page image (page 40, printed without the grade under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 82
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-3-s",
+      "wording_sha256": "5d2700b55abb857529db20a279311347b3547c018245a4b719c113060ea09ffd",
+      "text_sha256": "e4db27ca95ff8e05df4b3f2131d5c7c478802860a8f2e4b6170d2f002d8f84dd",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Two things in the Summary. (1) It narrows whom the risks fall on to the \"person who joins a gang or spends time with one\". The statement speaks of the risks in general, and the record's own notes count the danger to the family among them. (2) It says what the involvement is (joining, or spending time with a gang). The statement uses one general word for it and, as the record's own Limits says, does not say what counts. Fix: say what risks being involved with a gang brings, without naming forms of involvement or whose risks they are. Not a near copy. Wording and code equal the PDF (page 37, printed as 1.3.S under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 44
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-3-s",
+      "wording_sha256": "5d2700b55abb857529db20a279311347b3547c018245a4b719c113060ea09ffd",
+      "text_sha256": "f111570d0e5629e325e724a15b51d9baf85bec1b50f000af073d7d7a75496589",
+      "verdict": "confirmed",
+      "note": "Round 2. Both round 1 faults are resolved: the Summary no longer says whose dangers they are and no longer names forms of involvement. Near copy looked at: the statement is six words; the verb is kept, the noun for what is described is replaced and the closing noun phrase is turned into a clause. Close, not counted. Limits holds. The example list is built around a member and takes in the family; it is an example. Wording and code equal the PDF, read on the page image (page 37, printed without the grade under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 44
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-4-a",
+      "wording_sha256": "bba31fcf81c86a56a8728c66e2562bb605db0b23a1fd7f820814b5e0b04bc962",
+      "text_sha256": "af2fa19c93ecc3f5cc1c21224bf19ebe622d9816e796a15b8ab188d5a9b1598b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 5
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-4-m",
+      "wording_sha256": "866f8bc9715f7375be5fbe236fb4ce17a970c8ee040191f2368cb9c8100a55a8",
+      "text_sha256": "81c883b41595420704e11de94395a0fa1cb7a6d059815631ccce23dd846cd57f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 91
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-4-s",
+      "wording_sha256": "d70277dfdd5f4c048a29662b3c57af463116eeea43c4436022e27a2c6333da6d",
+      "text_sha256": "2ed966c75e550053c95169c98c69448bb51c51fabe442ff0732d3dda1fa3747c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 53
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-5-a",
+      "wording_sha256": "5062644c7ab25fe710f8e815adcd8057a93304d01d960742ea4132515af51f1b",
+      "text_sha256": "2183490e5c4be46e1e45508d14924e3728332690c3e0997923ef6ef3c0ef2ba6",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 16
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-5-m",
+      "wording_sha256": "7f753d086afb70a692e2e63454744179f7ee53761ccac4905953378e524663c1",
+      "text_sha256": "8eec2c4d577379bd904a8b32b7a53b5f3bd8a3b462943fb75a0596ef6158d866",
+      "verdict": "confirmed",
+      "note": "\"In a child's hands\" names particular conditions (diabetes, asthma, a wheelchair, a blood-sugar check). They are examples inside the two general terms the statement itself uses, so confirmed; the statement names none of them.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 103
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-5-s",
+      "wording_sha256": "8ebc57c0a18f4265bfaa74986b4cb623f4d95839a0fd21cf5bc1eab437651d96",
+      "text_sha256": "e7af01303f5e2e41f5ab7e4ecf3475a1f40a26937c488e566a9fa45ebd9edf89",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, last sentence: it reports the footnote only in part. On the page (37) the statement carries a raised 1, and the footnote at the foot of the page points to two places, one section of the Education Code and the document's own glossary, and says what for: what the statement's key noun means in law. Limits says only that a footnote cites the Education Code, next to a sentence that the statement lists no kind of weapon. Nothing is contradicted (the glossary entry, PDF page 71, is a general definition with one exclusion and no list of kinds), but a designer is not told that a legal definition exists and where it is. Fix: say that the footnote points both to the Education Code and to the glossary, where a weapon is defined in law. The same Limits sentence was left as a note in the kindergarten, grade 1 and grade 4 checks; it is the reason here because this check was asked to hold Limits to reporting the footnote in full. Wording: the record leaves the raised digit out and does not end in a bracketed digit, which is form; the footnote equals the record's accompanying text apart from the export's bracketed marker. Summary faithful, all three settings kept. Not a near copy. Wording and code equal the PDF (page 37, printed as 1.5.S under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 65
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-5-s",
+      "wording_sha256": "8ebc57c0a18f4265bfaa74986b4cb623f4d95839a0fd21cf5bc1eab437651d96",
+      "text_sha256": "5e0738124c07ccc430c2e015e1cbc474b7ccbeef94f43279cbaa440ff4f71a81",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: Limits now reports the footnote in full, both places it points to (a section of the Education Code and the document's own glossary) and what for (what counts as a weapon in law). Checked on the page image: the statement carries a raised 1, the first footnote at the foot of page 37 says this and belongs to this statement, and the glossary (PDF page 71) has the entry. Form: the record leaves the raised digit out, and the accompanying text carries the export's bracketed marker where the page has a raised digit. The Summary is faithful, with all three settings; not a near copy. Wording and code equal the PDF, read on the page image (page 37, printed without the grade under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 65
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-6-a",
+      "wording_sha256": "81e00c7e0dea3cec094e55af23ff48e95c0bb6d2c3e4ee7c1f78623fcbe4032b",
+      "text_sha256": "e3a3448572b55c5a11190c768bb7cfb5bd7107c9c2e8af9e07e4c4e7fc4bd839",
+      "verdict": "confirmed",
+      "note": "Summary: \"into dependence and then addiction\" puts the statement's two nouns in a sequence; the statement speaks of the stages of the two together and does not order them. Read as following the order in which the statement names them; Limits says correctly that the stages are neither named nor counted.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 25
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-6-m",
+      "wording_sha256": "c242c56cfd33da330c1d9948fcf37cfd544500efdf02faee2cfbdf629901a7bf",
+      "text_sha256": "1fdf2a87024ea1b2b6b62e5b41c7012301931fc498faac567ec936d643feb418",
+      "verdict": "confirmed",
+      "note": "\"In a child's hands\" supplies reasons of the pack's own (a mind can be hurt or ill as a body can; problems often grow when kept secret). The statement asks for reasons and gives none; these are read as examples, so confirmed.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 122
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-6-m",
+      "wording_sha256": "c242c56cfd33da330c1d9948fcf37cfd544500efdf02faee2cfbdf629901a7bf",
+      "text_sha256": "5f857ef7f779fde1552dbe2f0d628e6a4f1691ec6036728d533a41db68728544",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 remark is taken up: the reasons are now marked as the pack's examples, with a sentence saying the statement supplies none. The Summary is faithful, with both adjectives and all three kinds; not a near copy. Limits is right about 6.4.1.M. Wording and code equal the PDF, read on the page image (page 40, printed without the grade under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 122
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-6-s",
+      "wording_sha256": "4020be61886c52a8818c8d23fb489bc076ff61617b5aec97ceb779813486a76d",
+      "text_sha256": "8bc9b1218b1ffa84e0345ed7a9df67a47c70f3bd14e4776f1ce0f91fb21d4c98",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 83
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-7-a",
+      "wording_sha256": "c8cc3362398a2ca7a6ad946d73825c74795e3f894b764d830c5837581ec01474",
+      "text_sha256": "466b518e2f9d871971bd19caee8733aed1eea87e91201308c579df9e0fd76a03",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Two faults. (1) Summary: the second of the three substances is given as \"smoking\": the statement names the substance itself, and using it covers more than smoking (it is also chewed and sniffed); \"smoking\" also stops naming the substance, since other things are smoked too. The Summaries of 6.1.1.A, 6.2.1.A, 6.3.1.A and 6.8.1.A in this lane, and the grade 4 lane throughout, keep the substance's name; the chewed form is one that matters for sport. Fix: name the substance. (2) Limits, last sentence: it says drugs taken to improve performance are not mentioned. The statement's third term is general and covers any other drug, and the statement singles out performance in sport as included; such drugs fall inside both, so the sentence reads as a limit the statement does not set. Fix: drop the sentence. The rest holds: sport is given as one included case of bodily activity. Not a near copy. Wording and code equal the PDF (page 39, printed as 1.7.A under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 45
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-7-a",
+      "wording_sha256": "c8cc3362398a2ca7a6ad946d73825c74795e3f894b764d830c5837581ec01474",
+      "text_sha256": "f221b6f543b3109903781bbe8980c1a6e9323259409584b13c22b85be91b1b09",
+      "verdict": "confirmed",
+      "note": "Round 2. Both round 1 faults are resolved: the Summary names the second substance, and the Limits sentence about drugs taken to improve performance is gone. What is left of Limits holds: activity of the body in general, with sport as one included case. Remark, not counted: the Summary speaks of a person's \"ability to be\" active where the statement names only the activity; read as the plain sense. Not a near copy. Wording and code equal the PDF, read on the page image (page 39, printed without the grade under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 45
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-7-m",
+      "wording_sha256": "1bfe0d65e88d747b167d69608823782d1f18ab5ab2ce1760a787613d37b6f823",
+      "text_sha256": "e4dd20cd595a6519bf0b0f0674301778dc65f436618edfd8ce85f48fd59f146f",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the third of the three areas the statement names. The statement's word there covers every way of showing emotions and opinions (a gesture, touch, a face, something written or posted, as well as speech); the Summary makes it how they \"are voiced\", which reads as speech, and Limits repeats it (\"the way emotions and opinions are voiced\"). The record's own \"In a child's hands\" goes wider than speech. A small narrowing; \"expressed\" or \"shown\" in both places would be faithful. Wording and code match the PDF (page 40, printed as 1.7.M; the statement starts and ends where the record does). Not a near copy; the rest of the Design notes is in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 140
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-7-m",
+      "wording_sha256": "1bfe0d65e88d747b167d69608823782d1f18ab5ab2ce1760a787613d37b6f823",
+      "text_sha256": "0d2b6ca217ac24b819de916f1df58297be1bcd21526d545e84f11590180cae5b",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: \"voiced\" is now \"expressed\" in the Summary and in Limits, so the third area is no longer narrowed to speech. Faithful, all three areas kept; not a near copy. Wording and code equal the PDF, read on the page image (page 40, printed without the grade under Standard 1 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 140
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-7-s",
+      "wording_sha256": "3b4a1a214176682cc8211d043f984c2a263296d058d6b2ccdabd62ce19e7e69d",
+      "text_sha256": "3c516b356d834c61178f1e65bb6f219f7c18e5bd04875a9a191aafec50ce98a1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 97
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-8-m",
+      "wording_sha256": "c5a08986a22b7791a81e9d11d8e1a0b94b57743cf7364a1605be560be6d206f3",
+      "text_sha256": "4c71acc4013614f579d2e78d5fd84c151602cbe47f3009e730a9fa54b7f28c96",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 159
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-8-s",
+      "wording_sha256": "9685f957d88d3969705514e6a8e9b17b375081824b0014d9401719d78f336423",
+      "text_sha256": "703c319ac9d112818b2774e31a445208c9c59cdbd071e1346219d778855c3019",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 107
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-9-m",
+      "wording_sha256": "0b77731459c7ae4abc9df54449a94d7ed2436cd9d36d52454a914e93222a8958",
+      "text_sha256": "d40f17b3f1a973da998646ebf2d750d1dc5c1f15364f5b4c67cbbe690ab7e315",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 178
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-1-9-s",
+      "wording_sha256": "18e95814d9b346b01308921b04732734d4c8f9327c36a31017a949b30525a6da",
+      "text_sha256": "33911f2af47ad7281f8d659436a9ed1ccb468ef02b888d2e362e27b8982a2976",
+      "verdict": "confirmed",
+      "note": "The PDF prints a raised 2 directly after the closing full stop (page 37); the record's wording leaves the marker out and does not end in a bracketed digit, so the sentence is equal word for word. The footnote at the foot of the page, a bare reference to one section of the Education Code, equals the record's accompanying text apart from the export's bracketed marker, and Limits reports it in full.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 118
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-2-1-a",
+      "wording_sha256": "103d4570b0b142591094367aeefeb6e158fb553f4bece2c0b24eb75c4a52a5ff",
+      "text_sha256": "fcc039ca3327fd8fc686cf319d701344f91af347a020828f75826a7a9c12f4d4",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 68
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-2-1-m",
+      "wording_sha256": "b6cf4dbecfb98745406db763de5c9e8b5e7b50974ffb5c4a17a8e16d6e391edd",
+      "text_sha256": "7a49a12f3ed63017737680f6bb29105381b3d52a45946647e8dd1bfb1cb910da",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 192
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-2-1-s",
+      "wording_sha256": "4f6275d6e6019c5ac3b3acee5b1faecc4c79321bcc76db812d3023ac503b58f7",
+      "text_sha256": "8509eac30cb22bdc172e3d6561e6f636fb8efee740181bedfb7978478897df7a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 138
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-2-2-a",
+      "wording_sha256": "a8a54fd4d7bbf3129be5ce7dd4449734919e262f1da80a946788b533f834b181",
+      "text_sha256": "de951f44a0a2980eda778b9e5e8ff6e9e3f4561342a941bb2225d3a2a7dca6ce",
+      "verdict": "confirmed",
+      "note": "Limits, last sentence, says the statement does not say whether the role models are in adverts or in the child's own life. The statement gives them as one of the selling techniques it includes (the sentence before in Limits says so), so the doubt is the pack's; nothing a designer relies on changes.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 84
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-2-2-s",
+      "wording_sha256": "45dda22c6dc9932e61f2ce7bea4f4bfd46e3e352aa4d909abbf64c04e385c526",
+      "text_sha256": "345f7ae9e361ea7eadcd857fcb1975585bc09772fdc20032ac3405186fe2a6e3",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 153
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-2-3-a",
+      "wording_sha256": "edebc2181c63362f8bb1e998c7e3b3a29a40c720769e539a5bc4b6aa16f89f01",
+      "text_sha256": "676c549a4991c062934e3772dcb685c02e8007e6fc53e4a3bf1da71c5da87780",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 112
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-2-3-s",
+      "wording_sha256": "994ec87ec642fd2df5b437092a039ae7bb2ad5099611e0d37528c1ce4f5aa501",
+      "text_sha256": "6ee9887b64c506e2e7382acead4652cf62a76f482681d26d246ba0328126d9e7",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 164
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-2-4-a",
+      "wording_sha256": "2c7626d03809bfcab5c4a2b7f32ed2a3eacb93256243423b656d10e304013514",
+      "text_sha256": "c7fc39cf5f0c071f42104db2f88a199b6cb4e29b6b71729f969428ddd9bd723c",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, second sentence: it says the statement \"leaves tobacco out\". The statement names one substance and then uses a general term for all the others. It does not name tobacco, but the document's own usual phrase for this content area counts tobacco among drugs, so the general term covers it. The sentence reads as an exclusion the statement does not state. Fix: say that tobacco is not named separately here, unlike in most statements of this content area, and that the general term does not exclude it. Remark on the Summary, not the reason: \"a person's culture\" gives the culture an owner the statement does not; read as the usual sense. Summary otherwise faithful. Not a near copy. Wording and code equal the PDF (page 39, printed as 2.4.A under Standard 2 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 144
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-2-4-a",
+      "wording_sha256": "2c7626d03809bfcab5c4a2b7f32ed2a3eacb93256243423b656d10e304013514",
+      "text_sha256": "89444910d714a53f5e04ba42e6d7d3f56eb0d5b010733fd6fde92366e9cdddfa",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: Limits now says that tobacco is not named separately and that the general term does not exclude it. Its claim that most statements of the content area name tobacco holds (13 of the 20 on pages 38 to 40). The round 1 remark is taken up too: the culture no longer has an owner. Remark, not counted: the Summary gives the statement's noun for using as \"whether people\" drink or take; how much and in what way fall under the same noun. Not a near copy: the two influences stand in the other order and the sentence is recast. Wording and code equal the PDF, read on the page image (page 39, printed without the grade under Standard 2 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 144
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-3-1-a",
+      "wording_sha256": "9aabc7cd4bd29d3e4030b273dce35a3d65d7bb38400cbc0c6e5b1b75fae0b8a1",
+      "text_sha256": "c1485b90e8e5008a1222d37bffe00ebd663b328290b3a72402984bac09ba6344",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 165
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-3-1-m",
+      "wording_sha256": "340a608c7f4a7ebd8ad03e02246009385580d014aa8833fbbfca3c03608f1686",
+      "text_sha256": "24d530dcb24cdd85e45e9fd14d79e0308831f2ad01e24148f6c964b7a0f71667",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 212
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-3-1-s",
+      "wording_sha256": "fff13bf269be16680c10c91c9f1e7e9ee308a1c0b8d3660f7d372de26af3bd82",
+      "text_sha256": "0291c81750a7963dcc495218d26b2f77fbf2f9671b2020057034f4554b800724",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 183
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-3-2-m",
+      "wording_sha256": "7dd5f468909f9c32a3529d32bf5227a576c1d71b73c6aef2e643adac909dc28a",
+      "text_sha256": "6385881e7dbb41aaf71b98a6f191a58ca6e4ed923767d3041bcaf5061938a428",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 232
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-3-2-s",
+      "wording_sha256": "ab895cdb20c1c9e8649b3a05ed0eb1a815ba3a4fb34040a230a50f11e3b8dbd0",
+      "text_sha256": "747dd578335646af6017e94deec1a488e1cf10aa2c261eab62dbcc9a1d48c2c0",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 194
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-1-a",
+      "wording_sha256": "a0ea46cc5db97d75b5702fb7c5dffe4779e067a682134feef7270203d1cfc228",
+      "text_sha256": "a95e1a1a59799394dddbd32d242bacb1ba785ca7cce32606cbbc721ab5a9840b",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary gives the second of the three substances as \"smoking\": the statement names the substance itself, and using it covers more than smoking (it is also chewed and sniffed); \"smoking\" also stops naming the substance, since other things are smoked too. The Summaries of 6.1.1.A, 6.2.1.A, 6.3.1.A and 6.8.1.A in this lane, and the grade 4 lane throughout, keep the substance's name. Fix: name the substance. Remark, not the reason: the Summary and Limits read the statement's word for communication in words as spoken (\"spoken words\", \"about speech\"); that is the usual sense, though the word also covers written words. Limits is right that refusing under pressure, in words and without, is 6.4.2.A. Not a near copy. Wording and code equal the PDF (page 39, printed as 4.1.A under Standard 4 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 186
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-1-a",
+      "wording_sha256": "a0ea46cc5db97d75b5702fb7c5dffe4779e067a682134feef7270203d1cfc228",
+      "text_sha256": "9f4433ac79522c482aeebea96dc3f187448b7b6ed4cae27857fd50f77b8c6c85",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the Summary names the second substance. The round 1 remark is taken up too: the Summary and Limits no longer narrow communication in words to speech. Remark, not counted: Limits describes the neighbour 6.4.2.A as refusing \"a direct offer\"; that statement speaks of pressure, which is wider. It is a description of a neighbour, not of this statement. Not a near copy. Wording and code equal the PDF, read on the page image (page 39, printed without the grade under Standard 4 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 186
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-1-m",
+      "wording_sha256": "5e47703a137080f7f573eda18c01fb1cba1cca7935fbb07f2f1b0d00e54d6539",
+      "text_sha256": "c7b32355a1060a8a321b333e51390551d0fd8e827ff54a6026aea3da46f8da8f",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the statement's verb (its first word) to rehearsal: \"rehearses\". That verb covers both exercising the skill in a rehearsal and using it for real, and nothing in the statement confines it to role play: a child who really goes to an adult and asks meets it too. The same fault was found in grade 5 (5.4.1.P). Limits is right as it stands (\"rehearsal counts\" does not exclude real asking). Use a verb that leaves both open. Wording and code match the PDF (page 40, printed as 4.1.M under Standard 4; the statement starts and ends where the record does). Not a near copy; the Design notes are in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 253
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-1-m",
+      "wording_sha256": "5e47703a137080f7f573eda18c01fb1cba1cca7935fbb07f2f1b0d00e54d6539",
+      "text_sha256": "df2a13f28288db8253209481677c0ec8114e343bc29c268e38e2b347f4a47f2d",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the verb is now the statement's own, and Limits says a rehearsal counts and so does asking for real. The longest shared run is the list of the three kinds of health, which cannot be put otherwise; the sentence is recast, with the adults first. Not a near copy. Limits is right about 6.3.1.M. Wording and code equal the PDF, read on the page image (page 40, printed without the grade under Standard 4 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 253
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-1-s",
+      "wording_sha256": "8690fec7690d0bbd157c5440ceef02529a62625fed272af81a1109e420e4d8fd",
+      "text_sha256": "e0d03c6181e4393b478758ed3620a1fff31fe593b81b41c5bc20e6b46b83c292",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits narrows the statement to speech: \"the child does the talking\" and \"the people spoken to\". The statement speaks of communication skills in general; unlike the two matching statements of the neighbouring content area (6.4.1.A, 6.4.2.A) it does not say in words or without. The Summary keeps it general (\"communicating well\"), and the record's own example includes looking at the person. Fix: \"the child does the communicating\" and \"the people communicated with\". Limits is right that gangs and weapons have their own statements (6.4.4.S, 6.4.2.S, 6.4.3.S). The plain text layer prints the page's two footnotes after this statement (the last on page 37); they belong to 1.5.S and 1.9.S, and on the page image nothing else stands in this statement's row. Not a near copy. Wording and code equal the PDF (page 37, printed as 4.1.S under Standard 4 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-1-s",
+      "wording_sha256": "8690fec7690d0bbd157c5440ceef02529a62625fed272af81a1109e420e4d8fd",
+      "text_sha256": "4772f3968515d8ce798338232c8e36608f40650de5219d6cb0b72be4374e233c",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: Limits now speaks of communicating and of the people communicated with. The Summary's verb is now the statement's own, which leaves a rehearsal and real use both open; \"well\" keeps the adjective, and both purposes are kept. Not a near copy: the purpose is recast as a clause of result. Limits is right about the three neighbours (6.4.4.S, 6.4.2.S, 6.4.3.S). On the page image nothing else stands in this statement's row; the two footnotes under it belong to two other statements. Wording and code equal the PDF, read on the page image (page 37, printed without the grade under Standard 4 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 37,
+        "offset": 222
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-2-a",
+      "wording_sha256": "6c8a3c88e096fa22ad1b2701978ca64cf96d13d34043effbc1a469a0fa4952c5",
+      "text_sha256": "5c1136b954502fd9a2b5bd5db3d888346be0012d97f5b6f51fe68056b582bc8b",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary gives the second of the three substances as \"smoke\": the statement names the substance itself, and using it covers more than smoking (it is also chewed and sniffed); \"smoking\" also stops naming the substance, since other things are smoked too. The Summaries of 6.1.1.A, 6.2.1.A, 6.3.1.A and 6.8.1.A in this lane, and the grade 4 lane throughout, keep the substance's name. Fix: name the substance (\"use tobacco\"). Everything else holds: both kinds of refusal skill are kept, and Limits is right that the statement names nobody as applying the pressure. Not a near copy. Wording and code equal the PDF (page 39, printed as 4.2.A under Standard 4 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 206
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-2-a",
+      "wording_sha256": "6c8a3c88e096fa22ad1b2701978ca64cf96d13d34043effbc1a469a0fa4952c5",
+      "text_sha256": "06c0c666f9ce543c8dc816d51a9bbf7f09ec8868d516bd2e5c9a895c47f05575",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the Summary names the second substance. Both kinds of refusal skill are kept, and Limits is right that the statement names nobody as applying the pressure. Remark, not counted: the statement's adjective for the skills has no word of its own in the Summary; \"shows how to say no ... when pushed\" is read as carrying it. Not a near copy. Wording and code equal the PDF, read on the page image (page 39, printed without the grade under Standard 4 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 206
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-2-m",
+      "wording_sha256": "26657f73e025dd4d011f650e5b1ee0bbcf6e99f4f793058dc0e34b015e67dbaa",
+      "text_sha256": "ba7e6c2b6737cb7a81facf24807f82a659a34dcacdd29e70f5cad5c4ebb8602e",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 270
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-2-s",
+      "wording_sha256": "16c1f114ff347cda1dba3ee351624be87861b47381f27c02847dad2c88dcc59f",
+      "text_sha256": "7e11c1f1954510cc313c834e41842081a38fbf4dd7646caeeba330a69308fd5a",
+      "verdict": "confirmed",
+      "note": "The PDF prints a raised 3 directly after the closing full stop (page 38, the first statement on the page); the record's wording leaves the marker out and does not end in a bracketed digit, so the sentence is equal word for word. The footnote at the foot of page 38, a bare reference to one section of the Education Code, equals the record's accompanying text apart from the export's bracketed marker, and Limits reports it in full. Summary: it makes the child the one who comes across the weapon or knows of it; the statement does not say who finds it. Read as the obvious sense.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 5
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-3-m",
+      "wording_sha256": "9348206abe245ef6e2ad0012f2a2b8a006d115a355752d0f7091ad2251d455b2",
+      "text_sha256": "a31c9eb25b0e1da3137103cef5d9107e4c9985a37c6a24b57e6c711bd96f728c",
+      "verdict": "confirmed",
+      "note": "The Summary adds \"by words and actions\", \"human\" and \"to others\". None narrows the statement here (the two manners together leave nothing out, and the diversity meant in this content area is among people), so confirmed.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 5
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-3-s",
+      "wording_sha256": "ce21e7d82358d8c3f524ccb3e1a137bb0cf2abb73f3a716c0022fcdf68b86fbc",
+      "text_sha256": "de7fa90159aa982485004bf88c549580de9d6c7b580ccb680c379706c67ba76a",
+      "verdict": "confirmed",
+      "note": "The PDF prints a raised 4 after the closing full stop (page 38); the record's wording leaves it out, which is form. Accompanying text: the PDF's footnote 4 is a one-word back-reference to the footnote above it; the export, which the record follows, writes the reference out in full (the same section of the Education Code). Same content, different form. Limits reports it correctly.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 26
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-4-m",
+      "wording_sha256": "d246d9b067c51096aec3c9dd5d2565ce06ecbd452ed41762ad08622bb4582760",
+      "text_sha256": "94d63a92fd9cb97c09e128c2e69f226ce229c1c854a66b6c6dd1c10b1c94d01c",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds an outcome. The statement asks the child to show that they are able to use the steps; it does not ask that the conflict end settled. The Summary makes what is shown that the child \"can settle a conflict by going through the steps\", so a child who uses the steps well in a quarrel that stays open would meet the statement and not the Summary. The record's own Limits has it right (\"It is about using them\"). A small addition; say that the child shows they can use the steps for resolving a conflict. Wording and code match the PDF (page 41, printed as 4.4.M, the second statement on the page; the statement starts and ends where the record does). Not a near copy.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 15
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-4-m",
+      "wording_sha256": "d246d9b067c51096aec3c9dd5d2565ce06ecbd452ed41762ad08622bb4582760",
+      "text_sha256": "762688e1869edd0563ad5cb04f8892ba8b4265ac5cb603b46576a6988650041a",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the added outcome is gone; the child shows that they can use the steps. Near copy looked at closely: the statement is nine words; the Summary keeps its frame, with the opening verb and the noun for being able replaced and the closing noun phrase turned round. A close call, not counted, for the reason of length. Limits is unchanged and right. Wording and code equal the PDF, read on the page image (page 41, printed without the grade under Standard 4 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 15
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-4-s",
+      "wording_sha256": "0baaea92a7b56303b60feaadf510e34ea6ac1e88c3d76648c6e9e4cf2c07bdb0",
+      "text_sha256": "b40a9f8b78eb6583f9ddc0747520b5a17a05775155378378cd57c544696cd936",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Two narrowings. (1) Summary: the first of the two kinds of skill is given as \"what to say\"; the statement's term is communication in general, which is more than words said. (2) Limits: \"the child rehearses the words\"; the statement's verb covers both rehearsing the skills and using them for real, and a child who really turns down an approach meets it. The Summary's own verb (\"works on\") leaves that open. Fix: \"works on communicating and on refusing\"; in Limits, \"the child does this and does not only describe it\". Limits is right that 6.7.3.S is the neighbour about doing other things. Not a near copy. Wording and code equal the PDF (page 38, printed as 4.4.S under Standard 4 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 43
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-4-4-s",
+      "wording_sha256": "0baaea92a7b56303b60feaadf510e34ea6ac1e88c3d76648c6e9e4cf2c07bdb0",
+      "text_sha256": "e0a73bf148e137665df8b21223bf9192472f277719a01cef22f8f4963a34c2b8",
+      "verdict": "confirmed",
+      "note": "Round 2. Both round 1 faults are resolved: the first kind of skill is communicating in general, and Limits says in a rehearsal or for real. Limits now describes the neighbour 6.7.3.S with the general word for involvement. Near copy looked at closely: the statement is nine words; the Summary keeps its order and the stems of five of them (the verb, the two skills, the group, the involvement) and recasts the purpose. A close call, not counted, for the reason of length. Wording and code equal the PDF, read on the page image (page 38, printed without the grade under Standard 4 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 43
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-1-a",
+      "wording_sha256": "b7522c99e330b0a8d43e7beed43b7b78e1e1832060b70312bdba2504ee283091",
+      "text_sha256": "fe6e82b560e53134fdafac4234f046c9cea2b3597e5c44bf09664bbd2699301b",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Two narrowings in the Summary. (1) It makes the decisions and the relationships the child's own (\"their ties\"). The statement speaks of decisions to use and of relationships with two groups of people without saying whose; a child who thinks through another person's decision meets it too. (2) It gives the second of the three substances as \"smoke\": the statement names the substance itself, and using it covers more than smoking (it is also chewed and sniffed); \"smoking\" also stops naming the substance, since other things are smoked too. The Summaries of 6.1.1.A, 6.2.1.A, 6.3.1.A and 6.8.1.A in this lane, and the grade 4 lane throughout, keep the substance's name. Fix: a person's choice and that person's ties, and name the substance. Limits is right that the wider kinds of result are 6.5.3.A. Not a near copy. Wording and code equal the PDF (page 39, printed as 5.1.A under Standard 5 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 231
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-1-a",
+      "wording_sha256": "b7522c99e330b0a8d43e7beed43b7b78e1e1832060b70312bdba2504ee283091",
+      "text_sha256": "2651e31cbb4c889314b86324ea17057498dc7aebaa577a1e982f4cfb400f0f66",
+      "verdict": "confirmed",
+      "note": "Round 2. Both round 1 faults are resolved: the choice is now a person's and the ties are that person's, no longer the child's own, and the second substance is named. Limits is right that the wider kinds of result are 6.5.3.A. Not a near copy. Wording and code equal the PDF, read on the page image (page 39, printed without the grade under Standard 5 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 231
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-1-m",
+      "wording_sha256": "551771216bc554b7a7049e3319ee450d7039e4acf5cb882fe0720e49eb261d36",
+      "text_sha256": "cbc57d852e69ed843e800693ee9cb4770ec55a35347f86e1f99017302477cd61",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 31
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-1-s",
+      "wording_sha256": "c11b8a93088a8262f74093ea3931462254d14a65d69be1141ba9d401f0ce5c0b",
+      "text_sha256": "f9dd7543847639d2cc5a53520254134521943878de832dd913d1d268e539c83a",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 59
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-2-a",
+      "wording_sha256": "8db6afc145b2c46d1c8404a30fb0b0768d399b6e4d6e64acef3ff736ae7ff393",
+      "text_sha256": "ff80ebc16e377ca38716ae829a20087fb24f9436d8e7d884bd83a8881117bb44",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, last sentence: it says emergency services are not mentioned. The statement asks about situations that call for help from an adult and does not say which adult (the sentence before in Limits says so correctly). The people of an emergency service are adults, so asking them for help falls inside the statement's general term, and the record's own first case (a friend who has passed out) is one where a child would call them. The sentence reads as a limit the statement does not set. Fix: drop it. Remark on the Summary, not the reason: it names the one who asks as \"a young person\"; the statement does not say who asks. Read as the obvious sense. Summary otherwise faithful. Not a near copy. Wording and code equal the PDF (page 39, printed as 5.2.A under Standard 5 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 251
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-2-a",
+      "wording_sha256": "8db6afc145b2c46d1c8404a30fb0b0768d399b6e4d6e64acef3ff736ae7ff393",
+      "text_sha256": "3498c13f59b73c2600103209b5c7abb43d7e7e7f331159d3054e45890e68ff4d",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the Limits sentence about emergency services is gone, and Limits still says, rightly, that the statement does not say which adult. The round 1 remark is taken up too: the Summary no longer says who asks. Not a near copy. Wording and code equal the PDF, read on the page image (page 39, printed without the grade under Standard 5 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 251
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-2-m",
+      "wording_sha256": "6b3f5db8b284eabd36e92a04649761276461c3e1ee040512e608e57f7bc7fe47",
+      "text_sha256": "148dafe92640231fa73503afaf4960e74d01b7222bf460d0798fc882af25cac0",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "Two things. (1) The Summary adds an owner: \"when they are stressed, grieving a loss, or depressed\" makes the trouble the help-seeker's own. The statement does not say whose it is, so seeking help because of a friend's or a relative's trouble is covered too; the record's own \"In a child's hands\" includes such a case (a friend who says they want to disappear). Write it without tying the three to the person who seeks help. (2) \"In a child's hands\" adds clinical thresholds the statement does not contain: the cases carry fixed durations (two weeks, a month) and the child is to give the deciding sign as how long it lasts, how strong it is, whether daily things can still be done, and any talk of self-harm. The statement gives no situations and no warning signs, as the record's own Limits says; the sorting into \"handle it\" and \"get help\" by these criteria is the pack's, and a designer could take it for the standard's. Mark the cases as examples without fixed durations, or drop the criteria. Wording and code match the PDF (page 41, printed as 5.2.M under Standard 5; the statement starts and ends where the record does). Not a near copy; the cross-reference to 6.1.1.M in Limits is right.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 42
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-2-m",
+      "wording_sha256": "6b3f5db8b284eabd36e92a04649761276461c3e1ee040512e608e57f7bc7fe47",
+      "text_sha256": "326c4d541361acaf0222bd2f3f4134ddcf90dc7301f999519134724f51be3074",
+      "verdict": "confirmed",
+      "note": "Round 2. Both round 1 faults are resolved. (1) The Summary no longer makes the three troubles the help-seeker's own. (2) \"In a child's hands\" no longer sorts cases by criteria: the durations and the deciding signs are gone, three short cases are marked as the pack's examples, and no case is assigned to the side of needing help. Looked through the whole record for clinical claims, durations and warning signs: none in the Summary, in \"In a child's hands\" or in Limits. One remains in Common mistakes: a friend's talk of harming themselves that is kept secret. It stands under the pack's-inference heading, sets no criterion and contradicts nothing, so it is not counted; reported to the lead, who asked that nothing of the kind remain. The Summary is not a near copy: about half of the words are replaced. Limits is right about 6.1.1.M. Wording and code equal the PDF, read on the page image (page 41, printed without the grade under Standard 5 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 42
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-2-m",
+      "wording_sha256": "6b3f5db8b284eabd36e92a04649761276461c3e1ee040512e608e57f7bc7fe47",
+      "text_sha256": "e6e42aee99200149eb59c197bccdfd5624c1f251c07d94969251952539bcf3e4",
+      "verdict": "confirmed",
+      "note": "Round 3. Confirmed in round 2; the only change since is that the last sentence of Common mistakes, which named a warning sign, is gone. Looked through the whole record again for clinical claims, durations and warning signs. Durations: none anywhere. Clinical terms or thresholds: none; the only such word is the third of the statement's own three terms. Criteria for when help is needed: none; no case is assigned to the side of needing help. Warning signs named as such: none. Two things remain that the lead may want to know of, neither counted a fault: (1) the third of the pack's three short cases under \"In a child's hands\" describes a friend by a change in behaviour (no longer wanting to do things), which a reader could take as a sign; it is given as a situation to start from and is marked as the pack's example, and the statement itself asks for situations; (2) Common mistakes sets judging by how the person is doing against judging by the cause, which is general and names no sign. Summary faithful (no owner of the three troubles; the circumstances in which a person ought to look for help) and not a near copy. Limits right: three things, no list of situations or warning signs, and the signs and effects themselves are 6.1.1.M (checked: right). Wording and code equal the PDF (page 41, page image; printed without the grade under Standard 5 of the content area); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 42
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 3",
+      "round": 3
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-2-s",
+      "wording_sha256": "41ca0ec8950e09d3acc179db7ee0d0f34734fc3e1109312cf01b364c6da391ed",
+      "text_sha256": "21e648a737566e73ae38a5e21ee9dfec70a4c89d8fe187332ca72eff8d74bd5f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 77
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-3-a",
+      "wording_sha256": "49dddf9365ce2d708ce5c848c2905e12d76470f956a653fd372cb4a2212039b9",
+      "text_sha256": "43e73bfa50d146fbe6160edfb564542f15dfc6e752ca609c4f126eec350b0e40",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, second sentence: it says tobacco is not named in the statement. That is true of the words, but the statement names one substance and then uses a general term for all the others, and the document's own usual phrase for this content area counts tobacco among drugs, so the general term covers it. As written, the sentence reads as putting tobacco outside the statement, which the statement does not do. The same point as in 6.2.4.A. Fix: say that tobacco is not named separately and that the general term does not exclude it. Summary faithful: all four kinds of consequence are kept. Not a near copy. Wording and code equal the PDF (page 39, printed as 5.3.A under Standard 5 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 274
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-3-a",
+      "wording_sha256": "49dddf9365ce2d708ce5c848c2905e12d76470f956a653fd372cb4a2212039b9",
+      "text_sha256": "785d8440ebd3e6931c131940521701e42b4fe1518f288a376cc2afbc33a8544b",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: Limits now says that tobacco is not named separately and that the general term does not exclude it. The Summary is unchanged and faithful: all four kinds of result. Not a near copy. Wording and code equal the PDF, read on the page image (page 39, printed without the grade under Standard 5 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 274
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-3-m",
+      "wording_sha256": "4d30309edd2e4293b31ae4dcd6e80f6369f21d4e513baee777acb325a205ef52",
+      "text_sha256": "b3c9c7079d6f0de7bdf1f4c017723e560894d5e3e5612bdf31d4672abb6b843c",
+      "verdict": "confirmed",
+      "note": "\"In a child's hands\" has the child say the feeling \"is allowed and is not chosen, while the action is chosen\"; that is the pack's account of the contrast, not the statement's, which gives none. Read as an example of an answer, so confirmed.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 58
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-5-3-m",
+      "wording_sha256": "4d30309edd2e4293b31ae4dcd6e80f6369f21d4e513baee777acb325a205ef52",
+      "text_sha256": "c63ec053726ee35a20a5410fc6b67bd31d004fd03855a0092b0e31769b8a734d",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 remark is taken up: the account of feeling against action is now marked as one answer a child might give, the pack's example and not the statement's. The Summary is faithful, with both the comparison and the talk about what follows; not a near copy. Limits is right about 6.7.4.M. Wording and code equal the PDF, read on the page image (page 41, printed without the grade under Standard 5 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 58
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-6-1-a",
+      "wording_sha256": "f4bbd27f9e9147bbf2f019b3b8610f85e7e55595b48f6e2743c36579975fcd54",
+      "text_sha256": "718ba27dff25708c9b90c40642d888d2a4272ec5a3bc41259b7d9fd6c1e71548",
+      "verdict": "confirmed",
+      "note": "In the plain text layer the page number falls between the printed code and the statement (the last on page 39); on the page image the statement stands whole beside its code.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 39,
+        "offset": 296
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-6-1-m",
+      "wording_sha256": "7bbb22deafaedc8740e81b2ca5fc0b206ec638e56acddede775a0bf7681150de",
+      "text_sha256": "1d3458f32dbcf4c8d38a0860218a190de688e014816d2307a9ee1c524d7b1173",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 77
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-6-1-s",
+      "wording_sha256": "c28652c8998f671adf17d6ed85c24e2025d58091675956388d96022b7ad49456",
+      "text_sha256": "130e5bb2380c274d23e2f8a121561ff21845e514631ee0f6fbe3b8e945197f4c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 99
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-6-2-m",
+      "wording_sha256": "ed90503b0e145c0a379fff71576aa164f939cec8ddb550eef2e682130352b6c3",
+      "text_sha256": "386b7136addd2b75e4b31ff67ed1aba8a59698d36f27afa789208933f4c4c0fc",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds whose goals and who acts: \"a person's own goals when that person tries to settle problems by violence\". The statement is in the passive: it does not say who uses the violence, and it does not say that the goals affected are those of the one who uses it; the goals of a child against whom, or around whom, violence is used fall under it too. Limits then states this as a limit the statement does not set (\"about effects on a person's own goals, not on the victim\"). Write the Summary without tying the goals to the user of violence, and take the exclusion of the victim out of Limits. Wording and code match the PDF (page 41, printed as 6.2.M under Standard 6; the statement starts and ends where the record does). Not a near copy; the cross-reference to 6.1.9.M is right.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 88
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-6-2-m",
+      "wording_sha256": "ed90503b0e145c0a379fff71576aa164f939cec8ddb550eef2e682130352b6c3",
+      "text_sha256": "e79e2de55c5b1b5f2e5525e8d69a1b13a69b5443394a55489473144d0bd59e21",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the Summary no longer says whose goals or who uses the violence, and Limits now says the statement leaves both open. Not a near copy: the sentence is turned round. Limits is right about 6.1.9.M. Wording and code equal the PDF, read on the page image (page 41, printed without the grade under Standard 6 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 88
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-6-3-m",
+      "wording_sha256": "5beb46e5f17c366933bf93c409998a0491b98f7763619f9e024671d1340080fa",
+      "text_sha256": "a7c22144dfbcc9d26e1986640d8fe37e73a40bd473bc1ef249510fd2fd1e589b",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 105
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-1-a",
+      "wording_sha256": "93ab6d010444119399f55e49af8d47f6f0acbf3421172af7cf1ef8ea58eb5146",
+      "text_sha256": "b5841430a97097c25c2d0182829ada74ce509251badea20b0684a854a6506282",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary gives the second of the three substances as \"smoking\": the statement names the substance itself, and using it covers more than smoking (it is also chewed and sniffed); \"smoking\" also stops naming the substance, since other things are smoked too. The Summaries of 6.1.1.A, 6.2.1.A, 6.3.1.A and 6.8.1.A in this lane, and the grade 4 lane throughout, keep the substance's name. Fix: name the substance. Also in Limits: it says the statement asks for doing \"over time\"; the statement sets no time, as the same Limits says two sentences later (\"no length of time is set\"). Limits is right that naming the alternatives is 6.1.2.A. Not a near copy. Wording and code equal the PDF (page 40, printed as 7.1.A under Standard 7 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 11
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-1-a",
+      "wording_sha256": "93ab6d010444119399f55e49af8d47f6f0acbf3421172af7cf1ef8ea58eb5146",
+      "text_sha256": "d388816bb5daff3db0c8910e961f27f253c6a0a57433a6d529c93dfaa2e60b47",
+      "verdict": "confirmed",
+      "note": "Round 2. Both round 1 points are resolved: the Summary names the second substance, and Limits no longer says \"over time\" (it still says no length of time is set). The verb is now the statement's own, which leaves a rehearsal and real doing both open. Near copy looked at closely: the statement is ten words, five of them names of substances that cannot be put otherwise; of the rest the verb and one adjective are kept and the noun for the options is turned into a clause. A close call, not counted: a statement this short leaves a faithful sentence little room. The two weeks in the example are the pack's. Limits is right that naming is 6.1.2.A. Wording and code equal the PDF, read on the page image (page 40, printed without the grade under Standard 7 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 11
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-1-m",
+      "wording_sha256": "173b7915e9fe24bc7e89e9b17a446602dee96dbadc07204ee27a521fd9eb155b",
+      "text_sha256": "c954688a96654492a77ab9810b8e88b7bcdd5f9c8fd159d6579d2c5ab81641a1",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 129
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-1-s",
+      "wording_sha256": "e10c328d1888f9bc7a18fabfe48c88321b36a2777e349b368fc71a8f90a5b5d3",
+      "text_sha256": "b772ad8fd36f0b075297b543448c3d028faa138774f23eaab31cbb0699fbdeac",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 118
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-2-m",
+      "wording_sha256": "9b88c343fd2e627c4c004915d2780cf0d69c2652e51f714aafc48810727967b1",
+      "text_sha256": "77dbeb64c78c858ece97a431313b88fa413554d387ea57143f7ae4cc8f7be51d",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 139
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-2-m",
+      "wording_sha256": "9b88c343fd2e627c4c004915d2780cf0d69c2652e51f714aafc48810727967b1",
+      "text_sha256": "1ebbc3234bc5060c455efed39b5decdf5cd43656cf9b74602d01795dc3e4c9d6",
+      "verdict": "confirmed",
+      "note": "Round 2. Confirmed in round 1; since then the Summary's verb was changed to the statement's own verb of practising (it had been two verbs of the pack's). Read whole against the page: the Summary keeps the one action and its object, ways of dealing with stress, and adds nothing; of a statement of five words it shares only the verb and the last word, so it is not a near copy. Limits right: no strategies and no number of them are named; doing them is this statement, and making a plan for them is 6.6.1.M (checked on the page: right). The methods, the scale and the two weeks under \"In a child's hands\" are the pack's illustration of practising and are not presented as part of the statement. Wording and code equal the PDF (page 41, page image; printed without the grade under Standard 7 of the content area); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 139
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 3",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-2-s",
+      "wording_sha256": "a3cd3d482def757ce765bed5bccc67a20086fbc4b9cda0c886201b34f6e605e6",
+      "text_sha256": "13ecb223e523f6f02d3c7ef6527cb0a25cd27db551bf4228cc9dda70eff1ef5e",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary adds a manner: \"and does so as a habit\". The statement is five words and asks only for the doing; it does not say how often or for how long, and a child who uses a device safely in one session meets it. (The neighbouring 6.7.4.S reads the same verb the other way, as rehearsal; neither reading is in the statement.) Fix: drop the clause, or use a verb that leaves both open. Limits is right that the statement's noun is wider than the Internet and that talking over the dangers is 6.1.7.S. Not a near copy. Wording and code equal the PDF (page 38, printed as 7.2.S under Standard 7 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 127
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-2-s",
+      "wording_sha256": "a3cd3d482def757ce765bed5bccc67a20086fbc4b9cda0c886201b34f6e605e6",
+      "text_sha256": "b0d9086cf668aef90897bef54758ad49500d3948b9115b5f85530bfc454ffb57",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the added manner (\"as a habit\") is gone, and Limits says the child does these things without setting how often. Near copy looked at closely; this is the closest call of the round. The statement is five words and the Summary holds four of them in other grammatical forms, one of them moved to the end. Nothing is swapped because little can be: the verb, the quality and the thing are the whole statement. Not counted as a near copy, since any faithful sentence must hold the same three or four words; the automated check passes. Reported to the lead as a call that could go the other way. Limits is right that the noun is wider than the Internet and that talking over the dangers is 6.1.7.S. Wording and code equal the PDF, read on the page image (page 38, printed without the grade under Standard 7 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 127
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-3-m",
+      "wording_sha256": "9e0e658cfd60974e90866d3e86d195fbcc3f2c73a7d2cf023c82581db476de3a",
+      "text_sha256": "d985b25cadef16c26405774b3bd0327a4ff0eeabcc2a88661d57845cde2122f5",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 147
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-3-s",
+      "wording_sha256": "02de07edb805ce6b40d0bf2fddc8cc4c3ec6f916c3906d7e98b34e6cc6fdbe9f",
+      "text_sha256": "c58f3c86ecdbfec7f196a487935455b92d5ff0e48409c404dd3ffdeba3ba2d13",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows the statement's general word for being involved with a gang to \"joining a gang\". Involvement is wider than joining, and the neighbouring records say so themselves (6.1.3.S Limits: the statement does not say what counts as being involved; 6.4.4.S Common mistakes: a favour that does not seem like joining). Fix: \"in place of getting involved with a gang\". The verb is given as choosing and doing, which keeps it open. Limits is right about 6.4.4.S. Not a near copy. Wording and code equal the PDF (page 38, printed as 7.3.S under Standard 7 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 135
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-3-s",
+      "wording_sha256": "02de07edb805ce6b40d0bf2fddc8cc4c3ec6f916c3906d7e98b34e6cc6fdbe9f",
+      "text_sha256": "42d93396a690063d1a868b701c75de60ea48642c9fe81c9405f376a88e792ccb",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: the general word for involvement is back (\"getting involved with\"). The verb is now the statement's own. Near copy looked at: the statement is six words; the verb and one adjective are kept, the noun for the options and the closing noun phrase are recast. Close, not counted. Limits is right about 6.4.4.S. Wording and code equal the PDF, read on the page image (page 38, printed without the grade under Standard 7 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 135
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-4-m",
+      "wording_sha256": "e4bb60251fd42debee2a5a1bc57aac2a2f2d3577b14150beab207a63abc1749a",
+      "text_sha256": "fb0d31cfcca970f8117a7427126199b2c34b369fe5ea75832f1d0d18da2f60b7",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 163
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-4-s",
+      "wording_sha256": "2353f0a5ed760fa7d3b0a9ed2dac70cc44ca7a9f2b84d4093c22260f4e514e5c",
+      "text_sha256": "d7625822bb3de7669665e1fc460afcaa37d161de268f2a05c5b7b765a6f242e1",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary and Limits narrow the verb to rehearsal: \"as practice\" in the Summary, \"rehearsal with real actions\" in Limits. The statement's first word covers both a drill and giving first aid for real; a child who really treats a cut or makes a real emergency call meets it. The same verb opens 6.7.1.S, 6.7.3.S and 6.7.1.A, where the pack reads it as doing. Fix: drop \"as practice\", and say in Limits that the child carries the steps out where 6.1.2.S asks for a description. Limits is right about 6.1.2.S and about the one word that limits scope. Not a near copy: the statement is seven words and the Summary recasts them. Wording and code equal the PDF (page 38, printed as 7.4.S under Standard 7 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 144
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-7-4-s",
+      "wording_sha256": "2353f0a5ed760fa7d3b0a9ed2dac70cc44ca7a9f2b84d4093c22260f4e514e5c",
+      "text_sha256": "b9f194356adb7121cd76d6f384806f93261ce38d885a510eb08c4947bcf8ce18",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: \"as practice\" is gone from the Summary, and Limits says in a drill or for real. Remark, not counted: the Summary puts \"simple\" with first aid only; the statement's adjective stands before both nouns and can be read as covering both, and Limits leaves that open. Near copy looked at: the statement is seven words; the two named things are kept, the adjective and the last noun are replaced. Not a near copy. Limits is right about 6.1.2.S. Wording and code equal the PDF, read on the page image (page 38, printed without the grade under Standard 7 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 144
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-8-1-a",
+      "wording_sha256": "b954a90a1d2afc20f105bd8a9a2ce99d2affc6a313bb8d57416009a520805242",
+      "text_sha256": "6be72d88602c0248cd8bc5e0576a4759e7a62d48081ef5a30884987ee7acbc1f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 40,
+        "offset": 28
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-8-1-m",
+      "wording_sha256": "2d850f33b5b083dd0d0a83299fd519f96d3c5637f1d6916c04f3c0b5952e55f7",
+      "text_sha256": "51d57f5412736e304f39c24821c501dc8b1f4572b5b4d9f724f47cff24079a4f",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 178
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-8-1-s",
+      "wording_sha256": "59966891ce885205022b741f396df766024c4a1214b218dd306cbe9956d2538c",
+      "text_sha256": "d532d1e8e06bc5e3287989ce88e80e7ce60f8caf8b9ce687e3c67de459ded88c",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 158
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-8-2-m",
+      "wording_sha256": "12083d6e55ba1a70356608e1a1c7007209c17e27ff6976be3fa933a34c78879d",
+      "text_sha256": "97167c50d0a04095c7ec1ddbd14eedc30e24318955b7bf46101a1451c5866794",
+      "verdict": "unconfirmed",
+      "reason": "summary-or-gloss-unfaithful",
+      "note": "The Summary narrows two general terms. (1) The statement's word for those who are teased or bullied takes in anyone of the child's own age and standing (schoolmates in other classes, teammates, children of the neighbourhood); the Summary makes it \"a classmate\". (2) The statement's verb is not limited to speech; the Summary makes it \"speaks against it\", although standing beside the person, a gesture, a written objection or going to an adult also meet it, and the record's own \"In a child's hands\" uses some of these. Use the wider word for the people and a verb that is not only speech. The Summary's \"or\" between the two grounds, where the statement joins them with the other conjunction, is a fair reading and is not counted. Wording and code match the PDF (page 41, printed as 8.2.M, the last statement of the grade; it starts and ends where the record does, on two lines). Not a near copy; Limits is in order.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 191
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings mind",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-8-2-m",
+      "wording_sha256": "12083d6e55ba1a70356608e1a1c7007209c17e27ff6976be3fa933a34c78879d",
+      "text_sha256": "6d7fe209db0b387b7bb90189d40408962a2bf936f66ea699d16cb72db66b429c",
+      "verdict": "confirmed",
+      "note": "Round 2. Both round 1 faults are resolved: the general word for the child's equals is back, and the verb is no longer limited to speech. Both grounds are kept. Not a near copy: the sentence starts from the teasing. Limits is unchanged and in order. On the page the statement is the last of the grade and runs over two lines. Wording and code equal the PDF, read on the page image (page 41, printed without the grade under Standard 8 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 41,
+        "offset": 191
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-8-2-s",
+      "wording_sha256": "2194c45cc99188ef6834d0d4d5979d005558ef7ecf790ca6c657a7d42700e4f0",
+      "text_sha256": "06672350f79c4fff1c37c08b6ce11776042ed9779ec25ef269f1e2a5b24bb566",
+      "verdict": "unconfirmed",
+      "reason": "notes-contradict",
+      "note": "Limits, last sentence: it says online settings are not mentioned. The statement names two settings in general terms, and what the pupils of one school or the members of one community do to each other online is part of both; the record's own example has the child not forward a cruel post. The sentence reads as a limit the statement does not set. Fix: drop it, or say that the statement does not say where within the two settings. Summary faithful. Not a near copy. Wording and code equal the PDF (page 38, printed as 8.2.S under Standard 8 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 172
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-8-2-s",
+      "wording_sha256": "2194c45cc99188ef6834d0d4d5979d005558ef7ecf790ca6c657a7d42700e4f0",
+      "text_sha256": "5e6056bf89656d601630e41a9d33609f4073eb112b5f5e93e7791d186b75168a",
+      "verdict": "confirmed",
+      "note": "Round 2. The round 1 fault is resolved: Limits no longer says online settings are not mentioned; it says the statement does not say where within the two settings. The Summary is unchanged and faithful; not a near copy. Wording and code equal the PDF, read on the page image (page 38, printed without the grade under Standard 8 of the grade's pages); the statement starts and ends where the record does.",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 172
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings round 2",
+      "round": 2
+    },
+    {
+      "id": "edu.us-ca.grade-6.practical-life-feelings.objective.6-8-3-s",
+      "wording_sha256": "8bb73aab50c780d484e1a0bc4ffbaed599e02d6d1f6eaacef9d5290c64eb3436",
+      "text_sha256": "71c296fd2a968ce1e8cc12868561d8b749e7d7a2ecc7a2e42fb9308d52c977c5",
+      "verdict": "confirmed",
+      "rendition": "us-ca-cde-health-standards-pdf",
+      "place": {
+        "page": 38,
+        "offset": 183
+      },
+      "matched_by": "script",
+      "checker": "us-ca/grade-6/practical-life-feelings drugs-safety",
+      "round": 1
+    }
+  ],
+  "unrecorded": []
+}
