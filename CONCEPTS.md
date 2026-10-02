@@ -21,6 +21,12 @@ A quick build of a game's real scene in a candidate style, captured as a screens
 
 The spike is what turns a style choice into evidence: it shows the look reads clearly for a child and fits the frame-time budget before the style is claimed.
 
+### Look ledger
+The jam's menu of looks no game has claimed, kept as a ledger in which every look is open, reserved for one named game, or claimed.
+*Avoid:* style menu (the earlier list, which had no states)
+
+Only the lead changes a state: looks are reserved for a game before its builder starts, and after a merge one becomes a Claimed style and the game's others go back to open. A builder spikes the looks reserved for its game, first choice first, and never edits the ledger.
+
 ### Art guide
 The per-game document that describes a Claimed style: its palette, materials, lighting, motion rules, and how the game meets the Quality bar.
 
@@ -86,6 +92,29 @@ A scripted recording of a whole game, from a fresh open through the hands-off op
 
 It is played at a quick child's pace, each step starting as soon as the game allows, because overlapping moments are where state goes wrong and a still of one moment cannot show them. Game time advances in fixed steps from the first frame the game draws, with randomness seeded, so two recordings of the same script match frame for frame however slowly the machine renders. Run in real time on a device, the same script also measures smoothness against the Quality bar; on a machine that renders in software only the stepped recording means anything, and it judges behaviour and readability. It differs from a Cold playtest proxy, which plays only the first minute as a newcomer to find what is unclear.
 
+### Design sheet
+The written design of a game, made before any of its code: who it is for, its toy, what combines with what, how the school idea is represented, how an error shows, the order of challenges and what is saved, its characters and scenes, and the Education pack records its learning claim rests on.
+*Avoid:* spec, game design document
+
+It opens the same document as the game's Art guide. Someone who did not write it checks it against both packs before the game is built, and every finding of that check carries the exact sentence that should stand in its place.
+
+### Toy stage
+The stage of building a game in which only its toy exists: the one action the child's finger performs most, in an otherwise empty scene in the game's look, with its sound and motion and no goal.
+
+The toy is judged alone, because a goal, a story or a look does not make up for a dull action. The owner sees every game's toy once, at the end of this stage, before goals are built on it.
+
+### Wave
+A set of games built at the same time, one builder each, and merged together as one pull request.
+*Avoid:* batch, sprint
+
+A wave has a lead, who plans it, owns every file the games share, reserves looks in the Look ledger, and makes every commit. The owner plays one wave before the next is built on the same assumptions.
+
+### Held game
+A game that is stopped and left out of its Wave's merge, because its Design sheet names no supporting record, the owner rejected its toy, or it did not reach the Quality bar in time.
+*Avoid:* cancelled, cut
+
+A held game keeps its branch and its reserved looks and is listed first in the next wave.
+
 ## Motion
 
 ### Motion personality
@@ -141,6 +170,12 @@ The part of a game loop that makes play 5 differ from play 1 (physics that surpr
 *Avoid:* replayability hook, content
 
 An idea names its depth engine and a one-line "what is different on play 5" before anything is built; an idea that cannot is cut.
+
+### Hidden position
+A child's place in a game's designed order of challenges, which the game stores and nothing on screen ever shows.
+*Avoid:* level, difficulty setting, progress
+
+A visit starts at the stored position, and a first visit at a default the child's age suggests. It moves only between cycles, one step at a time: up after a cycle that goes well, down after one that goes badly. A stored position wins over the child's age, no clock is read, and it names a place in the game's own order, never a grade or a school level.
 
 ### Mechanic prototype
 A throwaway build of one game loop with simple graphics, made to find out whether the loop has depth, and free of the jam's rules (words, scores, wins and timers are allowed).

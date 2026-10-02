@@ -64,7 +64,7 @@ Decide the look first, then build the game inside it. A first slice that is play
 
 1. Before writing any gameplay, build the game's real scene (its table, props, and one character) in the looks reserved for the game in the menu in `docs/art-direction.md`, first choice first. A game with no reserved rows asks the lead to reserve some.
 2. For each candidate, take a screenshot at 1180x820 and record a measured fps. Put the screenshots on one contact sheet with the numbers.
-3. Show the contact sheet to the owner and get a pick. Register it as the existing rule describes.
+3. Get a pick from the contact sheet, and register it as the existing rule describes. For a single game the owner picks. In a wave of games built in parallel the lead picks from the rows reserved for each game, and the owner sees every game's look and toy together at the toy-stage checkpoint; a look he rejects there is replaced by the game's next reserved row ([building a jam game](building-a-jam-game.md)). That is the default until he says he wants to pick each look himself.
 4. Hold the slice to the full quality bar from its first screenshot, not after the mechanics work.
 5. Write game rules (state, scoring, fairness, timing, save cadence) as pure modules with no renderer or physics imports, each with its own tests, so a later look change costs only the view.
 
@@ -132,7 +132,7 @@ These lessons came from building the claymation style, but most of them are tech
 - Reviewing a game PR. Check that the style is registered and unclaimed by another game, that the PR says how each quality-bar line is met, and that it includes a measured frame rate.
 - Reworking an existing game's look. Update its registry row and its `ART.md` in the same PR.
 - Building any 3D kids' game in the jam. The clarity and performance techniques apply regardless of style.
-- Before the first gameplay commit of a new game. The style exploration and the owner's pick come first; a gameplay-first slice on a placeholder renderer is the pattern to avoid.
+- Before the first gameplay commit of a new game. The style exploration and the pick come first; a gameplay-first slice on a placeholder renderer is the pattern to avoid.
 - Structuring a new game's modules. Keep rules pure and renderer-free (no three.js, canvas, or physics imports) so a look change never touches them.
 - When an owner reacts to a slice with "looks plain" or "looks ugly". Stop adding mechanics and run the multi-style exploration on the real scene before continuing.
 

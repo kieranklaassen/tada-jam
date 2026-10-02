@@ -11,29 +11,36 @@ The authority for cartridge mechanics is Tada's `docs/cartridges.md`. This file 
 
 ## Documented knowledge
 
-- `docs/solutions/` — compounded knowledge: conventions and solutions from past work, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`, `applies_when`). Start a new game from [`docs/solutions/conventions/building-a-jam-game.md`](docs/solutions/conventions/building-a-jam-game.md), the step-by-step path from idea to a green PR.
+- `docs/solutions/` — compounded knowledge: conventions and solutions from past work, organized by category with YAML frontmatter (`module`, `tags`, `problem_type`, `applies_when`). Start a new game from [`docs/solutions/conventions/building-a-jam-game.md`](docs/solutions/conventions/building-a-jam-game.md), the step-by-step path from idea to a green PR. For a learning game it also holds the design sheet and its check, and the rules for building several games at once.
 - `CONCEPTS.md` — shared domain vocabulary for the jam (quality bar, claimed style, age band, guidance ladder, and more).
 - [compound-cli](https://github.com/kieranklaassen/compound-cli) manages that knowledge. Before starting work, recall what applies with `compound find "<what you are about to do>"` (judged recall; needs `TYPESAFE_API_KEY` in the environment). Without the CLI or the key, grep the frontmatter under `docs/solutions/` instead. New learnings are captured with the compound-engineering `ce-compound` workflow, one learning per run, and `compound audit --strict` (config in `.compound-engineering/config.yaml`) validates their frontmatter in CI.
 
 ## Before you show the owner
 
-Lessons from building Pebble Table and auditing the games after it, so the next game does not repeat them. The full checklist is in [`docs/solutions/conventions/building-a-jam-game.md`](docs/solutions/conventions/building-a-jam-game.md#before-you-show-the-owner).
+Lessons from building Pebble Table and auditing the games after it, and what the two packs add for a learning game, so the next game does not repeat them. The full checklist is in [`docs/solutions/conventions/building-a-jam-game.md`](docs/solutions/conventions/building-a-jam-game.md#before-you-show-the-owner).
 
-- **Look first.** The first screenshot is already in the chosen style at the quality bar; explore styles before gameplay ([style per game](docs/solutions/conventions/distinct-visual-style-per-game-shared-quality-bar.md)).
+- **Sheet before code.** The design sheet is in `ART.md` before any game code, and someone who did not write it has checked it against both packs ([the design sheet](docs/solutions/conventions/building-a-jam-game.md#the-design-sheet)).
+- **A toy first.** The one action the finger performs most is a pleasure with no goal, and is answered when the finger lands, before any goal is built on it (pack: game-design, toy-first.md).
+- **Look first.** The first screenshot is already in the chosen style at the quality bar; spike the looks reserved for the game before gameplay ([style per game](docs/solutions/conventions/distinct-visual-style-per-game-shared-quality-bar.md)).
 - **Clear to a child.** One obvious want per scene, the guidance ladder in the first slice, and a cold playtest proxy run before the owner sees it ([wordless clarity](docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md)).
 - **Every character moves like itself.** No shared animations; variants and delights per character ([motion personality](docs/solutions/design-patterns/motion-personality-per-character.md)).
 - **Refine in logged passes.** Screenshot, critique, one fix set, re-screenshot, frame rate ([refinement loop](docs/solutions/workflow-issues/refinement-loop-for-kid-3d-readability.md)).
-- **Measure on the target.** A production build in WebKit and throttled Chrome, a real iPad when possible; ship adaptive quality and the grown-up fps overlay from day one ([performance](docs/solutions/performance-issues/measure-on-the-target-device-and-ship-adaptive-quality.md)).
+- **Measure on the target.** A production build through the shared probe (`npm run perf:jam -- <game>`) in WebKit and throttled Chrome, a real iPad when possible; ship adaptive quality and the grown-up fps overlay from day one ([performance](docs/solutions/performance-issues/measure-on-the-target-device-and-ship-adaptive-quality.md)).
 - **Nothing passes through anything.** The intersection audit on moments that reach every state, every finding fixed or allowed with a reason and a cap, a before/after replay, and `enforce: true`; shader motion and 2D games covered by model tests ([intersection audit](docs/solutions/workflow-issues/run-the-intersection-audit-before-showing-the-owner.md)).
+- **Found as left.** Put away at any instant and opened again, nothing is lost and no scene replays; the next customer, patient or vehicle waits for the child's touch ([found as left](docs/solutions/conventions/building-a-jam-game.md#found-as-left)).
 - **Share a production build.** `npm run serve:lan`, never the dev server, and say which URL is which ([production build](docs/solutions/workflow-issues/share-a-production-build-not-the-dev-server.md)).
-- **Deliver cleanly.** Push the branch with CI green, hand the PR body to the coordinator, and never write a key value anywhere ([agent delivery](docs/solutions/workflow-issues/agent-delivery-push-branches-and-keep-secrets-out.md)).
+- **The claim can be checked.** A learning game is "designed from" the records it names, each with its standing and check state, and California wording is pasted nowhere: not in `ART.md`, a comment, a PR or a commit message ([the gates](docs/solutions/conventions/building-a-jam-game.md#the-gates)).
+- **Deliver cleanly.** Push the branch with CI green, hand the PR body to the coordinator, and never write a key value anywhere; in a wave the lead does all the git ([agent delivery](docs/solutions/workflow-issues/agent-delivery-push-branches-and-keep-secrets-out.md)).
 
 ## Shape of a game
 
+- A new game starts as a copy of `templates/cartridge/`, made by `npm run new:game` (key, name, band, emoji). The copy is the game's own code and imports nothing from the template. A file whose first line marks it frozen stays byte-equal to the template, which a test holds, and what a game tunes lives in its `config.ts`.
 - `games/<key>/manifest.ts` — the manifest const. No JSX, React imports, or Vite globals (it must stay Node-importable, like Tada's `manifests.ts`).
 - `games/<key>/<key>.tsx` — the Mount and the exported `Cartridge` object.
 - `games/<key>/index.ts` — jam-only: `export const game: JamGame = { cartridge, emoji }`. Deleted at port time.
 - Pure logic in its own modules with `*.test.ts` beside it; saved state goes through a defensive `deserialize`.
+- `games/<key>/symbols.ts`, only in a game whose age band starts at 6 or above: the one module that draws kid-side numerals and mathematics symbols.
+- In a game started from the template, `games/<key>/ART.md` holds the design sheet and then the art guide, and `games/<key>/REFINEMENT.md` opens with a status block and holds the pass log.
 - Contract types come from `../types` only (that path is `app/frontend/cartridges/types.ts` in Tada).
 
 ## Rules that still apply (from the Tada contract)
