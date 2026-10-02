@@ -27,7 +27,7 @@ const THEMES: Record<string, Record<string, string>> = {
   },
 }
 
-const AGES: readonly (number | null)[] = [null, 3, 4, 5, 6, 7, 8]
+const AGES: readonly (number | null)[] = [null, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 const LANGUAGES = ['en', 'nl', 'fr'] as const
 
 type Prefs = { childAge: number | null; language: string; theme: string }
@@ -40,7 +40,7 @@ function readPrefs(): Prefs {
     const parsed = JSON.parse(window.localStorage.getItem(PREFS_KEY) ?? 'null') as Partial<Prefs> | null
     if (!parsed) return fallback
     return {
-      childAge: typeof parsed.childAge === 'number' || parsed.childAge === null ? parsed.childAge : fallback.childAge,
+      childAge: parsed.childAge !== undefined && AGES.includes(parsed.childAge) ? parsed.childAge : fallback.childAge,
       language: typeof parsed.language === 'string' ? parsed.language : fallback.language,
       theme: typeof parsed.theme === 'string' && parsed.theme in THEMES ? parsed.theme : fallback.theme,
     }
