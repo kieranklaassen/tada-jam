@@ -54,7 +54,7 @@ The wordless check (`scripts/wordless-check.ts`) parses kid-side game code and f
 
 [`docs/solutions/conventions/building-a-jam-game.md`](docs/solutions/conventions/building-a-jam-game.md) walks through these steps in order, with the lessons from building Pebble Table.
 
-1. Create `games/<key>/` where `<key>` is a kebab-case slug (it doubles as the Tada storage namespace).
+1. Run `npm run new:game -- <key> "<Name>" <youngest>-<oldest> <emoji>`. It copies the template in `templates/cartridge/` into `games/<key>/`, where `<key>` is a kebab-case slug (it doubles as the Tada storage namespace). The steps below say what the copy holds.
 2. `games/<key>/manifest.ts` — export the manifest const (`key`, `name`, `ageBand`, `permissions`, `iconIdentity`). Keep it free of JSX and React imports. `ageBand` names one audience: whole years, 2 to 12, at most five years wide.
 3. `games/<key>/<key>.tsx` — export a `Cartridge` (`{ manifest, Mount }`). The Mount receives `{ ctx: CartridgeContext }`. Import contract types from `../types`.
 4. `games/<key>/index.ts` — `export const game: JamGame = { cartridge, emoji: '🪨' }`.

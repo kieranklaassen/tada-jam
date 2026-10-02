@@ -1,4 +1,5 @@
-import { readdirSync, statSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -7,6 +8,22 @@ import { KEY_PATTERN, validateManifest, type JamGame } from '../harness/contract
 const gamesDir = resolve(dirname(fileURLToPath(import.meta.url)), '../games')
 const folders = readdirSync(gamesDir).filter((name) => statSync(join(gamesDir, name)).isDirectory())
 const modules = import.meta.glob<{ game: JamGame }>('../games/*/index.ts', { eager: true })
+
+const templateDir = resolve(gamesDir, '../templates/cartridge')
+const FROZEN_COPY = /^\/\/ template: cartridge\/(\S+) v(\d+) \(frozen\b/
+
+/** Files under `dir` whose first line names a frozen template file at the template's current version and that differ from it. */
+function frozenDrift(dir: string): string[] {
+  return readdirSync(dir, { recursive: true, encoding: 'utf8' }).filter((file) => {
+    if (!/\.tsx?$/.test(file) || !statSync(join(dir, file)).isFile()) return false
+    const copy = readFileSync(join(dir, file), 'utf8')
+    const named = FROZEN_COPY.exec(copy.split('\n', 1)[0])
+    if (!named || !existsSync(join(templateDir, named[1]))) return false
+    const template = readFileSync(join(templateDir, named[1]), 'utf8')
+    // A copy made from an earlier version of the template is not held: it is waiting to be copied again.
+    return FROZEN_COPY.exec(template.split('\n', 1)[0])?.[2] === named[2] && copy !== template
+  })
+}
 
 describe('jam games', () => {
   it('every game folder has an index.ts exporting a game', () => {
@@ -40,6 +57,28 @@ describe('jam games', () => {
       })
     })
   }
+
+  it('every copy of a frozen template file is byte-equal to the template', () => {
+    expect(frozenDrift(gamesDir)).toEqual([])
+  })
+
+  it('a copy of a frozen file with one changed character is named, unless it is from an earlier version', () => {
+    const temp = mkdtempSync(join(tmpdir(), 'frozen-copies-'))
+    try {
+      const frozen = readFileSync(join(templateDir, 'saveCadence.ts'), 'utf8')
+      const second = frozen.indexOf('\n') + 1
+      const changed = frozen.slice(0, second) + (frozen[second] === 'x' ? 'y' : 'x') + frozen.slice(second + 1)
+      mkdirSync(join(temp, 'kept'))
+      mkdirSync(join(temp, 'changed', 'view'), { recursive: true })
+      mkdirSync(join(temp, 'earlier'))
+      writeFileSync(join(temp, 'kept', 'saveCadence.ts'), frozen)
+      writeFileSync(join(temp, 'changed', 'view', 'saveCadence.ts'), changed)
+      writeFileSync(join(temp, 'earlier', 'saveCadence.ts'), changed.replace(/ v\d+ /, ' v0 '))
+      expect(frozenDrift(temp)).toEqual(['changed/view/saveCadence.ts'])
+    } finally {
+      rmSync(temp, { recursive: true, force: true })
+    }
+  })
 
   it('keys are unique', () => {
     const keys = Object.values(modules).map(({ game }) => game.cartridge.manifest.key)

@@ -113,7 +113,8 @@ The handle's shape was specified only in prose. The game plans list `window.__ja
 
 ## Prevention
 
-- [ ] Declaring `window.__jamPerf` in a new game: prefer Light Garden's local intersection. If the game augments `Window` instead, copy Kite Tower's type exactly.
+- [ ] A game made from the template (`npm run new:game`) gets its declaration in the frozen `perf.ts`, which a test holds byte-equal to the template: do not edit it.
+- [ ] Declaring `window.__jamPerf` by hand in a game that was not made from the template: prefer Light Garden's local intersection. If the game augments `Window` instead, copy Kite Tower's type exactly.
 - [ ] Before pushing a game branch, merge `main` into it and run `npm run typecheck` on the result. A branch that passes alone can still break `main`.
 - [ ] When TS2717 names the same alias on both sides, list every declaration with `rg -n -A4 "declare global" games` and compare their types field by field.
 - [ ] Any other property a game adds to the global `Window` (Critter Clay's `__critterClayProbe` is one) follows the same rule: another game that declares the same name must match it exactly. A name only one game uses is safe.
