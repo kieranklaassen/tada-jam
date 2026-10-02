@@ -158,7 +158,7 @@ A demo is grouped in the catalog by what it tests. A **gentle** demo follows `la
 The reference corpus of official learning standards for California and the Netherlands (`education/`) that game designers read while planning a game with a learning goal: one record per official statement, per Lane, with its official code, source and Standing, its official wording or (where the source is Description-only) a summary in the pack's own words, and design notes kept apart as the pack's inference. It is used only while designing and building; no game reads it while it runs and no child sees it.
 *Avoid:* curriculum (the pack records standards, it does not sequence lessons), content pack (that is a game's own per-language content)
 
-The folder is also a Compound Pack: its top-level rule files say what a game that claims a school skill must honour, and the planning and review flows read them by themselves. Records are found with the lookup (`npm run education:find`), and a game cites a record by pack id or by official code with its jurisdiction, never by link.
+The folder is also a Compound Pack: its top-level rule files say what a game that claims a school skill must honour, and the planning and review flows read them by themselves. Records are found with the pack's lookup, and a game cites a record by pack id or by official code with its jurisdiction, never by link.
 
 ### Lane
 One jurisdiction, level and subject inside the Education pack, for example `us-ca/grade-4/mathematics` (California grade 4 mathematics) or `nl/fase-3/mathematics` (Dutch rekenen-wiskunde for groep 7 and 8). Lanes stand alone: a record in one lane is never stated to equal a record in another.
