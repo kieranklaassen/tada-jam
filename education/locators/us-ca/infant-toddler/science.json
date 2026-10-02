@@ -1,0 +1,25 @@
+{
+  "lane": "us-ca/infant-toddler/science",
+  "records": [
+    {
+      "group": "Cognitive Development / Strand 1.0: Exploration",
+      "code": "1.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 142,
+          "first": "The developing",
+          "last": "about another"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 142,
+          "first": "Children make simple",
+          "last": "something to happen"
+        }
+      ]
+    }
+  ]
+}

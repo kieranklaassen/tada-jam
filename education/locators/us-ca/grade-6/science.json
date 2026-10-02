@@ -1,0 +1,307 @@
+{
+  "lane": "us-ca/grade-6/science",
+  "records": [
+    {
+      "group": "MS-LS1 From Molecules to Organisms: Structures and Processes",
+      "code": "MS-LS1-1",
+      "california_addition": true,
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 1,
+          "first": "Conduct an investigation",
+          "last": "distinct from, cellular life"
+        }
+      ]
+    },
+    {
+      "group": "MS-LS1 From Molecules to Organisms: Structures and Processes",
+      "code": "MS-LS1-2",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 1,
+          "first": "Develop and use",
+          "last": "cells or cell parts",
+          "corrections": [
+            {
+              "from": "Empha- sis",
+              "to": "Emphasis",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "MS-LS1 From Molecules to Organisms: Structures and Processes",
+      "code": "MS-LS1-3",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 1,
+          "first": "Use argument supported by",
+          "last": "and nervous systems"
+        }
+      ]
+    },
+    {
+      "group": "MS-LS1 From Molecules to Organisms: Structures and Processes",
+      "code": "MS-LS1-4",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 2,
+          "first": "Use argument based on",
+          "last": "that squirrels bury",
+          "corrections": [
+            {
+              "from": "flow- ers",
+              "to": "flowers",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "MS-LS1 From Molecules to Organisms: Structures and Processes",
+      "code": "MS-LS1-5",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 2,
+          "first": "Construct a scientific explanation",
+          "last": "or biochemical processes",
+          "corrections": [
+            {
+              "from": "State- ment",
+              "to": "Statement",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "MS-LS1 From Molecules to Organisms: Structures and Processes",
+      "code": "MS-LS1-8",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 2,
+          "first": "Gather and synthesize information",
+          "last": "of this information",
+          "corrections": [
+            {
+              "from": "mem- ories",
+              "to": "memories",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "MS-LS3 Heredity: Inheritance and Variation of Traits",
+      "code": "MS-LS3-2",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 6,
+          "first": "Develop and use",
+          "last": "resulting genetic variation",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "MS-ESS2 Earth’s Systems",
+      "code": "MS-ESS2-4",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 8,
+          "first": "Develop a model to",
+          "last": "is not assessed",
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "MS-ESS2 Earth’s Systems",
+      "code": "MS-ESS2-5",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 8,
+          "first": "Collect data to provide",
+          "last": "from weather stations",
+          "corrections": [
+            {
+              "from": "Empha- sis",
+              "to": "Emphasis",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "MS-ESS2 Earth’s Systems",
+      "code": "MS-ESS2-6",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 8,
+          "first": "Develop and use",
+          "last": "of the Coriolis effect",
+          "firstOccurrence": 1,
+          "corrections": [
+            {
+              "from": "atmo- spheric",
+              "to": "atmospheric",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "MS-ESS3 Earth and Human Activity",
+      "code": "MS-ESS3-3",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 11,
+          "first": "Apply scientific principles",
+          "last": "water, or land",
+          "firstOccurrence": 1,
+          "corrections": [
+            {
+              "from": "solu- tions",
+              "to": "solutions",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "MS-ESS3 Earth and Human Activity",
+      "code": "MS-ESS3-5",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 11,
+          "first": "Ask questions to clarify",
+          "last": "rise in global temperatures",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "MS-PS3 Energy",
+      "code": "MS-PS3-3",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 14,
+          "first": "Apply scientific principles",
+          "last": "thermal energy transferred",
+          "lastOccurrence": 1,
+          "corrections": [
+            {
+              "from": "Ex- amples",
+              "to": "Examples",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "MS-PS3 Energy",
+      "code": "MS-PS3-4",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 14,
+          "first": "Plan an investigation",
+          "last": "thermal energy transferred",
+          "firstOccurrence": 1,
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "MS-PS3 Energy",
+      "code": "MS-PS3-5",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 14,
+          "first": "Construct, use, and present",
+          "last": "calculations of energy"
+        }
+      ]
+    },
+    {
+      "group": "MS-ETS1 Engineering Design",
+      "code": "MS-ETS1-1",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 17,
+          "first": "Define the criteria",
+          "last": "limit possible solutions",
+          "lastOccurrence": 1,
+          "corrections": [
+            {
+              "from": "prin- ciples",
+              "to": "principles",
+              "reason": "line-break hyphen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "MS-ETS1 Engineering Design",
+      "code": "MS-ETS1-2",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 17,
+          "first": "Evaluate competing design solutions",
+          "last": "of the problem"
+        }
+      ]
+    },
+    {
+      "group": "MS-ETS1 Engineering Design",
+      "code": "MS-ETS1-3",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 17,
+          "first": "Analyze data from tests",
+          "last": "criteria for success"
+        }
+      ]
+    },
+    {
+      "group": "MS-ETS1 Engineering Design",
+      "code": "MS-ETS1-4",
+      "spans": [
+        {
+          "source": "us-ca-cde-ngss-grade6-integrated-pdf",
+          "page": 17,
+          "first": "Develop a model to",
+          "last": "can be achieved",
+          "firstOccurrence": 1
+        }
+      ]
+    }
+  ]
+}

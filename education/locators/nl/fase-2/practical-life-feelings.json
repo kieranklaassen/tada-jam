@@ -1,0 +1,19 @@
+{
+  "lane": "nl/fase-2/practical-life-feelings",
+  "records": [
+    {
+      "group": "Inhoudslijn De samenleving, PDF / Consument zijn",
+      "code": "4",
+      "printed_code": false,
+      "spans": [
+        {
+          "source": "nl-slo-inhoudslijn-ojw-samenleving",
+          "page": 2,
+          "column": 3,
+          "first": "beseffen dat",
+          "last": "inkomsten/uitgaven"
+        }
+      ]
+    }
+  ]
+}

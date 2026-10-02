@@ -1,0 +1,565 @@
+{
+  "lane": "nl/einde-po/practical-life-feelings",
+  "records": [
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: democratische oefenplaats / Kerndoel 19",
+      "code": "19",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 1,
+          "first": "De school geeft vorm",
+          "last": "aan de democratische oefenplaats"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: democratische oefenplaats / Kerndoel 19",
+      "code": "19 A",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 1,
+          "first": "De school stimuleert",
+          "last": "competenties van leerlingen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: democratische oefenplaats / Kerndoel 19",
+      "code": "19 A a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 2,
+          "first": "aanbieden van kennis",
+          "last": "respectvolle omgang"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: democratische oefenplaats / Kerndoel 19",
+      "code": "19 A b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 2,
+          "first": "stimuleren van sociale vaardigheden",
+          "last": "kritische denkvaardigheden"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: democratische oefenplaats / Kerndoel 19",
+      "code": "19 A c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 2,
+          "first": "stimuleren van respectvolle communicatie",
+          "last": "offline en online"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: democratische oefenplaats / Kerndoel 19",
+      "code": "19 A d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 2,
+          "first": "aanbieden van activiteiten",
+          "last": "actief burgerschap stimuleren"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 1,
+          "first": "De leerling leert over",
+          "last": "over samenleven in een democratische rechtsstaat"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 A",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 1,
+          "first": "De leerling redeneert",
+          "last": "basiswaarden van de democratische rechtsstaat"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 A a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 2,
+          "first": "beschrijven van de betekenis",
+          "last": "rechtsstaat: vrijheid, gelijkwaardigheid en solidariteit"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 A b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 2,
+          "first": "beschrijven hoe de Grondwet",
+          "last": "rechtsstaat mogelijk maken"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 A c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 2,
+          "first": "redeneren over hoe vrijheid",
+          "last": "voet kunnen staan"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 A d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 2,
+          "first": "ervaringen opdoen met het voeren",
+          "last": "gelijkwaardige behandeling"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 A e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 3,
+          "column": 2,
+          "first": "herkennen en benoemen hoe basiswaarden",
+          "last": "het eigen leven"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 B",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 4,
+          "column": 1,
+          "first": "De leerling verkent hoe",
+          "last": "diversiteit in de samenleving"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 B a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 4,
+          "column": 2,
+          "first": "beschrijven van aspecten van diversiteit",
+          "last": "seksuele gerichtheid"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 B b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 4,
+          "column": 2,
+          "first": "verkennen van de eigen identiteit",
+          "last": "aanzien van aspecten van diversiteit"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 B c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 4,
+          "column": 2,
+          "first": "herkennen en benoemen van stereotypering",
+          "last": "discriminatie en uitsluiting"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 B d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 4,
+          "column": 2,
+          "first": "benoemen van het belang",
+          "last": "gelijkwaardig behandelen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel C. Burgerschap / Domein: samenleven in een democratische rechtsstaat / Kerndoel 20",
+      "code": "20 B e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 4,
+          "column": 2,
+          "first": "ervaringen opdoen met het omgaan",
+          "last": "gedrag van anderen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 9,
+          "column": 1,
+          "first": "De leerling verkent hoe mensen",
+          "last": "met elkaar samenleven"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 A",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 1,
+          "first": "De leerling verkent economische keuzes",
+          "last": "mogelijke gevolgen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 A a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 2,
+          "first": "verkennen hoe mensen met werk",
+          "last": "hun levensonderhoud voorzien"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 A b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 2,
+          "first": "verkennen hoe samenwerking",
+          "last": "welzijn en welvaart"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 A c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 2,
+          "first": "verkennen hoe keuzes worden beïnvloed",
+          "last": "door andere mensen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 A d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 2,
+          "first": "verkennen van keuzes en hun gevolgen",
+          "last": "in de eigen omgeving"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 A e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 2,
+          "first": "beschrijven van mogelijke gevolgen",
+          "last": "voor de leefomgeving"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 D",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 1,
+          "first": "De school draagt bij",
+          "last": "respectvolle omgang met anderen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 D a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 2,
+          "first": "aandacht schenken aan emoties",
+          "last": "omgaan met emoties"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 D b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 2,
+          "first": "bespreekbaar maken van wensen",
+          "last": "mogelijkheden en beperkingen"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 D c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 2,
+          "first": "stimuleren van veilige sociale omgang",
+          "last": "samenwerking en conflicthantering"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 D d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 2,
+          "first": "aandacht schenken aan relationele",
+          "last": "seksuele ontwikkeling"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 D e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 2,
+          "first": "bevorderen van respectvolle omgang",
+          "last": "seksuele diversiteit"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 E",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 1,
+          "first": "De leerling neemt op",
+          "last": "deel aan het verkeer",
+          "lastPage": 11
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 E a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 10,
+          "column": 2,
+          "first": "benoemen en toepassen van de verkeersregels",
+          "last": "fietsers en passagiers"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 E b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "kiezen van veilige routes",
+          "last": "gevaarlijke situaties"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 E c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "veilig handelen in verkeerssituaties",
+          "last": "omgeving van de school"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel E. Mens en maatschappij / Domein: mens en samenleving / Kerndoel 28",
+      "code": "28 E d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 11,
+          "column": 2,
+          "first": "rekening houden met",
+          "last": "andere verkeersdeelnemers"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 B",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 1,
+          "first": "De leerling toont inzicht in leefstijl",
+          "last": "keuzes hierin"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 B a",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "oriënteren op de invloed",
+          "last": "lichamelijke en mentale gezondheid"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 B b",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "beschrijven hoe bacteriën",
+          "last": "kunnen beïnvloeden"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 B c",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "verklaren hoe ziektes ontstaan",
+          "last": "behandeld kunnen worden"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 B d",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "beschrijven hoe onbedoelde zwangerschappen",
+          "last": "voorkomen kunnen worden"
+        }
+      ]
+    },
+    {
+      "group": "Conceptkerndoelen 2027 / Onderdeel F. Mens en natuur / Domein: organismen en gezondheid / Kerndoel 31",
+      "code": "31 B e",
+      "spans": [
+        {
+          "source": "nl-concept-besluit-kerndoelen-2027",
+          "page": 13,
+          "column": 2,
+          "first": "benoemen van verschillende gezondheids- en welzijnsorganisaties",
+          "last": "jezelf en anderen"
+        }
+      ]
+    }
+  ]
+}

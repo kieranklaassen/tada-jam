@@ -1,0 +1,430 @@
+{
+  "lane": "us-ca/cross-grade/reading-language",
+  "records": [
+    {
+      "group": "College and Career Readiness Anchor Standards for Reading",
+      "code": "R.CCR.1",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 16,
+          "first": "Read closely to determine",
+          "last": "drawn from the text",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Reading",
+      "code": "R.CCR.2",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 16,
+          "first": "Determine central ideas",
+          "last": "supporting details and ideas",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Reading",
+      "code": "R.CCR.3",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 16,
+          "first": "Analyze how and why",
+          "last": "course of a text",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Reading",
+      "code": "R.CCR.4",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 16,
+          "first": "Interpret words and phrases",
+          "last": "meaning or tone",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Reading",
+      "code": "R.CCR.5",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 16,
+          "first": "Analyze the structure",
+          "last": "and the whole",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Reading",
+      "code": "R.CCR.6",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 16,
+          "first": "Assess how point",
+          "last": "style of a text",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Reading",
+      "code": "R.CCR.7",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 16,
+          "first": "Integrate and evaluate content",
+          "last": "as in words",
+          "column": 1,
+          "corrections": [
+            {
+              "from": "words.*",
+              "to": "words.",
+              "reason": "footnote marker"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Reading",
+      "code": "R.CCR.8",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 16,
+          "first": "Delineate and evaluate",
+          "last": "of the evidence",
+          "column": 2
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Reading",
+      "code": "R.CCR.9",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 16,
+          "first": "Analyze how two",
+          "last": "the authors take",
+          "column": 2
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Reading",
+      "code": "R.CCR.10",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 16,
+          "first": "Read and",
+          "last": "and proficiently",
+          "column": 2
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Writing",
+      "code": "W.CCR.1",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 26,
+          "first": "Write arguments to support",
+          "last": "and sufficient evidence",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Writing",
+      "code": "W.CCR.2",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 26,
+          "first": "Write informative/explanatory texts",
+          "last": "analysis of content",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Writing",
+      "code": "W.CCR.3",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 26,
+          "first": "Write narratives to develop",
+          "last": "structured event sequences",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Writing",
+      "code": "W.CCR.4",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 26,
+          "first": "Produce clear and coherent",
+          "last": "purpose, and audience",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Writing",
+      "code": "W.CCR.5",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 26,
+          "first": "Develop and strengthen writing",
+          "last": "a new approach",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Writing",
+      "code": "W.CCR.6",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 26,
+          "first": "Use technology, including",
+          "last": "collaborate with others",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Writing",
+      "code": "W.CCR.7",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 26,
+          "first": "Conduct short as well",
+          "last": "subject under investigation",
+          "column": 2
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Writing",
+      "code": "W.CCR.8",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 26,
+          "first": "Gather relevant information",
+          "last": "while avoiding plagiarism",
+          "column": 2
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Writing",
+      "code": "W.CCR.9",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 26,
+          "first": "Draw evidence from",
+          "last": "reflection, and research",
+          "column": 2
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Writing",
+      "code": "W.CCR.10",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 26,
+          "first": "Write routinely over",
+          "last": "purposes, and audiences",
+          "column": 2
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Speaking and Listening",
+      "code": "SL.CCR.1",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 32,
+          "first": "Prepare for and participate",
+          "last": "clearly and persuasively",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Speaking and Listening",
+      "code": "SL.CCR.2",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 32,
+          "first": "Integrate and evaluate information",
+          "last": "quantitatively, and orally",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Speaking and Listening",
+      "code": "SL.CCR.3",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 32,
+          "first": "Evaluate a",
+          "last": "and rhetoric",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Speaking and Listening",
+      "code": "SL.CCR.4",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 32,
+          "first": "Present information, findings",
+          "last": "purpose, and audience",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Speaking and Listening",
+      "code": "SL.CCR.5",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 32,
+          "first": "Make strategic use",
+          "last": "understanding of presentations",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Speaking and Listening",
+      "code": "SL.CCR.6",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 32,
+          "first": "Adapt speech to",
+          "last": "indicated or appropriate",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Language",
+      "code": "L.CCR.1",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 37,
+          "first": "Demonstrate command of the",
+          "last": "writing or speaking",
+          "column": 1,
+          "firstOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Language",
+      "code": "L.CCR.2",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 37,
+          "first": "Demonstrate command of the",
+          "last": "spelling when writing",
+          "column": 1,
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Language",
+      "code": "L.CCR.3",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 37,
+          "first": "Apply knowledge of language",
+          "last": "reading or listening",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Language",
+      "code": "L.CCR.4",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 37,
+          "first": "Determine or clarify the",
+          "last": "materials, as appropriate",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Language",
+      "code": "L.CCR.5",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 37,
+          "first": "Demonstrate understanding",
+          "last": "word meanings",
+          "column": 1
+        }
+      ]
+    },
+    {
+      "group": "College and Career Readiness Anchor Standards for Language",
+      "code": "L.CCR.6",
+      "spans": [
+        {
+          "source": "us-ca-cde-ccss-ela-pdf",
+          "page": 37,
+          "first": "Acquire and use accurately",
+          "last": "comprehension or expression",
+          "column": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1298 @@
+{
+  "lane": "nl/fase-1/mathematics",
+  "records": [
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Telrij (tot tenminste 20) / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "de telrij opzeggen",
+          "last": "zo ver mogelijk tellen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Telrij (tot tenminste 20) / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "doortellen en terugtellen",
+          "last": "vanaf willekeurige getallen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Telrij (tot tenminste 20) / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "omgaan met begrippen rond de telrij",
+          "last": "terug, naast, tussenin"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Telrij (tot tenminste 20) / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "omgaan met rangtelwoorden",
+          "last": "wanneer je die gebruikt"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Telrij (tot tenminste 20) / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "vergelijken en ordenen van getallen in de telrij",
+          "last": "in de buurt liggen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Telrij (tot tenminste 20) / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "tellen met sprongen",
+          "last": "(2, 5, 10)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Telrij (tot tenminste 20) / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "redeneren over de telrij",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden (tot tenminste 20) / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "tellen van hoeveelheden",
+          "last": "het tellen leren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden (tot tenminste 20) / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "schatten van hoeveelheden",
+          "last": "schatten van hoeveelheden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden (tot tenminste 20) / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "vergelijken en ordenen van hoeveelheden",
+          "last": "zonder precies tellen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden (tot tenminste 20) / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "omgaan met begrippen rond hoeveelheden",
+          "last": "alles/niets, ongeveer, hoeveel"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden (tot tenminste 20) / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "handig organiseren",
+          "last": "op een rijtje leggen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden (tot tenminste 20) / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "(her)kennen van getalbeelden",
+          "last": "van getalbeelden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden (tot tenminste 20) / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "verkort tellen",
+          "last": "verkort tellen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden (tot tenminste 20) / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "representeren van hoeveelheden",
+          "last": "representeren van hoeveelheden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden (tot tenminste 20) / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "splitsen en samenvoegen",
+          "last": "van kleine hoeveelheden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Hoeveelheden (tot tenminste 20) / 10",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "redeneren over hoeveelheden",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Getallen (tot tenminste 20) / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "herkennen, lezen en schrijven",
+          "last": "van grotere getallen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Getallen (tot tenminste 20) / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "omgaan met begrippen rond getallen",
+          "last": "kleinste, gelijk"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Getallen (tot tenminste 20) / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "oefenen met de vaste volgorde",
+          "last": "in de getallenrij",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Getallen (tot tenminste 20) / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "vergelijken en ordenen van getallen in de getallenrij",
+          "last": "getallen in de getallenrij",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Getallen (tot tenminste 20) / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "onderzoeken van getalrelaties",
+          "last": "groot of klein verschil"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Getallen (tot tenminste 20) / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "verkennen van de verschillende betekenissen",
+          "last": "functies van getallen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Getallen (tot tenminste 20) / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "redeneren over getallen",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Relaties tussen telrij, hoeveelheden en getallen (tot tenminste 20) / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "koppelen van telwoorden",
+          "last": "hoeveelheden en getallen",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Relaties tussen telrij, hoeveelheden en getallen (tot tenminste 20) / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "flexibel omgaan",
+          "last": "hoeveelheden en getallen",
+          "lastOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Getalbegrip",
+      "code": "Relaties tussen telrij, hoeveelheden en getallen (tot tenminste 20) / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 1,
+          "first": "nadenken over 'nul'",
+          "last": "als hoeveelheid"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Bewerkingen",
+      "code": "Optellen en aftrekken met hele getallen (tot tenminste 20) / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "handelend optellen, aftrekken en splitsen",
+          "last": "splitsen van hoeveelheden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Bewerkingen",
+      "code": "Optellen en aftrekken met hele getallen (tot tenminste 20) / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "handelend omgaan met begrippen rond optellen",
+          "last": "weg, samen, over"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Bewerkingen",
+      "code": "Optellen en aftrekken met hele getallen (tot tenminste 20) / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "handelend optellen en aftrekken in de context",
+          "last": "van de telrij"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Bewerkingen",
+      "code": "Optellen en aftrekken met hele getallen (tot tenminste 20) / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "probleemoplossen, kritisch denken",
+          "last": "in betekenisvolle situaties"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Bewerkingen",
+      "code": "Vermenigvuldigen en delen met hele getallen (tot tenminste 20) / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "handelend uitdelen en verdelen",
+          "last": "de handeling gaat"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Bewerkingen",
+      "code": "Vermenigvuldigen en delen met hele getallen (tot tenminste 20) / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "handelend omgaan met begrippen rond delen",
+          "last": "verdelen, over, evenveel"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / GETALLEN: Bewerkingen",
+      "code": "Vermenigvuldigen en delen met hele getallen (tot tenminste 20) / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "redeneren over uitdelen",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / Verhoudingen",
+      "code": "1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "verhoudingsgewijs vergelijken",
+          "last": "ook groter zijn"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / Verhoudingen",
+      "code": "2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "verkennen van getalsmatige verhoudingen",
+          "last": "zijn ... eieren nodig"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / Verhoudingen",
+      "code": "3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "redeneren over (kwalitatieve) verhoudingen",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / Verbanden",
+      "code": "1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "gebruiken van staafdiagrammen",
+          "last": "en te vergelijken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / Verbanden",
+      "code": "2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "construeren van een beelddiagram",
+          "last": "of staafdiagram"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / Verbanden",
+      "code": "3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "aflezen van informatie",
+          "last": "(beelddiagram, staafdiagram)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / Verbanden",
+      "code": "4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 2,
+          "first": "lezen van een betekenisvolle",
+          "last": "de eigen groep"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Lengte en omtrek / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken en ervaren van het meten van lengte",
+          "last": "van lengte en omtrek"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Lengte en omtrek / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "omgaan met 'lengte' en 'omtrek'",
+          "last": "begrippen rond lengte en omtrek",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Lengte en omtrek / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "omgaan met tegenstellingen tussen begrippen rond lengte",
+          "last": "rond lengte en omtrek",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Lengte en omtrek / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "vergelijken en ordenen op lengte",
+          "last": "op lengte en omtrek"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Lengte en omtrek / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "meten met informele instrumenten en maten waarmee je lengte",
+          "last": "lengte kunt uitdrukken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Lengte en omtrek / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "verkennen en meten van maten",
+          "last": "het eigen lichaam"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Lengte en omtrek / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "redeneren over lengte en omtrek",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Oppervlakte / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken en ervaren van het meten van oppervlakte",
+          "last": "meten van oppervlakte"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Oppervlakte / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "omgaan met 'oppervlakte'",
+          "last": "begrippen rond oppervlakte",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Oppervlakte / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "omgaan met tegenstellingen tussen begrippen rond oppervlakte",
+          "last": "rond oppervlakte",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Oppervlakte / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "vergelijken en ordenen naar oppervlakte",
+          "last": "naar oppervlakte"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Inhoud / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "ontdekken en ervaren van het meten van inhoud",
+          "last": "meten van inhoud"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Inhoud / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "omgaan met begrippen rond inhoud",
+          "last": "begrippen rond inhoud",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Inhoud / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "omgaan met tegenstellingen tussen begrippen rond inhoud",
+          "last": "rond inhoud",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Inhoud / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "vergelijken en ordenen op inhoud",
+          "last": "op inhoud"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Inhoud / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "meten met informele instrumenten en maten waarmee je inhoud",
+          "last": "(blokken, bekers, flessen)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Inhoud / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "redeneren over inhouden",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Temperatuur / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 3,
+          "first": "verkennen en ervaren van de begrippen warm",
+          "last": "in verschillende situaties"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Gewicht / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "ontdekken en ervaren wat",
+          "last": "inhoudt",
+          "corrections": [
+            {
+              "from": "wat wegen' inhoudt",
+              "to": "wat 'wegen' inhoudt",
+              "reason": "text recognition misread"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Gewicht / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "omgaan met begrippen rond gewicht",
+          "last": "begrippen rond gewicht",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Gewicht / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "omgaan met tegenstellingen tussen begrippen rond gewicht",
+          "last": "rond gewicht",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Gewicht / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "vergelijken en ordenen op gewicht",
+          "last": "op gewicht"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Gewicht / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "meten met informele 'weeginstrumenten'",
+          "last": "balans en handen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Gewicht / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "redeneren over wegen en gewichten",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "omgaan met begrippen rond tijdsindeling",
+          "last": "namen van de maanden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "omgaan met begrippen rond tijdsaanduiding",
+          "last": "rond tijdsaanduiding"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "omgaan met dagritme",
+          "last": "cyclische tijdsaanduidingen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "plaatsen van gebeurtenissen",
+          "last": "in tijdsvolgorde"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "verkennen van diverse analoge",
+          "last": "functie van een klok"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "aflezen van tijd",
+          "last": "een digitale klok"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 7",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "gebruiken van eenvoudige kalenders",
+          "last": "eenvoudige kalenders"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 8",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "meten van tijd",
+          "last": "(informele) tijdmeters"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Tijd / 9",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "redeneren over tijd",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Geld / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "ontdekken dat er munten",
+          "last": "verschillende waarden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Geld / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "omgaan met begrippen rond geld",
+          "last": "rond geld"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Geld / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "verkennen van de rol van geld",
+          "last": "met pinpas"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Geld / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "eenvoudige geldbedragen",
+          "last": "hele euro's"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meten",
+      "code": "Geld / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 4,
+          "first": "redeneren over geld",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 3
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Oriënteren in de ruimte / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "omgaan met meetkundige begrippen",
+          "last": "meetkundige begrippen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Oriënteren in de ruimte / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "onderzoeken en omschrijven",
+          "last": "en t.o.v. jezelf"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Oriënteren in de ruimte / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "werken met eenvoudige tekeningen",
+          "last": "en plattegronden"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Oriënteren in de ruimte / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "onderzoeken wat wel en niet",
+          "last": "bepaalde standpunten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Oriënteren in de ruimte / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "onderzoeken en ontwerpen",
+          "last": "eenvoudige 'routes'"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Oriënteren in de ruimte / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "redeneren over 'oriënteren in de ruimte'",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Construeren / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "omgaan met begrippen rond construeren",
+          "last": "rond construeren",
+          "lastOccurrence": 1
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Construeren / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "construeren van ruimtelijke figuren",
+          "last": "meetkundig constructiemateriaal"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Construeren / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "voortzetten en zelf ontwerpen",
+          "last": "ketting- en mozaïekpatronen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Construeren / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "nabouwen van een voorbeeld",
+          "last": "passend constructiemateriaal"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Construeren / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "construeren met papier",
+          "last": "(patronen ontwerpen)"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Construeren / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "redeneren over eenvoudige meetkundige",
+          "last": "problemen rond construeren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Opereren met vormen en figuren / 1",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "sorteren van voorwerpen",
+          "last": "of meer kenmerken"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Opereren met vormen en figuren / 2",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "verschillen onderzoeken en benoemen",
+          "last": "tweedimensionale figuren"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Opereren met vormen en figuren / 3",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "onderscheiden en onderzoeken",
+          "last": "meetkundige vormen"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Opereren met vormen en figuren / 4",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "experimenteren met vormen",
+          "last": "en spiegeleffecten"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Opereren met vormen en figuren / 5",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "spelen met licht en schaduw",
+          "last": "zon of zaklamp"
+        }
+      ]
+    },
+    {
+      "group": "Inhoudskaart Rekenen-wiskunde, fase 1 / METEN & MEETKUNDE: Meetkunde",
+      "code": "Opereren met vormen en figuren / 6",
+      "spans": [
+        {
+          "source": "nl-slo-inhoudskaart-rekenen-fase1",
+          "page": 1,
+          "column": 5,
+          "first": "redeneren over 'opereren met vormen en figuren'",
+          "last": "probleem- en conflictsituaties",
+          "lastOccurrence": 2
+        }
+      ]
+    }
+  ]
+}

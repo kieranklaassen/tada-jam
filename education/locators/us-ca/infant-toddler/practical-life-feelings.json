@@ -1,0 +1,434 @@
+{
+  "lane": "us-ca/infant-toddler/practical-life-feelings",
+  "records": [
+    {
+      "group": "Social and Emotional Development / Strand 1.0: Self",
+      "code": "1.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 53,
+          "first": "The developing concept",
+          "last": "within social relationships"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 53,
+          "first": "Children identify their",
+          "last": "or cultural practices"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 1.0: Self",
+      "code": "1.2",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 55,
+          "first": "The developing understanding",
+          "last": "influence the environment"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 55,
+          "first": "Children show an understanding",
+          "last": "when describing themselves",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 1.0: Self",
+      "code": "1.3",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 56,
+          "first": "The developing ability",
+          "last": "sounds or words"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 56,
+          "first": "Children express secondary",
+          "last": "in pretend play"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 1.0: Self",
+      "code": "1.4",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 58,
+          "first": "The developing ability",
+          "last": "from a caregiver"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 58,
+          "first": "Children anticipate the",
+          "last": "communicate specific feelings"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 2.0: Social Interactions",
+      "code": "2.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 62,
+          "first": "The developing",
+          "last": "other people",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 62,
+          "first": "Children sometimes communicate",
+          "last": "example taking turns"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 2.0: Social Interactions",
+      "code": "2.2",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 64,
+          "first": "The developing",
+          "last": "of others",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 64,
+          "first": "Children show an understanding",
+          "last": "that person feel better"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 2.0: Social Interactions",
+      "code": "2.3",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 65,
+          "first": "The developing",
+          "last": "other people",
+          "lastOccurrence": 2
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 65,
+          "first": "Children interact with",
+          "last": "experiences or ideas"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 2.0: Social Interactions",
+      "code": "2.4",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 66,
+          "first": "The developing",
+          "last": "other children",
+          "lastOccurrence": 1
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 66,
+          "first": "Children engage in simple",
+          "last": "a shared activity",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 3.0: Relationships",
+      "code": "3.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 68,
+          "first": "The development of",
+          "last": "provide consistent nurturance"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 68,
+          "first": "When exploring the",
+          "last": "to these caregivers"
+        }
+      ]
+    },
+    {
+      "group": "Social and Emotional Development / Strand 3.0: Relationships",
+      "code": "3.2",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 71,
+          "first": "The development",
+          "last": "over time"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 71,
+          "first": "Children prefer to interact",
+          "last": "games with movement",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 1.0: Motivation to Learn",
+      "code": "1.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 85,
+          "first": "The developing ability",
+          "last": "people and events"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 85,
+          "first": "Children use a",
+          "last": "them more closely"
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 1.0: Motivation to Learn",
+      "code": "1.2",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 87,
+          "first": "The developing skill",
+          "last": "challenges and setbacks"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 87,
+          "first": "Children spend more",
+          "last": "they encounter challenges"
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 2.0: Executive Functioning",
+      "code": "2.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 90,
+          "first": "The developing skill",
+          "last": "activities and interactions"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 90,
+          "first": "Children demonstrate some ability",
+          "last": "and predictable environment",
+          "firstOccurrence": 2
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 2.0: Executive Functioning",
+      "code": "2.2",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 92,
+          "first": "The developing",
+          "last": "and impulses"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 92,
+          "first": "Children communicate more",
+          "last": "with caregiver guidance"
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 2.0: Executive Functioning",
+      "code": "2.3",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 94,
+          "first": "The developing ability",
+          "last": "goals and plans"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 94,
+          "first": "Children demonstrate the",
+          "last": "mind with caregiver support"
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 2.0: Executive Functioning",
+      "code": "2.4",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 96,
+          "first": "The developing",
+          "last": "and behavior"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 96,
+          "first": "Children shift attention",
+          "last": "complex pretend play"
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 3.0: Goal-Directed Learning",
+      "code": "3.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 99,
+          "first": "The developing skill",
+          "last": "get needs met"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 99,
+          "first": "Children use a",
+          "last": "and new situations"
+        }
+      ]
+    },
+    {
+      "group": "Approaches to Learning / Strand 3.0: Goal-Directed Learning",
+      "code": "3.2",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 100,
+          "first": "The developing",
+          "last": "accomplish goals"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 100,
+          "first": "Children play with",
+          "last": "with increasing independence"
+        }
+      ]
+    },
+    {
+      "group": "Cognitive Development / Strand 3.0: Imitation and Symbolic Thinking",
+      "code": "3.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 151,
+          "first": "The developing ability",
+          "last": "immediately or later"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 151,
+          "first": "Children imitate gestures",
+          "last": "a different context"
+        }
+      ]
+    },
+    {
+      "group": "Cognitive Development / Strand 3.0: Imitation and Symbolic Thinking",
+      "code": "3.2",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 152,
+          "first": "The developing ability",
+          "last": "actions objects or ideas",
+          "lastOccurrence": 2
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 152,
+          "first": "Children use objects",
+          "last": "concrete object present"
+        }
+      ]
+    },
+    {
+      "group": "Cognitive Development / Strand 4.0: Memory",
+      "code": "4.1",
+      "spans": [
+        {
+          "label": "Foundation",
+          "source": "us-ca-itldf-2025",
+          "page": 154,
+          "first": "The developing ability",
+          "last": "about past experiences"
+        },
+        {
+          "label": "23 through 36 months",
+          "source": "us-ca-itldf-2025",
+          "page": 154,
+          "first": "Children anticipate the",
+          "last": "act them out"
+        }
+      ]
+    }
+  ]
+}
