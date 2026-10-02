@@ -2,7 +2,7 @@
 title: Every jam game picks its own visual style; all games meet one shared quality bar
 date: 2026-09-22
 last_refreshed: 2026-09-22
-last_updated: 2026-09-22
+last_updated: 2026-10-02
 category: conventions
 module: art-direction
 problem_type: convention
@@ -37,7 +37,7 @@ The first art-direction doc written after the rebuild made a wrong generalizatio
 
 The correction is in PR [#1](https://github.com/kieranklaassen/tada-jam/pull/1), which is still open (not merged) as of writing. It splits the guidance into two layers:
 
-- `docs/art-direction.md` holds the jam-wide quality bar, the rule for picking a style, a registry of claimed styles, and a menu of unclaimed directions.
+- `docs/art-direction.md` holds the jam-wide quality bar, the rule for picking a style, a registry of claimed styles, and a menu of looks no game has claimed. Since October 2026 the menu is a ledger: each look is open, reserved for a named game, or claimed.
 - `games/pebble-table/ART.md` holds everything specific to claymation (palette, material, motion rules).
 
 The rule is also stated in `AGENTS.md` (`CLAUDE.md` is a symlink to it) and in the README's "Add a game" step 7.
@@ -50,9 +50,9 @@ The rule is also stated in `AGENTS.md` (`CLAUDE.md` is a symlink to it) and in t
 
 From `docs/art-direction.md` (section 2) and the "A distinct look per game" rule in `AGENTS.md`:
 
-1. Pick a direction nobody has claimed in the registry in `docs/art-direction.md`.
+1. Take a look from the menu in `docs/art-direction.md` (section 4). The menu is a ledger: every look is open, reserved for a named game, or claimed, and only the lead changes a state. The lead reserves two or three rows for a game before its builder starts, and the builder works from those, first choice first.
 2. Spike it on the game's real scene, not a mood board. Take a screenshot at 1180×820 and measure the frame rate at DPR 2.
-3. Register it in the same PR, with a link to the game's own art guide at `games/<key>/ART.md`.
+3. Register it in the same PR: a row in the claimed-styles registry, with a link to the game's own art guide at `games/<key>/ART.md`. The builder leaves the menu alone. After the merge the lead marks its row claimed and sets the game's other rows back to open.
 
 Techniques may be shared across games (merged meshes, blob shadows, the ghost-hand guidance). A look may not. The test is whether two games could be mistaken for each other in a screenshot (`docs/art-direction.md`).
 
@@ -62,7 +62,7 @@ When writing guidance, put style-specific details (palette, material, surface te
 
 Decide the look first, then build the game inside it. A first slice that is playable but plain is not a first slice: the owner judges the game by its first screenshot, and a plain renderer gets thrown away.
 
-1. Before writing any gameplay, build the game's real scene (its table, props, and one character) in several candidate styles from the unclaimed menu in `docs/art-direction.md`.
+1. Before writing any gameplay, build the game's real scene (its table, props, and one character) in the looks reserved for the game in the menu in `docs/art-direction.md`, first choice first. A game with no reserved rows asks the lead to reserve some.
 2. For each candidate, take a screenshot at 1180x820 and record a measured fps. Put the screenshots on one contact sheet with the numbers.
 3. Show the contact sheet to the owner and get a pick. Register it as the existing rule describes.
 4. Hold the slice to the full quality bar from its first screenshot, not after the mechanics work.
@@ -121,7 +121,7 @@ These lessons came from building the claymation style, but most of them are tech
 - **Distinct looks are part of the jam's value.** It is a space for experiments. If every game inherits the first game's look, the jam produces one aesthetic with several mechanics, and a child switching games in the Tada shell sees the same world over and over. The owner explicitly rejected that.
 - **A shared bar keeps variety from becoming uneven quality.** Without it, "a different style" could turn into a cheaper style, or one that runs at 30 fps on an iPad. The bar is deliberately style-independent: a paper-craft game and a claymation game are held to the same standard for idle life, feedback, clarity, guidance, and frame rate.
 - **Mixing the two layers causes drift.** The first art-direction doc showed what happens when a style decision is written into jam-wide guidance: later agents read it as a rule and copy the look. Keeping style in `games/<key>/ART.md` and the bar in `docs/art-direction.md` makes the boundary visible.
-- **Claiming a style early prevents collisions.** The registry plus a spike on the real scene makes the choice concrete (a screenshot and a number) before any visuals are built. Two parallel agents can't silently pick the same look, and a style that can't hit 60 fps is caught before the build starts.
+- **Claiming a style early prevents collisions.** The registry plus a spike on the real scene makes the choice concrete (a screenshot and a number) before any visuals are built. A style that can't hit 60 fps is caught before the build starts. A registry row lands only when a game merges, so the registry alone cannot stop two builders who work at the same time from picking one look. The menu's reservations do that: the lead gives each game its own rows before any builder starts, and no builder edits the menu.
 - **The performance techniques are hard-won and reusable.** Merging, instancing, blob shadows, baked AO, one post pass, and the DPR cap are what keep Pebble Table at about 48 draw calls. A new game in a different style can reuse all of them without borrowing the clay look.
 - **Gameplay-first costs a rewrite.** Pebble Table's 2D renderer and 2D physics were deleted wholesale once the owner saw the slice and asked for 3D; the pure rule modules and their tests carried over almost untouched. Exploring the look first, with rules kept renderer-free, turns that rewrite into a view swap.
 
@@ -148,16 +148,16 @@ This does not stop games from sharing code-level techniques or the style-indepen
 
 > Every Tada Jam game must meet the same **quality bar**, and every game must **look different**. Claymation is Pebble Table's style, not the jam's.
 
-**Registering a new game's style.** Say a second game spikes picture-book gouache from the unclaimed menu (`docs/art-direction.md`). In its PR it would add `games/<new-key>/ART.md` and one row to the registry (in `docs/art-direction.md` the art-guide column holds links):
+**Registering a new game's style.** Say a game spikes its reserved first choice from the menu (`docs/art-direction.md`, section 4), glossy die-cut stickers. In its PR it would add `games/<new-key>/ART.md` and one row to the registry (in `docs/art-direction.md` the art-guide column holds links):
 
 ```markdown
 | Game | Style | Art guide |
 | --- | --- | --- |
 | Pebble Table | Claymation 3D: plasticine with thumbprints, stop-motion lighting, terracotta on cool sage-teal | `games/pebble-table/ART.md` |
-| (new game) | Picture-book gouache: opaque colour fields, dry brush, loose ink outlines | `games/<new-key>/ART.md` |
+| (new game) | Glossy die-cut stickers: a white cut border, a soft shadow, and a moving gloss streak on every piece | `games/<new-key>/ART.md` |
 ```
 
-It would reuse techniques freely, such as instancing, blob shadows, one post pass, the DPR cap, and the ghost-hand guidance. It would replace everything that makes the look: a ramp shader and ink outlines instead of the clay material with thumbprint normals, and its own palette.
+It would reuse techniques freely, such as the DPR cap, the adaptive quality tiers, and the ghost-hand guidance. It would replace everything that makes the look: sprites with a cut border and a gloss streak instead of the clay material with thumbprint normals, and its own palette. After the merge the lead marks the stickers row claimed in the menu and sets the game's other reserved rows back to open.
 
 **Figure-ground fix in the palette (`games/pebble-table/view/clay.ts`):**
 
@@ -183,7 +183,7 @@ stone: '#c9683d',
 
 ## Related
 
-- [`docs/art-direction.md`](../../art-direction.md): the canonical quality bar, style rule, claimed-styles registry, and menu of unclaimed directions. This doc records why; that doc is the rule.
+- [`docs/art-direction.md`](../../art-direction.md): the canonical quality bar, style rule, claimed-styles registry, and look menu (a ledger of open, reserved, and claimed looks). This doc records why; that doc is the rule.
 - [`games/pebble-table/ART.md`](../../../games/pebble-table/ART.md): the worked example of one claimed style (claymation 3D) and its measured budget.
 - [`AGENTS.md`](../../../AGENTS.md): the "Quality bar" and "A distinct look per game" rules, plus the jam 3D stack allowance.
 - [`README.md`](../../../README.md): "Add a game" step 7 (pick, spike, register a style).

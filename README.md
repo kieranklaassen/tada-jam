@@ -34,7 +34,7 @@ Routes are hash-based (`#/play/<key>`), so no rewrites are needed.
 
 ## Look
 
-Every game looks different, and every game meets the same quality bar. [`docs/art-direction.md`](docs/art-direction.md) holds the bar (alive at idle, motion and sound on every touch, weight and squash, kid-clear, wordless guidance, 60 fps on an iPad, no external assets), the registry of claimed styles (Pebble Table is claymation 3D), and a menu of unclaimed directions.
+Every game looks different, and every game meets the same quality bar. [`docs/art-direction.md`](docs/art-direction.md) holds the bar (alive at idle, motion and sound on every touch, weight and squash, kid-clear, wordless guidance, 60 fps on an iPad, no external assets), the registry of claimed styles (Pebble Table is claymation 3D), and a menu of looks no game has claimed, kept as a ledger (open, reserved for a named game, or claimed).
 
 ## Checks
 
@@ -60,7 +60,7 @@ The wordless check (`scripts/wordless-check.ts`) parses kid-side game code and f
 4. `games/<key>/index.ts` — `export const game: JamGame = { cartridge, emoji: '🪨' }`.
 5. Put game logic in pure modules with tests next to them (`*.test.ts`). Read saved state through a defensive `deserialize`.
 6. Design for the youngest age in `ageBand`: every interaction must be understandable from wordless cues (see the age-band cue table in [`docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md`](docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md)).
-7. Pick an unclaimed visual style from [`docs/art-direction.md`](docs/art-direction.md), spike it on the game's real scene (screenshot at 1180×820, measure fps at DPR 2), write `games/<key>/ART.md`, and add the game to the claimed-styles registry.
+7. Take the look reserved for the game in the menu in [`docs/art-direction.md`](docs/art-direction.md) (a ledger: the lead reserves rows before a builder starts and marks one claimed after the merge), spike it on the game's real scene (screenshot at 1180×820, measure fps at DPR 2), write `games/<key>/ART.md`, and add the game to the claimed-styles registry.
 8. `npm run check`, then open a PR. Say how the game meets each line of the quality bar, with the measured frame rate. See `AGENTS.md` for the full rule list.
 
 ## Port a game into Tada
