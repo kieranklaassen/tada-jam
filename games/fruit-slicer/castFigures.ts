@@ -70,7 +70,12 @@ function pelican(ctx: Ctx, dots: Dots, cast: Casting): void {
   inked(ctx, oval(0, 4 - 20 * wings, 22 + 26 * wings, 30 - 12 * wings), WHITE, 3.5, dots.of(ctx, BLUE, 0.5))
   ctx.restore()
   // What it ate lies in the belly, each piece at its own length, and shows through.
-  feast.lumps.filter((one) => one.at >= 1).slice(-7).forEach((one, row) => lump(ctx, cast.fruit, -30, -20 - row * 10, Math.min(1, one.size), 60))
+  ctx.save()
+  ctx.beginPath()
+  body(ctx)
+  ctx.clip()
+  feast.lumps.filter((one) => one.at >= 1).slice(-6).forEach((one, row) => lump(ctx, cast.fruit, -34, -28 - row * 11, Math.min(1, one.size), 70, 9))
+  ctx.restore()
   // The neck, and a head that can turn away to preen.
   inked(ctx, poly([[-4, -90], [18, -96], [24, -122], [4, -126]]), WHITE, 4)
   ctx.save()

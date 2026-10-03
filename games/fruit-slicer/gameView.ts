@@ -26,6 +26,8 @@ import { eaten, marksOf, SHELF, type Piece } from './world'
 type Ctx = CanvasRenderingContext2D
 type Dots = Pick<Screens, 'of'>
 const SCALLOPS = 16
+/** How big each customer is drawn beside the pelican, which is the tallest: the small ones are drawn larger than life, so their faces read. */
+const SIZE: Readonly<Record<Customer['who'], number>> = { pelican: 1, twins: 1.5, ants: 1.5, cat: 1.15, boa: 1.05 }
 
 /** Everything that never moves: the two panels, the board, the shelf, the dog's arch and the roller's hook. Returns the figures drawn. */
 export function paintPlate(ctx: Ctx, dots: Dots): number {
@@ -175,9 +177,9 @@ function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
 }
 
 /** A ticket: a card with a small strip of the fruit for each share ordered, the share filled in, and, once it is written, the fraction on a bracket over that share. */
-function ticket(ctx: Ctx, customer: Customer, x: number, y: number, s: number): number {
+function ticket(ctx: Ctx, customer: Customer, x: number, top: number, s: number, stacked = false): number {
   const whole = (WHOLE[customer.fruit] / WHOLE.long) * 190 * s
-  let left = x, drawn = 0
+  let left = x, y = top, drawn = 0
   for (const share of customer.shares) {
     const reach = Math.max(1, share.num / share.den)
     const w = whole * reach + 40 * s, h = (customer.written ? 122 : 62) * s
@@ -206,7 +208,8 @@ function ticket(ctx: Ctx, customer: Customer, x: number, y: number, s: number): 
       ctx.stroke()
       drawFraction(ctx, share, sx + filled / 2, sy - 44 * s, 28 * s, { fill: INK })
     }
-    left += w + 8 * s
+    if (stacked) y += h + 6 * s
+    else left += w + 8 * s
     drawn += 6
   }
   return drawn
@@ -234,7 +237,7 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
   const bounce = closing > 0 && scenery.ending!.result.kind === 'over' ? 0.35 + 0.25 * Math.abs(Math.sin(closing * Math.PI * 3)) : 1
   const down = closing * bounce
   inked(ctx, poly([[lid.x, lid.y + lid.h], [lid.x + 12 * (1 - down), lid.y + lid.h * down], [lid.x + lid.w + 12 * (1 - down), lid.y + lid.h * down], [lid.x + lid.w, lid.y + lid.h]]), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
-  if (customer.written && down < 0.5) drawFraction(ctx, share, lid.x + lid.w / 2 + 6, lid.y + lid.h / 2, 13, { fill: INK, edge: WHITE, edgeWidth: 4 })
+  if (customer.written && down < 0.5) drawFraction(ctx, share, lid.x + lid.w / 2 + 6, lid.y + lid.h / 2, 17, { fill: INK, edge: WHITE, edgeWidth: 5 })
   // Shut, the lid lies over the tin and what is in it is no longer seen.
   inked(ctx, rect(body.x, body.y, body.w, body.h), down >= 0.99 ? '#c9d6e6' : '#eef3f8', 5, down >= 0.99 ? dots.of(ctx, BLUE, 0.3) : undefined)
   // The sprung jaw at the end of each compartment, and the twins' divider between the two.
@@ -253,7 +256,8 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
     ctx.stroke()
   })
   // The rail: the whole fruit ruled into its equal parts, the ordered ones in the fruit's tint. One row for each share.
-  const rowH = ruler.h / ruled.rows.length
+  // One row is the strip's own height; the cat's two rows are each a little shorter than that, one under the other.
+  const rowH = ruled.rows.length > 1 ? 12 : ruler.h
   const whole = WHOLE[customer.fruit] * PX
   ruled.rows.forEach((row, index) => {
     const y = ruler.y + index * rowH
@@ -272,7 +276,7 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
   // The sign between the cat's two shares, laid just past their ends.
   if (ruled.sign && customer.written && (!showing || show.extra > 0)) {
     const end = Math.max(...ruled.rows.map((row) => (whole * row.lit) / row.parts))
-    drawSign(ctx, ruled.sign, ruler.x + end + 14, ruler.y + ruler.h / 2, 18, { fill: INK, edge: WHITE, edgeWidth: 4 })
+    drawSign(ctx, ruled.sign, ruler.x + end + 16, ruler.y + rowH, 22, { fill: INK, edge: WHITE, edgeWidth: 5 })
   }
   return 8 + 4 * ruled.rows.length
 }
@@ -337,8 +341,8 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     const lengths = scenery.ending ? scenery.ending.result.parts.flatMap((part) => part.pieces.map((piece) => piece.length)) : eaten(game.world).map((piece) => piece.length)
     const feast = feastOf(atWindow, lengths, scenery.ending?.taste ?? null, scenery.show?.kind === 'showing' ? null : scenery.show, scenery.ending?.result.kind === 'over')
     const ants = atWindow.who === 'ants'
-    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show }, WINDOW.x + (ants ? 40 : atWindow.who === 'boa' ? 120 : 92), WINDOW.y + WINDOW.h - 4, 0.92, 540)
-    if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + 250, WINDOW.y + 34, atWindow.shares.length > 1 || atWindow.who === 'boa' ? 0.6 : atWindow.written ? 0.8 : 1)
+    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show }, WINDOW.x + (ants ? 46 : atWindow.who === 'boa' ? 130 : atWindow.who === 'twins' ? 118 : 92), WINDOW.y + WINDOW.h - 4, 0.92 * SIZE[atWindow.who], 540)
+    if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + 262, WINDOW.y + 34, atWindow.shares.length > 1 || atWindow.who === 'boa' ? 0.62 : atWindow.written ? 0.82 : 1)
     // Served, and the serve over: it holds its tin, shut, by its feet.
     if (game.finished && !scenery.ending) {
       inked(ctx, rect(WINDOW.x + 168, WINDOW.y + WINDOW.h - 34, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
@@ -352,9 +356,10 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
       drawn += customerAt(ctx, dots, gliding.customer, scenery.leavingActor, { show: scenery.show }, box.x + 56, box.y + box.h - 4, 0.62, 210)
       return
     }
-    const wide = customer.shares.length > 1 || customer.who === 'boa'
-    drawn += customerAt(ctx, dots, customer, scenery.queue[index], {}, box.x + (ants ? 16 : customer.who === 'boa' ? 80 : 56), box.y + box.h - 4, 0.62, 210)
-    drawn += ticket(ctx, customer, box.x + (wide ? 10 : 118), box.y + 30, wide ? 0.34 : customer.written ? 0.44 : 0.52)
+    // A long order's ticket goes above the one who holds it; the cat's two are stacked beside it; any other stands beside its ticket.
+    const long = customer.who === 'boa'
+    drawn += customerAt(ctx, dots, customer, scenery.queue[index], {}, box.x + (ants ? 14 : long ? 96 : customer.who === 'twins' ? 60 : 40), box.y + box.h - 4, (long ? 0.5 : 0.6) * SIZE[customer.who], ants ? 96 : 210)
+    drawn += ticket(ctx, customer, box.x + (long ? 8 : 122), box.y + 30, long ? 0.5 : customer.shares.length > 1 ? 0.5 : customer.written ? 0.54 : 0.6, true)
   })
   drawn += awning(ctx, scenery.time, fx.flap)
   drawn += crate(ctx, dots, fx.rock)

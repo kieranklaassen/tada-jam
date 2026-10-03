@@ -31,7 +31,7 @@ export const WINDOW: Box = { x: 26, y: 28, w: 610, h: 164 }
 export const QUEUE: readonly Box[] = [{ x: 660, y: 28, w: 236, h: 164 }, { x: 908, y: 28, w: 244, h: 164 }]
 /** The rail the tin lies on: the lid, the body and the ruled strip under it, all from the same left edge as the board. */
 export const RAIL_BOX: Box = { x: X0 - 12, y: 220, w: RAIL * PX + 24, h: 108 }
-export const TIN = { lidY: 220, lidH: 30, bodyY: 250, bodyH: 56, pieceH: 44, rulerY: 308, rulerH: 18 } as const
+export const TIN = { lidY: 220, lidH: 38, bodyY: 258, bodyH: 52, pieceH: 42, rulerY: 312, rulerH: 16 } as const
 export const BOARD: Box = { x: X0 - 16, y: 384, w: RAIL * PX + 32, h: 152 }
 export const SHELF_BOX: Box = { x: X0 - 16, y: 552, w: RAIL * PX + 32, h: SHELF * 56 + 6 }
 export const ROLLER: Box = { x: 1002, y: 222, w: 140, h: 104 }
