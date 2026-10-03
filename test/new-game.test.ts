@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
@@ -14,11 +14,14 @@ import { scanGames } from '../scripts/wordless-check'
 // the folder, the egress scan and the wordless scan. Its typecheck and its unit
 // tests are those of templates/cartridge/ in place, which the root typecheck
 // and test run include; what the band changes in a copy (its first-visit
-// defaults) is read back from copies at three bands.
+// defaults, and how the ghost hand shows a tap) is read back from copies at
+// several bands.
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const templateDir = join(root, 'templates', 'cartridge')
 const FROZEN = ['attention.ts', 'perf.ts', 'quality.ts', 'saveCadence.ts']
+/** Copied only into a game whose band starts at 6 or above. */
+const SYMBOLS = ['symbols.test.ts', 'symbols.ts']
 const FIRST_LINE = /^(?:\/\/|<!--) template: cartridge\/(\S+) v(\d+)( \(frozen: [^)]+\))?(?: -->)?$/
 
 const firstLine = (path: string): string => readFileSync(path, 'utf8').split('\n', 1)[0]
@@ -91,7 +94,10 @@ describe('new:game', () => {
   it('copies the template into games/<key>/, renames the Mount file, and writes nothing else', () => {
     const temp = tempRoot()
     newGame(ARGS, temp)
-    const expected = tree(templateDir).map((file) => `games/hedgehog-post/${file === 'game.tsx' ? 'hedgehog-post.tsx' : file}`)
+    // The band of this copy starts at 4, so the symbols module stays behind.
+    const expected = tree(templateDir)
+      .filter((file) => !SYMBOLS.includes(file))
+      .map((file) => `games/hedgehog-post/${file === 'game.tsx' ? 'hedgehog-post.tsx' : file}`)
     expect(tree(temp)).toEqual(expected.sort())
   })
 
@@ -139,6 +145,40 @@ describe('new:game', () => {
     expect(scanGames(temp)).toEqual([])
   })
 
+  it('copies the grown-up overlay as a free file, under the one name that lets its readout past the wordless scan', () => {
+    const temp = tempRoot()
+    const gameDir = newGame(ARGS, temp)
+    const overlay = readFileSync(join(gameDir, 'overlay.ts'), 'utf8')
+    expect(overlay).toBe(readFileSync(join(templateDir, 'overlay.ts'), 'utf8'))
+    expect(existsSync(join(gameDir, 'overlay.test.ts'))).toBe(true)
+    expect(frozenFiles()).not.toContain('overlay.ts')
+    // The Mount of the copy is wired to it.
+    expect(readFileSync(join(gameDir, 'hedgehog-post.tsx'), 'utf8')).toContain("from './overlay'")
+    // Its readout is text. It passes behind the plain exception because the file is named overlay: the same
+    // file under another name is a finding, so the readout cannot wander into the kid side.
+    expect(overlay).toMatch(/\/\/ wordless-ok: \S/)
+    expect(scanGames(temp)).toEqual([])
+    renameSync(join(gameDir, 'overlay.ts'), join(gameDir, 'readout.ts'))
+    expect(scanGames(temp).map((finding) => finding.rule)).toEqual(['plain-exception-misplaced'])
+  })
+
+  it('gives the symbols module and its test only to a game whose band starts at 6 or above', () => {
+    const temp = tempRoot()
+    for (const [key, band, holds] of [['young-one', '2-4', false], ['just-under', '5-9', false], ['just-there', '6-10', true], ['old-one', '9-12', true]] as const) {
+      const gameDir = newGame([key, 'A Game', band, '🎲'], temp)
+      for (const file of SYMBOLS) {
+        expect(existsSync(join(gameDir, file)), `${band} ${file}`).toBe(holds)
+        if (holds) expect(readFileSync(join(gameDir, file), 'utf8'), `${band} ${file}`).toBe(readFileSync(join(templateDir, file), 'utf8'))
+      }
+    }
+    // The copies that hold it pass both scans untouched: every text call in it is behind the numeral exception.
+    expect(scanTree(temp, { built: false })).toEqual([])
+    expect(scanGames(temp)).toEqual([])
+    // The same module in a game whose band starts below 6 is a finding, so it cannot be carried down by hand.
+    writeFileSync(join(temp, 'games', 'young-one', 'symbols.ts'), readFileSync(join(templateDir, 'symbols.ts'), 'utf8'))
+    expect(new Set(scanGames(temp).map((finding) => finding.rule))).toEqual(new Set(['numeral-exception-band']))
+  })
+
   it('copies the frozen files byte for byte', () => {
     const temp = tempRoot()
     newGame(ARGS, temp)
@@ -172,11 +212,35 @@ describe('new:game', () => {
   })
 
   it.each([
+    ['2-2', 'once', 1],
+    ['3-5', 'once', 1],
+    ['4-8', 'twice', 2],
+    ['9-12', 'twice', 2],
+  ])('makes a copy at band %s whose ghost hand presses %s to show a tap', async (band, _, presses) => {
+    const temp = tempRoot()
+    const gameDir = newGame([`band-${band}`, 'Band', band, '🫧'], temp)
+    const { config } = await rulesOf(gameDir)
+    expect(config.TAP_PRESSES).toBe(presses)
+    // The copy's own hand, left to its default: how many times it goes down over one demonstration of a tap.
+    const { handPose }: typeof import('../templates/cartridge/guidance') = await import(/* @vite-ignore */ join(gameDir, 'guidance.ts'))
+    const pose = { travel: 0, press: 0, opacity: 0 }
+    let shown = 0
+    let down = false
+    for (let i = 0; i <= 200; i++) {
+      const pressed = handPose(i / 200, false, pose).press > 0.5
+      if (pressed && !down) shown += 1
+      down = pressed
+    }
+    expect(shown).toBe(presses)
+  })
+
+  it.each([
     ['a key a game already uses', ['taken', 'Taken', '4-8', '🦔'], /already exists/],
     ['a key a showcase already uses', ['shown', 'Shown', '4-8', '🦔'], /already exists/],
     ['a key with an upper-case letter', ['Hedgehog', 'Hedgehog', '4-8', '🦔'], /kebab-case/],
     ["a key that is the name of one of the template's own modules", ['state', 'State', '4-8', '🦔'], /state\.ts/],
     ['the key index, which the jam registration would import itself under', ['index', 'Index', '4-8', '🦔'], /index\.ts/],
+    ["the key overlay, the name of the template's grown-up overlay", ['overlay', 'Overlay', '4-8', '🦔'], /overlay\.ts/],
     ['a band wider than five years', ['hedgehog-post', 'Hedgehog', '4-10', '🦔'], /wider than 5 years/],
     ['a band that starts below 2', ['hedgehog-post', 'Hedgehog', '1-4', '🦔'], /within 2 to 12/],
     ['a band that ends above 12', ['hedgehog-post', 'Hedgehog', '9-13', '🦔'], /within 2 to 12/],

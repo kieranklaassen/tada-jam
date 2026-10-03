@@ -104,10 +104,16 @@ The stage of building a game in which only its toy exists: the one action the ch
 The toy is judged alone, because a goal, a story or a look does not make up for a dull action. The owner sees every game's toy once, at the end of this stage, before goals are built on it.
 
 ### Wave
-A set of games built at the same time, one builder each, and merged together as one pull request.
+A set of games built at the same time, one builder each, and merged together as one pull request, or, when its builders are remote and finish apart, as a few stacked pull requests of the games that are ready.
 *Avoid:* batch, sprint
 
 A wave has a lead, who plans it, owns every file the games share, reserves looks in the Look ledger, starts the checkers of the Design sheets, and makes every commit on the wave's branch. A builder whose worktree the lead can read on disk runs no git that writes, and the lead commits for it; a builder on a remote machine commits and pushes only its own game branch, which the lead merges with a squash. The owner plays one wave before the next is built on the same assumptions.
+
+### Lane
+One remote builder's work on one game of a Wave: a cloud machine, a branch named `lane/<key>`, and the brief it was started from.
+*Avoid:* worker, job
+
+The lead cannot reach a lane while it runs. What a lane pushed and the status block in its game folder are all that carries from one run of a lane to the next, so every message to a lane is written for a session that has never seen the game.
 
 ### Held game
 A game that is stopped and left out of its Wave's merge, because its Design sheet names no supporting record, the owner rejected its toy, or it did not reach the Quality bar in time.

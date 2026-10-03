@@ -27,12 +27,15 @@ import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, 
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { KEY_PATTERN, ageBandProblems } from '../harness/contract.ts'
+import { NUMERALS_FROM_AGE } from './wordless-check.ts'
 
 const USAGE = 'usage: npm run new:game -- <key> "<Name>" <youngest>-<oldest> <emoji>\n       npm run new:game -- --refresh <key>'
 const REPOSITORY = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const TEMPLATE = join(REPOSITORY, 'templates', 'cartridge')
 /** The template's Mount file, which becomes <key>.tsx. */
 const MOUNT_FILE = 'game.tsx'
+/** The one module that draws numerals and signs, and its test: copied only into a game whose band starts at the age the wordless check allows them from. */
+const SYMBOL_FILES = new Set(['symbols.ts', 'symbols.test.ts'])
 
 /** A single-quoted TypeScript string literal. */
 function quote(text: string): string {
@@ -109,6 +112,7 @@ export function newGame(args: readonly string[], root: string = REPOSITORY): str
   const stem = camelCase(key)
   const written = new Map<string, string>()
   for (const file of templateFiles(TEMPLATE)) {
+    if (SYMBOL_FILES.has(file) && youngest < NUMERALS_FROM_AGE) continue
     let text = readFileSync(join(TEMPLATE, file), 'utf8')
     // Each game exports its manifest and its cartridge under its own names, as Tada's registry expects.
     text = text.replaceAll('templateManifest', `${stem}Manifest`).replaceAll('templateCartridge', `${stem}Cartridge`)

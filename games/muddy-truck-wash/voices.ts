@@ -1,0 +1,218 @@
+// Every sound of the game as plain numbers: a voice is a short list of notes,
+// each a wave or a band of noise with a pitch, a peak, an attack and a length.
+// Nothing here touches Web Audio, so a test can hold every voice inside the
+// ranges below, and someone who can hear tunes the numbers in one place.
+
+export type Wave = 'sine' | 'triangle' | 'square' | 'sawtooth' | 'noise'
+
+export type Note = {
+  wave: Wave
+  /** Hz. For noise it is the middle of the band. */
+  pitch: number
+  /** Hz the pitch glides to by the end of the note. */
+  glideTo?: number
+  /** Gain at the top of the attack, before the master gain. */
+  peak: number
+  /** Seconds to the peak. */
+  attack: number
+  /** Seconds from the peak to silence. */
+  length: number
+  /** Seconds after the voice starts. */
+  delay?: number
+  /** How narrow a noise band is: higher is narrower and more pitched. */
+  q?: number
+}
+
+export type VoiceSpec = readonly Note[]
+
+/** The ranges every note stays inside. */
+export const LIMITS = {
+  pitch: [45, 7000],
+  peak: [0.005, 0.3],
+  attack: [0.002, 0.12],
+  length: [0.02, 1.4],
+  /** A whole voice, from its start to its last note's end. */
+  seconds: 2.4,
+  notes: 8,
+} as const
+
+const clamp = (v: number, [lo, hi]: readonly [number, number]): number => Math.min(hi, Math.max(lo, v))
+/** `v` in 0..1 picks a place between two values. */
+const between = (a: number, b: number, v: number): number => a + (b - a) * Math.min(1, Math.max(0, v))
+
+function note(wave: Wave, pitch: number, peak: number, attack: number, length: number, more: Partial<Note> = {}): Note {
+  const n: Note = { wave, pitch: clamp(pitch, LIMITS.pitch), peak: clamp(peak, LIMITS.peak), attack: clamp(attack, LIMITS.attack), length: clamp(length, LIMITS.length), ...more }
+  if (n.glideTo !== undefined) n.glideTo = clamp(n.glideTo, LIMITS.pitch)
+  return n
+}
+
+/** The sponge lifting mud or laying foam: a wet scrub with a squeak on top. `speed` 0..1 raises it; `variant` 0..3 changes its grain. */
+export function scrub(speed: number, variant: number): VoiceSpec {
+  const v = ((variant % 4) + 4) % 4
+  return [
+    note('noise', between(900, 2100, speed) + v * 130, 0.13, 0.012, 0.11 + v * 0.015, { q: 1.4 + v * 0.3, glideTo: between(1300, 2600, speed) }),
+    note('sine', between(520, 980, speed) + v * 45, 0.05, 0.02, 0.09, { glideTo: between(700, 1250, speed) + v * 60 }),
+  ]
+}
+
+/** Bubbles rising off new foam: three small blips climbing. */
+export function foamUp(variant: number): VoiceSpec {
+  const base = 620 + (((variant % 4) + 4) % 4) * 70
+  return [0, 1, 2].map((i) => note('sine', base * (1 + i * 0.26), 0.05, 0.004, 0.05, { delay: 0.03 + i * 0.045, glideTo: base * (1.2 + i * 0.26) }))
+}
+
+/** The sponge on dried mud: a dry rasp in three scratches. */
+export function rasp(variant: number): VoiceSpec {
+  const v = ((variant % 4) + 4) % 4
+  return [0, 1, 2].map((i) => note('noise', 1500 + v * 160 + i * 120, 0.1, 0.004, 0.045, { delay: i * 0.055, q: 2.2 }))
+}
+
+/** The hose: a hiss of spray. On dried mud it sinks to a gurgle. */
+export function spray(variant: number, gurgle: boolean): VoiceSpec {
+  const v = ((variant % 4) + 4) % 4
+  const hiss = note('noise', 3400 + v * 260, 0.11, 0.015, 0.2, { q: 0.7, glideTo: gurgle ? 900 : 2900 + v * 200 })
+  return gurgle ? [hiss, note('sine', 190, 0.07, 0.03, 0.22, { delay: 0.05, glideTo: 110 })] : [hiss]
+}
+
+/** Foam carried off: the hiss with a falling wash and two drips. */
+export function rinse(variant: number): VoiceSpec {
+  const v = ((variant % 4) + 4) % 4
+  return [
+    note('noise', 2800 + v * 200, 0.12, 0.015, 0.26, { q: 0.7, glideTo: 700 }),
+    note('sine', 980 + v * 60, 0.05, 0.004, 0.06, { delay: 0.16, glideTo: 620 }),
+    note('sine', 1240 + v * 60, 0.04, 0.004, 0.06, { delay: 0.25, glideTo: 760 }),
+  ]
+}
+
+/** The cloth drying and shining: a squeak that climbs with each stroke of a rub. `rise` 0..1. */
+export function shine(rise: number): VoiceSpec {
+  return [
+    note('sine', between(760, 1500, rise), 0.07, 0.012, 0.11, { glideTo: between(1150, 2300, rise) }),
+    note('triangle', between(2300, 3600, rise), 0.03, 0.004, 0.2, { delay: 0.07 }),
+  ]
+}
+
+/** The cloth on dried mud: a dry scratch and a puff. */
+export function scratch(): VoiceSpec {
+  return [note('noise', 2600, 0.08, 0.004, 0.06, { q: 1.8 }), note('noise', 900, 0.05, 0.03, 0.18, { delay: 0.04, q: 0.6 })]
+}
+
+/** The cloth on soft mud: a squelchy wipe. */
+export function smear(): VoiceSpec {
+  return [note('noise', 520, 0.12, 0.02, 0.16, { q: 1.2, glideTo: 300 }), note('sine', 300, 0.06, 0.02, 0.14, { glideTo: 190 })]
+}
+
+/** The cloth pushing foam about: a soft fizz. */
+export function fizz(): VoiceSpec {
+  return [note('noise', 4600, 0.07, 0.02, 0.2, { q: 0.8 }), note('sine', 1500, 0.03, 0.004, 0.04, { delay: 0.08 })]
+}
+
+/** A bubble pops: a blip, higher for a smaller bubble. `size` 0..1. */
+export function pop(size: number): VoiceSpec {
+  return [note('sine', between(2000, 950, size), 0.06, 0.003, 0.04, { glideTo: between(2600, 1300, size) })]
+}
+
+/** A drop or a blob reaches the floor. */
+export function plip(size: number): VoiceSpec {
+  return [note('sine', between(1250, 620, size), 0.05, 0.003, 0.06, { glideTo: between(760, 380, size) })]
+}
+
+/** A bare finger, by what it meets. */
+export const poke = {
+  /** Dried mud: a knock and trickling crumbs. */
+  knock: (): VoiceSpec => [note('sine', 120, 0.16, 0.004, 0.12, { glideTo: 62 }), ...[0, 1, 2].map((i) => note('triangle', 1900 + i * 340, 0.03, 0.003, 0.025, { delay: 0.09 + i * 0.05 }))],
+  /** Soft mud: a squelch. */
+  squelch: (): VoiceSpec => [note('noise', 340, 0.14, 0.015, 0.16, { q: 1.5, glideTo: 130 }), note('sine', 150, 0.09, 0.02, 0.14, { glideTo: 72 })],
+  /** Foam: see `pop`. Wet paint: a squeaky slide. */
+  slide: (): VoiceSpec => [note('sine', 900, 0.06, 0.02, 0.07, { glideTo: 690 }), note('sine', 700, 0.05, 0.02, 0.08, { delay: 0.08, glideTo: 1040 })],
+  /** Dull paint: the metal rings. */
+  ring: (): VoiceSpec => [note('triangle', 1320, 0.09, 0.003, 0.3), note('sine', 2640, 0.035, 0.003, 0.2), note('sine', 96, 0.1, 0.004, 0.1, { glideTo: 60 })],
+  /** Shiny paint: a small low squeak as the print is left. */
+  print: (): VoiceSpec => [note('sine', 430, 0.07, 0.02, 0.1, { glideTo: 330 })],
+} as const
+
+/** A tool leaves the rack, or goes back. */
+export const take = {
+  sponge: (): VoiceSpec => [note('noise', 620, 0.1, 0.015, 0.09, { q: 1.3 }), note('sine', 300, 0.06, 0.015, 0.1, { glideTo: 390 })],
+  hose: (): VoiceSpec => [note('triangle', 520, 0.08, 0.003, 0.08), note('triangle', 790, 0.06, 0.003, 0.1, { delay: 0.05 }), note('noise', 3600, 0.04, 0.02, 0.12, { delay: 0.08, q: 0.7 })],
+  cloth: (): VoiceSpec => [note('noise', 1300, 0.08, 0.01, 0.06, { q: 0.8 }), note('noise', 1000, 0.06, 0.01, 0.07, { delay: 0.09, q: 0.8 })],
+  back: (): VoiceSpec => [note('triangle', 420, 0.06, 0.004, 0.07, { glideTo: 330 })],
+} as const
+
+/** A vehicle's horn, from its own two pitches. The mood is what it is about. */
+export function horn(low: number, high: number, hold: number, mood: 'call' | 'proud' | 'plain' | 'muddy' | 'bubbly' | 'wet'): VoiceSpec {
+  const toot = (pitch: number, delay: number, length: number, peak = 0.07): Note[] => [note('square', pitch, peak, 0.012, length, { delay }), note('triangle', pitch * 2, peak * 0.6, 0.012, length, { delay })]
+  if (mood === 'call') return [...toot(high, 0, hold * 0.45), ...toot(high, hold * 0.75, hold * 0.6)]
+  if (mood === 'proud') return [...toot(low, 0, hold * 0.8), ...toot(high, hold * 0.85, hold * 1.6, 0.08)]
+  if (mood === 'muddy') return [note('sawtooth', low * 0.5, 0.09, 0.02, hold * 1.6, { glideTo: low * 0.36 }), note('noise', 300, 0.06, 0.02, hold * 1.2, { q: 1.2 })]
+  if (mood === 'bubbly') return [...toot(high, 0, hold * 0.7), ...[0, 1, 2].map((i) => note('sine', 900 + i * 260, 0.05, 0.004, 0.05, { delay: hold * 0.6 + i * 0.07 }))]
+  if (mood === 'wet') return [...toot(low, 0, hold * 0.6), note('noise', 2600, 0.07, 0.02, 0.3, { delay: hold * 0.4, q: 0.7 })]
+  return toot(low, 0, hold)
+}
+
+/** An engine picking up: a low growl that climbs. `size` 0..1, bigger is lower. */
+export function rev(size: number): VoiceSpec {
+  return [note('sawtooth', between(95, 58, size), 0.07, 0.05, 0.55, { glideTo: between(190, 120, size) }), note('noise', 160, 0.07, 0.05, 0.5, { q: 0.8, glideTo: 320 })]
+}
+
+/** Tyres stopping on wet concrete, and the body settling. */
+export function brake(): VoiceSpec {
+  return [note('sine', 1750, 0.05, 0.01, 0.16, { glideTo: 1180 }), note('sine', 88, 0.12, 0.004, 0.14, { delay: 0.14, glideTo: 55 })]
+}
+
+/** Into the puddle. */
+export function splash(): VoiceSpec {
+  return [note('noise', 760, 0.15, 0.01, 0.28, { q: 0.8, glideTo: 300 }), note('sine', 210, 0.08, 0.01, 0.16, { glideTo: 95 }), note('sine', 980, 0.04, 0.004, 0.05, { delay: 0.2, glideTo: 640 }), note('sine', 1180, 0.04, 0.004, 0.05, { delay: 0.3, glideTo: 720 })]
+}
+
+/** A wet body shaking itself off. */
+export function shake(): VoiceSpec {
+  return [0, 1, 2, 3].map((i) => note('noise', 2100 + (i % 2) * 500, 0.08, 0.01, 0.07, { delay: i * 0.09, q: 0.9 }))
+}
+
+/** A body settling with a breath out. */
+export function sigh(): VoiceSpec {
+  return [note('noise', 1300, 0.05, 0.08, 0.5, { q: 0.6, glideTo: 600 })]
+}
+
+/** Lumps of dried mud dropping off behind. */
+export function clods(): VoiceSpec {
+  return [0, 1, 2].map((i) => note('sine', 150 - i * 22, 0.1, 0.004, 0.08, { delay: i * 0.13, glideTo: 70 }))
+}
+
+/** One drop, swelling and letting go. */
+export function drip(): VoiceSpec {
+  return [note('sine', 520, 0.07, 0.004, 0.09, { glideTo: 1150 })]
+}
+
+/** A vehicle finding something odd on its nose: two notes of surprise, low then high. */
+export function puzzled(low: number, high: number): VoiceSpec {
+  return [note('triangle', low * 2, 0.06, 0.02, 0.12, { glideTo: low * 1.8 }), note('triangle', high * 2, 0.06, 0.02, 0.2, { delay: 0.16, glideTo: high * 2.4 })]
+}
+
+/** What each vehicle sounds like when a touch meets its like or its dislike. Invented noises: no words. */
+export const feel = {
+  /** Tipper: a toot with bubbles in it. */
+  foamToot: (low: number): VoiceSpec => [note('square', low * 2, 0.06, 0.012, 0.16), ...[0, 1, 2, 3].map((i) => note('sine', 780 + i * 210, 0.045, 0.004, 0.05, { delay: 0.1 + i * 0.06, glideTo: 980 + i * 210 }))],
+  /** Tipper: a breath drawn in, and a sneeze. */
+  sneeze: (): VoiceSpec => [note('noise', 700, 0.06, 0.1, 0.22, { q: 1.4, glideTo: 2600 }), note('noise', 1900, 0.2, 0.006, 0.2, { delay: 0.36, q: 0.6 }), note('sine', 130, 0.14, 0.006, 0.16, { delay: 0.36, glideTo: 60 })],
+  /** The fire engine: a siren's whoop, up and down. */
+  whoop: (): VoiceSpec => [note('sine', 620, 0.08, 0.02, 0.22, { glideTo: 1240 }), note('sine', 1240, 0.08, 0.02, 0.26, { delay: 0.22, glideTo: 640 }), note('noise', 3000, 0.06, 0.02, 0.25, { delay: 0.3, q: 0.7, glideTo: 1800 })],
+  /** The fire engine: a raspberry of bubbles through the grille. */
+  raspberry: (): VoiceSpec => [note('sawtooth', 112, 0.09, 0.01, 0.34, { glideTo: 88 }), ...[0, 1, 2].map((i) => note('sine', 1000 + i * 240, 0.04, 0.004, 0.045, { delay: 0.12 + i * 0.08 }))],
+  /** The tractor: a purr in three chugs. */
+  chugs: (): VoiceSpec => [0, 1, 2].flatMap((i) => [note('sine', 98, 0.13, 0.006, 0.09, { delay: i * 0.17, glideTo: 70 }), note('triangle', 1500, 0.025, 0.003, 0.03, { delay: i * 0.17 + 0.05 })]),
+  /** The tractor: a cough, and the flap clacking. */
+  cough: (): VoiceSpec => [note('noise', 520, 0.16, 0.006, 0.1, { q: 0.9 }), note('noise', 460, 0.13, 0.006, 0.12, { delay: 0.2, q: 0.9 }), note('triangle', 1700, 0.05, 0.003, 0.03, { delay: 0.34 }), note('triangle', 1500, 0.05, 0.003, 0.03, { delay: 0.44 })],
+  /** The mixer: its drum rumbling round. */
+  rumble: (): VoiceSpec => [note('noise', 240, 0.11, 0.05, 0.5, { q: 1.2, glideTo: 420 }), note('sine', 82, 0.08, 0.05, 0.5, { glideTo: 110 })],
+  /** The mixer: a jammed drum, creaking. */
+  creak: (): VoiceSpec => [note('sawtooth', 190, 0.06, 0.03, 0.3, { glideTo: 150 }), note('sawtooth', 240, 0.05, 0.03, 0.2, { delay: 0.3, glideTo: 205 })],
+  /** The mixer: a giggle, up and down and up. */
+  giggle: (high: number): VoiceSpec => [0, 1, 2, 3, 4].map((i) => note('triangle', high * (i % 2 ? 2.6 : 2.1) + i * 20, 0.06, 0.008, 0.06, { delay: i * 0.085 })),
+} as const
+
+/** The tap knocked on its arm: a small bright clink of metal. */
+export function clink(): VoiceSpec {
+  return [note('triangle', 2140, 0.07, 0.003, 0.16), note('sine', 3210, 0.03, 0.003, 0.1), note('triangle', 1820, 0.03, 0.003, 0.09, { delay: 0.12 })]
+}

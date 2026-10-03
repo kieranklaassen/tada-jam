@@ -82,6 +82,10 @@ The folder is shaped so the port is a copy plus Tada's four registration touchpo
 | Pebble Table | `games/pebble-table/` | 3–7 | A claymation table in 3D: a bag of ten clay stones, the Honest Scale, and Fair Feeding with clay guests, where quantity is felt through play. Plan: `docs/plans/2026-09-22-001-feat-pebble-table-plan.md`. |
 | Bad Neighbours | `games/bad-neighbours/` | 4–8 | Drop wobbly apartment buildings onto a construction slab and watch the residents live in them. Physics stacking (matter.js) with secured foundations; a fallen building parachutes its resident out and returns to the queue. No score, no lives. |
 | Moon Phases | `games/moon-phases/` | 6–10 | A brass orrery on a table in three.js: the sun lamp always lights half the moon, and a round window shows the sky from the child's home on a turning Earth, day or night, with the moon up or set and flipped south of the equator. |
+| Muddy Truck Wash | `games/muddy-truck-wash/` | 2–4 | A wash bay in three.js: rub the mud off die-cast toy vehicles with a sponge, a hose and a cloth, and send each one out shining. A learning game: its design sheet in `ART.md` names the records it is designed from. |
+| Monster Pizza | `games/monster-pizza/` | 4–7 | A pizza counter drawn in felt-tip: a monster holds up a card of toppings, the child taps pieces on until the pizza matches, and the customer tastes what came out. A learning game on counting and comparing small sets. |
+| Fix-it Stall | `games/fix-it-stall/` | 9–12 | A repair stall seen from above: an animal brings a gadget that has stopped, and the child clips leads, swaps parts and tests with a lamp until the circuit is whole. A learning game on closed circuits. |
+| Monster Hotel | `games/monster-hotel/` | 9–12 | A cut-away hotel in pen and ink: monsters arrive with wants that pull against each other, and the child gives out rooms until the whole house settles. A learning game on conflicts and answers that suit every side. |
 
 ## Showcases
 
