@@ -68,7 +68,7 @@ export const LONGEST_FRAME_S = 0.1
 /** A change that keeps coming (a drag, a stroke) is handed to storage at most this often, in ms. */
 export const SAVE_THROTTLE_MS = 400
 
-const [YOUNGEST, OLDEST] = booBooVetManifest.ageBand
+const [YOUNGEST] = booBooVetManifest.ageBand
 
 // --- Guidance (guidance.ts) -------------------------------------------------
 
@@ -87,8 +87,13 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * at a time (pack: game-design, ordered-challenges-high-success.md). The ids
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
+ *
+ * Each id names what is new at that place in this game's own order: the first
+ * five add one need together with its care thing, `quiet` starts the signs
+ * small, `two` gives a patient two needs, and `two-quiet` does both. What each
+ * step lays out is in ladder.ts.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = ['bowl', 'blanket', 'plaster', 'brush', 'basket', 'quiet', 'two', 'two-quiet']
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -98,6 +103,7 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'bowl' },
+  { fromAge: 4, position: 'blanket' },
+  { fromAge: 5, position: 'plaster' },
 ]

@@ -5,7 +5,7 @@
 
 - Stage: sheet. The design sheet in `ART.md` is whole (every heading above `## The look`) and has not been checked.
 - Look in use: none yet. First reserved look: glossy die-cut stickers. The spike comes next.
-- Open: sheet ready for check, round 1. The commit that holds the whole sheet is named in the next line once it exists.
+- Open: sheet ready for check, round 1. The whole sheet is at commit `e24e096051c073276cc2920f61540190af7ec486`; the hash of its sheet part is `0659dc7f45ee29208c1d79cf31059c38e93c2e68155b656e5d1e3e359aa2e3b2`.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
