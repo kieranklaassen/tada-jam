@@ -13,7 +13,7 @@ import { isFooting, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, idleShow, type Cue, type Show } from './stage'
 import { RING, Toy } from './toy'
 import { TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
-import { bargeHorn, chord, creak, give, honk, lay as layVoice, pendulum, pinTick, reactVoice, restore, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
+import { bargeHorn, chiefTaps, chord, creak, give, honk, lay as layVoice, pendulum, pinTick, reactVoice, restore, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
 
 // The game on the toy: the vehicles at the two banks, a run over the bridge,
 // the two scenes a run ends in, and the sheets (the roll and the rack). Pure,
@@ -33,6 +33,8 @@ export type Drive = {
 }
 
 const longOf = (id: VehicleId): number => Math.max(...VEHICLES[id].axles)
+/** How tall each vehicle stands with its load, in cells: what a touch on it can reach. */
+const TALL: Readonly<Record<VehicleId, number>> = { 'post-van': 2.1, 'jelly-truck': 1.9, 'piano-mover': 2.2, 'giraffe-bus': 3.3, 'caterpillar-bus': 1.6 }
 
 export class Game extends Toy {
   drive: Drive | null = null
@@ -58,6 +60,8 @@ export class Game extends Toy {
   /** A hat the chief has plucked off a part and wears until the next sheet is unrolled. Short-lived: not saved. */
   chiefHat = false
   private owed: Idea | null = null
+  /** The threads plucked one after another, for the secret: every thread of the bridge from longest to shortest is a scale. */
+  private tune: number[] = []
   private scene: Scene | null = null
   private urgent = false
   private sceneClock = 0
@@ -229,6 +233,23 @@ export class Game extends Toy {
     super.dragEnd()
   }
 
+  /**
+   * A secret, which works every time and is never hinted: the threads of a
+   * bridge plucked one after another from the longest to the shortest play a
+   * scale, and the chief taps along. It needs three threads of three lengths.
+   */
+  protected override plucked(index: number): void {
+    if (this.bridge[index].kind !== 'thread') { this.tune = []; return }
+    this.tune.push(index)
+    const threads = this.bridge.flatMap((part, i) => (part.kind === 'thread' ? [i] : []))
+    const last = this.tune.slice(-threads.length), longs = last.map((i) => length(this.bridge[i]))
+    if (threads.length < 3 || last.length < threads.length || new Set(last).size < threads.length) return
+    if (!longs.every((long, i) => i === 0 || long < longs[i - 1])) return
+    this.tune = []
+    this.chief.react('taps-and-listens')
+    this.voices.push(chiefTaps(longs.slice(0, 3).map((long) => 440 * Math.sqrt(4 / long))))
+  }
+
   // --- The trolley and the tracing paper -------------------------------------------
 
   private tapTrolley(placed: boolean): void {
@@ -352,9 +373,9 @@ export class Game extends Toy {
   // --- Runs ----------------------------------------------------------------------
 
   private vehicleAt(x: number, y: number): { id: VehicleId; across: boolean } | null {
-    const near = this.waiting.findIndex((id, place) => onVehicle(this.at, waitAt(this.at, place), longOf(id), x, y))
+    const near = this.waiting.findIndex((id, place) => onVehicle(this.at, waitAt(this.at, place), longOf(id), TALL[id], x, y))
     if (near >= 0) return { id: this.waiting[near], across: false }
-    const far = this.across.findIndex((id, place) => onVehicle(this.at, parkAt(this.at, longOf(id), place), longOf(id), x, y))
+    const far = this.across.findIndex((id, place) => onVehicle(this.at, parkAt(this.at, longOf(id), place), longOf(id), TALL[id], x, y))
     return far >= 0 ? { id: this.across[far], across: true } : null
   }
 

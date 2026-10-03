@@ -72,9 +72,9 @@ export const waitAt = (at: Site, place: number): number => at.left[0] - 0.8 - 3.
 /** Where a vehicle is parked on the far bank: its front axle's x, given its own length and its place, 0 nearest the gap. */
 export const parkAt = (at: Site, long: number, place: number): number => at.right[0] + 1.1 + long + 3.4 * place
 
-/** True when a touch is on a vehicle whose front axle is at `front`: a box over its whole length and its load. */
-export const onVehicle = (at: Site, front: number, long: number, x: number, y: number): boolean =>
-  x >= front - long - 0.7 && x <= front + 0.7 && y >= at.left[1] - 0.2 && y <= at.left[1] + 2.6
+/** True when a touch is on a vehicle whose front axle is at `front`: a box over its whole length and its load, as tall as that vehicle stands. */
+export const onVehicle = (at: Site, front: number, long: number, tall: number, x: number, y: number): boolean =>
+  x >= front - long - 0.7 && x <= front + 0.7 && y >= at.left[1] - 0.2 && y <= at.left[1] + tall
 
 /** The next sheet's roll at the right edge of the sheet: its x, and the box a touch on it falls in. */
 export const ROLL = { x: COLS - 0.1, tall: 3.1 } as const

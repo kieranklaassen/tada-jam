@@ -248,6 +248,8 @@ export class View {
     else if (showing && 'differences' in showing) compareModels(pen, showing.differences, cx + cell * 1.4, cy, cell * 1.35, t >= 0.5, t < 0.5 ? span(0.2, 0.34) : span(0.62, 0.76), stream(12))
     else if (toy.marginModel) ideaModel(pen, toy.marginModel, cx + cell * 1.5, cy, cell * 1.9, true, 0, stream(12))
     else chiefModel(pen, cx + cell * 1.2, cy, cell * 1.1, stream(12))
+    // While it shows something, corner marks round its models lead the eye to the margin.
+    if (showing && (toy.chief.act === 'shows' || toy.chief.act === 'compares')) this.brackets(pen, [cx + cell * 1.05, cy - cell * 2.5], [cx + cell * 4.7, cy + cell * 0.25], 0.55 + 0.35 * Math.sin(toy.seconds * 4))
     drawn += 2
 
     if (guidance && guidance.demo !== null) { this.ghost(pen, toy, guidance); drawn++ }
@@ -338,7 +340,8 @@ export class View {
       put(show.vehicle, place.x + 0.06 * place.wiggle, place.y, place.tilt, drivePose(show.vehicle, game.seconds), false)
       if (place.afloat > 0) {
         // Up to its crates in the water: the sheet's blue over what is under the surface, and the rings it makes.
-        const [wx0, wy0] = at2(place.x - longOf(show.vehicle) - 1.2, WATER), [wx1, wy1] = at2(place.x + 1.2, WATER - 1.3)
+        // Only between the banks: the water is in the gap, and the ground beside it is not painted over.
+        const [wx0, wy0] = at2(Math.max(at.left[0] + 0.05, place.x - longOf(show.vehicle) - 1.2), WATER), [wx1, wy1] = at2(Math.min(at.right[0] - 0.05, place.x + 1.2), WATER - 1.3)
         pen.fillStyle = INK.sheet
         pen.globalAlpha = 0.82 * place.afloat
         pen.fillRect(wx0, wy0, wx1 - wx0, wy1 - wy0)
@@ -471,10 +474,16 @@ export class View {
     // With a road from lip to lip the next thing a child would want is to send the vehicle; with a roll waiting, to unroll it.
     const sending = toy.ready && toy.waiting.length > 0 && guidance.demoIndex % 2 === 0
     const unrolling = !sending && toy.save.next !== null && toy.ready
-    const picking = !sending && !unrolling && guidance.demoIndex % 2 === 1 && piles.length > 1
+    // With every part of the kit laid and still no road, the next thing is to take one back: the hand carries a part to the tray.
+    const spent = !sending && !unrolling && toy.bridge.length > 0 && piles.every((bay) => toy.left(bay.kind) === 0)
+    const picking = !sending && !unrolling && !spent && guidance.demoIndex % 2 === 1 && piles.length > 1
     const pose = handPose(guidance.demo ?? 0, !picking && !sending && !unrolling, this.hand)
     let tip: [number, number]
-    if (sending) tip = px(this.plot, waitAt(at, 0) - 0.4, at.left[1] + 0.9)
+    if (spent) {
+      const last = toy.drawn()[toy.bridge.length - 1], from = px(this.plot, (last.a[0] + last.b[0]) / 2, (last.a[1] + last.b[1]) / 2)
+      const to = px(this.plot, (piles[0].x0 + piles[0].x1) / 2, TRAY.top - TRAY.tall / 2)
+      tip = [from[0] + (to[0] - from[0]) * pose.travel, from[1] + (to[1] - from[1]) * pose.travel]
+    } else if (sending) tip = px(this.plot, waitAt(at, 0) - 0.4, at.left[1] + 0.9)
     else if (unrolling) tip = px(this.plot, ROLL.x - 0.2, at.right[1] + 1.4)
     else if (picking) {
       const other = piles[(piles.findIndex((bay) => bay.kind === toy.selected) + 1) % piles.length]

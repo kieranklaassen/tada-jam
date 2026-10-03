@@ -174,6 +174,7 @@ export class Toy {
       } else {
         this.voices.push(this.pluckOf(index))
         this.rung[index] = 0
+        this.plucked(index)
       }
     }
   }
@@ -228,6 +229,9 @@ export class Toy {
   pressEnd(): void {
     this.hand = null
   }
+
+  /** A part was plucked. The toy does nothing more with it; the game listens for a tune. */
+  protected plucked(_index: number): void {}
 
   // --- Time --------------------------------------------------------------------
 

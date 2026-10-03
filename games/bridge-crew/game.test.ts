@@ -347,4 +347,27 @@ describe('the trolley, the tracing paper and the two showings', () => {
     expect(game.save.sheets[0].hats).toEqual([])
     expect(game.chiefHat).toBe(true)
   })
+
+  it('a secret that works every time: the threads plucked from longest to shortest play a scale and the chief taps along', () => {
+    const yard = () => {
+      const game = new Game(freshSave(null, 'open-yard'), stream(8))
+      const b = (kind: number) => 5 + (14 * (kind + 0.5)) / 4
+      tapAt(game, b(3), -2.3)
+      // Three threads of three lengths, each from the far cliff down to the far bank, so each is held at both ends.
+      drag(game, [19, 11], [18, 6]); drag(game, [19, 11], [23, 6]); drag(game, [19, 11], [22, 6])
+      return game
+    }
+    const game = yard()
+    const mid = (i: number) => { const e = game.drawn()[i]; return [(e.a[0] + e.b[0]) / 2, (e.a[1] + e.b[1]) / 2] as const }
+    const pluck = (i: number) => { steps(game, 1.2); tapAt(game, ...mid(i)) }
+    const byLength = [0, 1, 2].sort((i, j) => Math.hypot(game.bridge[j].b[0] - game.bridge[j].a[0], game.bridge[j].b[1] - game.bridge[j].a[1]) - Math.hypot(game.bridge[i].b[0] - game.bridge[i].a[0], game.bridge[i].b[1] - game.bridge[i].a[1]))
+    // In any other order nothing happens.
+    pluck(byLength[2]); pluck(byLength[0]); pluck(byLength[1])
+    expect(game.chief.act).not.toBe('taps-and-listens')
+    for (const again of [0, 1]) {
+      pluck(byLength[0]); pluck(byLength[1]); pluck(byLength[2])
+      expect(game.chief.act, `time ${again + 1}`).toBe('taps-and-listens')
+      steps(game, 4)
+    }
+  })
 })

@@ -1,4 +1,5 @@
 import { WATER } from './pose'
+import { groundAt } from './sheet'
 import { WAIT } from './ride'
 import type { Beat } from './scene'
 import type { Site, VehicleId } from './sites'
@@ -85,18 +86,25 @@ export type Place = { x: number; y: number; tilt: number; afloat: number; wiggle
 /** The vehicle during the give: down into the water, along it to the near bank, up the bank, and still. `long` is the distance from its front axle to its last. */
 export function givePlace(show: Show, at: Site, long: number): Place {
   const wait = at.left[0] - WAIT.before, shore = at.left[0] + 0.4 + long
-  // It falls where it was, nose first, a little further on than where the road left it.
-  const dropX = Math.max(show.from[0], shore) + 0.3 * show.fall
-  const fallY = show.from[1] + (WATER + 0.25 - show.from[1]) * show.fall * show.fall
-  if (show.paddle <= 0) return { x: dropX, y: fallY, tilt: show.tilt - 0.35 * show.fall, afloat: show.fall >= 1 ? 1 : 0, wiggle: 0 }
+  // It falls where it was, nose first, a little further on than where the road left it, and never into either bank.
+  const dropX = Math.min(Math.max(show.from[0], shore) + 0.3 * show.fall, at.right[0] - 0.9)
+  const afloat = WATER + 0.25, fallY = show.from[1] + (afloat - show.from[1]) * show.fall * show.fall
+  // It floats on the water, and where a rock or a ledge stands out of it, it clambers over: its wheels are never inside one.
+  const over = (x: number) => Math.max(afloat, Math.min(at.left[1], groundAt(at, x)) + 0.02, Math.min(at.left[1], groundAt(at, x - long)) + 0.02)
+  if (show.paddle <= 0) return { x: dropX, y: Math.max(fallY, over(dropX)), tilt: show.tilt - 0.35 * show.fall, afloat: show.fall >= 1 ? 1 : 0, wiggle: 0 }
   if (show.climb <= 0) {
     // Afloat on its crates: it bobs, and paddles back toward the near bank.
     const x = dropX + (shore - dropX) * ease(show.paddle)
-    return { x, y: WATER + 0.25 + 0.08 * Math.sin(show.paddle * 14), tilt: 0.06 * Math.sin(show.paddle * 9), afloat: 1, wiggle: 0 }
+    return { x, y: over(x) + (over(x) > afloat ? 0 : 0.08 * Math.abs(Math.sin(show.paddle * 14))), tilt: 0.06 * Math.sin(show.paddle * 9), afloat: over(x) > afloat ? 0 : 1, wiggle: 0 }
   }
-  // Up the bank in one hop and back to where it waits.
-  const up = ease(show.climb)
-  return { x: shore + (wait - shore) * up, y: WATER + 0.25 + (at.left[1] - WATER - 0.25) * up + 0.9 * Math.sin(Math.PI * show.climb), tilt: 0.5 * Math.sin(Math.PI * show.climb), afloat: 1 - up, wiggle: show.shake > 0 && show.shake < 1 ? Math.sin(show.shake * 40) * (1 - show.shake) : 0 }
+  // Out of the water in one leap: straight up beside the bank to the height of its top, then over onto it and back to
+  // where it waits. It never goes through the bank's corner.
+  const up = ease(Math.min(1, show.climb * 2)), across = ease(Math.max(0, show.climb * 2 - 1)), base = over(shore)
+  return {
+    x: shore + (wait - shore) * across,
+    y: base + (at.left[1] - base) * up + 0.45 * Math.sin(Math.PI * Math.min(1, show.climb * 2)) * (1 - across) + 0.5 * Math.sin(Math.PI * across),
+    tilt: 0.3 * Math.sin(Math.PI * show.climb), afloat: 1 - up, wiggle: show.shake > 0 && show.shake < 1 ? Math.sin(show.shake * 40) * (1 - show.shake) : 0,
+  }
 }
 
 /** The vehicle during the crossing: where the run left it while it reacts, then on to where it stays: the lay-by on the far bank, or, come home, its place in the line at the near bank. `stays` is that place's x. */
