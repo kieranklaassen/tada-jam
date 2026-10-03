@@ -14,6 +14,53 @@ const run = (hair: Hair, seconds: number, s: Salon = salon(), hz = 60, each?: ()
 const fresh = () => new Hair(TUFTS, makeRng(1))
 const ROOT = { x: LOCK_X, y: COLLAR_Y }
 
+describe('strips that hang side by side', () => {
+  // How far the right strip's end is past the left one's, at the depth of the shorter: less than nothing when they have crossed.
+  const clear = (hair: Hair, s: Salon): number => 10 + (hair.strands.model.swing.x - hair.strands.lock.swing.x) * Math.min(s.lock, s.model) * 2.6
+
+  it('knock each other and never cross: a lock flung at the model sends the model swinging', () => {
+    const hair = fresh(), s = salon()
+    hair.strands.lock.swing.v = 9
+    let least = Infinity, most = 0
+    run(hair, 3, s, 60, () => { least = Math.min(least, clear(hair, s)); most = Math.max(most, hair.strands.model.swing.x) })
+    expect(least).toBeGreaterThanOrEqual(-0.5)
+    expect(most).toBeGreaterThan(0.15)
+    run(hair, 9, s)
+    expect(hair.settled).toBe(true)
+  })
+
+  it('give way to a strip in the fingers, which stays with the finger', () => {
+    const hair = fresh(), s = salon()
+    hair.catch('lock', { x: LOCK_X, y: COLLAR_Y + 80 }, ROOT)
+    hair.follow({ x: LOCK_X + 140, y: COLLAR_Y + 120 })
+    let least = Infinity
+    run(hair, 0.6, s, 60, () => { least = Math.min(least, clear(hair, s)) })
+    expect(hair.strands.lock.swing.x).toBeGreaterThan(0.6)
+    expect(hair.strands.model.swing.x).toBeGreaterThan(0.5)
+    expect(least).toBeGreaterThanOrEqual(-0.5)
+  })
+
+  it('are pushed aside by a ruffled strip as it fans out', () => {
+    const hair = fresh(), s = salon()
+    hair.ruffled('lock')
+    run(hair, 0.1, s)
+    expect(hair.strands.model.swing.x).toBeGreaterThan(0.05)
+  })
+
+  it('leave each other alone when they hang far apart: the friend across, the ribbon on its peg', () => {
+    const hair = fresh(), s = salon({ seat: 'across' })
+    hair.strands.lock.swing.v = 9
+    run(hair, 1, s)
+    expect(hair.strands.model.swing.x).toBe(0)
+    expect(hair.strands.ribbon.swing.x).toBe(0)
+    // Beside the lock, the ribbon is the lock's neighbour on the other side.
+    const beside = fresh(), t = salon({ ribbon: { len: 40, at: 'lock' } })
+    beside.strands.lock.swing.v = -9
+    run(beside, 0.5, t)
+    expect(beside.strands.ribbon.swing.x).toBeLessThan(-0.1)
+  })
+})
+
 describe('a strip that hangs', () => {
   it('squashes when it is caught, follows the finger to the side, and swings back when it is let go', () => {
     const hair = fresh(), lock = hair.strands.lock

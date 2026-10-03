@@ -34,6 +34,13 @@ export type Animal = {
   tufts: ({ steps: number; sprite: Sprite } | undefined)[]
 }
 
+const PARTS = ['ruff', 'face', 'ear', 'body', 'tailEnd'] as const
+type Part = (typeof PARTS)[number]
+type Making = Partial<Pick<Animal, Part>> & Pick<Animal, 'friendHead' | 'tufts'>
+
+/** Sheets a frame may paint once the first frame is done: a new customer's hair comes up over a few frames, behind the opening door. */
+const PER_FRAME = 2
+
 const ORDER = Object.keys(LOOKS)
 
 export class Sprites {
@@ -42,9 +49,13 @@ export class Sprites {
   /** Device pixels to a scene unit. */
   readonly scale: number
   private readonly paint: Watercolour
-  private readonly animals = new Map<CustomerId, Animal>()
+  private readonly animals = new Map<CustomerId, Making>()
   /** How many times a tuft has been painted, for a test and for the grown-up overlay. */
   repaints = 0
+  /** How many sheets have been painted in all. */
+  painted = 0
+  private allowance = Infinity
+  private fresh = true
 
   /** The whole surface behind everything: paper, wall, floor, mirror, chair, bench, stool, door and peg. */
   readonly backdrop: Sheet
@@ -124,6 +135,8 @@ export class Sprites {
     sheet.g.setTransform(s, 0, 0, s, -box.x * s, -box.y * s)
     paintIt(sheet.g, this.paint.from(rng), outline, rng)
     sheet.g.setTransform(1, 0, 0, 1, 0, 0)
+    this.painted++
+    this.allowance--
     return { sheet, box }
   }
 
@@ -143,36 +156,60 @@ export class Sprites {
     return { sheet, box }
   }
 
-  /** The painted pieces of a customer, made the first time it is seen. */
+  /** Starts a frame. The first frame of a set paints all it needs; after it a frame paints a few sheets at most, so nobody's arrival is a hitch. */
+  frame(): void {
+    this.allowance = this.fresh ? Infinity : PER_FRAME
+    this.fresh = false
+  }
+
+  /** With what is left of this frame's allowance, paints ahead for one who will come on: the pair behind the door, long before it opens. */
+  ahead(who: CustomerId, asFriend: boolean): void {
+    // The first frame painted all it needed; what it paints ahead is held to a frame's share like any other.
+    this.allowance = Math.min(this.allowance, PER_FRAME)
+    const have = this.pieces(who)
+    for (const part of PARTS) {
+      if (this.allowance <= 0) return
+      have[part] ??= this.recipe(who, part)
+    }
+    if (asFriend && this.allowance > 0) this.friendHead(who)
+  }
+
+  private pieces(who: CustomerId): Making {
+    let have = this.animals.get(who)
+    if (!have) { have = { friendHead: null, tufts: [] }; this.animals.set(who, have) }
+    return have
+  }
+
+  /** The painted pieces of a customer, made the first time it is seen if they were not painted ahead. */
   animal(who: CustomerId): Animal {
-    const have = this.animals.get(who)
-    if (have) return have
+    const have = this.pieces(who)
+    for (const part of PARTS) have[part] ??= this.recipe(who, part)
+    return have as Animal
+  }
+
+  private recipe(who: CustomerId, part: Part): Sprite {
     const look = LOOKS[who], n = 100 * (1 + ORDER.indexOf(who))
-    const made: Animal = {
-      ruff: this.piece(n + 1, (rng) => blob(rng, 0, 4, HEAD.rx + look.ruff.wide, HEAD.ry + look.ruff.tall, look.ruff.ragged, 22), (g, paint, outline) => {
+    switch (part) {
+      case 'ruff': return this.piece(n + 1, (rng) => blob(rng, 0, 4, HEAD.rx + look.ruff.wide, HEAD.ry + look.ruff.tall, look.ruff.ragged, 22), (g, paint, outline) => {
         paint.wash(g, outline, { color: look.mane, edge: look.maneEdge, blooms: [look.maneBlooms[1], look.maneBlooms[0]], strength: 0.78, reserve: true })
-      }),
-      face: this.piece(n + 2, (rng) => blob(rng, 0, 0, HEAD.rx, HEAD.ry, 0.035, 18), (g, paint, outline, rng) => paintFace(g, paint, outline, rng, look), look.horns ? 70 : 14),
-      ear: this.piece(n + 3, (rng) => blob(rng, 0, look.ears.kind === 'long' ? -look.ears.ry * 0.8 : 0, look.ears.rx, look.ears.ry, look.ears.kind === 'pom' ? 0.11 : 0.05, 12), (g, paint, outline, rng) => {
+      })
+      case 'face': return this.piece(n + 2, (rng) => blob(rng, 0, 0, HEAD.rx, HEAD.ry, 0.035, 18), (g, paint, outline, rng) => paintFace(g, paint, outline, rng, look), look.horns ? 70 : 14)
+      case 'ear': return this.piece(n + 3, (rng) => blob(rng, 0, look.ears.kind === 'long' ? -look.ears.ry * 0.8 : 0, look.ears.rx, look.ears.ry, look.ears.kind === 'pom' ? 0.11 : 0.05, 12), (g, paint, outline, rng) => {
         const hairy = look.ears.kind === 'pom'
         paint.wash(g, outline, { color: hairy ? look.mane : look.fur, edge: hairy ? look.maneEdge : look.furEdge, blooms: [hairy ? look.maneBlooms[0] : look.blush], reserve: true })
         paint.pencil(g, outline, true, 0.8)
         if (look.ears.kind === 'long') paint.wash(g, blob(rng, 0, -look.ears.ry * 0.8, look.ears.rx * 0.45, look.ears.ry * 0.72, 0.05, 10), { color: look.blush, strength: 0.6 })
-      }),
+      })
       // A body for a customer who is out of the cape and for a friend: a long torso and two feet.
-      body: this.piece(n + 4, (rng) => blob(rng, 0, HEAD.ry + 122, 66, 118, 0.04, 14), (g, paint, outline, rng) => {
+      case 'body': return this.piece(n + 4, (rng) => blob(rng, 0, HEAD.ry + 122, 66, 118, 0.04, 14), (g, paint, outline, rng) => {
         for (const side of [-1, 1]) paint.wash(g, blob(rng, side * 34, HEAD.ry + 232, 30, 15, 0.05, 10), { color: look.fur, edge: look.furEdge, reserve: true })
         paint.wash(g, outline, { color: look.fur, edge: look.furEdge, blooms: [look.blush], reserve: true })
         paint.pencil(g, outline, true, 0.8)
-      }, 30),
-      tailEnd: this.piece(n + 5, () => tuftOutline(look.tail === 'tuft' ? 'flame' : look.tail === 'brush' ? 'curtain' : 'pom', look.tail === 'scut' ? 44 : 66, look.tail === 'scut' ? 50 : 52, 0.2), (g, paint, outline) => {
+      }, 30)
+      case 'tailEnd': return this.piece(n + 5, () => tuftOutline(look.tail === 'tuft' ? 'flame' : look.tail === 'brush' ? 'curtain' : 'pom', look.tail === 'scut' ? 44 : 66, look.tail === 'scut' ? 50 : 52, 0.2), (g, paint, outline) => {
         paint.wash(g, outline, { color: look.tail === 'scut' ? look.fur : look.mane, edge: look.tail === 'scut' ? look.furEdge : look.maneEdge, blooms: [look.maneBlooms[0]], reserve: true })
-      }),
-      friendHead: null,
-      tufts: [],
+      })
     }
-    this.animals.set(who, made)
-    return made
   }
 
   /** A friend's whole head in one sheet: its ruff, its nine tufts as it always wears them, and its face. Its hair is not the child's to change. */
@@ -197,14 +234,17 @@ export class Sprites {
    * A tuft of a customer's mane, painted pointing straight up from its root
    * at the origin. `held` says it is in the fingers: then the sheet it has is
    * kept and stretched until the length is far enough off to show. Returns the
-   * sprite and the length it was painted at.
+   * sprite and the length it was painted at, or nothing while it waits its turn
+   * to be painted.
    */
-  tuft(who: CustomerId, index: number, steps: number, count: number, held: boolean): { sprite: Sprite; steps: number } {
+  tuft(who: CustomerId, index: number, steps: number, count: number, held: boolean): { sprite: Sprite; steps: number } | null {
     const animal = this.animal(who), have = animal.tufts[index]
     if (have) {
       const ratio = tuftPose(who, index, steps, count).reach / tuftPose(who, index, have.steps, count).reach
       if (have.steps === steps || (held && ratio >= REPAINT.shorter && ratio <= REPAINT.longer)) return have
     }
+    // The frame has painted what it may: the sheet it has is stretched for now, and a tuft with none waits a frame.
+    if (this.allowance <= 0) return have ?? null
     const look = LOOKS[who], pose = tuftPose(who, index, steps, count)
     const sprite = this.piece(20 + index + 40 * ORDER.indexOf(who), () => tuftOutline(look.tuft, pose.reach, pose.width, pose.curl), (g, paint, outline) => {
       paint.wash(g, outline, { color: look.mane, edge: look.maneEdge, blooms: [look.maneBlooms[0], look.maneBlooms[1]], strength: 0.82, reserve: true })
@@ -222,7 +262,7 @@ export class Sprites {
   /** Gives back the memory of every sheet, before a new set is made for another size. */
   dispose(): void {
     const sheets: (Sheet | undefined)[] = [this.backdrop, this.cape.sheet, this.drape.sheet, this.knot.sheet, this.hat.sheet, this.glow.sheet]
-    for (const animal of this.animals.values()) sheets.push(animal.ruff.sheet, animal.face.sheet, animal.ear.sheet, animal.body.sheet, animal.tailEnd.sheet, animal.friendHead?.sheet, ...animal.tufts.map((tuft) => tuft?.sprite.sheet))
+    for (const animal of this.animals.values()) sheets.push(...PARTS.map((part) => animal[part]?.sheet), animal.friendHead?.sheet, ...animal.tufts.map((tuft) => tuft?.sprite.sheet))
     for (const sheet of sheets) if (sheet) { sheet.canvas.width = 0; sheet.canvas.height = 0 }
     this.animals.clear()
     this.paint.dispose()

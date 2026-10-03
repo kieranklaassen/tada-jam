@@ -56,6 +56,21 @@ describe('before the slot has been read', () => {
   })
 })
 
+describe('a poke', () => {
+  it('holds nothing afterwards: the hair it touched wobbles free and comes to rest', () => {
+    for (const at of [onLock(10), onModel(10), { x: HEAD.x, y: HEAD.y - HEAD.ry - 40 }]) {
+      const play = seated()
+      tap(play, at)
+      expect(play.hair.holds).toBeNull()
+      expect(play.hand.held).toBeNull()
+      run(play, 0.1, true)
+      expect(play.hair.settled).toBe(false)
+      run(play, 6, true)
+      expect(play.hair.settled).toBe(true)
+    }
+  })
+})
+
 describe('a first visit', () => {
   it('opens on an empty chair with the first pair at the door, and nothing starts by itself', () => {
     const play = opened()

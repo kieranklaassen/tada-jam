@@ -99,9 +99,16 @@ function landsAt(salon: Salon, from: 'lock' | 'model' | 'ribbon'): number {
   return floorUnder(salon, from) + ((salon.clippings.length * 7) % 13) - 6
 }
 
+/** The place along the floor nearest to `x` where no piece lies yet: a piece that lands never hides another whole. */
+function freePlace(clippings: readonly Clipping[], x: number): number {
+  const taken = new Set(clippings.flatMap((c) => (c.on === 'floor' ? [c.x] : [])))
+  for (let off = 0; off <= 100; off++) for (const place of [x + off, x - off]) if (place >= 0 && place <= 100 && !taken.has(place)) return place
+  return x
+}
+
 /** Adds a piece. Past the most the salon keeps, the oldest piece on the floor turns to fluff; a face keeps what it wears. */
 export function withClipping(salon: Salon, piece: Clipping): Salon {
-  const clippings = [...salon.clippings, piece]
+  const clippings = [...salon.clippings, piece.on === 'floor' ? { ...piece, x: freePlace(salon.clippings, piece.x) } : piece]
   if (clippings.length > MAX_CLIPPINGS) {
     const oldestOnFloor = clippings.findIndex((c) => c.on === 'floor')
     clippings.splice(oldestOnFloor >= 0 ? oldestOnFloor : 0, 1)
@@ -239,7 +246,7 @@ function onClipping(salon: Salon, index: number, deed: Deed): Done {
       if (!drop) return answer(salon, 'clipping', 'pull')
       // A piece can be stuck on a face only while somebody is there to wear it.
       if (drop.on === 'face') return salon.chair === null ? answer(salon, 'clipping', 'pull') : answer(swap({ ...bare, on: 'face', who: drop.who, spot: drop.spot }), 'clipping', 'pull')
-      return answer(swap({ ...bare, on: 'floor', x: alongFloor(drop.x) }), 'clipping', 'pull')
+      return answer(swap({ ...bare, on: 'floor', x: freePlace(others(), alongFloor(drop.x)) }), 'clipping', 'pull')
     }
     case 'snip': {
       // Too small to cut in two: it turns to fluff and blows away.
@@ -251,7 +258,7 @@ function onClipping(salon: Salon, index: number, deed: Deed): Done {
       return answer(next, 'clipping', 'snip')
     }
     // A poke makes it hop; one that was stuck on a face hops off to the floor.
-    case 'poke': return answer(swap({ ...bare, on: 'floor', x: alongFloor(x + (index % 2 === 0 ? 6 : -6)) }), 'clipping', 'poke')
+    case 'poke': return answer(swap({ ...bare, on: 'floor', x: freePlace(others(), alongFloor(x + (index % 2 === 0 ? 6 : -6))) }), 'clipping', 'poke')
     case 'ruffle': return answer({ ...salon, clippings: others() }, 'clipping', 'ruffle')
     case 'ribbon': {
       // The ribbon lies down beside a piece on the floor; brought to a piece on a face, it goes round that face.

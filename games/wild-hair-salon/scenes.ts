@@ -8,7 +8,7 @@ import { TAIL_LEN } from './rules'
 import type { Game } from './save'
 import type { Beat } from './scene'
 import type { Showing } from './showing'
-import { DOORWAY, RIBBON_HOME, walk, type Staging } from './staging'
+import { DOORWAY, LOW, RIBBON_HOME, dipAt, lowFor, smooth, walk, type Staging } from './staging'
 import { TASTES, type CustomerId } from './tastes'
 
 // The short scenes, as lists of timed beats (scene.ts). Each is filled in
@@ -63,9 +63,12 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
   const gait = { customer: PERSONALITIES[after.chair].gait, friend: PERSONALITIES[after.friend].gait }
   const old = placesOf({ ...before, cape: 'off' })
   const goers = before.chair !== null && before.friend !== null && old.customer && old.friend
-    ? [{ who: before.chair, part: 'chair' as const, from: old.customer }, { who: before.friend, part: 'friend' as const, from: old.friend }]
+    ? [{ who: before.chair, part: 'chair' as const, from: old.customer, lock: before.lock, mane: before.mane }, { who: before.friend, part: 'friend' as const, from: old.friend, lock: before.model, mane: null }]
+      .map((goer) => ({ ...goer, worn: before.clippings.flatMap((c) => (c.on === 'face' && c.who === goer.part ? [{ spot: c.spot, len: c.len, hue: c.hue }] : [])) }))
     : []
-  const WALK = 1.6
+  const WALK = 1.6, OUT = 0.9, BEHIND = 0.65
+  // Along the back wall, a little above the straight way, when there is a pair going out to pass.
+  const BACK = -40
   const beats: Beat[] = [
     cueAt(0, () => {
       // The ones who waited are in the doorway under their hats; the ones who were done set off.
@@ -74,23 +77,19 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
       staging.cape = 0
       staging.customer = { ...DOORWAY, x: DOORWAY.x - 22, lift: 0, seen: 0 }
       staging.friend = { ...DOORWAY, x: DOORWAY.x + 26, lift: 0, seen: 0 }
-      staging.leaving = goers.map((goer) => ({ who: goer.who, part: goer.part, at: { ...goer.from, lift: 0, seen: 1 } }))
+      staging.leaving = goers.map((goer) => ({ ...goer, at: { ...goer.from, lift: 0, seen: 1 } }))
       if (!cast.cut) cast.cue('door')
     }),
     over(0, 0.4, (p) => { staging.door = p }),
-    over(0.2, 1.3, (p) => {
-      staging.leaving.forEach((goer, i) => {
-        const from = goers[i]?.from
-        if (!from) return
-        goer.at = walk(from, { ...DOORWAY, s: 0.6 }, p, PERSONALITIES[goer.who].gait, 1.3)
-        goer.at.seen = 1 - Math.max(0, (p - 0.8) / 0.2)
-      })
-      if (p >= 1) staging.leaving = []
-    }),
-    over(0.5, WALK, (p) => {
-      staging.customer = { ...walk({ ...DOORWAY, x: DOORWAY.x - 22 }, to.customer, p, gait.customer, WALK), seen: Math.min(1, p * 6) }
-      staging.friend = { ...walk({ ...DOORWAY, x: DOORWAY.x + 26 }, to.friend, p, gait.friend, WALK), seen: Math.min(1, p * 6) }
-    }),
+    // The pair that was done go out along the front of the floor, the friend first, past the pair coming in along the back.
+    ...goers.map((goer) => over(goer.part === 'friend' ? 0.1 : 0.4, OUT, (p) => {
+      const mine = staging.leaving.find((other) => other.part === goer.part)
+      if (mine) mine.at = { ...walk(goer.from, { ...DOORWAY, s: 0.6 }, p, PERSONALITIES[goer.who].gait, OUT, goer.part === 'friend' ? LOW + 24 : LOW), seen: 1 - Math.max(0, (p - 0.8) / 0.2) }
+      if (p >= 1 && goer.part === 'chair') staging.leaving = []
+    })),
+    // The customer leads the way in and the friend follows it, so each is seen whole.
+    over(0.5, WALK, (p) => { staging.customer = { ...walk({ ...DOORWAY, x: DOORWAY.x - 22 }, to.customer, p, gait.customer, WALK, goers.length ? BACK : 0), seen: Math.min(1, p * 6) } }),
+    over(0.5 + BEHIND, WALK - BEHIND, (p) => { staging.friend = { ...walk({ ...DOORWAY, x: DOORWAY.x + 26 }, to.friend, p, gait.friend, WALK - BEHIND, goers.length ? BACK : 0), seen: Math.min(1, p * 6) } }),
     cueAt(0.5 + WALK, () => { if (!cast.cut) { cast.cue('landed', after.chair ?? undefined); cast.customer()?.react('sitsDown'); cast.friend()?.react('sitsDown') } }),
     cueAt(0.7 + WALK, () => {
       staging.hats = 0
@@ -131,7 +130,7 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
   const beats: Beat[] = [
     cueAt(0, () => { staging.fx = null; if (!cast.cut) { cast.cue('capeOff'); customer?.react('hopsOver') } }),
     over(0, 0.5, (p) => { staging.cape = 1 - p }),
-    over(0.3, far ? 1.2 : 0.3, (p) => { staging.friend = far ? walk(friendFrom, friendTo, p, PERSONALITIES[friend].gait, 1.2) : { ...friendTo, lift: 0, seen: 1 } }),
+    over(0.3, far ? 1.2 : 0.3, (p) => { staging.friend = far ? walk(friendFrom, friendTo, p, PERSONALITIES[friend].gait, 1.2, lowFor(friendFrom, friendTo)) : { ...friendTo, lift: 0, seen: 1 } }),
     cueAt(far ? 1.5 : 0.6, () => { if (!cast.cut) { other?.react('hopsOver'); cast.cue('landed', friend) } }),
     // Both look down at the two free ends.
     cueAt(1.7, () => { if (!cast.cut) { customer?.react('floorWatched'); other?.react('floorWatched') } }),
@@ -195,7 +194,7 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
     const stand = (a: Actor) => ({ ...a, lift: 0, seen: 1 })
     return [
       cueAt(0, () => { staging.ribbon = { x: RIBBON_HOME.x, y: RIBBON_HOME.y, len: 16 }; if (!cast.cut) cast.friend()?.react('showsAMove') }),
-      over(0, 1.0, (p) => { staging.friend = walk(home, BY_THE_PEG, p, gait, 1.0) }),
+      over(0, 1.0, (p) => { staging.friend = walk(home, BY_THE_PEG, p, gait, 1.0, lowFor(home, BY_THE_PEG)) }),
       cueAt(1.0, () => { if (!cast.cut) cast.cue('ribbonTaken') }),
       // It holds the ribbon beside its own tail, and pulls it until it is as long as the tail.
       over(1.0, 0.5, (p) => { staging.tails = p; staging.ribbon = { x: RIBBON_HOME.x + (tail.x - 30 - RIBBON_HOME.x) * p, y: RIBBON_HOME.y + (tail.y - RIBBON_HOME.y) * p, len: 16 } }),
@@ -207,19 +206,22 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
       cueAt(2.6, () => { if (!cast.cut) cast.friend()?.react('holdsBreath') }),
       // It trots over and holds it beside the customer's tail.
       over(2.8, 1.1, (p) => {
-        staging.friend = walk(BY_THE_PEG, BY_THE_TAIL, p, gait, 1.1)
-        staging.ribbon = { x: tail.x - 30 + (beside.x - tail.x + 30) * p, y: tail.y + (beside.y - tail.y) * p - Math.sin(p * Math.PI) * 40, len: TAIL_LEN }
+        // Round the front of the chair, with the ribbon in its paw all the way.
+        staging.friend = walk(BY_THE_PEG, BY_THE_TAIL, p, gait, 1.1, LOW)
+        const along = smooth(p)
+        staging.ribbon = { x: tail.x - 30 + (beside.x - tail.x + 30) * along, y: tail.y + (beside.y - tail.y) * along + (p >= 1 ? 0 : LOW * dipAt(p)), len: TAIL_LEN }
       }),
       cueAt(3.9, () => { if (!cast.cut) { cast.customer()?.react('wantsItSo'); cast.cue('landed', friend) } }),
       over(3.9, 1.0, () => { staging.ribbon = { x: beside.x, y: beside.y, len: TAIL_LEN } }),
       // And hangs it back on its peg, where it is from then on.
       over(4.9, 1.0, (p) => {
-        staging.friend = walk(BY_THE_TAIL, BY_THE_PEG, p, gait, 1.0)
-        staging.ribbon = { x: beside.x + (RIBBON_HOME.x - beside.x) * p, y: beside.y + (RIBBON_HOME.y - beside.y) * p - Math.sin(p * Math.PI) * 60, len: TAIL_LEN }
+        staging.friend = walk(BY_THE_TAIL, BY_THE_PEG, p, gait, 1.0, LOW)
+        const along = smooth(p)
+        staging.ribbon = { x: beside.x + (RIBBON_HOME.x - beside.x) * along, y: beside.y + (RIBBON_HOME.y - beside.y) * along + (p >= 1 ? 0 : LOW * dipAt(p)), len: TAIL_LEN }
         staging.tails = 1 - p
       }),
       cueAt(5.9, () => { staging.ribbon = null; staging.tails = 0; if (!cast.cut) cast.cue('ribbonHome') }),
-      over(5.9, 1.0, (p) => { staging.friend = p >= 1 ? stand(home) : walk(BY_THE_PEG, home, p, gait, 1.0) }),
+      over(5.9, 1.0, (p) => { staging.friend = p >= 1 ? stand(home) : walk(BY_THE_PEG, home, p, gait, 1.0, lowFor(BY_THE_PEG, home)) }),
     ]
   }
 

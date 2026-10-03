@@ -93,6 +93,7 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
         if (!tuft) return
         const pose = tuftPose(who, index, length, count)
         const painted = sprites.tuft(who, index, length, count, hair.holds === index || tuft.rest !== 1)
+        if (!painted) return
         const frizz = 1 + tuft.frizz * 0.22
         g.save()
         g.translate(pose.base.x, pose.base.y)
@@ -277,7 +278,7 @@ function features(g: Ctx, puppet: Puppet, look: Look, small: boolean): number {
     g.rect(-9, mouthY + 2, 18, 14 + open * 6)
     g.fill()
     g.stroke()
-    drawn++
+   drawn += 2
   }
   // The mouth: the line down from the nose, and a curve that smiles or droops.
   const mouth: Point[][] = [[{ x: -27, y: mouthY + 3 - smile * 11 }, { x: -11, y: mouthY + 2 + smile * 6 }, { x: 0, y: mouthY }, { x: 11, y: mouthY + 2 + smile * 6 }, { x: 27, y: mouthY + 3 - smile * 11 }]]

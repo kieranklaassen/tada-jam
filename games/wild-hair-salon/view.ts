@@ -1,9 +1,9 @@
 import { drawFigure, pencil, stamp, strip, type Wears } from './figure'
 import { handPose, type Guidance, type HandPose } from './guidance'
-import type { Strand } from './hair'
+import { FAN, type Strand } from './hair'
 import { BLADES } from './hand'
 import { hintFor, type Hint } from './ladder'
-import { CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, STEP, STRIP_W, fit } from './layout'
+import { BESIDE_X, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, STEP, STRIP_W, fit } from './layout'
 import { FLUFF, LOOKS, RIBBON, hueOf } from './looks'
 import type { Play } from './play'
 import { SPOT_Y, clippingBox, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
@@ -11,7 +11,7 @@ import { TAIL_LEN } from './rules'
 import { TAIL_OF_CUSTOMER, tailOf } from './scenes'
 import type { Sprites } from './sprites'
 import { WINDOW, type Shown } from './staging'
-import type { CustomerId } from './tastes'
+import { CUSTOMERS, type CustomerId } from './tastes'
 import { GRAPHITE, type Ctx } from './wash'
 import type { Salon, Who } from './world'
 
@@ -26,6 +26,8 @@ const STEEL = '#cfd2dc', STEEL_EDGE = '#8a8fa0', HANDLE = '#ee7c62'
 const PANE = '#fbeeb5', PANE_EDGE = '#e0c66a', DOORWAY = '#5f8f82'
 /** How far above the line its length is taken from a lock comes out of the mane. */
 const ROOT = 44
+/** A lock on someone who is walking: it only swings. */
+const WALKING: Strand = { swing: { x: 0, v: 0 }, stretch: { x: 1, v: 0 }, flutter: 0, kick: { x: 0, v: 0 } }
 
 export type Frame = {
   play: Play
@@ -44,6 +46,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   const game = play.game
   // Before the slot has been read the room is all there is.
   if (!game) return drawn
+  sprites.frame()
   const { staging, hair } = play
   const f = fit(width, height)
   g.setTransform(f.scale, 0, 0, f.scale, f.dx, f.dy)
@@ -140,7 +143,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
       g.arc(modelRoot.x, modelRoot.y - 2, 15, 0, Math.PI * 2)
       g.fill()
       g.stroke()
-      drawn++
+     drawn += 2
       // A bow at the end of a tuft.
       if (shape && !carriedRibbon && staging.ribbon === null && shape.kind === 'worn' && shape.as === 'bow') drawn += bow(g, shape.at.x, shape.at.y, 0)
     }
@@ -151,7 +154,17 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   // The pair that was done, on their way out.
   staging.leaving.forEach((goer, i) => {
     const puppet = play.leaving[i]
-    if (puppet) drawn += drawFigure(g, sprites, { who: goer.who, puppet, at: goer.at, mane: null, body: 1, wears: { pieces: [], blindfold: false, hat: 0 }, time: play.time })
+    if (!puppet || goer.at.seen <= 0) return
+    // Each goes out with what it has: the customer's mane as it was cut, whatever is stuck on its face, and its lock at its cheek, swinging as it walks.
+    drawn += drawFigure(g, sprites, { who: goer.who, puppet, at: goer.at, mane: goer.mane ? { steps: goer.mane, hair } : null, body: 1, wears: { pieces: goer.worn.map((c) => ({ y: SPOT_Y[c.spot], half: (c.len * STEP) / 2, hue: c.hue })), blindfold: false, hat: 0 }, time: play.time })
+    const size = goer.at.s / goer.from.s, home = goer.part === 'chair' ? { x: LOCK_X, y: COLLAR_Y } : { x: BESIDE_X, y: COLLAR_Y }
+    WALKING.swing.x = Math.sin(play.time * 8 + i * 2) * 0.14
+    g.save()
+    g.globalAlpha = goer.at.seen
+    g.translate(goer.at.x, goer.at.y - goer.at.lift)
+    g.scale(size, size)
+    drawn += hanging(g, { x: home.x - goer.from.x, y: home.y - goer.from.y }, goer.lock * STEP, WALKING, play.time, { fill: LOOKS[goer.who].lock, edge: LOOKS[goer.who].lockEdge }, goer.part === 'chair' ? ROOT : 0, 0, false)
+    g.restore()
   })
 
   // The ribbon on its peg, on the floor, or where a showing has it.
@@ -184,12 +197,24 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     else drawn += strip(g, at.x, at.y - 18, (hair.carried.what.len * STEP) / 2, wriggle, hair.carried.what.hue)
   }
 
+  // The fluff in the air, one path for each colour: a puff swells, then shrinks to nothing rather than fading by itself.
+  const puffs = new Map<string, typeof hair.puffs>()
   for (const puff of hair.puffs) {
-    const fade = 1 - puff.age / puff.life
-    g.globalAlpha = Math.max(0, fade) * 0.85
-    g.fillStyle = puff.hue.startsWith('#') ? puff.hue : puff.hue === 'fluff' ? FLUFF : LOOKS[puff.hue as CustomerId]?.mane ?? FLUFF
+    const hue = puff.hue.startsWith('#') ? puff.hue : puff.hue === 'fluff' ? FLUFF : LOOKS[puff.hue as CustomerId]?.mane ?? FLUFF
+    const group = puffs.get(hue) ?? []
+    group.push(puff)
+    puffs.set(hue, group)
+  }
+  g.globalAlpha = 0.8
+  for (const [hue, group] of puffs) {
+    g.fillStyle = hue
     g.beginPath()
-    g.arc(puff.x, puff.y, puff.r * (puff.rolls ? fade : 1 + (1 - fade) * 0.6), 0, Math.PI * 2)
+    for (const puff of group) {
+      const fade = Math.max(0, 1 - puff.age / puff.life)
+      const r = puff.r * (puff.rolls ? fade : (1 + (1 - fade) * 0.6) * Math.min(1, fade * 2.5))
+      g.moveTo(puff.x + r, puff.y)
+      g.arc(puff.x, puff.y, r, 0, Math.PI * 2)
+    }
     g.fill()
     drawn++
   }
@@ -199,6 +224,10 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   // The ghost hand is drawn last, over what it shows.
   drawn += ghost(g, frame, hint, game)
   g.setTransform(1, 0, 0, 1, 0, 0)
+  // With what the frame has left to paint: the pair behind the door first, the friend's whole head with it, then anyone not met yet.
+  sprites.ahead(game.waiting[0], false)
+  sprites.ahead(game.waiting[1], true)
+  for (const who of CUSTOMERS) sprites.ahead(who, false)
   return drawn
 }
 
@@ -266,7 +295,7 @@ function hanging(g: Ctx, root: Point, length: number, strand: Strand, time: numb
   }
   const strands = strand.flutter > 0 ? 3 : 1
   for (let i = 0; i < strands; i++) {
-    const spread = strands === 1 ? 0 : (i - 1) * 0.3 * strand.flutter + Math.sin(time * 38 + i * 2.1) * 0.07 * strand.flutter
+    const spread = strands === 1 ? 0 : (i - 1) * FAN * strand.flutter + Math.sin(time * 38 + i * 2.1) * 0.07 * strand.flutter
     const w = strands === 1 ? half : half * 0.62
     const bend = kickFrom > 0 && long > kickFrom + 8 && strands === 1
     const first = bend ? kickFrom : long

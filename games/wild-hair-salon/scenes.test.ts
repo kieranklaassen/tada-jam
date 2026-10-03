@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { backUnderCape, capeOff, letIn, markShown, sendFriend } from './cycle'
 import { Hair } from './hair'
+import { HEAD } from './layout'
 import { PERSONALITIES } from './personality'
 import { placesOf } from './poses'
 import { Puppet } from './puppet'
@@ -9,7 +10,7 @@ import { TAIL_LEN, TUFTS } from './rules'
 import { freshGame, type Game } from './save'
 import { Scene, sceneLength, type Beat } from './scene'
 import { capeComesOff, comingIn, shownOnce, tailOf, type Cast, type Cue } from './scenes'
-import { DOORWAY, Staging, WINDOW, walk } from './staging'
+import { DOORWAY, LOW, Staging, WINDOW, dipAt, lowFor, walk } from './staging'
 
 function cast(game: Game): Cast & { cues: Cue[]; cut: boolean } {
   const customer = game.chair ? new Puppet(PERSONALITIES[game.chair], makeRng(1)) : null
@@ -28,10 +29,31 @@ function playThrough(beats: Beat[], each?: (t: number) => void): number {
 const seated = (over: Partial<Game> = {}): Game => ({ ...letIn(freshGame(null)).game, ...over })
 
 describe('the staging', () => {
+  it('takes a walker the low way round the front of the chair, and only when its way crosses the customer', () => {
+    const beside = { x: 708, y: 302, s: 0.65 }, across = { x: 133, y: 432, s: 0.65 }, peg = { x: 772, y: 330, s: 0.65 }
+    expect(lowFor(beside, across)).toBe(LOW)
+    expect(lowFor(across, beside)).toBe(LOW)
+    expect(lowFor(beside, peg)).toBe(0)
+    const gait = { hop: 0, steps: 2 }
+    // Straight, its face would go through the customer's; the low way the two faces never meet.
+    const into = (at: { x: number; y: number; s: number }): number => 1 + at.s - Math.hypot((at.x - HEAD.x) / HEAD.rx, (at.y - HEAD.y) / HEAD.ry)
+    let straight = -Infinity, low = -Infinity
+    for (let p = 0; p <= 1; p += 0.02) {
+      straight = Math.max(straight, into(walk(beside, across, p, gait, 1)))
+      low = Math.max(low, into(walk(beside, across, p, gait, 1, LOW)))
+    }
+    expect(straight).toBeGreaterThan(0.5)
+    expect(low).toBeLessThanOrEqual(0)
+    expect(walk(beside, across, 0, gait, 1, LOW)).toMatchObject({ x: beside.x, y: beside.y })
+    expect(walk(beside, across, 1, gait, 1, LOW)).toMatchObject({ x: across.x, y: across.y, lift: 0 })
+    expect(dipAt(0)).toBe(0)
+    expect(dipAt(0.5)).toBeCloseTo(1)
+  })
+
   it('puts everyone where the model has them when it is settled', () => {
     const staging = new Staging(), game = seated()
     staging.door = 0.6; staging.hats = 1; staging.fx = { kind: 'too-long', muddle: 0.3 }; staging.paw = { kind: 'snip', tuft: 1, progress: 0.4 }; staging.ribbon = { x: 1, y: 2, len: 9 }; staging.tails = 1
-    staging.leaving = [{ who: 'yak', part: 'chair', at: { x: 0, y: 0, s: 1, lift: 0, seen: 1 } }]
+    staging.leaving = [{ who: 'yak', part: 'chair', at: { x: 0, y: 0, s: 1, lift: 0, seen: 1 }, from: { x: 0, y: 0, s: 1 }, lock: 30, mane: null, worn: [] }]
     staging.settle(game)
     const places = placesOf(game)
     expect(staging).toMatchObject({ customer: { ...places.customer, lift: 0, seen: 1 }, friend: { ...places.friend, lift: 0, seen: 1 }, leaving: [], door: 0, waiting: 1, cape: 1, hats: 0, fx: null, paw: null, ribbon: null, tails: 0 })
@@ -76,6 +98,9 @@ describe('coming in', () => {
     scene.start(0, () => {})
     scene.update(0)
     expect(c.staging.leaving.map((goer) => goer.who)).toEqual(['lion', 'poodle'])
+    // Each goes with the hair it has: the customer's mane and lock as the child left them, the friend's own lock.
+    expect(c.staging.leaving.map((goer) => goer.lock)).toEqual([done.lock, done.model])
+    expect(c.staging.leaving.map((goer) => goer.mane)).toEqual([done.mane, null])
     scene.update(0.9)
     expect(c.staging.leaving[0].at.x).toBeGreaterThan(placesOf(done).customer!.x)
     scene.update(2)

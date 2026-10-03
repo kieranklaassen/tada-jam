@@ -11,7 +11,7 @@ import { deserializeGame, serializeGame, type Game } from './save'
 import { Scene, followedBy, sceneLength, type Beat } from './scene'
 import { capeComesOff, comingIn, shownOnce, type Cast, type Cue } from './scenes'
 import { MOST_NOTES, notesFor, notesForCue, type Note } from './sound'
-import { Staging, walk } from './staging'
+import { Staging, lowFor, walk } from './staging'
 import { TASTES, type CustomerId } from './tastes'
 import type { Salon, Who } from './world'
 
@@ -183,7 +183,7 @@ export class Play implements Cast {
       this.cue('capeOn')
       this.play(followedBy([
         { at: 0, lasts: 0.45, play: (p) => { this.staging.cape = p } },
-        { at: 0.1, lasts: 0.9, play: (p) => { if (from && to) this.staging.friend = from.x === to.x ? { ...to, lift: 0, seen: 1 } : walk(from, to, p, gait, 0.9) } },
+        { at: 0.1, lasts: 0.9, play: (p) => { if (from && to) this.staging.friend = from.x === to.x ? { ...to, lift: 0, seen: 1 } : walk(from, to, p, gait, 0.9, lowFor(from, to)) } },
       ], this.showings()))
       return
     }
@@ -194,7 +194,7 @@ export class Play implements Cast {
     const from = this.staging.friend, to = placesOf(seated).friend
     const gait = seated.friend ? PERSONALITIES[seated.friend].gait : { hop: 10, steps: 2 }
     this.play(followedBy([
-      { at: 0, lasts: 1.0, play: (p) => { if (from && to) this.staging.friend = walk(from, to, p, gait, 1.0) } },
+      { at: 0, lasts: 1.0, play: (p) => { if (from && to) this.staging.friend = walk(from, to, p, gait, 1.0, lowFor(from, to)) } },
       { at: 1.0, lasts: 0, play: () => { if (!this.cut) { this.puppets.friend?.react('hopsOver'); this.cue('landed', seated.friend ?? undefined) } } },
     ], this.showings()))
   }
@@ -213,7 +213,11 @@ export class Play implements Cast {
         this.pressedAt = gesture.at
         this.took(this.game!, hand.press(this.game!, gesture.at, this.time), 0)
         return
-      case 'tap': this.took(game, hand.tap(game, gesture.at), 0); return
+      case 'tap':
+        this.took(game, hand.tap(game, gesture.at), 0)
+        // A poke holds nothing: the hair it touched is free to wobble.
+        this.hair.release()
+        return
       case 'dragMove':
         this.follow(gesture.at)
         this.took(game, hand.move(game, gesture.at, this.time), 0)

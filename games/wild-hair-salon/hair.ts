@@ -1,5 +1,5 @@
-import { HEAD, STEP } from './layout'
-import { clippingBox, tuftPose, type Point } from './poses'
+import { HEAD, STEP, STRIP_W } from './layout'
+import { clippingBox, ribbonShape, stripOf, tuftPose, type Point } from './poses'
 import { TICK, ease, type Spring } from './puppet'
 import type { Rng } from './rng'
 import type { Clipping, Salon } from './world'
@@ -81,6 +81,11 @@ export class Hair {
   }
 
   /** Which hair is in the fingers, or nothing. */
+  /** The finger is gone after a touch that drew nothing out: what it had is free to swing again. */
+  release(): void {
+    this.held = null
+  }
+
   get holds(): StrandId | number | null {
     return this.held ? this.held.what : null
   }
@@ -214,6 +219,30 @@ export class Hair {
     }
   }
 
+  /**
+   * Keeps two strips that hang side by side from crossing. `room` is the
+   * angle between them at which the shorter one's end would touch the other.
+   * A strip in the fingers stays with the finger, and the other gives way; two
+   * free strips share the push and pass their swing on, with a little lost.
+   */
+  private knock(left: StrandId, right: StrandId, room: number): void {
+    const a = this.strands[left], b = this.strands[right]
+    const over = a.swing.x + FAN * 1.25 * a.flutter - (b.swing.x - FAN * 1.25 * b.flutter) - room
+    if (over <= 0) return
+    const aFree = this.held?.what !== left, bFree = this.held?.what !== right
+    const share = aFree && bFree ? 0.5 : 1
+    if (aFree) a.swing.x -= over * share
+    if (bFree) b.swing.x += over * share
+    const closing = a.swing.v - b.swing.v
+    if (closing <= 0) return
+    if (aFree && bFree) {
+      const together = (a.swing.v + b.swing.v) / 2
+      a.swing.v = together - closing * 0.2
+      b.swing.v = together + closing * 0.2
+    } else if (aFree) a.swing.v = b.swing.v - closing * 0.3
+    else if (bFree) b.swing.v = a.swing.v + closing * 0.3
+  }
+
   private tick(dt: number, salon: Salon): void {
     this.time += dt
     const due = this.later.filter((item) => item.at <= this.time)
@@ -237,6 +266,11 @@ export class Hair {
       ease(s.kick, 0, 60, 5, dt)
       s.flutter = Math.max(0, s.flutter - dt / 0.7)
     }
+    // The strips are paper and do not pass through each other: one that swings into its neighbour knocks it aside.
+    // A strip drawn out by the finger reaches as far down as the finger is.
+    const reach = (id: StrandId): number => Math.max(lengths[id] * STEP, held && held.what === id ? Math.hypot(held.to.x - held.root.x, held.to.y - held.root.y) : 0)
+    const side = neighbours(salon)
+    for (let pass = 0; pass < 2; pass++) for (const pair of side) this.knock(pair.left, pair.right, pair.gap / Math.max(30, Math.min(reach(pair.left), reach(pair.right))))
 
     const who = salon.chair ?? 'lion'
     this.tufts.forEach((tuft, index) => {
@@ -285,6 +319,24 @@ export class Hair {
     ease(s.open, 1, 520, 30, dt)
     s.shown = Math.max(0, Math.min(1, s.shown + (s.inHand ? dt : -dt) / 0.09))
   }
+}
+
+/** How far a ruffled strip fans out to each side, as an angle, at its fullest. */
+export const FAN = 0.3
+
+/** The strips that hang side by side, close enough to touch, each pair with the room between them. */
+function neighbours(salon: Salon): { left: StrandId; right: StrandId; gap: number }[] {
+  const hung = STRANDS.flatMap((id) => {
+    if (id === 'ribbon' && (ribbonShape(salon)?.kind !== 'hang' || salon.ribbon?.at === 'peg')) return []
+    const strip = stripOf(salon, id)
+    return strip ? [{ id, root: strip.root }] : []
+  }).sort((a, b) => a.root.x - b.root.x)
+  const pairs: { left: StrandId; right: StrandId; gap: number }[] = []
+  for (let i = 1; i < hung.length; i++) {
+    const a = hung[i - 1], b = hung[i]
+    if (Math.abs(a.root.y - b.root.y) < 40 && b.root.x - a.root.x < STRIP_W * 4) pairs.push({ left: a.id, right: b.id, gap: b.root.x - a.root.x - STRIP_W })
+  }
+  return pairs
 }
 
 function wrap(angle: number): number {

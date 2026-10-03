@@ -159,6 +159,29 @@ describe('a touch on the salon', () => {
     expect(act(salon(), { object: 'clipping', index: 9 }, { action: 'poke' }).cell).toBeNull()
   })
 
+  it('never lays one piece on the floor exactly where another lies, however it gets there', () => {
+    const places = (s: Salon): number[] => s.clippings.flatMap((c) => (c.on === 'floor' ? [c.x] : []))
+    const apart = (s: Salon): void => expect(new Set(places(s)).size).toBe(places(s).length)
+    // Cut after cut from the same lock, with pieces picked up in between so the count repeats.
+    let s = salon({ lock: 90, clippings: [] })
+    for (let i = 0; i < 9; i++) {
+      s = act(s, { object: 'lock' }, { action: 'snip', at: 80 - i * 6 }).salon
+      apart(s)
+      if (i % 3 === 1) s = act(s, { object: 'clipping', index: 0 }, { action: 'pull', drop: { on: 'face', who: 'chair', spot: 'brow' } }).salon
+    }
+    expect(places(s).length).toBeGreaterThan(4)
+    // Let go on top of another, hopped onto another, and cut in two beside others.
+    const on = places(s)[1]
+    s = act(s, { object: 'clipping', index: s.clippings.findIndex((c) => c.on === 'floor') }, { action: 'pull', drop: { on: 'floor', x: on } }).salon
+    apart(s)
+    for (let i = 0; i < s.clippings.length; i++) { s = act(s, { object: 'clipping', index: i }, { action: 'poke' }).salon; apart(s) }
+    for (let i = 0; i < 3; i++) { s = act(s, { object: 'clipping', index: s.clippings.findIndex((c) => c.on === 'floor' && c.len >= 6) }, { action: 'snip', at: 1 }).salon; apart(s) }
+    // And a piece is put down near where it was let go, never far off.
+    const far = act(salon({ clippings: [{ len: 20, hue: 'lion', on: 'floor', x: 40 }, { len: 9, hue: 'lion', on: 'floor', x: 41 }, { len: 9, hue: 'lion', on: 'floor', x: 60 }] }), { object: 'clipping', index: 2 }, { action: 'pull', drop: { on: 'floor', x: 40 } }).salon
+    expect(Math.abs(places(far)[2] - 40)).toBeLessThanOrEqual(2)
+    apart(far)
+  })
+
   it('keeps at most twelve clippings, lets the oldest on the floor go first and never takes one off a face', () => {
     let s = salon({ clippings: [{ len: 9, hue: 'lion', on: 'face', who: 'chair', spot: 'lip' }] })
     for (let i = 0; i < 30; i++) s = withClipping(s, { len: 10 + i, hue: 'poodle', on: 'floor', x: 50 })

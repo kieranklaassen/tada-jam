@@ -97,9 +97,8 @@ describe('one frame', () => {
     busy.hair.ruffled('lock')
     busy.step(1 / 60, false)
     expect(busy.hair.puffs.length).toBeGreaterThan(4)
-    // The jam's bar is about 80 draws a frame. This frame is everything at once, which play does not reach, and it
-    // is held to a few over; every frame a child can make by playing is held under 80 below.
-    expect(drawFrame(surface.g as Ctx, W, H, sprites, { play: busy, guidance: null })).toBeLessThanOrEqual(85)
+    // The jam's bar is about 80 draws a frame. This frame is everything at once, which play does not reach.
+    expect(drawFrame(surface.g as Ctx, W, H, sprites, { play: busy, guidance: null })).toBeLessThanOrEqual(80)
     // The idle ladder at its fullest: the glow and the ghost hand with its scissors.
     expect(drawFrame(surface.g as Ctx, W, H, sprites, { play: seated(), guidance: idle })).toBeLessThanOrEqual(80)
     // The most figures on stage: one pair going out and one coming in, the door open.
@@ -147,13 +146,17 @@ describe('one frame', () => {
     expect(sprites.repaints - count).toBeLessThanOrEqual(during + 1)
   })
 
-  it('makes its sheets once for a size and for each customer it meets: a frame makes none', () => {
+  it('makes its sheets once for a size: everyone is painted ahead over the first frames, and then a frame makes none', () => {
     const { make, made } = fakeSheets()
     const sprites = new Sprites(make, W, H, 1), surface = make(W, H), play = seated()
-    drawFrame(surface.g as Ctx, W, H, sprites, { play, guidance: idle })
-    const after = made()
-    for (let i = 0; i < 30; i++) { play.step(1 / 60, true); drawFrame(surface.g as Ctx, W, H, sprites, { play, guidance: idle }) }
-    expect(made()).toBe(after)
+    const frame = (): number => { const before = made(); play.step(1 / 60, true); drawFrame(surface.g as Ctx, W, H, sprites, { play, guidance: idle }); return made() - before }
+    frame()
+    // After the first frame, which paints what it shows, no frame paints more than a couple of pieces.
+    let most = 0
+    for (let i = 0; i < 40; i++) most = Math.max(most, frame())
+    expect(most).toBeGreaterThan(0)
+    expect(most).toBeLessThanOrEqual(2)
+    for (let i = 0; i < 30; i++) expect(frame()).toBe(0)
   })
 
   it('gives its sheets back when it is done with them', () => {

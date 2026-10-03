@@ -1,8 +1,8 @@
-import { DOOR, PEG } from './layout'
+import { DOOR, HEAD, PEG } from './layout'
 import { placesOf, type Actor } from './poses'
 import type { Comparison } from './showing'
 import type { CustomerId } from './tastes'
-import type { Salon } from './world'
+import type { FaceSpot, Salon } from './world'
 
 // Where everyone is drawn, and the few things a scene moves that the model
 // does not hold: the door, the cape in the air, a rain hat, a paw that shows
@@ -22,26 +22,47 @@ export const WINDOW: readonly [Actor, Actor] = [
 ]
 
 const shown = (a: Actor, seen = 1): Shown => ({ x: a.x, y: a.y, s: a.s, lift: 0, seen })
-const smooth = (t: number): number => { const c = Math.max(0, Math.min(1, t)); return c * c * (3 - 2 * c) }
+export const smooth = (t: number): number => { const c = Math.max(0, Math.min(1, t)); return c * c * (3 - 2 * c) }
 
-/** A figure part of the way from one place to another, hopping as it goes: `steps` hops over the whole way, each `hop` high. */
-export function walk(from: Actor, to: Actor, progress: number, gait: { hop: number; steps: number }, seconds: number): Shown {
+/** How far down the low way round the front of the chair goes at its lowest, along the floor in front of the cape. */
+export const LOW = 170
+
+/** How much of the low way a walker has gone down by, part of the way along: down quickly, along the floor, up at the end. */
+export function dipAt(progress: number): number {
+  const c = Math.max(0, Math.min(1, progress))
+  return Math.sin(Math.PI * c) ** 0.6
+}
+
+/** The low way for a walk that would otherwise take a head across the customer's: nobody passes through the one in the chair. */
+export function lowFor(from: Actor, to: Actor): number {
+  return (from.x - HEAD.x) * (to.x - HEAD.x) < 0 ? LOW : 0
+}
+
+/**
+ * A figure part of the way from one place to another, hopping as it goes:
+ * `steps` hops over the whole way, each `hop` high. `low` takes it down
+ * along the floor on the way, in front of whoever it passes.
+ */
+export function walk(from: Actor, to: Actor, progress: number, gait: { hop: number; steps: number }, seconds: number, low = 0): Shown {
   const t = smooth(progress), hops = Math.max(1, Math.round(gait.steps * seconds))
   return {
     x: from.x + (to.x - from.x) * t,
-    y: from.y + (to.y - from.y) * t,
+    y: from.y + (to.y - from.y) * t + (progress >= 1 ? 0 : low * dipAt(progress)),
     s: from.s + (to.s - from.s) * t,
     lift: progress >= 1 ? 0 : gait.hop * Math.abs(Math.sin(Math.PI * hops * progress)),
     seen: 1,
   }
 }
 
+/** One of the pair that was done, on its way out with what it has: its lock as the child left it, the customer's mane as it was cut, and whatever is stuck on its face. */
+export type Goer = { who: CustomerId; part: 'chair' | 'friend'; at: Shown; from: Actor; lock: number; mane: readonly number[] | null; worn: readonly { spot: FaceSpot; len: number; hue: string }[] }
+
 export class Staging {
   /** The pair in the salon, where they are drawn. Nothing, with nobody in the chair. */
   customer: Shown | null = null
   friend: Shown | null = null
   /** The pair that was done, on their way out. */
-  leaving: { who: CustomerId; part: 'chair' | 'friend'; at: Shown }[] = []
+  leaving: Goer[] = []
   /** 0 shut, 1 open. */
   door = 0
   /** How much of the next pair shows at the door's window. */
