@@ -6,11 +6,11 @@
 // Every function takes a clinic and gives back a new one with what happened,
 // so the view can play it. Pure: no renderer, no DOM, no clock.
 
-import { carrierArrives, layOut } from './arrivals'
-import type { Species } from './cast'
+import { layOut } from './arrivals'
+import { taste, type Species, type Taste } from './cast'
 import { pairOf, type Secret } from './grid'
 import { above, carrierCanStand, shownAtStart } from './ladder'
-import { CARES, type Care } from './needs'
+import { CARES, fits, type Care } from './needs'
 import { give, helpedBy, isWell, judge, stroke, type Answer, type Patient, type Stroke } from './patient'
 import { beginCycle, finishCycle, freshState, type GameState } from './state'
 
@@ -80,54 +80,72 @@ export function freshClinic(childAge: number | null, seed: number): Clinic {
 /** What coming in did, for the view to play. */
 export type CameIn = {
   from: 'door' | 'carrier'
-  /** The animal that left for the garden, if the one on the table was well. */
+  /** The animal that left for the garden, with what helped it. */
   left: Kept | null
-  /** The one on the table still had a need, so the two changed places and nothing was judged. */
-  swapped: boolean
   /** The thing the mouse shows as the cart rolls in, once for each thing. */
   showing: Care | null
 }
 
 /**
- * The child touched the one who waits, or the carrier. The animal on the
- * table makes room: a well one goes out to the garden with what helped it,
- * and one that still has a need changes places with the newcomer and keeps
- * everything about it. The things go back on the cart. Then the one who takes
- * the waiting place is laid out from the stored position.
+ * The child touched the one who waits, or the carrier. With the table empty
+ * or the animal on it well, the one that was touched comes in: the well one
+ * goes out to the garden with what helped it, every thing the cart carries
+ * lies on the cart again, and what was made of a thing comes in with it.
+ * While a need on the table is unmet nobody comes in and nothing changes:
+ * the touch is answered where the animal stands, which is the view's to play.
+ *
+ * When the one at the door came in, the next patient is laid out from the
+ * stored position, and a carrier from one position above wherever one may
+ * stand and none does. A carrier that was touched leaves its place empty
+ * until the next one comes in from the door.
  */
 export function comeIn(clinic: Clinic, from: 'door' | 'carrier'): { clinic: Clinic; cameIn: CameIn | null } {
   const newcomer = from === 'carrier' ? clinic.carrier : clinic.waiting
-  if (!newcomer) return { clinic, cameIn: null }
   const leaving = clinic.table
-  const swapped = leaving !== null && !isWell(leaving)
-  const left: Kept | null = leaving && !swapped ? { species: leaving.species, keeps: helpedBy(leaving) } : null
+  if (!newcomer || (leaving && !isWell(leaving))) return { clinic, cameIn: null }
+  const left: Kept | null = leaving ? { species: leaving.species, keeps: helpedBy(leaving) } : null
   const showing = CARES.find((care) => newcomer.cart.includes(care) && !clinic.shown.includes(care)) ?? null
   const shown = showing ? CARES.filter((care) => care === showing || clinic.shown.includes(care)) : clinic.shown
+  // A plaster stuck on an animal goes where the animal goes: out of view with the one that leaves, onto the
+  // table with the one who waited.
+  const plasters = clinic.things.plasters.flatMap((spot): PlasterSpot[] => (spot === 'patient' ? [] : spot === 'waiting' && from === 'door' ? ['patient'] : [spot]))
   let next: Clinic = {
     ...clinic,
     finished: beginCycle(clinic).finished,
     table: newcomer,
     garden: left ? [...clinic.garden, left].slice(-GARDEN_HOLDS) : clinic.garden,
     shown,
-    // The mouse puts the cart in order: every thing comes back, and the blanket comes off the basket. A plaster
-    // stuck on the animal goes where the animal goes: to the door with one that changes places, out of view otherwise.
-    things: { ...TIDY, plasters: clinic.things.plasters.flatMap((spot): PlasterSpot[] => (spot !== 'patient' ? [spot] : swapped && from === 'door' ? ['waiting'] : [])) },
-    made: { ...clinic.made, den: false },
+    // The den comes in as a den: the blanket stays over the basket, and the basket lies on the cart.
+    things: { ...TIDY, blanket: clinic.made.den ? 'on-basket' : 'cart', plasters },
   }
-  if (swapped) {
-    next = from === 'carrier' ? { ...next, carrier: { ...leaving, fromCarrier: true } } : { ...next, waiting: { ...leaving, fromCarrier: false } }
-  } else if (from === 'carrier') {
-    next = { ...next, carrier: null }
-  } else {
-    const inView = next.carrier ? [newcomer, ...(leaving ? [leaving] : []), next.carrier] : [newcomer, ...(leaving ? [leaving] : [])]
-    const waiting = layOut({ position: next.position, seed: next.seed, drawn: next.drawn, shown, recent: inView, justShown: showing })
-    next = { ...next, waiting, drawn: next.drawn + 1 }
-    if (!next.carrier && carrierCanStand(next.position) && carrierArrives(next.seed, next.drawn)) {
-      const carrier = layOut({ position: above(next.position), seed: next.seed, drawn: next.drawn, shown, recent: [waiting, newcomer], fromCarrier: true })
-      next = { ...next, carrier, drawn: next.drawn + 1 }
-    }
+  if (from === 'carrier') return { clinic: { ...next, carrier: null }, cameIn: { from, left, showing } }
+  const inView = [newcomer, ...(leaving ? [leaving] : []), ...(next.carrier ? [next.carrier] : [])]
+  const waiting = layOut({ position: next.position, seed: next.seed, drawn: next.drawn, shown, recent: inView, justShown: showing })
+  next = { ...next, waiting, drawn: next.drawn + 1 }
+  if (!next.carrier && carrierCanStand(next.position)) {
+    const carrier = layOut({ position: above(next.position), seed: next.seed, drawn: next.drawn, shown, recent: [waiting, newcomer], fromCarrier: true })
+    next = { ...next, carrier, drawn: next.drawn + 1 }
   }
-  return { clinic: next, cameIn: { from, left, swapped, showing } }
+  return { clinic: next, cameIn: { from, left, showing } }
+}
+
+/** What the one who waits does with a thing held out to it at the door. */
+export type AtTheDoor =
+  /** It takes the thing as play, by its taste. Its sign stays at its step: a need is met on the table only. */
+  | { kind: 'play'; taste: Taste }
+  /** The thing would fit its need: it is sniffed and nosed back toward the table, so the care that fits is never seen not to help. */
+  | { kind: 'nosed-back' }
+
+/**
+ * The child gave a thing to the one who waits. Nothing about the patient
+ * changes and nothing is judged. A thing taken as play comes to rest on the
+ * floor by the door, and a plaster sticks; a thing nosed back stays where it lay.
+ */
+export function giveAtTheDoor(clinic: Clinic, care: Care): { clinic: Clinic; atTheDoor: AtTheDoor } {
+  const waiting = clinic.waiting
+  if (waiting.needs.some((entry) => !entry.met && fits(care, entry.need))) return { clinic, atTheDoor: { kind: 'nosed-back' } }
+  const atTheDoor: AtTheDoor = { kind: 'play', taste: taste(waiting.species, care) }
+  return { clinic: care === 'plaster' ? stick(clinic, 'waiting') : putDown(clinic, care, 'floor-left'), atTheDoor }
 }
 
 /** What a give did in the room, on top of the patient's own answer. */

@@ -1,8 +1,12 @@
 // The object-by-action grid (ART.md, "The object-by-action grid"): six
 // objects by five needs, thirty cells, each with its own motion and its own
-// voice. One cell in each column helps. Every other cell works, is funny, and
-// shows the need again in the place the wrong thing landed. Then the five
-// pairs of things that always give the same result.
+// voice. One cell in each column helps. Every other cell of a care thing
+// works, is funny, and shows the need again one step more plainly, in the
+// place the wrong thing landed. The hand's five cells are strokes: they help
+// no need and move no step. A frightened animal is never pressed: a wrong
+// thing comes to rest at the edge of its hiding place or over it, never on
+// the animal, and its trembling never grows. No voice is a cry of pain.
+// Then the five pairs of things that always give the same result.
 //
 // Pure data. The view plays a cell's `motion` in the manner of the animal on
 // the table (cast.ts) and the sound module plays its `voice`.
@@ -26,14 +30,14 @@ export const GRID: Readonly<Record<Given, Readonly<Record<Need, Cell>>>> = {
     cold: { motion: 'plaster-flaps-off-in-shiver', voice: 'papery-flutter' },
     itchy: { motion: 'leg-sticks-to-plaster-hop-circle', voice: 'stretchy-creak-pop' },
     thirsty: { motion: 'plaster-on-tongue-sour-face', voice: 'wet-slap-bleh' },
-    scared: { motion: 'plaster-on-peeking-nose-pulls-in', voice: 'tick-sniff' },
+    scared: { motion: 'plaster-lands-beside-nose-sniffed-nose-pulls-in', voice: 'tick-sniff' },
   },
   blanket: {
-    sore: { motion: 'tucked-in-paw-sticks-out-waves', voice: 'whump-rising-whine' },
+    sore: { motion: 'tucked-in-paw-sticks-out-waves', voice: 'whump-questioning-hum' },
     cold: { motion: 'wrap-shiver-stops-head-pops-out', voice: 'whump-chatter-to-hum' },
     itchy: { motion: 'lump-scratches-blanket-kicked-off', voice: 'muffled-thumps' },
     thirsty: { motion: 'too-warm-oozes-out-flat', voice: 'panting-speeds-up' },
-    scared: { motion: 'blanket-over-hiding-place-trembles', voice: 'whump-endless-rustle' },
+    scared: { motion: 'blanket-settles-over-hiding-place-trembling-no-more', voice: 'whump-endless-rustle' },
   },
   brush: {
     sore: { motion: 'fur-fluffed-paw-lifted-away', voice: 'dry-strokes-eep' },

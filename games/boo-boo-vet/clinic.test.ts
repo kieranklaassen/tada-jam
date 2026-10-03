@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { stream } from './arrivals'
-import { GARDEN_HOLDS, MOVABLES, PLASTERS_KEPT, comeIn, freshClinic, giveCare, join, putDown, stick, strokePatient, type Clinic } from './clinic'
+import { GARDEN_HOLDS, MOVABLES, PLASTERS_KEPT, comeIn, freshClinic, giveAtTheDoor, giveCare, join, putDown, stick, strokePatient, type Clinic } from './clinic'
 import { LADDER } from './config'
 import { CARES, FITS, NEEDS, type Care, type Need } from './needs'
 import { isWell, showing } from './patient'
@@ -49,7 +49,7 @@ describe('coming in', () => {
     expect(clinic.waiting).not.toEqual(before.waiting)
     expect(clinic.waiting.species).not.toBe(clinic.table!.species)
     expect(clinic.drawn).toBe(2)
-    expect(cameIn).toEqual({ from: 'door', left: null, swapped: false, showing: null })
+    expect(cameIn).toEqual({ from: 'door', left: null, showing: null })
   })
 
   it('has the mouse show a new thing once, while the patient in front has a need already known, and gives the next patient the new need', () => {
@@ -75,17 +75,12 @@ describe('coming in', () => {
     for (const kept of clinic.garden) expect(kept.keeps.length).toBeGreaterThan(0)
   })
 
-  it('lets an animal that still has a need change places with the newcomer, keeping everything about it and judging nothing', () => {
+  it('brings nobody in while a need on the table is unmet: the touch changes nothing, and the same touch works once the animal is well', () => {
     const seated = giveCare(next(freshClinic(6, SEED)), 'basket').clinic
-    const unwell = seated.table!
-    expect(unwell.wrong).toBe(1)
-    const { clinic, cameIn } = comeIn(seated, 'door')
-    expect(cameIn).toMatchObject({ swapped: true, left: null })
-    expect(clinic.table).toEqual(seated.waiting)
-    expect(clinic.waiting).toEqual(unwell)
-    expect(clinic).toMatchObject({ drawn: seated.drawn, position: seated.position, garden: [], finished: false })
-    // And back again: it is found as it was.
-    expect(comeIn(clinic, 'door').clinic.table).toEqual(unwell)
+    expect(isWell(seated.table!)).toBe(false)
+    for (const from of ['door', 'carrier'] as const) expect(comeIn(seated, from)).toEqual({ clinic: seated, cameIn: null })
+    const well = makeWell(seated)
+    expect(comeIn(well, 'door').cameIn).toMatchObject({ from: 'door', left: { species: seated.table!.species } })
   })
 
   it('does nothing when the child touches a carrier that is not there', () => {
@@ -93,16 +88,102 @@ describe('coming in', () => {
     expect(comeIn(clinic, 'carrier')).toEqual({ clinic, cameIn: null })
   })
 
-  it('puts every thing back on the cart, keeps the stuck plasters, and takes the den apart', () => {
+  it('puts every thing back on the cart, keeps the stuck plasters, and brings in what was made of a thing', () => {
     let clinic = next(freshClinic(6, SEED))
     clinic = putDown(clinic, 'bowl', 'floor-left')
     clinic = join(clinic, 'blanket', 'basket').clinic
+    clinic = join(clinic, 'brush', 'bowl').clinic
     clinic = stick(clinic, 'mouse')
-    expect(clinic.things.blanket).toBe('on-basket')
+    const madeBefore = clinic.made
     clinic = next(makeWell(clinic))
-    for (const thing of MOVABLES) expect(clinic.things[thing]).toBe('cart')
-    expect(clinic.things.plasters).toEqual(['mouse'])
-    expect(clinic.made.den).toBe(false)
+    expect(clinic.things).toMatchObject({ bowl: 'cart', brush: 'cart', basket: 'cart', blanket: 'on-basket', plasters: ['mouse'] })
+    // Unless making the animal well used the foam up, everything made is still there.
+    expect(clinic.made).toMatchObject({ den: madeBefore.den, patches: madeBefore.patches, boat: madeBefore.boat })
+    expect(clinic.made.den).toBe(true)
+  })
+
+  it('lets a plaster go where its animal goes', () => {
+    let clinic = next(freshClinic(null, SEED))
+    clinic = giveAtTheDoor(clinic, 'plaster').clinic
+    expect(clinic.things.plasters).toEqual(['waiting'])
+    clinic = next(makeWell(clinic))
+    expect(clinic.things.plasters).toEqual(['patient'])
+    clinic = next(makeWell(clinic))
+    expect(clinic.things.plasters).toEqual([])
+  })
+})
+
+describe('the carrier', () => {
+  /** A room at a position, with a well animal on the table and the things all shown. */
+  function roomAt(position: string): Clinic {
+    const clinic = makeWell(next(freshClinic(null, SEED)))
+    return { ...clinic, position, shown: [...CARES] }
+  }
+
+  it('stands beside the one who waits from the fifth position to the one before the last, and nowhere else', () => {
+    for (const position of LADDER) {
+      const stands = ['basket', 'quiet', 'two'].includes(position)
+      expect(next(roomAt(position)).carrier !== null, position).toBe(stands)
+    }
+  })
+
+  it('holds a patient laid out one position above, by the same stream, every time', () => {
+    const one = next(roomAt('basket')), other = next(roomAt('basket'))
+    expect(one.carrier).toEqual(other.carrier)
+    expect(one.carrier).toMatchObject({ at: 'quiet', fromCarrier: true })
+    expect(one.carrier!.species).not.toBe(one.waiting.species)
+    expect(one.carrier!.species).not.toBe(one.table!.species)
+    expect(one.drawn).toBe(roomAt('basket').drawn + 2)
+  })
+
+  it('may always be chosen: its patient comes in, the one who waits stays, and its place is empty until the next one comes in from the door', () => {
+    const before = makeWell(next(roomAt('basket')))
+    const { clinic, cameIn } = comeIn(before, 'carrier')
+    expect(cameIn?.from).toBe('carrier')
+    expect(clinic.table).toEqual(before.carrier)
+    expect(clinic.waiting).toBe(before.waiting)
+    expect(clinic.carrier).toBeNull()
+    expect(clinic.drawn).toBe(before.drawn)
+    expect(next(makeWell(clinic)).carrier).not.toBeNull()
+  })
+
+  it('is judged like any other: a carrier cycle with no miss moves the position up', () => {
+    const before = makeWell(next(roomAt('basket')))
+    expect(before.position).toBe('basket')
+    const well = makeWell(comeIn(before, 'carrier').clinic)
+    expect(well.position).toBe('quiet')
+  })
+
+  it('stays where it stands when the position moves away from it', () => {
+    const before = next(roomAt('two'))
+    const carried = before.carrier
+    expect(next(makeWell({ ...before, position: 'two-quiet' })).carrier).toBe(carried)
+    expect(next(makeWell({ ...before, position: 'bowl' })).carrier).toBe(carried)
+  })
+})
+
+describe('giving at the door', () => {
+  it('lets the one who waits take a thing as play, by its taste, and leaves its sign and its count as they were', () => {
+    const clinic = next(freshClinic(6, SEED))
+    const waiting = clinic.waiting
+    for (const care of CARES) {
+      if (FITS[waiting.needs[0].need] === care) continue
+      const { clinic: after, atTheDoor } = giveAtTheDoor(clinic, care)
+      expect(atTheDoor.kind).toBe('play')
+      expect(after.waiting).toBe(waiting)
+      expect(after).toMatchObject({ position: clinic.position, finished: clinic.finished, table: clinic.table })
+      if (care === 'plaster') expect(after.things.plasters).toEqual(['waiting'])
+      else expect(after.things[care]).toBe('floor-left')
+    }
+  })
+
+  it('never shows the care that fits failing to help: held out at the door it is nosed back, and nothing changes', () => {
+    const clinic = next(freshClinic(6, SEED))
+    const fitting = FITS[clinic.waiting.needs[0].need]
+    expect(giveAtTheDoor(clinic, fitting)).toEqual({ clinic, atTheDoor: { kind: 'nosed-back' } })
+    // On the table the same thing helps, as it always does.
+    const seated = next(makeWell(clinic))
+    expect(giveCare(seated, fitting).gave?.answer.kind).toBe('helps')
   })
 })
 
@@ -252,6 +333,7 @@ describe('a child who taps anything', () => {
       for (let move = 0; move < 1500; move++) {
         const roll = random()
         if (!clinic.table || roll < 0.12) clinic = comeIn(clinic, clinic.carrier && random() < 0.5 ? 'carrier' : 'door').clinic
+        else if (roll < 0.2) clinic = giveAtTheDoor(clinic, choose(CARES)).clinic
         else if (roll < 0.8) clinic = giveCare(clinic, choose(clinic.table.cart)).clinic
         else if (roll < 0.9) clinic = join(clinic, choose(CARES), choose(CARES)).clinic
         else clinic = stick(clinic, choose(['mouse', 'waiting', 'lamp'] as const))

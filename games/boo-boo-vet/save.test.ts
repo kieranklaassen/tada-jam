@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { stream } from './arrivals'
-import { comeIn, freshClinic, giveCare, join, putDown, stick, type Clinic } from './clinic'
+import { comeIn, freshClinic, giveAtTheDoor, giveCare, join, putDown, stick, type Clinic } from './clinic'
 import { LADDER } from './config'
 import { CARES, FITS, OPEN, type Care } from './needs'
 import { isWell, showing, type Patient } from './patient'
@@ -42,6 +42,7 @@ describe('found as left', () => {
     for (let move = 0; move < 800; move++) {
       const roll = random()
       if (!clinic.table || roll < 0.15) clinic = comeIn(clinic, clinic.carrier && random() < 0.5 ? 'carrier' : 'door').clinic
+      else if (roll < 0.2) clinic = giveAtTheDoor(clinic, choose(CARES)).clinic
       else if (roll < 0.75) clinic = giveCare(clinic, choose(clinic.table.cart)).clinic
       else if (roll < 0.85) clinic = join(clinic, choose(CARES), choose(CARES)).clinic
       else if (roll < 0.93) clinic = putDown(clinic, choose(['bowl', 'blanket', 'brush', 'basket'] as const), choose(['cart', 'table-right', 'floor-left'] as const))
@@ -69,6 +70,8 @@ describe('found as left', () => {
     const back = reopened(clinic)
     expect(showing(back.table!)).toMatchObject({ step: OPEN, met: false })
     expect(back.table!.wrong).toBe(2)
+    // The well scene can still look back at each thing that did not fit, in the order it was tried.
+    expect(back.table!.tried).toEqual(CARES.filter((care) => care !== fitting).slice(0, 2))
     expect(back.finished).toBe(false)
   })
 
@@ -141,6 +144,7 @@ describe('the size of a save', () => {
       at: 'two-quiet',
       needs: [{ need: 'thirsty', step: OPEN, met: true }, { need: 'scared', step: OPEN, met: false }],
       wrong: 2,
+      tried: [...CARES],
       cart: [...CARES],
       fromCarrier,
     })

@@ -73,12 +73,8 @@ export function layOut(input: LayOut): Patient {
     at: step.id,
     needs: needs.map((need) => ({ need, step: step.start, met: false })),
     wrong: 0,
+    tried: [],
     cart: [...step.cart],
     fromCarrier: input.fromCarrier === true,
   }
-}
-
-/** Whether a carrier stands beside the one who waits after this layout: about every other time, by the same seed. */
-export function carrierArrives(seed: number, drawn: number): boolean {
-  return streamFor(seed, drawn, 0x2c1b3c6d)() < 0.5
 }

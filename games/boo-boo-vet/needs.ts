@@ -1,9 +1,10 @@
 // What an animal can need, what the child can give, and which gives fit.
 // Pure data and pure functions: no renderer, no DOM, no clock.
 //
-// The one pair that rests on a record is the bowl of water for the one that
-// droops (us-ca 3.7, us-ca K-LS1-1; nl Groeien, bloeien en voortplanten / 1).
-// The other four pairs are the game's own design (ART.md, "The records").
+// Of the five cares, only water is named by a record (us-ca 3.7 and us-ca
+// K-LS1-1; nl Groeien, bloeien en voortplanten / 1). The five signs and the
+// pairing of each sign with its care are the game's own design and rest on
+// no record (ART.md, "The records").
 
 /** The care things, in the order the designed order brings them onto the cart. */
 export const CARES = ['bowl', 'blanket', 'plaster', 'brush', 'basket'] as const

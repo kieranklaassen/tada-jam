@@ -52,11 +52,13 @@ export function above(position: string, ladder: readonly string[] = LADDER): str
   return ladder[Math.min(ladder.length - 1, place(position, ladder) + 1)]
 }
 
-/** From this position on a carrier can stand beside the one who waits. */
+/** From this position on, and at every position but the last, a carrier stands beside the one who waits. */
 export const CARRIER_FROM = 'basket'
 
+/** Whether a carrier is laid out at this position. Its patient comes from the step above, so the last step has none. */
 export function carrierCanStand(position: string, ladder: readonly string[] = LADDER): boolean {
-  return place(position, ladder) >= place(CARRIER_FROM, ladder)
+  const at = place(position, ladder)
+  return at >= place(CARRIER_FROM, ladder) && at < ladder.length - 1
 }
 
 /**

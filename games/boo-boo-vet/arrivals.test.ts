@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { carrierArrives, layOut, stream, type LayOut } from './arrivals'
+import { layOut, stream, type LayOut } from './arrivals'
 import { SPECIES } from './cast'
 import { LADDER } from './config'
 import { rung } from './ladder'
@@ -46,6 +46,7 @@ describe('laying out a patient', () => {
         expect(patient.cart).toEqual(step.cart)
         expect(patient.needs).toHaveLength(step.needs.length > 1 ? step.perPatient : 1)
         expect(patient.wrong).toBe(0)
+        expect(patient.tried).toEqual([])
         for (const entry of patient.needs) {
           expect(step.needs).toContain(entry.need)
           expect(entry.step).toBe(step.start)
@@ -109,17 +110,5 @@ describe('laying out a patient', () => {
     const carried = run(40, { fromCarrier: true })
     expect(carried.every((patient) => patient.fromCarrier)).toBe(true)
     expect(carried.map((patient) => patient.species + patient.needs[0].need).join()).not.toBe(waiting)
-  })
-})
-
-describe('the carrier', () => {
-  it('stands there about every other time, the same for the same seed and count', () => {
-    let times = 0
-    for (let drawn = 0; drawn < 400; drawn++) {
-      expect(carrierArrives(5, drawn)).toBe(carrierArrives(5, drawn))
-      if (carrierArrives(5, drawn)) times++
-    }
-    expect(times).toBeGreaterThan(150)
-    expect(times).toBeLessThan(250)
   })
 })

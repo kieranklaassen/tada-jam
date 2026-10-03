@@ -6,7 +6,7 @@ import { CARES, FITS, NEEDS, OPEN, PLAIN, QUIET, type Care, type Need, type Step
 import { carriesNew, give, helpedBy, isWell, judge, repairPatient, showing, stroke, type Patient } from './patient'
 
 function patient(needs: Need[], over: Partial<Patient> = {}, step: Step = PLAIN): Patient {
-  return { species: 'rabbit', at: 'basket', needs: needs.map((need) => ({ need, step, met: false })), wrong: 0, cart: [...CARES], fromCarrier: false, ...over }
+  return { species: 'rabbit', at: 'basket', needs: needs.map((need) => ({ need, step, met: false })), wrong: 0, tried: [], cart: [...CARES], fromCarrier: false, ...over }
 }
 
 describe('giving a care', () => {
@@ -63,6 +63,22 @@ describe('giving a care', () => {
     current = give(current, 'brush').patient
     current = give(current, 'basket').patient
     expect(current.wrong).toBe(2)
+  })
+
+  it('keeps the things that did not fit, each once, in the order first tried, for the well scene to look back at', () => {
+    let current = patient(['sore'])
+    for (const care of ['brush', 'bowl', 'brush', 'basket', 'bowl'] as Care[]) current = give(current, care).patient
+    expect(current.tried).toEqual(['brush', 'bowl', 'basket'])
+    const well = give(current, 'plaster').patient
+    expect(well.tried).toEqual(['brush', 'bowl', 'basket'])
+    // Play with a well animal adds nothing to it.
+    expect(give(well, 'blanket').patient.tried).toEqual(['brush', 'bowl', 'basket'])
+    // With two needs every thing can have missed once: five at most.
+    let two = patient(['thirsty', 'scared'])
+    for (const care of ['bowl', 'bowl', 'blanket', 'plaster', 'brush'] as Care[]) two = give(two, care).patient
+    two = give(give(two, 'basket').patient, 'basket').patient
+    expect(two.tried).toEqual(['bowl', 'blanket', 'plaster', 'brush'])
+    expect(two.tried.length).toBeLessThanOrEqual(CARES.length)
   })
 
   it('does not change the patient it was given', () => {
@@ -170,12 +186,13 @@ describe('reading a patient out of a save', () => {
   })
 
   it('repairs each field by itself', () => {
-    const repaired = repairPatient({ species: 'bear', at: 'nowhere', needs: [{ need: 'sore', step: 9, met: 'yes' }, { need: 'sore' }, 7, { need: 'cold', step: 2, met: true }, { need: 'itchy' }], wrong: 5, cart: ['bowl', 'needle', 'bowl'], fromCarrier: 1 })
+    const repaired = repairPatient({ species: 'bear', at: 'nowhere', needs: [{ need: 'sore', step: 9, met: 'yes' }, { need: 'sore' }, 7, { need: 'cold', step: 2, met: true }, { need: 'itchy' }], wrong: 5, tried: ['brush', 'brush', 'saw', 'bowl'], cart: ['bowl', 'needle', 'bowl'], fromCarrier: 1 })
     expect(repaired).toEqual({
       species: 'bear',
       at: LADDER[0],
       needs: [{ need: 'sore', step: PLAIN, met: false }, { need: 'cold', step: OPEN, met: true }],
       wrong: 0,
+      tried: ['brush', 'bowl'],
       // The things that fit its needs are put back on the cart.
       cart: ['bowl', 'blanket', 'plaster'],
       fromCarrier: false,

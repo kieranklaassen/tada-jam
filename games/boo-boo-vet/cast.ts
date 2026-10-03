@@ -25,7 +25,7 @@ export type Character = {
   funniest: Funniest
   /** The one thing it loves, with or without a need. */
   loves: Care
-  /** The one thing it is wary of. It still helps when it fits. */
+  /** The one thing it is wary of. It still helps when it fits, and no taste reaction uses the place and movement of a sign. */
   wary: Care
   /** A stroke here is the best thing there is. */
   strokeLoved: Spot

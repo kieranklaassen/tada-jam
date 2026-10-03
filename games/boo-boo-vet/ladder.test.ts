@@ -61,11 +61,11 @@ describe('the designed order', () => {
     expect(above(LADDER[LADDER.length - 1])).toBe(LADDER[LADDER.length - 1])
   })
 
-  it('lets the carrier stand only once all five things are known', () => {
+  it('lets the carrier stand once all five things are known, at every position but the last', () => {
     expect(rung(CARRIER_FROM).cart).toHaveLength(CARES.length)
-    expect(carrierCanStand('brush')).toBe(false)
-    expect(carrierCanStand('basket')).toBe(true)
-    expect(carrierCanStand('two-quiet')).toBe(true)
+    expect(LADDER.filter((id) => carrierCanStand(id))).toEqual(['basket', 'quiet', 'two'])
+    // Whoever is in it comes from one step above, so there is always a step above.
+    for (const id of LADDER) if (carrierCanStand(id)) expect(above(id)).not.toBe(id)
   })
 
   it('counts as shown, on a first visit, the first thing and the things of the steps before the start', () => {

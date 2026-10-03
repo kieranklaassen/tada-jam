@@ -26,6 +26,8 @@ export type Patient = {
   needs: PatientNeed[]
   /** How many cares did not fit while a need was unmet: 0, 1, or 2 for two or more. */
   wrong: 0 | 1 | 2
+  /** The care things that did not fit, each once, in the order first tried: the well scene looks back at each. */
+  tried: Care[]
   /** The care things its cart carries. */
   cart: Care[]
   fromCarrier: boolean
@@ -68,7 +70,8 @@ export function give(patient: Patient, care: Care): { patient: Patient; answer: 
   const step = plainer(shown.step)
   const needs = patient.needs.map((entry) => (entry === shown ? { ...entry, step } : entry))
   const wrong = Math.min(2, patient.wrong + 1) as 0 | 1 | 2
-  return { patient: { ...patient, needs, wrong }, answer: { kind: 'misses', need: shown.need, taste: manner, cell: cell(care, shown.need), step } }
+  const tried = patient.tried.includes(care) ? patient.tried : [...patient.tried, care]
+  return { patient: { ...patient, needs, wrong, tried }, answer: { kind: 'misses', need: shown.need, taste: manner, cell: cell(care, shown.need), step } }
 }
 
 /** What a stroke of the hand does: the animal shows its sign again, turned to the child. Nothing changes and nothing is counted. */
@@ -121,6 +124,7 @@ export function repairPatient(raw: unknown, ladder: readonly string[] = LADDER):
     at: typeof record.at === 'string' && ladder.includes(record.at) ? record.at : ladder[0],
     needs,
     wrong: record.wrong === 1 || record.wrong === 2 ? record.wrong : 0,
+    tried: Array.isArray(record.tried) ? record.tried.filter(isCare).filter((care, index, all) => all.indexOf(care) === index) : [],
     cart,
     fromCarrier: record.fromCarrier === true,
   }
