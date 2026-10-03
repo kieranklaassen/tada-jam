@@ -68,7 +68,7 @@ export const LONGEST_FRAME_S = 0.1
 /** A change that keeps coming (a drag, a stroke) is handed to storage at most this often, in ms. */
 export const SAVE_THROTTLE_MS = 400
 
-const [YOUNGEST, OLDEST] = bridgeCrewManifest.ageBand
+const [YOUNGEST] = bridgeCrewManifest.ageBand
 
 // --- Guidance (guidance.ts) -------------------------------------------------
 
@@ -88,7 +88,10 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = [
+  'plank-gap', 'rock-prop', 'first-triangle', 'jelly-run', 'truss-span', 'tube-post', 'piano-day', 'high-thread',
+  'tall-bus', 'mast-and-stay', 'arch-gorge', 'barge-below', 'thin-kit', 'long-haul', 'open-yard',
+]
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -98,6 +101,6 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'plank-gap' },
+  { fromAge: 11, position: 'first-triangle' },
 ]

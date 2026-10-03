@@ -55,6 +55,13 @@ export const PLANK_BEND = {
   edge: { stiffness: 640, strength: 4.8 },
 } as const
 
+/**
+ * A stick is no roadway: a wheel standing on it between its pins is carried by
+ * bending, which a thin square stick is poor at. This is the bending it takes
+ * before it snaps under the wheel.
+ */
+export const RAIL_BEND = 0.3
+
 /** The most parts one bridge or one tracing may hold. The saved state's size rests on it (save.ts). */
 export const MAX_PARTS = 48
 
