@@ -7,11 +7,29 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.
+The manifest band is 2 to 4, so the game is designed for a two-year-old and nothing in it may need more than a two-year-old has.
+
+- **The cue-table row.** The table in the wordless-clarity convention has no row below 3. Its 3 to 4 row is taken as the ceiling and cut further: one next act offered, one live want at a time, and nothing to decode. Its "Avoid" column is a hard constraint here: no text, numeral or pictorial icon, no spoken instruction, no verdict, no several activities live at once, and no tool on screen before it means something. The game has one tool, the hose, and it is on the truck from the first frame.
+- **The pack's rule for the age** (pack: game-design, ages-2-to-4.md). Everything essential works with a tap. A drag survives a lifted finger and counts when partly done. There is no pinch, tilt, shake or double tap. Each thing in a yard is about 100 logical pixels across or more, they stand well apart, and none sits in the bottom strip of the screen. Whatever looks touchable is touchable: every place on the screen answers a touch. A yard, which is one cycle, fits in one to three minutes. No amount in the game is larger than five: the fullest thing takes five gulps of water.
+- **The symbol rule.** The band starts below 6, so the kid side shows no word, letter, numeral or symbol, optional or not, and the game has no `symbols.ts`.
+- **What `ctx.childAge` sets.** One default only: where a first visit starts in the designed order. Age 2 or younger, or no age (`null`), starts at the first place, a yard with one thing in it. Age 3 starts at the second place. Age 4 or older starts at the third. A saved position wins over the age, every place is reached by play at any age, and nothing is hidden or locked by age.
 
 ## The toy
 
-The one action the finger performs most, what it does in an empty scene with its sound and motion, and why repeating it is a pleasure with no goal.
+**The action.** The child touches the yard and the fire truck sends water there. The finger is the place the water lands.
+
+- **A tap is a gulp.** The nozzle swings to the finger, the truck rocks back on its wheels, and one fat blob of water flies in an arc and lands where the finger was with a splash. A gulp is the unit of water for the whole game.
+- **A held finger is a stream.** Gulps follow one another into a thick jet. The jet follows the finger as it moves, and the landing point trails a little behind like a real hose. A stream gives one gulp of water about every third of a second.
+- **A lifted finger loses nothing.** Water already in the air still lands. A stream that is interrupted and taken up again counts as the same watering.
+- **The truck itself** is the one place that takes no water. A touch on it makes it honk, hop on its springs and turn its roof light once.
+
+**In an empty yard.** The yard is pale dry sand. Where water lands the sand turns dark, as wet sand does, and the dark patch has the shape of what the finger did: a blot for a tap, a line for a sweep. The patches dry back to pale over about half a minute of play, edge first, so the sand is never used up and there is always room for more. Drops bounce off the landing point and leave their own small dots.
+
+**The answer starts when the finger lands**, in the same frame: the nozzle snaps round, the truck squashes back, water leaves the nozzle and the hiss of the hose begins. The water itself needs about a quarter of a second to arrive, because it flies.
+
+**Sound.** The hose hisses for as long as water leaves it, pitched by how far the water has to go: a near target is a low gurgle and a far one a higher hiss. Each landing is a soft splat on sand, in several variants picked without repeats and pitched by how much water is already there. The truck creaks on its springs when it rocks. When the child stops, the sound falls to nothing within a second.
+
+**Why it is a pleasure with no goal.** It is a garden hose, and squirting a hose is something a small child does unprompted and for a long time. The finger draws with water on sand. The jet has weight and lag, and so each sweep comes out a little differently. The answer is far bigger than the touch: one tap moves a truck, throws water across the yard and leaves a mark. Random tapping covers the sand with blots, and nothing a child does is wrong. A person watching sees within three seconds that the child is squirting water from a toy fire truck.
 
 ## The object-by-action grid, and what is new on day 15
 
