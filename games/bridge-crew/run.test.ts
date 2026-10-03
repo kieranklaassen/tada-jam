@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CROSSINGS, part } from './bridges.fixture'
 import { park, roadOf, run } from './run'
-import { settle } from './frame'
+import { settle, solve } from './frame'
 import { isFooting, site } from './sites'
 import { VEHICLES, trainOf, trolleyTrain } from './vehicles'
 
@@ -44,6 +44,19 @@ describe('a run over the bridge as built', () => {
     expect(run(at, pushed, piano).frame.firm.some(Boolean)).toBe(false)
     // The same three parts below the deck pull, and hold.
     expect(run(at, CROSSINGS['thin-kit'], piano).ending).toEqual({ kind: 'crossed' })
+  })
+
+  it('an arch of pinned sticks carries by squeeze, and keeps its shape only when posts tie it to the deck', () => {
+    const at = site('arch-gorge', 0), bridge = CROSSINGS['arch-gorge']
+    const arch = [part('stick', 9, 4, 11, 6), part('stick', 11, 6, 13, 6), part('stick', 13, 6, 15, 4)]
+    expect(settle(arch, isFooting(at)).firm).toEqual([false, false, false])
+    const frame = settle(bridge, isFooting(at))
+    expect(frame.firm.every(Boolean)).toBe(true)
+    const loaded = solve(frame, [{ node: frame.at.get('12,8')!, weight: 3 }])
+    for (const index of [5, 6, 7]) expect(loaded.parts[index].force).toBeLessThan(-1)
+    // With the arch under it the deck dips less than the same deck on its two braces alone.
+    const bus = trainOf(VEHICLES['giraffe-bus'])
+    expect(run(at, bridge, bus).ride.dip).toBeLessThan(0.8 * run(at, bridge.slice(0, 5), bus).ride.dip)
   })
 
   it('the wrong road works too, each in its own way', () => {
