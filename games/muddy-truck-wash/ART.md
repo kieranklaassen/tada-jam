@@ -37,8 +37,8 @@ The objects are the six things that can be on a patch of the vehicle. The action
 | On the patch | Bare finger | Sponge | Hose | Cloth | Sent off like this |
 | --- | --- | --- | --- | --- | --- |
 | **Dried mud** (pale, cracked) | A knock: a thud, a crack runs across, crumbs trickle | A dry rasp: crumbs and dust, suds dribble over the top and slide off; the mud stays | It darkens from the finger outward and turns to soft mud, a hiss that becomes a gurgle | A scratch and a puff of dust; the mud stays | Plates of mud crack off on the way out and lie in a row of clods |
-| **Soft mud** (dark, wet) | A squelch and a dent that slowly fills | It lifts into brown foam that stays on the vehicle | It glistens, slumps and drips brown, and clings | It smears onto the clean paint beside it | Splats fly off the wheels; brown tyre tracks |
-| **Foam** (brown from mud, white on clean paint) | A hole pops in it, plip by plip | More foam, taller, and bubbles drift off | It slides off in rafts that sail to the drain; clean wet paint | It is pushed along onto the paint beside it; the cloth wears a foam beard | Blobs of foam peel off behind and a line of bubbles follows |
+| **Soft mud** (dark, wet) | A squelch and a dent that slowly fills | It lifts into brown foam that stays on the vehicle | It glistens, slumps and drips brown, and clings | It smears along the rub: the next three clean patches under the finger turn to soft mud, and then the cloth is clean | Splats fly off the wheels; brown tyre tracks |
+| **Foam** (brown from mud, white on clean paint) | Bubbles pop off it, plip by plip; the foam stays | More foam, taller, and bubbles drift off | It slides off in rafts that sail to the drain; clean wet paint | It is pushed along the rub onto the next three clean patches under the finger; the cloth wears a foam beard | Blobs of foam peel off behind and a line of bubbles follows |
 | **Wet paint** | A squeaky wet slide, drops scatter | Thin white foam that slides and runs in streaks, a wet slurp | Water sheets off the sills, drops bounce | It dries and shines, a rising squeak | The vehicle shakes like a dog first; wet tyre lines |
 | **Dull paint** (clean, dry) | The body bounces and the metal rings | Thick white foam that stands in peaks, a dry squeak going soft | Beads of water; wet paint | It shines, with one glint | A plain toot and off |
 | **Shiny paint** | A dull fingerprint | Foam hides the shine | Fat round drops race off; wet paint | A higher squeak and a second glint; still shiny | Lamps flash, a glint runs nose to tail, a proud horn |
@@ -69,7 +69,7 @@ A wrong attempt is a tool on a patch it cannot take forward. The patch shows wha
 
 - The hose on dried mud: the mud is still there, now dark and dripping. Water alone did not take it off.
 - The sponge on dried mud: crumbs and a dribble of suds, and the mud unchanged.
-- The cloth on soft mud: a brown smear on paint that was clean.
+- The cloth on soft mud: a short brown smear along the rub, on paint that was clean.
 - The cloth on foam: the foam has moved, not gone.
 - The sponge on a rinsed vehicle: foam again, to be rinsed again.
 
@@ -91,7 +91,7 @@ These ids are the `LADDER` in `config.ts`. They name places in the game's own or
 - badly: more than half of the mud it rolled in with is still on it as mud;
 - mixed: anything else.
 
-The position moves one step up after a wash that went well, one down after one that went badly, and stays after a mixed one, between cycles only. A saved position wins over the age. Nothing shows the position or that it moved: the vehicles that roll in are simply muddier or less muddy.
+The position moves one step up after a wash that went well, one down after one that went badly, and stays after a mixed one, between cycles only. The new position lays out the mud of the vehicle that then comes to the door; the one rolling in was already standing there with its mud, so a move shows one wash later. A saved position wins over the age. Nothing shows the position or that it moved: the vehicles that roll in are simply muddier or less muddy.
 
 **The harder option the child can see and pick.** A mud puddle lies beside the vehicle that waits. A tap on the puddle sends that vehicle through it, and it comes out with more soft mud, up to two times. A muddier vehicle is a bigger wash and looks it. The child may always pick it, and it does not move the position.
 
@@ -102,7 +102,7 @@ The position moves one step up after a wash that went well, one down after one t
 - `finished`: the template's mark that the cycle on screen is over. In this game the touch that sends one vehicle off also brings the next one in, so it is false in every save.
 - `bay`: the vehicle in the bay. `who` is its id in the roster; `cells` is the coarse grid of its surface, one character a patch, in rows (no body here, dried mud, soft mud, brown foam, white foam, wet, dull, shiny); `came` is how many patches held mud when it rolled in.
 - `next`: the vehicle that waits, as `who`, `cells` and `dips`, so mud from the puddle and foam that landed on it are kept. `dips` is how many times it has been through the puddle, 0 to 2, so a third tap only splashes after a put-away too; nothing shows it.
-- `seed`: the state of the seeded stream that picks the next vehicle and lays out its mud. It is not a count of anything.
+- `seed`: the state of the seeded stream that lays out the mud of each vehicle as it comes to the door. It is not a count of anything, and it does not pick who comes: the roster comes in its own order, round and round, so every vehicle is back within four washes.
 - `shown`: the ids of the first showings that have played, so each plays once.
 
 Not stored: the tool in hand (on load every tool hangs on the rack, where it came from); drips, bubbles, and the puddles and tracks on the floor, each of which lasts only seconds of attended play and leaves nothing to keep; and a scene in progress, whose outcome is saved when it starts. No clock is read and nothing changes while the game is put away. The largest legal state is under one kilobyte, and a test holds it under half the 64 KB cap.
@@ -116,7 +116,7 @@ Each vehicle's want is always visible. At rest the tipper keeps glancing at the 
 | Vehicle | Moves like | Likes | Cannot stand |
 | --- | --- | --- | --- |
 | **Tipper**, a yellow dump truck | Heavy and slow, with a bed that flaps like a lid | Foam anywhere on it: the bed bounces and its stack toots out bubbles | The cloth on its nose: a sneeze that throws the bed up and launches whatever foam is on it |
-| **Fire engine**, red | Quick and eager, ladder first | The hose anywhere on it: the ladder shoots up, the siren whoops and it squirts a small arc back from its roof | The sponge on its eyes: it blinks, the wipers flap and it blows bubbles through its grille |
+| **Fire engine**, red | Quick and eager, ladder first | The hose anywhere on it: the ladder shoots up, the siren whoops and it squirts a small arc back from its roof | The sponge on its eyes: it squeezes its eyes shut and blows bubbles through its grille |
 | **Tractor**, green | Lopsided and chugging, on two huge rear wheels | The cloth on its bonnet: it purrs in chugs and the flap on its exhaust lifts with each one | The hose on its exhaust pipe: a cough, a ring of steam, the flap clacking |
 | **Mixer**, a blue cement mixer | Round and rolling | Anything on its drum: the drum turns and what is on it spirals. Dried mud jams the drum, so it only creaks until that mud is wet | The sponge on its wheels: it is ticklish, the wheels spin and foam flies off the tyres |
 
@@ -126,7 +126,7 @@ A dislike is as good to watch as a like, and a vehicle that is bewildered is nev
 
 Each scene is a list of timed beats on the template's `scene.ts`, filled in from the state of play. Its outcome is saved when it starts, and any touch ends it with every beat at its end.
 
-- **The drip** (a first showing, once). Cause: the first vehicle that ever rolls in with dried mud. Beats, about four seconds: it brakes with its nose under the hose on its hook; a drop swells at the nozzle and falls on a dried patch; the patch darkens to soft mud and a brown drip runs; the vehicle goes cross-eyed at it and shakes its nose; the mud is still there. Filled in from: which vehicle, and its dried patch nearest the nose. It shows, before the child tries, that water softens dried mud and does not remove it. The mark in `shown` is saved at the start.
+- **The drip** (a first showing, once). Cause: the first vehicle that ever rolls in with dried mud; on a first visit that starts at `dried-patches` that is the vehicle already in the bay, and the showing plays in the first seconds of that visit. Beats, about four seconds: the vehicle shuffles until a dried patch on its nose is under the tap that hangs over the bay on the rack's long arm; a drop swells at the tap and falls on the patch; the patch darkens to soft mud and a brown drip runs; the vehicle goes cross-eyed at it and shakes its nose; the mud is still there. Filled in from: which vehicle, and the dried patch on its nose, which the arriving mud at `dried-patches` always leaves open to the sky. The tap lets a drop go in this scene only; the drop is not from the hose, so that the nose is not hidden behind the rack as it lands. It shows, before the child tries, that water softens dried mud and does not remove it. The mark in `shown` is saved at the start.
 - **The shine** (a consequence). Cause: the dab that leaves every patch of the vehicle shiny. Beats, about five seconds: a glint runs from that patch to the far end; the body rises on its springs; the lamps flash twice; its own horn; its own flourish (the bed tips, the ladder shoots up, the exhaust flap rattles, the drum turns once); it settles. Filled in from: which vehicle, and where the last dab landed. It plays every time the whole vehicle becomes shiny, and never on load.
 - **The puddle** (the child's harder option). Cause: a tap on the puddle. Beats, about three seconds: the vehicle that waits revs, hops in, splashes twice and rolls back out muddier. Filled in from: which vehicle, and how muddy it already is. A third tap only splashes.
 - **The send-off and the roll-in** (the ending, and the next beginning). Cause: a tap on the vehicle that waits. Beats, six to nine seconds: the one that waits honks; the one in the bay pulls back on its springs and goes, with the exit its surface gives it, as the last column of the grid says: clods for dried mud, splats and brown tracks for soft mud, blobs and bubbles for foam, a dog shake and wet lines for wet paint, a plain toot for dull paint, flashing lamps and a proud horn for shiny. The most common state leads and the others add their trails, which lie on the floor while the newcomer rolls in and then dry away over a few seconds of play. Then the newcomer rolls in, brakes, dips its nose, and its mud wobbles; another vehicle noses in at the door. Filled in from: who leaves and what is on it, who arrives and its mud.
