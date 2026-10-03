@@ -106,7 +106,8 @@ export function poseOf(act: Act, t: number, out: ChiefPose = { ...STILL }): Chie
       out.tilt = 0.55 * (ease(t, 0.5, 0.6) - ease(t, 0.84, 0.96))
       break
     case 'feathers-on-end':
-      out.hopX = 0.45 * (ease(t, 0, 0.16) - 0.6 * ease(t, 0.6, 1))
+      // It steps back to its place by the end: every act ends where it began.
+      out.hopX = 0.45 * (ease(t, 0, 0.16) - ease(t, 0.6, 1))
       out.hopY = 0.35 * swell(t, 0, 0.26)
       out.crest = ease(t, 0, 0.1) - ease(t, 0.5, 1)
       out.neck = -0.45 * (ease(t, 0, 0.12) - ease(t, 0.55, 1))
