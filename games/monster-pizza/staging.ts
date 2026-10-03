@@ -1,6 +1,6 @@
 import type { Customer } from './customers'
 import type { Kind } from './kinds'
-import { COUNTER_Y, CUSTOMER, DOOR, PIZZA } from './layout'
+import { COUNTER_Y, CUSTOMER, DOOR, DOOR_APART, DOOR_SIZE, PIZZA } from './layout'
 import type { Delta } from './motion'
 
 // Everything a scene moves that is not a rule: where the pizza is on its way
@@ -19,7 +19,7 @@ export type Effect = {
   t: number
 }
 
-/** A customer on the move: where its feet are, and how big it is drawn (0.44 at the door, 1 at the counter). */
+/** A customer on the move: where its feet are, and how big it is drawn (small at the door, 1 at the counter). */
 export type Walker = { who: Customer; x: number; y: number; size: number; act: Delta }
 
 export type Staging = {
@@ -65,7 +65,7 @@ export type Staging = {
 
 /** The door: where the one with the small roll stands, and the one with the big roll. */
 export function doorSpot(which: 'small' | 'big'): { x: number; y: number; size: number } {
-  return { x: DOOR.x + (which === 'small' ? -50 : 50), y: COUNTER_Y + 22, size: 0.44 }
+  return { x: DOOR.x + (which === 'small' ? -DOOR_APART : DOOR_APART), y: COUNTER_Y + 22, size: DOOR_SIZE }
 }
 
 export const COUNTER_SPOT = { x: CUSTOMER.x, y: CUSTOMER.y, size: 1 }

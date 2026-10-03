@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CUSTOMERS } from './customers'
 import { chooseHint, glows, type Scene as HintScene } from './hint'
 import { KINDS } from './kinds'
-import { OVEN_MOUTH, PIZZA, SERVE } from './layout'
+import { OVEN_MOUTH, OVEN_WAY, PIZZA, SERVE } from './layout'
 import type { Delta } from './motion'
 import { Scene, sceneLength } from './scene'
 import { EATING_SECONDS, baking, bakedAlready, delightAct, eating, fedAct, fewAct, firstShowing, handFed, manyAct, ovenShowing, rawTasting, steppingUp, tasting, walk } from './scenes'
@@ -164,6 +164,8 @@ describe('the scenes', () => {
     expect(st.bites).toBe(3)
     expect(st.pizzaHidden).toBe(true)
     expect(eaten).toBe(1)
+    // The card is rolled away with the last beat.
+    expect(st.cardOpen).toBe(0)
   })
 })
 
@@ -181,7 +183,7 @@ describe('hints', () => {
     const s = scene({ pieces: [{ x: 600, y: 500 }] })
     const three = [0, 1, 2].map((turn) => chooseHint(s, turn))
     expect(three[0]).toEqual({ move: 'tap', at: s.tubs[0] })
-    expect(three[1]).toEqual({ move: 'drag', from: PIZZA, to: OVEN_MOUTH })
+    expect(three[1]).toEqual({ move: 'drag', from: PIZZA, to: OVEN_WAY })
     expect(three[2]).toEqual({ move: 'tap', at: s.pieces[0] })
     // Baked, the way onward is to the customer.
     expect(chooseHint({ ...s, baked: true }, 1)).toEqual({ move: 'drag', from: PIZZA, to: SERVE })

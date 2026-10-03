@@ -3,13 +3,13 @@ import { CHARACTERS, CUSTOMERS, type Customer } from './customers'
 import { drawEffect, drawSoot, drawTongue, type Anchors } from './effects'
 import type { Glow } from './hint'
 import { KINDS, type Kind } from './kinds'
-import { BOARD, CARD, COUNTER_Y, DOOR, OVEN, PIECE_R, PIZZA, TUB, fit, type Fit } from './layout'
+import { BOARD, CARD, COUNTER_Y, OVEN, PIECE_R, PIZZA, TUB, fit, type Fit } from './layout'
 import { INK, PAPER, line, plain, sprite, stamp, type Pen, type Sprite } from './marker'
 import { customerSprites, drawArms, drawCustomer, type CustomerSprites, type Pose } from './monsterArt'
 import { makeRng, seedFrom } from './rng'
 import { makeScenery, paintOven, type Scenery } from './scenery'
 import { smooth } from './shapes'
-import type { Effect } from './staging'
+import { doorSpot, type Effect } from './staging'
 import { flightAt, tubAt, type Table } from './table'
 
 // The one place the kitchen is drawn. Everything that keeps its shape is a
@@ -212,10 +212,10 @@ export class KitchenView {
     g.rect(-4000, -4000, 8000, 4000 + COUNTER_Y + 14)
     g.clip()
     show.waiting.forEach((w) => {
-      const x = DOOR.x + (w.big ? 50 : -50), y = COUNTER_Y + 22
-      this.draws += drawCustomer(g, w.who, this.bodies.get(w.who)!, x, y, 0.44, w.pose)
+      const { x, y, size } = doorSpot(w.big ? 'big' : 'small')
+      this.draws += drawCustomer(g, w.who, this.bodies.get(w.who)!, x, y, size, w.pose)
       g.save()
-      g.translate(x + 30, y - 54 - w.pose.lift * 0.44)
+      g.translate(x + 30, y - 54 - w.pose.lift * size)
       g.rotate(-0.5)
       stamp(g, w.big ? scenery.bigRoll : scenery.roll)
       g.restore()

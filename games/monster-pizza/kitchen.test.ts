@@ -46,7 +46,7 @@ function slide(kitchen: Kitchen, dx: number, dy: number): void {
   kitchen.dragMove(PIZZA.x + dx, PIZZA.y + PIZZA.r * 0.95 + dy)
   kitchen.dragEnd()
 }
-const toOven = (kitchen: Kitchen) => slide(kitchen, 330, 30)
+const toOven = (kitchen: Kitchen) => slide(kitchen, 100, 10)
 const toCustomer = (kitchen: Kitchen) => slide(kitchen, 0, -60)
 
 function serveRight(kitchen: Kitchen): void {

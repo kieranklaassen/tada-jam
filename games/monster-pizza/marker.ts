@@ -113,6 +113,16 @@ export function line(g: Pen, points: Ring, rng: Rng, width = 6, color = INK): vo
   outline(g, points, rng, width, color, false)
 }
 
+/** What a sprite is drawn into. */
+export type Sheet = { width: number; height: number; getContext(kind: '2d'): unknown }
+
+let makeCanvas: () => Sheet = () => document.createElement('canvas')
+
+/** Where sprites get their canvases from. A test that counts what a frame draws passes its own here. */
+export function useCanvases(make: () => Sheet): void {
+  makeCanvas = make
+}
+
 /** A cached drawing. `x` and `y` place its top left corner in the units it was drawn in. */
 export type Sprite = { image: CanvasImageSource; x: number; y: number; w: number; h: number }
 
@@ -123,14 +133,14 @@ export type Sprite = { image: CanvasImageSource; x: number; y: number; w: number
  */
 export function sprite(box: { x: number; y: number; w: number; h: number }, density: number, pad: number, draw: (g: Pen) => void): Sprite {
   const x = box.x - pad, y = box.y - pad, w = box.w + pad * 2, h = box.h + pad * 2
-  const canvas = document.createElement('canvas')
+  const canvas = makeCanvas()
   canvas.width = Math.max(1, Math.ceil(w * density))
   canvas.height = Math.max(1, Math.ceil(h * density))
-  const g = canvas.getContext('2d')!
+  const g = canvas.getContext('2d') as Pen
   g.scale(density, density)
   g.translate(-x, -y)
   draw(g)
-  return { image: canvas, x, y, w, h }
+  return { image: canvas as unknown as CanvasImageSource, x, y, w, h }
 }
 
 /** A sprite of one ring drawn as a figure, seeded by name so its wobble is its own and never changes. */

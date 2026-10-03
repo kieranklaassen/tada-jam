@@ -421,7 +421,11 @@ export function eating(st: Staging, who: Customer, kind: Kind, eaten: () => void
       st.effect = u < 1 ? { kind, way: 'burp', big: false, t: u } : null
       st.act = { mouth: 0.9 * hump(u), squash: -0.08 * hump(ramp(u, 0, 0.3)) + 0.05 * hump(ramp(u, 0.3, 1)) }
     }),
-    tween(6.3, 0.7, (u) => { st.act = { squash: 0.06 * ease(u), blink: 0.5 * hump(u), part: 0.5 * ease(u) } }),
+    // It settles back, full, and the card is rolled away.
+    tween(6.3, 0.7, (u) => {
+      st.act = { squash: 0.06 * ease(u), blink: 0.5 * hump(u), part: 0.5 * ease(u) }
+      st.cardOpen = 1 - ease(u)
+    }),
     cue(EATING_SECONDS, () => calm(st)),
   )
   return beats

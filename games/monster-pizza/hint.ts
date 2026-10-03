@@ -1,4 +1,4 @@
-import { CUSTOMER, OVEN, OVEN_MOUTH, PIZZA, SERVE, TUB } from './layout'
+import { CUSTOMER, OVEN, OVEN_WAY, PIZZA, SERVE, TUB } from './layout'
 
 // What the idle ladder shows: which things glow, and the one move the ghost
 // hand performs. It shows how a thing is picked up or where things can go.
@@ -30,7 +30,7 @@ const CUSTOMER_GLOW: Glow = { x: CUSTOMER.x, y: CUSTOMER.y - 150, r: 170 }
 
 /** What can be touched to carry the job on, at this stage. */
 export function glows(scene: Scene): Glow[] {
-  if (scene.finished) return scene.door.map((d) => ({ x: d.x, y: d.y - 50, r: 62 }))
+  if (scene.finished) return scene.door.map((d) => ({ x: d.x, y: d.y - 50, r: 58 }))
   const tubs = scene.tubs.map((t) => ({ x: t.x, y: t.y + TUB.r * 0.2, r: TUB.r + 24 }))
   if (scene.pieces.length === 0 && !scene.baked) return tubs
   return scene.baked ? [...tubs, CUSTOMER_GLOW] : [...tubs, OVEN_GLOW]
@@ -46,7 +46,7 @@ export function chooseHint(scene: Scene, turn: number): Hint | null {
   const moves: Hint[] = []
   const tub = scene.tubs.length > 0 ? scene.tubs[Math.floor(turn / 2) % scene.tubs.length] : null
   const piece = scene.pieces.length > 0 ? scene.pieces[turn % scene.pieces.length] : null
-  const onward: Hint = scene.baked ? { move: 'drag', from: PIZZA, to: SERVE } : { move: 'drag', from: PIZZA, to: OVEN_MOUTH }
+  const onward: Hint = scene.baked ? { move: 'drag', from: PIZZA, to: SERVE } : { move: 'drag', from: PIZZA, to: OVEN_WAY }
   if (scene.pieces.length === 0 && !scene.baked) {
     if (tub) moves.push({ move: 'tap', at: tub })
   } else {

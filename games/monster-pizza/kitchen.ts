@@ -4,7 +4,7 @@ import { handPose, type Guidance, type HandPose } from './guidance'
 import { chooseHint, glows, type Scene as HintScene } from './hint'
 import { countsAsDone } from './input'
 import type { Kind } from './kinds'
-import { CARD, COUNTER_Y, CUSTOMER, OVEN, OVEN_MOUTH, PIZZA, SERVE, onPizza } from './layout'
+import { CARD, COUNTER_Y, CUSTOMER, OVEN, OVEN_WAY, PIZZA, SERVE, onPizza } from './layout'
 import { MotionDirector, type Delta } from './motion'
 import { compare, harder, layOrder, outcomeFor, refillDoor } from './order'
 import type { Pose } from './pose'
@@ -77,7 +77,10 @@ export class Kitchen {
     this.bakedLook = this.state.pizza.baked
     this.layCard()
     // Found as left: after the eating the board is bare, and nothing replays.
-    if (this.state.finished) this.st.pizzaHidden = true
+    if (this.state.finished) {
+      this.st.pizzaHidden = true
+      this.st.cardOpen = 0
+    }
     this.shown = {
       table: this.table, baked: false, pizza: { x: PIZZA.x, y: PIZZA.y, size: 1, hidden: false, bites: 0, puffed: 0 },
       customer: null, leaving: null, card: null, waiting: [], tubsIn: 1, glow: 0, glows: [], time: 0, ghost: null,
@@ -260,7 +263,7 @@ export class Kitchen {
     }
     for (const which of ['small', 'big'] as const) {
       const spot = doorSpot(which)
-      if (Math.abs(x - spot.x) < 50 && y < COUNTER_Y && y > spot.y - 150) return which
+      if (Math.abs(x - spot.x) < 60 && y < COUNTER_Y && y > spot.y - 150) return which
     }
     const who = this.state.customer
     if (who && Math.abs(x - CUSTOMER.x) < CHARACTERS[who].halfWidth && y < COUNTER_Y && y > CUSTOMER.y - CHARACTERS[who].height - 110) return 'customer'
@@ -319,9 +322,9 @@ export class Kitchen {
   dragMove(x: number, y: number): void {
     if (this.held === 'tub' || this.held === 'piece') carry(this.table, x, y)
     else if (this.held === 'pizza' && this.grab) {
-      // The pizza slides under the finger, with everything on it.
-      this.st.pizzaX = PIZZA.x + (x - this.grab.x)
-      this.st.pizzaY = PIZZA.y + (y - this.grab.y)
+      // The pizza slides under the finger, with everything on it: towards the oven or up to the customer, and never over a tub.
+      this.st.pizzaX = PIZZA.x + Math.max(0, Math.min(OVEN_WAY.x - PIZZA.x, x - this.grab.x))
+      this.st.pizzaY = PIZZA.y + Math.max(SERVE.y - PIZZA.y, Math.min(0, y - this.grab.y))
     }
   }
 
@@ -347,7 +350,7 @@ export class Kitchen {
     } else if (held === 'pizza') {
       // A slide counts when partly done: half the way to the oven bakes, half the way to the customer serves.
       const at = { x: this.st.pizzaX, y: this.st.pizzaY }
-      if (countsAsDone(PIZZA, at, OVEN_MOUTH)) this.bake()
+      if (countsAsDone(PIZZA, at, OVEN_WAY)) this.bake()
       else if (countsAsDone(PIZZA, at, SERVE)) this.serve()
     }
   }
@@ -445,7 +448,7 @@ export class Kitchen {
       if (this.state.finished && !this.scene) add(pose, { squash: 0.06, part: 0.5, blink: 0.12 })
       // One hand holds the card up; the other is the scene's to move.
       const walking = this.st.customer !== null
-      pose.handL = !walking && this.st.cardOpen > 0.5 && !this.state.finished ? { x: CARD.x + CARD.w - 4 - CUSTOMER.x, y: CARD.y + CARD.h * 0.6 - CUSTOMER.y } : null
+      pose.handL = !walking && this.st.cardOpen > 0.5 ? { x: CARD.x + CARD.w - 4 - CUSTOMER.x, y: CARD.y + CARD.h * 0.6 - CUSTOMER.y } : null
       pose.handR = this.st.hand ? { x: this.st.hand.x - CUSTOMER.x, y: this.st.hand.y - CUSTOMER.y } : null
     }
     const waiting = this.state.waiting
@@ -487,7 +490,7 @@ export class Kitchen {
     show.pizza.puffed = st.puffed
     show.customer = s.customer ? { who: s.customer, pose: this.director(s.customer).pose, x: st.customer?.x ?? CUSTOMER.x, y: st.customer?.y ?? CUSTOMER.y, size: st.customer?.size ?? 1 } : null
     show.leaving = st.leaving ? { who: st.leaving.who, pose: this.director(st.leaving.who).pose, x: st.leaving.x, y: st.leaving.y, size: st.leaving.size } : null
-    show.card = s.order && !s.finished ? { pictured: this.pictured, count: st.cardCount, open: st.cardOpen, patted: st.patted, pat: st.pat, shake: this.cardShake.x } : null
+    show.card = s.order ? { pictured: this.pictured, count: st.cardCount, open: st.cardOpen, patted: st.patted, pat: st.pat, shake: this.cardShake.x } : null
     show.waiting = s.waiting ? (['small', 'big'] as const).filter((which) => !(st.customer && s.customer === s.waiting![which])).map((which) => ({ who: s.waiting![which], big: which === 'big', pose: this.director(s.waiting![which]).pose })) : []
     show.tubsIn = st.tubsIn
     show.ovenShake = this.ovenShake.x
