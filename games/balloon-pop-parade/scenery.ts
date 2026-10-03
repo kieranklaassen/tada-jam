@@ -141,10 +141,10 @@ export function buildScenery(shared: VinylUniforms): Scenery {
 
   // The ghost hand: a glove with one finger out, its tip at the mesh's origin. It is drawn over everything and tests no depth.
   const glove = pillows([
-    { at: [0.16, -0.86, 0], size: [0.4, 0.42, 0.22], colour: PALETTE.valve },
-    { at: [0.02, -0.36, 0], size: [0.12, 0.42, 0.12], turn: [0, 0, 0.1], colour: PALETTE.valve, detail: [16, 10] },
-    { at: [0.56, -0.82, 0.04], size: [0.12, 0.22, 0.12], turn: [0, 0, -1.25], colour: PALETTE.valve, detail: [16, 10] },
-    { at: [0.2, -1.32, 0], size: [0.34, 0.16, 0.2], colour: PALETTE.glow, panels: 2, detail: [16, 10] },
+    // A mitten: a round palm, one finger out with its tip at the origin, and a cuff.
+    { at: [0.22, -0.92, 0], size: [0.42, 0.4, 0.24], colour: PALETTE.valve },
+    { at: [0.05, -0.36, 0], size: [0.13, 0.42, 0.13], turn: [0, 0, 0.14], colour: PALETTE.valve, detail: [16, 10] },
+    { at: [0.3, -1.36, 0], size: [0.36, 0.15, 0.22], colour: PALETTE.glow, panels: 2, detail: [16, 10] },
   ])
   const gloveSkin = vinylMaterial(shared, { uGlow: 0, uWobble: 0 })
   gloveSkin.depthTest = false

@@ -209,7 +209,7 @@ Balloon Pop Parade is designed from four California learning foundations publish
 
 - **The four hues.** Duck `#ffcc1f`, frog `#1fc48d`, hippo `#8b5cf6`, crab `#ee3345`. A friend is that hue all over and its balloons are exactly that hue. A beak, a belly, a claw tip and a foot are the same hue a step darker or lighter, the eyes are printed in ink (`#22203a`) with a white shine, and the valve is white. Tests hold the hues more than 45 degrees apart round the wheel, hold every one away from the sky's hue and darker than the sky, and hold the frog and the crab apart in lightness for a child who mixes red and green.
 - **The sky** runs from `#aee4f4` at the top to `#effbff` at the horizon. It is the plain surface the working pieces sit on: paler than any balloon and no balloon's hue.
-- **The hill** the friends stand on is a pink air bed (`#ffd3df`) with welded ribs across it, and the far hill is a paler haze (`#f6e6f1`). The friends stand on the hill's top with the sky behind them, so the hill is under their feet and never behind their bodies.
+- **The hill** the friends stand on is a pink air bed (`#ffd3df`) with welded ribs across it, and the far hill is a paler haze (`#f3cde2`). The friends stand on the hill's top with the sky behind them, so the hill is under their feet and never behind their bodies.
 - **Clouds** are white pillows, kept below the row of balloons so nothing stands behind a balloon but sky.
 
 ### Materials (`vinyl.ts`)
@@ -225,11 +225,21 @@ Daylight from up, left and in front, fixed in view space, so every form is lit t
 
 ### Motion (`clips.ts`, `theatre.ts`)
 
-- Everything is air under vinyl: a touch squashes it, letting go springs it back past round, and it wobbles before it settles. Nothing stops dead.
+- Everything is air under vinyl: a touch squashes it, letting go springs it back past round, and it wobbles before it settles. Nothing stops dead. A squashed friend spreads by half of what its volume would ask, so it never pushes into the friend beside it.
 - A balloon squashes flat under the finger the moment the finger lands, swoops down when the finger lifts, and a new one drifts into its place small and grows.
-- Each kind has its own tempo, weight and funniest part, and no two share a motion: the duck is quick and light and its tail never stops; the frog is still and then sudden, with a throat that swells; the hippo is slow and heavy, with a belly that wobbles after everything; the crab goes sideways in stops and starts, with eyes on stalks. Tests fail when two kinds' motions come too close.
+- Each kind has its own tempo, weight and funniest part, and no two share a motion: the duck is quick and light and its tail never stops; the frog is still and then sudden, with a throat that swells; the hippo is slow and heavy, with a belly that wobbles after everything; the crab goes sideways in stops and starts, with eyes on stalks. Each has nine motions (a catch, a refusal, being carried off, a start at a pop, two ways to take a poke, a wave, a proud move and a march) and its own gait, and tests fail when two kinds' motions, or two motions of one kind, come too close.
+- A director keeps it from repeating: a poke is never taken the same way twice running, and a motion a touch starts never runs at quite the same speed twice.
 - A friend without a balloon reaches up with both arms; one with a balloon holds its string and looks at it. The troop that waits keeps its arms down.
+- An arm comes round to the front as it is raised or let down, and a hand that holds a string stays up whatever else the friend does. A refusal goes to the side the bunch hangs on. All three are there so that no friend ever reaches into the one beside it.
+- A troop that walks keeps its places: nobody passes anybody, and each turns the way it goes only as far as it can between its neighbours (the duck a long way, the frog and the hippo a little, the crab not at all).
 - The balloons bob and the strings sway at rest; they do no more than that, since they are the working pieces.
+
+### The far hill, the clouds and the ghost hand (`scenery.ts`, `layout.ts`)
+
+- **The far hill** is a paler pillow a long way back and to the right. The last four troops the child served go round its top in single file with the balloons they carried off: whole toys in one geometry, one batch a kind, a little smaller than the friends in front, hazed towards the sky, with balloons a step paler than the ones in play.
+- **The clouds** are three white pillows, far back and below the row of balloons. The smallest hangs over the troop. A touched cloud squashes, squeaks and sheds blue drops, and so does the one over the troop when the spare balloons of too big a bunch bump it.
+- **The hill** answers a touch with a dimple where the finger is and a slow wobble that everyone standing on it rides.
+- **The idle guidance.** What can be touched next breathes: a bunch swells and settles, never changing colour, since its colour is what the child sorts by; the troop that waits takes a pale glow. The ghost hand is an inflated white mitten with a yellow cuff. It grows in from below and to the right of what it points at, dips onto it once, and shrinks away; the bunch under it squashes as a touched one would.
 
 ### Sound (`voices.ts`, `sounds.ts`)
 
@@ -248,4 +258,10 @@ A tier changes drawing only. The broad sheen, the pale rim, the seams and every 
 
 ### Budget
 
-At 1180 by 820 the heaviest moment laid out so far (three friends in the middle, three waiting, twelve balloons) is 39 draw calls and about 51,000 triangles, against the bar of about 80 draw calls. No shadow map, no post pass, pixel ratio capped at 2. Frame rates are the lead's to take on a real graphics card; none is claimed here.
+At 1180 by 820 a frame is six draws for each friend on stage and fourteen for everything else: the sky, two hills, three clouds, the balloons, the strings and the shadows as one batch each, four batches for the far hill and the ghost hand. The heaviest frame a counted test could reach, playing whole games fast and at random through every scene, stays at or under 72 draw calls (nine friends), against the bar of about 80. No shadow map, no post pass, pixel ratio capped at 2. Frame rates are the lead's to take on a real graphics card; none is claimed here.
+
+### The registry row
+
+For the claimed-styles table in `docs/art-direction.md`, when the look is accepted:
+
+`| Balloon Pop Parade | Inflatable vinyl toys 3D: puffy pool-toy animals and plain balloons with welded seams, a broad sheen and a pale rim, in four saturated hues on a pink air-bed hill under a pale open sky | [games/balloon-pop-parade/ART.md](../games/balloon-pop-parade/ART.md) |`
