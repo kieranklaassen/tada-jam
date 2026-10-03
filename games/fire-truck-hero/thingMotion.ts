@@ -245,11 +245,14 @@ export class PatchMotion {
 
 // --- The boat ----------------------------------------------------------------
 
+/** How long the ride over the rim takes. */
+export const CARRY_S = 1.1
+
 /** How long a swamped boat takes to sink, roll over, empty itself and pop up. */
 export const SINK_S = 1.7
 
 export class BoatMotion {
-  readonly pose = { rock: 0, roll: 0, sunk: 0, water: 0, pushX: 0, pushZ: 0, bob: 0, brim: 0 }
+  readonly pose = { rock: 0, roll: 0, sunk: 0, water: 0, pushX: 0, pushZ: 0, bob: 0, brim: 0, carryX: 0, carryZ: 0, carryY: 0 }
   private rock = spring(0)
   private pushX = spring(0)
   private pushZ = spring(0)
@@ -257,10 +260,21 @@ export class BoatMotion {
   private bob = spring(0)
   private sink = new Gesture()
   private brim = new Gesture()
+  private carry = new Gesture()
+  private carriedFrom = { x: 0, z: 0 }
   private time = 0
 
   settle(gulps: number): void {
     this.water.value = this.water.target = Math.min(1, gulps / THINGS.boat.fill)
+  }
+
+  /** An overflow carries it over the rim: `from` is where it was, measured from where it now lies aground. */
+  carried(from: { x: number; z: number }): void {
+    this.carriedFrom = { ...from }
+    this.pushX.value = this.pushX.target = 0
+    this.pushZ.value = this.pushZ.target = 0
+    this.carry.start()
+    kick(this.rock, 5)
   }
 
   /** `away` is the way the water pushes: from the truck to the boat, as a unit step. */
@@ -286,6 +300,7 @@ export class BoatMotion {
     this.time += seconds
     this.sink.step(seconds)
     this.brim.step(seconds)
+    this.carry.step(seconds)
     stepSpring(this.rock, { stiffness: 90, damping: 5 }, seconds)
     stepSpring(this.pushX, afloat ? { stiffness: 14, damping: 6 } : HEAVY, seconds)
     stepSpring(this.pushZ, afloat ? { stiffness: 14, damping: 6 } : HEAVY, seconds)
@@ -302,6 +317,12 @@ export class BoatMotion {
     pose.pushZ = this.pushZ.value
     pose.bob = this.bob.value
     pose.brim = hump(this.brim.through(0.9))
+    // The ride over the rim: out and down in about a second, lifted over the wall on the way.
+    const riding = this.carry.through(CARRY_S)
+    const left = riding < 1 ? 1 - riding * riding * (3 - 2 * riding) : 0
+    pose.carryX = this.carriedFrom.x * left
+    pose.carryZ = this.carriedFrom.z * left
+    pose.carryY = riding < 1 ? 0.2 * left + hump(riding) * 0.42 : 0
     return pose
   }
 

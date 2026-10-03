@@ -102,6 +102,11 @@ export class TruckMotion {
     this.rock.target = on ? -EAGER_LEAN : 0
   }
 
+  /** It sets off for the next yard: its light turns once. */
+  lightTurns(): void {
+    this.light.target += 2 * Math.PI
+  }
+
   /** A touch on the truck: it hops and its light turns once. */
   honk(): void {
     kick(this.lift, HOP_KICK)

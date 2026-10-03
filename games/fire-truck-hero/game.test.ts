@@ -243,6 +243,20 @@ describe('the ending of a yard', () => {
     expect(again.game.yard.met).toBe(true)
   })
 
+  it('finds the snail on its patch and out, since how far it had glided is short-lived', () => {
+    const t = new Table(saved('one-thing', 3))
+    expect(t.game.yard.things[0].kind).toBe('patch')
+    t.gulps(t.at(0), 3)
+    t.play(9)
+    expect(t.game.channels.glide).toBe(1)
+    const again = t.reload()
+    again.play(1)
+    expect(again.game.channels.snailOut).toBe(1)
+    expect(again.game.channels.glide).toBe(0)
+    expect(again.game.motion.snail.pose.out).toBeGreaterThan(0.9)
+    expect(Math.hypot(again.game.motion.snail.pose.x, again.game.motion.snail.pose.z)).toBeLessThan(1)
+  })
+
   it('gives way to a touch, which is then an ordinary touch', () => {
     const t = new Table(saved('two-things', 0))
     const want = t.game.yard.want

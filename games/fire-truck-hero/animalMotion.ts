@@ -21,19 +21,19 @@ const smooth = (t: number) => {
   return x * x * (3 - 2 * x)
 }
 
-/** Going from one place to another: a walk in small hops, or one jump in an arc. */
+/** Going from one place to another: a walk in small hops, by a point to the side where something stands in the way, or one jump in an arc. */
 class Going {
-  private from: Place = { x: 0, z: 0 }
-  private to: Place = { x: 0, z: 0 }
+  private points: Place[] = [{ x: 0, z: 0 }, { x: 0, z: 0 }]
+  private lengths: number[] = [0]
   private age = Infinity
   private lasts = 1
   private arc = 0
   private hops = 0
 
-  start(from: Place, to: Place, speed: number, arc: number, hops: boolean): void {
-    this.from = { ...from }
-    this.to = { ...to }
-    const far = Math.hypot(to.x - from.x, to.z - from.z)
+  start(way: readonly Place[], speed: number, arc: number, hops: boolean): void {
+    this.points = way.map((point) => ({ ...point }))
+    this.lengths = this.points.slice(1).map((point, i) => Math.hypot(point.x - this.points[i].x, point.z - this.points[i].z))
+    const far = this.lengths.reduce((sum, length) => sum + length, 0)
     this.lasts = Math.max(0.35, far / speed)
     this.arc = arc
     this.hops = hops ? Math.max(1, Math.round(far / 0.9)) : 0
@@ -52,9 +52,14 @@ class Going {
   at(rest: Place): { x: number; z: number; y: number; heading: number | null } {
     if (!this.going) return { x: rest.x, z: rest.z, y: 0, heading: null }
     const t = this.age / this.lasts
-    const share = smooth(t)
+    const far = this.lengths.reduce((sum, length) => sum + length, 0)
+    let left = smooth(t) * far
+    let leg = 0
+    while (leg < this.lengths.length - 1 && left > this.lengths[leg]) left -= this.lengths[leg++]
+    const from = this.points[leg], to = this.points[leg + 1]
+    const share = this.lengths[leg] > 0 ? Math.min(1, left / this.lengths[leg]) : 1
     const y = this.hops > 0 ? Math.abs(Math.sin(t * Math.PI * this.hops)) * 0.16 : Math.sin(t * Math.PI) * this.arc
-    return { x: this.from.x + (this.to.x - this.from.x) * share, z: this.from.z + (this.to.z - this.from.z) * share, y, heading: Math.atan2(this.to.z - this.from.z, this.to.x - this.from.x) }
+    return { x: from.x + (to.x - from.x) * share, z: from.z + (to.z - from.z) * share, y, heading: Math.atan2(to.z - from.z, to.x - from.x) }
   }
 }
 
@@ -104,10 +109,15 @@ export class CatMotion {
     else if (action === 'neighbour') this.sneeze.start()
   }
 
-  /** She goes somewhere else: a stalk across the sand, or one jump onto or off the truck's roof. */
-  move(to: Place, faces: number, toRoof: boolean): void {
-    const jump = toRoof || this.onRoof
-    this.going.start(this.home, to, jump ? 4.4 : 2.3, jump ? 1.5 : 0, !jump)
+  /**
+   * She goes somewhere else. `via` is the way round whatever stands between: no
+   * points for a straight stalk across the sand, one point to go round a thing,
+   * and null when there is no way round, or when she goes onto or off the
+   * truck's roof: then it is one jump in a high arc.
+   */
+  move(to: Place, faces: number, toRoof: boolean, via: readonly Place[] | null = []): void {
+    const jump = toRoof || this.onRoof || via === null
+    this.going.start([this.home, ...(jump ? [] : (via ?? [])), to], jump ? 4.4 : 2.3, toRoof || this.onRoof ? 1.5 : jump ? 2.4 : 0, !jump)
     this.home = { ...to }
     this.facing = faces
     this.onRoof = toRoof

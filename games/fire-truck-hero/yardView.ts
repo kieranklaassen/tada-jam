@@ -255,8 +255,8 @@ export class YardSet {
       const inPool = boat.in !== undefined
       // On the pool's floor until the water is deep enough; then on the water, lower the more it holds.
       boatY = inPool ? (floats ? waterY - 0.06 - pose.water * 0.12 : POOL.floor * SCALE.pool) + pose.bob * 0.02 - pose.sunk * 0.3 : 0
-      boatAt = { x: place.x + pose.pushX, z: place.z + pose.pushZ }
-      this.boat.root.position.set(boatAt.x, boatY, boatAt.z)
+      boatAt = { x: place.x + pose.pushX + pose.carryX, z: place.z + pose.pushZ + pose.carryZ }
+      this.boat.root.position.set(boatAt.x, boatY + pose.carryY, boatAt.z)
       this.boat.root.rotation.set(pose.roll, -0.5, pose.rock * 0.09 + pose.brim * 0.1)
       this.boat.inside.visible = pose.water > 0.05
       this.boat.inside.position.y = BOAT.floor + 0.02 + pose.water * (BOAT.brim - BOAT.floor - 0.07)

@@ -310,6 +310,7 @@ export class Game extends Toy {
     })
     leftMotion.ownChannels = { ...this.channels }
     this.leaving = { yard: left, motion: leftMotion }
+    this.truck.lightTurns()
     this.motion = new YardMotion(this.yard, this.seed + this.save.turn)
     Object.assign(this.channels, restChannels())
     this.putts = 0
@@ -447,6 +448,8 @@ export class Game extends Toy {
     Object.assign(this.channels, restChannels())
     const kind = this.yard.things[this.yard.want]?.kind
     if (this.yard.met && kind) for (const channel of endedChannels(kind)) this.channels[channel] = 1
+    // How far the snail had glided is short-lived: it is found on its patch, out.
+    this.channels.glide = 0
     this.motion.settle(this.yard, this.channels)
     this.latch = 0
     this.stillSince = this.clock

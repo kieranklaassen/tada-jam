@@ -75,3 +75,35 @@ export function targetAt(yard: Yard, x: number, z: number): Target {
   if (distance(point, BELL) <= BELL_REACH) return { on: 'bell' }
   return { on: 'ground' }
 }
+
+/** How near the middle of another thing a walker may pass. */
+export const WALK_CLEAR = 1.75
+
+function nearestOnWay(from: Place, to: Place, point: Place): number {
+  const dx = to.x - from.x, dz = to.z - from.z
+  const long = dx * dx + dz * dz
+  const share = long === 0 ? 0 : Math.max(0, Math.min(1, ((point.x - from.x) * dx + (point.z - from.z) * dz) / long))
+  return Math.hypot(point.x - (from.x + dx * share), point.z - (from.z + dz * share))
+}
+
+/**
+ * A way for a walker from one place to another that passes through nothing:
+ * straight if the straight way is clear of every place in `others`, or else by
+ * one point to the side, the nearer side first. Null when no such way is found:
+ * the walker then jumps over.
+ */
+export function wayRound(from: Place, to: Place, others: readonly Place[]): Place[] | null {
+  const clear = (a: Place, b: Place) => others.every((other) => nearestOnWay(a, b, other) >= WALK_CLEAR)
+  if (clear(from, to)) return []
+  const far = Math.max(0.001, distance(from, to))
+  const side = { x: -(to.z - from.z) / far, z: (to.x - from.x) / far }
+  for (const out of [2.2, -2.2, 3.2, -3.2, 4.2, -4.2]) {
+    for (const along of [0.5, 0.35, 0.65]) {
+      const via = { x: from.x + (to.x - from.x) * along + side.x * out, z: from.z + (to.z - from.z) * along + side.z * out }
+      // The way stays on the sand, and out of the strip by the near edge.
+      if (via.x < 0.8 || via.x > 15.2 || via.z < 1 || via.z > 8.6) continue
+      if (clear(from, via) && clear(via, to)) return [via]
+    }
+  }
+  return null
+}

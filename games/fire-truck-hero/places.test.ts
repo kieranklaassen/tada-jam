@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BELL, NEAR_STRIP_FROM_Z, SPOTS, TRUCK, TRUCK_REACH, distance } from './layout'
-import { NEST, NESTED_REACH, ROOF, placeOf, reachOf, targetAt } from './places'
+import { NEST, NESTED_REACH, ROOF, WALK_CLEAR, placeOf, reachOf, targetAt, wayRound } from './places'
 import { gulpOn } from './world'
 import { ARRANGEMENTS, layOut } from './yards'
 
@@ -83,5 +83,42 @@ describe('what a point of the yard is', () => {
     const yard = layOut('whole-garden', 0)
     expect(targetAt(yard, -50, 99)).toEqual({ on: 'ground' })
     expect(targetAt(yard, Number.NaN, 0)).toEqual({ on: 'ground' })
+  })
+})
+
+describe('a way round', () => {
+  const gap = (a: { x: number; z: number }, b: { x: number; z: number }, p: { x: number; z: number }) => {
+    let least = Infinity
+    for (let i = 0; i <= 40; i++) least = Math.min(least, Math.hypot(p.x - (a.x + ((b.x - a.x) * i) / 40), p.z - (a.z + ((b.z - a.z) * i) / 40)))
+    return least
+  }
+
+  it('is straight when nothing is in the way', () => {
+    expect(wayRound(SPOTS[0], SPOTS[2], [SPOTS[3]])).toEqual([])
+  })
+
+  it('goes by one point to the side when a thing stands in the way, and stays on the sand', () => {
+    const way = wayRound(SPOTS[0], SPOTS[4], [SPOTS[1]])
+    expect(way).toHaveLength(1)
+    const via = way![0]
+    expect(gap(SPOTS[0], via, SPOTS[1])).toBeGreaterThanOrEqual(WALK_CLEAR - 0.05)
+    expect(gap(via, SPOTS[4], SPOTS[1])).toBeGreaterThanOrEqual(WALK_CLEAR - 0.05)
+    expect(via.z).toBeLessThan(NEAR_STRIP_FROM_Z + 0.3)
+  })
+
+  it('passes through nothing between any two spots of any yard, or says there is no way', () => {
+    for (const yard of everyYard) {
+      const standing = yard.things.map((_, index) => index).filter((index) => yard.things[index].in === undefined)
+      for (let from = 0; from < SPOTS.length; from++) {
+        for (let to = 0; to < SPOTS.length; to++) {
+          if (from === to) continue
+          const others = [TRUCK, BELL, ...standing.map((index) => placeOf(yard, index)).filter((place) => distance(place, SPOTS[from]) > 0.1 && distance(place, SPOTS[to]) > 0.1)]
+          const way = wayRound(SPOTS[from], SPOTS[to], others)
+          if (way === null) continue
+          const points = [SPOTS[from], ...way, SPOTS[to]]
+          for (let leg = 1; leg < points.length; leg++) for (const other of others) expect(gap(points[leg - 1], points[leg], other)).toBeGreaterThanOrEqual(WALK_CLEAR - 0.05)
+        }
+      }
+    }
   })
 })

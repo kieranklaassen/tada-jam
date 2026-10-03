@@ -113,9 +113,9 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   truckShadow.renderOrder = 1
   scene.add(truckShadow)
   // The drop that hangs from the nozzle's tip while the truck rests and something wants water.
-  const hanging = new THREE.Mesh(new THREE.IcosahedronGeometry(0.075, 1), water)
+  const hanging = new THREE.Mesh(new THREE.IcosahedronGeometry(0.12, 1), water)
   hanging.name = 'hanging-drop'
-  hanging.position.set(BARREL + 0.02, -0.12, 0)
+  hanging.position.set(BARREL + 0.03, -0.17, 0)
   truck.nozzle.add(hanging)
 
   const hedges = buildHedges(plastic)

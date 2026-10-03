@@ -10,7 +10,7 @@
 import { BeeMotion, CatMotion, DuckMotion, SnailMotion } from './animalMotion'
 import { cellsAt, centreOf } from './ground'
 import { BELL, TRUCK, distance, type Place } from './layout'
-import { NEST, placeOf } from './places'
+import { NEST, placeOf, wayRound } from './places'
 import { restChannels, type Channels } from './scenes'
 import { kick, spring, stepSpring } from './springs'
 import { BoatMotion, FireMotion, PatchMotion, PoolMotion, SeedMotion, WheelMotion } from './thingMotion'
@@ -192,9 +192,18 @@ export class YardMotion {
   }
 
   /** A thing went somewhere else: the cat stalks or jumps, the boat is carried over the rim. */
-  moved(index: number, _before: Yard, yard: Yard): void {
+  moved(index: number, before: Yard, yard: Yard): void {
     const thing = yard.things[index]
-    if (thing?.kind === 'cat') this.cat.move(placeOf(yard, index), thing.spot === 'roof' ? Math.PI : CAT_FACES, thing.spot === 'roof')
+    if (thing?.kind === 'boat') {
+      const was = placeOf(before, index), now = placeOf(yard, index)
+      this.boat.carried({ x: was.x - now.x, z: was.z - now.z })
+    }
+    if (thing?.kind !== 'cat') return
+    const to = placeOf(yard, index)
+    const from = { x: this.cat.pose.x, z: this.cat.pose.z }
+    // She walks round whatever stands between, the truck and the bell included.
+    const others = [TRUCK, BELL, ...yard.things.map((_, at) => at).filter((at) => at !== index && yard.things[at].in === undefined).map((at) => placeOf(yard, at))]
+    this.cat.move(to, thing.spot === 'roof' ? Math.PI : CAT_FACES, thing.spot === 'roof', thing.spot === 'roof' ? [] : wayRound(from, to, others))
   }
 
   secret(_id: 'worm' | 'cat-on-roof' | 'marooned-cat', _yard: Yard): void {
