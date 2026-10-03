@@ -42,6 +42,8 @@ const PLIP_GAP = 0.07
 const READY: readonly [number, number, number] = [-1.6, 2.95, 1.0]
 /** A vehicle's like or dislike answers at most this often, so a rub sets it off again and again without piling it up. */
 const FEEL_GAP = 1.1
+/** Two taps on a tool within this long are one taking, never a taking and a hanging up. */
+const TWICE = 1.2
 /** The nozzle on the rack lets a drop go about this often, in seconds. */
 const DRIP_EVERY = 7
 
@@ -71,6 +73,7 @@ export class Play {
   private lastPlip = -1
   private tapIn = 2.5
   private pendingDrip = false
+  private tookAt = -9
   private readonly felt = new Map<Taste['id'], number>()
   /** Small things that happen a moment after a touch: the blast of a sneeze, the second chug. */
   private later: { at: number; run: () => void }[] = []
@@ -98,7 +101,7 @@ export class Play {
     const def = defOf(who)
     let motion = this.motions.get(who)
     if (!motion) {
-      motion = new TruckMotion(def.moves, def.wheels.map((wheel) => wheel.x), 0x9e37 + this.motions.size * 7919)
+      motion = new TruckMotion(def.moves, def.wheels.map((wheel) => wheel.x), 0x9e37 + this.motions.size * 7919, def.partSwing * 1.1)
       this.motions.set(who, motion)
     }
     motion.homeX = at.x
@@ -152,13 +155,19 @@ export class Play {
   }
 
   private take(tool: Tool): void {
-    // A tap on the tool in hand hangs it up again.
     if (this.hand === tool) {
+      // A second tap straight after taking it is a small child tapping twice: the tool stays in hand and says so again.
+      if (this.seconds - this.tookAt < TWICE) {
+        this.say(voices.take[tool](), 0.6)
+        return
+      }
+      // Later, a tap on the tool in hand hangs it up again.
       this.hand = 'finger'
       this.say(voices.take.back())
       return
     }
     this.hand = tool
+    this.tookAt = this.seconds
     this.say(voices.take[tool]())
     this.rest()
   }
@@ -321,6 +330,8 @@ export class Play {
   /** The child sends the vehicle in the bay off as it is, and the one that waits rolls in. */
   private sendOff(): void {
     this.release()
+    // The tool in hand goes up out of the lane, so nothing drives through it.
+    this.rest()
     const leaving = this.bay, incoming = this.next
     let result = sendOff(this.state)
     const newcomer = this.stand(result.state.next.who, result.state.next.cells, { x: LAYOUT.door.x + 7, z: LAYOUT.door.z })

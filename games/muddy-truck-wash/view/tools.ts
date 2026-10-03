@@ -10,7 +10,9 @@ import { toGeometry } from './geometry'
 // has no life of its own.
 
 /** Where a tool sits from the point it works on, and how fast it gets there. */
-const IN_HAND: Readonly<Record<Tool, readonly [number, number, number]>> = { sponge: [0, 0, 0.16], cloth: [0, 0.44, 0.14], hose: [0.7, 0.62, 0.95] }
+const IN_HAND: Readonly<Record<Tool, readonly [number, number, number]>> = { sponge: [0, 0, 0.24], cloth: [0, 0.44, 0.19], hose: [0.7, 0.62, 0.95] }
+/** The lowest a tool's own origin goes, so none of it dips into the floor when a wheel is washed. */
+const FLOOR: Readonly<Record<Tool, number>> = { sponge: 0.34, cloth: 1.08, hose: 0.9 }
 const DOWN = new THREE.Vector3(0, -1, 0)
 const TOOLS: readonly Tool[] = ['sponge', 'hose', 'cloth']
 
@@ -42,7 +44,7 @@ export class ToolsView {
       const mesh = this.tools[tool]
       const held = hand === tool
       const home = TOOL_HOME[tool], off = IN_HAND[tool]
-      if (held) this.want.set(spot.x + off[0], spot.y + off[1], spot.z + off[2])
+      if (held) this.want.set(spot.x + off[0], Math.max(FLOOR[tool], spot.y + off[1]), spot.z + off[2])
       else this.want.set(home[0], home[1], home[2])
       // Quick to the finger, slower back to the rack.
       mesh.position.lerp(this.want, 1 - Math.exp(-dt * (held && spot.working ? 26 : 9)))

@@ -14,8 +14,8 @@ export const mixer: VehicleDef = {
   paint: PAINT.blue,
   wheels: [
     { x: -1.5, r: 0.5, z: 0.8, w: 0.42, hub: PAINT.cream },
-    { x: 0.75, r: 0.5, z: 0.8, w: 0.42, hub: PAINT.cream },
-    { x: 1.8, r: 0.5, z: 0.8, w: 0.42, hub: PAINT.cream },
+    { x: 0.62, r: 0.5, z: 0.8, w: 0.42, hub: PAINT.cream },
+    { x: 1.86, r: 0.5, z: 0.8, w: 0.42, hub: PAINT.cream },
   ],
   eyes: EYES,
   side: { x0: -2.55, x1: 2.6, y0: 0, y1: 3.0 },

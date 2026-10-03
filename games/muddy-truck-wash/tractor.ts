@@ -53,7 +53,7 @@ export const tractor: VehicleDef = {
     body.round(0.035, 0.6, PAINT.zinc, { at: [0.1, 1.6, 0], turn: { axis: 'z', by: 0.6 } }, { axis: 'y', mat: MAT.metal, segs: 8 })
     body.ring(0.2, 0.035, PAINT.charcoal, { at: [0.28, 1.86, 0], turn: { axis: 'y', by: Math.PI / 2 } }, { mat: MAT.rubber, segs: 16, sides: 6 })
     // Mudguards over the big wheels.
-    for (const side of [-1, 1]) body.box([1.6, 0.12, 0.62], PAINT.green, { at: [1.05, 2.0, side * 0.86] }, { bevel: 0.05 })
+    for (const side of [-1, 1]) body.box([1.7, 0.12, 0.56], PAINT.green, { at: [1.05, 2.14, side * 0.96] }, { bevel: 0.05 })
     // The exhaust pipe on the bonnet.
     body.round(0.075, 1.25, PAINT.zinc, { at: [-1.1, 2.2, 0.2] }, { axis: 'y', mat: MAT.metal, segs: 12 })
 

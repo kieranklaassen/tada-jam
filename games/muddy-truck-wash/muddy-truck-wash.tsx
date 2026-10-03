@@ -9,6 +9,7 @@ import { emptyHint, hintFor } from './guide'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { muddyTruckWashManifest } from './manifest'
+import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { Play, type Target } from './play'
 import type { TruckPose } from './pose'
@@ -41,6 +42,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const work = new PerfRing()
     // A canvas 2D game reports the sprites and figures it drew as drawCalls; a three.js game reports the renderer's own counts.
     const view = new WashView(canvas, ROSTER)
+    // Grown-ups only: three taps in the top right corner, or fps=1 in the address.
+    const overlay = new Overlay(root, window.location.search)
     view.setTier(governor.settings)
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...view.counts }))
     // The game itself, once the slot has been read. Until then the bay stands empty.
@@ -133,6 +136,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (!attention.awake) return
       audio.touchDown()
       ladder.touch(clock.seconds)
+      const where = at(event)
+      overlay.press(where.x, where.y, width, event.timeStamp)
       act(touch.down(event.pointerId, at(event), event.timeStamp))
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
@@ -185,6 +190,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (!sized) draw()
       lastWork = performance.now() - start
       work.push(lastWork)
+      overlay.frame(now, clock.intervalMs, lastWork, governor.tier, view.counts.drawCalls, view.counts.triangles)
       frame = requestAnimationFrame(loop)
     }
 
@@ -231,6 +237,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       root.removeEventListener('pointerup', onUp)
       root.removeEventListener('pointercancel', onCancel)
       uninstallPerf()
+      overlay.dispose()
       view.dispose()
       audio.dispose()
     }

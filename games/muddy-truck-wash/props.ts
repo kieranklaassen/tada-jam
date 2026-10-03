@@ -99,7 +99,7 @@ export function bayShape(): Shape {
   // The door post: yellow with dark bands, and a lintel.
   const post = LAYOUT.yardFrom - 0.1
   s.box([0.36, 5.2, 0.36], PAINT.yellow, { at: [post, 2.6, wall + 0.2] }, { bevel: 0.05 })
-  for (const y of [0.5, 1.5, 2.5, 3.5, 4.5]) s.box([0.38, 0.4, 0.38], PAINT.charcoal, { at: [post, y, wall + 0.2] }, { bevel: 0.05 })
+  for (const y of [0.5, 1.5, 2.5, 3.5, 4.5]) s.box([0.46, 0.4, 0.46], PAINT.charcoal, { at: [post, y, wall + 0.2] }, { bevel: 0.05 })
   // A drain grate at the front of the pad.
   s.box([1.1, 0.04, 0.5], PAINT.charcoal, { at: [0.2, 0.02, 1.62] }, { bevel: 0.015 })
   for (let i = -3; i <= 3; i++) s.box([0.07, 0.05, 0.42], PAINT.zinc, { at: [0.2 + i * 0.15, 0.03, 1.62] }, { bevel: 0.01, mat: MAT.metal })

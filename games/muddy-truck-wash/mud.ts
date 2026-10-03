@@ -52,8 +52,9 @@ export function arrive(clean: Surface, position: string, seed: number): Surface 
     }
   }
   if (position === 'caked-all-over') {
-    // Dried mud over most of it, soft mud along the sills.
-    splash(0.72, [1, GRID_H - 1], 3, 'c', ['d'])
+    // Dried mud over all of it but for two small clean windows, and soft mud along the sills.
+    for (let cell = 0; cell < surface.length; cell++) if (surface[cell] === 'd') surface[cell] = 'c'
+    splash(0.12, [2, GRID_H - 1], 2, 'd', ['c'])
     for (let c = 0; c < GRID_W; c++) for (const r of [0, 1]) {
       const cell = cellAt(c, r)
       let roll: number

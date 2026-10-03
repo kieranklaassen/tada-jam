@@ -74,7 +74,8 @@ export class TruckMotion {
   private lastX: number | null = null
   private wheelSpeed = 0
 
-  constructor(readonly who: Personality, readonly axles: readonly number[], seed: number) {
+  /** `partMax` is how far a hinged part can swing open: it stops there however hard it is thrown. */
+  constructor(readonly who: Personality, readonly axles: readonly number[], seed: number, readonly partMax = Infinity) {
     this.seed = seed >>> 0 || 1
     this.blinkIn = who.blink[0] + this.random() * (who.blink[1] - who.blink[0])
     this.gazeSide.value = 0.75
@@ -138,6 +139,14 @@ export class TruckMotion {
     const jolt = (this.lift.speed - before) / Math.max(dt, 1e-3)
     this.part.speed += Math.max(-40, Math.min(40, -jolt)) * who.partThrow * dt
     this.part.step(dt, this.partTarget, who.partStiffness, who.partDamping)
+    // A hinged part hits its stops and bounces off them a little.
+    if (who.partStiffness > 0 && this.part.value > this.partMax) {
+      this.part.value = this.partMax
+      this.part.speed *= -0.3
+    } else if (who.partStiffness > 0 && this.part.value < 0) {
+      this.part.value = 0
+      this.part.speed *= -0.3
+    }
 
     const breath = Math.sin(this.seconds * who.breath * Math.PI * 2) * who.breathDepth
     const shake = Math.sin(this.seconds * who.idleRate * Math.PI * 2) * who.idleSize

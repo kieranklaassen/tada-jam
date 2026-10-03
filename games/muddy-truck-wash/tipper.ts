@@ -14,8 +14,8 @@ export const tipper: VehicleDef = {
   paint: PAINT.yellow,
   wheels: [
     { x: -1.42, r: 0.52, z: 0.8, w: 0.44, hub: PAINT.orange },
-    { x: 0.72, r: 0.52, z: 0.8, w: 0.44, hub: PAINT.orange },
-    { x: 1.78, r: 0.52, z: 0.8, w: 0.44, hub: PAINT.orange },
+    { x: 0.58, r: 0.52, z: 0.8, w: 0.44, hub: PAINT.orange },
+    { x: 1.84, r: 0.52, z: 0.8, w: 0.44, hub: PAINT.orange },
   ],
   eyes: EYES,
   side: { x0: -2.35, x1: 2.45, y0: 0, y1: 2.75 },
@@ -52,11 +52,12 @@ export const tipper: VehicleDef = {
     // The bed: a tub hinged at the back, with a lip that shades the cab.
     const part = new Shape()
     const bed = PAINT.orange
-    part.box([2.5, 0.16, 1.96], bed, { at: [1.18, 1.02, 0] }, { bevel: 0.05 })
+    // The side walls are the widest parts; the floor and the end walls sit inside them, so no two faces lie in one plane.
+    part.box([2.44, 0.16, 1.84], bed, { at: [1.18, 1.02, 0] }, { bevel: 0.05 })
     for (const side of [-1, 1]) part.box([2.5, 0.92, 0.14], bed, { at: [1.18, 1.52, side * 0.91] }, { bevel: 0.05, top: { sx: 1.04 } })
-    part.box([0.14, 1.3, 1.96], bed, { at: [0.0, 1.71, 0] }, { bevel: 0.05 })
-    part.box([0.14, 0.8, 1.96], bed, { at: [2.38, 1.46, 0], turn: { axis: 'z', by: -0.22 } }, { bevel: 0.05 })
-    part.box([0.7, 0.1, 1.96], bed, { at: [-0.28, 2.33, 0] }, { bevel: 0.04 })
+    part.box([0.14, 1.3, 1.84], bed, { at: [0.0, 1.71, 0] }, { bevel: 0.05 })
+    part.box([0.14, 0.8, 1.84], bed, { at: [2.38, 1.46, 0], turn: { axis: 'z', by: -0.22 } }, { bevel: 0.05 })
+    part.box([0.7, 0.1, 1.84], bed, { at: [-0.28, 2.33, 0] }, { bevel: 0.04 })
     // Ribs on the near and far sides, pressed into the tub.
     for (const side of [-1, 1]) for (const x of [0.5, 1.2, 1.9]) part.box([0.12, 0.8, 0.06], bed, { at: [x, 1.52, side * 0.99] }, { bevel: 0.025 })
     return { body, part, pivot: [2.25, 0.98, 0] }

@@ -101,8 +101,19 @@ describe('tools', () => {
     expect(play.hand).toBe('hose')
     play.press({ kind: 'tool', tool: 'cloth' })
     expect(play.hand).toBe('cloth')
+    run(play, 2)
     play.press({ kind: 'tool', tool: 'cloth' })
     expect(play.hand).toBe('finger')
+  })
+
+  it('two quick taps on a tool are one taking: a small child who taps twice still holds it', () => {
+    const play = new Play(coated('s'))
+    play.press({ kind: 'tool', tool: 'sponge' })
+    run(play, 0.3)
+    play.sounds.length = 0
+    play.press({ kind: 'tool', tool: 'sponge' })
+    expect(play.hand).toBe('sponge')
+    expect(play.sounds.length).toBeGreaterThan(0)
   })
 
   it('a rub lays the same dab along the finger\'s path, and what was done stays done when the finger lifts', () => {

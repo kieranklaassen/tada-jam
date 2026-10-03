@@ -108,7 +108,7 @@ const PITCH = 0.23
 
 export class Stage {
   readonly scene = new THREE.Scene()
-  readonly camera = new THREE.PerspectiveCamera(FOV, 1, 1, 80)
+  readonly camera = new THREE.PerspectiveCamera(FOV, 1, 4, 70)
   readonly tools: Record<Tool, THREE.Mesh>
   readonly marks = new FloorMarks()
   private readonly owned: { dispose(): void }[] = []

@@ -53,6 +53,8 @@ export class TruckView {
     this.axis.set(...def.partAxis).normalize()
     this.mirror.name = `mirror-${def.id}`
     this.mirror.scale.y = -1
+    // One vehicle is one object to the intersection audit: its own lids, pupils and drum are meant to touch it.
+    this.root.userData.jamObject = def.id
     this.maskA = maskTexture()
     this.maskB = maskTexture()
     this.owned.push(this.maskA, this.maskB)
@@ -70,14 +72,16 @@ export class TruckView {
       }
       const chassis = new THREE.Group()
       const body = new THREE.Mesh(bodyGeometry, material())
-      body.name = `${def.id}-body`
+      body.name = `${reflected ? 'mirror-' : ''}${def.id}-body`
       const part = new THREE.Mesh(partGeometry, material(built.pivot))
-      part.name = `${def.id}-part`
+      part.name = `${reflected ? 'mirror-' : ''}${def.id}-part`
       part.position.set(...built.pivot)
       chassis.add(body, part)
       const wheels = new THREE.InstancedMesh(wheelGeometry, material(), def.wheels.length * 2)
-      wheels.name = `${def.id}-wheels`
+      wheels.name = `${reflected ? 'mirror-' : ''}${def.id}-wheels`
       wheels.frustumCulled = false
+      // To the intersection audit each wheel is part of its vehicle, not a thing of its own.
+      if (!reflected) wheels.userData.jamInstanceObjects = Array.from({ length: def.wheels.length * 2 }, () => def.id)
       const hub = new THREE.Color()
       def.wheels.forEach((wheel, i) => {
         hub.setRGB(wheel.hub[0], wheel.hub[1], wheel.hub[2])
@@ -90,7 +94,7 @@ export class TruckView {
       this.sets.push({ chassis, part, wheels })
 
       if (!reflected) {
-        const pupilGeometry = toGeometry(new Shape().round(1, 0.3, PAINT.black, {}, { axis: 'z', mat: MAT.eye, segs: 16, bevel: 0.1 }))
+        const pupilGeometry = toGeometry(new Shape().round(1, 0.16, PAINT.black, {}, { axis: 'z', mat: MAT.eye, segs: 16, bevel: 0.06 }))
         const lidGeometry = toGeometry(new Shape().ball(1.09, def.paint, {}, { from: 0, segs: 16 }))
         this.owned.push(pupilGeometry, lidGeometry)
         const plain = enamelMaterial(kit, {})
@@ -205,7 +209,8 @@ export class TruckView {
       const side = pose.gazeSide + inward
       const dx = -Math.cos(side) * Math.cos(pose.gazeUp), dy = Math.sin(pose.gazeUp), dz = Math.sin(side) * Math.cos(pose.gazeUp)
       const pupil = this.pupils[i]
-      pupil.position.set(eye.at[0] + dx * eye.r * 0.93, eye.at[1] + dy * eye.r * 0.93, eye.at[2] + dz * eye.r * 0.93)
+      // The pupil lies on the lamp, under the lid's shell.
+      pupil.position.set(eye.at[0] + dx * eye.r * 0.97, eye.at[1] + dy * eye.r * 0.97, eye.at[2] + dz * eye.r * 0.97)
       pupil.quaternion.setFromUnitVectors(AHEAD, this.aim.set(dx, dy, dz))
       // The lid is a dome over the back of the lamp that rolls forward to shut.
       this.lids[i].rotation.set(0, side * 0.6, -0.95 + pose.lid * 2.35, 'YXZ')
