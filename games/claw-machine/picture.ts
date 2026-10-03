@@ -95,3 +95,17 @@ export type Picture = {
   /** The gate of the ledge shaking, 1 to 0. */
   gate: number
 }
+
+/**
+ * How many draws a picture costs on the stage (view/stage.ts): the cabinet,
+ * the shadows, the gate, the cable and the three parts of the claw; one for
+ * each toy; a body, a pair of pupils, a tongue and a window for a gobbler at
+ * the tray, and a body and pupils for one in the shade; one for each crate;
+ * and the glow and the hand when they show. The frame budget is held on this
+ * count, since a test cannot draw.
+ */
+export function drawsOf(picture: Picture): number {
+  const fixed = 1 + 1 + 1 + 1 + 3
+  const gobblers = picture.gobblers.reduce((sum, look) => sum + (look.waiting ? 2 : 4), 0)
+  return fixed + picture.toys.length + gobblers + picture.crates.length + (picture.glows.length > 0 ? 1 : 0) + (picture.hand ? 1 : 0)
+}

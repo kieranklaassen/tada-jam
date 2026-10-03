@@ -105,6 +105,9 @@ export class Game {
   private wagTurns = 0
   private wagAt = 0
   private wagFrom = 0
+  /** The fastest the trolley has gone on its way to the end of the rail, and whether it has hit the buffer on this run. */
+  private runPeak = 0
+  private buffered = false
   /** The gate shaking, 1 to 0. */
   gateShake = 0
   private owed = 0
@@ -357,8 +360,21 @@ export class Game {
     for (const actor of this.leaving) { this.moveActor(actor); this.moveSnack(actor) }
     this.leaving = this.leaving.filter((actor) => !(actor.walk === null && actor.role === 'leaving'))
     this.gateShake = Math.max(0, this.gateShake - STEP / 0.5)
+    this.watchBuffer()
     this.watchWaiting()
     if (this.scene) { this.scene.update(this.time); if (!this.scene.running) this.endScene(false) }
+  }
+
+  /** A hard slide into the end of the rail hits the buffer: a double ding, and the trolley bounces back a stud. */
+  private watchBuffer(): void {
+    const claw = this.claw, target = this.aim.target
+    if (target.on !== 'rail-end' || claw.phase !== 'ready') { this.runPeak = 0; this.buffered = false; return }
+    const end = target.side * RAIL.maxX
+    this.runPeak = Math.max(this.runPeak, claw.vx * target.side)
+    if (this.buffered || Math.abs(claw.x - end) > 0.8 || this.runPeak < 45) return
+    this.buffered = true
+    claw.vx = -target.side * 14
+    this.carry(clawSwingsInto(this.world, target, target.side, this.held >= 0))
   }
 
   /** The claw held still over one thing: after a moment the thing notices, once for each hold. */
@@ -376,7 +392,6 @@ export class Game {
     const claw = this.claw
     if (event.type === 'chirp') this.say({ type: 'chirp', distance: event.distance })
     else if (event.type === 'tick') this.say({ type: 'tick' })
-    else if (event.type === 'buffer') this.carry(clawSwingsInto(this.world, { on: 'rail-end', side: event.side }, event.side, this.held >= 0))
     else if (event.type === 'ratchet') this.say({ type: 'ratchet', progress: event.progress, heavy: claw.load })
     else if (event.type === 'landed') { this.say({ type: 'clack' }); this.carry(clawLands(this.world, this.pending)) }
     else if (event.type === 'closed') {
