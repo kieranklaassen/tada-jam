@@ -33,15 +33,38 @@ The manifest band is 2 to 4, so the game is designed for a two-year-old and noth
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+One tool, the hose, meets seven things. The five actions are five ways water can reach a thing. "Its fill" is the number of gulps a thing takes before it has had enough, never more than five.
+
+| | One gulp (a tap) | Its fill | Too much (water after its fill) | A sweep past (a moving stream crosses it) | Water from a neighbour (not aimed at it) |
+| --- | --- | --- | --- | --- | --- |
+| **The small fire** (fill: 3) | The flame ducks flat with a short hiss and a puff of steam, and stands up again smaller. | It goes out: a long hiss falling in pitch, one fat cloud of steam, black wet logs that drip. | The wet logs float off on their own puddle and knock together, as wood does. | The flame leans away from the stream and wobbles back with a soft "fft". | Flung drops make it spit and crackle with tiny steam pips. Run-off reaching the ring puts it out from below with a slow sizzle. |
+| **The paddling pool** (fill: 4) | A hollow plastic "bonk", a puddle on the bottom, one ring of ripples. | The level climbs with each gulp, seen through the pool's wall, and each splash sounds deeper. What floats lifts off the bottom at the third gulp. | Water runs over the low side of the rim and down onto the ground in a dark tongue. What floats rides out on it. | A row of ripples across the surface, and what floats bobs. Dry, it rattles like a drum. | Flung drops patter rings on the surface. |
+| **The seed in its pot** (fill: 3) | The soil turns dark and a green shoot pokes up with a plucked note. | Shoot, then two leaves, then an open flower, each a step up in pitch. | Water runs out of the hole under the pot into its saucer. The flower's cup fills, nods, and tips its water over whoever stands below. | The leaves flutter and shake off drops. | Run-off reaching the pot is soaked up from below: the dark climbs the pot and the plant grows one step, slowly. |
+| **The dry ground** (fill: 3 on one spot) | A dark blot with a soft "pat". | The blot stops soaking in and stands as a shiny puddle that goes "plip". | The puddle turns to mud. Landings go "squelch" and throw brown blobs. | A dark line, as long as the sweep: drawing with water. | The tongue of run-off creeps along the ground and darkens it. |
+| **The boat** (fill: 3) | On sand it rocks on its keel, rings hollow, and is pushed a hand's width by the force of the water. | Water gathers inside it until it is full to the brim and sits low. | Afloat, a boat full of water sinks with three glugs, rolls over, empties itself and pops up again. On sand it brims over and rocks. | The stream pushes it along: it sails across the pool, or slides across the sand, nose first. | A rising pool lifts it off the bottom. An overflow carries it over the rim and leaves it aground. |
+| **The wheel** (fill: a held stream) | It turns part of the way round, ticking like a ratchet, and slows. | It spins steadily with a rising whirr and flings drops off its paddles in a ring. | It spins to a blur, whistles, and throws its ring of drops so wide that every neighbour gets a gulp. | One flick: half a turn and a clack. | A stream of run-off passing under it turns it slowly from below. |
+| **The cat** (fill: 3) | She leaps straight up on four stiff legs, lands, shakes one paw and glares at the truck. | Soaked. She shakes herself from nose to tail, spraying her neighbours, and stalks to the driest spot in the yard. | She climbs onto the truck's roof, the one place that takes no water, and washes a paw with her back to the hose. | Ears flat, she ducks under the stream with her tail like a bottle brush. | One flung drop on her nose and she sneezes. When run-off creeps toward her she lifts her paws one at a time and moves over. |
+
+Every cell is a use that works. The wrong use of each thing is its "too much" cell, and the cat is wrong in every cell and funny in each.
+
+**What is new on day 15.** On day 1 the child squirts what is in front of the truck and is surprised by what it does. On day 15 the child knows what water does to each of the seven things and what each animal thinks of it, and causes it on purpose and at one remove: fills the pool so that the overflow waters the seed, spins the wheel to sprinkle the cat without aiming at her, sinks the boat to see it pop up. The yards are the same things in new arrangements, and the child is faster, surer and trying one new thing (pack: game-design, depth-from-combinations.md; pack: game-design, ages-2-to-4.md).
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+The school idea is cause and effect with water: a child gives water to a thing and sees what the water does to it. It was chosen before the game, and it is the water itself.
+
+- **Water is shown as water behaving truly on true materials.** It flies in an arc and lands. It soaks into dry sand and darkens it. It collects in a hollow thing from the bottom up under a level surface. It lifts a light thing once it is deep enough and not before. It runs over the lowest point of a full thing and then downhill. It pushes what is light and turns a wheel. It puts out a fire and leaves steam. A boat full of water sinks. Each of these is what a child sees with a real hose in a real garden.
+- **The amount is visible and never counted.** How much water a thing has had is seen in the thing: the height of the flame, the level under the duck, the stage of the plant, the darkness of the sand. No number, tick mark or meter stands for it.
+- **One thing is faster than life.** A seed goes from shoot to flower in three gulps. The direction is true (with water it grows, and a seed that gets none stays a seed for as long as the yard is on screen) and the speed is not: it is a time-lapse. The pack's table of ideas by age gives "seed to flower in one sitting, the child giving water" for ages 2 to 4, and this is that.
+- **Evidence.** The rows of that table this game uses (cause and effect as "touch it and something reliable happens; the same touch gives the same result", and the seed to flower row) cite no trial. So the representation is early-years practice with water play and a proposal of the pack, without a trial behind it (pack: game-design, representation-before-game.md).
+- **Where the order stops.** At the object. The things on screen are the objects, there is no picture stage, and a band that starts below 6 has no symbol stage (pack: game-design, fade-to-school-symbols.md).
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No: every result is what water really does to that material, so with the water taken out the grid is empty and no other subject fits into it.
+- **Attention.** At the moment of decision the child looks at one thing and at how much water it has had (the flame, the level, the bud) and thinks about what water will do to it next. Aiming takes no thought, because the water lands where the finger is and each thing is about 100 logical pixels across or more.
+- **Fun.** The skill is used in the squirt, which is the most enjoyable moment of play, and play never stops for it.
+- **Guess.** Yes, and in this band that is meant: every tap gives a true answer and enough water anywhere meets any want, so no child is stuck. What random tapping does not give is the outcome the child meant: the duck afloat and the cat dry, the pool full and not over, the overflow sent to the seed. There is no set of options to try one by one.
 
 ## The error as a consequence
 
