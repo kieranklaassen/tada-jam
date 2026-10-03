@@ -181,23 +181,51 @@ No scene plays before the action that causes it, none plays only sometimes for t
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+Each record was read in its file and looked up again by id on 2026-10-03. The standing and the check state are as the lookup printed them that day. What a record asks is given in the game's own words or, for a California record, from the record's Summary, which is the pack's own text.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels, as the lookup prints them: age 2 is `infant-toddler` (the indicator for 23 through 36 months); age 3 is `preschool-tk`, sub-band Early (3 to 4 ½ Years); age 4 is `preschool-tk`, Early and Later, where both statements of a foundation apply. Age mapping: official. Gap: none printed.
+
+California's support for this game is in science. No reading and language record of this jurisdiction carries telling apart sounds that are not speech, or matching a sound to its maker, so the game claims no California reading and language skill and names nothing in its place.
+
+- `edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-2` (`us-ca 2.2`, Preschool/Transitional Kindergarten Learning Foundations: Science, Strand 2.0, Physical Science): department-published-foundation, confirmed. For ages 3 and 4. In play, a child notices sound and explores it through the senses; at the later age the child changes sound on purpose and describes the change. The record also covers light and shadows, which the game leaves out.
+  Limits taken: at the earlier age the statement is noticing and exploring, and describing is not yet asked. The statement does not explain how sound travels, and neither does the game. Left open by Limits: the statement does not list the properties of sound, so the properties the game varies (how high, how long, steady or warbling, one note or two, up or down, softer inside a hide) are the game's own choice. Beyond what the game gives: the describing of the later age, since a wordless game asks nobody to describe, and the setting, which the record gives as play and investigation shared with others, where the game gives the play and cannot give the company.
+- `edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-1` (`us-ca 2.1`, same document and strand): department-published-foundation, confirmed. For ages 3 and 4. A child explores things and says what they are like, and the sound a thing makes is one of the example properties.
+  Limits taken: the properties are examples and not a checklist; the statement asks for describing, not explaining, and sets no number of things. The game takes the one example, sound, as a property that tells one maker from another. Beyond what the game gives: the saying, and the record's sorting of materials into solid and not solid, which is not in the game.
+- `edu.us-ca.infant-toddler.science.objective.cognitive-development-strand-1-0-exploration-1-1` (`us-ca 1.1`, Infant–Toddler Learning and Development Foundations, Second Edition, Cognitive Development, Strand 1.0: Exploration): department-published-foundation, confirmed. For age 2. It is about a child's growing grasp that doing one thing makes a second thing happen, with simple predictions.
+  Limits taken: the predictions are called simple, nothing says what they are about or that they must be right, and the record describes what children typically show, not a requirement on a child. For a two-year-old the game makes no California claim beyond this: I tap the egg and it sounds, and I tap it again and someone comes out.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels, as the lookup prints them: ages 2 and 3 are `peuters`; age 4 is `peuters` (up to the fourth birthday) and `fase-1`, sub-band groep 1. Age mapping: convention. Gap: none printed. At age 4 the lookup also returns the `einde-po` lane, labelled end-of-primary goals; the game is designed from no record of that lane.
+
+Two of the records below print the same code, so each is cited by pack id with its scope.
+
+- `edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-3` (`nl` Fonemisch bewustzijn en alfabetisch principe / 3, Inhoudskaart Nederlandse taal, peuters / Aanvankelijk lezen): curriculum-institute-guidance, confirmed. Playing games around language, word games and sound games.
+  Limits taken: it describes what is offered to children of about 2 to 4, not what a child must be able to do; it mentions no letters and no written words, and the game has none. Left open by Limits: which games, how long they last and who leads them, so a sound game of creature voices, led by the child, in cycles of one to three minutes, is the game's own choice. Our reading, not the record's: the bullet stands under a heading about awareness of the sounds of speech, and creature voices are listening play that comes before that. The game is a sound game in the sense of the card and is not called phonemic awareness.
+- `edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-verschijnselen-uit-natuurkunde-en-techniek-natuurkundige-verschijnselen-2` (`nl` Natuurkundige verschijnselen / 2, Inhoudskaart Oriëntatie op jezelf en de wereld, peuters / Verschijnselen uit natuurkunde en techniek): curriculum-institute-guidance, confirmed. Discovering and wondering about sound, for which the card names loudness and pitch. The record also names light, warmth, force and a lamp, which the game leaves out.
+  Limits taken: an offer to children of about 2 to 4; the verbs are discovering and wondering, with no explaining and no measuring; for sound only loudness and pitch are named. The game takes both: pitch tells the high family from the low one, and loudness is softer inside a hide and louder in the open at the same pitch. Beyond the record, as the game's own choice: how long a call lasts, whether it warbles, one note or two, up or down.
+- `edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-verschijnselen-uit-natuurkunde-en-techniek-natuurkundige-verschijnselen-1` (`nl` Natuurkundige verschijnselen / 1, same card and block): curriculum-institute-guidance, confirmed. Exploring and naming things from what the child sees, hears, feels, smells and tastes.
+  Limits taken: an offer to children of about 2 to 4; no list of things or words is set. The game gives the exploring by hearing and seeing. Beyond what the game gives: the naming, which a wordless game leaves to the child and whoever sits beside them.
+- `edu.nl.fase-1.reading-language.objective.inhoudskaart-nederlandse-taal-fase-1-lezen-fonemisch-bewustzijn-en-alfabetisch-principe-3` (`nl` Fonemisch bewustzijn en alfabetisch principe / 3, Inhoudskaart Nederlandse taal, fase 1 / Lezen): curriculum-institute-guidance, confirmed. For a child of 4 in groep 1. Taking part in word games and sound games.
+  Limits taken: it describes what a school offers in groep 1 and 2, with no year stated, not what a child must be able to do; it mentions no letters and no written words. Left open by Limits: which games. The same reading of ours holds as for the peuter bullet.
+- `edu.nl.fase-1.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-fase-1-verschijnselen-uit-natuurkunde-en-techniek-natuurkundige-verschijnselen-2` (`nl` Natuurkundige verschijnselen / 2, Inhoudskaart Oriëntatie op jezelf en de wereld, fase 1 / Verschijnselen uit natuurkunde en techniek): curriculum-institute-guidance, confirmed. For a child of 4 in groep 1. Discovering and wondering about sound, for which the card names loudness and pitch, beside light, heat, force and electricity, which the game leaves out.
+  Limits taken: what a school offers in groep 1 and 2, with no year stated; discovering and wondering, with no explaining, no measuring and no rule to state; no instrument is named. The game takes loudness and pitch as under the peuter bullet.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **The subject.** The Dutch cards carry a sound game under reading and language as well as sound under science. California carries sound under science only. The game follows each under its own heading: it is a sound game in the sense of the card for the Netherlands, and makes no reading and language claim for California.
+- **Age 2.** The Dutch peuter cards are an offer to children of about 2 to 4. California's records on sound are for ages 3 and 4, and for a two-year-old the game rests on cause and effect alone. The game plays the same at every age; only what it claims differs.
+- **Which properties of sound.** The Dutch cards name loudness and pitch. The California statement lists none. The game follows the Dutch cards here and uses both, and everything else it varies is its own choice under either.
+- **Saying.** California's later age asks a child to describe a change, and one Dutch bullet asks for naming. The game gives neither under either.
+- **Standing.** The California records are foundations published by a state department. The Dutch records are guidance from the curriculum institute. Neither is a standard or the law, and no record of one jurisdiction stands for a record of the other.
+
+Matching a sound to who makes it, and finding two that sound alike, are in no record of either jurisdiction. They are the game's own.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Who Made That Sound is designed from three California foundations published by a state department (`us-ca 2.2` and `us-ca 2.1` of Physical Science in the Preschool/Transitional Kindergarten Learning Foundations for science, for ages 3 and 4, and for a two-year-old `us-ca 1.1` of Exploration in the infant-toddler foundations, on cause and effect only), and from five bullets of the Dutch curriculum institute's content cards, which are guidance and not law: for peuters the sound-game bullet of the language card and two bullets of the orientation card, on sound and on exploring with the senses, and for fase 1 the sound-game bullet of the language card and the sound bullet of the orientation card. All eight records are confirmed. It is a listening game with invented voices; matching a sound to its maker is the game's own and rests on no record.
 
 ## The look
 
