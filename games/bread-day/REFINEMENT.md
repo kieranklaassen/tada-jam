@@ -3,20 +3,36 @@
 
 ## Status
 
-- Stage: sheet. The design sheet is whole in `ART.md`, written on 2026-10-03 and not yet checked.
-- Sheet hash (everything above `## The look`): `805e0241f142af9fd4b920cb98f590de8ee725438e7aaea8e11834f4d68acbbc`.
-- Look in use: none yet. The first reserved look is Linocut print; its spike is the next piece of this run.
+- Stage: sheet. This run (the first) covered the design sheet, the look spike and the rules, and stops there as its brief says. The toy is not built.
+- Sheet: whole in `ART.md` at commit `27bd83f`, written on 2026-10-03, not yet checked. Sheet hash (everything above `## The look`): `805e0241f142af9fd4b920cb98f590de8ee725438e7aaea8e11834f4d68acbbc`. The sheet part has not changed since that commit.
+- Look in use: Linocut print, the first and only row reserved. Spike done at commit `31ee2b3`: the Mount draws the game's real scene at load with a fixed seed, and nothing is playable behind it. It reads clearly in my own stills at 1180 by 820, 1024 by 768 and 820 by 1180 (software renderer, pixel ratio 2, production build). No frame rate was measured: that is the lead's, on a real graphics card.
+- Rules: written against the sheet at `27bd83f`, before its check, at this builder's own risk. Pure modules with tests beside them: `stuff.ts`, `tastes.ts`, `bakery.ts`, `save.ts`, `grid.ts`, `consequence.ts`, and the position ids in `config.ts`. A finding under the representation, the mechanic questions, the error, the designed order or the records reopens them.
 - Open: sheet ready for check, round 1
+- Open, for the sheet after its check: one rule was added after the sheet was pushed and is not in it. Water poured onto a peel that is already full takes a scoop of flour over the edge with it (`tip` in `stuff.ts`), so that a full peel can still become batter and every raw state can still be mended in place. Proposed sentence, to follow "A pour too many runs off the peel" under the grid: "Water over a full peel takes a scoop of flour with it, so what is left is wetter."
+- Open, request to the lead: a row for Bread Day in the claimed-styles registry of `docs/art-direction.md` (Linocut print, art guide `games/bread-day/ART.md`), once the owner has accepted the look.
+- Open, request to the lead: the frame rate of the spike at pixel ratio 2, and how long the one-off printing takes on an iPad (see the template note on `bread-day.tsx`).
+- Not yet made, by design of this run: the toy, the sounds (no voice module yet), the idle guidance for this game, the scenes, motion per character, the model overlap tests and the frame-budget test.
+- Next run: read the checker's report and paste its replacements; take the template commit the lead names; then build the toy (the push into the dough) in this look.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
 ### Template notes
 
-No entry yet. One entry a file copied from the template, written for the lead and for the games that come after: used as copied, or what was changed and why, and what is wrong or missing that any game would need. Mark a fault or a gap **for the template**. A frozen file is never changed here: a fault in one is a request to the lead.
+- `config.ts`: changed in two places only, `LADDER` (the eight position ids) and `FIRST_VISIT` (their two starting ids). The rest is as copied.
+- `state.ts`: used as copied and wrapped by `save.ts`, as its header asks. **For the template:** `beginCycle` and `finishCycle` take and return the whole `GameState`, so a game whose world is one larger record has to project it and merge it back (`cycleOf` and `withCycle` in `bakery.ts`). A signature generic over `{ position, finished }` would spare every game that step.
+- `bread-day.tsx` (the Mount): changed for the look spike only. It creates the look, calls `look.resize` after the backing store is sized, and `draw` lays the look down and sets `drawn.drawCalls`. The comment above `draw` still describes a blank surface. **For the template:** a canvas look that prints its sprites on resize does all that work inside `resize`, in one blocking step (about 0.65 s here on a software renderer). The Mount has no place to spread such work over frames or to show the first frame early; a canvas game would use one.
+- `audio.ts`, `input.ts`, `guidance.ts`, `scene.ts`, `overlay.ts`: as copied, and not yet used by the game's own code.
+- `perf.ts`, `quality.ts`, `attention.ts`, `saveCadence.ts` (frozen): untouched.
+- **For the template:** there is no seeded random stream. This game needed one twice already (the lane in `bakery.ts`, the print in `lookCut.ts`), and every game with a fixed-seed spike will write its own.
+- **For the template:** the lower-tier path of the look (the same prints scaled down at a lower pixel ratio) was written but not exercised at run time.
 
 ### For the owner to decide
 
-Nothing yet. One line for each thing only the owner can settle: the look and the toy at the toy checkpoint, a default the game would like changed, and anything the guide does not rule on.
+- The look, at the toy checkpoint: Linocut print, as the spike shows it.
+- The jar of bubbly. The idea as briefed says warmth makes dough rise; flour and water alone do not rise, so the game adds a jar of live starter, shown and never explained. Without it the model would show a change that is not real.
+- The cast: animals who each look like the bread they want, with a badger as the baker, in place of the demo's human family.
+- A black, burnt bread is a wanted result (the crow's), reached only by the child's own act of baking again, never by waiting.
+- None of the defaults awaiting the owner in the guide needs a different answer for this game.
 
 ## Pass log
 
@@ -31,7 +47,17 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### How the game meets the quality bar
 
-Nothing yet. One entry for each line of the quality bar, saying how the game meets it so far. Each frame rate comes with the engine, the throttle, the pixel ratio and the build it was measured on, and with whether a physical iPad was measured.
+So far, from the sheet, the rules and the look spike. Nothing here is a measured frame rate, and no physical iPad was measured.
+
+- **Alive at idle.** In the spike the fire flickers, the badger blinks and the dough breathes, on the attended clock only. Customers' routines come with the game.
+- **Motion and sound on every touch.** Not built. `grid.ts` already names a motion and a voice for every act on every thing, and a test holds that none is missing.
+- **Weight, squash and follow-through.** Not built. The toy is the push into the dough.
+- **Kid-clear.** The spike shows few, large shapes: cream dough on a blue peel on a dark bench, two tools, one customer, the baker, the oven.
+- **Wordless clarity for the declared age.** No word, letter, numeral or symbol anywhere; no recipe card and no thought bubble. A want is shown by the customer's body and basket. `npm run -s wordless:check` passes.
+- **Wordless guidance.** The template's idle ladder is in place and not yet fed by the game.
+- **60 fps on a mid-range iPad.** Not measured. The spike lays down twelve cached sprites a frame, with no post pass, and the pixel ratio is capped at 2 by the tier table.
+- **Procedural or committed assets only.** Everything is drawn at run time from a fixed seed. `node scripts/egress-check.ts` and `npm run egress:built` pass.
+- **Its own art direction.** Linocut print: see "The look" in `ART.md`.
 
 ### The learning claim
 
