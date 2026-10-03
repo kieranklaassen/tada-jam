@@ -27,7 +27,20 @@ The action the finger performs most is **pulling a lock longer and snipping it s
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+Six objects and five actions. The actions are told apart by what the finger does, never by a tool picked from a tray: **pull** is landing on the thing and dragging; **snip** is landing beside it and crossing it; **poke** is a tap; **ruffle** is rubbing back and forth on it; **bring the ribbon** is carrying the ribbon by its clip and letting go on the thing.
+
+| | Pull | Snip | Poke | Ruffle | Bring the ribbon |
+| --- | --- | --- | --- | --- | --- |
+| **A lock under the cape** (the customer's) | Stretches longer with a creak that falls in pitch, and stays as long as it was pulled; the head leans after it | Cut where it was crossed; the piece drops to the floor and the stump twangs up; it stays cut | Plucked like a string: a note that is lower the longer the lock is, and one slow swing | Fans out and flutters with a dry rustle, then falls straight, as long as before; the head wobbles | The ribbon clips on beside it with their top ends level, and both hang still |
+| **The friend's lock** (the model) | Stretches, then snaps back to its own length with a rubbery boing; the friend's eyes cross | A piece pops off, the friend shakes like a wet dog, and the lock is back at its own length with a cork pop | Hums in the friend's own voice, and an ear flicks | The friend squirms and laughs; the lock does not change | The friend takes the clip in a paw and holds its breath, cheeks puffed, while the ribbon hangs beside the lock, top ends level |
+| **A tuft of the mane** | Grows into a tall plume that flops over when it is top-heavy, with a rising whistle | Becomes a round pom, and a puff of fluff floats up with a soft poff | Boings like a spring, and the tufts next to it ripple outwards | The whole mane frizzes into a ball with a crackle, then sinks back to how it was | The ribbon ties itself into a bow on the tuft with a rustle and a ting; the customer looks up at it and likes it or hates it, by its taste |
+| **The ribbon** | Runs longer off its roll with a ratchet tick, and stays | Cut; the offcut spirals down slowly like a leaf with a paper flutter and lies on the floor | Twangs like a rubber band, curls up at its end and uncurls | Spins into a corkscrew with a whirr, then hangs straight | Carried back to its peg, it winds on with a zip and hangs there at the length it has |
+| **A clipping** on the floor | Comes along in the fingers, wriggling, and lies where it is let go; let go on a face it sticks there | Cut in two, and the halves hop apart; a piece too small to cut turns to fluff and blows away | Hops like a flea with a tick | Rolls up into a fluff ball that rolls away under the chair | The ribbon lies down on the floor beside it, ends level |
+| **A face** (the customer's or the friend's) | The cheek stretches like dough and snaps back with a blub and a squeak in that customer's voice | The scissors snip the air by the nose; the customer goes cross-eyed, ducks under the cape and peeks out; nothing is cut | A giggle in that customer's own voice, different on the nose, an ear and the chin | A head rub: each customer answers in its own way, by its taste | The ribbon wraps round the head as a blindfold, and the customer lifts it to peek |
+
+Every cell is the right use of something and the wrong use of something else, and all thirty work. The ones a grown-up would call wrong are the loudest: snipping the model, pulling a cheek, a clipping worn as a moustache.
+
+**Day 15.** The child gives haircuts on purpose to four customers whose tastes they know, to get the reaction they want to see; carries a length across the room on the ribbon without being shown; dresses faces with moustaches and eyebrows cut to size from clippings; and matches two locks at once where on day 1 they matched one that hung right beside its model.
 
 ## The representation
 
