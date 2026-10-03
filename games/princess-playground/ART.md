@@ -225,4 +225,47 @@ Princess Playground is designed from five California learning foundations publis
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Written after the spike of 2026-10-03. Not part of the sheet.
+
+**The claimed look: sand tray** (the first row reserved for this game in the look ledger). A shallow walnut tray of pale sand on a cool grey-blue cloth, seen from the child's side and a little above. The sand is one material, raked into even lines that bend into rings round the stone, and a low light from the left picks out every line, groove and dimple. The only objects are smooth stones: a dark stone with a slate plank across it, and four painted pebbles. Nothing is made of sand, and nothing is clay.
+
+How it stays apart from the claimed looks: Pebble Table is plasticine with thumbprints under stop-motion light on a table of many things; here there is one granular surface that records what touches it, hard glossy stones, and no depth blur.
+
+**Palette.**
+
+| What | Colour | Why |
+| --- | --- | --- |
+| Sand | `#e9d3a9`, warm and pale | The plain surface under the working pieces. |
+| Sand in shade | cool violet-grey over the same sand | Shade is a hue shift, so a groove reads as depth and not as dirt. |
+| Tray | `#5a3b2a` walnut | Darker than everything in it: a frame, never a target. |
+| Cloth | `#6f8794` | Cool and quiet behind a warm tray. |
+| Stone and plank | `#2f3340`, `#56617a` slate | The working pieces: plain, no pattern, a hue the sand does not have. |
+| Pim | `#ff6a55` coral, cream shell crown | The smallest gets the hottest colour so she is never lost. |
+| Mog | `#19c2ae` teal | Told from Dot by hue and by his two ear bumps. |
+| Dot | `#d3c9e8` alone, `#8c56e0` in company | The one colour in the game that changes, and it changes only with company. |
+| Bo | `#1d6a8c` deep blue-green | The darkest and largest: weight you can see. |
+
+No friend is yellow, tan or brown: those belong to the sand and the tray.
+
+**Materials.** The sand is one flat plane. Its relief is a 512 by 320 height canvas that the fragment shader lights from the slope (two taps each way); grains are a hash; the soft shadows of the four friends and the plank are uniforms in the same shader. The plane is never displaced. Stones are glossy standard materials with a small soft highlight, no texture. Faces are flat unlit ink and white, so they read at any angle of the light.
+
+**Lighting.** One directional light, low from the left and a little behind, warm; one cool hemisphere fill. No shadow map and no post pass. Shadows on the sand fall to the right and stretch, as a low light makes them.
+
+**Motion rules.**
+
+- Every friend moves by its own numbers (`personality.ts`): Pim snaps back at once and her crown lags; Mog is smooth, gathers himself longest for his size and goes long when lifted; Dot takes small low hops and wobbles softly for a while; Bo rocks to get going, lands flat and his belly goes on wobbling. A test fails if two friends come to share a set.
+- A hop gathers, leaps, arcs and lands with a squash; nothing teleports. A friend let go by the finger falls straight to its place.
+- The plank is the heaviest thing on screen: it turns faster the bigger the difference, knocks on the sand, rebounds a little and lies still. With equal weights it floats and sways.
+- The working pieces move only as the idea needs. The plank and the stone have no idle motion; the friends breathe and blink, which adds no bulk and changes no weight.
+- Everything runs on attended game time at a fixed step of 1/120 s, with one seeded stream that only picks ordinary detail (when a blink falls).
+
+**Tiers** (`config.ts`). A tier changes drawing only.
+
+| Tier | Pixel ratio | Grain | What still holds |
+| --- | --- | --- | --- |
+| 0 | 2 | full | Everything. |
+| 1 | 1.5 | full | The same look, softer edges. |
+| 2 | 1.25 | 0.7 | Fewer flashing grains. |
+| 3 | 1 | 0.5 | Raked lines, grooves, shadows and every friend as before: it is still the sand tray. |
+
+**Budget so far.** 23 draw calls and about 16,000 triangles with all four friends on screen, read from the renderer on the spike. No frame rate has been measured: this machine has no graphics card.
