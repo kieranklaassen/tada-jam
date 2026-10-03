@@ -18,8 +18,11 @@
 export type Pad = { x: number; y: number }
 export type Trace = { a: number; b: number }
 
-/** The gadgets a customer brings, and the stall's own sign. A plain gadget has no switch: copper joins the switch's pads. */
-export type GadgetKind = 'lamp-plain' | 'fan-plain' | 'bell-plain' | 'lamp' | 'fan' | 'bell' | 'car' | 'robot' | 'sign'
+/**
+ * The gadgets a customer brings, the stall's own sign, and the toy: a cell and a lamp on the bare mat with no
+ * copper between them. A plain gadget has no switch: copper joins the switch's pads.
+ */
+export type GadgetKind = 'lamp-plain' | 'fan-plain' | 'bell-plain' | 'lamp' | 'fan' | 'bell' | 'car' | 'robot' | 'sign' | 'toy'
 
 export type Board = {
   /** Width and height in pad units. */
@@ -39,7 +42,7 @@ export type Board = {
 
 type Shape = { rungs: number; cells: 1 | 2; switched: boolean }
 
-const SHAPES: Record<GadgetKind, Shape> = {
+const SHAPES: Record<Exclude<GadgetKind, 'toy'>, Shape> = {
   'lamp-plain': { rungs: 3, cells: 1, switched: false },
   'fan-plain': { rungs: 3, cells: 1, switched: false },
   'bell-plain': { rungs: 3, cells: 1, switched: false },
@@ -100,23 +103,39 @@ function build(shape: Shape): Board {
   return { cols, rows: bottom + 1, pads, traces, cellSockets, switchSocket: [switchA, switchB], linkSocket: [linkA, linkB], rungs }
 }
 
+/**
+ * The toy: nothing is joined to anything. A cell stands at the left and a lamp at the right, each on its own two
+ * pads, and two lone posts lie between them for a longer way round. Every way the current can go is a lead the
+ * child clipped on.
+ *
+ *        4 post
+ *   1 cap        2 lamp
+ *   0 base       3 lamp
+ *        5 post
+ */
+function buildToy(): Board {
+  const pads: Pad[] = [{ x: 0, y: 2 }, { x: 0, y: 1 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 2, y: 0 }, { x: 2, y: 3 }]
+  return { cols: 5, rows: 4, pads, traces: [], cellSockets: [[0, 1]], switchSocket: [4, 5], linkSocket: [4, 5], rungs: [[2, 3]] }
+}
+
 const BOARDS = new Map<GadgetKind, Board>()
 
 /** The copper of one kind of gadget. Built once and shared: a board is never changed. */
 export function boardOf(kind: GadgetKind): Board {
   let board = BOARDS.get(kind)
   if (!board) {
-    board = build(SHAPES[kind])
+    board = kind === 'toy' ? buildToy() : build(SHAPES[kind])
     BOARDS.set(kind, board)
   }
   return board
 }
 
+/** Every kind with copper of its own: the gadgets and the sign. The toy has none and is not among them. */
 export const GADGET_KINDS = Object.keys(SHAPES) as GadgetKind[]
 
 /** Whether a string from a save names a gadget. */
 export function isGadgetKind(value: unknown): value is GadgetKind {
-  return typeof value === 'string' && Object.hasOwn(SHAPES, value)
+  return value === 'toy' || (typeof value === 'string' && Object.hasOwn(SHAPES, value))
 }
 
 /** The distance between two pads, in pad units. */

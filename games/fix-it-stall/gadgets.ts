@@ -21,11 +21,12 @@ const RUNGS: Record<GadgetKind, readonly (Load | null)[]> = {
   car: [null, 'lamp', 'motor'],
   robot: ['lamp', 'buzzer', 'motor'],
   sign: ['lamp', 'lamp', 'lamp', 'lamp', 'lamp', 'motor', 'buzzer'],
+  toy: ['lamp'],
 }
 
 /** A plain gadget has copper where the others have a switch. */
 export function hasSwitch(kind: GadgetKind): boolean {
-  return !kind.endsWith('-plain')
+  return kind !== 'toy' && !kind.endsWith('-plain')
 }
 
 /** The gadget whole and switched on. */
@@ -36,7 +37,8 @@ export function asBuilt(kind: GadgetKind): Circuit {
   RUNGS[kind].forEach((load, rung) => {
     if (load) parts.push(trayPart(load, board.rungs[rung][0], board.rungs[rung][1]))
   })
-  return { ...emptyCircuit(kind), parts, leads: [{ a: board.linkSocket[0], b: board.linkSocket[1] }] }
+  // The toy comes with no lead on it: its first lead is the child's.
+  return { ...emptyCircuit(kind), parts, leads: kind === 'toy' ? [] : [{ a: board.linkSocket[0], b: board.linkSocket[1] }] }
 }
 
 /** How many lamps, motors and buzzers the gadget came with. A mend has made it run when at least as many of each run again. */
