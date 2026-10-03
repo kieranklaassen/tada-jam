@@ -7,11 +7,39 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.
+Chalk Train: the child draws on a patch of tar with a finger, and a small chalk train rides whatever was drawn.
+
+**Band.** The manifest band is 2 to 4. Its youngest age, two, governs every choice below.
+
+**What governs two.**
+
+- The cue table of wordless clarity has no row below 3. Its 3 to 4 row is taken as the ceiling and cut further (pack: game-design, ages-2-to-4.md). Its "Avoid" column is a hard limit here: no text, numeral or pictorial icon to decode, no spoken instruction, no verdict, never several activities live at once, and no tool on screen before it means anything. So there is no palette, no eraser, no button and no thought bubble. The whole screen is the tar, and the finger is the chalk.
+- Everything essential works with a tap. A tap lays a chalk dot and the train comes to it. A drag lays a line, survives a lifted finger (the line simply ends there and stays), and counts when partly done: the train rides however much of it exists.
+- No pinch, tilt, shake, double tap or long press. A second finger draws a second line.
+- Every touch is answered when the finger lands, and there is no dead end: no mark can be wrong, and the train can always reach any mark.
+- Things the child aims at (the train, a rider, a rider's home) are about 100 logical pixels across or more, well apart, and none sits in the bottom strip where wrists rest. Drawing needs no aim at all.
+- One loved action, offered again and again: making a line and watching something run along it. A whole cycle (one rider taken home) fits in one to three minutes. Never more than four riders on the tar, and at most three stops at once.
+- No symbol of any kind: the band starts below 6, so the game has no `symbols.ts`, and nothing the game draws is a letter, a numeral or a sign. A child's own loop or zigzag may happen to look like a letter; the game neither draws nor reads one.
+- No voice instructs. The riders and the engine speak in invented, synthesized sounds.
+
+**What `ctx.childAge` sets.** Only the place in the designed order where a first visit starts: two or younger starts at `short-hop`, three at `long-way`, four or older at `up-and-down` (the places are listed under "The designed order"). `null` starts at `short-hop`, the youngest default. The bottom and top defaults are open-ended. A saved position always wins over the age, and age locks or hides nothing: every mark, every rider's taste and every secret works for every child from the first visit.
 
 ## The toy
 
-The one action the finger performs most, what it does in an empty scene with its sound and motion, and why repeating it is a pleasure with no goal.
+**The action.** The finger makes a chalk mark on the tar, and the engine rides it.
+
+**In an empty scene** there is only grey tar and the engine, a side-on chalk drawing with a face, standing on a short stub of chalk rail and breathing out small smoke puffs.
+
+- **Finger lands.** In that frame a chalk dot appears under the finger with a puff of dust and a dry tick. The engine's eyes snap to the spot and it gives a short toot.
+- **Finger moves.** Chalk comes out under the finger as a dusty, slightly broken line, with a scrape whose pitch follows the finger's speed. Sleepers tick into place along the line a moment behind it. The engine does not wait for the finger to lift: it sets off toward the near end of the new line at once.
+- **The ride.** The engine reads the line with its body. On a straight run it gathers speed and its smoke streams back. On a bend it leans. At a sharp corner it clacks and its wagons bunch and spring apart. Uphill it slows and chuffs hard; downhill it runs away with a rising whistle. Round a loop it goes upside down and its funnel cap drops off and lands back on. In a scribble it spins about and comes out dusty and sneezes. A wobbly line gives a wobbly ride, exactly as wobbly as the line.
+- **Finger lifts.** The line ends there and stays. The engine rides to the open end, brakes with a squash, peers over the end and puffs.
+- **A tap alone.** The dot is enough. The engine rolls off its line and trundles across the bare tar toward the dot, slow and bumpy, cheeks wobbling, and sits on the dot with a small hoot. So tapping anywhere calls the train, and drawing gives it a fast smooth run.
+- **A poke at the engine.** It blows a smoke ring and its eyes cross.
+
+**Why it is a pleasure with no goal.** The child causes a big, readable chain with one small act, and the chain is a replay of the child's own gesture: the mark stays on the tar and the engine acts it out, so every different mark is a different ride. Random tapping always calls the train. A watcher can tell in three seconds what the child is doing: drawing track for a train. Nothing is asked, counted or finished; the engine waits at the end of the line for as long as the child likes.
+
+**The one rule of the toy,** which every later part keeps: chalk is smooth and fast, bare tar is slow and bumpy, and the form of the line is the form of the ride.
 
 ## The object-by-action grid, and what is new on day 15
 
