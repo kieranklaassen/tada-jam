@@ -179,4 +179,32 @@ Claw Machine is designed from one California learning foundation for preschool a
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+**Stud bricks**, the first row reserved for the game in the look menu. Everything in the cabinet is moulded plastic bricks on one stud grid, seen in perspective from the front and above, the way a child stands at a claw machine.
+
+**What makes a screenshot this game.** Studs on every open top, a thin dark seam round every brick, flat saturated primaries on dark neutral bricks, a pale studded tray in a green rim, and three brick bins with frog eyes and peg teeth looking up at a claw on a cable.
+
+**Palette** (`palette.ts`).
+
+- The three toy colours, which are also the three colour gobblers: red `#d8261c`, blue `#1668d8`, yellow `#f7c400`. A toy is one of them all over.
+- White `#f3f2ec` for the gobblers that go by kind or size, for teeth, eyes and the lining of every belly, so a toy of the gobbler's own colour still shows inside it.
+- The tray is plain and pale, `#e4e1d6`, so every toy colour stands off it; the cabinet behind the gobblers is dark and neutral, `#303a4a`, so every gobbler stands off it.
+- Green `#2ea44f` is the machine's own trim (the rim of the tray, the corner posts, the teeth of the claw). It is the one brick primary no toy has, so nothing on the machine can be taken for a group.
+- Steel greys for the claw and its cable, and pink `#f2718a` for a tongue.
+
+**Materials** (`view/plastic.ts`). One plastic for every brick, with the colour in the vertices, so a whole build is one draw. The light is fixed to the camera as a matcap would be: a soft shade that keeps the hue, a small hard white highlight and a pale sheen from above. The seam is drawn at the edge of each brick face from the face's own size, with a lighter bevel just inside it. The belly windows are clear panels. No texture, no light, no shadow map and no post pass.
+
+**Shapes** (`bricks.ts`, `builds.ts`, `gobblerBuild.ts`, `clawBuild.ts`, `cabinet.ts`). Boxes and round bricks only, with studs at eight sides each. A stud is built only where no brick sits on it. The one part that is not a brick is a gobbler's eyeball, a plain ball, so a face reads from across a room.
+
+**The working pieces stay plain.** A toy has no face, no pattern and no motion of its own; a small one and a big one of a kind are two different builds on the same grid, not one build scaled. The texture of the look is on the gobblers, the cabinet and the claw.
+
+**Shadows.** Round contact shadows on whatever is beneath, all in one draw. A shadow thins as its toy rises, and the claw's own shadow shows where it will land.
+
+**Motion rules.**
+
+- Plastic is hard. It does not bend: it hops, clicks down, and squashes for an instant on landing before springing back.
+- The claw has weight: the trolley is pulled toward the finger and damped, the cable swings against every change of speed, and a load makes the swing slower and longer.
+- A hop is a small throw straight up, sized by distance from what caused it, so a ring of hops spreads from every landing.
+- Working pieces move only when something moves them. A gobbler breathes, blinks and watches the claw, each at its own pace; no two share a pace or a blink.
+- Nothing moves on a clock of its own while the game is unattended or hidden.
+
+**Tiers** (`config.ts`). A tier changes the pixel ratio only (2, 1.5, 1.25, 1). The look has no post pass and no shadow map to shed, and the lowest tier is the same bricks at a lower ratio.
