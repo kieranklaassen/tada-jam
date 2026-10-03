@@ -5,7 +5,7 @@ import { FIRST_VISIT, LADDER, WHOLE_PATHS_UNTIL } from './config'
 import { GUEST_IDS, PHASES, TASTES } from './guests'
 import { bedsIn, edgeById, roomCount } from './hotel'
 import { heard, moodOf, settled } from './mood'
-import { delightsIn, roomings, solve } from './solver'
+import { delightsIn, kits, roomings, solve } from './solver'
 
 /** The share of the ways of giving out the rooms that settle the house with everything left in the cupboard. */
 function bareShare(cast: Cast): number {
@@ -134,7 +134,22 @@ describe('how hard the places are', () => {
   })
 
   it('from the third place on, giving out rooms blind seldom settles the house', () => {
-    for (const place of LADDER.slice(2)) for (const cast of castsAt(place)) expect(bareShare(cast), cast.id).toBeLessThanOrEqual(1 / 7)
+    for (const place of LADDER.slice(2)) for (const cast of castsAt(place)) expect(bareShare(cast), cast.id).toBeLessThanOrEqual(1 / 8)
+  })
+
+  it('once things can be placed a house has from about two hundred to many thousands of arrangements', () => {
+    const sizes = LADDER.slice(2).flatMap((place) => castsAt(place)).map((cast) => {
+      let rooms = 0, placings = 0
+      for (const _ of roomings(cast, cast.guests)) rooms++
+      for (const _ of kits(cast, cast.guests)) placings++
+      return rooms * placings
+    })
+    expect(Math.min(...sizes)).toBeGreaterThanOrEqual(190)
+    expect(Math.max(...sizes)).toBeGreaterThan(100000)
+  })
+
+  it('keeps the singer off the bench until her own place, so that she is new there', () => {
+    for (const cast of CASTS) if (cast.bench === 'singer') expect(LADDER.indexOf(cast.position), cast.id).toBeGreaterThanOrEqual(LADDER.indexOf('listener'))
   })
 
   it('no guest of any cast is cross for a reason the child cannot find from its place', () => {
