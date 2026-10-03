@@ -101,7 +101,7 @@ void main() {
 `
 
 /** The corners of what the camera must keep in view, in world units. */
-const FRAME = { x0: -4.6, x1: 4.75, y0: -0.75, y1: 4.35 }
+const FRAME = { x0: -5.0, x1: 4.75, y0: -0.75, y1: 4.35 }
 const FOV = 26
 const YAW = 0.3
 const PITCH = 0.23

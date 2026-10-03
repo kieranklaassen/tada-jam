@@ -1,11 +1,16 @@
+import { vehicle as defOf } from './cycle'
 import { KIND, Particles, type Landing } from './fx'
 import { TruckMotion } from './motion'
-import { TOOL_HOME } from './props'
+import { LAYOUT, TOOL_HOME } from './props'
 import { react } from './reactions'
-import type { VehicleDef } from './roster'
-import { GRID_W, dab, type Hand, type Surface, type Tool } from './surface'
+import type { VehicleDef, VehicleId } from './roster'
+import { Scene } from './scene'
+import { dripScene, openDriedPatch, puddleScene, sendOffScene, shineScene } from './scenes'
+import { silhouette } from './silhouette'
+import { GRID_W, allShiny, dab, decode, type Hand, type Surface, type Tool } from './surface'
 import * as voices from './voices'
 import type { VoiceSpec } from './voices'
+import { markShown, sendOff, throughPuddle, washed, type WashState } from './washState'
 
 // The game in play, with no renderer and no browser: what is in the bay, what
 // is in the hand, and what each touch sets going. The Mount turns a pointer
@@ -34,6 +39,8 @@ const HOSE_EVERY = 0.2
 const PLIP_GAP = 0.07
 /** Where a tool waits by the vehicle when no finger is down: above the cab, out of the way of the paint. */
 const READY: readonly [number, number, number] = [-1.5, 3.25, 1.0]
+/** The nozzle on the rack lets a drop go about this often, in seconds. */
+const DRIP_EVERY = 7
 
 export class Play {
   hand: Hand = 'finger'
@@ -42,25 +49,67 @@ export class Play {
   readonly sounds: Sound[] = []
   /** Things that reached the floor this frame. The view drains it into the floor's marks. */
   readonly marks: Landing[] = []
-  /** Set when something a save holds has changed. The Mount clears it. */
+  /** Set when something a save holds has changed, and when it has to be saved at once. The Mount clears both. */
   dirty = false
+  urgent = false
   readonly tool: ToolSpot = { x: 0, y: 0, z: 0, working: false }
-  private seconds = 0
+  bay: Vehicle
+  next: Vehicle
+  /** The vehicle on its way out during a send-off, or null. */
+  leaving: Vehicle | null = null
+  seconds = 0
+  private readonly motions = new Map<VehicleId, TruckMotion>()
+  private scene: Scene | null = null
   private pressing: Extract<Target, { kind: 'truck' }> | null = null
   private lastDab = { x: 0, y: 0, at: -1 }
   private slide = 0
   private variant = 0
   private rise = 0
   private lastPlip = -1
+  private tapIn = 2.5
+  private pendingDrip = false
 
-  constructor(public bay: Vehicle, seed = 0x77a5) {
+  constructor(public state: WashState, seed = 0x77a5) {
     this.particles = new Particles(seed)
+    this.bay = this.stand(state.bay.who, state.bay.cells, LAYOUT.bay)
+    this.next = this.stand(state.next.who, state.next.cells, LAYOUT.door)
     this.rest()
+    // A first visit that opens on dried mud has not had its showing yet.
+    this.pendingDrip = !state.shown.includes('drip') && openDriedPatch(this.bay) !== null
   }
 
-  /** A finger lands. */
+  /** The vehicles to draw, each with its pose. */
+  get onStage(): Vehicle[] {
+    return this.leaving ? [this.bay, this.next, this.leaving] : [this.bay, this.next]
+  }
+
+  get sceneRunning(): boolean {
+    return this.scene?.running ?? false
+  }
+
+  /** Puts a vehicle of the roster on a spot, with the surface a save holds for it. */
+  stand(who: VehicleId, cells: string, at: { x: number; z: number }): Vehicle {
+    const def = defOf(who)
+    let motion = this.motions.get(who)
+    if (!motion) {
+      motion = new TruckMotion(def.moves, def.wheels.map((wheel) => wheel.x), 0x9e37 + this.motions.size * 7919)
+      this.motions.set(who, motion)
+    }
+    motion.homeX = at.x
+    motion.homeZ = at.z
+    return { def, surface: decode(cells) ?? silhouette(def), motion }
+  }
+
+  say(spec: VoiceSpec, gain = 1): void {
+    this.sounds.push({ spec, gain })
+  }
+
+  /** A finger lands. Any touch ends a scene at once, and is then answered as a touch. */
   press(target: Target): void {
+    this.scene?.finish()
     if (target.kind === 'tool') return this.take(target.tool)
+    if (target.kind === 'next') return this.sendOff()
+    if (target.kind === 'puddle') return this.puddle()
     if (target.kind !== 'truck') return
     this.pressing = target
     this.rise = 0
@@ -70,6 +119,7 @@ export class Play {
 
   /** The finger moves, still down. `speed` is how fast it travels over the vehicle, in units a second. */
   drag(target: Target, speed: number): void {
+    if (this.sceneRunning) return
     if (target.kind === 'tool' && this.hand !== target.tool && !this.pressing) return this.take(target.tool)
     if (target.kind !== 'truck') {
       // Off the vehicle the tool waits at its edge; the press on the body is let go.
@@ -99,18 +149,18 @@ export class Play {
     // A tap on the tool in hand hangs it up again.
     if (this.hand === tool) {
       this.hand = 'finger'
-      this.sounds.push({ spec: voices.take.back(), gain: 1 })
+      this.say(voices.take.back())
       return
     }
     this.hand = tool
-    this.sounds.push({ spec: voices.take[tool](), gain: 1 })
+    this.say(voices.take[tool]())
     this.rest()
   }
 
   /** Puts the tool spot where a tool waits: by the vehicle when one is in hand. */
   private rest(): void {
     const home = this.hand === 'finger' ? TOOL_HOME.sponge : READY
-    this.tool.x = this.hand === 'finger' ? home[0] : this.bay.motion.homeX + home[0]
+    this.tool.x = this.hand === 'finger' ? home[0] : LAYOUT.bay.x + home[0]
     this.tool.y = home[1]
     this.tool.z = home[2]
     this.tool.working = false
@@ -125,19 +175,25 @@ export class Play {
     motion.lookAt = { side: 0.95 + Math.max(-1, Math.min(1, target.x / 2)) * 0.25, up: Math.max(-0.3, Math.min(0.5, (target.y - 1.5) * 0.3)) }
   }
 
+  /** The surface of the vehicle in the bay, into the live vehicle and the save. */
+  setBaySurface(surface: Surface): void {
+    if (surface === this.bay.surface) return
+    this.bay.surface = surface
+    this.state = washed(this.state, surface)
+    this.dirty = true
+  }
+
   /** One dab at the target: the surface changes, and the touch is answered for what it met. */
   private touch(target: Extract<Target, { kind: 'truck' }>, landed: boolean): void {
     const bay = this.bay
     const result = dab(bay.surface, this.hand, target.col, target.row)
     if (!result.met.length) return
-    if (result.surface !== bay.surface) {
-      bay.surface = result.surface
-      this.dirty = true
-    }
+    const wasShiny = allShiny(bay.surface)
+    this.setBaySurface(result.surface)
     this.variant = (this.variant + 1 + (this.particles.random() < 0.3 ? 1 : 0)) % 4
     if (this.hand === 'cloth') this.rise = Math.min(1, this.rise + 0.12)
     const reaction = react(this.hand, result.met[0], { speed: Math.min(1, this.slide / 6), variant: this.variant, rise: this.rise })
-    for (const spec of reaction.voices) this.sounds.push({ spec, gain: 1 })
+    for (const spec of reaction.voices) this.say(spec)
     const wx = bay.motion.homeX + target.x, wz = bay.motion.homeZ + 1.0
     for (const b of reaction.bursts) {
       // A glint sits on the paint; everything else is thrown from it.
@@ -148,20 +204,87 @@ export class Play {
     if (landed) bay.motion.kick(target.x, reaction.kick)
     this.lastDab = { x: target.x, y: target.y, at: this.seconds }
     this.follow(target)
+    // The dab that leaves every patch shiny sets off the shine. The finger is let go of, so the scene is not ended by its own touch.
+    if (!wasShiny && allShiny(bay.surface)) {
+      this.release()
+      this.start(shineScene(this, bay, target.x))
+    }
+  }
+
+  private start(beats: ConstructorParameters<typeof Scene>[0], outcome: () => void = () => {}): void {
+    this.scene = new Scene(beats)
+    this.scene.start(this.seconds, outcome)
+  }
+
+  /** The child sends the vehicle in the bay off as it is, and the one that waits rolls in. */
+  private sendOff(): void {
+    this.release()
+    const leaving = this.bay, incoming = this.next
+    let result = sendOff(this.state)
+    const newcomer = this.stand(result.state.next.who, result.state.next.cells, { x: LAYOUT.door.x + 7, z: LAYOUT.door.z })
+    // The first vehicle that rolls in with dried mud is shown what water does to it: marked now, played after it stops.
+    const patch = result.state.shown.includes('drip') ? null : openDriedPatch(incoming)
+    const beats = sendOffScene(this, leaving, incoming, newcomer)
+    if (patch) {
+      result = { ...result, state: markShown(result.state, 'drip') }
+      const from = beats.reduce((end, beat) => Math.max(end, beat.at + beat.lasts), 0)
+      const after = dripScene(this, incoming, patch)
+      result.state = washed(result.state, after.surface)
+      for (const beat of after.beats) beats.push({ ...beat, at: beat.at + from })
+    }
+    this.start(beats, () => {
+      this.state = result.state
+      this.leaving = leaving
+      this.bay = incoming
+      this.next = newcomer
+      this.dirty = true
+      this.urgent = true
+    })
+  }
+
+  /** The vehicle that waits goes through the puddle. When the puddle has no more to add it only splashes. */
+  private puddle(): void {
+    const after = throughPuddle(this.state)
+    const surface = after === this.state ? null : (decode(after.next.cells) ?? this.next.surface)
+    this.start(puddleScene(this, this.next, surface), () => {
+      if (after === this.state) return
+      this.state = after
+      this.dirty = true
+      this.urgent = true
+    })
   }
 
   /** One frame of attended time. */
   step(dt: number): void {
     this.seconds += dt
+    if (this.pendingDrip && !this.sceneRunning) {
+      this.pendingDrip = false
+      const patch = openDriedPatch(this.bay)
+      if (patch) {
+        const drip = dripScene(this, this.bay, patch)
+        this.start(drip.beats, () => {
+          this.state = washed(markShown(this.state, 'drip'), drip.surface)
+          this.dirty = true
+          this.urgent = true
+        })
+      }
+    }
+    this.scene?.update(this.seconds)
     // A held hose keeps spraying where it points.
     if (this.pressing && this.hand === 'hose' && this.seconds - this.lastDab.at >= HOSE_EVERY) this.touch(this.pressing, false)
-    this.bay.motion.step(dt)
+    // The nozzle lets a drop go now and then while it hangs on the rack: it falls to the floor under it.
+    this.tapIn -= dt
+    if (this.tapIn <= 0) {
+      this.tapIn = DRIP_EVERY * (0.7 + this.particles.random() * 0.6)
+      if (this.hand !== 'hose') this.particles.emit(KIND.drop, TOOL_HOME.hose[0], TOOL_HOME.hose[1] - 0.72, TOOL_HOME.hose[2], 0, 0, 0, 0.09, 3)
+    }
+    for (const who of this.onStage) who.motion.step(dt)
     this.particles.step(dt, (landing) => {
       if (landing.kind !== KIND.bubble) this.marks.push(landing)
       if (this.seconds - this.lastPlip < PLIP_GAP) return
       this.lastPlip = this.seconds
       const size = Math.min(1, landing.size / 0.18)
-      this.sounds.push({ spec: landing.kind === KIND.bubble ? voices.pop(size) : voices.plip(size), gain: 0.5 })
+      this.say(landing.kind === KIND.bubble ? voices.pop(size) : voices.plip(size), 0.5)
     })
   }
 }

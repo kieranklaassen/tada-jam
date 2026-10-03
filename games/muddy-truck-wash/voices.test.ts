@@ -14,6 +14,9 @@ function all(): [string, VoiceSpec][] {
   }
   for (const t of [-1, 0, 0.3, 1, 2]) out.push([`shine ${t}`, voices.shine(t)], [`pop ${t}`, voices.pop(t)], [`plip ${t}`, voices.plip(t)])
   out.push(['scratch', voices.scratch()], ['smear', voices.smear()], ['fizz', voices.fizz()])
+  for (const mood of ['call', 'proud', 'plain', 'muddy', 'bubbly', 'wet'] as const) for (const [low, high, hold] of [[147, 175, 0.22], [392, 523, 0.16], [196, 247, 0.34]]) out.push([`horn ${mood} ${low}`, voices.horn(low, high, hold, mood)])
+  for (const size of [0, 0.5, 1]) out.push([`rev ${size}`, voices.rev(size)])
+  out.push(['brake', voices.brake()], ['splash', voices.splash()], ['shake', voices.shake()], ['sigh', voices.sigh()], ['clods', voices.clods()], ['drip', voices.drip()], ['puzzled', voices.puzzled(196, 247)])
   for (const [name, make] of Object.entries(voices.poke)) out.push([`poke ${name}`, make()])
   for (const [name, make] of Object.entries(voices.take)) out.push([`take ${name}`, make()])
   return out

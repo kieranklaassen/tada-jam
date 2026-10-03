@@ -38,7 +38,7 @@ export const tractor: VehicleDef = {
     body.box([0.18, 0.24, 1.3], PAINT.zinc, { at: [-2.1, 0.74, 0] }, { bevel: 0.06, mat: MAT.metal })
     for (const eye of EYES) {
       body.round(eye.r * 1.12, 0.16, PAINT.zinc, { at: [eye.at[0] + 0.1, eye.at[1], eye.at[2]] }, { axis: 'x', mat: MAT.metal, segs: 18 })
-      body.ball(eye.r, PAINT.lamp, { at: [eye.at[0], eye.at[1], eye.at[2]] }, { mat: MAT.lamp, segs: 18 })
+      body.ball(eye.r, PAINT.lamp, { at: [eye.at[0], eye.at[1], eye.at[2]] }, { mat: MAT.eye, segs: 18 })
     }
     // The long narrow bonnet, with a grille of zinc bars on its nose.
     body.box([1.9, 0.78, 1.0], PAINT.green, { at: [-1.1, 1.24, 0] }, { bevel: 0.1, top: { sz: 0.86 } })

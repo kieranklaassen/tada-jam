@@ -7,7 +7,8 @@
 export type Rgb = readonly [number, number, number]
 
 /** How a surface takes light. One shader draws them all. */
-export const MAT = { enamel: 0, rubber: 1, metal: 2, lamp: 3, soft: 4 } as const
+/** `eye` is lamp glass that mud, foam and water never cover: a vehicle's eyes always show. */
+export const MAT = { enamel: 0, rubber: 1, metal: 2, lamp: 3, soft: 4, eye: 5 } as const
 export type Mat = (typeof MAT)[keyof typeof MAT]
 
 export function rgb(hex: number): Rgb {

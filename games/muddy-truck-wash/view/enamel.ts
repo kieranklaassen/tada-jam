@@ -150,15 +150,18 @@ void main() {
   float diffuse = lit.r, glint = lit.g, sky = lit.b;
   float mat = vSurface.x;
   float enamel = step(mat, 0.5), rubber = step(0.5, mat) * step(mat, 1.5), metal = step(1.5, mat) * step(mat, 2.5);
-  float lamp = step(2.5, mat) * step(mat, 3.5), soft = step(3.5, mat);
+  float eye = step(4.5, mat);
+  float lamp = step(2.5, mat) * step(mat, 3.5) + eye, soft = step(3.5, mat) * step(mat, 4.5);
 
   vec2 grain = vRest.xy * 0.23 + vRest.z * 0.11;
   vec4 noise = texture2D(uNoise, grain);
   vec4 fine = texture2D(uNoise, grain * 3.1 + 0.37);
 
   // What the wash has left here. Unmasked things are clean, dry and as glossy as uGloss says.
-  vec4 a = texture2D(uMaskA, vMaskUv) * uMasked;
-  vec4 b = texture2D(uMaskB, vMaskUv) * uMasked;
+  // Nothing covers an eye.
+  float masked = uMasked * (1.0 - eye);
+  vec4 a = texture2D(uMaskA, vMaskUv) * masked;
+  vec4 b = texture2D(uMaskB, vMaskUv) * masked;
   float mud = smoothstep(0.4, 0.56, a.r + (noise.r - 0.5) * 0.42);
   float softMud = a.g;
   float foam = smoothstep(0.34, 0.5, a.b + (noise.r - 0.5) * 0.3 + (fine.b - 0.5) * 0.14);

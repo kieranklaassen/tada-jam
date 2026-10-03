@@ -4,28 +4,26 @@ import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio } from './audio'
 import { BACKDROP } from './config'
+import { ROSTER } from './cycle'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { muddyTruckWashManifest } from './manifest'
-import { TruckMotion } from './motion'
-import { arrive } from './mud'
-import { Play, type Target } from './play'
 import { installJamPerf } from './perf'
+import { Play, type Target } from './play'
+import type { TruckPose } from './pose'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
+import type { VehicleId } from './roster'
 import { SaveCadence } from './saveCadence'
-import { silhouette } from './silhouette'
 import { voiced } from './sound'
-import { fireEngine } from './fireEngine'
-import { LAYOUT } from './props'
-import { deserialize, serialize, type GameState } from './state'
-import { tipper } from './tipper'
+import type { Surface } from './surface'
 import { WashView } from './view/washView'
+import { deserializeWash, serializeWash } from './washState'
 
-// The Mount, showing a blank surface. Everything a game needs around its
-// renderer is wired and running: the saved state, attention, the attended
+// The Mount: the template's wiring (the saved state, attention, the attended
 // clock, touch, sound from the first touch, the idle ladder, adaptive quality
-// and the grown-up performance handle. The renderer, the rules and the sounds
-// go in where the comments say.
+// and the grown-up performance handle) around the game's own three parts.
+// `Play` is the game with no browser in it, `WashView` draws what it holds,
+// and this file passes touches in and sounds, saves and frames out.
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -41,23 +39,30 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
     // A canvas 2D game reports the sprites and figures it drew as drawCalls; a three.js game reports the renderer's own counts.
-    const view = new WashView(canvas, [tipper, fireEngine])
+    const view = new WashView(canvas, ROSTER)
     view.setTier(governor.settings)
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...view.counts }))
-    // The toy: one muddy vehicle in the bay with a fixed seed, the three tools, and another vehicle at the door.
-    const play = new Play({ def: tipper, surface: arrive(silhouette(tipper), 'dried-patches', 20261003), motion: new TruckMotion(tipper.moves, tipper.wheels.map((wheel) => wheel.x), 11) })
-    const waiting = { def: fireEngine, surface: arrive(silhouette(fireEngine), 'fresh-splashes', 77), motion: new TruckMotion(fireEngine.moves, fireEngine.wheels.map((wheel) => wheel.x), 23) }
-    waiting.motion.homeX = LAYOUT.door.x
-    waiting.motion.homeZ = LAYOUT.door.z
-    const poses = new Map([[tipper.id, play.bay.motion.pose], [fireEngine.id, waiting.motion.pose]])
-    view.show([tipper.id, fireEngine.id])
-    view.setSurface(fireEngine.id, waiting.surface, true)
-    view.setSurface(tipper.id, play.bay.surface, true)
-    let shown = play.bay.surface
-    let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    // The game itself, once the slot has been read. Until then the bay stands empty.
+    let play: Play | null = null
+    let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    const poses = new Map<VehicleId, TruckPose>(), shown = new Map<VehicleId, Surface>()
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
-    const cadence = new SaveCadence(() => { if (state) ctxRef.current.storage.save(serialize(state)) })
+    const cadence = new SaveCadence(() => { if (play) ctxRef.current.storage.save(serializeWash(play.state)) })
+
+    // Shows the vehicles that are on stage, each with what is on it. `instant` skips the easing of a surface, as on load.
+    const stage = (game: Play, instant: boolean): void => {
+      const on = game.onStage
+      poses.clear()
+      for (const who of on) {
+        poses.set(who.def.id, who.motion.pose)
+        if (shown.get(who.def.id) !== who.surface) {
+          shown.set(who.def.id, who.surface)
+          view.setSurface(who.def.id, who.surface, instant || !view.isShown(who.def.id))
+        }
+      }
+      view.show(on.map((who) => who.def.id))
+    }
 
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame
     // and `resize` calls it after sizing, which can be before the slot is read and while the game rests.
@@ -81,33 +86,43 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const observer = new ResizeObserver(resize)
     observer.observe(root)
 
+    // Hands a change to storage: at once when a scene's outcome has just been set, otherwise at the throttle.
+    const save = (game: Play): void => {
+      if (!game.dirty) return
+      cadence.change(performance.now(), game.urgent)
+      game.dirty = false
+      game.urgent = false
+    }
     // What a finger is on, from where it is on the surface.
-    const targetAt = (at: Point): Target => {
-      const bay = play.bay
-      return view.picker.pick(at.x, at.y, width, height, { def: bay.def, x: bay.motion.homeX, z: bay.motion.homeZ, surface: bay.surface }, { def: waiting.def, x: waiting.motion.homeX, z: waiting.motion.homeZ, surface: waiting.surface })
+    const targetAt = (game: Play, at: Point): Target => {
+      const { bay, next } = game
+      return view.picker.pick(at.x, at.y, width, height, { def: bay.def, x: bay.motion.homeX, z: bay.motion.homeZ, surface: bay.surface }, { def: next.def, x: next.motion.homeX, z: next.motion.homeZ, surface: next.surface })
     }
     // How fast the finger travels over the vehicle, in its units a second, smoothed over a few moves.
     let last: { x: number; y: number; at: number } | null = null, speed = 0
     // What the game does with a gesture. The answer starts on the press, when the finger lands, never on the lift.
     const act = (gestures: Gesture[]) => {
+      const game = play
+      if (!game) return
       for (const gesture of gestures) {
         if (gesture.type === 'press') {
           last = null
           speed = 0
-          play.press(targetAt(gesture.at))
+          game.press(targetAt(game, gesture.at))
         } else if (gesture.type === 'dragMove') {
-          const target = targetAt(gesture.at)
+          const target = targetAt(game, gesture.at)
           if (target.kind === 'truck') {
             const now = clock.seconds
             if (last && now > last.at) speed += (Math.hypot(target.x - last.x, target.y - last.y) / (now - last.at) - speed) * 0.4
             if (!last || now > last.at) last = { x: target.x, y: target.y, at: now }
           } else last = null
-          play.drag(target, speed)
+          game.drag(target, speed)
         } else if (gesture.type !== 'dragStart') {
           // A tap's lift, a lift mid-rub, the end of a rub, or a press taken away: the tool stays in hand where it was let go.
-          play.release()
+          game.release()
         }
       }
+      save(game)
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -147,17 +162,17 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // What to show an idle child: a glow on what can be touched, then one move.
       ladder.update(clock.seconds)
       // The game steps its rules here.
-      play.step(dt)
-      waiting.motion.step(dt)
-      for (const sound of play.sounds) audio.play(voiced(sound.spec, sound.gain))
-      play.sounds.length = 0
-      for (const mark of play.marks) view.stage.marks.land(mark)
-      play.marks.length = 0
-      if (play.bay.surface !== shown) {
-        shown = play.bay.surface
-        view.setSurface(play.bay.def.id, shown)
+      const game = play
+      if (game) {
+        game.step(dt)
+        for (const sound of game.sounds) audio.play(voiced(sound.spec, sound.gain))
+        game.sounds.length = 0
+        for (const mark of game.marks) view.stage.marks.land(mark)
+        game.marks.length = 0
+        stage(game, false)
+        view.update(dt, clock.seconds, poses, game.particles, game.hand, game.tool)
+        save(game)
       }
-      view.update(dt, clock.seconds, poses, play.particles, play.hand, play.tool)
       // A tier change is applied ahead of the draw: the pixel ratio now, and whatever else the game's tiers set.
       // The interval just measured belongs to the frame before, so it is judged with that frame's work.
       const stepped = clock.intervalMs > 0 && governor.sample(clock.intervalMs, lastWork)
@@ -190,7 +205,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
-      state = deserialize(value, ctxRef.current.childAge)
+      const game = new Play(deserializeWash(value, ctxRef.current.childAge))
+      play = game
+      // Found as left: the vehicles stand as the save has them, with no easing in and no scene.
+      stage(game, true)
+      view.update(0, clock.seconds, poses, game.particles, game.hand, game.tool)
+      draw()
     })
     resize()
     attention.set(ctxRef.current.attention.attended)

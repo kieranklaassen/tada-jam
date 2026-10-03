@@ -90,7 +90,7 @@ export class TruckView {
       this.sets.push({ chassis, part, wheels })
 
       if (!reflected) {
-        const pupilGeometry = toGeometry(new Shape().round(1, 0.3, PAINT.black, {}, { axis: 'z', mat: MAT.lamp, segs: 16, bevel: 0.1 }))
+        const pupilGeometry = toGeometry(new Shape().round(1, 0.3, PAINT.black, {}, { axis: 'z', mat: MAT.eye, segs: 16, bevel: 0.1 }))
         const lidGeometry = toGeometry(new Shape().ball(1.09, def.paint, {}, { from: 0, segs: 16 }))
         this.owned.push(pupilGeometry, lidGeometry)
         const plain = enamelMaterial(kit, {})
@@ -174,8 +174,9 @@ export class TruckView {
 
   private pose(pose: TruckPose): void {
     const def = this.def
-    this.root.position.set(pose.x, 0, pose.z)
-    this.mirror.position.set(pose.x, 0, pose.z)
+    this.root.position.set(pose.x, pose.hop, pose.z)
+    // The copy under the floor sinks as the vehicle rises.
+    this.mirror.position.set(pose.x, -pose.hop, pose.z)
     for (const set of this.sets) {
       set.chassis.position.y = pose.lift
       set.chassis.rotation.set(pose.lean, 0, pose.pitch)

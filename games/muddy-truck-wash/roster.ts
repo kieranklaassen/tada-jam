@@ -66,7 +66,7 @@ export function undercarriage(body: Shape, length: number, noseX: number, eyes: 
   for (const eye of eyes) {
     // A zinc bezel, then the lamp itself, proud of the bonnet so it reads from the side.
     body.round(eye.r * 1.12, 0.16, PAINT.zinc, { at: [eye.at[0] + 0.1, eye.at[1], eye.at[2]] }, { axis: 'x', mat: MAT.metal, segs: 18 })
-    body.ball(eye.r, PAINT.lamp, { at: [eye.at[0], eye.at[1], eye.at[2]] }, { mat: MAT.lamp, segs: 18 })
+    body.ball(eye.r, PAINT.lamp, { at: [eye.at[0], eye.at[1], eye.at[2]] }, { mat: MAT.eye, segs: 18 })
   }
 }
 

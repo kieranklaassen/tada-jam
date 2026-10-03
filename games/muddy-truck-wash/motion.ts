@@ -54,6 +54,8 @@ export class TruckMotion {
   lookAt: { side: number; up: number } | null = null
   /** Asked angle of the funniest part, on top of what the bounce throws it to. */
   partTarget = 0
+  /** Height added to the body and the wheels alike: the whole vehicle off the floor, as in a hop. */
+  hop = 0
   private readonly lift = new Spring()
   private readonly pitch = new Spring()
   private readonly lean = new Spring()
@@ -91,6 +93,11 @@ export class TruckMotion {
   hold(press: Press | null, slide = 0): void {
     this.press = press
     this.drag = slide
+  }
+
+  /** Throws the body up on its springs (or down, when negative). */
+  jolt(speed: number): void {
+    this.lift.speed += speed * this.who.give
   }
 
   /** Sets the funniest part going: a shove to a hinged part, a spin to a drum. */
@@ -133,6 +140,7 @@ export class TruckMotion {
     if (this.lastX !== null) pose.wheelSpin -= (this.homeX - this.lastX) / 0.5
     this.lastX = this.homeX
     pose.z = this.homeZ
+    pose.hop = this.hop
     pose.lift = this.lift.value + breath + shake
     pose.pitch = this.pitch.value
     pose.lean = this.lean.value + shake * 0.6

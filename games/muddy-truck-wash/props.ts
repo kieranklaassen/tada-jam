@@ -12,10 +12,13 @@ export const LAYOUT = {
   /** Where the next one waits, nose at the door. */
   door: { x: 6.15, z: -0.6 },
   /** The far end a vehicle leaves by, past the rack. */
-  exit: { x: -13, z: -0.3 },
+  exit: { x: -13.5, z: -0.5 },
   /** The mud puddle in the yard. */
   puddle: { x: 4.1, z: 1.45, rx: 0.78, rz: 0.5 },
-  rack: { x: -3.95, z: 0.35 },
+  /** The rack stands toward the child, clear of the lane the vehicles leave by. */
+  rack: { x: -4.45, z: 1.6 },
+  /** The tap on the rack's long arm, over the nose of the vehicle in the bay. It lets a drop go only in the first showing. */
+  tap: { x: -1.85, y: 3.92, z: 0.3 },
   wall: { z: -2.7 },
   /** The wet pad of the bay, in x and z. */
   pad: { x0: -3.2, x1: 3.0, z0: -1.9, z1: 2.0 },
@@ -26,7 +29,7 @@ export const LAYOUT = {
 /** Where each tool hangs: its own origin in the world. */
 export const TOOL_HOME: Readonly<Record<Tool, readonly [number, number, number]>> = {
   cloth: [LAYOUT.rack.x + 0.62, 3.62, LAYOUT.rack.z],
-  hose: [LAYOUT.rack.x + 0.95, 1.88, LAYOUT.rack.z + 0.09],
+  hose: [LAYOUT.rack.x + 0.63, 2.28, LAYOUT.rack.z + 0.01],
   sponge: [LAYOUT.rack.x + 0.66, 0.98, LAYOUT.rack.z],
 }
 
@@ -43,6 +46,11 @@ export function rackShape(): Shape {
     s.round(0.055, 0.8, PAINT.zinc, { at: [x + 0.4, y, z] }, { axis: 'x', mat: MAT.metal, segs: 10 })
     s.ball(0.09, PAINT.zinc, { at: [x + 0.8, y, z] }, { mat: MAT.metal, segs: 10 })
   }
+  // The long arm from the top of the post out over the lane, and the tap at its end.
+  const reach = Math.hypot(LAYOUT.tap.x - x, LAYOUT.tap.z - z), swing = Math.atan2(-(LAYOUT.tap.z - z), LAYOUT.tap.x - x)
+  s.round(0.055, reach, PAINT.zinc, { at: [(x + LAYOUT.tap.x) / 2, 4.12, (z + LAYOUT.tap.z) / 2], turn: { axis: 'y', by: swing } }, { axis: 'x', mat: MAT.metal, segs: 10 })
+  s.round(0.1, 0.2, PAINT.red, { at: [LAYOUT.tap.x, 4.06, LAYOUT.tap.z] }, { axis: 'y', segs: 12, bevel: 0.03 })
+  s.round(0.06, 0.12, PAINT.zinc, { at: [LAYOUT.tap.x, 3.94, LAYOUT.tap.z] }, { axis: 'y', mat: MAT.metal, segs: 10, bevel: 0.02 })
   // The bucket: blue enamel, wider at the rim, with a zinc band.
   s.round(0.4, 0.62, PAINT.blue, { at: [x + 0.66, 0.43, z] }, { axis: 'y', r2: 0.5, segs: 20, bevel: 0.05 })
   s.round(0.52, 0.07, PAINT.zinc, { at: [x + 0.66, 0.74, z] }, { axis: 'y', mat: MAT.metal, segs: 20, bevel: 0.02 })
@@ -54,10 +62,10 @@ export function rackShape(): Shape {
 }
 
 /** How each tool hangs on the rack: a turn about z. */
-export const TOOL_HANG: Readonly<Record<Tool, number>> = { cloth: 0, hose: 0.9, sponge: 0 }
+export const TOOL_HANG: Readonly<Record<Tool, number>> = { cloth: 0, hose: 0, sponge: 0 }
 
 /** The middle of each tool as it hangs, from its origin: where a finger aims and where a glow sits. */
-export const TOOL_MIDDLE: Readonly<Record<Tool, readonly [number, number, number]>> = { cloth: [0, -0.42, 0], hose: [0.22, -0.2, 0], sponge: [0, 0, 0] }
+export const TOOL_MIDDLE: Readonly<Record<Tool, readonly [number, number, number]>> = { cloth: [0, -0.42, 0], hose: [0, -0.2, 0], sponge: [0, 0, 0] }
 
 /** Each tool about its own origin, as it hangs. */
 export function toolShape(tool: Tool): Shape {

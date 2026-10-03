@@ -64,7 +64,15 @@ export function arrive(clean: Surface, position: string, seed: number): Surface 
     // Soft mud thrown up from the wheels, on about a third of the vehicle.
     splash(0.34, [0, 2], 3, 's', ['d'])
     // And, further on, two or three patches that have dried on.
-    if (position === 'dried-patches') splash(0.2, [2, GRID_H - 1], 3, 'c', ['d', 's'])
+    if (position === 'dried-patches') {
+      // One of them is always on top of the nose, open to the sky, where a drop can fall on it.
+      const col = 1
+      for (let r = GRID_H - 1; r >= 0; r--) if (surface[cellAt(col, r)] !== '.') {
+        s = blob(surface, col, r, Math.max(3, Math.round(body * 0.06)), 'c', s, ['d', 's'])
+        break
+      }
+      splash(0.14, [2, GRID_H - 1], 2, 'c', ['d', 's'])
+    }
   }
   return surface
 }

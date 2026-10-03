@@ -6,6 +6,8 @@ export type TruckPose = {
   z: number
   /** The body above its rest height on the springs. */
   lift: number
+  /** The whole vehicle, wheels and all, above the floor. */
+  hop: number
   /** Nose down, radians. */
   pitch: number
   /** Leaning toward the child, radians. */
@@ -25,5 +27,5 @@ export type TruckPose = {
 }
 
 export function restPose(): TruckPose {
-  return { x: 0, z: 0, lift: 0, pitch: 0, lean: 0, wheelSpin: 0, squash: [], part: 0, gazeSide: 0.75, gazeUp: 0.1, lid: 0, cross: 0 }
+  return { x: 0, z: 0, lift: 0, hop: 0, pitch: 0, lean: 0, wheelSpin: 0, squash: [], part: 0, gazeSide: 0.75, gazeUp: 0.1, lid: 0, cross: 0 }
 }

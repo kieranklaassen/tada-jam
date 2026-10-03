@@ -58,6 +58,10 @@ export class WashView {
     return this.trucks.get(id)!
   }
 
+  isShown(id: VehicleId): boolean {
+    return this.truck(id).root.visible
+  }
+
   /** Which vehicles are on stage. */
   show(ids: readonly VehicleId[]): void {
     for (const [id, truck] of this.trucks) {
