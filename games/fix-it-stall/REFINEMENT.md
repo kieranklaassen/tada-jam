@@ -3,18 +3,25 @@
 
 ## Status
 
-- Stage: sheet, with the look spike and the rules written. First run, from base commit 2a133cc on `feat/learning-games-build`. This run stops here, as its brief says.
-- Sheet: whole, not yet checked. The text to check is the sheet part of `ART.md` (everything above `## The look`) as pushed in commit 044bb5f, "Fix-it Stall sheet: the records, ready for check". It has not changed since.
-- Sheet hash (`awk '/^## The look/{exit} {print}' games/fix-it-stall/ART.md | sha256sum`): `0585a62e0a40d226105a4869612f164d0fc828f64f6f005618a3d09435be8423`
-- Rules: written while the check runs, at the builder's own risk, against the sheet at commit 044bb5f. A finding under the representation, the mechanic questions, the error, the designed order or the records reopens them.
+- Stage: sheet, with the look spike and the rules written. Two runs so far: the first from base commit 2a133cc on `feat/learning-games-build`; the second did only the first check's answer (`docs/build/answers/fix-it-stall-1.md` on the base branch, read at its commit 20b17a6). The toy is not started: the brief holds it until the lead names the template commit from the canvas pilot.
+- Sheet check, round 1: checker B, on the sheet at commit 044bb5f (hash `0585a62e…8423`). Outcome: OPEN, 18 findings. All 18 are pasted as the checker wrote them, none disputed.
+- Sheet as it now stands: commit b4d5f61, "Fix-it Stall sheet: the first check's replacements, pasted". The sheet part of `ART.md` (everything above `## The look`) has not changed since that commit.
+- Sheet hash (`awk '/^## The look/{exit} {print}' games/fix-it-stall/ART.md | sha256sum`): `10953ba4508340335383dc02ce130afdaad19a71ab6f5cc222012f02c11d69ca`
+- Rules: brought into line with the pasted text, at the builder's own risk until the sheet passes. They are written against the sheet at commit b4d5f61. What changed, by finding:
+  - 2, 7: no rule changed; tests now hold the model to the corrected rows (cells side by side each carry half; the test lamp across a good cell, and across neither of two breaks).
+  - 3: the model states that a motor is the one part that is also a source, and `braking` in `solve.ts` says how hard a blade spun by hand is held back.
+  - 4, 5: `grid.ts` and `voices.ts` have the buzzer's wrong use, a voice for every cell the check found silent, and a clip's sound for each bench odd.
+  - 6: from `double` on a job always holds two breaks, and never a pair that one lead or one swap mends (`oneActMends` in `jobs.ts`).
+  - 8: a circuit holds the parts that lie loose on the mat, each at a cell of a coarse grid, and they are saved (`Loose` in `circuit.ts`).
+  - 9: a job keeps its own idea (`Job.idea`), which is an earlier position's when it holds an earlier kind of break.
+  - 10: the stall stores which idea stands mended on the old hand's board (`Stall.board`).
+  - 1 and 11 to 18: words of the sheet only; no rule rested on them.
 - Look in use: Electronics bench, the first reserved look. The spike is in: the Mount shows it at load, one fixed moment, nothing playable (`spike.ts`). Stills taken here in headless Chromium on a software renderer at 1180 by 820, pixel ratio 1 and 2, kept outside the repository. No frame rate measured here: the lead takes it on a real graphics card.
 - Renderer: canvas 2D, as the brief suggests.
 - Not built: the toy, any touch, any sound played, any numeral drawn, the overlap tests of a canvas game. The Mount still answers a press with the template's tick only.
-- Two places where the rules hold something the sheet does not say yet. Both are for the sheet's next round, and neither was written into the sheet after it was pushed for its check:
-  1. A job stores the position it was laid out from (`Job.from` in `jobs.ts`). The neat way is shown for the idea of the job in hand, and with the next customer laid out a cycle ahead that is not always the stored position. The sheet's list of what `job` holds does not name it. Wanted in the sheet, under "What is stored", in the row for `job`: "The customer at the bench: who, which position it was laid out from, which gadget, its circuit, its ticket or none, whether its lid is open, and whether a hand-back has already failed (`missed`)."
-  2. The buzzer's row of the grid marks no wrong use, and the guide asks for one for each object. `grid.ts` has none for it and its test says so. Proposed for the sheet: too many cells make it shriek and walk off the board, as a motor does.
 - Requests to the lead: none that block. A registry row for the look when it is accepted.
-- Open: sheet ready for check, round 1
+- Answers handled: `fix-it-stall-1.md`. At every stage boundary and before a run ends, `git fetch origin` and look under `docs/build/answers/` on the base branch for a higher number.
+- Open: sheet ready for check, round 2
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
@@ -62,9 +69,9 @@ So far only the spike and the rules exist. Each line says what is there and what
 
 ### The learning claim
 
-As the sheet has it, read on 2026-10-03, every record `confirmed` that day:
+As the sheet has it after its first check, read on 2026-10-03, every record `confirmed` that day:
 
-Fix-it Stall is designed from two California content standards adopted by the State Board of Education for grade 4 (`us-ca 4-PS3-2` and `us-ca 4-PS3-4`), in part from one for grade 5 (`us-ca 5-PS1-3`), and from one cross-grade engineering design standard for grades 3 to 5 (`us-ca 3-5-ETS1-3`); and from three SLO fase goals, which are curriculum-institute guidance and not law (`nl ojw/nattech/2/06/fase2`, `nl ojw/nattech/1/02/fase2` and `nl ojw/nattech/2/06/fase3`), from core goal 42 of 2006, a legal core goal still in force (`nl 42`), and from two items of a draft core goal, not in force (`nl 30 A c` and `nl 30 A e`). For California the game is designed from the two grade 4 standards on energy and a designed device and is not described as teaching circuits. Nothing says what a child has reached.
+Fix-it Stall is designed from two California content standards adopted by the State Board of Education for grade 4 (`us-ca 4-PS3-2` and `us-ca 4-PS3-4`), in part from one for grade 5 (`us-ca 5-PS1-3`, of which it takes one example property and not the telling of one material from another), and from one cross-grade engineering design standard for grades 3 to 5 (`us-ca 3-5-ETS1-3`); and from three SLO fase goals, which are curriculum-institute guidance and not law (`nl ojw/nattech/2/06/fase2`, `nl ojw/nattech/1/02/fase2` and `nl ojw/nattech/2/06/fase3`), from core goal 42 of 2006, a legal core goal still in force (`nl 42`), and from two items of a draft core goal, not in force (`nl 30 A e`, and in part `nl 30 A c`, whose describing the game does not ask for). Every record named was `confirmed` when it was read on 2026-10-03. Part by part: the closed circuit is taken from nl only (the two fase goals on electricity, guidance), no us-ca record is named for it, and for California the game is not described as teaching circuits; energy carried by the current and arriving as light, heat or sound is taken from us-ca only (`us-ca 4-PS3-2`); which materials let current through is taken from nl (guidance) and, as one example property, in part from us-ca (`us-ca 5-PS1-3`); a device that is tested and improved, and finding where it fails, are taken from us-ca (`us-ca 4-PS3-4` and `us-ca 3-5-ETS1-3`) and on the Dutch side from a draft item, not in force (`nl 30 A e`); what each part adds is taken only from a draft item, not in force (`nl 30 A c`). No us-ca record is named for grade 6, so for a child in grade 6 the game rests on the nl records only. Nothing here says what a child has reached, and the game is not described as raising attainment.
 
 The check states are to be read again on the day of the pull request.
 
@@ -83,6 +90,8 @@ The check states are to be read again on the day of the pull request.
 - **Solve the circuit, do not script it.** A circuit of pads, traces, leads and parts is a small linear system: nodal analysis with each cell as a push in parallel with its own small resistance needs no extra unknowns, and Gaussian elimination over forty nodes is nothing. Every cell of the grid then falls out as a test (`solve.test.ts`) and no cell needs a special case.
 - **Give every pad a tiny leak to ground** so that a pad nothing reaches does not make the system singular. It shows as a difference in the ninth decimal, so compare currents to six.
 - **Let a job prove itself.** `jobs.test.ts` lays out 120 jobs at every position and checks that each arrives broken and that one plain mend of each break, made only with the finger's acts and the tray, makes it run. The layout itself refuses a second break that undoes the first (a flat cell beside one that pushes the wrong way lights a lamp dimly).
-- **A waiting customer needs its own position.** With the next customer laid out a cycle ahead, anything that depends on "the idea of this job" must be stored with the job, or it reads the wrong position.
+- **A waiting customer needs its own idea.** With the next customer laid out a cycle ahead, and one job in three holding an earlier kind of break, anything that depends on "the idea of this job" must be stored with the job. Read from the stored position it is wrong twice over.
+- **Whatever the sheet says stays must have a field.** The first check found three things the sheet said stay and the save had no place for: a part lying loose, the old hand's mended board, and which idea a job was for. Read the sheet for the word "stays" before writing the save.
+- **A claim about guessing is a rule.** "No single lead or swap makes it run" is only true if the layout refuses the pairs one act would mend, and a test tries every act.
 - **The hand-back takes the stall's tool away.** A mend that only works through the test lamp must not count, so the owner's try runs with the test lamp off the board.
 - **On a 2D canvas a shadow ignores the transform.** Scale blur and offset by hand, and cast each part's shadow once from a plain footprint, or every inner shape darkens the one under it.
