@@ -96,7 +96,7 @@ Nothing gives a verdict. There is no buzzer, no cross, no sad face turned to the
 
 ## The designed order, and what is stored
 
-**A cycle is one clutch.** A clutch of hides comes into the row, each holding one kind. The ones who ask come one at a time, and each finds its own. When the row is empty the cycle is over. A clutch of two or three takes one to three minutes.
+**A cycle is one clutch.** A clutch of hides comes into the row, each holding one kind. The ones who ask come one at a time, and each finds its own. When the row is empty and everyone who came to ask has found its own, the cycle is over. A clutch of two or three takes one to three minutes.
 
 **Hearing and choosing are two separate taps.** The first tap on a hide lets the child hear it, and the asker answers so that the two calls come one after the other. The second tap on that hide opens it. A tap on the asker makes it call again, and everyone still hidden answers in turn, so anything can be heard again without opening it. When someone new comes to ask, every hide that was heard is as it was before, so the first tap on it is again for hearing: a hide is never opened for an asker it has not been heard against.
 
