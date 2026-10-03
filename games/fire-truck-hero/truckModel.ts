@@ -11,7 +11,9 @@ import { at, ball, boss, box, lathe, mould, rod, seam, type Part } from './mould
 import type { TruckPose } from './truckMotion'
 
 /** Where the nozzle pivots, measured from the truck's middle on the ground. layout.ts places the water's start here. */
-export const NOZZLE_PIVOT = { x: 0.92, y: 2.5 } as const
+export const NOZZLE_PIVOT = { x: 0.92, y: 2.58 } as const
+/** The barrel never tilts down further than this, in radians, so it stays clear of the cab's roof. */
+export const LOWEST_TILT = -0.26
 /** The length of the nozzle's barrel, from its pivot to its mouth. */
 export const BARREL = 0.95
 
@@ -51,7 +53,8 @@ function shell(): Part[] {
     at(box(3.02, 0.16, 1.54, 0.06, PAINT.cream), 0, 0.92, 0),
     // The cab, at the front, with a window in each side.
     at(box(1.25, 0.78, 1.44, 0.3, PAINT.red), 0.94, 1.74, 0),
-    at(seam(1.25, 0.78, 0.3, PAINT.red), 0.94, 1.74, 0),
+    // A hair thicker than the body's seam, so that where the two cross their faces do not lie in one plane.
+    at(seam(1.25, 0.78, 0.3, PAINT.red, 0.06), 0.94, 1.74, 0),
     at(box(0.6, 0.38, 1.47, 0.06, PAINT.glass), 0.9, 1.8, 0),
     // The windscreen holds the face: two big whites, with the pupils a separate moulding in front of them.
     at(ball(0.3, PAINT.cream, [0.45, 1, 0.95]), EYES.x, EYES.y, EYES.apart),
@@ -65,7 +68,7 @@ function shell(): Part[] {
     at(rod(0.34, 0.34, 0.07, PAINT.yellow, 16), -1.18, 1.62, 0.58, Math.PI / 2),
     at(rod(0.34, 0.34, 0.07, PAINT.yellow, 16), -1.18, 1.62, 0.06, Math.PI / 2),
     // The pedestal the turret stands on, in the middle of the cab's roof, so the barrel swings clear of everything.
-    at(lathe([[0.36, 0], [0.36, 0.08], [0.27, 0.16], [0.25, 0.3], [0, 0.3]], PAINT.grey, 16), NOZZLE_PIVOT.x, 2.1, 0),
+    at(lathe([[0.36, 0], [0.36, 0.08], [0.27, 0.16], [0.25, 0.38], [0, 0.38]], PAINT.grey, 16), NOZZLE_PIVOT.x, 2.1, 0),
     // The stalk of the roof light, on the rear deck.
     at(rod(0.16, 0.2, 0.46, PAINT.grey, 12), LIGHT.x, 1.62, LIGHT.z),
   ]
@@ -163,7 +166,7 @@ export function poseTruck(model: TruckModel, pose: TruckPose, faces: number): vo
   model.body.scale.set(wide, pose.squash, wide)
   // The pose turns toward +z, and three.js turns the other way about the upright.
   model.turret.rotation.y = -pose.turn - faces
-  model.nozzle.rotation.z = pose.tilt - pose.rock
+  model.nozzle.rotation.z = Math.max(LOWEST_TILT, pose.tilt - pose.rock)
   model.light.rotation.y = pose.light
   model.pupils.position.z = pose.lookSide * 0.09
   model.pupils.position.y = EYES.y - ROCK_HEIGHT + pose.lookUp * 0.07

@@ -79,6 +79,7 @@ export class Game extends Toy {
   private readonly spits: Spit[] = []
   private clock = 0
   private putts = 0
+  private tapsHeard = 0
 
   constructor(play: (voice: VoiceSpec) => void, raw: unknown, childAge: number | null, private readonly seed = 1) {
     super(play)
@@ -118,7 +119,8 @@ export class Game extends Toy {
       this.latch = 0
       this.motion.latchDown()
     }
-    if (this.motion.duck.tapped) this.say(duckTapsFloor())
+    // The duck's beak on a dry floor is heard a few times after a touch, and then it taps in silence: an idle yard goes quiet.
+    if (this.motion.duck.tapped && this.tapsHeard++ < 3) this.say(duckTapsFloor())
     this.show(now)
     this.scene?.update(now)
     if (this.scene && !this.scene.running) this.scene = null
@@ -312,6 +314,8 @@ export class Game extends Toy {
     this.leaving = { yard: left, motion: leftMotion }
     this.truck.lightTurns()
     this.motion = new YardMotion(this.yard, this.seed + this.save.turn)
+    // The yard that slides in is whole from its first frame: every thing in its place.
+    this.motion.settle(this.yard, restChannels())
     Object.assign(this.channels, restChannels())
     this.putts = 0
   }
@@ -418,6 +422,7 @@ export class Game extends Toy {
   /** The child is acting: nothing is shown any more, and what stands in this yard counts as met. */
   private touched(now: number): void {
     this.stillSince = now
+    this.tapsHeard = 0
     if (this.nextShowAt === Infinity) return
     this.nextShowAt = Infinity
     const met = this.yard.things.map((thing) => thing.kind).filter((kind) => !this.save.seen.includes(kind))

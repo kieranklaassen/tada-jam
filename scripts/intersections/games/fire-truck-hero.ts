@@ -67,6 +67,30 @@ export default {
     // The demonstration hand hovers over what it points at and is drawn see-through.
     'guide-hand',
   ],
+  allow: [
+    // The truck's own joints.
+    { a: 'truck-shell', b: 'truck-yoke', upTo: 0.4, reason: "the nozzle's yoke turns in its socket on top of the pedestal, which is part of the shell" },
+    { a: 'truck-shell', b: 'truck-pupils', upTo: 0.7, reason: 'the pupils are set into the whites of the eyes, which are part of the shell' },
+    // Things that float sit in the water, and the water line crosses them.
+    { a: 'pool-water', b: 'duck-body', upTo: 0.6, reason: 'the duck floats: the water line crosses its body' },
+    { a: 'pool-water', b: 'boat-hull', upTo: 0.7, reason: 'the boat floats low in the water, and rising water passes its flat bottom on the way up' },
+    { a: 'boat-water', b: 'boat-hull', upTo: 0.7, reason: 'water gathers inside the boat and stands against its sides' },
+    { a: 'ground', b: 'worm-body', upTo: 1, reason: 'the worm comes up out of the mud and goes back down into it' },
+    // A thing's own parts where they join.
+    { a: 'seed-bud', b: 'seed-shoot', kind: 'pose', upTo: 0.3, reason: 'the bud grows on the end of its stem' },
+    { a: 'seed-bud', b: 'seed-petals', kind: 'pose', upTo: 0.3, reason: 'the bud opens into the flower: for a moment both are there' },
+    { a: 'snail-shell', b: 'snail-body', kind: 'pose', upTo: 0.4, reason: "the snail's body comes out of its shell" },
+    { a: 'snail-shell', b: 'snail-feelers', kind: 'pose', upTo: 0.4, reason: "the snail's feelers come out of its shell with its body" },
+    { a: 'cat-body', b: 'cat-paw', kind: 'pose', upTo: 0.3, reason: 'her front paw rests against her body' },
+    { a: 'cat-body', b: 'cat-tail', kind: 'pose', upTo: 0.3, reason: 'her tail is rooted in her body' },
+    { a: 'cat-body', b: 'cat-skull', kind: 'pose', upTo: 0.3, reason: 'her head sits on her shoulders' },
+    { a: 'cat-skull', b: 'cat-lids', kind: 'pose', upTo: 0.3, reason: 'her eyelids lie on her eyes' },
+    { a: 'bee-body', b: 'bee-wings', kind: 'pose', upTo: 0.3, reason: 'her wings are rooted in her back' },
+    // Contacts the game means.
+    { a: 'bee-body', b: 'seed-petals', upTo: 0.25, reason: 'the bee sits on the open flower' },
+    { a: 'gate-slats', b: 'gate-posts', upTo: 0.25, reason: 'the leaf of the gate is hinged on its post' },
+    { a: 'boat-hull', b: 'cat-', upTo: 0.45, reason: 'the cat naps in the boat: she sits down into it' },
+  ],
   moments: [
     {
       // A first visit: the truck shows the fire with one small spit, then the glow and the ghost hand.

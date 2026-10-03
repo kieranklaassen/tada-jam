@@ -8,6 +8,7 @@
 // Their tastes never change, so what each does about water is always the same.
 
 import type { Place } from './layout'
+import { ROOF_HEIGHT } from './places'
 import type { Channels } from './scenes'
 import { kick, spring, stepSpring, type Feel } from './springs'
 import { Gesture, hump } from './thingMotion'
@@ -32,8 +33,13 @@ class Going {
   private lasts = 1
   private arc = 0
   private hops = 0
+  private fromY = 0
+  private toY = 0
 
-  start(way: readonly Place[], speed: number, arc: number, hops: boolean): void {
+  /** `fromY` and `toY` are how high it stands at the start and at the end: the sand is 0. */
+  start(way: readonly Place[], speed: number, arc: number, hops: boolean, fromY = 0, toY = 0): void {
+    this.fromY = fromY
+    this.toY = toY
     this.points = way.map((point) => ({ ...point }))
     this.lengths = this.points.slice(1).map((point, i) => Math.hypot(point.x - this.points[i].x, point.z - this.points[i].z))
     const far = this.lengths.reduce((sum, length) => sum + length, 0)
@@ -53,7 +59,7 @@ class Going {
 
   /** Where it is now, how high, and which way it is headed (0 is along +x, toward +z is positive). */
   at(rest: Place): { x: number; z: number; y: number; heading: number | null } {
-    if (!this.going) return { x: rest.x, z: rest.z, y: 0, heading: null }
+    if (!this.going) return { x: rest.x, z: rest.z, y: this.toY, heading: null }
     const t = this.age / this.lasts
     const far = this.lengths.reduce((sum, length) => sum + length, 0)
     let left = smooth(t) * far
@@ -61,7 +67,8 @@ class Going {
     while (leg < this.lengths.length - 1 && left > this.lengths[leg]) left -= this.lengths[leg++]
     const from = this.points[leg], to = this.points[leg + 1]
     const share = this.lengths[leg] > 0 ? Math.min(1, left / this.lengths[leg]) : 1
-    const y = this.hops > 0 ? Math.abs(Math.sin(t * Math.PI * this.hops)) * 0.16 : Math.sin(t * Math.PI) * this.arc
+    const lift = this.hops > 0 ? Math.abs(Math.sin(t * Math.PI * this.hops)) * 0.16 : Math.sin(t * Math.PI) * this.arc
+    const y = this.fromY + (this.toY - this.fromY) * smooth(t) + lift
     return { x: from.x + (to.x - from.x) * share, z: from.z + (to.z - from.z) * share, y, heading: Math.atan2(to.z - from.z, to.x - from.x) }
   }
 }
@@ -70,12 +77,17 @@ class Going {
 
 const CAT_BODY: Feel = { stiffness: 120, damping: 11 }
 
+/** How big she is in the boat and on the truck, as a share of her size on the sand: she is a small cat in a small place. */
+export const SIZE_IN_BOAT = 0.5
+export const SIZE_ON_ROOF = 0.75
+
 export class CatMotion {
-  readonly pose = { x: 0, z: 0, y: 0, turn: 0, squash: 1, headTurn: 0, headTilt: 0, shake: 0, ears: 0, tail: 0, tailUp: 0, paw: 0, eyesShut: 0, upright: 0 }
+  readonly pose = { x: 0, z: 0, y: 0, turn: 0, squash: 1, size: 1, headTurn: 0, headTilt: 0, shake: 0, ears: 0, tail: 0, tailUp: 0, paw: 0, eyesShut: 0, upright: 0 }
   private readonly going = new Going()
   private leap = spring(0)
   private upright = spring(0)
   private eyes = spring(0)
+  private size = spring(1)
   private readonly paw = new Gesture()
   private readonly glare = new Gesture()
   private readonly shake = new Gesture()
@@ -93,6 +105,9 @@ export class CatMotion {
     this.home = { ...at }
     this.facing = faces
     this.onRoof = onRoof
+    this.going.start([at, at], 1, 0, false, onRoof ? ROOF_HEIGHT : 0, onRoof ? ROOF_HEIGHT : 0)
+    this.going.step(1)
+    this.size.value = this.size.target = onRoof ? SIZE_ON_ROOF : as.napping || as.marooned ? SIZE_IN_BOAT : 1
     // She is found as she was: eyes shut by a fire or asleep in the boat, bolt upright if she is afloat.
     this.upright.value = this.upright.target = as.marooned ? 1 : 0
     this.eyes.value = this.eyes.target = (as.warm || as.napping) && !as.marooned ? 1 : 0
@@ -123,7 +138,9 @@ export class CatMotion {
    */
   move(to: Place, faces: number, toRoof: boolean, via: readonly Place[] | null = []): void {
     const jump = toRoof || this.onRoof || via === null
-    this.going.start([this.home, ...(jump ? [] : (via ?? [])), to], jump ? 4.4 : 2.3, toRoof || this.onRoof ? 1.5 : jump ? 2.4 : 0, !jump)
+    // Onto the roof and off it she goes in one high arc, well clear of the truck's light and nozzle.
+    this.going.start([this.home, ...(jump ? [] : (via ?? [])), to], jump ? 5.2 : 2.3, toRoof || this.onRoof ? 2.6 : jump ? 2.4 : 0, !jump, this.onRoof ? ROOF_HEIGHT : 0, toRoof ? ROOF_HEIGHT : 0)
+    this.size.target = toRoof ? SIZE_ON_ROOF : 1
     this.home = { ...to }
     this.facing = faces
     this.onRoof = toRoof
@@ -147,6 +164,7 @@ export class CatMotion {
     }
     this.upright.target = marooned ? 1 : 0
     stepSpring(this.upright, CAT_BODY, seconds)
+    stepSpring(this.size, { stiffness: 30, damping: 11 }, seconds)
     // By a fire, or asleep in the boat, her eyes are shut.
     this.eyes.target = (warm || napping) && !marooned && !this.going.going ? 1 : 0
     stepSpring(this.eyes, { stiffness: 30, damping: 11 }, seconds)
@@ -176,11 +194,16 @@ export class CatMotion {
     pose.paw = pawing < 1 && pawing > 0.3 ? Math.abs(Math.sin(pawing * Math.PI * 6)) : this.onRoof && !this.going.going ? 0.5 + 0.5 * Math.sin(this.time * 2.2) : 0
     pose.eyesShut = this.eyes.value
     pose.upright = this.upright.value
+    pose.size = this.size.value
     return pose
   }
 }
 
 // --- The duck ----------------------------------------------------------------
+
+/** The duck's lap: how far from the pool's middle it paddles, and how far round to each side, in radians. */
+export const LAP_RADIUS = 0.7
+export const LAP_SWING = 0.7
 
 /** How long the duck's ride over the rim and its waddle back take. */
 export const RIDE_S = 3
@@ -202,17 +225,18 @@ export class DuckMotion {
   }
 
   /**
-   * `floats` is how high the water holds it above the pool floor (0 on the
-   * floor); `rim` is how far the low side of the rim is from the duck's place,
-   * toward the child, and how high.
+   * `floats` is how high the water holds it above the pool floor, in yard
+   * units (0 on the floor); `rim` is how far the low side of the rim is from
+   * the duck's place, toward the child, how high the wall stands above the
+   * floor, and how far the sand lies below the floor.
    */
-  step(seconds: number, afloat: boolean, floats: number, rim: { far: number; high: number }, channels: Channels): typeof this.pose {
+  step(seconds: number, afloat: boolean, floats: number, rim: { far: number; high: number; floor?: number }, channels: Channels): typeof this.pose {
     this.time += seconds
     this.tap.step(seconds)
     this.ride.step(seconds)
     stepSpring(this.wiggle, { stiffness: 210, damping: 9 }, seconds)
     this.tapped = false
-    // On a dry floor it taps the floor with its beak, which it dislikes, every couple of seconds.
+    // On a dry floor it taps the floor with its beak, which it dislikes, every few seconds.
     this.sinceTap += seconds
     if (!afloat && floats <= 0.001 && this.sinceTap > DUCK_TAPS_EVERY_S && !this.ride.playing(RIDE_S)) {
       this.sinceTap = 0
@@ -221,26 +245,29 @@ export class DuckMotion {
     }
     const pose = this.pose
     const beat = Math.sin(this.time * TEMPO.duck * 2 * Math.PI)
-    const lap = channels.lap * Math.PI * 2
-    const riding = this.ride.through(RIDE_S)
-    // The lap of the ending: once round the middle of the pool, and back to its own side.
-    pose.x = afloat ? (Math.cos(lap) - 1) * -0.55 + Math.cos(this.time * 0.5) * 0.05 : 0
-    pose.z = afloat ? Math.sin(lap) * 0.5 + Math.sin(this.time * 0.5) * 0.05 : 0
-    pose.turn = channels.lap > 0 && channels.lap < 1 ? lap + Math.PI / 2 : -0.6
+    // The lap of the ending: along its own side of the pool one way, back the other way, and home. It keeps to
+    // its side, so it never meets the boat.
+    const swing = Math.sin(channels.lap * Math.PI * 2) * LAP_SWING
+    pose.x = afloat ? LAP_RADIUS * (1 - Math.cos(swing)) : 0
+    pose.z = afloat ? LAP_RADIUS * Math.sin(swing) : 0
+    pose.turn = channels.lap > 0 && channels.lap < 1 ? -0.6 + Math.cos(channels.lap * Math.PI * 2) * 1.3 * Math.sign(Math.sin(channels.lap * Math.PI * 4) || 1) : -0.6
     pose.y = floats + (afloat ? beat * 0.025 : 0)
+    pose.tilt = hump(channels.dunk) * 1.15 + this.tapBow()
+    const riding = this.ride.through(RIDE_S)
     if (riding < 1) {
-      // Out over the low side of the rim on the overflow, a waddle on the sand, and back in.
-      const out = hump(riding)
-      pose.z += out * (rim.far + 0.7)
-      pose.y = Math.max(pose.y * (1 - out), hump(Math.min(1, out * 1.6)) * rim.high * (out < 0.75 ? 1 : 0))
+      // Out over the low side of the rim on the overflow, a waddle on the sand, and back in the same way.
+      const sand = -(rim.floor ?? 0)
+      const out = rim.far + 0.75
+      const leg = riding < 0.38 ? riding / 0.38 : riding > 0.62 ? (1 - riding) / 0.38 : 1
+      pose.x = 0
+      pose.z = out * smooth(leg)
+      // It clears the wall in an arc each way, and stands on the sand in between.
+      pose.y = leg < 1 ? floats + (sand - floats) * smooth(leg) + Math.sin(leg * Math.PI) * (rim.high + 0.5) : sand + Math.abs(Math.sin(riding * Math.PI * 16)) * 0.05
       pose.turn = riding < 0.5 ? Math.PI / 2 : -Math.PI / 2
       pose.tilt = Math.sin(riding * Math.PI * 14) * 0.12
-    } else {
-      // Head under with its tail up, and then a shake.
-      pose.tilt = hump(channels.dunk) * 1.15 + this.tapBow()
     }
     const shaking = channels.shake > 0 && channels.shake < 1 ? Math.sin(channels.shake * Math.PI * 12) * 0.35 * (1 - channels.shake) : 0
-    pose.wiggle = this.wiggle.value * 0.08 + shaking + (afloat ? 0 : 0)
+    pose.wiggle = this.wiggle.value * 0.08 + shaking
     pose.beak = this.tap.playing(0.5) ? hump(this.tap.through(0.5)) : 0
     return pose
   }

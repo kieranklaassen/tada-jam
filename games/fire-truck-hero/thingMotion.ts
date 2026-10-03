@@ -266,6 +266,7 @@ export class BoatMotion {
   private brim = new Gesture()
   private carry = new Gesture()
   private carriedFrom = { x: 0, z: 0 }
+  private inPool = false
   private time = 0
 
   settle(gulps: number): void {
@@ -303,7 +304,8 @@ export class BoatMotion {
     }
   }
 
-  step(seconds: number, afloat: boolean): typeof this.pose {
+  step(seconds: number, afloat: boolean, inPool = afloat): typeof this.pose {
+    this.inPool = inPool
     this.time += seconds
     this.sink.step(seconds)
     this.brim.step(seconds)
@@ -334,7 +336,8 @@ export class BoatMotion {
   }
 
   private push(away: { x: number; z: number }, by: number): void {
-    const limit = 0.3
+    // In the pool there is a hand's width of water round it; on the sand it has more room.
+    const limit = this.inPool ? 0.05 : 0.3
     this.pushX.target = Math.max(-limit, Math.min(limit, this.pushX.target + away.x * by))
     this.pushZ.target = Math.max(-limit, Math.min(limit, this.pushZ.target + away.z * by))
   }

@@ -23,7 +23,6 @@ export type Proxy = { readonly ball: THREE.Sphere; to: Place }
 export type Materials = { plastic: THREE.Material; glow: THREE.Material; water: THREE.Material }
 
 const MAX_SHADOWS = 12
-const ROOF_Y = 1.78
 const dryPatch = new THREE.Color(THINGS_PAINT.patch), dampSand = new THREE.Color(SAND.damp), mudSand = new THREE.Color(SAND.mud)
 const drySoil = new THREE.Color(THINGS_PAINT.soilDry), wetSoil = new THREE.Color(THINGS_PAINT.soil)
 
@@ -180,7 +179,8 @@ export class YardSet {
       this.shadow(place, 1.8)
       const duck = motion.duck.pose
       const floor = POOL.floor * SCALE.pool
-      this.duck.position.set(place.x + NEST.duckInPool.x + duck.x, duck.y > 0 ? Math.max(floor, waterY - 0.12) + Math.max(0, duck.y - pose.level) : floor, place.z + NEST.duckInPool.z + duck.z)
+      // The duck's height is its own: on the floor, on the water, or over the rim and onto the sand.
+      this.duck.position.set(place.x + NEST.duckInPool.x + duck.x, floor + duck.y - (duck.y > 0.02 && duck.z < 0.9 ? 0.1 : 0), place.z + NEST.duckInPool.z + duck.z)
       this.duck.rotation.set(duck.wiggle, -duck.turn, -duck.tilt)
       let count = 0
       for (const ring of motion.ripples.rings) {
@@ -221,7 +221,7 @@ export class YardSet {
       this.shadow(place, 1.2)
       this.proxy(place.x, 1.1, place.z, 0.95, place)
       const bee = motion.bee.pose
-      this.bee.root.position.set(place.x + bee.x * SCALE.seed, bee.y * SCALE.seed, place.z + bee.z * SCALE.seed)
+      this.bee.root.position.set(place.x + bee.x * SCALE.seed, (bee.y + bee.landed * 0.12) * SCALE.seed, place.z + bee.z * SCALE.seed)
       this.bee.root.rotation.y = -bee.turn
       this.bee.wings.rotation.x = Math.sin(time * 58) * 0.7 * bee.wings
     }
@@ -254,10 +254,11 @@ export class YardSet {
       const floats = afloat(yard, has.boat)
       const inPool = boat.in !== undefined
       // On the pool's floor until the water is deep enough; then on the water, lower the more it holds.
-      boatY = inPool ? (floats ? waterY - 0.06 - pose.water * 0.12 : POOL.floor * SCALE.pool) + pose.bob * 0.02 - pose.sunk * 0.3 : 0
+      // On sand it is lifted as it tips, so its ends never dig in.
+      boatY = inPool ? (floats ? waterY - 0.06 - pose.water * 0.1 + pose.bob * 0.02 - pose.sunk * 0.22 : POOL.floor * SCALE.pool + 0.012) : 0.02 + Math.abs(pose.rock * 0.09 + pose.brim * 0.1) * 0.5
       boatAt = { x: place.x + pose.pushX + pose.carryX, z: place.z + pose.pushZ + pose.carryZ }
       this.boat.root.position.set(boatAt.x, boatY + pose.carryY, boatAt.z)
-      this.boat.root.rotation.set(pose.roll, -0.5, pose.rock * 0.09 + pose.brim * 0.1)
+      this.boat.root.rotation.set(pose.roll, -0.3, pose.rock * 0.09 + pose.brim * 0.1)
       this.boat.inside.visible = pose.water > 0.05
       this.boat.inside.position.y = BOAT.floor + 0.02 + pose.water * (BOAT.brim - BOAT.floor - 0.07)
       if (!inPool) this.shadow(boatAt, 0.95)
@@ -279,9 +280,10 @@ export class YardSet {
       const pose = motion.cat.pose
       const inBoat = cat.in !== undefined
       const onRoof = cat.spot === 'roof'
-      const base = inBoat ? boatY + BOAT.floor * SCALE.boat : onRoof && pose.y < 0.01 ? ROOF_Y : onRoof ? ROOF_Y * Math.min(1, 1.2 - pose.y * 0.2) : 0
+      // In the boat she rides on its floor; anywhere else her height is her own.
+      const base = inBoat ? boatY + (BOAT.floor + 0.02) * SCALE.boat : 0
       const x = inBoat ? boatAt.x : pose.x, z = inBoat ? boatAt.z : pose.z
-      const size = SCALE.cat * (inBoat ? 0.62 : 1)
+      const size = SCALE.cat * pose.size
       this.cat.root.position.set(x, base + pose.y, z)
       this.cat.root.rotation.y = -pose.turn + pose.shake
       const wide = 1 / Math.sqrt(Math.max(0.4, pose.squash))
@@ -289,17 +291,19 @@ export class YardSet {
       this.cat.head.rotation.set(0, -pose.headTurn, pose.headTilt - pose.ears * 0.12)
       this.cat.lids.visible = pose.eyesShut > 0.15
       this.cat.lids.scale.set(1, Math.max(0.15, pose.eyesShut), 1)
+      // A bottle brush is fatter, so it is lifted to stay on the sand. Up, it swings up from its root on her near side.
       this.cat.tail.scale.set(1, 1 + pose.tail * 0.9, 1 + pose.tail * 0.5)
-      this.cat.tail.rotation.z = -pose.tailUp * 1.3
+      this.cat.tail.position.y = 0.12 + pose.tail * 0.1
+      this.cat.tail.rotation.x = -pose.tailUp * 1.0
       this.cat.paw.position.y = 0.07 + pose.paw * 0.28
-      if (!inBoat && !onRoof) this.shadow({ x, z }, 1.05 * (1 - Math.min(0.5, pose.y * 0.3)))
+      if (!inBoat && pose.y < 1.2) this.shadow({ x, z }, 1.05 * pose.size * (1 - Math.min(0.5, pose.y * 0.3)))
       if (!onRoof) this.proxy(x, base + 0.75 * size, z, inBoat ? 0.5 : 0.85, { x, z })
     }
 
     // The worm comes up where the mud is, looks about and goes down.
-    this.worm.root.visible = wormAt !== null
+    const up = channels.wormUp * (1 - channels.wormDown)
+    this.worm.root.visible = wormAt !== null && up > 0.02
     if (wormAt) {
-      const up = channels.wormUp * (1 - channels.wormDown)
       this.worm.root.position.set(wormAt.x, -0.85 * SCALE.worm * (1 - up), wormAt.z)
       this.worm.root.rotation.y = Math.sin(channels.wormLooks * Math.PI * 3) * 1.1 - 1.2
     }
@@ -337,7 +341,7 @@ export class YardSet {
       this.peeks.seed.rotation.y = -(time * 2.3 + Math.PI / 2)
     } else if (kind === 'patch') {
       // A shell on the gate's left post.
-      this.peeks.patch.position.set(GATE.x - GATE.half, 2.22, GATE.z)
+      this.peeks.patch.position.set(GATE.x - GATE.half, 2.33, GATE.z)
       this.peeks.patch.rotation.y = -Math.PI / 2
     }
   }

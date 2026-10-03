@@ -183,13 +183,14 @@ export function buildHedges(plastic: THREE.Material): THREE.Mesh {
 /** The far side of a yard as one moulding: the picket fence, open from one x to another where the gate hangs, and two trees beyond it. Both yards on screen during a drive share it. */
 export function buildFarSide(gateGap: readonly [number, number]): THREE.BufferGeometry {
   const parts: Part[] = []
-  const from = -HEDGE_OUT + 0.45, to = COLS + HEDGE_OUT - 0.45
+  // The fence stops short of the hedges at both ends.
+  const from = 0.12, to = COLS - 0.12
   for (let x = from; x <= to + 0.01; x += 0.78) {
     if (x > gateGap[0] - 0.45 && x < gateGap[1] + 0.45) continue
     parts.push(...picket(x, FENCE_Z))
   }
   // The two rails behind the pickets, broken at the gate.
-  for (const [a, b] of [[from - 0.2, gateGap[0] - 0.2], [gateGap[1] + 0.2, to + 0.2]]) {
+  for (const [a, b] of [[from - 0.15, gateGap[0] - 0.2], [gateGap[1] + 0.2, to + 0.15]]) {
     for (const y of [0.42, 0.86]) parts.push(at(box(b - a, 0.13, 0.1, 0.05, GARDEN.fence), (a + b) / 2, y, FENCE_Z - 0.1))
   }
   parts.push(...tree(10.4, -3.3, 0.9), ...tree(14.2, -2.6, 0.78))

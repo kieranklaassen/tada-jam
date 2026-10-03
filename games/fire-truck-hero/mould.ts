@@ -63,8 +63,8 @@ export function at(part: Part, x: number, y: number, z: number, turnX = 0, turnY
 }
 
 /** The mould seam of a box-shaped shell of this width and height: a thin darker band round its middle, where the two halves meet, standing a hair proud. */
-export function seam(width: number, height: number, radius: number, hex: number): Part {
-  return box(width + 0.012, height + 0.012, 0.045, Math.min(radius, 0.02), darker(hex))
+export function seam(width: number, height: number, radius: number, hex: number, thick = 0.045): Part {
+  return box(width + 0.012, height + 0.012, thick, Math.min(radius, 0.02), darker(hex))
 }
 
 /** A screw boss: the small sunk dot where a toy's two halves are screwed together. */

@@ -10,20 +10,21 @@ import type { Yard } from './world'
 /** Where one thing sits relative to the thing it is in, or to the spot it shares. */
 export const NEST = {
   /** The boat lies at the right of the pool, leaving the middle to the water and the left to the duck. */
-  boatInPool: { x: 0.64, z: 0.05 },
+  boatInPool: { x: 0.55, z: 0 },
   /** The cat naps in the middle of the boat. */
   catInBoat: { x: -0.05, z: 0 },
   /** A boat carried over the rim lies aground on the near side of the pool. */
   boatAground: { x: 0.35, z: 1.85 },
   /** The duck's side of the pool. */
-  duckInPool: { x: -0.66, z: 0.1 },
+  duckInPool: { x: -0.7, z: 0 },
 } as const
 
 /** How near a point must be to count as on a thing that is in another. */
-export const NESTED_REACH = { boat: 0.5, cat: 0.36 } as const
+export const NESTED_REACH = { boat: 0.45, cat: 0.3 } as const
 
-/** Where the cat sits on the truck's roof: on the rear deck, behind the light. */
-export const ROOF: Place = { x: TRUCK.x - 1.25, z: TRUCK.z + 0.3 }
+/** Where the cat sits on the truck: on top of the hose reel at its back, clear of the light and the nozzle, and how high that is. */
+export const ROOF: Place = { x: TRUCK.x - 1.67, z: TRUCK.z - 0.04 }
+export const ROOF_HEIGHT = 2.47
 
 export type Target = { on: 'thing'; index: number } | { on: 'bell' } | { on: 'truck' } | { on: 'ground' }
 

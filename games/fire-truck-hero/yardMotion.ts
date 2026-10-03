@@ -21,6 +21,11 @@ import { afloat, FLOATS_AT, type Yard } from './world'
 export const PUFFS = 28
 export const RINGS = 14
 
+/** The pool as the duck knows it, in yard units: how far its rim is from its middle, how deep it is to the brim, and how high its floor is above the sand. */
+export const POOL_RIM = 1.38
+export const POOL_DEEP = 0.4
+export const POOL_FLOOR = 0.07
+
 /** The way the cat looks when nothing has her attention: toward the child and a little toward the truck. */
 export const CAT_FACES = 2.0
 
@@ -265,7 +270,7 @@ export class YardMotion {
     if (pool) {
       const pose = this.pool.step(seconds)
       const deep = pool.gulps >= FLOATS_AT
-      this.duck.step(seconds, deep, deep ? pose.level : 0, { far: 1.15 - NEST.duckInPool.z, high: 1 }, channels)
+      this.duck.step(seconds, deep, deep ? pose.level * POOL_DEEP : 0, { far: POOL_RIM - NEST.duckInPool.z, high: POOL_DEEP, floor: POOL_FLOOR }, channels)
     }
     if (seed) {
       const pose = this.seed.step(seconds)
@@ -275,7 +280,7 @@ export class YardMotion {
       this.patch.step(seconds)
       this.snail.step(seconds, patch.gulps, lit, channels)
     }
-    if (boat) this.boat.step(seconds, afloat(yard, this.has.boat))
+    if (boat) this.boat.step(seconds, afloat(yard, this.has.boat), boat.in !== undefined)
     if (this.has.wheel >= 0) {
       if ((thingOf('wheel')?.gulps ?? 0) === 0) this.wheel.runDown()
       this.wheel.step(seconds)

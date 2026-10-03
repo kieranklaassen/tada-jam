@@ -17,7 +17,7 @@ export const TRUCK: Place = { x: 2.6, z: 5.4 }
 export const TRUCK_REACH = 2.0
 
 /** The nozzle on the truck's roof, where the water leaves: its place and height. */
-export const NOZZLE = { x: 3.71, z: 5.68, y: 3.12 } as const
+export const NOZZLE = { x: 3.71, z: 5.68, y: 3.22 } as const
 
 /** The five spots a thing can stand on. An arrangement names them by index. */
 export const SPOTS: readonly Place[] = [

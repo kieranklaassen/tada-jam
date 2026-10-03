@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { BeeMotion, CatMotion, DuckMotion, RIDE_S, STARTLE_S, SnailMotion, TEMPO } from './animalMotion'
+import { BeeMotion, CatMotion, DuckMotion, RIDE_S, STARTLE_S, SnailMotion, TEMPO, LAP_RADIUS, LAP_SWING, SIZE_ON_ROOF } from './animalMotion'
+import { ROOF_HEIGHT } from './places'
 import { restChannels, type Channel, type Channels } from './scenes'
 
 const FRAME = 1 / 60
@@ -222,7 +223,8 @@ describe('the cat', () => {
       motion.answer(action)
       let highest = 0, washed = 0
       play(step, 3, () => {
-        highest = Math.max(highest, motion.pose.y)
+        // Her height is the roof's, where she sits.
+        highest = Math.max(highest, motion.pose.y - ROOF_HEIGHT)
         washed = Math.max(washed, motion.pose.paw)
         expect(motion.pose.shake).toBe(0)
         expect(motion.pose.headTilt).toBe(0)
@@ -285,12 +287,15 @@ describe('the cat', () => {
       rising = jumper.motion.pose.y > arc
       arc = Math.max(arc, jumper.motion.pose.y)
     })
-    expect(arc).toBeGreaterThan(1)
+    // The arc goes well above the roof she lands on, clear of the truck's light and nozzle.
+    expect(arc).toBeGreaterThan(ROOF_HEIGHT + 1)
     expect(arc).toBeGreaterThan(hop * 4)
     expect(peaks).toBe(1)
     expect(jumper.motion.pose.x).toBe(1.35)
     expect(jumper.motion.pose.z).toBe(5.7)
-    expect(jumper.motion.pose.y).toBe(0)
+    expect(jumper.motion.pose.y).toBe(ROOF_HEIGHT)
+    // She is a small cat up there.
+    expect(jumper.motion.pose.size).toBeCloseTo(SIZE_ON_ROOF, 2)
   })
 
   it('shuts her eyes by a fire, and opens them when it is out', () => {
@@ -439,25 +444,25 @@ describe('the duck', () => {
     expect(duck.pose).toEqual(twin.pose)
   })
 
-  it('paddles once round the pool in the ending, and ends where it began', () => {
+  it('paddles along its own side of the pool in the ending, one way and back the other, and ends where it began', () => {
     const channels = channelsWith()
     const duck = new DuckMotion(), twin = new DuckMotion()
     const step = () => { wetDuck(duck, channels)(); wetDuck(twin)() }
     step()
-    let turned = 0, before = Math.PI
+    let nearSide = 0, farSide = 0, towardMiddle = 0
     const lasts = 3.6
     play(step, lasts, (now) => {
-      // Set against a twin that stays, round the middle of its lap.
-      const angle = Math.atan2(duck.pose.z - twin.pose.z, duck.pose.x - twin.pose.x - 0.55)
-      let change = angle - before
-      if (change > Math.PI) change -= 2 * Math.PI
-      if (change < -Math.PI) change += 2 * Math.PI
-      turned += change
-      before = angle
+      nearSide = Math.max(nearSide, duck.pose.z - twin.pose.z)
+      farSide = Math.min(farSide, duck.pose.z - twin.pose.z)
+      towardMiddle = Math.max(towardMiddle, duck.pose.x - twin.pose.x)
       channels.lap = Math.min(1, now / lasts)
     })
     step()
-    expect(Math.abs(turned)).toBeCloseTo(2 * Math.PI, 1)
+    // It goes to both sides by the same way.
+    expect(nearSide).toBeCloseTo(LAP_RADIUS * Math.sin(LAP_SWING), 2)
+    expect(farSide).toBeCloseTo(-LAP_RADIUS * Math.sin(LAP_SWING), 2)
+    // It keeps to its side: it never comes near the middle, where a boat may lie.
+    expect(towardMiddle).toBeLessThan(LAP_RADIUS * 0.3)
     expect(duck.pose.x).toBeCloseTo(twin.pose.x, 9)
     expect(duck.pose.z).toBeCloseTo(twin.pose.z, 9)
     expect(duck.pose.turn).toBe(twin.pose.turn)
