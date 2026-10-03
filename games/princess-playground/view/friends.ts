@@ -161,6 +161,8 @@ function lids(eyeSize: number): THREE.Object3D {
     cap.scale(1, 1.1, 0.62)
     cap.lookAt(new THREE.Vector3(side * EYE.x, EYE.y * 1.6, EYE.z))
     cap.rotateX(-0.5)
+    // Outer corners down: sleepy, not cross.
+    cap.rotateZ(side * 0.4)
     cap.translate(at.x, at.y, at.z + 0.012)
     parts.push(cap)
   }

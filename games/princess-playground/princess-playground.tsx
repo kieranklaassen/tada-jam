@@ -11,10 +11,12 @@ import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
-import { deserialize, serialize, type GameState } from './state'
-import { putOnEnd, emptyArrangement } from './arrangement'
-import { Toy } from './toy'
-import { Stage } from './view/stage'
+import { Game, type Touched } from './game'
+import { Grains } from './grains'
+import { load } from './save'
+import { voiceOf } from './sound'
+import { Stage, type StageView } from './view/stage'
+import { PLANK } from './world'
 
 // The Mount, showing a blank surface. Everything a game needs around its
 // renderer is wired and running: the saved state, attention, the attended
@@ -39,12 +41,18 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const overlay = new Overlay(root, window.location.search)
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
-    const stage = new Stage(canvas)
+    // The game is made when the slot has been read. Until then the stage draws the bare tray.
+    let game: Game | null = null
+    // The grains' positions are one buffer the game writes and the stage draws; it is made here so both can hold it.
+    const grainPool = new Grains()
+    const stage = new Stage(canvas, grainPool.positions)
     const drawn = stage.drawn
-    // The toy: the first ride as it is laid out, with a fixed seed. Every load starts from it; nothing of it is saved yet.
-    const toy = new Toy(stage, audio, putOnEnd(emptyArrangement(), 'pim', 'left'), 1)
+    const view: StageView = { frame: null as never, hand: null, rakeOut: false, rakeSweep: null, grainsFlying: false }
+    // A fixed seed for stills: `seed=<n>` in the address. Otherwise each visit draws its own, which only picks ordinary detail.
+    const seedText = new URLSearchParams(window.location.search).get('seed')
+    const seed = seedText !== null && Number.isFinite(Number(seedText)) ? Number(seedText) : Math.floor(Math.random() * 2 ** 31)
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     // The game hands a change to storage where it makes it, at one of two speeds:
@@ -53,7 +61,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     //   cadence.change(performance.now(), true)  a scene's outcome, a cycle judged, the position moved: at once,
     //                                            since a put-away in the next moment must find it saved
     // Going to rest writes whatever the throttle still holds (`cadence.settle`, below).
-    const cadence = new SaveCadence(() => { if (state) ctxRef.current.storage.save(serialize(state)) })
+    // What is saved is who is where: never a friend in the air or in the hand (`game.saved`).
+    const cadence = new SaveCadence(() => { if (game) ctxRef.current.storage.save(game.saved()) })
 
     // The one place the game applies a quality tier: whatever its tiers set besides the pixel ratio, which
     // `resize` applies. It runs once before the first frame and again each time the governor changes tier, ahead
@@ -68,7 +77,38 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => { if (width > 0) stage.render(toy.frame) }
+    const draw = () => {
+      if (width <= 0) return
+      if (!game) {
+        stage.render(null)
+        return
+      }
+      view.frame = game.frame
+      view.hand = game.guide.hand
+      view.rakeOut = game.rakeOut
+      view.rakeSweep = game.rakeSweep
+      view.grainsFlying = game.grains.flying > 0
+      stage.render(view)
+    }
+
+    // What the game asks for after it has answered a touch or played a step: its sounds, its marks in the sand,
+    // and a save at one of the two speeds. Called inside the gesture handler, so a first sound falls inside the
+    // touch, and again after the game's step in the loop.
+    const flush = () => {
+      if (!game) return
+      for (const cue of game.takeCues()) {
+        if (cue.type === 'voice') audio.play(voiceOf(cue.parts))
+        else if (cue.type === 'dimple') stage.map.dimple(cue.x, cue.z, cue.radius, cue.depth)
+        else if (cue.type === 'groove') stage.map.groove(cue.x0, cue.z0, cue.x1, cue.z1, 0.2)
+        else if (cue.type === 'bite') stage.map.bite(cue.x, PLANK.halfWidth, cue.strength)
+        else if (cue.type === 'ring') stage.map.ring(cue.x, cue.z, cue.radius)
+        // The rake itself is drawn across by the stage, which rakes the sand behind it.
+      }
+      if (game.wantsSave !== 'no') {
+        cadence.change(performance.now(), game.wantsSave === 'now')
+        game.wantsSave = 'no'
+      }
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
@@ -92,7 +132,19 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // A game with short scenes ends the one that is playing first thing in every press, before the press is
     // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
     const act = (gestures: Gesture[]) => {
-      for (const gesture of gestures) toy.gesture(gesture)
+      if (!game) return
+      for (const gesture of gestures) {
+        if (gesture.type === 'press') {
+          const hit = stage.pick(gesture.at.x, gesture.at.y, game.frame)
+          game.press(hit as Touched)
+        } else if (gesture.type === 'tap') game.tap()
+        else if (gesture.type === 'dragStart') game.dragStart()
+        else if (gesture.type === 'dragMove') game.dragTo(stage.pointAt(gesture.at.x, gesture.at.y, game.carryHeight), stage.sandAt(gesture.at.x, gesture.at.y))
+        else if (gesture.type === 'dragEnd') game.dragEnd()
+        else if (gesture.type === 'pressEnd') game.pressEnd()
+        // A lifted finger mid-drag: the friend in hand hangs where it is and waits out the grace.
+      }
+      flush()
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -132,9 +184,13 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
-      if (touch.active) ladder.touch(clock.seconds)
+      if (touch.active || game?.sceneRunning) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
-      toy.step(step, ladder.update(clock.seconds))
+      const guidance = ladder.update(clock.seconds)
+      if (game) {
+        game.step(step, guidance)
+        flush()
+      }
       // The game steps its rules and its scene here, and hands what they changed to storage (`cadence`, above).
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that
@@ -169,7 +225,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
-      state = deserialize(value, ctxRef.current.childAge)
+      const world = load(value, ctxRef.current.childAge)
+      game = new Game(world, seed, grainPool)
+      // The sand as it was left: each cell of the saved grid drawn from its digit.
+      stage.map.fromMarks(world.marks)
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.

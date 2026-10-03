@@ -1,3 +1,4 @@
+import { MARK_COLS, MARK_ROWS, RAKED, SMOOTH, centreOf, type Marks } from '../marks'
 import { PLANK, TRAY } from '../world'
 
 // The sand's height as a small grey canvas, which the sand shader lights from
@@ -13,6 +14,8 @@ const RAKE_PITCH = 0.4
 export class SandMap {
   readonly canvas: HTMLCanvasElement
   private readonly ctx: CanvasRenderingContext2D
+  /** The tray as the rake leaves it, kept so that raking again is one copy. */
+  private readonly raked: HTMLCanvasElement
   /** Set when the canvas changed and the texture must be sent again. */
   dirty = true
 
@@ -21,6 +24,10 @@ export class SandMap {
     this.canvas.width = MAP_WIDTH
     this.canvas.height = MAP_HEIGHT
     this.ctx = this.canvas.getContext('2d', { willReadFrequently: false })!
+    this.raked = document.createElement('canvas')
+    this.raked.width = MAP_WIDTH
+    this.raked.height = MAP_HEIGHT
+    this.paintRaked()
     this.rake()
   }
 
@@ -36,9 +43,55 @@ export class SandMap {
     return MAP_WIDTH / (TRAY.halfWidth * 2)
   }
 
-  /** Even raked lines along the tray, bending into rings round the stone. */
+  /** The whole tray raked again. */
   rake(): void {
-    const image = this.ctx.createImageData(MAP_WIDTH, MAP_HEIGHT)
+    this.ctx.drawImage(this.raked, 0, 0)
+    this.dirty = true
+  }
+
+  /** The rake on its way across: the tray is raked again from the left rim as far as `x`. */
+  rakeUpTo(x: number): void {
+    const width = Math.max(0, Math.min(MAP_WIDTH, Math.ceil(this.px(x))))
+    if (width === 0) return
+    this.ctx.drawImage(this.raked, 0, 0, width, MAP_HEIGHT, 0, 0, width, MAP_HEIGHT)
+    this.dirty = true
+  }
+
+  /** How a load finds the sand: each cell drawn from its digit alone. Raked is the tray as it starts, smooth is flat, anything deeper is a soft hollow of that depth. */
+  fromMarks(marks: Marks): void {
+    this.rake()
+    const cell = (TRAY.halfWidth * 2) / MARK_COLS
+    for (let row = 0; row < MARK_ROWS; row++) {
+      for (let col = 0; col < MARK_COLS; col++) {
+        const digit = marks[row * MARK_COLS + col]
+        if (digit === RAKED) continue
+        const { x, z } = centreOf(col, row)
+        if (digit === SMOOTH) {
+          this.ctx.fillStyle = grey(FLAT, 1)
+          this.ctx.fillRect(this.px(x - cell / 2), this.pz(z - cell / 2), cell * this.scale, cell * this.scale)
+        } else this.dimple(x, z, cell * 0.62, 0.25 + digit / 12)
+      }
+    }
+    this.dirty = true
+  }
+
+  /** Dot's ring: a thin furrow drawn round where it stands. */
+  ring(x: number, z: number, radius: number): void {
+    const ctx = this.ctx, r = radius * this.scale
+    for (const [width, style] of [[5, grey(FLAT + 30, 0.5)], [3, grey(FLAT - 44, 0.9)], [1.2, grey(FLAT - 66, 1)]] as const) {
+      ctx.lineWidth = width
+      ctx.strokeStyle = style
+      ctx.beginPath()
+      ctx.arc(this.px(x), this.pz(z), r, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+    this.dirty = true
+  }
+
+  /** Even raked lines along the tray, bending into rings round the stone: painted once. */
+  private paintRaked(): void {
+    const target = this.raked.getContext('2d')!
+    const image = target.createImageData(MAP_WIDTH, MAP_HEIGHT)
     const data = image.data
     const wave = (Math.PI * 2) / RAKE_PITCH
     for (let j = 0; j < MAP_HEIGHT; j++) {
@@ -57,8 +110,7 @@ export class SandMap {
         data[at + 3] = 255
       }
     }
-    this.ctx.putImageData(image, 0, 0)
-    this.dirty = true
+    target.putImageData(image, 0, 0)
   }
 
   /** A finger's poke, or a small friend set down: a bowl with a soft raised lip. */
@@ -109,20 +161,21 @@ export class SandMap {
     ctx.save()
     ctx.translate(cx, cz)
     ctx.scale(rx / rz, 1)
-    const lip = ctx.createRadialGradient(0, 0, rz * 0.6, 0, 0, rz * 1.9)
-    lip.addColorStop(0, grey(FLAT + 50, 0.85))
+    // A soft dark trench, deepest in the middle, with only a faint rise round it: a hollow, not a ring.
+    const lip = ctx.createRadialGradient(0, 0, rz * 0.9, 0, 0, rz * 1.7)
+    lip.addColorStop(0, grey(FLAT + 22, 0.5))
     lip.addColorStop(1, grey(FLAT, 0))
     ctx.fillStyle = lip
     ctx.beginPath()
-    ctx.arc(0, 0, rz * 1.9, 0, Math.PI * 2)
+    ctx.arc(0, 0, rz * 1.7, 0, Math.PI * 2)
     ctx.fill()
-    const pit = ctx.createRadialGradient(0, 0, 0, 0, 0, rz)
-    pit.addColorStop(0, grey(FLAT - 84, 1))
-    pit.addColorStop(0.8, grey(FLAT - 50, 0.95))
-    pit.addColorStop(1, grey(FLAT + 16, 0.4))
+    const pit = ctx.createRadialGradient(0, 0, 0, 0, 0, rz * 1.05)
+    pit.addColorStop(0, grey(FLAT - 80, 1))
+    pit.addColorStop(0.55, grey(FLAT - 62, 0.95))
+    pit.addColorStop(1, grey(FLAT - 10, 0))
     ctx.fillStyle = pit
     ctx.beginPath()
-    ctx.arc(0, 0, rz, 0, Math.PI * 2)
+    ctx.arc(0, 0, rz * 1.05, 0, Math.PI * 2)
     ctx.fill()
     ctx.restore()
     this.dirty = true

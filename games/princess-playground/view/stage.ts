@@ -1,7 +1,9 @@
 import * as THREE from 'three'
 import type { Frame } from '../pose'
 import { FRIEND_IDS, FRIENDS, PLANK, TRAY, type FriendId } from '../world'
+import { handPose, type HandPose } from '../guidance'
 import { buildFriend, poseFriend, type FriendView } from './friends'
+import { RAKE_AT, RAKE_REACH, buildGrains, buildHand, buildRake } from './props'
 import { LIGHT, Sand } from './sand'
 import { SandMap } from './sandMap'
 
@@ -9,7 +11,19 @@ import { SandMap } from './sandMap'
 // on a dark stone, and the four friends, under one low raking light. Raw
 // three.js on the Mount's canvas. No shadow maps and no post pass.
 
-export type Hit = { kind: 'friend'; id: FriendId } | { kind: 'plank'; along: number } | { kind: 'sand'; x: number; z: number } | { kind: 'none' }
+export type Hit = { kind: 'friend'; id: FriendId } | { kind: 'plank'; along: number } | { kind: 'sand'; x: number; z: number } | { kind: 'rake' } | { kind: 'none' }
+
+/** Everything the stage draws in one frame: the playground, and the small things round it. */
+export type StageView = {
+  frame: Frame
+  /** 0 to 1 through the ghost hand's one tap on the friend the glow is on, or null. */
+  hand: number | null
+  rakeOut: boolean
+  /** 0 to 1 while the rake crosses the tray, or null. */
+  rakeSweep: number | null
+  /** Grains are in the air. */
+  grainsFlying: boolean
+}
 
 const CLOTH = '#6f8794'
 /** The camera looks down the tray from the child's side. */
@@ -27,15 +41,23 @@ export class Stage {
   private readonly sand: Sand
   private readonly plank: THREE.Mesh
   private readonly friends: Record<FriendId, FriendView>
+  private readonly rake = buildRake()
+  private readonly hand = buildHand()
+  private readonly grains: THREE.Points
+  private readonly handNow: HandPose = { travel: 0, press: 0, opacity: 0 }
+  private rakeShown = false
+  private warmed = false
   private readonly ray = new THREE.Raycaster()
   private readonly pointer = new THREE.Vector2()
   private readonly scratch = new THREE.Vector3()
   private width = 1
   private height = 1
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, grains: Float32Array) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' })
     this.renderer.setClearColor(CLOTH)
+    // Reading a program's log back waits for its compile; the game's programs are fixed, so the check is left out.
+    this.renderer.debug.checkShaderErrors = false
     this.scene.add(new THREE.HemisphereLight('#eef2ff', '#d9c39a', 2.5))
     const sun = new THREE.DirectionalLight('#fff0d2', 2.6)
     sun.position.copy(LIGHT).multiplyScalar(20)
@@ -46,7 +68,35 @@ export class Stage {
     this.plank = plank()
     this.scene.add(this.plank)
     this.friends = Object.fromEntries(FRIEND_IDS.map((id) => [id, buildFriend(id)])) as Record<FriendId, FriendView>
-    for (const id of FRIEND_IDS) this.scene.add(this.friends[id].group)
+    for (const id of FRIEND_IDS) {
+      this.friends[id].group.visible = false
+      this.scene.add(this.friends[id].group)
+    }
+    this.plank.visible = false
+    this.grains = buildGrains(grains)
+    this.grains.visible = false
+    this.scene.add(this.rake, this.grains, this.hand)
+  }
+
+  /**
+   * Draws one frame with everything shown, into a buffer that is then drawn over. Whatever first appears in play
+   * (the grains at the first knock, the hand, the rake) has by then been compiled and drawn once, so its first
+   * real frame costs what every later one does.
+   */
+  private warmUp(): void {
+    const hidden: THREE.Object3D[] = []
+    this.scene.traverse((object) => {
+      if (!object.visible) {
+        hidden.push(object)
+        object.visible = true
+      }
+    })
+    const range = this.grains.geometry.drawRange.count
+    this.hand.material.opacity = 0.5
+    this.renderer.compile(this.scene, this.camera)
+    this.renderer.render(this.scene, this.camera)
+    this.grains.geometry.setDrawRange(0, range)
+    for (const object of hidden) object.visible = false
   }
 
   /** Sizes the drawing buffer. The Mount keeps the canvas's CSS size. */
@@ -66,6 +116,10 @@ export class Stage {
     this.camera.position.copy(AIM).addScaledVector(direction.normalize(), distance)
     this.camera.lookAt(AIM)
     this.camera.updateProjectionMatrix()
+    if (!this.warmed) {
+      this.warmed = true
+      this.warmUp()
+    }
   }
 
   /** How much grain the sand shows: a cheaper tier draws less. */
@@ -73,7 +127,19 @@ export class Stage {
     this.sand.material.uniforms.uGrain.value = grain
   }
 
-  render(frame: Frame): void {
+  /** Draws a frame. With no view yet (the slot is still being read) it draws the bare tray: sand, rim and stone. */
+  render(view: StageView | null): void {
+    const frame = view?.frame ?? null
+    this.plank.visible = frame !== null
+    for (const id of FRIEND_IDS) this.friends[id].group.visible = frame !== null
+    if (view && frame) this.lay(view, frame)
+    this.sand.sync()
+    this.renderer.render(this.scene, this.camera)
+    this.drawn.drawCalls = this.renderer.info.render.calls
+    this.drawn.triangles = this.renderer.info.render.triangles
+  }
+
+  private lay(view: StageView, frame: Frame): void {
     this.plank.rotation.z = -frame.tilt
     const reach = PLANK.halfLength * Math.cos(frame.tilt), drop = PLANK.halfLength * Math.sin(frame.tilt)
     // The plank's shadow: both ends thrown onto the sand along the light.
@@ -95,17 +161,39 @@ export class Stage {
     })
     const uniforms = this.sand.material.uniforms
     uniforms.uGlow.value = frame.glowOn ? frame.glow : 0
+    const hand = this.hand
+    hand.visible = false
     if (frame.glowOn) {
-      const pose = frame.poses[frame.glowOn]
-      ;(uniforms.uGlowAt.value as THREE.Vector3).set(pose.x, pose.z, FRIENDS[frame.glowOn].radius)
+      const pose = frame.poses[frame.glowOn], spec = FRIENDS[frame.glowOn]
+      ;(uniforms.uGlowAt.value as THREE.Vector3).set(pose.x, pose.z, spec.radius)
+      if (view.hand !== null) {
+        // The ghost hand: it comes down onto the friend's head, presses once and lifts.
+        const now = handPose(view.hand, false, this.handNow)
+        hand.visible = now.opacity > 0.01
+        hand.material.opacity = now.opacity * 0.92
+        hand.position.set(pose.x + spec.radius * 0.35, pose.y + spec.halfHeight * 2 + 0.5 - now.press * 0.45, pose.z - spec.radius * 0.2)
+      }
     }
-    this.sand.sync()
-    this.renderer.render(this.scene, this.camera)
-    this.drawn.drawCalls = this.renderer.info.render.calls
-    this.drawn.triangles = this.renderer.info.render.triangles
+    // The rake: out while the sand holds a mark, and across the tray when it is drawn.
+    const rake = this.rake
+    if (view.rakeOut !== this.rakeShown) {
+      this.rakeShown = view.rakeOut
+      rake.visible = view.rakeOut
+    }
+    if (view.rakeSweep !== null) {
+      const x = -TRAY.halfWidth + view.rakeSweep * TRAY.halfWidth * 2
+      // Lifted off the rim and drawn through the sand, head first and tines down.
+      rake.position.set(x, 0.05, -0.2)
+      rake.rotation.y = 0
+      this.map.rakeUpTo(x)
+    } else if (rake.position.z !== RAKE_AT.z) {
+      rake.position.set(RAKE_AT.x, RAKE_AT.y, RAKE_AT.z)
+    }
+    this.grains.visible = view.grainsFlying
+    if (view.grainsFlying) this.grains.geometry.attributes.position.needsUpdate = true
   }
 
-  /** What lies under a point of the surface, in CSS pixels: a friend first, then the plank, then the sand. */
+  /** What lies under a point of the surface, in CSS pixels: a friend first, then the rake, then the plank, then the sand. */
   pick(x: number, y: number, frame: Frame): Hit {
     this.aim(x, y)
     let best: FriendId | null = null, bestAt = Infinity
@@ -122,6 +210,10 @@ export class Stage {
       }
     }
     if (best) return { kind: 'friend', id: best }
+    if (this.rakeShown) {
+      const at = this.onPlane(RAKE_AT.y + 0.2)
+      if (at && Math.abs(at.x - this.rake.position.x) < RAKE_REACH && Math.abs(at.z - this.rake.position.z) < RAKE_REACH * 0.55) return { kind: 'rake' }
+    }
     const plank = this.ray.intersectObject(this.plank, false)[0]
     if (plank) return { kind: 'plank', along: plank.point.x }
     const sand = this.onPlane(0)
@@ -136,10 +228,11 @@ export class Stage {
     return at ? { x: at.x, z: at.z } : null
   }
 
-  /** Where a point of the tray is on the surface, in CSS pixels: for the ghost hand. */
-  project(x: number, y: number, z: number): { x: number; y: number } {
-    const p = this.scratch.set(x, y, z).project(this.camera)
-    return { x: (p.x * 0.5 + 0.5) * this.width, y: (-p.y * 0.5 + 0.5) * this.height }
+  /** Where the finger is on the sand, or null when it is off the tray. */
+  sandAt(x: number, y: number): { x: number; z: number } | null {
+    this.aim(x, y)
+    const at = this.onPlane(0)
+    return at && Math.abs(at.x) <= TRAY.halfWidth && Math.abs(at.z) <= TRAY.halfDepth ? { x: at.x, z: at.z } : null
   }
 
   private aim(x: number, y: number): void {

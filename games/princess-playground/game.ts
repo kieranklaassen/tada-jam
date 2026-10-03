@@ -73,10 +73,10 @@ export class Game {
   private company: boolean
   private lastDemo = -1
 
-  constructor(world: World, seed: number) {
+  constructor(world: World, seed: number, grains: Grains = new Grains(seed + 17)) {
     this.world = world
     this.play = new Playground(world.arrangement, seed)
-    this.grains = new Grains(seed + 17)
+    this.grains = grains
     this.company = inCompany(world.arrangement)
     this.pendingShowing = this.wantsShowing() ? world.kind : null
     this.moods()
