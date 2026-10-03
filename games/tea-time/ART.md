@@ -7,11 +7,26 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.
+The manifest band is 4 to 6, and its youngest age, 4, governs every choice below.
+
+- **The cue-table row.** Age 4 falls in the 3 to 4 row of the age-band cue table in `docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md`. The cues the game uses from it: a breathing glow on what can be touched now, a ghost hand that shows one move, characters who gaze and reach, tools that appear only when they mean something (the sponge comes out with the first spill), and materials that correct themselves (tea that runs over a rim, a painted line that the tea covers). Its "Avoid" column is a hard limit here: no text, numeral or pictorial icon that has to be decoded, no spoken instruction, no verdict, never several activities live at once, and no tool on the table before it means anything. One next act is offered at a time and one finger does everything.
+- **The pack's rule for the range** (pack: game-design, ages-4-to-6.md). The game is pretend play: a table, props and guests who react, and the child supplies the plot. Every act is a tap, a press that is held, or a drag that survives a lifted finger. There is no double tap and nothing to read. The jokes are tricks and slapstick on a guest who overreacts and is never hurt.
+- **The symbol rule.** The band starts below 6, so the kid side shows no word, letter, numeral or symbol, optional or not, and the game has no `symbols.ts`. The rings painted inside a cup are brushwork at a height, not marks to be read as a scale: there are no ticks, no count of them is ever needed, and each cup carries one.
+- **What `ctx.childAge` sets.** Only where a first visit starts in the designed order. A child of 4 or 5, a younger child, and no age at all (`null`) start at the first position, `brim`. A child of 6 or older starts at `lay-a-place`, two steps on, where the place is laid before the pour. A saved position always wins over the age, every position stays reachable by play from either start, and nothing is locked or hidden by age. A new idea is still shown once to a child who starts further on, because each first showing has its own stored mark.
 
 ## The toy
 
-The one action the finger performs most, what it does in an empty scene with its sound and motion, and why repeating it is a pleasure with no goal.
+**Pouring.** The finger presses a cup and holds; the teapot pours into it for as long as the finger stays, and stops when it lifts.
+
+In an empty scene there is a plain cloth, the pot, and one cup on its saucer.
+
+- **When the finger lands**, in the same frame: the pot hops off the cloth with its lid rattling and swings its spout over the cup, the cup settles into its saucer with a clink, and the first drop is already falling. Nothing waits for the lift.
+- **While it is held**: the stream thickens over the first half second from a dribble to a steady rope of tea, so a short press gives a drop and a long one gives a cupful. The tea is a warm amber disc on the cup's white inside, and it climbs the wall as it grows, so the amount can be read at every moment of the pour, from the first coin of tea at the bottom to the skin that bulges at the rim. The sound of the filling cup climbs in pitch as the space above the tea gets shorter, as a real cup's does, over the glug of the pot.
+- **When it lifts**: the pot rights itself, one last drop hangs on the spout and falls with a plip, the lid lands with a click, and the surface rocks and settles.
+- **Past the rim**: the tea runs down the outside into the saucer, fills the saucer, and then creeps onto the cloth as a puddle with a soft patter. The sponge comes out of the tray at the first spill, and rubbing it over the puddle takes the tea up along the stroke with a squeak.
+- **The simplest use always works**: a tap on the cup gives one drop and a ring of the cup, pitched by how full it is. A press anywhere else pours there too: on the cloth it makes a puddle, on the saucer a shallow pool, on the pot itself a tip where it stands.
+
+**Why repeating it is a pleasure with no goal.** The child is making a liquid do things: it stretches, thickens, climbs, bulges, runs over and spreads, and each of those has its own sound that the finger plays by staying or leaving. The cup is an instrument: the same hold never sounds quite the same, and the spill is the funniest part, costs nothing and wipes away. A person watching sees within three seconds that the child is pouring tea. No part of it needs a guest, a target or an ending (pack: game-design, toy-first.md; pack: game-design, touch-answers-bigger-than-the-touch.md).
 
 ## The object-by-action grid, and what is new on day 15
 
