@@ -106,19 +106,57 @@ Seven objects by five actions. Every result is what the solved circuit does, so 
 | Lead straight across it | **W** Whatever it was no longer matters: a rubber with a lead across it "works". |
 | Flick it | Each sounds as its material: the spoon sings, the key jingles, the foil crackles, the pencil tocks, the rubber wobbles without a sound, the stick clacks, the string flops. |
 
-**On day 15** the child reads a board before touching it and fetches the tester only where it is needed; tunes one gadget to one customer (dim for the owl, two cells for the moth); and keeps contraptions of their own running on the stall's sign board, such as a lamp worked from two switches, a fan and a bell on one cell, or a blade spun by hand that makes a lamp glint. None of that is new content: it is the same seven objects, combined (pack: game-design, depth-from-combinations.md; pack: game-design, liveliness-from-causing-and-comedy.md).
+**On day 15** the child reads a board before touching it and fetches the test lamp only where it is needed; tunes one gadget to one customer (dim for the owl, two cells for the moth); and keeps contraptions of their own running on the stall's sign board, such as a lamp worked from two switches, a fan and a bell on one cell, or a blade spun by hand that makes a lamp glint. None of that is new content: it is the same seven objects, combined (pack: game-design, depth-from-combinations.md; pack: game-design, liveliness-from-causing-and-comedy.md).
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+**The idea.** A thing runs only when there is an unbroken way round: out of a source, through the thing, and back into the source. What the current carries from the source arrives as light, sound or motion. Some materials let it through and some do not.
+
+**How it appears in the objects.** It was chosen before the stall, the customers or the look.
+
+- **The loop is a ring of metal the child can trace with a finger.** The gadget lies open and is seen from straight above: copper traces, solder pads, the legs of parts, and leads. The way the current goes is the way the metal goes. A break in the idea is a break in the metal: a crack, a loose clip, a blown filament, a flat cell, or a rubber where metal should be.
+- **The current is a row of beads on the metal.** Beads move only where the solved current is not zero, and their speed is that current. They run all the way round at one speed, as many come back into the cell as left it, they divide at a fork and join again after it, and they move everywhere in the loop in the same frame or nowhere. No bead is used up in a lamp. What the lamp takes out of the current is shown as what it gives: glow and warmth falling on the mat.
+- **A source has two different ends.** The cap and the base of a cell differ in shape and colour, and turning the cell round is an action.
+- **"More" is never a number.** More current is faster beads, a whiter filament, a quicker blade, a higher rasp.
+
+**Where the model is true, and where it stops.** Every result on screen is computed from the circuit as it lies: ideal parts of fixed resistance on steady direct current, solved again at every change. Nothing is scripted to light. It leaves out, and does not claim: cells running down (no clock runs), a filament's resistance changing as it heats, magnetism and static electricity. The beads are the one invented thing. Current cannot be seen, and the beads stand for it as the arrows in a school drawing do.
+
+**Its support.** A bench of cells, leads and lamps is school practice. The table at the end of the pack's `research/learning-games-that-work.md` lists "build and run" circuits for this skill, with support from a secondary summary of another build-and-run physics game. No trial of this representation for circuits is cited there, so it is school practice without a trial of its own behind it (pack: game-design, representation-before-game.md).
+
+**Where object, picture and symbol stop** (pack: game-design, fade-to-school-symbols.md).
+
+- **Object.** Every part is itself, drawn as itself, in every position of the designed order.
+- **Picture.** From the position `ticket` on, a customer may bring an order ticket: a small card clipped to the gadget that draws the parts asked for, such as two lamps.
+- **Symbol.** One place only: on that ticket, a numeral lies beside the drawn group it counts (two drawn lamps, and the numeral for two beside them). It names a quantity that is asked for, the drawing carries the order without it, and play never depends on reading it. The range is 1 to 3 and is the game's own choice; no record names a number. In the pure rules it is `Ticket.count`. None is drawn in this run: the module that draws numerals, `symbols.ts`, comes from the lead.
+- **Not used.** School circuit symbols: none is in the jam's list of signs, and no record the game rests on names them. A meter, a gauge or any reading on the object: brighter and faster are seen, never read off. The plus and minus signs printed on a real cell: see "For the owner to decide" in `REFINEMENT.md`.
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No: the play is the loop itself, so taking the circuit out leaves no game, and another subject would need other objects and other rules.
+- **Attention.** At the moment of decision the child looks at where the metal runs and thinks about whether there is an unbroken way out of the cell, through the lamp, motor or buzzer, and back, and which piece on that way does not let current through.
+- **Fun.** The skill is used in the best moment of play, when the last clip bites and the dead thing starts up in that frame; nothing stops for a question.
+- **Guess.** Only at the first position, where the gap can be seen and any lead across it works; from the third position on the break cannot be seen, a lead clipped at random most often makes a short that pops the flag, and a child who clips the test lamp across every piece in turn is not guessing but running the test the skill consists of.
+
+(pack: game-design, the-mechanic-is-the-school-skill.md)
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+The game runs what the child built and shows what it does. Nothing gives a verdict: no buzzer for a mistake, no cross, no face turned to the child. Each consequence below is the solved circuit's own.
+
+| What the child did | What the world does | Where and why it shows |
+| --- | --- | --- |
+| Left a gap in the loop | Nothing runs, anywhere. No bead moves. | The test lamp, which is a lamp with a lead on each leg, glows dully when it is clipped across the break: there it closes the loop through the rest of the gadget. Across a sound piece of a dead loop it stays dark. So the break is the one place where something put across it comes alive. Clipped straight across a cell, the same lamp shows whether that cell is flat. |
+| Made a way round that misses the load | A short. The leads on that way glow orange, the cell puffs, and its cutout flag pops. | The glow marks exactly the way the current took, and nothing on it is a lamp, a motor or a buzzer. The flag stays up until it is tapped, and pops again while the short is still there. |
+| Put a source in backwards | A motor spins the other way: a fan sucks, a car backs up. Two cells nose to nose push against each other and nothing runs. | The beads run the other way, and the two cells lean on each other at the place where they meet. |
+| Put in too many cells | A lamp flares and pops, and its glass goes smoky. A motor screams and the fan walks across the mat. | The blown lamp is now the gap, and it rattles when flicked. The tray always has another lamp. |
+| Used a thing that does not let current through | Nothing runs. | The beads never start, and the test lamp clipped across the thing glows: the thing is the break. |
+| Handed back a gadget that does not run | The customer tries it, nothing happens, and they put it back on the mat with the lid open. | The gadget lies as the child left it. |
+
+**The state stays.** Every lead and part is where the child put it after any of these. The child changes one thing and sees at once what that one thing did. Nothing is reset, nothing is taken away, and a popped flag or a blown lamp costs a tap or a new lamp from a tray that never runs out.
+
+**It thins.** The old hand shows a neat way only once for each new idea ("The scenes"). After that the circuit's own behaviour is the only feedback.
+
+(pack: game-design, errors-show-as-consequences.md)
 
 ## The designed order, and what is stored
 
