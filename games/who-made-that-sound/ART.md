@@ -41,7 +41,7 @@ The objects are the six kinds of creature. Each kind has one voice, which never 
 | `wheep` | middle-sized and springy | a glide up through the middle |
 | `dooo` | middle-sized and droopy | the same glide, down |
 
-Two kinds of one family differ in one thing only (one note or two, steady or warbling, up or down). Two kinds of different families differ in how high and in how long at once. The numbers are in `voices.ts`, and its test holds each voice in its range.
+Two kinds of one family differ in one thing only (one note or two, steady or warbling, up or down). Two kinds of different families differ in how high and in how long at once. The numbers are in `voices.ts`, and its test holds each voice in its range. The grid itself is in `grid.ts`.
 
 The actions are the five things a child can do to any kind. Every cell looks and sounds different, because every kind has its own voice, its own entrance and its own trick, and every pair of kinds meets in its own way ("The characters and their fixed tastes").
 
@@ -98,7 +98,7 @@ Nothing gives a verdict. There is no buzzer, no cross, no sad face turned to the
 
 **A cycle is one clutch.** A clutch of hides comes into the row, each holding one kind. The ones who ask come one at a time, and each finds its own. When the row is empty the cycle is over. A clutch of two or three takes one to three minutes.
 
-**Hearing and choosing are two separate taps.** The first tap on a hide lets the child hear it, and the asker answers so that the two calls come one after the other. The second tap on that hide opens it. A tap on the asker makes it call again, and everyone still hidden answers in turn, so anything can be heard again without opening it.
+**Hearing and choosing are two separate taps.** The first tap on a hide lets the child hear it, and the asker answers so that the two calls come one after the other. The second tap on that hide opens it. A tap on the asker makes it call again, and everyone still hidden answers in turn, so anything can be heard again without opening it. When someone new comes to ask, every hide that was heard is as it was before, so the first tap on it is again for hearing: a hide is never opened for an asker it has not been heard against.
 
 **The places, in order.** Each adds one new thing, or combines two that are known. The ids are the ones in `LADDER` in `config.ts`.
 
@@ -114,7 +114,7 @@ Nothing gives a verdict. There is no buzzer, no cross, no sad face turned to the
 
 **How a cycle is judged.** By the number of wrong attempts in it: none is a cycle gone well, one is mixed, two or more is gone badly. The place moves one step up after a cycle gone well, one step down after one gone badly, and stays after a mixed one, between cycles only. A child who opens hides blindly in a clutch of three has no wrong attempt one time in six and two wrong attempts one time in three, so blind play drifts to the first two places. A visit put away with no finished cycle leaves the place where it was. Nothing on screen shows the place or that it moved.
 
-**The harder option the child can pick.** A basket stands by the row with one more egg in it, of a kind that is not in the clutch. A tap on the basket tips that egg into the row, and its grown one joins those who will come to ask. A fuller row is harder and looks it. The child may do this in any cycle that has room (fewer than four in the row), or never. An egg left in the basket stays there, and is in the basket still when the next clutch comes.
+**The harder option the child can pick.** A basket stands by the row with one more egg in it, of a kind that is not in the clutch. A tap on the basket tips that egg into the row, and its grown one joins those who will come to ask (in `who-is-inside` the grown one joins the row and the egg joins those that will come to the stone). A fuller row is harder and looks it. The child may do this in any cycle that has room (fewer than four in the row), or never. An egg left in the basket stays there, and is in the basket still when the next clutch comes.
 
 **Which clutch a new place lays out.** The very next one. While a cycle runs, the one who waits at the edge belongs to that same cycle. Nobody from the next clutch is on screen until the cycle has been judged: the next clutch is laid out at that moment, from the place as it then stands, and its first comer appears at the edge during the ending.
 
@@ -129,7 +129,7 @@ Nothing gives a verdict. There is no buzzer, no cross, no sad face turned to the
 | `finished` | The clutch on screen is finished. Its ending stays, and the next one waits at the edge. |
 | `rng` | The state of the seeded stream that lays out clutches, so the same save always gives the same next clutch. |
 | `shown` | Which of the three ways of asking (`seek`, `who`, `alike`) a character has already shown once. |
-| `hill` | Who stands on the hill, oldest first, at most four: for each a kind and whether it is a family, twins, or one alone. |
+| `hill` | Who stands on the hill, oldest first, at most four and never two of one kind: for each a kind and whether it is a family, twins, or one alone. |
 | `extra` | The kind inside the egg in the basket, or nothing when that egg has been tipped into the row. |
 | `next` | The clutch that waits at the edge while `finished` is true, laid out in full; otherwise nothing. |
 | `cycle` | The clutch on screen, or nothing before the first one has come in. Its fields are below. |
@@ -169,15 +169,15 @@ These reactions are the game's only feedback. The rule is in `tastes.ts`.
 
 Each scene is a list of timed beats filled in from the state of play, and each gives way to any touch: the touch is answered as it would be at any other time, and the scene jumps to its end state, which was saved when the scene began.
 
-- **The showing** (about 8 seconds). Cause: the first clutch of a way of asking the child has not met (`seek`, `who`, `alike`) comes in on the child's touch. A grown one sets down a single egg, calls, hears it answer alike and softer, taps it once so that it wakes and calls, calls again itself, taps it a second time so that it bursts, and the two sing in step and go up the hill. In `who-is-inside` the grown one walks over and knocks; in `two-alike` a little one that has just come out does the tapping. Filled in from the kind of the one who shows. It is shown once for each way of asking, marked in `shown`, and never plays again unasked.
-- **The reunion** (5 to 6 seconds). Cause: the child opens the hide of the kind that asks. Beats: out with its own entrance, its call in the open, the asker's call, both in step with both bodies in the same shape, the little one climbs on, the two go up the hill. Filled in from the kind, the spot of the hide, and who already stands on the hill and turns to listen.
-- **The meeting that does not match** (3 to 4 seconds). Cause: the child opens another hide. Beats: out with its own entrance, its call, the asker's call, each one's reaction by its taste, the walk up the hill. Filled in from the two kinds, so there are thirty different meetings.
-- **The choir** (6 to 9 seconds), the ending. Cause: the last hide of the clutch is done. Everyone who came out of this clutch calls once, in the order the child found them, and then all call together. It stars exactly what the child let out, in the child's order.
-- **The round**, a secret. Cause: both kinds of one family stand on the hill and the child taps one straight after the other. They sing a short round. It works every time, is never hinted at, and is never counted (pack: game-design, hidden-never-counted.md).
+- **The showing** (4 to 9 seconds, by the length of the voice). Cause: the first clutch of a way of asking the child has not met (`seek`, `who`, `alike`) comes in on the child's touch. A grown one sets down a single egg, calls, hears it answer alike and softer, taps it once so that it wakes and calls, calls again itself, taps it a second time so that it bursts, and the two sing in step and go up the hill. In `who-is-inside` the grown one walks over and knocks; in `two-alike` a little one that has just come out does the tapping. Filled in from the kind of the one who shows. It is shown once for each way of asking, marked in `shown`, and never plays again unasked.
+- **The reunion** (4 to 7 seconds). Cause: the child opens the hide of the kind that asks. Beats: out with its own entrance, its call in the open, the asker's call, both in step with both bodies in the same shape, the little one climbs on, the two go up the hill. Filled in from the kind, the spot of the hide, and who already stands on the hill and turns to listen.
+- **The meeting that does not match** (4 to 6 seconds). Cause: the child opens another hide. Beats: out with its own entrance, its call, the asker's call, each one's reaction by its taste, the walk up the hill. Filled in from the two kinds, so there are thirty different meetings.
+- **The choir** (4 to 8 seconds), the ending. Cause: the last one of the clutch has found its own. Everyone who came out of this clutch turns to the front and calls once, in the order the child found them, and then all call together. It stars exactly what the child let out, in the child's order.
+- **The round**, a secret. Cause: both kinds of one family stand on the hill and the child taps one straight after the other. They sing a short round of 4 to 8 seconds. It works every time, is never hinted at, and is never counted (pack: game-design, hidden-never-counted.md).
 
 No scene plays before the action that causes it, none plays only sometimes for the same action, and none is a fixed film.
 
-**How a cycle ends and the next one starts.** The cycle ends with the choir, and the finished scene stays as long as the child likes: everyone on the hill, each still calling when tapped. During the choir the first comer of the next clutch appears at the edge with its basket and waits there. It rocks on its feet, looks at the row, and does nothing else: it does not call out, hurry, or show that time has passed. If the child does nothing, nothing starts. A tap on it brings it in: the hides tumble out of the basket into the row, and it steps to the stone and calls. Inside a cycle the same holds for each one who asks: the next waits at the edge and comes in on a tap. On load no scene plays again: the world is as it was left, with the same one waiting (pack: game-design, endings-and-short-scenes.md; "How a cycle restarts" in the guide).
+**How a cycle ends and the next one starts.** The cycle ends with the choir, and the finished scene stays as long as the child likes: everyone on the hill, each still calling when tapped. During the choir the first comer of the next clutch appears at the edge with its bundle of hides and waits there. It rocks on its feet, looks at the row, and does nothing else: it does not call out, hurry, or show that time has passed. If the child does nothing, nothing starts. A tap on it brings it in: the hides tumble out of the bundle into the row, the basket by the row gets a new egg if it was empty, and the one who came steps to the stone and calls. Inside a cycle the same holds for each one who asks: the next waits at the edge and comes in on a tap, on itself or on a hide. On load no scene plays again: the world is as it was left, with the same one waiting (pack: game-design, endings-and-short-scenes.md; "How a cycle restarts" in the guide).
 
 ## The records
 
