@@ -54,6 +54,24 @@ describe('a run as it is watched', () => {
     expect(past).toBeGreaterThan(5.8)
   })
 
+  it('homeward the same bridge is met from the far end: the same places, the other way round', () => {
+    const out = run(gap, CROSSINGS['plank-gap'], van), home = run(gap, CROSSINGS['plank-gap'], van, true)
+    expect(home.ending).toEqual({ kind: 'crossed' })
+    expect(home.steps).toHaveLength(out.steps.length)
+    expect(home.steps[0].x).toBe(gap.right[0])
+    expect(home.steps[1].x).toBe(gap.right[0] - 0.5)
+    // The plank works hardest with the van at mid-span, whichever way it is going.
+    const peak = (r: typeof out) => Math.max(...r.steps.map((s) => s.use[0]))
+    expect(peak(home)).toBeCloseTo(peak(out), 4)
+    expect(frontAt(gap, 0, true)).toBe(gap.right[0] + PARK)
+    expect(stepAt(gap, home, gap.right[0] - 1, true)).toBe(2)
+    expect(ended(gap, home, gap.left[0] - 2, true)).toBe(true)
+    // Facing home, the other axle is ahead of the leading one's x by as far as it was behind.
+    expect(seat(gap, home, between(home, 2), van, 12, 6, true).axles.map((a) => a.x)).toEqual([12, 13])
+    // With no road to the far lip there is nothing to drive onto.
+    expect(run(gap, [part('plank', 8, 6, 12, 6, true)], van, true).ending).toEqual({ kind: 'road-ends', at: gap.right })
+  })
+
   it('a part creaks once each time its strain passes a threshold on the way up', () => {
     expect(creaks([0.2, 0.2], [0.6, 0.3])).toEqual([{ part: 0, use: 0.6 }])
     expect(creaks([0.6], [0.7])).toEqual([])

@@ -14,16 +14,19 @@ export const WAIT = { before: 0.8, apart: 3.4 } as const
 /** Where a vehicle that has crossed parks: its front axle this far past the far lip, plus its own length. */
 export const PARK = 1.1
 
-/** The front axle's x at a moment of the drive, which starts where the vehicle waited. */
-export const frontAt = (at: Site, seconds: number): number => at.left[0] - WAIT.before + SPEED * seconds
+/** The leading axle's x at a moment of the drive, which starts where the vehicle waited: at the near bank, or, homeward, in the lay-by on the far bank. */
+export const frontAt = (at: Site, seconds: number, homeward = false): number => (homeward ? at.right[0] + PARK - SPEED * seconds : at.left[0] - WAIT.before + SPEED * seconds)
 
-/** How far a run got along its steps when the front axle is at x: a whole number is a step, and the last step is the end of the run. */
-export function stepAt(at: Site, run: Run, x: number): number {
-  return Math.max(0, Math.min(run.steps.length - 1, (x - at.left[0]) / 0.5))
+/** How far along a run's steps the leading axle at x is, before any limit: each half cell past the lip it set out from is a step. */
+const along = (at: Site, x: number, homeward: boolean): number => (homeward ? at.right[0] - x : x - at.left[0]) / 0.5
+
+/** How far a run got along its steps when the leading axle is at x: a whole number is a step, and the last step is the end of the run. */
+export function stepAt(at: Site, run: Run, x: number, homeward = false): number {
+  return Math.max(0, Math.min(run.steps.length - 1, along(at, x, homeward)))
 }
 
 /** True once the run's ending has been reached: the wheels are past the last step the model computed. */
-export const ended = (at: Site, run: Run, x: number): boolean => (x - at.left[0]) / 0.5 >= run.steps.length - 1
+export const ended = (at: Site, run: Run, x: number, homeward = false): boolean => along(at, x, homeward) >= run.steps.length - 1
 
 /**
  * The bridge at a moment between two steps of a run: every node's
@@ -48,6 +51,7 @@ export function between(run: Run, progress: number): Answer & { use: number[]; s
 export function roadHeight(at: Site, run: Run, answer: Pick<Answer, 'moved'>, x: number, drawn: number): number {
   const { frame, road } = run
   if (x <= at.left[0] || road.nodes.length < 2) return at.left[1]
+  if (x >= at.right[0] && road.complete) return at.right[1]
   for (let r = 0; r + 1 < road.nodes.length; r++) {
     const from = frame.nodes[road.nodes[r]], to = frame.nodes[road.nodes[r + 1]]
     if (x < from.x || x > to.x) continue
@@ -62,8 +66,8 @@ export function roadHeight(at: Site, run: Run, answer: Pick<Answer, 'moved'>, x:
 /** How a vehicle sits on the road: its front axle's place, each axle's height, and the tilt of its body between the first axle and the last. */
 export type Seat = { x: number; y: number; tilt: number; axles: { x: number; y: number }[] }
 
-export function seat(at: Site, run: Run, answer: Pick<Answer, 'moved'>, train: Train, x: number, drawn: number): Seat {
-  const axles = train.map((axle) => ({ x: x - axle.behind, y: roadHeight(at, run, answer, x - axle.behind, drawn) }))
+export function seat(at: Site, run: Run, answer: Pick<Answer, 'moved'>, train: Train, x: number, drawn: number, homeward = false): Seat {
+  const axles = train.map((axle) => { const ax = homeward ? x + axle.behind : x - axle.behind; return { x: ax, y: roadHeight(at, run, answer, ax, drawn) } })
   const first = axles[0], last = axles[axles.length - 1]
   const tilt = axles.length > 1 && first.x !== last.x ? Math.atan2(first.y - last.y, first.x - last.x) : 0
   return { x, y: first.y, tilt, axles }

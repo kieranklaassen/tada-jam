@@ -202,8 +202,12 @@ function carry(at: Site, frame: Frame, road: Road, parts: readonly Part[], wheel
   return { loads, wrong }
 }
 
-/** Carries a train of weights over the bridge and says how it went. */
-export function run(at: Site, parts: readonly Part[], train: Train): Run {
+/**
+ * Carries a train of weights over the bridge and says how it went. `homeward`
+ * carries it back from the far bank: the same places, met from the other end,
+ * with the wheels ahead of the leading axle's x as far as they were behind it.
+ */
+export function run(at: Site, parts: readonly Part[], train: Train, homeward = false): Run {
   const frame = settle(parts, isFooting(at))
   const road = roadOf(at, frame)
   const steps: Step[] = []
@@ -213,7 +217,7 @@ export function run(at: Site, parts: readonly Part[], train: Train): Run {
 
   // Before any wheel is on it the bridge carries itself, and may already fail to.
   const rest = solve(frame)
-  steps.push(record(frame, at.left[0], rest))
+  steps.push(record(frame, homeward ? at.right[0] : at.left[0], rest))
   const failsAlone = failure(rest)
   if (failsAlone) return { frame, road, steps, ending: failsAlone, ride }
 
@@ -221,9 +225,14 @@ export function run(at: Site, parts: readonly Part[], train: Train): Run {
   const long = Math.max(...train.map((axle) => axle.behind))
   const height = (n: number, moved: Float32Array) => frame.nodes[n].y + moved[2 * n + 1]
   const slope = (from: number, to: number, moved: Float32Array) => (height(to, moved) - height(from, moved)) / (frame.nodes[to].x - frame.nodes[from].x)
-  for (let x = at.left[0] + 0.5; x <= at.right[0] + long; x += 0.5) {
+  // A road that does not reach the far lip gives a vehicle on the far bank nothing to drive onto.
+  if (homeward && !road.complete) return { frame, road, steps, ending: { kind: 'road-ends', at: at.right }, ride }
+  const places: number[] = []
+  if (homeward) for (let x = at.right[0] - 0.5; x >= at.left[0] - long; x -= 0.5) places.push(x)
+  else for (let x = at.left[0] + 0.5; x <= at.right[0] + long; x += 0.5) places.push(x)
+  for (const x of places) {
     if (!road.complete && x > last.x) return { frame, road, steps, ending: { kind: 'road-ends', at: [last.x, last.y] }, ride }
-    const { loads, wrong } = carry(at, frame, road, parts, train.map((axle) => ({ x: x - axle.behind, weight: axle.weight })))
+    const { loads, wrong } = carry(at, frame, road, parts, train.map((axle) => ({ x: homeward ? x + axle.behind : x - axle.behind, weight: axle.weight })))
     const answer = solve(frame, loads)
     const step = record(frame, x, answer)
     steps.push(step)
