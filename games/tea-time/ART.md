@@ -112,11 +112,11 @@ The position never moves during a sitting, and a visit put away before the sitti
 
 **What is stored.** Plain JSON through `ctx.storage`, versioned, read field by field by a defensive `deserialize`. Every field:
 
-- `version`: the number of this shape. A higher one than the game knows is treated as unreadable.
+- `v`: the number of this shape. A higher one than the game knows is treated as unreadable.
 - `position`: one id from the order above. An unknown id falls back to the first-visit default.
 - `seed`: the state of the seeded stream that picks the ordinary detail of a party (which of two guests comes, who sits where). It is never shown and counts nothing.
 - `shown`: the ideas a guest has already shown once, as a list of ids (`pour`, `lay`, `halfway`, `twins`, `sizes`), so no showing plays twice.
-- `sitting`: whether the sitting is `open` or `ended`.
+- `finished`: whether the sitting on screen has ended. Its settled table stays as it is, and the next sitting begins on the child's touch.
 - `guests`: for each guest at the table, who it is, its seat, its first lift in this sitting (none yet, to taste, too little, too much) and whether it has drunk a cup to its taste.
 - `things`: every movable thing with where it lies: its kind (pot, cup, saucer, spoon, sponge, bowl), its size and the height of its ring if it is a cup, whose it is, where it stands on the cloth or which thing it stands on, and how much tea is in it. A thing in the hand is stored where it was picked up.
 - `tools`: whether the sponge and the bowl have come out of the tray.
