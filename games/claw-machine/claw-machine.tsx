@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
-import { GameAudio, tick } from './audio'
+import { GameAudio } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
@@ -11,13 +11,20 @@ import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
-import { spikePicture } from './spike'
+import { voice } from './sound'
 import { deserialize, serialize, type GameState } from './state'
+import { joltOf, newToybox, toyPicture } from './toyScene'
 import { Stage } from './view/stage'
+import { voiceOf } from './voices'
 
 // The Mount. Around the stage it wires the saved state, attention, the
 // attended clock, touch, sound from the first touch, the idle ladder, adaptive
 // quality, the grown-up performance handle and the grown-up overlay.
+
+/** The height a finger points at: about the middle of a toy standing on the tray. */
+const POINTING_HEIGHT = 1.6
+/** How long the gobblers take to get over a start. */
+const JOLT_SECONDS = 0.45
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -35,6 +42,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // Grown-ups only: three quick taps in the top right corner, or fps=1 in the address (overlay.ts).
     const overlay = new Overlay(root, window.location.search)
     const stage = new Stage(canvas)
+    // The toy: the claw over a tray of toys, laid out the same way at every load, with no goal and nothing saved.
+    const box = newToybox()
+    // How startled the gobblers still are, from 1 down to 0, and whether the drop of this drag has been made.
+    let jolt = 0, dropped = false
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
@@ -62,7 +73,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // been read.
     const draw = () => {
       if (width <= 0) return
-      const counts = stage.draw(spikePicture(clock.seconds))
+      const counts = stage.draw(toyPicture(box, clock.seconds, jolt))
       drawn.drawCalls = counts.drawCalls; drawn.triangles = counts.triangles
     }
 
@@ -87,8 +98,23 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // What the game does with a gesture. The blank surface only answers a touch with a sound.
     // A game with short scenes ends the one that is playing first thing in every press, before the press is
     // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
+    // A finger on the glass points at the level of the toys, so the claw goes to the thing under the finger.
+    const aim = (at: Point) => {
+      const where = stage.pointOnPlane(at.x / Math.max(1, width), at.y / Math.max(1, height), POINTING_HEIGHT)
+      box.point(where.x, where.z)
+    }
     const act = (gestures: Gesture[]) => {
-      for (const gesture of gestures) if (gesture.type === 'press') audio.play(tick)
+      for (const gesture of gestures) {
+        // The claw answers when the finger lands: the jaws snap open and the trolley sets off.
+        if (gesture.type === 'press') { aim(gesture.at); dropped = false }
+        else if (gesture.type === 'tap') { aim(gesture.at); box.lift() }
+        else if (gesture.type === 'dragMove') { aim(gesture.at); dropped = false }
+        // Lifting is the drop, so it is made the moment the finger leaves, not when the drag is given up. A
+        // finger that comes back carries on pointing, and its next lift drops again.
+        else if (gesture.type === 'dragLift') { box.lift(); dropped = true }
+        else if (gesture.type === 'dragEnd') { if (!dropped) box.lift(); dropped = false }
+        else if (gesture.type === 'pressEnd') box.cancel()
+      }
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -122,9 +148,19 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       if (!attention.awake || disposed) return
       // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
-      clock.advance(now)
+      const step = clock.advance(now)
       const start = performance.now()
       act(touch.advance(now))
+      // The rules of the toy play the step in fixed parts, and what happened in it is heard at once.
+      box.advance(step)
+      const happened = box.takeEvents()
+      jolt = Math.max(jolt - step / JOLT_SECONDS, joltOf(happened), 0)
+      let ticks = 0
+      for (const event of happened) {
+        // A fast run crosses several studs in one frame; one tick stands for them.
+        if (event.type === 'tick' && ticks++ > 0) continue
+        audio.play(voice(voiceOf(event)))
+      }
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.

@@ -52,14 +52,12 @@ export const BACK = { z: -17, top: 50 * PLATE } as const
 /** The gantry. The bridge itself runs above the frame; the cable hangs from it. */
 export const RAIL = {
   /** The height the cable hangs from. */
-  top: 22,
+  top: 30,
   /** How far the trolley can run. */
-  minX: -15,
-  maxX: 15,
+  minX: -14,
+  maxX: 14,
   minZ: -12.5,
-  maxZ: 10.5,
-  /** The length of cable out when the claw is at rest. */
-  rest: 11.5,
+  maxZ: 11,
 } as const
 
 /** What the camera frames: the whole cabinet, fitted to the surface whatever its shape. */

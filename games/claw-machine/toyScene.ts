@@ -1,0 +1,58 @@
+import { hubAt } from './claw'
+import type { Picture, Shadow, ToyLook } from './picture'
+import { TRAY } from './places'
+import { sceneryLooks } from './scenery'
+import { Toybox, type ToyEvent } from './toybox'
+import type { Toy } from './toys'
+import { nearestPlace } from './tray'
+
+// The toy as the Mount shows it at load: the same seven toys on the same
+// places every time, the claw over them, and the gobblers looking on.
+
+const LOAD: readonly { toy: Toy; place: number }[] = [
+  { toy: { colour: 'red', kind: 'duck', size: 'small' }, place: 0 },
+  { toy: { colour: 'blue', kind: 'rocket', size: 'big' }, place: 1 },
+  { toy: { colour: 'yellow', kind: 'car', size: 'small' }, place: 3 },
+  { toy: { colour: 'yellow', kind: 'duck', size: 'big' }, place: 5 },
+  { toy: { colour: 'red', kind: 'car', size: 'big' }, place: 7 },
+  { toy: { colour: 'blue', kind: 'duck', size: 'small' }, place: 8 },
+  { toy: { colour: 'red', kind: 'rocket', size: 'small' }, place: 9 },
+]
+
+export function newToybox(): Toybox {
+  return new Toybox(LOAD)
+}
+
+/** How hard the gobblers start at what just happened: a thud, a bell or a bonk makes them jump. */
+export function joltOf(events: readonly ToyEvent[]): number {
+  let jolt = 0
+  for (const event of events) {
+    if (event.type === 'bonk' || event.type === 'buffer' || event.type === 'boing') jolt = Math.max(jolt, 1)
+    else if (event.type === 'click') jolt = Math.max(jolt, event.heavy > 1 ? 1 : 0.4)
+  }
+  return jolt
+}
+
+/** The picture of the toy at `time` seconds, with `jolt` running from 1 to 0 after something startling. */
+export function toyPicture(box: Toybox, time: number, jolt: number): Picture {
+  const claw = box.claw, hub = hubAt(claw)
+  const toys: ToyLook[] = [], shadows: Shadow[] = []
+  for (const piece of box.pieces) {
+    toys.push({ key: piece.key, toy: piece.toy, x: piece.x, y: piece.y, z: piece.z, squash: piece.squash, leanX: piece.leanX, leanZ: piece.leanZ, scale: 1 })
+    // Its shadow lies on whatever is under it and thins as the toy rises.
+    const under = nearestPlace(piece.x, piece.z)
+    const ground = piece.state === 'standing' ? box.stackTop(piece.place, piece.key) : box.stackTop(under, piece.key)
+    const lift = Math.max(0, piece.y - ground)
+    shadows.push({ x: piece.x, y: ground, z: piece.z, r: piece.heavy > 1 ? 3.3 : 2.1, a: Math.max(0.25, 1 - lift / 16) })
+  }
+  if (!box.held) shadows.push({ x: hub.x, y: Math.max(TRAY.top, claw.landY), z: hub.z, r: 1.7, a: 0.75 })
+  // A start is a quick squash that springs back: down first, then up past rest.
+  const start = jolt > 0 ? Math.sin((1 - jolt) * Math.PI * 2) * jolt : 0
+  const scenery = sceneryLooks(time, hub, -start)
+  return {
+    toys: toys.concat(scenery.snacks),
+    gobblers: scenery.gobblers,
+    claw: { x: claw.x, z: claw.z, length: claw.length, swingX: claw.swingX, swingZ: claw.swingZ, open: claw.open, squash: claw.squash },
+    shadows,
+  }
+}

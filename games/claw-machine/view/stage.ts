@@ -88,6 +88,17 @@ export class Stage {
     fitCamera(this.camera, width / height)
   }
 
+  /**
+   * The point of the level plane at height `y` that lies under a point of the surface, given as fractions of
+   * its width and height: where in the cabinet a finger is pointing.
+   */
+  pointOnPlane(fx: number, fy: number, y: number): { x: number; z: number } {
+    const origin = this.camera.position
+    this.position.set(fx * 2 - 1, 1 - fy * 2, 0.5).unproject(this.camera).sub(origin)
+    const t = (y - origin.y) / this.position.y
+    return { x: origin.x + this.position.x * t, z: origin.z + this.position.z * t }
+  }
+
   /** Compiles the programs ahead of the first frame that needs them. */
   warm(): void {
     this.renderer.compile(this.scene, this.camera)
