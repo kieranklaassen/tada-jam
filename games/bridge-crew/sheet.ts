@@ -145,3 +145,19 @@ export function trayBox(pen: Pen, plot: Plot, at: Site, random: () => number) {
   corners.forEach((from, i) => rule(pen, ...from, ...corners[(i + 1) % 4], cell * 0.04, 0.9, random))
   for (const pile of piles.slice(1)) { const [x] = px(plot, pile.x0, 0); rule(pen, x, y0 + cell * 0.2, x, y1 - cell * 0.2, cell * 0.02, 0.5, random) }
 }
+
+/**
+ * The height of the ground at an x between grid columns, as it is drawn: the
+ * top of the outline above. At a wall, where the outline stands upright, the
+ * lower side is given, so a part may lie along the wall and not inside it.
+ */
+export function groundAt(at: Site, x: number): number {
+  const outline = groundOutline(at)
+  let height = -Infinity, wall = Infinity
+  for (let i = 1; i < outline.length; i++) {
+    const [x0, y0] = outline[i - 1], [x1, y1] = outline[i]
+    if (x0 === x1) { if (x === x0) wall = Math.min(wall, y0, y1); continue }
+    if (x >= Math.min(x0, x1) && x <= Math.max(x0, x1)) height = Math.max(height, y0 + ((y1 - y0) * (x - x0)) / (x1 - x0))
+  }
+  return wall < Infinity ? wall : height > -Infinity ? height : at.left[1]
+}

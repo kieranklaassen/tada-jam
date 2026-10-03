@@ -4,6 +4,7 @@ import { length, type Part } from './kit'
 import { TRAY, bayAt, bays, gridPointAt, touched } from './layout'
 import { stream } from './look'
 import { deserialize, freshSave, serialize } from './save'
+import { groundAt } from './sheet'
 import { site } from './sites'
 import { FLIGHT, HOLD, RING, Toy, closedTriangle } from './toy'
 
@@ -81,6 +82,37 @@ describe('the toy', () => {
     settle(toy, 14)
     expect(toy.busy).toBe(false)
     expect(toy.rest[0].how).toBe('hangs')
+  })
+
+  it('nothing passes through anything: swinging and hanging parts stay out of the ground, and a chain stays linked', () => {
+    const toy = fresh()
+    // Three planks hinged across the gap with nothing under the hinges, then a stick off the far end: all of it folds.
+    drag(toy, [6, 6], [10, 6]); drag(toy, [10, 6], [14, 6]); drag(toy, [14, 6], [18, 6])
+    pickKind(toy, 'stick'); drag(toy, [14, 6], [14, 9])
+    expect(toy.frame.firm.some(Boolean)).toBe(false)
+    let knocks = 0, deepest = 0, widest = 0
+    for (let frame = 0; frame < 60 * 12; frame++) {
+      toy.step(1 / 60)
+      knocks += toy.takeVoices().length
+      const drawn = toy.drawn()
+      drawn.forEach(({ a, b }) => {
+        // Both ends and three points between: how far under the drawn ground any of them is.
+        for (const t of [0, 0.25, 0.5, 0.75, 1]) { const x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t; deepest = Math.max(deepest, groundAt(toy.at, x) - y) }
+      })
+      // Every link hangs from where the part above it is now, within what a spring gives in a frame.
+      toy.rest.forEach((rest, index) => {
+        if (!rest.via) return
+        const up = drawn[rest.via.part], mine = drawn[index], s = rest.via.share
+        const link = [up.a[0] + (up.b[0] - up.a[0]) * s, up.a[1] + (up.b[1] - up.a[1]) * s], pin = [mine.a[0] + (mine.b[0] - mine.a[0]) * rest.pivot, mine.a[1] + (mine.b[1] - mine.a[1]) * rest.pivot]
+        if (frame > 30) widest = Math.max(widest, Math.hypot(link[0] - pin[0], link[1] - pin[1]))
+      })
+    }
+    expect(toy.rest.some((rest) => rest.via)).toBe(true)
+    // In pixels at 1180 by 820 a cell is 44: under a tenth of a cell is under five pixels.
+    expect(deepest).toBeLessThan(0.1)
+    expect(widest).toBeLessThan(0.35)
+    // A plank swinging down from a lip knocks against the bank, and is heard.
+    expect(knocks).toBeGreaterThan(0)
   })
 
   it('the simplest use always works: one plank across two pins stands', () => {

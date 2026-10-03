@@ -25,6 +25,8 @@ export type Rest = {
   pivot: number
   /** A thread that nothing pulls on: it is drawn with a loose curve. */
   slack: boolean
+  /** A link of a chain: the hanging part this one hangs from, and where along that part, as a share from its a to its b. */
+  via?: { part: number; share: number }
 }
 
 export function rests(parts: readonly Part[], frame: Frame, answer: Answer, isFooting: (p: Point) => boolean, ground: (x: number) => number): Rest[] {
@@ -44,16 +46,23 @@ export function rests(parts: readonly Part[], frame: Frame, answer: Answer, isFo
   // A part hangs from the one solid point along it (a footing, or a pin of a firm part). What is pinned to a
   // hanging part and to nothing solid hangs from it in turn, like a chain.
   const solid = new Map(held)
+  /** Which hanging part each held point is on, so a chain knows its links. */
+  const owner = new Map<string, { part: number; share: number }>()
   const hangFrom = (part: Part, index: number, on: Point, at: readonly [number, number]) => {
     const long = length(part), share = Math.hypot(on[0] - part.a[0], on[1] - part.a[1]) / long
-    // The longer side goes down.
-    const down = share <= 0.5 ? 1 : -1
-    const rest: Rest = { a: [at[0], at[1] + down * share * long], b: [at[0], at[1] - down * (1 - share) * long], how: 'hangs', pivot: share, slack: false }
+    // The longer side goes down, and where the ground is nearer than its length it leans, its end on the ground,
+    // toward the side where the ground falls away.
+    const down = share <= 0.5 ? 1 : -1, below = long * Math.max(share, 1 - share)
+    const room = at[1] - ground(at[0])
+    const lean = room >= below ? 0 : Math.acos(Math.max(0, room) / below) * (ground(at[0] + 0.5) <= ground(at[0] - 0.5) ? 1 : -1)
+    const dx = Math.sin(lean) * down, dy = Math.cos(lean) * down
+    const rest: Rest = { a: [at[0] - dx * share * long, at[1] + dy * share * long], b: [at[0] + dx * (1 - share) * long, at[1] - dy * (1 - share) * long], how: 'hangs', pivot: share, slack: false, via: owner.get(key(on)) }
     out[index] = rest
     for (const p of pinsOf(part)) {
       if (held.has(key(p))) continue
       const along = Math.hypot(p[0] - part.a[0], p[1] - part.a[1]) / long
       held.set(key(p), [rest.a[0] + (rest.b[0] - rest.a[0]) * along, rest.a[1] + (rest.b[1] - rest.a[1]) * along])
+      owner.set(key(p), { part: index, share: along })
     }
   }
   parts.forEach((part, index) => {
@@ -79,7 +88,7 @@ export function rests(parts: readonly Part[], frame: Frame, answer: Answer, isFo
     const rest = out[index]
     if (rest) return rest
     const long = length(part), mid = (part.a[0] + part.b[0]) / 2
-    const floor = Math.max(ground(Math.round(mid)), WATER) + 0.08
+    const floor = Math.max(ground(mid), WATER) + 0.08
     return { a: [mid - long / 2, floor], b: [mid + long / 2, floor], how: 'lies', pivot: 0.5, slack: false }
   })
 }
@@ -145,7 +154,7 @@ export const GAIT = {
  * changes (it was firm and now hangs from its other end), the part keeps the
  * place and the direction it has and swings on from there: nothing jumps.
  */
-export function follow(moving: Moving, rest: Rest, long: number, dt: number): void {
+export function follow(moving: Moving, rest: Rest, long: number, dt: number, carried: readonly [number, number] = [0, 0]): void {
   if (moving.pivot !== rest.pivot) {
     const now = ends(moving, long)
     moving.x.at = now.a[0] + (now.b[0] - now.a[0]) * rest.pivot
@@ -153,9 +162,10 @@ export function follow(moving: Moving, rest: Rest, long: number, dt: number): vo
     moving.pivot = rest.pivot
   }
   moving.how = rest.how
+  // A link of a chain is carried along by the part it hangs from: `carried` is how far that part's pin is from its rest.
   const gait = GAIT[rest.how], [x, y] = pivotOf(rest)
-  spring(moving.x, x, dt, gait.beat, gait.damp)
-  spring(moving.y, y, dt, gait.beat, gait.damp)
+  spring(moving.x, x + carried[0], dt, gait.beat, gait.damp)
+  spring(moving.y, y + carried[1], dt, gait.beat, gait.damp)
   spring(moving.turn, nearest(direction(rest), moving.turn.at), dt, gait.swing, gait.swingDamp)
 }
 

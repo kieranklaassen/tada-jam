@@ -5,8 +5,9 @@ import { bayAt, touched } from './layout'
 import { ChiefDirector } from './motion'
 import { atRest, ends, follow, rests, unrest, type Moving, type Rest } from './pose'
 import { edit, type Save } from './save'
+import { groundAt } from './sheet'
 import { canPin, isFooting, site, type Site } from './sites'
-import { chiefCroak, chiefRuffle, chiefTaps, fold, lay as layVoice, pick, pinClick, pinRattle, putBack, snapTick, type VoiceSpec } from './voices'
+import { chiefCroak, chiefRuffle, chiefTaps, fold, knock, lay as layVoice, pick, pinClick, pinRattle, putBack, snapTick, type VoiceSpec } from './voices'
 
 // The toy: the bridge on the board, a finger, and what the two do to each
 // other. Pure: no renderer, no DOM and no clock of its own. The Mount feeds it
@@ -240,10 +241,40 @@ export class Toy {
         }
       }
     }
-    this.bridge.forEach((part, index) => {
-      follow(this.moving[index], this.rest[index], length(part), dt)
+    // Links of a chain after what they hang from, so each is carried by where its link is now.
+    const order = this.bridge.map((_, index) => index).sort((i, j) => this.depth(i) - this.depth(j))
+    for (const index of order) {
+      const part = this.bridge[index], moving = this.moving[index], before = moving.turn.at, rest = this.rest[index]
+      let carried: readonly [number, number] = [0, 0]
+      if (rest.via) {
+        const link = this.rest[rest.via.part], now = ends(this.moving[rest.via.part], length(this.bridge[rest.via.part])), s = rest.via.share
+        carried = [now.a[0] + (now.b[0] - now.a[0]) * s - (link.a[0] + (link.b[0] - link.a[0]) * s), now.a[1] + (now.b[1] - now.a[1]) * s - (link.a[1] + (link.b[1] - link.a[1]) * s)]
+      }
+      follow(moving, rest, length(part), dt, carried)
       this.rung[index] += dt; this.turned[index] += dt; this.laid[index] += dt
-    })
+      // A swinging part does not go through the ground: where it would, it is turned back the short way until it
+      // lies clear, and it comes off the ground more slowly than it met it, with a knock.
+      if (rest.how !== 'hangs') continue
+      const long = length(part)
+      const under = (turn: number): number => {
+        const c = Math.cos(turn), s = Math.sin(turn)
+        let deep = 0
+        for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+          const along = (t - moving.pivot) * long
+          deep = Math.max(deep, groundAt(this.at, moving.x.at + c * along) - (moving.y.at + s * along))
+        }
+        return deep
+      }
+      if (under(moving.turn.at) <= CLEAR) continue
+      let clear = before
+      for (let k = 1; k <= 80 && under(clear) > CLEAR; k++) {
+        const step = 0.04 * Math.ceil(k / 2) * (k % 2 ? 1 : -1)
+        if (under(moving.turn.at + step) <= CLEAR) clear = moving.turn.at + step
+      }
+      if (Math.abs(moving.turn.speed) > 1.2) this.voices.push(knock(part.kind, long, Math.abs(moving.turn.speed)))
+      moving.turn.at = clear
+      moving.turn.speed *= -0.35
+    }
     for (const [point, since] of this.clicked) { if (since > 1) this.clicked.delete(point); else this.clicked.set(point, since + dt) }
     for (const flight of this.flying) flight.since += dt
     this.flying = this.flying.filter((flight) => flight.since < FLIGHT)
@@ -259,6 +290,13 @@ export class Toy {
 
   // --- The model ---------------------------------------------------------------
 
+  /** How many links of a chain lie between a part and something solid. */
+  private depth(index: number): number {
+    let depth = 0
+    for (let via = this.rest[index].via; via && depth < this.bridge.length; via = this.rest[via.part].via) depth++
+    return depth
+  }
+
   private pluckOf(index: number): VoiceSpec {
     return plucked(this.bridge[index], this.answer.parts[index]).voice
   }
@@ -267,7 +305,7 @@ export class Toy {
     const footing = isFooting(this.at)
     this.frame = settle(this.bridge, footing)
     this.answer = solve(this.frame)
-    this.rest = rests(this.bridge, this.frame, this.answer, footing, (x) => this.at.ground[Math.max(0, Math.min(this.at.ground.length - 1, x))])
+    this.rest = rests(this.bridge, this.frame, this.answer, footing, (x) => groundAt(this.at, x))
   }
 
   /** Drops what the toy keeps beside each part, for parts that have left the bridge. */
@@ -306,6 +344,9 @@ export class Toy {
     }
   }
 }
+
+/** How far under the drawn ground a swinging part may dip before it is turned back, in cells: a pixel or so. */
+const CLEAR = 0.03
 
 /** How long a part takes to fly back to the tray, in seconds. */
 export const FLIGHT = 0.45

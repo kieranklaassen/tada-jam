@@ -67,6 +67,17 @@ describe('where a part comes to rest', () => {
     expect(onBank.a[1]).toBeCloseTo(6.08)
   })
 
+  it('a hanging part longer than the drop under it leans with its end on the ground, and never goes through it', () => {
+    // A four-cell plank from a pin three cells above the ground.
+    const { rest } = restsOf([part('plank', 6, 3, 10, 3)], footings([6, 3]))
+    expect(rest[0].how).toBe('hangs')
+    expect(rest[0].b[1]).toBeCloseTo(0)
+    expect(Math.hypot(rest[0].b[0] - 6, rest[0].b[1] - 3)).toBeCloseTo(4)
+    // It leans to the side where the ground falls away: here a bank stands on its left.
+    const banked = restsOf([part('plank', 6, 3, 10, 3)], footings([6, 3]), (x) => (x < 6 ? 6 : 0)).rest[0]
+    expect(banked.b[0]).toBeGreaterThan(6)
+  })
+
   it('a thread nothing pulls on is marked slack', () => {
     const { rest } = restsOf([part('thread', 0, 6, 3, 6)], footings([0, 6], [3, 6]))
     expect(rest[0]).toMatchObject({ how: 'firm', slack: true })

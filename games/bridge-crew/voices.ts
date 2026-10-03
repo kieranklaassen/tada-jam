@@ -195,6 +195,9 @@ export const chiefCroak: VoiceSpec = [{ wave: 'square', pitch: 190, slideTo: 150
 /** A part put back where it came from: a soft knock, quieter than laying it. */
 export const putBack = (kind: Kind, long: number): VoiceSpec => kept([{ wave: 'triangle', pitch: byLength(kind, long) * 0.9, peak: 0.06, attack: 0.004, length: 0.08 }])
 
+/** A swinging part knocks against the bank: a wooden knock, louder the faster it came. `speed` is in radians a second. */
+export const knock = (kind: Kind, long: number, speed: number): VoiceSpec => kept([{ wave: kind === 'tube' ? 'sine' : 'triangle', pitch: byLength(kind, long) * 0.7, slideTo: byLength(kind, long) * 0.5, peak: 0.04 + 0.03 * Math.min(speed, 4), attack: 0.002, length: 0.09 }])
+
 /** A pile in the tray picked: the parts of that kind stir. */
 export const pick = (kind: Kind): VoiceSpec => kept([{ wave: kind === 'tube' ? 'sine' : kind === 'thread' ? 'noise' : 'triangle', pitch: BASE[kind] * 1.5, peak: 0.07, attack: 0.003, length: 0.07 }, { wave: 'triangle', pitch: BASE[kind] * 2, peak: 0.04, attack: 0.002, length: 0.05, after: 0.06 }])
 

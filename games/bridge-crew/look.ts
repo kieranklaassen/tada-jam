@@ -86,7 +86,7 @@ export const SHADOW = { x: 0.07, y: 0.09 } as const
 export type Wood = 'plank' | 'plank-edge' | 'stick' | 'tube'
 
 /** How thick each lies in the side view, in cells. */
-export const THICK: Readonly<Record<Wood, number>> = { plank: 0.13, 'plank-edge': 0.4, stick: 0.13, tube: 0.26 }
+export const THICK: Readonly<Record<Wood, number>> = { plank: 0.17, 'plank-edge': 0.42, stick: 0.1, tube: 0.26 }
 
 function bar(pen: Pen, long: number, thick: number, round: number) {
   pen.beginPath()
