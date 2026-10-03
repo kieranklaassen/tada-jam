@@ -9,19 +9,20 @@ import { GUIDE_PAINT } from './look'
 import { at, ball, mould, rod } from './mould'
 
 /** How high the fingertip hovers before it presses, in yard units. */
-const HOVER = 0.9
+const HOVER = 1.5
+/** The hand stops this far above the sand, so it presses on a thing that stands there and not through it. */
+const PRESS_TO = 0.75
 
 export type GuideView = {
   root: THREE.Group
-  /** `glow` is 0 to 1; `hand` is the pose of the demonstration that is playing, or null. */
-  show: (glow: number, hand: HandPose | null, now: number) => void
+  /** `glow` is 0 to 1; `hand` is the pose of the demonstration that is playing, or null; `at` is where a touch could go. */
+  show: (glow: number, hand: HandPose | null, at: Place, now: number) => void
   dispose: () => void
 }
 
-export function buildGuideView(where: Place): GuideView {
+export function buildGuideView(): GuideView {
   const root = new THREE.Group()
   root.name = 'guide'
-  root.position.set(where.x, 0, where.z)
 
   const ringShape = new THREE.RingGeometry(0.62, 0.86, 40)
   ringShape.rotateX(-Math.PI / 2)
@@ -58,7 +59,8 @@ export function buildGuideView(where: Place): GuideView {
 
   return {
     root,
-    show: (glow, pose, now) => {
+    show: (glow, pose, at, now) => {
+      root.position.set(at.x, 0, at.z)
       ring.visible = glow > 0.01
       if (ring.visible) {
         // It breathes: a little wider and fainter, then back.
@@ -69,7 +71,7 @@ export function buildGuideView(where: Place): GuideView {
       hand.visible = pose !== null && pose.opacity > 0.01
       if (pose && hand.visible) {
         handPaint.opacity = pose.opacity * 0.92
-        hand.position.y = HOVER * (1 - pose.press)
+        hand.position.y = PRESS_TO + (HOVER - PRESS_TO) * (1 - pose.press)
       }
     },
     dispose: () => {

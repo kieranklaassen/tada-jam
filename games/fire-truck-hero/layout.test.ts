@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { COLS, ROWS } from './ground'
-import { BELL, BELL_REACH, LEAST_GAP, NEAR_STRIP_FROM_Z, NOZZLE, SPOTS, THING_REACH, TRUCK, TRUCK_REACH, aimAt, distance } from './layout'
+import { BELL, BELL_REACH, GATE, LEAST_GAP, NEAR_STRIP_FROM_Z, NOZZLE, SPOTS, THING_REACH, TRUCK, TRUCK_REACH, aimAt, distance } from './layout'
 
 const places = [TRUCK, ...SPOTS, BELL]
 
@@ -38,6 +38,20 @@ describe('the places of a yard', () => {
   it('puts the nozzle on the truck', () => {
     expect(distance(NOZZLE, TRUCK)).toBeLessThan(TRUCK_REACH)
     expect(NOZZLE.y).toBeGreaterThan(1)
+  })
+})
+
+describe('the way on', () => {
+  it('lies straight ahead of the truck and crosses no spot', () => {
+    expect(GATE.x).toBe(TRUCK.x)
+    // The truck is about three units wide. Nothing stands within its lane up to the gate.
+    for (const spot of SPOTS) expect(Math.abs(spot.x - GATE.x)).toBeGreaterThan(1.5 + THING_REACH)
+    expect(GATE.half).toBeGreaterThan(1.5)
+  })
+
+  it('hangs the bell beside the gate and out of the truck\'s lane', () => {
+    expect(BELL.x).toBeGreaterThan(GATE.x + GATE.half)
+    expect(BELL.x - GATE.x).toBeLessThan(GATE.half + 1)
   })
 })
 

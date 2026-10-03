@@ -35,16 +35,25 @@ export class Toy {
   readonly drops = new Drops()
   readonly truck = new TruckMotion()
   readonly paint = new WetPaint()
-  /** The wet sand as the coarse grid that a save would hold. */
-  ground: Ground = dryGround()
+  /** The open sand as the coarse grid that a save holds. The game keeps it in its yard. */
+  protected sand: Ground = dryGround()
   /** The share of the stream's small drops and splashes that are drawn: a quality tier sets it. The water is the same. */
   dropsShare = 1
-  private readonly variants = new Variants()
+  protected readonly variants = new Variants()
   private readonly creaks = new Variants(0x2c1b3c6d)
   private trickleOwed = 0
   private gulpsInTouch = 0
 
-  constructor(private readonly play: (voice: VoiceSpec) => void) {}
+  constructor(protected readonly play: (voice: VoiceSpec) => void) {}
+
+  get ground(): Ground {
+    return this.sand
+  }
+
+  set ground(next: Ground) {
+    this.sand = next
+  }
+
 
   /** The finger lands. On the truck it honks and hops; anywhere else the first gulp leaves at once. */
   press(touched: Touched, now: number): void {
@@ -72,7 +81,7 @@ export class Toy {
 
   /** One frame of `seconds` of game time, ending at `now` on the attended clock. */
   step(seconds: number, now: number): void {
-    const { launched, landed } = this.hose.step(now, seconds)
+    const { launched, landed, rested } = this.hose.step(now, seconds)
     for (const gulp of launched) {
       this.leave(gulp)
       this.play(hoseVoice(gulp.arc.reach))
@@ -88,6 +97,7 @@ export class Toy {
       }
     }
     for (const gulp of landed) this.land(gulp)
+    if (rested) this.rested()
     this.drops.step(seconds, (x, z, gulps, radius) => this.paint.splash(x, z, gulps * SPREAD, radius), Math.round(SPLASH_PER_LANDING * this.dropsShare))
     this.ground = dry(this.ground, seconds)
     this.paint.dry(seconds)
@@ -104,7 +114,10 @@ export class Toy {
     this.drops.clear()
   }
 
-  private leave(gulp: Gulp): void {
+  /** The stream stopped and stayed stopped: the watering is over. The game tells the yard. */
+  protected rested(): void {}
+
+  protected leave(gulp: Gulp): void {
     const { turn, tilt } = nozzleFor(gulp.arc)
     this.truck.aim(turn, tilt)
     this.truck.gulp(gulp.first)
@@ -113,8 +126,8 @@ export class Toy {
     if (this.gulpsInTouch++ % 3 === 0 && !gulp.first) this.play(creak(this.creaks.next(3)))
   }
 
-  /** A gulp reaches the sand: it is heard, and the grid takes its water. */
-  private land(gulp: Gulp): void {
+  /** A gulp reaches the sand: it is heard, and the grid takes its water. The game sends it to what stands there. */
+  protected land(gulp: Gulp): void {
     const { x, z } = gulp.arc.to
     const before = levelOf(this.ground[cellAt(x, z)] ?? 0)
     const variant = this.variants.next(SPLAT_VARIANTS)
@@ -124,7 +137,7 @@ export class Toy {
     this.pour(gulp)
   }
 
-  private pour(gulp: Gulp): void {
+  protected pour(gulp: Gulp): void {
     const { x, z } = gulp.arc.to
     const cell = cellAt(x, z)
     if (cell < 0) return

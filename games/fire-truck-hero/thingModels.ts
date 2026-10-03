@@ -73,17 +73,32 @@ function flame(height: number, width: number, hex: number): Part {
   return lathe([[0, 0], [width * 0.8, height * 0.12], [width, height * 0.32], [width * 0.72, height * 0.58], [width * 0.3, height * 0.84], [0, height]], hex, 14)
 }
 
-/** The small fire: a ring of pebbles, three logs, and flames that the stage keeps moving. */
-export function buildFire(plastic: THREE.Material, glow: THREE.Material): { root: THREE.Group; flames: THREE.Mesh } {
+export type FireModel = { root: THREE.Group; flames: THREE.Mesh; logs: THREE.Group; dryLogs: THREE.Mesh; wetLogs: THREE.Mesh }
+
+function logs(hex: number): Part[] {
+  const parts: Part[] = []
+  for (let i = 0; i < 3; i++) parts.push(at(rod(0.12, 0.13, 1.15, hex, 10), 0, 0.2 + i * 0.02, 0, Math.PI / 2 - 0.16, (i / 3) * Math.PI))
+  return parts
+}
+
+/** The small fire: a ring of pebbles, three logs (dry, and black and wet once it is out), and flames that the stage keeps moving. */
+export function buildFire(plastic: THREE.Material, glow: THREE.Material): FireModel {
   const root = new THREE.Group()
   root.name = 'fire'
-  const still: Part[] = []
+  const pebbles: Part[] = []
   for (let i = 0; i < 9; i++) {
     const turn = (i / 9) * Math.PI * 2
-    still.push(at(ball(0.2, PAINT.pebble, [1.1, 0.7, 0.95], 10), Math.cos(turn) * 0.86, 0.12, Math.sin(turn) * 0.86, 0, turn))
+    pebbles.push(at(ball(0.2, PAINT.pebble, [1.1, 0.7, 0.95], 10), Math.cos(turn) * 0.86, 0.12, Math.sin(turn) * 0.86, 0, turn))
   }
-  for (let i = 0; i < 3; i++) still.push(at(rod(0.12, 0.13, 1.15, PAINT.log, 10), 0, 0.2 + i * 0.02, 0, Math.PI / 2 - 0.16, (i / 3) * Math.PI))
-  root.add(named('fire-ring', still, plastic))
+  root.add(named('fire-ring', pebbles, plastic))
+  // The logs can float off on a puddle, so they hang in a group of their own.
+  const logGroup = new THREE.Group()
+  logGroup.name = 'fire-logs'
+  const dryLogs = named('fire-logs-dry', logs(PAINT.log), plastic)
+  const wetLogs = named('fire-logs-wet', logs(PAINT.logWet), plastic)
+  wetLogs.visible = false
+  logGroup.add(dryLogs, wetLogs)
+  root.add(logGroup)
   const flames = named(
     'fire-flames',
     [at(flame(1.25, 0.42, PAINT.flameOuter), 0, 0, 0), at(flame(0.85, 0.3, PAINT.flameOuter), -0.36, 0, 0.1), at(flame(0.75, 0.27, PAINT.flameOuter), 0.36, 0, -0.06), at(flame(0.72, 0.22, PAINT.flameInner), 0.02, 0.04, 0.3)],
@@ -91,124 +106,161 @@ export function buildFire(plastic: THREE.Material, glow: THREE.Material): { root
   )
   flames.position.y = 0.22
   root.add(flames)
-  return { root, flames }
+  return { root, flames, logs: logGroup, dryLogs, wetLogs }
 }
 
-/** The cat, who wants a warm dry place. She sits facing +x, with her tail curled round. */
-export function buildCat(plastic: THREE.Material): { root: THREE.Group; head: THREE.Mesh } {
+export type CatModel = { root: THREE.Group; body: THREE.Mesh; head: THREE.Group; lids: THREE.Mesh; tail: THREE.Mesh; paw: THREE.Mesh }
+
+/** The cat, who wants a warm dry place. She sits facing +x. Her head, her eyelids, her tail and one front paw move by themselves. */
+export function buildCat(plastic: THREE.Material): CatModel {
   const root = new THREE.Group()
   root.name = 'cat'
-  const tail = new THREE.TubeGeometry(
-    new THREE.CatmullRomCurve3([new THREE.Vector3(-0.36, 0.12, 0), new THREE.Vector3(-0.52, 0.11, 0.26), new THREE.Vector3(-0.28, 0.11, 0.52), new THREE.Vector3(0.14, 0.11, 0.56), new THREE.Vector3(0.4, 0.11, 0.42)]),
+  const body = named(
+    'cat-body',
+    [lathe([[0, 0], [0.44, 0.02], [0.5, 0.2], [0.42, 0.55], [0.27, 0.86], [0, 0.94]], PAINT.cat, 18), at(ball(0.2, PAINT.catPale, [0.6, 1.15, 0.85], 10), 0.27, 0.42, 0), at(ball(0.12, PAINT.cat, [1.3, 0.7, 1], 8), 0.4, 0.07, -0.18)],
+    plastic,
+  )
+  root.add(body)
+  // The paw she shakes and washes.
+  const paw = named('cat-paw', [ball(0.12, PAINT.cat, [1.3, 0.7, 1], 8)], plastic)
+  paw.position.set(0.4, 0.07, 0.18)
+  root.add(paw)
+  // The tail lies curled round her on the ground, from its root behind her.
+  const curve = new THREE.TubeGeometry(
+    new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(-0.16, -0.01, 0.26), new THREE.Vector3(0.08, -0.01, 0.52), new THREE.Vector3(0.5, -0.01, 0.56), new THREE.Vector3(0.76, -0.01, 0.42)]),
     14,
     0.1,
     8,
   )
-  root.add(
+  const colours = new Float32Array(curve.getAttribute('position').count * 3)
+  const lilac = new THREE.Color(PAINT.cat)
+  for (let i = 0; i < colours.length; i += 3) lilac.toArray(colours, i)
+  curve.setAttribute('color', new THREE.BufferAttribute(colours, 3))
+  curve.deleteAttribute('uv')
+  const tail = named('cat-tail', [curve, ball(0.1, PAINT.cat, [1, 1, 1], 8)], plastic)
+  tail.position.set(-0.36, 0.12, 0)
+  root.add(tail)
+  const head = new THREE.Group()
+  head.name = 'cat-head'
+  head.position.set(0.08, 1.12, 0)
+  head.add(
     named(
-      'cat-body',
+      'cat-skull',
       [
-        lathe([[0, 0], [0.44, 0.02], [0.5, 0.2], [0.42, 0.55], [0.27, 0.86], [0, 0.94]], PAINT.cat, 18),
-        at(ball(0.2, PAINT.catPale, [0.6, 1.15, 0.85], 10), 0.27, 0.42, 0),
-        at(ball(0.12, PAINT.cat, [1.3, 0.7, 1], 8), 0.4, 0.07, 0.18),
-        at(ball(0.12, PAINT.cat, [1.3, 0.7, 1], 8), 0.4, 0.07, -0.18),
-        // The tail is a tube, which is painted like any other part.
-        (() => {
-          const colours = new Float32Array(tail.getAttribute('position').count * 3)
-          const c = new THREE.Color(PAINT.cat)
-          for (let i = 0; i < colours.length; i += 3) c.toArray(colours, i)
-          tail.setAttribute('color', new THREE.BufferAttribute(colours, 3))
-          tail.deleteAttribute('uv')
-          return tail
-        })(),
+        ball(0.36, PAINT.cat, [0.95, 0.88, 1.05]),
+        at(rod(0, 0.17, 0.36, PAINT.cat, 8), 0.02, 0.38, 0.22, 0.25),
+        at(rod(0, 0.17, 0.36, PAINT.cat, 8), 0.02, 0.38, -0.22, -0.25),
+        at(ball(0.15, PAINT.catPale, [0.7, 0.7, 1.25], 10), 0.27, -0.08, 0),
+        at(ball(0.045, PAINT.petal, [1, 0.8, 1.2], 8), 0.385, -0.03, 0),
+        eye(0.3, 0.08, 0.15, 0.08),
+        eye(0.3, 0.08, -0.15, 0.08),
       ],
       plastic,
     ),
   )
-  const head = named(
-    'cat-head',
-    [
-      ball(0.36, PAINT.cat, [0.95, 0.88, 1.05]),
-      at(rod(0, 0.17, 0.36, PAINT.cat, 8), 0.02, 0.38, 0.22, 0.25),
-      at(rod(0, 0.17, 0.36, PAINT.cat, 8), 0.02, 0.38, -0.22, -0.25),
-      at(ball(0.15, PAINT.catPale, [0.7, 0.7, 1.25], 10), 0.27, -0.08, 0),
-      at(ball(0.045, PAINT.petal, [1, 0.8, 1.2], 8), 0.385, -0.03, 0),
-      eye(0.3, 0.08, 0.15, 0.08),
-      eye(0.3, 0.08, -0.15, 0.08),
-    ],
-    plastic,
-  )
-  head.position.set(0.08, 1.12, 0)
+  // Eyelids: two lilac caps that come down over her eyes when she is content.
+  const lids = named('cat-lids', [at(ball(0.1, PAINT.cat, [0.7, 1, 1], 8), 0.305, 0.1, 0.15), at(ball(0.1, PAINT.cat, [0.7, 1, 1], 8), 0.305, 0.1, -0.15)], plastic)
+  lids.visible = false
+  head.add(lids)
   root.add(head)
-  return { root, head }
+  return { root, body, head, lids, tail, paw }
 }
 
-/** The seed in its pot. The stage shows the plant at the stage the water has brought it to. */
-export function buildPot(plastic: THREE.Material): { root: THREE.Group; plant: THREE.Mesh } {
+export type PotModel = { root: THREE.Group; soil: THREE.Mesh; shoot: THREE.Mesh; leaves: THREE.Mesh; bud: THREE.Mesh; flower: THREE.Group; petals: THREE.Mesh; saucerWater: THREE.Mesh }
+
+/** How high the soil's top is in the pot, and how tall the grown stem stands above it. */
+export const POT = { soil: 0.82, stem: 1.0 } as const
+
+/**
+ * The seed in its pot. The plant is in parts that the stage grows one after
+ * another as water comes: the shoot, two leaves, a closed bud, and the flower
+ * that opens in its place.
+ */
+export function buildPot(plastic: THREE.Material, water: THREE.Material): PotModel {
   const root = new THREE.Group()
   root.name = 'seed'
   root.add(
     named(
       'seed-pot',
-      [
-        lathe([[0, 0], [0.48, 0], [0.5, 0.06], [0.66, 0.74], [0.74, 0.76], [0.74, 0.9], [0.62, 0.9], [0.6, 0.78], [0, 0.78]], PAINT.pot, 22),
-        at(rod(0.6, 0.6, 0.04, PAINT.soil, 22), 0, 0.8, 0),
-        at(lathe([[0, 0], [0.86, 0], [0.92, 0.07], [0.84, 0.1], [0, 0.06]], PAINT.pot, 22), 0, 0, 0),
-      ],
+      [lathe([[0, 0], [0.48, 0], [0.5, 0.06], [0.66, 0.74], [0.74, 0.76], [0.74, 0.9], [0.62, 0.9], [0.6, 0.78], [0, 0.78]], PAINT.pot, 22), at(lathe([[0, 0], [0.86, 0], [0.92, 0.07], [0.84, 0.1], [0, 0.06]], PAINT.pot, 22), 0, 0, 0)],
       plastic,
     ),
   )
-  // The open flower, as the spike shows it: a stem, two leaves and five petals round a yellow middle.
-  const parts: Part[] = [at(rod(0.05, 0.065, 1.0, PAINT.shoot, 8), 0, 0.5, 0), at(ball(0.2, PAINT.shoot, [1.5, 0.3, 0.8], 10), 0.26, 0.42, 0, 0, 0, 0.5), at(ball(0.2, PAINT.shoot, [1.5, 0.3, 0.8], 10), -0.26, 0.56, 0, 0, 0, -0.5)]
+  // The soil has a material of its own: it turns dark when it is watered.
+  const soil = named('seed-soil', [rod(0.6, 0.6, 0.04, 0xffffff, 22)], new THREE.MeshLambertMaterial({ vertexColors: true, color: PAINT.soilDry }))
+  soil.position.y = POT.soil - 0.02
+  root.add(soil)
+  const saucerWater = named('seed-saucer-water', [rod(0.8, 0.8, 0.02, WATER.body, 22)], water)
+  saucerWater.position.y = 0.085
+  saucerWater.visible = false
+  root.add(saucerWater)
+  const shoot = named('seed-shoot', [at(rod(0.05, 0.065, POT.stem, PAINT.shoot, 8), 0, POT.stem / 2, 0)], plastic)
+  const leaves = named('seed-leaves', [at(ball(0.2, PAINT.shoot, [1.5, 0.3, 0.8], 10), 0.26, 0.42, 0, 0, 0, 0.5), at(ball(0.2, PAINT.shoot, [1.5, 0.3, 0.8], 10), -0.26, 0.56, 0, 0, 0, -0.5)], plastic)
+  const bud = named('seed-bud', [at(ball(0.15, PAINT.shoot, [0.9, 1.25, 0.9], 10), 0, POT.stem + 0.08, 0), at(ball(0.07, PAINT.petal, [1, 1, 1], 8), 0, POT.stem + 0.24, 0)], plastic)
+  const flower = new THREE.Group()
+  flower.name = 'seed-flower'
+  flower.position.y = POT.stem + 0.06
+  const petalParts: Part[] = []
   for (let i = 0; i < 5; i++) {
     const turn = (i / 5) * Math.PI * 2
-    parts.push(at(ball(0.2, PAINT.petal, [1, 0.45, 0.8], 10), Math.cos(turn) * 0.24, 1.06, Math.sin(turn) * 0.24, 0, -turn))
+    petalParts.push(at(ball(0.2, PAINT.petal, [1, 0.45, 0.8], 10), Math.cos(turn) * 0.24, 0, Math.sin(turn) * 0.24, 0, -turn))
   }
-  parts.push(at(ball(0.15, PAINT.bee, [1, 0.7, 1], 10), 0, 1.1, 0))
-  const plant = named('seed-plant', parts, plastic)
-  plant.position.y = 0.8
-  root.add(plant)
-  return { root, plant }
+  petalParts.push(at(ball(0.15, PAINT.bee, [1, 0.7, 1], 10), 0, 0.04, 0))
+  const petals = named('seed-petals', petalParts, plastic)
+  flower.add(petals)
+  for (const part of [shoot, leaves, bud, flower]) {
+    part.position.y += POT.soil
+    part.visible = false
+    root.add(part)
+  }
+  return { root, soil, shoot, leaves, bud, flower, petals, saucerWater }
 }
 
-/** How far the bell hangs out over the yard from the fence, and how far each gate post stands from the gate's middle. */
-export const GATE_ARM = 1.35
-export const GATE_HALF = 1.35
-
 /** How much bigger than its parts each toy stands in the yard, so the smallest is still a fat target for a small finger. */
-export const SCALE = { pool: 1.15, duck: 1.2, fire: 1.2, cat: 1.45, seed: 1.25, bell: 1.45 } as const
+export const SCALE = { pool: 1.15, duck: 1.15, fire: 1.2, cat: 1.45, seed: 1.25, bell: 1.45, boat: 0.76, wheel: 1.3, patch: 1.0, snail: 1.3, bee: 1.35, worm: 1.4 } as const
+
+export type GateModel = { root: THREE.Group; leaf: THREE.Group; bell: THREE.Group; latch: THREE.Mesh }
 
 /**
- * The gate in the far fence, seen from the yard: two posts, a leaf of pickets
- * hinged on the right one, and the bell hanging out over the yard on an arm
- * from the left one. It stands at the origin with the fence along x.
+ * The gate in the far fence, seen from the yard: two posts `half` apart from
+ * its middle, a leaf of pickets hinged on the left one, a red latch on the
+ * right one, and the bell hanging out over the sand on an arm from the right
+ * post, `armX` to the side and `armZ` toward the child. It stands at the
+ * origin with the fence along x.
  */
-export function buildGate(plastic: THREE.Material): { root: THREE.Group; leaf: THREE.Group; bell: THREE.Group } {
+export function buildGate(plastic: THREE.Material, half: number, armX: number, armZ: number): GateModel {
   const root = new THREE.Group()
   root.name = 'gate'
+  const reach = Math.hypot(armX, armZ)
   root.add(
     named(
       'gate-posts',
       [
-        at(box(0.44, 2.9, 0.44, 0.15, GARDEN.gate), -GATE_HALF, 1.45, 0),
-        at(box(0.44, 2.0, 0.44, 0.15, GARDEN.gate), GATE_HALF, 1.0, 0),
-        at(ball(0.28, TRUCK_PAINT.cream, [1, 0.8, 1], 10), GATE_HALF, 2.08, 0),
-        at(box(0.2, 0.18, GATE_ARM + 0.35, 0.07, GATE_PAINT), -GATE_HALF, 2.72, GATE_ARM / 2),
+        at(box(0.44, 2.0, 0.44, 0.15, GATE_PAINT), -half, 1.0, 0),
+        at(ball(0.28, TRUCK_PAINT.cream, [1, 0.8, 1], 10), -half, 2.08, 0),
+        at(box(0.44, 2.9, 0.44, 0.15, GATE_PAINT), half, 1.45, 0),
+        // The arm the bell hangs from.
+        at(box(0.2, 0.18, reach + 0.3, 0.07, GATE_PAINT), half + armX / 2, 2.72, armZ / 2, 0, Math.atan2(armX, armZ)),
       ],
       plastic,
     ),
   )
   const leaf = new THREE.Group()
   leaf.name = 'gate-leaf'
-  leaf.position.set(GATE_HALF - 0.2, 0, 0.02)
-  const span = 2 * GATE_HALF - 0.5
-  const slats: Part[] = [at(box(span, 0.14, 0.12, 0.05, GARDEN.gate), -span / 2, 0.45, 0), at(box(span, 0.14, 0.12, 0.05, GARDEN.gate), -span / 2, 1.2, 0)]
-  for (let i = 0; i < 5; i++) slats.push(at(box(0.32, 1.45, 0.15, 0.1, GARDEN.gate), -0.24 - i * 0.44, 0.86, 0.05))
+  leaf.position.set(-half + 0.2, 0, 0.02)
+  const span = 2 * half - 0.5
+  const slats: Part[] = [at(box(span, 0.14, 0.12, 0.05, GATE_PAINT), span / 2, 0.45, 0), at(box(span, 0.14, 0.12, 0.05, GATE_PAINT), span / 2, 1.2, 0)]
+  const pickets = Math.round(span / 0.46)
+  for (let i = 0; i < pickets; i++) slats.push(at(box(0.32, 1.45, 0.15, 0.1, GATE_PAINT), 0.24 + (i * (span - 0.48)) / (pickets - 1), 0.86, 0.05))
   leaf.add(named('gate-slats', slats, plastic))
   root.add(leaf)
+  // The latch: a red lever on the right post that each ring of the bell lifts by a third.
+  const latch = named('gate-latch', [at(box(0.62, 0.14, 0.12, 0.05, TRUCK_PAINT.red), -0.24, 0, 0), ball(0.1, TRUCK_PAINT.red)], plastic)
+  latch.position.set(half - 0.1, 1.2, 0.3)
+  root.add(latch)
   const bell = new THREE.Group()
   bell.name = 'bell'
-  bell.position.set(-GATE_HALF, 2.66, GATE_ARM)
+  bell.position.set(half + armX, 2.66, armZ)
   bell.scale.setScalar(SCALE.bell)
   bell.add(
     named(
@@ -222,5 +274,5 @@ export function buildGate(plastic: THREE.Material): { root: THREE.Group; leaf: T
     ),
   )
   root.add(bell)
-  return { root, leaf, bell }
+  return { root, leaf, bell, latch }
 }

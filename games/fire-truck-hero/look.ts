@@ -38,7 +38,7 @@ export const TRUCK_PAINT = {
 /** The seven things and the animals. Each has a hue of its own, so a two-year-old tells them apart by colour alone. */
 export const THINGS_PAINT = {
   poolWall: 0x4fa6e0,
-  poolFloor: 0xb5e2f5,
+  poolFloor: 0xf6efdc,
   duck: 0xffd447,
   beak: 0xf2863a,
   flameOuter: 0xff8d3a,
@@ -49,7 +49,8 @@ export const THINGS_PAINT = {
   cat: 0xb08ad8,
   catPale: 0xe9dcf6,
   pot: 0xe07a52,
-  soil: 0x8a6a4c,
+  soilDry: 0xb89a78,
+  soil: 0x6e5038,
   shoot: 0x62b34f,
   petal: 0xf472a0,
   boat: 0x36b3a8,
@@ -57,6 +58,11 @@ export const THINGS_PAINT = {
   snailShell: 0xe3a05c,
   snailBody: 0xd9c9a2,
   bee: 0xf4c53a,
+  beeStripe: 0x4a3a34,
+  wing: 0xeaf6fb,
+  worm: 0xf09a9a,
+  patch: 0xf3e6c8,
+  bench: 0xfaf1dc,
 } as const
 
 /** Water in the air and on the ground. */

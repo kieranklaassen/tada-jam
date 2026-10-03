@@ -69,6 +69,28 @@ export class Drops {
     this.jet(arc, 0, (this.random() - 0.5) * 0.34, (this.random() - 0.5) * 0.34, 0.14 + this.random() * 0.08, 0.14, 0.62)
   }
 
+  /** The small spit with which the truck shows a new thing: three little drops that leave no mark and carry no water. */
+  spit(arc: Arc): void {
+    for (let i = 0; i < 3; i++) this.jet(arc, -i * 0.03, (this.random() - 0.5) * 0.2, (this.random() - 0.5) * 0.2, 0.1 + this.random() * 0.04, 0, 0)
+  }
+
+  /** Drops flung from a place: off the paddles of the wheel, or off a cat who shakes herself. They fall and are gone. */
+  burst(x: number, y: number, z: number, count: number, speed: number): void {
+    for (let i = 0; i < count; i++) {
+      const drop = this.free()
+      if (!drop) return
+      const turn = ((i + this.random()) / count) * Math.PI * 2
+      drop.arc = null
+      drop.size = 0.07 + this.random() * 0.05
+      drop.x = x
+      drop.y = y
+      drop.z = z
+      drop.vx = Math.cos(turn) * speed * (0.7 + this.random() * 0.6)
+      drop.vz = Math.sin(turn) * speed * (0.7 + this.random() * 0.6)
+      drop.vy = 1.6 + this.random() * 2.4
+    }
+  }
+
   /** One frame. Each drop that reaches the ground is handed to `land`, and throws up `splash` small drops (fewer on a low tier). */
   step(seconds: number, land: Landing, splash = SPLASH_PER_LANDING): void {
     this.visited = 0
@@ -90,8 +112,9 @@ export class Drops {
         drop.z = z
         if (drop.t >= drop.arc.seconds) {
           this.kill(drop)
-          land(x, z, drop.gulps, drop.mark)
-          for (let i = 0; i < splash; i++) this.throwUp(x, z, drop.size)
+          // A drop with no mark is a show, not water: it lands without a trace.
+          if (drop.mark > 0) land(x, z, drop.gulps, drop.mark)
+          for (let i = 0; i < (drop.mark > 0 ? splash : 1); i++) this.throwUp(x, z, drop.size)
         }
       } else {
         drop.vy -= SPLASH_GRAVITY * seconds

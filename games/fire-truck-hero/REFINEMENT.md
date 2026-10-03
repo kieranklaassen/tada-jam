@@ -3,7 +3,7 @@
 
 ## Status
 
-- Stage: toy, built and waiting for the owner. This run did the sheet, the look spike, the toy and the rules, and stops here as its brief says. The game is not built on the toy yet.
+- Stage: game, being built on the toy. The owner has been shown the toy and has not answered; the lead has the lanes build on. The Mount now shows the game: a yard of things that answer the hose, the bell on the gate, and the drive to the next yard. Tests for the game's own modules, the scenes' saves, the audit and the passes are still to come in this run.
 - Sheet, round 1: checked by checker B, outcome open with 11 findings. All eleven replacements are pasted as they stand, in commit `0b2db37`. None was disputed.
 - Sheet, as it stands now: commit `283d66702e6c5701c09c9f5d316009e9878f616f`. The hash of its sheet part is `4bd44585782b608ca8b408108484fc3595e4c50cfd1ff9933a9c9373fd073a94`. It holds the eleven pastes and three sentences of the builder's own, listed below, for round 2 to read.
 - A correction: the status block of commit `9a3a3b0` gave a wrong ending for the round 1 hash. The text round 1 checked is the text of commit `471110b`, with the hash the checker's report names.

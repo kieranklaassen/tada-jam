@@ -33,6 +33,9 @@ export const MOST_ROCK = 0.22
 /** The idle bob: how far and how often, like a motor ticking over. */
 export const IDLE_BOB = 0.012
 export const IDLE_HZ = 2.6
+/** How far it leans toward a flame, in radians, and how fast its light turns meanwhile, in radians a second. */
+export const EAGER_LEAN = 0.045
+export const EAGER_LIGHT = 2.6
 /** How long the eyes are shut in a blink, in seconds. */
 export const BLINK_S = 0.13
 
@@ -80,6 +83,7 @@ export class TruckMotion {
   private nextBlink = 2.2
   private blinks = 0
   private inAir = false
+  private keen = false
 
   /** Water is being sent this way: the nozzle swings to it. */
   aim(turn: number, tilt: number): void {
@@ -90,6 +94,12 @@ export class TruckMotion {
   /** A gulp leaves the nozzle: the body is knocked back. `first` is the first gulp of a touch. */
   gulp(first: boolean): void {
     kick(this.rock, first ? GULP_KICK : STREAM_KICK)
+  }
+
+  /** There is a flame to put out: it leans toward the yard and its roof light keeps turning. */
+  eager(on: boolean): void {
+    this.keen = on
+    this.rock.target = on ? -EAGER_LEAN : 0
   }
 
   /** A touch on the truck: it hops and its light turns once. */
@@ -108,6 +118,7 @@ export class TruckMotion {
     stepSpring(this.lift, HOP, seconds)
     stepSpring(this.turn, NOZZLE_FEEL, seconds)
     stepSpring(this.tilt, NOZZLE_FEEL, seconds)
+    if (this.keen) this.light.target += seconds * EAGER_LIGHT
     stepSpring(this.light, LIGHT, seconds)
     // The eyes follow the nozzle: sideways with its turn, up with its tilt.
     this.lookSide.target = Math.max(-1, Math.min(1, Math.sin(this.turn.value) * 1.4))

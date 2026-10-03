@@ -5,6 +5,7 @@
 
 import * as THREE from 'three'
 import { COLS, ROWS } from './ground'
+import { YARD_PITCH } from './layout'
 import { GARDEN, SAND, rgbOf } from './look'
 import { at, ball, box, mould, rod, type Part } from './mould'
 import { HEIGHT, WIDTH, type WetPaint } from './wetPaint'
@@ -33,6 +34,8 @@ precision mediump float;
 varying vec2 vYard;
 uniform sampler2D wet;
 uniform vec2 yard;
+uniform float slide;
+uniform float pitch;
 uniform vec3 sandDry, sandSpeck, sandDamp, sandMud, puddle, grass, grassDark;
 uniform float detail;
 
@@ -44,23 +47,28 @@ float grain(vec2 p) {
 }
 
 void main() {
-  // The yard is a sand pit with a soft wobbly edge; beyond it is grass.
-  float wobble = (grain(vYard * 0.9) - 0.5) * 0.5;
-  vec2 inset = min(vYard + 0.55, yard + 0.55 - vYard);
-  float sandShare = smoothstep(-0.08, 0.1, min(inset.x, inset.y) + wobble);
+  // The yard is a sand pit with a soft wobbly edge; beyond it is grass. On the way to the next yard the pit
+  // slides toward the child and the next one, a pitch behind it, slides in.
+  vec2 here = vYard - vec2(0.0, slide);
+  vec2 next = here + vec2(0.0, pitch);
+  float wobble = (grain(here * 0.9) - 0.5) * 0.5;
+  vec2 insetHere = min(here + 0.55, yard + 0.55 - here);
+  vec2 insetNext = min(next + 0.55, yard + 0.55 - next);
+  float sandShare = smoothstep(-0.08, 0.1, max(min(insetHere.x, insetHere.y), min(insetNext.x, insetNext.y)) + wobble);
 
-  float speck = detail > 0.5 ? grain(vYard * 9.0) * 0.6 + grain(vYard * 31.0) * 0.4 : 0.5;
+  float speck = detail > 0.5 ? grain(here * 9.0) * 0.6 + grain(here * 31.0) * 0.4 : 0.5;
   // Raked sand: soft low ridges, lit from the upper left.
-  float ridge = detail > 0.5 ? sin(vYard.y * 5.2 + grain(vYard * 0.7) * 5.0) * 0.5 + 0.5 : 0.5;
+  float ridge = detail > 0.5 ? sin(here.y * 5.2 + grain(here * 0.7) * 5.0) * 0.5 + 0.5 : 0.5;
   vec3 sand = mix(sandDry, sandSpeck, speck * 0.55) * (0.955 + 0.07 * ridge);
 
-  vec3 w = texture2D(wet, vYard / yard).rgb;
-  float inYard = step(0.0, vYard.x) * step(vYard.x, yard.x) * step(0.0, vYard.y) * step(vYard.y, yard.y);
+  // The wet picture belongs to the yard that is here, and slides away with it.
+  vec3 w = texture2D(wet, here / yard).rgb;
+  float inYard = step(0.0, here.x) * step(here.x, yard.x) * step(0.0, here.y) * step(here.y, yard.y);
   w *= inYard;
   float damp = smoothstep(0.0, 0.34, w.r);
   sand = mix(sand, sandDamp * (0.92 + 0.12 * speck), damp);
   // Mud is dark and lumpy, with a wet shine on its lumps.
-  float lumps = detail > 0.5 ? grain(vYard * 6.5) : 0.5;
+  float lumps = detail > 0.5 ? grain(here * 6.5) : 0.5;
   sand = mix(sand, sandMud * (0.8 + 0.5 * lumps) + smoothstep(0.72, 0.9, lumps) * 0.16, smoothstep(0.3, 0.6, w.b));
   // Standing water: a blue sheet with a pale rim where it meets the sand.
   float muddy = smoothstep(0.3, 0.6, w.b);
@@ -68,8 +76,8 @@ void main() {
   float rim = smoothstep(0.4, 0.5, w.g) - smoothstep(0.5, 0.66, w.g);
   sand = mix(sand, puddle, pool * 0.82) + rim * (1.0 - muddy) * 0.1;
 
-  float blades = detail > 0.5 ? grain(vYard * vec2(14.0, 5.0)) : 0.5;
-  float patches = grain(vYard * 0.35);
+  float blades = detail > 0.5 ? grain(here * vec2(14.0, 5.0)) : 0.5;
+  float patches = grain(here * 0.35);
   vec3 lawn = mix(grass, grassDark, blades * 0.45 + patches * 0.35);
   gl_FragColor = vec4(mix(lawn, sand, sandShare), 1.0);
   #include <colorspace_fragment>
@@ -81,6 +89,8 @@ export type Ground3 = {
   refresh: (paint: WetPaint) => void
   /** The speckle, ridges and blades of grass, which the lowest tier leaves out. */
   setDetail: (on: boolean) => void
+  /** How far the yard has slid toward the child on the way to the next one, in yard units. */
+  setSlide: (by: number) => void
   dispose: () => void
 }
 
@@ -104,6 +114,8 @@ export function buildGround(paint: WetPaint): Ground3 {
       grass: { value: vec(GARDEN.grass) },
       grassDark: { value: vec(GARDEN.grassDark) },
       detail: { value: 1 },
+      slide: { value: 0 },
+      pitch: { value: YARD_PITCH },
     },
   })
   const plane = new THREE.PlaneGeometry(COLS + 2 * BEYOND, ROWS + 2 * BEYOND)
@@ -119,6 +131,7 @@ export function buildGround(paint: WetPaint): Ground3 {
       texture.needsUpdate = true
     },
     setDetail: (on) => { material.uniforms.detail.value = on ? 1 : 0 },
+    setSlide: (by) => { material.uniforms.slide.value = by },
     dispose: () => {
       plane.dispose()
       material.dispose()
@@ -140,7 +153,7 @@ function tree(x: number, z: number, size: number): Part[] {
 /** A hedge as a row of fat green bumps, from one z to another along one x. */
 function hedge(x: number, fromZ: number, toZ: number): Part[] {
   const parts: Part[] = []
-  const count = Math.max(1, Math.round((toZ - fromZ) / 1.25))
+  const count = Math.max(1, Math.round((toZ - fromZ) / HEDGE_STEP))
   for (let i = 0; i <= count; i++) {
     const z = fromZ + ((toZ - fromZ) * i) / count
     parts.push(at(ball(0.95, GARDEN.hedge, [0.8, i % 2 ? 0.92 : 1.06, 1], 12), x, 0.72, z))
@@ -151,24 +164,36 @@ function hedge(x: number, fromZ: number, toZ: number): Part[] {
 /** Where the far fence stands, just beyond the yard's far edge. */
 export const FENCE_Z = -0.85
 
-/** Everything that stands still round the yard, as one moulding. `gateGap` leaves the far fence open, from one x to another, where the gate hangs. */
-export function buildSurround(plastic: THREE.Material, gateGap: readonly [number, number] | null): THREE.Mesh {
+/** How far apart the bumps of a hedge stand. A pitch of yards is a whole number of them, so a hedge that slides by a pitch looks as it did. */
+export const HEDGE_STEP = 1.25
+
+/**
+ * The hedges down both sides, as one moulding. They run on past both ends of
+ * the yard, so the stage can slide them with the ground on the way to the next
+ * yard and wrap them round by one bump.
+ */
+export function buildHedges(plastic: THREE.Material): THREE.Mesh {
   const parts: Part[] = []
-  const from = -HEDGE_OUT - 0.3, to = COLS + HEDGE_OUT + 0.3
+  for (const x of [-HEDGE_OUT, COLS + HEDGE_OUT]) parts.push(...hedge(x, FENCE_Z - 6 * HEDGE_STEP, FENCE_Z + 14 * HEDGE_STEP))
+  const mesh = new THREE.Mesh(mould(parts), plastic)
+  mesh.name = 'hedges'
+  return mesh
+}
+
+/** The far side of a yard as one moulding: the picket fence, open from one x to another where the gate hangs, and two trees beyond it. Both yards on screen during a drive share it. */
+export function buildFarSide(gateGap: readonly [number, number]): THREE.BufferGeometry {
+  const parts: Part[] = []
+  const from = -HEDGE_OUT + 0.45, to = COLS + HEDGE_OUT - 0.45
   for (let x = from; x <= to + 0.01; x += 0.78) {
-    if (gateGap && x > gateGap[0] - 0.45 && x < gateGap[1] + 0.45) continue
+    if (x > gateGap[0] - 0.45 && x < gateGap[1] + 0.45) continue
     parts.push(...picket(x, FENCE_Z))
   }
   // The two rails behind the pickets, broken at the gate.
-  const runs: [number, number][] = gateGap ? [[from - 0.2, gateGap[0] - 0.2], [gateGap[1] + 0.2, to + 0.2]] : [[from - 0.2, to + 0.2]]
-  for (const [a, b] of runs) {
+  for (const [a, b] of [[from - 0.2, gateGap[0] - 0.2], [gateGap[1] + 0.2, to + 0.2]]) {
     for (const y of [0.42, 0.86]) parts.push(at(box(b - a, 0.13, 0.1, 0.05, GARDEN.fence), (a + b) / 2, y, FENCE_Z - 0.1))
   }
-  parts.push(...hedge(-HEDGE_OUT, FENCE_Z + 0.75, ROWS + 2.5), ...hedge(COLS + HEDGE_OUT, FENCE_Z + 0.75, ROWS + 2.5))
-  parts.push(...tree(2.2, -2.7, 0.8), ...tree(8.6, -3.1, 0.92))
-  const mesh = new THREE.Mesh(mould(parts), plastic)
-  mesh.name = 'surround'
-  return mesh
+  parts.push(...tree(10.4, -3.3, 0.9), ...tree(14.2, -2.6, 0.78))
+  return mould(parts)
 }
 
 /** The far colour behind everything: a pale sky. */

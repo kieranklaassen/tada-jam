@@ -12,20 +12,23 @@ import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { sound } from './sound'
+import { Game } from './game'
 import { createStage } from './stage'
-import { deserialize, serialize, type GameState } from './state'
-import { Toy } from './toy'
+import { KINDS } from './things'
 
 // The Mount. Everything a game needs around its renderer is wired and
 // running: the saved state, attention, the attended clock, touch, sound from
 // the first touch, the idle ladder, adaptive quality, the grown-up performance
-// handle and the grown-up overlay. The renderer is the stage (stage.ts).
+// handle and the grown-up overlay. The game is game.ts, which holds the rules,
+// the scenes and the motion, and the renderer is the stage (stage.ts), which
+// draws what the game holds.
 //
-// It shows the toy (toy.ts): the hose in an empty yard, with its sound and
-// motion and no goal. `spike=1` in the address shows the look spike instead:
-// the fullest yard the look has to carry, standing still but alive, for a
-// still. The rules (world.ts and the modules round it) are not wired in yet:
-// the game is built on the toy once the owner has seen it.
+// Two things in the address are for grown-ups taking stills: `seed=<n>` fixes
+// the game's random stream, and `spike=1` shows the fullest yard the look has
+// to carry, standing still but alive and taking no touch.
+
+/** The saved state the look spike is shown from: the whole garden, with every kind already met so that nothing is shown. */
+const SPIKE = { v: 1, position: 'whole-garden', finished: false, yard: { place: 'whole-garden', arrangement: 0 }, seen: [...KINDS] }
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -45,14 +48,15 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
-    // The toy and the yard as three.js draws it. Both are made once.
-    const spike = new URLSearchParams(window.location.search).get('spike') === '1'
-    const toy = new Toy((voice) => sound(audio, voice))
-    const paint = toy.paint
-    const stage = createStage(canvas, paint, spike)
+    // The yard as three.js draws it, made once. The game is made when the saved slot has been read.
+    const query = new URLSearchParams(window.location.search)
+    const spike = query.get('spike') === '1'
+    const seed = Number(query.get('seed')) || Math.floor(Math.random() * 0x7fffffff) + 1
+    const stage = createStage(canvas)
     const hand: HandPose = { travel: 0, press: 0, opacity: 0 }
+    let game: Game | null = null
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     // The game hands a change to storage where it makes it, at one of two speeds:
@@ -61,7 +65,13 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     //   cadence.change(performance.now(), true)  a scene's outcome, a cycle judged, the position moved: at once,
     //                                            since a put-away in the next moment must find it saved
     // Going to rest writes whatever the throttle still holds (`cadence.settle`, below).
-    const cadence = new SaveCadence(() => { if (state) ctxRef.current.storage.save(serialize(state)) })
+    const cadence = new SaveCadence(() => { if (game && !spike) ctxRef.current.storage.save(game.snapshot()) })
+    // What the game changed is handed to storage: at the throttle for water, at once for an outcome.
+    const keep = () => {
+      if (!game || game.needsSave === 'none') return
+      cadence.change(performance.now(), game.needsSave === 'now')
+      game.needsSave = 'none'
+    }
 
     // The one place the game applies a quality tier: whatever its tiers set besides the pixel ratio, which
     // `resize` applies. It runs once before the first frame and again each time the governor changes tier, ahead
@@ -70,7 +80,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // canvas, where a still or a probe can read which tier is applied.
     const applyTier = () => {
       stage.applyTier(governor.tier)
-      toy.dropsShare = TIERS[governor.tier].drops
+      if (game) game.dropsShare = TIERS[governor.tier].drops
       canvas.dataset.tier = String(governor.tier)
     }
 
@@ -78,7 +88,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
     const draw = () => {
-      stage.draw(paint)
+      if (game) stage.show(game)
+      stage.draw()
       drawn.drawCalls = stage.counts.drawCalls
       drawn.triangles = stage.counts.triangles
     }
@@ -101,19 +112,20 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const observer = new ResizeObserver(resize)
     observer.observe(root)
 
-    // What the game does with a gesture: every touch is the hose. A press sends the first gulp in the frame the
-    // finger lands, a held or moving finger is a stream that follows it, and a lift loses nothing. A finger that
-    // comes back to a drag it had let go takes the stream up again. The spike stands still and takes no touch.
+    // What the game does with a gesture: every touch is the hose. A press ends a scene that is playing and
+    // then sends the first gulp in the frame the finger lands, a held or moving finger is a stream that follows
+    // it, and a lift loses nothing. A finger that comes back to a drag it had let go takes the stream up again.
     const act = (gestures: Gesture[]) => {
-      if (spike) return
+      if (!game || spike) return
       for (const gesture of gestures) {
-        if (gesture.type === 'press') toy.press(stage.under(gesture.at.x, gesture.at.y), clock.seconds)
+        if (gesture.type === 'press') game.press(stage.under(gesture.at.x, gesture.at.y), clock.seconds)
         else if (gesture.type === 'dragMove') {
           const under = stage.under(gesture.at.x, gesture.at.y)
-          if (toy.hose.holding) toy.move(under.point)
-          else if (!under.truck) toy.press(under, clock.seconds)
-        } else if (gesture.type !== 'dragStart') toy.lift()
+          if (game.hose.holding) game.move(under.point)
+          else if (!under.truck) game.press(under, clock.seconds)
+        } else if (gesture.type !== 'dragStart') game.lift()
       }
+      keep()
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -153,14 +165,15 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
-      if (touch.active) ladder.touch(clock.seconds)
-      // What to show an idle child: a glow where a touch could go, then one move, a single tap of the ghost hand.
-      const guidance = ladder.update(clock.seconds)
-      stage.guide(spike ? 0 : guidance.glow, spike || guidance.demo === null ? null : handPose(guidance.demo, false, hand), clock.seconds)
-      // The game steps its rules and its scene here, and hands what they changed to storage (`cadence`, above).
-      toy.step(step, clock.seconds)
-      stage.show(toy.truck.pose, toy.drops)
-      stage.idle(step, clock.seconds)
+      if (touch.active || game?.sceneRunning || game?.leaving) ladder.touch(clock.seconds)
+      // The game steps its rules, its scenes and its motion, and what they changed is handed to storage.
+      if (game) {
+        game.step(step, clock.seconds)
+        keep()
+        // What to show an idle child: a glow on what wants water, then one move, a single tap of the ghost hand.
+        const guidance = ladder.update(clock.seconds)
+        stage.guide(spike ? 0 : guidance.glow, spike || guidance.demo === null ? null : handPose(guidance.demo, false, hand), game.wants, clock.seconds)
+      }
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that
       // frame's work.
@@ -187,19 +200,20 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       act(touch.clear())
-      // Water in the air lands at once and silently, so nothing is lost and nothing hangs there.
-      toy.rest()
+      // A scene lands at its end and water in the air lands at once, silently, so nothing is lost.
+      game?.rest()
+      keep()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)
 
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
-      // A saved position wins; `childAge` only chooses where a first visit starts.
-      state = deserialize(value, ctxRef.current.childAge)
-      // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
-      // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
-      // has no frame coming, and would go on showing the surface as it was before the read.
+      // A saved position wins; `childAge` only chooses where a first visit starts. The game sets itself up from
+      // the state as it was left: nothing eases in and no scene replays.
+      game = new Game((voice) => sound(audio, voice), spike ? SPIKE : value, ctxRef.current.childAge, seed)
+      game.dropsShare = TIERS[governor.tier].drops
+      // The load draws the first frame itself: a game that is resting or parked has no frame coming.
       draw()
     })
     applyTier()
@@ -210,6 +224,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       disposed = true
       // As on going to rest: the touch ends first, so the thing in hand is put down before the last save.
       act(touch.clear())
+      game?.rest()
+      keep()
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()

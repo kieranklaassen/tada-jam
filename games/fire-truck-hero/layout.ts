@@ -21,7 +21,7 @@ export const NOZZLE = { x: 3.71, z: 5.68, y: 3.12 } as const
 
 /** The five spots a thing can stand on. An arrangement names them by index. */
 export const SPOTS: readonly Place[] = [
-  { x: 6.2, z: 2.8 },
+  { x: 6.6, z: 2.8 },
   { x: 10.2, z: 2.6 },
   { x: 8.0, z: 6.2 },
   { x: 12.2, z: 6.0 },
@@ -29,11 +29,22 @@ export const SPOTS: readonly Place[] = [
 ]
 
 /**
- * The bell, which hangs on the gate in the far fence, toward the right. Three
- * rings open the gate. It is at the far edge so that what waits beyond the
- * gate shows over the fence. This is the foot of its post, where water lands.
+ * The gate hangs in the far fence straight ahead of the truck's place, so the
+ * truck drives on through it without crossing any spot. This is the middle of
+ * the gate and half its width.
  */
-export const BELL: Place = { x: 13.4, z: 0.5 }
+export const GATE = { x: 2.6, z: -0.85, half: 1.6 } as const
+
+/**
+ * The bell, which hangs out over the sand from the gate's right post. Three
+ * rings open the gate. It is at the far edge so that what waits beyond the
+ * gate shows over the fence. This is the point of the sand under it, where
+ * water lands.
+ */
+export const BELL: Place = { x: 4.6, z: 0.6 }
+
+/** From one yard's far fence to the next yard's: a yard and the lane of grass between two yards. */
+export const YARD_PITCH = 15
 
 /** How far from a spot's middle water still lands on the thing that stands there. */
 export const THING_REACH = 1.3
