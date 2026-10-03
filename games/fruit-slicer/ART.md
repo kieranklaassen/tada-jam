@@ -35,7 +35,7 @@ The things: the **fruit** (an uncut one on the board), a **piece** (anything cut
 
 | | Slice | Poke | Give a piece | Fling a piece at it | Roll |
 | --- | --- | --- | --- | --- | --- |
-| **Fruit** | Cut square where the stroke crosses: thwack, juice, two pieces hop apart. | It quivers end to end and gives its own low note. | The piece lies on top of it from the left end, so the two lengths can be compared edge to edge. | It bounces off with a rubber boing and the fruit shivers. | The roller presses the equal parts of the ticket into it, one tick a part. |
+| **Fruit** | Cut square where the stroke crosses: thwack, juice, two pieces hop apart. | It quivers end to end and gives its own low note. | The piece lies alongside it from the same left end, so the two lengths can be compared edge to edge. | It bounces off with a rubber boing and the fruit shivers. | The roller presses the equal parts of the ticket into it, one tick a part. |
 | **Piece** | Cut again, a higher thwack the shorter it is; too thin, and a curl of peel spins off to the dog. | It rings: the shorter the piece, the higher the note, as a string does. | The two butt end to end and travel as a row; their lengths add. | It is knocked along like a puck and clacks into the next one. | The parts are pressed into the piece, as if it were a whole of its own. |
 | **Tin** | The blade skids off with sparks and the tin rings at the pitch of its length. | Shut, it rattles and stays shut. Open, its jaw snaps like a castanet. | It springs open to its true length beside the piece. The piece fits, sticks out, or leaves a gap. | It bongs off the lid and skitters back onto the counter. | The whole and its equal parts are ruled along the rail under the open tin. |
 | **Customer** | Only a tuft, a feather tip or a whisker end comes off, and it pops back; the customer looks about, puzzled. | Each has its own flinch and noise. | It eats the piece as it is, bypassing the tin, and its body shows exactly what went in. | Splat on the face; it licks the juice off in its own way. | It is rolled flat as a page, then springs back into shape with a honk. |
@@ -88,17 +88,80 @@ Feedback is fullest when an idea is new: the first time a new idea is met, the r
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+A cycle is one customer: called to the window, served, sent off. The order of challenges adds one thing at a time and then mixes it with what came before (pack: game-design, ordered-challenges-high-success.md; pack: game-design, many-short-visits.md).
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+**The positions.** The ids are the ones in `LADDER` in `config.ts`. Each names a place in this game's own order, by the thing that is new there.
+
+| Id | What is new there | Parts in play |
+| --- | --- | --- |
+| `half` | An order for half of a fruit, in one piece, for the pelican. No symbol anywhere. | halves |
+| `quarter` | Quarters: one quarter, three quarters. | halves, quarters |
+| `shared` | The twins, who want their order in two equal pieces: a half is two quarters. | the same |
+| `carried` | The ants, who want theirs in pieces of one part each: three quarters is three quarter pieces. | the same |
+| `written` | The fraction, with its bar, laid on the ticket's filled share and on the open tin. Nothing else changes. | the same |
+| `eighths` | Eighths. | and eighths |
+| `thirds` | Thirds and sixths. | and thirds, sixths |
+| `fifths` | Fifths and tenths. | and fifths, tenths |
+| `twelfths` | Twelfths. | and twelfths |
+| `bigger` | The cat, who holds two tickets and wants the bigger share; the sign between the two. | all of the above |
+| `longer` | The boa, who orders more than one whole fruit. | all of the above |
+| `bare` | Tickets that show the filled share with no part lines. | all of the above |
+
+The fruit comes in three lengths from the first position on, since a share is always a share of this fruit. The parts in play are the game's own choice, taken from the one list a record states ("The records").
+
+**Two wait, and the child calls one.** Two customers always stand in the queue, each with its ticket showing. One carries what is new at the position. The other is drawn from everything before it, so known work keeps coming back in a new form. The child calls either by touching it. The one with the new thing looks harder in the world: more part lines on its ticket, two tickets, a longer fruit drawn on it. The one not called goes on waiting and does nothing about it.
+
+**How a cycle is judged.** Never shown, and used for one thing only: where the next customer to join the queue is laid out.
+
+- **Well**: the tin shut on a fit, and every piece in it was cut before that tin opened, on a fruit the roller had not marked.
+- **Mixed**: the tin shut on a fit, but a piece in it was cut after the tin opened, or carries roller marks.
+- **Badly**: the customer was sent off with an order that did not fit.
+
+Only a cycle with the customer who carried the new thing moves the position: up one after well, down one after badly, not at all after mixed. A customer's taste never enters the judgement. A position moves between cycles, one step at a time, and no clock is read.
+
+**Which customer a new position lays out.** The two who wait were laid out before the cycle was judged. A new position lays out the customer who joins the queue as the served one leaves, so the change first shows on the customer after the two already waiting.
+
+**What is stored**, as plain versioned JSON, each field repaired by itself on load:
+
+- `v`: the version of the save.
+- `position`: the id of the place in the designed order.
+- `finished`: the customer at the window has been served; the ending stays, and nothing replays on load.
+- `seed`: the state of the seeded stream that lays out customers.
+- `window`: the customer at the window, or none: who it is, which fruit, the share or two shares ordered, whether it carries the new thing, whether its ticket is written and has part lines.
+- `queue`: the two who wait, each in the same form.
+- `tinOpen`: whether the tin at the window has been opened, which is when the truth was shown.
+- `pieces`: every piece in the world: its id, its fruit, its length, where it lies (a lane of the board and how far along, a place on the shelf, or a compartment of the tin and its turn in it), whether it was cut before the tin opened, and what parts the roller pressed into it.
+- `nextId`: the id the next piece takes.
+- `shown`: the ids of the positions whose first showing has played, so each plays once.
+
+A piece in the hand is saved where it was picked up. The serve is judged and saved when its scene starts, so a put-away in the middle of it loses nothing. The largest state the rules allow is under half of the 64 KB cap, and a test holds it there.
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+Every customer's want is the same and always visible: the share on its ticket, of the fruit drawn on it. What differs, and never changes, is how each wants it cut. A taste is shown by the customer's body, to these exact pieces, and is never about the child (pack: game-design, characters-with-opinions.md). Meeting a taste is the visibly better way of filling an order; missing it still fills the order.
+
+- **The pelican** swallows whole. Likes its order in one piece: it goes down the pouch in a single smooth bulge. Cannot stand seams: every extra piece is a separate lump and a hiccup, and a row of crumbs gives it the hiccups all the way out of the window. Slow, heavy, deadpan; its pouch is the funny part.
+- **The twins**, two shrews with one tin divided across the middle. Like two pieces of the same length, one each, and then eat in step. Cannot stand one being longer: they pull the longer piece between them like a rope and the tin spins. Quick and twitchy; their noses are the funny part.
+- **The ants**, a file of them, one for each part of the order. Like a piece of one part each, and march off in step with every piece at the same height. A piece of two parts is lifted by two ants together, which works; a piece that ends between two ants flattens the ant under its end, who peels itself up, cross, and carries the corner. Tiny, brisk, in unison; their legs are the funny part.
+- **The cat** holds two tickets and wants the bigger share, always. Likes the longer tin filled. Given the smaller share, it lays the piece in the longer tin, looks at the gap, and looks at the child's piece again. When the two shares are equal it goes cross-eyed, and either fills the tin. Languid, superior; its tail is the funny part.
+- **The boa** orders more than one whole fruit. Likes long pieces, which travel down it as long smooth swellings. Cannot stand crumbs: a piece shorter than an eighth of the fruit makes it sneeze, and the sneeze travels the length of it. Slow and endless; the far end of it, which arrives late, is the funny part.
+- **The dog** under the counter is not a customer. It wants whatever falls. Likes the smallest things best: for a curl of peel it turns a full circle. A long piece it eats politely and with difficulty, cheeks out. It is where a child sends what it has no use for, so tidying up is a calm act and a small show.
+
+No customer hurries, complains of waiting, or refers to the child leaving or coming back. A joke is played on someone who is puzzled and never hurt.
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Each scene is a list of timed beats filled in from the state of play, and any touch ends it at its last pose (pack: game-design, endings-and-short-scenes.md).
+
+**The serve** (the ending of a cycle, 4 to 8 seconds). Cause: the tin shuts on a fit, or the child sends the customer off by touching it while its tin holds a misfit, or feeds it by hand. Beats: the lid, or the shrug at a lid that will not shut; the tin is lifted; the pieces are eaten one at a time in the order they lie, up to six and then the rest in one go; the body shows each piece at its own length; the taste lands; the customer settles with its tin. Filled in from: who it is, how many pieces, each piece's length, and whether the order was within the give, too long or too short and by how much. A piece that sticks out is eaten sticking out. The outcome is judged and saved as the first beat starts.
+
+**The first showing** (3 to 5 seconds, once for each position that brings a new idea). Cause: the child's own first attempt at the new idea has just been laid in the tin; the child tries first and is then shown a neat way to compare (pack: game-design, guided-discovery.md). Beats: the roller drops from its hook, runs along the rail under the open tin and rules the whole into its equal parts, one tick a part; the ordered parts fill with the fruit's colour up to the jaw; the child's piece lies beside them. For the twins the divider then drops in the middle. For the cat both shares are ruled into the same parts, one above the other, and the sign is laid between their ends. Filled in from: the share ordered, the fruit, and the piece the child cut. It shows where the share ends on the rail after the child has cut, never before.
+
+**The glider** (a secret, about 5 seconds, every time). Cause: a whole uncut fruit is fed to the pelican by hand. Beats: the beak will not close on it; the pelican tries twice; it spreads its wings, tips forward and glides out of the window with the fruit across its beak like a balancing pole; a feather drifts down. It is never hinted at, counted or listed (pack: game-design, hidden-never-counted.md).
+
+**How a cycle ends, and how the next one starts.** The last pose of the serve stays for as long as the child likes: the customer at the window with its tin, the board and the shelf as they were left. The two who wait are in view the whole time. Nothing new starts unless the child touches one of them; that one then steps up, and the served one leaves as it does. On load no scene replays: the world is in the state the last scene ended in, with the two waiting.
+
+The first customer of a first visit is not at the window either: two wait, and a fruit lies on the board to be sliced with nobody asking for anything.
 
 ## The records
 
@@ -106,19 +169,68 @@ One heading per jurisdiction, never one list or table that pairs them; a game wi
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels, as the lookup prints them on 2026-10-03: `grade-4` at age 9; `grade-4` and `grade-5` at age 10; `grade-5` and `grade-6` at age 11; `grade-6` at age 12. Age mapping: derived (typical ages, not law).
+Gaps as printed: at age 9, "Grade 3 is not in the pack. A third grader turns nine during the year; grade 4 starts at nine."; at age 12, "Grade 7 is not in the pack. A sixth grader turns twelve during the year; a child who starts the school year at twelve is in grade 7."
+The `cross-grade` lane is returned beside every one of these ages, labelled cross-grade. The game names none of its records.
+
+The game is designed from four records, of `grade-4` and `grade-5`. What each asks is given in the game's own words.
+
+- `edu.us-ca.grade-5.mathematics.objective.5-nf-4-a` (`us-ca 5.NF.4.a`): state-board-adopted-standard, confirmed. In the game: a share of a fruit is found by seeing the fruit as so many equal parts and taking some of them, and the cut is placed where those parts end. The roller on a piece does the same to a piece.
+  Limits taken: one of the two things multiplied is a fraction; here it is applied to one fruit or to one piece. Left open by Limits: the statement gives no list of denominators, so the parts in play are the game's own choice (below). Mixed numbers are not named in this part, so the boa's order is not designed from this record.
+- `edu.us-ca.grade-4.mathematics.objective.4-nf-1` (`us-ca 4.NF.1`): state-board-adopted-standard, confirmed. In the game: one length gets two names by cutting, more parts and each part smaller: two quarter pieces on a half, four eighth pieces on the same half.
+  Limits taken: the denominators of this grade's fractions are 2, 3, 4, 5, 6, 8, 10, 12 and 100, and an equal share is in range only when its denominator is one of them, so the twins are given an order only when each twin's share has a denominator on the list. The reason is given with a visual model: here, the lengths. A fraction in lowest terms is not asked for, so a ticket may show two quarters. The game's own choice: hundredths are left out, since a hundredth of a fruit is thinner than the give of a tin.
+- `edu.us-ca.grade-4.mathematics.objective.4-nf-2` (`us-ca 4.NF.2`): state-board-adopted-standard, confirmed. In the game: the cat's two shares differ in both numbers; they are compared as lengths from one left edge, then ruled into the same parts, and the sign for less than, equal or greater than is laid between them.
+  Limits taken: the same list of denominators; two fractions at a time; both of one same whole, so the cat's two tickets are always of the same fruit; the ways of comparing named in the statement are examples. A pair is laid out only when the parts both can be ruled into are on the list, which leaves out thirds against fifths.
+- `edu.us-ca.grade-4.mathematics.objective.4-nf-3-a` (`us-ca 4.NF.3.a`): state-board-adopted-standard, confirmed. In the game: the ants' order is so many pieces of one part each, joined in a row; laying pieces end to end joins them, and cutting or lifting one away separates them.
+  Limits taken: the same list of denominators; the parts joined belong to one same whole, so a piece of another fruit is picked out of the tin; the neighbouring parts of the standard work with like denominators. The statement does not say the fraction is less than one whole, which is what the boa's order rests on. The game's own reading: the boa's row is cut from two fruits of one kind, that is, two wholes of one size.
+
+No `grade-6` record is named. The fraction statements of that level that the game could touch place numbers of either sign on a number line (`us-ca 6.NS.6.c`, confirmed), and the game has a strip and no number line. For an eleven- or twelve-year-old in California the game is designed from records of the levels below.
+
+The game shows a share of a strip as a visual model. It does not claim the number line for California at any age in the band.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels, as the lookup prints them on 2026-10-03: `fase-2` at age 9 (sub-band: groep 5 or groep 6) and at age 10 (groep 6); `fase-3` at age 10 (groep 7), age 11 (groep 7 or groep 8) and age 12 (groep 8). Age mapping: convention, not law.
+Gap as printed at age 12: "A child who starts the school year at twelve is usually in secondary school, which is not in the pack."
+The `einde-po` lane is returned beside every one of these ages, labelled end-of-primary goals: what a school works towards by the end of groep 8, not what a child of this age should master. Three records below come from it and keep that label.
+
+What each asks is given in the game's own words.
+
+- `edu.nl.fase-2.mathematics.objective.137f3549-99fa-44b8-bcde-25afc78dc1f4` (`nl rw/gb/5/01/fase2`): curriculum-institute-guidance, confirmed. In the game: whole, half and quarter as lengths of a fruit, and halving as a cut.
+  Limits taken: half and quarter are the only fractions named; the wording does not mention notation; an offer for the band, with no year.
+- `edu.nl.fase-2.mathematics.objective.d147c1ee-a77d-4de5-8bb6-2f0ed78db700` (`nl rw/verh/1/02/fase2`): curriculum-institute-guidance, confirmed. In the game: half and a quarter of a whole, found by dividing a fruit up for a customer.
+  Limits taken: two fractions, half and quarter; concrete situations of dividing up; no number range; notation is not mentioned. The game's own choice: three quarters, met as three quarter pieces, goes one step past the two fractions named.
+- `edu.nl.fase-2.mathematics.objective.61276199-d643-4545-8411-ba3ed923f097` (`nl rw/bew/6/01/fase2`): curriculum-institute-guidance, confirmed. In the game: pieces are laid end to end, and the difference between a piece and an order is a gap or an overhang that can be seen.
+  Limits taken: expressly without fraction notation, which is why the first four positions show no symbol; exploring, with no method and no fluency asked; no denominators named in its own wording, and the band's concepts are whole, half and quarter (the first record above).
+- `edu.nl.fase-3.mathematics.objective.b3a0749d-be59-4f73-b4a4-f8b42cc85ed1` (`nl rw/bew/6/02/fase3`): curriculum-institute-guidance, confirmed. In the game: a fraction applied to an amount, as the part of a fruit's length that an order asks for.
+  Limits taken: an offer for the band, with no year. Left open by Limits: no number range, no denominators, and no kind of quantity, so a length of fruit and the parts in play are the game's own choice. The game does not ask for the whole when a part is given.
+- `edu.nl.fase-3.mathematics.objective.01a57126-2aa6-4575-8a4f-0cb68a165f86` (`nl rw/gb/5/05/fase3`): curriculum-institute-guidance, confirmed. In the game: one length gets several names by cutting. The game takes less than the record offers: the child makes equal shares in pieces, and no row of fractions is asked for or written.
+  Left open by Limits: no denominators, no starting fractions, no length of row.
+- `edu.nl.fase-3.mathematics.objective.060a4233-7c11-4a0b-be4a-6207cb07a8e9` (`nl rw/gb/5/06/fase3`): curriculum-institute-guidance, confirmed. In the game: the cat's two shares are compared by ruling both into the same parts; a share is given its place along a strip; the boa's order is more than one whole.
+  Limits taken: the record does not say which procedures, nor on what a fraction is given a place, so the ruling into the same parts and the strip are the game's own choice. Putting three or more fractions in order is not in the game. No denominators and no number range.
+- `edu.nl.einde-po.mathematics.objective.cf930236-879b-4650-8c02-808ab63b93c7` (`nl 10 B d`) [end-of-primary goals]: legal-core-goal, regime 2026, confirmed. In the game: two shares are compared, and the reason is there to be seen, as two lengths ruled into the same parts. Two names for one length is as far as the game goes towards simplifying, and it puts nothing in order.
+  Limits taken: a reason is asked together with the answer; no method is prescribed; no range of denominators.
+- `edu.nl.einde-po.mathematics.objective.referentieniveau-1f-rekenen-1-getallen-c-gebruiken-paraat-hebben-10` (no printed code) [end-of-primary goals]: legal-reference-level, confirmed. In the game: two simple fractions are compared in a situation that means something, an order at a stall.
+  Limits taken: "simple" is not defined, so the parts in play are the game's own choice; the printed example is an example of the level. The game shows a strip and no number line, and takes only the comparing from this record.
+- `edu.nl.einde-po.mathematics.objective.referentieniveau-1f-rekenen-1-getallen-a-notatie-taal-en-betekenis-paraat-hebben-4` (no printed code) [end-of-primary goals]: legal-reference-level, confirmed. In the game: the fraction is written with a horizontal bar.
+  Limits taken: the statement is about the notation and asks for no calculation; it names no denominators and no number range.
+
+No Dutch record the game names prints the signs for less than, equal and greater than, and none names a denominator beyond half and quarter. The signs and the parts in play are, on the Dutch side, the game's own choice.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **Notation at nine.** The California records of `grade-4` work with written fractions. The Dutch records of `fase-2` name work with fractions without notation. The game follows the Dutch records for its first four positions (`half`, `quarter`, `shared`, `carried`), which show no symbol and stay inside both sets, and the California records from `written` on. For a nine-year-old in the Netherlands the written fraction goes beyond the `fase-2` records; the notation itself is named on the Dutch side only by an end-of-primary record.
+- **The parts in play.** The California `grade-4` records state a list of denominators. No Dutch record the game names states any beyond half and quarter. The game follows the California list, less hundredths, in the order halves, quarters, eighths, thirds and sixths, fifths and tenths, twelfths. On the Dutch side that range is the game's own choice.
+- **A number line.** No California record of `grade-4` or `grade-5` that the game names puts a fraction on a number line. One Dutch end-of-primary record names the number line. The game follows the California records here and shows a strip. It claims the number line for neither.
+- **The comparison signs.** One California record names them as the way the result of a comparison is written. No Dutch record the game names prints them. The game follows the California record from `bigger` on.
+- **How close a cut must be.** Neither set says. The give of a tin is the game's own choice.
+- **Standing.** The California records are adopted content standards. The Dutch records are guidance for a band, one item of a legal core goal, and two statements of a legal reference level; the last three say what a school works towards by the end of primary school.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Fruit Slicer is designed from four content standards adopted by the California State Board of Education for grade 4 and grade 5 mathematics (`us-ca 4.NF.1`, `4.NF.2`, `4.NF.3.a` and `5.NF.4.a`), and, for the Netherlands, from six goals of SLO's guidance for fase 2 and fase 3, which is guidance and not law (`nl rw/gb/5/01/fase2`, `rw/verh/1/02/fase2`, `rw/bew/6/01/fase2`, `rw/bew/6/02/fase3`, `rw/gb/5/05/fase3` and `rw/gb/5/06/fase3`), from one item of the legal core goals of 2026 (`nl 10 B d`) and from two statements of the legal reference level 1F, those three being end-of-primary goals. Every record named was confirmed when the lookup was read on 2026-10-03.
+
+It is built on a representation with evidence behind it for fraction size: an estimate along a length followed by the true length beside it. It makes no claim about what a child who plays it has reached.
 
 ## The look
 
