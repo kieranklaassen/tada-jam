@@ -7,11 +7,28 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.
+The manifest band is 2 to 4, and its youngest age, 2, governs every choice below.
+
+- **Cue table.** The table in wordless clarity has no row below 3, so its 3 to 4 row is the ceiling and the game cuts further. From its "Avoid" column the game takes: no text, numeral or icon to decode; no spoken instruction; no verdict; one live activity (one vehicle in the bay); and no tool that means nothing when it is touched. All three tools are in the scene from the first frame, and each one changes whatever it touches at once, so none is there before it means something.
+- **The pack's rule for the range** (pack: game-design, ages-2-to-4.md). Every touch is answered and no order of touches is a dead end. The targets a wash needs (the vehicle, three tools, the vehicle that waits, the puddle) are each at least 100 logical pixels across, well apart, and none is in the bottom strip. Everything works with a tap: a tap on a tool takes it in hand, and a tap on the vehicle is one full dab of that tool. A rub is the same dab repeated along the finger's path; it survives a lifted finger, and whatever part of it was done stays done. No pinch, tilt, shake or double tap. One loved action, covering and uncovering, offered again and again. A wash fits in one to three minutes. There are three tools and never more than two vehicles on screen.
+- **Symbols.** The band starts below 6, so the kid side shows no word, letter, numeral or symbol, optional or not, and the game has no `symbols.ts`. No voice gives an instruction; the vehicles speak in engine noises and horns.
+- **What `ctx.childAge` sets.** Only where a first visit starts in the designed order: a child of 2 or 3 starts at `fresh-splashes`, and a child of 4 or older starts at `dried-patches`. `null` starts at `fresh-splashes`. A saved position wins over the age, every place in the order is reached by play at any age, and the age gates nothing.
 
 ## The toy
 
-The one action the finger performs most, what it does in an empty scene with its sound and motion, and why repeating it is a pleasure with no goal.
+**Rubbing a tool over the vehicle.** The finger lands on the vehicle with a tool in hand, and the paint under it changes.
+
+In the empty scene there is one vehicle, caked in mud, on wet concrete, with the sponge in hand. On touch-down, in the same frame:
+
+- the body dips on its springs toward the finger, and the wheels on that side squash;
+- the patch under the finger turns from mud to foam, and the edge of the foam swells out past the finger;
+- a scrub squeak sounds, its pitch set by how fast the finger moves, never twice the same of four variants;
+- bubbles lift off the patch, drift up, and pop one by one with small plips after the finger has gone;
+- brown drips run down from the patch to the floor and spread into a puddle that stays.
+
+A rub lays a trail of the same change, and the body rocks after the finger like a toy pushed across a table. The hose and the cloth are held the same way and answer in their own material: water sheets, beads and runs off the sills; the cloth squeaks and leaves a glint. With no tool in hand the finger is a poke: the vehicle bounces on its springs and its mud squelches.
+
+It is a pleasure with no goal because it is covering and uncovering, which a two-year-old does unprompted: bright paint appears from under brown, white foam hides it again, water takes the foam away. Each touch is a small reveal, bigger than the finger, and the vehicle can be covered and uncovered for as long as the child likes with nothing to finish. Random tapping always makes foam, splashes or shine, and never a refusal. A person watching sees within three seconds that the child is washing a truck.
 
 ## The object-by-action grid, and what is new on day 15
 
