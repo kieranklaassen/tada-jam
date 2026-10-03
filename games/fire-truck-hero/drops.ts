@@ -66,7 +66,7 @@ export class Drops {
 
   /** One small drop of a stream, to fill the gap between two gulps. It carries no water of its own, only a mark, so that a sweep leaves a line. */
   trickle(arc: Arc): void {
-    this.jet(arc, 0, (this.random() - 0.5) * 0.34, (this.random() - 0.5) * 0.34, 0.14 + this.random() * 0.08, 0.14, 0.44)
+    this.jet(arc, 0, (this.random() - 0.5) * 0.34, (this.random() - 0.5) * 0.34, 0.14 + this.random() * 0.08, 0.14, 0.62)
   }
 
   /** One frame. Each drop that reaches the ground is handed to `land`, and throws up `splash` small drops (fewer on a low tier). */

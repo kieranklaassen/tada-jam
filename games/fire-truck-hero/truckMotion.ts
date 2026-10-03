@@ -13,6 +13,8 @@ import { kick, spring, stepSpring, type Feel } from './springs'
 
 /** The body on its springs: lively, so a rock back swings past level before it settles. */
 export const BODY: Feel = { stiffness: 150, damping: 9 }
+/** A hop: softer than the body's rock, so the truck hangs in the air for a moment. */
+export const HOP: Feel = { stiffness: 80, damping: 5 }
 /** The nozzle: quick and a little loose. */
 export const NOZZLE_FEEL: Feel = { stiffness: 420, damping: 24 }
 /** The eyes: they glide after the nozzle. */
@@ -25,7 +27,7 @@ export const GULP_KICK = 2.3
 /** The gulps of a stream knock less than the first of a touch, so a held stream is a shudder and not a seesaw. */
 export const STREAM_KICK = 1.0
 /** How fast a honk throws the body up, in yard units a second. */
-export const HOP_KICK = 3.2
+export const HOP_KICK = 5
 /** The body never tips further than this, in radians. */
 export const MOST_ROCK = 0.22
 /** The idle bob: how far and how often, like a motor ticking over. */
@@ -37,8 +39,10 @@ export const BLINK_S = 0.13
 export type TruckPose = {
   /** The body tips back by this many radians (negative is forward). */
   rock: number
-  /** The body is lifted by this many yard units. */
+  /** The whole truck is off the ground by this many yard units: a hop. */
   lift: number
+  /** The body alone rides this much higher on its springs: the idle bob. */
+  bob: number
   /** The body squashes and stretches by this share: under 1 is squashed. */
   squash: number
   /** The nozzle's direction: a turn about the upright (0 is along +x, toward +z is positive) and a tilt up from level. */
@@ -62,7 +66,7 @@ export function turnTo(from: number, to: number): number {
 }
 
 export class TruckMotion {
-  readonly pose: TruckPose = { rock: 0, lift: 0, squash: 1, turn: 0, tilt: 0.2, light: 0, lookSide: 0, lookUp: 0, eyesOpen: 1 }
+  readonly pose: TruckPose = { rock: 0, lift: 0, bob: 0, squash: 1, turn: 0, tilt: 0.2, light: 0, lookSide: 0, lookUp: 0, eyesOpen: 1 }
   /** The truck was in the air and has just come down: true for one step, for the thud. */
   landed = false
   private rock = spring(0)
@@ -101,7 +105,7 @@ export class TruckMotion {
     if (!(seconds > 0)) return this.pose
     this.time += seconds
     stepSpring(this.rock, BODY, seconds)
-    stepSpring(this.lift, BODY, seconds)
+    stepSpring(this.lift, HOP, seconds)
     stepSpring(this.turn, NOZZLE_FEEL, seconds)
     stepSpring(this.tilt, NOZZLE_FEEL, seconds)
     stepSpring(this.light, LIGHT, seconds)
@@ -112,7 +116,8 @@ export class TruckMotion {
     stepSpring(this.lookUp, EYES, seconds)
 
     // A toy cannot sink into the sand: below its wheels the spring turns it round, and that is the landing.
-    if (this.lift.value > 0.03) this.inAir = true
+    // It bounces once more, low, and that small bounce is not a second landing.
+    if (this.lift.value > 0.1) this.inAir = true
     if (this.lift.value < 0) {
       this.lift.value = 0
       if (this.lift.velocity < 0) this.lift.velocity *= -0.25
@@ -122,7 +127,8 @@ export class TruckMotion {
 
     const pose = this.pose
     pose.rock = Math.max(-MOST_ROCK, Math.min(MOST_ROCK, this.rock.value))
-    pose.lift = this.lift.value + IDLE_BOB * (0.5 + 0.5 * Math.sin(this.time * IDLE_HZ * 2 * Math.PI))
+    pose.lift = this.lift.value
+    pose.bob = IDLE_BOB * (0.5 + 0.5 * Math.sin(this.time * IDLE_HZ * 2 * Math.PI))
     // Stretched on the way up, squashed as it comes down and as it rocks back.
     pose.squash = Math.max(0.9, Math.min(1.1, 1 + this.lift.velocity * 0.02 - Math.abs(pose.rock) * 0.25))
     pose.turn = this.turn.value

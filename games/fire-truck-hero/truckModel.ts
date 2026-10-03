@@ -155,7 +155,9 @@ export function buildTruck(plastic: THREE.Material): TruckModel {
  */
 export function poseTruck(model: TruckModel, pose: TruckPose, faces: number): void {
   model.body.rotation.z = pose.rock
-  model.body.position.y = ROCK_HEIGHT + pose.lift
+  // A hop takes the wheels with it; the idle bob is the body on its springs.
+  model.root.position.y = pose.lift
+  model.body.position.y = ROCK_HEIGHT + pose.bob
   // Squashed it is wider, stretched it is thinner: it keeps its bulk.
   const wide = 1 / Math.sqrt(pose.squash)
   model.body.scale.set(wide, pose.squash, wide)

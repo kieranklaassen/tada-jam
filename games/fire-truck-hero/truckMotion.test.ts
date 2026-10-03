@@ -93,7 +93,7 @@ describe('a honk', () => {
       if (t.landed) landings++
       expect(t.pose.lift).toBeGreaterThanOrEqual(0)
     })
-    expect(highest).toBeGreaterThan(0.15)
+    expect(highest).toBeGreaterThan(0.3)
     expect(highest).toBeLessThan(0.6)
     expect(landings).toBe(1)
   })
@@ -123,8 +123,10 @@ describe('the truck at rest', () => {
     const truck = new TruckMotion()
     let least = 1, most = 0
     play(truck, 1, (t) => {
-      least = Math.min(least, t.pose.lift)
-      most = Math.max(most, t.pose.lift)
+      least = Math.min(least, t.pose.bob)
+      most = Math.max(most, t.pose.bob)
+      // Its wheels stay on the sand: only the body rides its springs.
+      expect(t.pose.lift).toBe(0)
     })
     expect(most - least).toBeGreaterThan(IDLE_BOB * 0.8)
     expect(most).toBeLessThanOrEqual(IDLE_BOB + 1e-9)
