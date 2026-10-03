@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { backUnderCape, capeOff, letIn, markShown, sendFriend } from './cycle'
 import { Hair } from './hair'
-import { HEAD } from './layout'
+import { COLLAR_Y, HEAD, LOCK_X, STEP } from './layout'
 import { PERSONALITIES } from './personality'
-import { placesOf } from './poses'
+import { onHead, placesOf, tuftPose, tuftTip } from './poses'
 import { Puppet } from './puppet'
 import { makeRng } from './rng'
 import { TAIL_LEN, TUFTS } from './rules'
 import { freshGame, type Game } from './save'
 import { Scene, sceneLength, type Beat } from './scene'
-import { capeComesOff, comingIn, shownOnce, tailOf, type Cast, type Cue } from './scenes'
+import { PAW_HOME, capeComesOff, comingIn, shownOnce, tailOf, type Cast, type Cue } from './scenes'
 import { DOORWAY, LOW, Staging, WINDOW, dipAt, lowFor, walk } from './staging'
 
 function cast(game: Game): Cast & { cues: Cue[]; cut: boolean } {
@@ -52,7 +52,7 @@ describe('the staging', () => {
 
   it('puts everyone where the model has them when it is settled', () => {
     const staging = new Staging(), game = seated()
-    staging.door = 0.6; staging.hats = 1; staging.fx = { kind: 'too-long', muddle: 0.3 }; staging.paw = { kind: 'snip', tuft: 1, progress: 0.4 }; staging.ribbon = { x: 1, y: 2, len: 9 }; staging.tails = 1
+    staging.door = 0.6; staging.hats = 1; staging.fx = { kind: 'too-long', muddle: 0.3 }; staging.paw = { x: 1, y: 2, scissors: 1 }; staging.ribbon = { x: 1, y: 2, len: 9 }; staging.tails = 1
     staging.leaving = [{ who: 'yak', part: 'chair', at: { x: 0, y: 0, s: 1, lift: 0, seen: 1 }, from: { x: 0, y: 0, s: 1 }, lock: 30, mane: null, worn: [] }]
     staging.settle(game)
     const places = placesOf(game)
@@ -139,7 +139,55 @@ describe('the cape coming off', () => {
     expect(c.cues).toEqual(expect.arrayContaining(['capeOff', cue]))
     expect(c.staging).toMatchObject({ cape: 0, fx: null })
     // What sounds is the two lengths, never a cheer or a buzzer: there is no such cue to give.
-    expect(c.cues.every((heard) => ['capeOff', 'landed', 'tooLong', 'tooShort', 'asLong'].includes(heard))).toBe(true)
+    expect(c.cues.every((heard) => ['capeOff', 'landed', 'tooLong', 'tooShort', 'asLong', 'flap', 'air'].includes(heard))).toBe(true)
+    expect(c.staging.paw).toBeNull()
+  })
+
+  it('has the customer take hold of a lock that is too long level with the friend\'s end, and the piece below flaps the more the longer it is', () => {
+    const flaps = (lock: number): number => {
+      const before = seated({ lock, model: 40 }), done = capeOff(before), c = cast(done.game)
+      const modelEnd = COLLAR_Y + 40 * STEP
+      let held = 0, kicked = 0
+      playThrough(capeComesOff(c, before, done.game, done.showing!), () => {
+        if (c.staging.fx && c.staging.paw && Math.abs(c.staging.paw.y - modelEnd) < 1 && Math.abs(c.staging.paw.x - LOCK_X) < 8) held++
+        kicked = Math.max(kicked, Math.abs(c.hair.strands.lock.kick.v))
+      })
+      expect(held).toBeGreaterThan(20)
+      expect(kicked).toBeGreaterThan(2)
+      return c.cues.filter((cue) => cue === 'flap').length
+    }
+    expect(flaps(90)).toBeGreaterThan(flaps(52))
+  })
+
+  it('has the customer feel on down from the end of a lock that is too short, as far as the friend\'s end, and find air there', () => {
+    const before = seated({ lock: 20, model: 60 }), done = capeOff(before), c = cast(done.game)
+    const lockEnd = COLLAR_Y + 20 * STEP, modelEnd = COLLAR_Y + 60 * STEP
+    let top = Infinity, bottom = -Infinity, flicked = 0
+    playThrough(capeComesOff(c, before, done.game, done.showing!), () => {
+      if (c.staging.fx && c.staging.paw) { top = Math.min(top, c.staging.paw.y); bottom = Math.max(bottom, c.staging.paw.y) }
+      flicked = Math.min(flicked, c.hair.strands.model.kick.v)
+    })
+    // From the end of its own lock down through the gap to where the friend's lock ends, and no further.
+    expect(top).toBeLessThanOrEqual(lockEnd + 1)
+    expect(bottom).toBeGreaterThan(modelEnd - 2)
+    expect(bottom).toBeLessThanOrEqual(modelEnd + 1)
+    expect(c.cues.filter((cue) => cue === 'air').length).toBeGreaterThanOrEqual(2)
+    // Then the friend's longer end flicks over at it.
+    expect(flicked).toBeLessThan(-2)
+    expect(c.customer()!.started).toContain('lion-pats-for-it-and-an-ear-flicks-out')
+  })
+
+  it('has the two ends meet in the customer\'s paw when they are as long, and the two locks swing as one', () => {
+    const before = seated({ lock: 44, model: 44 }), done = capeOff(before), c = cast(done.game)
+    let together = 0, met = 0
+    playThrough(capeComesOff(c, before, done.game, done.showing!), () => {
+      const { lock, model } = c.hair.strands
+      // Both are set swinging the same way at the same moment, with the paw at the place where the two ends meet.
+      if (lock.swing.v > 1 && lock.swing.v === model.swing.v) together++
+      if (c.staging.paw && Math.abs(c.staging.paw.y - (COLLAR_Y + 44 * STEP)) < 1 && c.staging.paw.x > LOCK_X && c.staging.paw.x < LOCK_X + 36) met++
+    })
+    expect(together).toBeGreaterThan(0)
+    expect(met).toBeGreaterThan(10)
   })
 
   it('brings a friend who sat across the room over to stand cheek to cheek', () => {
@@ -174,8 +222,13 @@ describe('a thing shown once', () => {
     const scene = new Scene(beats)
     scene.start(0, () => {})
     scene.update(0)
-    expect(c.staging.paw).toMatchObject({ kind: 'snip', tuft: 1 })
+    // The paw comes out of the cape with the scissors, on the far side from the friend, and goes to that tuft.
+    expect(c.staging.paw).toEqual({ ...PAW_HOME, scissors: 1 })
     expect(c.hair.tufts[1].rest).toBeGreaterThan(1.4)
+    scene.update(1.2)
+    const tuft = tuftPose('lion', 1, 90, 9), at = onHead({ x: HEAD.x, y: HEAD.y, s: 1 }, { x: tuft.base.x + (tuftTip(tuft).x - tuft.base.x) * 0.7, y: tuft.base.y + (tuftTip(tuft).y - tuft.base.y) * 0.7 })
+    expect(c.staging.paw!.x).toBeCloseTo(at.x, 0)
+    expect(c.staging.paw!.y).toBeCloseTo(at.y, 0)
     scene.update(1.6)
     expect(c.hair.tufts[1].rest).toBe(1)
     expect(c.cues).toContain('nip')
@@ -191,11 +244,15 @@ describe('a thing shown once', () => {
     const scene = new Scene(shownOnce(c, 'pull', before, after))
     scene.start(0, () => {})
     scene.update(0)
-    expect(c.staging.paw).toMatchObject({ kind: 'pull', tuft: 2 })
+    expect(c.staging.paw).toEqual({ ...PAW_HOME, scissors: null })
     const start = c.hair.tufts[2].rest
     expect(start).toBeLessThan(0.8)
+    scene.update(0.75)
+    const gripped = { ...c.staging.paw! }
     scene.update(1.2)
     expect(c.hair.tufts[2].rest).toBeGreaterThan(start)
+    // The paw goes out along the tuft as it draws it longer.
+    expect(Math.hypot(c.staging.paw!.x - gripped.x, c.staging.paw!.y - gripped.y)).toBeGreaterThan(10)
     scene.update(3)
     expect(c.hair.tufts[2].rest).toBe(1)
     expect(c.cues).toContain('tug')

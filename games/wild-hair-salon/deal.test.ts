@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FIRST_VISIT, LADDER } from './config'
-import { arrangementOf, dealPair, layOut } from './deal'
+import { IN_VIEW, arrangementOf, dealPair, layOut } from './deal'
 import { makeRng } from './rng'
 import { CLOSE, MAX_LEN, MEET, MIN_LEN, MODEL_MAX, MODEL_MIN, NEAR, PLAIN, TUFTS } from './rules'
 import { outcomeOf } from './showing'
@@ -59,6 +59,12 @@ describe('the designed order', () => {
       expect(layout.mane).toHaveLength(TUFTS)
       for (const steps of layout.mane) expect(Number.isInteger(steps) && steps >= MIN_LEN && steps <= MAX_LEN).toBe(true)
       expect(Math.max(...layout.mane) - Math.min(...layout.mane)).toBeGreaterThanOrEqual(50)
+      // One tuft is the longest and one the shortest, and both are where the friend never hides them.
+      const longest = Math.max(...layout.mane), shortest = Math.min(...layout.mane)
+      expect(layout.mane.filter((steps) => steps === longest)).toHaveLength(1)
+      expect(layout.mane.filter((steps) => steps === shortest)).toHaveLength(1)
+      expect(layout.mane.indexOf(longest)).toBeLessThan(IN_VIEW)
+      expect(layout.mane.indexOf(shortest)).toBeLessThan(IN_VIEW)
     }
     expect([...ways].sort()).toEqual(way === 'either' ? ['longer', 'shorter'] : [way])
   })

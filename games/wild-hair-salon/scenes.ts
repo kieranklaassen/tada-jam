@@ -1,6 +1,6 @@
 import type { Idea } from './cycle'
 import type { Hair } from './hair'
-import { HEAD } from './layout'
+import { COLLAR_Y, HEAD, STEP } from './layout'
 import { PERSONALITIES } from './personality'
 import { onHead, placesOf, tuftPose, tuftTip, type Actor, type Point } from './poses'
 import type { Puppet } from './puppet'
@@ -22,7 +22,7 @@ import { TASTES, type CustomerId } from './tastes'
 /** A sound a scene asks for, by name. The game turns it into notes. */
 export type Cue =
   | 'door' | 'doorShut' | 'step' | 'hatOff' | 'hairOut' | 'capeOn' | 'capeOff' | 'landed'
-  | 'tooLong' | 'tooShort' | 'asLong' | 'nip' | 'tug' | 'ribbonTaken' | 'ribbonTick' | 'ribbonHome'
+  | 'tooLong' | 'tooShort' | 'asLong' | 'flap' | 'air' | 'nip' | 'tug' | 'ribbonTaken' | 'ribbonTick' | 'ribbonHome'
 
 export type Cast = {
   staging: Staging
@@ -43,6 +43,10 @@ export const TAIL_OF_CUSTOMER: Point = { x: 300, y: 474 }
 export function tailOf(actor: Actor): Point {
   return { x: actor.x + 72, y: actor.y + 98 }
 }
+/** Where the customer's paw comes out of the cape, on the far side from the friend. */
+export const PAW_HOME: Point = { x: HEAD.x - 104, y: COLLAR_Y + 12 }
+/** Where its paw comes from when the cape is off and it stands by the friend: its shoulder on the friend's side. */
+export const SHOULDER: Point = { x: HEAD.x + 44, y: HEAD.y + HEAD.ry + 44 }
 /** Where the friend stands by the ribbon's peg, and by the customer's tail. */
 const BY_THE_PEG: Actor = { x: 772, y: 330, s: 0.65 }
 const BY_THE_TAIL: Actor = { x: 232, y: 392, s: 0.65 }
@@ -134,17 +138,52 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
     cueAt(far ? 1.5 : 0.6, () => { if (!cast.cut) { other?.react('hopsOver'); cast.cue('landed', friend) } }),
     // Both look down at the two free ends.
     cueAt(1.7, () => { if (!cast.cut) { customer?.react('floorWatched'); other?.react('floorWatched') } }),
-    cueAt(2.5, () => {
-      staging.fx = { kind, muddle: showing.comparison.muddle }
-      if (cast.cut) return
-      if (kind === 'too-long') { customer?.react('lockTooLong'); hair.kicked('lock', 5 * big); cast.cue('tooLong', chair) }
-      // The friend's longer end tickles the customer's chin.
-      if (kind === 'too-short') { customer?.react('lockTooShort'); other?.react('friendPoked'); hair.kicked('model', -5 * big); cast.cue('tooShort', chair) }
-      if (kind === 'as-long') { customer?.react('lockAsLong'); other?.react('lockAsLong'); hair.plucked('lock', 1); hair.plucked('model', 1); cast.cue('asLong', chair) }
-    }),
   ]
-  let t = 2.5 + Math.max(customer?.lasts(kind === 'too-long' ? 'lockTooLong' : kind === 'too-short' ? 'lockTooShort' : 'lockAsLong') ?? 1.2, 1.2) + 0.3
-  beats.push(over(2.5, t - 2.5, () => {}))
+  // The customer's paw acts out the comparison on the two ends themselves, sized by the piece or the gap.
+  const lock = to.lock ?? { x: 0, y: 0, unit: STEP }
+  const lockEnd = lock.y + after.lock * lock.unit, modelEnd = lock.y + after.model * lock.unit
+  const times = 3 + Math.round(showing.comparison.muddle * 4)
+  const paw = (x: number, y: number): void => { staging.paw = { x, y, scissors: null } }
+  const reach = (p: number, x: number, y: number): void => paw(SHOULDER.x + (x - SHOULDER.x) * smooth(p), SHOULDER.y + (y - SHOULDER.y) * smooth(p))
+  const reaction = kind === 'too-long' ? 'lockTooLong' as const : kind === 'too-short' ? 'lockTooShort' as const : 'lockAsLong' as const
+  let t = 2.5
+  if (kind === 'too-long') {
+    // It takes hold of its lock level with the friend's end. The piece below its paw is the piece things happen to: it flaps about, the bigger the wilder.
+    const flap = 0.36
+    beats.push(
+      over(2.1, 0.4, (p) => reach(p, lock.x - 2, modelEnd)),
+      cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) { customer?.react(reaction); cast.cue('tooLong', chair) } }),
+      ...Array.from({ length: times }, (_, i) => cueAt(2.5 + i * flap, () => { if (!cast.cut) { hair.kicked('lock', (i % 2 ? -1 : 1) * 7 * big); if (i > 0) cast.cue('flap', chair) } })),
+      over(2.5, times * flap, (p) => paw(lock.x - 2 + Math.sin(p * times * Math.PI) * 5, modelEnd)),
+    )
+    t = 2.5 + times * flap
+  } else if (kind === 'too-short') {
+    // It takes its lock by the end, feels on down for hair as far as the friend's end, and finds air; then the friend's longer end flicks over at it.
+    const grab = 0.36, feel = 0.7
+    beats.push(
+      over(2.1, 0.4, (p) => reach(p, lock.x, lockEnd)),
+      cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) cast.cue('tooShort', chair) }),
+      over(2.5, feel, (p) => paw(lock.x, lockEnd + (modelEnd - lockEnd) * smooth(p))),
+      ...Array.from({ length: times }, (_, i) => cueAt(2.5 + feel + i * grab, () => { if (!cast.cut) cast.cue('air', chair) })),
+      over(2.5 + feel, times * grab, (p) => paw(lock.x + Math.sin(p * times * Math.PI * 2) * 10, modelEnd - Math.abs(Math.sin(p * times * Math.PI)) * 14)),
+      cueAt(2.5 + feel + times * grab, () => { if (!cast.cut) { customer?.react(reaction); other?.react('friendPoked'); hair.kicked('model', -7 * big) } }),
+    )
+    t = 2.5 + feel + times * grab
+  } else {
+    // The two ends meet in its paw, and the two locks swing as one.
+    beats.push(
+      over(2.1, 0.4, (p) => reach(p, lock.x + 18, modelEnd)),
+      cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) { customer?.react(reaction); other?.react(reaction); cast.cue('asLong', chair) } }),
+      over(2.5, 0.5, () => paw(lock.x + 18, modelEnd)),
+      cueAt(3.0, () => { if (!cast.cut) { hair.strands.lock.swing.v = 2.4; hair.strands.model.swing.v = 2.4 } }),
+    )
+    t = 3.0
+  }
+  // The paw goes home while the customer does what it does about it.
+  const lets = t
+  beats.push(over(lets, 0.3, (p) => { const from = staging.paw ?? { x: SHOULDER.x, y: SHOULDER.y }; if (p >= 1) staging.paw = null; else paw(from.x + (SHOULDER.x - from.x) * p * 0.5, from.y + (SHOULDER.y - from.y) * p * 0.5) }))
+  t += Math.max(customer?.lasts(reaction) ?? 1.2, 1.2) + 0.3
+  beats.push(over(lets, t - lets, () => {}))
   // Then its tastes: its mane, its bow, and whatever it wears.
   if (showing.mane !== 'plain') {
     const reaction = showing.mane === 'liked' ? 'maneLiked' as const : 'maneHated' as const
@@ -170,7 +209,7 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
     t += 1.1
   }
   // They settle, side by side, with the haircut on show.
-  beats.push(cueAt(t, () => { staging.fx = null; staging.cape = 0; staging.friend = { ...friendTo, lift: 0, seen: 1 } }))
+  beats.push(cueAt(t, () => { staging.fx = null; staging.paw = null; staging.cape = 0; staging.friend = { ...friendTo, lift: 0, seen: 1 } }))
   return beats
 }
 
@@ -233,23 +272,34 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
   const share = reach(was) / reach(is)
   const tip = (): Point => onHead({ x: HEAD.x, y: HEAD.y, s: 1 }, tuftTip(tuftPose(chair, tuft, is, after.mane.length)))
   const held = hair.tufts[tuft]
+  // The paw comes out of the cape on the far side from the friend and goes to the tuft, a good way along it.
+  const head = { x: HEAD.x, y: HEAD.y, s: 1 }
+  const along = (steps: number): Point => { const pose = tuftPose(chair, tuft, steps, after.mane.length), end = tuftTip(pose); return onHead(head, { x: pose.base.x + (end.x - pose.base.x) * 0.7, y: pose.base.y + (end.y - pose.base.y) * 0.7 }) }
+  const grip = along(was), drawn = along(is)
+  const pawAt = (p: number): { x: number; y: number; scissors: number | null } => {
+    const reach = smooth(Math.min(1, p / 0.5)), tug = idea === 'pull' ? Math.max(0, (p - 0.5) / 0.5) : 0
+    const to = { x: grip.x + (drawn.x - grip.x) * tug, y: grip.y + (drawn.y - grip.y) * tug }
+    return { x: PAW_HOME.x + (to.x - PAW_HOME.x) * reach, y: PAW_HOME.y + (to.y - PAW_HOME.y) * reach, scissors: idea === 'snip' ? (p > 0.92 ? 0 : 1) : null }
+  }
   return [
     cueAt(0, () => {
       // The tuft is drawn as long as it was until the paw has done its work.
       if (held) { held.rest = share; held.stretch.x = share; held.stretch.v = 0 }
-      staging.paw = { kind: idea, tuft, progress: 0 }
+      staging.paw = pawAt(0)
       if (!cast.cut) cast.customer()?.react('showsAMove')
     }),
     over(0, 1.5, (p) => {
-      staging.paw = { kind: idea, tuft, progress: p }
+      staging.paw = pawAt(p)
       // A tug draws the tuft out as the paw goes; a nip leaves it until the blades close.
-      if (idea === 'pull' && held) held.rest = share + (1 - share) * Math.max(0, (p - 0.4) / 0.6)
+      if (idea === 'pull' && held) held.rest = share + (1 - share) * Math.max(0, (p - 0.5) / 0.5)
     }),
-    cueAt(idea === 'pull' ? 0.6 : 1.5, () => { if (!cast.cut) cast.cue(idea === 'snip' ? 'nip' : 'tug', chair) }),
+    cueAt(idea === 'pull' ? 0.75 : 1.5, () => { if (!cast.cut) cast.cue(idea === 'snip' ? 'nip' : 'tug', chair) }),
     cueAt(1.5, () => {
       if (held) held.rest = 1
       if (idea === 'snip' && !cast.cut) hair.tuftSnipped(tuft, tip(), '#f0c9a0')
     }),
-    over(1.5, 0.9, (p) => { staging.paw = p >= 1 ? null : { kind: idea, tuft, progress: 1 } }),
+    // It holds the tuft up a moment to be seen, and goes back under the cape.
+    over(1.5, 0.5, () => { staging.paw = pawAt(1) }),
+    over(2.0, 0.4, (p) => { const end = pawAt(1); staging.paw = p >= 1 ? null : { x: end.x + (PAW_HOME.x - end.x) * smooth(p), y: end.y + (PAW_HOME.y - end.y) * smooth(p), scissors: end.scissors === null ? null : 1 } }),
   ]
 }

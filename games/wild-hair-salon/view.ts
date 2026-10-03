@@ -8,7 +8,7 @@ import { FLUFF, LOOKS, RIBBON, hueOf } from './looks'
 import type { Play } from './play'
 import { SPOT_Y, clippingBox, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
 import { TAIL_LEN } from './rules'
-import { TAIL_OF_CUSTOMER, tailOf } from './scenes'
+import { PAW_HOME, SHOULDER, TAIL_OF_CUSTOMER, tailOf } from './scenes'
 import type { Sprites } from './sprites'
 import { WINDOW, type Shown } from './staging'
 import { CUSTOMERS, type CustomerId } from './tastes'
@@ -148,7 +148,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
       if (shape && !carriedRibbon && staging.ribbon === null && shape.kind === 'worn' && shape.as === 'bow') drawn += bow(g, shape.at.x, shape.at.y, 0)
     }
 
-    if (staging.paw && customer) drawn += paw(g, chair, staging.paw, game)
+    if (staging.paw && customer) drawn += paw(g, chair, staging.paw, caped > 0.5)
   }
 
   // The pair that was done, on their way out.
@@ -323,7 +323,7 @@ function hanging(g: Ctx, root: Point, length: number, strand: Strand, time: numb
       // The piece past the other lock's end: the part things happen to.
       const rest = long - first
       g.translate(0, first)
-      g.rotate(-(strand.kick.x * 0.5 + Math.sin(time * 9) * 0.05))
+      g.rotate(-(strand.kick.x + Math.sin(time * 9) * 0.05))
       g.beginPath()
       g.moveTo(-w, 0)
       g.lineTo(w, 0)
@@ -427,25 +427,36 @@ function tail(g: Ctx, sprites: Sprites, who: CustomerId, from: Point, straight: 
   return drawn + 1
 }
 
-/** The customer's paw showing a move on a tuft of its own mane: it goes to the tuft, and nips it or tugs it. */
-function paw(g: Ctx, who: CustomerId, showing: { kind: 'snip' | 'pull'; tuft: number; progress: number }, game: Salon): number {
-  const look = LOOKS[who], head = { x: HEAD.x, y: HEAD.y, s: 1 }
-  const tuftAt = tuftPose(who, showing.tuft, game.mane[showing.tuft] ?? 30, game.mane.length), tip = tuftTip(tuftAt)
-  const mid = onHead(head, { x: tuftAt.base.x + (tip.x - tuftAt.base.x) * 0.7, y: tuftAt.base.y + (tip.y - tuftAt.base.y) * 0.7 })
-  const from = { x: HEAD.x - 150, y: COLLAR_Y + 10 }
-  const reach = Math.min(1, showing.progress / 0.5)
-  const tug = showing.kind === 'pull' ? Math.max(0, (showing.progress - 0.5) / 0.5) * 26 : 0
-  const x = from.x + (mid.x - from.x) * reach + Math.sin(tuftAt.angle) * tug, y = from.y + (mid.y - from.y) * reach - Math.cos(tuftAt.angle) * tug
-  pencil(g, [from, { x: (from.x + x) / 2 - 20, y: (from.y + y) / 2 }, { x, y }], 9, 0.5)
+/**
+ * The customer's paw, out at work: an arm of its own fur from under the cape,
+ * or from its shoulder when the cape is off, round the outside of its face to
+ * where the paw is, with the scissors in it when it holds a pair.
+ */
+function paw(g: Ctx, who: CustomerId, at: { x: number; y: number; scissors: number | null }, caped: boolean): number {
+  const look = LOOKS[who], from = caped ? PAW_HOME : SHOULDER
+  // The arm bows away from the middle of the face, so it never crosses the eyes.
+  const mid = { x: (from.x + at.x) / 2, y: (from.y + at.y) / 2 }, far = Math.max(1, Math.hypot(at.x - from.x, at.y - from.y))
+  const across = { x: -(at.y - from.y) / far, y: (at.x - from.x) / far }
+  const out = across.x * (mid.x - HEAD.x) + across.y * (mid.y - HEAD.y) >= 0 ? 1 : -1
+  const elbow = { x: mid.x + across.x * out * far * 0.45, y: mid.y + across.y * out * far * 0.45 }
+  g.lineCap = 'round'
+  for (const [colour, wide] of [[look.furEdge, 22], [look.fur, 18]] as const) {
+    g.strokeStyle = colour
+    g.lineWidth = wide
+    g.beginPath()
+    g.moveTo(from.x, from.y)
+    g.quadraticCurveTo(elbow.x, elbow.y, at.x, at.y)
+    g.stroke()
+  }
   g.fillStyle = look.fur
   g.strokeStyle = look.furEdge
   g.lineWidth = 2
   g.beginPath()
-  g.arc(x, y, 18, 0, Math.PI * 2)
+  g.arc(at.x, at.y, 17, 0, Math.PI * 2)
   g.fill()
   g.stroke()
-  let drawn = 3
-  if (showing.kind === 'snip') drawn += scissors(g, { x: x + 16, y: y - BLADES.y - 6 }, showing.progress > 0.92 ? 0 : 1, Math.min(1, reach) * 0.9, 0.6)
+  let drawn = 4
+  if (at.scissors !== null) drawn += scissors(g, { x: at.x + 14, y: at.y - BLADES.y - 6 }, at.scissors, 0.9, 0.6)
   return drawn
 }
 

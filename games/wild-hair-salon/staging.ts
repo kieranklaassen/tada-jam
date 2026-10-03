@@ -73,8 +73,8 @@ export class Staging {
   hats = 0
   /** What the two locks are acting out when the cape has come off, and how big the muddle is. */
   fx: { kind: Comparison['kind']; muddle: number } | null = null
-  /** The customer's paw showing a move on a tuft of its own mane. */
-  paw: { kind: 'snip' | 'pull'; tuft: number; progress: number } | null = null
+  /** The customer's paw, out at work: where it is, and how far open the scissors in it are when it holds a pair. */
+  paw: { x: number; y: number; scissors: number | null } | null = null
   /** Where the ribbon is drawn and how long, while the friend shows what it is for. */
   ribbon: { x: number; y: number; len: number } | null = null
   /** How far the two tails are held out straight to be measured, 0 to 1. */

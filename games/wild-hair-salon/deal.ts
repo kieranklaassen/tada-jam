@@ -34,16 +34,20 @@ export function arrangementOf(position: string): Arrangement {
 
 export type Layout = { seat: Seat; lock: number; model: number; mane: number[] }
 
+/** The tufts, counted from the far side, that a friend sitting beside the chair never stands in front of. */
+export const IN_VIEW = 5
+
 export function layOut(position: string, rng: Rng): Layout {
   const { seat, way, gap } = arrangementOf(position)
   const model = rng.int(MODEL_MIN, MODEL_MAX)
   const longer = way === 'longer' || (way === 'either' && rng.next() < 0.5)
   const by = rng.int(gap.min, gap.max)
-  // Wild hair: nine tufts of very different lengths, with one long and one short for certain.
-  const mane = Array.from({ length: TUFTS }, () => rng.int(12, 96))
-  const tall = rng.int(0, TUFTS - 1)
+  // Wild hair: nine tufts of very different lengths, with one longest and one shortest for certain. Those two are
+  // on the side away from the friend, where a paw at work on them is in plain view.
+  const mane = Array.from({ length: TUFTS }, () => rng.int(30, 74))
+  const tall = rng.int(0, IN_VIEW - 1)
   mane[tall] = rng.int(78, 96)
-  mane[(tall + rng.int(1, TUFTS - 1)) % TUFTS] = rng.int(12, 26)
+  mane[(tall + rng.int(1, IN_VIEW - 1)) % IN_VIEW] = rng.int(12, 26)
   return { seat, model, lock: toLength(model + (longer ? by : -by)), mane }
 }
 
