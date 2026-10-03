@@ -11,39 +11,41 @@ const round = (colour: Rgb, x: number, y: number, z: number, w: number, d: numbe
 /** A wheel: a disc on its side, `w` across and `d` thick, its low edge at `y`. */
 const wheel = (colour: Rgb, x: number, y: number, z: number, w: number, d: number): Brick => ({ x, y, z, w, d, h: w / 0.4, colour, round: true, axis: 'z', studs: false })
 
+// A small toy is about three and a half studs long and a big one about five and a half: a big one is clearly the
+// bigger of the two, and two big ones still stand side by side on the tray without touching.
 function duck(c: Rgb, big: boolean): Brick[] {
   if (!big) return [
-    box(c, 0, 0, 0, 3, 2, 3), // body
+    box(c, 0, 0, 0, 2, 2, 3), // body
     box(c, 0, 3, 0.5, 1, 1, 1), // tail
-    round(c, 1.6, 3, 0, 2, 2, 3), // a round head, leaning out over the chest
-    box(c, 3.4, 4, 0.5, 1, 1, 1, false), // bill
+    round(c, 1, 3, 0.2, 1.6, 1.6, 3), // a round head, leaning out over the chest
+    box(c, 2.5, 4, 0.6, 0.9, 0.8, 1, false), // bill
   ]
   return [
-    box(c, 0, 0, 0, 5, 3, 4),
+    box(c, 0, 0, 0, 4, 3, 4),
     box(c, 0, 4, 1, 1, 1, 2),
-    round(c, 2.8, 4, 0, 3, 3, 4),
-    box(c, 5.6, 5, 0.75, 1.5, 1.5, 1, false),
+    round(c, 2, 4, 0.2, 2.6, 2.6, 4),
+    box(c, 4.4, 5, 0.9, 1.1, 1.2, 1, false),
   ]
 }
 
 function car(c: Rgb, big: boolean): Brick[] {
   if (!big) return [
-    box(c, 0, 1, 0, 4, 2, 2), // chassis
-    box(c, 1, 3, 0, 2, 2, 2), // cab
-    wheel(c, 0.2, 0, -0.3, 1.2, 0.5), wheel(c, 2.6, 0, -0.3, 1.2, 0.5),
-    wheel(c, 0.2, 0, 1.8, 1.2, 0.5), wheel(c, 2.6, 0, 1.8, 1.2, 0.5),
+    box(c, 0, 1, 0, 3, 2, 2), // chassis
+    box(c, 0.5, 3, 0, 2, 2, 2), // cab
+    wheel(c, 0.1, 0, -0.3, 1.1, 0.5), wheel(c, 1.8, 0, -0.3, 1.1, 0.5),
+    wheel(c, 0.1, 0, 1.8, 1.1, 0.5), wheel(c, 1.8, 0, 1.8, 1.1, 0.5),
   ]
   return [
-    box(c, 0, 2, 0, 7, 3, 3),
-    box(c, 2, 5, 0, 3, 3, 3),
-    wheel(c, 0.4, 0, -0.4, 2, 0.7), wheel(c, 4.6, 0, -0.4, 2, 0.7),
-    wheel(c, 0.4, 0, 2.7, 2, 0.7), wheel(c, 4.6, 0, 2.7, 2, 0.7),
+    box(c, 0, 2, 0, 5, 3, 3),
+    box(c, 1, 5, 0, 3, 3, 3),
+    wheel(c, 0.3, 0, -0.4, 1.8, 0.7), wheel(c, 2.9, 0, -0.4, 1.8, 0.7),
+    wheel(c, 0.3, 0, 2.7, 1.8, 0.7), wheel(c, 2.9, 0, 2.7, 1.8, 0.7),
   ]
 }
 
 function rocket(c: Rgb, big: boolean): Brick[] {
   if (!big) return [
-    box(c, 0, 0, 0.5, 1, 1, 2, false), box(c, 3, 0, 0.5, 1, 1, 2, false), // fins
+    box(c, 0.4, 0, 0.7, 0.6, 0.6, 2, false), box(c, 3, 0, 0.7, 0.6, 0.6, 2, false), // fins
     round(c, 1, 0, 0, 2, 2, 5, false), // body
     round(c, 1.3, 5, 0.3, 1.4, 1.4, 2, false), // shoulder
     round(c, 1.6, 7, 0.6, 0.8, 0.8, 2), // nose

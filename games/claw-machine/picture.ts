@@ -20,6 +20,8 @@ export type ToyLook = {
   leanZ: number
   /** 1 on the tray; a toy in a belly is drawn small. */
   scale: number
+  /** Turned about its own upright, in radians: a toy in a belly turns with its gobbler. */
+  turn: number
 }
 
 export type GobblerLook = {

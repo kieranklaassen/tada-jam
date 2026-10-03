@@ -46,7 +46,7 @@ export function slotX(slot: number, crew: number): number {
  * The shelf behind the parapet, where the next ones wait. It lies below the floor of the cabinet, so that a
  * gobbler standing on it shows only its eyes over the parapet, and the back of the cabinet stays low.
  */
-export const SHELF = { x: -17, z: -16, w: 34, d: 7, top: -10 * PLATE } as const
+export const SHELF = { x: -17, z: -16, w: 34, d: 7, top: -6 * PLATE } as const
 /** Where the ones who wait stand, by the middle of each. */
 export const WAIT_Z = -12.5
 export const WALL = { z: -9, top: 13 * PLATE } as const
@@ -73,7 +73,7 @@ export const BELL = { x: 17, z: 6, half: 1, top: 11 * PLATE } as const
 export const GATE = { x: 0, z: -8.5, half: 3, top: 16 * PLATE } as const
 
 /** Where a crate stands on the ledge: the only one in the middle, or two side by side. */
-export const CRATE = { z: -12.5, width: 13, depth: 5, deck: 18 * PLATE, apart: 8.6 } as const
+export const CRATE = { z: -12.5, width: 13, depth: 5, deck: 14 * PLATE, apart: 8.6 } as const
 export function crateX(which: number, crates: number): number {
   return crates < 2 ? 0 : (which === 0 ? -1 : 1) * CRATE.apart
 }

@@ -9,7 +9,7 @@ import type { Toy } from './toys'
 // room for it.
 
 /** How small a toy is in a belly. */
-export const MINI = 0.42
+export const MINI = 0.46
 export const BELLY_ROWS = 2
 /** The gap between two toys in a row and at either end of it, in world units. */
 const GAP = 0.25

@@ -1,7 +1,7 @@
 import type { Game } from './game'
 import { rimHeight } from './gobblerBuild'
 import { shapeOf } from './gobblers'
-import { deckTop, type Spot } from './layout'
+import { crateTop, type Spot } from './layout'
 import { GATE, SHELF } from './places'
 import { trayIsClear } from './world'
 
@@ -25,7 +25,8 @@ export function hintFor(game: Game, showing: number): Hint {
   if (game.scene) return { marks: [], tap: null }
   // A cycle has ended, or none has begun: the crates wait for the claw.
   if (world.finished) {
-    const marks = game.crates.map((crate) => ({ x: crate.x, y: SHELF.top + deckTop(crate.which) + 1.2, z: crate.z + 1.2, r: 3.4 }))
+    // The ring lies over the riders at the top of the crate, where it shows above whoever stands at the tray.
+    const marks = game.crates.map((crate) => ({ x: crate.x, y: SHELF.top + crateTop(crate.which, crate.crews.length) - 0.4, z: crate.z - 1.4, r: 4.2 }))
     return { marks, tap: marks.length > 0 ? marks[nth % marks.length] : null }
   }
   // A toy is in the jaws: it can go to any gobbler, and the hand shows another one each time.
@@ -38,7 +39,7 @@ export function hintFor(game: Game, showing: number): Hint {
   if (standing.length > 0) {
     const marks = standing.map(({ stack, place }) => {
       const top = game.bodies[stack[stack.length - 1]]
-      return { x: top.x, y: game.stackTop(place) + 0.15, z: top.z, r: top.heavy > 1 ? 3.6 : 2.6 }
+      return { x: top.x, y: game.stackTop(place) + 0.15, z: top.z, r: top.heavy > 1 ? 3 : 2 }
     })
     return { marks, tap: marks[nth % marks.length] }
   }

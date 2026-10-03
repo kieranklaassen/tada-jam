@@ -72,12 +72,12 @@ export class Stage {
 
     // The glow on what can be touched: a gold ring with a dark edge, so it reads on the pale tray and on the
     // dark wall alike. Every ring is as strong as every other, so one material serves them all.
-    const ring = new RingGeometry(0.78, 1, 28, 2)
+    const ring = new RingGeometry(0.86, 1, 32, 2)
     ring.rotateX(-Math.PI / 2)
     const tint = new Float32Array(ring.getAttribute('position').count * 3)
     for (let i = 0; i < tint.length / 3; i++) {
       const x = ring.getAttribute('position').getX(i), z = ring.getAttribute('position').getZ(i)
-      tint.set(Math.hypot(x, z) > 0.95 ? [0.6, 0.32, 0] : [1, 0.78, 0.12], i * 3)
+      tint.set(Math.hypot(x, z) > 0.97 ? [0.6, 0.32, 0] : [1, 0.78, 0.12], i * 3)
     }
     ring.setAttribute('color', new BufferAttribute(tint, 3))
     this.glows = new InstancedMesh(ring, new MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0, depthWrite: false }), MAX_GLOWS)
@@ -175,6 +175,7 @@ export class Stage {
       // A toy in the jaws hangs the way the cable does.
       this.position.set(Math.sin(look.leanX), -Math.cos(look.leanX) * Math.cos(look.leanZ), Math.sin(look.leanZ)).normalize().negate()
       mesh.quaternion.setFromUnitVectors(UP, this.position)
+      if (look.turn !== 0) mesh.rotateY(look.turn)
       mesh.scale.set(wide * look.scale, look.squash * look.scale, wide * look.scale)
     }
     for (const [key, mesh] of this.toyMeshes) if (!seen.has(key)) { this.scene.remove(mesh); this.toyMeshes.delete(key) }

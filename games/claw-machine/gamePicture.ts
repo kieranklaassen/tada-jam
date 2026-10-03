@@ -48,9 +48,12 @@ export function barePicture(): Picture {
 export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   const claw = game.claw, hub = hubAt(claw)
   const toys: ToyLook[] = [], gobblers: GobblerLook[] = [], shadows: Shadow[] = [], glows: GlowLook[] = []
-  const look = (key: number, body: Body, x = body.x, y = body.y, z = body.z): ToyLook => ({ key, toy: body.toy, x, y, z, squash: body.squash, leanX: body.leanX, leanZ: body.leanZ, scale: body.scale })
-  /** A thing in or on a gobbler rides its pose: it shifts with it and rises as it stretches. */
-  const riding = (actor: Actor, body: Body, key: number) => toys.push(look(key, body, body.x + pose.dx * actor.scale, actor.y + pose.dy + (body.y - actor.y) * pose.squash, body.z + pose.dz * actor.scale))
+  const look = (key: number, body: Body, x = body.x, y = body.y, z = body.z, turn = 0): ToyLook => ({ key, toy: body.toy, x, y, z, squash: body.squash, leanX: body.leanX, leanZ: body.leanZ, scale: body.scale, turn })
+  /** A thing in or on a gobbler rides its pose: it shifts and turns with it and rises as it stretches. */
+  const riding = (actor: Actor, body: Body, key: number) => {
+    const rx = body.x - actor.x, rz = body.z - actor.z, cos = Math.cos(pose.turn), sin = Math.sin(pose.turn)
+    toys.push(look(key, body, actor.x + pose.dx * actor.scale + rx * cos + rz * sin, actor.y + pose.dy + (body.y - actor.y) * pose.squash, actor.z + pose.dz * actor.scale - rx * sin + rz * cos, pose.turn))
+  }
 
   // What the gobblers watch: the toy in the jaws, or the claw.
   const watched = game.held >= 0 ? game.bodies[game.held] : hub
@@ -65,7 +68,8 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
       gazeY: pose.looks ? pose.gazeY : clamp((watched.y - eyeY) / 9 - (watched.z - actor.z) / 30, -1, 1),
       blink: pose.blink, tongue: actor.tongue, waiting: actor.role === 'waiting' || actor.scale < 0.95,
     })
-    riding(actor, actor.snack, 10000 + actor.key)
+    // A snack shows in the belly of a gobbler at the tray; the ones who wait are seen from the eyes up.
+    if (actor.role !== 'waiting') riding(actor, actor.snack, 10000 + actor.key)
     actor.cargo.forEach((body, i) => riding(actor, body, 20000 + actor.key * 16 + i))
   }
   for (const actor of game.crew) {
