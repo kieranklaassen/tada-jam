@@ -81,6 +81,36 @@ describe('the unlock', () => {
     expect(played).toBe(1)
   })
 
+  it('keeps the first finger\'s sound when a second finger or a palm lands inside the touch', async () => {
+    fakeAudio([['refuse', 'refuse', 'run']])
+    const audio = new GameAudio()
+    let played = 0
+    audio.touchDown()
+    audio.play(() => played++)
+    audio.touchDown()
+    await answered()
+    expect(played).toBe(0)
+    audio.touchUp()
+    await answered()
+    expect(played).toBe(1)
+  })
+
+  it('ends its touch when the game rests, so a sound made after the wake and outside a touch is not held', async () => {
+    fakeAudio([['refuse', 'refuse', 'run']])
+    const audio = new GameAudio()
+    let played = 0
+    audio.touchDown()
+    await answered()
+    audio.setActive(false)
+    audio.setActive(true)
+    await answered()
+    audio.play(() => played++)
+    // The old touch's lift arrives late, or never: either way it has nothing to release.
+    audio.touchUp()
+    await answered()
+    expect(played).toBe(0)
+  })
+
   it('that is left unanswered on touch-down and lands on the lift plays the touch once, not twice', async () => {
     fakeAudio([['wait', 'run']])
     const audio = new GameAudio()

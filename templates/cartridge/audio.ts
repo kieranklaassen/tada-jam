@@ -26,12 +26,13 @@ export class GameAudio {
 
   /** Call first in every touch-down handler. */
   touchDown(): void {
+    // A second finger or a palm landing inside a touch must not drop the sound the first finger is waiting to hear.
+    if (!this.touching) this.held = null
     this.touching = true
-    this.held = null
     this.unlock()
   }
 
-  /** Call last in every lift handler, after the game has played the lift's own sound. */
+  /** Call last in every lift handler, after the game has played the lift's own sound, and when a touch is cancelled. */
   touchUp(): void {
     this.touching = false
     this.unlock()
@@ -51,7 +52,11 @@ export class GameAudio {
   /** Attended and visible, or not. A resting game is silent. */
   setActive(active: boolean): void {
     this.active = active
-    if (!active) this.held = null
+    if (!active) {
+      // A resting game ends its touch: the lift will never arrive.
+      this.held = null
+      this.touching = false
+    }
     if (!this.context) return
     if (active) void this.context.resume().catch(() => {})
     else void this.context.suspend().catch(() => {})

@@ -81,7 +81,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       act(touch.up(event.pointerId, at(event), event.timeStamp))
       audio.touchUp()
     }
-    const onCancel = (event: PointerEvent) => act(touch.cancel(event.pointerId, event.timeStamp))
+    const onCancel = (event: PointerEvent) => {
+      act(touch.cancel(event.pointerId, event.timeStamp))
+      audio.touchUp()
+    }
     root.addEventListener('pointerdown', onDown)
     root.addEventListener('pointermove', onMove)
     root.addEventListener('pointerup', onUp)
