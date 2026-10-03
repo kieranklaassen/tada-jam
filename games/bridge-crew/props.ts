@@ -80,7 +80,7 @@ export function lineDrawing(pen: Pen, parts: readonly Part[], ends: readonly { a
 
 /** A sheet of tracing paper in its compartment, with the design traced on it drawn small. Empty when `parts` is null. */
 export function tracingSheet(pen: Pen, x: number, y: number, wide: number, tall: number, c: number, parts: readonly Part[] | null) {
-  pen.globalAlpha = parts ? 0.9 : 0.35
+  pen.globalAlpha = parts ? 0.92 : 0.35
   cutOut(pen, c, '#e8eef6', () => pen.roundRect(x, y, wide, tall, c * 0.05))
   pen.globalAlpha = 1
   if (!parts || parts.length === 0) return
@@ -145,6 +145,8 @@ export function ideaModel(pen: Pen, idea: Idea, x: number, y: number, c: number,
       if (holds) stick(0, 0.5, 1.4, 0.5, 'plank-edge')
       else { stick(0, 0.5, 0.7, 0.5 - sag, 'plank'); stick(0.7, 0.5 - sag, 1.4, 0.5, 'plank') }
       dot(0, 0.5); dot(1.4, 0.5)
+      // The same small block presses on both: one dips under it and the other does not.
+      cutOut(pen, c, INK.steel, () => pen.rect(x + 0.52 * w, y - (0.5 - (holds ? 0 : sag)) * w - c * (holds ? 0.36 : 0.22), 0.36 * w, c * 0.16))
       break
     case 'prop':
       // The same strip dips with nothing under it, and lies level on a post.

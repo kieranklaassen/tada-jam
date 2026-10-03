@@ -236,16 +236,17 @@ export class View {
     pen.strokeStyle = INK.line
     pen.globalAlpha = 0.9
     pen.lineWidth = Math.max(1.5, cell * 0.05)
-    pen.beginPath(); pen.moveTo(cx - cell * 0.7, cy); pen.lineTo(cx + cell * 2.6, cy); pen.stroke()
+    pen.beginPath(); pen.moveTo(cx - cell * 0.7, cy); pen.lineTo(cx + cell * 4.6, cy); pen.stroke()
     pen.globalAlpha = 1
     chief(pen, cx, cy, cell * 1.1, toy.chief.pose, stream(11), toy.chiefHat)
     // The model in front of it: the way that fails and then the idea while it shows the neat way; two models side by
     // side while it shows the one change; the idea's model once shown; and its own small triangle otherwise.
     const showing = toy.showing, t = toy.chief.progress
     const span = (a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)))
-    if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * 1.25, cy, cell * 1.1, t >= 0.5, span(0.34, 0.46), stream(12))
-    else if (showing && 'differences' in showing) compareModels(pen, showing.differences, cx + cell * 1.2, cy, cell, t >= 0.5, t < 0.5 ? span(0.2, 0.34) : span(0.62, 0.76), stream(12))
-    else if (toy.marginModel) ideaModel(pen, toy.marginModel, cx + cell * 1.25, cy, cell * 1.1, true, 0, stream(12))
+    // The models are drawn large enough to read from across the sheet: a cell and a half to the model's own cell.
+    if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * 1.5, cy, cell * 1.9, t >= 0.5, span(0.34, 0.46), stream(12))
+    else if (showing && 'differences' in showing) compareModels(pen, showing.differences, cx + cell * 1.4, cy, cell * 1.35, t >= 0.5, t < 0.5 ? span(0.2, 0.34) : span(0.62, 0.76), stream(12))
+    else if (toy.marginModel) ideaModel(pen, toy.marginModel, cx + cell * 1.5, cy, cell * 1.9, true, 0, stream(12))
     else chiefModel(pen, cx + cell * 1.2, cy, cell * 1.1, stream(12))
     drawn += 2
 
@@ -402,9 +403,9 @@ export class View {
     // The trolley's compartment: the trolley with its stack while it is at home, and the weights not on it.
     const cart = game.trolley, carried = hand?.what === 'trolley' && hand.carried ? hand.finger : null
     const home = at2((boxes[0].x0 + boxes[0].x1) / 2 - 0.25, low + 0.55)
-    spareWeights(pen, ...at2(boxes[0].x0 + 0.45, low + 1.75), cell, 6 - cart.weights)
+    spareWeights(pen, ...at2(boxes[0].x0 + 0.5, low + 1.6), cell * 0.9, 6 - cart.weights)
     if (carried) trolley(pen, ...at2(carried[0], carried[1] - 0.2), cell, cart.weights, 'tray', 0, stream(31))
-    else if (!cart.at && !game.trolleyFell) trolley(pen, home[0], home[1], cell, cart.weights, 'tray', 0, stream(31))
+    else if (!cart.at && !game.trolleyFell) trolley(pen, home[0], home[1], cell * 1.15, cart.weights, 'tray', 0, stream(31))
     // On the bridge: trundling from where it was set down to where it rests, riding under the plank, or swinging from a pin.
     const place = game.trolleyPlace()
     if (place && cart.at && !carried) {
@@ -423,8 +424,15 @@ export class View {
 
     // The tracing paper: the pad at the bottom, and the two tracings kept above it. The one laid on the board is marked.
     const paper = boxes[1], half = (paper.x1 - paper.x0) / 2
-    const [px0, py0] = at2(paper.x0 + 0.25, low + 0.85)
-    tracingSheet(pen, px0, py0, (half * 2 - 0.5) * cell, cell * 0.6, cell, null)
+    // The pad: three sheets of tracing paper, each a little askew on the one under it, and the pencil that lies on them.
+    for (let i = 0; i < 3; i++) { const [px0, py0] = at2(paper.x0 + 0.3 + 0.05 * i, low + 0.9 - 0.06 * i); tracingSheet(pen, px0, py0, (half * 2 - 0.65) * cell, cell * 0.62, cell, i === 2 ? [] : null) }
+    const [pcx, pcy] = at2(paper.x0 + 0.55, low + 0.42)
+    pen.strokeStyle = INK.pencil
+    pen.lineCap = 'round'
+    pen.lineWidth = Math.max(2, cell * 0.08)
+    pen.beginPath(); pen.moveTo(pcx, pcy); pen.lineTo(pcx + cell * 1.1, pcy - cell * 0.22); pen.stroke()
+    pen.strokeStyle = INK.steelDark
+    pen.beginPath(); pen.moveTo(pcx + cell * 1.1, pcy - cell * 0.22); pen.lineTo(pcx + cell * 1.2, pcy - cell * 0.24); pen.stroke()
     for (const slot of [0, 1] as const) {
       const [sx, sy] = at2(paper.x0 + slot * half + 0.15, top - 0.15)
       tracingSheet(pen, sx, sy, (half - 0.3) * cell, cell * 0.95, cell, sheet.tracings[slot] ?? null)
