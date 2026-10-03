@@ -3,11 +3,18 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
-- Look in use: none yet.
-- Open: the design sheet in `ART.md` and its check.
+- Stage: sheet. The design sheet is whole in `ART.md` as it stands at commit `c5edd65`. Hash of the sheet part (everything above `## The look`): `2bdd3321af364369a6dec9009cc63700c8c293dd8712678156a7a37973bdd404`.
+- Look in use: none yet. First reserved look: inflatable vinyl toys.
+- Open: sheet ready for check, round 1
 
-The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
+The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The parts below belong to the block.
+
+### For the lead
+
+- **How the sheet reads the brief.** The brief has one friend who shows two and gets two. The sheet shows the amount by how many friends of one kind come by together (a troop of one, two or three, one balloon each), because whole bodies in a row are the only thing on a friend that a two-year-old can take in as two or three alike. If the amount must sit on a single friend, say so and the representation, the grid and the rules change with it.
+- **Records.** Of the eight records in the brief, two are not named: `us-ca 2.1` of the infant-toddler lane and the peuter card's Hoeveelheden / 1. Both are about number words or counting, and the game has neither. Three are added, read through the lookup on 2026-10-03, all confirmed: `us-ca 1.6` of the preschool mathematics foundations, and the peuter card's Hoeveelheden / 3 and Hoeveelheden / 4.
+- **Where the cloud page and the guide differ.** The guide says a remote builder's commit messages name no tool; the cloud page gives a fixed last line that names one. The commits on this branch end with the cloud page's line.
+- No pull request is opened from this branch: the lead builds it.
 
 ### Template notes
 
