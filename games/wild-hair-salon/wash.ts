@@ -133,6 +133,12 @@ export class Watercolour {
     this.grainTile = this.paintGrain()
   }
 
+  /** Gives back the memory of every sheet it made. A tablet's browser keeps a tight count of canvas memory, and a sheet that is only dropped is not given back at once. */
+  dispose(): void {
+    for (const sheet of [...this.sheets.values(), this.grainTile]) { sheet.canvas.width = 0; sheet.canvas.height = 0 }
+    this.sheets.clear()
+  }
+
   /** Paints from another stream from here on: a piece that is painted again draws the same blooms as before. */
   from(rng: Rng): this {
     this.rng = rng

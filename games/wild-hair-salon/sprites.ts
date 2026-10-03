@@ -84,6 +84,14 @@ export class Sprites {
     this.glow = this.makeGlow()
   }
 
+  /** Gives back the memory of every sheet, before a new set is made for another size. */
+  dispose(): void {
+    const sheets = [this.backdrop, this.ruff.sheet, this.face.sheet, this.ear.sheet, this.cape.sheet, this.tailTuft.sheet, this.glow.sheet, ...this.tufts.map((tuft) => tuft?.sprite.sheet)]
+    for (const sheet of sheets) if (sheet) { sheet.canvas.width = 0; sheet.canvas.height = 0 }
+    this.tufts = []
+    this.paint.dispose()
+  }
+
   /** Paints one piece on a sheet of its own, from a stream of its own. */
   private piece(n: number, shape: (rng: ReturnType<typeof makeRng>) => Point[], paintIt: (g: Ctx, paint: Watercolour, outline: Point[], rng: ReturnType<typeof makeRng>) => void): Sprite {
     const rng = makeRng(this.seed * 31 + n)
@@ -131,6 +139,7 @@ export class Sprites {
       paint.pencil(g, [mid(outline[0], outline[8], 0.25), mid(outline[1], outline[7], 0.25), mid(outline[2], outline[6], 0.25)], false, 0.55)
       paint.pencil(g, [mid(outline[0], outline[8], 0.75), mid(outline[1], outline[7], 0.75), mid(outline[2], outline[6], 0.75)], false, 0.55)
     })
+    if (have) { have.sprite.sheet.canvas.width = 0; have.sprite.sheet.canvas.height = 0 }
     this.repaints++
     this.tufts[index] = { steps, sprite }
     return this.tufts[index]!

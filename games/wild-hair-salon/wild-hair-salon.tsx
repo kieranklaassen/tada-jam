@@ -83,7 +83,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (!g || canvas.width <= 0 || canvas.height <= 0) return
       if (spike) { drawn.drawCalls = spike.draw(g, canvas.width, canvas.height); return }
       const size = `${canvas.width}x${canvas.height}`
-      if (!sprites || spritesFor !== size) { sprites = new Sprites(browserSheet, canvas.width, canvas.height, SPIKE_SEED); spritesFor = size }
+      if (!sprites || spritesFor !== size) {
+        sprites?.dispose()
+        sprites = new Sprites(browserSheet, canvas.width, canvas.height, SPIKE_SEED)
+        spritesFor = size
+      }
       drawn.drawCalls = drawFrame(g, canvas.width, canvas.height, sprites, { salon: toy.game, puppet: toy.puppet, hair: toy.hair, guidance, time: toy.time })
     }
 
@@ -234,6 +238,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       uninstallPerf()
       overlay.dispose()
       audio.dispose()
+      sprites?.dispose()
     }
   }, [])
 

@@ -90,6 +90,17 @@ describe('one frame of the toy', () => {
     expect(sprites.repaints - toy.game!.mane.length).toBeLessThanOrEqual(during + 1)
   })
 
+  it('gives its sheets back when it is done with them', () => {
+    const sheets: { canvas: { width: number; height: number } }[] = []
+    const { make } = fakeSheets()
+    const keep: MakeSheet = (w, h) => { const sheet = make(w, h); sheets.push(sheet as never); return sheet }
+    const sprites = new Sprites(keep, W, H, 1), surface = make(W, H), toy = opened()
+    drawFrame(surface.g as Ctx, W, H, sprites, frameOf(toy))
+    expect(sheets.some((sheet) => sheet.canvas.width > 0)).toBe(true)
+    sprites.dispose()
+    expect(sheets.every((sheet) => sheet.canvas.width === 0 && sheet.canvas.height === 0)).toBe(true)
+  })
+
   it('makes its sheets once for a size: a frame makes none', () => {
     const { make, made } = fakeSheets()
     const sprites = new Sprites(make, W, H, 1), surface = make(W, H), toy = opened()
