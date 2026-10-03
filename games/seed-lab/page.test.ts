@@ -63,14 +63,29 @@ describe('a pod that bursts', () => {
     expect(ids(state, 'tray')).toEqual([9, 10, 11, 12, 13, 14])
   })
 
-  it('leaves a tray plant that holds a pod where it is, and sends the young that find no pot to the border', () => {
+  it('always lands in the tray: a tray plant that holds a pod hops to the border too, and bursts its pod as it goes', () => {
     let state = burst(dab(page(), 1, 2).state, 2).state
     state = dab(state, 1, 5).state
+    const waiting = podOn(state, 5)!.seeds
+    const step = burst(dab(state, 1, 2).state, 2)
+    state = step.state
+    expect(plantById(state, 5)!.row).toBe('border')
+    expect(state.pods).toEqual([])
+    const tray = state.plants.filter((plant) => plant.row === 'tray')
+    expect(tray).toHaveLength(6)
+    for (const plant of tray) expect(plant.from).toEqual({ how: 'seed', onto: 2, dust: 1 })
+    const sideBrood = state.plants.filter((plant) => plant.from.how === 'seed' && plant.from.onto === 5)
+    expect(sideBrood.map((plant) => plant.pairs)).toEqual(waiting)
+    expect(sideBrood.every((plant) => plant.row === 'border')).toBe(true)
+    expect(step.events.filter((event) => event.type === 'burst').map((event) => (event as { on: number }).on)).toEqual([2, 5])
+  })
+
+  it('sends the plants that stood in the tray to the border in the order they came up, not the order they stand in', () => {
+    let state = burst(dab(page(), 1, 2).state, 2).state
+    state = move(move(state, 3, 'shelf', 4).state, 3, 'tray', 5).state
+    state = move(state, 8, 'tray', 0).state
     state = burst(dab(state, 1, 2).state, 2).state
-    expect(plantById(state, 5)).toMatchObject({ row: 'tray', slot: 2 })
-    expect(state.plants.filter((plant) => plant.row === 'tray')).toHaveLength(6)
-    expect(state.plants.filter((plant) => plant.id > 8 && plant.row === 'border')).toHaveLength(1)
-    expect(podOn(state, 5)).toBeDefined()
+    expect(ids(state, 'border')).toEqual([3, 4, 5, 6, 7, 8])
   })
 
   it('brings each young up in the soil of its own pot', () => {

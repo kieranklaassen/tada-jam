@@ -14,7 +14,7 @@ import { PACKETS, lookCode, lookOf, type PacketId, type Pairs } from './plant'
 
 export type PageEvent =
   | { type: 'pod-set'; on: number; dust: number }
-  /** Dust on a flower that already holds a pod: it sneezes the dust back out. */
+  /** Dust on a flower that already holds a pod: the pod blows it back out. */
   | { type: 'pod-full'; on: number }
   | { type: 'burst'; on: number; young: number[] }
   | { type: 'grew'; id: number; how: 'packet' | 'runner' }
@@ -133,28 +133,39 @@ export function dab(state: LabState, dustId: number, ontoId: number): Step {
 }
 
 /**
- * A pod bursts. The tray's plants that hold no pod of their own move to the
- * border, the six young come up in the tray's free pots, each in that pot's
- * soil, and any that find no pot come up in the border.
+ * A pod bursts. Its brood always lands in the tray: plants still standing
+ * there hop to the border first, in the order they came up, and the six
+ * young come up in the six pots, each in that pot's soil. A plant that hops
+ * while it holds a pod of its own bursts it as it goes, and those young come
+ * up in the border beside it, since a pod sits only on a plant in a pot.
  */
 export function burst(state: LabState, ontoId: number): Step {
-  const pod = podOn(state, ontoId), onto = plantById(state, ontoId)
-  if (!pod || !onto) return still(state)
+  const pod = podOn(state, ontoId)
+  if (!pod || !plantById(state, ontoId)) return still(state)
   const events: PageEvent[] = []
   let next: LabState = { ...state, pods: state.pods.filter((one) => one.on !== ontoId) }
-  const leaving = next.plants.filter((plant) => plant.row === 'tray' && !podOn(next, plant.id)).sort((a, b) => a.slot - b.slot)
-  next = toBorder(next, leaving.map((plant) => plant.id), events)
-  const free = Array.from({ length: ROW_SIZE.tray }, (_, slot) => slot).filter((slot) => !plantAt(next, 'tray', slot))
-  const young: number[] = []
-  const from: Origin = { how: 'seed', onto: ontoId, dust: pod.dust }
-  for (const pairs of pod.seeds) {
-    const id = next.nextId
-    const slot = free.shift()
-    const plant: Plant = slot === undefined ? { id, pairs, dry: false, row: 'border', slot: BORDER_PLACES, from } : { id, pairs, dry: isDry(next, 'tray', slot), row: 'tray', slot, from }
-    next = { ...next, nextId: id + 1, plants: [...next.plants, plant] }
-    if (slot === undefined) next = toBorder(next, [id], events)
-    young.push(id)
+  const standing = next.plants.filter((plant) => plant.row === 'tray').sort((a, b) => a.id - b.id)
+  for (const plant of standing) {
+    next = toBorder(next, [plant.id], events)
+    const own = podOn(next, plant.id)
+    if (!own) continue
+    next = { ...next, pods: next.pods.filter((one) => one.on !== plant.id) }
+    const young: number[] = []
+    for (const pairs of own.seeds) {
+      const id = next.nextId
+      next = { ...next, nextId: id + 1, plants: [...next.plants, { id, pairs, dry: false, row: 'border', slot: BORDER_PLACES, from: { how: 'seed', onto: plant.id, dust: own.dust } }] }
+      next = toBorder(next, [id], events)
+      young.push(id)
+    }
+    events.push({ type: 'burst', on: plant.id, young })
   }
+  const young: number[] = []
+  pod.seeds.forEach((pairs, slot) => {
+    const id = next.nextId
+    const plant: Plant = { id, pairs, dry: isDry(next, 'tray', slot), row: 'tray', slot, from: { how: 'seed', onto: ontoId, dust: pod.dust } }
+    next = { ...next, nextId: id + 1, plants: [...next.plants, plant] }
+    young.push(id)
+  })
   return { state: next, events: [{ type: 'burst', on: ontoId, young }, ...events] }
 }
 
