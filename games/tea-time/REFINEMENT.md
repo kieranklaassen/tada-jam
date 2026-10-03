@@ -3,9 +3,9 @@
 
 ## Status
 
-- Stage: sheet, being written (first run, from base commit 2a133cc). The first two headings are in `ART.md`.
-- Look in use: none yet. Reserved: blue-and-white glazed pottery (first and only row).
-- Open: the rest of the design sheet in `ART.md`, then its check.
+- Stage: sheet. First run, cut from base commit 2a133cc. The design sheet is whole in `ART.md` at commit f39c7f7; the sha256 of its sheet part (everything above `## The look`) is `7d2069347ad4c052181030adc63ce6bf6b79a08e7917688a5120f514f8518dff`.
+- Look in use: none yet. Reserved: blue-and-white glazed pottery, the first and only row; its spike comes next.
+- Open: sheet ready for check, round 1
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
