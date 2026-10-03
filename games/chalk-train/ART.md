@@ -15,7 +15,7 @@ Chalk Train: the child draws on a patch of tar with a finger, and a small chalk 
 
 - The cue table of wordless clarity has no row below 3. Its 3 to 4 row is taken as the ceiling and cut further (pack: game-design, ages-2-to-4.md). Its "Avoid" column is a hard limit here: no text, numeral or pictorial icon to decode, no spoken instruction, no verdict, never several activities live at once, and no tool on screen before it means anything. So there is no palette, no eraser, no button and no thought bubble. The whole screen is the tar, and the finger is the chalk.
 - Everything essential works with a tap. A tap lays a chalk dot and the train comes to it. A drag lays a line, survives a lifted finger (the line simply ends there and stays), and counts when partly done: the train rides however much of it exists.
-- No pinch, tilt, shake, double tap or long press. A second finger draws a second line.
+- No pinch, tilt, shake, double tap or long press. One finger draws at a time: another finger or a resting palm is ignored, draws nothing, and never ends the line being drawn.
 - Every touch is answered when the finger lands, and there is no dead end: no mark can be wrong, and the train can always reach any mark.
 - Things the child aims at (the train, a rider, a rider's home) are about 100 logical pixels across or more, well apart, and none sits in the bottom strip where wrists rest. Drawing needs no aim at all.
 - One loved action, offered again and again: making a line and watching something run along it. A whole cycle (one rider taken home) fits in one to three minutes. Never more than four riders on the tar, and at most three stops at once.
@@ -43,18 +43,18 @@ Chalk Train: the child draws on a patch of tar with a finger, and a small chalk 
 
 ## The object-by-action grid, and what is new on day 15
 
-The child has one tool, chalk, and five kinds of mark. A mark's kind is read from its shape after it is made; the child never picks one from a menu. The grid is what each kind of mark does to each of the six things it can land on. Two rules fill it, and they never change: **the form of the mark is the form of the ride**, and **chalk laid on a thing chalks that thing**.
+The child has one tool, chalk, and five kinds of mark. A mark's kind is read from its shape after it is made; the child never picks one from a menu. The grid is what each kind of mark does to each of the six things it can land on. Two rules fill it, and they never change: **the form of the mark is the form of the ride**, and **chalk laid on a thing chalks that thing**. A rider's home is not a row of the grid: chalk laid on a home lies on the tar under it and is read as on bare tar, and the home also answers the touch with its own small move and sound (the pond ripples with a blip, the nest rustles, the leaf flaps, the cushion puffs out a sigh), the same for every kind of mark.
 
 The kinds of mark: a **tap** (a dot), a **line** (straight or bending, flat or sloping), a **zigzag** (sharp corners back and forth), a **loop** (the line crosses itself going round), and a **scribble** (a lot of chalk in a small place).
 
 | Lands on | Tap | Line | Zigzag | Loop | Scribble |
 | --- | --- | --- | --- | --- | --- |
 | **Bare tar** | A dot with a dust puff and a dry tick. The engine trundles over, bumping, and sits on it with a hoot. | A rail with sleepers. The engine gathers speed, smoke streaming, long whistle; it leans on bends and chuffs up slopes. | A clack at every corner. The wagons bunch and spring apart, and the engine hiccups a toot at each point. | Loop the loop. The engine rides upside down, its funnel cap drops and lands back on, and the whistle swoops up and down. | A chalk thicket. The engine burrows in, spins about, bursts out white with dust and sneezes. |
-| **The engine** | A smoke ring, crossed eyes and a small poot. | Pulled away: it leaps onto the line with spinning wheels and a screech, front wheels lifting. | Striped in that chalk. It wriggles and giggles in stuttering toots, and keeps the stripes until it next meets water. | Lassoed. It spins once on the spot with a kettle whistle and spiral eyes. | Lost in a dust cloud. It shakes like a wet dog, dust flies, and it coughs one grey puff. |
-| **A rider** | Its own trick: the frog hop-croaks, the chick flaps and trills, the snail pops in and out of its shell, the cat stretches and chirps. | The train comes to it. A waiting rider climbs aboard in its own way; a rider at home leans out and greets the train. | Tickled. It is bounced along the corners as on stepping stones, squeaking in its own voice. | A chalk hoop. The rider spins it round its middle three times, humming, then lets it drop, and the ring stays on the tar. | Dusted pale. It sneezes its own sneeze and shakes itself clean. |
-| **The puddle** | A plop, spreading rings and one drop that jumps. | The chalk goes dark and smeary where it is wet. The train drives through with a bow wave and a hiss and leaves wet wheel prints that dry. | A skipping splash at each crossing of the water, like a skimmed stone: plip, plip, plip. | A dry road round the water. The train circles it leaning in, its reflection rides upside down in the puddle, and the whistle echoes. | The chalk melts in. The water swirls into that pastel with a glug, and a train that next goes through comes out tinted and leaves coloured prints. |
-| **The dandelion in the crack** | The seed head bursts with a soft puff and the seeds drift off. A new head grows back while the child watches. | The train brushes past. The stalk bends flat and twangs back. | The stalk is batted left and right at every pass, a tick-tock of twangs. | A chalk garden ring. Inside it the dandelion opens into a yellow flower and stays open as long as the ring is there. | A furry white tuft of stuck seeds. A train riding through comes out with a seed beard and blows it off with a toot. |
-| **A chalk line already there** | Calls the train: it rides the line to that spot at speed and rings its bell. | A crossing. The train goes straight over it with a double clack. | A rumble strip of hatches. The train drums over it and its wagons chatter. | A curl in the line. The train takes the curl as a small loop and carries on. | A knot. The train squeezes through slowly with a creak and pops out with a cork sound. |
+| **The engine** | A smoke ring, crossed eyes and a small poot. | Pulled away: it leaps onto the line with spinning wheels and a screech, front wheels lifting. | Striped in that chalk. It wriggles and giggles in wheezy puffs of steam, and keeps the stripes until it next meets water. | Lassoed. It spins once on the spot with a kettle whistle and spiral eyes. | Lost in a dust cloud. It shakes like a wet dog, dust flies, and it coughs one grey puff. |
+| **A rider** | Its own trick: the frog hop-croaks, the chick flaps and trills, the snail pops in and out of its shell, the cat stretches and chirps. | The train comes to it and stops with a coupling clunk. A waiting rider climbs aboard in its own way and thumps down in the wagon; a rider at home leans out and greets the train with its own call. | Tickled. It is bounced along the corners as on stepping stones, squeaking in its own voice. | A chalk hoop. The rider spins it round its middle three times, humming, then lets it drop, and the ring stays on the tar. | Dusted pale. It sneezes its own sneeze and shakes itself clean. |
+| **The puddle** | A plop, spreading rings and one drop that jumps. | The chalk goes dark and smeary where it is wet. The train drives through with a bow wave and a hiss and leaves wet wheel prints that dry. | A skipping splash at each crossing of the water, like a skimmed stone: plip, plip, plip. | A dry road round the water. The train circles it leaning in, its reflection rides upside down in the puddle, and the whistle echoes. | The chalk melts in. The water swirls into that pastel with a glug, and a train that next goes through comes out tinted and leaves coloured prints that dry away. |
+| **The dandelion in the crack** | The seed head bursts with a soft puff and the seeds drift off. A new head grows back while the child watches. | The train brushes past. The stalk bends flat and twangs back. | The stalk is batted left and right at every pass, a tick-tock of twangs. | A chalk garden ring. Inside it the dandelion opens into a yellow flower with a rising rustle of petals, and stays open as long as the ring is there. | A furry white tuft of stuck seeds. A train riding through comes out with a seed beard and blows it off with a toot. |
+| **A chalk line already there** | Calls the train: it rides the line to that spot at speed and rings its bell. | A crossing. The train goes straight over it with a double clack. | A rumble strip of hatches. The train drums over it and its wagons chatter. | A curl in the line. The train takes the curl as a small quick loop, its wagons cracking round one after another like a whip with a rising zip, and carries on. | A knot. The train squeezes through slowly with a creak and pops out with a cork sound. |
 
 Every cell differs in what is seen and in what is heard, and the rules module holds the grid as data with a test that no two cells share a sight or a sound.
 
@@ -93,12 +93,12 @@ Every cell differs in what is seen and in what is heard, and the rules module ho
 No mark is wrong, so nothing here is an error in the sense of a wrong answer. What can happen is that a mark does less than the child meant. Each case shows as a consequence in the world, by the one rule of the toy.
 
 - **The line stops short.** The train rides to the open end, brakes, and peers over it. The rider leans out toward its home. The bare tar between the end of the chalk and the home is the gap, in plain view. The child adds a mark; the line already there stays.
-- **There is a gap between two marks.** The train leaves the chalk, trundles across the gap slowly and bumpily with its wagons rattling, and picks up speed again on the next chalk. The bump happens exactly where the gap is, and the wheels leave a faint dusty trail across it, so the place stays marked.
+- **There is a gap between two marks.** The train leaves the chalk, trundles across the gap slowly and bumpily with its wagons rattling, and picks up speed again on the next chalk. The bump happens exactly where the gap is, and the wheels leave a faint dusty trail across it that fades as the train rides on, so the place is marked while the child is looking.
 - **The line goes somewhere else.** The train goes there too, and waits. Any new mark, anywhere, brings it on.
 - **Only taps.** The train trundles from dot to dot. The rider gets home, shaken about by the bumps. Slow and bumpy is the consequence of no line; it is still a ride, and the snail likes it.
 - **A form the rider dislikes.** The rider reacts to the thing: the cat's fur stands on end over the corners, the snail hides from the loop. The reaction is to the ride and is as good to watch as a liked one. The ride still counts and the rider still gets home.
 
-In every case the state stays: no mark is removed, nothing resets, no rider is lost, and nothing gives a verdict. There is no buzzer, cross, sad face turned to the child, or cheer. Getting home is also only a consequence: the rider gets out and does what it came for.
+In every case the state stays: no mark is removed by a miss (the oldest chalk only pales and goes when the tar is full, as under "What is stored"), nothing resets, no rider is lost, and nothing gives a verdict. There is no buzzer, cross, sad face turned to the child, or cheer. Getting home is also only a consequence: the rider gets out and does what it came for.
 
 ## The designed order, and what is stored
 
@@ -111,11 +111,11 @@ In every case the state stays: no mark is removed, nothing resets, no rider is l
 3. `up-and-down`: the home is higher or lower than the stop. New: slope.
 4. `round-the-water`: the puddle lies between the stop and the home. New: the puddle, to go through or round.
 5. `far-rider`: the rider waits away from the train. New: fetching, a second leg.
-6. `two-at-once`: two riders wait at two stops, each with its own home, and the train has two wagons. A combination of everything before, in any order the child likes.
+6. `two-at-once`: two riders wait at two stops, each with its own home, and both wagons are needed. A combination of everything before, in any order the child likes.
 
 The puddle and the dandelion are part of the tar from the first visit and can be drawn on at every position; a layout only decides whether the puddle lies on the way.
 
-**The harder option the child can see and pick.** From the second cycle on, the next rider is already waiting on the tar. The child may fetch it before taking the current rider home and carry both at once. It is farther away, so it looks like more, and it is never asked for.
+**The harder option the child can see and pick.** From the first cycle on, the next rider is drawn in at its stop when the child's first mark begins the cycle, so while the child works the next rider is already waiting on the tar. The train has two wagons at every position, so while a wagon is free the child may fetch the waiting rider before taking the current rider home and carry both at once. It is farther away, so it looks like more, and it is never asked for.
 
 **How a cycle is judged.** The game's own call: by how much of the riders' way from stop to home was ridden on chalk, by distance.
 
@@ -142,7 +142,7 @@ No clock is read. The position moves when the ending starts, never inside a cycl
 - `chalk`: the colour the next mark takes, the next of five pastels in a fixed order.
 - `shown`: the first showing has played.
 
-Whether the dandelion is in flower is read from the marks and not stored. A largest legal state is held under half of the 64 KB cap by a test.
+Whether the dandelion is in flower or wears a seed tuft, and where chalk lies dark in the puddle, are read from the marks and not stored. A largest legal state is held under half of the 64 KB cap by a test.
 
 ## The characters and their fixed tastes
 
@@ -178,7 +178,7 @@ Each scene is a list of timed beats on the template's `scene.ts`, filled in from
 
 **How a cycle ends.** With the last rider of the layout home, the ending stands for as long as the child likes: the riders stay in their homes doing small things, the engine stands and puffs, and the chalk stays. If the child does nothing, nothing new starts. There is no next round by itself and no countdown.
 
-**How the next one starts.** The next rider is already on the tar, waiting at its stop, looking at its own home. It comes in on the child's touch: the child's next mark begins the next cycle, and the rider boards when the train reaches it. When that cycle begins, the rider after it is drawn in at its stop, and the home from two cycles back is rubbed away with its rider's wave, so there are never more than four riders and three stops on the tar. On load the world is as it was left: the same chalk, the train where it came to rest, each rider where it was, and the next one waiting. Nobody refers to the absence.
+**How the next one starts.** The next rider is already on the tar, waiting at its stop, looking at its own home. It comes in on the child's touch: the child's next mark begins the next cycle, and the rider boards when the train reaches it. When that cycle begins, the rider after it is drawn in at its stop, and earlier homes are rubbed away with their riders' waves until only the home reached last is left. Of a layout with two riders only the first waits ahead on the tar; the second is drawn in at its stop when that cycle begins. So there are never more than four riders (two of the layout in play, one waiting, one at home) and three stops on the tar. On load the world is as it was left: the same chalk, the train where it came to rest, each rider where it was, and the next one waiting. Nobody refers to the absence.
 
 ## The records
 
