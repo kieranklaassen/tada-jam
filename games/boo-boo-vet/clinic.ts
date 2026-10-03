@@ -109,8 +109,9 @@ export function comeIn(clinic: Clinic, from: 'door' | 'carrier'): { clinic: Clin
     table: newcomer,
     garden: left ? [...clinic.garden, left].slice(-GARDEN_HOLDS) : clinic.garden,
     shown,
-    // The mouse puts the cart in order: every thing comes back, and the blanket comes off the basket.
-    things: { ...TIDY, plasters: clinic.things.plasters },
+    // The mouse puts the cart in order: every thing comes back, and the blanket comes off the basket. A plaster
+    // stuck on the animal goes where the animal goes: to the door with one that changes places, out of view otherwise.
+    things: { ...TIDY, plasters: clinic.things.plasters.flatMap((spot): PlasterSpot[] => (spot !== 'patient' ? [spot] : swapped && from === 'door' ? ['waiting'] : [])) },
     made: { ...clinic.made, den: false },
   }
   if (swapped) {
