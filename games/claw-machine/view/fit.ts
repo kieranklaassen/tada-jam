@@ -13,6 +13,8 @@ const KEY_POINTS: readonly Vector3[] = [
   new Vector3(FRAME.minX, 0, FRAME.floorZ), new Vector3(FRAME.maxX, 0, FRAME.floorZ),
   new Vector3(FRAME.minX, FRAME.top, FRAME.topZ), new Vector3(FRAME.maxX, FRAME.top, FRAME.topZ),
   new Vector3(FRAME.minX, 0, -9), new Vector3(FRAME.maxX, 0, -9),
+  // The claw at its highest, carrying a tall toy over a gobbler.
+  new Vector3(0, 19, -4.5),
 ]
 
 const forward = new Vector3(0, -Math.sin(PITCH), -Math.cos(PITCH))

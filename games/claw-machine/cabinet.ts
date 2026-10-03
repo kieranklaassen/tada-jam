@@ -30,7 +30,7 @@ export function cabinetBricks(): Brick[] {
   const out: Brick[] = []
   const plates = (height: number) => Math.round(height / PLATE)
   // The floor of the cabinet.
-  for (let x = -20; x < 20; x += 8) out.push({ x, y: -1, z: -18, w: 8, d: 34, h: 1, colour: FLOOR })
+  for (let x = -20; x < 20; x += 8) out.push({ x, y: -1, z: WALL.z, w: 8, d: 25, h: 1, colour: FLOOR })
   // The tray: one plain pale plate, and a rim in the machine's own colour.
   out.push({ x: TRAY.x, y: 0, z: TRAY.z, w: TRAY_WIDTH, d: TRAY_DEPTH, h: 1, colour: TRAY_COLOUR })
   const rim = () => TRIM

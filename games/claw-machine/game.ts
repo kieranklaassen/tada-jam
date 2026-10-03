@@ -256,6 +256,8 @@ export class Game {
       if (this.lifted >= 0) this.dropGobbler()
       this.still = 0; this.noticed = false; this.wagTurns = 0; this.wagWay = 0
     }
+    // With one crate on the ledge, either side of the ledge means that crate.
+    if (aim.target.on === 'ledge' && this.crates.length > 0) aim = { ...aim, target: { on: 'ledge', which: Math.min(aim.target.which, this.crates.length - 1) } }
     this.aim = aim
     const to = this.trolleyFor(aim)
     follow(this.claw, to.x, to.z, this.fromClaw)
@@ -328,7 +330,7 @@ export class Game {
       const actor = this.crew[this.lifted], up = actor.id === 'big' ? 0.5 : 2.6
       return crewSpot(actor.slot, this.crew.length).y + knobAt(shapeOf(actor.id)).y + JAW_REACH * 0.55 + up
     }
-    return Math.max(LOWEST_RIDE, near + below + 1.5)
+    return Math.max(LOWEST_RIDE, near + below + 1)
   }
 
   /** The height of what the jaws will land on when they drop for the thing the claw is going for. */

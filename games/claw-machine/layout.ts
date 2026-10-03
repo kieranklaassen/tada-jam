@@ -30,7 +30,7 @@ export function waitingSpot(slot: number, crew: number): Spot {
 /** The top of a gobbler's head above its feet: its eyes, or the model on its back. */
 export function headTop(id: GobblerId): number {
   const shape = shapeOf(id)
-  return rimHeight(shape) + (shape.model ? 1.6 + toySpan({ colour: 'red', kind: shape.model, size: 'small' }).height + 0.2 : 2.3)
+  return rimHeight(shape) + (shape.model ? 0.8 + toySpan({ colour: 'red', kind: shape.model, size: 'small' }).height + 0.2 : 2.3)
 }
 
 /** Where the snack and then the toys of a group lie in a gobbler's belly, measured from its feet, in the order they went in. */
@@ -89,7 +89,7 @@ export function riderSpots(crews: readonly (readonly GobblerId[])[]): Spot[][] {
 }
 
 /** How much higher each row of riders sits than the row in front. */
-export const RISER = 2.6
+export const RISER = 1.8
 
 /** The top of everything on a crate, above the shelf: what the claw has to clear. */
 export function crateTop(which: number, crews: number): number {

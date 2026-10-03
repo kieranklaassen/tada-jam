@@ -89,8 +89,8 @@ export function gobblerParts(shape: GobblerShape): GobblerParts {
   for (const eye of eyeCentres(shape)) body.push({ x: eye.x - EYE / 2, y: (eye.y - EYE / 2) / PLATE, z: eye.z - EYE / 2, w: EYE, d: EYE, h: 0, colour: WHITE, ball: true, studs: false })
   if (shape.model) {
     // A bracket on the back of the rim, and the white model of its kind standing on it.
-    body.push(box(c, -1, rim, -3, 2, 1, 3), box(c, -3, rim + 3, -4, 6, 3, 1, true))
-    for (const brick of modelBricks(shape.model)) body.push({ ...brick, y: brick.y + rim + 4, z: brick.z - 2.5 })
+    body.push(box(c, -1, rim, -3, 2, 1, 1), box(c, -3, rim + 1, -4, 6, 3, 1, true))
+    for (const brick of modelBricks(shape.model)) body.push({ ...brick, y: brick.y + rim + 2, z: brick.z - 2.5 })
   }
   const window: Brick[] = [box(WHITE, -half + 1, at + 2, 2.25, shape.width - 2, 0.5, shape.belly - 2)]
   const [left, right] = eyeCentres(shape)
