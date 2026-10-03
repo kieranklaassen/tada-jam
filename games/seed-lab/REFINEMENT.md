@@ -12,7 +12,15 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 
 ### Template notes
 
-No entry yet. One entry a file copied from the template, written for the lead and for the games that come after: used as copied, or what was changed and why, and what is wrong or missing that any game would need. Mark a fault or a gap **for the template**. A frozen file is never changed here: a fault in one is a request to the lead.
+One entry a copied file. The game's rules are all in new modules of its own (`plant`, `chance`, `breed`, `visitors`, `order`, `lab`, `page`, `visit`, `grid`, `voices`, `loupe`).
+
+- `perf.ts`, `quality.ts`, `attention.ts`, `saveCadence.ts`: frozen, as copied.
+- `config.ts`: changed, as it is meant to be. `LADDER` holds the nine position ids and is now a tuple, with a `PositionId` type beside it; `FIRST_VISIT` has its second row from age 11 and no longer reads the band's oldest age. **For the template:** rules keyed by position want the ids as a type, and `readonly string[]` gives none; a tuple with `satisfies readonly string[]` and an exported `PositionId` works with `state.ts` unchanged.
+- `state.ts`: as copied, wrapped by `lab.ts` in the way its header describes. **For the template:** (1) a wrapper has to repeat the record and version check to know whether `deserialize` read the record or handed back a fresh state, because the two look the same from outside; exporting that check, or returning the fact, would save every game the copy. (2) `position` is a `string`, so a wrapper narrows it with a guard at each use.
+- `audio.ts`: as copied; the game plays nothing of its own yet. **For the template:** a remote builder is asked for every voice as plain numbers in one pure module with a test of ranges, and the template has no such module, so each game will invent its own shape. The one here is `voices.ts`: a voice is a list of parts (tone or noise, pitch, glide, wave or band width, peak, attack, length, start), each part one call of `tone` or `noise`.
+- `input.ts`, `guidance.ts`, `scene.ts`, `overlay.ts` and their tests: as copied, not yet used by the game's own code.
+- **Missing, for the template:** a seeded stream of chance. The guide asks every game for a seeded random stream nothing else draws from; `chance.ts` here is fifty lines that any game could share (draws that depend only on a seed, a stream and a place in it).
+- `ART.md`, `REFINEMENT.md`: as copied, filled in.
 
 ### For the owner to decide
 
