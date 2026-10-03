@@ -62,13 +62,21 @@ describe('the designed order', () => {
   })
 
   it('stays inside the bounds the records give: three groups at most, ten in a group at most', () => {
+    for (const seed of SEEDS) {
+      // The widest load splits five and four by size, so the fullest belly holds six, its snack included.
+      const sizes = layCycle('three-ways-wide', seed).toys.filter((toy) => toy.size === 'big').length
+      expect([4, 5]).toContain(sizes)
+    }
+    let fullest = 0
     for (const position of LADDER) for (const seed of SEEDS) {
       const { toys, crews } = layCycle(position, seed)
+      for (const crew of crews) for (const id of crew) fullest = Math.max(fullest, 1 + toys.filter((toy) => takes(id, toy)).length)
       for (const crew of crews) {
         expect(crew.length).toBeLessThanOrEqual(MOST_GROUPS)
         for (const id of crew) expect(1 + toys.filter((toy) => takes(id, toy)).length).toBeLessThanOrEqual(MOST_IN_A_GROUP)
       }
     }
+    expect(fullest).toBe(6)
   })
 
   it('fits every group behind its belly window, snack first, in whatever order the toys are fed', () => {
@@ -78,7 +86,7 @@ describe('the designed order', () => {
       for (const crew of crews) for (const id of crew) {
         const group = toys.filter((toy) => takes(id, toy))
         for (const order of [group, [...group].reverse(), shuffled(random, group), shuffled(random, group)]) {
-          expect(bellyLayout(shapeOf(id), [snackOf(id), ...order]), `${position} ${id}`).not.toBeNull()
+          expect(bellyLayout(shapeOf(id), [snackOf(id, toys[0]), ...order]), `${position} ${id}`).not.toBeNull()
         }
       }
     }

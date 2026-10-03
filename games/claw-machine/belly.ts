@@ -5,7 +5,8 @@ import type { Toy } from './toys'
 
 // Where a group lies in a belly. A swallowed toy is chewed small and stands
 // behind the window with the others, in the order it went in: along the
-// bottom row from the left, then along the row above.
+// bottom row from the left, and in the row above when the bottom row has no
+// room for it.
 
 /** How small a toy is in a belly. */
 export const MINI = 0.42
@@ -17,21 +18,21 @@ export type BellyPlace = { x: number; y: number; z: number }
 
 /**
  * The middle of the base of each toy of a group, measured from the gobbler's
- * feet, in the order given, or null when the group does not fit. A row runs
- * from the left until the next toy would not fit, so a toy keeps its place
- * when another is added after it.
+ * feet, in the order given, or null when the group does not fit. Each toy
+ * takes the first row that still has room for it, at the left of what is
+ * there, so a toy keeps its place when another is added after it.
  */
 export function bellyLayout(shape: GobblerShape, group: readonly Toy[]): BellyPlace[] | null {
   const inside = bellyBox(shape), rowHeight = inside.h / BELLY_ROWS
   const out: BellyPlace[] = []
-  let row = 0, used = GAP
+  const used = Array.from({ length: BELLY_ROWS }, () => GAP)
   for (const toy of group) {
     const span = toySpan(toy), length = span.length * MINI
-    if (span.height * MINI > rowHeight || length + 2 * GAP > inside.w) return null
-    if (used + length + GAP > inside.w) { row++; used = GAP }
-    if (row >= BELLY_ROWS) return null
-    out.push({ x: inside.x + used + length / 2, y: LEGS * PLATE + inside.y + row * rowHeight, z: inside.z + inside.d * 0.55 })
-    used += length + GAP
+    if (span.height * MINI > rowHeight) return null
+    const row = used.findIndex((taken) => taken + length + GAP <= inside.w + 1e-9)
+    if (row < 0) return null
+    out.push({ x: inside.x + used[row] + length / 2, y: LEGS * PLATE + inside.y + row * rowHeight, z: inside.z + inside.d * 0.55 })
+    used[row] += length + GAP
   }
   return out
 }

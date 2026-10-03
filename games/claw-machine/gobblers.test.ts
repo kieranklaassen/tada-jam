@@ -39,17 +39,23 @@ describe('the gobblers and their tastes', () => {
   })
 
   it('arrives with a snack of its own sort, and the snacks of a crew differ only in what the crew goes by', () => {
-    for (const id of GOBBLERS) {
-      expect(takes(id, snackOf(id))).toBe(true)
-      expect(bellyLayout(shapeOf(id), [snackOf(id)])).not.toBeNull()
-    }
-    for (const by of ATTRIBUTES) {
-      const snacks = crewFor(by, VALUES[by]).map(snackOf)
-      for (const other of ATTRIBUTES) {
-        const seen = new Set(snacks.map((snack) => snack[other]))
-        expect(seen.size).toBe(other === by ? snacks.length : 1)
+    // Whatever the first toy of the load is, a snack is its gobbler's sort and is like that toy in the rest.
+    for (const first of EVERY_TOY) {
+      for (const id of GOBBLERS) {
+        const snack = snackOf(id, first)
+        expect(takes(id, snack)).toBe(true)
+        for (const other of ATTRIBUTES) if (other !== GOBBLER[id].by) expect(snack[other]).toBe(first[other])
+      }
+      for (const by of ATTRIBUTES) {
+        const snacks = crewFor(by, VALUES[by]).map((id) => snackOf(id, first))
+        for (const other of ATTRIBUTES) {
+          const seen = new Set(snacks.map((snack) => snack[other]))
+          expect(seen.size).toBe(other === by ? snacks.length : 1)
+        }
       }
     }
+    // A gobbler that goes by size never gets a snack too tall for its belly from a load it can meet.
+    for (const first of EVERY_TOY) expect(bellyLayout(shapeOf('little'), [snackOf('little', first)])).not.toBeNull()
   })
 
   it('shows what it takes in its own body', () => {

@@ -13,11 +13,14 @@ import type { Toy } from './toys'
 
 type Standing = { id: string; shape: GobblerShape; x: number; y: number; z: number; waiting: boolean; snack?: Toy; pace: number; phase: number; blinkEvery: number }
 
+/** The first toy of the toy's load: the snacks take their kind and size from it. */
+const FIRST: Toy = { colour: 'red', kind: 'duck', size: 'small' }
+
 const CREW: readonly GobblerId[] = ['red', 'blue', 'yellow'], WAITING: readonly GobblerId[] = ['duck', 'car', 'rocket']
 
 const CAST: Standing[] = [
   ...CREW.map((id, i): Standing => ({
-    id: `crew-${id}`, shape: shapeOf(id), x: slotX(i, 3), y: STEP.top, z: SLOT_Z, waiting: false, snack: snackOf(id),
+    id: `crew-${id}`, shape: shapeOf(id), x: slotX(i, 3), y: STEP.top, z: SLOT_Z, waiting: false, snack: snackOf(id, FIRST),
     pace: [1.7, 1.25, 2.1][i], phase: [0.4, 2.9, 4.6][i], blinkEvery: [3.7, 5.3, 4.4][i],
   })),
   ...WAITING.map((id, i): Standing => ({

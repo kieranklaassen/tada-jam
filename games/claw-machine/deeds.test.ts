@@ -16,7 +16,7 @@ function cell(deed: Deed): string {
   if (deed.type === 'grab') return deed.left > 0 ? 'grab-top' : 'grab'
   if (deed.type === 'click') return `click-level-${deed.level}-${deed.heavy ? 'big' : 'small'}`
   if (deed.type === 'gulp') return `gulp-${deed.chomps}`
-  if (deed.type === 'spit' || deed.type === 'thrown-back' || deed.type === 'rim-slide') return `${deed.type}-${deed.heavy ? 'big' : 'small'}`
+  if (deed.type === 'spit' || deed.type === 'thrown-back' || deed.type === 'rim-slide' || deed.type === 'gate-roll') return `${deed.type}-${deed.heavy ? 'big' : 'small'}`
   return deed.type
 }
 
@@ -47,6 +47,25 @@ describe('the object-by-action grid', () => {
     }
     expect(cells.length).toBe(30)
     expect(new Set(cells).size, cells.join(' ')).toBe(30)
+    // With no one waiting on the ledge (a cycle with one sort), the ledge answers by itself, in five more ways.
+    const alone = (): World => ({ ...newWorld(null), finished: false, crates: [], position: 'two-sizes', cycle: startCycle('two-sizes', 3, false) })
+    const ledge: Target = { on: 'ledge', which: 0 }
+    const own = [
+      cell(clawLands(alone(), ledge)),
+      cell((() => { const w = alone(); return toyLetGo(w, toysOf(w, 'small')[0], ledge) })()),
+      cell((() => { const w = alone(); return toyLetGo(w, toysOf(w, 'big')[0], ledge) })()),
+      cell(clawSwingsInto(alone(), ledge, 1, false)),
+      cell(clawWaitsAbove(alone(), ledge)),
+    ]
+    expect(own).toEqual(['gate-rattle', 'gate-roll-small', 'gate-roll-big', 'gate-comb', 'gate-creak'])
+    expect(new Set([...cells, ...own]).size).toBe(35)
+  })
+
+  it('brings a toy let go on the empty ledge back onto the tray, like any other', () => {
+    const w: World = { ...newWorld(null), finished: false, crates: [], position: 'two-colours', cycle: startCycle('two-colours', 3, false) }
+    const deed = toyLetGo(w, 0, { on: 'ledge', which: 0 })
+    expect(deed.type).toBe('gate-roll')
+    expect(trayOf(w.cycle).flat().sort()).toEqual([0, 1, 2, 3])
   })
 
   it('gives the wrong use of a gobbler its own answers too', () => {
@@ -75,6 +94,18 @@ describe('an error is a consequence', () => {
     expect(bellyOf(w.cycle, other)).toEqual([])
     // The child changes one thing, the gobbler, and the same toy goes home.
     expect(toyLetGo(w, toy, { on: 'gobbler', slot: home }).type).toBe('gulp')
+  })
+
+  it('counts a first try into a gobbler that does not take the toy, whichever way the toy comes back', () => {
+    for (const position of ['two-sizes', 'two-colours', 'two-kinds'] as const) {
+      const w: World = { ...newWorld(null), finished: false, crates: [], position, cycle: startCycle(position, 4, false) }
+      const home = homeOf(w, 0)
+      const deed = toyLetGo(w, 0, { on: 'gobbler', slot: 1 - home })
+      expect(deed.type).toBe('spit')
+      expect(w.cycle.misses).toBe(1)
+      toyLetGo(w, 0, { on: 'gobbler', slot: 1 - home })
+      expect(w.cycle.misses).toBe(1)
+    }
   })
 
   it('never loses a toy, whatever is done with it', () => {

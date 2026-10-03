@@ -64,14 +64,14 @@ export function crewGoesBy(crew: readonly GobblerId[]): Attribute {
 }
 
 /**
- * The toy a gobbler arrives with in its belly: one of its own sort. The
- * snacks of one crew differ only in the attribute the crew goes by, so the
- * snacks themselves show what the crew sorts by.
+ * The toy a gobbler arrives with in its belly: one of its own sort. It takes
+ * its other two properties from the first toy of the load, so the snacks of
+ * one crew differ only in the attribute the crew goes by, and a snack is
+ * rebuilt from the saved load and is no field of the save.
  */
-export function snackOf(id: GobblerId): Toy {
+export function snackOf(id: GobblerId, first: Toy): Toy {
   const gobbler = GOBBLER[id]
-  const plain: Toy = { colour: 'yellow', kind: 'duck', size: 'small' }
-  return { ...plain, [gobbler.by]: gobbler.takes } as Toy
+  return { ...first, [gobbler.by]: gobbler.takes } as Toy
 }
 
 /** How a gobbler is built. */

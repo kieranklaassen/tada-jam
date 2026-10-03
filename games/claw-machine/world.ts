@@ -28,7 +28,7 @@ export type Cycle = {
   sort: number
   toys: Toy[]
   where: Where[]
-  /** For each toy, whether its first try of this sort has been made; and how many first tries of the cycle were spat back. */
+  /** For each toy, whether its first try of this sort has been made; and how many first tries of the cycle went into a gobbler that does not take that toy. */
   tried: boolean[]
   misses: number
 }
@@ -112,8 +112,17 @@ export function bellyOf(cycle: Cycle, slot: number): number[] {
 /** Whether one more toy fits behind a gobbler's window with its snack and what it already holds. */
 export function bellyHasRoom(cycle: Cycle, slot: number, toy: number): boolean {
   const id = cycle.crews[cycle.sort][slot]
-  const group = [snackOf(id), ...bellyOf(cycle, slot).map((one) => cycle.toys[one]), cycle.toys[toy]]
+  const group = [snackOf(id, cycle.toys[0]), ...bellyOf(cycle, slot).map((one) => cycle.toys[one]), cycle.toys[toy]]
   return bellyLayout(shapeOf(id), group) !== null
+}
+
+/**
+ * Whether anyone waits on the ledge: the next crew of this cycle, or after
+ * the ending the crates with their crews riding. In a cycle's last sort, and
+ * in every cycle with one sort, no one does, and the ledge answers by itself.
+ */
+export function someoneWaits(world: World): boolean {
+  return world.finished ? world.crates.length > 0 : world.cycle.sort + 1 < world.cycle.crews.length
 }
 
 /** Whether every toy of the load is in a belly: the sort is done. */
@@ -123,8 +132,9 @@ export function trayIsClear(cycle: Cycle): boolean {
 
 /**
  * How a cycle went, from first tries only. With P first tries (toys times the
- * sorts made) and M of them spat back: well when 6M is at most P, badly when
- * 2M is at least P, mixed between. A cycle with no try made is mixed.
+ * sorts made) and M of them into a gobbler that does not take that toy,
+ * whichever way the toy comes back: well when 6M is at most P, badly when 2M
+ * is at least P, mixed between. A cycle with no try made is mixed.
  */
 export function judge(cycle: Cycle): CycleOutcome {
   const tries = cycle.toys.length * cycle.crews.length

@@ -1,7 +1,7 @@
 import { GOBBLER, takes, type GobblerId, type LiftWay, type WrongWay } from './gobblers'
 import { TRAY, placeAt, slotX } from './places'
 import { STACK_MOST, nearestFree, nearestWithRoom, type Tray } from './tray'
-import { bellyHasRoom, bellyOf, crewNow, endCycle, nextCrew, takeCrate, trayIsClear, trayOf, type World } from './world'
+import { bellyHasRoom, bellyOf, crewNow, endCycle, nextCrew, someoneWaits, takeCrate, trayIsClear, trayOf, type World } from './world'
 
 // The object-by-action grid as rules (ART.md, "The object-by-action grid"):
 // what happens when the claw meets a thing, in each of five ways. Every deed
@@ -41,6 +41,12 @@ export type Deed =
   | { type: 'snap-miss'; gobbler: GobblerId }
   | { type: 'lean' }
   | { type: 'double-ding' }
+  // The ledge with no one waiting on it answers by itself: its gate rattles, a toy rolls or scrapes down its bars,
+  // the claw combs them, and it creaks open a crack.
+  | { type: 'gate-rattle' }
+  | { type: 'gate-roll'; toy: number; place: number; heavy: boolean }
+  | { type: 'gate-comb' }
+  | { type: 'gate-creak' }
   // The claw waits above it.
   | { type: 'spread-jaws' }
   | { type: 'breathe' }
@@ -74,6 +80,7 @@ export function clawLands(world: World, target: Target): Deed {
   if (target.on === 'rail-end') return { type: 'bell' }
   // The ledge: the ones who wait come in only on this touch, and only when the tray is clear.
   if (world.finished) return takeCrate(world, target.which) ? { type: 'take-crate', which: target.which } : { type: 'bonk-waiter' }
+  if (!someoneWaits(world)) return { type: 'gate-rattle' }
   const tipped = nextCrew(world)
   return tipped ? { type: 'next-crew', tipped } : { type: 'bonk-waiter' }
 }
@@ -123,6 +130,8 @@ export function toyLetGo(world: World, toy: number, target: Target): Deed {
       return { type: 'gulp', toy, slot, gobbler, nth, chomps: heavy ? 3 : 1, ends }
     }
     // Not its sort: the toy comes back onto the nearest free studs in front of the gobbler, and the state stays.
+    // A first try into a gobbler that does not take the toy is a miss whichever way the toy comes back: spat
+    // out, slid off a head or dropped through the bars.
     if (first && !fits) cycle.misses++
     const place = freePlace(tray, slotX(slot, crewNow(world).length), TRAY.z)
     stand(place)
@@ -135,7 +144,7 @@ export function toyLetGo(world: World, toy: number, target: Target): Deed {
   if (target.on === 'ledge') {
     const place = freePlace(tray, from.x, TRAY.z)
     stand(place)
-    return { type: 'thrown-back', toy, place, heavy }
+    return someoneWaits(world) ? { type: 'thrown-back', toy, place, heavy } : { type: 'gate-roll', toy, place, heavy }
   }
   const place = freePlace(tray, target.side * 100, from.z)
   stand(place)
@@ -148,7 +157,7 @@ export function clawSwingsInto(world: World, target: Target, direction: -1 | 1, 
     const gobbler = crewNow(world)[target.slot]
     return carrying ? { type: 'snap-miss', gobbler } : { type: 'duck', gobbler }
   }
-  if (target.on === 'ledge') return { type: 'lean' }
+  if (target.on === 'ledge') return someoneWaits(world) ? { type: 'lean' } : { type: 'gate-comb' }
   if (target.on === 'rail-end') return { type: 'double-ding' }
   const cycle = world.cycle, tray = trayOf(cycle), stack = tray[target.place]
   if (stack.length === 0) return { type: 'rattle' }
@@ -173,7 +182,7 @@ export function clawSwingsInto(world: World, target: Target, direction: -1 | 1, 
 /** The claw waits above a thing. Nothing changes; the thing shows that it has noticed. */
 export function clawWaitsAbove(world: World, target: Target): Deed {
   if (target.on === 'gobbler') return { type: 'open-wide', gobbler: crewNow(world)[target.slot] }
-  if (target.on === 'ledge') return { type: 'stare' }
+  if (target.on === 'ledge') return someoneWaits(world) ? { type: 'stare' } : { type: 'gate-creak' }
   if (target.on === 'rail-end') return { type: 'hum' }
   const height = trayOf(world.cycle)[target.place].length
   return height === 0 ? { type: 'breathe' } : height === 1 ? { type: 'spread-jaws' } : { type: 'wind-up' }
