@@ -86,9 +86,24 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * The game's challenges in their designed order, easiest first, one new thing
  * at a time (pack: game-design, ordered-challenges-high-success.md). The ids
  * are what a save stores: add steps anywhere, and never rename one that has
- * shipped. Nothing on screen shows where the child is.
+ * shipped. Nothing on screen shows where the child is. Each id names what is
+ * new at that place in this game's own order; what a customer laid out there
+ * may order is in orders.ts.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = [
+  'half', // half of a fruit, in one piece; no symbol anywhere
+  'quarter', // quarters
+  'shared', // the twins: an order in two equal pieces
+  'carried', // the ants: an order in pieces of one part each
+  'written', // the fraction laid on the ticket's share and on the open tin
+  'eighths',
+  'thirds', // thirds and sixths
+  'fifths', // fifths and tenths
+  'twelfths',
+  'bigger', // the cat: two shares, the bigger one, the sign between them
+  'longer', // the boa: more than one whole fruit
+  'bare', // tickets with no part lines
+]
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -98,6 +113,7 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'half' },
+  // From eleven a first visit opens where the notation first appears; every earlier step is still met, mixed in.
+  ...(OLDEST >= 11 ? [{ fromAge: 11, position: 'written' }] : []),
 ]
