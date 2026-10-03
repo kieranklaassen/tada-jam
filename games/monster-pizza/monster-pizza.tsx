@@ -2,17 +2,20 @@
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
-import { GameAudio, tick } from './audio'
+import { GameAudio } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
+import { Kitchen } from './kitchen'
+import { toStage } from './layout'
 import { monsterPizzaManifest } from './manifest'
 import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
+import { deserialize, serialize, type Save } from './save'
 import { SaveCadence } from './saveCadence'
+import { voiceOf } from './sounds'
 import { spikeShow } from './spike'
-import { deserialize, serialize, type GameState } from './state'
 import { KitchenView } from './view'
 
 // The Mount, showing a blank surface. Everything a game needs around its
@@ -20,6 +23,12 @@ import { KitchenView } from './view'
 // clock, touch, sound from the first touch, the idle ladder, adaptive quality,
 // the grown-up performance handle and the grown-up overlay. The renderer, the
 // rules and the sounds go in where the comments say.
+
+/** The seed of this visit's random stream: `?seed=` pins it for a still, otherwise it is new each time. */
+function seedOf(search: string): number {
+  const pinned = Number(new URLSearchParams(search).get('seed'))
+  return Number.isFinite(pinned) && pinned > 0 ? pinned >>> 0 : (Math.random() * 2 ** 32) >>> 0
+}
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -40,9 +49,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
     const view = new KitchenView(canvas)
-    const show = spikeShow()
+    // The rules, once the slot has been read. `?spike=1` shows the still scene of the look spike instead.
+    let kitchen: Kitchen | null = null
+    const still = new URLSearchParams(window.location.search).has('spike') ? spikeShow() : null
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    let state: Save | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     // The game hands a change to storage where it makes it, at one of two speeds:
@@ -51,7 +62,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     //   cadence.change(performance.now(), true)  a scene's outcome, a cycle judged, the position moved: at once,
     //                                            since a put-away in the next moment must find it saved
     // Going to rest writes whatever the throttle still holds (`cadence.settle`, below).
-    const cadence = new SaveCadence(() => { if (state) ctxRef.current.storage.save(serialize(state)) })
+    const cadence = new SaveCadence(() => {
+      if (!state) return
+      // Nothing is saved in the air: the pieces are taken at rest.
+      if (kitchen) state.pizza.pieces = kitchen.pieces()
+      ctxRef.current.storage.save(serialize(state))
+    })
 
     // The one place the game applies a quality tier: whatever its tiers set besides the pixel ratio, which
     // `resize` applies. It runs once before the first frame and again each time the governor changes tier, ahead
@@ -64,7 +80,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
     const draw = () => {
-      view.draw(show)
+      if (still) view.draw(still)
+      else if (kitchen) view.draw(kitchen.show(ladder.update(clock.seconds)))
+      else view.blank()
       drawn.drawCalls = view.draws
     }
 
@@ -91,7 +109,34 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // A game with short scenes ends the one that is playing first thing in every press, before the press is
     // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
     const act = (gestures: Gesture[]) => {
-      for (const gesture of gestures) if (gesture.type === 'press') audio.play(tick)
+      if (!kitchen) return
+      for (const gesture of gestures) {
+        if (gesture.type === 'press') {
+          const p = toStage(view.fit, gesture.at.x, gesture.at.y)
+          kitchen.press(p.x, p.y)
+        } else if (gesture.type === 'tap') kitchen.tap()
+        else if (gesture.type === 'dragMove') {
+          const p = toStage(view.fit, gesture.at.x, gesture.at.y)
+          kitchen.dragMove(p.x, p.y)
+        } else if (gesture.type === 'dragLift') kitchen.dragLift()
+        else if (gesture.type === 'dragEnd') kitchen.dragEnd()
+        else if (gesture.type === 'pressEnd') kitchen.pressEnd()
+      }
+      sound()
+      keep()
+    }
+    // The kitchen's answers are sounded in the handler that caused them, so a touch is heard as it lands.
+    const sound = () => {
+      if (!kitchen) return
+      for (const spec of kitchen.sounds) audio.play(voiceOf(spec))
+      kitchen.sounds.length = 0
+    }
+    // What the kitchen changed goes to storage: a piece set down at the throttle, an outcome at once.
+    const keep = () => {
+      if (!kitchen || kitchen.dirty === 'no') return
+      const now = kitchen.dirty === 'now'
+      kitchen.dirty = 'no'
+      cadence.change(performance.now(), now)
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -125,7 +170,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       if (!attention.awake || disposed) return
       // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
-      clock.advance(now)
+      const step = clock.advance(now)
       const start = performance.now()
       act(touch.advance(now))
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
@@ -135,6 +180,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // What to show an idle child: a glow on what can be touched, then one move.
       ladder.update(clock.seconds)
       // The game steps its rules and its scene here, and hands what they changed to storage (`cadence`, above).
+      if (kitchen) {
+        kitchen.step(step)
+        sound()
+        keep()
+      }
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that
       // frame's work.
@@ -172,6 +222,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.
+      kitchen = new Kitchen(state, seedOf(window.location.search))
       draw()
     })
     applyTier()

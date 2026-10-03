@@ -25,13 +25,13 @@ export function paintWall(g: Pen): void {
 /** The counter's near edge: drawn over the customers, so their feet are behind it. */
 export function paintLip(g: Pen): void {
   const rng = makeRng(seedFrom('lip'))
-  const band = roundRect(-40, COUNTER_Y, STAGE_W + 80, 30, 6, 2)
-  // The worktop below the lip is paper, kept plain for the work.
+  // The band runs past both ends of the stage, so a wider surface has no gap. The worktop below it is bare paper, kept plain for the work.
+  const band = roundRect(-1200, COUNTER_Y, STAGE_W + 2400, 30, 6, 2)
   g.fillStyle = PAPER
-  g.fillRect(-2000, COUNTER_Y + 12, STAGE_W + 4000, STAGE_H + 2000)
+  g.fillRect(-1200, COUNTER_Y, STAGE_W + 2400, 30)
   colourIn(g, band, '#f6b93b', rng, 0.02, 12)
-  line(g, [-40, COUNTER_Y, STAGE_W * 0.3, COUNTER_Y + 3, STAGE_W * 0.7, COUNTER_Y - 2, STAGE_W + 40, COUNTER_Y + 2], rng, 7)
-  line(g, [-40, COUNTER_Y + 30, STAGE_W * 0.4, COUNTER_Y + 28, STAGE_W + 40, COUNTER_Y + 32], rng, 6)
+  line(g, [-1200, COUNTER_Y, STAGE_W * 0.3, COUNTER_Y + 3, STAGE_W * 0.7, COUNTER_Y - 2, STAGE_W + 1200, COUNTER_Y + 2], rng, 7)
+  line(g, [-1200, COUNTER_Y + 30, STAGE_W * 0.4, COUNTER_Y + 28, STAGE_W + 1200, COUNTER_Y + 32], rng, 6)
 }
 
 /** The board the pizza lies on, with its handle. */
@@ -127,7 +127,7 @@ export function makeScenery(density: number, kinds: readonly Kind[], view: { x: 
   const disc = { x: -PIZZA.r, y: -PIZZA.r, w: PIZZA.r * 2, h: PIZZA.r * 2 }
   return {
     wall: sprite(view, density, 0, paintWall),
-    lip: sprite({ x: view.x, y: COUNTER_Y - 8, w: view.w, h: view.y + view.h - COUNTER_Y + 8 }, density, 0, paintLip),
+    lip: sprite({ x: view.x, y: COUNTER_Y - 8, w: view.w, h: 48 }, density, 0, paintLip),
     board: sprite({ x: BOARD.x - BOARD.r, y: BOARD.y - BOARD.r, w: BOARD.r * 2, h: BOARD.r * 2 + 54 }, density, 24, paintBoard),
     oven: sprite({ x: OVEN.x - OVEN.w / 2, y: OVEN.y - OVEN.h * 0.8, w: OVEN.w, h: OVEN.h * 1.3 }, density, 24, (g) => paintOven(g, 0)),
     pizza: sprite(disc, density, 24, (g) => paintPizza(g, false)),

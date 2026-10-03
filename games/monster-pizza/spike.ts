@@ -40,5 +40,6 @@ export function spikeShow(): Show {
     glow: 0,
     time: 0,
     ghost: null,
+    ovenShake: 0,
   }
 }

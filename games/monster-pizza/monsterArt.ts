@@ -1,5 +1,6 @@
 import { CHARACTERS, type Customer } from './customers'
 import { INK, colourIn, figure, line, outline, plain, solid, sprite, stamp, type Pen, type Sprite } from './marker'
+import { restPose, type Pose } from './pose'
 import { makeRng, seedFrom } from './rng'
 import { bounds, ellipse, smooth, type Ring } from './shapes'
 
@@ -8,31 +9,7 @@ import { bounds, ellipse, smooth, type Ring } from './shapes'
 // once into a sprite; eyes, mouth, arms and the funniest part are pen lines
 // drawn each frame from the pose, so they can move.
 
-export type Pose = {
-  /** Squash and stretch about the feet. */
-  sx: number
-  sy: number
-  /** Lean, in radians, about the feet. */
-  lean: number
-  /** Where it looks, each -1 to 1. */
-  lookX: number
-  lookY: number
-  /** 0 open to 1 shut. */
-  blink: number
-  /** 0 shut to 1 wide open. */
-  mouth: number
-  /** 0 in to 1 right out. */
-  tongue: number
-  /** The funniest part's own swing, -1 to 1: the stalk bends, the belly swells, the neck stretches, the ears lift. */
-  part: number
-  /** Where each hand is, in the customer's own units, or null to let the arm hang. */
-  handL: { x: number; y: number } | null
-  handR: { x: number; y: number } | null
-}
-
-export function restPose(): Pose {
-  return { sx: 1, sy: 1, lean: 0, lookX: 0, lookY: 0, blink: 0, mouth: 0, tongue: 0, part: 0, handL: null, handR: null }
-}
+export { restPose, type Pose }
 
 function bodyRing(who: Customer): Ring {
   const { halfWidth: W, height: H } = CHARACTERS[who]
@@ -131,7 +108,8 @@ function mouth(g: Pen, who: Customer, pose: Pose): void {
 function arm(g: Pen, who: Customer, side: -1 | 1, hand: { x: number; y: number } | null): void {
   const c = CHARACTERS[who]
   const sx = side * c.halfWidth * 0.86, sy = -c.height * (who === 'fizz' ? 0.36 : 0.44)
-  const to = hand ?? { x: side * (c.halfWidth + 26), y: -c.height * 0.12 }
+  // At rest a hand lies on the counter's edge.
+  const to = hand ?? { x: side * (c.halfWidth + 22), y: -34 }
   const rng = makeRng(seedFrom(who) + 11 + side)
   const mx = (sx + to.x) / 2 + side * 14, my = Math.max(sy, to.y) + 26
   line(g, [sx, sy, mx, my, to.x, to.y], rng, 9, INK)
@@ -164,23 +142,37 @@ function funniest(g: Pen, who: Customer, pose: Pose, under: boolean): void {
   }
 }
 
+function place(g: Pen, x: number, y: number, size: number, pose: Pose): void {
+  g.translate(x, y)
+  g.scale(size, size)
+  g.translate(0, -pose.lift)
+  g.rotate(pose.lean)
+  g.scale(pose.sx, pose.sy)
+}
+
 /**
- * Draws one customer with its feet at (x, y), `size` times its own size.
- * Returns how many figures it drew, for the grown-up handle.
+ * Draws one customer with its feet at (x, y), `size` times its own size: the
+ * body and the face. The view clips this at the counter, so the feet are
+ * behind it. Returns how many figures it drew, for the grown-up handle.
  */
 export function drawCustomer(g: Pen, who: Customer, sprites: CustomerSprites, x: number, y: number, size: number, pose: Pose): number {
   g.save()
-  g.translate(x, y)
-  g.scale(size, size)
-  g.rotate(pose.lean)
-  g.scale(pose.sx, pose.sy)
+  place(g, x, y, size, pose)
   funniest(g, who, pose, true)
   stamp(g, sprites.body)
   funniest(g, who, pose, false)
   for (const e of eyes(who)) eye(g, e.x + (who === 'bim' ? pose.part * 8 : 0), e.y, e.r, pose)
   mouth(g, who, pose)
+  g.restore()
+  return 4
+}
+
+/** The arms, drawn after the counter so a hand can reach over it onto the table. */
+export function drawArms(g: Pen, who: Customer, x: number, y: number, size: number, pose: Pose): number {
+  g.save()
+  place(g, x, y, size, pose)
   arm(g, who, -1, pose.handL)
   arm(g, who, 1, pose.handR)
   g.restore()
-  return 6
+  return 2
 }

@@ -1,4 +1,4 @@
-import { ellipse, smooth, type Ring } from './shapes'
+import { bounds, ellipse, smooth, type Ring } from './shapes'
 
 // The six kinds of topping. These are the pieces a child counts, so each is
 // one flat colour inside one bold outline, told from the others by shape and
@@ -22,6 +22,15 @@ export type KindLook = {
   tub: string
 }
 
+/** Centres a ring and scales it so that its farthest point is `reach` from the middle: every kind is then of one size. */
+function fitted(ring: Ring, reach = 1): Ring {
+  const box = bounds(ring)
+  const cx = box.x + box.w / 2, cy = box.y + box.h / 2
+  let far = 0
+  for (let i = 0; i < ring.length; i += 2) far = Math.max(far, Math.hypot(ring[i] - cx, ring[i + 1] - cy))
+  return ring.map((v, i) => ((v - (i % 2 === 0 ? cx : cy)) / far) * reach)
+}
+
 const pepper = smooth([-0.92, -0.5, -0.3, -0.72, 0.5, -0.4, 0.94, 0.42, 0.72, 0.8, 0.3, 0.3, -0.25, 0.02, -0.82, -0.02], 5)
 const mushroom = smooth([-0.95, 0.02, -0.72, -0.62, 0, -0.9, 0.72, -0.62, 0.95, 0.02, 0.36, 0.14, 0.34, 0.82, 0, 0.92, -0.34, 0.82, -0.36, 0.14], 4)
 const olive = ellipse(0, 0, 0.8, 0.8, 22)
@@ -30,12 +39,12 @@ const sock = smooth([-0.56, -0.92, 0.12, -0.92, 0.16, 0.02, 0.84, 0.36, 0.86, 0.
 const worm = smooth([-0.94, 0.3, -0.62, -0.62, -0.06, -0.5, 0.2, 0.22, 0.56, 0.1, 0.7, -0.5, 0.96, -0.34, 0.9, 0.5, 0.26, 0.76, -0.2, 0.14, -0.46, -0.06, -0.58, 0.5], 4)
 
 export const LOOKS: Record<Kind, KindLook> = {
-  pepper: { fill: '#e4322b', ring: pepper, tub: '#f08a2c' },
-  mushroom: { fill: '#b98a5e', ring: mushroom, tub: '#63b7e6' },
-  olive: { fill: '#4d7a2a', ring: olive, tub: '#e9c62f' },
-  cheese: { fill: '#ffd21f', ring: cheese, tub: '#e2574c' },
-  sock: { fill: '#2f7fe0', ring: sock, tub: '#7cc65a' },
-  worm: { fill: '#ff8fb4', ring: worm, tub: '#9a7ae0' },
+  pepper: { fill: '#e4322b', ring: fitted(pepper), tub: '#f08a2c' },
+  mushroom: { fill: '#b98a5e', ring: fitted(mushroom), tub: '#63b7e6' },
+  olive: { fill: '#4d7a2a', ring: fitted(olive, 0.86), tub: '#e9c62f' },
+  cheese: { fill: '#ffd21f', ring: fitted(cheese), tub: '#e2574c' },
+  sock: { fill: '#2f7fe0', ring: fitted(sock), tub: '#7cc65a' },
+  worm: { fill: '#ff8fb4', ring: fitted(worm), tub: '#9a7ae0' },
 }
 
 /** The ring of a kind, scaled to radius `r` about (cx, cy) and turned by `turn`. */

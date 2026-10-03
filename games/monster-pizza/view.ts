@@ -1,9 +1,9 @@
 import { PICTURED_R, type Pictured } from './card'
 import { CUSTOMERS, type Customer } from './customers'
 import { KINDS, type Kind } from './kinds'
-import { CARD, COUNTER_Y, CUSTOMER, DOOR, PIECE_R, PIZZA, TUB, fit, onPizza, type Fit } from './layout'
-import { INK, line, plain, sprite, stamp, type Pen, type Sprite } from './marker'
-import { customerSprites, drawCustomer, type CustomerSprites, type Pose } from './monsterArt'
+import { CARD, COUNTER_Y, CUSTOMER, DOOR, OVEN, PIECE_R, PIZZA, TUB, fit, onPizza, type Fit } from './layout'
+import { INK, PAPER, line, plain, sprite, stamp, type Pen, type Sprite } from './marker'
+import { customerSprites, drawArms, drawCustomer, type CustomerSprites, type Pose } from './monsterArt'
 import { makeRng, seedFrom } from './rng'
 import { makeScenery, type Scenery } from './scenery'
 import { smooth } from './shapes'
@@ -29,13 +29,15 @@ export type Show = {
   time: number
   /** The ghost hand of the idle ladder, in stage units, or none. */
   ghost: { x: number; y: number; press: number; opacity: number } | null
+  /** The oven's rattle when it is poked: a small turn, in the spring's own units. */
+  ovenShake: number
 }
 
 function paintHalo(g: Pen): void {
   const rng = makeRng(seedFrom('halo'))
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2 + 0.13
-    line(g, [Math.cos(a) * 92, Math.sin(a) * 92, Math.cos(a) * 118, Math.sin(a) * 118], rng, 9, '#ff9f1a')
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2 + 0.13
+    line(g, [Math.cos(a) * 76, Math.sin(a) * 76, Math.cos(a) * 96, Math.sin(a) * 96], rng, 8, '#ff9f1a')
   }
 }
 
@@ -73,7 +75,7 @@ export class KitchenView {
     this.scenery = makeScenery(density, this.kinds, { x: -s.left / s.scale, y: -s.top / s.scale, w: width / s.scale, h: height / s.scale })
     this.bodies.clear()
     for (const who of CUSTOMERS) this.bodies.set(who, customerSprites(who, density))
-    this.halo = sprite({ x: -124, y: -124, w: 248, h: 248 }, density, 6, paintHalo)
+    this.halo = sprite({ x: -100, y: -100, w: 200, h: 200 }, density, 6, paintHalo)
     this.ghost = sprite({ x: -44, y: -70, w: 100, h: 138 }, density, 8, paintGhost)
   }
 
@@ -88,6 +90,14 @@ export class KitchenView {
     this.draws += 1
   }
 
+  /** Bare paper, for the moment before the save has been read. */
+  blank(): void {
+    this.g.setTransform(1, 0, 0, 1, 0, 0)
+    this.g.fillStyle = PAPER
+    this.g.fillRect(0, 0, this.g.canvas.width, this.g.canvas.height)
+    this.draws = 0
+  }
+
   draw(show: Show): void {
     const g = this.g, scenery = this.scenery
     if (!scenery) return
@@ -98,6 +108,11 @@ export class KitchenView {
     this.draws += 1
 
     // The door: the next customers, each with its order rolled up.
+    // Customers stand behind the counter: whatever of them is below its far edge is not drawn.
+    g.save()
+    g.beginPath()
+    g.rect(-4000, -4000, 8000, 4000 + COUNTER_Y + 14)
+    g.clip()
     show.waiting.forEach((w, i) => {
       const x = DOOR.x + (i === 0 ? -50 : 50), y = COUNTER_Y + 22
       this.draws += drawCustomer(g, w.who, this.bodies.get(w.who)!, x, y, 0.44, w.pose)
@@ -109,8 +124,15 @@ export class KitchenView {
       this.draws += 1
     })
     if (show.customer) this.draws += drawCustomer(g, show.customer.who, this.bodies.get(show.customer.who)!, CUSTOMER.x, CUSTOMER.y, 1, show.customer.pose)
+    g.restore()
     stamp(g, scenery.lip)
+    if (show.customer) this.draws += drawArms(g, show.customer.who, CUSTOMER.x, CUSTOMER.y, 1, show.customer.pose)
+    g.save()
+    g.translate(OVEN.x, OVEN.y + OVEN.h / 2)
+    g.rotate(show.ovenShake * 0.02)
+    g.translate(-OVEN.x, -OVEN.y - OVEN.h / 2)
     stamp(g, scenery.oven)
+    g.restore()
     stamp(g, scenery.board)
     this.draws += 3
 

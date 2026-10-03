@@ -87,7 +87,66 @@ export function freeSpot(table: Table): { x: number; y: number } | null {
   }
   // Crowded: walk a fine grid for any room at all.
   for (let gy = -REACH; gy <= REACH; gy += 0.04) for (let gx = -REACH; gx <= REACH; gx += 0.04) if (clear(spots, gx, gy)) return { x: gx, y: gy }
-  return null
+  // No gap big enough as the pieces lie, though the pizza is not full: the ones lying there shuffle up.
+  return makeRoom(table, table.rng.range(-0.2, 0.2), table.rng.range(-0.2, 0.2))
+}
+
+/** Twelve spots that always fit: three round the middle and nine round the edge. */
+function ringSpots(): { x: number; y: number }[] {
+  const out: { x: number; y: number }[] = []
+  for (let i = 0; i < 3; i++) out.push({ x: Math.cos((i / 3) * Math.PI * 2) * APART * 0.6, y: Math.sin((i / 3) * Math.PI * 2) * APART * 0.6 })
+  for (let i = 0; i < 9; i++) out.push({ x: Math.cos((i / 9) * Math.PI * 2 + 0.3) * REACH, y: Math.sin((i / 9) * Math.PI * 2 + 0.3) * REACH })
+  return out
+}
+
+/**
+ * Makes room for one more piece near (x, y) by nudging the pieces that lie
+ * there apart, as a hand would. Returns the new piece's spot. The pieces at
+ * rest are moved; a piece still in the air keeps the spot it was promised.
+ */
+export function makeRoom(table: Table, x: number, y: number): { x: number; y: number } | null {
+  if (claimed(table).length >= CAPACITY) return null
+  const fixed = table.flights.flatMap((f) => (f.end.on === 'pizza' ? [{ x: f.end.x, y: f.end.y }] : []))
+  const free = [...table.pieces.map((p) => ({ x: p.x, y: p.y })), { x, y }]
+  const hold = (p: { x: number; y: number }): void => {
+    const d = Math.hypot(p.x, p.y)
+    if (d > REACH) { p.x *= REACH / d; p.y *= REACH / d }
+  }
+  let settled = false
+  for (let pass = 0; pass < 400 && !settled; pass++) {
+    settled = true
+    for (let i = 0; i < free.length; i++) {
+      for (const other of [...free.slice(i + 1), ...fixed]) {
+        let dx = free[i].x - other.x, dy = free[i].y - other.y
+        let d = Math.hypot(dx, dy)
+        if (d >= APART) continue
+        settled = false
+        if (d < 1e-6) { dx = 0.01 * (i + 1); dy = 0.013; d = Math.hypot(dx, dy) }
+        const push = ((APART - d) / d) * 0.52
+        const moves = fixed.includes(other) ? 1 : 0.5
+        free[i].x += dx * push * moves; free[i].y += dy * push * moves
+        if (moves < 1) { other.x -= dx * push * 0.5; other.y -= dy * push * 0.5; hold(other) }
+        hold(free[i])
+      }
+    }
+  }
+  if (!settled) {
+    // Too tangled to nudge apart: everything goes to the spots that always fit, each piece to the nearest one left.
+    const spots = ringSpots().filter((s) => fixed.every((f) => Math.hypot(f.x - s.x, f.y - s.y) >= APART))
+    if (spots.length < free.length) return null
+    for (const p of free) {
+      let best = 0
+      for (let i = 1; i < spots.length; i++) if (Math.hypot(spots[i].x - p.x, spots[i].y - p.y) < Math.hypot(spots[best].x - p.x, spots[best].y - p.y)) best = i
+      const [spot] = spots.splice(best, 1)
+      p.x = spot.x; p.y = spot.y
+    }
+  }
+  table.pieces.forEach((piece, i) => {
+    if (piece.x !== free[i].x || piece.y !== free[i].y) piece.settle.v += 4
+    piece.x = free[i].x
+    piece.y = free[i].y
+  })
+  return free[free.length - 1]
 }
 
 /** The clear spot nearest to where a carried piece was let go, or null when there is none close by. */
@@ -105,7 +164,7 @@ export function spotNear(table: Table, x: number, y: number): { x: number; y: nu
       if (clear(spots, px, py)) return { x: px, y: py }
     }
   }
-  return null
+  return makeRoom(table, x, y)
 }
 
 function fly(table: Table, kind: Kind, turn: number, from: { x: number; y: number }, to: { x: number; y: number }, end: Flight['end']): void {

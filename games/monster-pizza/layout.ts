@@ -32,7 +32,7 @@ export const PIZZA = { x: 596, y: 512, r: 150 }
 /** The round board the pizza lies on. */
 export const BOARD = { x: 596, y: 514, r: 176 }
 /** A piece on the pizza, as a share of the pizza's radius and in stage units. */
-export const PIECE_SHARE = 0.168
+export const PIECE_SHARE = 0.152
 export const PIECE_R = PIZZA.r * PIECE_SHARE
 /** Pieces stay inside this share of the pizza's radius, clear of the crust. */
 export const TOP_SHARE = 0.86
