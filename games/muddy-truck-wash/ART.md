@@ -225,6 +225,7 @@ Muddy Truck Wash is designed from four California learning foundations published
 - Eyes follow the finger while it works, wander by themselves at rest, and blink on their own clock.
 - Nothing eases in without weight: things that fly are thrown, fall under gravity, and land where they stop.
 - No camera shake and no impact pause (a default awaiting the owner). The size of an answer comes from the chain it sets off.
+- The idle glow is a warm light on the edges of the tools on the rack, which swell a little with it. The vehicles take no glow: on a body that size it reads as haze, and they are alive already. The ghost hand is a pale mitten that reaches in from the open floor.
 
 **How each tier keeps the look** (`TIERS` in `config.ts`; tier 0 is full).
 

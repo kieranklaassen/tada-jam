@@ -24,6 +24,8 @@ export type Target =
   | { kind: 'truck'; col: number; row: number; x: number; y: number }
   | { kind: 'next' }
   | { kind: 'puddle' }
+  /** A point of the bare floor. */
+  | { kind: 'floor'; x: number; z: number }
   | { kind: 'none' }
 
 export type Sound = { spec: VoiceSpec; gain: number }
@@ -123,7 +125,12 @@ export class Play {
     if (target.kind === 'tool') return this.take(target.tool)
     if (target.kind === 'next') return this.sendOff()
     if (target.kind === 'puddle') return this.puddle()
-    if (target.kind !== 'truck') return
+    if (target.kind === 'floor') return this.onFloor(target.x, target.z)
+    if (target.kind !== 'truck') {
+      // The wall, or nothing at all: still a knock, so no tap lands in silence.
+      this.say(voices.plip(0.9), 0.5)
+      return
+    }
     this.pressing = target
     this.rise = 0
     this.slide = 0
@@ -237,6 +244,23 @@ export class Play {
       this.release()
       this.start(shineScene(this, bay, target.x))
     }
+  }
+
+  /** A tool on the bare floor does its own thing there too: the hose wets it, the sponge leaves suds, anything else knocks up a little dust. */
+  private onFloor(x: number, z: number): void {
+    const p = this.particles
+    if (this.hand === 'hose') {
+      this.say(voices.spray(this.variant, false))
+      p.burst(KIND.drop, 7, x, 0.3, z, 1.4, 1.6, 0.07, 0.8)
+    } else if (this.hand === 'sponge') {
+      this.say(voices.scrub(0.3, this.variant))
+      p.burst(KIND.blob, 2, x, 0.25, z, 0.4, 0.6, 0.15, 0.8)
+      p.burst(KIND.bubble, 3, x, 0.25, z, 0.4, 0.6, 0.11, 1.2)
+    } else {
+      this.say(voices.poke.knock(), 0.5)
+      p.burst(KIND.dust, 3, x, 0.12, z, 0.7, 0.4, 0.26, 0.6)
+    }
+    this.variant = (this.variant + 1) % 4
   }
 
   private after(seconds: number, run: () => void): void {

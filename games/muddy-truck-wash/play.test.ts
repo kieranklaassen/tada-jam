@@ -62,6 +62,22 @@ describe('a touch is answered when the finger lands', () => {
     }
   })
 
+  it('a tap on the bare floor or on nothing at all is answered too', () => {
+    for (const tool of ['finger', 'sponge', 'hose', 'cloth'] as const) {
+      const play = new Play(coated('d'))
+      if (tool !== 'finger') play.press({ kind: 'tool', tool })
+      play.sounds.length = 0
+      play.press({ kind: 'floor', x: 1, z: 2 })
+      expect(play.sounds.length, tool).toBeGreaterThan(0)
+      expect(play.particles.count, tool).toBeGreaterThan(0)
+      play.sounds.length = 0
+      play.press({ kind: 'none' })
+      expect(play.sounds.length, tool).toBeGreaterThan(0)
+      // Nothing a save holds has changed.
+      expect(play.dirty).toBe(false)
+    }
+  })
+
   it('random tapping always produces something and never breaks the save', () => {
     const play = new Play(freshWash(4))
     let seed = 12345
@@ -71,7 +87,8 @@ describe('a touch is answered when the finger lands', () => {
       if (r < 0.12) return { kind: 'tool', tool: (['sponge', 'hose', 'cloth'] as const)[Math.floor(random() * 3)] }
       if (r < 0.17) return { kind: 'next' }
       if (r < 0.22) return { kind: 'puddle' }
-      if (r < 0.25) return { kind: 'none' }
+      if (r < 0.24) return { kind: 'none' }
+      if (r < 0.3) return { kind: 'floor', x: random() * 6 - 3, z: 1.5 + random() }
       return on(play, Math.floor(random() * GRID_W), Math.floor(random() * GRID_H))
     }
     for (let i = 0; i < 400; i++) {

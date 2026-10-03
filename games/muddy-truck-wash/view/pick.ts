@@ -11,6 +11,8 @@ import { GRID_H, GRID_W, cellAt, type Surface, type Tool } from '../surface'
 
 /** A tool answers a touch within this many logical pixels of its middle, so its target is at least 120 across. */
 const TOOL_REACH = 62
+/** The puddle answers a touch within this many logical pixels of its middle. */
+const PUDDLE_REACH = 66
 /** The vehicle's side is tried at these depths, nearest first, so a touch on its nose or roof finds a patch too. */
 const DEPTHS = [0.92, 0.45, 0, -0.45, -0.92]
 
@@ -57,10 +59,13 @@ export class Picker {
       this.box.max.set(next.x + side.x1, side.y1, next.z + 0.95)
       if (this.ray.ray.intersectsBox(this.box)) return { kind: 'next' }
     }
+    // The puddle lies flat and is seen from low down, so it is a thin shape on the glass: it answers within a wide circle of its middle.
+    const puddle = this.project(LAYOUT.puddle.x, 0, LAYOUT.puddle.z, width, height)
+    if (Math.hypot(puddle.x - px, puddle.y - py) <= PUDDLE_REACH) return { kind: 'puddle' }
+    // The bare floor in front of the wall.
     if (d.y < 0) {
       const t = -o.y / d.y, x = o.x + d.x * t, z = o.z + d.z * t
-      const p = LAYOUT.puddle
-      if (Math.hypot((x - p.x) / (p.rx * 1.3), (z - p.z) / (p.rz * 1.5)) <= 1) return { kind: 'puddle' }
+      if (z > LAYOUT.wall.z + 0.2) return { kind: 'floor', x, z }
     }
     return { kind: 'none' }
   }
