@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PLATE, STUD_SIDES, bounds, buildMesh, centred, type Brick, type BrickMesh } from './bricks'
+import { PLATE, STUD_SIDES, bounds, buildMesh, centred, mergeMeshes, type Brick, type BrickMesh } from './bricks'
 
 const RED = [1, 0, 0] as const
 
@@ -25,6 +25,7 @@ describe('brick geometry', () => {
       { x: 0, y: 0, z: 0, w: 2, d: 3, h: 3, colour: RED },
       { x: 3, y: 0, z: 0, w: 2, d: 2, h: 3, colour: RED, round: true },
       { x: 6, y: 0, z: 0, w: 1, d: 0.5, h: 3, colour: RED, round: true, axis: 'z' },
+      { x: 8, y: 0, z: 0, w: 2, d: 2, h: 0, colour: RED, ball: true, studs: false },
     ]
     // A cylinder's side is flat between two rounded normals, so its facing agrees a little less than fully.
     expect(worstFacing(buildMesh(bricks, true))).toBeGreaterThan(0.85)
@@ -62,5 +63,17 @@ describe('brick geometry', () => {
     expect(moved.min[0]).toBeCloseTo(-2); expect(moved.max[0]).toBeCloseTo(2)
     expect(moved.min[1]).toBeCloseTo(0)
     expect(moved.min[2]).toBeCloseTo(-1); expect(moved.max[2]).toBeCloseTo(1)
+  })
+
+  it('merges meshes into one, each scaled about its own origin and moved', () => {
+    const one = buildMesh([{ x: 0, y: 0, z: 0, w: 2, d: 2, h: 5, colour: RED, studs: false }], true)
+    const both = mergeMeshes([{ mesh: one }, { mesh: one, scale: 0.5, at: [10, 0, 0] }])
+    expect(both.position.length).toBe(one.position.length * 2)
+    expect(both.index.length).toBe(one.index.length * 2)
+    expect(Math.max(...both.index)).toBe(both.position.length / 3 - 1)
+    let far = 0
+    for (let i = one.position.length; i < both.position.length; i += 3) far = Math.max(far, both.position[i])
+    expect(far).toBeCloseTo(11)
+    expect(worstFacing(both)).toBeGreaterThan(0.99)
   })
 })

@@ -42,6 +42,9 @@ export type GobblerLook = {
   leanZ: number
   /** One of those who wait behind the parapet, in its shade. */
   waiting: boolean
+  /** Turned about its own upright, in radians, and its size: 1 on the step. */
+  turn: number
+  scale: number
 }
 
 export type ClawLook = {

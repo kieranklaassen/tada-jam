@@ -38,7 +38,7 @@ export const STEP = { x: -17, z: -8, w: 34, d: 7, top: 3 * PLATE } as const
 /** Where a crew of two or of three stands, by the middle of each gobbler. */
 export const SLOT_Z = -4.5
 export function slotX(slot: number, crew: number): number {
-  const gap = crew <= 2 ? 14 : 11
+  const gap = crew <= 2 ? 14 : 12
   return (slot - (crew - 1) / 2) * gap
 }
 
@@ -54,11 +54,23 @@ export const RAIL = {
   /** The height the cable hangs from. */
   top: 30,
   /** How far the trolley can run. */
-  minX: -14,
-  maxX: 14,
+  minX: -17,
+  maxX: 17,
   minZ: -12.5,
   maxZ: 11,
 } as const
 
 /** What the camera frames: the whole cabinet, fitted to the surface whatever its shape. */
-export const FRAME = { minX: -17.6, maxX: 17.6, floorZ: 14.2, top: 15, topZ: -15.5 } as const
+export const FRAME = { minX: -18.6, maxX: 18.6, floorZ: 14.2, top: 15.5, topZ: -15.5 } as const
+
+/** The bell post at either end of the rail: a buffer brick with a bell on it, beside the tray. */
+export const BELL = { x: 17, z: 6, half: 1, top: 11 * PLATE } as const
+
+/** The gate of the ledge, in the middle of the parapet: what the claw hooks to bring the next ones in. */
+export const GATE = { x: 0, z: -8.5, half: 3, top: 29 * PLATE } as const
+
+/** Where a crate stands on the ledge: the only one in the middle, or two side by side. */
+export const CRATE = { z: -12.5, width: 13, depth: 5, deck: 21 * PLATE, apart: 8.6 } as const
+export function crateX(which: number, crates: number): number {
+  return crates < 2 ? 0 : (which === 0 ? -1 : 1) * CRATE.apart
+}

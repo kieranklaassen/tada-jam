@@ -31,6 +31,8 @@ export type Brick = {
   axis?: 'y' | 'z'
   /** Studs on top. On by default; a brick under another gets none where it is covered. */
   studs?: boolean
+  /** A ball that fills its box: the one shape that is not a brick, for an eye. Its box is `w` across each way, and `h` is ignored. */
+  ball?: boolean
 }
 
 export type BrickMesh = {
@@ -122,10 +124,28 @@ class Builder {
   }
 }
 
+/** A ball, in rings from pole to pole. It shades smoothly and carries no seam. */
+function ball(b: Builder, cx: number, cy: number, cz: number, radius: number, c: Rgb): void {
+  const rings = 8, around = 14, first = b.position.length / 3
+  for (let ring = 0; ring <= rings; ring++) {
+    const tilt = (ring / rings) * Math.PI, y = Math.cos(tilt), level = Math.sin(tilt)
+    for (let i = 0; i < around; i++) {
+      const a = (i / around) * Math.PI * 2, x = Math.cos(a) * level, z = Math.sin(a) * level
+      b.vertex(cx + x * radius, cy + y * radius, cz + z * radius, x, y, z, c, ...NO_SEAM)
+    }
+  }
+  for (let ring = 0; ring < rings; ring++) for (let i = 0; i < around; i++) {
+    const p = first + ring * around + i, q = first + ring * around + ((i + 1) % around)
+    if (ring > 0) b.index.push(p, q, p + around)
+    if (ring < rings - 1) b.index.push(q, q + around, p + around)
+  }
+}
+
 /** Whether the stud at this cell on top of `brick` is covered by another brick of the build. */
 function covered(bricks: readonly Brick[], brick: Brick, sx: number, sz: number): boolean {
   const top = brick.y + brick.h
   for (const other of bricks) {
+    if (other.ball) continue
     if (other === brick || other.y > top + 1e-6 || other.y + other.h <= top + 1e-6) continue
     if (sx + 0.5 > other.x && sx + 0.5 < other.x + other.w && sz + 0.5 > other.z && sz + 0.5 < other.z + other.d) return true
   }
@@ -137,6 +157,10 @@ export function buildMesh(bricks: readonly Brick[], withBottoms = false): BrickM
   const b = new Builder()
   for (const brick of bricks) {
     const y0 = brick.y * PLATE, y1 = (brick.y + brick.h) * PLATE
+    if (brick.ball) {
+      ball(b, brick.x + brick.w / 2, y0 + brick.w / 2, brick.z + brick.w / 2, brick.w / 2, brick.colour)
+      continue
+    }
     if (brick.round) {
       const axis = brick.axis ?? 'y'
       if (axis === 'y') b.cylinder(brick.x + brick.w / 2, y0, brick.z + brick.d / 2, Math.min(brick.w, brick.d) / 2, y1 - y0, 'y', ROUND_SIDES, brick.colour, withBottoms)
@@ -172,6 +196,7 @@ export function bounds(bricks: readonly Brick[]): { min: [number, number, number
   const min: [number, number, number] = [Infinity, Infinity, Infinity], max: [number, number, number] = [-Infinity, -Infinity, -Infinity]
   for (const brick of bricks) {
     const lo = [brick.x, brick.y * PLATE, brick.z], hi = [brick.x + brick.w, (brick.y + brick.h) * PLATE, brick.z + brick.d]
+    if (brick.ball) { hi[1] = lo[1] + brick.w; hi[2] = lo[2] + brick.w }
     if (brick.round && brick.axis === 'z') {
       // Lies on its side: w is its diameter, d its length, centred on the middle of its height.
       const mid = (brick.y + brick.h / 2) * PLATE, r = Math.min(brick.w, brick.h * PLATE) / 2
@@ -187,4 +212,26 @@ export function centred(bricks: readonly Brick[]): Brick[] {
   const { min, max } = bounds(bricks)
   const dx = (min[0] + max[0]) / 2, dz = (min[2] + max[2]) / 2, dy = Math.min(...bricks.map((brick) => brick.y))
   return bricks.map((brick) => ({ ...brick, x: brick.x - dx, y: brick.y - dy, z: brick.z - dz }))
+}
+
+/**
+ * Several meshes as one, each scaled about its own origin and then moved: a
+ * thing that never comes apart is one draw, whatever it is built from.
+ */
+export function mergeMeshes(parts: readonly { mesh: BrickMesh; scale?: number; at?: readonly [number, number, number] }[]): BrickMesh {
+  const total = parts.reduce((sum, part) => sum + part.mesh.position.length / 3, 0)
+  const indices = parts.reduce((sum, part) => sum + part.mesh.index.length, 0)
+  const out: BrickMesh = { position: new Float32Array(total * 3), normal: new Float32Array(total * 3), color: new Float32Array(total * 3), face: new Float32Array(total * 4), index: new Uint32Array(indices), studs: 0 }
+  let vertex = 0, index = 0
+  for (const { mesh, scale = 1, at = [0, 0, 0] } of parts) {
+    const count = mesh.position.length / 3
+    for (let i = 0; i < count; i++) for (let k = 0; k < 3; k++) out.position[(vertex + i) * 3 + k] = mesh.position[i * 3 + k] * scale + at[k]
+    out.normal.set(mesh.normal, vertex * 3)
+    out.color.set(mesh.color, vertex * 3)
+    // The seam keeps its place on a smaller copy: its face sizes shrink with it.
+    for (let i = 0; i < count * 4; i++) out.face[vertex * 4 + i] = mesh.face[i] * scale
+    for (let i = 0; i < mesh.index.length; i++) out.index[index + i] = mesh.index[i] + vertex
+    vertex += count; index += mesh.index.length; out.studs += mesh.studs
+  }
+  return out
 }
