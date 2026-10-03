@@ -101,6 +101,51 @@ describe('the march on the spot', () => {
     expect(swelled[2]).toBeGreaterThan(swelled[1])
   })
 
+  /** The order in which the friends of a frog troop swell their throats, which is the frog's proud move. */
+  const turnsOf = (theatre: Theatre, size: number): number[] => {
+    const { poses, painter } = recorder(), swelled: number[] = Array.from({ length: size }, () => -1)
+    for (let t = 0; t < 3.5; t += 1 / 60) {
+      theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      for (let i = 0; i < size; i++) if (swelled[i] < 0 && poses.get(`friend-${i}`)!.puff > 1.6) swelled[i] = t
+    }
+    return swelled.map((at, i) => ({ at, i })).sort((a, b) => a.at - b.at).map((turn) => turn.i)
+  }
+
+  it('gives the friends their turns in the order the balloons were taken, a popped and refilled one last', () => {
+    const theatre = new Theatre(troopOf('frog', 3)), { poses, painter } = recorder()
+    tapSlot(theatre, 0)
+    play(theatre, 1.3)
+    tapSlot(theatre, 0)
+    play(theatre, 1.3)
+    // The first friend's balloon is popped, and the third is served before the first is served again.
+    theatre.paint(painter, VIEW)
+    theatre.press(friendX(0, 3) + 0.7, GROUND + 4, VIEW)
+    theatre.release(VIEW)
+    expect(theatre.save.troop.held).toEqual([false, true, false])
+    play(theatre, 1.3)
+    tapSlot(theatre, 0)
+    play(theatre, 1.3)
+    tapSlot(theatre, 0)
+    expect(theatre.save.troop.held).toEqual([true, true, true])
+    until(theatre, 'ending')
+    expect(poses.size).toBeGreaterThan(0)
+    // The rules hand balloons out from the left, so the first friend took the third balloon and the third friend the last.
+    expect(turnsOf(theatre, 3)).toEqual([1, 0, 2])
+  })
+
+  it('after a load has those who already held a balloon go first, as they stand, and those served since follow', () => {
+    const before = new Theatre(troopOf('frog', 3))
+    tapSlot(before, 0)
+    play(before, 1.3)
+    const found = deserializeSave(JSON.parse(JSON.stringify(serializeSave(before.save))))
+    // Opened again with the first friend served; its balloon is popped and it is served last.
+    const theatre = new Theatre({ ...found, troop: { ...found.troop, held: [false, true, true] } })
+    tapSlot(theatre, 0)
+    until(theatre, 'ending')
+    expect(turnsOf(theatre, 3)).toEqual([1, 2, 0])
+  })
+
   it('gives way to a touch, which is then an ordinary touch', () => {
     const theatre = new Theatre(troopOf('hippo', 1))
     tapSlot(theatre, 0)

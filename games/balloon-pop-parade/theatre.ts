@@ -107,6 +107,8 @@ export class Theatre {
   private walkIn = 1
   private nextIn = 1
   private skyIn = true
+  /** The friends who hold a balloon, in the order they came by it. Short-lived: as the game is found, those who hold one stand in it in the order they stand. */
+  private took: number[] = []
   /** The other friends look at a friend whose balloon was popped, until this time. */
   private lookAt = { friend: -1, until: 0 }
   /** The scenery answers too: each cloud is a pillow that squashes and sheds drops, and the hill is an air bed that wobbles. */
@@ -152,6 +154,7 @@ export class Theatre {
     this.places = this.save.sky.map(() => ({ squash: 0, squashSpeed: 0, pressed: false, push: 0, pushSpeed: 0, away: 0, grow: 1 }))
     this.held = troop.held.map((holds, i) => ({ x: friendX(i, troop.size) + 0.7, y: GROUND + HELD_HEIGHT, vx: 0, vy: 0, shown: holds }))
     this.actors = troop.held.map(() => ({ clip: null, t: 0, next: null, tug: null, landAfter: 0 }))
+    this.took = troop.held.map((holds, i) => (holds ? i : -1)).filter((i) => i >= 0)
     this.flights.length = 0
     this.slotsFor = 0
     this.pressedSlot = -1
@@ -283,6 +286,7 @@ export class Theatre {
     if (!first) return
     const serves = events.find((event) => event.type === 'served')
     this.unsaved = serves ? 2 : Math.max(this.unsaved, 1) as 1 | 2
+    if (first.type === 'taken') this.took.push(...first.takers)
     const given: Given = first.type === 'taken' ? { result: 'taken', takers: first.takers, served: serves !== undefined }
       : first.type === 'gotAway' ? { result: 'gotAway', grabber: first.grabber, spare: first.spare }
       : { result: 'refused' }
@@ -292,7 +296,7 @@ export class Theatre {
     const friend = given.result === 'taken' ? given.takers[0] : given.result === 'gotAway' ? (everyoneHolds ? this.nearest(at.x, false) : given.grabber) : this.nearest(at.x, true)
     this.flights.push({ bunch, slot, given, t: 0, fromX: at.x, fromY: at.y, landed: false, after: 0, friend })
     // The ending follows the catch that causes it: when the last balloon is in a hand and the catch is over.
-    if (serves && serves.type === 'served') this.endingDue = { at: this.time + FLIGHT + PERSONALITIES[this.troop.kind].lasts.catch * 0.7, order: serves.order, together: serves.together }
+    if (serves && serves.type === 'served') this.endingDue = { at: this.time + FLIGHT + PERSONALITIES[this.troop.kind].lasts.catch * 0.7, order: [...this.took], together: serves.together }
     // The same bunch drifts back into the same place: the sky stays as it was.
     place.away = REGROW_AFTER
     place.grow = 0
@@ -327,6 +331,7 @@ export class Theatre {
     this.save = save
     this.unsaved = Math.max(this.unsaved, 1) as 1 | 2
     const troop = save.troop
+    this.took = this.took.filter((i) => i !== friend)
     const balloon = this.held[friend]
     balloon.shown = false
     this.burst(balloon.x, balloon.y, KIND_COLOURS[troop.kind])
@@ -378,8 +383,9 @@ export class Theatre {
    */
   private endCycle(order: readonly number[], together: boolean): void {
     const kind = this.troop.kind, p = PERSONALITIES[kind], size = this.troop.size
-    // Those served before the last bunch go first, then the takers of the last bunch in their order.
-    const turns = [...Array.from({ length: size }, (_, i) => i).filter((i) => !order.includes(i)), ...order]
+    // The friends take their turns in the order the balloons were taken. After a load that order is gone for those
+    // who already held one: they go first, in the order they stand, and those served since follow as they were served.
+    const turns = [...order, ...Array.from({ length: size }, (_, i) => i).filter((i) => !order.includes(i))]
     const gap = together ? 0.14 : Math.min(0.7, p.lasts.proud * 0.75)
     const beats: Beat[] = []
     turns.forEach((friend, k) => beats.push({ at: 0.15 + k * gap, lasts: 0, play: this.cue(() => { this.act(friend, 'proud'); this.sound(`${kind}Poke`, 1.18 + k * 0.05, 0.8) }) }))
