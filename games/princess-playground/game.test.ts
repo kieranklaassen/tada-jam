@@ -7,7 +7,7 @@ import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { freshWorld, load, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
-import { FRIEND_IDS, MAX_TILT, WAITING_PLACE, type FriendId } from './world'
+import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, WAITING_PLACE, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
 
@@ -366,6 +366,55 @@ describe('found as left', () => {
       expect(endings, `seed ${seed}`).toBeGreaterThan(0)
     }
   }, 60_000)
+})
+
+describe('nothing passes through anything', () => {
+  /** How nearly two bodies overlap: 1 is touching, less is inside each other. Each body is read as the egg it is drawn as. */
+  const apart = (game: Game, a: FriendId, b: FriendId): number => {
+    // As drawn: the poses of the frame, where a friend on a head rides its squash and its lean.
+    const p = game.frame.poses[a], q = game.frame.poses[b], fa = FRIENDS[a], fb = FRIENDS[b]
+    const dy = p.y + fa.halfHeight * p.squash - (q.y + fb.halfHeight * q.squash)
+    return Math.hypot((p.x - q.x) / (fa.radius + fb.radius), (p.z - q.z) / (fa.radius + fb.radius), dy / (fa.halfHeight * p.squash + fb.halfHeight * q.squash))
+  }
+
+  // What the intersection audit cannot be sure to sample: every frame of a long, quick, seeded play, scenes and all.
+  it('through three minutes of quick play nobody is ever inside the plank, under the sand, or through another friend', () => {
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const random = seeded(seed * 53)
+      const game = new Game(freshWorld(seed % 2 ? null : 5), seed)
+      let next = 0, closest = 1, deepest = 0, lowest = 0
+      for (let t = 0; t < 180; t += 1 / 60) {
+        if (t >= next) {
+          next = t + 0.12 + random() * (seed === 5 ? 0.4 : 1.8)
+          const id = FRIEND_IDS[Math.floor(random() * 4)], roll = random()
+          if (game.play.held) game.dragEnd()
+          else if (roll < 0.62) tapOn(game, id)
+          else if (roll < 0.86) {
+            game.press({ kind: 'friend', id })
+            game.dragStart()
+            game.dragTo({ x: (random() - 0.5) * 11, z: (random() - 0.5) * 6 }, null)
+          } else game.press({ kind: 'plank', along: random() < 0.5 ? -2 : 2 })
+        }
+        game.step(1 / 60, QUIET)
+        game.takeCues()
+        const tilt = game.play.plank.tilt
+        for (const id of FRIEND_IDS) {
+          const body = game.play.bodies[id], pose = game.frame.poses[id]
+          lowest = Math.min(lowest, pose.y)
+          // Its middle over the board: its underside is on the board or above it.
+          if (Math.abs(pose.z - PLANK.z) < PLANK.halfWidth && Math.abs(pose.x) < PLANK.halfLength) deepest = Math.max(deepest, plankTopAt(pose.x, tilt) - pose.y)
+          // Two friends are held apart whenever either stands, sits, rides, is thrown or is carried. A friend in the
+          // middle of a hop flies over whoever stood in its way when it left; two hopping at once are not compared.
+          for (const other of FRIEND_IDS) if (other < id && body.mode !== 'hop' && game.play.bodies[other].mode !== 'hop') closest = Math.min(closest, apart(game, id, other))
+        }
+      }
+      // Bo sinks a twentieth of a unit into the sand when he is set down in it, and sighs; nobody goes deeper.
+      expect(lowest, `seed ${seed}: under the sand`).toBeGreaterThan(-0.07)
+      expect(deepest, `seed ${seed}: into the plank`).toBeLessThan(0.06)
+      // A friend sitting on another nestles a twentieth into it; nobody is ever deeper in anybody than a seventh.
+      expect(closest, `seed ${seed}: through a friend`).toBeGreaterThan(0.85)
+    }
+  }, 120_000)
 })
 
 describe('one obvious want, and the friends as they are', () => {

@@ -3,8 +3,8 @@ import { PERSONALITY } from './personality'
 import { nudge, stepPlank, type PlankState } from './plank'
 import type { Frame, FriendPose, Poses } from './pose'
 import { restPose } from './pose'
-import { restingAt, restTilt } from './rest'
-import { ENDS, FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, TRAY, otherEnd, type End, type FriendId } from './world'
+import { NESTLE, restingAt, restTilt } from './rest'
+import { ENDS, FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, TRAY, otherEnd, plankTopAt, type End, type FriendId } from './world'
 
 // The playground in motion: the plank, and each friend hopping, riding, being
 // tossed, carried and set down. Pure, on game time alone, stepped at a fixed
@@ -333,6 +333,8 @@ export class Playground {
   private hop(id: FriendId, fall: boolean, slid = false): void {
     const body = this.bodies[id], spec = FRIENDS[id], own = PERSONALITY[id]
     const inAir = body.mode !== 'rest'
+    // A friend leaving the plank leaves at once: the plank swings the moment its weight is gone, and must not swing through it.
+    const offPlank = body.landed
     body.fromX = body.x; body.fromY = body.y; body.fromZ = body.z
     body.mode = 'hop'
     body.landed = false
@@ -340,10 +342,62 @@ export class Playground {
     body.leapt = false
     body.slid = slid
     // A friend already in the air, or let go by the finger, does not gather itself first.
-    body.gather = inAir || fall ? 0 : own.gather
-    body.hopFor = fall ? (slid ? 0.5 : 0.24) : spec.hopSeconds
-    body.hopHigh = fall ? (slid ? 0.05 : 0.1) : spec.hopHeight
+    body.gather = inAir || fall || offPlank ? 0 : own.gather
+    // Let go from the hand it comes down to its place: straight down where it hangs over it, and in a small arc over
+    // whatever stands between when its place is a step to the side.
+    const target = restingAt(this.arrangement, id, this.plank.tilt)
+    const aside = Math.hypot(target.x - body.x, target.z - body.z)
+    body.hopFor = fall ? (slid ? 0.5 : 0.24 + Math.min(0.3, aside * 0.1)) : spec.hopSeconds
+    body.hopHigh = fall ? (slid ? 0.05 : Math.max(0.1, aside > 0.6 ? this.clearance(id) : 0)) : Math.max(spec.hopHeight, this.clearance(id))
     if (slid) this.events.push({ type: 'slide', id })
+  }
+
+  /** The top of whatever a friend's body would be over at (x, z): the plank, a friend standing or sitting there, or the sand at 0. */
+  private heightUnder(id: FriendId, x: number, z: number): number {
+    const radius = FRIENDS[id].radius
+    let top = 0
+    if (Math.abs(z - PLANK.z) < PLANK.halfWidth + radius * 0.9 && Math.abs(x) < PLANK.halfLength + radius * 0.9) {
+      // The highest the board's top gets anywhere under the body.
+      const clamp = (along: number) => Math.max(-PLANK.halfLength, Math.min(PLANK.halfLength, along))
+      top = Math.max(plankTopAt(clamp(x - radius), this.plank.tilt), plankTopAt(clamp(x + radius), this.plank.tilt))
+    }
+    for (const other of FRIEND_IDS) {
+      if (other === id) continue
+      const there = this.bodies[other]
+      if (Math.hypot(there.x - x, there.z - z) < (radius + FRIENDS[other].radius) * 1.08) top = Math.max(top, there.y + FRIENDS[other].halfHeight * 2 * Math.max(1, there.squash))
+    }
+    return top
+  }
+
+  /**
+   * How high a hop must arc so that the friend flies over whoever stands or
+   * sits in its way, and over the plank: nobody hops through anybody. Friends
+   * right beside where it starts or lands are not in the way.
+   */
+  private clearance(id: FriendId): number {
+    const body = this.bodies[id], spec = FRIENDS[id]
+    const target = body.away ?? restingAt(this.arrangement, id, this.plank.tilt)
+    const dx = target.x - body.x, dz = target.z - body.z, length2 = dx * dx + dz * dz
+    if (length2 < 0.01) return 0
+    let need = 0
+    const over = (x: number, z: number, top: number, reach: number) => {
+      const s = ((x - body.x) * dx + (z - body.z) * dz) / length2
+      if (s < 0.14 || s > 0.86) return
+      const off = Math.hypot(body.x + dx * s - x, body.z + dz * s - z)
+      if (off > reach) return
+      const line = body.y + (target.y - body.y) * s
+      need = Math.max(need, (top + 0.25 - line) / (4 * s * (1 - s)))
+    }
+    for (const other of FRIEND_IDS) {
+      if (other === id) continue
+      const there = this.bodies[other]
+      over(there.x, there.z, there.y + FRIENDS[other].halfHeight * 2, (spec.radius + FRIENDS[other].radius) * 1.1)
+    }
+    // The plank, as three places along it, and the stone under its middle.
+    for (const along of [-PLANK.seat, 0, PLANK.seat]) over(along, PLANK.z, plankTopAt(along, this.plank.tilt), spec.radius + PLANK.halfWidth)
+    // Up onto a high seat, or down off one: the arc goes up and over the edge of the board, never through it.
+    need = Math.max(need, (0.3 * Math.abs(target.y - body.y) + 0.35) / 0.84)
+    return Math.min(4.5, need)
   }
 
   private step(dt: number): void {
@@ -385,10 +439,17 @@ export class Playground {
     const target = body.away ?? restingAt(this.arrangement, id, this.plank.tilt)
     if (body.mode === 'held') {
       const pull = 1 - Math.exp(-dt * 16)
-      const dx = (body.holdX - body.x) * pull
+      let dx = (body.holdX - body.x) * pull, dz = (body.holdZ - body.z) * pull
+      // It is carried over whatever is in the way, never through it: it rises first, and only then goes across.
+      const ahead = this.heightUnder(id, body.x + dx, body.z + dz)
+      if (body.y < ahead) {
+        dx = 0
+        dz = 0
+      }
       body.x += dx
-      body.z += (body.holdZ - body.z) * pull
-      body.y += (HOLD_HEIGHT - body.y) * (1 - Math.exp(-dt * 11))
+      body.z += dz
+      const wanted = Math.max(HOLD_HEIGHT, ahead + 0.3, this.heightUnder(id, body.holdX, body.holdZ) + 0.3)
+      body.y = Math.max(this.heightUnder(id, body.x, body.z), body.y + (wanted - body.y) * (1 - Math.exp(-dt * 16)))
       // It dangles: the body swings back against the way it is carried.
       body.leanTo = Math.max(-0.6, Math.min(0.6, (dx / dt) * 0.07))
       body.squashTo = own.heldStretch
@@ -427,10 +488,18 @@ export class Playground {
       body.squashV += 6
       if (body.hopHigh > 0.5) this.events.push({ type: 'leap', id })
     }
+    // Landing on a friend who is in the air: it lands where that friend is, not where the seat would be.
+    const place = body.away ? null : placeOf(this.arrangement, id)
+    if (place && place.at === 'end' && place.level > 0) {
+      const underId = this.arrangement[place.end][place.level - 1], under = this.bodies[underId]
+      if (under.mode !== 'hop' && under.mode !== 'held') target.y = Math.max(target.y, under.y + Math.cos(this.plank.tilt) * FRIENDS[underId].halfHeight * 2 * NESTLE * under.squash)
+    }
     const s = Math.min(1, (body.hopT - body.gather) / body.hopFor)
     body.x = body.fromX + (target.x - body.fromX) * s
     body.z = body.fromZ + (target.z - body.fromZ) * s
     body.y = body.fromY + (target.y - body.fromY) * s + 4 * body.hopHigh * s * (1 - s)
+    // Over the board it is never below the board's top: a plank that swings up under a hopping friend carries it.
+    if (Math.abs(body.z - PLANK.z) < PLANK.halfWidth && Math.abs(body.x) < PLANK.halfLength) body.y = Math.max(body.y, plankTopAt(body.x, this.plank.tilt))
     body.squashTo = 1.12
     body.turn = Math.max(-0.5, Math.min(0.5, (target.x - body.fromX) * 0.12)) * (1 - s)
     if (s >= 1) {
@@ -469,6 +538,14 @@ export class Playground {
       return
     }
     body.landed = true
+    // It landed on a friend who is in the air: it flies on with it.
+    if (place.level > 0) {
+      const under = this.bodies[this.arrangement[place.end][place.level - 1]]
+      if (under.mode === 'air') {
+        body.mode = 'air'
+        body.vy = under.vy
+      }
+    }
     const side = place.end === 'right' ? 1 : -1
     const before = Math.sign(this.plank.tilt)
     nudge(this.plank, side * spec.weight * LANDING_PUSH * (firstTouch ? 1 : 0.35) * (0.5 + 0.5 * hard))
@@ -488,7 +565,11 @@ export class Playground {
     for (let level = 1; level < stack.length; level++) {
       const below = this.bodies[stack[level - 1]], body = this.bodies[stack[level]]
       if (body.mode === 'hop' || body.mode === 'held' || below.mode === 'hop' || below.mode === 'held') continue
-      const floor = below.y + FRIENDS[stack[level - 1]].halfHeight * 2 * 0.9 * below.squash
+      // Two at rest are kept together where they are drawn (`frame`): the one above rides the squash of the one below.
+      if (body.mode === 'rest' && below.mode === 'rest') continue
+      // The stack leans with the board, so a head is a little lower than its height above the seat below it.
+      // A little over the head as it springs: a body's small acts (a chuckle, a breath) stretch it a hair past its spring.
+      const floor = below.y + Math.cos(this.plank.tilt) * FRIENDS[stack[level - 1]].halfHeight * 2 * Math.max(NESTLE, below.squash * 1.1)
       if (body.y < floor) {
         body.y = floor
         if (below.mode === 'air' && body.vy < below.vy) {
@@ -503,7 +584,7 @@ export class Playground {
   private live(id: FriendId, dt: number): void {
     const body = this.bodies[id], own = PERSONALITY[id]
     body.squashV += (own.springStiff * (body.squashTo - body.squash) - own.springDamp * body.squashV) * dt
-    body.squash = Math.max(0.35, Math.min(1.6, body.squash + body.squashV * dt))
+    body.squash = Math.max(0.35, Math.min(1.3, body.squash + body.squashV * dt))
     const leanPull = 140 * (body.leanTo - body.lean) - 12 * body.leanV
     body.leanV += leanPull * dt
     body.lean += body.leanV * dt
@@ -575,7 +656,28 @@ export class Playground {
       // Only Pim and Mog pull a face: Dot goes pale and quiet, and Bo dozes.
       pose.frown = body.mood === 'put-out' && (id === 'pim' || id === 'mog') && body.mouth < 0.3 ? 1 : 0
       pose.follow = body.follow + (id === 'mog' && body.mood === 'put-out' ? -0.5 : 0)
+      pose.pressed = 0
       if (body.act) this.perform(body, pose)
+    }
+    // Whoever sits on a friend rides that friend's squash: pressed flat, it lets them down; popping back, it lifts them.
+    for (const end of ENDS) {
+      const stack = this.arrangement[end]
+      for (let level = 1; level < stack.length; level++) {
+        const body = this.bodies[stack[level]], below = this.bodies[stack[level - 1]]
+        const under = this.poses[stack[level - 1]], pose = this.poses[stack[level]]
+        // Whoever has arrived on a head presses it, in the air as at rest.
+        if (body.mode !== 'hop' && body.mode !== 'held') under.pressed = 1
+        if (body.mode === 'hop' || body.mode === 'held' || below.mode === 'hop' || below.mode === 'held') continue
+        const rise = FRIENDS[stack[level - 1]].halfHeight * 2 * NESTLE * under.squash
+        if (body.mode !== 'rest' || !body.landed || below.mode !== 'rest' || !below.landed) {
+          // In the air together: never lower than the head below, however that head stretches or bobs.
+          pose.y = Math.max(pose.y, under.y + Math.cos(under.lean) * rise)
+          continue
+        }
+        // At rest it stands on the head below, wherever that head is: down when it is squashed, to the side when it leans.
+        pose.x = under.x + Math.sin(under.lean) * rise
+        pose.y = under.y + Math.cos(under.lean) * rise
+      }
     }
     this.out.tilt = this.plank.tilt
     this.out.glow = glow

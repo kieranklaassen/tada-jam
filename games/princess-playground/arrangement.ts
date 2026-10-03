@@ -83,10 +83,12 @@ export function putInSand(a: Arrangement, id: FriendId, spot: Spot): Arrangement
   return next
 }
 
-/** How near two friends may stand in the sand, beyond their two radii. */
-const ELBOW = 0.06
+/** How near two friends may stand in the sand: their two radii, a tenth more for the belly each has below its middle and the spread of a squash, and a little air. */
+export function elbowRoom(a: FriendId, b: FriendId): number {
+  return (FRIENDS[a].radius + FRIENDS[b].radius) * 1.12 + 0.08
+}
 /** The waiting place is kept clear for whoever waits there, or will: nobody stands within this of it, plus their own radius. */
-export const WAITING_CLEAR = 0.9
+export const WAITING_CLEAR = 1.25
 
 function clear(a: Arrangement, id: FriendId, at: Spot): boolean {
   const radius = FRIENDS[id].radius
@@ -94,7 +96,7 @@ function clear(a: Arrangement, id: FriendId, at: Spot): boolean {
   for (const other of FRIEND_IDS) {
     const there = a.sand[other]
     if (other === id || !there) continue
-    if (Math.hypot(at.x - there.x, at.z - there.z) < radius + FRIENDS[other].radius + ELBOW) return false
+    if (Math.hypot(at.x - there.x, at.z - there.z) < elbowRoom(id, other)) return false
   }
   return true
 }

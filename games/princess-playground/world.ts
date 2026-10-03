@@ -51,7 +51,7 @@ export const MAX_TILT = Math.asin(PLANK.pivotHeight / PLANK.halfLength)
 export const SAND = {
   maxX: 5.15,
   /** Nearest the child. Kept off the bottom of the screen, where wrists rest. */
-  maxZ: 2.75,
+  maxZ: 2.6,
   minZ: -3.0,
   /** Half the depth of the strip under the plank where nobody stands. */
   plankStrip: 1.8,
@@ -101,22 +101,26 @@ export function gridLine(cell: number, origin: number): number {
 
 /** Moves a spot to the nearest place a friend of this radius may stand. */
 export function standable(spot: Spot, radius: number): Spot {
-  const x = onGrid(spot.x, -SAND.maxX + radius * 0.5, SAND.maxX - radius * 0.5, -TRAY.halfWidth)
-  const nearRim = SAND.minZ + radius * 0.5
-  let z = onGrid(spot.z, nearRim, SAND.maxZ, -TRAY.halfDepth)
+  // Clear of the rim by the body's widest reach: its radius, its belly, and the spread of a hard landing.
+  const reach = radius * 1.3 + 0.05
+  const sideRim = Math.min(SAND.maxX - radius * 0.5, TRAY.halfWidth - reach)
+  const x = onGrid(spot.x, -sideRim, sideRim, -TRAY.halfWidth)
+  const nearRim = Math.max(SAND.minZ + radius * 0.5, -TRAY.halfDepth + reach)
+  const childRim = Math.min(SAND.maxZ, TRAY.halfDepth - reach)
+  let z = onGrid(spot.z, nearRim, childRim, -TRAY.halfDepth)
   const half = SAND.plankStrip + radius * 0.4
   if (Math.abs(x) < SAND.plankReach + radius && Math.abs(z - PLANK.z) < half) {
     // Under the plank: step out in front of it, or behind it where there is room and it is nearer.
     const behind = PLANK.z - half
-    z = spot.z < PLANK.z && behind >= nearRim ? onGrid(behind, nearRim, behind, -TRAY.halfDepth) : onGrid(PLANK.z + half, PLANK.z + half, SAND.maxZ, -TRAY.halfDepth)
+    z = spot.z < PLANK.z && behind >= nearRim ? onGrid(behind, nearRim, behind, -TRAY.halfDepth) : onGrid(PLANK.z + half, PLANK.z + half, childRim, -TRAY.halfDepth)
   }
   return { x, z }
 }
 
 /** Where each friend stands by default on the right of the tray; mirrored for the left. Dot's is the rim. */
 export const HOME: Readonly<Record<FriendId, Spot>> = {
-  pim: standable({ x: 1.68, z: 2.49 }, FRIENDS.pim.radius),
-  mog: standable({ x: 2.88, z: 1.41 }, FRIENDS.mog.radius),
+  pim: standable({ x: 1.92, z: 2.49 }, FRIENDS.pim.radius),
+  mog: standable({ x: 2.88, z: 1.17 }, FRIENDS.mog.radius),
   bo: standable({ x: 4.56, z: 2.37 }, FRIENDS.bo.radius),
   dot: standable({ x: 4.68, z: -2.55 }, FRIENDS.dot.radius),
 }

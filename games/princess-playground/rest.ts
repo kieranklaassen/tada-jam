@@ -7,18 +7,22 @@ import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, WAITING_PLACE, plankTopAt, type E
 // this, and every hop and toss ends in it.
 
 /** How much of a body's height a friend sitting on another sinks into the one below. */
-export const NESTLE = 0.9
+export const NESTLE = 0.95
 
 export function restTilt(a: Arrangement, without: FriendId | null = null): number {
   return lean(a, without) * MAX_TILT
 }
 
-/** Where the bottom of the friend at `level` of an end's stack is, for a tilt. */
+/** Where the bottom of the friend at `level` of an end's stack is, for a tilt. A stack stands square on the board, so it leans with it. */
 export function seatOf(a: Arrangement, end: End, level: number, tilt: number): { x: number; y: number; z: number } {
   const along = (end === 'left' ? -1 : 1) * PLANK.seat
-  let y = plankTopAt(along, tilt)
-  for (let i = 0; i < level; i++) y += FRIENDS[a[end][i]].halfHeight * 2 * NESTLE
-  return { x: along * Math.cos(tilt), y, z: PLANK.z }
+  let x = along * Math.cos(tilt), y = plankTopAt(along, tilt)
+  for (let i = 0; i < level; i++) {
+    const rise = FRIENDS[a[end][i]].halfHeight * 2 * NESTLE
+    x += Math.sin(tilt) * rise
+    y += Math.cos(tilt) * rise
+  }
+  return { x, y, z: PLANK.z }
 }
 
 /** Where the bottom of a friend is at rest, for a tilt. */

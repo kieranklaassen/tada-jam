@@ -61,6 +61,8 @@ export function buildFriend(id: FriendId): FriendView {
   const spec = FRIENDS[id]
   const group = new THREE.Group()
   group.name = `friend-${id}`
+  // One object for the intersection audit: a face lies on its body by design.
+  group.userData.jamObject = `friend-${id}`
   const full = new THREE.Color(PAINT[id].full), pale = new THREE.Color(PAINT[id].pale)
 
   // The body: an egg a little heavier at the bottom, like a pebble lying on its flat side.
@@ -75,18 +77,7 @@ export function buildFriend(id: FriendId): FriendView {
     n.set(x / spec.radius, y / spec.halfHeight, z / (spec.radius * 0.94)).normalize()
     normal.setXYZ(i, n.x, n.y, n.z)
   }
-  const extras: THREE.BufferGeometry[] = []
-  if (id === 'mog') {
-    for (const side of [-1, 1]) {
-      const ear = new THREE.SphereGeometry(spec.radius * 0.24, 14, 10)
-      ear.scale(0.85, 1.25, 0.6)
-      const at = onBody('mog', side * 0.5, 0.86, -0.05)
-      ear.rotateZ(-side * 0.4)
-      ear.translate(at.x, at.y + spec.radius * 0.08, at.z)
-      extras.push(ear)
-    }
-  }
-  const merged = extras.length ? mergeGeometries([bodyGeometry.toNonIndexed(), ...extras.map((e) => e.toNonIndexed())])! : bodyGeometry
+  const merged = bodyGeometry
   merged.translate(0, spec.halfHeight, 0)
   const body = new THREE.Mesh(merged, new THREE.MeshStandardMaterial({ color: full, roughness: 0.34, metalness: 0 }))
   body.name = `${id}-body`
@@ -95,12 +86,15 @@ export function buildFriend(id: FriendId): FriendView {
   const eyeSize = spec.radius * (id === 'bo' ? 0.19 : id === 'pim' ? 0.27 : 0.23)
   const whites = new THREE.Mesh(eyeGeometry(id, eyeSize, 0, 0.012), WHITE)
   const pupils = new THREE.Mesh(eyeGeometry(id, eyeSize * 0.56, 0, eyeSize * 0.34), INK)
+  // The mouth is half a ring lying on the body's slope. Turned one way in its own plane it smiles, the other way it is turned down.
   const mouthGeometry = new THREE.TorusGeometry(spec.radius * 0.16, spec.radius * 0.04, 6, 14, Math.PI)
-  mouthGeometry.rotateZ(Math.PI)
-  mouthGeometry.rotateX(-0.55)
   const mouthAt = onBody(id, 0, 0.36, 0.93)
   const mouth = new THREE.Mesh(mouthGeometry, INK)
+  mouth.name = `${id}-mouth`
+  mouth.rotation.set(-0.55, 0, Math.PI)
   mouth.position.set(mouthAt.x, mouthAt.y + spec.halfHeight, mouthAt.z + 0.015)
+  whites.name = `${id}-whites`
+  pupils.name = `${id}-pupils`
   const face = new THREE.Group()
   face.position.y = spec.halfHeight
   face.add(whites, pupils)
@@ -109,9 +103,11 @@ export function buildFriend(id: FriendId): FriendView {
   let extra: THREE.Object3D | null = null
   if (id === 'pim') extra = crown(spec.radius)
   if (id === 'dot') extra = speckles()
+  if (id === 'mog') extra = ears(body.material)
   if (id === 'bo') extra = lids(eyeSize)
   if (extra) {
     if (id === 'pim') extra.position.set(0, spec.halfHeight * 1.9, -spec.radius * 0.18)
+    else if (id === 'mog') extra.position.y = spec.halfHeight * 1.86
     else extra.position.y = spec.halfHeight
     group.add(extra)
   }
@@ -129,6 +125,21 @@ function crown(radius: number): THREE.Object3D {
   const shell = new THREE.Mesh(new THREE.LatheGeometry(profile, 18), new THREE.MeshStandardMaterial({ color: '#fff6dc', roughness: 0.4, emissive: '#5a4a20', emissiveIntensity: 0.35 }))
   shell.name = 'pim-crown'
   return shell
+}
+
+/** Mog's ear bumps: two small rounded ears on top of his head, of his own paint. They lie flat when he is put out or sat on. */
+function ears(material: THREE.Material): THREE.Object3D {
+  const radius = FRIENDS.mog.radius, parts: THREE.BufferGeometry[] = []
+  for (const side of [-1, 1]) {
+    const ear = new THREE.SphereGeometry(radius * 0.24, 14, 10)
+    ear.scale(0.85, 1.25, 0.6)
+    ear.rotateZ(-side * 0.4)
+    ear.translate(side * radius * 0.42, radius * 0.16, -radius * 0.04)
+    parts.push(ear)
+  }
+  const mesh = new THREE.Mesh(mergeGeometries(parts)!, material)
+  mesh.name = 'mog-ears'
+  return mesh
 }
 
 /** Dot's speckles: a scatter of lighter spots over its back and brow. */
@@ -174,7 +185,8 @@ function lids(eyeSize: number): THREE.Object3D {
 /** Lays one frame's pose onto a friend's meshes. */
 export function poseFriend(view: FriendView, pose: FriendPose): void {
   const spec = FRIENDS[view.id]
-  const wide = 1 / Math.sqrt(Math.max(0.2, pose.squash))
+  // Pressed flat, a body spreads, but only so far: it never grows into its neighbour or the rim.
+  const wide = Math.min(1.2, 1 / Math.sqrt(Math.max(0.2, pose.squash)))
   view.group.position.set(pose.x, pose.y, pose.z)
   view.group.scale.set(wide, pose.squash, wide)
   view.group.rotation.set(-pose.nod, pose.turn, -pose.lean, 'YXZ')
@@ -185,11 +197,27 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
     eyes.scale.y = open
     eyes.position.y = eyeY * (1 - open)
   }
+  // A shut eye is a dark line: the white is put away, so the two never lie in one plane.
+  view.whites.visible = open > 0.3
   view.pupils.position.x = pose.gazeX * spec.radius * 0.05
   view.pupils.position.y += pose.gazeY * spec.radius * 0.03
-  // A mouth turned down is the same arc turned over.
-  view.mouth.scale.set(1 + pose.mouth * 0.35, pose.frown > 0.5 ? -0.8 : 1 + pose.mouth * 0.9, 1)
+  // A mouth turned down is the same arc turned over in its own plane, where it lies.
+  view.mouth.rotation.z = pose.frown > 0.5 ? 0 : Math.PI
+  view.mouth.scale.set(1 + pose.mouth * 0.35, 1 + pose.mouth * 0.9, 1)
   view.body.material.color.lerpColors(view.pale, view.full, pose.bright)
-  if (view.extra && view.id === 'pim') view.extra.rotation.set(0.1 + pose.follow * 0.4, 0, -pose.follow)
+  // The crown swings on its base, and no further than it could without tipping into her head.
+  const swing = Math.max(-0.3, Math.min(0.3, pose.follow))
+  if (view.extra && view.id === 'pim') {
+    // With a friend on her head the crown slips down to the side of it, out from under them.
+    if (pose.pressed > 0.5) {
+      view.extra.position.set(-spec.radius * 0.86, spec.halfHeight * 1.05, spec.radius * 0.12)
+      view.extra.rotation.set(0, 0, 1.25)
+    } else {
+      view.extra.position.set(0, spec.halfHeight * 1.9, -spec.radius * 0.18)
+      view.extra.rotation.set(0.1 + swing * 0.4, 0, -swing)
+    }
+  }
   if (view.extra && view.id === 'dot') view.extra.rotation.y = pose.follow * 0.6
+  // Mog's ears lie flat when he is put out, and flatter still under a friend.
+  if (view.extra && view.id === 'mog') view.extra.scale.y = pose.pressed > 0.5 ? 0.12 : pose.frown > 0.5 ? 0.45 : 1
 }

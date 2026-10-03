@@ -182,11 +182,10 @@ export class Stage {
     }
     if (view.rakeSweep !== null) {
       const x = -TRAY.halfWidth + view.rakeSweep * TRAY.halfWidth * 2
-      // Lifted off the rim and drawn through the sand, head first and tines down.
-      rake.position.set(x, 0.05, -0.2)
-      rake.rotation.y = 0
+      // Drawn along the far rim from one side of the tray to the other; the sand is raked across its whole depth as it passes.
+      rake.position.set(x * 0.8, RAKE_AT.y, RAKE_AT.z)
       this.map.rakeUpTo(x)
-    } else if (rake.position.z !== RAKE_AT.z) {
+    } else if (rake.position.x !== RAKE_AT.x) {
       rake.position.set(RAKE_AT.x, RAKE_AT.y, RAKE_AT.z)
     }
     this.grains.visible = view.grainsFlying

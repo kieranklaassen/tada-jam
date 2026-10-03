@@ -69,10 +69,23 @@ export class SandMap {
         if (digit === SMOOTH) {
           this.ctx.fillStyle = grey(FLAT, 1)
           this.ctx.fillRect(this.px(x - cell / 2), this.pz(z - cell / 2), cell * this.scale, cell * this.scale)
-        } else this.dimple(x, z, cell * 0.62, 0.25 + digit / 12)
+        } else this.hollow(x, z, cell * 1.05, 0.2 + digit / 14)
       }
     }
     this.dirty = true
+  }
+
+  /** A soft dip with no lip, wide enough to run into its neighbours: a saved mark, drawn from its cell alone. */
+  private hollow(x: number, z: number, radius: number, depth: number): void {
+    const ctx = this.ctx, cx = this.px(x), cz = this.pz(z), r = radius * this.scale
+    const dip = ctx.createRadialGradient(cx, cz, 0, cx, cz, r)
+    dip.addColorStop(0, grey(FLAT - 70 * depth, 0.85))
+    dip.addColorStop(0.6, grey(FLAT - 46 * depth, 0.6))
+    dip.addColorStop(1, grey(FLAT - 20 * depth, 0))
+    ctx.fillStyle = dip
+    ctx.beginPath()
+    ctx.arc(cx, cz, r, 0, Math.PI * 2)
+    ctx.fill()
   }
 
   /** Dot's ring: a thin furrow drawn round where it stands. */
