@@ -37,6 +37,11 @@ export type PlayEvent =
 
 type Mode = 'rest' | 'hop' | 'air' | 'held'
 
+/** A small thing a friend does with its body where it sits or stands. Each lasts a moment and changes no place. */
+export type Act = 'spin' | 'stamp' | 'kick' | 'tall' | 'knead' | 'sway' | 'sink' | 'duck' | 'lean' | 'chuckle' | 'bounce' | 'look'
+
+export type Mood = 'glad' | 'put-out' | 'plain'
+
 type Body = {
   x: number; y: number; z: number
   mode: Mode
@@ -57,6 +62,19 @@ type Body = {
   doze: number
   phase: number
   turn: number
+  /** A place it has gone to for a showing, away from where the arrangement has it; null when it is where it belongs. */
+  away: { x: number; y: number; z: number } | null
+  act: Act | null
+  actT: number
+  actFor: number
+  actWay: number
+  mood: Mood
+  /** Where it looks, -1 left to 1 right; eased. */
+  gaze: number
+  gazeTo: number
+  /** How far its eyes are raised, -1 to 1; eased. */
+  gazeUp: number
+  gazeUpTo: number
 }
 
 /** A small seeded stream (mulberry32): the only randomness in the game, and it only picks ordinary detail. */
@@ -99,6 +117,7 @@ export class Playground {
         squash: 1, squashV: 0, squashTo: 1, lean: 0, leanV: 0, leanTo: 0, follow: 0, followV: 0,
         holdX: at.x, holdZ: at.z, blinkIn: 0.6 + index * 0.9 + this.random() * 2, blinkT: 0, mouth: 0,
         bright: 1, doze: 0, phase: index * 1.7, turn: 0,
+        away: null, act: null, actT: 0, actFor: 0, actWay: 0, mood: 'plain', gaze: 0, gazeTo: 0, gazeUp: 0, gazeUpTo: 0,
       }
       this.poses[id] = restPose()
     })
@@ -176,6 +195,92 @@ export class Playground {
 
   dragSand(x0: number, z0: number, x1: number, z1: number): void {
     this.events.push({ type: 'groove', x0, z0, x1, z1 })
+  }
+
+  /** A friend does a small thing with its body, for `seconds`. `way` is -1 or 1 where the act has a side. */
+  act(id: FriendId, act: Act, seconds: number, way = 0): void {
+    const body = this.bodies[id]
+    body.act = act
+    body.actT = 0
+    body.actFor = seconds
+    body.actWay = way
+  }
+
+  setMood(id: FriendId, mood: Mood): void {
+    this.bodies[id].mood = mood
+  }
+
+  /** Where a friend looks: `side` -1 left to 1 right, `up` -1 down to 1 up. It eases there. */
+  look(id: FriendId, side: number, up: number): void {
+    this.bodies[id].gazeTo = side
+    this.bodies[id].gazeUpTo = up
+  }
+
+  /** For a showing: a friend hops to a place of the showing's own, and stays there until it is sent home. */
+  visit(id: FriendId, point: { x: number; y: number; z: number }): void {
+    this.bodies[id].away = point
+    this.hop(id, false)
+  }
+
+  /** For a showing: a friend stands at a place of the showing's own from the start, with no hop. */
+  standAt(id: FriendId, point: { x: number; y: number; z: number }): void {
+    const body = this.bodies[id]
+    body.away = point
+    body.mode = 'rest'
+    body.landed = false
+    body.x = point.x; body.y = point.y; body.z = point.z
+  }
+
+  /** Back to where the arrangement has it, by a hop. */
+  goHome(id: FriendId): void {
+    if (!this.bodies[id].away) return
+    this.bodies[id].away = null
+    this.hop(id, false)
+  }
+
+  /** The arrangement changed under everyone at once (a new ride is laid out): whoever is not where it now belongs hops there. */
+  relayout(arrangement: Arrangement): void {
+    if (this.held) this.release()
+    const before = this.arrangement
+    this.arrangement = arrangement
+    for (const id of FRIEND_IDS) {
+      const was = placeOf(before, id), now = placeOf(arrangement, id), body = this.bodies[id]
+      const same = !body.away && body.mode === 'rest' && was.at === now.at && (was.at !== 'end' || (now.at === 'end' && was.end === now.end && was.level === now.level)) && (was.at !== 'sand' || (now.at === 'sand' && was.spot.x === now.spot.x && was.spot.z === now.spot.z))
+      body.away = null
+      if (!same) this.hop(id, false)
+    }
+  }
+
+  /** Everything at rest, at once, as an arrangement has it: how a load finds the world, and how a touch ends a showing. */
+  settleTo(arrangement: Arrangement): void {
+    this.held = null
+    this.arrangement = arrangement
+    this.plank.tilt = restTilt(arrangement)
+    this.plank.spin = 0
+    for (const id of FRIEND_IDS) {
+      const body = this.bodies[id], at = restingAt(arrangement, id, this.plank.tilt)
+      body.away = null
+      body.mode = 'rest'
+      body.landed = placeOf(arrangement, id).at === 'end'
+      body.x = at.x; body.y = at.y; body.z = at.z
+      body.vy = 0
+      body.squash = 1; body.squashV = 0; body.squashTo = 1
+      body.lean = 0; body.leanV = 0; body.leanTo = 0
+      body.turn = 0
+      body.act = null
+    }
+    this.wasLevel = this.isLevel()
+  }
+
+  /** The plank has come to lie where the weights on it leave it, or nearly, and is no longer swinging hard. */
+  get plankArrived(): boolean {
+    const target = this.restingTilt()
+    return Math.abs(this.plank.tilt - target) < 0.06 && Math.abs(this.plank.spin) < 1.2
+  }
+
+  /** A push on the plank from the game: a rock in the ending scene. Positive turns the right end down. */
+  rock(spin: number): void {
+    nudge(this.plank, spin)
   }
 
   takeEvents(): PlayEvent[] {
@@ -259,7 +364,7 @@ export class Playground {
 
   private move(id: FriendId, dt: number): void {
     const body = this.bodies[id], own = PERSONALITY[id]
-    const target = restingAt(this.arrangement, id, this.plank.tilt)
+    const target = body.away ?? restingAt(this.arrangement, id, this.plank.tilt)
     if (body.mode === 'held') {
       const pull = 1 - Math.exp(-dt * 16)
       const dx = (body.holdX - body.x) * pull
@@ -321,6 +426,16 @@ export class Playground {
     const body = this.bodies[id], own = PERSONALITY[id], spec = FRIENDS[id]
     const place = placeOf(this.arrangement, id)
     const firstTouch = !body.landed
+    if (body.away) {
+      body.mode = 'rest'
+      body.x = target.x; body.y = target.y; body.z = target.z
+      body.vy = 0
+      body.turn = 0
+      body.squash = 1 - (1 - own.landSquash) * 0.6
+      body.squashV = 0
+      this.events.push({ type: 'land', id, on: target.y > 0.05 ? 'friend' : 'sand', x: target.x, z: target.z, speed })
+      return
+    }
     body.mode = 'rest'
     body.y = target.y
     body.x = target.x
@@ -379,6 +494,12 @@ export class Playground {
     body.followV += (own.followStiff * (drive * own.followReach - body.follow) - own.followDamp * body.followV) * dt
     body.follow += body.followV * dt
     body.mouth = Math.max(0, body.mouth - dt * 2.2)
+    if (body.act) {
+      body.actT += dt
+      if (body.actT >= body.actFor) body.act = null
+    }
+    body.gaze += (body.gazeTo - body.gaze) * (1 - Math.exp(-dt * 7))
+    body.gazeUp += (body.gazeUpTo - body.gazeUp) * (1 - Math.exp(-dt * 7))
     body.phase += dt * own.breatheRate * Math.PI * 2
     body.blinkIn -= dt
     if (body.blinkIn <= 0) {
@@ -396,6 +517,25 @@ export class Playground {
     }
   }
 
+  /** Lays the act a body is in the middle of onto its pose. Every act begins and ends at nothing, so none leaves a mark. */
+  private perform(body: Body, pose: FriendPose): void {
+    const t = Math.min(1, body.actT / body.actFor), bell = Math.sin(t * Math.PI), fade = 1 - t
+    switch (body.act) {
+      case 'spin': pose.turn += Math.PI * 2 * (t * t * (3 - 2 * t)); break
+      case 'stamp': pose.squash *= 1 - 0.2 * Math.abs(Math.sin(t * Math.PI * 3)); break
+      case 'kick': pose.lean += 0.24 * Math.sin(t * Math.PI * 9) * fade; pose.y += 0.06 * Math.abs(Math.sin(t * Math.PI * 9)) * fade; break
+      case 'tall': pose.squash *= 1 + 0.16 * bell; break
+      case 'knead': pose.squash *= 1 - 0.14 * Math.abs(Math.sin(t * Math.PI * 2)); pose.lean += 0.07 * Math.sin(t * Math.PI * 4); break
+      case 'sway': pose.lean += (body.actWay || 1) * 0.17 * Math.sin(t * Math.PI * 3) * (0.4 + 0.6 * fade); break
+      case 'sink': pose.squash *= 1 - 0.12 * bell; pose.y -= 0.05 * bell; break
+      case 'duck': pose.squash *= 1 - 0.32 * bell; break
+      case 'lean': pose.lean += body.actWay * 0.3 * bell; break
+      case 'chuckle': pose.squash *= 1 + 0.06 * Math.sin(t * Math.PI * 14) * fade; break
+      case 'bounce': pose.y += 0.4 * Math.abs(Math.sin(t * Math.PI * 2)) * (0.5 + 0.5 * fade); pose.squash *= 1 + 0.08 * Math.sin(t * Math.PI * 4); break
+      case 'look': pose.nod += 0.2 * bell; break
+    }
+  }
+
   /** What the view draws now. The same object every frame. */
   frame(glow = 0, glowOn: FriendId | null = null): Frame {
     for (const id of FRIEND_IDS) {
@@ -409,12 +549,15 @@ export class Playground {
       pose.nod = body.mode === 'air' ? 0.25 : 0
       pose.turn = body.turn
       const heavyLids = id === 'bo' ? 0.28 + 0.72 * body.doze : 0
-      pose.lids = Math.max(body.blinkT > 0 ? 1 : 0, heavyLids)
-      pose.gazeX = 0
-      pose.gazeY = body.mode === 'air' || body.mode === 'held' ? 0.6 : 0
+      pose.lids = Math.max(body.blinkT > 0 ? 1 : 0, heavyLids, body.mood === 'put-out' && (id === 'pim' || id === 'mog') ? 0.32 : 0)
+      pose.gazeX = body.gaze
+      pose.gazeY = body.mode === 'air' || body.mode === 'held' ? 0.6 : body.gazeUp
       pose.bright = id === 'dot' ? body.bright : 1
-      pose.mouth = body.mouth
-      pose.follow = body.follow
+      pose.mouth = Math.max(body.mouth, body.mood === 'glad' ? 0.25 : 0)
+      // Only Pim and Mog pull a face: Dot goes pale and quiet, and Bo dozes.
+      pose.frown = body.mood === 'put-out' && (id === 'pim' || id === 'mog') && body.mouth < 0.3 ? 1 : 0
+      pose.follow = body.follow + (id === 'mog' && body.mood === 'put-out' ? -0.5 : 0)
+      if (body.act) this.perform(body, pose)
     }
     this.out.tilt = this.plank.tilt
     this.out.glow = glow

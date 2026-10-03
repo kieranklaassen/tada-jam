@@ -124,6 +124,160 @@ export function drag(speed: number): Part[] {
   return [hiss(1400 + 1400 * s, 0.9, 0.03 + 0.05 * s, 0.02, 0.12)]
 }
 
+// --- The sounds of the grid's cells that the voices above do not already make ---
+
+/** Pim on the low end: a tiny tick, and two stamps of a small foot. */
+export function tick(): Part[] {
+  return [tone(1500, 0.07, 0.003, 0.04, 1200, 'triangle'), tone(420, 0.06, 0.004, 0.05, 300, 'triangle', 0.16), tone(420, 0.06, 0.004, 0.05, 300, 'triangle', 0.3)]
+}
+
+/** Pim dangling on the high end: a trill. */
+export function trill(): Part[] {
+  return [0, 1, 2, 3].map((n) => tone(n % 2 ? 1320 : 1100, 0.07, 0.006, 0.07, 0, 'triangle', n * 0.08))
+}
+
+/** A light clack: a small friend tipping the plank. */
+export function clack(): Part[] {
+  return [tone(900, 0.1, 0.003, 0.05, 600, 'square'), hiss(2600, 3, 0.04, 0.003, 0.06)]
+}
+
+/** Pim on top of someone: a boing, then she crows. */
+export function crow(): Part[] {
+  return [tone(300, 0.1, 0.006, 0.2, 620, 'sine'), tone(1000, 0.1, 0.01, 0.1, 1500, 'triangle', 0.2), tone(1500, 0.1, 0.01, 0.2, 1300, 'triangle', 0.32)]
+}
+
+/** Pim underneath someone: a raspberry. */
+export function raspberry(): Part[] {
+  return [tone(110, 0.1, 0.01, 0.34, 80, 'sawtooth'), hiss(260, 6, 0.07, 0.01, 0.34, 180)]
+}
+
+/** Pim's crown slipping: a tiny rattle after a soft pat. */
+export function rattle(): Part[] {
+  return [0, 1, 2].map((n) => hiss(3000, 9, 0.04, 0.003, 0.03, 0, 0.12 + n * 0.05))
+}
+
+/** Mog on a high perch: a purr. */
+export function purr(): Part[] {
+  return [tone(70, 0.11, 0.08, 0.9, 0, 'sawtooth'), hiss(140, 4, 0.05, 0.08, 0.9)]
+}
+
+/** Mog kneading: two muffled pats and a short chirr. */
+export function knead(): Part[] {
+  return [tone(160, 0.08, 0.006, 0.07, 110), tone(160, 0.08, 0.006, 0.07, 110, 'sine', 0.2), tone(700, 0.08, 0.02, 0.14, 900, 'sine', 0.44)]
+}
+
+/** Mog turning in his hollow: a dry scrunch. */
+export function scrunch(): Part[] {
+  return [hiss(1100, 1.2, 0.08, 0.03, 0.26, 700)]
+}
+
+/** Mog thrown: a yowl that falls. It replaces the whoop for him where the game wants it longer. */
+export function yowl(): Part[] {
+  return [tone(900, 0.13, 0.03, 0.5, 420, 'sawtooth')]
+}
+
+/** Dot on the low end: a two-note hum. `alone` lets it die away at once. */
+export function hum(alone: boolean): Part[] {
+  return alone ? [tone(392, 0.08, 0.04, 0.2), tone(330, 0.05, 0.04, 0.3, 0, 'sine', 0.2)] : [tone(392, 0.09, 0.04, 0.3), tone(494, 0.09, 0.04, 0.45, 0, 'sine', 0.26)]
+}
+
+/** Dot tipping the plank: a clear ring over the knock. */
+export function ringOver(): Part[] {
+  return [tone(1568, 0.08, 0.004, 0.6, 0, 'sine'), tone(2349, 0.03, 0.004, 0.4, 0, 'sine')]
+}
+
+/** Dot up high and not tipping it: one long high note. */
+export function longNote(): Part[] {
+  return [tone(988, 0.08, 0.12, 0.9, 0, 'sine')]
+}
+
+/** Dot on or under a friend: a low duet, two voices a third apart. */
+export function duet(): Part[] {
+  return [tone(196, 0.09, 0.1, 0.9, 0, 'sine'), tone(247, 0.08, 0.14, 0.86, 0, 'triangle')]
+}
+
+/** Dot in the sand beside a friend: one soft note. */
+export function softNote(): Part[] {
+  return [tone(659, 0.07, 0.05, 0.4, 0, 'sine')]
+}
+
+/** Dot drawing its ring: a faint slow scratch. */
+export function scratch(): Part[] {
+  return [hiss(1700, 2.4, 0.04, 0.2, 0.9, 1300)]
+}
+
+/** Bo asleep: one snore, in and out. */
+export function snore(): Part[] {
+  return [hiss(180, 5, 0.07, 0.25, 0.5, 240), tone(82, 0.07, 0.25, 0.5, 0, 'sawtooth'), hiss(320, 3, 0.04, 0.2, 0.5, 200, 0.8)]
+}
+
+/** Bo on the high end: the slam, a crack with a low boom under it. */
+export function slam(): Part[] {
+  return [hiss(2400, 1, 0.14, 0.002, 0.07), tone(70, 0.22, 0.004, 0.5, 52), tone(140, 0.06, 0.004, 0.2, 90, 'triangle')]
+}
+
+/** A friend squashed under Bo: a wheeze. */
+export function wheeze(): Part[] {
+  return [hiss(900, 7, 0.07, 0.03, 0.4, 500), tone(520, 0.04, 0.03, 0.4, 300, 'sine')]
+}
+
+/** Bo sinking into the sand: a sigh. */
+export function sigh(): Part[] {
+  return [hiss(700, 1.5, 0.06, 0.15, 0.7, 380)]
+}
+
+/** Bo high up at last: a slow rumbling chuckle. */
+export function chuckle(): Part[] {
+  return [0, 1, 2, 3].map((n) => tone(120 - n * 6, 0.1, 0.02, 0.14, 95, 'triangle', n * 0.2))
+}
+
+/** Pim flying: a squeal. */
+export function squeal(): Part[] {
+  return [tone(1200, 0.12, 0.02, 0.5, 2300, 'triangle')]
+}
+
+/** The low end tapped: a dull clonk. */
+export function clonk(): Part[] {
+  return [tone(150, 0.14, 0.003, 0.14, 100, 'triangle'), hiss(1200, 0.8, 0.03, 0.004, 0.1)]
+}
+
+/** The high end tapped and sprung back: a twang. */
+export function twang(): Part[] {
+  return [tone(240, 0.12, 0.004, 0.4, 330, 'sawtooth'), tone(480, 0.04, 0.004, 0.3, 660, 'sine')]
+}
+
+/** Sand running off the plank: a dry trickle. */
+export function trickle(): Part[] {
+  return [hiss(2600, 1.4, 0.04, 0.05, 0.6, 1800)]
+}
+
+/** An end biting the sand: a crunch, deeper the heavier the end. */
+export function crunch(weight: number): Part[] {
+  const w = Math.min(9, Math.max(0, weight))
+  return [hiss(700 - 40 * w, 0.9, 0.06 + 0.012 * w, 0.004, 0.16 + 0.02 * w, 300), tone(110 - 5 * w, 0.05 + 0.01 * w, 0.004, 0.14, 60)]
+}
+
+/** Grains sliding back into a bite as the end lifts: a short whisper. */
+export function whisper(): Part[] {
+  return [hiss(3000, 1, 0.03, 0.04, 0.22, 2200)]
+}
+
+/** Thrown grains settling on heads: a light patter. */
+export function patter(): Part[] {
+  return [0, 1, 2, 3, 4].map((n) => hiss(2000 + n * 180, 5, 0.03, 0.003, 0.04, 0, 0.06 * n + (n % 2) * 0.02))
+}
+
+/** The rake drawn across the tray: a long even comb through the sand. */
+export function comb(): Part[] {
+  return [hiss(1500, 1.1, 0.07, 0.15, 1.2, 1900), hiss(600, 2, 0.03, 0.15, 1.2)]
+}
+
+/** The asker's small hop on the spot: a short hopeful two-note peep in its own voice. */
+export function ask(id: FriendId): Part[] {
+  const p = THROAT[id].pitch
+  return [tone(p, THROAT[id].peak * 0.6, 0.02, 0.1, 0, THROAT[id].wave), tone(p * 1.19, THROAT[id].peak * 0.6, 0.02, 0.16, 0, THROAT[id].wave, 0.13)]
+}
+
 export function lengthOf(voice: readonly Part[]): number {
   return voice.reduce((end, part) => Math.max(end, part.delay + part.attack + part.decay), 0)
 }

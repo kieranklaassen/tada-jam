@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import * as voices from './voices'
 import { RANGE, THROAT, VARIANTS, chirp, creak, drag, knock, leap, lengthOf, levelHum, lift, poke, slide, thump, whoop, type Part } from './voices'
 import { FRIEND_IDS, FRIENDS } from './world'
 
@@ -14,6 +15,12 @@ function everyVoice(): { name: string; voice: Part[] }[] {
   for (const speed of [0, 1, 3.5, 9]) all.push({ name: `knock ${speed}`, voice: knock(speed) }, { name: `drag ${speed}`, voice: drag(speed * 4) })
   for (const strength of [0, 0.6, 1, 2]) all.push({ name: `creak ${strength}`, voice: creak(strength) })
   all.push({ name: 'level', voice: levelHum() }, { name: 'slide', voice: slide() }, { name: 'poke', voice: poke() })
+  // The cells' own sounds: every voice that takes no argument, then the ones that take one.
+  const plain = ['tick', 'trill', 'clack', 'crow', 'raspberry', 'rattle', 'purr', 'knead', 'scrunch', 'yowl', 'ringOver', 'longNote', 'duet', 'softNote', 'scratch', 'snore', 'slam', 'wheeze', 'sigh', 'chuckle', 'squeal', 'clonk', 'twang', 'trickle', 'whisper', 'patter', 'comb'] as const
+  for (const name of plain) all.push({ name, voice: voices[name]() })
+  for (const alone of [true, false]) all.push({ name: `hum ${alone}`, voice: voices.hum(alone) })
+  for (const weight of [0, 2, 4, 9, 30]) all.push({ name: `crunch ${weight}`, voice: voices.crunch(weight) })
+  for (const id of FRIEND_IDS) all.push({ name: `ask ${id}`, voice: voices.ask(id) })
   return all
 }
 
@@ -38,6 +45,12 @@ describe('the voices, as numbers', () => {
 
   it('the parts of one voice together never pass a safe peak', () => {
     for (const { name, voice } of everyVoice()) expect(voice.reduce((sum, part) => sum + part.peak, 0), name).toBeLessThanOrEqual(0.45)
+  })
+
+  it('every voice the module exports is among those held in range', () => {
+    const held = new Set(everyVoice().map(({ name }) => name.split(' ')[0]))
+    const makers = Object.entries(voices).filter(([, value]) => typeof value === 'function').map(([name]) => name).filter((name) => name !== 'lengthOf')
+    for (const name of makers) expect(held.has(name === 'levelHum' ? 'level' : name), name).toBe(true)
   })
 
   it('a bigger friend speaks lower and lands lower', () => {

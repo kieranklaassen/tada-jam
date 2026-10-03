@@ -27,12 +27,14 @@ export type FriendPose = {
   mouth: number
   /** A second, lagging lean for the part that follows through: Pim's crown, Bo's belly, Mog's ears. */
   follow: number
+  /** 0 a smile to 1 a mouth turned down: put out, never at the child. */
+  frown: number
 }
 
 export type Poses = Record<FriendId, FriendPose>
 
 export function restPose(x = 0, y = 0, z = 0): FriendPose {
-  return { x, y, z, squash: 1, lean: 0, nod: 0, turn: 0, lids: 0, gazeX: 0, gazeY: 0, bright: 1, mouth: 0, follow: 0 }
+  return { x, y, z, squash: 1, lean: 0, nod: 0, turn: 0, lids: 0, gazeX: 0, gazeY: 0, bright: 1, mouth: 0, follow: 0, frown: 0 }
 }
 
 /** What the view draws in one frame. */

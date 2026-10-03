@@ -183,9 +183,11 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
     eyes.scale.y = open
     eyes.position.y = eyeY * (1 - open)
   }
-  view.pupils.position.x = pose.gazeX * spec.radius * 0.035
+  view.pupils.position.x = pose.gazeX * spec.radius * 0.05
   view.pupils.position.y += pose.gazeY * spec.radius * 0.03
-  view.mouth.scale.set(1 + pose.mouth * 0.35, 1 + pose.mouth * 0.9, 1)
+  // A mouth turned down is the same arc turned over.
+  view.mouth.scale.set(1 + pose.mouth * 0.35, pose.frown > 0.5 ? -0.8 : 1 + pose.mouth * 0.9, 1)
   view.body.material.color.lerpColors(view.pale, view.full, pose.bright)
   if (view.extra && view.id === 'pim') view.extra.rotation.set(0.1 + pose.follow * 0.4, 0, -pose.follow)
+  if (view.extra && view.id === 'dot') view.extra.rotation.y = pose.follow * 0.6
 }
