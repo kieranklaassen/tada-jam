@@ -50,7 +50,7 @@ async function sweep(d: Driver, from: readonly [number, number], to: readonly [n
 }
 
 export default {
-  enforce: false,
+  enforce: true,
   childAge: 2,
   query: 'seed=7',
   ignore: [

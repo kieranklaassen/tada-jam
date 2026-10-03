@@ -331,7 +331,7 @@ export class BoatMotion {
     const left = riding < 1 ? 1 - riding * riding * (3 - 2 * riding) : 0
     pose.carryX = this.carriedFrom.x * left
     pose.carryZ = this.carriedFrom.z * left
-    pose.carryY = riding < 1 ? 0.2 * left + hump(riding) * 0.42 : 0
+    pose.carryY = riding < 1 ? 0.2 * left + hump(riding) * 0.85 : 0
     return pose
   }
 

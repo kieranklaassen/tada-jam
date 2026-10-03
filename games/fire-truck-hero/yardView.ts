@@ -81,6 +81,8 @@ export class YardSet {
     this.bee.root.scale.setScalar(SCALE.bee)
     this.snail.root.scale.setScalar(SCALE.snail)
     this.boat.root.scale.setScalar(SCALE.boat)
+    // It heads first and then rolls, so it rolls about its own keel.
+    this.boat.root.rotation.order = 'YXZ'
     this.wheel.root.scale.setScalar(SCALE.wheel)
     this.worm.root.scale.setScalar(SCALE.worm)
     this.root.add(this.gate.root, this.fire.root, this.pool.root, this.duck, this.pot.root, this.bee.root, this.patch.root, this.snail.root, this.boat.root, this.wheel.root, this.cat.root, this.worm.root)
@@ -259,7 +261,8 @@ export class YardSet {
       const carried = waterY - 0.16 - pose.water * 0.08 + (floats ? pose.bob * 0.02 - pose.sunk * 0.2 : 0)
       boatY = inPool ? Math.max(POOL.floor * SCALE.pool + 0.012, carried) : 0.02 + Math.abs(pose.rock * 0.09 + pose.brim * 0.1) * 0.5
       boatAt = { x: place.x + pose.pushX + pose.carryX, z: place.z + pose.pushZ + pose.carryZ }
-      boatY += pose.carryY
+      // Rolling over, it comes up out of the water far enough that its rim never dips under the pool's floor.
+      boatY += pose.carryY + (Math.abs(Math.sin(pose.roll)) * 0.4 + ((1 - Math.cos(pose.roll)) / 2) * 0.33) * SCALE.boat
       this.boat.root.position.set(boatAt.x, boatY, boatAt.z)
       this.boat.root.rotation.set(pose.roll, -0.3, pose.rock * 0.09 + pose.brim * 0.1)
       this.boat.inside.visible = pose.water > 0.05

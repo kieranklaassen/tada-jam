@@ -78,7 +78,7 @@ class Going {
 const CAT_BODY: Feel = { stiffness: 120, damping: 11 }
 
 /** How big she is in the boat and on the truck, as a share of her size on the sand: she is a small cat in a small place. */
-export const SIZE_IN_BOAT = 0.5
+export const SIZE_IN_BOAT = 0.45
 export const SIZE_ON_ROOF = 0.75
 
 export class CatMotion {
@@ -203,7 +203,7 @@ export class CatMotion {
 
 /** The duck's lap: how far from the pool's middle it paddles, and how far round to each side, in radians. */
 export const LAP_RADIUS = 0.7
-export const LAP_SWING = 0.7
+export const LAP_SWING = 0.6
 
 /** How long the duck's ride over the rim and its waddle back take. */
 export const RIDE_S = 3
