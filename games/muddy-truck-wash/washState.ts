@@ -1,6 +1,7 @@
 import { ROSTER, isVehicle, judge, vehicle, whoNext } from './cycle'
 import { MAX_DIPS, arrive, next as draw, puddled } from './mud'
 import type { VehicleId } from './roster'
+import { keptForShowing } from './showing'
 import { silhouette } from './silhouette'
 import { beginCycle, deserialize, finishCycle, freshState, serialize, type CycleOutcome, type GameState } from './state'
 import { CELLS, decode, encode, tally, type Surface } from './surface'
@@ -114,7 +115,9 @@ export function throughPuddle(state: WashState): WashState {
   const before = decode(state.next.cells)
   if (!before || state.next.dips >= MAX_DIPS) return state
   const [, seed] = draw(state.seed)
-  return { ...state, seed, next: { ...state.next, cells: encode(puddled(before, state.next.dips, seed)), dips: state.next.dips + 1 } }
+  // Until the first showing has played, no mud lands on the dried patch it needs.
+  const keep = keptForShowing(vehicle(state.next.who), before, state.shown)
+  return { ...state, seed, next: { ...state.next, cells: encode(puddled(before, state.next.dips, seed, keep)), dips: state.next.dips + 1 } }
 }
 
 export type SendOff = { state: WashState; outcome: CycleOutcome; left: VehicleId }

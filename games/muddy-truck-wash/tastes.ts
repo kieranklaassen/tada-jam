@@ -100,15 +100,15 @@ export function launchFoam(def: VehicleDef, surface: Surface): { surface: Surfac
   return { surface: next, flew: bed.length }
 }
 
-/** Foam that lands on the vehicle that waits: a hat of white foam on its topmost patches, from its nose back, one for each two that flew (at most four). */
-export function foamHat(surface: Surface, flew: number): Surface {
+/** Foam that lands on the vehicle that waits: a hat of white foam on its topmost patches, from its nose back, one for each two that flew (at most four). None lands on a patch in `keep`. */
+export function foamHat(surface: Surface, flew: number, keep: readonly number[] = []): Surface {
   const next = surface.slice()
   let left = Math.min(4, Math.ceil(flew / 2))
   for (let col = 0; col < GRID_W && left > 0; col++) {
     for (let row = Math.floor(CELLS / GRID_W) - 1; row >= 0; row--) {
       const cell = row * GRID_W + col
       if (next[cell] === '.') continue
-      if (next[cell] !== 'f') { next[cell] = 'f'; left -= 1 }
+      if (next[cell] !== 'f' && !keep.includes(cell)) { next[cell] = 'f'; left -= 1 }
       break
     }
   }

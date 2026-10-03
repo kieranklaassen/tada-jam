@@ -6,6 +6,7 @@ import { react } from './reactions'
 import type { VehicleDef, VehicleId } from './roster'
 import { Scene } from './scene'
 import { dripScene, openDriedPatch, puddleScene, sendOffScene, shineScene } from './scenes'
+import { keptForShowing } from './showing'
 import { reliefAt, silhouette } from './silhouette'
 import { WANTS, drumJammed, foamHat, launchFoam, tasteFor, type Taste } from './tastes'
 import { GRID_W, allShiny, dab, decode, type Carried, type Hand, type Surface, type Tool } from './surface'
@@ -282,7 +283,8 @@ export class Play {
       m.squint = 1.5
       m.jolt(0.8)
       const launched = launchFoam(def, who.surface), waiting = this.next
-      const hat = launched.flew ? foamHat(waiting.surface, launched.flew) : null
+      // Until the first showing has played, no foam lands on the dried patch it needs.
+      const hat = launched.flew ? foamHat(waiting.surface, launched.flew, keptForShowing(waiting.def, waiting.surface, this.state.shown)) : null
       // Both ends of the throw go into the save now; the foam is seen to land a moment later.
       this.setBaySurface(launched.surface)
       if (hat) {

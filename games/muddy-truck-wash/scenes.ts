@@ -2,8 +2,8 @@ import { KIND, type Kind } from './fx'
 import type { Play, Vehicle } from './play'
 import { LAYOUT } from './props'
 import type { Beat } from './scene'
-import { patchCentre } from './silhouette'
-import { GRID_H, GRID_W, cellAt, dabCells, tally, type Surface } from './surface'
+import { driedNosePatch, type DriedPatch } from './showing'
+import { dabCells, tally, type Surface } from './surface'
 import * as voices from './voices'
 
 // The short scenes, each a list of timed beats on the template's Scene and
@@ -213,25 +213,9 @@ export function shineScene(play: Play, who: Vehicle, fromX: number): Beat[] {
   ]
 }
 
-export type DriedPatch = { col: number; row: number; x: number; y: number }
-
-/**
- * A dried patch a falling drop can reach: on the nose, under the tap, with
- * nothing of the body above it.
- */
+/** The dried patch on a vehicle's nose that a drop from the tap can reach, or null. */
 export function openDriedPatch(who: Vehicle): DriedPatch | null {
-  for (let col = 0; col < GRID_W; col++) {
-    const centre = patchCentre(who.def, col, 0)
-    // The vehicle only shuffles a little to bring the patch under the tap.
-    if (Math.abs(LAYOUT.tap.x - centre.x) > 0.5) continue
-    for (let row = GRID_H - 1; row >= 0; row--) {
-      const patch = who.surface[cellAt(col, row)]
-      if (patch === '.') continue
-      if (patch === 'c') return { col, row, ...patchCentre(who.def, col, row) }
-      break
-    }
-  }
-  return null
+  return driedNosePatch(who.def, who.surface)
 }
 
 /**

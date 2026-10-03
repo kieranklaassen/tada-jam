@@ -87,8 +87,9 @@ export const MAX_DIPS = 2
  * halfway up, and each throws a few splashes higher. Dried mud and foam it
  * lands on become soft mud too. How many trips a vehicle has had is kept
  * beside its surface in the save: it cannot be read back from the mud.
+ * Nothing lands on the patches in `keep`: they come out as they went in.
  */
-export function puddled(surface: Surface, dip: number, seed: number): Surface {
+export function puddled(surface: Surface, dip: number, seed: number, keep: readonly number[] = []): Surface {
   const top = dip <= 0 ? 1 : 3
   const out = surface.slice()
   for (let r = 0; r <= top; r++) for (let c = 0; c < GRID_W; c++) if (out[cellAt(c, r)] !== '.') out[cellAt(c, r)] = 's'
@@ -98,5 +99,6 @@ export function puddled(surface: Surface, dip: number, seed: number): Surface {
     ;[at, s] = pickIn(out, [top + 1, Math.min(GRID_H - 1, top + 1)], s, ['d', 'w', 'p', 'c', 'm', 'f', 'b'])
     if (at) s = blob(out, at[0], at[1], 2, 's', s, ['d', 'w', 'p', 'c', 'm', 'f', 'b'])
   }
+  for (const cell of keep) out[cell] = surface[cell]
   return out
 }
