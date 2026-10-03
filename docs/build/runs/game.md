@@ -21,12 +21,12 @@ Steps 5 to 9 of the guide, on your toy.
 - **The whole idle ladder**, and one obvious want in every scene.
 - **Performance**: the adaptive quality and the overlay are already in. Add the frame-budget test the template names, and keep to the budget of your renderer (three.js: under about 80 draw calls, no shadow maps, at most one post pass; canvas: at most one full-surface composite a frame).
 - **Nothing passes through anything.** A three.js game writes its moments in `scripts/intersections/games/<key>.ts` so that they reach every state, runs the audit with the browser your machine has, fixes or allows each finding with a reason and a cap, and sets `enforce: true`. A canvas game covers overlap with its own model tests.
+- **Numerals, in a game whose band starts at 6 or above.** The shared module is in the template since commit `d316d6cc` of the base branch. Copy it and its test into your folder as they stand (`git show origin/feat/learning-games-build:templates/cartridge/symbols.ts > games/<key>/symbols.ts`, and the same for `symbols.test.ts`), keep their first lines, and draw every numeral and sign through it, each laid on or beside the quantity it stands for, in the places your sheet lists and nowhere else. It draws on a canvas 2D surface; a three.js game draws onto a canvas that it uses as a texture. If it lacks something you need, add it in your copy with a test and say so under requests to the lead. Fruit Slicer keeps its own.
 - **Logged passes** (step 8) and **the cold playtest proxy** (step 9) on the production build, with your own stills kept outside the repository. At least three passes, each with the critique in the child's words and one fix set.
 
 ## What it does not cover
 
 - Frame rates on a graphics card, the look registry row and the pull request are the lead's. Keep "For the pull request" in `REFINEMENT.md` current, and leave the text of the registry row at the end of `ART.md`.
-- A game whose band starts at 6 or above, other than Fruit Slicer, draws no numeral until the message that names the commit of the shared `symbols.ts`. Build every position that needs none, and leave the ones that need one laid out in the rules and unwired in the view; say which in the status block.
 - Speech. No game depends on a spoken word until the owner has tried it on his iPad.
 
 ## Where it ends
