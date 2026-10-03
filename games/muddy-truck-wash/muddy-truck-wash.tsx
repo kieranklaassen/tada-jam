@@ -5,6 +5,7 @@ import { AttendedClock, Attention } from './attention'
 import { GameAudio } from './audio'
 import { BACKDROP } from './config'
 import { ROSTER } from './cycle'
+import { emptyHint, hintFor } from './guide'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { muddyTruckWashManifest } from './manifest'
@@ -45,7 +46,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The game itself, once the slot has been read. Until then the bay stands empty.
     let play: Play | null = null
     let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
-    const poses = new Map<VehicleId, TruckPose>(), shown = new Map<VehicleId, Surface>()
+    const poses = new Map<VehicleId, TruckPose>(), shown = new Map<VehicleId, Surface>(), hint = emptyHint()
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     const cadence = new SaveCadence(() => { if (play) ctxRef.current.storage.save(serializeWash(play.state)) })
@@ -159,8 +160,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       act(touch.advance(now))
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       if (touch.active) ladder.touch(clock.seconds)
+      // A scene playing is not idleness either.
+      if (play?.sceneRunning) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
-      ladder.update(clock.seconds)
+      const guidance = ladder.update(clock.seconds)
       // The game steps its rules here.
       const game = play
       if (game) {
@@ -170,7 +173,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         for (const mark of game.marks) view.stage.marks.land(mark)
         game.marks.length = 0
         stage(game, false)
-        view.update(dt, clock.seconds, poses, game.particles, game.hand, game.tool)
+        view.update(dt, clock.seconds, poses, game.particles, game.hand, game.tool, hintFor(game, guidance, hint))
         save(game)
       }
       // A tier change is applied ahead of the draw: the pixel ratio now, and whatever else the game's tiers set.
@@ -209,7 +212,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       play = game
       // Found as left: the vehicles stand as the save has them, with no easing in and no scene.
       stage(game, true)
-      view.update(0, clock.seconds, poses, game.particles, game.hand, game.tool)
+      view.update(0, clock.seconds, poses, game.particles, game.hand, game.tool, hint)
       draw()
     })
     resize()

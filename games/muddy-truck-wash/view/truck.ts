@@ -212,6 +212,12 @@ export class TruckView {
     })
   }
 
+  /** The idle glow on the vehicle itself (not on its copy under the floor). */
+  setGlow(glow: number): void {
+    const set = this.sets[0]
+    for (const mesh of [set.chassis.children[0] as THREE.Mesh, set.part, set.wheels]) (mesh.material as THREE.ShaderMaterial).uniforms.uGlow.value = glow
+  }
+
   dispose(): void {
     for (const thing of this.owned) thing.dispose()
   }

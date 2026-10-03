@@ -93,16 +93,20 @@ export function allShiny(surface: Surface): boolean {
 }
 
 /** The patches each tool has work on: what it would take forward in a wash. */
-const WORK: Readonly<Record<Tool, readonly Patch[]>> = { hose: ['c', 'b', 'f'], sponge: ['s'], cloth: ['w', 'd'] }
+export const WORK: Readonly<Record<Tool, readonly Patch[]>> = { hose: ['c', 'b', 'f'], sponge: ['s'], cloth: ['w', 'd'] }
 
-/** The tool with the most work waiting, or null when the vehicle is all shiny. Ties go to the order of a wash. */
-export function busiestTool(surface: Surface): Tool | null {
-  let best: Tool | null = null, most = 0
-  for (const tool of ['hose', 'sponge', 'cloth'] as const) {
-    const count = surface.filter((patch) => WORK[tool].includes(patch)).length
-    if (count > most) { most = count; best = tool }
-  }
-  return best
+/**
+ * The tool a wash would take up next, or null when the vehicle is all shiny.
+ * Mud comes before foam and foam before drying: dried mud wants the hose,
+ * soft mud the sponge, foam the hose again, and clean paint the cloth.
+ */
+export function nextTool(surface: Surface): Tool | null {
+  const has = (patches: readonly Patch[]): boolean => surface.some((patch) => patches.includes(patch))
+  if (has(['c'])) return 'hose'
+  if (has(['s'])) return 'sponge'
+  if (has(['b', 'f'])) return 'hose'
+  if (has(['w', 'd'])) return 'cloth'
+  return null
 }
 
 export function encode(surface: Surface): string {

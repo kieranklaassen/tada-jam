@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CELLS, GRID_H, GRID_W, PATCHES, TURNS, allShiny, busiestTool, cellAt, dab, dabCells, decode, encode, tally, type Hand, type Patch, type Surface } from './surface'
+import { CELLS, GRID_H, GRID_W, PATCHES, TURNS, allShiny, cellAt, dab, dabCells, decode, encode, nextTool, tally, type Hand, type Patch, type Surface } from './surface'
 
 const all = (patch: Patch): Surface => Array.from({ length: CELLS }, () => patch)
 const HANDS: Hand[] = ['finger', 'sponge', 'hose', 'cloth']
@@ -139,12 +139,18 @@ describe('reading the surface', () => {
     expect(allShiny(all('.'))).toBe(false)
   })
 
-  it('names the tool with the most work waiting, in the order of a wash on a tie', () => {
-    expect(busiestTool(all('c'))).toBe('hose')
-    expect(busiestTool(all('s'))).toBe('sponge')
-    expect(busiestTool(all('b'))).toBe('hose')
-    expect(busiestTool(all('w'))).toBe('cloth')
-    expect(busiestTool(all('p'))).toBeNull()
+  it('names the tool a wash would take up next: mud before foam, foam before drying', () => {
+    expect(nextTool(all('c'))).toBe('hose')
+    expect(nextTool(all('s'))).toBe('sponge')
+    expect(nextTool(all('b'))).toBe('hose')
+    expect(nextTool(all('w'))).toBe('cloth')
+    expect(nextTool(all('p'))).toBeNull()
+    // One patch of soft mud on a dull vehicle: the sponge, however much there is to dry.
+    const s = all('d')
+    s[40] = 's'
+    expect(nextTool(s)).toBe('sponge')
+    s[41] = 'c'
+    expect(nextTool(s)).toBe('hose')
   })
 
   it('a grid survives a save, and a damaged one is refused', () => {

@@ -2,6 +2,10 @@ import * as THREE from 'three'
 import type { VehicleDef, VehicleId } from '../roster'
 import type { Surface } from '../surface'
 import type { Particles } from '../fx'
+import type { Hint } from '../guide'
+import { MAT, Shape } from '../shapes'
+import { enamelMaterial } from './enamel'
+import { toGeometry } from './geometry'
 import type { Hand } from '../surface'
 import type { ToolSpot } from '../play'
 import { makeKit, type EnamelKit } from './enamel'
@@ -33,6 +37,7 @@ export class WashView {
   readonly picker: Picker
   private readonly fx = new FxView()
   private readonly toolsView: ToolsView
+  private readonly hand: THREE.Mesh
 
   constructor(canvas: HTMLCanvasElement, roster: readonly VehicleDef[]) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' })
@@ -44,6 +49,20 @@ export class WashView {
     this.picker = new Picker(this.stage.camera)
     this.toolsView = new ToolsView(this.stage.tools, this.stage.scene)
     this.stage.scene.add(this.fx.mesh)
+    // The ghost hand: a pale mitten whose fingertip is its origin. It is drawn over everything and shows through.
+    const mitten = new Shape()
+    const pale: [number, number, number] = [1, 0.97, 0.9]
+    mitten.round(0.1, 0.55, pale, { at: [0.06, -0.26, 0.05], turn: { axis: 'z', by: 0.22 } }, { axis: 'y', mat: MAT.soft, segs: 12, bevel: 0.05 })
+    mitten.ball(0.3, pale, { at: [0.2, -0.7, 0.1] }, { mat: MAT.soft, segs: 14, squash: [1, 1.1, 0.6] })
+    mitten.round(0.09, 0.3, pale, { at: [-0.08, -0.62, 0.1], turn: { axis: 'z', by: 0.9 } }, { axis: 'y', mat: MAT.soft, segs: 10, bevel: 0.04 })
+    const handMaterial = enamelMaterial(this.kit, {})
+    handMaterial.transparent = true
+    handMaterial.depthTest = false
+    this.hand = new THREE.Mesh(toGeometry(mitten), handMaterial)
+    this.hand.name = 'ghost-hand'
+    this.hand.renderOrder = 8
+    this.hand.visible = false
+    this.stage.scene.add(this.hand)
     // Built once, at mount: every vehicle and its copy, hidden until it is on stage.
     for (const def of roster) {
       const truck = new TruckView(this.kit, def, true)
@@ -86,8 +105,18 @@ export class WashView {
     this.stage.fit(width, height)
   }
 
-  update(dt: number, seconds: number, poses: ReadonlyMap<VehicleId, TruckPose>, particles: Particles, hand: Hand, spot: ToolSpot): void {
+  update(dt: number, seconds: number, poses: ReadonlyMap<VehicleId, TruckPose>, particles: Particles, hand: Hand, spot: ToolSpot, hint: Hint): void {
     for (const [id, pose] of poses) this.truck(id).update(dt, pose)
+    // The idle glow breathes; it is on the tools on the rack and the vehicles that answer a touch.
+    const glow = hint.glow * (0.55 + 0.45 * Math.sin(seconds * 3.2))
+    for (const tool of ['sponge', 'hose', 'cloth'] as const) (this.stage.tools[tool].material as THREE.ShaderMaterial).uniforms.uGlow.value = hint.tools.includes(tool) ? glow : 0
+    for (const [id, truck] of this.trucks) truck.setGlow(hint.vehicles.includes(id) ? glow * 0.7 : 0)
+    this.hand.visible = hint.hand !== null && hint.hand.opacity > 0.01
+    if (hint.hand) {
+      // The hand hovers off the thing and comes down onto it as it presses.
+      this.hand.position.set(hint.hand.x, hint.hand.y, hint.hand.z + 0.45 * (1 - hint.hand.press))
+      ;(this.hand.material as THREE.ShaderMaterial).uniforms.uAlpha.value = hint.hand.opacity * 0.9
+    }
     this.fx.update(particles, this.particleLimit)
     this.toolsView.update(dt, seconds, hand, spot)
   }
@@ -103,6 +132,8 @@ export class WashView {
   dispose(): void {
     for (const truck of this.trucks.values()) truck.dispose()
     this.fx.dispose()
+    this.hand.geometry.dispose()
+    ;(this.hand.material as THREE.Material).dispose()
     this.toolsView.dispose()
     this.stage.dispose()
     this.kit.dispose()

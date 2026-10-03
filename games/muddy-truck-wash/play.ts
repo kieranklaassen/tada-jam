@@ -39,7 +39,7 @@ const HOSE_EVERY = 0.2
 /** Small sounds from things landing and popping are spaced at least this far apart. */
 const PLIP_GAP = 0.07
 /** Where a tool waits by the vehicle when no finger is down: above the cab, out of the way of the paint. */
-const READY: readonly [number, number, number] = [-1.5, 3.25, 1.0]
+const READY: readonly [number, number, number] = [-1.6, 2.95, 1.0]
 /** A vehicle's like or dislike answers at most this often, so a rub sets it off again and again without piling it up. */
 const FEEL_GAP = 1.1
 /** The nozzle on the rack lets a drop go about this often, in seconds. */

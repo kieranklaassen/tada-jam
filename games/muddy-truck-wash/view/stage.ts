@@ -153,6 +153,12 @@ export class Stage {
     add('rack', toGeometry(rackShape()))
     add('bay', toGeometry(bayShape()))
     this.tools = { sponge: add('tool-sponge', toGeometry(toolShape('sponge'))), hose: add('tool-hose', toGeometry(toolShape('hose'))), cloth: add('tool-cloth', toGeometry(toolShape('cloth'))) }
+    // Each tool has its own material, so each can glow by itself.
+    for (const tool of ['sponge', 'hose', 'cloth'] as const) {
+      const own = enamelMaterial(kit, { gloss: 0.9 })
+      this.owned.push(own)
+      this.tools[tool].material = own
+    }
     this.fit(1180, 820)
   }
 

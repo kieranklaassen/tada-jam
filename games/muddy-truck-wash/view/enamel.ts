@@ -136,6 +136,8 @@ uniform float uGloss;
 uniform float uMirror;
 uniform vec3 uFloor;
 uniform float uYard;
+uniform float uGlow;
+uniform float uAlpha;
 varying vec3 vNormal;
 varying vec3 vPaint;
 varying vec2 vSurface;
@@ -224,12 +226,15 @@ void main() {
   suds = mix(suds, suds * vec3(0.78, 0.62, 0.44), brown * (0.55 + 0.45 * noise.g));
   col = mix(col, suds, foam);
 
+  // The idle glow: a warm light on the edges that face away, so it reads on paint, mud and foam alike.
+  col += uGlow * vec3(1.0, 0.9, 0.55) * (0.03 + 1.1 * pow(1.0 - clamp(n.z, 0.0, 1.0), 2.4));
+
   #ifdef REFLECTED
     // The copy under the floor: what wet concrete gives back, fading with depth.
     float fade = exp(vWorld.y * 1.5) * uMirror * (1.0 - smoothstep(uYard - 0.9, uYard - 0.2, vWorld.x));
     gl_FragColor = vec4(mix(uFloor, col, 0.55), fade);
   #else
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = vec4(col, uAlpha);
   #endif
 }
 `
@@ -274,6 +279,8 @@ export function enamelMaterial(kit: EnamelKit, options: EnamelOptions = {}): THR
       uMasked: { value: options.masks ? 1 : 0 },
       uGloss: { value: options.gloss ?? 0.9 },
       uMirror: { value: 0.7 },
+      uGlow: { value: 0 },
+      uAlpha: { value: 1 },
       uYard: { value: options.yardFrom ?? 1e6 },
       uFloor: { value: new THREE.Vector3(...(options.floor ?? [0.13, 0.15, 0.18])) },
       // Takes a vertex to where it rests on the vehicle's side, for reading the surface grid.
