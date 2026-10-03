@@ -6,6 +6,7 @@ import { GameAudio, tick } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
+import { createLook } from './look'
 import { breadDayManifest } from './manifest'
 import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
@@ -37,6 +38,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
+    // The look prints its sprites once per size and pixel ratio (`resize`), and a frame only lays them down.
+    const look = createLook()
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
@@ -59,7 +62,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => {}
+    const draw = () => {
+      const g = canvas.getContext('2d')
+      if (g) drawn.drawCalls = look.draw(g, clock.seconds)
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
@@ -73,6 +79,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // Sizing the backing store wipes the surface, so it is redrawn at once: a resize lands after the frame's
       // own draw, or while the game rests and no frame is coming, and either would leave the surface blank.
       canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
+      look.resize(w, h, ratio)
       draw()
       return true
     }
