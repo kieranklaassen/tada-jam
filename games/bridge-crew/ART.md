@@ -71,7 +71,7 @@ Five gestures: **lay** (drag from pin to pin), **pluck** (tap), **turn** (tap ag
 - **Swap.** No: the play is the frame itself, and with other content there would be nothing left to build, test or watch fail.
 - **Attention.** At the moment of decision, which is where to lay or remove one part before the next test, the child must look at where the last test broke, bent or folded and think about what would hold that place.
 - **Fun.** The test run is the most enjoyable moment of play and it is the skill: the crossing, the creaks, the break and the splash are the fair test and its result.
-- **Guess.** Random parts make something that stands or folds but rarely a crossing; the kit on a sheet is too small to lay every part everywhere, and from the fourth sheet on a vehicle's tastes rule out simply piling parts on.
+- **Guess.** Random parts make something that stands or folds but rarely a crossing; the kit on a sheet is too small to lay every part everywhere, and a bridge made by piling parts on is heavy, dips under its own weight and shows on the cargo of the vehicle that rides it.
 
 ## The error as a consequence
 
@@ -139,11 +139,37 @@ A wrong design is run exactly as built, and the world shows where and why.
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+The characters are the vehicles and their drivers, a barge, and the crew chief. Each reacts to the exact bridge the child made, by what the model computed for that run. No reaction is about the child, and a vehicle that waits tinkers with its own cargo and never hurries anyone.
+
+| Character | Its one visible want | Likes, always | Dislikes, always |
+| --- | --- | --- | --- |
+| **Post van** (2 crates) | To cross with its tower of parcels standing | A deck that hardly dips: the parcels stay stacked and the driver whistles | A deep dip: parcels slide off the back one at a time, and the driver gets out and restacks them |
+| **Jelly truck** (3 crates and a jelly) | To deliver the jelly in one piece | A long, even dip: the jelly rolls in one slow wave | A kink where two planks meet at an angle: the jelly jumps and lands on the cab roof. A deck with no dip at all bores it: the driver yawns |
+| **Piano mover** (4 crates on two close axles) | To keep the piano on the cart | A level way on and off: the keys ripple in a chord | A slope: the piano rolls backward and the mover runs behind it, holding on |
+| **Giraffe bus** (3 crates, tall) | To keep every hat on | Open sky over the road: the necks stretch | Any part lower than its heads: the necks duck in a wave and a hat stays hanging on that part until it is plucked off |
+| **Caterpillar bus** (5 crates on six axles) | To keep in step | Pins under the deck at even spacing: its feet tick in time and it hums a scale | Uneven spacing: it loses step and hiccups |
+| **Barge** (passes underneath) | A clear channel | Open water mid-river: it toots | A prop in the channel: it scrapes past and its flowerpot falls in and bobs back |
+| **Crew chief** (a heron with a pencil behind its ear) | To finish the small model it is fiddling with in the margin | A triangle: it taps each side with its beak and nods | A shape that folds: it steps back with its feathers on end |
+
+**The want at rest.** The job vehicle stands at the near bank facing the gap, creeps to the edge, looks down, looks across at the far bank and backs up. The tray of parts sits open under the gap.
+
+**The idle ladder** (attended time only): first the pins and the tray glow; later a ghost hand lays one part between two pins away from the gap and takes it off again. It shows the gesture and never where a part belongs.
+
+Since the tastes differ and never change, "better" has more than one meaning and the child can aim at one on purpose: a stiff deck for the van, a soft one for the jelly, nothing overhead for the bus.
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Each scene is a list of timed beats filled in from the run just computed. Any touch ends a scene at once in its last pose, and its outcome is saved when it starts.
+
+- **The crossing** (the ending; about 8 seconds). Cause: the job vehicle reaches the far bank. Beats: the wheels leave the last plank and the bridge springs up and rings with the notes of its own parts; the vehicle's cargo and driver show how this ride went, by its tastes; it parks in the lay-by on the far bank and stays there; the pencil rings fade; the next roll slides in at the right edge and one other vehicle draws up at the near bank. Filled in from: the dip along the deck, the kinks, the parts overhead and in the channel, the pin spacing.
+- **The give** (a consequence; 4 to 6 seconds). Cause: a part gives, the build folds, or the roadway ends. Beats: the part gives at its spot; the pieces drop; the vehicle falls, floats on its crates, paddles to the near bank and drives up, shaking off water; the chief looks up from its model. It ends with the bridge back as built and the pencil ring on the spot.
+- **The neat way** (shown once for each idea; 6 to 9 seconds). Cause: the second failed run on a sheet whose new idea has not been shown, when the failure is one that idea answers. The child has tried their own way first. Beats: the chief pins a hand-sized model together in the margin from offcuts, first the way that fails (a square that leans over), then the idea (the same square with one diagonal); it stands on the model, which holds; it looks at the model, never at the child. The model stays in the margin and can be pressed and plucked. It is never a model of the gap on the sheet.
+- **One change** (the fair-test showing, once). Cause: the child runs the trolley over a bridge with a tracing laid on it, and the two differ in more than one part. Beats: the chief sets two small models side by side that differ in two things and loads both, and nothing tells which change helped; it swaps one part back so they differ in one thing and loads them again, and the difference shows. Then the board is the child's.
+- **Secrets**, which work every time and are never hinted: threads plucked from longest to shortest play a scale and the chief taps along; under a whole arch the barge's horn comes back as a chord; a hat left on a part can be plucked off and worn by the chief.
+
+**Comparing, as play.** The tracing paper in the tray takes a white line copy of the bridge as it stands. A tracing laid on the board is computed under the same load at the same place as the bridge, and its dip is drawn as a second line. A tracing can be swapped onto the board, or one part can be copied from it.
+
+**How a cycle ends and the next begins.** The crossing stays as it ended for as long as the child likes: the vehicle parked on the far bank, the bridge standing. Nothing else starts by itself. A touch on the roll unrolls the next sheet and puts this one on the rack. A touch on the parked vehicle sends it home across the bridge again, which is a real run. On load no scene replays: the world is as the last scene left it, with the roll and the other vehicle waiting.
 
 ## The records
 
