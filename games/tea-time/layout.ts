@@ -15,8 +15,8 @@ export const SEAT_COUNT = 4
 const SEAT_XS: readonly (readonly number[])[] = [[], [0], [-2.1, 2.1], [-3.7, 0, 3.7], [-4.65, -1.55, 1.55, 4.65]]
 
 /** How far back a guest sits, and how far in front of it its place is laid. */
-export const GUEST_Z = -2.35
-export const PLACE_Z = -0.35
+export const GUEST_Z = -2.2
+export const PLACE_Z = 0.05
 
 /** Where the guest in seat `seat` of a party of `party` sits. */
 export function seatSpot(party: number, seat: number): Spot {
@@ -36,12 +36,12 @@ export function spoonSpot(party: number, seat: number): Spot {
 
 /** The tray along the near edge: the pot's stand, the stack of saucers, the spoons, and where the sponge and the bowl come out. */
 export const TRAY = {
-  pot: { x: 3.3, z: 2.2 },
-  saucers: { x: -4.4, z: 2.3 },
-  spoons: { x: -2.7, z: 2.45 },
-  cups: { x: -0.9, z: 2.35 },
-  sponge: { x: 0.9, z: 2.5 },
-  bowl: { x: 5.3, z: 1.2 },
+  saucers: { x: -5.5, z: 2.4 },
+  spoons: { x: -4.25, z: 2.5 },
+  cups: { x: -2.6, z: 2.4 },
+  sponge: { x: 1.7, z: 2.55 },
+  pot: { x: 3.55, z: 2.35 },
+  bowl: { x: 5.6, z: 2.3 },
 } as const
 
 /** A thing set down outside the cloth is brought back to its edge. */
