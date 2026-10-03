@@ -160,9 +160,56 @@ The game runs what the child built and shows what it does. Nothing gives a verdi
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**One cycle** is one customer: the gadget comes onto the mat, is opened, mended, and handed back. It takes a few minutes and is whole in one short visit (pack: game-design, many-short-visits.md).
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+**The order.** Ten positions, each adding one idea to those before it, then combinations. The ids are the ones in `LADDER` in `config.ts`; each names a place in the game's own order and nothing else.
+
+| Id | What the customer's gadget has | The one new idea |
+| --- | --- | --- |
+| `gap` | One loop of a cell and one lamp, motor or buzzer, with one break in plain sight: a cracked trace or a clip that has come off. | The way round must be closed. |
+| `switch` | The same, with a switch in the loop left up. | A switch is a gap made on purpose, and is told from a break. |
+| `flat` | Nothing to see: the cell is flat. | A loop needs a source that pushes. |
+| `dead` | Nothing to see: the lamp is blown, or the motor or buzzer is open inside. | A part can be the gap. |
+| `stuff` | An earlier mend with the wrong thing: a rubber, a stick or a string joins two pads. | Some materials let current through and some do not. |
+| `backwards` | A motor that turns the wrong way, or two cells nose to nose. | A source has a direction. |
+| `short` | A scrap of foil lies across two pads, and the flag pops whenever the gadget is switched on. | A way round that misses the load. |
+| `branch` | Two things on one cell, such as a robot's eyes and its arm, of which one runs and one does not. | Two loops can share one source, and each must be closed. |
+| `double` | Two breaks of different kinds already met. | Kinds are mixed, so the child has to decide which kinds these are. |
+| `ticket` | Breaks of kinds already met, and an order ticket asking for a change: a second lamp, a switch, another cell. | Redesign: several answers work, and they do different things. |
+
+From `flat` on, a position lays out its own kind of break two times in three and an earlier kind otherwise, in whichever gadget and for whichever customer the seeded stream draws. The rules never change, so what a child finds out stays true (pack: game-design, ordered-challenges-high-success.md).
+
+**Most attempts succeed.** The gadget is live on the mat the moment its loop closes, so the child sees it run before handing it back.
+
+**How a cycle is judged.** The game's own call, made when the gadget is handed back or sent away:
+
+- **Well:** it ran the first time it was handed back.
+- **Mixed:** it ran, on a later hand-back.
+- **Badly:** the child called the next customer while the gadget had not run for its owner, who shrugs and takes it as it is.
+
+"Ran" means every lamp, motor and buzzer the gadget came with carries current when its owner switches it on, a motor turns the way the gadget needs, and no flag pops. The ticket and the tastes never enter the judgement: any repair that works stands. The position moves one step up after a cycle that went well, one down after one that went badly, and not at all after a mixed one or at either end. Nothing on screen shows the position or that it moved, and no clock is read.
+
+**Which customer a new position lays out: the customer after next.** A job (who, which gadget, the breaks inside it, the ticket) is laid out when its customer steps up to wait at the window, from the position stored at that moment. When a cycle is judged, the customer who waits was laid out before it, so a moved position first shows in the customer who steps up after them. On a first visit the customer at the bench and the one at the window are both laid out from the starting position.
+
+**The harder thing the child may always pick: the stall's own sign.** A board three times the size of any gadget hangs at the back of the stall: several lamps, a fan and a bell on two cells, broken in several ways from the first day. It looks harder because it is bigger and has more on it. A touch brings it down onto the mat in place of the customer's gadget, and another puts it back. It belongs to no customer, is never handed back and never judged, and it moves no position. It is also the free place to build: whatever the child makes of it stays and keeps running above the bench.
+
+**"A neater one is visibly neater."** Neatness is seen on the gadget, never counted. A mend with one short lead lets the lid shut flat. More leads, long ones and loose ends make the lid bulge, and past a point it will not shut: the gadget goes home held by a rubber band with leads trailing. Both run, and both stand.
+
+**What is stored.** Small plain JSON, versioned, read defensively field by field:
+
+| Field | What it holds |
+| --- | --- |
+| `v` | The version of the shape. |
+| `position` | An id from the ladder: where the next job is laid out from. |
+| `finished` | The cycle on screen has ended: its customer stands with the gadget as it was handed back, nothing replays on load, and the next cycle starts on the child's touch. |
+| `stream` | The state of the seeded stream that jobs are laid out from, so a reload deals nothing new. |
+| `job` | The customer at the bench: who, which gadget, its circuit, its ticket or none, whether its lid is open, and whether a hand-back has already failed (`missed`). |
+| `next` | The customer at the window, in the same shape, as laid out. |
+| `sign` | The circuit of the stall's sign. |
+| `onMat` | Which board lies on the mat: the job's or the sign. |
+| `shown` | The ids of the ideas whose neat way has been shown. |
+
+A circuit is stored as the gadget's kind, which of its traces are cracked, its parts (kind, the two pads, and whichever of these applies: a switch's lever, a flat cell, a popped flag, a blown lamp, a part open inside, what a bench odd is made of) and its leads (the two pads, or one pad and a loose end). Nothing in the hand is stored: a lead counts from the frame its first clip bites, with its other end loose on the mat. The beads, the glow and a spinning blade are a view of the stored circuit and are not stored. No date, no duration, no count of visits or repairs is kept anywhere. The largest legal state is held under half of the 64 KB cap by a test ("Found as left" in the guide).
 
 ## The characters and their fixed tastes
 
