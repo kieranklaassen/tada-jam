@@ -81,7 +81,9 @@ describe('a cycle', () => {
     expect(away.cues).toEqual(['sent-away'])
     expect(away.stay.finished).toBe(true)
     expect(away.stay.position).toBe('two-guests')
-    expect(Object.values(away.stay.at).filter((at) => at === 'gone').length).toBe(2)
+    expect(Object.values(away.stay.at)).toEqual(['gone', 'gone', 'gone'])
+    expect(Object.values(away.stay.kit).every((entry) => entry.at === 'cupboard')).toBe(true)
+    expect(away.stay.from).toBe(null)
     // The empty house is not judged again by anything done in it.
     expect(tapIn(away.stay, { guest: 'yeti' }).outcome).toBe('nothing')
   })
@@ -147,7 +149,8 @@ describe('a cycle', () => {
   it('is not cued when the child found the neat way itself', () => {
     const turn = playNeat(begin('two-guests/c'))
     expect(turn.cues).toEqual(['settled-day'])
-    expect(turn.stay.shown).toEqual([])
+    // The first settled day at the place has passed: nothing is shown there later either.
+    expect(turn.stay.shown).toEqual(['two-guests'])
   })
 
   it('every cast can be played to its ending by its neat way, from the lobby, by set-downs and dial taps alone', () => {

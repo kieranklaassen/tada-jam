@@ -20,7 +20,7 @@ describe('what is saved', () => {
     expect([stay.phase, stay.from, stay.moves, stay.round, stay.shown]).toEqual(['day', null, 0, 0, []])
   })
 
-  it('age only chooses where a first visit starts, and a saved place wins over it', () => {
+  it('age only chooses where a first visit starts (the first place at 10 or younger, the second from 11), and a saved place wins over it', () => {
     expect(freshStay(9).position).toBe('two-guests')
     expect(freshStay(10).position).toBe('two-guests')
     expect(freshStay(11).position).toBe('heat-and-snow')

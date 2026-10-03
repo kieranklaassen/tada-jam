@@ -100,9 +100,9 @@ function guestTo(arrangement: Arrangement, id: GuestId, target: Target): Move {
   return guestToRoom(arrangement, id, target.room)
 }
 
-/** Everyone in the house and the lobby leaves with the coach, the one on the bench stays, and the things go back to the cupboard. */
+/** Every guest of the cast leaves with the coach, the one on the bench included, and the things go back to the cupboard. */
 export function sendAway(arrangement: Arrangement): Move {
-  const guests = arrangement.guests.map((guest): Lodger => (guest.at === 'bench' ? guest : { id: guest.id, at: 'gone' }))
+  const guests = arrangement.guests.map((guest): Lodger => ({ id: guest.id, at: 'gone' }))
   const things = arrangement.things.map((item): Thing => ({ ...item, at: 'cupboard' }))
   return { arrangement: { ...arrangement, guests, things }, outcome: 'sent-away', changed: true }
 }

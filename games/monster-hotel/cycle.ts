@@ -61,7 +61,7 @@ function after(stay: Stay, before: Arrangement, now: Arrangement, outcome: Outco
   const had = pairingsIn(before)
   const cues: Cue[] = pairingsIn(now).filter((pairing) => !had.includes(pairing))
   let next = withArrangement(stay, now)
-  // A view from a guest who has left the house and the bench is dropped.
+  // A view from a guest who has left with the coach is dropped.
   if (next.from !== null && next.at[next.from] === 'gone') next = { ...next, from: null }
   if (stay.finished) return { stay: next, outcome, cues }
   if (changed) next = { ...next, moves: Math.min(MOST_MOVES, next.moves + 1) }
@@ -73,12 +73,11 @@ function after(stay: Stay, before: Arrangement, now: Arrangement, outcome: Outco
   // Settled: the cycle is judged here, once, and saved with the scene it starts.
   const judged: Stay = { ...next, ...finishCycle(next, howItWent(next.moves, present(now).length)) }
   cues.push('settled-day')
+  // The neat way belongs to the first settled day at a place. A child who has found it there has nothing to be shown, then or later.
   const cast = castById(stay.cast)
-  if (cast && !judged.shown.includes(cast.position) && !sameHouse(now, neatOf(cast))) {
-    cues.push('neat-way')
-    return { stay: { ...judged, shown: [...judged.shown, cast.position] }, outcome, cues }
-  }
-  return { stay: judged, outcome, cues }
+  if (!cast || judged.shown.includes(cast.position)) return { stay: judged, outcome, cues }
+  if (!sameHouse(now, neatOf(cast))) cues.push('neat-way')
+  return { stay: { ...judged, shown: [...judged.shown, cast.position] }, outcome, cues }
 }
 
 /** The child sets a guest or a thing down. */

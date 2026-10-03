@@ -1,24 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import { CASTS, castById, neatOf } from './casts'
-import { setDownIn, tapIn, touchCoach, turnWheelIn } from './cycle'
-import { demandOf } from './demand'
-import { hintFor } from './hint'
-import { settled } from './mood'
+import { CASTS, castById } from './casts'
+import { setDownIn, tapIn, touchCoach, turnWheelIn, type Turn } from './cycle'
+import { hintFor, type Hint } from './hint'
 import { arrangementOf, freshStay, withCast, type Stay } from './stay'
 
 const begin = (id: string): Stay => withCast({ ...freshStay(null), position: castById(id)!.position }, castById(id)!)
 
-describe('what the idle ladder may show', () => {
-  it('on a first visit: carry the first waiting guest to the door it stares at', () => {
-    const start = freshStay(null)
-    const cast = castById(start.cast)!
-    expect(hintFor(start)).toEqual({ kind: 'carry', guest: cast.guests[0], room: demandOf(cast.house, cast.guests[0]) })
-  })
+/** What happens when the child does exactly what the hand showed. A lifted guest is put back where it stood. */
+function follow(stay: Stay, hint: Hint): Turn {
+  if (hint.kind === 'lift') return setDownIn(stay, { guest: hint.guest }, 'lobby')
+  if (hint.kind === 'look') return tapIn(stay, { guest: hint.guest })
+  if (hint.kind === 'wheel') return turnWheelIn(stay)
+  return touchCoach(stay)
+}
 
-  it('when the room asked for is taken, the nearest room with a bed', () => {
-    const start = begin('two-guests/a')
-    const one = setDownIn(start, { guest: 'troll' }, { room: 3 }).stay
-    expect(hintFor(one)).toEqual({ kind: 'carry', guest: 'bat', room: 2 })
+describe('what the idle ladder may show', () => {
+  it('on a first visit: the first waiting guest lifted a little and put back', () => {
+    const start = freshStay(null)
+    expect(hintFor(start)).toEqual({ kind: 'lift', guest: castById(start.cast)!.guests[0] })
+    const one = setDownIn(begin('two-guests/a'), { guest: 'troll' }, { room: 3 }).stay
+    expect(hintFor(one)).toEqual({ kind: 'lift', guest: 'bat' })
   })
 
   it('when someone is cross: touch that guest, and never the one the page is already drawn from', () => {
@@ -34,26 +35,22 @@ describe('what the idle ladder may show', () => {
   it('when the cycle has been judged: the coach', () => {
     const done = setDownIn(setDownIn(begin('two-guests/b'), { guest: 'troll' }, { room: 0 }).stay, { guest: 'blob' }, { room: 3 }).stay
     expect(hintFor(done)).toEqual({ kind: 'coach' })
-    expect(hintFor(touchCoach(done).stay)!.kind).toBe('carry')
+    expect(hintFor(touchCoach(done).stay)!.kind).toBe('lift')
   })
 
-  it('shows a move, never a solution: following the hand alone seldom settles a house past the first places', () => {
-    let followed = 0, settledByHand = 0
+  it('never shows an arrangement that settles the house: a child who only copies the hand changes nothing in it', () => {
     for (const cast of CASTS) {
       let stay = begin(cast.id)
-      // Follow every carry the hand would show, and nothing else.
-      for (let step = 0; step < 12; step++) {
+      const before = arrangementOf(stay)
+      for (let step = 0; step < 8; step++) {
         const hint = hintFor(stay)
-        if (!hint || hint.kind !== 'carry') break
-        stay = setDownIn(stay, { guest: hint.guest }, { room: hint.room }).stay
+        if (!hint) break
+        const turn = follow(stay, hint)
+        expect(turn.cues, cast.id).toEqual([])
+        stay = turn.stay
       }
-      followed++
-      if (settled(arrangementOf(stay))) settledByHand++
-      // And the hand never names the neat way's rooms on purpose: it only knows each guest's own wish.
-      expect(hintFor(begin(cast.id))).toEqual({ kind: 'carry', guest: cast.guests[0], room: demandOf(cast.house, cast.guests[0]) })
-      expect(neatOf(cast).guests.length).toBeGreaterThan(0)
+      expect({ ...arrangementOf(stay), phase: before.phase }, cast.id).toEqual(before)
+      expect([stay.finished, stay.moves, stay.position], cast.id).toEqual([false, 0, cast.position])
     }
-    expect(followed).toBe(CASTS.length)
-    expect(settledByHand).toBeLessThanOrEqual(CASTS.length / 4)
   })
 })

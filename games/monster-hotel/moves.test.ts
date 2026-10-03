@@ -105,11 +105,11 @@ describe('setting a guest down', () => {
     expect(setDown(start(), { guest: 'bat' }, 'lobby').changed).toBe(false)
   })
 
-  it('a guest on the coach sends this lot away: the bench guest stays and the things go back', () => {
+  it('a guest on the coach sends this lot away: every guest of the cast goes, the bench guest included, and the things go back', () => {
     const busy = setDown(setDown(start(), { thing: 'quilt' }, { guest: 'troll' }).arrangement, { thing: 'stove' }, { room: 0 }).arrangement
     const away = setDown(busy, { guest: 'blob' }, 'coach')
     expect(away.outcome).toBe('sent-away')
-    expect(away.arrangement.guests.map((guest) => guest.at)).toEqual(['gone', 'gone', 'gone', 'gone', 'bench'])
+    expect(away.arrangement.guests.map((guest) => guest.at)).toEqual(['gone', 'gone', 'gone', 'gone', 'gone'])
     expect(away.arrangement.things.every((item) => item.at === 'cupboard')).toBe(true)
     expect(sendAway(away.arrangement).arrangement.guests).toEqual(away.arrangement.guests)
     expect(settled(away.arrangement)).toBe(false)

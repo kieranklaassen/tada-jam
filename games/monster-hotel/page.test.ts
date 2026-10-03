@@ -32,7 +32,7 @@ describe('from the rules to the page', () => {
     expect(page.guests.filter((guest) => guest.place === 'lobby').map((guest) => guest.staresAt)).toEqual([3, 3])
     expect(page.guests.find((guest) => guest.place === 'bench')!.id).toBe(cast.bench)
     const away = setDownIn(start, { guest: 'troll' }, 'coach').stay
-    expect(pageOf(away).guests.map((guest) => guest.id)).toEqual([cast.bench])
+    expect(pageOf(away).guests).toEqual([])
   })
 
   it('the page is drawn from the guest the child touched, and the house on it is the same house', () => {
