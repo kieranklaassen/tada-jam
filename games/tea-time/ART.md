@@ -79,17 +79,72 @@ There is no buzzer, cross, sad face turned to the child, reset or lost piece, an
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+A cycle is one **sitting**: a party of guests comes to the table, each place is laid, each cup is poured, and the sitting ends when every guest has drunk a cup to its taste.
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+**The order.** One new thing at a time, then what is known in combination. The ids are the ones in `LADDER` in `config.ts`. They name places in this game's own order and nothing else.
+
+| Position id | The party | What is new |
+| --- | --- | --- |
+| `brim` | The Bear alone. He lays his own place. | The pour: press, hold, let go. Full, and not yet full. |
+| `drop` | The Mouse alone. She lays her own place. | Letting go early. Too much, and the bowl and the sponge. |
+| `lay-a-place` | The Bear or the Mouse, with a cup and nothing else. | A saucer and a spoon from the tray for the guest. |
+| `two-guests` | The Bear and the Mouse. | Nothing new: two places and two rings at once. |
+| `halfway` | The Hen with the Bear or the Mouse. | A ring in the middle of the cup. |
+| `three-guests` | The Bear, the Hen and the Mouse. | Nothing new: three places, three rings. |
+| `twins` | The two Ducklings, whose cups have no ring. | As much in one cup as in the other. |
+| `whose-cup` | The Bear and the Mouse with no cups; a house cup and a thimble on the tray. | Cups that hold different amounts. Full is the line. |
+| `three-cups` | The Bear, the Hen and the Mouse with no cups, seated smallest to largest; three sizes of cup on the tray. | Nothing new: three cups to hand out, which end in a row by size. |
+| `full-table` | Any four of the five, some with their own ringed cups and some without. | Nothing new: everything together. |
+
+A party never has more than four guests, and the table has four seats. The amounts are the game's own choice, since no record names a unit or a number: a house cup holds one cupful, the Hen's ring and the middle cup are half of that, and the Mouse's ring and the thimble are about a seventh. A pour is to taste when the tea is within about a finger's width of the ring.
+
+**A harder option the child can see and pick.** The bowl, the sponge and every cup are always free to use, so a child can at any sitting pour from cup to cup, share one cup between two guests or fill the thimble from the Mouse's cup. It looks harder because it is: more tea is moving between more cups. Nothing asks for it.
+
+**How the position moves.** Each guest's first lift of the cup in a sitting is noted as to taste or not. When the sitting ends:
+
+- it went **well** if every guest's first lift was to taste: the position moves one step on;
+- it went **badly** if there were two or more guests and no first lift was to taste: one step back;
+- anything else is **mixed**, and the position stays.
+
+The position never moves during a sitting, and a visit put away before the sitting ends leaves it where it was. At `full-table` a sitting that goes well stays there, with a new party each time. Nothing on screen shows the position, and no clock is read.
+
+**Which party a new position lays out.** The next party does not wait on screen while the child works. It comes to the garden gate when the sitting ends, after the position has moved, so it is laid out from the new position and there is no party in between. It is stored from that moment and waits there for the child's touch.
+
+**What is stored.** Plain JSON through `ctx.storage`, versioned, read field by field by a defensive `deserialize`. Every field:
+
+- `version`: the number of this shape. A higher one than the game knows is treated as unreadable.
+- `position`: one id from the order above. An unknown id falls back to the first-visit default.
+- `seed`: the state of the seeded stream that picks the ordinary detail of a party (which of two guests comes, who sits where). It is never shown and counts nothing.
+- `shown`: the ideas a guest has already shown once, as a list of ids (`pour`, `lay`, `halfway`, `twins`, `sizes`), so no showing plays twice.
+- `sitting`: whether the sitting is `open` or `ended`.
+- `guests`: for each guest at the table, who it is, its seat, its first lift in this sitting (none yet, to taste, too little, too much) and whether it has drunk a cup to its taste.
+- `things`: every movable thing with where it lies: its kind (pot, cup, saucer, spoon, sponge, bowl), its size and the height of its ring if it is a cup, whose it is, where it stands on the cloth or which thing it stands on, and how much tea is in it. A thing in the hand is stored where it was picked up.
+- `tools`: whether the sponge and the bowl have come out of the tray.
+- `puddles`: the tea on the cloth as a coarse grid of 24 by 12 cells, each holding an amount.
+- `waiting`: the next party at the gate, as a list of who comes and with which cup, or nothing while a sitting is open.
+
+A pour in progress is not stored as such: the tea already in the cup is. A scene's outcome is stored when the scene starts, so a guest's first lift is noted before its sip plays, and on load no scene plays again. The largest legal state, with four guests, every thing on the cloth and a full grid of puddles, stays under half of the 64 KB cap, and a test holds that (pack: game-design, ordered-challenges-high-success.md; pack: game-design, many-short-visits.md; "The hidden position" and "Found as left" in the guide).
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+Every guest has one visible want: it sits with its paws or wings on the table and its eyes on its own cup, and looks from the cup to the pot. No guest gives a sign while tea is running; each one watches the stream in the same way whatever the height. What a guest thinks shows after the pot has gone back, starts within a few hundred milliseconds of the lift, and is about the cup, never about the child.
+
+- **The Bear.** Big, slow and heavy; his belly and his lower lip are the funny parts. He wants his cup **full to the brim**. He likes tea in the saucer too, and licks it up. A spill does not trouble him. He dislikes a cup with room in it and a cup that is too small.
+- **The Mouse.** Tiny, quick and neat; her whiskers and her tail are the funny parts. She wants **only a drop**. She dislikes a cup that is too full and anything wet on the cloth by her place: she lifts her tail clear of a puddle and will not sip until it is wiped.
+- **The Hen.** Middle-sized, busy and fussy; her neck and her comb are the funny parts. She wants her cup **half full**, and she stirs it with her spoon before she drinks. She dislikes tea over her ring, and a place with no spoon: she looks under her saucer for it.
+- **The Ducklings.** Two, alike, the second copying the first half a beat late; their tails and big feet are the funny parts. They want **the same as each other**, at any height. They dislike one having more than the other. They like puddles and paddle in them.
+
+These never change, in any position or with any cup, so a child can learn them and test them on purpose: what does the Bear do with the thimble, what does the Mouse do when the Ducklings' puddle reaches her. Nobody thanks or praises the child, nobody is disappointed in the child, and a guest who waits never hurries anyone or remarks on being left (pack: game-design, characters-with-opinions.md).
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+A scene is a list of timed beats over a handful of poses joined by springs, built on the template's `scene.ts` and filled in from the state of play. No scene plays before the child's action, none blocks the next touch, and none plays again on load.
+
+- **The sip** (4 to 8 seconds). Cause: the pot has gone back to its stand after pouring into a guest's cup. Beats: the guest reaches, lifts, looks in, then does what that amount of tea brings (drinks; or tips it back for one drop; or its own mishap with too much), and sets the cup down. Filled in from: who the guest is, how the tea stands against the ring or the twin's cup, the size of the cup, whether the spoon is in it, whether the saucer holds tea, and whether a puddle is near. It runs beside the child's play, and a touch on that guest or its cup ends it at once with the cup back on its saucer.
+- **The showing** (4 to 6 seconds, once for each new idea). Cause: the first sitting at which an idea is new and its mark is not yet stored. A guest does the new thing once, inside the fiction and without words: the Bear presses his own cup and the pot pours a splash for as long as his paw stays, and he drinks the splash; a guest fetches a saucer from the stack and sets its cup on it; the Hen runs her wing along her ring; the Ducklings hold their empty cups rim to rim; the Mouse and the Bear try the two cups for size. It is never the answer to the cup in front of the child, any touch ends it, and it does not play again (pack: game-design, guided-discovery.md).
+- **The clink** (6 to 10 seconds, and then it holds). Cause: the last guest has drunk a cup to its taste. Beats: every guest lifts its cup, they lean in and clink, each cup sounding at the pitch of how full the child made it, they drink together, and each settles in its own way: the Bear dozes, the Mouse grooms her whiskers, the Hen tucks her head under her wing, the Ducklings lean on each other. Then the next party comes to the garden gate and waits there. Any touch ends the scene into the settled table.
+
+**How a cycle ends and how the next one starts.** The settled table stays as long as the child likes, and everything on it still answers a touch. If the child does nothing, nothing new starts. The party at the gate waits without a sign of impatience. When the child touches the gate, the seated guests get down, put their saucers and spoons back on the tray as they go, and leave with their cups, and the new party walks in. Open play has no other ending, and that is its calm way of tidying up (pack: game-design, endings-and-short-scenes.md; "How a cycle restarts" in the guide).
 
 ## The records
 
