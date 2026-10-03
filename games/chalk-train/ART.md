@@ -102,17 +102,82 @@ In every case the state stays: no mark is removed, nothing resets, no rider is l
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**A cycle** is one layout played through: every rider of the layout is taken from its stop to its home. Each layout sets out one thing the world offers, never demands: the bare tar between the train, a waiting rider and that rider's home.
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+**The order,** one new thing at a time and then combinations. The ids are the ones in `LADDER` in `config.ts`; each names what is laid out, in the game's own words.
+
+1. `short-hop`: one rider waits right beside the train, and its home is a short way off on level tar. One short mark does it.
+2. `long-way`: the home is across the tar. New: distance, so a long line or several marks end to end.
+3. `up-and-down`: the home is higher or lower than the stop. New: slope.
+4. `round-the-water`: the puddle lies between the stop and the home. New: the puddle, to go through or round.
+5. `far-rider`: the rider waits away from the train. New: fetching, a second leg.
+6. `two-at-once`: two riders wait at two stops, each with its own home, and the train has two wagons. A combination of everything before, in any order the child likes.
+
+The puddle and the dandelion are part of the tar from the first visit and can be drawn on at every position; a layout only decides whether the puddle lies on the way.
+
+**The harder option the child can see and pick.** From the second cycle on, the next rider is already waiting on the tar. The child may fetch it before taking the current rider home and carry both at once. It is farther away, so it looks like more, and it is never asked for.
+
+**How a cycle is judged.** The game's own call: by how much of the riders' way from stop to home was ridden on chalk, by distance.
+
+- **Well:** three quarters or more on chalk. The position moves one step up.
+- **Badly:** a quarter or less on chalk, which is a trip made almost wholly of taps. The position moves one step down, so the next layout but one is a shorter way.
+- **Mixed:** anything between. The position stays.
+
+No clock is read. The position moves when the ending starts, never inside a cycle, and a visit put away with no finished cycle leaves it where it was. Nothing on screen shows the position or that it moved.
+
+**Which rider a new position lays out.** The next rider waits on screen while the child works, laid out before the current cycle was judged. So a moved position shows on the rider after next: that rider is drawn in at its stop when the child's first mark begins the next cycle, from the position as it stands then.
+
+**A first showing.** On the very first cycle the waiting rider shows the one new idea once, inside the scene and without words: it scrapes a short chalk line from the engine's rail about a third of the way toward its home, drops the stub of chalk, which crumbles away, and climbs aboard; the engine rides to the end of that line and peers over. Any touch ends the showing at once. It is stored as shown and never plays again. No later position needs a showing: its new thing is where things lie, and every mark already works there.
+
+**What is stored.** Plain JSON through `ctx.storage`, versioned, read field by field.
+
+- `v`: the version of the saved shape.
+- `position`: an id from the ladder; an unknown id falls back to the first-visit default.
+- `finished`: the cycle on screen has ended and its ending stands.
+- `seed`: the state of the one random stream that picks layouts, so a layout is the same when found again.
+- `marks`: the chalk on the tar, oldest first, each a chalk colour and a run of whole-number points in the tar's own units. At most 14 marks and 1200 points in all; a mark past the cap rubs out the oldest, which has been growing paler as newer marks were made. A mark's kind is read from its shape and is not stored.
+- `train`: where the train stands and which way it faces, with its stripes and its tint from the puddle, each a chalk colour or none. A ride in progress is not stored: the train is saved where that ride comes to rest.
+- `water`: the puddle's colour, a chalk colour or none.
+- `riders`: at most four, each with its kind, its stop, its home, where it is (at the stop, aboard, or home), how far its trip has gone on chalk and on bare tar, and what the ride has done to it so far (small capped tallies of fast runs, corners, loops, splashes, bumps and scribbles), from which the ending is built.
+- `shown`: the first showing has played.
+
+Whether the dandelion is in flower is read from the marks and not stored. The chalk colour of the next mark follows from the number of marks made in the stream and is the next of five pastels in a fixed order. A largest legal state is held under half of the 64 KB cap by a test.
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+Five characters. Each reacts to the exact ride the child drew, as it happens, and the reactions are the only feedback in the game. A taste never changes, so a child can learn it and test it on purpose. A reaction is always to the ride and never about the child.
+
+What a ride can do to a rider, read from the marks: a **fast run** (a long straight line), a **corner** (a zigzag point), a **loop**, a **splash** (chalk through the puddle), a **bump** (bare tar), a **scribble**.
+
+- **The engine.** Wants chalk to ride, and shows it: its eyes follow the finger and it leans toward the nearest chalk. It likes every line. On bare tar it grumbles at the bumps and its cheeks wobble. Steady, heavy, and funniest in its funnel and cheeks.
+- **The frog.** Wants its pond. Likes corners (it hops in time with each one and croaks) and splashes (it dives through the spray). Dislikes fast runs (flattened against the wagon back, eyes bulging) and scribbles (the dust makes it sneeze a croak). Springy, light, and funniest in its throat pouch.
+- **The chick.** Wants its nest. Likes loops (it flaps and whoops, and feathers fly) and fast runs (wings out like a plane). Dislikes splashes (it puffs into a wet ball and shakes) and bumps (a peep at each one, like hiccups). Quick, very light, and funniest in its stubby wings.
+- **The snail.** Wants its lettuce leaf. Likes bumps (the slow way suits it: it hums and its eye stalks sway) and scribbles (it curls up inside one with a sigh). Dislikes loops (it hides, its shell rolls round the wagon, and it peers out with spiral eyes) and fast runs (its eye stalks stream out behind). Slow, heavy, and funniest in its eye stalks.
+- **The cat.** Wants its cushion in a patch of sun. Likes fast runs (ears back, a loud purr) and scribbles (it bats at the dust). Dislikes corners (fur on end, tail like a bottle brush) and splashes (it leaps straight up and lands on the engine's funnel). Smooth and then sudden, middling weight, and funniest in its tail.
+
+Every one of the six has a rider that likes it and a rider that dislikes it, and a dislike is as good to watch as a like. A waiting rider looks toward its home and reaches for it; it never hurries the child, complains of waiting, or remarks on the child stopping, leaving or coming back.
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Each scene is a list of timed beats on the template's `scene.ts`, filled in from the state of play, and each gives way to any touch: the touch is answered as a normal touch, and everyone in the scene jumps to where the scene would have left them. The outcome of a scene is saved when it starts, so nothing replays on load.
+
+**Getting home** (the ending of a cycle, 5 to 8 seconds).
+
+- Cause: the train reaches a home with that home's rider aboard.
+- Beats: the train brakes with a squeal and a squash. The rider gets out the way the ride left it. The rider goes to its thing and does what it came for: the frog dives in with a plop, the chick settles and tucks its head, the snail munches, the cat turns round twice and curls up. The engine lets out one last puff of smoke in the shape of the ride.
+- Filled in from the state: how the rider gets out comes from what the ride did to it most (spiral eyes and a wobbling walk after loops, hopping in a zigzag after corners, shaking off water after splashes, fur or feathers blown flat after fast runs, a slow dusty shuffle after scribbles, a jelly-legged wobble after bumps), played as that rider's like or dislike. The shape of the last smoke puff is the most-drawn kind of mark on the way.
+
+**The roundabout** (a secret, 5 to 7 seconds).
+
+- Cause: the train rides a line whose two ends meet. It works every time and is never hinted.
+- Beats: three times round, faster each time, then slowing; the train stops where it began with spiral eyes, and each rider aboard reacts once as to a loop.
+- Filled in from the state: the size and shape of the child's own ring, and who is aboard.
+
+**The first showing** (once only, 4 to 6 seconds) is described under "The designed order".
+
+**How a cycle ends.** With the last rider of the layout home, the ending stands for as long as the child likes: the riders stay in their homes doing small things, the engine stands and puffs, and the chalk stays. If the child does nothing, nothing new starts. There is no next round by itself and no countdown.
+
+**How the next one starts.** The next rider is already on the tar, waiting at its stop, looking at its own home. It comes in on the child's touch: the child's next mark begins the next cycle, and the rider boards when the train reaches it. When that cycle begins, the rider after it is drawn in at its stop, and the home from two cycles back is rubbed away with its rider's wave, so there are never more than four riders and three stops on the tar. On load the world is as it was left: the same chalk, the train where it came to rest, each rider where it was, and the next one waiting. Nobody refers to the absence.
 
 ## The records
 
