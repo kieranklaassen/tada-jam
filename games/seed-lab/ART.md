@@ -32,19 +32,54 @@ Why it is a pleasure with no goal: every dab is a small unpacking. The brood res
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+Six objects by five actions. Every cell works, and none refuses. The right use is in bold; the others are the wrong uses, which are at least as funny. The runner bud, the can and the blotter arrive later in the designed order; the grid is the whole game.
+
+| | Poke it | Dust it (bring pollen) | Wet it (the can; the blotter does the opposite) | Carry it to a pot | Offer it to the visitor |
+| --- | --- | --- | --- | --- | --- |
+| **A plant in bloom** | Bends like a spring and plucks its own note (pitch by height); a puff of dust | **A pod sets behind the flower: the cross.** Its own dust works too | Petals sag, then it shakes itself dry like a dog, with a rattle of drops; its grown height stays | **Moves there.** If the pot is taken it shoulders the other plant out, which hops to the margin | **The visitor answers this exact plant, trait by trait** |
+| **A pod** | **Bursts: six seeds fly to the tray** | Sneezes the dust back out, since it is already set | Swells fat and squirts all six in one jet, with a squeak | Lands whole in one pot; six come up in a clump and elbow each other out into the free pots | The visitor shakes it like a rattle until it bursts in its grip, and the brood lands as usual |
+| **A packet seed** | Hops with a click; on soil it sprouts where it lies | The dust slides off and the seed spins: a seed is already made | Swells and splits with a creak before it is even planted, and the sprout walks it to the nearest pot | **Grows there** | The visitor balances it (the snail on an eye-stalk), drops it, and it rolls into a pot and sprouts |
+| **A runner bud** | Boings like a door-stop spring, a tone higher with each poke | The dust slides off and the bud shrugs: a runner needs none | The runner stretches and creeps to the nearest free pot by itself | **Roots there: a copy of the one parent, still joined by its runner** | The visitor tugs it like a lead and the parent plant hops along behind |
+| **A pot of bare soil** | The soil puffs; the worm looks out, looks round and goes back in | Dust settles, nothing grows, the worm sneezes | **Darkens with a glug** (the blotter pales it with a dry squeak); filled twice it runs over and the beetle paddles past on a leaf | Swaps places with the pot it is dropped on, plants riding along | The visitor peers in, the worm waves, and the pot is handed back |
+| **The beetle** | Flips on its back, pedals, rights itself with a click | Turns gold, sneezes, and leaves gold footprints for a while | Opens its wing cases as an umbrella | Digs itself in like a seed, waits, and climbs out affronted when nothing grows | Beetle and visitor bow stiffly; the beetle straightens the visitor's sketch |
+
+**New on day 15.** The child owns lines that breed true, kept on the shelf (a pair that always gives short spotted whites), reads a hidden factor from a family before sowing, reaches one wanted plant by three routes (two true lines, a runner from a lucky find, a blotted pot), and knows the combinations that each visitor answers like no other. None of it is unlocked by time or amount of play: the rules are the same on day 1, and what changed is what the child has bred and what they can foresee.
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+**The idea.** A young plant takes after its parents. With two parents each young gets something from both, and the young differ from one another. With one parent the young is a copy.
+
+**How it appears in the objects.**
+
+- **A plant's body is its traits, and nothing else about it varies.** Four traits: petal colour (red, pink, white), height (counted in stem joints), leaf outline (round or jagged), and spots on the petals (plain or spotted). The plants are the working pieces: no faces, no patterns beyond the four traits, no idle motion, on bare cream paper (pack: game-design, working-objects-stay-plain.md, by its exception for a piece whose body is the idea).
+- **Passing on is a thing the child carries.** Dust goes from one flower to another by the finger. The pod forms on the flower the dust reaches, the seeds come out of that pod, and a pencil line is drawn from each young to each of its two parents. Two parents, two lines.
+- **A copy has one line.** A runner is a stem from one plant to a new one, and it stays drawn. One parent, one line, the same plant again.
+- **The loupe shows why.** Held over a plant, it shows two beads for each trait: one that came down each pencil line. Over a pod, it shows one bead of each pair leaving each parent. The beads are a picture of the model, not a drawing of anything inside a real plant, and the look says so by drawing them in pencil, as a note beside the specimen.
+- **Colour comes first because the pair can be read without the loupe**: a red bead and a white bead give a pink flower. In height, leaf and spots one bead hides the other, so a plant can carry what it does not show, and a family is what gives it away.
+- **Surroundings.** Soil is wet or dry when a seed or a runner comes up in it. A plant that comes up in dry soil grows half its height. Soil that is dry is drawn pale and cracked, so the cause sits under the plant.
+
+**The model, and what is true in it.** Each plant carries a pair of factors for each trait. Each seed takes one factor of each pair from each parent, each drawn with an even chance and each trait by itself, from a seeded stream. A runner carries the parent's pairs unchanged. A plant that comes up short of water grows less, and what it passes on is unchanged by that. Those three sentences are all the model claims as science, and they hold everywhere in the game with no exception. What follows is the game's own choice, since no record sets it: which factor hides which (tall hides short, round hides jagged, plain hides spotted, and red with white shows as pink), that each trait rests on one pair, the four traits themselves, six seeds to a pod, heights of four joints and two, and the halving in dry soil. Chance is never smoothed: a pod is six honest draws, not a tidy sample. The plants are of one invented kind, and every young is of that kind.
+
+**Evidence.** The pack's tables of representations hold no row for inheritance (`research/learning-games-that-work.md`, section 4 and the closing table). The nearest row is a small live model to tend and disturb, which rests on the general finding for simulations. So pairs of factors drawn one from each parent are school practice without a trial behind them here, and the sheet says so.
+
+**Object, picture, symbol.** The object is the plant. The pictures are the pencil family lines, the loupe's beads and a visitor's wish sketch. The only symbols are numerals, in two places, each beside its quantity: beside the plants drawn in a wish that asks for two or three alike, and beside each group when the child sorts a brood into like young (one to six). The order stops there for this band. The school form of a cross table writes factors as letters, and no letter is drawn at any age, so that form is not reached; ratio notation is not in the listed signs and is not used. Whether the count beside a sorted group is a numeral on a quantity or a reading on the child's work is put to the owner in `REFINEMENT.md`.
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No: the play is the rule of inheritance itself (what two parents can pass on, what one parent copies, what the soil changes and does not pass on), and with another subject in its place there is no game left to play.
+- **Attention.** At the moment of decision, which is where to carry the dust, whether to take a runner instead, and which soil to sow in, the child looks at the traits of the two plants and at their families (the pencil lines, and what their broods showed) and thinks about what each of them can pass on.
+- **Fun.** The skill is used in the most enjoyable moment: the dab and the brood that bursts out of it are the play, and the child's forecast is met or overturned as six plants draw themselves.
+- **Guess.** Random dabbing always gives a brood, which is the toy, and at the first step any cross of the two plants on the page meets the first wish by design; from the second step on the wanted factor is hidden in plants that do not show it, so tapping at random or trying every pair costs many pods where reading the families costs one or two, and a wish for several traits at once is out of reach of trying everything in any sitting.
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+The game runs what the child chose and shows what it gives. Three things can go wrong, and each says where and why.
+
+- **A cross that does not give the wanted young.** The brood comes up as it must, and it is the answer: six plants that show what those two parents could pass on. Where: in the tray, each young tied to both parents by its pencil lines. Why: under the loupe each young shows the bead it took from each. Two tall parents that give a short young have just told the child both carry short. Nothing is taken away: both parents and all six young stay, so the child changes one parent, or crosses two of the young, and dabs again.
+- **A plant offered that the visitor does not want.** The visitor answers the exact trait that misses, with its body and on the plant: the snail stretches up a tall stem towards the flower, overbalances and lands on its shell; the bee skids across a petal with no spots and off the far side. It likes the rest visibly first, so the child sees which trait was the miss. It sets the plant back in the pot it came from. The feeling is about the plant, never about the child.
+- **Soil left dry.** The plant comes up half as high over soil that is drawn pale and cracked, beside its sisters in dark soil. A copy by runner into wet soil comes up at full height, which shows that the dryness was not passed on.
+
+There is no buzzer, cross, sad face, reset or lost piece. An odd result is a plant like any other: it can be kept on the shelf, bred from, or offered, and some of the oddest are a visitor's secret favourite. A wrong try is never free of information, because every pod is a brood to read.
 
 ## The designed order, and what is stored
 
