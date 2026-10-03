@@ -68,6 +68,30 @@ describe('the toy drawn', () => {
     expect(calls.length).toBeGreaterThan(first / 3)
   })
 
+  it('keeps a frame inside its budget: one full-surface stamp, and a bounded count of calls for the fullest bridge', () => {
+    const toy = new Toy(freshSave(null, TOY_SHEET), stream(5))
+    // Every part of the yard's kit laid, wherever it will go.
+    const lay = (kind: number, a: [number, number], b: [number, number]) => { toy.press(5 + (14 * (kind + 0.5)) / 4, -2.3); toy.tap(); toy.press(...a); toy.dragStart(); toy.dragMove(...b); toy.dragEnd() }
+    for (let i = 0; i < 5; i++) lay(0, [6 + 2 * i, 8], [8 + 2 * i, 8])
+    for (let i = 0; i < 16; i++) lay(1, [4 + i, 9 + (i % 3)], [5 + i, 10 + (i % 3)])
+    for (let i = 0; i < 4; i++) lay(2, [6 + 3 * i, 12], [8 + 3 * i, 13])
+    for (let i = 0; i < 8; i++) lay(3, [5 + 2 * i, 13], [6 + 2 * i, 14])
+    expect(toy.bridge).toHaveLength(33)
+    const { pen, calls, canvas } = recording()
+    const view = new View(1, canvas)
+    view.size(1180, 820, 2, true)
+    view.draw(pen, toy, null)
+    for (let i = 0; i < 20; i++) toy.step(1 / 60)
+    calls.length = 0
+    const drawn = view.draw(pen, toy, new IdleLadder(0).update(6))
+    // The whole still sheet is one picture stamped once; every other picture drawn is a small sprite.
+    const stamps = calls.filter((call) => call.name === 'drawImage' && call.args.length === 3)
+    expect(stamps).toHaveLength(1)
+    expect(drawn).toBeLessThan(160)
+    // Counted calls on the canvas, not time: the same on any machine.
+    expect(calls.length).toBeLessThan(4000)
+  })
+
   it('maps a touch back to the grid it draws on, at any size', () => {
     const view = new View(1, recording().canvas)
     for (const [w, h] of [[1180, 820], [820, 1180], [1366, 1024]]) {
