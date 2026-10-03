@@ -3,8 +3,9 @@ import { draw, pick } from './stream'
 
 // The five customers as numbers. Each moves like itself and like no other:
 // its own tempo, its own funny part, its own small things at idle and its own
-// way of taking a poke, a snip, the roller, a splat, a bite or a step. The
-// state machine that paces them is shared; not one curve is. Pure: it runs on
+// way of taking a poke, a snip, the roller, a splat, a bite or a step, and its
+// own way of leaving with what it was served. The state machine that paces
+// them is shared; not one curve is. Pure: it runs on
 // the seconds it is handed and a stream of its own.
 //
 // - The pelican: slow, heavy, deadpan. Its pouch is the funny part.
@@ -37,10 +38,16 @@ export type CastPose = {
   tuft: number
   /** Off the ground, in the figure's own units. */
   hop: number
+  /** On its way out with what it was served: 0 where it stands, 1 out of sight. */
+  away: number
+  /** 0 facing as it stands, 1 turned about to go. */
+  turn: number
 }
 
-export type Reaction = 'flinch' | 'snip' | 'flat' | 'lick' | 'gulp' | 'step'
-export const REACTIONS: readonly Reaction[] = ['flinch', 'snip', 'flat', 'lick', 'gulp', 'step']
+export type Reaction = 'flinch' | 'snip' | 'flat' | 'lick' | 'gulp' | 'step' | 'leave'
+export const REACTIONS: readonly Reaction[] = ['flinch', 'snip', 'flat', 'lick', 'gulp', 'step', 'leave']
+/** The longest any customer takes to leave: a second. A touch never waits for it. */
+export const LEAVE_AT_MOST = 1
 
 type Sheet = {
   /** How fast it breathes: radians a second. */
@@ -54,11 +61,11 @@ type Sheet = {
 }
 
 export const SHEETS: Readonly<Record<Who, Sheet>> = {
-  pelican: { tempo: 0.9, idle: { blink: 0.34, preen: 2.2, gape: 1.7, shuffle: 1.3 }, react: { flinch: 0.7, snip: 0.9, flat: 1.1, lick: 1.2, gulp: 0.9, step: 1.1 }, rest: [2.2, 5] },
-  twins: { tempo: 2.6, idle: { sniff: 0.7, startle: 0.45, squabble: 1.1, groom: 1.3 }, react: { flinch: 0.35, snip: 0.5, flat: 0.7, lick: 0.6, gulp: 0.4, step: 0.5 }, rest: [0.6, 1.8] },
-  ants: { tempo: 4.2, idle: { feelers: 0.5, drill: 0.9, aboutFace: 0.8 }, react: { flinch: 0.3, snip: 0.4, flat: 0.8, lick: 0.5, gulp: 0.35, step: 0.6 }, rest: [0.8, 2.2] },
-  cat: { tempo: 0.5, idle: { slowBlink: 1.5, tailFlick: 0.4, yawn: 2.1, lookAway: 1.9 }, react: { flinch: 0.9, snip: 1.3, flat: 1.4, lick: 1.6, gulp: 0.8, step: 1.2 }, rest: [2.6, 6] },
-  boa: { tempo: 0.35, idle: { tongue: 0.5, sway: 2.6, coil: 1.9 }, react: { flinch: 1.2, snip: 1.1, flat: 1.6, lick: 1.4, gulp: 1.3, step: 1.8 }, rest: [3, 6.5] },
+  pelican: { tempo: 0.9, idle: { blink: 0.34, preen: 2.2, gape: 1.7, shuffle: 1.3 }, react: { flinch: 0.7, snip: 0.9, flat: 1.1, lick: 1.2, gulp: 0.9, step: 1.1, leave: 1 }, rest: [2.2, 5] },
+  twins: { tempo: 2.6, idle: { sniff: 0.7, startle: 0.45, squabble: 1.1, groom: 1.3 }, react: { flinch: 0.35, snip: 0.5, flat: 0.7, lick: 0.6, gulp: 0.4, step: 0.5, leave: 0.55 }, rest: [0.6, 1.8] },
+  ants: { tempo: 4.2, idle: { feelers: 0.5, drill: 0.9, aboutFace: 0.8 }, react: { flinch: 0.3, snip: 0.4, flat: 0.8, lick: 0.5, gulp: 0.35, step: 0.6, leave: 0.7 }, rest: [0.8, 2.2] },
+  cat: { tempo: 0.5, idle: { slowBlink: 1.5, tailFlick: 0.4, yawn: 2.1, lookAway: 1.9 }, react: { flinch: 0.9, snip: 1.3, flat: 1.4, lick: 1.6, gulp: 0.8, step: 1.2, leave: 0.9 }, rest: [2.6, 6] },
+  boa: { tempo: 0.35, idle: { tongue: 0.5, sway: 2.6, coil: 1.9 }, react: { flinch: 1.2, snip: 1.1, flat: 1.6, lick: 1.4, gulp: 1.3, step: 1.8, leave: 1 }, rest: [3, 6.5] },
 }
 
 export type Actor = {
@@ -112,7 +119,7 @@ export function stepActor(actor: Actor, dt: number): Actor {
 
 const bump = (t: number): number => Math.sin(Math.max(0, Math.min(1, t)) * Math.PI)
 const ramp = (t: number, from: number, to: number): number => Math.max(0, Math.min(1, (t - from) / (to - from)))
-const REST: CastPose = { bob: 0, lean: 0, flat: 0, stretch: 0, head: 0, mouth: 0, lids: 0, eyeX: 0, eyeY: 0, part: 0, bit: 0, tuft: 1, hop: 0 }
+const REST: CastPose = { bob: 0, lean: 0, flat: 0, stretch: 0, head: 0, mouth: 0, lids: 0, eyeX: 0, eyeY: 0, part: 0, bit: 0, tuft: 1, hop: 0, away: 0, turn: 0 }
 
 /**
  * A customer's pose now. `member` is which of several bodies this is: 0 or 1 for the twins, the place in the
@@ -139,6 +146,8 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (react === 'lick') { pose.mouth = 0.5 * bump(r); pose.head = 0.35 * Math.sin(r * Math.PI * 2); pose.lids = 0.9 * bump(r) }
       if (react === 'gulp') { pose.mouth = bump(ramp(r, 0, 0.4)); pose.part = bump(ramp(r, 0.3, 1)); pose.stretch = 0.1 * bump(ramp(r, 0.3, 0.7)) }
       if (react === 'step') { pose.lean = 0.13 * Math.sin(r * Math.PI * 3); pose.hop = 3 * Math.abs(Math.sin(r * Math.PI * 3)); pose.part = 0.5 * Math.sin(r * Math.PI * 3 - 1) }
+      // It waddles out at one heavy pace, rocking from foot to foot, and the pouch swings after it.
+      if (react === 'leave') { pose.turn = 1; pose.away = r; pose.lean = 0.16 * Math.sin(r * Math.PI * 6); pose.hop = 4 * Math.abs(Math.sin(r * Math.PI * 6)); pose.part = 0.9 * Math.sin(r * Math.PI * 6 - 1.3); pose.lids = 0.6 }
       break
     }
     case 'twins': {
@@ -157,6 +166,8 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (react === 'lick') { pose.mouth = Math.abs(Math.sin(r * Math.PI * 6)); pose.part = Math.sin(r * 60) }
       if (react === 'gulp') { pose.mouth = bump(r); pose.hop = 4 * bump(r) }
       if (react === 'step') { pose.hop = 7 * Math.abs(Math.sin(r * Math.PI * 4 + m)); pose.lean = 0.1 * Math.sin(r * Math.PI * 8) }
+      // They scurry, one bolting first and the other after it, ears back and noses going.
+      if (react === 'leave') { pose.turn = 1; pose.away = ramp(r, m * 0.3, 0.7 + m * 0.3); pose.hop = 10 * Math.abs(Math.sin(r * Math.PI * 5 + m * 1.3)); pose.part = Math.sin(r * 70 + m); pose.bit = -0.8; pose.lean = -0.25 }
       break
     }
     case 'ants': {
@@ -173,6 +184,8 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (react === 'lick') { pose.lean = 0.5 * Math.sin(r * Math.PI * 4 + m); pose.part = r * 40 }
       if (react === 'gulp') { pose.mouth = bump(r); pose.stretch = 0.3 * bump(r) }
       if (react === 'step') { pose.part = t * 4.2 * 2 - m * 0.7; pose.bob = 2 * Math.sin(r * Math.PI * 6 - m) }
+      // They turn about as one and march off in step, every ant at the same height at the same moment.
+      if (react === 'leave') { pose.turn = 1; pose.away = r; pose.part = t * 4.2 * 3; pose.bob = 2.4 * Math.sin(r * Math.PI * 8); pose.bit = 0.9 }
       break
     }
     case 'cat': {
@@ -190,6 +203,8 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (react === 'lick') { pose.mouth = 0.4 * bump(r); pose.head = 0.5 * bump(ramp(r, 0, 0.5)) - 0.5 * bump(ramp(r, 0.5, 1)); pose.lids = 1; pose.bit = Math.sin(r * Math.PI * 5) }
       if (react === 'gulp') { pose.mouth = 0.7 * bump(ramp(r, 0, 0.5)); pose.lids = 0.9 }
       if (react === 'step') { pose.stretch = 0.2 * bump(ramp(r, 0, 0.5)); pose.lean = -0.08 * bump(r); pose.part = 1.1 * ramp(r, 0, 1) }
+      // It does not hurry: a long stretch first, eyes shut, then it turns its back and is gone, tail straight up.
+      if (react === 'leave') { pose.stretch = 0.24 * bump(ramp(r, 0, 0.35)); pose.lids = 1 - 0.4 * ramp(r, 0.3, 0.5); pose.turn = ramp(r, 0.28, 0.32); pose.away = ramp(r, 0.3, 1) ** 2; pose.part = 1.7; pose.head = -0.5 * ramp(r, 0.3, 0.5) }
       break
     }
     case 'boa': {
@@ -207,6 +222,8 @@ export function poseOf(actor: Actor, member = 0): CastPose {
       if (react === 'lick') { pose.bit = Math.abs(Math.sin(r * Math.PI * 4)); pose.head = 0.4 * bump(r) }
       if (react === 'gulp') { pose.mouth = bump(ramp(r, 0, 0.3)); pose.hop = 0; pose.stretch = 0.2 * bump(ramp(r, 0.2, 1)) }
       if (react === 'step') { pose.part = t * 0.35 + 4 * r; pose.head = 0.3 * bump(r) }
+      // It pours itself out head first, slowly and then all at once, and the far end is the last of it to go.
+      if (react === 'leave') { pose.turn = 1; pose.away = r * r; pose.part = t * 0.35 + 8 * r; pose.head = 0.3 * Math.sin(r * Math.PI * 2); pose.bit = bump(r) }
       break
     }
   }

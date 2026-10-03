@@ -28,10 +28,13 @@ export type Casting = {
 
 const GREY = '#9aa6b8'
 
-/** Stands a body on its feet at (x, y): its hop, its lean, how flat the roller left it and how tall it gathers itself. */
-function stand(ctx: Ctx, x: number, y: number, s: number, pose: CastPose, body: () => void): void {
+/**
+ * Stands a body on its feet at (x, y): its hop, its lean, how flat the roller left it and how tall it gathers
+ * itself. One that is leaving is `exit` units further left when it is out of sight.
+ */
+function stand(ctx: Ctx, x: number, y: number, s: number, pose: CastPose, body: () => void, exit = 0): void {
   ctx.save()
-  ctx.translate(x, y - (pose.hop + pose.bob) * s)
+  ctx.translate(x - pose.away * exit, y - (pose.hop + pose.bob) * s)
   ctx.rotate(pose.lean)
   ctx.scale(s * (1 + 0.6 * pose.flat), s * (1 + pose.stretch) * (1 - 0.88 * pose.flat))
   body()
@@ -150,7 +153,7 @@ function antBody(ctx: Ctx, pose: CastPose, flat: number): void {
   ctx.save()
   ctx.scale(1 + 0.5 * flat, 1 - 0.85 * flat)
   ctx.rotate(pose.head > 1 ? 0 : pose.lean)
-  if (pose.head > Math.PI / 2) ctx.scale(-1, 1)
+  if (pose.head > Math.PI / 2 || pose.turn > 0.5) ctx.scale(-1, 1)
   ctx.strokeStyle = INK
   ctx.lineWidth = 2.6
   ctx.lineCap = 'round'
@@ -285,18 +288,21 @@ export const WIDTH: Readonly<Record<Who, number>> = { pelican: 190, twins: 150, 
 
 /**
  * Draws a customer standing with its feet at (x, y). The twins are two bodies facing each other; the ants are a
- * file of `count`, one for each part of the order, spaced to fit `room` units across.
+ * file of `count`, one for each part of the order, spaced to fit `room` units across. A customer that is
+ * leaving has turned about, and is `exit` units to the left when it is out of sight.
  */
-export function drawCustomer(ctx: Ctx, dots: Dots, cast: Casting, x: number, y: number, s: number, room = 400): void {
+export function drawCustomer(ctx: Ctx, dots: Dots, cast: Casting, x: number, y: number, s: number, room = 400, exit = 0): void {
   if (cast.who === 'twins') {
     const feast = cast.feast
     for (const member of [0, 1]) {
       const side = member === 0 ? -1 : 1
-      stand(ctx, x + side * 46 * s + feast.pull * 10 * s, y, s, cast.pose(member), () => {
-        ctx.scale(-side, 1)
+      const pose = cast.pose(member)
+      stand(ctx, x + side * 46 * s + feast.pull * 10 * s, y, s, pose, () => {
+        // They face each other, until they turn to go.
+        ctx.scale(pose.turn > 0.5 ? -1 : -side, 1)
         ctx.rotate(-0.12 * Math.abs(feast.pull))
         shrew(ctx, dots, cast, member)
-      })
+      }, exit)
     }
     // The longer piece, pulled between them like a rope.
     if (feast.pull !== 0) {
@@ -315,20 +321,22 @@ export function drawCustomer(ctx: Ctx, dots: Dots, cast: Casting, x: number, y: 
     for (let member = 0; member < count; member++) {
       const pose = cast.pose(member)
       const flat = Math.max(pose.flat, cast.feast.flat[member] ?? 0)
-      stand(ctx, x + member * gap, y, k, { ...pose, flat: 0 }, () => antBody(ctx, pose, flat))
+      stand(ctx, x + member * gap, y, k, { ...pose, flat: 0 }, () => antBody(ctx, pose, flat), exit)
     }
     // What they carry rides above the file, each piece as long as the ants it lies across.
     let along = 0
     for (const one of cast.feast.lumps) {
       const w = one.size * cast.parts * gap
-      lump(ctx, cast.fruit, x - 20 * k + along, y - (38 + 40 * (1 - one.at)) * k, 1, w, 8 * k + 3)
+      lump(ctx, cast.fruit, x - 20 * k + along - cast.pose(0).away * exit, y - (38 + 40 * (1 - one.at)) * k, 1, w, 8 * k + 3)
       along += w
     }
     return
   }
-  stand(ctx, x, y, s, cast.pose(0), () => {
+  const pose = cast.pose(0)
+  stand(ctx, x, y, s, pose, () => {
+    if (pose.turn > 0.5) ctx.scale(-1, 1)
     if (cast.who === 'pelican') pelican(ctx, dots, cast)
     else if (cast.who === 'cat') cat(ctx, dots, cast)
     else boa(ctx, dots, cast)
-  })
+  }, exit)
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { REACTIONS, SHEETS, newActor, poseOf, reactTo, stepActor, type Actor, type CastPose } from './cast'
+import { LEAVE_AT_MOST, REACTIONS, SHEETS, newActor, poseOf, reactTo, stepActor, type Actor, type CastPose } from './cast'
 import type { Who } from './orders'
 
 const WHOS: Who[] = ['pelican', 'twins', 'ants', 'cat', 'boa']
@@ -10,7 +10,7 @@ function play(actor: Actor, seconds: number, each?: (actor: Actor) => void): Act
   }
   return actor
 }
-const numbers = (pose: CastPose): number[] => [pose.bob / 10, pose.lean, pose.flat, pose.stretch, pose.head, pose.mouth, pose.lids, pose.eyeX, pose.eyeY, Math.sin(pose.part), pose.bit, pose.tuft, pose.hop / 10]
+const numbers = (pose: CastPose): number[] => [pose.bob / 10, pose.lean, pose.flat, pose.stretch, pose.head, pose.mouth, pose.lids, pose.eyeX, pose.eyeY, Math.sin(pose.part), pose.bit, pose.tuft, pose.hop / 10, pose.away, pose.turn]
 /** What one action looks like: the pose sampled through it, with the breathing taken out by starting every one at the same moment. */
 function print(who: Who, set: Partial<Actor>, seconds: number): number[] {
   const out: number[] = []
@@ -58,7 +58,7 @@ describe('every customer', () => {
     const check = (pose: CastPose, where: string) => {
       for (const [name, value, low, high] of [
         ['bob', pose.bob, -6, 6], ['lean', pose.lean, -0.7, 0.7], ['flat', pose.flat, 0, 1], ['stretch', pose.stretch, 0, 0.4], ['mouth', pose.mouth, 0, 1.01],
-        ['lids', pose.lids, -1, 1.01], ['eyeX', pose.eyeX, -1, 1], ['eyeY', pose.eyeY, -1, 1], ['bit', pose.bit, -1.3, 1.3], ['tuft', pose.tuft, 0, 1.31], ['hop', pose.hop, 0, 16],
+        ['lids', pose.lids, -1, 1.01], ['eyeX', pose.eyeX, -1, 1], ['eyeY', pose.eyeY, -1, 1], ['bit', pose.bit, -1.3, 1.3], ['tuft', pose.tuft, 0, 1.31], ['hop', pose.hop, 0, 16], ['away', pose.away, 0, 1], ['turn', pose.turn, 0, 1],
       ] as const) {
         expect(value, `${where} ${name}`).toBeGreaterThanOrEqual(low)
         expect(value, `${where} ${name}`).toBeLessThanOrEqual(high)
@@ -86,6 +86,28 @@ describe('every customer', () => {
       expect(least, who).toBe(0)
       expect(poseOf(after).tuft, who).toBeGreaterThanOrEqual(0.9)
     }
+  })
+
+  it('leaves like itself, in a second or less: it turns about, is out of sight when the leaving ends, and never goes back', () => {
+    for (const who of WHOS) {
+      expect(SHEETS[who].react.leave, who).toBeLessThanOrEqual(LEAVE_AT_MOST)
+      expect(poseOf(newActor(who, 2)), who).toMatchObject({ away: 0, turn: 0 })
+      let before = 0
+      const members = who === 'twins' ? [0, 1] : [0]
+      const last = play(reactTo(newActor(who, 2), 'leave'), SHEETS[who].react.leave - 0.02, (actor) => {
+        const away = poseOf(actor).away
+        expect(away, who).toBeGreaterThanOrEqual(before)
+        before = away
+      })
+      for (const member of members) expect(poseOf(last, member), `${who} ${member}`).toMatchObject({ turn: 1 })
+      for (const member of members) expect(poseOf(last, member).away, `${who} ${member}`).toBeGreaterThan(0.93)
+    }
+    // The twins bolt one after the other; the cat stretches first and only then turns its back.
+    const twins = play(reactTo(newActor('twins', 2), 'leave'), 0.2)
+    expect(poseOf(twins, 0).away).toBeGreaterThan(poseOf(twins, 1).away)
+    const cat = play(reactTo(newActor('cat', 2), 'leave'), 0.2)
+    expect(poseOf(cat)).toMatchObject({ away: 0, turn: 0 })
+    expect(poseOf(cat).stretch).toBeGreaterThan(0.1)
   })
 
   it('is rolled flat as a page and springs back', () => {

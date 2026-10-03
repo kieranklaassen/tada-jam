@@ -312,6 +312,46 @@ describe('the cast in the run', () => {
   })
 })
 
+describe('the leaving', () => {
+  it('shows the served customer going as the next one steps up, for a second at most, and no touch waits for it', () => {
+    const { run } = withCut(0)
+    serve(run)
+    play(run, 9)
+    const served = run.game.window!
+    expect(run.game.finished).toBe(true)
+    expect(run.frame(0, BUSY).departing).toBeNull()
+    run.tap(mid(QUEUE[1]))
+    // The game has moved on at the touch: the called one is at the window, and what the served one ate is gone with it.
+    const after = stored(run)
+    expect(run.game.finished).toBe(false)
+    expect(eaten(run.game.world)).toEqual([])
+    const going = run.frame(0, BUSY).departing!
+    expect(going.customer).toEqual(served)
+    expect(going.actor).toMatchObject({ who: served.who, react: 'leave' })
+    expect(going.lengths.length).toBeGreaterThan(0)
+    // A touch in the middle of it is an ordinary touch, and the leaving goes on behind it.
+    play(run, 0.2)
+    run.press({ x: 300, y: BOARD.y - 30 })
+    expect(run.blade).not.toBeNull()
+    run.end()
+    expect(run.frame(0, BUSY).departing).not.toBeNull()
+    play(run, 0.85)
+    expect(run.frame(0, BUSY).departing).toBeNull()
+    // Nothing of it is in the game: a put-away in the middle of it loses nothing and replays nothing.
+    expect(stored(run)).toEqual(after)
+    expect(new GameRun(deserialize(after, null, 11), 11).frame(0, BUSY).departing).toBeNull()
+  })
+
+  it('is only for one who was served: the first to step up, and two who change places, leave nobody going', () => {
+    const run = fresh()
+    run.tap(mid(QUEUE[0]))
+    expect(run.frame(0, BUSY).departing).toBeNull()
+    run.tap(mid(QUEUE[1]))
+    expect(run.happened).toContainEqual({ kind: 'called', index: 1, did: 'swapped' })
+    expect(run.frame(0, BUSY).departing).toBeNull()
+  })
+})
+
 describe('found as left', () => {
   it('can be put away at any instant of a stroke, a carry or a scene, and opens exactly as it was', () => {
     const { run } = withCut(-400)

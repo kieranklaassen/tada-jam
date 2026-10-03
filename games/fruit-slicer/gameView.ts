@@ -28,6 +28,8 @@ type Dots = Pick<Screens, 'of'>
 const SCALLOPS = 16
 /** How big each customer is drawn beside the pelican, which is the tallest: the small ones are drawn larger than life, so their faces read. */
 const SIZE: Readonly<Record<Customer['who'], number>> = { pelican: 1, twins: 1.5, ants: 1.5, cat: 1.15, boa: 1.05 }
+/** Where the one at the window stands, by who it is: the middle of its feet. */
+const windowX = (who: Customer['who']): number => WINDOW.x + (who === 'ants' ? 46 : who === 'boa' ? 130 : who === 'twins' ? 118 : 92)
 
 /** Everything that never moves: the two panels, the board, the shelf, the dog's arch and the roller's hook. Returns the figures drawn. */
 export function paintPlate(ctx: Ctx, dots: Dots): number {
@@ -290,7 +292,7 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
 }
 
 /** A customer and its ticket, standing with its feet on the sill at `x`, in a box `room` wide. */
-function customerAt(ctx: Ctx, dots: Dots, customer: Customer, actor: Actor | null, cast: Partial<Casting>, x: number, y: number, s: number, room: number): number {
+function customerAt(ctx: Ctx, dots: Dots, customer: Customer, actor: Actor | null, cast: Partial<Casting>, x: number, y: number, s: number, room: number, exit = 0): number {
   if (!actor) return 0
   const full: Casting = {
     who: customer.who,
@@ -301,7 +303,7 @@ function customerAt(ctx: Ctx, dots: Dots, customer: Customer, actor: Actor | nul
     count: wantedCount(customer),
     parts: wanted(customer).den,
   }
-  drawCustomer(ctx, dots, full, x, y, s, room)
+  drawCustomer(ctx, dots, full, x, y, s, room, exit)
   return customer.who === 'ants' ? full.count * 6 : customer.who === 'twins' ? 30 : 16
 }
 
@@ -343,13 +345,28 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   const { game, fx } = scenery
   let drawn = effects(ctx, fx, true)
   // The customer at the window, with its ticket; or one still on its way out.
+  const departing = scenery.departing
+  if (departing) {
+    // The served customer on its way out, behind the one stepping up: turned about, its shut tin with it, and gone at the edge of the panel.
+    const who = departing.customer.who, s = 0.92 * SIZE[who], x = windowX(who), file = wantedCount(departing.customer)
+    const wide = who === 'ants' ? file * Math.min(44 * s, 540 / file) : 100 * s
+    const exit = Math.max(x - WALL.x + wide, WINDOW.x + 240 - WALL.x)
+    const last = poseOf(departing.actor, who === 'twins' ? 1 : 0)
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(WALL.x + 3, WALL.y + 3, WALL.w - 6, WALL.h - 6)
+    ctx.clip()
+    drawn += customerAt(ctx, dots, departing.customer, departing.actor, { feast: feastOf(departing.customer, departing.lengths, null, null) }, x, WINDOW.y + WINDOW.h - 4, s, 540, exit)
+    inked(ctx, rect(WINDOW.x + 168 - last.away * exit, WINDOW.y + WINDOW.h - 34 - last.hop, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
+    ctx.restore()
+    drawn++
+  }
   const gliding = scenery.leaving
   const atWindow = game.window ?? (gliding?.whom === 'window' ? gliding.customer : null)
   if (atWindow) {
     const lengths = scenery.ending ? scenery.ending.result.parts.flatMap((part) => part.pieces.map((piece) => piece.length)) : eaten(game.world).map((piece) => piece.length)
     const feast = feastOf(atWindow, lengths, scenery.ending?.taste ?? null, scenery.show?.kind === 'showing' ? null : scenery.show, scenery.ending?.result.kind === 'over')
-    const ants = atWindow.who === 'ants'
-    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show }, WINDOW.x + (ants ? 46 : atWindow.who === 'boa' ? 130 : atWindow.who === 'twins' ? 118 : 92), WINDOW.y + WINDOW.h - 4, 0.92 * SIZE[atWindow.who], 540)
+    drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show }, windowX(atWindow.who), WINDOW.y + WINDOW.h - 4, 0.92 * SIZE[atWindow.who], 540)
     if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + 262, WINDOW.y + 34, atWindow.shares.length > 1 || atWindow.who === 'boa' ? 0.62 : atWindow.written ? 0.82 : 1)
     // Served, and the serve over: it holds its tin, shut, by its feet.
     if (game.finished && !scenery.ending) {

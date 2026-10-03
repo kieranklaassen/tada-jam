@@ -57,6 +57,8 @@ export type Scenery = {
   ending: Ending | null
   /** A customer who has left the game and is still on its way out: the pelican, gliding, from the window or from its place in the queue. */
   leaving: { customer: Customer; whom: Whom } | null
+  /** The served customer on its way out with its tin, as the one who was called steps up: who it is, how it moves, and the pieces it ate. */
+  departing: { customer: Customer; actor: Actor; lengths: number[] } | null
   /** The idle ladder: how strongly the next thing glows, what glows, and the ghost hand when it is showing a move. */
   glow: number
   guide: Guide | null
@@ -88,6 +90,7 @@ export class GameRun {
   private leaving: { customer: Customer; whom: Whom } | null = null
   private skipping = false
   private leavingActor: Actor | null = null
+  private departing: { customer: Customer; actor: Actor; lengths: number[] } | null = null
   private clock = 0
   private seed: number
 
@@ -217,6 +220,11 @@ export class GameRun {
     this.dog = stepDog(this.dog, dt)
     if (this.window) this.window = stepActor(this.window, dt)
     this.queue = [stepActor(this.queue[0], dt), stepActor(this.queue[1], dt)]
+    if (this.departing) {
+      // It is shown for as long as its own way of leaving takes, a second at most, and then it is gone.
+      const actor = stepActor(this.departing.actor, dt)
+      this.departing = actor.react === 'leave' ? { ...this.departing, actor } : null
+    }
     for (const one of this.coming) one.wait -= dt
     for (const one of this.coming.filter((due) => due.wait <= 0)) this.dog = react(this.dog, one.reaction, one.amount)
     this.coming = this.coming.filter((due) => due.wait > 0)
@@ -240,7 +248,7 @@ export class GameRun {
     const carried = this.held ? { ids: this.held.held.ids, dx: this.held.at.x - this.held.held.dx - this.held.held.boxes[0].x, dy: this.held.at.y - this.held.held.dy - this.held.held.boxes[0].y } : null
     // With no scene playing, a served customer is in the last pose of its serve: that is what a load finds.
     const show = this.show ?? (this.game.window && this.game.finished ? servedShow(eaten(this.game.world).length) : null)
-    return { game: this.game, fx: this.fx, dog: dogPose(this.dog, look), window: this.window, queue: this.queue, leavingActor: this.leavingActor, time, blade: this.blade, carried, roller: this.roller, show, ending: this.ending, leaving: this.leaving, glow: idle ? guidance.glow : 0, guide, hand }
+    return { game: this.game, fx: this.fx, dog: dogPose(this.dog, look), window: this.window, queue: this.queue, leavingActor: this.leavingActor, departing: this.departing, time, blade: this.blade, carried, roller: this.roller, show, ending: this.ending, leaving: this.leaving, glow: idle ? guidance.glow : 0, guide, hand }
   }
 
   /** A customer's pose, for the view: the one at the window or one who waits, and which of its bodies. */
@@ -346,6 +354,8 @@ export class GameRun {
         case 'called': {
           // The one who was called steps up; whoever now stands in its place in the queue has just arrived there.
           const called = this.queue[event.index]
+          // The served one leaves as the called one steps up. It left the game on the touch: this only shows it going, and no touch waits for it.
+          this.departing = event.did === 'stepped' && before.window && before.finished && this.window ? { customer: before.window, actor: reactTo(this.window, 'leave'), lengths: eaten(before.world).map((piece) => piece.length) } : null
           this.queue[event.index] = event.did === 'swapped' && this.window ? reactTo(this.window, 'step') : reactTo(newActor(game.queue[event.index].who, ++this.seed + 10), 'step')
           this.window = reactTo(called, 'step')
           this.sounds.push({ id: 'step', delay: 0 })
