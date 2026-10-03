@@ -3,9 +3,9 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
-- Look in use: none yet.
-- Open: the design sheet in `ART.md` and its check.
+- Stage: sheet. The design sheet in `ART.md` is whole, as it stands at commit `c4f9ba9` (sheet hash `45ab1170dc484757fca139faf6805db59bc789df0476ac6512b24a71a8632721`).
+- Look in use: none yet. The first reserved look, wet watercolour, is the next thing spiked.
+- Open: sheet ready for check, round 1
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
