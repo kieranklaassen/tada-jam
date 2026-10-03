@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { KINDS, SPEC } from './kit'
-import { RANGE, chord, creak, fold, give, lay, pinClick, play, pluck, snapTick, splash, takeOff, trolleyBells, turn, type VoiceSpec } from './voices'
+import { RANGE, chord, creak, fold, give, gurgle, lay, load, pendulum, pinClick, pinPop, pinRattle, pinSwing, pinTick, plop, play, pluck, snapTick, splash, takeOff, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, turn, type VoiceSpec } from './voices'
 
 const every: [string, VoiceSpec][] = [
   ['pin', pinClick],
@@ -13,6 +13,10 @@ const every: [string, VoiceSpec][] = [
   ...KINDS.flatMap((kind) => (['bend', 'bow', 'squeeze', 'pull'] as const).map((how): [string, VoiceSpec] => [`give ${kind} ${how}`, give(how, kind)])),
   ...[0, 1, 4, 40].flatMap((n): [string, VoiceSpec][] => [[`fold ${n}`, fold(n)], [`splash ${n}`, splash(n)], [`bells ${n}`, trolleyBells(n)]]),
   ['chord', chord([9000, 20, 440, 330, 550, 660, 770])],
+  ...KINDS.flatMap((kind) => [-1, 0, 0.5, 1, 9].map((use): [string, VoiceSpec] => [`load ${kind} ${use}`, load(kind, use)])),
+  ['plop', plop], ['gurgle', gurgle], ['pin tick', pinTick], ['pin swing', pinSwing], ['pendulum', pendulum], ['trolley set', trolleySet], ['trolley flip', trolleyFlip],
+  ['rattle none', pinRattle([])], ['rattle many', pinRattle([1, 99999, 300, 400, 500, 600, 700])],
+  ...[0, 1, 3, 40].flatMap((n): [string, VoiceSpec][] => [[`pop ${n}`, pinPop(n)], [`weight ${n}`, trolleyWeight(n)], [`off ${n}`, trolleyOff(n)]]),
 ]
 
 describe('the voices, as numbers', () => {
@@ -47,6 +51,13 @@ describe('the voices, as numbers', () => {
     // A stick pings when stretched and knocks when squeezed.
     expect(pluck('stick', 5, 2, false)[0].pitch).toBeGreaterThan(pluck('stick', -5, 2, false)[0].pitch)
     expect(pluck('stick', -5, 2, false)).toHaveLength(2)
+  })
+
+  it('a load is heard as the sheet says: the plank creaks lower as it bends more, the squeezed stick squeaks higher', () => {
+    expect(load('plank', 0.9)[0].pitch).toBeLessThan(load('plank', 0.2)[0].pitch)
+    expect(load('stick', 0.9)[0].pitch).toBeGreaterThan(load('stick', 0.2)[0].pitch)
+    expect(load('thread', 0.9)[0].length).toBeGreaterThan(0.5)
+    expect(load('tube', 0.5).length).toBeGreaterThan(2)
   })
 
   it('strain is heard before a part gives: the creak rises with the share of strength in use', () => {

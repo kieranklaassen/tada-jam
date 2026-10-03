@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { part } from './bridges.fixture'
 import { settle, solve } from './frame'
-import { GESTURES, GRID, THINGS, layPart, laid, loaded, plucked, pullPin, takeOffPart, trolleyRung, turnPart } from './grid'
+import { GESTURES, GRID, THINGS, cellVoice, layPart, laid, loaded, plucked, pullPin, putPin, takeOffPart, trolleyRung, turnPart } from './grid'
 import { KINDS, key, type Point } from './kit'
+import { RANGE } from './voices'
 
 const kit = { plank: 3, stick: 3, tube: 3, thread: 3 }
 const footings = (...points: Point[]) => { const set = new Set(points.map(key)); return (p: Point) => set.has(key(p)) }
@@ -56,12 +57,44 @@ describe('the object-by-action grid', () => {
     expect(plucked(part('stick', 0, 0, 2, 0), { ...states[2], force: 4 }).does).toBe('pings')
   })
 
-  it('pulling a pin takes off every part that ends on it and leaves a plank that only passes through', () => {
+  it('every cell has a sound of its own, inside the range every voice keeps', () => {
+    const voices = THINGS.flatMap((thing) => GESTURES.map((gesture) => cellVoice(thing, gesture)))
+    expect(new Set(voices.map((voice) => JSON.stringify(voice))).size).toBe(30)
+    for (const voice of voices) {
+      expect(voice.length).toBeGreaterThan(0)
+      for (const sound of voice) {
+        expect(sound.pitch).toBeGreaterThanOrEqual(RANGE.pitch[0]); expect(sound.pitch).toBeLessThanOrEqual(RANGE.pitch[1])
+        expect(sound.peak).toBeGreaterThanOrEqual(RANGE.peak[0]); expect(sound.peak).toBeLessThanOrEqual(RANGE.peak[1])
+        expect(sound.length).toBeGreaterThanOrEqual(RANGE.length[0]); expect(sound.length).toBeLessThanOrEqual(RANGE.length[1])
+        expect(sound.after ?? 0).toBeLessThanOrEqual(RANGE.after[1])
+      }
+      expect(voice.reduce((sum, sound) => sum + sound.peak, 0)).toBeLessThanOrEqual(0.5)
+    }
+  })
+
+  it('a pin taken off leaves every part that ended on it hanging loose there, and a pin put back holds them again', () => {
     const bridge = [part('plank', 0, 0, 4, 0), part('stick', 2, 0, 2, -2), part('thread', 2, 0, 0, 3), part('stick', 4, 0, 4, -2)]
     const pulled = pullPin(bridge, [2, 0])
-    expect(pulled.dropped).toEqual([1, 2])
-    expect(pulled.bridge).toEqual([bridge[0], bridge[3]])
+    expect(pulled.loosened).toEqual([1, 2])
+    expect(pulled.bridge[0]).toEqual(bridge[0])
+    expect(pulled.bridge[1]).toEqual({ ...bridge[1], loose: 'a' })
+    expect(pulled.bridge[2].loose).toBe('a')
+    expect(pulled.bridge[3]).toEqual(bridge[3])
     expect(pullPin(bridge, [9, 9]).bridge).toEqual(bridge)
+    // The loose part carries nothing: the frame leaves it out, and it still weighs on the pin that holds it.
+    const frame = settle(pulled.bridge, footings([0, 0], [4, 0], [2, -2], [4, -2]))
+    expect(frame.firm).toEqual([true, false, false, true])
+    // Its other pin taken off as well, it has nothing left to hang from and drops into the tray.
+    const again = pullPin(pulled.bridge, [2, -2])
+    expect(again.dropped).toEqual([1])
+    expect(again.bridge).toHaveLength(3)
+    // A pin put back holds what hangs loose at that point, and nothing else.
+    const back = putPin(pulled.bridge, [2, 0])
+    expect(back.pinned).toEqual([1, 2])
+    expect(back.bridge).toEqual(bridge)
+    expect(putPin(bridge, [2, 0]).pinned).toEqual([])
+    // More ends let go, more clatter.
+    expect(pulled.result.voice.length).toBeGreaterThan(pullPin(bridge, [4, -2]).result.voice.length)
   })
 
   it('a part that gives under a load gives in its own voice', () => {

@@ -20,6 +20,8 @@ export type Part = {
   b: Point
   /** A plank turned on its edge. The other kinds are the same both ways, so it changes nothing for them. */
   turned: boolean
+  /** The end that hangs loose because its pin was taken off, if one does. Such a part carries nothing until a pin goes back in. */
+  loose?: 'a' | 'b'
 }
 
 export type KindSpec = {
@@ -90,8 +92,9 @@ export function gridPointsOn(part: Pick<Part, 'a' | 'b'>): Point[] {
   return points
 }
 
-/** The points where this part can be pinned to others. */
-export const pinsOf = (part: Part): Point[] => (part.kind === 'plank' ? gridPointsOn(part) : [part.a, part.b])
+/** The points where this part is pinned to others: every grid point along a plank, the two ends of the other kinds, and never an end that hangs loose. */
+export const pinsOf = (part: Part): Point[] =>
+  (part.kind === 'plank' ? gridPointsOn(part) : [part.a, part.b]).filter((p) => !(part.loose && samePoint(p, part[part.loose])))
 
 /** How many of each kind a sheet's kit holds. */
 export type KitCount = Readonly<Record<Kind, number>>

@@ -96,10 +96,11 @@ function build(parts: readonly Part[], firm: boolean[], isFooting: (p: Point) =>
     const half = (SPEC[parts[bar.part].kind].weight * bar.long) / 2
     weight[bar.i] += half; weight[bar.j] += half
   }
-  // A part that hangs loose from a firm point still weighs on it.
+  // A part that hangs loose from a firm point still weighs on it, at the end or ends that are still pinned.
   parts.forEach((part, index) => {
     if (firm[index]) return
-    const ends = [at.get(key(part.a)), at.get(key(part.b))].filter((n): n is number => n !== undefined)
+    const held = (['a', 'b'] as const).filter((end) => part.loose !== end).map((end) => at.get(key(part[end])))
+    const ends = held.filter((n): n is number => n !== undefined)
     for (const n of ends) weight[n] += (SPEC[part.kind].weight * length(part)) / ends.length
   })
 
@@ -228,7 +229,8 @@ function forces(frame: Frame, loads: readonly Load[], nudge: number): Float64Arr
  * after round, until what remains holds its shape.
  */
 export function settle(parts: readonly Part[], isFooting: (p: Point) => boolean): Frame {
-  const firm = parts.map(() => true)
+  // A part with an end off its pin is left out from the start: it hangs from its other end.
+  const firm = parts.map((part) => !part.loose)
   for (let round = 0; round <= parts.length; round++) {
     const frame = build(parts, firm, isFooting)
     const loose = new Set<number>()

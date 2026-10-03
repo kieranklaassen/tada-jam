@@ -101,8 +101,10 @@ export function turn(kind: Kind, long: number): VoiceSpec {
 export function takeOff(kind: Kind, long: number): VoiceSpec {
   const pitch = byLength(kind, long)
   switch (kind) {
-    case 'plank': return kept([{ wave: 'noise', pitch: 500, slideTo: 900, peak: 0.07, attack: 0.04, length: 0.25 }])
-    case 'stick': return kept([{ wave: 'triangle', pitch: pitch * 2, slideTo: pitch * 3, peak: 0.08, attack: 0.002, length: 0.07 }])
+    // A long wooden scrape.
+    case 'plank': return kept([{ wave: 'noise', pitch: 500, slideTo: 900, peak: 0.07, attack: 0.04, length: 0.45 }])
+    // A flick, and the rattle of the sticks it lands among.
+    case 'stick': return kept([{ wave: 'triangle', pitch: pitch * 2, slideTo: pitch * 3, peak: 0.08, attack: 0.002, length: 0.07 }, ...[0.09, 0.13, 0.19].map((after, i) => ({ wave: 'triangle' as const, pitch: 900 + 180 * i, peak: 0.04, attack: 0.001, length: 0.04, after }))])
     case 'tube': return kept([{ wave: 'sine', pitch: pitch * 0.6, slideTo: pitch * 0.45, peak: 0.1, attack: 0.01, length: 0.35 }])
     case 'thread': return kept([{ wave: 'noise', pitch: 1500, slideTo: 3000, peak: 0.07, attack: 0.01, length: 0.18 }])
   }
@@ -131,6 +133,55 @@ export const trolleyBells = (weights: number): VoiceSpec => Array.from({ length:
 
 /** The bridge springs back when the load leaves it: the notes of its own parts, lowest first. */
 export const chord = (pitches: readonly number[]): VoiceSpec => [...pitches].sort((a, b) => a - b).slice(0, 5).map((pitch, i) => ({ wave: 'triangle' as const, pitch: clamp(pitch, RANGE.pitch), peak: 0.09, attack: 0.004, length: 0.8, after: 0.05 * i }))
+
+/**
+ * A part carrying a load, each kind in its own voice (grid.ts, the Load
+ * column): a plank creaks lower as its curve deepens, a squeezed stick squeaks
+ * higher as it bows, a tube crackles like a paper cup, and a pulled thread
+ * hums. `use` is the share of the part's strength in use.
+ */
+export function load(kind: Kind, use: number): VoiceSpec {
+  const share = clamp(use, [0, 1])
+  switch (kind) {
+    case 'plank': return kept([{ wave: 'square', pitch: 220 - 110 * share, slideTo: 180 - 100 * share, peak: 0.04 + 0.06 * share, attack: 0.02, length: 0.3 }])
+    case 'stick': return kept([{ wave: 'triangle', pitch: 1400 + 900 * share, slideTo: 1700 + 1100 * share, peak: 0.04 + 0.05 * share, attack: 0.01, length: 0.18 }])
+    case 'tube': return kept([0, 0.04, 0.09, 0.16].map((after, i) => ({ wave: 'noise' as const, pitch: 1800 + 300 * i, peak: 0.03 + 0.03 * share, attack: 0.001, length: 0.03, after })))
+    case 'thread': return kept([{ wave: 'sine', pitch: 110 + 110 * share, peak: 0.05 + 0.04 * share, attack: 0.06, length: 0.9 }])
+  }
+}
+
+/** Something drops into the water: the plop after a tube rolls its load off. */
+export const plop: VoiceSpec = [{ wave: 'sine', pitch: 520, slideTo: 140, peak: 0.14, attack: 0.004, length: 0.14 }, { wave: 'noise', pitch: 900, slideTo: 300, peak: 0.05, attack: 0.01, length: 0.2, after: 0.05 }]
+
+/** Wheels in the water on a thread used as a road: a gurgle. */
+export const gurgle: VoiceSpec = [0, 0.09, 0.17, 0.28].map((after, i) => ({ wave: 'sine' as const, pitch: 300 + 70 * ((i * 3) % 4), slideTo: 420 + 60 * i, peak: 0.07, attack: 0.01, length: 0.09, after }))
+
+/** A hinge in the air ticks when a part on it shifts. */
+export const pinTick: VoiceSpec = [{ wave: 'triangle', pitch: 2600, peak: 0.05, attack: 0.001, length: 0.03 }]
+
+/** Every part on a plucked pin rattles at once: a few quick knocks at the pitches of those parts. */
+export const pinRattle = (pitches: readonly number[]): VoiceSpec => kept((pitches.length ? pitches : [600]).slice(0, 5).map((pitch, i) => ({ wave: 'triangle' as const, pitch, peak: 0.07, attack: 0.002, length: 0.06, after: 0.03 * i })))
+
+/** A lone part swings round its one pin like a clock hand, ticking. */
+export const pinSwing: VoiceSpec = [0, 0.14, 0.28, 0.42].map((after, i) => ({ wave: 'triangle' as const, pitch: i % 2 ? 1500 : 1900, peak: 0.06, attack: 0.001, length: 0.035, after }))
+
+/** A pin comes out with a pop, and the ends it held clatter loose: one knock for each. */
+export const pinPop = (ends: number): VoiceSpec => [{ wave: 'sine', pitch: 700, slideTo: 1500, peak: 0.13, attack: 0.002, length: 0.06 }, ...Array.from({ length: Math.min(Math.max(ends, 0), 4) }, (_, i) => ({ wave: 'triangle' as const, pitch: 420 - 50 * i, peak: 0.08, attack: 0.002, length: 0.07, after: 0.1 + 0.07 * i }))]
+
+/** The trolley hung from a pin swings like a pendulum, with a squeak at each end of the swing. */
+export const pendulum: VoiceSpec = [0, 0.5].map((after, i) => ({ wave: 'triangle' as const, pitch: i ? 1250 : 1100, slideTo: i ? 1100 : 1250, peak: 0.05, attack: 0.03, length: 0.16, after }))
+
+/** The trolley set down on a plank: a clink of its weights and the trundle of its wheels to the low point. */
+export const trolleySet: VoiceSpec = [{ wave: 'sine', pitch: 1900, peak: 0.08, attack: 0.001, length: 0.1 }, { wave: 'noise', pitch: 420, slideTo: 320, peak: 0.05, attack: 0.05, length: 0.5, after: 0.08 }]
+
+/** The trolley flipped to ride under the plank: a clank. */
+export const trolleyFlip: VoiceSpec = [{ wave: 'square', pitch: 330, slideTo: 250, peak: 0.07, attack: 0.002, length: 0.12 }, { wave: 'sine', pitch: 1500, peak: 0.06, attack: 0.001, length: 0.2, after: 0.03 }]
+
+/** One more weight on the trolley: a clunk, lower the more weights it carries. */
+export const trolleyWeight = (weights: number): VoiceSpec => kept([{ wave: 'triangle', pitch: 260 - 22 * weights, slideTo: 200 - 20 * weights, peak: 0.14, attack: 0.002, length: 0.12 }])
+
+/** The trolley taken off: the deck springs back up and the weights jingle. */
+export const trolleyOff = (weights: number): VoiceSpec => [{ wave: 'triangle', pitch: 180, slideTo: 360, peak: 0.1, attack: 0.01, length: 0.25 }, ...Array.from({ length: Math.min(Math.max(Math.round(weights), 1), 5) }, (_, i) => ({ wave: 'sine' as const, pitch: 2100 + 190 * ((i * 5) % 6), peak: 0.04, attack: 0.001, length: 0.12, after: 0.05 + 0.035 * i }))]
 
 /** Turns a voice into calls on the two builders of audio.ts. `at` is the audio clock's time now. */
 export function play(voice: VoiceSpec, at: number, tone: (at: number, pitch: number, wave: OscillatorType, peak: number, attack: number, length: number, slideTo?: number) => void, noise: (at: number, pitch: number, q: number, peak: number, attack: number, length: number, slideTo?: number) => void): void {

@@ -1,7 +1,7 @@
 import type { PartState } from './frame'
 import { layProblem, length, samePoint, turn as turned, type Kind, type KitCount, type LayProblem, type Part, type Point } from './kit'
 import type { Ending } from './run'
-import { give, lay as layVoice, pinClick, pluck as pluckVoice, takeOff as takeOffVoice, trolleyBells, turn as turnVoice, type VoiceSpec } from './voices'
+import { give, lay as layVoice, load as loadVoice, pendulum, pinClick, pinPop, pinRattle, pinSwing, pluck as pluckVoice, takeOff as takeOffVoice, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, turn as turnVoice, type VoiceSpec } from './voices'
 
 // The object-by-action grid (ART.md): six objects by five gestures. Every cell
 // has its own result to see and to hear, and the wrong use of an object works.
@@ -20,8 +20,8 @@ export const GRID: Readonly<Record<Thing, Readonly<Record<Gesture, string>>>> = 
   stick: { lay: 'lands-with-a-click', pluck: 'pings-or-knocks', turn: 'spins-like-a-propeller', load: 'rides-like-a-rail', 'take-off': 'flicks-like-a-spillikin' },
   tube: { lay: 'lands-with-a-tok', pluck: 'hoots-like-a-bottle', turn: 'log-rolls', load: 'takes-the-squeeze', 'take-off': 'rolls-down-the-sheet' },
   thread: { lay: 'hangs-in-a-curve', pluck: 'twangs-or-flops', turn: 'whirls-like-a-skipping-rope', load: 'dips-into-a-v', 'take-off': 'whips-onto-its-spool' },
-  pin: { lay: 'clicks-into-the-grid', pluck: 'rattles-every-part-on-it', turn: 'swings-a-part-like-a-clock-hand', load: 'hangs-the-trolley', 'take-off': 'drops-its-parts-loose' },
-  trolley: { lay: 'sits-and-rolls-to-the-low-point', pluck: 'rings-its-weights', turn: 'flips-to-hang-below', load: 'dips-the-deck-a-step', 'take-off': 'lets-the-deck-spring-back' },
+  pin: { lay: 'clicks-into-the-grid', pluck: 'rattles-every-part-on-it', turn: 'swings-a-part-like-a-clock-hand', load: 'hangs-the-trolley-as-a-pendulum', 'take-off': 'pops-out-and-drops-ends-loose' },
+  trolley: { lay: 'sits-and-trundles-to-the-low-point', pluck: 'rings-its-weights', turn: 'flips-to-ride-under-the-plank', load: 'dips-the-deck-a-step', 'take-off': 'lets-the-deck-spring-back' },
 }
 
 export type Result = { does: string; voice: VoiceSpec }
@@ -62,19 +62,49 @@ export function takeOffPart(bridge: readonly Part[], index: number): { bridge: P
 }
 
 /**
- * A pin pulled: every part that ends on it comes loose there and goes back to
- * the tray, and the build sags or folds from that place. A plank that only
- * passes through the point stays.
+ * A pin pulled: every part that ends on it hangs loose at that end, and the
+ * build sags or folds from that place. A plank that only passes through the
+ * point stays as it is. A part whose other end was already loose has nothing
+ * left to hang from and drops back into the tray.
  */
-export function pullPin(bridge: readonly Part[], at: Point): { bridge: Part[]; dropped: number[]; result: Result } {
-  const dropped = bridge.flatMap((part, i) => (samePoint(part.a, at) || samePoint(part.b, at) ? [i] : []))
-  return { bridge: bridge.filter((_, i) => !dropped.includes(i)), dropped, result: { does: GRID.pin['take-off'], voice: pinClick } }
+export function pullPin(bridge: readonly Part[], at: Point): { bridge: Part[]; loosened: number[]; dropped: number[]; result: Result } {
+  const loosened: number[] = [], dropped: number[] = []
+  const next = bridge.flatMap((part, i): Part[] => {
+    const end = !part.loose && samePoint(part.a, at) ? 'a' : !part.loose && samePoint(part.b, at) ? 'b' : null
+    if (end) { loosened.push(i); return [{ ...part, loose: end }] }
+    // The held end of a part that already hangs loose: with this pin gone too, it falls.
+    if (part.loose && samePoint(part[part.loose === 'a' ? 'b' : 'a'], at)) { dropped.push(i); return [] }
+    return [part]
+  })
+  return { bridge: next, loosened, dropped, result: { does: GRID.pin['take-off'], voice: pinPop(loosened.length + dropped.length) } }
+}
+
+/** A pin put back into a grid point: every end that hangs loose there is pinned again. */
+export function putPin(bridge: readonly Part[], at: Point): { bridge: Part[]; pinned: number[]; result: Result } {
+  const pinned: number[] = []
+  const next = bridge.map((part, i): Part => {
+    if (!part.loose || !samePoint(part[part.loose], at)) return part
+    pinned.push(i)
+    return { kind: part.kind, a: part.a, b: part.b, turned: part.turned }
+  })
+  return { bridge: next, pinned, result: { does: GRID.pin.lay, voice: pinClick } }
+}
+
+/**
+ * The sound of each cell of the grid, at its plainest: thirty voices, no two
+ * alike. Where a cell's sound follows the model (a pluck, a load), this is the
+ * voice of a part two cells long at rest or half-way to its limit.
+ */
+export function cellVoice(thing: Thing, gesture: Gesture): VoiceSpec {
+  if (thing === 'pin') return { lay: pinClick, pluck: pinRattle([600, 900, 400]), turn: pinSwing, load: pendulum, 'take-off': pinPop(2) }[gesture]
+  if (thing === 'trolley') return { lay: trolleySet, pluck: trolleyBells(2), turn: trolleyFlip, load: trolleyWeight(2), 'take-off': trolleyOff(2) }[gesture]
+  return { lay: layVoice(thing, 2), pluck: pluckVoice(thing, 2, 2, false), turn: turnVoice(thing, 2), load: loadVoice(thing, 0.5), 'take-off': takeOffVoice(thing, 2) }[gesture]
 }
 
 /** What a wheel or the trolley does to the part it stands on: the right road bends, and each wrong road works in its own way. */
 export function loaded(kind: Kind, ending: Ending | null): Result {
   const how = ending?.kind === 'gives' ? (ending.strain === 'pull' || ending.strain === 'bow' || ending.strain === 'squeeze' ? ending.strain : 'bend') : null
-  return { does: GRID[kind].load, voice: how ? give(how, kind) : layVoice(kind, 2) }
+  return { does: GRID[kind].load, voice: how ? give(how, kind) : loadVoice(kind, 0.5) }
 }
 
 export const trolleyRung = (weights: number): Result => ({ does: GRID.trolley.pluck, voice: trolleyBells(weights) })
