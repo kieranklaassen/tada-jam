@@ -32,11 +32,47 @@ The three supplies differ in the hand: logs knock like wood blocks and roll a li
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+Six objects by five actions. The first three objects are the supplies, which have a right place (their rod) and a right user (logs feed the fire, oil the lantern, water the kettle). Every other use is a wrong use: it works, it is funny, it costs nothing, and it never changes the plan. "At dusk" is while the child plans; "at night" is while the night runs.
+
+| | Pull it along | Drop it on the fire | Drop it on a lantern | Drop it on a camper | Tap it |
+| --- | --- | --- | --- | --- | --- |
+| **Log** | A row zips out along the rod, wood-block notes rising. | At dusk the ring of stones shuffles and bites it in. At night the fire flares, its circle of light bulges for a beat and the eyes at its edge jump back. | It balances on top; the lantern tips, rolls down the slope, plops into the stream with a hiss and bobs back. | Each uses it their own way: the reader sits on it, the sleeper takes it as a pillow, the cook stirs it in the pot. | It rolls half a turn and rings its own note. |
+| **Oil flask** | The oil pours out along the rod as one amber band, gurgling, with a clink at each flask mark. | A fireball ring: every hat blows back, the cook's eyebrows go sooty, and the flask is back in its pile. | The right use: it glugs in, and the lantern burps a smoke ring. | The camper sniffs it, pulls a face and hands it to the mule, which sneezes. | It wobbles and rings like glass. |
+| **Water can** | Cans come out slowly with a slosh that lags behind the finger. | At dusk a puddle and a frog. At night a hiss and a steam cloud that hides a patch of the map for a moment. | The lantern gargles and blows one bubble that drifts off the sheet. | A splash: the sleeper sits up and shakes like a dog, the reader holds the book overhead as a roof. | It sloshes, and a cup of water hops out and back. |
+| **Lantern** | It is carried across the map with its reach drawn as a pencil circle that follows it, and stands on the pin where it is let go. | It glows red, whistles like a kettle and hops out by itself. | Two lanterns stack and sway, then the top one slides off to the nearest free pin. | It is worn as a hat: the reader reads on, pleased; the sleeper pulls the bag over their head. | The wick clicks between low and high, and the halo shrinks or grows. |
+| **Amount card** | The right use: stamped along the night ruler, each stamp lays the card's pieces under the next span in pencil, with the running total beside them. | A corner curls and smokes; the card shakes itself flat. | It sticks on as a shade and the light goes striped. | The dog takes it, runs a lap of the camp and brings it back damp. | It flips between its single and its doubled side. |
+| **Marshmallow** | A dotted trail of marshmallows is laid across the map, and at night the raccoons follow it exactly, wherever it leads. | It swells to the size of a tent, toasts, and sags. | It melts over the glass and the moths stick to it. | The camper eats it with both cheeks; the sleeper eats it without waking. | The tin's lid pops and one jumps out. |
+
+**Day 15.** On day 1 the child gets one fire through a short night by trying and looking. On day 15 the child plans a long night for five campers with two lanterns and a kettle on a sled that is nearly full, in the head, by doubling an amount card instead of counting hours, and gets it right on the first night; knows each camper's fixed tastes well enough to stage a night on purpose (let the lantern run dry at one exact hour and the reader walks, still reading, into the stream); and makes nights of their own by unfolding the ruler and turning the dials (pack: game-design, depth-from-combinations.md; pack: game-design, liveliness-from-causing-and-comedy.md).
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+**The idea.** A supply is used up at a steady amount for each span of time, so whether a stock lasts is a relation between three quantities: how much there is, how much goes in one span, and how long the night is.
+
+**Chosen first: two straight lines of equal steps, lying side by side, and a card that links them.** This is the double number line and the ratio table of school, built from the game's own objects.
+
+- **The night is a length.** A folding ruler lies along the bottom of the map. Each division is one hour, all equal, read from dusk at the left to dawn at the right. A brass cursor slides along it, and the night is wherever the cursor stands. A longer night is a longer ruler: the child unfolds another section.
+- **A stock is a length.** Each supply lies as a row along its own banded rod, parallel to the ruler, counted from the pile at the left. Logs are counted pieces. Oil and water are poured: one continuous band, with a mark at each flask or can.
+- **The amount card links the two.** Each user has one card: a piece of ruler of so many hours with the pieces it uses in that span laid under it (three logs under one hour; one flask under two hours). The card is the amount for one span as a thing the child can pick up, double, and later halve.
+- **The strip.** Stamping a card along the ruler lays its pieces under span after span in pencil, with the running total beside each stamp. That strip is a ratio table laid out to scale: hours above, pieces below.
+- **The truth beside the estimate.** As the night runs, the row on the rod shortens from its far end and what was used is laid as ash under the hour in which it burned, so the stock turns into the strip in front of the child. When a supply runs out the ash stops, a pin drops on the ruler at that moment, and the gap from the pin to dawn is the hours not covered (pack: game-design, representation-before-game.md).
+
+**Why this shape.** Time and stock are both straight paths of equal steps, never a dial, a clock face or a winding track. The pack's table for ratio and proportion asks for continuous amounts first, since children are misled by countable pieces until about ten, and gives the ratio table and the double number line as the school forms. So the first amount that is not "so many for one hour" arrives on oil, which pours, and the logs, which are counted, carry the whole-number positions.
+
+**Standing of the evidence.** The double number line and the ratio table are school practice in the Dutch tradition, cited in the pack from a secondary summary, with no trial behind them. Continuous amounts before counted ones rests on one study the pack cites second-hand. The straight path of equal steps has a trial behind it, but for number order in preschool, which is not this skill. The game is therefore built on school practice, and says so.
+
+**Object, picture, symbol.** All three stages are inside the same play: the objects (rows on rods, the ruler), the picture (the pencilled strip, the ash), and the symbol (numerals laid on them). The order stops at whole numbers and fractions laid on their quantities. No sign for an operation is needed to play, and none stands alone.
+
+**Where each numeral lies.** All drawn by `symbols.ts`, none in this run.
+
+1. On the night ruler, at each hour division: the count of hours from dusk.
+2. On each rod, at every fifth mark, and at the end of the row: the count of pieces laid in. This is a quantity the child set.
+3. On an amount card: one numeral beside its pieces and one beside its span of ruler. A halved card may show a fraction, as two whole numbers with a bar, beside a half piece that is drawn sawn or half full.
+4. On the pencilled strip: the running total beside each stamp, and the hours it has reached on the ruler above.
+5. On a water can: the count of cups it holds, beside its cup marks.
+6. On the sled, where there is one: the count of places on its bed, at every fifth place.
+
+**Where no numeral lies.** Nothing reads out how a night went: no numeral on the ash, on the gap, on what is left over or on a camper. Short and left over are seen as lengths (pack: game-design, fade-to-school-symbols.md).
 
 ## The four mechanic questions
 
