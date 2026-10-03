@@ -5,7 +5,8 @@
 //
 // It never looks at the child and never approves of a move. It has two
 // tastes (vehicles.ts): a triangle, which it taps and listens to, and a shape
-// that folds, which stands its feathers on end.
+// that folds, which stands its feathers on end. When a vehicle goes into the
+// water it looks up from its model, at the gap.
 
 /** Every channel of the chief's body, each about a rest value of 0. */
 export type ChiefPose = {
@@ -55,6 +56,8 @@ export const REACT = {
   'taps-and-listens': 2.4,
   /** A shape that folds: it hops back with its crest and feathers on end, and settles. */
   'feathers-on-end': 1.9,
+  /** Something went into the water: it looks up from its model toward the gap, holds, and goes back to it. */
+  'looks-up': 2.1,
 } as const
 export type React = keyof typeof REACT
 
@@ -139,6 +142,12 @@ export function poseOf(act: Act, t: number, out: ChiefPose = { ...STILL }): Chie
       out.neck = -0.6 * swell(t, 0.02, 0.6)
       out.tilt = -0.3 * swell(t, 0.2, 0.8)
       out.crest = 0.5 * swell(t, 0, 0.5)
+      break
+    case 'looks-up':
+      // The neck comes up straight and a little back, the head goes over to the side of the gap, and the crest lifts and lies down again.
+      out.neck = -0.5 * (ease(t, 0, 0.14) - ease(t, 0.72, 1))
+      out.tilt = -0.28 * (ease(t, 0.1, 0.24) - ease(t, 0.66, 0.9))
+      out.crest = 0.3 * swell(t, 0, 0.45)
       break
     case 'feathers-on-end':
       // It steps back to its place by the end: every act ends where it began.

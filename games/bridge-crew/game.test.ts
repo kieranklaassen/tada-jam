@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CROSSINGS } from './bridges.fixture'
+import { driverAt } from './fleet'
 import { Game } from './game'
 import { ROLL, TRAY, bays, parkAt, rackAt, tools, waitAt } from './layout'
 import { stream } from './look'
@@ -410,5 +411,30 @@ describe('what the sheet says a child sees and hears', () => {
     game.press(1, 1)
     expect(game.dipped).toBeNull()
     expect(JSON.stringify(stored(game))).not.toContain('dipped')
+  })
+
+  it('when a vehicle goes into the water the chief looks up from its model, and goes back to it', () => {
+    const game = fresh()
+    send(game)
+    expect(game.show.kind).toBe('give')
+    expect(game.chief.act).toBe('looks-up')
+    steps(game, 0.6)
+    // Its neck is up and back, away from the model.
+    expect(game.chief.pose.neck).toBeLessThan(-0.3)
+    steps(game, 6)
+    expect(game.chief.act).not.toBe('looks-up')
+  })
+
+  it('after a crossing the van stands whole on a bank, either way, so its driver on foot beside it stands on that bank too', () => {
+    const game = new Game(edit(freshSave(null), CROSSINGS['plank-gap']), stream(2)), long = Math.max(...VEHICLES['post-van'].axles)
+    send(game)
+    expect(game.show).toMatchObject({ kind: 'crossing', homeward: false })
+    expect(game.show.from[0] + driverAt(long, 1)).toBeGreaterThanOrEqual(game.at.right[0])
+    steps(game, 9)
+    tapAt(game, parkAt(game.at, long, 0) - 0.4, game.at.right[1] + 1)
+    for (let i = 0; i < 60 * 20 && game.drive; i++) game.step(1 / 60)
+    expect(game.show).toMatchObject({ kind: 'crossing', homeward: true })
+    // Facing home it is drawn mirrored: its driver is as far the other way.
+    expect(game.show.from[0] - driverAt(long, 1)).toBeLessThanOrEqual(game.at.left[0])
   })
 })

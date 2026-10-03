@@ -111,6 +111,8 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
         pen.beginPath(); pen.moveTo(px + w / 2, py - c * 0.29); pen.lineTo(px + w / 2, py); pen.moveTo(px, py - c * 0.145); pen.lineTo(px + w, py - c * 0.145); pen.stroke()
       }
       crateCount(pen, spec.crates, -c * (long + 0.98), bed - c * 0.36, c, flip, counted)
+      // The driver is out of the cab: its window is bare paper.
+      if (pose.upset > 0.08) { pen.fillStyle = INK.paper; pen.beginPath(); pen.roundRect(-c * 0.3 + c * 0.92 * 0.56 - c * 0.3, bed - c * 0.09 - c * 1.05 * 0.62 - c * 0.26, c * 0.6, c * 0.52, c * 0.06); pen.fill() }
       break
     }
     case 'jelly-truck': {
@@ -202,4 +204,25 @@ export function vehicle(pen: Pen, id: VehicleId, c: number, pose: VehiclePose, s
   pen.restore()
   // The wheels stay on the road whatever the body does. The caterpillar's are its feet, and each lifts in its turn.
   spec.axles.forEach((behind, i) => wheel(pen, -c * behind, -r - (id === 'caterpillar-bus' ? pose.cargo[i] * c * 0.14 : 0), r, c, spin + i))
+  if (id === 'post-van' && pose.upset > 0.08) driver(pen, c, driverAt(long, pose.upset) * c, pose.upset)
+}
+
+/** Where the van's driver stands beside the van, in cells from its front axle: from the cab door to just ahead of the back wheels, which are still on the bank. */
+export const driverAt = (long: number, out: number): number => -0.15 - (long - 0.4) * Math.min(1, out)
+
+/** The van's driver on foot: a paper cut-out with a pencil face, standing on the ground. At the tail it reaches both arms up to the tower of parcels. */
+function driver(pen: Pen, c: number, x: number, out: number) {
+  const walking = out < 1 ? Math.abs(Math.sin(out * Math.PI * 5)) : 0, y = -c * 0.03 * walking, reach = Math.max(0, (out - 0.85) / 0.15)
+  cutOut(pen, c, INK.paper, () => pen.roundRect(x - c * 0.11, y - c * 0.5, c * 0.22, c * 0.36, c * 0.05))
+  cutOut(pen, c, INK.paper, () => pen.arc(x, y - c * 0.61, c * 0.12, 0, Math.PI * 2))
+  pencil(pen, c, 0.03)
+  // It looks at its parcels, toward the tail.
+  for (const ex of [-0.07, -0.01]) { pen.beginPath(); pen.arc(x + c * ex, y - c * 0.63, c * 0.018, 0, Math.PI * 2); pen.fill() }
+  pen.beginPath()
+  pen.moveTo(x - c * 0.07, y - c * 0.44); pen.lineTo(x - c * (0.14 + 0.16 * reach), y - c * (0.3 + 0.42 * reach))
+  pen.moveTo(x + c * 0.07, y - c * 0.44); pen.lineTo(x + c * (0.14 - 0.34 * reach), y - c * (0.3 + 0.46 * reach))
+  // Two legs that step as it walks.
+  pen.moveTo(x - c * 0.05, y - c * 0.14); pen.lineTo(x - c * (0.05 + 0.07 * walking), 0)
+  pen.moveTo(x + c * 0.05, y - c * 0.14); pen.lineTo(x + c * (0.05 + 0.07 * walking), 0)
+  pen.stroke()
 }

@@ -22,7 +22,7 @@ export type VehiclePose = {
   cargo: number[]
   /** The driver's face: -1 put out, 0 minding its business, 1 content. */
   face: number
-  /** One more thing each vehicle has of its own: parcels off, the jelly in the air, the piano rolled back, hats off, a hiccup. 0 to 1. */
+  /** One more thing each vehicle has of its own: the van's driver out of the cab and at its tail, the jelly in the air, the piano rolled back, hats off, a hiccup. 0 to 1. */
   upset: number
 }
 
@@ -132,10 +132,10 @@ export function reactPose(id: VehicleId, reaction: Reaction, t: number, out: Veh
         for (let i = 0; i < 3; i++) out.cargo[i] = 0
         out.bounce = 0.08 * swell(t, 0.1, 0.3) + 0.05 * swell(t, 0.35, 0.5)
       } else if (mood === 'dislike') {
-        // The parcels slide off the back one at a time, and are put back at the end.
+        // The parcels slide off the back one at a time. Then the driver gets out, walks to the tail and restacks them, and gets in again.
         const off = 1 + Math.round(2 * amount)
         for (let i = 0; i < 3; i++) if (3 - i <= off) out.cargo[i] = -1.6 * (ease(t, 0.1 + 0.12 * (2 - i), 0.3 + 0.12 * (2 - i)) - ease(t, 0.78, 0.96))
-        out.upset = hold
+        out.upset = ease(t, 0.52, 0.68) - ease(t, 0.92, 1)
       } else for (let i = 0; i < 3; i++) out.cargo[i] = -0.12 * (i + 1) * amount * hold
       break
     case 'jelly-truck':

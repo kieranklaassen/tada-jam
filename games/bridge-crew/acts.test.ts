@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ROUND, drivePose, poke, reactPose, waitPose, type VehiclePose } from './acts'
 import type { VehicleId } from './sites'
+import { driverAt } from './fleet'
 import { VEHICLES, type Reaction } from './vehicles'
 
 const ids = Object.keys(VEHICLES) as VehicleId[]
@@ -81,5 +82,21 @@ describe('how each vehicle moves', () => {
         expect(wobbling.bounce).toBeGreaterThanOrEqual(plain.bounce)
       }
     }
+  })
+
+  it('put out by a ride that shed its parcels, the van\'s driver gets out, restacks them at the tail and gets in again', () => {
+    const at = (t: number) => reactPose('post-van', dislike, t)
+    // It sits in the cab while the parcels slide off.
+    for (const t of [0, 0.2, 0.4, 0.5]) expect(at(t).upset).toBe(0)
+    expect(Math.min(...at(0.5).cargo.slice(0, 3))).toBeLessThan(-1)
+    // It is at the tail before the first parcel goes back, and stays there until the last is on the tower.
+    for (const t of [0.7, 0.78, 0.9]) expect(at(t).upset).toBeCloseTo(1, 6)
+    expect(Math.min(...at(0.97).cargo.slice(0, 3))).toBeCloseTo(0, 1)
+    expect(at(1).upset).toBeCloseTo(0, 6)
+    // A ride it liked, or one that was neither, keeps it in the cab.
+    for (const t of [0.3, 0.6, 0.8]) { expect(reactPose('post-van', like, t).upset).toBe(0); expect(reactPose('post-van', plain, t).upset).toBe(0) }
+    // On foot it stays beside the van, between its axles: where the van stands on a bank, so does its driver.
+    const long = Math.max(...VEHICLES['post-van'].axles)
+    for (let out = 0; out <= 1.0001; out += 0.1) { expect(driverAt(long, out)).toBeLessThan(0); expect(driverAt(long, out)).toBeGreaterThan(-long) }
   })
 })

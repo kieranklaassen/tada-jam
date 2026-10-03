@@ -425,6 +425,8 @@ export class Game extends Toy {
     } else {
       const what = consequence(drive.run, this.bridge, VEHICLES[drive.vehicle].crates)
       show.kind = 'give'
+      // The chief looks up from its model, at the gap and never at the child.
+      this.chief.react('looks-up')
       this.gave = what.ring
       this.voices.push(what.voice.filter((sound) => (sound.after ?? 0) < 0.35))
       // The wrong road has its own sound: a tube rolls its load off with a plop, and wheels on a thread gurgle in the water.
