@@ -137,11 +137,21 @@ function take(world: World, hat: number): void {
   world.loose = world.loose.filter((entry) => entry.hat !== hat)
 }
 
+/** The round spot nearest to this one that has no loose hat beside it yet; the lower spot wins a tie. Two loose hats never rest beside the same spot. */
+function freeFloor(world: World, spot: number): number {
+  const taken = world.loose.map((entry) => entry.spot)
+  for (let away = 0; away < MOST; away++) for (const side of [-1, 1]) {
+    const near = spot + side * away
+    if (near >= 0 && near < MOST && !taken.includes(near)) return near
+  }
+  return spot
+}
+
 /** Puts a hat down, from wherever it was. The one place a hat moves, so a hat is never in two places. */
 function move(world: World, hat: number, to: Drop, happened: Happened[]): void {
   const from = placeOf(world, hat)
   take(world, hat)
-  if (to.on === 'floor') world.loose.push({ hat, spot: to.spot })
+  if (to.on === 'floor') world.loose.push({ hat, spot: freeFloor(world, to.spot) })
   const wearer = to.on === 'head' ? creatureAt(world, to.spot) : undefined
   if (wearer) wearer.hats.push(hat)
   happened.push({ type: 'hatMoved', hat, from, to: placeOf(world, hat) })
@@ -252,8 +262,9 @@ export function applyChange(before: World): Outcome {
   if (world.crew.length <= 1) return { world, happened }
   world.crew = world.crew.filter((creature) => creature !== leaver)
   for (const hat of leaver.hats) {
-    world.loose.push({ hat, spot: leaver.spot })
-    happened.push({ type: 'hatMoved', hat, from: { at: 'head', spot: leaver.spot, level: 0 }, to: { at: 'loose', spot: leaver.spot } })
+    const spot = freeFloor(world, leaver.spot)
+    world.loose.push({ hat, spot })
+    happened.push({ type: 'hatMoved', hat, from: { at: 'head', spot: leaver.spot, level: 0 }, to: { at: 'loose', spot } })
   }
   happened.push({ type: 'left', spot: leaver.spot, kind: leaver.kind })
   return { world, happened }

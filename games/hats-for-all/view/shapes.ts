@@ -86,7 +86,7 @@ export function creatureCut(kind: CreatureKind): Cut {
     return { body, feet: [roundedRect(-0.74, 0, 0.58, 0.4, 0.18), roundedRect(0.16, 0, 0.58, 0.4, 0.18)], ...BODY[kind] }
   }
   if (kind === 'wig') {
-    return { body: roundedRect(-1.4, 0.16, 2.8, 1.56, 0.72), feet: [roundedRect(-1.0, 0, 0.62, 0.36, 0.16), roundedRect(0.38, 0, 0.62, 0.36, 0.16)], ...BODY[kind] }
+    return { body: roundedRect(-1.25, 0.16, 2.5, 1.56, 0.72), feet: [roundedRect(-0.92, 0, 0.62, 0.36, 0.16), roundedRect(0.3, 0, 0.62, 0.36, 0.16)], ...BODY[kind] }
   }
   // Pip: a small bean on big flat feet.
   const body = new THREE.Shape()

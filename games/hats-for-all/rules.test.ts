@@ -141,6 +141,15 @@ describe('a tapped creature', () => {
   })
 })
 
+describe('loose hats', () => {
+  it('never rest two beside one round spot: the second takes the nearest free one', () => {
+    let w = world([2], 4)
+    for (const hat of [0, 1, 2, 3]) w = dropHat(w, hat, { on: 'floor', spot: 2 }).world
+    expect(w.loose.map((entry) => entry.spot)).toEqual([2, 1, 3, 0])
+    expect(new Set(w.loose.map((entry) => entry.spot)).size).toBe(4)
+  })
+})
+
 describe('a dragged hat', () => {
   it('let go where it was changes nothing', () => {
     const w = dropHat(world([1, 2], 2), 0, { on: 'head', spot: 1 }).world

@@ -26,9 +26,18 @@ export type Body = {
 }
 
 export const BODY: Record<CreatureKind, Body> = {
-  bop: { top: 2.2, faceY: 1.42, eyeGap: 0.42, eyeSize: 0.27, reach: 1.1, ground: 1.25 },
+  bop: { top: 2.2, faceY: 1.42, eyeGap: 0.42, eyeSize: 0.27, reach: 1.08, ground: 1.25 },
   lanky: { top: 3.56, faceY: 3.06, eyeGap: 0.25, eyeSize: 0.2, reach: 0.74, ground: 0.95 },
   flop: { top: 2.3, faceY: 1.7, eyeGap: 0.3, eyeSize: 0.22, reach: 1.02, ground: 1.2 },
-  wig: { top: 1.7, faceY: 1.06, eyeGap: 0.5, eyeSize: 0.24, reach: 1.46, ground: 1.6 },
+  wig: { top: 1.7, faceY: 1.06, eyeGap: 0.5, eyeSize: 0.24, reach: 1.3, ground: 1.45 },
   pip: { top: 1.56, faceY: 1.02, eyeGap: 0.24, eyeSize: 0.2, reach: 0.66, ground: 1.0 },
 }
+
+/** The arch, standing on y = 0: half the width of its opening and of the whole, how high its sides stand before they curve, and how thick it is. */
+export const ARCH = { inner: 1.9, outer: 2.7, straight: 2.6, depth: 0.9 } as const
+
+/** A creature's hand: a small disc at its side. How wide it is from its middle, and how far its front stands out from the middle of the body when it pats. */
+export const HAND = { radius: 0.27, front: 0.53 } as const
+
+/** How thick a creature is. */
+export const CREATURE_DEPTH = 0.7
