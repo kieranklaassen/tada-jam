@@ -102,9 +102,10 @@ describe('the toy drawn', () => {
     }
   })
 
-  it('the ghost hand shows a part laid on the near bank, away from the gap', () => {
+  it('the ghost hand shows a part laid on the far bank, away from the gap and from the chief', () => {
     const toy = built(), move = demoMove(toy.at)
-    expect(move.to[0]).toBeLessThan(toy.at.left[0])
+    expect(move.from[0]).toBeGreaterThan(toy.at.right[0])
+    expect(move.to[0]).toBeGreaterThan(toy.at.right[0])
     expect(canPin(toy.at, move.from) && canPin(toy.at, move.to)).toBe(true)
     expect(isFooting(toy.at)(move.from)).toBe(true)
   })

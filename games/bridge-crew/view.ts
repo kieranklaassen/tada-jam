@@ -21,8 +21,8 @@ const SHAKE: Readonly<Record<Kind, { far: number; beat: number }>> = {
   plank: { far: 0.07, beat: 8 }, stick: { far: 0.035, beat: 21 }, tube: { far: 0.03, beat: 13 }, thread: { far: 0.22, beat: 15 },
 }
 
-/** The move the ghost hand shows: a part laid between two points on the near bank, away from the gap. */
-export const demoMove = (at: Site): { from: Point; to: Point } => ({ from: [at.left[0] - 3, at.left[1]], to: [at.left[0] - 1, at.left[1] + 1] })
+/** The move the ghost hand shows: a part laid between two points on the far bank, away from the gap and clear of the chief and its model. */
+export const demoMove = (at: Site): { from: Point; to: Point } => ({ from: [at.right[0] + 1, at.right[1]], to: [at.right[0] + 3, at.right[1] + 1] })
 
 export class View {
   plot: Plot = { cell: 1, ox: 0, oy: 0 }
@@ -250,7 +250,7 @@ export class View {
     pen.globalAlpha = 1
   }
 
-  /** The ghost hand: one move a child could make now, shown and never told. It lays a part on the bank, or it picks another pile. */
+  /** The ghost hand: one move a child could make now, shown and never told. It lays a part on the far bank, or it picks another pile. */
   private ghost(pen: Pen, toy: Toy, guidance: Guidance): void {
     const { cell } = this.plot, at = toy.at, piles = bays(at)
     const picking = guidance.demoIndex % 2 === 1 && piles.length > 1
