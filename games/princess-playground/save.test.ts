@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isSound, lean, placeOf, putInSand, tap } from './arrangement'
 import { MOVES_CAP } from './config'
-import { furrow, isSmooth, marksToText, stamp } from './marks'
+import { RAKED, furrow, marksToText, rakeIsOut, stamp } from './marks'
 import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { afterMove, beginRide, endRide, freshWorld, largestSaved, load, markShown, rideIsOver, save, type World } from './save'
@@ -24,7 +24,8 @@ describe('a first visit', () => {
     expect(world.arrangement.left).toEqual(['pim'])
     expect(world.state.finished).toBe(false)
     expect(world.moves).toBe(0)
-    expect(isSmooth(world.marks)).toBe(true)
+    expect(world.marks.every((cell) => cell === RAKED)).toBe(true)
+    expect(rakeIsOut(world.marks)).toBe(false)
     expect(freshWorld(5).kind).toBe('middle-asks')
   })
 })
@@ -86,6 +87,8 @@ describe('the end of a ride and the start of the next', () => {
     expect(ended.arrangement.waiting).toBe('mog')
     expect(standsAt(ended.arrangement, 'mog')).toEqual({ ...WAITING_PLACE })
     expect(ended.arrangement.right).toEqual([])
+    // The count of moves is cleared with the ending, so nothing of the judged ride is left to count again.
+    expect(ended.moves).toBe(0)
     expect(endRide(ended)).toBe(ended)
     expect(rideIsOver(ended)).toBe(false)
   })
@@ -99,7 +102,7 @@ describe('the end of a ride and the start of the next', () => {
     const ended = endRide(lifted())
     // Free play on the finished scene moves friends and counts nothing.
     const played = afterMove(ended, tap(ended.arrangement, 'bo'))
-    expect(played.moves).toBe(ended.moves)
+    expect(played.moves).toBe(0)
     expect(played.state.finished).toBe(true)
     expect(tap(played.arrangement, 'mog')).toBe(played.arrangement)
     // Nor can the waiting friend be carried off: the world stays as it was.

@@ -1,6 +1,6 @@
 import { copy, emptyArrangement, putInSand, type Arrangement } from './arrangement'
 import { MOVES_CAP } from './config'
-import { marksFromText, marksToText, smoothSand, type Marks } from './marks'
+import { marksFromText, marksToText, rakedSand, type Marks } from './marks'
 import { KINDS, countMove, isKind, isMove, judge, kindAt, layout, rideOf, wantMet, wrapTurn, type Kind } from './rides'
 import { beginCycle, deserialize, finishCycle, freshState, serialize, type GameState } from './state'
 import { FRIEND_IDS, FRIENDS, GRID, TRAY, gridLine, homeOn, type FriendId, type Spot } from './world'
@@ -57,7 +57,7 @@ function isFriend(value: unknown): value is FriendId {
 export function freshWorld(childAge: number | null): World {
   const state = freshState(childAge)
   const kind = kindAt(state.position, 0)
-  return { state, kind, turn: 0, arrangement: layout(rideOf(kind, 0)), moves: 0, shown: [], marks: smoothSand() }
+  return { state, kind, turn: 0, arrangement: layout(rideOf(kind, 0)), moves: 0, shown: [], marks: rakedSand() }
 }
 
 export function save(world: World): Saved {
@@ -142,15 +142,17 @@ export function rideIsOver(world: World): boolean {
 }
 
 /**
- * The ride ends. It is judged, the position moves for the next one, and the
- * friend who asks next goes to the waiting place. All of it is the outcome of
- * the ending scene and is saved when that scene starts.
+ * The ride ends. It is judged, the position moves for the next one, the
+ * friend who asks next leaves the plank or the sand for the waiting place,
+ * and the count of moves is cleared. All of it is the outcome of the ending
+ * scene and is saved when that scene starts: `finished`, `position`,
+ * `waiting`, `left`, `right`, `sand` and `moves`.
  */
 export function endRide(world: World): World {
   if (world.state.finished) return world
   const state = finishCycle(world.state, judge(world.kind, world.moves))
   const next = rideOf(kindAt(state.position, world.turn + 1), world.turn + 1)
-  return { ...world, state, arrangement: toWaiting(world.arrangement, next.asker) }
+  return { ...world, state, arrangement: toWaiting(world.arrangement, next.asker), moves: 0 }
 }
 
 /** The child touched the friend who waits: the next ride is laid out. Nothing happens while a ride runs. */
@@ -170,6 +172,6 @@ export function markShown(world: World, kind: Kind): World {
 export function largestSaved(): Saved {
   let arrangement = emptyArrangement()
   for (const id of FRIEND_IDS) arrangement = putInSand(arrangement, id, { x: -TRAY.halfWidth + FRIENDS[id].radius, z: TRAY.halfDepth })
-  const world: World = { state: { ...freshState(null), position: 'middle-asks', finished: false }, kind: 'middle-asks', turn: 9, arrangement, moves: MOVES_CAP, shown: [...KINDS], marks: smoothSand().fill(9) }
+  const world: World = { state: { ...freshState(null), position: 'middle-asks', finished: false }, kind: 'middle-asks', turn: 9, arrangement, moves: MOVES_CAP, shown: [...KINDS], marks: rakedSand().fill(9) }
   return save(world)
 }
