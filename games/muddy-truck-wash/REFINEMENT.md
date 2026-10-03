@@ -3,15 +3,16 @@
 
 ## Status
 
-- Stage: gates, as far as this machine can take them, after a third run that answered the second check of the sheet. The game is built on the toy and unchanged in look and play but for what the two checks and the lead's finding asked.
+- Stage: gates, as far as this machine can take them. Sheet passed in round 3 (checker: E), as it stands at commit `b0c5201`. The game is built on the toy and unchanged in look and play but for what the checks and the lead's finding asked.
 - Sheet, round 1: checker A read the sheet at commit `2f24260` (sha256 `64167625dec6f9e1821e04482569c2e21ea02080d10c06c93a0d1e06fec34ad7`). Outcome: open, 11 findings, each with the sentence to stand there.
   - All eleven are pasted as given, and nothing else, in commit `7a32f95`.
   - The five places where the game differed from the sheet are written into it in commit `f15246e`.
   - What the cloth does with mud it has itself laid down is said in it in commit `5eea7eb`.
 - Sheet, round 2: checker C read the sheet whose sheet part has sha256 `46a0247f26caa29d207314cdc9d60b84a85d939e929734bde35690da7a9db571` (commit `5eea7eb`). Outcome: open, 6 findings, each with the text to stand there; all eleven round 1 replacements stand as pasted.
   - All six are pasted as given, and nothing else, in commit `b0c5201`. None was left out: none looked wrong.
-- Sheet now: `ART.md` at commit `b0c5201`, sheet part sha256 `5b33487d0c880e3e052189c842cf3fb21b564e9e12aca8bbad6aa678626d767d` (`awk '/^## The look/{exit} {print}' games/muddy-truck-wash/ART.md | sha256sum`). Nothing above `## The look` has changed since that commit.
-- Open: sheet ready for check, round 3
+- Sheet, round 3: checker E read the sheet whose sheet part has sha256 `5b33487d0c880e3e052189c842cf3fb21b564e9e12aca8bbad6aa678626d767d`. Outcome: **passed**, no finding. The commit that holds that text is `b0c5201`, and nothing above `## The look` has changed since.
+- The sheet part keeps that hash until the game is merged (`awk '/^## The look/{exit} {print}' games/muddy-truck-wash/ART.md | sha256sum`). Nothing above the line `## The look` in `ART.md` is changed from now on without asking for a new round.
+- Open, for the lead: the frame rates on a graphics card for the pull request (the first reading is below); the intersection audit in CI, with the repository's own browser; and the owner's answer on the look and the toy.
 - Rules brought into line with the round 1 findings that change them:
   - Finding 8: `next.dips` (0 to 2) is saved with the vehicle that waits, read defensively, and back at none for each new vehicle at the door (commit `2625c34`).
   - Finding 3: the floor's marks creep to the drain and dry within seconds of attended play; `floor.ts` is the rule and `floor.test.ts` holds that nothing is left (commit `95de18b`).
@@ -23,7 +24,7 @@
   - Finding 4, the tap. It is now a thing of its own on the end of the arm: touched, it swings with a clink, gives no water, and comes to rest; knocked again and again it swings no further than 0.6 radians (commit `21fd678`).
   - Finding 5, the drip. Until the showing has played, neither the puddle's mud nor thrown foam lands on the dried patch on the nose of a waiting vehicle: `showing.ts`, with tests in the rule, in the save and in play (commit `b14570b`).
   - Findings 1 and 6 change no rule. Finding 1 names a sound for every cell of the grid; see below for where the game's sounds fall short of it.
-- Everything from "the game on the toy" onward was built before the sheet passed, at the builder's own risk. A finding in round 3 under the representation, the mechanic questions, the error, the designed order or the records reopens the rules.
+- Everything from "the game on the toy" onward was built before the sheet passed, at the builder's own risk, and was brought into line with each round as listed above. The rules now stand on the text that passed, but for the places listed under "Where the game still differs from the sheet".
 - Look in use: first reserved choice, enamel toy cars. Not refined in this run: the owner has the build and has not yet answered on the look and the toy.
 - Frame rate, from the lead on a graphics card (an Apple M4, 1180 by 820 at a pixel ratio of 2, the build of `ea5e4ad`, a first reading taken while other work ran): Chrome with the CPU throttled six times and the top tier pinned, 60 frames a second, 59 in the worst second, 1.7 ms of the game's own time at the 95th percentile, 27 to 30 draw calls; WebKit with the top tier pinned, 60 and 60, 1.0 ms; Chrome unthrottled with the governor free, it stays on the top tier. The reading for the pull request is the lead's to take later. No physical iPad yet.
 - Open, the gates: nobody has listened to the game. Ran green at the last commit: `npx tsc --noEmit`, `npx vitest run games/muddy-truck-wash test/games.test.ts` (25 files, 434 tests), `npm run -s wordless:check`, `node scripts/egress-check.ts`, `npm run build`, `npm run egress:built`, `npm run education:built`, and `npm run check:intersections -- muddy-truck-wash --ci` with `enforce: true` (clean, exit 0: 0 open, 34 allowed, 2 hidden, 527 samples, 42 pieces; the tap is the new piece and the audit knocks it).
@@ -38,7 +39,7 @@
   3. **The grid's last column.** A wet vehicle sent off leaves a trail of drops that wets the floor along its way, not two tyre lines.
 - Where this run differs from the cloud page: `npx playwright install` was not run, in any run. The machine came with a Chromium (revision 1194) and an instruction not to download another; the repository's Playwright asks for revision 1243. The audit was run by pointing `PLAYWRIGHT_BROWSERS_PATH` at a folder outside the repository that links revision 1243's file names to the installed one. Nothing in the repository was changed for this.
 - Machine: Node 24 installed with nvm (the machine came with 22).
-- A standing rule from the lead: at every stage boundary, and before any run ends, run `git fetch origin` and look under `docs/build/answers/` on `origin/feat/learning-games-build` for a file `muddy-truck-wash-N.md` with a higher N than has been handled, and act on it before stopping. Handled so far: 1 and 2.
+- A standing rule from the lead: at every stage boundary, and before any run ends, run `git fetch origin` and look under `docs/build/answers/` on `origin/feat/learning-games-build` for a file `muddy-truck-wash-N.md` with a higher N than has been handled, and act on it before stopping. Handled so far: 1, 2 and 3.
 
 ### Template notes
 
