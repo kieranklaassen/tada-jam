@@ -185,7 +185,7 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
   }
   view.pupils.position.x = pose.gazeX * spec.radius * 0.035
   view.pupils.position.y += pose.gazeY * spec.radius * 0.03
-  view.mouth.scale.set(1 + pose.mouth * 0.3, 1 + pose.mouth * 2.2, 1)
+  view.mouth.scale.set(1 + pose.mouth * 0.35, 1 + pose.mouth * 0.9, 1)
   view.body.material.color.lerpColors(view.pale, view.full, pose.bright)
   if (view.extra && view.id === 'pim') view.extra.rotation.set(0.1 + pose.follow * 0.4, 0, -pose.follow)
 }

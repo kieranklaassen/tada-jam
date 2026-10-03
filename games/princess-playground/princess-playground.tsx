@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
-import { GameAudio, tick } from './audio'
+import { GameAudio } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
@@ -13,7 +13,7 @@ import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { deserialize, serialize, type GameState } from './state'
 import { putOnEnd, emptyArrangement } from './arrangement'
-import { restFrame } from './rest'
+import { Toy } from './toy'
 import { Stage } from './view/stage'
 
 // The Mount, showing a blank surface. Everything a game needs around its
@@ -41,8 +41,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const stage = new Stage(canvas)
     const drawn = stage.drawn
-    // The look spike: the first ride as it is laid out, at rest.
-    const frameNow = restFrame(putOnEnd(emptyArrangement(), 'pim', 'left'))
+    // The toy: the first ride as it is laid out, with a fixed seed. Every load starts from it; nothing of it is saved yet.
+    const toy = new Toy(stage, audio, putOnEnd(emptyArrangement(), 'pim', 'left'), 1)
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
@@ -68,7 +68,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => { if (width > 0) stage.render(frameNow) }
+    const draw = () => { if (width > 0) stage.render(toy.frame) }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
@@ -92,7 +92,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // A game with short scenes ends the one that is playing first thing in every press, before the press is
     // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
     const act = (gestures: Gesture[]) => {
-      for (const gesture of gestures) if (gesture.type === 'press') audio.play(tick)
+      for (const gesture of gestures) toy.gesture(gesture)
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -126,7 +126,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       if (!attention.awake || disposed) return
       // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
-      clock.advance(now)
+      const step = clock.advance(now)
       const start = performance.now()
       act(touch.advance(now))
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
@@ -134,7 +134,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
       if (touch.active) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
-      ladder.update(clock.seconds)
+      toy.step(step, ladder.update(clock.seconds))
       // The game steps its rules and its scene here, and hands what they changed to storage (`cadence`, above).
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that

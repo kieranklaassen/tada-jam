@@ -25,7 +25,7 @@ export type FriendSpec = {
 export const FRIENDS: Readonly<Record<FriendId, FriendSpec>> = {
   pim: { id: 'pim', weight: 2, radius: 0.56, halfHeight: 0.46, hopSeconds: 0.42, hopHeight: 1.9 },
   mog: { id: 'mog', weight: 3, radius: 0.74, halfHeight: 0.56, hopSeconds: 0.56, hopHeight: 1.5 },
-  dot: { id: 'dot', weight: 3, radius: 0.74, halfHeight: 0.56, hopSeconds: 0.62, hopHeight: 1.2 },
+  dot: { id: 'dot', weight: 3, radius: 0.74, halfHeight: 0.56, hopSeconds: 0.5, hopHeight: 0.95 },
   bo: { id: 'bo', weight: 4, radius: 1.0, halfHeight: 0.78, hopSeconds: 0.8, hopHeight: 1.0 },
 }
 
@@ -54,9 +54,9 @@ export const SAND = {
   maxZ: 2.75,
   minZ: -3.0,
   /** Half the depth of the strip under the plank where nobody stands. */
-  plankStrip: 1.2,
+  plankStrip: 1.8,
   /** The strip reaches this far from the stone. */
-  plankReach: 4.3,
+  plankReach: 3.9,
 } as const
 
 /** Where the friend who asks next waits: in front of the stone. */
@@ -98,9 +98,9 @@ export function standable(spot: Spot, radius: number): Spot {
 
 /** Where each friend stands by default on the right of the tray; mirrored for the left. Dot's is the rim. */
 export const HOME: Readonly<Record<FriendId, Spot>> = {
-  pim: { x: 1.7, z: 2.3 },
-  mog: { x: 2.6, z: 0.75 },
-  bo: { x: 4.45, z: 2.0 },
+  pim: { x: 1.5, z: 2.45 },
+  mog: { x: 3.1, z: 1.45 },
+  bo: { x: 4.65, z: 2.3 },
   dot: { x: 4.75, z: -2.63 },
 }
 
