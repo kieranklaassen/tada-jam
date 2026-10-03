@@ -68,21 +68,90 @@ Beside the six: the day-and-night wheel on the roof, which the child turns by ha
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+There is no wrong move, only an arrangement that leaves somebody cross. The hotel runs every arrangement truly and shows what it does.
+
+- **What it does.** A guest reached by something it minds shows it at once, in its own room and in its own way: the blob drags the pillow over all of its eyes, the lizard goes grey and stiff, the yeti sags into the shape of a puddle, the bat wraps itself tighter.
+- **Where.** The guest turns to the wall, floor or ceiling the trouble comes through. On the plain page the marks of that air are drawn crossing it. In the first three places of the order they are drawn the whole way from the one who makes them; from the fourth place on, the plain page shows only the last crossing, and the whole path is seen from the guest's own place. So feedback is fullest while the game is new and thins afterwards.
+- **Why.** From the cross guest's place the page inks the path in heavy black, back through each wall to the guest or thing it starts from, at the hour it is made. Turning the wheel shows whether it is a day trouble or a night trouble.
+- **The state stays.** Nothing is undone, nobody storms out, nothing is taken away and nothing resets. The child changes one thing and the house answers again.
+- **It is about the thing.** A cross guest glares at the wall and never at the child. Being cross is as good to watch as being content, and a house full of cross guests is the funniest house.
+- **Success is a consequence too.** A content guest simply does its one thing undisturbed: the tuba is played, the stew is stirred, the bat sleeps.
+- **No verdict.** No tick, cross or buzzer, no praise, no meter of contentment, no count of content guests, and no face turned to the child.
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**The order.** Ten places, one new thing at each and then combinations. The ids below are the ones in `LADDER` in `config.ts`. They name what is in the house and never a grade, a groep or a level.
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+| Place | Id | New here |
+| --- | --- | --- |
+| first | `two-guests` | a house of four rooms; two or three guests; noise, and who sleeps when |
+| second | `heat-and-snow` | warmth that rises and cold that sinks: the boiler under one column, the snow hole over another, the lizard and the yeti |
+| third | `quilt` | the first thing to place: the quilt |
+| fourth | `corridor` | the long house of two floors by three rooms; a smell along a corridor; the cook and the fly |
+| fifth | `stove-and-ice` | warmth and cold of the child's own making, with the dials |
+| sixth | `alarm-clock` | time as something that can be asked for: guests who will change their hours and guests who will not |
+| seventh | `tower-and-pipe` | the tower of three floors by two rooms, and the pipe |
+| eighth | `twin-rooms` | more guests than rooms, and rooms with two beds |
+| ninth | `listener` | the singer, who is content only if someone awake hears her and does not mind |
+| tenth | `full-house` | everything at once: five guests and three things |
+
+- Each place has three **casts**, written by hand in `casts.ts`: the house and what is fixed in it, the guests, the things in the cupboard, and one guest on the bench outside. A test solves every cast and fails unless at least two different arrangements settle it, so "there are several" is checked and not hoped for.
+- **The harder option looks harder and is chosen.** On the bench outside sits one more guest with a mountain of luggage, plainly awkward. The child may carry it in at any moment and carry it out again. It is never needed.
+- **A cycle** runs from a coach-load arriving to the hotel being settled: every guest in the house content by day and by night.
+- **Goes well:** settled within three set-downs for each guest in the house. Only set-downs that change the arrangement are counted. Looking from a guest's place, tapping and turning the wheel are free, so looking more is never held against the child. **Mixed:** settled with more set-downs. **Badly:** the child carried a guest out to the coach before the house was settled, which sends this lot away. A visit put away before either leaves the place where it was. The count is kept only to judge the cycle and is shown nowhere.
+- **Which customer a new position lays out.** The coach waits with its blinds drawn, and who is in it is decided when the child touches it, from the place as it stands then. So a place that moved when the last cycle was judged shows on the very next coach-load, and nobody who was already visible is changed.
+- Nothing shows the place: no number, no label, no map, and no sign that the next house is easier.
+
+**What is stored**, every field, as plain JSON through `ctx.storage`:
+
+| Field | Holds |
+| --- | --- |
+| `v` | the version of the shape |
+| `position` | the id of the child's place in the order |
+| `finished` | the cycle on screen has been judged; nothing replays on load |
+| `cast` | the id of the cast on screen |
+| `round` | how many coach-loads have begun, wrapped at 10,000; it only rotates the casts of a place |
+| `at` | for each guest of the cast, where it is: a room, the lobby, the bench, or gone with the coach |
+| `kit` | for each thing of the cast, where it is (the cupboard, a room, a wall or floor, a guest) and, for the stove and the ice box, its dial from 1 to 3 |
+| `phase` | day or night, as the wheel was left |
+| `from` | the guest whose place the page is drawn from, or none |
+| `moves` | the set-downs of this cycle that changed the arrangement, capped at 999 |
+| `shown` | the ids of the places whose neat way the porter has already shown |
+
+A thing or a guest in the hand is saved where it came from. The marks of noise, warmth and smell, every guest's mood, and the hour's goings-on are worked out from these fields and are never stored. A largest legal state is under 2 KB, and a test holds it under half of the 64 KB cap.
+
+**The numerals in the rules.** The dial of the stove and of the ice box is a whole number from 1 to 3 in `kit`. A pure function lists every numeral the page may draw as a value and the thing it lies on, and it lists the two dials only.
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+Eight guests. Each has one want that can be seen from across the room, and tastes that never change, so a child can learn them and test them on purpose. "Minds" and "must have" make a guest cross; "loves" makes a content guest plainly happier and is never needed.
+
+| Guest | The want you can see | Awake | Gives off | Must have | Minds | Loves | Will change its hours |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **the troll with the tuba** | to play all night; it carries the tuba everywhere with its lips already pursed | night | noise, two rooms' worth, while awake | to be free to play (not wrapped in the quilt) | nothing: it sleeps like a log | | yes |
+| **the bat** | to sleep all day in the cool, hanging; the eye mask is already on its forehead | night | nothing | a cool or cold room | noise while it sleeps | | never |
+| **the blob in pyjamas** | to sleep all night in peace; it clutches its pillow | day | nothing | a room neither warm nor cold | noise while it sleeps; a smell at any hour | being wrapped in the quilt | yes |
+| **the yeti** | to be cold; it leads its own snow cloud on a string | day | cold, always, which sinks | a cold room | nothing else | | yes |
+| **the lizard in a scarf** | to be warm; it shivers and hugs a hot-water bottle | day | nothing | a warm room | noise while it sleeps | | never |
+| **the cook** | to stew all day; the cauldron is on its back and the spoon in its fist | day | a smell while awake; a little warmth always | a room that is not cold, or the stew will not simmer | nothing | noise, which it hums along to | never |
+| **the fly** | to smell something rich; its nose is in the air and its napkin tucked in | day | a small buzz while awake, heard only in its own room | a room that is not cold | nothing | a smell | yes |
+| **the singer** | to be heard; she is a ghost with her mouth open and her music held out | night | noise, three rooms' worth, while awake; a little cold always | someone awake within reach of her voice who does not mind it | a smell at any hour; a warm room | | never |
+
+- **Who else is in the scene.** The porter, an old tortoise with a luggage trolley, carries things and shows the neat way; the coach driver waits. Neither has an opinion of the child or of an arrangement.
+- **Feelings are about the house.** A guest is cross with a wall, a smell or a neighbour's tuba. No guest is ever disappointed in the child, thanks or praises the child, hurries the child, or notices the child leaving or coming back. A guest left in the lobby waits beside its bag for as long as it takes and does not complain.
+- **A joke is never cruel.** The guest a wrong use lands on is bewildered and never hurt: the lizard that goes stiff as a plank thaws as soon as it is warm.
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Every scene is a list of timed beats on the attended clock, filled in from the house as it stands. Its outcome is saved when it starts, any touch ends it with everything at its end state, and none plays on load.
+
+1. **The settled day** (the ending, 8 to 10 seconds). Cause: the finger lifts from the set-down that leaves every guest in the house content by day and by night. Beats: the page shows one night and one day go by; at night each night guest does its one thing in exactly the room the child gave it, by day the others do; each love plays (the fly leans into the smell coming through the wall, the cook hums to the tuba); every sleeper sleeps through; the wheel comes to rest where the child had left it. Filled in from: who is in which room, what is fixed where, and who loves what reaches them.
+2. **The porter's neat way** (6 to 9 seconds, joined to the settled day as one scene). Cause: the first settled day at a place whose new thing the child has now used, when the child's arrangement is not the cast's neat one. Beats: the porter trundles in, moves at most three things, the guests take it in their own ways and at least one is plainly happier than before; a held moment; the porter puts everything back exactly as the child had it. It is a second arrangement beside the child's own, shown after the child's has already stood, and never a correction. It is shown once for each place and changes nothing that is saved except the mark in `shown`.
+3. **The coach changes over** (about 6 seconds). Cause: the child touches the waiting coach after a cycle has been judged. Beats: the door opens; the old guests file out with their bags past the new ones without a glance; the porter trundles the things back to the cupboard; each new guest plants its bag in the lobby and turns to stare at the door it wants; the coach pulls away and the next one pulls up with its blinds drawn. Filled in from: who leaves, who arrives, and which doors they stare at.
+4. **Sent away** (about 5 seconds). Cause: the child sets a guest down on the coach before the house is settled. Beats: the rest follow it out in a line, unbothered; the things go back to the cupboard; the coach pulls away and the next pulls up and waits.
+5. **Pairings** (about 4 seconds each). Cause: one exact combination, every time it is made, such as the yeti in a room with the stove at three flames, or the troll and the singer on two sides of one wall at night. Beats: the two do one absurd thing together. Never hinted at, counted or listed.
+
+**How a cycle ends and the next starts.** A settled house stays as long as the child likes and can be played with freely; it is not judged twice. If the child does nothing, nothing new starts: no countdown and no next round. The next coach-load is visible and waiting at the kerb, blinds drawn, and comes in only on the child's touch. Nobody who waits complains, hurries the child or refers to the child leaving or coming back. On the very first visit two guests already stand in the lobby staring at the same door, and a coach waits behind them. On load the house is as it was left: the same guests in the same rooms at the same hour, the page drawn from the same place, and the coach waiting.
 
 ## The records
 
