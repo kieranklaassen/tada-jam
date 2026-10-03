@@ -58,6 +58,7 @@ export class FireMotion {
   private flat = spring(0)
   private lean = spring(0)
   private spit = new Gesture()
+  private gutter = new Gesture()
   private drift = spring(0)
   private adrift = 0
   private time = 0
@@ -67,11 +68,14 @@ export class FireMotion {
     this.drift.value = this.drift.target = gulps > THINGS.fire.fill ? 1 : 0
   }
 
-  answer(action: Action, gulps: number, strength = 1): void {
+  /** `creeping` is true when a neighbour's water is run-off on the ground and not drops in the air. */
+  answer(action: Action, gulps: number, strength = 1, creeping = false): void {
     this.flame.target = FLAME_FOR_GULPS[Math.min(4, gulps)]
     // A gulp flattens the flame, a sweep makes it lean away, flung drops make it spit, and too much floats the logs.
+    // Run-off reaches the ring from below: the flame gutters, a slow shiver from side to side, and sinks.
     if (action === 'gulp' || action === 'fill') kick(this.flat, 9 * strength)
     else if (action === 'sweep') kick(this.lean, 7 * strength)
+    else if (action === 'neighbour' && creeping) this.gutter.start()
     else if (action === 'neighbour') this.spit.start()
     else this.drift.target = 1
   }
@@ -79,6 +83,7 @@ export class FireMotion {
   step(seconds: number): typeof this.pose {
     this.time += seconds
     this.spit.step(seconds)
+    this.gutter.step(seconds)
     stepSpring(this.flame, HEAVY, seconds)
     stepSpring(this.flat, SNAPPY, seconds)
     stepSpring(this.lean, SOFT, seconds)
@@ -86,7 +91,8 @@ export class FireMotion {
     const pose = this.pose
     pose.flame = Math.max(0, this.flame.value)
     pose.flat = Math.max(0, Math.min(0.8, this.flat.value))
-    pose.lean = Math.max(-0.7, Math.min(0.7, this.lean.value))
+    const guttering = this.gutter.through(1.2)
+    pose.lean = Math.max(-0.7, Math.min(0.7, this.lean.value + (guttering < 1 ? Math.sin(guttering * Math.PI * 5) * 0.3 * (1 - guttering) : 0)))
     pose.flicker = this.time
     pose.spit = hump(this.spit.through(0.5))
     pose.wet = this.flame.target === 0

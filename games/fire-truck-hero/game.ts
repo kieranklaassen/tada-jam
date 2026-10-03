@@ -17,18 +17,18 @@ import { cellOf } from './grid'
 import { cellAt, levelOf, PUDDLE_AT } from './ground'
 import type { Gulp } from './hose'
 import { arcTo, nozzleFor } from './jet'
-import { BELL, GATE, NOZZLE, PEEK_REACH_Z, PEEK_X, type Place } from './layout'
+import { BELL, GATE, NOZZLE, PEEK_REACH_Z, PEEK_X, distance, type Place } from './layout'
 import { placeOf, targetAt } from './places'
 import { deserializeSave, driveOn, serializeSave, withYard, yardOf, type Save } from './save'
 import { Scene } from './scene'
 import { driveScene, endedChannels, endingOf, onTheWay, restChannels, wormScene, type Channels, type Directions, type Mark, type OnTheWay } from './scenes'
-import { THINGS, type Kind } from './things'
+import { THINGS, type Action, type Kind } from './things'
 import { Toy, type Touched } from './toy'
 import { honk as honkVoice, plip, splat, squelch, SPLAT_VARIANTS, type VoiceSpec } from './voices'
-import { gulpOn, gulpOnGround, honk, rest as restYard, sweepOver, type Step, type Yard, type YardEvent } from './world'
+import { gulpOn, gulpOnGround, honk, rest as restYard, sweepOver, type Came, type Step, type Yard, type YardEvent } from './world'
 import { arrangementsOf } from './yards'
 import { YardMotion } from './yardMotion'
-import { beeBuzz, beeLands, bellRing, cellVoice, drip, duckQuack, duckTapsFloor, gateSwings, onPlastic, petalOpens, showSpit, snailGlides, steamFades, truckRolls, wormPops } from './yardVoices'
+import { beeBuzz, beeLands, bellRing, catPaws, cellVoice, delayed, drip, duckQuack, duckTapsFloor, gateSwings, onPlastic, petalOpens, showSpit, slowSizzle, snailGlides, steamFades, truckRolls, wormPops } from './yardVoices'
 
 /** A landing point that moves faster than this, in yard units a second, is sweeping. */
 export const SWEEP_SPEED = 4.2
@@ -44,6 +44,13 @@ export const SHOW_AFTER_S = 1.6
 export const SHOW_EVERY_S = 1.4
 /** How long the hose must have been still before the truck's nozzle turns back to what wants water, in seconds. */
 export const AT_REST_AFTER_S = 1.1
+/** The duck's quack comes this long after the splash that set it off, in seconds. */
+export const QUACK_AFTER_S = 0.09
+/** How near a thing's middle a worm may come up, and how near the snail. */
+export const WORM_CLEAR = 1.5
+export const WORM_CLEAR_OF_SNAIL = 0.85
+/** How far the flower's cup has nodded over when its water tips out, as a share of the whole nod. */
+export const CUP_TIPS_AT = 0.85
 
 /** What the Mount should do about saving after a touch or a frame. */
 export type SaveNeed = 'none' | 'soon' | 'now'
@@ -81,6 +88,11 @@ export class Game extends Toy {
   private putts = 0
   private tapsHeard = 0
   private fingerRangOpen = false
+  /** Mud made while a scene played: its worm comes up when the scene is over. */
+  private wormOwed: Place | null = null
+  /** The want was met by a gulp aimed at it, whose own sound said so. */
+  private metByAim = false
+  private cupTipped = false
 
   /** `startedAt` is the attended clock's seconds when the game is made, so that what it times (the first showing, the truck coming to rest) counts from then. */
   constructor(play: (voice: VoiceSpec) => void, raw: unknown, childAge: number | null, private readonly seed = 1, startedAt = 0) {
@@ -134,8 +146,14 @@ export class Game extends Toy {
     this.show(now)
     this.scene?.update(now)
     if (this.scene && !this.scene.running) this.scene = null
+    if (!this.scene && this.wormOwed && !this.leaving) {
+      const at = this.wormOwed
+      this.wormOwed = null
+      this.startWorm(at, now)
+    }
     this.atRest(seconds, now)
     this.motion.step(seconds, this.yard, this.channels)
+    this.tipCup()
     this.leaving?.motion.step(seconds, this.leaving.yard, this.leaving.motion.ownChannels)
   }
 
@@ -153,6 +171,7 @@ export class Game extends Toy {
     this.skipSounds = false
     this.drops.clear()
     this.spits.length = 0
+    this.wormOwed = null
   }
 
   /** A scene is playing: the Mount keeps the idle ladder down meanwhile. */
@@ -233,11 +252,13 @@ export class Game extends Toy {
     const before = cell < 0 ? 0 : this.yard.ground[cell]
     const was = levelOf(before)
     const variant = this.variants.next(SPLAT_VARIANTS)
+    // A landing on mud throws brown blobs.
+    if (was === 'mud' && !this.skipSounds) this.drops.blobs(x, z)
     if (was === 'mud') this.say(squelch(variant))
     else if (was === 'puddle') this.say(plip(variant))
     else if (!fast) this.say(splat(this.paint.at(x, z).damp / 255, variant))
     const step = gulpOnGround(this.yard, x, z)
-    this.apply(step, this.clock, { x, z })
+    this.apply(step, this.clock)
     if (cell < 0) return
     const now = levelOf(this.yard.ground[cell])
     if (before < PUDDLE_AT && now !== 'damp') this.paint.puddle(x, z)
@@ -269,23 +290,24 @@ export class Game extends Toy {
   // --- What the rules said -----------------------------------------------------
 
   /** Takes a step of the rules: the yard, its sounds, its motion, its scenes, and what to save. */
-  private apply(step: Step, now: number, at?: Place): void {
+  private apply(step: Step, now: number): void {
     const before = this.yard
     this.yard = step.yard
     if (step.yard !== before) this.need('soon')
-    for (const event of step.events) this.hear(event, before, now, at)
+    for (const event of step.events) this.hear(event, before, now)
   }
 
-  private hear(event: YardEvent, before: Yard, now: number, at?: Place): void {
+  private hear(event: YardEvent, before: Yard, now: number): void {
     if (event.type === 'result') {
       if (event.thing >= 0) {
         const thing = this.yard.things[event.thing]
         const fullness = Math.min(1, (thing?.gulps ?? 0) / THINGS[event.kind].fill)
-        this.say(cellVoice(cellOf(event.kind, event.action).voice, fullness, this.variants.next(3)))
-        this.motion.result(event.thing, event.action, this.yard)
+        this.say(this.voiceOf(event.kind, event.action, event.by, thing?.gulps ?? 0, fullness))
+        this.motion.result(event.thing, event.action, this.yard, 1, event.by)
         this.around(event.thing, event.kind, event.action)
+        if (event.thing === this.yard.want && event.action === 'fill') this.metByAim = true
         // What a neighbour passes on is seen on the ground on its way.
-        if (event.action === 'neighbour') this.runOff(before, event.thing)
+        if (event.by === 'run-off') this.runOff(before, event.thing, event.kind)
       } else if (event.action === 'neighbour' && event.cell !== undefined) {
         // An overflow with nothing below it: a tongue of water on the sand beside the pool.
         const x = (event.cell % 16) + 0.5, z = Math.floor(event.cell / 16) + 0.5
@@ -297,7 +319,9 @@ export class Game extends Toy {
       this.need('now')
     } else if (event.type === 'secret') {
       this.need('now')
-      if (event.id === 'worm' && at) this.startWorm(at, now)
+      // Mud made while a scene plays keeps its worm until the scene is over.
+      if (event.id === 'worm' && this.scene) this.wormOwed = event.at
+      else if (event.id === 'worm') this.startWorm(event.at, now)
       else this.motion.secret(event.id, this.yard)
     } else if (event.type === 'want-met') {
       this.startEnding(now)
@@ -306,21 +330,61 @@ export class Game extends Toy {
     }
   }
 
-  /** What the animals and the air round a thing do about a result: a quack, a buzz, drops flung off a wheel or a wet cat. */
-  private around(index: number, kind: Kind, action: 'gulp' | 'fill' | 'too-much' | 'sweep' | 'neighbour'): void {
+  /**
+   * The sound of a result. It is the cell's own, but for three that the sheet tells apart inside a cell: a pool
+   * that already holds water splashes, deeper with each gulp, where an empty one bonks; run-off that reaches a
+   * fire sizzles where flung drops crackle; and a cat who lifts her paws out of run-off does not sneeze.
+   */
+  private voiceOf(kind: Kind, action: Action, by: Came | undefined, gulps: number, fullness: number): VoiceSpec {
+    const variant = this.variants.next(3)
+    if (kind === 'pool' && action === 'gulp' && gulps > 1) return cellVoice(cellOf('pool', 'fill').voice, fullness, variant)
+    if (kind === 'fire' && by === 'run-off') return slowSizzle()
+    if (kind === 'cat' && by === 'run-off') return catPaws()
+    return cellVoice(cellOf(kind, action).voice, fullness, variant)
+  }
+
+  /** The flower's cup, filled past its fill, nods over and tips its water out: three drops off its low side, as it tips. */
+  private tipCup(): void {
+    const nod = this.motion.has.seed >= 0 ? this.motion.seed.pose.nod : 0
+    if (nod < 0.3) this.cupTipped = false
+    if (nod < CUP_TIPS_AT || this.cupTipped) return
+    this.cupTipped = true
+    const at = placeOf(this.yard, this.motion.has.seed)
+    for (let i = 0; i < 3; i++) this.drops.drip(at.x - 0.75, 1.9, at.z, 0.3 + i * 0.25)
+  }
+
+  /** What the animals and the air round a thing do about a result: a quack, a buzz, drops flung off a wheel, a wet cat or a tipped flower, blobs out of mud. */
+  private around(index: number, kind: Kind, action: Action): void {
     const at = placeOf(this.yard, index)
-    if (kind === 'pool' && (action === 'fill' || action === 'too-much')) this.say(duckQuack(this.variants.next(3)))
+    // Sprayed, the duck wriggles and quacks: every time the hose reaches its pool.
+    if (kind === 'pool' && action !== 'neighbour') this.say(delayed(duckQuack(this.variants.next(3)), QUACK_AFTER_S))
+    // Mud throws brown blobs.
+    else if (kind === 'patch' && action === 'too-much') this.drops.blobs(at.x, at.z)
     else if (kind === 'seed' && action !== 'neighbour') this.say(beeBuzz(true))
     else if (kind === 'wheel' && (action === 'fill' || action === 'too-much')) this.drops.burst(at.x, 1.3, at.z, action === 'fill' ? 6 : 12, action === 'fill' ? 2.2 : 3.6)
     else if (kind === 'cat' && action === 'fill') this.drops.burst(at.x, 0.9, at.z, 10, 2.4)
   }
 
-  /** Water passed on from one thing to another shows on the sand between them. */
-  private runOff(before: Yard, to: number): void {
-    const from = before.things.findIndex((thing, index) => thing.kind === 'pool' && before.runsTo === to && index !== to && thing.gulps >= THINGS.pool.fill)
+  /**
+   * Run-off shows on the sand on its way: a tongue from the pool to what it runs to, bent past the wheel where
+   * one stands on the way, and a shorter tongue that creeps toward the cat and stops short of where she sat.
+   */
+  private runOff(before: Yard, to: number, kind: Kind): void {
+    const from = before.things.findIndex((thing, index) => thing.kind === 'pool' && index !== to && thing.gulps >= THINGS.pool.fill)
     if (from < 0) return
-    const a = placeOf(this.yard, from), b = placeOf(this.yard, to)
-    for (let i = 1; i <= 6; i++) this.paint.splash(a.x + ((b.x - a.x) * i) / 7, a.z + ((b.z - a.z) * i) / 7, 1.4, 0.55)
+    const a = placeOf(before, from), b = placeOf(before, to)
+    if (kind === 'cat') return this.tongue(a, { x: a.x + (b.x - a.x) * 0.62, z: a.z + (b.z - a.z) * 0.62 })
+    if (before.runsTo !== to) return
+    const past = before.runsPast
+    if (past === undefined) return this.tongue(a, b)
+    const wheel = placeOf(before, past)
+    this.tongue(a, wheel)
+    this.tongue(wheel, b)
+  }
+
+  private tongue(a: Place, b: Place): void {
+    const steps = Math.max(3, Math.round(distance(a, b) / 0.6))
+    for (let i = 1; i <= steps; i++) this.paint.splash(a.x + ((b.x - a.x) * i) / (steps + 1), a.z + ((b.z - a.z) * i) / (steps + 1), 1.4, 0.55)
   }
 
   // --- The bell and the way on -------------------------------------------------
@@ -344,6 +408,7 @@ export class Game extends Toy {
     const leftMotion = this.motion
     this.latch = 0
     this.wormAt = null
+    this.wormOwed = null
     this.scene = new Scene(driveScene(this.directions()))
     this.scene.start(now, () => {
       this.save = driveOn(withYard(this.save, left), left)
@@ -374,6 +439,8 @@ export class Game extends Toy {
     const kind = this.yard.things[this.yard.want]?.kind
     if (!kind) return
     this.endScene()
+    // The snail's way is laid as it comes out: along the wet the child has made by now.
+    if (kind === 'patch') this.motion.snailSetsOut(this.yard)
     const beats = endingOf(kind, this.directions())
     this.scene = new Scene(beats)
     this.scene.start(now, () => {
@@ -383,9 +450,22 @@ export class Game extends Toy {
     })
   }
 
+  /** A worm comes up where the mud was made, or just beside it where a thing or an animal is in the way. */
   private startWorm(at: Place, now: number): void {
-    if (this.scene) return
-    this.wormAt = { x: at.x, z: at.z }
+    if (this.scene || this.leaving) return
+    // The dry patch is ground: a worm may come up in it, clear of the snail. Every other thing it keeps well away from.
+    const patch = this.motion.has.patch
+    const taken = this.yard.things.map((_, index) => placeOf(this.yard, index)).filter((_, index) => index !== patch)
+    const snail = patch >= 0 ? { x: placeOf(this.yard, patch).x + this.motion.snail.pose.x, z: placeOf(this.yard, patch).z + this.motion.snail.pose.z } : null
+    const free = (point: Place) => {
+      const on = targetAt(this.yard, point.x, point.z)
+      if (cellAt(point.x, point.z) < 0 || !(on.on === 'ground' || (on.on === 'thing' && on.index === patch))) return false
+      return taken.every((other) => distance(other, point) >= WORM_CLEAR) && (snail === null || distance(snail, point) >= WORM_CLEAR_OF_SNAIL)
+    }
+    const beside = [[0, 0], [-0.6, 0.5], [0.6, 0.5], [-0.6, -0.5], [0.6, -0.5], [0, 1.6], [-1.6, 0], [1.6, 0], [0, -1.6], [-1.6, 1.6], [1.6, 1.6], [-1.6, -1.6], [1.6, -1.6]].map(([x, z]) => ({ x: at.x + x, z: at.z + z }))
+    const up = beside.find(free)
+    if (!up) return
+    this.wormAt = up
     for (const channel of ['wormUp', 'wormLooks', 'wormDown'] as const) this.channels[channel] = 0
     this.scene = new Scene(wormScene(this.directions()))
     // The mud that brought it up is already in the yard. Saved at once, with the yard.
@@ -411,7 +491,14 @@ export class Game extends Toy {
   private marked(mark: Mark, n: number): void {
     if (mark === 'arrived') return this.arrive()
     if (mark === 'worm-gone') this.wormAt = null
+    // The logs drip: a drop lets go of a log's end and falls.
+    if (mark === 'drip' && this.motion.has.fire >= 0 && !this.skipSounds) {
+      const fire = placeOf(this.yard, this.motion.has.fire)
+      this.drops.drip(fire.x + (n === 0 ? 0.62 : -0.55), 0.55, fire.z + (n === 0 ? 0.2 : -0.1))
+    }
     const voices: Partial<Record<Mark, () => VoiceSpec>> = {
+      // A fire that a neighbour's water put out had no hiss of its own yet.
+      'hiss-falls': () => (this.metByAim ? [] : cellVoice(cellOf('fire', 'fill').voice, 1, 0)),
       drip: () => drip(n),
       'steam-fades': steamFades,
       quack: () => duckQuack(n),
@@ -424,8 +511,8 @@ export class Game extends Toy {
       'gate-swings': gateSwings,
       putt: () => truckRolls(this.putts++),
     }
-    const voice = voices[mark]
-    if (voice) this.say(voice())
+    const voice = voices[mark]?.()
+    if (voice && voice.length > 0) this.say(voice)
   }
 
   // --- The first showing of a new thing ---------------------------------------
@@ -499,6 +586,8 @@ export class Game extends Toy {
     this.channels.glide = 0
     this.motion.settle(this.yard, this.channels)
     this.latch = 0
+    this.metByAim = false
+    this.wormOwed = null
     this.stillSince = this.clock
     // A yard found with its want met has been played: nothing in it is shown.
     this.nextShowAt = this.yard.met || this.yard.things.every((thing) => this.save.seen.includes(thing.kind)) ? Infinity : this.clock + SHOW_AFTER_S

@@ -131,7 +131,10 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   const atRest = restChannels()
   const leftAs = restChannels()
 
-  const drops = buildWaterView(water)
+  // The drops carry their own colours (water, or mud), so their material is the water's in white.
+  const dropPaint = water.clone()
+  dropPaint.color.set(0xffffff)
+  const drops = buildWaterView(dropPaint)
   scene.add(drops.mesh)
   const guide = buildGuideView()
   scene.add(guide.root)
@@ -196,7 +199,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   scene.remove(other.root)
 
   const counts: StageCounts = { drawCalls: 0, triangles: 0 }
-  const everything = [satin, matte, glow, water, shadowMaterial]
+  const everything = [satin, matte, glow, water, dropPaint, shadowMaterial]
   let paintOf: Game | null = null
 
   return {

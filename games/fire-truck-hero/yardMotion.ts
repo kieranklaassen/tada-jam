@@ -8,14 +8,14 @@
 // kind and each animal.
 
 import { BeeMotion, CatMotion, DuckMotion, SnailMotion } from './animalMotion'
-import { cellsAt, centreOf } from './ground'
 import { BELL, TRUCK, distance, type Place } from './layout'
 import { NEST, placeOf, wayRound } from './places'
 import { restChannels, type Channels } from './scenes'
+import { snailWay } from './snailWay'
 import { kick, spring, stepSpring } from './springs'
 import { BoatMotion, FireMotion, PatchMotion, PoolMotion, SeedMotion, WheelMotion } from './thingMotion'
 import { KINDS, THINGS, type Action, type Kind } from './things'
-import { afloat, FLOATS_AT, type Yard } from './world'
+import { afloat, FLOATS_AT, type Came, type Yard } from './world'
 
 /** The most puffs of steam and the most ripples alive at once. The stage draws each set in one call. */
 export const PUFFS = 28
@@ -28,6 +28,9 @@ export const POOL_FLOOR = 0.07
 
 /** The way the cat looks when nothing has her attention: toward the child and a little toward the truck. */
 export const CAT_FACES = 2.0
+
+/** Where the snail sits on its patch, measured from the patch's middle. */
+export const SNAIL_SITS: Place = { x: 0.34, z: 0.22 }
 
 type Puff = { alive: boolean; x: number; y: number; z: number; size: number; age: number; life: number; grow: number; drift: number }
 type Ring = { alive: boolean; x: number; z: number; radius: number; age: number; life: number; most: number }
@@ -162,29 +165,34 @@ export class YardMotion {
       const cat = yard.things[this.has.cat]
       const inBoat = cat.in !== undefined && yard.things[cat.in]?.kind === 'boat'
       const marooned = inBoat && afloat(yard, cat.in!)
-      this.cat.settle(placeOf(yard, this.has.cat), cat.spot === 'roof' ? Math.PI : CAT_FACES, cat.spot === 'roof', { warm: lit, marooned, napping: inBoat && !marooned })
+      this.cat.settle(placeOf(yard, this.has.cat), cat.spot === 'roof' ? Math.PI : CAT_FACES, cat.spot === 'roof', { warm: lit, marooned, napping: inBoat && !marooned, putOut: this.fireOut && !inBoat })
     }
-    if (this.has.patch >= 0) this.snail.settle({ x: 0.34, z: 0.22 }, this.snailGoal(yard), lit ? 0 : SnailMotion.feelersFor(gulps('patch'), channels.snailOut))
+    if (this.has.patch >= 0) this.snail.settle(SNAIL_SITS, this.snailWay(yard), lit ? 0 : SnailMotion.feelersFor(gulps('patch'), channels.snailOut))
     this.latch.value = this.latch.target = 0
     this.latch.velocity = 0
     this.bellSwing.value = this.bellSwing.velocity = 0
     this.ownChannels = { ...channels }
   }
 
-  /** A cell of the grid happened to a thing. Each kind answers each action in its own way. */
-  result(index: number, action: Action, yard: Yard, strength = 1): void {
+  /** A cell of the grid happened to a thing. Each kind answers each action in its own way. `by` is how a neighbour's water came. */
+  result(index: number, action: Action, yard: Yard, strength = 1, by?: Came): void {
     const thing = yard.things[index]
     if (!thing) return
     const at = placeOf(yard, index)
     if (thing.kind === 'fire') {
-      this.fire.answer(action, thing.gulps, strength)
+      const creeping = action === 'neighbour' && by === 'run-off'
+      this.fire.answer(action, thing.gulps, strength, creeping)
       if (action === 'gulp') this.steam.puff(at, 0.9, 2, 0.5 * strength)
       else if (action === 'fill') this.steam.puff(at, 0.7, 9, 1.05)
+      // Run-off steams low, round the ring, where it meets the embers. Flung drops make pips higher up.
+      else if (creeping) this.steam.puff(at, 0.25, 4, 0.42)
       else if (action === 'neighbour') this.steam.puff(at, 0.8, 2, 0.28)
       // The moment it goes out, and only then, the cat who sat by it is put out too.
       if (thing.gulps >= THINGS.fire.fill && !this.fireOut) {
         this.fireOut = true
         this.cat.fireOut()
+        // Put out by a neighbour's water it gives up its cloud all the same.
+        if (action === 'neighbour') this.steam.puff(at, 0.6, 7, 0.95)
       }
     } else if (thing.kind === 'pool') {
       this.pool.answer(action, thing.gulps, strength)
@@ -204,8 +212,13 @@ export class YardMotion {
     } else if (thing.kind === 'wheel') {
       this.wheel.answer(action, thing.gulps, strength)
     } else {
-      this.cat.answer(action, strength)
+      this.cat.answer(action, strength, by === 'run-off')
     }
+  }
+
+  /** The snail comes out: its way is laid now, along the wet the child has made. */
+  snailSetsOut(yard: Yard): void {
+    if (this.has.patch >= 0) this.snail.setOut(SNAIL_SITS, this.snailWay(yard))
   }
 
   /** The truck shows a thing the child has not met: its one-gulp answer at half size. */
@@ -225,6 +238,11 @@ export class YardMotion {
     const from = { x: this.cat.pose.x, z: this.cat.pose.z }
     // She walks round whatever stands between, the truck and the bell included.
     const others = [TRUCK, BELL, ...yard.things.map((_, at) => at).filter((at) => at !== index && yard.things[at].in === undefined).map((at) => placeOf(yard, at))]
+    // A snail that has come out is somewhere of its own.
+    if (this.has.patch >= 0) {
+      const patch = placeOf(yard, this.has.patch)
+      others.push({ x: patch.x + this.snail.pose.x, z: patch.z + this.snail.pose.z })
+    }
     this.cat.move(to, thing.spot === 'roof' ? Math.PI : CAT_FACES, thing.spot === 'roof', thing.spot === 'roof' ? [] : wayRound(from, to, others))
   }
 
@@ -298,7 +316,8 @@ export class YardMotion {
       const marooned = inBoat && afloat(yard, cat.in!)
       const at = placeOf(yard, this.has.cat)
       const toTruck = Math.atan2(TRUCK.z - at.z, TRUCK.x - at.x) - CAT_FACES
-      this.cat.step(seconds, lit, marooned, inBoat && !marooned, Math.max(-1.3, Math.min(1.3, Math.atan2(Math.sin(toTruck), Math.cos(toTruck)))))
+      const away = toTruck + Math.PI
+      this.cat.step(seconds, lit, marooned, inBoat && !marooned, Math.max(-1.3, Math.min(1.3, Math.atan2(Math.sin(toTruck), Math.cos(toTruck)))), Math.atan2(Math.sin(away), Math.cos(away)))
     }
     this.steam.step(seconds)
     this.ripples.step(seconds)
@@ -310,28 +329,10 @@ export class YardMotion {
     this.bell.latch = Math.max(0, Math.min(1.1, this.latch.value))
   }
 
-  /**
-   * Where the snail glides to when it comes out, measured from the middle of
-   * its patch: the wettest open sand near it, if the way there is clear of
-   * every other thing, or else across its own patch.
-   */
-  private snailGoal(yard: Yard): Place {
+  /** The way the snail glides when it comes out, measured from the middle of its patch: along the wet, clear of every other thing. */
+  private snailWay(yard: Yard): Place[] {
     const home = placeOf(yard, this.has.patch)
     const others = [TRUCK, BELL, ...yard.things.map((_, index) => placeOf(yard, index)).filter((_, index) => index !== this.has.patch)]
-    const clear = (to: Place) => others.every((other) => [0.5, 0.75, 1].every((share) => distance(other, { x: home.x + (to.x - home.x) * share, z: home.z + (to.z - home.z) * share }) > 1.9))
-    for (const level of ['mud', 'puddle'] as const) {
-      let best: Place | null = null
-      let bestGap = 3.2
-      for (const cell of cellsAt(yard.ground, level)) {
-        const at = centreOf(cell)
-        const gap = distance(home, at)
-        if (gap > 1.3 && gap < bestGap && clear(at)) {
-          best = { x: at.x - home.x, z: at.z - home.z }
-          bestGap = gap
-        }
-      }
-      if (best) return best
-    }
-    return { x: -0.5, z: -0.24 }
+    return snailWay(yard.ground, home, others)
   }
 }

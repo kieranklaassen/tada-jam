@@ -25,6 +25,8 @@ export type Arrangement = {
   readonly runsTo?: number
   /** The indices the wheel's flung ring reaches. */
   readonly flingsTo?: readonly number[]
+  /** The index of the wheel that stands on the way from the pool to what it runs to: the run-off passes under it. */
+  readonly runsPast?: number
 }
 
 /** A yard by name: its place in the order and the number of its arrangement. */
@@ -33,7 +35,11 @@ export type YardSpec = { readonly place: string; readonly arrangement: number }
 const on = (kind: Kind, spot: number): Placed => ({ kind, spot })
 const inside = (kind: Kind, spot: number, index: number): Placed => ({ kind, spot, in: index })
 
-/** The spots are those of layout.ts, by index. In a downhill yard the pool stands on a far spot and what it runs to on a nearer one. */
+/**
+ * The spots are those of layout.ts, by index. In a downhill yard the pool
+ * stands on a far spot and what it runs to on a nearer one. In two whole
+ * gardens a wheel stands on the way down, and the run-off bends past it.
+ */
 export const ARRANGEMENTS: Readonly<Record<string, readonly Arrangement[]>> = {
   /** One thing alone with the truck. Water does something to a thing. */
   'one-thing': [
@@ -70,8 +76,8 @@ export const ARRANGEMENTS: Readonly<Record<string, readonly Arrangement[]>> = {
   /** Four or five things, one want, and every earlier idea at hand. */
   'whole-garden': [
     { things: [on('pool', 1), inside('boat', 1, 0), on('seed', 3), on('wheel', 2), on('cat', 0)], want: 2, runsTo: 2, flingsTo: [2, 4] },
-    { things: [on('pool', 0), on('fire', 2), on('wheel', 3), on('cat', 1)], want: 1, runsTo: 1, flingsTo: [1, 3] },
-    { things: [on('pool', 1), inside('boat', 1, 0), inside('cat', 1, 1), on('patch', 3), on('wheel', 4)], want: 3, runsTo: 3, flingsTo: [3, 0] },
+    { things: [on('pool', 0), on('fire', 3), on('wheel', 2), on('cat', 1)], want: 1, runsTo: 1, flingsTo: [1, 3], runsPast: 2 },
+    { things: [on('pool', 1), inside('boat', 1, 0), inside('cat', 1, 1), on('patch', 3), on('wheel', 4)], want: 3, runsTo: 3, flingsTo: [3, 0], runsPast: 4 },
   ],
 }
 
@@ -99,6 +105,7 @@ export function layOut(place: string, arrangement: number): Yard {
     want: plan.want,
     ...(plan.runsTo === undefined ? {} : { runsTo: plan.runsTo }),
     ...(plan.flingsTo === undefined ? {} : { flingsTo: [...plan.flingsTo] }),
+    ...(plan.runsPast === undefined ? {} : { runsPast: plan.runsPast }),
     ground: dryGround(),
     met: false,
   }

@@ -36,8 +36,8 @@ class Going {
   private fromY = 0
   private toY = 0
 
-  /** `fromY` and `toY` are how high it stands at the start and at the end: the sand is 0. */
-  start(way: readonly Place[], speed: number, arc: number, hops: boolean, fromY = 0, toY = 0): void {
+  /** `fromY` and `toY` are how high it stands at the start and at the end: the sand is 0. `after` is how long it waits where it is before it sets off. */
+  start(way: readonly Place[], speed: number, arc: number, hops: boolean, fromY = 0, toY = 0, after = 0): void {
     this.fromY = fromY
     this.toY = toY
     this.points = way.map((point) => ({ ...point }))
@@ -46,7 +46,7 @@ class Going {
     this.lasts = Math.max(0.35, far / speed)
     this.arc = arc
     this.hops = hops ? Math.max(1, Math.round(far / 0.9)) : 0
-    this.age = 0
+    this.age = -after
   }
 
   step(seconds: number): void {
@@ -60,6 +60,8 @@ class Going {
   /** Where it is now, how high, and which way it is headed (0 is along +x, toward +z is positive). */
   at(rest: Place): { x: number; z: number; y: number; heading: number | null } {
     if (!this.going) return { x: rest.x, z: rest.z, y: this.toY, heading: null }
+    // Before it sets off it stands where it was, facing as it did.
+    if (this.age < 0) return { x: this.points[0].x, z: this.points[0].z, y: this.fromY, heading: null }
     const t = this.age / this.lasts
     const far = this.lengths.reduce((sum, length) => sum + length, 0)
     let left = smooth(t) * far
@@ -84,8 +86,13 @@ export const JUMP_OVER = 3.1
 export const SIZE_IN_BOAT = 0.45
 export const SIZE_ON_ROOF = 0.75
 
+/** How long she lifts her paws out of creeping run-off, one at a time, before she moves over. */
+export const PAWS_S = 1.0
+/** How long she looks at the wet logs and at the truck before she turns her back. */
+export const HUFF_S = 2.4
+
 export class CatMotion {
-  readonly pose = { x: 0, z: 0, y: 0, turn: 0, squash: 1, size: 1, headTurn: 0, headTilt: 0, shake: 0, ears: 0, tail: 0, tailUp: 0, paw: 0, eyesShut: 0, upright: 0 }
+  readonly pose = { x: 0, z: 0, y: 0, turn: 0, squash: 1, size: 1, headTurn: 0, headTilt: 0, shake: 0, ears: 0, tail: 0, tailUp: 0, paw: 0, pawFar: 0, eyesShut: 0, upright: 0 }
   private readonly going = new Going()
   private leap = spring(0)
   private upright = spring(0)
@@ -97,14 +104,17 @@ export class CatMotion {
   private readonly duck = new Gesture()
   private readonly sneeze = new Gesture()
   private readonly huff = new Gesture()
+  private readonly paws = new Gesture()
+  /** How far she has turned her back on the truck, 0 to 1. Once the fire is out she sits that way wherever she sits on the sand. */
+  private back = spring(0)
   private time = 0
   private home: Place = { x: 0, z: 0 }
   private facing = 0
   private onRoof = false
   private inAir = false
 
-  /** Puts her where she is, as she was left. `faces` is the way she looks when nothing has her attention. */
-  settle(at: Place, faces: number, onRoof: boolean, as: { warm: boolean; marooned: boolean; napping: boolean } = { warm: false, marooned: false, napping: false }): void {
+  /** Puts her where she is, as she was left. `faces` is the way she looks when nothing has her attention. `putOut` is true where a fire has gone out: she is found with her back turned. */
+  settle(at: Place, faces: number, onRoof: boolean, as: { warm: boolean; marooned: boolean; napping: boolean; putOut?: boolean } = { warm: false, marooned: false, napping: false }): void {
     this.home = { ...at }
     this.facing = faces
     this.onRoof = onRoof
@@ -114,9 +124,12 @@ export class CatMotion {
     // She is found as she was: eyes shut by a fire or asleep in the boat, bolt upright if she is afloat.
     this.upright.value = this.upright.target = as.marooned ? 1 : 0
     this.eyes.value = this.eyes.target = (as.warm || as.napping) && !as.marooned ? 1 : 0
+    this.back.value = this.back.target = as.putOut ? 1 : 0
+    this.back.velocity = 0
   }
 
-  answer(action: Action, strength = 1): void {
+  /** `creeping` is true when the water is run-off on the ground and not drops in the air. */
+  answer(action: Action, strength = 1, creeping = false): void {
     if (this.onRoof) {
       // On the roof she takes no water: a shrug, and she goes on washing her paw.
       kick(this.leap, 0.8)
@@ -130,6 +143,8 @@ export class CatMotion {
       this.glare.start()
     } else if (action === 'fill') this.shake.start()
     else if (action === 'sweep') this.duck.start()
+    // Run-off creeps toward her: she lifts her paws one at a time. A flung drop on her nose: she sneezes.
+    else if (action === 'neighbour' && creeping) this.paws.start()
     else if (action === 'neighbour') this.sneeze.start()
   }
 
@@ -142,7 +157,9 @@ export class CatMotion {
   move(to: Place, faces: number, toRoof: boolean, via: readonly Place[] | null = []): void {
     const jump = toRoof || this.onRoof || via === null
     // Onto the roof and off it she goes in one high arc, well clear of the truck's light and nozzle.
-    this.going.start([this.home, ...(jump ? [] : (via ?? [])), to], jump ? 5.2 : 2.3, toRoof || this.onRoof ? 2.6 : jump ? JUMP_OVER : 0, !jump, this.onRoof ? ROOF_HEIGHT : 0, toRoof ? ROOF_HEIGHT : 0)
+    // Paws that are being lifted are lifted first, and then she goes.
+    const after = this.paws.playing(PAWS_S) ? PAWS_S * (1 - this.paws.through(PAWS_S)) : 0
+    this.going.start([this.home, ...(jump ? [] : (via ?? [])), to], jump ? 5.2 : 2.3, toRoof || this.onRoof ? 2.6 : jump ? JUMP_OVER : 0, !jump, this.onRoof ? ROOF_HEIGHT : 0, toRoof ? ROOF_HEIGHT : 0, after)
     this.size.target = toRoof ? SIZE_ON_ROOF : 1
     this.home = { ...to }
     this.facing = faces
@@ -154,11 +171,14 @@ export class CatMotion {
     this.huff.start()
   }
 
-  /** `warm` is true while a fire burns in the yard; `marooned` while she floats in the boat; `toTruck` and `toFire` are the turns of her head toward them. */
-  step(seconds: number, warm: boolean, marooned: boolean, napping: boolean, toTruck: number): typeof this.pose {
+  /**
+   * `warm` is true while a fire burns in the yard; `marooned` while she floats in the boat; `toTruck` is the turn
+   * of her head toward the truck, and `away` the turn of her whole body that puts her back to it.
+   */
+  step(seconds: number, warm: boolean, marooned: boolean, napping: boolean, toTruck: number, away = Math.PI): typeof this.pose {
     this.time += seconds
     this.going.step(seconds)
-    for (const gesture of [this.paw, this.glare, this.shake, this.duck, this.sneeze, this.huff]) gesture.step(seconds)
+    for (const gesture of [this.paw, this.glare, this.shake, this.duck, this.sneeze, this.huff, this.paws]) gesture.step(seconds)
     stepSpring(this.leap, CAT_BODY, seconds)
     if (this.leap.value < 0) {
       this.leap.value = 0
@@ -177,13 +197,20 @@ export class CatMotion {
     pose.x = way.x
     pose.z = way.z
     pose.y = way.y + this.leap.value
-    pose.turn = way.heading ?? this.facing
+    const huffing = this.huff.through(HUFF_S)
+    // After her two looks she turns her back, and that is how she sits from then on. On the truck her back is to the hose already.
+    if (huffing < 1 && huffing > 0.6) this.back.target = 1
+    stepSpring(this.back, { stiffness: 26, damping: 9 }, seconds)
+    const backTurned = this.onRoof ? 0 : Math.max(0, Math.min(1, this.back.value))
+    pose.turn = way.heading ?? this.facing + away * backTurned
     const ducking = hump(this.duck.through(0.7))
     // Stiff and stretched in the air, squashed under a stream, and breathing slowly at rest.
     pose.squash = 1 + (this.inAir ? 0.12 : 0) - ducking * 0.42 + Math.sin(this.time * TEMPO.cat * 2 * Math.PI) * 0.015 + this.upright.value * 0.14 - (napping ? 0.2 : 0)
     const glaring = this.glare.playing(1.5) && !this.glare.playing(0.35) ? 1 : 0
-    const huffing = this.huff.through(2.4)
-    pose.headTurn = glaring * toTruck + (huffing < 1 ? (huffing < 0.45 ? 0.5 : toTruck) : 0) + Math.sin(this.time * 0.31) * 0.12 * (1 - glaring)
+    // With her back turned the truck is behind her: a glare is then a look over her shoulder.
+    const round = toTruck - away * backTurned
+    const toward = Math.max(-1.3, Math.min(1.3, Math.atan2(Math.sin(round), Math.cos(round))))
+    pose.headTurn = glaring * toward + (huffing < 1 ? (huffing < 0.45 ? 0.5 : toTruck) * (1 - backTurned) : 0) + Math.sin(this.time * 0.31) * 0.12 * (1 - glaring)
     const sneezing = this.sneeze.through(0.45)
     pose.headTilt = sneezing < 1 ? -hump(sneezing) * 0.5 : 0
     const shaking = this.shake.through(0.8)
@@ -191,10 +218,14 @@ export class CatMotion {
     pose.ears = Math.max(ducking, this.inAir ? 0.6 : 0) - this.upright.value * 0.3
     // Her tail flicks now and then, stands like a bottle brush under a stream, and goes up when she is put out.
     pose.tail = ducking > 0.1 ? 1 : Math.max(0, Math.sin(this.time * TEMPO.cat * 2 * Math.PI * 0.5) - 0.86) * 4
-    pose.tailUp = huffing < 1 && huffing > 0.6 ? 1 : this.onRoof ? 0.4 : 0
+    pose.tailUp = this.onRoof ? 0.4 : backTurned
     const pawing = this.paw.through(1.0)
+    // Out of creeping wet she lifts one front paw and then the other, twice over, each held up for a moment.
+    const lifting = this.paws.through(PAWS_S)
+    const lift = (from: number) => (lifting < 1 ? hump((lifting - from) / 0.25) * (lifting >= from && lifting < from + 0.25 ? 1 : 0) : 0)
     // A shaken paw after a gulp; on the roof, a paw washed slowly over and over.
-    pose.paw = pawing < 1 && pawing > 0.3 ? Math.abs(Math.sin(pawing * Math.PI * 6)) : this.onRoof && !this.going.going ? 0.5 + 0.5 * Math.sin(this.time * 2.2) : 0
+    pose.paw = lifting < 1 ? Math.max(lift(0), lift(0.5)) : pawing < 1 && pawing > 0.3 ? Math.abs(Math.sin(pawing * Math.PI * 6)) : this.onRoof && !this.going.going ? 0.5 + 0.5 * Math.sin(this.time * 2.2) : 0
+    pose.pawFar = Math.max(lift(0.25), lift(0.75))
     pose.eyesShut = this.eyes.value
     pose.upright = this.upright.value
     pose.size = this.size.value
@@ -331,16 +362,23 @@ export class BeeMotion {
 export class SnailMotion {
   readonly pose = { x: 0, z: 0, turn: 0, out: 0, feelers: 0 }
   private feelers = spring(0)
-  private from: Place = { x: 0.3, z: 0.25 }
-  private to: Place = { x: -0.5, z: -0.2 }
+  /** The way it glides, point by point, measured from the middle of the patch. The first point is where it sits. */
+  private way: Place[] = [{ x: 0.3, z: 0.25 }, { x: -0.5, z: -0.2 }]
+  private lengths: number[] = [0.92]
   private time = 0
 
-  /** Where it sits on the patch and where it glides to when it comes out, both measured from the middle of the patch. */
-  settle(from: Place, to: Place, feelers = 0): void {
-    this.from = { ...from }
-    this.to = { ...to }
+  /** Where it sits on the patch and the way it glides when it comes out, measured from the middle of the patch. */
+  settle(from: Place, way: readonly Place[], feelers = 0): void {
+    this.setOut(from, way)
     // It is found as it was: its feelers as far out as its patch is wet.
     this.feelers.value = this.feelers.target = feelers
+  }
+
+  /** The way it will glide, laid when it comes out: along the wet the child made. */
+  setOut(from: Place, way: readonly Place[]): void {
+    this.way = [{ ...from }, ...way.map((point) => ({ ...point }))]
+    if (this.way.length < 2) this.way.push({ ...from })
+    this.lengths = this.way.slice(1).map((point, i) => Math.hypot(point.x - this.way[i].x, point.z - this.way[i].z))
   }
 
   /** How far out its feelers are for the water its patch holds, with no fire near. */
@@ -356,9 +394,19 @@ export class SnailMotion {
     stepSpring(this.feelers, { stiffness: 14, damping: 6.5 }, seconds)
     const pose = this.pose
     const far = channels.glide
-    pose.x = this.from.x + (this.to.x - this.from.x) * far
-    pose.z = this.from.z + (this.to.z - this.from.z) * far
-    pose.turn = Math.atan2(this.to.z - this.from.z, this.to.x - this.from.x)
+    // Along its way leg by leg, at one pace, turning into each leg as it comes to it.
+    let left = far * this.lengths.reduce((sum, length) => sum + length, 0)
+    let leg = 0
+    while (leg < this.lengths.length - 1 && left > this.lengths[leg]) left -= this.lengths[leg++]
+    const from = this.way[leg], to = this.way[leg + 1]
+    const share = this.lengths[leg] > 0 ? Math.min(1, left / this.lengths[leg]) : 0
+    pose.x = from.x + (to.x - from.x) * share
+    pose.z = from.z + (to.z - from.z) * share
+    const heading = Math.atan2(to.z - from.z, to.x - from.x)
+    // Round a corner its head comes round over the first part of the new leg.
+    const before = leg > 0 ? Math.atan2(from.z - this.way[leg - 1].z, from.x - this.way[leg - 1].x) : heading
+    const swing = Math.atan2(Math.sin(heading - before), Math.cos(heading - before))
+    pose.turn = before + swing * smooth(Math.min(1, left / 0.45))
     // It stretches and gathers as it glides, one slow wave at a time.
     pose.out = channels.snailOut * (1 + (far > 0 && far < 1 ? Math.sin(this.time * TEMPO.snail * 2 * Math.PI * 6) * 0.12 : 0))
     pose.feelers = Math.max(0, this.feelers.value)

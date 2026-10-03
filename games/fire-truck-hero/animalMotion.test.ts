@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BeeMotion, CatMotion, DuckMotion, RIDE_S, STARTLE_S, SnailMotion, TEMPO, LAP_RADIUS, LAP_SWING, SIZE_ON_ROOF } from './animalMotion'
+import { BeeMotion, CatMotion, DuckMotion, RIDE_S, STARTLE_S, SnailMotion, TEMPO, LAP_RADIUS, LAP_SWING, SIZE_ON_ROOF, PAWS_S } from './animalMotion'
 import { ROOF_HEIGHT } from './places'
 import { restChannels, type Channel, type Channels } from './scenes'
 
@@ -307,18 +307,76 @@ describe('the cat', () => {
     expect(motion.pose.eyesShut).toBeLessThan(0.1)
   })
 
-  it('looks at the truck and puts her tail up when the fire she sat by goes out', () => {
+  it('looks at the logs and at the truck when the fire she sat by goes out, and then turns her back with her tail up', () => {
     const { motion, step } = cat()
     motion.fireOut()
-    let tailUp = 0, looked = 0
-    play(step, 2.4, () => {
-      tailUp = Math.max(tailUp, motion.pose.tailUp)
+    let looked = 0, turnedWhileLooking = 0
+    play(step, 1.3, () => {
       looked = Math.max(looked, motion.pose.headTurn)
+      turnedWhileLooking = Math.max(turnedWhileLooking, Math.abs(motion.pose.turn - FACES))
     })
-    expect(tailUp).toBe(1)
+    // First the two looks, with her body still.
     expect(looked).toBeGreaterThan(0.45)
-    play(step, 0.2)
-    expect(motion.pose.tailUp).toBe(0)
+    expect(turnedWhileLooking).toBeLessThan(0.01)
+    expect(motion.pose.tailUp).toBeLessThan(0.05)
+    // Then her whole body comes round, and that is how she stays.
+    play(step, 3)
+    expect(Math.cos(motion.pose.turn - FACES)).toBeLessThan(-0.98)
+    expect(motion.pose.tailUp).toBeGreaterThan(0.95)
+    play(step, 5)
+    expect(Math.cos(motion.pose.turn - FACES)).toBeLessThan(-0.98)
+    expect(motion.pose.tailUp).toBeGreaterThan(0.95)
+  })
+
+  it('is found with her back turned where the fire is out, with nothing easing in', () => {
+    const motion = new CatMotion()
+    motion.settle(HOME, FACES, false, { warm: false, marooned: false, napping: false, putOut: true })
+    motion.step(FRAME, false, false, false, 0.5)
+    const first = motion.pose.turn
+    expect(Math.cos(first - FACES)).toBeLessThan(-0.98)
+    expect(motion.pose.tailUp).toBeGreaterThan(0.95)
+    play(() => motion.step(FRAME, false, false, false, 0.5), 2)
+    expect(motion.pose.turn).toBeCloseTo(first, 6)
+  })
+
+  it('lifts her paws one at a time out of creeping run-off, and only then moves over', () => {
+    const { motion, step } = cat()
+    motion.answer('neighbour', 1, true)
+    motion.move({ x: HOME.x + 4, z: HOME.z }, FACES, false)
+    let near = 0, far = 0, both = 0, movedWhileLifting = 0
+    const lifts: string[] = []
+    play(step, PAWS_S, () => {
+      const { paw, pawFar } = motion.pose
+      near = Math.max(near, paw)
+      far = Math.max(far, pawFar)
+      both = Math.max(both, Math.min(paw, pawFar))
+      const up = paw > 0.5 ? 'near' : pawFar > 0.5 ? 'far' : ''
+      if (up && lifts[lifts.length - 1] !== up) lifts.push(up)
+      movedWhileLifting = Math.max(movedWhileLifting, Math.abs(motion.pose.x - HOME.x))
+    })
+    expect(near).toBeGreaterThan(0.9)
+    expect(far).toBeGreaterThan(0.9)
+    // Never two paws up at once, and each one twice.
+    expect(both).toBeLessThan(0.05)
+    expect(lifts).toEqual(['near', 'far', 'near', 'far'])
+    expect(movedWhileLifting).toBeLessThan(1e-9)
+    // She does not sneeze at it.
+    expect(motion.pose.headTilt).toBe(0)
+    play(step, 4)
+    expect(motion.pose.x).toBe(HOME.x + 4)
+    expect(motion.pose.pawFar).toBe(0)
+  })
+
+  it('sneezes at a flung drop and lifts no paw', () => {
+    const { motion, step } = cat()
+    motion.answer('neighbour')
+    let tilt = 0, far = 0
+    play(step, 0.6, () => {
+      tilt = Math.min(tilt, motion.pose.headTilt)
+      far = Math.max(far, motion.pose.pawFar)
+    })
+    expect(tilt).toBeLessThan(-0.3)
+    expect(far).toBe(0)
   })
 
   it('sits bolt upright when she is marooned in the boat', () => {
@@ -655,10 +713,45 @@ describe('the snail', () => {
     expect(snail.pose.out).toBe(1)
   })
 
+  it('glides along a way of several points, leg by leg, at one pace, and arrives exactly', () => {
+    const snail = new SnailMotion()
+    const from = { x: 0.25, z: 0.25 }
+    const way = [{ x: 1.25, z: 0.25 }, { x: 1.25, z: 2.25 }, { x: 3.25, z: 2.25 }]
+    snail.settle(from, way)
+    const channels = channelsWith({ snailOut: 1 })
+    const points = [from, ...way]
+    let offWay = 0, pace = 0, last = { ...from }
+    const paces: number[] = []
+    play(() => snail.step(FRAME, 3, false, channels), 5, (now) => {
+      const { x, z } = snail.pose
+      // How far it is from the nearest leg of its way.
+      let gap = Infinity
+      for (let leg = 0; leg < way.length; leg++) {
+        const a = points[leg], b = points[leg + 1]
+        const long = Math.hypot(b.x - a.x, b.z - a.z)
+        const share = Math.max(0, Math.min(1, ((x - a.x) * (b.x - a.x) + (z - a.z) * (b.z - a.z)) / (long * long)))
+        gap = Math.min(gap, Math.hypot(x - (a.x + (b.x - a.x) * share), z - (a.z + (b.z - a.z) * share)))
+      }
+      offWay = Math.max(offWay, gap)
+      pace = Math.hypot(x - last.x, z - last.z)
+      if (now > 0.1 && now < 4.9) paces.push(pace)
+      last = { x, z }
+      channels.glide = Math.min(1, now / 5)
+    })
+    snail.step(FRAME, 3, false, channels)
+    expect(offWay).toBeLessThan(1e-9)
+    // One pace all the way: it does not hurry down a long leg. A corner, cut across by one frame's step, is a little shorter.
+    expect(Math.max(...paces) / Math.min(...paces)).toBeLessThan(1.5)
+    expect(snail.pose.x).toBe(3.25)
+    expect(snail.pose.z).toBe(2.25)
+    // It ends facing along its last leg.
+    expect(snail.pose.turn).toBeCloseTo(0, 6)
+  })
+
   it('glides from its place to its goal in a straight line, and arrives exactly', () => {
     const snail = new SnailMotion()
     const from = { x: 0.25, z: 0.25 }, to = { x: -1.5, z: 1 }
-    snail.settle(from, to)
+    snail.settle(from, [to])
     const channels = channelsWith({ snailOut: 1 })
     snail.step(FRAME, 3, false, channels)
     expect(snail.pose.x).toBe(from.x)

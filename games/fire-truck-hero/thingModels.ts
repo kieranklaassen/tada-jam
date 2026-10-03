@@ -109,22 +109,24 @@ export function buildFire(plastic: THREE.Material, glow: THREE.Material): FireMo
   return { root, flames, logs: logGroup, dryLogs, wetLogs }
 }
 
-export type CatModel = { root: THREE.Group; body: THREE.Mesh; head: THREE.Group; lids: THREE.Mesh; tail: THREE.Mesh; paw: THREE.Mesh }
+export type CatModel = { root: THREE.Group; body: THREE.Mesh; head: THREE.Group; lids: THREE.Mesh; tail: THREE.Mesh; paw: THREE.Mesh; pawFar: THREE.Mesh }
 
-/** The cat, who wants a warm dry place. She sits facing +x. Her head, her eyelids, her tail and one front paw move by themselves. */
+/** The cat, who wants a warm dry place. She sits facing +x. Her head, her eyelids, her tail and her two front paws move by themselves. */
 export function buildCat(plastic: THREE.Material): CatModel {
   const root = new THREE.Group()
   root.name = 'cat'
   const body = named(
     'cat-body',
-    [lathe([[0, 0], [0.44, 0.02], [0.5, 0.2], [0.42, 0.55], [0.27, 0.86], [0, 0.94]], PAINT.cat, 18), at(ball(0.2, PAINT.catPale, [0.6, 1.15, 0.85], 10), 0.27, 0.42, 0), at(ball(0.12, PAINT.cat, [1.3, 0.7, 1], 8), 0.4, 0.07, -0.18)],
+    [lathe([[0, 0], [0.44, 0.02], [0.5, 0.2], [0.42, 0.55], [0.27, 0.86], [0, 0.94]], PAINT.cat, 18), at(ball(0.2, PAINT.catPale, [0.6, 1.15, 0.85], 10), 0.27, 0.42, 0)],
     plastic,
   )
   root.add(body)
-  // The paw she shakes and washes.
+  // The paw she shakes and washes, and the other one: out of creeping wet she lifts them one at a time.
   const paw = named('cat-paw', [ball(0.12, PAINT.cat, [1.3, 0.7, 1], 8)], plastic)
   paw.position.set(0.4, 0.07, 0.18)
-  root.add(paw)
+  const pawFar = named('cat-paw-far', [ball(0.12, PAINT.cat, [1.3, 0.7, 1], 8)], plastic)
+  pawFar.position.set(0.4, 0.07, -0.18)
+  root.add(paw, pawFar)
   // The tail lies curled round her on the ground, from its root behind her.
   const curve = new THREE.TubeGeometry(
     new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(-0.16, -0.01, 0.26), new THREE.Vector3(0.08, -0.01, 0.52), new THREE.Vector3(0.5, -0.01, 0.56), new THREE.Vector3(0.76, -0.01, 0.42)]),
@@ -163,10 +165,16 @@ export function buildCat(plastic: THREE.Material): CatModel {
   lids.visible = false
   head.add(lids)
   root.add(head)
-  return { root, body, head, lids, tail, paw }
+  return { root, body, head, lids, tail, paw, pawFar }
 }
 
-export type PotModel = { root: THREE.Group; soil: THREE.Mesh; shoot: THREE.Mesh; leaves: THREE.Mesh; bud: THREE.Mesh; flower: THREE.Group; petals: THREE.Mesh; saucerWater: THREE.Mesh }
+export type PotModel = { root: THREE.Group; soil: THREE.Mesh; shoot: THREE.Mesh; leaves: THREE.Mesh; bud: THREE.Mesh; flower: THREE.Group; petals: THREE.InstancedMesh; saucerWater: THREE.Mesh; leafDrop: THREE.Mesh }
+
+/** The flower: five petals round a heart. Where each petal sits when it is open, and how big it and the heart are. */
+export const PETALS = 5
+export const PETAL = { ring: 0.24, size: [0.2, 0.09, 0.16], heart: [0.15, 0.105, 0.15], heartY: 0.04 } as const
+/** The tip of the leaf a drop hangs from, in the pot's own units, and how far the drop falls from it. */
+export const LEAF_TIP = { x: 0.52, y: 1.4, fall: 0.5 } as const
 
 /** How high the soil's top is in the pot, and how tall the grown stem stands above it. */
 export const POT = { soil: 0.82, stem: 1.0 } as const
@@ -174,7 +182,9 @@ export const POT = { soil: 0.82, stem: 1.0 } as const
 /**
  * The seed in its pot. The plant is in parts that the stage grows one after
  * another as water comes: the shoot, two leaves, a closed bud, and the flower
- * that opens in its place.
+ * that opens in its place. The flower's petals and its heart are instances of
+ * one ball, each with its own colour, so the stage can open them one by one
+ * and paint them the colour of the arrangement in one draw call.
  */
 export function buildPot(plastic: THREE.Material, water: THREE.Material): PotModel {
   const root = new THREE.Group()
@@ -196,24 +206,26 @@ export function buildPot(plastic: THREE.Material, water: THREE.Material): PotMod
   root.add(saucerWater)
   const shoot = named('seed-shoot', [at(rod(0.05, 0.065, POT.stem, PAINT.shoot, 8), 0, POT.stem / 2, 0)], plastic)
   const leaves = named('seed-leaves', [at(ball(0.2, PAINT.shoot, [1.5, 0.3, 0.8], 10), 0.26, 0.42, 0, 0, 0, 0.5), at(ball(0.2, PAINT.shoot, [1.5, 0.3, 0.8], 10), -0.26, 0.56, 0, 0, 0, -0.5)], plastic)
-  const bud = named('seed-bud', [at(ball(0.15, PAINT.shoot, [0.9, 1.25, 0.9], 10), 0, POT.stem + 0.08, 0), at(ball(0.07, PAINT.petal, [1, 1, 1], 8), 0, POT.stem + 0.24, 0)], plastic)
+  const bud = named('seed-bud', [at(ball(0.15, PAINT.shoot, [0.9, 1.25, 0.9], 10), 0, POT.stem + 0.08, 0), at(ball(0.07, TRUCK_PAINT.cream, [1, 1, 1], 8), 0, POT.stem + 0.24, 0)], plastic)
   const flower = new THREE.Group()
   flower.name = 'seed-flower'
   flower.position.y = POT.stem + 0.06
-  const petalParts: Part[] = []
-  for (let i = 0; i < 5; i++) {
-    const turn = (i / 5) * Math.PI * 2
-    petalParts.push(at(ball(0.2, PAINT.petal, [1, 0.45, 0.8], 10), Math.cos(turn) * 0.24, 0, Math.sin(turn) * 0.24, 0, -turn))
-  }
-  petalParts.push(at(ball(0.15, PAINT.bee, [1, 0.7, 1], 10), 0, 0.04, 0))
-  const petals = named('seed-petals', petalParts, plastic)
+  const petals = new THREE.InstancedMesh(mould([ball(1, 0xffffff, [1, 1, 1], 10)]), plastic, PETALS + 1)
+  petals.name = 'seed-petals'
+  petals.frustumCulled = false
+  const pink = new THREE.Color(PAINT.petal)
+  for (let i = 0; i <= PETALS; i++) petals.setColorAt(i, i < PETALS ? pink : pink.clone().set(PAINT.bee))
   flower.add(petals)
+  // The drop that hangs from a leaf's tip and falls when the flower has opened.
+  const leafDrop = named('seed-leaf-drop', [ball(0.075, WATER.body, [1, 1.2, 1], 8)], water)
+  leafDrop.visible = false
+  root.add(leafDrop)
   for (const part of [shoot, leaves, bud, flower]) {
     part.position.y += POT.soil
     part.visible = false
     root.add(part)
   }
-  return { root, soil, shoot, leaves, bud, flower, petals, saucerWater }
+  return { root, soil, shoot, leaves, bud, flower, petals, saucerWater, leafDrop }
 }
 
 /** How much bigger than its parts each toy stands in the yard, so the smallest is still a fat target for a small finger. */

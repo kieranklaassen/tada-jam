@@ -65,6 +65,13 @@ export const THINGS_PAINT = {
   bench: 0xfaf1dc,
 } as const
 
+/**
+ * The colours a flower opens in. An arrangement of the yard has one of them,
+ * so a return visit to another arrangement finds another flower. Each is far
+ * from the green of the plant, and none is the yellow of the flower's heart.
+ */
+export const FLOWER_PAINT = [THINGS_PAINT.petal, 0xfbf4e6, 0x7f9cf5] as const
+
 /** Water in the air and on the ground. */
 export const WATER = {
   body: 0x74c9f2,

@@ -6,13 +6,14 @@
 // one being left can slide away while the next slides in.
 
 import * as THREE from 'three'
+import { PETAL_COUNT, flowerOf, leafDrop, petalOpen } from './flower'
 import { FENCE_Z } from './gardenModel'
 import { BELL, GATE, PEEK_X, SPOTS, type Place } from './layout'
-import { SAND, THINGS_PAINT, WATER } from './look'
+import { FLOWER_PAINT, SAND, THINGS_PAINT, WATER } from './look'
 import { BOAT, PATCH, WHEEL, buildBee, buildBoat, buildPatch, buildSnail, buildWheel, buildWorm } from './moreModels'
 import { NEST, placeOf } from './places'
 import type { Channels } from './scenes'
-import { POOL, POT, SCALE, buildCat, buildDuck, buildFire, buildGate, buildPool, buildPot } from './thingModels'
+import { LEAF_TIP, PETAL, POOL, POT, SCALE, buildCat, buildDuck, buildFire, buildGate, buildPool, buildPot } from './thingModels'
 import type { Kind } from './things'
 import { afloat, type Yard } from './world'
 import { PUFFS, RINGS, type YardMotion } from './yardMotion'
@@ -52,7 +53,11 @@ export class YardSet {
   private readonly flat = new THREE.Quaternion()
   private readonly size = new THREE.Vector3()
   private readonly spot = new THREE.Vector3()
+  private readonly turn = new THREE.Quaternion()
+  private readonly upright = new THREE.Vector3(0, 1, 0)
+  private readonly colour = new THREE.Color()
   private shadowCount = 0
+  private flowerShown = -1
 
   constructor(name: string, farSide: THREE.BufferGeometry, materials: Materials, shadow: THREE.Material, shadowPlane: THREE.BufferGeometry) {
     const { plastic, glow, water } = materials
@@ -217,9 +222,14 @@ export class YardSet {
       this.pot.flower.visible = pose.flower > 0.05
       this.pot.flower.position.y = top + 0.06
       this.pot.flower.scale.setScalar(Math.max(0.05, pose.flower))
-      this.pot.petals.scale.set(0.35 + 0.65 * open, 1, 0.35 + 0.65 * open)
+      this.petals(open, flowerOf(yard.place, yard.arrangement))
       this.pot.flower.rotation.z = sway + pose.nod * 1.2 - channels.beeLands * 0.14
       this.pot.saucerWater.visible = pose.saucer > 0.5
+      // A drop hangs from a leaf's tip as the ending closes, lets go and falls.
+      const drop = leafDrop(has.seed === yard.want ? channels.leafDrop : 0)
+      this.pot.leafDrop.visible = drop.size > 0.05
+      this.pot.leafDrop.position.set(LEAF_TIP.x, LEAF_TIP.y - 0.06 - drop.fallen * LEAF_TIP.fall, 0)
+      this.pot.leafDrop.scale.setScalar(Math.max(0.05, drop.size))
       this.shadow(place, 1.2)
       this.proxy(place.x, 1.1, place.z, 0.95, place)
       const bee = motion.bee.pose
@@ -302,6 +312,7 @@ export class YardSet {
       this.cat.tail.position.y = 0.12 + pose.tail * 0.1
       this.cat.tail.rotation.x = -pose.tailUp * 1.0
       this.cat.paw.position.y = 0.07 + pose.paw * 0.28
+      this.cat.pawFar.position.y = 0.07 + pose.pawFar * 0.28
       if (!inBoat && pose.y < 1.2) this.shadow({ x, z }, 1.05 * pose.size * (1 - Math.min(0.5, pose.y * 0.3)))
       if (!onRoof) this.proxy(x, base + 0.75 * size, z, inBoat ? 0.5 : 0.85, { x, z })
     }
@@ -349,6 +360,31 @@ export class YardSet {
       // A shell on the gate's left post.
       this.peeks.patch.position.set(GATE.x - GATE.half, 2.33 + hop * 0.5, GATE.z)
       this.peeks.patch.rotation.y = -Math.PI / 2
+    }
+  }
+
+  /** The flower's petals, each as far open as its turn has come, and its heart, in the colour of the arrangement. */
+  private petals(open: number, colour: number): void {
+    const petals = this.pot.petals
+    for (let i = 0; i < PETAL_COUNT; i++) {
+      const round = (i / PETAL_COUNT) * Math.PI * 2
+      const by = petalOpen(open, i)
+      // A shut petal is small and close in to the heart; it comes out to its place as it opens.
+      this.matrix.compose(
+        this.spot.set(Math.cos(round) * PETAL.ring * by, 0, Math.sin(round) * PETAL.ring * by),
+        this.turn.setFromAxisAngle(this.upright, -round),
+        this.size.set(PETAL.size[0] * by, PETAL.size[1], PETAL.size[2] * by),
+      )
+      petals.setMatrixAt(i, this.matrix)
+    }
+    this.matrix.compose(this.spot.set(0, PETAL.heartY, 0), this.flat, this.size.set(PETAL.heart[0], PETAL.heart[1], PETAL.heart[2]))
+    petals.setMatrixAt(PETAL_COUNT, this.matrix)
+    petals.instanceMatrix.needsUpdate = true
+    if (colour !== this.flowerShown) {
+      this.flowerShown = colour
+      this.colour.set(FLOWER_PAINT[colour] ?? FLOWER_PAINT[0])
+      for (let i = 0; i < PETAL_COUNT; i++) petals.setColorAt(i, this.colour)
+      if (petals.instanceColor) petals.instanceColor.needsUpdate = true
     }
   }
 

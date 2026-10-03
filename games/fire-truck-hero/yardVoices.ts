@@ -444,6 +444,29 @@ export function catPurr(): VoiceSpec {
   ]
 }
 
+/** Run-off reaches the fire's ring and puts it out from below: a slow sizzle that sinks, with the last of the steam over it. */
+export function slowSizzle(): VoiceSpec {
+  return [
+    { kind: 'noise', at: 0, frequency: 3000, glideTo: 1300, q: 0.8, peak: 0.07, attack: 0.08, decay: 0.6 },
+    { kind: 'noise', at: 0.1, frequency: 5200, glideTo: 4200, q: 1, peak: 0.025, attack: 0.08, decay: 0.45 },
+  ]
+}
+
+/** The cat lifts her paws out of the creeping wet, one at a time: four soft pats on sand, two pitches in turn. */
+export function catPaws(): VoiceSpec {
+  return [
+    { kind: 'noise', at: 0, frequency: 520, q: 1.4, peak: 0.045, attack: 0.004, decay: 0.045 },
+    { kind: 'noise', at: 0.2, frequency: 610, q: 1.4, peak: 0.04, attack: 0.004, decay: 0.045 },
+    { kind: 'noise', at: 0.4, frequency: 520, q: 1.4, peak: 0.045, attack: 0.004, decay: 0.045 },
+    { kind: 'noise', at: 0.6, frequency: 610, q: 1.4, peak: 0.04, attack: 0.004, decay: 0.045 },
+  ]
+}
+
+/** A voice that starts `later` seconds on: the duck's quack after the splash that set it off. */
+export function delayed(voice: VoiceSpec, later: number): VoiceSpec {
+  return voice.map((partial) => ({ ...partial, at: partial.at + later }))
+}
+
 /** The small spit of water with which the truck shows a new thing: the pop of the hose at half its loudness and a little higher. */
 export function showSpit(): VoiceSpec {
   return [{ kind: 'tone', at: 0, frequency: 350, glideTo: 630, wave: 'sine', peak: 0.06, attack: 0.004, decay: 0.07 }]

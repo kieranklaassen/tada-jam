@@ -35,16 +35,22 @@ export type Yard = {
   readonly runsTo?: number
   /** The indices the wheel's flung ring reaches. */
   readonly flingsTo?: readonly number[]
+  /** The index of the wheel the pool's run-off passes under on its way down. */
+  readonly runsPast?: number
   readonly ground: Ground
   /** The want has been met. It is said once. */
   readonly met: boolean
 }
 
-/** A result is a cell of the grid. On open ground `thing` is -1 and `cell` is the ground cell. */
+/** How water that was not aimed at a thing came to it: as run-off along the ground, or as flung drops. */
+export type Came = 'run-off' | 'drops'
+
+/** A result is a cell of the grid. On open ground `thing` is -1 and `cell` is the ground cell. A neighbour's water says how it came. */
 export type YardEvent =
-  | { type: 'result'; thing: number; kind: Kind; action: Action; id: string; cell?: number }
+  | { type: 'result'; thing: number; kind: Kind; action: Action; id: string; cell?: number; by?: Came }
   | { type: 'want-met'; thing: number }
-  | { type: 'secret'; id: 'worm' | 'cat-on-roof' | 'marooned-cat' }
+  | { type: 'secret'; id: 'worm'; at: Place }
+  | { type: 'secret'; id: 'cat-on-roof' | 'marooned-cat' }
   | { type: 'honk' }
   | { type: 'moved'; thing: number; to: Spot }
 
@@ -55,6 +61,9 @@ export const FLOATS_AT = 3
 
 /** With nothing below a pool, its overflow lands this far toward the near edge, just past the rim. */
 export const RUN_OFF_REACH = 1.5
+
+/** A cat who sits this near a pool that runs over has the run-off creep toward her. */
+export const CREEP_REACH = 3.8
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] }
 type Draft = Omit<Mutable<Yard>, 'things'> & { things: Mutable<Thing>[] }
@@ -79,12 +88,13 @@ export function thingsAt(yard: Yard, spot: Spot): number[] {
   return at.sort((a, b) => Number(yard.things[a].in !== undefined) - Number(yard.things[b].in !== undefined))
 }
 
-/** The free spot with the driest sand under it, or null when every spot is taken. */
-export function driestFreeSpot(yard: Yard): number | null {
+/** The free spot with the driest sand under it, or null when every spot is taken. `clearOf` leaves out the spots within the creep of a pool that stands there. */
+export function driestFreeSpot(yard: Yard, clearOf?: Place): number | null {
   const taken = new Set(yard.things.filter((thing) => thing.in === undefined).map((thing) => thing.spot))
   const wetAt = (spot: number) => yard.ground[cellAt(SPOTS[spot].x, SPOTS[spot].z)] ?? 0
   let best: number | null = null
   for (let spot = 0; spot < SPOTS.length; spot++) {
+    if (clearOf && Math.hypot(SPOTS[spot].x - clearOf.x, SPOTS[spot].z - clearOf.z) <= CREEP_REACH) continue
     if (!taken.has(spot) && (best === null || wetAt(spot) < wetAt(best))) best = spot
   }
   return best
@@ -99,9 +109,9 @@ export function wantMet(yard: Yard): boolean {
   return at !== null && ['puddle', 'mud'].includes(levelAt(yard.ground, at.x, at.z))
 }
 
-function say(d: Draft, events: YardEvent[], index: number, action: Action): void {
+function say(d: Draft, events: YardEvent[], index: number, action: Action, by?: Came): void {
   const { kind } = d.things[index]
-  events.push({ type: 'result', thing: index, kind, action, id: cellOf(kind, action).id })
+  events.push({ type: 'result', thing: index, kind, action, id: cellOf(kind, action).id, ...(by ? { by } : {}) })
 }
 
 function moveTo(d: Draft, events: YardEvent[], index: number, to: Spot): void {
@@ -122,7 +132,7 @@ function wet(d: Draft, events: YardEvent[], at: Place, named: 'aimed' | 'neighbo
   const now = levelOf(d.ground[cell])
   const action = named === 'aimed' ? ACTION_AT[now] : 'neighbour'
   if (named) events.push({ type: 'result', thing: -1, kind: 'patch', action, id: cellOf('patch', action).id, cell })
-  if (was !== 'mud' && now === 'mud') events.push({ type: 'secret', id: 'worm' })
+  if (was !== 'mud' && now === 'mud') events.push({ type: 'secret', id: 'worm', at: { x: at.x, z: at.z } })
 }
 
 /** A pool got a gulp. At three gulps what is in it floats, and past its fill it runs over to what is below. */
@@ -144,12 +154,27 @@ function poolRose(d: Draft, events: YardEvent[], index: number, before: number):
   }
   const below = d.runsTo
   const beside = placeOf(pool)
-  if (below !== undefined && below !== index && d.things[below]) reach(d, events, below, false, true)
+  // On its way down the tongue passes under a wheel, which it turns slowly from below.
+  const past = d.runsPast
+  if (past !== undefined && d.things[past]?.kind === 'wheel') say(d, events, past, 'neighbour', 'run-off')
+  if (below !== undefined && below !== index && d.things[below]) reach(d, events, below, false, true, 'run-off')
   else if (beside) wet(d, events, { x: beside.x, z: beside.z + RUN_OFF_REACH }, 'neighbour')
+  if (beside) creepTo(d, events, beside)
+}
+
+/** Run-off creeps toward a cat who sits on the sand near the pool: she keeps her water, lifts her paws and moves over to a dry spot out of its way. */
+function creepTo(d: Draft, events: YardEvent[], pool: Place): void {
+  d.things.forEach((thing, index) => {
+    const at = thing.kind === 'cat' && thing.in === undefined ? placeOf(thing) : null
+    if (!at || Math.hypot(at.x - pool.x, at.z - pool.z) > CREEP_REACH) return
+    say(d, events, index, 'neighbour', 'run-off')
+    const dry = driestFreeSpot(d, pool)
+    if (dry !== null) moveTo(d, events, index, dry)
+  })
 }
 
 /** Water reaches a thing: aimed by the child, or passed on by a neighbour as a whole gulp or as drops. */
-function reach(d: Draft, events: YardEvent[], index: number, aimed: boolean, water: boolean): void {
+function reach(d: Draft, events: YardEvent[], index: number, aimed: boolean, water: boolean, by?: Came): void {
   const thing = d.things[index]
   const { fill, most } = THINGS[thing.kind]
   if (thing.spot === 'roof') {
@@ -160,7 +185,7 @@ function reach(d: Draft, events: YardEvent[], index: number, aimed: boolean, wat
   const before = thing.gulps
   // Run-off turns the wheel from below, and is not a stream on it.
   if (water && (aimed || thing.kind !== 'wheel')) thing.gulps = Math.min(most, before + 1)
-  say(d, events, index, aimed ? actionOf(thing.kind, before, thing.gulps) : 'neighbour')
+  say(d, events, index, aimed ? actionOf(thing.kind, before, thing.gulps) : 'neighbour', aimed ? undefined : by)
   if (!water) return
   const over = before >= fill
   const at = placeOf(thing)
@@ -170,7 +195,7 @@ function reach(d: Draft, events: YardEvent[], index: number, aimed: boolean, wat
   if (thing.kind === 'boat' && aimed && over && afloat(d, index)) thing.gulps = 0
   if (thing.kind === 'wheel' && aimed && thing.gulps >= fill) {
     // At its fill the ring is drops. Past it every neighbour gets a whole gulp.
-    for (const to of d.flingsTo ?? []) if (to !== index && d.things[to]) reach(d, events, to, false, over)
+    for (const to of d.flingsTo ?? []) if (to !== index && d.things[to]) reach(d, events, to, false, over, 'drops')
   }
   if (thing.kind === 'cat' && over) {
     moveTo(d, events, index, 'roof')

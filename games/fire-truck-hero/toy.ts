@@ -8,7 +8,7 @@
 // the finger lands: the nozzle turns, the truck rocks back, water leaves and
 // the hose is heard, before any frame has been played.
 
-import { Drops, SPLASH_PER_LANDING } from './drops'
+import { DOT, Drops, SPLASH_PER_LANDING } from './drops'
 import { PUDDLE_AT, cellAt, dry, dryGround, levelOf, pour, type Ground } from './ground'
 import { Hose, type Gulp } from './hose'
 import { arcTo, nozzleFor, type Ground2 } from './jet'
@@ -98,7 +98,7 @@ export class Toy {
     }
     for (const gulp of landed) this.land(gulp)
     if (rested) this.rested()
-    this.drops.step(seconds, (x, z, gulps, radius) => this.paint.splash(x, z, gulps * SPREAD, radius), Math.round(SPLASH_PER_LANDING * this.dropsShare))
+    this.drops.step(seconds, (x, z, gulps, radius) => this.paint.splash(x, z, gulps * SPREAD, radius), Math.round(SPLASH_PER_LANDING * this.dropsShare), (x, z) => this.paint.splash(x, z, DOT.dark, DOT.radius))
     this.ground = dry(this.ground, seconds)
     this.paint.dry(seconds)
     this.truck.step(seconds)

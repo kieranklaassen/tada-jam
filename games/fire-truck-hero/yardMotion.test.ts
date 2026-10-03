@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { COLS, MUD_AT, PUDDLE_AT, ROWS, centreOf, pour } from './ground'
+import { COLS, PUDDLE_AT, ROWS, centreOf, pour } from './ground'
 import { BELL, TRUCK, distance, type Place } from './layout'
 import { placeOf } from './places'
 import { restChannels, type Channels } from './scenes'
@@ -535,65 +535,57 @@ describe('a boat that the overflow carries off', () => {
 describe('the way the snail glides', () => {
   const patchYards = everyYard.filter((yard) => indexOf(yard, 'patch') >= 0)
   const OUT: Channels = { ...REST, snailOut: 1 }
-  const THERE: Channels = { ...REST, snailOut: 1, glide: 1 }
 
-  /** Where the snail starts and where it ends up in this yard, in yard units. */
-  function wayOf(yard: Yard): { from: Place; to: Place; home: Place } {
+  /** The snail's way in this yard as it comes out, as points of the yard, sampled all along the glide. */
+  function wayOf(yard: Yard): { points: Place[]; home: Place } {
     const motion = new YardMotion(yard)
     motion.settle(yard, REST)
+    motion.snailSetsOut(yard)
     const home = placeOf(yard, motion.has.patch)
-    motion.step(FRAME, yard, OUT)
-    const from = { x: home.x + motion.snail.pose.x, z: home.z + motion.snail.pose.z }
-    motion.step(FRAME, yard, THERE)
-    return { from, to: { x: home.x + motion.snail.pose.x, z: home.z + motion.snail.pose.z }, home }
+    const points: Place[] = []
+    for (let step = 0; step <= 60; step++) {
+      motion.step(FRAME, yard, { ...OUT, glide: step / 60 })
+      points.push({ x: home.x + motion.snail.pose.x, z: home.z + motion.snail.pose.z })
+    }
+    return { points, home }
   }
 
   /** The nearest the way comes to anything else that stands in the yard, the truck and the bell among them. */
-  function clearance(yard: Yard, from: Place, to: Place): number {
+  function clearance(yard: Yard, points: readonly Place[]): number {
     const patch = indexOf(yard, 'patch')
     const others = [TRUCK, BELL, ...yard.things.map((_, index) => index).filter((index) => index !== patch).map((index) => placeOf(yard, index))]
     let least = Infinity
-    for (let step = 0; step <= 40; step++) {
-      const point = { x: from.x + ((to.x - from.x) * step) / 40, z: from.z + ((to.z - from.z) * step) / 40 }
-      for (const other of others) least = Math.min(least, distance(point, other))
-    }
+    for (const point of points) for (const other of others) least = Math.min(least, distance(point, other))
     return least
   }
 
-  const puddleAt = (yard: Yard, cells: readonly number[], gulps: number): Yard => ({ ...yard, ground: cells.reduce((ground, cell) => pour(ground, centreOf(cell).x, centreOf(cell).z, gulps), yard.ground) })
+  const wetAt = (yard: Yard, cells: readonly number[], gulps: number): Yard => ({ ...yard, ground: cells.reduce((ground, cell) => pour(ground, centreOf(cell).x, centreOf(cell).z, gulps), yard.ground) })
 
-  it('stays on its own patch in a yard with no puddle on the sand', () => {
+  it('stays on its own patch in a yard with no wet sand beside it', () => {
     expect(patchYards.length).toBeGreaterThanOrEqual(4)
     for (const yard of patchYards) {
-      const { from, to, home } = wayOf(yard)
-      expect(distance(from, home)).toBeLessThan(0.8)
-      expect(distance(to, home)).toBeLessThan(0.8)
-      expect(distance(from, to)).toBeGreaterThan(0.5)
-      expect(clearance(yard, from, to)).toBeGreaterThan(1.5)
+      const { points, home } = wayOf(yard)
+      for (const point of points) expect(distance(point, home)).toBeLessThan(0.8)
+      expect(distance(points[0], points[points.length - 1])).toBeGreaterThan(0.5)
+      expect(clearance(yard, points)).toBeGreaterThan(1.5)
     }
   })
 
-  it('is clear of every other thing, the truck and the bell, wherever on the sand a puddle or mud stands', () => {
-    let toPuddle = 0
-    for (const start of patchYards) {
-      for (const gulps of [PUDDLE_AT, MUD_AT]) {
-        for (let cell = 0; cell < COLS * ROWS; cell++) {
-          const yard = puddleAt(start, [cell], gulps)
-          const { from, to, home } = wayOf(yard)
-          expect(clearance(yard, from, to), `${start.place} ${start.arrangement}, water in cell ${cell}`).toBeGreaterThan(1.5)
-          if (distance(to, home) > 1) {
-            // When it leaves its patch it goes to the wet place and to nowhere else.
-            expect(to.x).toBeCloseTo(centreOf(cell).x, 9)
-            expect(to.z).toBeCloseTo(centreOf(cell).z, 9)
-            toPuddle++
-          }
-        }
-      }
-    }
-    expect(toPuddle).toBeGreaterThan(20)
+  it('is laid when it comes out, from the wet the child has made by then, and not when the yard was laid out dry', () => {
+    const dry = layOut('one-thing', 3)
+    const motion = new YardMotion(dry)
+    motion.settle(dry, REST)
+    const home = placeOf(dry, 0)
+    // The child draws a line away from the patch, and then the snail comes out.
+    const line = [1, 2, 3].map((dx) => Math.floor(home.z) * COLS + Math.floor(home.x) + dx)
+    const wet = wetAt(dry, line, 1)
+    motion.snailSetsOut(wet)
+    motion.step(FRAME, wet, { ...OUT, glide: 1 })
+    expect(home.x + motion.snail.pose.x).toBeCloseTo(centreOf(line[2]).x, 9)
+    expect(home.z + motion.snail.pose.z).toBeCloseTo(centreOf(line[2]).z, 9)
   })
 
-  it('is clear of everything with many puddles on the sand at once', () => {
+  it('is clear of every other thing, the truck and the bell, however the sand is wet', () => {
     let state = 12345
     const random = () => {
       state ^= state << 13
@@ -601,26 +593,26 @@ describe('the way the snail glides', () => {
       state ^= state << 5
       return (state >>> 0) / 2 ** 32
     }
+    let left = 0
     for (const start of patchYards) {
-      for (let round = 0; round < 40; round++) {
-        const cells = Array.from({ length: 1 + Math.floor(random() * 12) }, () => Math.floor(random() * COLS * ROWS))
-        const yard = puddleAt(puddleAt(start, cells.slice(0, 6), PUDDLE_AT), cells.slice(6), MUD_AT)
-        const { from, to } = wayOf(yard)
-        expect(clearance(yard, from, to), `${start.place} ${start.arrangement}, water in cells ${cells.join(' ')}`).toBeGreaterThan(1.5)
+      for (let round = 0; round < 60; round++) {
+        // A scribble: a walk of wet cells from somewhere near the patch, and a few puddles anywhere.
+        const home = placeOf(start, indexOf(start, 'patch'))
+        let col = Math.floor(home.x) + Math.floor(random() * 5) - 2, row = Math.floor(home.z) + Math.floor(random() * 5) - 2
+        const cells: number[] = []
+        for (let step = 0; step < 14; step++) {
+          col = Math.max(0, Math.min(COLS - 1, col + Math.floor(random() * 3) - 1))
+          row = Math.max(0, Math.min(ROWS - 1, row + Math.floor(random() * 3) - 1))
+          cells.push(row * COLS + col)
+        }
+        const puddles = Array.from({ length: 4 }, () => Math.floor(random() * COLS * ROWS))
+        const yard = wetAt(wetAt(start, cells, 1), puddles, PUDDLE_AT)
+        const { points } = wayOf(yard)
+        expect(clearance(yard, points), `${start.place} ${start.arrangement}, wet cells ${cells.join(' ')}`).toBeGreaterThan(1.5)
+        if (distance(points[points.length - 1], home) > 1.3) left++
       }
     }
-  })
-
-  it('goes to mud before a puddle, the wettest place', () => {
-    const start = layOut('one-thing', 3)
-    const home = placeOf(start, 0)
-    const cellNear = (dx: number, dz: number) => Math.floor(home.z + dz) * COLS + Math.floor(home.x + dx)
-    const puddle = cellNear(2, 0), mud = cellNear(-2, 1)
-    const yard = puddleAt(puddleAt(start, [puddle], PUDDLE_AT), [mud], MUD_AT)
-    const { to } = wayOf(yard)
-    expect(to.x).toBeCloseTo(centreOf(mud).x, 9)
-    expect(to.z).toBeCloseTo(centreOf(mud).z, 9)
-    const onlyPuddle = wayOf(puddleAt(start, [puddle], PUDDLE_AT)).to
-    expect(onlyPuddle.x).toBeCloseTo(centreOf(puddle).x, 9)
+    // Most scribbles by the patch do take it off its patch.
+    expect(left).toBeGreaterThan(40)
   })
 })
