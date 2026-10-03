@@ -226,6 +226,28 @@ describe('loose things', () => {
     expect(lowest).toBeLessThanOrEqual(box.y + 25)
   })
 
+  it('lets an offcut of ribbon come down slowly, turning like a leaf, and lie without a bounce', () => {
+    const fall = (piece: Clipping): { seconds: number; rose: boolean; turned: number } => {
+      const hair = fresh(), from = { x: LOCK_X, y: 420 }
+      hair.fly(salon(), piece, from)
+      const start = hair.flights.get(piece)!.turn
+      let steps = 0, rose = false, last = from.y, turned = 0
+      while (hair.flights.has(piece) && steps < 1200) {
+        hair.step(1 / 120, salon())
+        const f = hair.flights.get(piece)
+        if (f) { if (f.y < last - 0.01) rose = true; last = f.y; turned = Math.abs(f.turn - start) }
+        steps++
+      }
+      return { seconds: steps / 120, rose, turned }
+    }
+    const hairPiece = fall({ len: 20, hue: 'lion', on: 'floor', x: 46 }), offcut = fall({ len: 20, hue: 'ribbon', on: 'floor', x: 46 })
+    expect(offcut.seconds).toBeGreaterThan(hairPiece.seconds * 1.5)
+    expect(offcut.seconds).toBeLessThan(3)
+    // It never goes back up, and it turns right round on the way.
+    expect(offcut.rose).toBe(false)
+    expect(offcut.turned).toBeGreaterThan(Math.PI)
+  })
+
   it('does not fly a piece that nobody is there to wear', () => {
     const hair = fresh(), piece: Clipping = { len: 9, hue: 'lion', on: 'face', who: 'chair', spot: 'lip' }
     hair.fly(salon({ chair: null, friend: null }), piece, { x: 1, y: 1 })

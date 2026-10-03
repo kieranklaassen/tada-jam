@@ -209,7 +209,9 @@ function lines(g: Ctx, all: readonly (readonly Point[])[], weight: number, alpha
  */
 function features(g: Ctx, puppet: Puppet, look: Look, small: boolean): number {
   const blink = Math.max(0, Math.min(1, puppet.at('blink'))), wide = puppet.at('wide'), cross = puppet.at('cross')
-  const lookX = puppet.at('lookX') * 9, lookY = puppet.at('lookY') * 8, brow = puppet.at('brow')
+  // The eyes go where it looks, and after the finger that has hold of its hair or its cheek, as the head leans that way.
+  const after = (lean: number): number => Math.max(-7, Math.min(7, lean * 0.4))
+  const lookX = puppet.at('lookX') * 9 + after(puppet.lean.x.x + puppet.cheek.x.x * 0.2), lookY = puppet.at('lookY') * 8 + after(puppet.lean.y.x + puppet.cheek.y.x * 0.2), brow = puppet.at('brow')
   const { apart, size, y } = look.eyes
   const shut = blink > 0.75, r = size * (1 + wide * 0.3)
   const eye = (side: number): Point => ({ x: side * apart + lookX - side * cross * 15, y: y + lookY })

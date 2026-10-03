@@ -80,8 +80,16 @@ describe('coming in', () => {
   it('brings the pair from the doorway to their places, hats off and cape on, in 4 to 6 seconds', () => {
     const before = freshGame(null), after = letIn(before).game, c = cast(after)
     const beats = comingIn(c, before, after)
-    let sawHats = false, sawDoor = false
-    const length = playThrough(beats, () => { if (c.staging.hats === 1) sawHats = true; if (c.staging.door > 0.9) sawDoor = true })
+    let sawHats = false, sawDoor = false, patted = 0
+    const length = playThrough(beats, () => {
+      if (c.staging.hats === 1) sawHats = true
+      if (c.staging.door > 0.9) sawDoor = true
+      // At the end the customer pats its own lock with a paw, near its top.
+      const paw = c.staging.paw
+      if (paw && Math.abs(paw.x - LOCK_X) < 12 && paw.y > COLLAR_Y && paw.y < COLLAR_Y + 60) patted++
+    })
+    expect(patted).toBeGreaterThan(5)
+    expect(c.staging.paw).toBeNull()
     expect(length).toBeGreaterThanOrEqual(4)
     expect(length).toBeLessThanOrEqual(6)
     expect(sawHats && sawDoor).toBe(true)

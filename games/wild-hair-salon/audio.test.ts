@@ -120,6 +120,20 @@ describe('the unlock', () => {
     expect(played).toBe(1)
   })
 
+  it('keeps holding the first finger\'s sounds when a second finger or a palm lifts inside the touch', async () => {
+    fakeAudio([['refuse', 'refuse', 'refuse', 'run']])
+    const audio = new GameAudio()
+    const heard: string[] = []
+    audio.touchDown()
+    audio.touchDown()
+    audio.touchUp()
+    await answered()
+    audio.play(() => heard.push('rub'))
+    audio.touchUp()
+    await answered()
+    expect(heard).toEqual(['rub'])
+  })
+
   it('ends its touch when the game rests, so a sound made after the wake and outside a touch is not held', async () => {
     fakeAudio([['refuse', 'refuse', 'run']])
     const audio = new GameAudio()

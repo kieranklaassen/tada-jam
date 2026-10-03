@@ -4,6 +4,7 @@ import { COLLAR_Y, LOCK_X, STEP } from './layout'
 import { LOOKS, hueOf, tuftOutline } from './looks'
 import { Play } from './play'
 import { BUTTONS, placesOf } from './poses'
+import { blankSheets, bounds, recordingSheet, type Recording } from './recorder'
 import { Sprites } from './sprites'
 import { CUSTOMERS } from './tastes'
 import { drawFrame } from './view'
@@ -169,6 +170,28 @@ describe('one frame', () => {
     expect(kept.some((sheet) => sheet.canvas.width > 0)).toBe(true)
     sprites.dispose()
     expect(kept.every((sheet) => sheet.canvas.width === 0 && sheet.canvas.height === 0)).toBe(true)
+  })
+})
+
+describe('the eyes', () => {
+  it('go after the finger that has hold of the lock, further than the head leans', () => {
+    // Where the eyes are drawn, as against the face they are in.
+    const gaze = (play: Play): number => {
+      const kept: Recording = { shapes: [], stamps: [], texts: 0 }
+      const sprites = new Sprites(blankSheets, 1180, 820, 1), surface = recordingSheet(1180, 820, kept)
+      drawFrame(surface.g as Ctx, 1180, 820, sprites, { play, guidance: null })
+      const face = kept.stamps.find((stamp) => stamp.image === sprites.animal(play.game!.chair!).face.sheet.canvas)!
+      const eyes = kept.shapes.find((shape) => shape.kind === 'fill' && shape.style === '#3b3136' && bounds(shape.points).y < 330 && bounds(shape.points).x < 600)!
+      const f = bounds(face.corners), e = bounds(eyes.points)
+      return e.x + e.w / 2 - (f.x + f.w / 2)
+    }
+    const still = seated()
+    for (let i = 0; i < 30; i++) still.step(1 / 60, false)
+    const pulled = seated(), from = { x: LOCK_X, y: COLLAR_Y + 20 * STEP }
+    pulled.gesture({ type: 'press', at: from })
+    pulled.gesture({ type: 'dragStart', from })
+    for (let i = 1; i <= 30; i++) { pulled.gesture({ type: 'dragMove', from, at: { x: from.x + i * 6, y: from.y + i * 3 } }); pulled.step(1 / 60, false) }
+    expect(gaze(pulled) - gaze(still)).toBeGreaterThan(2)
   })
 })
 

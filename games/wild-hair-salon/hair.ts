@@ -12,6 +12,8 @@ import type { Clipping, Salon } from './world'
 // only how it gets there. Pure numbers, in fixed steps, from a seeded stream.
 
 const G = 2600
+/** How fast an offcut of ribbon comes down, in scene units a second. */
+const LEAF_FALL = 240
 /** The most puffs of fluff in the air at once. */
 export const MOST_PUFFS = 8
 
@@ -23,7 +25,7 @@ export type Strand = { swing: Spring; stretch: Spring; flutter: number; kick: Sp
 /** A tuft: `rest` is the length it is held at, as a share of its own, while a showing has it (1 otherwise). */
 export type Tuft = { lean: Spring; stretch: Spring; frizz: number; rest: number }
 /** A piece in the air, on its way to where the model already has it. */
-export type Flight = { x: number; y: number; vx: number; vy: number; turn: number; spin: number; toX: number; toY: number; bounced: boolean }
+export type Flight = { x: number; y: number; vx: number; vy: number; turn: number; spin: number; toX: number; toY: number; bounced: boolean; leaf: boolean }
 /** A puff of fluff, or the fluff ball a rubbed piece rolls up into. */
 export type Puff = { x: number; y: number; vx: number; vy: number; r: number; age: number; life: number; hue: string; rolls: boolean }
 type Later = { at: number; run: () => void }
@@ -163,8 +165,10 @@ export class Hair {
   fly(salon: Salon, piece: Clipping, from: Point, toss = 0): void {
     const box = clippingBox(salon, piece)
     if (!box) return
-    const seconds = Math.max(0.16, Math.sqrt((2 * Math.max(20, box.y - from.y)) / G))
-    this.flights.set(piece, { x: from.x, y: from.y, vx: (box.x - from.x) / seconds, vy: -toss, turn: this.rng.range(-0.6, 0.6), spin: this.rng.range(-9, 9), toX: box.x, toY: box.y, bounced: false })
+    // A piece of hair drops; an offcut of ribbon is light, and spirals down slowly like a leaf.
+    const leaf = piece.hue === 'ribbon' && toss === 0, drop = Math.max(20, box.y - from.y)
+    const seconds = leaf ? drop / LEAF_FALL : Math.max(0.16, Math.sqrt((2 * drop) / G))
+    this.flights.set(piece, { x: from.x, y: from.y, vx: (box.x - from.x) / seconds, vy: leaf ? LEAF_FALL : -toss, turn: this.rng.range(-0.6, 0.6), spin: leaf ? 7 : this.rng.range(-9, 9), toX: box.x, toY: box.y, bounced: false, leaf })
   }
 
   scissorsIn(at: Point): void {
@@ -292,7 +296,7 @@ export class Hair {
     })
 
     for (const [piece, flight] of this.flights) {
-      flight.vy += G * dt
+      if (!flight.leaf) flight.vy += G * dt
       flight.x += flight.vx * dt
       flight.y += flight.vy * dt
       flight.turn += flight.spin * dt

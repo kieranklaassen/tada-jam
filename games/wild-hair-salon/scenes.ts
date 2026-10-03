@@ -110,7 +110,11 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
     over(1.3 + WALK, 0.35, (p) => { staging.door = 1 - p; staging.waiting = p }),
     // The one want, always visible: the customer looks from its lock to the friend's, and the friend holds its own out.
     cueAt(1.7 + WALK, () => { if (!cast.cut) { cast.customer()?.react('wantsItSo'); cast.friend()?.react('wantsItSo') } }),
-    over(1.7 + WALK, Math.max(0.4, cast.customer()?.lasts('wantsItSo') ?? 0.8), () => {}),
+    // And pats its own lock, twice, with a paw from under the cape.
+    over(1.7 + WALK, Math.max(1, cast.customer()?.lasts('wantsItSo') ?? 1), (p) => {
+      const lock = places.lock, out = smooth(Math.min(1, p / 0.3, (1 - p) / 0.3))
+      staging.paw = p >= 1 || !lock ? null : { x: PAW_HOME.x + (lock.x - 4 - PAW_HOME.x) * out, y: PAW_HOME.y + (lock.y + 44 - PAW_HOME.y) * out - Math.abs(Math.sin(p * Math.PI * 2)) * 8 * out, scissors: null }
+    }),
   ]
   return beats
 }
@@ -279,7 +283,9 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
   const pawAt = (p: number): { x: number; y: number; scissors: number | null } => {
     const reach = smooth(Math.min(1, p / 0.5)), tug = idea === 'pull' ? Math.max(0, (p - 0.5) / 0.5) : 0
     const to = { x: grip.x + (drawn.x - grip.x) * tug, y: grip.y + (drawn.y - grip.y) * tug }
-    return { x: PAW_HOME.x + (to.x - PAW_HOME.x) * reach, y: PAW_HOME.y + (to.y - PAW_HOME.y) * reach, scissors: idea === 'snip' ? (p > 0.92 ? 0 : 1) : null }
+    // It goes out round the side of the face, never across the eyes.
+    const round = { x: HEAD.x - HEAD.rx - 90, y: (PAW_HOME.y + to.y) / 2 }, a = (1 - reach) * (1 - reach), b = 2 * reach * (1 - reach), c = reach * reach
+    return { x: a * PAW_HOME.x + b * round.x + c * to.x, y: a * PAW_HOME.y + b * round.y + c * to.y, scissors: idea === 'snip' ? (p > 0.92 ? 0 : 1) : null }
   }
   return [
     cueAt(0, () => {
