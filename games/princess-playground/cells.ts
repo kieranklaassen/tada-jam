@@ -29,6 +29,8 @@ export type Landing = {
   company: boolean
   /** The weight now on the end it landed on. */
   weightThere: number
+  /** Everyone else on the plank, on either end, after the landing. */
+  others: readonly FriendId[]
 }
 
 export type Reaction = {
@@ -47,14 +49,15 @@ export type Reaction = {
 export function landingOf(before: Arrangement, after: Arrangement, id: FriendId): Landing {
   const place = placeOf(after, id)
   const company = inCompany(after)
-  if (place.at !== 'end') return { id, deed: 'in-the-sand', end: null, tips: false, levels: false, below: null, alone: false, company, weightThere: 0 }
+  const others = [...after.left, ...after.right].filter((other) => other !== id)
+  if (place.at !== 'end') return { id, deed: 'in-the-sand', end: null, tips: false, levels: false, below: null, alone: false, company, weightThere: 0, others }
   // The plank as it lay without this friend: that is what it landed on.
   const without = lean(before, id), now = lean(after)
   const side = place.end === 'right' ? 1 : -1
   const below = place.level > 0 ? after[place.end][place.level - 1] : null
   const deed: Landing['deed'] = below ? 'on-a-friend' : without === side ? 'low-end' : 'high-end'
   const weightThere = after[place.end].reduce((sum, other) => sum + FRIENDS[other].weight, 0)
-  return { id, deed, end: place.end, tips: now === side && without !== side, levels: now === 0, below, alone: after.left.length + after.right.length === 1, company, weightThere }
+  return { id, deed, end: place.end, tips: now === side && without !== side, levels: now === 0, below, alone: after.left.length + after.right.length === 1, company, weightThere, others }
 }
 
 const react = (who: FriendId, after: number, rest: Omit<Reaction, 'who' | 'after'>): Reaction => ({ who, after, ...rest })
@@ -90,6 +93,8 @@ export function reactionsTo(l: Landing): Reaction[] {
       else add(0.1, { voice: v.scrunch(), act: 'spin', seconds: 0.7 })
       break
     case 'dot':
+      // The friends already on the plank turn to Dot and bounce, one after another: it is their answer to its coming.
+      if (l.end) l.others.forEach((other, index) => { if (other !== l.below) out.push(react(other, 0.25 + index * 0.12, { act: 'bounce', seconds: 0.5 })) })
       if (l.deed === 'low-end') add(0.1, { voice: v.hum(l.alone), act: l.alone ? 'look' : 'sway', seconds: 1, way: toward })
       else if (l.deed === 'high-end') add(0.1, l.tips ? { voice: v.ringOver() } : { voice: v.longNote(), act: 'sway', seconds: 1.4, way: toward })
       else if (l.deed === 'on-a-friend') {

@@ -45,11 +45,11 @@ describe('the cells in play', () => {
     const heavy = id === 'bo' ? 'mog' : 'bo'
     return {
       low: reactionsTo(landingOf(on([heavy, others.find((o) => o !== heavy)!], []), putOnEnd(on([], []), id, 'left'), id)),
-      lowAlready: reactionsTo({ id, deed: 'low-end', end: 'left', tips: false, levels: false, below: null, alone: false, company: true, weightThere: 5 }),
-      highTips: reactionsTo({ id, deed: 'high-end', end: 'right', tips: true, levels: false, below: null, alone: false, company: true, weightThere: 5 }),
-      highStays: reactionsTo({ id, deed: 'high-end', end: 'right', tips: false, levels: false, below: null, alone: false, company: true, weightThere: 2 }),
-      onFriend: reactionsTo({ id, deed: 'on-a-friend', end: 'left', tips: false, levels: false, below: heavy, alone: false, company: true, weightThere: 6 }),
-      sand: reactionsTo({ id, deed: 'in-the-sand', end: null, tips: false, levels: false, below: null, alone: false, company: false, weightThere: 0 }),
+      lowAlready: reactionsTo({ id, deed: 'low-end', end: 'left', tips: false, levels: false, below: null, alone: false, company: true, weightThere: 5, others: [] }),
+      highTips: reactionsTo({ id, deed: 'high-end', end: 'right', tips: true, levels: false, below: null, alone: false, company: true, weightThere: 5, others: [] }),
+      highStays: reactionsTo({ id, deed: 'high-end', end: 'right', tips: false, levels: false, below: null, alone: false, company: true, weightThere: 2, others: [] }),
+      onFriend: reactionsTo({ id, deed: 'on-a-friend', end: 'left', tips: false, levels: false, below: heavy, alone: false, company: true, weightThere: 6, others: [heavy] }),
+      sand: reactionsTo({ id, deed: 'in-the-sand', end: null, tips: false, levels: false, below: null, alone: false, company: false, weightThere: 0, others: [] }),
     }
   }
 
@@ -78,12 +78,23 @@ describe('the cells in play', () => {
   })
 
   it('Dot in the sand hums beside a friend, and alone draws its one ring', () => {
-    const beside = reactionsTo({ id: 'dot', deed: 'in-the-sand', end: null, tips: false, levels: false, below: null, alone: false, company: true, weightThere: 0 })
+    const beside = reactionsTo({ id: 'dot', deed: 'in-the-sand', end: null, tips: false, levels: false, below: null, alone: false, company: true, weightThere: 0, others: [] })
     expect(beside.some((r) => r.mark === 'ring')).toBe(false)
     expect(deeds('dot').sand.filter((r) => r.mark === 'ring').length).toBe(1)
     const start = on(['pim'], ['dot'])
     const off = putInSand(start, 'dot', homeOn('dot', 'right'))
     expect(landingOf(start, off, 'dot').company).toBe(false)
+  })
+
+  it('the friends on the plank answer Dot’s coming: each bounces, and nobody bounces for anyone else', () => {
+    const start = on(['pim'], ['bo'])
+    const dotComes = reactionsTo(landingOf(start, putOnEnd(start, 'dot', 'right'), 'dot'))
+    expect(dotComes.filter((r) => r.act === 'bounce').map((r) => r.who).sort()).toEqual(['pim'])
+    const lonely = on(['pim', 'mog'], [])
+    const greeted = reactionsTo(landingOf(lonely, putOnEnd(lonely, 'dot', 'right'), 'dot'))
+    expect(greeted.filter((r) => r.act === 'bounce').map((r) => r.who).sort()).toEqual(['mog', 'pim'])
+    const mogComes = reactionsTo(landingOf(start, putOnEnd(start, 'mog', 'right'), 'mog'))
+    expect(mogComes.some((r) => r.who === 'pim' && r.act === 'bounce')).toBe(false)
   })
 
   it('being thrown and being carried up are each friend’s own: Pim squeals and spins, Mog yowls, Bo chuckles', () => {

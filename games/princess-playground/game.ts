@@ -395,6 +395,8 @@ export class Game implements Director {
       this.grains.burst(event.x, PLANK.z, 0.35 + 0.65 * power, Math.round(8 + 22 * power), PLANK.halfWidth * 2)
       if (power > 0.45) {
         this.voice(v.whisper())
+        // Sand thrown onto the board runs off its low end.
+        this.react([{ who: 'pim', after: 0.6, voice: v.trickle() }])
         // Thrown grains settle on the heads of whoever rides.
         if (this.play.arrangement.left.length + this.play.arrangement.right.length > 1) this.react([{ who: 'pim', after: 0.35, voice: v.patter() }])
       }

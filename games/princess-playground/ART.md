@@ -252,6 +252,7 @@ No friend is yellow, tan or brown: those belong to the sand and the tray.
 
 **Motion rules.**
 
+- Nothing passes through anything. A hop goes up before it goes across and comes down from above, and arcs over whoever stands in its way; a carried friend rises before it goes over anything; a friend on another sits on the very top of it and rides its squash and its lean; a friend leaving the plank leaves at once.
 - Every friend moves by its own numbers (`personality.ts`): Pim snaps back at once and her crown lags; Mog is smooth, gathers himself longest for his size and goes long when lifted; Dot takes small low hops and wobbles softly for a while; Bo rocks to get going, lands flat and his belly goes on wobbling. A test fails if two friends come to share a set.
 - A hop gathers, leaps, arcs and lands with a squash; nothing teleports. A friend let go by the finger falls straight to its place.
 - The plank is the heaviest thing on screen: it turns faster the bigger the difference, knocks on the sand, rebounds a little and lies still. With equal weights it floats and sways.
@@ -267,4 +268,20 @@ No friend is yellow, tan or brown: those belong to the sand and the tray.
 | 2 | 1.25 | 0.7 | Fewer flashing grains. |
 | 3 | 1 | 0.5 | Raked lines, grooves, shadows and every friend as before: it is still the sand tray. |
 
-**Budget so far.** 23 draw calls and about 16,000 triangles with all four friends on screen, read from the renderer on the spike. No frame rate has been measured: this machine has no graphics card.
+**The small things.**
+
+- The rake: a small terracotta rake lying on top of the far rim, in the middle, where nothing ever stands in front of it. It is out only while the sand holds a mark. Touched, it is drawn along the rim from one side of the tray to the other, and the sand is raked again across its whole depth as it passes.
+- The grains: a fixed pool of 72 pale points thrown up by a knock or a landing, falling back in under half a second. One draw, no body, no mark.
+- The ghost hand of the idle ladder: a pale mitten with one finger out, drawn once on a canvas, tilted so that it comes in from the side and comes down on the top of a head, never over a face. It is a picture of a hand, not a sign to read.
+- The idle glow: a warm ring of light on the sand under the one friend the ladder shows, drawn in the sand's own shader.
+- A shut eye is a dark line: the white is put away. Pim's crown slips to the side of her head when a friend sits on her; Mog's ears lie back.
+
+**Budget.** 24 to 26 draw calls and about 16,400 triangles with everything on screen, read from the renderer. No shadow map, no post pass, pixel ratio capped at 2, one 512 by 320 texture sent again only in a frame that marked the sand. Every program is compiled and drawn once, hidden, at mount. No frame rate has been measured: this machine has no graphics card.
+
+## The registry row, for the lead
+
+For section 3 of `docs/art-direction.md`, when the game is merged:
+
+| Game | Style | Art guide |
+| --- | --- | --- |
+| Princess Playground | Sand tray 3D: one shallow walnut tray of pale raked sand under a low raking light, lit from a height canvas so every groove, dimple and bite shows; a slate plank on a dark stone and four glossy painted pebbles (coral, teal, lilac to violet, deep blue-green) as the only objects | [`games/princess-playground/ART.md`](../games/princess-playground/ART.md) |
