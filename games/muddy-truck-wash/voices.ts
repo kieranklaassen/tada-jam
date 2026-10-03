@@ -189,3 +189,25 @@ export function drip(): VoiceSpec {
 export function puzzled(low: number, high: number): VoiceSpec {
   return [note('triangle', low * 2, 0.06, 0.02, 0.12, { glideTo: low * 1.8 }), note('triangle', high * 2, 0.06, 0.02, 0.2, { delay: 0.16, glideTo: high * 2.4 })]
 }
+
+/** What each vehicle sounds like when a touch meets its like or its dislike. Invented noises: no words. */
+export const feel = {
+  /** Tipper: a toot with bubbles in it. */
+  foamToot: (low: number): VoiceSpec => [note('square', low * 2, 0.06, 0.012, 0.16), ...[0, 1, 2, 3].map((i) => note('sine', 780 + i * 210, 0.045, 0.004, 0.05, { delay: 0.1 + i * 0.06, glideTo: 980 + i * 210 }))],
+  /** Tipper: a breath drawn in, and a sneeze. */
+  sneeze: (): VoiceSpec => [note('noise', 700, 0.06, 0.1, 0.22, { q: 1.4, glideTo: 2600 }), note('noise', 1900, 0.2, 0.006, 0.2, { delay: 0.36, q: 0.6 }), note('sine', 130, 0.14, 0.006, 0.16, { delay: 0.36, glideTo: 60 })],
+  /** The fire engine: a siren's whoop, up and down. */
+  whoop: (): VoiceSpec => [note('sine', 620, 0.08, 0.02, 0.22, { glideTo: 1240 }), note('sine', 1240, 0.08, 0.02, 0.26, { delay: 0.22, glideTo: 640 }), note('noise', 3000, 0.06, 0.02, 0.25, { delay: 0.3, q: 0.7, glideTo: 1800 })],
+  /** The fire engine: a raspberry of bubbles through the grille. */
+  raspberry: (): VoiceSpec => [note('sawtooth', 112, 0.09, 0.01, 0.34, { glideTo: 88 }), ...[0, 1, 2].map((i) => note('sine', 1000 + i * 240, 0.04, 0.004, 0.045, { delay: 0.12 + i * 0.08 }))],
+  /** The tractor: a purr in three chugs. */
+  chugs: (): VoiceSpec => [0, 1, 2].flatMap((i) => [note('sine', 98, 0.13, 0.006, 0.09, { delay: i * 0.17, glideTo: 70 }), note('triangle', 1500, 0.025, 0.003, 0.03, { delay: i * 0.17 + 0.05 })]),
+  /** The tractor: a cough, and the flap clacking. */
+  cough: (): VoiceSpec => [note('noise', 520, 0.16, 0.006, 0.1, { q: 0.9 }), note('noise', 460, 0.13, 0.006, 0.12, { delay: 0.2, q: 0.9 }), note('triangle', 1700, 0.05, 0.003, 0.03, { delay: 0.34 }), note('triangle', 1500, 0.05, 0.003, 0.03, { delay: 0.44 })],
+  /** The mixer: its drum rumbling round. */
+  rumble: (): VoiceSpec => [note('noise', 240, 0.11, 0.05, 0.5, { q: 1.2, glideTo: 420 }), note('sine', 82, 0.08, 0.05, 0.5, { glideTo: 110 })],
+  /** The mixer: a jammed drum, creaking. */
+  creak: (): VoiceSpec => [note('sawtooth', 190, 0.06, 0.03, 0.3, { glideTo: 150 }), note('sawtooth', 240, 0.05, 0.03, 0.2, { delay: 0.3, glideTo: 205 })],
+  /** The mixer: a giggle, up and down and up. */
+  giggle: (high: number): VoiceSpec => [0, 1, 2, 3, 4].map((i) => note('triangle', high * (i % 2 ? 2.6 : 2.1) + i * 20, 0.06, 0.008, 0.06, { delay: i * 0.085 })),
+} as const

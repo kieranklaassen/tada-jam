@@ -76,8 +76,10 @@ describe('the save', () => {
     expect(lostPlace.position).toBe(LADDER[0])
     expect(lostPlace.bay).toEqual(good.bay)
 
-    const lowCame = deserializeWash({ ...raw, bay: { ...raw.bay, cells: encode(coat(ROSTER[0].id, 'c')), came: 1 } })
-    expect(lowCame.bay.came).toBe(tally(coat(ROSTER[0].id, 'c')).mud)
+    // What it came with may be less than what is on it now (a cloth smears mud wider), so a low count is kept.
+    const caked = { ...raw.bay, cells: encode(coat(ROSTER[0].id, 'c')) }
+    expect(deserializeWash({ ...raw, bay: { ...caked, came: 1 } }).bay.came).toBe(1)
+    for (const came of [-1, 2.5, CELLS + 1, '7', null]) expect(deserializeWash({ ...raw, bay: { ...caked, came } }).bay.came).toBe(tally(coat(ROSTER[0].id, 'c')).mud)
   })
 
   it('refuses a grid that is not this vehicle\'s body, and a vehicle it does not know', () => {

@@ -72,6 +72,7 @@ export class TruckMotion {
   private wander = { side: 0.75, up: 0.1 }
   private seconds = 0
   private lastX: number | null = null
+  private wheelSpeed = 0
 
   constructor(readonly who: Personality, readonly axles: readonly number[], seed: number) {
     this.seed = seed >>> 0 || 1
@@ -93,6 +94,11 @@ export class TruckMotion {
   hold(press: Press | null, slide = 0): void {
     this.press = press
     this.drag = slide
+  }
+
+  /** Sets the wheels spinning where it stands; they coast to a stop. */
+  spinWheels(speed: number): void {
+    this.wheelSpeed += speed
   }
 
   /** Throws the body up on its springs (or down, when negative). */
@@ -139,6 +145,8 @@ export class TruckMotion {
     // Wheels roll with the ground they cover: forward is -x, and half a unit is about a wheel's radius.
     if (this.lastX !== null) pose.wheelSpin -= (this.homeX - this.lastX) / 0.5
     this.lastX = this.homeX
+    pose.wheelSpin += this.wheelSpeed * dt
+    this.wheelSpeed *= Math.exp(-dt * 1.8)
     pose.z = this.homeZ
     pose.hop = this.hop
     pose.lift = this.lift.value + breath + shake

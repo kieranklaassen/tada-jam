@@ -71,8 +71,8 @@ export function deserializeWash(raw: unknown, childAge: number | null = null): W
   const rawBay = typeof record.bay === 'object' && record.bay !== null ? (record.bay as Record<string, unknown>) : {}
   const bayWho = isVehicle(rawBay.who) ? rawBay.who : fresh.bay.who
   const bayCells = (isVehicle(rawBay.who) ? grid(rawBay.cells, bayWho) : null) ?? arrival(bayWho, base.position, seed)
-  const mud = mudOn(bayCells)
-  const came = typeof rawBay.came === 'number' && Number.isInteger(rawBay.came) && rawBay.came >= mud && rawBay.came <= CELLS ? rawBay.came : mud
+  // What it rolled in with can be less than what is on it now: a cloth smears mud wider. Only a number that cannot be a count is replaced.
+  const came = typeof rawBay.came === 'number' && Number.isInteger(rawBay.came) && rawBay.came >= 0 && rawBay.came <= CELLS ? rawBay.came : mudOn(bayCells)
 
   const rawNext = typeof record.next === 'object' && record.next !== null ? (record.next as Record<string, unknown>) : {}
   // The one who waits is never the one in the bay.

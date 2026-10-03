@@ -7,10 +7,11 @@ import type { VehicleDef, VehicleId } from './roster'
 import { Scene } from './scene'
 import { dripScene, openDriedPatch, puddleScene, sendOffScene, shineScene } from './scenes'
 import { silhouette } from './silhouette'
+import { drumJammed, foamHat, launchFoam, tasteFor, type Taste } from './tastes'
 import { GRID_W, allShiny, dab, decode, type Hand, type Surface, type Tool } from './surface'
 import * as voices from './voices'
 import type { VoiceSpec } from './voices'
-import { markShown, sendOff, throughPuddle, washed, type WashState } from './washState'
+import { landedOnNext, markShown, sendOff, throughPuddle, washed, type WashState } from './washState'
 
 // The game in play, with no renderer and no browser: what is in the bay, what
 // is in the hand, and what each touch sets going. The Mount turns a pointer
@@ -39,6 +40,8 @@ const HOSE_EVERY = 0.2
 const PLIP_GAP = 0.07
 /** Where a tool waits by the vehicle when no finger is down: above the cab, out of the way of the paint. */
 const READY: readonly [number, number, number] = [-1.5, 3.25, 1.0]
+/** A vehicle's like or dislike answers at most this often, so a rub sets it off again and again without piling it up. */
+const FEEL_GAP = 1.1
 /** The nozzle on the rack lets a drop go about this often, in seconds. */
 const DRIP_EVERY = 7
 
@@ -68,6 +71,9 @@ export class Play {
   private lastPlip = -1
   private tapIn = 2.5
   private pendingDrip = false
+  private readonly felt = new Map<Taste['id'], number>()
+  /** Small things that happen a moment after a touch: the blast of a sneeze, the second chug. */
+  private later: { at: number; run: () => void }[] = []
 
   constructor(public state: WashState, seed = 0x77a5) {
     this.particles = new Particles(seed)
@@ -204,10 +210,106 @@ export class Play {
     if (landed) bay.motion.kick(target.x, reaction.kick)
     this.lastDab = { x: target.x, y: target.y, at: this.seconds }
     this.follow(target)
+    // The vehicle's own opinion of this tool on this part of it.
+    const taste = tasteFor(bay.def, this.hand, target.x, target.y)
+    if (taste && this.seconds - (this.felt.get(taste.id) ?? -9) >= FEEL_GAP) {
+      this.felt.set(taste.id, this.seconds)
+      this.feel(taste, bay)
+    }
     // The dab that leaves every patch shiny sets off the shine. The finger is let go of, so the scene is not ended by its own touch.
     if (!wasShiny && allShiny(bay.surface)) {
       this.release()
       this.start(shineScene(this, bay, target.x))
+    }
+  }
+
+  private after(seconds: number, run: () => void): void {
+    this.later.push({ at: this.seconds + seconds, run })
+  }
+
+  /** A like or a dislike, set off by the touch that just landed. What it changes is saved at once. */
+  private feel(taste: Taste, who: Vehicle): void {
+    const def = who.def, m = who.motion, p = this.particles
+    const x = m.homeX, z = m.homeZ
+    if (taste.id === 'foam-toot') {
+      // The bed bounces and the stack toots out bubbles.
+      this.say(voices.feel.foamToot(def.horn.low))
+      m.fling(7)
+      for (let i = 0; i < 6; i++) p.emit(KIND.bubble, x - 1.0, 2.75, z + 0.98, (p.random() - 0.5) * 0.6, 1.2 + p.random(), 0.2, 0.13 + p.random() * 0.08, 1.4 + p.random())
+    } else if (taste.id === 'sneeze') {
+      // A breath in, then a sneeze that throws the bed up and launches whatever foam is on it, over to the one that waits.
+      this.say(voices.feel.sneeze())
+      m.squint = 1.5
+      m.jolt(0.8)
+      const launched = launchFoam(def, who.surface), waiting = this.next
+      const hat = launched.flew ? foamHat(waiting.surface, launched.flew) : null
+      // Both ends of the throw go into the save now; the foam is seen to land a moment later.
+      this.setBaySurface(launched.surface)
+      if (hat) {
+        this.state = landedOnNext(this.state, hat)
+        this.dirty = true
+        this.urgent = true
+      }
+      this.after(0.36, () => {
+        m.fling(24)
+        m.kick(-2, 1.6)
+        p.burst(KIND.dust, 4, x + def.side.x0, 1.2, z + 0.6, 1.2, 0.4, 0.4, 0.7)
+        for (let i = 0; i < Math.min(14, launched.flew * 2); i++) p.emit(KIND.blob, x + 0.6 + p.random() * 1.4, 2.2, z + (p.random() - 0.5), 2.4 + p.random() * 1.6, 3.2 + p.random() * 1.4, -0.3, 0.2, 2.2)
+      })
+      if (hat) this.after(1.2, () => { waiting.surface = hat; waiting.motion.kick(0, 0.6); waiting.motion.blink() })
+    } else if (taste.id === 'ladder-whoop') {
+      // The ladder shoots up, the siren whoops, and it squirts a small arc back from its roof.
+      this.say(voices.feel.whoop())
+      m.partTarget = def.partSwing
+      this.after(FEEL_GAP + 0.2, () => { if (this.seconds - (this.felt.get('ladder-whoop') ?? -9) > FEEL_GAP) m.partTarget = 0 })
+      for (let i = 0; i < 8; i++) this.after(0.2 + i * 0.04, () => p.emit(KIND.drop, x - 0.85, 2.2, z + 0.5, -0.4 + p.random() * 0.2, 2.6, 1.6 + p.random() * 0.4, 0.08, 1.6))
+    } else if (taste.id === 'soap-eyes') {
+      // It squeezes its eyes shut and blows bubbles through its grille. Bewildered, never hurt.
+      this.say(voices.feel.raspberry())
+      m.squint = 1.6
+      m.kick(-2, 0.7)
+      for (let i = 0; i < 7; i++) this.after(0.1 + i * 0.05, () => p.emit(KIND.bubble, x + def.side.x0 - 0.1, 0.95, z + (p.random() - 0.5) * 0.8, -1.2 - p.random(), 0.3, 0.4, 0.1 + p.random() * 0.07, 1.2))
+    } else if (taste.id === 'polish-purr') {
+      // It purrs in chugs, and the flap on its exhaust lifts with each one.
+      this.say(voices.feel.chugs())
+      for (let i = 0; i < 3; i++) this.after(i * 0.17, () => {
+        m.fling(11)
+        m.jolt(0.25)
+        p.emit(KIND.dust, x - 1.1, 2.95, z + 0.2, 0, 0.8, 0, 0.22, 0.6)
+      })
+    } else if (taste.id === 'pipe-cough') {
+      // A cough, a ring of steam, the flap clacking.
+      this.say(voices.feel.cough())
+      m.cross = 0.9
+      for (const delay of [0, 0.2]) this.after(delay, () => { m.fling(18); m.kick(-1.1, 0.8) })
+      for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * Math.PI * 2
+        this.after(0.22, () => p.emit(KIND.dust, x - 1.1 + Math.cos(a) * 0.12, 3.0, z + 0.2 + Math.sin(a) * 0.12, Math.cos(a) * 0.7, 0.9, Math.sin(a) * 0.7, 0.3, 1.0))
+      }
+    } else if (taste.id === 'drum-turn') {
+      if (drumJammed(def, who.surface)) {
+        // Dried mud jams the drum: it creaks and twitches until that mud is wet.
+        this.say(voices.feel.creak())
+        m.fling(0.9)
+        this.after(0.2, () => m.fling(-0.9))
+        m.kick(1, 0.5)
+      } else {
+        // The drum turns, and what is on it goes round with it.
+        this.say(voices.feel.rumble())
+        m.fling(8)
+        const kind = this.hand === 'hose' ? KIND.drop : this.hand === 'cloth' ? KIND.glint : this.hand === 'sponge' ? KIND.bubble : KIND.dust
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2
+          this.after(i * 0.05, () => p.emit(kind, x + 1.0 + Math.cos(a) * 0.95, 2.05 + Math.sin(a) * 0.95, z + 1.0, kind === KIND.glint ? 0 : Math.cos(a) * 1.6, kind === KIND.glint ? 0 : Math.sin(a) * 1.6 + 0.6, 0.3, kind === KIND.glint ? 0.45 : 0.1, 0.9))
+        }
+      }
+    } else {
+      // Ticklish: the wheels spin and foam flies off the tyres.
+      this.say(voices.feel.giggle(def.horn.high))
+      m.spinWheels(20)
+      m.squint = 0.9
+      for (const delay of [0, 0.12, 0.24, 0.36]) this.after(delay, () => m.kick((p.random() - 0.5) * 3, 0.5))
+      for (const wheel of def.wheels) for (let i = 0; i < 4; i++) this.after(i * 0.07, () => p.emit(KIND.blob, x + wheel.x, wheel.r, z + 1.0, (p.random() - 0.5) * 4, 2 + p.random() * 2, 0.6, 0.13, 1.3))
     }
   }
 
@@ -270,6 +372,13 @@ export class Play {
       }
     }
     this.scene?.update(this.seconds)
+    if (this.later.length) {
+      const due = this.later.filter((cue) => cue.at <= this.seconds)
+      if (due.length) {
+        this.later = this.later.filter((cue) => cue.at > this.seconds)
+        for (const cue of due) cue.run()
+      }
+    }
     // A held hose keeps spraying where it points.
     if (this.pressing && this.hand === 'hose' && this.seconds - this.lastDab.at >= HOSE_EVERY) this.touch(this.pressing, false)
     // The nozzle lets a drop go now and then while it hangs on the rack: it falls to the floor under it.
