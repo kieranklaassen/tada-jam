@@ -381,7 +381,8 @@ export class Play {
     let under = 0
     for (let level = 0; level < seen.level; level++) under += HAT_HEIGHT[this.hatKind(this.hatOn(seen.who, level) ?? hat)]
     // A hat that is tipped is lifted by as much as its low corner dips, so it rests on the head by that corner and never in it.
-    const tip = seen.level > 0 ? 0 : mods.hatTilt + (actor.grumpy && !tower ? 0.16 : 0), dip = Math.abs(Math.sin(tip)) * HAT_HALF[h.kind]
+    // The hats of a tower stand square on one another, whatever act is still playing under them.
+    const tip = tower ? 0 : mods.hatTilt + (actor.grumpy ? 0.16 : 0), dip = Math.abs(Math.sin(tip)) * HAT_HALF[h.kind]
     // However far an act and a slipping tower bring a hat down, it stays above the feet.
     const lean = actor.lean.x + mods.lean, head = body.top * actor.squash.x * mods.squash, top = Math.max(0.45, head + slip + mods.hatLift + dip) + under
     // A body leans as foam does: its feet stay planted and its top slides across, so the top of its head stays level.

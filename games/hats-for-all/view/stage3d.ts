@@ -146,6 +146,9 @@ export class FoamStage {
     this.tileFor = key
     this.tile.geometry.dispose()
     this.tile.geometry = buildTile(kinds)
+    // The tile is cut again for each cycle's hats. Its name says which, so anything that reads the scene and
+    // remembers a geometry by its name never takes one tile for another.
+    this.tile.geometry.uuid = `tile ${key}`
     this.hats.forEach((mesh, hat) => { if (hat < kinds.length) mesh.geometry = this.pieces.hats[kinds[hat]] })
   }
 
@@ -201,10 +204,12 @@ export class FoamStage {
         if (!mesh.visible) return
         const pose = play.hatPose(hat), flat = 1 - pose.up, give = 1 - pose.squash, glowing = lit({ type: 'hat', hat })
         const stir = glowing ? pulse * (0.5 + 0.5 * Math.sin(play.time * 5 + hat * 1.7)) : 0
-        mesh.position.set(pose.x, pose.y - flat * give * SLAB * 0.9 + stir * 0.1, pose.z)
+        // Lying in its hole a hat gives under the finger as foam does: it gets thinner and its underside stays on
+        // the mat. Standing, it squashes onto what it stands on and spreads.
+        const thin = 1 - flat * Math.max(0, give) * 0.7
+        mesh.position.set(pose.x, pose.y - flat * (1 - thin) * SLAB / 2 + stir * 0.1, pose.z)
         mesh.rotation.set(-Math.PI / 2 * flat + pose.flip, pose.turn, pose.tilt + stir * 0.05)
-        // Lying in its hole a hat gives downwards; standing it squashes onto what it stands on and spreads.
-        mesh.scale.set(1 + pose.up * (1 / Math.sqrt(pose.squash) - 1), 1 - pose.up * give, 1 - flat * give * 0.5)
+        mesh.scale.set(1 + pose.up * (1 / Math.sqrt(pose.squash) - 1), 1 - pose.up * give, thin)
         if (pose.up > 0.02) shade(pose.x, pose.z, 2 / (1 + pose.y * 0.25), 1.1 / (1 + pose.y * 0.25))
         if (glowing) halo(pose.x, flat > 0.5 ? SLAB + 0.02 : 0.02, pose.z - flat * HAT_HEIGHT[play.hatKind(hat)] / 2, 2.6 + 1.2 * pulse)
       })
@@ -241,7 +246,7 @@ export class FoamStage {
   private swing(ear: THREE.Mesh, slot: number, side: number, top: number, pose: ActorPose): void {
     ear.visible = true
     ear.userData.jamObject = `creature-${slot}`
-    this.q.setFromAxisAngle(this.v.set(0, 0, 1), side * (0.2 + 0.5 * pose.pat + 0.9 * Math.max(0, pose.ears) - 0.15 * Math.max(0, -pose.ears)) - pose.lean * 2.5 + side * (1 - pose.squash) * 1.6)
+    this.q.setFromAxisAngle(this.v.set(0, 0, 1), side * (0.2 + 0.5 * pose.pat + 0.9 * Math.max(0, pose.ears) - 0.15 * Math.max(0, -pose.ears)) - pose.lean * 1.5 + side * (1 - pose.squash) * 1.0)
     // In front of the body's face and behind its hands.
     ear.matrix.compose(this.v.set(side * 0.78, top - 0.42, CREATURE_DEPTH / 2 + EAR_DEPTH / 2 + 0.01), this.q, this.s.set(1, 1, 1)).premultiply(this.body)
     ear.matrixWorldNeedsUpdate = true

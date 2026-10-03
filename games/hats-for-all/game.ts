@@ -371,11 +371,17 @@ export class Game {
       play.cue(object === 'loose-hat' ? 'creak' : 'bap', object === 'loose-hat' ? creak(this.next()) : bap(kind, this.next()), 0.09)
       play.act(who, 'totters-blind')
       this.says(who, 'grump', 0.14)
+      // Whoever is left bare looks from the tower to its own head and pats it: it shows where the hat went.
+      for (const other of this.saved.crew) {
+        if (other.hats.length > 0) continue
+        play.look(other.kind, spotX(creature.spot), ROW_Z, 0.9, 0.7)
+        play.after(0.9, () => { if (play.has(other.kind) && play.worn(other.kind) === 0) play.act(other.kind, 'pats-its-bare-head') })
+      }
     } else {
       play.act(who, object === 'loose-hat' ? 'ducks-under' : TASTE_ACTS[creature.kind][kind])
       this.says(who, moodFor(tasteFor(creature.kind, kind)), 0.1)
     }
-    play.everyoneLooks(spotX(creature.spot), ROW_Z, 1.2, who)
+    if (creature.hats.length === 1) play.everyoneLooks(spotX(creature.spot), ROW_Z, 1.2, who)
   }
 
   /** A creature was pulled and let go: it does something funny with whoever or whatever it was pulled to, and stays on its spot. */

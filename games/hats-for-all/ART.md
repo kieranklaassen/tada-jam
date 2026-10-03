@@ -199,7 +199,7 @@ Hats for All is designed from three California preschool and transitional kinder
 
 ## The look
 
-**Foam play mats**, the first look reserved for this game in the ledger of `docs/art-direction.md`. Everything on screen is a thick slab of squashy foam cut from one outline: the floor of jigsaw tiles, the white tile the hats press out of, the hats, the creatures and the arch. A hat pressed out leaves its hole, and the mat shows through it.
+**Foam play mats**, the first look reserved for this game in the ledger of `docs/art-direction.md`. Everything on screen is a thick slab of squashy foam cut from one outline: the floor of jigsaw tiles with five round spots inlaid in it, the white tile the hats press out of, the hats, the creatures and the arch they come and go through. A hat pressed out leaves its hole, and the mat shows through it.
 
 It must not be taken for Kite Tower (blocks on a playroom floor: wood with grain, lathe-turned dolls) or Shadow Lantern (flat extruded shapes: paper, lamp light). Here nothing has grain, nothing is paper and nothing is lit by a lamp: the foam is matte with a fine stipple, every edge is a small soft bevel, the floor locks together with dovetail teeth, and the colours are flat.
 
@@ -208,6 +208,8 @@ It must not be taken for Kite Tower (blocks on a playroom floor: wood with grain
 | What | Colour | Why |
 | --- | --- | --- |
 | Mat floor, two tones | `#27a99a`, `#2fb8a8` | One calm hue that no piece uses, so every hat and creature stands off it. |
+| Round spots | `#63d2c3` | A lighter tone of the floor, inlaid flush: where a creature stands and a loose hat rests beside. |
+| The idle glow | `#ff9a1f` | A soft ring round the next thing to touch, never over it, so a hat keeps its own colour while lit. It reads on the cream tile and on the teal floor alike. |
 | Hat tile and arch | `#f6f1e4` | The mat's furniture is cream: the hats lie on the plainest, lightest surface in the scene. |
 | Cone, dome, brim | `#e3382c`, `#2d6fe0`, `#f7c41d` | The working pieces are the three flat primaries and nothing else is. |
 | Bop, Lanky, Flop, Wig, Pip | `#f58a1f`, `#8b52d4`, `#f0609f`, `#a9d83c`, `#4b4f5c` | Secondaries and one charcoal, none shared with a hat. |
@@ -220,6 +222,8 @@ It must not be taken for Kite Tower (blocks on a playroom floor: wood with grain
 - Every piece is an outline extruded 0.5 to 0.9 mat units with a bevel of 0.055. Squash is a scale spring, never a soft body.
 - The hats are working pieces and stay plain: one flat colour, one simple outline, no face, no pattern and no idle motion in the tile (pack: game-design, working-objects-stay-plain.md). The creatures carry the faces and the comedy.
 - No shadow map. A soft round blob lies under each creature, each hat in the air or on the floor, and each leg of the arch; the same blob is the dimple where the floor is poked.
+- A body leans as foam does: its feet stay planted and its top slides across. Nothing rotates into the floor.
+- The ghost hand of the idle ladder is a white mitten with one finger out and a dark edge, drawn in code. It is a picture of a hand pressing the thing a child could press, and nothing to decode.
 
 ### Lighting
 
@@ -229,7 +233,9 @@ Daylight, as through a window: one broad sky light and one soft sun from the upp
 
 - A touch is answered when the finger lands: the foam gives under it at once, and springs back when it lifts.
 - A hat leaves with a pop, turns over once in the air and lands with a squash on what it lands on; what it lands on squashes too.
-- Each creature has its own spring, tempo and sway (`motion.ts`), so the same landing looks different on each: the ball bounces, the post sways, the jelly loaf wobbles for seconds.
+- Each creature has its own spring, tempo and sway (`motion.ts`), so the same landing, the same walk and the same breath look different on each: the ball bounces, the post sways, the jelly loaf wobbles for seconds.
+- What a creature does is an act (`acts.ts`): fifteen for the tastes, one for each creature under each kind of hat, and others for the cells of the grid and the scenes. Every act begins and ends at rest and is its own motion, by test.
+- A hat that comes down over a face comes forward of it first, and a hat on its way home is over its hole before it goes in: nothing passes through anything on the way.
 - Alive at idle: every creature breathes at its own tempo, looks at the hats while it is bare and up at its hat when it has one, blinks at moments of its own, and a bare one pats its head now and then. Nothing beckons or flashes.
 
 ### The tiers
@@ -239,3 +245,11 @@ Daylight, as through a window: one broad sky light and one soft sun from the upp
 ### What the spike showed
 
 Stills at 1180 by 820 were taken on the build machine, which draws in software, at pixel ratios 1 and 2. They say the layout, the silhouettes and the colours read: three creatures, four hats and the arch are each told apart at a glance, and a hat on a head, a hat in its hole and a hat loose on the floor cannot be confused. They say nothing about frame rate, which the lead measures on a real graphics card.
+
+### The registry row
+
+For the lead, for section 3 of `docs/art-direction.md`, when the game merges:
+
+| Game | Style | Art guide |
+| --- | --- | --- |
+| Hats for All | Foam play mats 3D: thick matte foam slabs with a fine stipple and a small soft bevel, a jigsaw-toothed teal floor with round spots inlaid, a cream tile the hats press out of and leave their holes in, hats in the three flat primaries, cut-out creatures in secondaries, plain daylight | `games/hats-for-all/ART.md` |
