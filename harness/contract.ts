@@ -99,6 +99,28 @@ export type JamGame = {
 export const KEY_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
 const SEMVER_PATTERN = /^\d+\.\d+\.\d+$/
 
+/** The youngest and the oldest age a jam game can be made for, in whole years. */
+export const AGE_RANGE = [2, 12] as const
+/** The widest band a jam game may declare: a game is designed for one audience. */
+export const MAX_BAND_YEARS = 5
+
+/**
+ * The jam's own band rule, which is stricter than the contract's: whole years,
+ * inside AGE_RANGE, youngest first, at most MAX_BAND_YEARS wide. Returns
+ * human-readable problems; an empty list means the band names one jam audience.
+ * The generator, the games test and the shell's age list all read it from here.
+ */
+export function ageBandProblems(band: readonly [number, number]): string[] {
+  const [youngest, oldest] = band
+  const named = `ageBand [${youngest}, ${oldest}]`
+  const problems: string[] = []
+  if (!Number.isInteger(youngest) || !Number.isInteger(oldest)) problems.push(`${named} is not in whole years`)
+  if (youngest < AGE_RANGE[0] || oldest > AGE_RANGE[1]) problems.push(`${named} does not lie within ${AGE_RANGE[0]} to ${AGE_RANGE[1]}`)
+  if (oldest < youngest) problems.push(`${named} does not put the youngest age first`)
+  if (oldest - youngest > MAX_BAND_YEARS) problems.push(`${named} is wider than ${MAX_BAND_YEARS} years; a game is designed for one audience, so split a wider range into faces or a second game`)
+  return problems
+}
+
 /** Returns human-readable problems; an empty list means the manifest is valid. */
 export function validateManifest(manifest: CartridgeManifest): string[] {
   const problems: string[] = []

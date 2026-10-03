@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { CartridgeBoundary } from './CartridgeBoundary'
-import type { CartridgeContext, CartridgeStatus, JamGame } from './contract'
+import { AGE_RANGE, type CartridgeContext, type CartridgeStatus, type JamGame } from './contract'
 import { PortraitOverlay } from './PortraitOverlay'
 import { createJamStorage } from './storage'
 
@@ -27,7 +27,8 @@ const THEMES: Record<string, Record<string, string>> = {
   },
 }
 
-const AGES: readonly (number | null)[] = [null, 3, 4, 5, 6, 7, 8]
+// No age, then every whole age a jam game can be made for.
+const AGES: readonly (number | null)[] = [null, ...Array.from({ length: AGE_RANGE[1] - AGE_RANGE[0] + 1 }, (_, index) => AGE_RANGE[0] + index)]
 const LANGUAGES = ['en', 'nl', 'fr'] as const
 
 type Prefs = { childAge: number | null; language: string; theme: string }
@@ -40,7 +41,7 @@ function readPrefs(): Prefs {
     const parsed = JSON.parse(window.localStorage.getItem(PREFS_KEY) ?? 'null') as Partial<Prefs> | null
     if (!parsed) return fallback
     return {
-      childAge: typeof parsed.childAge === 'number' || parsed.childAge === null ? parsed.childAge : fallback.childAge,
+      childAge: parsed.childAge !== undefined && AGES.includes(parsed.childAge) ? parsed.childAge : fallback.childAge,
       language: typeof parsed.language === 'string' ? parsed.language : fallback.language,
       theme: typeof parsed.theme === 'string' && parsed.theme in THEMES ? parsed.theme : fallback.theme,
     }

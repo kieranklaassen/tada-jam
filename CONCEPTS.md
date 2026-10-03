@@ -19,7 +19,13 @@ Styles are claimed per game, never per jam. Techniques (how something is rendere
 ### Style spike
 A quick build of a game's real scene in a candidate style, captured as a screenshot at iPad-landscape size with a measured frame rate, done before any full visual build.
 
-The spike is what turns a style choice into evidence: it shows the look reads clearly for a child and fits the frame-time budget before the style is claimed.
+The spike is what turns a style choice into evidence: it shows the look reads clearly for a child and fits the frame-time budget before the style is claimed. A builder spikes the first look reserved for its game, and the next reserved look only if the first fails on clarity or frame rate or the owner rejects it at the end of the Toy stage. The order of the reserved rows is the lead's pick, and the contact sheet that sets looks side by side is the lead's, across the games of a Wave.
+
+### Look ledger
+The jam's menu of looks no game has claimed, kept as a ledger in which every look is open, reserved for one named game, or claimed.
+*Avoid:* style menu (the earlier list, which had no states)
+
+Only the lead changes a state: looks are reserved for a game before its builder starts, and after a merge one becomes a Claimed style and the game's others go back to open. A builder spikes the first look reserved for its game, moves to the next reserved row only when that Style spike fails or the owner rejects the look, and never edits the ledger. A new row in the registry of Claimed styles is a request to the lead in a Wave, and a builder working alone adds it.
 
 ### Art guide
 The per-game document that describes a Claimed style: its palette, materials, lighting, motion rules, and how the game meets the Quality bar.
@@ -43,12 +49,12 @@ A game declares one audience, so a band stays narrow; an idea that spans a wider
 ### Kid side
 Everything a child sees and touches while playing a game, as opposed to the jam shell and any grown-up corner.
 
-The kid side shows no words or numerals by default and gives no spoken instructions. A documented exception may show text in a grown-up corner reached by a deliberate hold gesture, or an optional numeral that an older child in the Age band reaches for and never needs.
+The kid side shows no words or letters at any age and gives no spoken instructions. A game whose Age band starts below 6 shows no numeral or symbol either, optional or not. A game whose Age band starts at 6 or above may show numerals and mathematics symbols (the digits, the signs for plus, minus, times, divide, equals, less than and greater than, the fraction bar, the decimal mark and the percent sign), each laid on or beside the quantity it stands for. The band decides this, never the child's age while playing. Text meant for a grown-up, such as a performance overlay or a grown-up corner reached by a deliberate hold gesture, is a documented exception and is kept apart from the kid side.
 
 ### Wordless clarity
 The Quality bar property that a child at the youngest age of a game's Age band can work out every interaction from cues alone: what can be touched looks touchable, one next act is offered at a time, and the world answers physically.
 
-Which cues work depends on age: demonstration and one affordance at a time for the youngest children, more simultaneous options and optional symbols (never required) as the band gets older.
+Which cues work depends on age: demonstration and one affordance at a time for the youngest children, more simultaneous options as the band gets older. Where the Kid side may show numerals and mathematics symbols, they sit on or beside the quantities they stand for, and play does not depend on reading one.
 
 ### Guidance ladder
 The escalating, idle-only hints a game gives when the child stops: first a glow on what can be touched, then a demonstration (a ghost hand or a character) of one possible next act, backing off with growing gaps and stopping after a few tries.
@@ -85,6 +91,29 @@ A scripted recording of a whole game, from a fresh open through the hands-off op
 *Avoid:* demo video, screen recording
 
 It is played at a quick child's pace, each step starting as soon as the game allows, because overlapping moments are where state goes wrong and a still of one moment cannot show them. Game time advances in fixed steps from the first frame the game draws, with randomness seeded, so two recordings of the same script match frame for frame however slowly the machine renders. Run in real time on a device, the same script also measures smoothness against the Quality bar; on a machine that renders in software only the stepped recording means anything, and it judges behaviour and readability. It differs from a Cold playtest proxy, which plays only the first minute as a newcomer to find what is unclear.
+
+### Design sheet
+The written design of a game, made before any of its code: who it is for, its toy, what combines with what, how the school idea is represented, how an error shows, the order of challenges and what is saved, its characters and scenes, and the Education pack records its learning claim rests on.
+*Avoid:* spec, game design document
+
+It opens the same document as the game's Art guide. Someone who did not write it checks it against both packs before the game is built, and every finding of that check carries the exact sentence that should stand in its place.
+
+### Toy stage
+The stage of building a game in which only its toy exists: the one action the child's finger performs most, in an otherwise empty scene in the game's look, with its sound and motion and no goal.
+
+The toy is judged alone, because a goal, a story or a look does not make up for a dull action. The owner sees every game's toy once, at the end of this stage, before goals are built on it.
+
+### Wave
+A set of games built at the same time, one builder each, and merged together as one pull request.
+*Avoid:* batch, sprint
+
+A wave has a lead, who plans it, owns every file the games share, reserves looks in the Look ledger, starts the checkers of the Design sheets, and makes every commit on the wave's branch. A builder whose worktree the lead can read on disk runs no git that writes, and the lead commits for it; a builder on a remote machine commits and pushes only its own game branch, which the lead merges with a squash. The owner plays one wave before the next is built on the same assumptions.
+
+### Held game
+A game that is stopped and left out of its Wave's merge, because its Design sheet names no supporting record, the owner rejected its toy, or it did not reach the Quality bar in time.
+*Avoid:* cancelled, cut
+
+A held game keeps its branch and its reserved looks and is listed first in the next wave.
 
 ## Motion
 
@@ -141,6 +170,12 @@ The part of a game loop that makes play 5 differ from play 1 (physics that surpr
 *Avoid:* replayability hook, content
 
 An idea names its depth engine and a one-line "what is different on play 5" before anything is built; an idea that cannot is cut.
+
+### Hidden position
+A child's place in a game's designed order of challenges, which the game stores and nothing on screen ever shows.
+*Avoid:* level, difficulty setting, progress
+
+A visit starts at the stored position, and a first visit at a default the child's age suggests. It moves only between cycles, one step at a time: up after a cycle that goes well, down after one that goes badly. A stored position wins over the child's age, no clock is read, and it names a place in the game's own order, never a grade or a school level.
 
 ### Mechanic prototype
 A throwaway build of one game loop with simple graphics, made to find out whether the loop has depth, and free of the jam's rules (words, scores, wins and timers are allowed).

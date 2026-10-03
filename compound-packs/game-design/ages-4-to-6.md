@@ -25,6 +25,6 @@ Do not:
 
 Exception: none.
 
-Open: whether a single letter that says its sound may appear in this band, and how letters are first shown, are the owner's decisions (`research/open-questions.md`, items 3 and 4). Until then the jam's wordless rule stands.
+Open: whether a single letter that says its sound may appear in this band, and how letters are first shown, are the owner's decisions (`research/open-questions.md`, items 3 and 4). Until then the jam's wordless rule stands: no letter or written word at any age, and no numeral or symbol in a game whose age band starts below 6 (`fade-to-school-symbols.md`).
 
 Evidence: tap and drag-and-drop get faster and more accurate between ages 3 and 6 [S, Vatavu et al. 2015]. Hoicka et al. on humor [V]. House House on the goose, who "is never really that bad", and on villagers with limited vision [V]. Riddles at six to eight are from a summary of McGhee [S]. Detail: `research/depth-and-replay.md`, section 2; `research/learning-games-that-work.md`, section 4.

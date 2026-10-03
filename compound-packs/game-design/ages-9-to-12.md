@@ -24,6 +24,6 @@ Do not:
 
 Exception: difficulty comes with a way back in. Children in grades 4 to 6 said they stopped when a game was too hard.
 
-Open: whether a reading on the object itself (a height, a part count) may be shown, and whether written notation may be required, are the owner's decisions (`research/open-questions.md`, items 2 and 5).
+Open: whether a reading on the object itself (a height, a part count) may be shown, and whether a numeral or symbol may stand alone, so that play depends on reading it, are the owner's decisions (`research/open-questions.md`, items 2 and 5). Until then neither is used. Numerals and mathematics symbols laid on or beside the quantity they stand for are allowed when the game's band starts at 6 or above (`fade-to-school-symbols.md`).
 
 Evidence: Papert on children calling something fun because it is hard [V]. In Olson's survey of 1,254 pupils aged 12 to 14, the top edge of this band, challenge, creativity and curiosity were leading motives [V]. Fifth-graders were moved more by challenge than by competition [V, Greenberg as cited by Olson]. The babyish list is inference and has not been checked with children [I]. Detail: `research/depth-and-replay.md`, summary rule 13 and section 3; `research/learning-games-that-work.md`, section 7.
