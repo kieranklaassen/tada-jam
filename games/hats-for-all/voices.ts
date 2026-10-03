@@ -90,9 +90,10 @@ export function squeak(count: number): Partial[] {
   return [tone(0, 880 * v, 1480 * v, 0.07, 0.006, 0.1), noise(0, 420, 300, 2, 0.05, 0.004, 0.08)]
 }
 
-/** One step of a loose hat scuttling. */
+/** A loose hat scuttling: a quick soft patter of five small steps. */
 export function scuttle(count: number): Partial[] {
-  return [noise(0, 2300 * vary(count), 1700, 6, 0.035, 0.002, 0.035)]
+  const v = vary(count)
+  return [0, 1, 2, 3, 4].map((step) => noise(step * 0.09, (2300 - step * 90) * v, 1700, 6, 0.035, 0.002, 0.035))
 }
 
 /** A hat skids across the foam to a round spot: a long rubbery squeal that sinks as it slows. */

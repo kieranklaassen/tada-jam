@@ -354,7 +354,8 @@ export class Game {
     play.cue('bap', bap(this.saved.tile[hats[hats.length - 1]], this.next()))
     play.act(who, 'salutes-and-topples')
     play.cue('whistle', whistle(this.next()), 0.35)
-    play.after(0.5, () => hats.forEach((hat) => {
+    // They leave from the top down, a moment apart, so no hat flies through the one above it.
+    hats.forEach((hat, level) => play.after(0.5 + (hats.length - 1 - level) * 0.14, () => {
       const kind = this.saved.tile[hat]
       if (play.seen(hat).at === 'head') play.moveHat(hat, { at: 'tile' }, 'pop', () => play.cue('fwump', fwump(kind, this.next())))
     }))

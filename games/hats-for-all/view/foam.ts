@@ -149,12 +149,15 @@ export function handTexture(size = 64): THREE.DataTexture {
   return texture
 }
 
-/** A soft ring, clear in the middle: the glow that lies round a thing and never over it, so a hat keeps its own colour while it is lit. */
-export function ringTexture(size = 64): THREE.DataTexture {
+/** How much of a glow ring's width, from its middle out, is clear: the thing it marks fits inside that. */
+export const RING_CLEAR = 0.86
+
+/** A thin soft ring, clear in the middle: the glow that lies round a thing and never over it, so a hat keeps its own colour while it is lit. */
+export function ringTexture(size = 128): THREE.DataTexture {
   const data = new Uint8Array(size * size * 4)
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const d = Math.hypot(x - size / 2 + 0.5, y - size / 2 + 0.5) / (size / 2)
-    const a = Math.max(0, Math.min(1, (d - 0.5) / 0.22)) * Math.max(0, Math.min(1, (1 - d) / 0.3))
+    const a = Math.max(0, Math.min(1, (d - RING_CLEAR) / 0.05)) * Math.max(0, Math.min(1, (1 - d) / 0.05))
     data.set([255, 255, 255, Math.round(255 * a)], (y * size + x) * 4)
   }
   const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)

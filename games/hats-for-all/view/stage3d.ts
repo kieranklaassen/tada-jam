@@ -3,11 +3,11 @@ import type { LetGo, Target } from '../game'
 import type { Hint } from '../guide'
 import { MOST, type HatKind } from '../kinds'
 import { DIMPLE_SECONDS, type ActorPose, type Play } from '../play'
-import { CREATURE_DEPTH, HAND, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
+import { CREATURE_DEPTH, HAND, HAT_HALF, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
 import { ARCH_X, ARCH_Z, LANE_Z, TILE_Z } from '../stage'
 import { tileWidth } from '../tile'
 import { CREATURE_COLOUR, EAR_DEPTH, PALETTE, buildArch, buildMat, buildPieces, buildRoom, buildTile, type Pieces } from './build'
-import { blobTexture, foamMaterials, handTexture, ringTexture } from './foam'
+import { RING_CLEAR, blobTexture, foamMaterials, handTexture, ringTexture } from './foam'
 
 // The foam scene as three.js objects, with no renderer: it is built once,
 // moves what is there from the theatre's numbers each frame, and answers
@@ -105,7 +105,7 @@ export class FoamStage {
     this.hands = instanced('hands', this.pieces.hand, this.foam.plain, BODIES * 2)
     this.dots = instanced('dots', this.pieces.dot, new THREE.MeshBasicMaterial({ color: PALETTE.dot }), BODIES * 3)
     this.blobs = instanced('shadow-blobs', this.pieces.blob, flat(PALETTE.shadow, 0.5), BLOBS)
-    this.glows = instanced('glow-blobs', this.pieces.blob, flat(PALETTE.glow, 0.9, 2), GLOWS)
+    this.glows = instanced('glow-blobs', this.pieces.blob, flat(PALETTE.glow, 1, 2), GLOWS)
     this.blobs.renderOrder = 1
     this.glows.renderOrder = 2
     // The owners of each hand and each dot, for a check that reads the scene: they belong to their creature.
@@ -159,8 +159,10 @@ export class FoamStage {
       if (blob < BLOBS) this.blobs.setMatrixAt(blob++, this.m.compose(this.v.set(x, y, z), this.q.identity(), this.s.set(wide, 1, deep)))
     }
     const lit = (target: Target): boolean => guide !== null && guide.glow > 0 && guide.hint.glow.some((one) => one.type === target.type && (one.type === 'hat' ? one.hat === (target as { hat: number }).hat : one.type === 'creature' && one.who === (target as { who: string }).who))
-    const halo = (x: number, y: number, z: number, size: number): void => {
-      if (glow < GLOWS) this.glows.setMatrixAt(glow++, this.m.compose(this.v.set(x, y, z), this.q.identity(), this.s.set(size, 1, size)))
+    // A ring round a thing that is `halfWide` by `halfDeep`: the thing fits in the ring's clear middle with a little room, so the ring marks it and never lies over it or runs into the next.
+    const halo = (x: number, y: number, z: number, halfWide: number, halfDeep: number): void => {
+      const grow = (1 + 0.06 * pulse) * 2 / RING_CLEAR
+      if (glow < GLOWS) this.glows.setMatrixAt(glow++, this.m.compose(this.v.set(x, y, z), this.q.identity(), this.s.set((halfWide + 0.07) * grow, 1, (halfDeep + 0.07) * grow)))
     }
     const pulse = guide ? guide.glow * (0.75 + 0.25 * Math.sin((play?.time ?? 0) * 4)) : 0
     this.tile.visible = play !== null && play.hatCount > 0
@@ -193,7 +195,7 @@ export class FoamStage {
       dot = (i + 1) * 3
       hand = (i + 1) * 2
       shade(pose.x, pose.z + 0.1, cut.ground * 2.3 / (1 + pose.y * 0.4), 1.5 / (1 + pose.y * 0.4))
-      if (lit({ type: 'creature', who })) halo(pose.x, 0.02, pose.z + 0.1, cut.ground * (2.6 + 1.2 * pulse))
+      if (lit({ type: 'creature', who })) halo(pose.x, 0.02, pose.z + 0.1, cut.ground * 1.05, 0.85)
     })
     while (ear < this.ears.length) this.ears[ear++].visible = false
     if (play) {
@@ -211,7 +213,9 @@ export class FoamStage {
         mesh.rotation.set(-Math.PI / 2 * flat + pose.flip, pose.turn, pose.tilt + stir * 0.05)
         mesh.scale.set(1 + pose.up * (1 / Math.sqrt(pose.squash) - 1), 1 - pose.up * give, thin)
         if (pose.up > 0.02) shade(pose.x, pose.z, 2 / (1 + pose.y * 0.25), 1.1 / (1 + pose.y * 0.25))
-        if (glowing) halo(pose.x, flat > 0.5 ? SLAB + 0.02 : 0.02, pose.z - flat * HAT_HEIGHT[play.hatKind(hat)] / 2, 2.6 + 1.2 * pulse)
+        // A hat in its hole is ringed on the tile, close round its own outline; a hat standing on the floor or a head is ringed on the floor under it.
+        if (glowing && flat > 0.5) halo(pose.x, SLAB + 0.02, pose.z - HAT_HEIGHT[play.hatKind(hat)] / 2, HAT_HALF[play.hatKind(hat)], HAT_HEIGHT[play.hatKind(hat)] / 2)
+        else if (glowing) halo(pose.x, 0.02, pose.z, HAT_HALF[play.hatKind(hat)] + 0.25, 0.75)
       })
       this.arch.scale.set(1 / Math.sqrt(play.arch.x), play.arch.x, 1)
       for (const dimple of play.dimples) {
@@ -225,6 +229,8 @@ export class FoamStage {
     this.hands.count = hand
     this.blobs.count = blob
     this.glows.count = glow
+    // The rings breathe together: they come up and go down with the idle ladder's glow.
+    ;(this.glows.material as THREE.MeshBasicMaterial).opacity = Math.min(1, pulse * 1.15)
     for (const mesh of [this.dots, this.hands, this.blobs, this.glows]) {
       mesh.instanceMatrix.needsUpdate = true
       // An instanced mesh with nothing in it is not submitted at all.

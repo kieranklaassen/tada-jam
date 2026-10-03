@@ -295,10 +295,12 @@ export class Play {
       const u = Math.min(1, flight.t / flight.lasts), e = ease(u)
       // Two hops never touch down between them; and a hat on its way home is over its hole before it comes down into it.
       const bounce = flight.travel === 'hop' ? Math.max(Math.abs(Math.sin(u * Math.PI * 2)), 0.45 * Math.sin(u * Math.PI)) : Math.sin(u * Math.PI)
-      const over = h.seen.at === 'tile' ? ease(Math.min(1, u / 0.7)) : e
+      // And a hat on its way to a head is as high as the head before it comes in over it, so it never rises through the hat it lands on.
+      const toHead = h.seen.at === 'head'
+      const over = h.seen.at === 'tile' ? ease(Math.min(1, u / 0.7)) : toHead ? ease(Math.max(0, (u - 0.3) / 0.7)) : e
       pose.x = flight.fromX + (pose.x - flight.fromX) * over
       pose.z = flight.fromZ + (pose.z - flight.fromZ) * over
-      pose.y = flight.fromY + (pose.y - flight.fromY) * e + bounce * flight.arc
+      pose.y = flight.fromY + (pose.y - flight.fromY) * (toHead ? ease(Math.min(1, u / 0.55)) : e) + bounce * flight.arc
       // It lies down, or stands up, in the high middle of its way and not at either end, where it would sweep through what it leaves or lands on.
       pose.up = flight.fromUp + (pose.up - flight.fromUp) * ease(Math.max(0, Math.min(1, (u - 0.2) / 0.6)))
       pose.flip = flight.travel === 'pop' ? e * Math.PI * 2 : 0

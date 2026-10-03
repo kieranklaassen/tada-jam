@@ -56,7 +56,7 @@ function tastes(kind: Hat) {
 }
 
 const audit: GameAudit = {
-  enforce: false,
+  enforce: true,
   query: 'tier=0&seed=11',
   childAge: 2,
   sampleMs: 200,

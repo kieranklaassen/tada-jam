@@ -94,7 +94,7 @@ export function wayToTile(spot: number, hole: number, hats: number): Point[] {
 
 /** How fast the parade marches, in mat units a second, and how long each creature waits after the one before it, so the line opens out and nobody brushes a neighbour at a turn. */
 export const PARADE_SPEED = 7
-export const PARADE_STAGGER_S = 0.14
+export const PARADE_STAGGER_S = 0.24
 
 export function wayLength(way: readonly Point[]): number {
   let length = 0
