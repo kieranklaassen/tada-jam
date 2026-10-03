@@ -238,4 +238,30 @@ Night Camp is designed from six California content standards adopted by the Stat
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Not part of the sheet. Written after the spike of the first reserved row of the ledger, **survey map and field kit**. The spike is `look.ts` over `terrain.ts`, shown by the Mount at load from a fixed seed; it is a still, and nothing is playable behind it.
+
+**The claim, in one line.** A printed topographic sheet seen from straight above, with the field kit lying on it: the map is flat print in browns, greens and blues, the kit is red, white, black and steel and casts hard shadows, and the campers are the map's own printed symbols come alive.
+
+**What keeps it apart from the claimed looks.** Turning Tower is the nearest: its terrain is stepped solids under a dusk sky, and this is contour lines on paper with no solid, no sky and no gradient. Shadow Lantern has flat pieces with offset shadows on a dark ground: here only the kit casts a shadow, on cream paper, and nothing is cut paper.
+
+**Palette.**
+
+- The map, which uses no red: paper `#f2e9d2`, the back of the sheet `#f8f3e6`, contour `#b98a55`, every fifth contour `#9c6a36`, woodland tint `#d5e3ae`, tree symbols `#6f9150`, water line `#4a94c6` and water tint `#c3e1ee`, neat line `#4b3a2b`, pencil `#6d6862`, night film `#4a5c9c`.
+- The figures (campers, tents, animals): key line `#3a2c22`, ochre `#d9a640`, sand `#e8d3a2`, olive `#8d9a4c`, moss `#5f7a40`, teal `#4f8e88`, plum `#7d5470`, slate `#6283a6`, bark `#96693f`, mule `#a58e70`.
+- The kit, which is everything that can be touched: vermilion `#e2401c`, white `#fcf9f1`, black `#1c1c1f`, steel `#c5cdd3` and `#7d8891`.
+- The working pieces, each one flat colour: log `#cf9f62`, oil `#eca418`, water `#2c7fd0`, ash `#9b9b98`.
+
+**Materials.**
+
+- The map is print: contour lines traced once from one height function, with every fifth heavier; one layer of hill shading from the same function; woodland as a flat tint with small solid tree symbols; a stream and a pool; a dashed footpath; fold creases; a neat line with margin ticks. Tree symbols are solid crowns and spires, never an open ring with a tail, which reads as a letter.
+- The figures are flat inks inside one dark key line, with no shadow, as if printed on the sheet. Each camper is told apart from above by hat and sleeping bag.
+- The kit is real things lying on paper: banded measuring rods, a folding rule with hinges, a steel cursor with a crescent cut out of it, map pins, a compass without letters, a dial ring round the fire. Metal carries one white highlight line.
+- The working pieces stay plain (pack: game-design, working-objects-stay-plain.md): a log is a tan bar, oil an amber band, water a blue band, on plain rods, with no face, no texture and no motion of their own.
+
+**Lighting.** None, but for the one hill-shading layer, lit from the top left as on a printed map. Every kit object casts one small hard shadow, down and to the right, and nothing else casts any. The night is one flat film laid over the map inside the neat line, multiplied, with clean circular holes where the fire and a lit lantern reach; eyes show just outside the holes. The kit and the folded edge stay above the film.
+
+**Motion rules, for the toy.** The map never moves. Figures move as cut-out symbols: they slide, turn and tip their heads up, and each camper moves like itself. Kit that is lifted grows its shadow offset and sets down with a small overshoot. The working pieces move only as the idea needs: a row zips out and settles in a wave, and a stock shortens from its far end as the night runs.
+
+**Tiers.** The tiers in `config.ts` change the pixel ratio only, from 2 down to 1. The map is a cached layer repainted only when the size or the ratio changes, and the look holds at a ratio of 1.
+
+**Cost, as drawn.** One cached map layer and about fifty figure draws a frame. The frame rate is not measured: the builder's machine has no graphics card.
