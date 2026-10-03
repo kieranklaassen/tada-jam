@@ -59,7 +59,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // canvas, where a still or a probe can read which tier is applied.
     const applyTier = () => { canvas.dataset.tier = String(governor.tier) }
 
-    // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
+    // The one place the game draws its frame. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
     // For now it draws the look spike's fixed page (spikePage.ts), with nothing playable behind it.

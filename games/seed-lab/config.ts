@@ -5,8 +5,8 @@ import { seedLabManifest } from './manifest'
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
 // template and a template fix can be copied over them.
 
-/** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+/** The colour of the surface before the first frame is drawn: the journal's paper, so nothing steps when the page appears. */
+export const BACKDROP = '#f3ead6'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 

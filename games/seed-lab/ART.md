@@ -216,4 +216,49 @@ Seed Lab is designed from two California standards adopted by the State Board fo
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Written after the style spike, not part of the sheet. The look is the game's first reserved row, **Naturalist's field journal**, built from the row's own description. It is a request to the lead for the registry, not a claim: the owner sees it at the toy checkpoint.
+
+**What it is.** One page of a naturalist's notebook, seen flat. A plate of bare paper is taped to the page and holds two boards of pots; packets are taped down the left edge; the visitors, the beetle and its loupe are drawn in the right margin; a pencil ground line along the foot carries the border. Everything is pen and thin wash on cream paper. There is no scene, no sky, no light source and no cast shadow.
+
+**What it must never be taken for.** Bedtime Forest is opaque gouache in tone bands with a brown line; Hillside Spring is a painted scene with light shafts. Here the ink is one blue-black, the colour is transparent and sits a little off the line, most of the surface is bare paper, and nothing is lit.
+
+**Palette.**
+
+| Hex | Use |
+| --- | --- |
+| `#1f2a44` | The one pen ink, blue-black |
+| `#5f5d5a` | Pencil: family lines, sketches, ground lines |
+| `#f3ead6` | Paper |
+| `#f8f2e2` | The plate, scraps and packets |
+| `#d42a36`, `#f29abb` | Red petals, pink petals |
+| `#8fa3bd` | The cool shadow wash that lets a white flower read on cream |
+| `#4d0a1a` | Petal spots |
+| `#e6ac1e`, `#9a6a10` | The eye of a flower, its anthers |
+| `#7fa63e`, `#93a850` | Leaf, stem |
+| `#cf6f3f` | Terracotta |
+| `#4b3323`, `#d9c297` | Wet soil, dry soil |
+| `#b98d5a`, `#9aa9a6` | The wooden board, the zinc tray |
+| `#c99a2e`, `#a9cfd6` | The loupe's brass and glass |
+| `#e4cf8f` | Tape |
+
+**Materials and line.**
+
+- **Pen.** One ink. A stroke is a filled ribbon about a pixel wide whose width wanders with pressure and tapers over its last fifth; a closed outline does not taper. A line thins less than its drawing shrinks, so a border plant is still a pen drawing.
+- **Hatching** only where a naturalist would shade: the under half of a leaf, one side of a pot, wet soil, the boards.
+- **Wash.** Always multiplied under the line, in three loose layers: a graded first layer, two blooms, a darker rim where pigment pools. It sits up to a pixel off the line. A white petal is bare paper with a grey wash at its base and a heavier outline.
+- **Pencil.** Grainy and broken. A wish sketch is pencil with one note of petal colour, and leaves out any trait the wish does not ask about.
+- **Paper.** Painted once per size, with its fibres, foxing, a tide line, the plate, the boards, tape and two pressed leaves. Nothing is ruled.
+- **No writing.** A journal invites handwriting, and the game draws none: no word, no letter, no numeral, and no scribble that could be read as one. The numerals of the sheet come later, from `symbols.ts`.
+
+**The working pieces stay plain.** A plant shows its four traits and nothing else. Two plants of one look are the same drawing: the pen's wobble is seeded by the look alone. Joints are drawn as nodes so that four, two and one can be counted at a glance, a leaf pair sits at each joint, and all pot plants share one scale so that heights compare by eye. Dry soil is pale and cracked, wet soil dark and hatched.
+
+**Lighting.** None. Depth comes from overlap and from the pooled rim of a wash.
+
+**Motion rules** (the toy stage builds them; the spike holds only the idle).
+
+- Plants never move at idle. They move when touched, set, growing or carried: a stem is a spring, a growing plant is the pen line racing up with the wash blooming in behind it.
+- Idle life belongs to the characters and the page: the beetle's feelers, the snail's eye-stalks, the worm, one end of a strip of tape that lifts.
+- Each character has its own tempo and weight, as "The characters and their fixed tastes" sets out, and no two share an action.
+- Ink does not fade in or slide. Things arrive by being drawn, or by walking in.
+
+**How each tier keeps the look.** A tier sets the pixel ratio (2, 1.5, 1.25, 1). The page is a few dozen sprites, each drawn once per look and size and kept, over a paper drawn once: 51 draws a frame on the spike page. Tiers 2 and 3 also stop the lifting tape end. A lower tier still looks like the page, since it is the same drawing at a lower ratio. If more must go, the candidates in order are the blooms of the wash, some of the paper's fibres, and the rate of the idle sway.
