@@ -3,10 +3,10 @@
 
 ## Status
 
-- Stage: sheet. The design sheet in `ART.md` is whole, written on 2026-10-03.
-- Sheet as pushed for the check: sha256 of the sheet part `11f75200bb12e675854d59ebb3e8ebf296e0f47c37942c6cacea1d793d955db1` (`awk '/^## The look/{exit} {print}' games/claw-machine/ART.md | sha256sum`).
-- Look in use: none yet. First reserved look: Stud bricks (the only row reserved).
-- Renderer: three.js, as the brief suggests.
+- Stage: the look spike, with the sheet waiting for its check. The design sheet in `ART.md` is whole, written on 2026-10-03.
+- Sheet as pushed for the check: commit `f5f963d`, sha256 of the sheet part `11f75200bb12e675854d59ebb3e8ebf296e0f47c37942c6cacea1d793d955db1` (`awk '/^## The look/{exit} {print}' games/claw-machine/ART.md | sha256sum`).
+- Look in use: Stud bricks, the first and only reserved row. The spike is the game's real scene from a fixed seed (`spike.ts`), which the Mount shows at load. Stills taken on software GL at 1180 by 820; no frame rate taken here (the lead measures it on a graphics card).
+- Renderer: raw three.js, as the brief suggests. No physics engine: the toys click onto fixed places, so the world is a pure model.
 - Open: sheet ready for check, round 1
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.

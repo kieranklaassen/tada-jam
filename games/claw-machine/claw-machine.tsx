@@ -11,13 +11,13 @@ import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
+import { spikePicture } from './spike'
 import { deserialize, serialize, type GameState } from './state'
+import { Stage } from './view/stage'
 
-// The Mount, showing a blank surface. Everything a game needs around its
-// renderer is wired and running: the saved state, attention, the attended
-// clock, touch, sound from the first touch, the idle ladder, adaptive quality,
-// the grown-up performance handle and the grown-up overlay. The renderer, the
-// rules and the sounds go in where the comments say.
+// The Mount. Around the stage it wires the saved state, attention, the
+// attended clock, touch, sound from the first touch, the idle ladder, adaptive
+// quality, the grown-up performance handle and the grown-up overlay.
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -34,6 +34,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const work = new PerfRing()
     // Grown-ups only: three quick taps in the top right corner, or fps=1 in the address (overlay.ts).
     const overlay = new Overlay(root, window.location.search)
+    const stage = new Stage(canvas)
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
@@ -56,10 +57,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // canvas, where a still or a probe can read which tier is applied.
     const applyTier = () => { canvas.dataset.tier = String(governor.tier) }
 
-    // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
-    // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
-    // load calls it once the slot has been read.
-    const draw = () => {}
+    // The one place the game draws its frame. The loop calls it on every frame, `resize` calls it after sizing,
+    // which can be before the slot is read and while the game rests, and the load calls it once the slot has
+    // been read.
+    const draw = () => {
+      if (width <= 0) return
+      const counts = stage.draw(spikePicture(clock.seconds))
+      drawn.drawCalls = counts.drawCalls; drawn.triangles = counts.triangles
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
@@ -72,7 +77,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       width = w; height = h; dpr = ratio
       // Sizing the backing store wipes the surface, so it is redrawn at once: a resize lands after the frame's
       // own draw, or while the game rests and no frame is coming, and either would leave the surface blank.
-      canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
+      stage.resize(w, h, ratio)
       draw()
       return true
     }
@@ -185,6 +190,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       uninstallPerf()
       overlay.dispose()
       audio.dispose()
+      stage.dispose()
     }
   }, [])
 

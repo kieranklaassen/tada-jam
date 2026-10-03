@@ -5,8 +5,8 @@ import { clawMachineManifest } from './manifest'
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
 // template and a template fix can be copied over them.
 
-/** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+/** The colour behind the stage: the dark of the cabinet, so no pale flash shows before the first frame. */
+export const BACKDROP = '#303a4a'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 
