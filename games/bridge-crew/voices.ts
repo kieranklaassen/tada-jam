@@ -183,6 +183,21 @@ export const trolleyWeight = (weights: number): VoiceSpec => kept([{ wave: 'tria
 /** The trolley taken off: the deck springs back up and the weights jingle. */
 export const trolleyOff = (weights: number): VoiceSpec => [{ wave: 'triangle', pitch: 180, slideTo: 360, peak: 0.1, attack: 0.01, length: 0.25 }, ...Array.from({ length: Math.min(Math.max(Math.round(weights), 1), 5) }, (_, i) => ({ wave: 'sine' as const, pitch: 2100 + 190 * ((i * 5) % 6), peak: 0.04, attack: 0.001, length: 0.12, after: 0.05 + 0.035 * i }))]
 
+/** The crew chief taps a triangle, once on each side: three knocks at the pitches of the three parts. */
+export const chiefTaps = (pitches: readonly number[]): VoiceSpec => kept([0, 1, 2].map((i) => ({ wave: 'triangle' as const, pitch: (pitches[i] ?? 700) * 1.5, peak: 0.09, attack: 0.002, length: 0.07, after: 0.34 + 0.29 * i })))
+
+/** Its feathers stand on end: a quick dry ruffle that rises. */
+export const chiefRuffle: VoiceSpec = [{ wave: 'noise', pitch: 1500, slideTo: 3000, peak: 0.07, attack: 0.02, length: 0.22 }, { wave: 'noise', pitch: 2400, peak: 0.04, attack: 0.01, length: 0.1, after: 0.2 }]
+
+/** Poked, it gives one short dry croak. */
+export const chiefCroak: VoiceSpec = [{ wave: 'square', pitch: 190, slideTo: 150, peak: 0.07, attack: 0.008, length: 0.16 }, { wave: 'noise', pitch: 800, peak: 0.03, attack: 0.008, length: 0.12 }]
+
+/** A part put back where it came from: a soft knock, quieter than laying it. */
+export const putBack = (kind: Kind, long: number): VoiceSpec => kept([{ wave: 'triangle', pitch: byLength(kind, long) * 0.9, peak: 0.06, attack: 0.004, length: 0.08 }])
+
+/** A pile in the tray picked: the parts of that kind stir. */
+export const pick = (kind: Kind): VoiceSpec => kept([{ wave: kind === 'tube' ? 'sine' : kind === 'thread' ? 'noise' : 'triangle', pitch: BASE[kind] * 1.5, peak: 0.07, attack: 0.003, length: 0.07 }, { wave: 'triangle', pitch: BASE[kind] * 2, peak: 0.04, attack: 0.002, length: 0.05, after: 0.06 }])
+
 /** Turns a voice into calls on the two builders of audio.ts. `at` is the audio clock's time now. */
 export function play(voice: VoiceSpec, at: number, tone: (at: number, pitch: number, wave: OscillatorType, peak: number, attack: number, length: number, slideTo?: number) => void, noise: (at: number, pitch: number, q: number, peak: number, attack: number, length: number, slideTo?: number) => void): void {
   for (const sound of voice) {

@@ -64,8 +64,13 @@ const isRecord = (value: unknown): value is Record<string, unknown> => typeof va
 
 const emptySheet = (id: string, variant: number): Sheet => ({ site: id, variant, bridge: [], tracings: [], trolley: { weights: TROLLEY_WEIGHTS.fewest, at: null }, crossed: [], ring: null, hats: [] })
 
-export function freshSave(childAge: number | null): Save {
-  const base = freshState(childAge), first = layOut(base.position, {})
+/**
+ * A first visit. `startOn` puts another sheet on the board than the one the
+ * position lays out: the toy opens on the free yard, where the whole kit is
+ * (config.ts, `TOY_SHEET`). The position is left as the age set it.
+ */
+export function freshSave(childAge: number | null, startOn: string | null = null): Save {
+  const base = freshState(childAge), first = layOut(startOn ?? base.position, {})
   return { ...base, sheets: [emptySheet(first.site, first.variant)], on: 0, next: null, waiting: [site(first.site, first.variant).job], tries: 0, laid: { [first.site]: 1 }, shown: [] }
 }
 
@@ -121,8 +126,8 @@ function readSheet(raw: unknown): Sheet | null {
  * own `deserialize`; then the same record is read again for the game's fields,
  * each repaired by itself, so one damaged field never costs a bridge.
  */
-export function deserialize(raw: unknown, childAge: number | null = null): Save {
-  const base = readBase(raw, childAge), fresh = freshSave(childAge)
+export function deserialize(raw: unknown, childAge: number | null = null, startOn: string | null = null): Save {
+  const base = readBase(raw, childAge), fresh = freshSave(childAge, startOn)
   if (!isRecord(raw) || raw.v !== base.v) return fresh
   const sheets = (Array.isArray(raw.sheets) ? raw.sheets : []).map(readSheet).filter((s): s is Sheet => s !== null).slice(-RACK)
   if (sheets.length === 0) return { ...fresh, position: base.position }

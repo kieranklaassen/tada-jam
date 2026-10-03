@@ -58,7 +58,10 @@ export const REACT = {
 } as const
 export type React = keyof typeof REACT
 
-export type Act = Idle | React | 'rest'
+/** Poked by a finger, it starts, glances up at nothing and goes back to its model. Seconds. */
+export const POKED = 1.3
+
+export type Act = Idle | React | 'poked' | 'rest'
 
 const clamp01 = (t: number) => Math.max(0, Math.min(1, t))
 /** Rises from 0 to 1 and falls back, smoothly, over the span from a to b. */
@@ -105,6 +108,13 @@ export function poseOf(act: Act, t: number, out: ChiefPose = { ...STILL }): Chie
       // Then it holds still with its head well over to one side, listening.
       out.tilt = 0.55 * (ease(t, 0.5, 0.6) - ease(t, 0.84, 0.96))
       break
+    case 'poked':
+      // A start: the whole bird lifts a little, the head whips up and back, and it blinks it off.
+      out.hopY = 0.12 * swell(t, 0, 0.3)
+      out.neck = -0.6 * swell(t, 0.02, 0.6)
+      out.tilt = -0.3 * swell(t, 0.2, 0.8)
+      out.crest = 0.5 * swell(t, 0, 0.5)
+      break
     case 'feathers-on-end':
       // It steps back to its place by the end: every act ends where it began.
       out.hopX = 0.45 * (ease(t, 0, 0.16) - ease(t, 0.6, 1))
@@ -139,6 +149,13 @@ export class ChiefDirector {
     this.act = what
     this.into = 0
     this.span = REACT[what]
+  }
+
+  /** A finger poked it. */
+  poke(): void {
+    this.act = 'poked'
+    this.into = 0
+    this.span = POKED
   }
 
   /** How far through its act it is, 0 to 1. */

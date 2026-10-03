@@ -80,6 +80,16 @@ const [YOUNGEST] = bridgeCrewManifest.ageBand
  */
 export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
 
+// --- The toy ----------------------------------------------------------------
+
+/**
+ * The sheet a first visit opens on while the game is a toy: the free yard,
+ * the one place with the whole kit and nothing to cross. The game stage sets
+ * this to null, and a first visit then opens on the sheet its position lays
+ * out. A saved visit is found as it was left either way.
+ */
+export const TOY_SHEET: string | null = 'open-yard'
+
 // --- The designed order (state.ts) -----------------------------------------
 
 /**

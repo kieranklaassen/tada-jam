@@ -3,7 +3,7 @@ import { stream } from './look'
 import { ChiefDirector, IDLE, REACT, STILL, poseOf, stringSway, waterDrift, type Act, type ChiefPose, type Idle } from './motion'
 
 const channels = Object.keys(STILL) as (keyof ChiefPose)[]
-const acts = [...Object.keys(IDLE), ...Object.keys(REACT)] as Act[]
+const acts = [...Object.keys(IDLE), ...Object.keys(REACT), 'poked'] as Act[]
 /** The most each channel moves over an act. */
 const reach = (act: Act): Record<string, number> => {
   const most: Record<string, number> = {}
@@ -75,6 +75,9 @@ describe('how the crew chief moves', () => {
     expect(chief.step(0.2).crest).toBeGreaterThan(0.5)
     for (let i = 0; i < 60 * REACT['feathers-on-end']; i++) chief.step(1 / 60)
     expect(chief.act).toBe('rest')
+    chief.poke()
+    expect(chief.act).toBe('poked')
+    expect(chief.step(0.3).neck).toBeLessThan(-0.3)
   })
 
   it('the same seed gives the same chief, and no time gives no change', () => {
