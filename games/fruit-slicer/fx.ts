@@ -1,5 +1,5 @@
 import type { Fruit } from './measure'
-import { COUNTER, CRATE, DOG, WALL, type Box } from './stage'
+import { COUNTER, CRATE, DOG, QUEUE, WALL, WINDOW, type Box } from './stage'
 import { draw } from './stream'
 import type { GameEvent } from './moves'
 
@@ -21,8 +21,8 @@ export type Fx =
   | { kind: 'lines'; x: number; y: number; angle: number; reach: number; age: number; life: number }
   /** A curl of peel, spinning away to the dog. */
   | { kind: 'curl'; x: number; y: number; fromX: number; fromY: number; fruit: Fruit; age: number; life: number }
-  /** A piece dropping from the shelf to the dog. */
-  | { kind: 'fly'; x: number; y: number; from: Box; fruit: Fruit; age: number; life: number }
+  /** A piece on its way to whoever eats it: the dog, or a customer. `tx`, `ty` is the mouth it flies to. */
+  | { kind: 'fly'; x: number; y: number; tx: number; ty: number; from: Box; fruit: Fruit; age: number; life: number }
   /** The mark of a knock on something bare. */
   | { kind: 'knock'; x: number; y: number; age: number; life: number }
 
@@ -97,7 +97,33 @@ export function spawn(state: FxState, event: GameEvent): FxState {
       event.ids.forEach((id, i) => shake(id, 'slide', 0, 0.3, event.from[i]))
       break
     case 'fell':
-      next.fx.push({ kind: 'fly', x: event.from.x, y: event.from.y, from: event.from, fruit: event.piece.fruit, age: 0, life: 0.4 })
+      next.fx.push({ kind: 'fly', x: event.from.x, y: event.from.y, tx: MOUTH.x, ty: MOUTH.y, from: event.from, fruit: event.piece.fruit, age: 0, life: 0.4 })
+      break
+    case 'ate':
+    case 'splat': {
+      // To a customer's mouth, or onto its face, where it bursts.
+      const to = mouthOf(event.whom)
+      next.fx.push({ kind: 'fly', x: event.from.x, y: event.from.y, tx: to.x, ty: to.y, from: event.from, fruit: event.piece.fruit, age: 0, life: 0.3 })
+      if (event.kind === 'splat') next.fx.push({ kind: 'burst', x: to.x, y: to.y, size: 30, fruit: event.piece.fruit, seed: random() * 1000, age: -0.3, life: 0.3 })
+      break
+    }
+    case 'setDown':
+      event.ids.forEach((id, i) => shake(id, 'slide', 0, 0.22, event.from[i]))
+      break
+    case 'given':
+      shake(event.id, 'slide', 0, 0.2, event.from)
+      break
+    case 'knocked':
+      shake(event.id, 'slide', 0, 0.3, event.from)
+      break
+    case 'bounce':
+    case 'skid':
+      next.fx.push({ kind: 'burst', x: event.x, y: event.y, size: 20, fruit: 'middle', seed: random() * 1000, age: 0, life: 0.2 })
+      next.fx.push({ kind: 'lines', x: event.x, y: event.y, angle: -Math.PI / 2, reach: 50, age: 0, life: 0.2 })
+      break
+    case 'rolled':
+      next.fx.push({ kind: 'knock', x: event.x, y: event.y, age: 0, life: 0.3 })
+      if (event.on === 'crate') next.rockSpeed += 6
       break
     case 'spill':
       next.rockSpeed += 9
@@ -206,8 +232,14 @@ export function settled(state: FxState): boolean {
   return state.shakes.length === 0 && state.fx.every((one) => one.kind === 'spatter') && Math.abs(state.flap) < 0.002 && Math.abs(state.rock) < 0.002
 }
 
-/** Where something flying to the dog is now: an arc from where it started to the dog's mouth. */
-export function flight(fromX: number, fromY: number, t: number): { x: number; y: number } {
+/** Where something flying to a mouth is now: an arc from where it started to that mouth, the dog's unless another is given. */
+export function flight(fromX: number, fromY: number, t: number, to: { x: number; y: number } = MOUTH): { x: number; y: number } {
   const ease = t * t
-  return { x: fromX + (MOUTH.x - fromX) * t, y: fromY + (MOUTH.y - fromY) * ease - Math.sin(t * Math.PI) * 90 }
+  return { x: fromX + (to.x - fromX) * t, y: fromY + (to.y - fromY) * ease - Math.sin(t * Math.PI) * 90 }
+}
+
+/** Where a customer's mouth is, near enough for something to fly to: the one at the window, or one of the two who wait. */
+export function mouthOf(whom: 'window' | 0 | 1): { x: number; y: number } {
+  const box = whom === 'window' ? WINDOW : QUEUE[whom]
+  return { x: box.x + (whom === 'window' ? 150 : 70), y: box.y + 70 }
 }

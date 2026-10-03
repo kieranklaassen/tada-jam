@@ -1,8 +1,8 @@
 import { feed, give, splat, treat, type Game } from './cycle'
 import { RAIL, WHOLE } from './measure'
-import { fellEvents, gone, land, shutIfFit, tinAt, type GameEvent, type Whom } from './moves'
+import { fellEvents, gone, land, shutIfFit, thingAt, tinAt, type GameEvent, type Whom } from './moves'
 import { ruling } from './serve'
-import { COUNTER, LANE_H, PX, WALL, X0, laneTop, under, type Box, type Point, type Under } from './stage'
+import { COUNTER, LANE_H, PX, WALL, X0, laneTop, type Box, type Point, type Under } from './stage'
 import { LANES, onLane, pieceOf, remove, roll, rowOf, setRowOnBoard, setOnShelf, type World } from './world'
 
 // Carrying, flinging and the roller: the other three acts of the grid. A
@@ -37,7 +37,7 @@ const PAGE: Box = { x: WALL.x, y: WALL.y, w: WALL.w, h: COUNTER.y + COUNTER.h - 
 /** The finger lands on a piece: it takes hold of that piece and of the row on the side of the half it landed on. */
 export function grab(game: Game, p: Point): Held | null {
   const tin = tinAt(game)
-  const hit = under(game.world, p, tin)
+  const hit = thingAt(game, p)
   if (hit.thing !== 'fruit' && hit.thing !== 'piece') return null
   const ids = rowOf(game.world, hit.piece.id, p.x < hit.box.x + hit.box.w / 2 ? 'left' : 'right')
   const boxes = gone(game.world, ids, tin).map(({ from }) => from)
@@ -79,7 +79,7 @@ function shutAfter(game: Game, events: GameEvent[], before: Game, held: Held): {
  */
 export function drop(game: Game, held: Held, at: Point): { game: Game; events: GameEvent[] } {
   const tin = tinAt(game)
-  const target = under(without(game.world, held.ids), at, tin)
+  const target = thingAt(game, at, held.ids)
   const leftEdge = (at.x - held.dx - X0) / PX
   const pieces = gone(game.world, held.ids, tin)
   switch (target.thing) {
@@ -194,7 +194,7 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
   const mine = gone(game.world, held.ids, tin)[0]
   const rest = without(game.world, held.ids)
   const end = landing(at, v)
-  const hit: Under = under(rest, end, tin)
+  const hit: Under = thingAt(game, end, held.ids)
   const backOnBoard = (off: 'tin' | 'fruit' | 'crate' | 'shelf', voice: 'bong' | 'boing' | 'rock', from: Game = game): { game: Game; events: GameEvent[] } => {
     const set = setRowOnBoard(from.world, [id], laneAt(at.y), (at.x - held.dx - X0) / PX)
     const events: GameEvent[] = [{ kind: 'bounce', id, off, x: end.x, y: end.y, length: mine.piece.length, voice }, { kind: 'setDown', ids: [id], from: [mine.from], how: 'put', voice: 'lay' }, ...fellEvents(from.world, set.fell)]
@@ -252,7 +252,7 @@ export function fling(game: Game, held: Held, at: Point, v: Point): { game: Game
  * the dog's ears are ironed.
  */
 export function rollOver(game: Game, at: Point): { game: Game; events: GameEvent[] } {
-  const hit = under(game.world, at, tinAt(game))
+  const hit = thingAt(game, at)
   const parts = game.window && !game.finished ? ruling(game.window).rows[0].parts : 0
   const rolled = (on: 'tin' | 'customer' | 'crate' | 'dog' | 'bare', voice: 'rule' | 'drum' | 'honk' | 'washboard' | 'sproing', whom: Whom | null = null, count = 0): { game: Game; events: GameEvent[] } => ({ game, events: [{ kind: 'rolled', on, whom, parts: count, x: at.x, y: at.y, voice }] })
   switch (hit.thing) {
@@ -279,5 +279,5 @@ export function rollOver(game: Game, at: Point): { game: Game; events: GameEvent
 
 /** Whether a point of the stage is over a thing a piece in the hand could be given to, for the view to show the thing leaning in. */
 export function over(game: Game, held: Held, at: Point): Under {
-  return under(without(game.world, held.ids), at, tinAt(game))
+  return thingAt(game, at, held.ids)
 }

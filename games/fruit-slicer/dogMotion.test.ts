@@ -64,7 +64,7 @@ describe('the dog at idle', () => {
 })
 
 describe('what the dog does', () => {
-  const seconds: Record<string, number> = { blink: 0.28, earFlick: 0.5, sniff: 1.1, headTilt: 1.6, yawn: 1.9, pant: 2.4, bark: 0.45, snap: 0.32, spin: 0.7, gulp: 0.6, cheeks: 1.5 }
+  const seconds: Record<string, number> = { blink: 0.28, earFlick: 0.5, sniff: 1.1, headTilt: 1.6, yawn: 1.9, pant: 2.4, bark: 0.45, snap: 0.32, spin: 0.7, gulp: 0.6, cheeks: 1.5, ironed: 1.2 }
   const prints = [
     ...IDLE.map((idle) => ({ name: idle, numbers: print({ ...newDog(1), idle }, seconds[idle]) })),
     ...REACTIONS.map((reaction) => ({ name: reaction, numbers: print({ ...newDog(1), react: reaction, amount: 0.7 }, seconds[reaction]) })),

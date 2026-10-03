@@ -90,11 +90,12 @@ describe('letting go over the tin', () => {
     expect(out.game.finished).toBe(true)
   })
 
-  it('bongs a piece back onto the board when the customer has been served or nobody is there', () => {
+  it('has no tin to lay a piece in once the customer has been served, or when nobody is there: the piece comes back to the board', () => {
     const made = cutAt(start, ORDERED)
     const served = drop(made.game, hold(made.game, made.left), tinPoint).game
+    expect(tinAt(served)).toBeNull()
     const again = drop(served, hold(served, made.right), tinPoint)
-    expect(kinds(again.events)).toEqual(['bounce', 'setDown'])
+    expect(kinds(again.events)).toEqual(['setDown'])
     expect(pieceOf(again.game.world, made.right)!.place.on).toBe('board')
     const alone = cutAt(fresh, 900)
     expect(tinAt(alone.game)).toBeNull()

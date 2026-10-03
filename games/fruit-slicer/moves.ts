@@ -2,7 +2,7 @@ import { call, crate, sendOff, settle, type Ending, type Game } from './cycle'
 import { FRUITS, WHOLE, shareLength, type Fruit } from './measure'
 import { tinParts, wanted } from './orders'
 import { served } from './serve'
-import { CRATE, DOG, PX, QUEUE, WINDOW, shown, tinShape, under, type Box, type Point, type TinShape } from './stage'
+import { CRATE, DOG, PX, QUEUE, WINDOW, shown, tinShape, under, type Box, type Point, type TinShape, type Under } from './stage'
 import type { VoiceId } from './voices'
 import { cut, landFruit, pieceOf, type Piece, type World } from './world'
 
@@ -72,9 +72,19 @@ export type GameEvent =
 export type Stroke = { made: number[]; crate: boolean; dog: boolean; tin: boolean; snipped: Whom[]; cuts: number; travelled: number }
 export const newStroke = (): Stroke => ({ made: [], crate: false, dog: false, tin: false, snipped: [], cuts: 0, travelled: 0 })
 
-/** The tin at the window as it lies on the rail, or nothing when nobody stands there. */
+/**
+ * The tin on the rail, or nothing: there is one while a customer at the window waits to be served. Before the
+ * first piece is laid in it, it is shut and folded small. Once the customer has been served it has lifted its
+ * tin off the rail and holds it.
+ */
 export function tinAt(game: Game): TinShape | null {
-  return game.window ? tinShape(tinParts(game.window), WHOLE[game.window.fruit]) : null
+  return game.window && !game.finished ? tinShape(tinParts(game.window), WHOLE[game.window.fruit], game.world.tinOpen) : null
+}
+
+/** What is under a point of the stage in this game: `without` leaves out pieces in the hand, which cannot be their own target. */
+export function thingAt(game: Game, p: Point, without: readonly number[] = []): Under {
+  const world = without.length > 0 ? { ...game.world, pieces: game.world.pieces.filter((piece) => !without.includes(piece.id)) } : game.world
+  return under(world, p, tinAt(game), game.window !== null)
 }
 
 /** Whether the segment from a to b touches a box (Liang and Barsky). */
@@ -212,8 +222,7 @@ export function slice(game: Game, a: Point, b: Point, stroke: Stroke): { game: G
  * tap lands in silence.
  */
 export function poke(game: Game, p: Point): { game: Game; events: GameEvent[] } {
-  const tin = tinAt(game)
-  const hit = under(game.world, p, tin)
+  const hit = thingAt(game, p)
   switch (hit.thing) {
     case 'fruit':
     case 'piece':

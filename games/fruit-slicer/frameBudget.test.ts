@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { freshGame, type Game } from './cycle'
-import { newDog, poseOf, react } from './dogMotion'
-import { newFx, spawn, step, type FxState } from './fx'
-import { guideOf } from './guide'
-import { CRATE, SHELF_BOX, BOARD, X0, PX } from './stage'
-import { newStroke, poke, slice } from './moves'
-import { paintFrame, paintPlate, type Frame } from './toyView'
+import { GameRun } from './gameRun'
+import { paintFrame, paintPlate } from './gameView'
+import { tinParts, type Customer } from './orders'
+import { BOARD, CRATE, PX, QUEUE, SHELF_BOX, TIN, X0, type Point } from './stage'
 
 // The frame budget, in the counted form: the painters run on a stand-in that counts every call made on the
 // context, so the work of a frame is a number that does not depend on the machine the test runs on.
@@ -16,6 +14,7 @@ function counter() {
   const ctx = new Proxy({} as Record<string, unknown>, {
     get: (target, name: string) => {
       if (name in target) return target[name]
+      if (name === 'measureText') return (text: string) => ({ width: text.length * 8 })
       return (..._args: unknown[]) => void calls.set(name, (calls.get(name) ?? 0) + 1)
     },
     set: (target, name: string, value) => {
@@ -27,65 +26,84 @@ function counter() {
   return { ctx: ctx as unknown as CanvasRenderingContext2D, calls, total }
 }
 const dots = { of: () => '#000' }
+const IDLE = { glow: 1, demo: 0.5, demoIndex: 0 }
+const BUSY = { glow: 0, demo: null, demoIndex: -1 }
+const mid = (index: 0 | 1): Point => ({ x: QUEUE[index].x + 100, y: QUEUE[index].y + 80 })
 
-/** A counter after a child has been at it: the fruit cut small on both lanes, the shelf full, and a stroke through all of it in progress. */
-function busy(): { game: Game; fx: FxState } {
-  let game = freshGame(null)
-  let fx = newFx(1)
-  const crate = { x: CRATE.x + 70, y: CRATE.y + 70 }
-  for (let round = 0; round < 6; round++) {
-    game = poke(game, crate).game
+/** A game as heavy to draw as the rules allow: the busiest customers, an open tin, both lanes cut small, the shelf full, and a long stroke through all of it in progress. */
+function heaviest(): GameRun {
+  const ants: Customer = { who: 'ants', fruit: 'long', shares: [{ num: 12, den: 12 }], carries: null, written: true, lined: true }
+  const cat: Customer = { who: 'cat', fruit: 'middle', shares: [{ num: 11, den: 12 }, { num: 5, den: 6 }], carries: null, written: true, lined: true }
+  const game: Game = { ...freshGame(null), queue: [ants, cat] }
+  const run = new GameRun(game, 3)
+  run.tap(mid(0))
+  // Fresh fruit, cut small on both lanes, with one piece laid in the tin to open it.
+  for (let round = 0; round < 4; round++) {
+    run.tap({ x: CRATE.x + 70, y: CRATE.y + 70 })
     for (let i = 1; i < 24; i++) {
       const x = X0 + i * 100 * PX
-      const result = slice(game, { x, y: BOARD.y - 20 }, { x: x + 10, y: SHELF_BOX.y + SHELF_BOX.h + 10 }, newStroke())
-      game = result.game
-      if (round === 5) for (const event of result.events) fx = spawn(fx, event)
+      run.press({ x, y: BOARD.y - 20 })
+      run.move({ x: x + 6, y: SHELF_BOX.y + SHELF_BOX.h + 10 })
+      run.lift()
+    }
+    if (round === 0) {
+      run.press({ x: X0 + 12, y: BOARD.y + BOARD.h - 40 })
+      run.move({ x: X0 + 30, y: TIN.bodyY + 20 })
+      run.move({ x: X0 + 40, y: TIN.bodyY + 24 })
+      run.lift()
     }
   }
-  return { game, fx: step(fx, 1 / 60) }
+  for (let i = 0; i < 400; i++) run.step(1 / 60)
+  // A last long stroke, caught in the frame after it, with every effect alive.
+  for (let i = 1; i < 24; i++) {
+    const x = X0 + i * 100 * PX + 40
+    run.press({ x, y: BOARD.y - 20 })
+    run.move({ x: x + 6, y: SHELF_BOX.y + SHELF_BOX.h + 10 })
+  }
+  run.step(1 / 60)
+  return run
 }
 
 describe('the work of a frame', () => {
-  const dog = poseOf(react(newDog(1), 'cheeks', 1))
-
   it('at rest is small: the plate is stamped and only what can move is drawn', () => {
-    const game = freshGame(null)
+    const run = new GameRun(freshGame(null), 1)
     const c = counter()
-    const frame: Frame = { world: game.world, fx: newFx(1), dog: poseOf(newDog(1)), time: 1, blade: null, glow: 0, guide: null, hand: null }
-    const figures = paintFrame(c.ctx, dots, frame)
-    // Measured when the toy was built: 35 figures and 213 calls.
-    expect(figures).toBeLessThan(45)
-    expect(c.total()).toBeLessThan(300)
+    const figures = paintFrame(c.ctx, dots, run.frame(1, BUSY))
+    // Measured when the game was built: 81 figures and 444 calls.
+    expect(figures).toBeLessThan(110)
+    expect(c.total()).toBeLessThan(600)
     expect(c.calls.get('drawImage') ?? 0).toBe(0)
   })
 
-  it('in the heaviest moment stays inside the budget: both lanes and the shelf full of pieces, every effect of a long stroke alive, the blade down, the glow and the hand showing', () => {
-    const { game, fx } = busy()
-    expect(game.world.pieces.length).toBeGreaterThanOrEqual(36)
-    expect(fx.fx.length).toBeGreaterThan(40)
+  it('in the heaviest moment stays inside the budget', () => {
+    const run = heaviest()
+    expect(run.game.window).toMatchObject({ who: 'ants' })
+    expect(tinParts(run.game.window!)).toHaveLength(1)
+    expect(run.game.world.tinOpen).toBe(true)
+    expect(run.game.world.pieces.length).toBeGreaterThanOrEqual(28)
+    expect(run.fx.fx.length).toBeGreaterThan(40)
     const c = counter()
-    const guide = guideOf(game.world)
-    const frame: Frame = { world: game.world, fx, dog, time: 3, blade: { x: 400, y: 300 }, glow: 1, guide, hand: { travel: 0.5, press: 1, opacity: 1 } }
-    const figures = paintFrame(c.ctx, dots, frame)
-    // Measured when the toy was built: 178 figures and 1494 calls, with 46 pieces and 90 effects alive.
-    expect(figures).toBeLessThan(220)
-    expect(c.total()).toBeLessThan(2000)
+    const figures = paintFrame(c.ctx, dots, run.frame(3, IDLE))
+    // Measured when the game was built: 301 figures and 2753 calls, with twelve ants at the window, a cat and its
+    // two tickets waiting, 32 pieces and 90 effects alive, the open tin ruled into twelfths, the glow and the hand.
+    expect(figures).toBeLessThan(380)
+    expect(c.total()).toBeLessThan(3600)
     // Nothing a frame draws is a full-surface composite: the one stamp of the plate is the canvas's, not the painter's.
     expect(c.calls.get('drawImage') ?? 0).toBe(0)
     expect(c.calls.get('getImageData') ?? 0).toBe(0)
   })
 
-  it('never leaves a save unrestored or a clip open, so one figure cannot leak into the next', () => {
-    const { game, fx } = busy()
+  it('never leaves a save unrestored, so one figure cannot leak into the next', () => {
+    const run = heaviest()
     const c = counter()
-    paintFrame(c.ctx, dots, { world: game.world, fx, dog, time: 3, blade: { x: 400, y: 300 }, glow: 1, guide: guideOf(game.world), hand: { travel: 0.5, press: 1, opacity: 1 } })
+    paintFrame(c.ctx, dots, run.frame(3, IDLE))
     paintPlate(c.ctx, dots)
     expect(c.calls.get('save')).toBe(c.calls.get('restore'))
   })
 
   it('paints the plate with a handful of figures, once for a size of surface', () => {
     const c = counter()
-    expect(paintPlate(c.ctx, dots)).toBeLessThan(20)
-    expect(c.total()).toBeLessThan(120)
+    expect(paintPlate(c.ctx, dots)).toBeLessThan(30)
+    expect(c.total()).toBeLessThan(160)
   })
 })

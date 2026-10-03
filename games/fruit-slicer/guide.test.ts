@@ -1,48 +1,79 @@
 import { describe, expect, it } from 'vitest'
-import { freshGame } from './cycle'
+import { drop, grab } from './carry'
+import { call, freshGame, type Game } from './cycle'
 import { STROKE_AT, guideOf } from './guide'
 import { GIVE_PARTS } from './measure'
-import { CRATE, COUNTER, boxOf } from './stage'
-import { newStroke, poke, slice } from './moves'
-import { emptyWorld, onLane } from './world'
+import { newStroke, poke, slice, tinAt } from './moves'
+import { tinParts, wanted } from './orders'
+import { CRATE, COUNTER, LANE_H, PX, QUEUE, WINDOW, X0, boxOf, laneTop } from './stage'
+import { onLane, remove } from './world'
 
-const game = freshGame(null)
+const fresh = freshGame(null)
+const start = call(fresh, 0).game
+const NEAR = laneTop(0) + LANE_H / 2
+const cutAt = (game: Game, points: number): Game => slice(game, { x: X0 + points * PX, y: NEAR - 50 }, { x: X0 + points * PX, y: NEAR + 50 }, newStroke()).game
 
-describe('what the idle ladder shows', () => {
-  it('glows on the fruit on the board, and the hand strokes straight down across it', () => {
-    const guide = guideOf(game.world)
-    const fruit = boxOf(onLane(game.world, 0)[0])!
-    expect(guide.on).toBe('fruit')
-    expect(guide.glow).toEqual(fruit)
-    expect(guide.hand.drag).toBe(true)
+describe('with nobody to serve', () => {
+  it('glows on the two who wait, and the hand taps one of them: a tap that calls it', () => {
+    const guide = guideOf(fresh)
+    expect(guide).toMatchObject({ on: 'waiting', glow: [QUEUE[0], QUEUE[1]], hand: { drag: false } })
+    expect(poke(fresh, guide.hand.from).game.window).toEqual(fresh.queue[0])
+    expect(poke(fresh, guideOf(fresh, 1).hand.from).game.window).toEqual(fresh.queue[1])
+  })
+
+  it('does the same once the customer at the window has been served', () => {
+    const ordered = tinParts(start.window!)[0]
+    const made = cutAt(start, ordered)
+    const piece = onLane(made.world, 0)[0]
+    const served = drop(made, grab(made, { x: X0 + 30, y: NEAR })!, { x: X0 + 30, y: tinAt(made)!.body.y + 20 }).game
+    expect(piece.length).toBe(ordered)
+    expect(served.finished).toBe(true)
+    expect(guideOf(served).on).toBe('waiting')
+  })
+})
+
+describe('with a customer to serve', () => {
+  it('glows on its fruit, and the hand strokes straight down across it: a stroke that really cuts', () => {
+    const guide = guideOf(start)
+    const fruit = boxOf(onLane(start.world, 0)[0])!
+    expect(guide).toMatchObject({ on: 'fruit', glow: [fruit], hand: { drag: true } })
     expect(guide.hand.from.x).toBe(guide.hand.to.x)
     expect(guide.hand.from.y).toBeLessThan(fruit.y)
-    expect(guide.hand.to.y).toBeGreaterThan(fruit.y + fruit.h)
     expect(guide.hand.from.y).toBeGreaterThan(COUNTER.y)
-    // The stroke it shows is one that really cuts.
-    expect(slice(game, guide.hand.from, guide.hand.to, newStroke()).stroke.cuts).toBe(1)
+    expect(slice(start, guide.hand.from, guide.hand.to, newStroke()).stroke.cuts).toBe(1)
   })
 
-  it('shows how, never where: a different place each time, and none that would pass for a half, a third or a quarter', () => {
-    const fruit = boxOf(onLane(game.world, 0)[0])!
-    const places = [0, 1, 2, 3].map((showing) => (guideOf(game.world, showing).hand.from.x - fruit.x) / fruit.w)
-    expect(new Set(places.map((place) => place.toFixed(2))).size).toBe(4)
-    for (const place of STROKE_AT) for (const share of [1 / 2, 1 / 3, 2 / 3, 1 / 4, 3 / 4]) expect(Math.abs(place - share), `${place} against ${share}`).toBeGreaterThan(1 / GIVE_PARTS)
-    expect(guideOf(game.world, 4)).toEqual(guideOf(game.world, 0))
-    expect(guideOf(game.world, -1)).toEqual(guideOf(game.world, 3))
+  it('shows how, never where: the stroke is never at the share on the ticket, nor anywhere near it', () => {
+    const share = wanted(start.window!)
+    const fruit = boxOf(onLane(start.world, 0)[0])!
+    const places = [0, 1, 2, 3, 4, 5].map((showing) => (guideOf(start, showing).hand.from.x - fruit.x) / fruit.w)
+    for (const place of places) expect(Math.abs(place - share.num / share.den)).toBeGreaterThan(2 / GIVE_PARTS)
+    expect(new Set(places.map((place) => place.toFixed(2))).size).toBeGreaterThan(1)
+    for (const place of STROKE_AT) for (const simple of [1 / 2, 1 / 3, 2 / 3, 1 / 4, 3 / 4]) expect(Math.abs(place - simple)).toBeGreaterThan(1 / GIVE_PARTS)
   })
 
-  it('moves to the longest piece once the fruit is cut', () => {
-    const cut = slice(game, { x: 300, y: 300 }, { x: 300, y: 470 }, newStroke()).game
-    const pieces = onLane(cut.world, 0).map((piece) => boxOf(piece)!)
-    const longest = pieces.reduce((a, b) => (b.w > a.w ? b : a))
-    expect(guideOf(cut.world).glow).toEqual(longest)
+  it('glows on the crate, with a tap, when none of its fruit lies on the board', () => {
+    const bare = { ...start, world: remove(start.world, onLane(start.world, 0)[0].id) }
+    const guide = guideOf(bare)
+    expect(guide).toMatchObject({ on: 'crate', glow: [CRATE], hand: { drag: false } })
+    expect(poke(bare, guide.hand.from).events.some((event) => event.kind === 'land')).toBe(true)
   })
 
-  it('glows on the crate, with a tap, when the board is bare: a tap that brings a fruit', () => {
-    const guide = guideOf(emptyWorld())
-    expect(guide).toMatchObject({ on: 'crate', glow: CRATE, hand: { drag: false } })
-    expect(guide.hand.from).toEqual(guide.hand.to)
-    expect(poke({ ...game, world: emptyWorld() }, guide.hand.from).events.some((event) => event.kind === 'land')).toBe(true)
+  it('glows on the tin once a piece has been cut, and the hand carries a piece to it: a carry that really lays it in', () => {
+    const made = cutAt(start, 700)
+    const guide = guideOf(made)
+    expect(guide).toMatchObject({ on: 'tin', glow: [tinAt(made)!.body], hand: { drag: true } })
+    const held = grab(made, guide.hand.from)
+    expect(held).not.toBeNull()
+    expect(drop(made, held!, guide.hand.to).events[0].kind).toBe('given')
+  })
+
+  it('glows on the customer when what lies in its tin sticks out: a tap sends it off as it is', () => {
+    const ordered = tinParts(start.window!)[0]
+    const made = cutAt(start, ordered + 400)
+    const over = drop(made, grab(made, { x: X0 + 30, y: NEAR })!, { x: X0 + 30, y: tinAt(made)!.body.y + 20 }).game
+    const guide = guideOf(over)
+    expect(guide).toMatchObject({ on: 'customer', glow: [WINDOW], hand: { drag: false } })
+    expect(poke(over, guide.hand.from).game.finished).toBe(true)
   })
 })

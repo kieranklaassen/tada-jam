@@ -71,10 +71,23 @@ export type TinShape = {
   body: Box
   lid: Box
   ruler: Box
+  /** Whether it has sprung open. A shut tin takes a piece anywhere along the rail, and then opens. */
+  open: boolean
 }
 
-/** The shape of a tin whose compartments are these lengths, in points, and whose fruit is this long. */
-export function tinShape(lengths: readonly number[], whole: number): TinShape {
+/** How wide the tin is while it is shut: folded up, it says nothing of how long the order is. */
+export const SHUT_TIN = 104
+
+/**
+ * The shape of a tin whose compartments are these lengths, in points, and whose fruit is this long. Open, it
+ * is exactly as long as the order. Shut, before the first piece is laid in it, it is folded small at the left
+ * end of the rail and has no lid standing and no ruled strip: its true length is shown only when it springs open.
+ */
+export function tinShape(lengths: readonly number[], whole: number, open = true): TinShape {
+  if (!open) {
+    const body = { x: X0 - 8, y: TIN.bodyY, w: SHUT_TIN, h: TIN.bodyH }
+    return { parts: [{ x: X0, w: SHUT_TIN - 16 }], body, lid: { ...body, y: TIN.bodyY, h: 0 }, ruler: { x: X0, y: TIN.rulerY, w: 0, h: 0 }, open: false }
+  }
   let x = X0
   const parts = lengths.map((length) => {
     const part = { x, w: length * PX }
@@ -87,6 +100,7 @@ export function tinShape(lengths: readonly number[], whole: number): TinShape {
     body: { x: X0 - 8, y: TIN.bodyY, w: w + 16, h: TIN.bodyH },
     lid: { x: X0 - 8, y: TIN.lidY, w: w + 16, h: TIN.lidH },
     ruler: { x: X0, y: TIN.rulerY, w: Math.max(w, whole * PX), h: TIN.rulerH },
+    open: true,
   }
 }
 
@@ -135,7 +149,7 @@ export function under(world: World, p: Point, tin: TinShape | null = null, serve
   }
   if (tin && inside(p, RAIL_BOX)) {
     // Anywhere along the rail gives to the tin: the compartment under the point, or the nearest one.
-    const at = tin.parts.findIndex((part) => p.x < part.x + part.w)
+    const at = tin.open ? tin.parts.findIndex((part) => p.x < part.x + part.w) : 0
     return { thing: 'tin', part: at < 0 ? tin.parts.length - 1 : at }
   }
   if (inside(p, ROLLER)) return { thing: 'roller' }

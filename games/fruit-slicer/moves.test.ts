@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { call, freshGame, give, type Game } from './cycle'
 import { FRUITS, WHOLE, giveOf } from './measure'
 import { tinParts } from './orders'
-import { BOARD, COUNTER, CRATE, DOG, LANE_H, PX, QUEUE, RAIL_BOX, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, X0, laneTop, rowTop, type Box, type Point } from './stage'
+import { BOARD, COUNTER, CRATE, DOG, LANE_H, PX, QUEUE, RAIL_BOX, ROLLER, SHELF_BOX, SHUT_TIN, TIN, WALL, WINDOW, X0, laneTop, rowTop, type Box, type Point } from './stage'
 import { holdsMisfit, newStroke, poke, slice, tinAt, touches, type GameEvent } from './moves'
 import { SHELF, cut, inTin, onLane, onShelf, setOnShelf } from './world'
 
@@ -196,11 +196,17 @@ describe('with a customer at the window', () => {
   }
   const tinMid = { x: X0 + 40, y: TIN.bodyY + TIN.bodyH / 2 }
 
-  it('has a tin on the rail, exactly as long as the order', () => {
-    const tin = tinAt(start)!
-    expect(tin.parts).toEqual([{ x: X0, w: ordered * PX }])
-    expect(tin.body.y).toBeGreaterThanOrEqual(RAIL_BOX.y)
-    expect(tin.ruler.y + tin.ruler.h).toBeLessThanOrEqual(RAIL_BOX.y + RAIL_BOX.h)
+  it('has a tin on the rail: folded small while it is shut, exactly as long as the order once it is open, and lifted off once the customer is served', () => {
+    const shut = tinAt(start)!
+    expect(shut.open).toBe(false)
+    expect(shut.body.w).toBe(SHUT_TIN)
+    expect(shut.body.w).not.toBeCloseTo(ordered * PX + 16)
+    const open = tinAt(served(-400))!
+    expect(open.open).toBe(true)
+    expect(open.parts).toEqual([{ x: X0, w: ordered * PX }])
+    expect(open.body.y).toBeGreaterThanOrEqual(RAIL_BOX.y)
+    expect(open.ruler.y + open.ruler.h).toBeLessThanOrEqual(RAIL_BOX.y + RAIL_BOX.h)
+    expect(tinAt(served(0))).toBeNull()
     expect(tinAt(game)).toBeNull()
   })
 

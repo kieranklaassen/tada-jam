@@ -56,6 +56,10 @@ export const VOICES = {
   // The slice and what surrounds it.
   ring: () => [tone(2600, 0.07, 0.002, 0.16, 'triangle', 1900)],
   tickEnd: () => [tone(1500, 0.05, 0.001, 0.04, 'square')],
+  // A finger takes hold of a piece: a small wet pop, at the pitch of its length.
+  pick: (length: number) => [tone(ringHz(length) * 1.5, 0.12, 0.002, 0.05, 'sine', ringHz(length) * 2.2), hiss(1200, 0.04, 0.002, 0.03)],
+  // A customer steps up to the window: two soft footfalls.
+  step: () => [tone(150, 0.14, 0.004, 0.09, 'sine', 110), tone(170, 0.12, 0.004, 0.09, 'sine', 120, 0.16)],
   whistle: () => [hiss(900, 0.08, 0.02, 0.2, 2600)],
   curl: () => [hiss(3200, 0.06, 0.004, 0.12, 4200), tone(1800, 0.04, 0.002, 0.2, 'sine', 2500, 0.05)],
   thwack: (length: number) => [hiss(ringHz(length) * 3, 0.24, 0.002, 0.14, ringHz(length) * 1.2), tone(ringHz(length), 0.2, 0.003, 0.22, 'triangle', ringHz(length) * 0.7), hiss(600, 0.08, 0.03, 0.3, 240, 0.05)],

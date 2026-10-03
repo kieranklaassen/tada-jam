@@ -33,11 +33,11 @@ export type DogPose = {
 
 export const IDLE = ['blink', 'earFlick', 'sniff', 'headTilt', 'yawn', 'pant'] as const
 export type Idle = (typeof IDLE)[number]
-export const REACTIONS = ['bark', 'snap', 'spin', 'gulp', 'cheeks'] as const
+export const REACTIONS = ['bark', 'snap', 'spin', 'gulp', 'cheeks', 'ironed'] as const
 export type Reaction = (typeof REACTIONS)[number]
 
 const IDLE_SECONDS: Readonly<Record<Idle, number>> = { blink: 0.28, earFlick: 0.5, sniff: 1.1, headTilt: 1.6, yawn: 1.9, pant: 2.4 }
-const REACTION_SECONDS: Readonly<Record<Reaction, number>> = { bark: 0.45, snap: 0.32, spin: 0.7, gulp: 0.6, cheeks: 1.5 }
+const REACTION_SECONDS: Readonly<Record<Reaction, number>> = { bark: 0.45, snap: 0.32, spin: 0.7, gulp: 0.6, cheeks: 1.5, ironed: 1.2 }
 
 export type DogState = {
   /** Seconds the dog has been watched: its breathing runs on this. */
@@ -171,6 +171,13 @@ export function poseOf(state: DogState, look: { x: number; y: number } | null = 
         pose.jaw = bump(ramp(t, 0, 0.4))
         pose.cheeks = state.amount * bump(ramp(t, 0.2, 1))
         pose.lift += 8 * bump(ramp(t, 0, 0.5)) - 6 * bump(ramp(t, 0.5, 1))
+        break
+      case 'ironed':
+        // The roller irons its ears flat; they spring up one at a time, the left one first.
+        pose.earLeft += t < 0.5 ? -0.5 * ramp(t, 0, 0.1) : -0.5 + 0.9 * bump(ramp(t, 0.5, 0.75)) + 0.5 * ramp(t, 0.5, 0.6)
+        pose.earRight += t < 0.72 ? -0.5 * ramp(t, 0, 0.1) : -0.5 + 0.9 * bump(ramp(t, 0.72, 1)) + 0.5 * ramp(t, 0.72, 0.82)
+        pose.lift -= 9 * (1 - ramp(t, 0.5, 0.6))
+        pose.lids = 0.8 * (1 - ramp(t, 0.45, 0.55))
         break
       case 'cheeks':
         // A long piece, eaten politely and with difficulty.
