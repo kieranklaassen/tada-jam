@@ -206,4 +206,31 @@ Fire Truck Hero is designed from five learning foundations published by Californ
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+**Garden-toy plastic**, the first look reserved for the game in the ledger of `docs/art-direction.md`. Spiked on the game's real scene and in use from the first screenshot. The numbers are in `look.ts`, and `look.test.ts` holds them apart.
+
+**What it is.** A back garden of outdoor toys on a sunny day. Every toy is machine-made: one fat blow-moulded shell with rounded edges, a darker mould seam round its middle, small sunk screw bosses, and sun-faded primary colours with a satin shine. Nothing is hand-made: no thumbprints, no grain, no brush. Next to the claimed looks it is the only one of hard plastic, and it stands outdoors on sand and grass in daylight.
+
+**The scene.** A sand pit seen from the near side and well above, 16 units wide and 10 deep, inside a cream picket fence at the far edge and fat green hedges at the sides, with grass and two lollipop trees beyond. The truck stands at the left, turned a little toward the child so its face shows. The gate hangs in the far fence toward the right, with its bell out over the sand, so what waits beyond it can show over the fence. Nothing a child needs stands in the near strip of sand, which is the bottom of the screen.
+
+**Palette.**
+
+- Sand: pale warm `SAND.dry`, with a faint speckle and soft raked ridges. Wet sand is clearly darker (`SAND.damp`), mud darker again and lumpy with a wet shine, standing water a pale blue sheet with a light rim.
+- The truck: faded tomato red with a cream stripe and bumper, yellow ladder, hubs and nozzle, a blue roof light, grey tyres.
+- Each thing has a hue of its own, so a two-year-old tells them apart by colour alone: the pool blue, the duck yellow, the fire orange, the cat lilac, the pot terracotta, the plant green with a pink flower, the boat teal, the wheel amber.
+- Water in the air: light blue with a white shine.
+- The idle cue: a blue ring and a blue ghost hand with a cream cuff, a hue that neither the sand nor the grass has.
+
+**Materials.** One satin plastic for every toy: a single material with the colour in the vertices, so a toy is one moulding and one draw call. Flames are a second, unlit material, so a flame never has a shaded side. Water is a third, shiny and a little clear. The ground is one plane with one small shader: sand inside the yard with a soft wobbly edge, grass outside, and the wet sand read from a small picture (`wetPaint.ts`). No texture is loaded: everything is drawn by code.
+
+**Lighting.** One sun from the upper left and a pale sky light with a warm bounce from the sand. No shadow maps: every toy has a soft blob shadow on the sand, drawn as one instanced mesh. No post pass and no tone mapping, so the colours stay as chosen.
+
+**Faces.** The animals and the truck have faces; the seven things of the grid have none. The truck's face is its windscreen: two big whites with pupils that look where the nozzle points, and a cream bumper for a mouth.
+
+**Motion rules.**
+
+- Everything with weight sits on a spring (`springs.ts`) and is stepped on game time in short steps, so a slow device plays the same motion.
+- The truck moves like itself (`truckMotion.ts`): eager, springy and a little heavy. A gulp rocks it back and it swings forward past level before it settles. A honk hops the whole truck, which hangs for a moment, lands once and bounces low. The nozzle is quick and loose and overshoots. The roof light is heavy: it turns once and stops without swinging back. At rest the body bobs like a motor ticking over, and it blinks at uneven gaps.
+- Water is fat: a gulp is one big blob with a few drops round it, stretched along its way, and every landing throws up a small splash.
+- In the spike, each thing idles in its own way: the flames flicker, the cat's head turns slowly, the duck rocks, the flower sways, the bell swings.
+
+**Quality tiers** (`config.ts`). A tier changes drawing only. Tier 0 is the full look at a pixel ratio of 2. Tier 1 lowers the pixel ratio to 1.5. Tier 2 lowers it to 1.25, flattens the ground's grain to plain colours and draws seven in ten of the stream's small drops. Tier 3 is a pixel ratio of 1, matte plastic without the satin highlight, and half the small drops with no splashes. The toys, the colours, the blob shadows and the water's marks on the sand are the same on every tier, and so is how much water lands and where.
