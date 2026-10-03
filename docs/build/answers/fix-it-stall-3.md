@@ -6,8 +6,6 @@ Paste each replacement as it stands, bring anything you built on the old text in
 
 ## The checker's report
 
-Note for the user, not part of the check: a system notice in this session says the MCP servers linear-server, mainframe, plugin:figma:figma and posthog need authorization before their tools can be used (claude.ai connector settings, or /mcp). This check did not need them.
-
 Check of the design sheet for `fix-it-stall` (Fix-it Stall, band 9 to 12), round 3, checker E. File read: ``games/fix-it-stall/ART.md` as checked`, everything above `## The look`; its sha256 is `2b54c0648a6671a41f832feb69341c34680a79b13d9969a12305212e024f6bcd`, as given. Line numbers are lines of that file. The diff against the round 2 copy shows five changed lines (105, 138, 213, 245, 326) and nothing else.
 
 Records: all ten exist; code, standing, regime (`nl 42`: 2006; the two draft items: 2027-draft) and check state (`confirmed`, all ten) are as the lookup prints today. No web address and no suspected paste of official wording in the changed text.
