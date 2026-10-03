@@ -1,4 +1,4 @@
-import { poke, reactPose, waitPose, drivePose, type VehiclePose } from './acts'
+import { RAIL_TILT, poke, reactPose, waitPose, drivePose, type VehiclePose } from './acts'
 import { showsStrain, strainLook } from './consequence'
 import { chief, chiefModel, roll } from './figures'
 import { barge, compareModels, ideaModel, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
@@ -161,6 +161,9 @@ export class View {
     toy.bridge.forEach((part, index) => {
       if (part.kind !== 'thread') return
       const p = pose[index], whirl = p.turning * 0.4 * Math.sin(2 * Math.PI * 3 * p.turned)
+      // A thread with wheels on it is a tightrope: it goes down in a V with the wheel, to the water.
+      const dip = toy.dipPoint()
+      if (dip && dip.part === index) { const v = at2(dip.at); string(pen, ...p.a, ...v, cell, 0); string(pen, ...v, ...p.b, cell, 0); drawn += 2; return }
       string(pen, ...p.a, ...p.b, cell, (toy.rest[index].slack ? 0.3 : 0) + p.shake + whirl)
       drawn++
     })
@@ -332,7 +335,8 @@ export class View {
     const seat = game.seatNow()
     if (game.drive && seat) {
       const flip = game.drive.homeward
-      put(game.drive.vehicle, seat.x, seat.y, flip ? -seat.tilt : seat.tilt, drivePose(game.drive.vehicle, game.drive.seconds), flip)
+      // On a stick it rides a rail, tilting, with its back wheels off; on a plank on edge it wobbles as on a kerb.
+      put(game.drive.vehicle, seat.x, seat.y, (flip ? -seat.tilt : seat.tilt) - RAIL_TILT * seat.rail, drivePose(game.drive.vehicle, game.drive.seconds, seat.kerb), flip)
     }
     // In a scene: where its beats have it.
     if (show.vehicle && show.kind === 'give') {

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { CROSSINGS } from './bridges.fixture'
 import { Game } from './game'
-import { ROLL, TRAY, parkAt, rackAt, tools, waitAt } from './layout'
+import { ROLL, TRAY, bays, parkAt, rackAt, tools, waitAt } from './layout'
 import { stream } from './look'
+import { WATER } from './pose'
 import { crossingTime } from './ride'
 import { deserialize, edit, freshSave, serialize } from './save'
 import { VEHICLES, trainOf } from './vehicles'
@@ -369,5 +370,45 @@ describe('the trolley, the tracing paper and the two showings', () => {
       expect(game.chief.act, `time ${again + 1}`).toBe('taps-and-listens')
       steps(game, 4)
     }
+  })
+})
+
+/** Picks a pile in the tray. */
+const pile = (game: Game, kind: string) => { const bay = bays(game.at).find((b) => b.kind === kind)!; tapAt(game, (bay.x0 + bay.x1) / 2, TRAY.top - 1) }
+
+describe('what the sheet says a child sees and hears', () => {
+  it('a thread as a road is a tightrope: it goes down in a V with the wheel to the water, and is straight again as the vehicle paddles off', () => {
+    const game = new Game(freshSave(null, 'high-thread'), stream(4))
+    pile(game, 'thread')
+    drag(game, [8, 6], [16, 6])
+    expect(game.bridge).toMatchObject([{ kind: 'thread' }])
+    expect(game.dipPoint()).toBeNull()
+    send(game)
+    expect(game.show.kind).toBe('give')
+    expect(game.dipped).toEqual({ part: 0 })
+    let lowest = Infinity, last = 6.01
+    for (let i = 0; i < 90 && game.show.paddle <= 0; i++) {
+      game.step(1 / 60)
+      const v = game.dipPoint()
+      if (!v || game.show.paddle > 0) continue
+      // The point of the V is on the thread's span and goes only down.
+      expect(v.part).toBe(0)
+      expect(v.at[0]).toBeGreaterThan(8)
+      expect(v.at[0]).toBeLessThan(16)
+      expect(v.at[1]).toBeLessThanOrEqual(last + 1e-6)
+      last = v.at[1]; lowest = Math.min(lowest, v.at[1])
+    }
+    // Down to where the wheels sit in the water.
+    expect(lowest).toBeLessThan(WATER + 0.4)
+    steps(game, 1.2)
+    expect(game.dipPoint()).toBeNull()
+    steps(game, 5)
+    expect(game.dipped).toBeNull()
+    // A touch that ends the scene leaves no V behind either, and what is saved has nothing of it.
+    send(game)
+    expect(game.dipped).not.toBeNull()
+    game.press(1, 1)
+    expect(game.dipped).toBeNull()
+    expect(JSON.stringify(stored(game))).not.toContain('dipped')
   })
 })

@@ -10,7 +10,7 @@ import { crossed, failedRun, markShown, onNewest, parked, pluckHat, ringed, sent
 import { Scene } from './scene'
 import { groundAt } from './sheet'
 import { isFooting, site, type Idea, type VehicleId } from './sites'
-import { crossingBeats, giveBeats, idleShow, type Cue, type Show } from './stage'
+import { crossingBeats, giveBeats, givePlace, idleShow, type Cue, type Show } from './stage'
 import { RING, Toy } from './toy'
 import { TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
 import { bargeHorn, chiefTaps, chord, creak, give, gurgle, honk, plop, lay as layVoice, pendulum, pinTick, reactVoice, restore, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
@@ -41,6 +41,8 @@ export class Game extends Toy {
   show: Show = idleShow()
   /** During a give: the part that gave and where. The view draws it parted there. */
   gave: { part: number; spot: readonly [number, number] } | null = null
+  /** During a give that began with wheels on a thread: the thread that let them down. The view draws it as a V down to the wheel. */
+  dipped: { part: number } | null = null
   /** Seconds since each vehicle was last touched: its answer to a poke is drawn from it. */
   poked = new Map<VehicleId, number>()
   /** The roadway reaches from lip to lip: a vehicle sent now has a road to try. */
@@ -110,7 +112,25 @@ export class Game extends Toy {
     const drive = this.drive
     if (!drive) return null
     const x = frontAt(this.at, drive.seconds, drive.homeward)
-    return seat(this.at, drive.run, between(drive.run, stepAt(this.at, drive.run, x, drive.homeward)), drive.train, x, DRAWN_DIP, drive.homeward)
+    return seat(this.at, drive.run, between(drive.run, stepAt(this.at, drive.run, x, drive.homeward)), drive.train, x, DRAWN_DIP, drive.homeward, this.bridge)
+  }
+
+  /**
+   * The point of the V a thread makes under a wheel: the wheel itself while
+   * the vehicle goes down to the water and sits there, and back up to the
+   * thread's own line as the vehicle paddles away. Null when no thread is dipped.
+   */
+  dipPoint(): { part: number; at: readonly [number, number] } | null {
+    const dipped = this.dipped, show = this.show
+    if (!dipped || show.kind !== 'give' || !show.vehicle) return null
+    const thread = this.drawn()[dipped.part]
+    if (!thread) return null
+    const [a, b] = thread.a[0] <= thread.b[0] ? [thread.a, thread.b] : [thread.b, thread.a]
+    const wheel = givePlace(show, this.at, longOf(show.vehicle))
+    const x = Math.max(a[0] + 0.1, Math.min(b[0] - 0.1, show.from[0])), level = a[1] + ((b[1] - a[1]) * (x - a[0])) / Math.max(b[0] - a[0], 0.2)
+    // It lets go of the wheel in the first third of the paddle and is straight again.
+    const held = 1 - Math.min(1, show.paddle * 3)
+    return held <= 0 ? null : { part: dipped.part, at: [x + (wheel.x - x) * held * show.fall, level + (Math.min(level, wheel.y) - level) * held] }
   }
 
   /**
@@ -409,7 +429,7 @@ export class Game extends Toy {
       this.voices.push(what.voice.filter((sound) => (sound.after ?? 0) < 0.35))
       // The wrong road has its own sound: a tube rolls its load off with a plop, and wheels on a thread gurgle in the water.
       if (drive.run.ending.kind === 'rolls-off') this.voices.push(plop)
-      if (drive.run.ending.kind === 'dunks') this.voices.push(gurgle)
+      if (drive.run.ending.kind === 'dunks') { this.voices.push(gurgle); this.dipped = { part: drive.run.ending.part } }
       // A vehicle that fails on its way home paddles to the near bank like any other, and is home.
       this.save = drive.homeward ? sentHome(this.save, drive.vehicle) : failedRun(this.save, drive.vehicle, what.ring)
       this.scene = new Scene(giveBeats(show, cue))
@@ -428,7 +448,7 @@ export class Game extends Toy {
   }
 
   private cue(what: Cue, drive: Drive): void {
-    if (what === 'restore') { this.gave = null; this.model() }
+    if (what === 'restore') { this.gave = null; this.dipped = null; this.model() }
     if (this.skipping) return
     if (what === 'splash') this.voices.push(splash(VEHICLES[drive.vehicle].crates))
     if (what === 'ring') {
@@ -444,6 +464,7 @@ export class Game extends Toy {
   /** The scene is over, by itself or by a touch: everything is where it was taking it. */
   private afterScene(): void {
     this.gave = null
+    this.dipped = null
     this.show = idleShow()
     this.scene = null
     this.model()

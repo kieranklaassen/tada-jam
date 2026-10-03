@@ -69,4 +69,17 @@ describe('how each vehicle moves', () => {
     const starts = ids.map((id) => JSON.stringify(flat(poke(id, 0.2, waitPose(id, 0, false))).map((v) => v.toFixed(3))))
     expect(new Set(starts).size).toBe(ids.length)
   })
+
+  it('on a kerb every vehicle wobbles, and its wheels never go under the road for it', () => {
+    for (const id of ids) {
+      const level = trace((t) => drivePose(id, t), 4), kerb = trace((t) => drivePose(id, t, 1), 4)
+      expect(apart(level, kerb), id).toBeGreaterThan(0.03)
+      for (let i = 0; i <= 80; i++) {
+        const plain = drivePose(id, (i / 80) * 4), wobbling = drivePose(id, (i / 80) * 4, 1)
+        // The body rocks nose-down about its front wheels and hops: its back wheels lift and never sink.
+        expect(wobbling.pitch).toBeLessThanOrEqual(plain.pitch)
+        expect(wobbling.bounce).toBeGreaterThanOrEqual(plain.bounce)
+      }
+    }
+  })
 })

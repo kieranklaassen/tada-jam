@@ -1,5 +1,6 @@
 import type { Answer } from './frame'
 import type { Strain } from './frame'
+import type { Part } from './kit'
 import type { Run, Step, Train } from './run'
 import type { Site } from './sites'
 
@@ -63,14 +64,38 @@ export function roadHeight(at: Site, run: Run, answer: Pick<Answer, 'moved'>, x:
   return road.complete ? at.right[1] : last.y + answer.moved(road.nodes[road.nodes.length - 1])[1] * drawn
 }
 
-/** How a vehicle sits on the road: its front axle's place, each axle's height, and the tilt of its body between the first axle and the last. */
-export type Seat = { x: number; y: number; tilt: number; axles: { x: number; y: number }[] }
+/**
+ * How a vehicle sits on the road: its front axle's place, each axle's height,
+ * and the tilt of its body between the first axle and the last. `rail` and
+ * `kerb` say what is under its wheels when the road is no flat plank: on a
+ * stick it rides a rail, most of all with a wheel half way between two pins
+ * (0 at a pin, 1 from a quarter of a cell in), and on a plank on edge a kerb.
+ */
+export type Seat = { x: number; y: number; tilt: number; axles: { x: number; y: number }[]; rail: number; kerb: number }
 
-export function seat(at: Site, run: Run, answer: Pick<Answer, 'moved'>, train: Train, x: number, drawn: number, homeward = false): Seat {
+/** The part of the way a wheel at x stands on, and how far it is from the nearer of that piece's two pins: 0 on a pin, which counts as the piece before it. Null on a bank or off the way. */
+function under(at: Site, run: Run, x: number): { part: number; in: number } | null {
+  const { frame, road } = run
+  if (x <= at.left[0] || x >= at.right[0]) return null
+  for (let r = 0; r + 1 < road.nodes.length; r++) {
+    const x0 = frame.nodes[road.nodes[r]].x, x1 = frame.nodes[road.nodes[r + 1]].x
+    if (x >= x0 && x <= x1) return { part: road.parts[r], in: Math.min(x - x0, x1 - x) }
+  }
+  return null
+}
+
+export function seat(at: Site, run: Run, answer: Pick<Answer, 'moved'>, train: Train, x: number, drawn: number, homeward = false, parts: readonly Part[] = []): Seat {
   const axles = train.map((axle) => { const ax = homeward ? x + axle.behind : x - axle.behind; return { x: ax, y: roadHeight(at, run, answer, ax, drawn) } })
   const first = axles[0], last = axles[axles.length - 1]
   const tilt = axles.length > 1 && first.x !== last.x ? Math.atan2(first.y - last.y, first.x - last.x) : 0
-  return { x, y: first.y, tilt, axles }
+  let rail = 0, kerb = 0
+  for (const axle of axles) {
+    const on = under(at, run, axle.x), part = on ? parts[on.part] : undefined
+    if (!on || !part) continue
+    if (part.kind === 'stick') rail = Math.max(rail, Math.min(1, on.in * 4))
+    if (part.kind === 'plank' && part.turned) kerb = 1
+  }
+  return { x, y: first.y, tilt, axles, rail, kerb }
 }
 
 /** How long a crossing drive lasts from the bank to the lay-by on the far side, in seconds. */

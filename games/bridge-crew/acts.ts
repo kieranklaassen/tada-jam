@@ -72,8 +72,24 @@ export function waitPose(id: VehicleId, seconds: number, front: boolean, out: Ve
   return out
 }
 
-/** A vehicle on the road: the same cargo, shaken by the drive. `seconds` is the time on the run. */
-export function drivePose(id: VehicleId, seconds: number, out: VehiclePose = still()): VehiclePose {
+/** How far a vehicle's back wheels come off a stick it rides as a rail, as a tilt of the whole vehicle about its front axle, in radians. */
+export const RAIL_TILT = 0.13
+
+/**
+ * A vehicle on the road: the same cargo, shaken by the drive. `seconds` is the
+ * time on the run. `kerb` is 1 on a plank on edge: it wobbles across as on a
+ * kerb, its body rocking on its wheels and hopping, and never dips under the road.
+ */
+export function drivePose(id: VehicleId, seconds: number, kerb = 0, out: VehiclePose = still()): VehiclePose {
+  wheels(id, seconds, out)
+  if (kerb > 0) {
+    out.pitch -= 0.05 * kerb * Math.abs(Math.sin(seconds * 9))
+    out.bounce += 0.035 * kerb * Math.abs(Math.cos(seconds * 9))
+  }
+  return out
+}
+
+function wheels(id: VehicleId, seconds: number, out: VehiclePose): VehiclePose {
   Object.assign(out, still())
   switch (id) {
     case 'post-van':

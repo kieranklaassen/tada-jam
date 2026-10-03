@@ -72,6 +72,28 @@ describe('a run as it is watched', () => {
     expect(run(gap, [part('plank', 8, 6, 12, 6, true)], van, true).ending).toEqual({ kind: 'road-ends', at: gap.right })
   })
 
+  it('on a stick the wheels ride a rail, most between two pins and not at all on a pin; on a plank on edge, a kerb', () => {
+    // A rail of one-cell sticks, each joint held from a bank by a diagonal: light wheels can ride it.
+    const rail = [part('stick', 10, 6, 11, 6), part('stick', 11, 6, 12, 6), part('stick', 12, 6, 13, 6), part('stick', 13, 6, 14, 6), part('stick', 11, 6, 10, 5), part('stick', 12, 6, 10, 4), part('stick', 13, 6, 14, 5)]
+    const ride = run(gap, rail, van)
+    expect(ride.road.complete).toBe(true)
+    expect(ride.ending).toEqual({ kind: 'crossed' })
+    const at = (x: number) => seat(gap, ride, between(ride, stepAt(gap, ride, x)), van, x, 6, false, rail)
+    expect(at(10.5).rail).toBe(1)
+    expect(at(10.1).rail).toBeCloseTo(0.4)
+    // Both axles on pins: it sits level for a moment, so it rocks from stick to stick.
+    expect(at(12).rail).toBe(0)
+    expect(at(gap.left[0] - 0.5).rail).toBe(0)
+    expect(at(10.5).kerb).toBe(0)
+    // The same wheels on a longer stick are too much for it: it snaps under them.
+    expect(run(gap, [part('stick', 10, 6, 12, 6), part('stick', 12, 6, 14, 6), part('stick', 12, 6, 10, 4)], van).ending).toMatchObject({ kind: 'gives', part: 0, strain: 'bend' })
+    const edge = CROSSINGS['plank-gap'], flat = edge.map((p) => ({ ...p, turned: false }))
+    expect(seat(gap, crossing, between(crossing, 2), van, 11, 6, false, edge).kerb).toBe(1)
+    expect(seat(gap, crossing, between(crossing, 2), van, 11, 6, false, flat).kerb).toBe(0)
+    expect(seat(gap, crossing, between(crossing, 0), van, gap.left[0] - 0.5, 6, false, edge).kerb).toBe(0)
+    expect(seat(gap, crossing, between(crossing, 2), van, 11, 6, false, edge).rail).toBe(0)
+  })
+
   it('a part creaks once each time its strain passes a threshold on the way up', () => {
     expect(creaks([0.2, 0.2], [0.6, 0.3])).toEqual([{ part: 0, use: 0.6 }])
     expect(creaks([0.6], [0.7])).toEqual([])
