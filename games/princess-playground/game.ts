@@ -39,8 +39,10 @@ const GROOVE_STEP = 0.14
 const HISS_EVERY = 0.09
 /** Idle seconds after which the asker gives one small hop: three times at most, further and further apart. */
 export const ASK_AT = [2.5, 10.5, 26.5] as const
-/** Bo snores this many times after he dozes off, then sleeps quietly. */
-export const SNORES = 4
+/** Seconds between Bo's snores, for as long as he dozes. */
+export const SNORE_EVERY = 3.4
+/** Seconds between the hums of a plank that floats level, and between the sways of a tower of four, for as long as each holds. */
+export const HELD_EVERY = 1.8
 /** Seconds the rake takes to cross the tray. */
 export const RAKE_SECONDS = 1.2
 
@@ -69,8 +71,10 @@ export class Game implements Director {
   private asked = 0
   private said = 0
   private lastHiss = -1
-  private snores = 0
   private snoreAt = 0
+  private heldAt = 0
+  /** Until when the friends on the plank look after Dot, who was just taken away. */
+  private lookAfter = 0
   private company: boolean
   private lastDemo = -1
   /** What the scene that is playing does to the sand, as it was read before the scene began and saved with its outcome. */
@@ -141,7 +145,11 @@ export class Game implements Director {
     this.pressed = { kind: 'other' }
     if (pressed.kind !== 'friend') return
     if (this.world.arrangement.waiting === pressed.id) this.begin()
-    else this.moved(pressed.id, () => this.play.tapFriend(pressed.id))
+    else {
+      this.moved(pressed.id, () => this.play.tapFriend(pressed.id))
+      // Dot twirls as it goes.
+      if (pressed.id === 'dot') this.play.act('dot', 'spin', 0.5)
+    }
   }
 
   dragStart(): void {
@@ -209,6 +217,7 @@ export class Game implements Director {
     }
     this.looks()
     this.snore()
+    this.held()
     this.dotAlone()
     this.guideFrom(guidance)
     this.frame = this.play.frame(this.guide.glow, this.guide.on)
@@ -223,6 +232,8 @@ export class Game implements Director {
     const after = this.play.arrangement
     this.world = afterMove(this.world, after)
     this.landings[id] = landingOf(before, after, id)
+    // Dot taken off the plank: the friends still on it look after it for a moment.
+    if (id === 'dot' && placeOf(before, 'dot').at === 'end' && placeOf(after, 'dot').at !== 'end') this.lookAfter = this.time + 1.2
     this.wantSave('soon')
     this.moods()
   }
@@ -348,6 +359,11 @@ export class Game implements Director {
   private apply(reaction: Reaction): void {
     if (reaction.act) this.play.act(reaction.who, reaction.act, reaction.seconds ?? 0.6, reaction.way ?? 0)
     if (reaction.voice) this.voice(reaction.voice)
+    if (reaction.mark === 'trickle') {
+      // Sand thrown onto the board runs off whichever end is low now, in a thin stream.
+      const way = Math.sign(this.play.plank.tilt)
+      if (way !== 0) this.grains.burst(way * PLANK.halfLength * 0.97, PLANK.z, 0.12, 9, PLANK.halfWidth * 1.6, 0.35)
+    }
     if (reaction.mark === 'ring') {
       const at = standsAt(this.play.arrangement, reaction.who), radius = FRIENDS[reaction.who].radius * 1.25
       ringMark(this.world.marks, at.x, at.z, radius)
@@ -366,6 +382,7 @@ export class Game implements Director {
     else if (event.type === 'toss') this.react(tossed(event.id, event.speed))
     else if (event.type === 'level') {
       this.voice(v.levelHum())
+      this.heldAt = this.time + HELD_EVERY
       // Everyone on the floating plank sways with it, one after another.
       const riders = [...this.play.arrangement.left, ...this.play.arrangement.right]
       riders.forEach((id, index) => this.react([{ who: id, after: index * 0.12, act: 'sway', seconds: 1.6, way: index % 2 ? -1 : 1 }]))
@@ -379,10 +396,21 @@ export class Game implements Director {
         this.grains.burst(event.x, event.z, 0.25 + 0.15 * spec.weight, 4 + spec.weight * 3)
         this.wantSave('soon')
       }
+      // Thrown by the plank and down again: a squeak in its own voice.
+      if (event.thrown) this.voice(v.chirp(event.id, this.said++))
       const landing = this.landings[event.id]
       if (landing) {
         delete this.landings[event.id]
         this.react(reactionsTo(landing))
+        // Bo on the low end digs it in: a crater under that end, and a ring of sand flies.
+        if (event.id === 'bo' && landing.deed === 'low-end' && landing.end) {
+          const x = (landing.end === 'left' ? -1 : 1) * PLANK.halfLength * Math.cos(this.play.plank.tilt)
+          const op: SandOp = { type: 'bite', x, weight: landing.weightThere, speed: 2 }
+          this.mark(op)
+          this.draw(op)
+          this.grains.burst(x, PLANK.z, 0.7, 20, PLANK.halfWidth * 2)
+          this.wantSave('soon')
+        }
       }
     } else if (event.type === 'knock') {
       const weight = weightOn(this.play.arrangement, event.end), power = Math.min(1, event.speed / 3)
@@ -395,10 +423,17 @@ export class Game implements Director {
       this.grains.burst(event.x, PLANK.z, 0.35 + 0.65 * power, Math.round(8 + 22 * power), PLANK.halfWidth * 2)
       if (power > 0.45) {
         this.voice(v.whisper())
+        // As the other end lifts, grains slide back into the bite it leaves.
+        this.grains.burst(-event.x, PLANK.z, 0.14, 6, PLANK.halfWidth * 2)
         // Sand thrown onto the board runs off its low end.
-        this.react([{ who: 'pim', after: 0.6, voice: v.trickle() }])
+        this.react([{ who: 'pim', after: 0.6, voice: v.trickle(), mark: 'trickle' }])
         // Thrown grains settle on the heads of whoever rides.
-        if (this.play.arrangement.left.length + this.play.arrangement.right.length > 1) this.react([{ who: 'pim', after: 0.35, voice: v.patter() }])
+        const riders = this.play.arrangement[event.end]
+        if (riders.length) {
+          this.react([{ who: 'pim', after: 0.35, voice: v.patter() }])
+          // And are shaken off.
+          this.react(riders.map((id, index) => ({ who: id, after: 0.55 + index * 0.08, act: 'shake' as const, seconds: 0.45 })))
+        }
       }
       this.wantSave('soon')
     } else if (event.type === 'poke') {
@@ -461,7 +496,11 @@ export class Game implements Director {
     for (const id of FRIEND_IDS) {
       const at = standsAt(a, id)
       if (a.waiting === id) play.look(id, 0, 0.7)
-      else if (asking && id === ride.asker && placeOf(a, id).at === 'end') play.look(id, at.x < 0 ? 0.9 : -0.9, ride.asks === 'up' ? 0.8 : -0.8)
+      else if (asking && id === ride.asker && placeOf(a, id).at === 'end') {
+        // One who wants up looks along the plank and up. One stuck high looks down at the sand under it and back at the sky.
+        const up = ride.asks === 'up' ? 0.8 : Math.floor(this.time / 1.6) % 2 === 0 ? -0.9 : 0.9
+        play.look(id, ride.asks === 'up' ? (at.x < 0 ? 0.9 : -0.9) : 0, up)
+      } else if (this.time < this.lookAfter && id !== 'dot' && placeOf(a, id).at === 'end') play.look(id, Math.sign(play.bodies.dot.x - at.x) * 0.9, 0)
       else play.look(id, Math.max(-0.7, Math.min(0.7, -at.x * 0.25)), placeOf(a, id).at === 'end' ? 0 : 0.35)
     }
     // After a still while the asker gives one small hop on the spot: three times at most, then it only looks.
@@ -472,18 +511,40 @@ export class Game implements Director {
     }
   }
 
-  /** Bo alone on the plank dozes off and snores a few times, then sleeps on without a sound. Anything landing wakes him. */
+  /** Bo alone on the plank dozes off and snores for as long as he is alone. Anything landing wakes him. */
   private snore(): void {
     const doze = this.play.bodies.bo.doze
     if (doze < 0.5) {
-      this.snores = 0
       this.snoreAt = this.time + 0.8
       return
     }
-    if (doze > 0.95 && this.snores < SNORES && this.time >= this.snoreAt) {
-      this.snores += 1
-      this.snoreAt = this.time + 3.4
+    if (doze > 0.95 && this.time >= this.snoreAt) {
+      this.snoreAt = this.time + SNORE_EVERY
       this.voice(v.snore())
+    }
+  }
+
+  /**
+   * The secrets that are held states: a plank that floats level hums for as
+   * long as it floats, with everyone on it swaying; a tower of four sways for
+   * as long as it stands. Each begins and ends with the arrangement, never
+   * with the clock: the clock only spaces the hums and the sways.
+   */
+  private held(): void {
+    const play = this.play, a = play.arrangement
+    if (this.scene || play.held || this.time < this.heldAt || !play.settled) return
+    const left = weightOn(a, 'left'), right = weightOn(a, 'right')
+    if (left > 0 && left === right) {
+      this.heldAt = this.time + HELD_EVERY
+      this.voice(v.levelHum())
+      ;[...a.left, ...a.right].forEach((id, index) => play.act(id, 'sway', 1.6, index % 2 ? -1 : 1))
+      return
+    }
+    const tower = a.left.length === 4 ? a.left : a.right.length === 4 ? a.right : null
+    if (tower) {
+      this.heldAt = this.time + HELD_EVERY
+      // The tower sways as one: every friend the same way.
+      for (const id of tower) play.act(id, 'sway', 1.7, 1)
     }
   }
 

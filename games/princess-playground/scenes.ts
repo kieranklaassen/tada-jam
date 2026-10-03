@@ -56,6 +56,8 @@ function until(at: number): Beat {
  */
 export function endingBeats(game: Director, asker: FriendId, lifters: readonly FriendId[]): Beat[] {
   const beats: Beat[] = [once(game, 0, () => game.react(delight(asker)))]
+  // Bo's chuckle shakes the plank under him.
+  if (asker === 'bo') for (const [at, way] of [[0.15, 1], [0.35, -1], [0.55, 1], [0.75, -1]] as const) beats.push(once(game, at, () => game.play.rock(way * 0.4)))
   lifters.forEach((id, index) => {
     beats.push(once(game, 0.8 + index * 0.22, () => {
       game.play.act(id, 'bounce', 0.5)

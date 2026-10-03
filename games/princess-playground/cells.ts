@@ -41,8 +41,8 @@ export type Reaction = {
   seconds?: number
   way?: number
   voice?: readonly Part[]
-  /** A mark to leave in the sand at the friend's feet. */
-  mark?: 'ring'
+  /** A mark to leave in the sand at the friend's feet, or sand to let run off the low end of the board. */
+  mark?: 'ring' | 'trickle'
 }
 
 /** Where a friend was put, read from the arrangement before and after the child's move. */
@@ -83,7 +83,7 @@ export function reactionsTo(l: Landing): Reaction[] {
       if (l.deed === 'low-end') add(0.1, { voice: v.tick(), act: 'stamp', seconds: 0.6 })
       else if (l.deed === 'high-end') add(0.05, l.tips ? { voice: v.clack() } : { voice: v.trill(), act: 'kick', seconds: 1.3 })
       else if (l.deed === 'on-a-friend') add(0.1, { voice: v.crow(), act: 'bounce', seconds: 0.7 })
-      else add(0.05, { voice: v.rattle(), act: 'kick', seconds: 0.5 })
+      else add(0.05, { voice: v.rattle(), act: 'slip', seconds: 1.1 })
       break
     case 'mog':
       if (l.deed === 'low-end') add(0.15, { act: 'spin', seconds: 0.8 })

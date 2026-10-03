@@ -70,6 +70,12 @@ describe('the voices, as numbers', () => {
     for (const id of FRIEND_IDS) expect(new Set([0, 1, 2].map((v) => shape(chirp(id, v)))).size).toBe(VARIANTS)
   })
 
+  it('the slide down the plank is a whistle that rises', () => {
+    const [whistle] = slide()
+    expect(whistle.kind).toBe('tone')
+    expect(whistle.glideTo).toBeGreaterThan(whistle.frequency * 2)
+  })
+
   it('a harder knock is louder and longer, and a landing in sand sounds unlike one on the plank', () => {
     expect(knock(3.5)[0].peak).toBeGreaterThan(knock(0.6)[0].peak)
     expect(lengthOf(knock(3.5))).toBeGreaterThan(lengthOf(knock(0.6)))

@@ -108,9 +108,9 @@ export function lift(id: FriendId): Part[] {
   return [tone(p * 0.9, THROAT[id].peak * 0.8, 0.01, 0.12, p * 1.3, THROAT[id].wave)]
 }
 
-/** Sliding down the plank: a whistle that falls. */
+/** Sliding down the plank: a whistle that rises. */
 export function slide(): Part[] {
-  return [tone(1300, 0.08, 0.02, 0.42, 480, 'sine'), hiss(2200, 2, 0.03, 0.02, 0.4, 900)]
+  return [tone(480, 0.08, 0.02, 0.42, 1300, 'sine'), hiss(900, 2, 0.03, 0.02, 0.4, 2200)]
 }
 
 /** A finger's poke in the sand. */

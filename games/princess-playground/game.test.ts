@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { isSound, placeOf, standsAt } from './arrangement'
-import { ASK_AT, Game, SNORES, type Cue } from './game'
+import { isSound, placeOf, putInSand, putOnEnd, standsAt } from './arrangement'
+import { ASK_AT, Game, SNORE_EVERY, type Cue } from './game'
 import type { Guidance } from './guidance'
 import { RAKED, marksToText, rakeIsOut } from './marks'
 import { overlap } from './overlap'
@@ -8,7 +8,7 @@ import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { freshWorld, load, save, type Saved, type World } from './save'
 import { NEXT_AT } from './scenes'
-import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, plankTopAt, type FriendId } from './world'
+import { FRIEND_IDS, MAX_TILT, PLANK, WAITING_PLACE, homeOn, plankTopAt, type FriendId } from './world'
 
 const QUIET: Guidance = { glow: 0, demo: null, demoIndex: -1 }
 
@@ -434,13 +434,16 @@ describe('one obvious want, and the friends as they are', () => {
     expect(game.world.state.finished).toBe(false)
   })
 
-  it('Bo alone on the plank dozes and snores a few times, then sleeps quietly; a friend landing wakes him', () => {
+  it('Bo alone on the plank dozes and snores for as long as he is alone; a friend landing wakes him', () => {
     const world = shown()
     const game = new Game({ ...world, state: { ...world.state, finished: true }, arrangement: { ...layout(rideOf('big-asks', 0)), waiting: null } }, 1)
     // Free play on a finished scene, so nothing asks: only the snores are heard.
     const { cues } = run(game, 40)
     expect(game.play.bodies.bo.doze).toBeGreaterThan(0.95)
-    expect(cues.filter((cue) => cue.type === 'voice').length).toBe(SNORES)
+    // One snore every few seconds, the whole forty: about eleven, and it never runs away.
+    const snores = cues.filter((cue) => cue.type === 'voice').length
+    expect(snores).toBeGreaterThanOrEqual(Math.floor(36 / SNORE_EVERY))
+    expect(snores).toBeLessThanOrEqual(Math.ceil(40 / SNORE_EVERY))
     tapOn(game, 'pim')
     run(game, 2)
     expect(game.play.bodies.bo.doze).toBeLessThan(0.2)
@@ -480,6 +483,98 @@ describe('one obvious want, and the friends as they are', () => {
     expect(cues.filter((cue) => cue.type === 'ring').length).toBe(1)
     expect(game.play.bodies.dot.bright).toBeLessThan(0.1)
     expect(rakeIsOut(game.world.marks)).toBe(true)
+  })
+})
+
+describe('the small promises of the sheet', () => {
+  /** A game in free play on a finished scene, with the arrangement given: nothing asks, so only what is tested is heard. */
+  const free = (left: FriendId[], right: FriendId[]): Game => {
+    const world = shown()
+    let a = layout(rideOf('little-asks', 0))
+    for (const id of FRIEND_IDS) a = putInSand(a, id, homeOn(id, 'right'))
+    for (const id of left) a = putOnEnd(a, id, 'left')
+    for (const id of right) a = putOnEnd(a, id, 'right')
+    return new Game({ ...world, state: { ...world.state, finished: true }, arrangement: { ...a, waiting: null } }, 1)
+  }
+  const voices = (cues: Cue[]) => cues.filter((cue) => cue.type === 'voice').length
+
+  it('a touched friend looks at the finger at once', () => {
+    const game = free([], [])
+    game.press({ kind: 'friend', id: 'mog' })
+    run(game, 0.2)
+    expect(game.frame.poses.mog.gazeY).toBeGreaterThan(0.7)
+    run(game, 1.5)
+    expect(game.frame.poses.mog.gazeY).toBeLessThan(0.6)
+  })
+
+  it('a plank that floats level hums for as long as it floats, everyone on it swaying, and stops when it no longer does', () => {
+    const game = free(['mog'], ['dot'])
+    const level = run(game, 10)
+    expect(voices(level.cues)).toBeGreaterThanOrEqual(4)
+    expect(Math.abs(game.play.plank.tilt)).toBeLessThan(0.05)
+    tapOn(game, 'dot')
+    run(game, 4)
+    game.takeCues()
+    // Mog alone now: no hum, and he is not Bo, so nothing is heard at all.
+    expect(voices(run(game, 8).cues)).toBe(0)
+  })
+
+  it('a tower of four sways for as long as it stands', () => {
+    const game = free(['pim'], ['bo', 'mog', 'dot'])
+    tapOn(game, 'pim')
+    run(game, 0.3)
+    game.press({ kind: 'friend', id: 'pim' })
+    game.dragStart()
+    game.dragTo({ x: 3, z: -1 }, null)
+    run(game, 0.8)
+    game.dragEnd()
+    run(game, 6)
+    expect(game.play.arrangement.right.length).toBe(4)
+    let swaying = 0
+    for (let i = 0; i < 240; i++) {
+      game.step(1 / 60, QUIET)
+      if (FRIEND_IDS.every((id) => game.play.bodies[id].act === 'sway')) swaying += 1
+    }
+    expect(swaying).toBeGreaterThan(120)
+  })
+
+  it('Bo set down on the low end digs it in: a bite under that end, and sand flies', () => {
+    const game = free([], ['mog'])
+    run(game, 0.5)
+    game.takeCues()
+    tapOn(game, 'bo')
+    let flew = 0
+    const cues: Cue[] = []
+    for (let i = 0; i < 180; i++) {
+      game.step(1 / 60, QUIET)
+      cues.push(...game.takeCues())
+      flew = Math.max(flew, game.grains.flying)
+    }
+    expect(cues.some((cue) => cue.type === 'bite')).toBe(true)
+    expect(flew).toBeGreaterThanOrEqual(10)
+  })
+
+  it('the friends still on the plank look after Dot when it is taken away', () => {
+    const game = free(['pim'], ['dot'])
+    run(game, 1)
+    tapOn(game, 'dot')
+    run(game, 0.5)
+    // Dot is off to the right; Pim, on the left end, looks that way.
+    expect(game.play.bodies.pim.gazeTo).toBeGreaterThan(0.8)
+    run(game, 3)
+    expect(game.play.bodies.pim.gazeTo).toBeLessThan(0.8)
+  })
+
+  it('a friend thrown by the plank squeaks as it comes down again', () => {
+    const game = free(['pim'], [])
+    run(game, 0.5)
+    tapOn(game, 'bo')
+    run(game, 0.9)
+    game.takeCues()
+    // From here on: the knock, Pim's flight, and her landing with its thump and her own squeak.
+    const { cues } = run(game, 3)
+    expect(game.play.bodies.pim.mode).toBe('rest')
+    expect(voices(cues)).toBeGreaterThanOrEqual(4)
   })
 })
 

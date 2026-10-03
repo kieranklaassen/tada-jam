@@ -22,15 +22,15 @@ export class Grains {
     for (let i = 0; i < MAX_GRAINS; i++) this.positions[i * 3 + 1] = -1
   }
 
-  /** Throws `count` grains from (x, z) on the sand. `power` is 0 to 1; `across` spreads them along z, as under the plank's end. */
-  burst(x: number, z: number, power: number, count: number, across = 0): void {
+  /** Throws `count` grains from (x, z). `power` is 0 to 1; `across` spreads them along z, as under the plank's end; `from` is the height they start at, the sand unless they run off the board. */
+  burst(x: number, z: number, power: number, count: number, across = 0, from = 0.03): void {
     const p = Math.min(1, Math.max(0.1, power))
     for (let n = 0; n < Math.min(count, MAX_GRAINS); n++) {
       const i = this.next
       this.next = (this.next + 1) % MAX_GRAINS
       const angle = this.random() * Math.PI * 2, out = (0.6 + this.random() * 1.6) * p
       this.positions[i * 3] = x + (this.random() - 0.5) * 0.2
-      this.positions[i * 3 + 1] = 0.03
+      this.positions[i * 3 + 1] = from
       this.positions[i * 3 + 2] = z + (this.random() - 0.5) * across
       this.velocity[i * 3] = Math.cos(angle) * out
       this.velocity[i * 3 + 1] = (2.2 + this.random() * 3.4) * p

@@ -27,7 +27,7 @@ export const LANDING_PUSH = 0.5
 export type PlayEvent =
   | { type: 'touch'; id: FriendId }
   | { type: 'leap'; id: FriendId }
-  | { type: 'land'; id: FriendId; on: 'plank' | 'sand' | 'friend'; x: number; z: number; speed: number }
+  | { type: 'land'; id: FriendId; on: 'plank' | 'sand' | 'friend'; x: number; z: number; speed: number; thrown: boolean }
   | { type: 'knock'; end: End; speed: number; x: number }
   | { type: 'toss'; id: FriendId; speed: number }
   | { type: 'creak'; strength: number }
@@ -40,7 +40,7 @@ export type PlayEvent =
 type Mode = 'rest' | 'hop' | 'air' | 'held'
 
 /** A small thing a friend does with its body where it sits or stands. Each lasts a moment and changes no place. */
-export type Act = 'spin' | 'stamp' | 'kick' | 'tall' | 'knead' | 'sway' | 'sink' | 'duck' | 'lean' | 'chuckle' | 'bounce' | 'look'
+export type Act = 'spin' | 'stamp' | 'kick' | 'tall' | 'knead' | 'sway' | 'sink' | 'duck' | 'lean' | 'chuckle' | 'bounce' | 'look' | 'slip' | 'shake'
 
 export type Mood = 'glad' | 'put-out' | 'plain'
 
@@ -77,6 +77,10 @@ type Body = {
   /** How far its eyes are raised, -1 to 1; eased. */
   gazeUp: number
   gazeUpTo: number
+  /** Seconds left of looking at the finger that touched it. */
+  glance: number
+  /** It was thrown by the plank and has not landed yet. */
+  thrown: boolean
 }
 
 /** A small seeded stream (mulberry32): the only randomness in the game, and it only picks ordinary detail. */
@@ -121,7 +125,7 @@ export class Playground {
         squash: 1, squashV: 0, squashTo: 1, lean: 0, leanV: 0, leanTo: 0, follow: 0, followV: 0,
         holdX: at.x, holdZ: at.z, blinkIn: 0.6 + index * 0.9 + this.random() * 2, blinkT: 0, mouth: 0,
         bright: 1, doze: 0, phase: index * 1.7, turn: 0,
-        away: null, act: null, actT: 0, actFor: 0, actWay: 0, mood: 'plain', gaze: 0, gazeTo: 0, gazeUp: 0, gazeUpTo: 0,
+        away: null, act: null, actT: 0, actFor: 0, actWay: 0, mood: 'plain', gaze: 0, gazeTo: 0, gazeUp: 0, gazeUpTo: 0, glance: 0, thrown: false,
       }
       this.poses[id] = restPose()
     })
@@ -144,6 +148,8 @@ export class Playground {
     const body = this.bodies[id]
     body.squashV -= 5.5
     body.mouth = 1
+    // It looks at the finger: out of the tray and up, at whoever touched it.
+    body.glance = 0.5
     this.events.push({ type: 'touch', id })
   }
 
@@ -432,6 +438,7 @@ export class Playground {
         continue
       }
       body.mode = 'air'
+      body.thrown = true
       body.vy = throwSpeed
       body.squashV += 5
       body.mouth = 1
@@ -538,7 +545,7 @@ export class Playground {
       body.turn = 0
       body.squash = 1 - (1 - own.landSquash) * 0.6
       body.squashV = 0
-      this.events.push({ type: 'land', id, on: target.y > 0.05 ? 'friend' : 'sand', x: target.x, z: target.z, speed })
+      this.events.push({ type: 'land', id, on: target.y > 0.05 ? 'friend' : 'sand', x: target.x, z: target.z, speed, thrown: false })
       return
     }
     body.mode = 'rest'
@@ -552,7 +559,7 @@ export class Playground {
     body.squashV = 0
     body.mouth = Math.max(body.mouth, hard)
     if (place.at !== 'end') {
-      this.events.push({ type: 'land', id, on: 'sand', x: target.x, z: target.z, speed })
+      this.events.push({ type: 'land', id, on: 'sand', x: target.x, z: target.z, speed, thrown: false })
       return
     }
     body.landed = true
@@ -567,7 +574,8 @@ export class Playground {
     const side = place.end === 'right' ? 1 : -1
     const before = Math.sign(this.plank.tilt)
     nudge(this.plank, side * spec.weight * LANDING_PUSH * (firstTouch ? 1 : 0.35) * (0.5 + 0.5 * hard))
-    this.events.push({ type: 'land', id, on: place.level > 0 ? 'friend' : 'plank', x: target.x, z: target.z, speed })
+    this.events.push({ type: 'land', id, on: place.level > 0 ? 'friend' : 'plank', x: target.x, z: target.z, speed, thrown: body.thrown })
+    body.thrown = false
     if (place.level > 0) {
       const below = this.bodies[this.arrangement[place.end][place.level - 1]]
       below.squash = Math.min(below.squash, 1 - 0.1 * spec.weight * (0.5 + 0.5 * hard))
@@ -615,8 +623,9 @@ export class Playground {
       body.actT += dt
       if (body.actT >= body.actFor) body.act = null
     }
-    body.gaze += (body.gazeTo - body.gaze) * (1 - Math.exp(-dt * 7))
-    body.gazeUp += (body.gazeUpTo - body.gazeUp) * (1 - Math.exp(-dt * 7))
+    body.glance = Math.max(0, body.glance - dt)
+    body.gaze += ((body.glance > 0 ? 0 : body.gazeTo) - body.gaze) * (1 - Math.exp(-dt * (body.glance > 0 ? 24 : 7)))
+    body.gazeUp += ((body.glance > 0 ? 1 : body.gazeUpTo) - body.gazeUp) * (1 - Math.exp(-dt * (body.glance > 0 ? 24 : 7)))
     body.phase += dt * own.breatheRate * Math.PI * 2
     body.blinkIn -= dt
     if (body.blinkIn <= 0) {
@@ -651,6 +660,10 @@ export class Playground {
       case 'chuckle': pose.squash *= 1 + 0.06 * Math.sin(t * Math.PI * 14) * fade; break
       case 'bounce': pose.y += 0.4 * Math.abs(Math.sin(t * Math.PI * 2)) * (0.5 + 0.5 * fade); pose.squash *= 1 + 0.08 * Math.sin(t * Math.PI * 4); break
       case 'look': pose.nod += 0.2 * bell; break
+      // The crown slips over one eye, stays a moment, and is shaken straight.
+      case 'slip': pose.follow = t < 0.55 ? 0.3 * Math.min(1, t * 6) : 0.3 * Math.cos((t - 0.55) * 28) * (1 - t) * 2.2; pose.lean += t < 0.55 ? 0 : 0.1 * Math.sin((t - 0.55) * 28) * (1 - t) * 2.2; break
+      // Grains shaken off a head: a quick shiver.
+      case 'shake': pose.lean += 0.12 * Math.sin(t * Math.PI * 10) * fade; break
     }
   }
 
