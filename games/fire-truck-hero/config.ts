@@ -5,8 +5,8 @@ import { fireTruckHeroManifest } from './manifest'
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
 // template and a template fix can be copied over them.
 
-/** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+/** The colour behind the canvas, seen until the first frame is drawn: the yard's sky (look.ts). */
+export const BACKDROP = '#cfeaf4'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 
@@ -19,10 +19,21 @@ export const BACKDROP = '#f4efe6'
 export type Tier = {
   /** Canvas pixel ratio cap; the jam's bar caps it at 2. */
   dpr: number
+  /** The ground's grain: the speckle and ridges of the sand and the blades of the grass. Without it sand and grass are flat colours. */
+  detail: boolean
+  /** The satin highlight on the plastic. Without it the same toys are matte. */
+  shine: boolean
+  /** The share of the water's drops that are drawn. The water itself, and where it lands, is the same on every tier. */
+  drops: number
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
-export const TIERS: readonly Tier[] = [{ dpr: 2 }, { dpr: 1.5 }, { dpr: 1.25 }, { dpr: 1 }]
+export const TIERS: readonly Tier[] = [
+  { dpr: 2, detail: true, shine: true, drops: 1 },
+  { dpr: 1.5, detail: true, shine: true, drops: 1 },
+  { dpr: 1.25, detail: false, shine: true, drops: 0.7 },
+  { dpr: 1, detail: false, shine: false, drops: 0.5 },
+]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */
 export const GOVERNOR = {

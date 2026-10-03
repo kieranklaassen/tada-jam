@@ -14,10 +14,10 @@ export type Place = { readonly x: number; readonly z: number }
 export const TRUCK: Place = { x: 2.6, z: 5.4 }
 
 /** How far from the truck's middle a touch still counts as on the truck. */
-export const TRUCK_REACH = 1.7
+export const TRUCK_REACH = 2.0
 
 /** The nozzle on the truck's roof, where the water leaves: its place and height. */
-export const NOZZLE = { x: 3.0, z: 5.4, y: 2.1 } as const
+export const NOZZLE = { x: 3.71, z: 5.68, y: 3.12 } as const
 
 /** The five spots a thing can stand on. An arrangement names them by index. */
 export const SPOTS: readonly Place[] = [
@@ -25,11 +25,15 @@ export const SPOTS: readonly Place[] = [
   { x: 10.2, z: 2.6 },
   { x: 8.0, z: 6.2 },
   { x: 12.2, z: 6.0 },
-  { x: 13.6, z: 2.6 },
+  { x: 14.0, z: 3.7 },
 ]
 
-/** The bell on the gate post at the right edge. Three rings open the gate. */
-export const BELL: Place = { x: 15.0, z: 5.4 }
+/**
+ * The bell, which hangs on the gate in the far fence, toward the right. Three
+ * rings open the gate. It is at the far edge so that what waits beyond the
+ * gate shows over the fence. This is the foot of its post, where water lands.
+ */
+export const BELL: Place = { x: 13.4, z: 0.5 }
 
 /** How far from a spot's middle water still lands on the thing that stands there. */
 export const THING_REACH = 1.3

@@ -63,9 +63,10 @@ describe('the arc of a gulp', () => {
     expect(right.turn).toBeCloseTo(0, 6)
     const near = nozzleFor(arcTo(NOZZLE, { x: NOZZLE.x, z: NOZZLE.z + 3 }))
     expect(near.turn).toBeCloseTo(Math.PI / 2, 6)
-    // A near target is lobbed up steeply and a far one thrown flatter.
-    expect(right.tilt).toBeLessThan(near.tilt)
+    // A far target is thrown up and over. One at the truck's feet is poured down on.
     expect(right.tilt).toBeGreaterThan(0)
+    expect(nozzleFor(arcTo(NOZZLE, { x: NOZZLE.x + 0.4, z: NOZZLE.z })).tilt).toBeLessThan(0)
+    expect(Math.abs(near.tilt)).toBeLessThan(Math.PI / 2)
     expect(Number.isFinite(nozzleFor(arcTo(NOZZLE, { x: NOZZLE.x, z: NOZZLE.z })).tilt)).toBe(true)
   })
 })

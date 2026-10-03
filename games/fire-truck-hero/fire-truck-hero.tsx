@@ -11,13 +11,17 @@ import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
+import { createStage } from './stage'
 import { deserialize, serialize, type GameState } from './state'
+import { WetPaint } from './wetPaint'
 
-// The Mount, showing a blank surface. Everything a game needs around its
-// renderer is wired and running: the saved state, attention, the attended
-// clock, touch, sound from the first touch, the idle ladder, adaptive quality,
-// the grown-up performance handle and the grown-up overlay. The renderer, the
-// rules and the sounds go in where the comments say.
+// The Mount. Everything a game needs around its renderer is wired and
+// running: the saved state, attention, the attended clock, touch, sound from
+// the first touch, the idle ladder, adaptive quality, the grown-up performance
+// handle and the grown-up overlay. The renderer is the stage (stage.ts). For
+// now the Mount shows the look spike: the fullest yard, standing still but
+// alive, in the look (ART.md, "The look"). The rules and the sounds go in
+// where the comments say.
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -37,6 +41,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
+    // The picture of the wet sand, and the yard as three.js draws it. Both are made once.
+    const paint = new WetPaint()
+    const stage = createStage(canvas, paint, true)
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
@@ -54,12 +61,19 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // of `resize`, since `resize` does nothing when the size and the pixel ratio stay as they were (on a display
     // of ratio 1 they always do). The blank surface has nothing to switch: it marks the tier it was given on its
     // canvas, where a still or a probe can read which tier is applied.
-    const applyTier = () => { canvas.dataset.tier = String(governor.tier) }
+    const applyTier = () => {
+      stage.applyTier(governor.tier)
+      canvas.dataset.tier = String(governor.tier)
+    }
 
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => {}
+    const draw = () => {
+      stage.draw(paint)
+      drawn.drawCalls = stage.counts.drawCalls
+      drawn.triangles = stage.counts.triangles
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
@@ -72,7 +86,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       width = w; height = h; dpr = ratio
       // Sizing the backing store wipes the surface, so it is redrawn at once: a resize lands after the frame's
       // own draw, or while the game rests and no frame is coming, and either would leave the surface blank.
-      canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
+      stage.resize(w, h, ratio)
       draw()
       return true
     }
@@ -117,7 +131,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       if (!attention.awake || disposed) return
       // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
-      clock.advance(now)
+      const step = clock.advance(now)
       const start = performance.now()
       act(touch.advance(now))
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
@@ -127,6 +141,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // What to show an idle child: a glow on what can be touched, then one move.
       ladder.update(clock.seconds)
       // The game steps its rules and its scene here, and hands what they changed to storage (`cadence`, above).
+      stage.idle(step, clock.seconds)
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that
       // frame's work.
@@ -185,6 +200,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       uninstallPerf()
       overlay.dispose()
       audio.dispose()
+      stage.dispose()
     }
   }, [])
 

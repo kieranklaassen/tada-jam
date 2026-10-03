@@ -13,9 +13,11 @@ describe('the places of a yard', () => {
     for (const place of places) {
       expect(place.x).toBeGreaterThan(1)
       expect(place.x).toBeLessThan(COLS - 0.5)
-      expect(place.z).toBeGreaterThan(1.5)
+      expect(place.z).toBeGreaterThan(0)
       expect(place.z).toBeLessThan(NEAR_STRIP_FROM_Z)
     }
+    // Things stand clear of the far fence. Only the bell is at it, on the gate.
+    for (const place of [TRUCK, ...SPOTS]) expect(place.z).toBeGreaterThan(1.5)
     expect(NEAR_STRIP_FROM_Z).toBeLessThan(ROWS)
   })
 
