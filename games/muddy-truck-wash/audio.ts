@@ -19,7 +19,8 @@ export class GameAudio {
   private master: GainNode | null = null
   private active = true
   private failed = false
-  private touching = false
+  /** Fingers on the glass: the touch is over only when the last one lifts. */
+  private touching = 0
   /** Unlocks the browser has not answered yet. */
   private asking = 0
   private held: Voice | null = null
@@ -27,14 +28,15 @@ export class GameAudio {
   /** Call first in every touch-down handler. */
   touchDown(): void {
     // A second finger or a palm landing inside a touch must not drop the sound the first finger is waiting to hear.
-    if (!this.touching) this.held = null
-    this.touching = true
+    if (this.touching === 0) this.held = null
+    this.touching += 1
     this.unlock()
   }
 
   /** Call last in every lift handler, after the game has played the lift's own sound, and when a touch is cancelled. */
   touchUp(): void {
-    this.touching = false
+    // Nor must their lift end the touch: the first finger is still down, and its later sounds still wait for the unlock.
+    if (this.touching > 0) this.touching -= 1
     this.unlock()
   }
 
@@ -46,7 +48,7 @@ export class GameAudio {
       return
     }
     // Not running yet. Inside a touch, or while its unlock is still being answered, the newest sound waits for it.
-    if (this.touching || this.asking > 0) this.held = voice
+    if (this.touching > 0 || this.asking > 0) this.held = voice
   }
 
   /** Attended and visible, or not. A resting game is silent. */
@@ -55,7 +57,7 @@ export class GameAudio {
     if (!active) {
       // A resting game ends its touch: the lift will never arrive.
       this.held = null
-      this.touching = false
+      this.touching = 0
     }
     if (!this.context) return
     if (active) void this.context.resume().catch(() => {})

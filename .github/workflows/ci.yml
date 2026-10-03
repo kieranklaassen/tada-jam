@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: check-${{ github.ref }}
-      cancel-in-progress: ${{ startsWith(github.ref_name, 'lane/') }}
+      cancel-in-progress: ${{ startsWith(github.head_ref || github.ref_name, 'lane/') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -48,7 +48,7 @@ jobs:
   # shards by name, so a new game needs no change here.
   intersections:
     name: Intersection audit (${{ matrix.shard }}/4)
-    if: ${{ !startsWith(github.ref_name, 'lane/') }}
+    if: ${{ !startsWith(github.head_ref || github.ref_name, 'lane/') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -82,7 +82,7 @@ jobs:
   # It shares nothing with the jam's checks above.
   lab:
     name: Mechanic lab
-    if: ${{ !startsWith(github.ref_name, 'lane/') }}
+    if: ${{ !startsWith(github.head_ref || github.ref_name, 'lane/') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -102,7 +102,7 @@ jobs:
   # stale or unchecked, every frame as generated, the coverage report fresh.
   education:
     name: Education pack
-    if: ${{ !startsWith(github.ref_name, 'lane/') }}
+    if: ${{ !startsWith(github.head_ref || github.ref_name, 'lane/') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
