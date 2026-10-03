@@ -57,6 +57,14 @@ describe('a touch', () => {
     }
   })
 
+  it('is left alone in the top right corner, which is the grown-up\'s', () => {
+    const moment = MOMENTS.mixed, theatre = new Theatre(saveOf(moment)), before = JSON.stringify(theatre.save)
+    theatre.press(VIEW.width / 2 - 0.3, VIEW.height / 2 - 0.3, VIEW)
+    theatre.release(VIEW)
+    expect(theatre.sounds).toHaveLength(0)
+    expect(JSON.stringify(theatre.save)).toBe(before)
+  })
+
   it('squashes the bunch under the finger at once and holds it flat until the lift', () => {
     const theatre = solo('duck', ['duck', 'frog', 'duck', 'frog']), { frame, painter, clear } = recorder()
     const at = skySlots(4, VIEW)[1]
