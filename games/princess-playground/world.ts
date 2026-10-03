@@ -98,8 +98,8 @@ export function standable(spot: Spot, radius: number): Spot {
 
 /** Where each friend stands by default on the right of the tray; mirrored for the left. Dot's is the rim. */
 export const HOME: Readonly<Record<FriendId, Spot>> = {
-  pim: { x: 1.5, z: 2.45 },
-  mog: { x: 3.1, z: 1.45 },
+  pim: { x: 1.7, z: 2.45 },
+  mog: { x: 3.0, z: 1.4 },
   bo: { x: 4.65, z: 2.3 },
   dot: { x: 4.75, z: -2.63 },
 }

@@ -83,30 +83,48 @@ export function putInSand(a: Arrangement, id: FriendId, spot: Spot): Arrangement
   return next
 }
 
-/** Nearest place to `spot` where this friend stands clear of the plank, the waiting place and the others in the sand. */
+/** How near two friends may stand in the sand, beyond their two radii. */
+const ELBOW = 0.06
+/** The waiting place is kept clear for whoever waits there, or will: nobody stands within this of it, plus their own radius. */
+export const WAITING_CLEAR = 0.9
+
+function clear(a: Arrangement, id: FriendId, at: Spot): boolean {
+  const radius = FRIENDS[id].radius
+  if (Math.hypot(at.x - WAITING_PLACE.x, at.z - WAITING_PLACE.z) < radius + WAITING_CLEAR) return false
+  for (const other of FRIEND_IDS) {
+    const there = a.sand[other]
+    if (other === id || !there) continue
+    if (Math.hypot(at.x - there.x, at.z - there.z) < radius + FRIENDS[other].radius + ELBOW) return false
+  }
+  return true
+}
+
+/**
+ * Nearest place to `spot` where this friend stands clear of the plank, the
+ * rim, the waiting place and the others in the sand. It looks outward in
+ * rings, so the answer is the same every time and always exists.
+ */
 export function freeSpot(a: Arrangement, id: FriendId, spot: Spot): Spot {
   const radius = FRIENDS[id].radius
-  let at = standable(spot, radius)
-  const others: { spot: Spot; radius: number }[] = []
-  for (const other of FRIEND_IDS) if (other !== id && a.sand[other]) others.push({ spot: a.sand[other]!, radius: FRIENDS[other].radius })
-  // The waiting place is kept clear for whoever waits there, or will.
-  others.push({ spot: WAITING_PLACE, radius: 0.9 })
-  for (let pass = 0; pass < 12; pass++) {
-    let moved = false
-    for (const other of others) {
-      const dx = at.x - other.spot.x, dz = at.z - other.spot.z
-      const gap = radius + other.radius + 0.06, apart = Math.hypot(dx, dz)
-      if (apart >= gap) continue
-      // Straight away from the other; from dead centre, away toward the nearer rim.
-      const ux = apart > 1e-3 ? dx / apart : at.x >= 0 ? 1 : -1, uz = apart > 1e-3 ? dz / apart : 0
-      at = standable({ x: other.spot.x + ux * gap, z: other.spot.z + uz * gap }, radius)
-      moved = true
+  const first = standable(spot, radius)
+  if (clear(a, id, first)) return first
+  let best: Spot | null = null, bestApart = Infinity
+  for (let ring = 1; ring <= 40; ring++) {
+    const reach = ring * 0.25
+    for (let k = 0; k < 20; k++) {
+      const angle = (k / 20) * Math.PI * 2
+      const at = standable({ x: first.x + Math.cos(angle) * reach, z: first.z + Math.sin(angle) * reach }, radius)
+      if (!clear(a, id, at)) continue
+      const apart = Math.hypot(at.x - first.x, at.z - first.z)
+      if (apart < bestApart - 1e-9) {
+        best = at
+        bestApart = apart
+      }
     }
-    if (!moved) break
-    // Pinned against a rim or the plank: slide along instead.
-    if (pass >= 6) at = standable({ x: at.x + (at.x >= 0 ? -1 : 1) * 0.45, z: at.z }, radius)
+    // A free place this near cannot be beaten by a wider ring.
+    if (best && bestApart <= reach) return best
   }
-  return at
+  return best ?? first
 }
 
 /**
