@@ -372,6 +372,23 @@ describe('the bell and the way on', () => {
     expect(t.game.yard.things[t.game.yard.want].gulps).toBe(1)
   })
 
+  it('is not cut short by the finger that rang it open: a held finger does nothing more until it lifts', () => {
+    const t = new Table()
+    t.game.press({ truck: false, point: BELL }, t.now)
+    t.play(1.2)
+    expect(t.game.leaving).not.toBeNull()
+    expect(t.game.hose.holding).toBe(false)
+    // The finger is still down and wobbles: the Mount sends that on as a new press.
+    t.game.press({ truck: false, point: { x: BELL.x + 0.2, z: BELL.z } }, t.now)
+    t.play(0.5)
+    expect(t.game.leaving).not.toBeNull()
+    expect(t.game.hose.flying).toHaveLength(0)
+    // Once it has lifted, a touch is a touch again and ends the drive.
+    t.game.lift()
+    t.game.press({ truck: false, point: { x: 12, z: 8 } }, t.now)
+    expect(t.game.leaving).toBeNull()
+  })
+
   it('judges the yard that is left: up after a want met, not up after one left unmet', () => {
     const met = new Table()
     met.gulps(met.at(0), 3)

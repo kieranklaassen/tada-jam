@@ -80,6 +80,7 @@ export class Game extends Toy {
   private clock = 0
   private putts = 0
   private tapsHeard = 0
+  private fingerRangOpen = false
 
   constructor(play: (voice: VoiceSpec) => void, raw: unknown, childAge: number | null, private readonly seed = 1) {
     super(play)
@@ -94,6 +95,8 @@ export class Game extends Toy {
   /** The finger lands. A scene that is playing ends first, and the touch is then an ordinary touch. */
   override press(touched: Touched, now: number): void {
     this.clock = now
+    // The finger that rang the gate open is still down: it does nothing more until it lifts, or its first wobble would cut the drive short.
+    if (this.fingerRangOpen) return
     this.endScene()
     this.touched(now)
     if (touched.truck) {
@@ -103,6 +106,11 @@ export class Game extends Toy {
       return
     }
     super.press(touched, now)
+  }
+
+  override lift(): void {
+    this.fingerRangOpen = false
+    super.lift()
   }
 
   // --- Frames ----------------------------------------------------------------
@@ -319,6 +327,10 @@ export class Game extends Toy {
   /** The gate opens and the truck rolls on. The next yard is in the state from this moment: a put-away in the middle finds it there. */
   private driveOn(now: number): void {
     this.endScene()
+    // The stream stops with the yard it was for. Water still in the air belonged to that yard and is let go.
+    this.fingerRangOpen = this.hose.holding
+    this.hose.clear()
+    this.launchSpeed.clear()
     const left = this.yard
     const leftMotion = this.motion
     this.latch = 0
