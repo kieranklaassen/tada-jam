@@ -27,7 +27,7 @@ export const CELLS: Readonly<Record<Thing, Readonly<Record<Deed, Cell>>>> = {
   },
   mog: {
     tap: { seen: 'stretches long, pads on or off', heard: 'a chirrup in two' },
-    'low-end': { seen: 'circles once and sits tail side on', heard: 'a soft thud' },
+    'low-end': { seen: 'circles once and sits', heard: 'a soft thud' },
     'high-end': { seen: 'tips it with a toss, or sits tall on the perch', heard: 'a firm knock, or a purr' },
     'on-a-friend': { seen: 'kneads the head below twice, then sits', heard: 'two muffled pats and a short chirr' },
     'in-the-sand': { seen: 'neat round hollow, one turn in it', heard: 'a dry scrunch' },

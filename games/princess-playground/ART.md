@@ -254,7 +254,7 @@ No friend is yellow, tan or brown: those belong to the sand and the tray.
 
 - Nothing passes through anything. A hop goes up before it goes across and comes down from above, and arcs over whoever stands in its way; a carried friend rises before it goes over anything; a friend on another sits on the very top of it and rides its squash and its lean; a friend leaving the plank leaves at once.
 - Every friend moves by its own numbers (`personality.ts`): Pim snaps back at once and her crown lags; Mog is smooth, gathers himself longest for his size and goes long when lifted; Dot takes small low hops and wobbles softly for a while; Bo rocks to get going, lands flat and his belly goes on wobbling. A test fails if two friends come to share a set.
-- A hop gathers, leaps, arcs and lands with a squash; nothing teleports. A friend let go by the finger falls straight to its place.
+- A hop gathers, leaps, arcs and lands with a squash; nothing teleports. A friend let go by the finger comes straight down where it hangs over its place, and in a small arc when its place is a step to the side.
 - The plank is the heaviest thing on screen: it turns faster the bigger the difference, knocks on the sand, rebounds a little and lies still. With equal weights it floats and sways.
 - The working pieces move only as the idea needs. The plank and the stone have no idle motion; the friends breathe and blink, which adds no bulk and changes no weight.
 - Everything runs on attended game time at a fixed step of 1/120 s, with one seeded stream that only picks ordinary detail (when a blink falls).
@@ -271,12 +271,12 @@ No friend is yellow, tan or brown: those belong to the sand and the tray.
 **The small things.**
 
 - The rake: a small terracotta rake lying on top of the far rim, in the middle, where nothing ever stands in front of it. It is out only while the sand holds a mark. Touched, it is drawn along the rim from one side of the tray to the other, and the sand is raked again across its whole depth as it passes.
-- The grains: a fixed pool of 72 pale points thrown up by a knock or a landing, falling back in under half a second. One draw, no body, no mark.
+- The grains: a fixed pool of 72 pale points thrown up by a knock or a landing, running off the low end of the board, or sliding back into a bite as an end lifts; each falls back in about half a second. One draw, no body, no mark.
 - The ghost hand of the idle ladder: a pale mitten with one finger out, drawn once on a canvas, tilted so that it comes in from the side and comes down on the top of a head, never over a face. It is a picture of a hand, not a sign to read.
 - The idle glow: a warm ring of light on the sand under the one friend the ladder shows, drawn in the sand's own shader.
-- A shut eye is a dark line: the white is put away. Pim's crown slips to the side of her head when a friend sits on her; Mog's ears lie back.
+- A shut eye is a dark line: the white is put away. Pim's crown slips to the side of her head when a friend sits on her, and over one eye when she is set down in the sand; Mog's ears lie flat when he is put out and are laid right back under a friend.
 
-**Budget.** 24 to 26 draw calls and about 16,400 triangles with everything on screen, read from the renderer. No shadow map, no post pass, pixel ratio capped at 2, one 512 by 320 texture sent again only in a frame that marked the sand. Every program is compiled and drawn once, hidden, at mount. No frame rate has been measured: this machine has no graphics card.
+**Budget.** 25 to 27 draw calls and about 16,400 triangles with everything on screen, read from the renderer. No shadow map, no post pass, pixel ratio capped at 2, one 512 by 320 texture sent again only in a frame that marked the sand. Every program is compiled and drawn once, hidden, at mount. No frame rate has been measured: this machine has no graphics card.
 
 ## The registry row, for the lead
 
