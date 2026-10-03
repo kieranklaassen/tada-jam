@@ -76,7 +76,7 @@ describe('the saved salon', () => {
   })
 
   it('repairs each damaged field by itself and keeps the rest', () => {
-    const good = serializeGame({ ...seated(4), lock: 61, model: 40, seat: 'across', mane: [10, 20, 30, 40, 50, 60, 70, 80, 90], ribbon: { len: 33, at: 'floor', x: 20 }, shown: { snip: true, pull: true, ribbon: true }, clippings: [{ len: 8, hue: 'lion', on: 'floor', x: 44 }] })
+    const good = serializeGame({ ...seated(4), lock: 61, model: 40, seat: 'across', mane: [12, 47, 31, 68, 25, 90, 53, 74, 19], ribbon: { len: 33, at: 'floor', x: 20 }, shown: { snip: true, pull: true, ribbon: true }, clippings: [{ len: 8, hue: 'lion', on: 'floor', x: 44 }] })
     const damaged: [string, unknown][] = [
       ['waiting', ['yak']], ['seed', 'x'], ['lock', null], ['model', 'long'], ['seat', 'ceiling'],
       ['cape', 'half'], ['mane', 'wild'], ['ribbon', 'yes'], ['clippings', { len: 3 }], ['shown', 5], ['position', 'grade-1'], ['finished', 'yes'],
