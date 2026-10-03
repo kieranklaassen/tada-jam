@@ -90,7 +90,7 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = ['little-asks', 'middle-asks', 'big-asks', 'near-side', 'high-asks', 'any-asks']
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -100,6 +100,16 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'little-asks' },
+  // From four, a first visit opens one step on: size already matters.
+  ...(OLDEST >= 4 && YOUNGEST < 4 ? [{ fromAge: 4, position: 'middle-asks' }] : []),
 ]
+
+// --- Rides (rides.ts) --------------------------------------------------------
+
+/** A ride that takes at most this many moves more than the fewest went well. */
+export const WELL_WITHIN = 2
+/** A ride that takes at most this many more went neither well nor badly; beyond it, badly. */
+export const MIXED_WITHIN = 5
+/** The moves of a ride stop being counted here: beyond it every ride is judged the same. */
+export const MOVES_CAP = 40
