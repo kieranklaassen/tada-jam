@@ -68,7 +68,7 @@ export const LONGEST_FRAME_S = 0.1
 /** A change that keeps coming (a drag, a stroke) is handed to storage at most this often, in ms. */
 export const SAVE_THROTTLE_MS = 400
 
-const [YOUNGEST, OLDEST] = seedLabManifest.ageBand
+const [YOUNGEST] = seedLabManifest.ageBand
 
 // --- Guidance (guidance.ts) -------------------------------------------------
 
@@ -88,7 +88,10 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER = ['colour', 'short', 'colour-short', 'runner', 'jagged', 'three-traits', 'spots', 'dry', 'whole-plant'] as const satisfies readonly string[]
+
+/** A place in the game's own order. It names what is new there, never a grade, a groep or a level. What each place brings and asks is in order.ts. */
+export type PositionId = (typeof LADDER)[number]
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -97,7 +100,7 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * Rows ascend by age and no two share one, or the earlier row is never reached:
  * a band of a single age has a single row.
  */
-export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+export const FIRST_VISIT: readonly { fromAge: number; position: PositionId }[] = [
+  { fromAge: YOUNGEST, position: 'colour' },
+  { fromAge: 11, position: 'short' },
 ]
