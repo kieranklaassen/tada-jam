@@ -186,6 +186,26 @@ describe('the game', () => {
     expect(game.world.position).toBe('three-ways-wide')
   }, 30000)
 
+  it('lands where the finger was, whenever the finger lifts and however far the cable has swung', () => {
+    const landing = (liftAfter: number) => {
+      const game = begun('three-colours')
+      const toy = 2, from = placeAt((game.world.cycle.where[toy] as { place: number }).place)
+      // A fast slide from the far side of the tray to the toy, lifted early or late in the run.
+      game.point({ target: { on: 'place', place: 0 }, x: from.x > 0 ? -14 : 14, z: 9 }, true)
+      game.advance(0.5)
+      game.point({ target: game.world.cycle.where[toy].at === 'tray' ? { on: 'place', place: (game.world.cycle.where[toy] as { place: number }).place } : { on: 'place', place: 0 }, x: from.x + 1.2, z: from.z - 0.8 }, false)
+      game.advance(liftAfter)
+      const swing = Math.abs(game.claw.swingX)
+      game.lift()
+      game.advance(3)
+      return { held: game.held, swing }
+    }
+    const early = landing(0.02), mid = landing(0.2), late = landing(1.5)
+    expect([early.held, mid.held, late.held]).toEqual([2, 2, 2])
+    // The early lift really was made in mid-run, with the cable swung out.
+    expect(early.swing + mid.swing).toBeGreaterThan(0.05)
+  })
+
   it('plays the same touches the same way every time', () => {
     const play = () => {
       const game = begun('colours-then-kinds', 11)
