@@ -5,7 +5,8 @@ import { stream } from './look'
 import { deserialize, freshSave, serialize } from './save'
 import { groundAt } from './sheet'
 import { site } from './sites'
-import { FLIGHT, HOLD, RING, Toy, closedTriangle } from './toy'
+import { FLIGHT, HOLD, LEAN, RING, Toy, closedTriangle } from './toy'
+import { pinTick } from './voices'
 
 const part = (kind: Part['kind'], ax: number, ay: number, bx: number, by: number, turned = false): Part => ({ kind, a: [ax, ay], b: [bx, by], turned })
 /** The toy alone, on the free yard, where the whole kit is. */
@@ -198,6 +199,55 @@ describe('the toy', () => {
     toy.press(10, 6); toy.tap()
     expect(toy.bridge.some((p) => p.loose)).toBe(false)
     expect(toy.frame.firm).toEqual([true, true])
+  })
+
+  it('a pin in the air is a hinge that ticks as a part on it turns, and is silent once the part is at rest', () => {
+    const toy = fresh(), [lx, ly] = toy.at.left
+    const ticks = (seconds: number) => { let heard = 0; for (let i = 0; i < seconds * 60; i++) { toy.step(1 / 60); heard += toy.takeVoices().filter((voice) => voice === pinTick).length } return heard }
+    // A plank between two footings turns on nothing: it lands, and no hinge is heard.
+    drag(toy, [lx - 1, ly], [lx, ly])
+    toy.takeVoices()
+    expect(ticks(3)).toBe(0)
+    // A stick on one pin swings round like a clock hand, ticking, and hangs.
+    pickKind(toy, 'stick')
+    drag(toy, [lx, ly], [lx + 2, ly + 2])
+    toy.takeVoices()
+    expect(toy.rest[1].how).toBe('hangs')
+    expect(ticks(4)).toBeGreaterThanOrEqual(3)
+    expect(ticks(3)).toBe(0)
+    // Never faster than a ratchet: two ticks are never in one step.
+    drag(toy, [lx + 1, ly + 3], [lx + 3, ly + 3])
+    toy.takeVoices()
+    for (let i = 0; i < 240; i++) { toy.step(1 / 60); expect(toy.takeVoices().filter((voice) => voice === pinTick).length).toBeLessThanOrEqual(1) }
+  })
+
+  it('while a part is laid, what is built leans toward it a little and stands straight again when it lands', () => {
+    const toy = fresh(), [lx, ly] = toy.at.left
+    pickKind(toy, 'stick')
+    // Two sticks from two footings to one pin in the air: a firm point above the lip.
+    drag(toy, [lx - 1, ly], [lx, ly + 1]); drag(toy, [lx, ly], [lx, ly + 1])
+    settle(toy)
+    expect(toy.frame.firm).toEqual([true, true])
+    expect(toy.lean([lx, ly + 1])).toEqual([0, 0])
+    toy.press(lx - 2, ly); toy.dragStart(); toy.dragMove(lx - 1, ly + 3)
+    settle(toy, 1)
+    expect(toy.leaning).toBeGreaterThan(0.99)
+    const lean = toy.lean([lx, ly + 1])
+    // Toward the finger, which is up and to the left of it, and by no more than a few pixels.
+    expect(lean[0]).toBeLessThan(0)
+    expect(lean[1]).toBeGreaterThan(0)
+    expect(Math.hypot(...lean)).toBeGreaterThan(0.02)
+    expect(Math.hypot(...lean)).toBeLessThanOrEqual(LEAN.far)
+    // A footing does not lean, nor the pin the part grows from, nor anything far off.
+    expect(toy.lean([lx, ly])).toEqual([0, 0])
+    expect(toy.lean([lx - 2, ly])).toEqual([0, 0])
+    expect(toy.lean([lx + 8, ly + 1])).toEqual([0, 0])
+    toy.dragEnd()
+    settle(toy, 1.5)
+    expect(toy.leaning).toBe(0)
+    expect(toy.lean([lx, ly + 1])).toEqual([0, 0])
+    // It is not part of what is saved.
+    expect(JSON.stringify(serialize(toy.save))).not.toContain('lean')
   })
 
   it('the chief has its two tastes about what was built, and a poke gets its own answer', () => {

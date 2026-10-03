@@ -147,7 +147,10 @@ export class View {
     const hand = toy.hand
     const sheet = toy.save.sheets[toy.save.on], jobCrossed = sheet.crossed.includes(at.job)
     const pose = toy.bridge.map((part, index) => {
-      const now = hand?.what === 'part' && hand.carried && hand.index === index ? toy.carriedEnds(hand) : ends(toy.moving[index], length(part))
+      const carried = hand?.what === 'part' && hand.carried && hand.index === index
+      const now = carried ? toy.carriedEnds(hand) : ends(toy.moving[index], length(part))
+      // While a part is being laid, what is built leans toward it a little: each pinned end goes with its pin.
+      if (!carried && toy.leaning > 0 && toy.rest[index].how === 'firm') for (const end of ['a', 'b'] as const) { if (part.loose === end) continue; const lean = toy.lean(part[end]); now[end][0] += lean[0]; now[end][1] += lean[1] }
       const dx = now.b[0] - now.a[0], dy = now.b[1] - now.a[1], long = Math.hypot(dx, dy) || 1
       // A plucked part shakes across its own length and dies away.
       const rung = toy.rung[index], shake = rung < RING ? SHAKE[part.kind].far * Math.exp(-rung / 0.22) * Math.sin(2 * Math.PI * SHAKE[part.kind].beat * rung) : 0

@@ -7,7 +7,7 @@ import { atRest, ends, follow, rests, unrest, type Moving, type Rest } from './p
 import { edit, type Save } from './save'
 import { groundAt } from './sheet'
 import { canPin, isFooting, site, type Site } from './sites'
-import { chiefCroak, chiefRuffle, chiefTaps, fold, knock, lay as layVoice, pick, pinClick, pinRattle, putBack, snapTick, type VoiceSpec } from './voices'
+import { chiefCroak, chiefRuffle, chiefTaps, fold, knock, lay as layVoice, pick, pinClick, pinRattle, pinTick, putBack, snapTick, type VoiceSpec } from './voices'
 
 // The toy: the bridge on the board, a finger, and what the two do to each
 // other. Pure: no renderer, no DOM and no clock of its own. The Mount feeds it
@@ -46,6 +46,11 @@ export const CARRY_OFF = 1
 /** Where the crew chief stands, in cells: on a ruled ledge in the top left margin of the sheet, clear of both banks. And how near a touch must be to poke it. */
 export const CHIEF = { x: 0.7, y: 10.9, reach: 1.5 } as const
 
+/** A hinge ticks once for each notch a part on it turns through, in radians, and no faster than one tick in `gap` seconds. The notches lie clear of the angles a part can be laid at. */
+export const NOTCH = { turn: 0.3, gap: 0.05 } as const
+/** What is built leans toward a part being laid: a pin in the air by up to `far` cells, less the further it is from the finger, and not at all beyond `reach`. */
+export const LEAN = { far: 0.07, reach: 5 } as const
+
 /** A part on its way back to the tray after it was taken off: drawn until it gets there. */
 export type Flying = { part: Part; a: readonly [number, number]; b: readonly [number, number]; since: number }
 
@@ -67,6 +72,12 @@ export class Toy {
   /** Seconds since a pin last clicked in at each grid point, by its key. */
   clicked = new Map<string, number>()
   flying: Flying[] = []
+  /** How far what is built leans toward a part being laid, 0 to 1: it eases in while the part grows and out when it lands. And where to, and the pin the part grows from, which stays put. */
+  leaning = 0
+  private leanTo: readonly [number, number] = [0, 0]
+  private leanFrom: Point | null = null
+  /** Seconds since a hinge last ticked. */
+  private ticked = Infinity
   readonly chief: ChiefDirector
   seconds = 0
   protected voices: VoiceSpec[] = []
@@ -102,7 +113,7 @@ export class Toy {
 
   /** True while anything is still on its way to rest: the scene is alive and must be drawn. */
   get busy(): boolean {
-    return this.hand !== null || this.flying.length > 0 || this.bridge.some((part, index) => unrest(this.moving[index], this.rest[index], length(part)) > 0.002 || this.rung[index] < RING + 0.4 || this.turned[index] < 0.6 || this.laid[index] < 0.6)
+    return this.hand !== null || this.flying.length > 0 || this.leaning > 0.01 || this.bridge.some((part, index) => unrest(this.moving[index], this.rest[index], length(part)) > 0.002 || this.rung[index] < RING + 0.4 || this.turned[index] < 0.6 || this.laid[index] < 0.6)
   }
 
   takeVoices(): VoiceSpec[] {
@@ -252,6 +263,12 @@ export class Toy {
         }
       }
     }
+    // What is built leans toward a part being laid, and stands straight again once it has landed.
+    const laying = hand?.what === 'lay' && !samePoint(hand.from, hand.to)
+    if (hand?.what === 'lay' && laying) { this.leanTo = hand.finger; this.leanFrom = hand.from }
+    this.leaning += ((laying ? 1 : 0) - this.leaning) * Math.min(1, dt * 10)
+    if (this.leaning < 0.001) this.leaning = 0
+    this.ticked += dt
     // Links of a chain after what they hang from, so each is carried by where its link is now.
     const order = this.bridge.map((_, index) => index).sort((i, j) => this.depth(i) - this.depth(j))
     for (const index of order) {
@@ -263,6 +280,9 @@ export class Toy {
       }
       follow(moving, rest, length(part), dt, carried)
       this.rung[index] += dt; this.turned[index] += dt; this.laid[index] += dt
+      // A pin in the air is a hinge, and it ticks as a part on it turns: once for each notch the part passes.
+      const notch = (turn: number) => Math.floor(turn / NOTCH.turn - 0.5)
+      if (notch(moving.turn.at) !== notch(before) && this.ticked >= NOTCH.gap && this.hinged(index)) { this.voices.push(pinTick); this.ticked = 0 }
       // A swinging part does not go through the ground: where it would, it is turned back the short way until it
       // lies clear, and it comes off the ground more slowly than it met it, with a knock.
       if (rest.how !== 'hangs') continue
@@ -290,6 +310,22 @@ export class Toy {
     for (const flight of this.flying) flight.since += dt
     this.flying = this.flying.filter((flight) => flight.since < FLIGHT)
     this.chief.step(dt)
+  }
+
+  /** True for a part that turns on a hinge: one that hangs by one pin, or has a pinned end on a pin in the air. A thread turns on nothing. */
+  private hinged(index: number): boolean {
+    const part = this.bridge[index], footing = isFooting(this.at)
+    if (part.kind === 'thread') return false
+    return this.rest[index].how === 'hangs' || (['a', 'b'] as const).some((end) => part.loose !== end && !footing(part[end]))
+  }
+
+  /** How far the pin at a grid point is drawn from its place while a part is being laid: toward the finger, a little. A footing does not lean, nor the pin the part grows from. */
+  lean(point: Point): readonly [number, number] {
+    if (this.leaning <= 0 || isFooting(this.at)(point) || (this.leanFrom && samePoint(point, this.leanFrom))) return STRAIGHT
+    const dx = this.leanTo[0] - point[0], dy = this.leanTo[1] - point[1], far = Math.hypot(dx, dy)
+    if (far < 0.3 || far >= LEAN.reach) return STRAIGHT
+    const by = (LEAN.far * this.leaning * (1 - far / LEAN.reach)) / far
+    return [dx * by, dy * by]
   }
 
   /** Where a carried part is drawn: as it lay, moved by as far as the finger has gone. */
@@ -359,6 +395,8 @@ export class Toy {
     }
   }
 }
+
+const STRAIGHT: readonly [number, number] = [0, 0]
 
 /** How far under the drawn ground a swinging part may dip before it is turned back, in cells: a pixel or so. */
 const CLEAR = 0.03
