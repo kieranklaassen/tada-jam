@@ -139,11 +139,48 @@ A piece in the hand is saved in its tub, or on the spot it was picked up from. B
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+Five customers to start. Each has the same one visible want, in its own manner: it holds its card up, looks from the card to the pizza and back, and its mouth waters. A want is always about the pizza, never about the child.
+
+| Customer | Body and tempo | Funniest part | Loves | Cannot stand, and what that does |
+| --- | --- | --- | --- | --- |
+| Bim | small, quick, springy | one eye on a long stalk | olives | socks: the eye stalk ties itself in a knot and has to be unpicked |
+| Grum | huge, slow, heavy | a belly that goes on wobbling after every move | cheese | peppers: steam whistles from both ears and the belly glows like a lamp |
+| Fizz | tall, thin, jittery | a neck that stretches, under three antennae | peppers | mushrooms: the neck goes limp as a noodle and the antennae droop |
+| Mops | round, furry, sleepy | floppy ears that arrive late | socks | olives: the ears shoot straight up and every hair stands on end |
+| Ooze | a soft blob that drips and gathers itself | a very long tongue | worms | cheese: it melts into a puddle and pulls itself together again |
+
+**The tastes never change**, so a child can learn them and test them on purpose.
+
+- A customer's order always holds the kind it loves, and never the kind it cannot stand.
+- From the place `spare-tub` on, the tub that is not wanted holds the kind this customer cannot stand. Putting one on its pizza is a trick the child can play at any time, and the reaction comes every time, in the tasting.
+- Fed by hand, the kind it loves gets that customer's own small dance, and the kind it cannot stand is spat neatly back into its tub.
+- Every reaction in the grid is played in the customer's manner: Grum's flame is one slow rolling ball, Bim's is three quick sparks and a hop.
+
+**The reactions are the feedback.** A customer reacts to the exact pizza in front of it: these kinds, this many. A reaction starts as the tongue touches the pizza and reads from across a room. No customer thanks, praises or blames the child, complains of waiting, or remarks on the child stopping, leaving or coming back. The customer a trick is played on is bewildered and never hurt.
+
+(pack: game-design, characters-with-opinions.md)
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Each scene is a list of timed beats filled in from the state of play, built on `scene.ts`. Its outcome is saved when it starts. Any touch ends it at once with everything where the scene was taking it, and that touch is then an ordinary touch.
+
+**Stepping up** (about 4 seconds). *Cause:* the child touches a customer at the door. *Beats:* the customer who has eaten, if there is one, pats its belly and leaves in its own walk; the one touched comes to the counter in its own walk; a fresh base slides onto the board; the roll opens into the card and its pieces appear one at a time; the tubs slide in. *Filled in from:* which customer, its order, which roll it held. *Saved at the start:* the new customer, its order, the tubs, an empty pizza, and the next two at the door.
+
+**The first showing** (about 2 seconds, once ever). *Cause:* the first customer a child ever serves has stepped up. *Beats:* the customer pokes the tub with a finger, and one piece hops onto the pizza. That is the move, not the answer: this first order always holds at least two pieces. *Saved at the start:* the piece on the pizza, and `tap-a-tub` in `shown`.
+
+**To the oven, shown** (about 2 seconds, once ever). *Cause:* in that same first cycle, the pizza holds a piece and the child has not touched anything for a few seconds of attended time. *Beats:* the oven's window lights, the customer nudges the board a hand's width towards the oven and lets it slide back. It shows where a pizza goes, and says nothing about whether this one is ready. *Saved at the start:* `to-the-oven` in `shown`.
+
+**Baking** (about 3 seconds). *Cause:* the child slides the pizza to the oven, or taps the oven. *Beats:* the pizza goes in and the door shuts; the window glows and each kind on the pizza makes its baking sound; the door opens and the pizza slides out, each piece changed as its kind bakes. *Filled in from:* the kinds on the pizza. *Saved at the start:* the pizza as baked.
+
+**The tasting** (4 to 8 seconds). *Cause:* the child slides a baked pizza to the customer, or taps the customer, and the pizza does not match the card. *Beats:* the lean and the lick; then, for up to three kinds that are off, that kind's cell of the grid, one beat for each piece up to three or one big beat beyond; then the push back to the board. *Filled in from:* which kinds are off, in which direction and by how many, and the customer's manner. *Saved at the start:* one more pizza pushed back. A raw pizza gets the short raw tasting, which saves nothing.
+
+**The eating** (6 to 9 seconds, the ending). *Cause:* a baked pizza is served and every kind pairs off with the card. *Beats:* three bites, each taking a third of the pizza with the crunch of the kinds in it; the customer's own delight; a burp in the colours of what it ate; it settles back, full. *Filled in from:* the pieces where the child laid them, the kinds, the customer. *Saved at the start:* `finished`, and the position moved as the cycle went.
+
+**Secrets** play the same way every time and are never hinted at: each customer's own answer to a piece fed by hand, the base baked with nothing on it, and the tasting of the kind a customer cannot stand.
+
+**How a cycle ends and the next one starts.** The eating ends on a finished scene that stays as long as the child likes: the customer sits back full at the counter, crumbs on the board. If the child does nothing, nothing new starts, and there is no countdown. Two customers wait at the door in plain view, each with a roll, and neither hurries the child or complains. The next cycle starts when the child touches one of them. On load nothing replays: the kitchen is as it was left, mid-order or after the eating, with the two at the door.
+
+(pack: game-design, endings-and-short-scenes.md; pack: game-design, guided-discovery.md)
 
 ## The records
 
