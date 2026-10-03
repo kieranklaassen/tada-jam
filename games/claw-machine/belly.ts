@@ -1,12 +1,13 @@
 import { PLATE } from './bricks'
 import { toySpan } from './builds'
-import { LEGS, bellyBox, type GobblerShape } from './gobblerBuild'
+import { BELLY_STEP, ROW_Z, bellyBox, type GobblerShape } from './gobblerBuild'
 import type { Toy } from './toys'
 
-// Where a group lies in a belly. A swallowed toy is chewed small and stands
-// behind the window with the others, in the order it went in: along the
-// bottom row from the left, and in the row above when the bottom row has no
-// room for it.
+// Where a group stands in a belly. A swallowed toy is chewed small and
+// stands behind the window with the others, in the order it went in: along
+// the front row from the left, and on the step behind when the front row has
+// no room for it. Both rows show through the window, the back one over the
+// front one.
 
 /** How small a toy is in a belly. */
 export const MINI = 0.46
@@ -23,15 +24,14 @@ export type BellyPlace = { x: number; y: number; z: number }
  * there, so a toy keeps its place when another is added after it.
  */
 export function bellyLayout(shape: GobblerShape, group: readonly Toy[]): BellyPlace[] | null {
-  const inside = bellyBox(shape), rowHeight = inside.h / BELLY_ROWS
+  const inside = bellyBox(shape), step = BELLY_STEP * PLATE
   const out: BellyPlace[] = []
   const used = Array.from({ length: BELLY_ROWS }, () => GAP)
   for (const toy of group) {
     const span = toySpan(toy), length = span.length * MINI
-    if (span.height * MINI > rowHeight) return null
-    const row = used.findIndex((taken) => taken + length + GAP <= inside.w + 1e-9)
+    const row = used.findIndex((taken, r) => taken + length + GAP <= inside.w + 1e-9 && span.height * MINI + r * step <= inside.h - 0.15)
     if (row < 0) return null
-    out.push({ x: inside.x + used[row] + length / 2, y: LEGS * PLATE + inside.y + row * rowHeight, z: inside.z + inside.d * 0.55 })
+    out.push({ x: inside.x + used[row] + length / 2, y: inside.y + row * step, z: row === 0 ? ROW_Z : -ROW_Z })
     used[row] += length + GAP
   }
   return out

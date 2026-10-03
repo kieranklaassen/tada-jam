@@ -8,7 +8,7 @@ import { crewGoesBy, shapeOf } from './gobblers'
 import { RIDER, TIP, crewSpot, deckSpots, deckTop, handleSpot, riderSpots, tipped, waitingSpot, type Spot } from './layout'
 import { actSeconds } from './motion'
 import { SHELF, TRAY, TRAY_DEPTH } from './places'
-import { chew, nextLeg, react } from './react'
+import { DOWN_THE_THROAT, chew, nextLeg, react } from './react'
 import { Scene, type Beat } from './scene'
 import { bellyOf, crewArrives, crewNow, type World } from './world'
 
@@ -58,10 +58,20 @@ function showing(game: Game, from: number): Beat[] {
   game.crew.forEach((actor, i) => {
     const at = from + i * SHOW_EACH
     beats.push(cue(game, at, () => { game.startAct(actor, 'show'); game.say({ type: 'show', who: actor.id }) }))
-    beats.push(cue(game, at + actSeconds(actor.id, 'show') * 0.8, () => {
-      game.startAct(actor, 'gulp', 1)
-      game.say({ type: 'gulp', heavy: 1, who: actor.id })
-      toss(actor.snack, { ...game.snackSpot(actor), seconds: 0.26, scale: MINI, landing: 'belly' })
+    const gulp = at + actSeconds(actor.id, 'show') * 0.8
+    beats.push(cue(game, gulp, () => { game.startAct(actor, 'gulp', 1); game.say({ type: 'gulp', heavy: 1, who: actor.id }) }))
+    // The swallow: chewed small where it lies on the tongue, down the throat, and up to its size and its place
+    // in the belly.
+    const snack = actor.snack
+    beats.push(over(game, gulp + 0.12, 0.5, (progress) => {
+      const mouth = game.mouthOf(actor), home = game.snackSpot(actor)
+      snack.mode = 'parked'
+      if (progress < 0.35) { snack.x = mouth.x; snack.y = mouth.y; snack.z = mouth.z; snack.scale = (1 - (1 - DOWN_THE_THROAT) * (progress / 0.35)) * actor.scale; return }
+      if (progress < 0.55) { snack.x = mouth.x; snack.y = mouth.y - 0.75 * ((progress - 0.35) / 0.2); snack.z = mouth.z; snack.scale = DOWN_THE_THROAT * actor.scale; return }
+      const u = (progress - 0.55) / 0.45
+      snack.x = mouth.x + (home.x - mouth.x) * u; snack.y = mouth.y - 0.75 + (home.y - (mouth.y - 0.75)) * u; snack.z = mouth.z + (home.z - mouth.z) * u
+      snack.scale = (DOWN_THE_THROAT + (MINI - DOWN_THE_THROAT) * u) * actor.scale
+      if (progress >= 1) { snack.mode = 'resting'; game.say({ type: 'plink', nth: 0 }) }
     }))
   })
   beats.push(cue(game, from + game.crew.length * SHOW_EACH, () => {}))
@@ -103,11 +113,14 @@ export function tipOut(game: Game, tipped: readonly number[]): void {
       beats.push(cue(game, start + 0.3 + j * 0.14, () => {
         const body = game.bodies[toy], home = game.spotOf(toy)
         game.say({ type: 'tip', nth: n })
-        // Up out of the mouth, growing as it comes, and over the teeth onto the tray.
-        const mouth = { x: actor.x, y: rim + 0.6, z: actor.z, seconds: 0.16, scale: 0.8, landing: 'again' as const, fixed: true }
-        game.flights.set(body, mouth)
-        body.legs = [{ x: home.x, y: home.y, z: home.z, seconds: airTime(mouth.y, home.y, mouth.y + 3.4), scale: 1, landing: 'stand' }]
-        toss(body, mouth)
+        // Chewed small again, up the throat, out of the mouth growing as it comes, and over the teeth onto the tray.
+        const tongue = game.mouthOf(actor).y
+        const under = { x: actor.x, y: tongue - 0.75, z: actor.z, seconds: 0.12, scale: DOWN_THE_THROAT, landing: 'again' as const, fixed: true }
+        const on = { x: actor.x, y: tongue, z: actor.z, seconds: 0.08, scale: DOWN_THE_THROAT, landing: 'again' as const, fixed: true }
+        const above = { x: actor.x, y: rim + 0.6, z: actor.z, seconds: 0.16, scale: 0.8, landing: 'again' as const, fixed: true }
+        game.flights.set(body, under)
+        body.legs = [on, above, { x: home.x, y: home.y, z: home.z, seconds: airTime(above.y, home.y, above.y + 3.4), scale: 1, landing: 'stand' }]
+        toss(body, under)
       }))
     })
     at += 0.5 + mine.length * 0.14

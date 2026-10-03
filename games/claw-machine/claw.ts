@@ -176,7 +176,8 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
 
   // The jaws and the squash are springs toward where the phase wants them.
   const wantOpen = claw.phase === 'dropping' || claw.phase === 'letting-go' ? 1 : claw.phase === 'closing' || claw.phase === 'rising' || claw.load > 0 ? claw.grip : claw.following ? 1 : REST_OPEN
-  claw.openV += ((wantOpen - claw.open) * 420 - claw.openV * 26) * dt
+  // The jaws shut without overshooting: they stop beside what they hold and never bite into it.
+  claw.openV += ((wantOpen - claw.open) * 420 - claw.openV * 41) * dt
   claw.open = clamp(claw.open + claw.openV * dt, 0, 1.06)
   claw.squashV += ((1 - claw.squash) * 520 - claw.squashV * 18) * dt
   claw.squash = clamp(claw.squash + claw.squashV * dt, 0.6, 1.4)

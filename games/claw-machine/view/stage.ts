@@ -157,7 +157,7 @@ export class Stage {
     if (mesh) return mesh
     const id = `${look.toy.colour}-${look.toy.kind}-${look.toy.size}`
     let geometry = this.toyGeometry.get(id)
-    if (!geometry) this.toyGeometry.set(id, (geometry = brickGeometry(toyBricks(look.toy))))
+    if (!geometry) this.toyGeometry.set(id, (geometry = brickGeometry(toyBricks(look.toy), true)))
     mesh = new Mesh(geometry, this.plastic)
     mesh.name = `toy-${look.key}`
     this.toyMeshes.set(look.key, mesh)

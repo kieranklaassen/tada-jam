@@ -10,6 +10,7 @@ import { PERSONALITY, WRONG, actPose, idlePose, liftedPose, restPose, wrongPose,
 import type { GlowLook, GobblerLook, Picture, Shadow, ToyLook } from './picture'
 import { RAIL, TRAY } from './places'
 import { nearestPlace } from './tray'
+import { trayIsClear } from './world'
 
 // The picture of the game for one frame: where every toy, gobbler and crate
 // is drawn, the claw, the shadows, and what the idle ladder shows. It reads
@@ -45,6 +46,9 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
     if (actor.id === 'rocket' && claw.phase === 'rising') out.squash *= 1 + 0.14 * Math.min(1, claw.t * 2)
     if (actor.id === 'little' && near && claw.phase === 'ready') out.dy += 0.6 * Math.abs(Math.sin(game.time * 7))
   }
+  // The ones who wait: when the tray is clear they go up on tiptoe to look over the parapet. They do not
+  // call or hurry anyone; they are only where the next thing is.
+  if (actor.role === 'waiting' && !actor.walk && !actor.act && game.bodies.length > 0 && trayIsClear(game.world.cycle)) out.squash *= 1.1 + 0.03 * Math.sin(game.time * PERSONALITY[actor.id].tempo)
   if (actor.liftedT >= 0) {
     // In the jaws it hangs from its knob: however it stretches, leans or spins, the knob stays between the teeth.
     const knob = knobAt(shapeOf(actor.id)), wide = 1 / Math.sqrt(Math.max(0.2, out.squash))
@@ -98,7 +102,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
       squash: pose.squash, leanX: pose.leanX, leanZ: pose.leanZ, turn: pose.turn, scale: actor.scale,
       gazeX: pose.looks ? pose.gazeX : clamp((watched.x - actor.x) / 11, -1, 1),
       gazeY: pose.looks ? pose.gazeY : clamp((watched.y - eyeY) / 9 - (watched.z - actor.z) / 30, -1, 1),
-      blink: pose.blink, tongue: actor.tongue, waiting: actor.role === 'waiting' || actor.scale < 0.95,
+      blink: pose.blink, waiting: actor.role === 'waiting' || actor.scale < 0.95,
     })
     // A snack shows in the belly of a gobbler at the tray; the ones who wait are seen from the eyes up.
     if (actor.role !== 'waiting') riding(actor, actor.snack, 10000 + actor.key)
@@ -152,7 +156,8 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     toys, gobblers, shadows, glows, hand: ghost, gate: game.gateShake,
     crates: game.crates.map((crate) => ({
       key: `${crate.from}-${crate.seed}-${crate.toys.length}-${crate.crews.length}`, which: crate.which, toys: crate.toys, crews: crate.crews,
-      x: crate.x + crate.away * AWAY * (crate.x < 0 ? -1 : 1), y: crate.y, z: crate.z, tip: crate.tip,
+      // A crate that waits rocks a little on its foot: its riders cannot sit still.
+      x: crate.x + crate.away * AWAY * (crate.x < 0 ? -1 : 1), y: crate.y + (crate.carried || game.scene ? 0 : 0.07 * Math.abs(Math.sin(game.time * 2.6 + crate.which))), z: crate.z, tip: crate.tip,
     })),
     // Left alone, the claw is never quite still: the cable sways a hair and the jaws work a little.
     claw: {

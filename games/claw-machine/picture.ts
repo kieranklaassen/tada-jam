@@ -40,8 +40,6 @@ export type GobblerLook = {
   gazeY: number
   /** 0 eyes open, 1 shut. */
   blink: number
-  /** 0 the tongue lies on the floor of the belly, 1 it is raised to the rim. */
-  tongue: number
   /** Lean, in radians: forward and back, and side to side. */
   leanX: number
   leanZ: number
@@ -103,13 +101,13 @@ export type Picture = {
 /**
  * How many draws a picture costs on the stage (view/stage.ts): the cabinet,
  * the shadows, the gate, the cable and the three parts of the claw; one for
- * each toy; a body, a pair of pupils, a tongue and a window for a gobbler at
- * the tray, and a body and pupils for one in the shade; one for each crate;
+ * each toy; a body, a pair of pupils and a window for a gobbler at the
+ * tray, and a body and pupils for one in the shade; one for each crate;
  * and the glow and the hand when they show. The frame budget is held on this
  * count, since a test cannot draw.
  */
 export function drawsOf(picture: Picture): number {
   const fixed = 1 + 1 + 1 + 1 + 3
-  const gobblers = picture.gobblers.reduce((sum, look) => sum + (look.waiting ? 2 : 4), 0)
+  const gobblers = picture.gobblers.reduce((sum, look) => sum + (look.waiting ? 2 : 3), 0)
   return fixed + picture.toys.length + gobblers + picture.crates.length + (picture.glows.length > 0 ? 1 : 0) + (picture.hand ? 1 : 0)
 }

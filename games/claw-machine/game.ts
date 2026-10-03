@@ -7,7 +7,7 @@ import { HINGE_DROP, JAW_REACH, TOOTH_DROP } from './clawBuild'
 import type { PositionId } from './config'
 import { clawLands, clawSwingsInto, clawWaitsAbove, toyLetGo, type Deed, type Target } from './deeds'
 import type { GameEvent } from './events'
-import { knobAt, tongueTravel } from './gobblerBuild'
+import { knobAt, tongueTop } from './gobblerBuild'
 import { GOBBLER, shapeOf, snackOf, type GobblerId } from './gobblers'
 import { bellySpots, crateSpot, crateTop, crewSpot, deckTop, handleSpot, headTop, waitingSpot, type Spot } from './layout'
 import { LIFT_SECONDS, WRONG, actSeconds, type Act } from './motion'
@@ -48,8 +48,6 @@ export type Actor = {
   liftedT: number
   /** Seconds the claw has waited above it, or -1. */
   openT: number
-  /** How far its tongue is raised, 0 to 1. */
-  tongue: number
   walk: Walk | null
   /** Its snack, and what it carries off in its belly when it leaves. */
   snack: Body
@@ -78,7 +76,7 @@ export type CrateBody = {
 
 /** What becomes of a toy that is on a gobbler's tongue. */
 export type Plan =
-  | { kind: 'gulp'; chomps: number; ends: 'sort' | 'cycle' | null; chompsDone: number; /** The chewing is done and the tongue is taking it down. */ swallowed: boolean }
+  | { kind: 'gulp'; chomps: number; ends: 'sort' | 'cycle' | null; chompsDone: number; /** The chewing is done and the toy is being chewed small to go down the throat. */ swallowed: boolean }
   | { kind: 'spit'; hold: number; started: boolean; released: boolean; place: number }
 
 /** How far from the middle of a toy the claw can land and still close on it. */
@@ -87,7 +85,7 @@ const LOWEST_RIDE = 9.2
 /** How far above a thing the hinge stops when the shut jaws are only to touch it. */
 const TOUCH = JAW_REACH + 0.5
 /** How far above the top of a gobbler's knob the hinge is when the teeth hold the knob by its middle. */
-export const KNOB_HOLD = TOOTH_DROP - 0.6
+export const KNOB_HOLD = TOOTH_DROP - 0.2
 /** The sliver of air a crate stands on: two things that touch are never drawn in the same plane. */
 export const AIR = 0.02
 /** How long the claw has to wait above a thing before the thing notices. */
@@ -96,7 +94,7 @@ const WAIT_SECONDS = 0.7
 export function newActor(key: number, id: GobblerId, slot: number, role: Actor['role'], at: Spot, first: Toy | undefined): Actor {
   const snack = newBody(snackOf(id, first ?? { colour: 'yellow', kind: 'duck', size: 'small' }))
   snack.scale = MINI
-  return { key, cargoAt: [], id, slot, role, x: at.x, y: at.y, z: at.z, scale: 1, act: null, actT: 0, actFor: 1, actN: 1, wrongT: -1, liftedT: -1, openT: -1, tongue: 0, walk: null, snack, cargo: [] }
+  return { key, cargoAt: [], id, slot, role, x: at.x, y: at.y, z: at.z, scale: 1, act: null, actT: 0, actFor: 1, actN: 1, wrongT: -1, liftedT: -1, openT: -1, walk: null, snack, cargo: [] }
 }
 
 export class Game {
@@ -196,7 +194,7 @@ export class Game {
     for (const actor of this.crew) {
       const at = crewSpot(actor.slot, crew.length)
       actor.role = 'crew'; actor.x = at.x; actor.y = at.y; actor.z = at.z; actor.scale = 1
-      actor.walk = null; actor.act = null; actor.wrongT = -1; actor.openT = -1; actor.tongue = 0
+      actor.walk = null; actor.act = null; actor.wrongT = -1; actor.openT = -1
       if (actor.slot !== this.lifted) actor.liftedT = -1
       actor.snack.mode = 'resting'; actor.snack.scale = MINI
     }
@@ -241,10 +239,9 @@ export class Game {
     body.x = at.x; body.y = at.y; body.z = at.z; body.scale = at.scale
   }
 
-  /** Where a gobbler's tongue holds a toy: at the rim when raised. */
+  /** Where a toy in a gobbler's mouth lies: on its tongue, in the middle, over the throat. */
   mouthOf(actor: Actor): Spot {
-    const travel = tongueTravel(shapeOf(actor.id))
-    return { x: actor.x, y: actor.y + travel.floor + travel.rise * actor.tongue + 0.2, z: actor.z }
+    return { x: actor.x, y: actor.y + tongueTop(shapeOf(actor.id)) * actor.scale + AIR, z: actor.z }
   }
 
   say(event: GameEvent): void {
@@ -369,10 +366,10 @@ export class Game {
     return Math.max(LOWEST_RIDE, near + below + 1)
   }
 
-  /** How far below the hinge of the jaws the base of a held toy hangs: the teeth close beside its highest part. */
+  /** How far below the hinge of the jaws the base of a held toy hangs: the teeth close beside the top plate of its highest part. */
   hang(toy: number): number {
     const hold = holdOf(this.bodies[toy].toy)
-    return TOOTH_DROP - hold.height / 2 + hold.top
+    return TOOTH_DROP - 0.2 + hold.top
   }
 
   /**
@@ -586,11 +583,6 @@ export class Game {
     if (actor.act) { actor.actT += STEP / actor.actFor; if (actor.actT >= 1) { actor.act = null; actor.actT = 0 } }
     if (actor.wrongT >= 0) { actor.wrongT += STEP; if (actor.wrongT >= WRONG[GOBBLER[actor.id].wrong].seconds) actor.wrongT = -1 }
     if (actor.openT >= 0) actor.openT += STEP
-    // The tongue is up while a toy is on it or on its way to it.
-    let up = 0
-    if (actor.role === 'crew') for (const body of this.bodies) if (body.slot === actor.slot && (body.mode === 'mouth' || (body.mode === 'flying' && body.landing === 'mouth'))) { const plan = this.plans.get(body); if (!(plan && plan.kind === 'gulp' && plan.swallowed)) up = 1 }
-    if (actor.snack.mode === 'mouth') up = 1
-    actor.tongue += (up - actor.tongue) * Math.min(1, STEP * (up > actor.tongue ? 22 : 14))
     if (actor.slot === this.lifted && actor.role === 'crew' && this.claw.phase !== 'letting-go') {
       // In the jaws: it hangs from its knob under the claw.
       const hub = hubAt(this.claw), knob = knobAt(shapeOf(actor.id)), home = crewSpot(actor.slot, this.crew.length)
@@ -627,6 +619,7 @@ export class Game {
     settle(snack, STEP)
     const home = this.snackSpot(actor)
     actor.cargo.forEach((body, i) => { const at = actor.cargoAt[i]; body.x = actor.x + at.x; body.y = actor.y + at.y; body.z = actor.z + at.z })
+    if (snack.mode === 'parked') return
     if (snack.mode === 'flying') {
       if (fly(snack, home, STEP)) { snack.mode = 'resting'; snack.squash = 0.7; snack.squashV = 0; this.say({ type: 'plink', nth: 0 }) }
       return

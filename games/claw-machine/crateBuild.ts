@@ -44,11 +44,11 @@ function box(which: number, rows: number): Brick[] {
 export function crateMesh(which: number, toys: readonly Toy[], crews: readonly (readonly GobblerId[])[]): BrickMesh {
   const top = deckTop(which)
   const parts: { mesh: BrickMesh; scale?: number; at?: readonly [number, number, number] }[] = [{ mesh: buildMesh(box(which, crews.length)) }]
-  deckSpots(toys).forEach((spot, i) => parts.push({ mesh: buildMesh(toyBricks(toys[i])), scale: MINI, at: [spot.x, top + spot.y, spot.z] }))
+  deckSpots(toys).forEach((spot, i) => parts.push({ mesh: buildMesh(toyBricks(toys[i]), true), scale: MINI, at: [spot.x, top + spot.y, spot.z] }))
   riderSpots(crews).forEach((row, r) => row.forEach((spot, i) => {
     const shape = shapeOf(crews[r][i]), built = gobblerParts(shape), eye = eyeCentres(shape)[0], reach = EYE / 2 - 0.12
     const at = [spot.x, top + spot.y, spot.z] as const
-    parts.push({ mesh: buildMesh(built.body), scale: RIDER, at })
+    parts.push({ mesh: buildMesh(built.body, true), scale: RIDER, at })
     // Its pupils, looking at the child.
     parts.push({ mesh: buildMesh(built.pupils, true), scale: RIDER, at: [at[0], at[1] + (eye.y + Math.sin(AHEAD) * reach) * RIDER, at[2] + (eye.z + Math.cos(AHEAD) * reach) * RIDER] })
   }))

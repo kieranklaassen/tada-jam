@@ -1,10 +1,10 @@
 import { Group, Mesh, MeshBasicMaterial, type ShaderMaterial } from 'three'
-import { EYE, eyeCentres, gobblerParts, tongueTravel } from '../gobblerBuild'
+import { EYE, eyeCentres, gobblerParts } from '../gobblerBuild'
 import type { GobblerLook } from '../picture'
 import { brickGeometry } from './plastic'
 
 // One gobbler on the stage: its body, which squashes and stretches about its
-// feet, the clear front of its belly, its two pupils and its tongue.
+// feet, the clear front of its belly, and its two pupils.
 
 /** The angle above level at which the child looks in. */
 const AHEAD = 0.6
@@ -14,10 +14,8 @@ const glass = new MeshBasicMaterial({ color: 0xcfe6ff, transparent: true, opacit
 export class GobblerRig {
   readonly group = new Group()
   private readonly pupils: Mesh
-  private readonly tongue: Mesh
   private readonly eyeY: number
   private readonly eyeZ: number
-  private readonly travel: { floor: number; rise: number }
   /** Whether it was built in the shade of the parapet; the stage builds it again when that changes. */
   readonly waiting: boolean
 
@@ -25,7 +23,7 @@ export class GobblerRig {
     this.waiting = look.waiting
     const parts = gobblerParts(look.shape)
     this.group.name = `gobbler-${look.who}`
-    const body = new Mesh(brickGeometry(parts.body), plastic)
+    const body = new Mesh(brickGeometry(parts.body, true), plastic)
     body.name = `gobbler-${look.who}-body`
     this.group.add(body)
     const eye = eyeCentres(look.shape)[0]
@@ -33,18 +31,13 @@ export class GobblerRig {
     this.pupils = new Mesh(brickGeometry(parts.pupils, true), plastic)
     this.pupils.name = `gobbler-${look.who}-pupils`
     this.group.add(this.pupils)
-    this.tongue = new Mesh(brickGeometry(parts.tongue), plastic)
-    this.tongue.name = `gobbler-${look.who}-tongue`
-    this.group.add(this.tongue)
-    this.travel = tongueTravel(look.shape)
     // The ones who wait show no belly: they are seen from the eyes up.
-    if (!look.waiting && parts.window.length > 0) {
-      const window = new Mesh(brickGeometry(parts.window), glass)
+    if (!look.waiting) {
+      const window = new Mesh(brickGeometry(parts.window, true), glass)
       window.name = `gobbler-${look.who}-window`
       window.renderOrder = 2
       this.group.add(window)
     }
-    this.tongue.visible = !look.waiting
   }
 
   pose(look: GobblerLook): void {
@@ -57,7 +50,6 @@ export class GobblerRig {
     const across = look.gazeX * 0.75, lift = AHEAD + look.gazeY * 0.6, r = EYE / 2 - 0.12
     this.pupils.position.set(Math.sin(across) * Math.cos(lift) * r, this.eyeY + Math.sin(lift) * r, this.eyeZ + Math.cos(across) * Math.cos(lift) * r)
     this.pupils.scale.set(1, Math.max(0.1, 1 - look.blink), 1)
-    this.tongue.position.y = this.travel.floor + look.tongue * this.travel.rise
   }
 
   dispose(): void {
