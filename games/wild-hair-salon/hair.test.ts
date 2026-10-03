@@ -112,7 +112,7 @@ describe('the mane', () => {
     run(hair, 2)
     expect(hair.puffs).toEqual([])
     for (let i = 0; i < 20; i++) hair.fluff({ x: 1, y: 1 }, '#fff', 5)
-    expect(hair.puffs.length).toBeLessThanOrEqual(24)
+    expect(hair.puffs.length).toBeLessThanOrEqual(12)
   })
 })
 

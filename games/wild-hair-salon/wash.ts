@@ -122,7 +122,7 @@ export class Watercolour {
   laid = 0
 
   private readonly makeSheet: MakeSheet
-  private readonly rng: Rng
+  private rng: Rng
   /** Device pixels per scene unit. */
   private readonly scale: number
 
@@ -131,6 +131,12 @@ export class Watercolour {
     this.rng = rng
     this.scale = scale
     this.grainTile = this.paintGrain()
+  }
+
+  /** Paints from another stream from here on: a piece that is painted again draws the same blooms as before. */
+  from(rng: Rng): this {
+    this.rng = rng
+    return this
   }
 
   /** A cleared sheet of this size for one part of the work. Sizing a canvas wipes it and resets its context. */

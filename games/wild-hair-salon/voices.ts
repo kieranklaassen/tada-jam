@@ -79,6 +79,7 @@ export const OTHER_VOICES = {
   capeOn: { kind: 'noise', q: 0.7, pitch: 1400, glideTo: 450, peak: 0.12, attack: 0.02, length: 0.4 },
   door: { kind: 'tone', wave: 'sine', pitch: 784, glideTo: 1047, peak: 0.1, attack: 0.004, length: 0.5 },
   hop: { kind: 'tone', wave: 'sine', pitch: 200, glideTo: 380, peak: 0.1, attack: 0.004, length: 0.14 },
+  airSnip: { kind: 'noise', q: 7, pitch: 2900, peak: 0.07, attack: 0.001, length: 0.05 },
   smack: { kind: 'noise', q: 1, pitch: 600, peak: 0.1, attack: 0.002, length: 0.06 },
   sigh: { kind: 'noise', q: 0.6, pitch: 900, glideTo: 500, peak: 0.05, attack: 0.06, length: 0.5 },
   ooh: { kind: 'tone', wave: 'sine', pitch: 330, glideTo: 440, peak: 0.1, attack: 0.04, length: 0.3 },

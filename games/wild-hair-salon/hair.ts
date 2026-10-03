@@ -12,6 +12,8 @@ import type { Clipping, Salon } from './world'
 // steps, from a seeded stream.
 
 const G = 2600
+/** The most puffs of fluff in the air at once. */
+export const MOST_PUFFS = 12
 
 export type Tuft = { lean: Spring; stretch: Spring; frizz: number }
 /** A piece in the air, on its way to where the model already has it. */
@@ -74,6 +76,11 @@ export class Hair {
     else { const tuft = this.tufts[held.what]; if (tuft) tuft.stretch.v += 2.6 }
   }
 
+  /** Which tuft is in the fingers, or nothing. */
+  get holdsTuft(): number | null {
+    return this.held && this.held.what !== 'lock' ? this.held.what : null
+  }
+
   /** The offset of the finger from where the held hair is rooted, or nothing: how the head knows which way it is pulled. */
   get pull(): Point | null {
     const held = this.held
@@ -124,7 +131,7 @@ export class Hair {
 
   /** A few puffs of fluff float up from a point. */
   fluff(from: Point, hue: string, count: number): void {
-    for (let i = 0; i < count && this.puffs.length < 24; i++) {
+    for (let i = 0; i < count && this.puffs.length < MOST_PUFFS; i++) {
       this.puffs.push({ x: from.x + this.rng.range(-10, 10), y: from.y + this.rng.range(-8, 8), vx: this.rng.range(-40, 40), vy: this.rng.range(-110, -50), r: this.rng.range(5, 11), age: 0, life: this.rng.range(0.7, 1.2), hue, rolls: false })
     }
   }

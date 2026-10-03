@@ -40,13 +40,16 @@ export function arch(rng: Rng, cx: number, top: number, bottom: number, w: numbe
   return out
 }
 
-export function paintRoom(g: Ctx, paint: Watercolour, rng: Rng): void {
-  // The wall: one big wash with white paper left all round it.
+/** The wall and the floor: one big wash with white paper left all round it, and a warm one below. */
+export function paintWalls(g: Ctx, paint: Watercolour, rng: Rng): void {
   paint.wash(g, roughBox(rng, 34, 30, SCENE.w - 68, FLOOR_Y - 22, 14), { color: ROOM.wall, edge: ROOM.wallEdge, blooms: [ROOM.wallBloom, ROOM.wallBloom], bleed: 12, pool: 14, strength: 0.75, grain: 0.3 })
-  // The floor: a warm wash that runs a little past the wall on both sides.
+  // The floor runs a little past the wall on both sides.
   paint.wash(g, roughBox(rng, 14, FLOOR_Y, SCENE.w - 28, SCENE.h - FLOOR_Y - 26, 10), { color: ROOM.floor, edge: ROOM.floorEdge, blooms: [ROOM.floorBloom, ROOM.floorBloom], bleed: 10, pool: 12, strength: 0.85 })
   paint.pencil(g, [{ x: 28, y: FLOOR_Y + 2 }, { x: SCENE.w / 2, y: FLOOR_Y - 1 }, { x: SCENE.w - 30, y: FLOOR_Y + 3 }])
+}
 
+export function paintRoom(g: Ctx, paint: Watercolour, rng: Rng): void {
+  paintWalls(g, paint, rng)
   paintMirror(g, paint, rng)
   paintDoor(g, paint, rng)
   paintBench(g, paint, rng)
@@ -54,7 +57,7 @@ export function paintRoom(g: Ctx, paint: Watercolour, rng: Rng): void {
   paintChair(g, paint, rng)
 }
 
-function paintMirror(g: Ctx, paint: Watercolour, rng: Rng): void {
+export function paintMirror(g: Ctx, paint: Watercolour, rng: Rng): void {
   const frame = arch(rng, MIRROR.x, MIRROR.top, MIRROR.bottom, MIRROR.w)
   const glass = arch(rng, MIRROR.x, MIRROR.top + 20, MIRROR.bottom - 18, MIRROR.w - 40)
   paint.wash(g, frame, { color: ROOM.frame, edge: ROOM.frameEdge, strength: 0.7, reserve: true })
@@ -66,7 +69,7 @@ function paintMirror(g: Ctx, paint: Watercolour, rng: Rng): void {
   paint.pencil(g, [{ x: MIRROR.x - 104, y: 216 }, { x: MIRROR.x - 92, y: 190 }], false, 0.8)
 }
 
-function paintDoor(g: Ctx, paint: Watercolour, rng: Rng): void {
+export function paintDoor(g: Ctx, paint: Watercolour, rng: Rng): void {
   const leaf = roughBox(rng, DOOR.x, DOOR.y, DOOR.w, DOOR.h, 3)
   paint.wash(g, leaf, { color: ROOM.door, edge: ROOM.doorEdge, blooms: [ROOM.wallBloom], reserve: true })
   paint.pencil(g, leaf, true)
@@ -105,7 +108,7 @@ export function dot(g: Ctx, x: number, y: number, r: number, color: string = ROO
   g.restore()
 }
 
-function paintBench(g: Ctx, paint: Watercolour, rng: Rng): void {
+export function paintBench(g: Ctx, paint: Watercolour, rng: Rng): void {
   const back = roughBox(rng, BENCH.x + 6, BENCH.backY, BENCH.w - 12, 34, 3)
   const seat = roughBox(rng, BENCH.x, BENCH.seatY, BENCH.w, 26, 3)
   paint.wash(g, back, { color: ROOM.wood, edge: ROOM.woodEdge, reserve: true })
@@ -118,7 +121,7 @@ function paintBench(g: Ctx, paint: Watercolour, rng: Rng): void {
   paint.pencil(g, back, true, 0.8)
 }
 
-function paintStool(g: Ctx, paint: Watercolour, rng: Rng): void {
+export function paintStool(g: Ctx, paint: Watercolour, rng: Rng): void {
   const top = roughBox(rng, STOOL.x - 46, STOOL.seatY, 92, 18, 2)
   paint.wash(g, top, { color: ROOM.wood, edge: ROOM.woodEdge, reserve: true })
   for (const side of [-1, 1]) {
@@ -128,7 +131,7 @@ function paintStool(g: Ctx, paint: Watercolour, rng: Rng): void {
   paint.pencil(g, top, true)
 }
 
-function paintChair(g: Ctx, paint: Watercolour, rng: Rng): void {
+export function paintChair(g: Ctx, paint: Watercolour, rng: Rng): void {
   // Only the back and the foot show: the cape covers the rest.
   const back = roughBox(rng, CHAIR.x - 150, 300, 300, 250, 6)
   paint.wash(g, back, { color: ROOM.chair, edge: ROOM.chairEdge, blooms: ['#f6a17f'], reserve: true })
