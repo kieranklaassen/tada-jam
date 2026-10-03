@@ -1,4 +1,5 @@
 import { type BufferGeometry, Group, Mesh, type ShaderMaterial, Vector3 } from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { BODIES, type Body, type KindName } from './bodies'
 import { PALETTE } from './palette'
 import type { Pose } from './pose'
@@ -106,6 +107,28 @@ export function buildFriend(kind: KindName, name: string, shared: VinylUniforms)
   squash.add(armL, armR)
 
   return { kind, plan, root, squash, head, eyes, armL, armR, extra, material, hand: new Vector3(-plan.hand[0], plan.hand[1], plan.hand[2]) }
+}
+
+/**
+ * A whole friend as one geometry, standing with its string hand up: what a friend on the far hill is drawn from,
+ * where it is too small for its parts to be seen moving. One draw for every such friend of a kind.
+ */
+export function marcherGeometry(kind: KindName): BufferGeometry {
+  const plan = BODIES[kind]
+  const head = pillows(plan.head).translate(...plan.neck)
+  const eyes = pillows(plan.eyes)
+  const extra = pillows(plan.extra).translate(...plan.extraPivot)
+  if (plan.extraOnHead) {
+    // The crab's stalks ride on its head, and its eyes on the stalks.
+    extra.translate(...plan.neck)
+    eyes.translate(plan.neck[0] + plan.extraPivot[0], plan.neck[1] + plan.extraPivot[1], plan.neck[2] + plan.extraPivot[2])
+  } else eyes.translate(...plan.neck)
+  const armL = pillows(plan.arm).rotateZ(-0.25).translate(...plan.shoulder)
+  const armR = pillows(mirrored(plan.arm)).rotateZ(plan.reach).translate(-plan.shoulder[0], plan.shoulder[1], plan.shoulder[2])
+  const parts = [pillows(plan.body), head, eyes, extra, armL, armR]
+  const whole = mergeGeometries(parts, false)
+  for (const part of parts) part.dispose()
+  return whole
 }
 
 /** Puts a friend in a pose. The crab's funniest part is its eye stalks, which stretch upwards; the others puff all round. */

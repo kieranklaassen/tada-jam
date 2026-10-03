@@ -15,6 +15,7 @@ import { sharedVinyl, type VinylUniforms } from './vinyl'
 export type StageLook = { gloss: boolean; wobble: boolean; clouds: boolean }
 
 const UP = new Vector3(0, 1, 0)
+const KINDS: readonly KindName[] = ['duck', 'frog', 'hippo', 'crab']
 
 export class Stage {
   readonly scene = new Scene()
@@ -27,8 +28,10 @@ export class Stage {
   private balloons = 0
   private strings = 0
   private shadows = 0
+  private readonly marchers: Record<KindName, number> = { duck: 0, frog: 0, hippo: 0, crab: 0 }
   private readonly matrix = new Matrix4()
   private readonly quaternion = new Quaternion()
+  private readonly tilt = new Quaternion()
   private readonly position = new Vector3()
   private readonly scale = new Vector3()
   private readonly along = new Vector3()
@@ -101,13 +104,17 @@ export class Stage {
     this.balloons = 0
     this.strings = 0
     this.shadows = 0
+    this.marchers.duck = this.marchers.frog = this.marchers.hippo = this.marchers.crab = 0
+    this.scenery.hand.visible = false
   }
 
-  /** One balloon: its middle, how wide and how tall it is against its resting size, its lean, and its colour. */
-  balloon(x: number, y: number, z: number, wide: number, tall: number, lean: number, colour: string): void {
+  /** One balloon: its middle, how wide and how tall it is against its resting size, its lean, its colour, and how far it glows. */
+  balloon(x: number, y: number, z: number, wide: number, tall: number, lean: number, colour: string, glow = 0): void {
     if (this.balloons >= MAX_BALLOONS) return
     this.quaternion.setFromAxisAngle(this.along.set(0, 0, 1), lean)
-    this.matrix.compose(this.position.set(x, y, z), this.quaternion, this.scale.set(BALLOON * wide, BALLOON * tall, BALLOON * wide))
+    // The breathing glow on a balloon that can be touched is a swell, never a change of colour: its colour is what the child sorts by.
+    const swell = 1 + glow * 0.09
+    this.matrix.compose(this.position.set(x, y, z), this.quaternion, this.scale.set(BALLOON * wide * swell, BALLOON * tall * swell, BALLOON * wide * swell))
     this.scenery.balloons.setMatrixAt(this.balloons, this.matrix)
     this.scenery.balloons.setColorAt(this.balloons, this.colourOf(colour))
     this.balloons += 1
@@ -136,6 +143,36 @@ export class Stage {
     this.shadows += 1
   }
 
+  /** One friend on the far hill: a whole toy at its feet's place, turned the way it walks and leaning with its step. */
+  marcher(kind: KindName, x: number, y: number, z: number, scale: number, turn: number, lean: number): void {
+    const batch = this.scenery.parade[kind], index = this.marchers[kind]
+    if (index >= batch.instanceMatrix.count) return
+    this.quaternion.setFromAxisAngle(this.along.set(0, 1, 0), turn)
+    this.tilt.setFromAxisAngle(this.along.set(0, 0, 1), lean)
+    this.matrix.compose(this.position.set(x, y, z), this.quaternion.multiply(this.tilt), this.scale.setScalar(scale))
+    batch.setMatrixAt(index, this.matrix)
+    this.marchers[kind] = index + 1
+  }
+
+  /** The ghost hand: its fingertip at this point, this large (it grows in and out instead of fading), pressed this far. */
+  hand(x: number, y: number, size: number, press: number): void {
+    const hand = this.scenery.hand
+    hand.visible = size > 0.02
+    // It comes up from below and to the right, so it never covers what it points at, and dips onto it as it presses.
+    hand.position.set(x + 0.22 * (1 - press), y - 0.34 * (1 - press), 1.2)
+    hand.rotation.z = 0.5
+    const grown = size * 1.45
+    hand.scale.set(grown * (1 + press * 0.1), grown * (1 - press * 0.12), grown)
+  }
+
+  /** A cloud squashed or stretched: 1 at rest. */
+  cloud(index: number, squash: number): void {
+    const cloud = this.scenery.clouds[index]
+    if (!cloud) return
+    const scale = cloud.scale.z
+    cloud.scale.set(scale / Math.sqrt(Math.max(0.3, squash)), scale * squash, scale)
+  }
+
   /** Ends the frame's lists and draws. */
   render(): void {
     const { balloons, strings, shadows } = this.scenery
@@ -145,6 +182,11 @@ export class Stage {
     for (const batch of [balloons, strings, shadows]) {
       batch.instanceMatrix.needsUpdate = true
       if (batch.instanceColor) batch.instanceColor.needsUpdate = true
+    }
+    for (const kind of KINDS) {
+      const batch = this.scenery.parade[kind]
+      batch.count = this.marchers[kind]
+      batch.instanceMatrix.needsUpdate = true
     }
     this.renderer.render(this.scene, this.camera)
   }

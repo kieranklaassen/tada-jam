@@ -22,7 +22,7 @@ export const PALETTE = {
   /** The inflatable hill the friends stand on, and the far one the parade goes round. */
   hill: '#ffd3df',
   hillSeam: '#f7a9c0',
-  farHill: '#f6e6f1',
+  farHill: '#f3cde2',
   cloud: '#ffffff',
   /** Printed eyes. */
   ink: '#22203a',
@@ -31,6 +31,8 @@ export const PALETTE = {
   string: '#fffaf0',
   /** What a blob shadow is before it takes a tint of the toy above it. */
   shadow: '#b9668a',
+  /** A drop from a cloud. */
+  drop: '#7fc8ea',
   /** The breathing glow on what can be touched. */
   glow: '#fff3b0',
 } as const

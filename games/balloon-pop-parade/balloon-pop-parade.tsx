@@ -4,7 +4,7 @@ import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio } from './audio'
 import { BACKDROP } from './config'
-import { IdleLadder } from './guidance'
+import { IdleLadder, type Guidance } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { toWorld } from './layout'
 import { balloonPopParadeManifest } from './manifest'
@@ -60,6 +60,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    // What the idle ladder shows now: kept from the loop for the draw, so the glow and the ghost hand reach the stage.
+    let guidance: Guidance | null = null
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     // The game hands a change to storage where it makes it, at one of two speeds:
@@ -86,7 +88,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const draw = () => {
       if (!width) return
       stage.begin(clock.seconds)
-      if (theatre) theatre.paint(stage, stage.view)
+      if (theatre) theatre.paint(stage, stage.view, guidance)
       stage.render()
       Object.assign(drawn, stage.drawn)
     }
@@ -168,7 +170,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
       if (touch.active || theatre?.playing) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
-      ladder.update(clock.seconds)
+      guidance = ladder.update(clock.seconds)
       // The game steps its rules and its scene here, and hands what they changed to storage (`cadence`, above).
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that

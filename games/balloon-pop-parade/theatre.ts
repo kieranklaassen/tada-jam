@@ -1,6 +1,7 @@
 import { BODIES, type KindName } from './bodies'
 import { clip, PERSONALITIES, rest, stride, walk, type ClipId } from './clips'
-import { BALLOON, bunchOffsets, bunchReach, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, skySlots, WAITING_SCALE, waitingSpot, type View } from './layout'
+import { handPose, type Guidance, type HandPose } from './guidance'
+import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
 import { KIND_COLOURS, PALETTE, shade } from './palette'
 import { copyPose, REST, restPose, type Pose } from './pose'
 import type { VoiceId } from './voices'
@@ -23,7 +24,10 @@ import type { Bunch, Given, Troop } from './world'
 export type Painter = {
   place(name: string, kind: KindName, pose: Pose): void
   drop(name: string): void
-  balloon(x: number, y: number, z: number, wide: number, tall: number, lean: number, colour: string): void
+  balloon(x: number, y: number, z: number, wide: number, tall: number, lean: number, colour: string, glow?: number): void
+  marcher(kind: KindName, x: number, y: number, z: number, scale: number, turn: number, lean: number): void
+  hand(x: number, y: number, size: number, press: number): void
+  cloud(index: number, squash: number): void
   string(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, colour: string, thick?: number): void
   shadow(x: number, y: number, z: number, wide: number, deep: number, colour: string): void
 }
@@ -32,7 +36,7 @@ export type Painter = {
 export type Sound = { voice: VoiceId; pitch: number; gain: number; after: number }
 
 /** What a point of the surface is on. */
-export type Hit = { on: 'held'; friend: number } | { on: 'bunch'; slot: number } | { on: 'friend'; friend: number } | { on: 'waiting' } | { on: 'air' }
+export type Hit = { on: 'held'; friend: number } | { on: 'bunch'; slot: number } | { on: 'friend'; friend: number } | { on: 'waiting' } | { on: 'cloud'; index: number } | { on: 'hill' } | { on: 'air' }
 
 type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; away: number; grow: number }
 type Flight = { bunch: Bunch; slot: number; given: Given; t: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number }
@@ -40,6 +44,9 @@ type Held = { x: number; y: number; vx: number; vy: number; shown: boolean }
 type Loose = { x: number; y: number; vx: number; vy: number; colour: string; flat: boolean; t: number; popAt: number }
 type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; life: number }
 /** `tug` is the bunch that carries a friend off, and `landAfter` puts its landing sound a little after its neighbour's when a whole troop comes down. */
+/** A drop of water from a cloud, and a dimple in the hill where it was touched. */
+type Drop = { x: number; y: number; vx: number; vy: number; life: number }
+type Dimple = { x: number; t: number }
 type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null; landAfter: number }
 
 /** A troop that is only passing: one that marches off, or one that crosses to show a new idea. Short-lived, and no part of the save. */
@@ -102,6 +109,19 @@ export class Theatre {
   private skyIn = true
   /** The other friends look at a friend whose balloon was popped, until this time. */
   private lookAt = { friend: -1, until: 0 }
+  /** The scenery answers too: each cloud is a pillow that squashes and sheds drops, and the hill is an air bed that wobbles. */
+  private readonly clouds = CLOUDS.map(() => ({ squash: 1, speed: 0 }))
+  private readonly drops: Drop[] = []
+  private readonly dimples: Dimple[] = []
+  private wobbled = -10
+  /** When the cloud over the troop is bumped by balloons that got away, and until when the troop blinks under its drops. */
+  private bumpAt = -1
+  private flinchUntil = -1
+  private readonly far = { x: 0, y: 0, z: 0, turn: 0 }
+  private readonly seen = { x: 0, y: 0, scale: 1 }
+  private readonly ghost: HandPose = { travel: 0, press: 0, opacity: 0 }
+  /** The view of the last frame painted, for what happens between frames and needs to know where a cloud is seen. */
+  private lastView: View = viewFor(1180, 820)
 
   /** `seed` is for the theatre's own small variations (a pitch, where a scrap flies); it lays out nothing. */
   constructor(save: Save, seed = 0x9e3779b9) {
@@ -185,6 +205,12 @@ export class Theatre {
     const waitingPlan = BODIES[this.waiting.kind], wide = waitingPlan.halfWidth * FRIEND_SCALE * WAITING_SCALE * far
     const footY = groundAt(first.x, first.z) * far
     if (x < first.x * far + wide + 0.35 && y > footY - 0.3 && y < footY + waitingPlan.height * FRIEND_SCALE * WAITING_SCALE * far + 0.35) return { on: 'waiting' }
+    for (let index = 0; index < CLOUDS.length; index++) {
+      const cloud = CLOUDS[index], at = seenAt(cloud.x, cloud.y, cloud.z, view, this.seen)
+      if (Math.abs(x - at.x) < 2.5 * cloud.scale * at.scale && Math.abs(y - at.y) < 0.95 * cloud.scale * at.scale) return { on: 'cloud', index }
+    }
+    // Below the friends' feet there is only the hill.
+    if (y < groundAt(x, 0) - 0.25) return { on: 'hill' }
     // A near miss still counts: a small finger aimed at a bunch and landed beside it.
     let nearest = -1, nearestGap = 0.9
     for (let slot = 0; slot < slots.length; slot++) {
@@ -226,6 +252,14 @@ export class Theatre {
     } else if (hit.on === 'waiting') {
       this.sound(`${this.waiting.kind}Poke`, 1.1, 0.7)
       this.callNext()
+    } else if (hit.on === 'cloud') {
+      this.shed(hit.index, view)
+    } else if (hit.on === 'hill') {
+      // The hill is an air bed: a dimple where the finger is, and a wobble that everyone on it rides.
+      this.sound('hillBoing', 0.9 + this.random() * 0.2)
+      this.wobbled = this.time
+      if (this.dimples.length >= 3) this.dimples.shift()
+      this.dimples.push({ x, t: 0 })
     } else {
       this.sound('boop')
       const slots = this.slots(view)
@@ -430,6 +464,16 @@ export class Theatre {
     this.scene.start(this.time, () => { this.unsaved = 2 })
   }
 
+  /** A cloud is squeezed: it squeaks, squashes, and sheds a few drops. */
+  private shed(index: number, view: View): void {
+    const cloud = CLOUDS[index], at = seenAt(cloud.x, cloud.y, cloud.z, view, this.seen)
+    this.clouds[index].speed -= 5
+    this.sound('cloudSqueak', 0.9 + this.random() * 0.25)
+    this.sound('patter', 1, 0.8, 0.22)
+    if (this.drops.length > 14) this.drops.splice(0, this.drops.length - 14)
+    for (let i = 0; i < 7; i++) this.drops.push({ x: at.x + (i / 6 - 0.5) * 3.2 * cloud.scale * at.scale, y: at.y - 0.35 * at.scale, vx: (this.random() - 0.5) * 0.6, vy: -this.random() * 1.5, life: 0.75 + this.random() * 0.25 })
+  }
+
   /** A pop: the snap, and scraps of the balloon's colour thrown out. */
   private burst(x: number, y: number, colour: string): void {
     this.sound('pop', 0.9 + this.random() * 0.25)
@@ -561,6 +605,25 @@ export class Theatre {
         this.loose.splice(i, 1)
       }
     }
+    for (const cloud of this.clouds) {
+      cloud.speed += ((1 - cloud.squash) * 160 - cloud.speed * 9) * dt
+      cloud.squash += cloud.speed * dt
+    }
+    if (this.bumpAt >= 0 && this.time >= this.bumpAt) {
+      this.bumpAt = -1
+      this.flinchUntil = this.time + 0.9
+      // The cloud over the troop is the last of them; the drops are placed from where it is seen on a full-width surface.
+      this.shed(CLOUDS.length - 1, this.lastView)
+    }
+    for (let i = this.drops.length - 1; i >= 0; i--) {
+      const drop = this.drops[i]
+      drop.life -= dt
+      drop.vy -= 11 * dt
+      drop.x += drop.vx * dt
+      drop.y += drop.vy * dt
+      if (drop.life <= 0 || drop.y < groundAt(drop.x, 0)) this.drops.splice(i, 1)
+    }
+    for (let i = this.dimples.length - 1; i >= 0; i--) if ((this.dimples[i].t += dt) > 0.7) this.dimples.splice(i, 1)
     for (let i = this.scraps.length - 1; i >= 0; i--) {
       const scrap = this.scraps[i]
       scrap.life -= dt
@@ -619,6 +682,8 @@ export class Theatre {
         this.carryOff(flight.friend, flight.bunch, 1, 0)
         // A balloon in each hand: the two rub together.
         if (everyoneHolds && flight.bunch.count === 1) this.sound('squeal', 1, 0.9, 0.15)
+        // A bunch bigger than the whole troop: its spare balloons bump the cloud on their way out, and it sheds its drops on the troop.
+        if (everyoneHolds && flight.bunch.count > this.troop.size) this.bumpAt = this.time + PERSONALITIES[this.troop.kind].cue.letGo + 0.25
       }
     }
   }
@@ -685,10 +750,56 @@ export class Theatre {
     return { x: spot.x + 0.25, y: spot.y + tall + 0.55 }
   }
 
-  /** Tells the painter where everything is now. */
-  paint(painter: Painter, view: View): void {
+  /**
+   * Tells the painter where everything is now. `guidance` is what the idle ladder shows: a breathing glow on what
+   * can be touched next, then a ghost hand that shows one move and never the answer. While the troop wants
+   * balloons that is the bunches, the hand tapping one place after another whatever is in it; once the troop is
+   * served it is the troop that waits. Nothing of it shows while a scene plays or a bunch is in the air.
+   */
+  paint(painter: Painter, view: View, guidance: Guidance | null = null): void {
     const kind = this.troop.kind, plan = BODIES[kind], colour = KIND_COLOURS[kind], cord = shade(colour, -0.3)
     const pose = this.pose, time = this.time
+    this.lastView = view
+    const idle = guidance && !this.playing && this.flights.length === 0 && this.pressedSlot < 0 ? guidance : null
+    const glow = idle ? idle.glow * (0.65 + 0.35 * Math.sin(time * 3.2)) : 0
+    const next = this.save.finished
+    let shownSlot = -1, press = 0
+    if (idle && idle.demo !== null) {
+      handPose(idle.demo, false, this.ghost)
+      press = this.ghost.press
+      if (next) {
+        const first = waitingSpot(0, view), at = seenAt(first.x, groundAt(first.x, first.z) + BODIES[this.waiting.kind].height * FRIEND_SCALE * WAITING_SCALE * 0.72, first.z, view, this.seen)
+        painter.hand(at.x + BODIES[this.waiting.kind].halfWidth * FRIEND_SCALE * WAITING_SCALE * 0.6, at.y, this.ghost.opacity, press)
+      } else if (this.sky.length > 0) {
+        // One place after another, whatever hangs there: the hand shows that a bunch can be tapped, not which.
+        shownSlot = (1 + Math.max(0, idle.demoIndex) * 2) % this.sky.length
+        const at = this.slots(view)[shownSlot]
+        painter.hand(at.x + bunchReach(this.sky[shownSlot].count).x * 0.45, at.y - BALLOON * 0.35, this.ghost.opacity, press)
+      }
+    }
+
+    // The scenery: each cloud as squashed as it is, its drops, the dimples in the hill.
+    for (let i = 0; i < this.clouds.length; i++) painter.cloud(i, this.clouds[i].squash)
+    for (const drop of this.drops) painter.balloon(drop.x, drop.y, 0.5, 0.26, 0.3, Math.PI, PALETTE.drop)
+    for (const dimple of this.dimples) {
+      const grown = 0.9 + dimple.t * 3.4
+      painter.shadow(dimple.x, groundAt(dimple.x, 2.4) + 0.03, 2.4, grown, grown * 0.5, PALETTE.shadow)
+    }
+    // The troops that were served, going round the far hill with the balloons they carried off. The one that is
+    // still marching off in front has not got there yet.
+    const parade = this.save.parade, arrived = this.leaving ? parade.length - 1 : parade.length
+    for (let t = 0; t < arrived; t++) {
+      const troop = parade[t], rate = PERSONALITIES[troop.kind].steps / PERSONALITIES[troop.kind].walk, hue = shade(KIND_COLOURS[troop.kind], 0.4)
+      for (let m = 0; m < troop.size; m++) {
+        const at = paradeSpot(t, m, time, this.far), step = time * rate + m * 0.4
+        const hop = Math.abs(Math.sin(step * Math.PI)) * (troop.kind === 'frog' ? 0.35 : 0.1)
+        painter.marcher(troop.kind, at.x, at.y + hop, at.z, FRIEND_SCALE, at.turn, Math.sin(step * Math.PI) * 0.1)
+        if (m >= troop.balloons) continue
+        const by = at.y + hop + HELD_HEIGHT + Math.sin(time * 1.4 + t + m) * 0.08
+        painter.balloon(at.x + 0.3, by, at.z, 1, 1, 0.06, hue)
+        painter.string(at.x + 0.3, by - BALLOON * 1.32, at.z, at.x, at.y + hop + BODIES[troop.kind].height * FRIEND_SCALE * 0.95, at.z, hue, 0.03)
+      }
+    }
 
     // The bunches in their places.
     const slots = this.slots(view)
@@ -701,7 +812,8 @@ export class Theatre {
       const bob = Math.sin(time * 1.1 + slot * 1.7) * 0.07 + (1 - grown) * (1 - grown) * 1.4
       const cx = slots[slot].x + place.push, cy = slots[slot].y + bob
       // Flat under the finger, and past round for a moment when it is let go; never flatter than a pillow can be.
-      const flat = Math.max(-0.35, Math.min(1.15, place.squash))
+      // The ghost hand's press shows what a touch does: the bunch under it squashes, and springs back when the hand lifts.
+      const flat = Math.max(-0.35, Math.min(1.15, place.squash + (slot === shownSlot ? press * 0.75 : 0)))
       const wide = (1 + flat * 0.3) * size, tall = (1 - flat * 0.36) * size
       const knotX = cx, knotY = cy - BALLOON * 2.5 * size
       const offsets = bunchOffsets(bunch.count)
@@ -709,7 +821,7 @@ export class Theatre {
         const sway = Math.sin(time * 0.9 + slot * 2.3 + k * 1.3) * 0.05
         const x = cx + offsets[k].x * size * (1 + flat * 0.12) + sway * 0.4, y = cy + offsets[k].y * size
         const lean = (bunch.count > 1 ? -offsets[k].x * 0.42 : 0) + sway - place.pushSpeed * 0.04
-        painter.balloon(x, y, -k * 0.02, wide, tall, lean, hue)
+        painter.balloon(x, y, -k * 0.02, wide, tall, lean, hue, next ? 0 : glow)
         const tailX = x + Math.sin(lean) * BALLOON * 1.32 * tall, tailY = y - Math.cos(lean) * BALLOON * 1.32 * tall
         if (bunch.count > 1) painter.string(tailX, tailY, 0, knotX, knotY, 0, line)
         else painter.string(tailX, tailY, 0, tailX + Math.sin(time * 1.3 + slot) * 0.06 - place.pushSpeed * 0.05, tailY - 0.6 * size, 0, line)
@@ -741,6 +853,12 @@ export class Theatre {
       }
       if (actor.clip) clip(kind, actor.clip, actor.t, plan.height * FRIEND_SCALE, plan.reach, pose)
       this.watch(i, pose)
+      this.ride(pose, i)
+      if (!actor.clip) {
+        // A troop whose friend has lost its balloon looks at the empty hand; a served troop, left alone, looks to the troop that waits.
+        if (time < this.lookAt.until && i !== this.lookAt.friend) pose.headTurn += Math.sign(this.lookAt.friend - i) * -0.55
+        else if (next && glow > 0) pose.headTurn += 0.35 * glow
+      }
       painter.place(name, kind, pose)
       const floor = groundAt(pose.x, pose.z), lifted = pose.y - floor
       // The shadow stays on the hill and shrinks as the friend leaves it.
@@ -814,6 +932,7 @@ export class Theatre {
       pose.nod = -0.25
       if (this.nextIn < 1) walk(this.waiting.kind, this.nextIn, 1, pose)
       if (this.waitingActor.clip) clip(this.waiting.kind, this.waitingActor.clip, Math.max(0, this.waitingActor.t - i * 0.08), waitingPlan.height, waitingPlan.reach, pose)
+      pose.glow = next ? glow : 0
       painter.place(`waiting-${i}`, this.waiting.kind, pose)
       painter.shadow(pose.x, groundAt(pose.x, spot.z) + 0.02, spot.z + 0.1, waitingPlan.halfWidth * 0.75, 0.36, PALETTE.shadow)
     }
@@ -903,6 +1022,21 @@ export class Theatre {
   private along(flight: Flight): { x: number; y: number; u: number } {
     const to = this.target(flight), u = Math.min(1, flight.t / FLIGHT), eased = u * u * (3 - 2 * u)
     return { x: flight.fromX + (to.x - flight.fromX) * eased, y: flight.fromY + (to.y - flight.fromY) * eased + Math.sin(u * Math.PI) * 0.5 * (1 - u), u }
+  }
+
+  /** A friend rides the wobble of the hill after it was touched, and blinks under a cloud's drops. */
+  private ride(pose: Pose, seed: number): void {
+    const since = this.time - this.wobbled
+    if (since < 1.2) {
+      const fade = Math.exp(-since * 3.2)
+      pose.y += Math.max(0, Math.sin(since * 11 - seed * 0.6)) * 0.16 * fade
+      pose.squash += Math.sin(since * 16 - seed * 0.6) * 0.07 * fade
+    }
+    if (this.time < this.flinchUntil) {
+      pose.blink = 1
+      pose.squash -= 0.05
+      pose.nod += 0.25
+    }
   }
 
   /** A friend at rest follows with its head whatever is coming down to it. */

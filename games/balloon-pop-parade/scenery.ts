@@ -1,5 +1,7 @@
-import { BufferAttribute, CircleGeometry, Color, CylinderGeometry, DynamicDrawUsage, Group, InstancedMesh, Mesh, MeshBasicMaterial, PlaneGeometry, ShaderMaterial } from 'three'
-import { BALLOON, GROUND, HILL } from './layout'
+import { BufferAttribute, type BufferGeometry, CircleGeometry, Color, CylinderGeometry, DynamicDrawUsage, Group, InstancedMesh, Mesh, MeshBasicMaterial, PlaneGeometry, ShaderMaterial } from 'three'
+import type { KindName } from './bodies'
+import { marcherGeometry } from './friends'
+import { BALLOON, CLOUDS, FAR_HILL, GROUND, HILL, PARADE_FRIENDS } from './layout'
 import { PALETTE } from './palette'
 import { pillow, pillows } from './shapes'
 import { vinylMaterial, type VinylUniforms } from './vinyl'
@@ -8,14 +10,13 @@ import { vinylMaterial, type VinylUniforms } from './vinyl'
 // batches everything small is drawn from: balloons, strings and blob shadows.
 // Each batch is one draw however many are in it.
 
-/** The most balloons in one frame: the sky (up to twelve), three held, four bunches in flight, those that got away, and the scraps of a few pops, which are drawn as small balloons. */
-export const MAX_BALLOONS = 64
+/** The most balloons in one frame: the sky (up to twelve), three held, four bunches in flight, those that got away, a troop passing with theirs, the far hill's twelve, and the scraps of a few pops and the drops of a cloud, which are drawn as small balloons. */
+export const MAX_BALLOONS = 96
 export const MAX_STRINGS = 64
-export const MAX_SHADOWS = 10
+export const MAX_SHADOWS = 16
 
 /** How far behind the friends the sky stands, and the clouds in front of it. */
 const SKY_DEPTH = -40
-const CLOUD_DEPTH = -15
 
 export type Scenery = {
   group: Group
@@ -24,6 +25,10 @@ export type Scenery = {
   balloons: InstancedMesh
   strings: InstancedMesh
   shadows: InstancedMesh
+  /** The friends on the far hill, one batch a kind. */
+  parade: Record<KindName, InstancedMesh>
+  /** The ghost hand of the idle guidance: an inflated white glove, drawn over everything. */
+  hand: Mesh
   dispose(): void
 }
 
@@ -97,16 +102,16 @@ export function buildScenery(shared: VinylUniforms): Scenery {
   // The hill is a pillow lying on its side, so its welded panels run across it like the ribs of an air bed.
   const hill = new Mesh(pillow({ at: [HILL.x, GROUND - HILL.ry, HILL.z], size: [HILL.ry, HILL.rx, HILL.rz], turn: [0, 0, Math.PI / 2], colour: PALETTE.hill, panels: 30, detail: [64, 40] }), still)
   hill.name = 'hill'
-  const farHill = new Mesh(pillow({ at: [6.5, GROUND - 4.4, -19], size: [5.6, 11, 5], turn: [0, 0, Math.PI / 2], colour: PALETTE.farHill, detail: [40, 20] }), still)
+  const farHill = new Mesh(pillow({ at: [FAR_HILL.x, FAR_HILL.y, FAR_HILL.z], size: [FAR_HILL.ry, FAR_HILL.rx, FAR_HILL.rz], turn: [0, 0, Math.PI / 2], colour: PALETTE.farHill, detail: [40, 20] }), still)
   farHill.name = 'far-hill'
   group.add(hill, farHill)
 
   const cloudShape = cloudGeometry()
-  const clouds = [[-9.5, 1.6, 1.25], [8.2, 0.4, 0.95], [1.5, -1.2, 0.7]].map(([x, y, scale], i) => {
+  const clouds = CLOUDS.map((at, i) => {
     const cloud = new Mesh(cloudShape, soft)
     cloud.name = `cloud-${i}`
-    cloud.position.set(x, y, CLOUD_DEPTH)
-    cloud.scale.setScalar(scale)
+    cloud.position.set(at.x, at.y, at.z)
+    cloud.scale.setScalar(at.scale)
     return cloud
   })
   group.add(...clouds)
@@ -122,8 +127,35 @@ export function buildScenery(shared: VinylUniforms): Scenery {
   )
   shadows.name = 'shadows'
   shadows.renderOrder = -1
+  // The far hill's friends: whole toys in one geometry, hazed by the distance, a batch for each kind.
+  const hazed = vinylMaterial(shared, { uGlow: 0, uWobble: 0, uHaze: 0.26 })
+  const marchers: BufferGeometry[] = []
+  const batchOf = (kind: KindName): InstancedMesh => {
+    const geometry = marcherGeometry(kind)
+    marchers.push(geometry)
+    const batch = new InstancedMesh(geometry, hazed, PARADE_FRIENDS)
+    batch.name = `parade-${kind}`
+    return batch
+  }
+  const parade: Record<KindName, InstancedMesh> = { duck: batchOf('duck'), frog: batchOf('frog'), hippo: batchOf('hippo'), crab: batchOf('crab') }
+
+  // The ghost hand: a glove with one finger out, its tip at the mesh's origin. It is drawn over everything and tests no depth.
+  const glove = pillows([
+    { at: [0.16, -0.86, 0], size: [0.4, 0.42, 0.22], colour: PALETTE.valve },
+    { at: [0.02, -0.36, 0], size: [0.12, 0.42, 0.12], turn: [0, 0, 0.1], colour: PALETTE.valve, detail: [16, 10] },
+    { at: [0.56, -0.82, 0.04], size: [0.12, 0.22, 0.12], turn: [0, 0, -1.25], colour: PALETTE.valve, detail: [16, 10] },
+    { at: [0.2, -1.32, 0], size: [0.34, 0.16, 0.2], colour: PALETTE.glow, panels: 2, detail: [16, 10] },
+  ])
+  const gloveSkin = vinylMaterial(shared, { uGlow: 0, uWobble: 0 })
+  gloveSkin.depthTest = false
+  gloveSkin.depthWrite = false
+  const hand = new Mesh(glove, gloveSkin)
+  hand.name = 'ghost-hand'
+  hand.renderOrder = 10
+  hand.visible = false
+
   const white = new Color('#ffffff')
-  for (const batch of [balloons, strings, shadows]) {
+  for (const batch of [balloons, strings, shadows, ...Object.values(parade)]) {
     batch.instanceMatrix.setUsage(DynamicDrawUsage)
     // The colour buffer is made on the first write; make it now, so every instance has one from the first draw.
     batch.setColorAt(0, white)
@@ -131,7 +163,7 @@ export function buildScenery(shared: VinylUniforms): Scenery {
     // Instances move every frame, so the batch's own bounds would always be stale.
     batch.frustumCulled = false
   }
-  group.add(shadows, strings, balloons)
+  group.add(shadows, strings, balloons, ...Object.values(parade), hand)
 
   return {
     group,
@@ -140,6 +172,8 @@ export function buildScenery(shared: VinylUniforms): Scenery {
     balloons,
     strings,
     shadows,
+    parade,
+    hand,
     dispose() {
       for (const mesh of [backdrop, hill, farHill, balloons, strings, shadows]) {
         mesh.geometry.dispose()
@@ -148,6 +182,10 @@ export function buildScenery(shared: VinylUniforms): Scenery {
         else material.dispose()
       }
       cloudShape.dispose()
+      for (const geometry of marchers) geometry.dispose()
+      glove.dispose()
+      gloveSkin.dispose()
+      hazed.dispose()
       still.dispose()
       soft.dispose()
     },

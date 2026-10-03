@@ -20,6 +20,8 @@ export type VinylUniforms = {
   uGloss: { value: number }
   /** Extra light on the whole form, 0 to 1: the breathing glow on what can be touched. */
   uGlow: { value: number }
+  /** How far the form is lost in the haze of distance, 0 to 1: its colour goes towards the sky's. */
+  uHaze: { value: number }
   uKey: { value: Vector3 }
   uSky: { value: Color }
   uGlowColour: { value: Color }
@@ -64,6 +66,7 @@ void main() {
 const FRAGMENT = /* glsl */ `
 uniform float uGloss;
 uniform float uGlow;
+uniform float uHaze;
 uniform vec3 uKey;
 uniform vec3 uSky;
 uniform vec3 uGlowColour;
@@ -107,6 +110,7 @@ void main() {
   colour = mix(colour, mix(vColour, uSky, 0.35) * 0.5 + 0.5, rim * 0.62);
 
   colour = mix(colour, uGlowColour, uGlow * (0.22 + rim * 0.5));
+  colour = mix(colour, uSky * 0.35 + 0.65, uHaze);
   gl_FragColor = vec4(colour, 1.0);
   #include <colorspace_fragment>
 }
@@ -122,6 +126,7 @@ export function sharedVinyl(): VinylUniforms {
     uWobble: { value: 0.012 },
     uGloss: { value: 1 },
     uGlow: { value: 0 },
+    uHaze: { value: 0 },
     uKey: { value: KEY },
     uSky: { value: new Color(PALETTE.skyTop) },
     uGlowColour: { value: new Color(PALETTE.glow) },
@@ -132,9 +137,10 @@ export function sharedVinyl(): VinylUniforms {
  * A vinyl material. `own` lists the uniforms this material keeps to itself (its own glow, a stiller skin); the
  * others are the shared objects, which is what keeps one write enough.
  */
-export function vinylMaterial(shared: VinylUniforms, own: Partial<{ uGlow: number; uWobble: number }> = {}, bothSides = false): ShaderMaterial {
+export function vinylMaterial(shared: VinylUniforms, own: Partial<{ uGlow: number; uWobble: number; uHaze: number }> = {}, bothSides = false): ShaderMaterial {
   const uniforms: VinylUniforms = { ...shared }
   if (own.uGlow !== undefined) uniforms.uGlow = { value: own.uGlow }
   if (own.uWobble !== undefined) uniforms.uWobble = { value: own.uWobble }
+  if (own.uHaze !== undefined) uniforms.uHaze = { value: own.uHaze }
   return new ShaderMaterial({ uniforms, vertexShader: VERTEX, fragmentShader: FRAGMENT, vertexColors: true, side: bothSides ? DoubleSide : FrontSide })
 }

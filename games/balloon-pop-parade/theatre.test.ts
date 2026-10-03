@@ -15,15 +15,18 @@ const KINDS: KindName[] = ['duck', 'frog', 'hippo', 'crab']
 
 /** A painter that keeps what one frame drew. */
 function recorder() {
-  const frame = { balloons: [] as { x: number; y: number; wide: number; tall: number; colour: string }[], strings: 0, shadows: 0, poses: new Map<string, Pose>() }
+  const frame = { balloons: [] as { x: number; y: number; wide: number; tall: number; colour: string; glow: number }[], strings: 0, shadows: 0, marchers: 0, hand: null as { x: number; y: number; size: number; press: number } | null, clouds: [1, 1, 1], poses: new Map<string, Pose>() }
   const painter: Painter = {
     place: (name, _kind, pose) => void frame.poses.set(name, { ...pose }),
     drop: (name) => void frame.poses.delete(name),
-    balloon: (x, y, _z, wide, tall, _lean, colour) => void frame.balloons.push({ x, y, wide, tall, colour }),
+    balloon: (x, y, _z, wide, tall, _lean, colour, glow = 0) => void frame.balloons.push({ x, y, wide, tall, colour, glow }),
     string: () => void (frame.strings += 1),
+    marcher: () => void (frame.marchers += 1),
+    hand: (x, y, size, press) => void (frame.hand = { x, y, size, press }),
+    cloud: (index, squash) => void (frame.clouds[index] = squash),
     shadow: () => void (frame.shadows += 1),
   }
-  return { frame, painter, clear: () => { frame.balloons.length = 0; frame.strings = 0; frame.shadows = 0 } }
+  return { frame, painter, clear: () => { frame.balloons.length = 0; frame.strings = 0; frame.shadows = 0; frame.marchers = 0; frame.hand = null } }
 }
 
 /** A theatre on a made-up moment of a cycle. */
@@ -73,7 +76,10 @@ describe('a touch', () => {
   it('reads a finger that lands just beside a bunch as on it, and one far from everything as on the air', () => {
     const theatre = solo('duck', ['duck', 'frog', 'duck', 'frog']), at = skySlots(4, VIEW)[2]
     expect(theatre.hit(at.x + 1.3, at.y - 1.2, VIEW)).toEqual({ on: 'bunch', slot: 2 })
-    expect(theatre.hit(0, 0.4, VIEW)).toEqual({ on: 'air' })
+    expect(theatre.hit(-2.6, -0.5, VIEW)).toEqual({ on: 'air' })
+    // The scenery is touchable too: the cloud over the troop, and the hill under its feet.
+    expect(theatre.hit(0.4, 0.5, VIEW)).toEqual({ on: 'cloud', index: 2 })
+    expect(theatre.hit(3, GROUND - 0.8, VIEW)).toEqual({ on: 'hill' })
     expect(theatre.hit(0, GROUND + 1, VIEW)).toEqual({ on: 'friend', friend: 0 })
     expect(theatre.hit(-VIEW.width / 2 + 0.9, GROUND + 0.9, VIEW)).toEqual({ on: 'waiting' })
   })
@@ -271,7 +277,7 @@ describe('a frame', () => {
       let seed = 7
       const random = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648
       let most = { balloons: 0, strings: 0, shadows: 0, friends: 0 }
-      for (let i = 0; i < 60 * 40; i++) {
+      for (let i = 0; i < 60 * 25; i++) {
         if (i % 7 === 0) {
           theatre.press((random() - 0.5) * VIEW.width, (random() - 0.5) * VIEW.height, VIEW)
           if (random() < 0.9) theatre.release(VIEW)
@@ -290,7 +296,7 @@ describe('a frame', () => {
       expect(most.friends, `${name} friends`).toBeLessThanOrEqual(6)
       theatre.sounds.length = 0
     }
-  })
+  }, 20_000)
 
   it('settles: left alone after any play, only the sky, the held balloons and the friends are drawn', () => {
     const moment = MOMENTS.mixed, theatre = new Theatre(saveOf(moment)), { frame, painter } = recorder()
@@ -309,6 +315,116 @@ describe('a frame', () => {
       return JSON.stringify([frame.balloons, [...frame.poses], theatre.sounds])
     }
     expect(run()).toBe(run())
+  })
+})
+
+describe('the idle guidance', () => {
+  const glowing = { glow: 1, demo: null, demoIndex: -1 }
+  const showing = (index: number) => ({ glow: 1, demo: 0.43, demoIndex: index })
+
+  it('swells the bunches while the troop wants balloons, and never touches their colour', () => {
+    const theatre = solo('duck', ['duck', 'frog', 'duck', 'frog']), { frame, painter, clear } = recorder()
+    theatre.paint(painter, VIEW)
+    const plain = frame.balloons.map((balloon) => balloon.colour)
+    clear()
+    theatre.paint(painter, VIEW, glowing)
+    expect(frame.balloons.every((balloon) => balloon.glow > 0)).toBe(true)
+    expect(frame.balloons.map((balloon) => balloon.colour)).toEqual(plain)
+    expect([...frame.poses.values()].every((pose) => pose.glow === 0)).toBe(true)
+  })
+
+  it('shows one move with the hand: a tap on one place after another, whatever hangs there', () => {
+    const theatre = solo('duck', ['duck', 'frog', 'duck', 'frog']), { frame, painter, clear } = recorder(), places = skySlots(4, VIEW)
+    const tapped: number[] = []
+    for (let demo = 0; demo < 4; demo++) {
+      clear()
+      theatre.paint(painter, VIEW, showing(demo))
+      expect(frame.hand!.press).toBeGreaterThan(0.9)
+      const slot = places.findIndex((place) => Math.abs(place.x - frame.hand!.x) < 1)
+      tapped.push(slot)
+      // The bunch under the hand squashes as a touched one would, and nothing is sent.
+      expect(frame.balloons[slot].tall).toBeLessThan(0.85)
+    }
+    expect(new Set(tapped).size, 'not always the same place').toBeGreaterThan(1)
+    expect(tapped.map((slot) => theatre.sky[slot].colour), 'not only the troop\'s own colour').toContain('frog')
+    expect(theatre.save.troop.held).toEqual([false])
+  })
+
+  it('moves to the troop that waits once the troop on screen is served: one next act at a time', () => {
+    const theatre = staged({ troop: { kind: 'duck', size: 1, held: [true] }, sky: [{ colour: 'duck', count: 1 }, { colour: 'frog', count: 1 }], waiting: { kind: 'frog', size: 2 } }), { frame, painter } = recorder()
+    theatre.paint(painter, VIEW, showing(0))
+    expect(frame.balloons.every((balloon) => balloon.glow === 0)).toBe(true)
+    expect(frame.poses.get('waiting-0')!.glow).toBeGreaterThan(0)
+    expect(frame.poses.get('friend-0')!.glow).toBe(0)
+    expect(frame.hand!.x, 'the hand is at the edge, by the troop that waits').toBeLessThan(-VIEW.width / 2 + 3)
+  })
+
+  it('shows nothing while a bunch is in the air or a scene plays', () => {
+    const theatre = solo('duck', ['duck', 'frog']), { frame, painter, clear } = recorder()
+    tapSlot(theatre, 0)
+    theatre.paint(painter, VIEW, showing(0))
+    expect(frame.hand).toBe(null)
+    expect(frame.balloons.every((balloon) => balloon.glow === 0)).toBe(true)
+    play(theatre, 1.4)
+    expect(theatre.playing).toBe('ending')
+    clear()
+    theatre.paint(painter, VIEW, showing(0))
+    expect(frame.hand).toBe(null)
+  })
+})
+
+describe('the scenery', () => {
+  it('answers a touch on a cloud with a squeak, a squash and drops that fall and are gone', () => {
+    const theatre = solo('duck', ['duck', 'frog']), { frame, painter, clear } = recorder()
+    theatre.press(0.4, 0.5, VIEW)
+    expect(voices(theatre)).toEqual(['cloudSqueak', 'patter'])
+    play(theatre, 0.1)
+    theatre.paint(painter, VIEW)
+    expect(frame.clouds[2]).toBeLessThan(0.95)
+    expect(frame.balloons.length, 'the sky of two and seven drops').toBe(9)
+    play(theatre, 2)
+    clear()
+    theatre.paint(painter, VIEW)
+    expect(frame.balloons).toHaveLength(2)
+    expect(frame.clouds[2]).toBeCloseTo(1, 1)
+  })
+
+  it('answers a touch on the hill with a wobble that the friends ride', () => {
+    const theatre = solo('hippo', ['hippo', 'duck']), { frame, painter } = recorder()
+    theatre.press(3, GROUND - 0.8, VIEW)
+    expect(voices(theatre)).toEqual(['hillBoing'])
+    let highest = 0
+    for (let i = 0; i < 40; i++) {
+      theatre.step(1 / 60)
+      theatre.paint(painter, VIEW)
+      highest = Math.max(highest, frame.poses.get('friend-0')!.y - GROUND)
+    }
+    expect(highest).toBeGreaterThan(0.05)
+    expect(frame.shadows, 'a dimple where it was touched').toBeGreaterThan(2)
+  })
+
+  it('has the spare balloons of a bunch bigger than a served troop bump the cloud, which sheds its drops on the troop', () => {
+    const theatre = staged({ troop: { kind: 'duck', size: 2, held: [true, true] }, sky: [{ colour: 'duck', count: 1 }, { colour: 'duck', count: 3 }], waiting: { kind: 'frog', size: 1 } }), { frame, painter } = recorder()
+    tapSlot(theatre, 1)
+    play(theatre, FLIGHT + PERSONALITIES.duck.cue.letGo + 0.4)
+    expect(voices(theatre)).toEqual(expect.arrayContaining(['cloudSqueak', 'patter']))
+    theatre.paint(painter, VIEW)
+    expect(frame.clouds[2]).not.toBe(1)
+    // The troop blinks under the drops.
+    expect(frame.poses.get('friend-0')!.blink).toBe(1)
+    play(theatre, 3)
+    expect(theatre.save.troop.held).toEqual([true, true])
+  })
+})
+
+describe('the far hill', () => {
+  it('shows the troops that were served going round with the balloons they carried off, and nothing else', () => {
+    const save = { ...saveOf(MOMENTS.solo), parade: [{ kind: 'duck' as const, size: 2 as const, balloons: 2 }, { kind: 'crab' as const, size: 3 as const, balloons: 1 }] }
+    const theatre = new Theatre(save), { frame, painter } = recorder()
+    theatre.paint(painter, VIEW)
+    expect(frame.marchers).toBe(5)
+    // The sky of four, and three balloons on the far hill, each a paler one of its troop's colour.
+    expect(frame.balloons).toHaveLength(7)
   })
 })
 

@@ -24,6 +24,9 @@ function recorder() {
     balloon: () => void (balloons += 1),
     string: () => {},
     shadow: () => {},
+    marcher: () => {},
+    hand: () => {},
+    cloud: () => {},
   }
   return { poses, painter, balloons: () => balloons, clear: () => { balloons = 0 } }
 }
@@ -283,7 +286,7 @@ describe('the pass-by', () => {
   it('is never the kind the child is about to serve, and takes what hangs low for it', () => {
     for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
       const fresh = freshSave(3, seed), theatre = new Theatre(fresh), kinds: string[] = []
-      const painter: Painter = { place: (name, kind) => { if (name === 'passer-0') kinds.push(kind) }, drop: () => {}, balloon: () => {}, string: () => {}, shadow: () => {} }
+      const painter: Painter = { place: (name, kind) => { if (name === 'passer-0') kinds.push(kind) }, drop: () => {}, balloon: () => {}, string: () => {}, shadow: () => {}, marcher: () => {}, hand: () => {}, cloud: () => {} }
       play(theatre, 0.3)
       theatre.paint(painter, VIEW)
       expect(kinds[0]).not.toBe(fresh.troop.kind)

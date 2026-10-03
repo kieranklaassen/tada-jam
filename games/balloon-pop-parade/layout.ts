@@ -31,6 +31,15 @@ export const WAITING_DEPTH = -3.2
 /** The hill is the top of a wide pillow. */
 export const HILL = { x: 0, z: -0.4, rx: 22, ry: 4.6, rz: 10 } as const
 
+/** The far hill, where the troops that were served go round: the top of another pillow, a long way back and to the right. */
+export const FAR_HILL = { x: 9, y: GROUND - 4.4, z: -19, rx: 11, ry: 5.6, rz: 5 } as const
+/** The clouds: pillows far behind, kept below the row of balloons so nothing stands behind a balloon but sky. The last hangs over the troop. */
+export const CLOUDS = [
+  { x: -9.5, y: 1.6, z: -15, scale: 1.25 },
+  { x: 9.6, y: 3.0, z: -15, scale: 0.95 },
+  { x: 0.8, y: 0.9, z: -15, scale: 0.75 },
+] as const
+
 export type View = {
   /** World units seen at z = 0. */
   width: number
@@ -95,4 +104,37 @@ const REACH = OFFSETS.map((offsets) => ({ x: Math.max(...offsets.map((o) => Math
 /** A point of the surface, in logical pixels from its top left, as a point of the plane z = 0. */
 export function toWorld(xPx: number, yPx: number, widthPx: number, heightPx: number, view: View): { x: number; y: number } {
   return { x: (xPx - widthPx / 2) / view.pixelsPerUnit, y: (heightPx / 2 - yPx) / view.pixelsPerUnit }
+}
+
+/** The height of the far hill's skin under a point. */
+export function farGroundAt(x: number, z: number): number {
+  const dx = (x - FAR_HILL.x) / FAR_HILL.rx, dz = (z - FAR_HILL.z) / FAR_HILL.rz
+  return FAR_HILL.y + FAR_HILL.ry * Math.sqrt(Math.max(0, 1 - dx * dx - dz * dz))
+}
+
+/** How many troops go round the far hill at most, and the friends in them. */
+export const PARADE_TROOPS = 4
+export const PARADE_FRIENDS = PARADE_TROOPS * 3
+
+/**
+ * Where friend `member` of troop `troop` of the parade is at `time`: the troops go slowly round the top of the
+ * far hill, evenly spaced, each friend a step behind the one in front. `turn` is which way it faces.
+ */
+export function paradeSpot(troop: number, member: number, time: number, out: { x: number; y: number; z: number; turn: number }): { x: number; y: number; z: number; turn: number } {
+  const angle = time * 0.1 + (troop / PARADE_TROOPS) * Math.PI * 2 - member * 0.21
+  out.x = FAR_HILL.x + Math.cos(angle) * 4.6
+  out.z = FAR_HILL.z + Math.sin(angle) * 1.5 + 1.2
+  out.y = farGroundAt(out.x, out.z)
+  // It walks along the ring: at the front of it to the left, at the back to the right.
+  out.turn = Math.atan2(-Math.sin(angle) * 4.6, Math.cos(angle) * 1.5)
+  return out
+}
+
+/** Where a far point is seen in the friends' plane, z = 0: its x and y there, and how much smaller it looks. */
+export function seenAt(x: number, y: number, z: number, view: View, out: { x: number; y: number; scale: number }): { x: number; y: number; scale: number } {
+  const scale = view.distance / (view.distance - z)
+  out.x = x * scale
+  out.y = y * scale
+  out.scale = scale
+  return out
 }
