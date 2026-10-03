@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { nearestOn, pathLength, resample, spotAt } from './path'
+import { crossings, inside, middle, nearestOn, pathLength, resample, spotAt } from './path'
 
 const L = [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 50 }]
 
@@ -40,5 +40,23 @@ describe('a mark as a path', () => {
     expect(nearestOn(L, { x: 40, y: 30 })).toEqual({ s: 40, gap: 30 })
     expect(nearestOn(L, { x: 130, y: 20 })).toEqual({ s: 120, gap: 30 })
     expect(nearestOn([{ x: 0, y: 0 }], { x: 3, y: 4 })).toEqual({ s: 0, gap: 5 })
+  })
+
+  it('tells inside a closed shape from outside', () => {
+    const square = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 }]
+    expect(inside(square, { x: 5, y: 5 })).toBe(true)
+    expect(inside(square, { x: 15, y: 5 })).toBe(false)
+    expect(inside(square, { x: 5, y: -1 })).toBe(false)
+  })
+
+  it('counts where two paths cross', () => {
+    const flat = [{ x: 0, y: 0 }, { x: 100, y: 0 }]
+    expect(crossings(flat, [{ x: 50, y: -10 }, { x: 50, y: 10 }])).toBe(1)
+    expect(crossings(flat, [{ x: 20, y: -10 }, { x: 40, y: 10 }, { x: 60, y: -10 }, { x: 80, y: 10 }])).toBe(3)
+    expect(crossings(flat, [{ x: 0, y: 5 }, { x: 100, y: 5 }])).toBe(0)
+  })
+
+  it('finds the middle of a path', () => {
+    expect(middle(L)).toEqual({ x: 50, y: 25 })
   })
 })

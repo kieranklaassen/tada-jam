@@ -75,3 +75,34 @@ export function nearestOn(pts: readonly Pt[], p: Pt): { s: number; gap: number }
   }
   return best
 }
+
+/** Whether a point lies inside a closed shape whose corners are `shape`. */
+export function inside(shape: readonly Pt[], p: Pt): boolean {
+  let within = false
+  for (let i = 0, j = shape.length - 1; i < shape.length; j = i++) {
+    const a = shape[i], b = shape[j]
+    if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) within = !within
+  }
+  return within
+}
+
+/** How many times two paths cross each other. */
+export function crossings(a: readonly Pt[], b: readonly Pt[]): number {
+  const side = (p: Pt, q: Pt, r: Pt) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)
+  let count = 0
+  for (let i = 1; i < a.length; i++) {
+    for (let j = 1; j < b.length; j++) {
+      const d1 = side(b[j - 1], b[j], a[i - 1]), d2 = side(b[j - 1], b[j], a[i])
+      const d3 = side(a[i - 1], a[i], b[j - 1]), d4 = side(a[i - 1], a[i], b[j])
+      if (d1 * d2 < 0 && d3 * d4 < 0) count++
+    }
+  }
+  return count
+}
+
+/** The middle of the box a path fits in. */
+export function middle(pts: readonly Pt[]): Pt {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (const p of pts) { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y) }
+  return { x: (x0 + x1) / 2, y: (y0 + y1) / 2 }
+}
