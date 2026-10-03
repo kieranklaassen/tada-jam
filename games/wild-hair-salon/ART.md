@@ -82,7 +82,7 @@ A length is a **plain straight strip that hangs from a level line**. Two strips 
 | `beside-short` | Beside | Plainly shorter | Pulling |
 | `beside-either` | Beside | Plainly longer or plainly shorter | Nothing new: the child has to see which it is |
 | `beside-close` | Beside | A little longer or a little shorter | A small difference |
-| `across` | The friend sits on the bench across the room | Plainly longer or plainly shorter | A model that cannot be held beside the lock, and the ribbon |
+| `across` | The friend sits on the bench across the room | Plainly longer or plainly shorter | A model that sits apart from the lock, and the ribbon |
 | `across-close` | Across | A little longer or a little shorter | Nothing new: the two before it together |
 
 **The sizes** are the game's own choice, since no record named below gives a size. Lengths are whole steps from 4 (a stub) to 100 (down to the floor), and a step is never shown. A model is between 34 and 66. "Plainly" is a difference of 24 to 30 steps, "a little" is 9 to 14, and two ends meet when they are within 5.
@@ -153,23 +153,42 @@ Each scene is a list of timed beats filled in from the state of play, on the tem
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+The game is designed from comparing two lengths directly. Standing and check state are as the lookup printed them on 2026-10-03. For a California record the text in quotation marks is the record's Summary, which is the pack's own text and not the official wording.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels, as the lookup prints them by age: at 4, `preschool-tk`, where the Early and the Later statement of a foundation both apply for the whole year; at 5, `preschool-tk` at the Later statement and `kindergarten`; at 6, `kindergarten` and `grade-1`. Age mapping: official. Gap: none printed. At 5 and 6 the lookup also returns the `cross-grade` lane, labelled cross-grade; the game names no record from it.
+
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-1` (`us-ca 3.1`, in Mathematics, Strand 3.0 of the Preschool/Transitional Kindergarten Learning Foundations): department-published-foundation, confirmed. The record's Summary: "At the earlier age (3 to 4½ years), a child shows awareness that things can be compared in how long they are, how heavy they are, or how much they hold: the child notices such differences and communicates about them. At the later age (4 to 5½ years), the child compares two objects on one of these attributes and communicates what the comparison shows; placing the objects next to each other is given as an example of how."
+  Limits taken: awareness only at the earlier age, which is why the first position has two lengths that differ plainly; two objects at the later age; no units, numbers or measuring tools. Left open by Limits: how the two are compared, with side by side as its example; two strips hanging from one level line is the game's own choice. Of the three attributes it names, the game uses length only.
+- `edu.us-ca.kindergarten.mathematics.objective.k-md-2` (`us-ca K.MD.2`): state-board-adopted-standard, confirmed. The record's Summary: "The child puts two objects against each other to compare them on a measurable feature they share, finds which one has more of it and which has less, and says what the difference is. The example given is two children whose heights are compared, with one described as taller or shorter."
+  Limits taken: exactly two objects, compared directly; no units, rulers or numbers; the difference is a matter of longer and shorter and never an amount. Left open by Limits: which feature; length is the game's own choice. The record has the child say what the difference is. Nothing in the game hears or asks for words: the child acts on the difference, and the game is designed from the comparison only.
+- `edu.us-ca.grade-1.mathematics.objective.1-md-1` (`us-ca 1.MD.1`): state-board-adopted-standard, confirmed. Taken in part. The record's Summary: "The child arranges three things according to how long they are. The child also finds out which of two things is longer without putting them side by side, by comparing each with a third thing." The part taken is the second sentence. In the salon the two things are the model and the lock when the friend sits across the room, and the third is the ribbon.
+  Limits taken: two objects for the comparison through a third; no units or numbers; length only. Not taken: the first sentence of the Summary. The game puts nothing in order.
+
+Not named: `us-ca 3.2` of the same strand is about putting objects in order, which the game does not do.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels, as the lookup prints them by age: at 4, `peuters`, up to the fourth birthday and returned for a child who has only just turned four, and `fase-1`, sub-band groep 1; at 5, `fase-1`, sub-band groep 1 or groep 2; at 6, `fase-1`, sub-band groep 2 or groep 3. Age mapping: convention. Gap: none printed. From 4 the lookup also returns the `einde-po` lane, labelled end-of-primary goals; the game names no record from it.
+
+- `edu.nl.fase-1.mathematics.objective.89bb477b-2b37-4d5e-91b8-2a6ddfb709dc` (`nl rw/m/1/04/fase1`): curriculum-institute-guidance, confirmed. Taken in part. In the game's words, the part taken: comparing by length.
+  Limits taken: it says what a school can offer in fase 1 and not what a child must be able to do, and nothing says in which year; it names no objects, no units and no number of objects. Left open by Limits: the way of comparing, for which the source prints by eye, measuring off and holding side by side as an example; the game has all three, as its own choice. Not taken: ordering, and the distance around a thing.
+- `edu.nl.fase-1.mathematics.objective.a825be0e-b3d2-46d1-a297-4a2ecdc81999` (`nl rw/m/1/02/fase1`): curriculum-institute-guidance, confirmed. Taken in part. In the game's words: working with length and with the ideas around it, of which longer, shorter and equally long are among its examples.
+  Limits taken: what a school can offer in fase 1, with no year; the ideas listed are examples; no units. The words for length and for the distance around are themselves part of this goal, and the game shows and speaks no word, so that part is not in the game: it carries the ideas longer, shorter and equally long in what the hair does. Not taken: the distance around, and the other sizes among its examples.
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-lengte-omtrek-en-oppervlakte-1` (a bullet of the SLO content card for peuters, cited by pack id): curriculum-institute-guidance, confirmed. In the game's words: comparing by length.
+  Limits taken: it says what is offered to children of about 2 to 4 before they start school and not what a child must be able to do, so it bears only on the youngest end of the band; the comparison is direct; no measuring tool, steps or units; length only.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **When.** The California records are tied to an age or a grade: two statements of a foundation at 4, an adopted standard for kindergarten and one for grade 1. The Dutch fase 1 goals are for a band of school years and name no year. The game follows neither for timing: its order is its own, and a child's age sets only where a first visit starts.
+- **How many things.** The California records bound a comparison to two objects, and at grade 1 name a third one as the go-between. The Dutch fase 1 goal names no number of objects. The game follows California here: two lengths at a time, and a third only as the go-between.
+- **Words.** The California kindergarten record has the child say what the difference is, and one Dutch goal has the words for length as part of the goal. The game follows neither: it has no words.
+- **Ordering.** One California record and one Dutch record named above also ask for ordering. The game takes the comparing from each and no ordering from either.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Wild Hair Salon is designed from comparing two lengths directly. In California it is designed from `us-ca 3.1` of Strand 3.0 in Mathematics, a learning foundation for preschool and transitional kindergarten published by the state department, which is a foundation and not a standard, and from two content standards adopted by the State Board of Education: `us-ca K.MD.2`, and `us-ca 1.MD.1` for comparing two lengths through a third thing only. In the Netherlands it is designed from guidance of the curriculum institute SLO, which is not law and says what can be offered, not what a child must know: the fase 1 goals `nl rw/m/1/04/fase1`, for comparing by length only, and `nl rw/m/1/02/fase1`, and the peuter card bullet named above. All six records were `confirmed` on 2026-10-03. Cutting or pulling a lock until it is as long as its model is the game's own use of repeated direct comparison: no record named here asks a child to make one length equal to another. The game measures nothing in units, and it says nothing about what any child has reached.
 
 ## The look
 
