@@ -162,9 +162,11 @@ function crab(): Body {
   const c = KIND_COLOURS.crab, light = shade(c, 0.5), dark = shade(c, -0.2)
   const legs: Pillow[] = [-0.3, 0.02, 0.34].flatMap((z, i) => both({ at: [0.82 + i * 0.03, 0.24, z], size: [0.1, 0.3, 0.1], turn: [0, 0, 0.45], colour: dark, detail: TINY }))
   return {
-    body: [{ at: [0, 0.66, 0], size: [0.94, 0.54, 0.72], colour: c, panels: 6 }, ...legs],
+    // Eight panels, so the welded seams fall either side of the smile and none runs down the middle of it: a bar
+    // across a line would read as a sign.
+    body: [{ at: [0, 0.66, 0], size: [0.94, 0.54, 0.72], colour: c, panels: 8 }, ...legs],
     // The crab has no head of its own: its face is on its shell, so the part that nods holds the smile.
-    head: [{ at: [0, -0.18, 0.4], size: [0.3, 0.035, 0.06], colour: dark, detail: SMALL }],
+    head: [{ at: [0, -0.18, 0.4], size: [0.25, 0.035, 0.06], colour: dark, detail: SMALL }],
     eyes: eye(0.3, 0.64, 0.15, 0.12),
     arm: [
       { at: [-0.1, -0.28, 0.02], size: [0.13, 0.34, 0.13], turn: [0, 0, -0.3], colour: c, detail: SMALL },
