@@ -33,6 +33,9 @@ export type Hand =
   | { what: 'vehicle'; id: string; across: boolean }
   | { what: 'roll' }
   | { what: 'rack'; index: number }
+  /** The trolley in its compartment or on the bridge, and the tracing paper: `spot` is the pad or one of the two kept tracings. */
+  | { what: 'trolley'; placed: boolean; carried: boolean; finger: readonly [number, number] }
+  | { what: 'tracing'; spot: 'pad' | 0 | 1; carried: boolean; finger: readonly [number, number] }
 
 /** How long a plucked part goes on ringing, in seconds: a second tap inside it turns the part. */
 export const RING = 0.8

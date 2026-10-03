@@ -61,7 +61,16 @@ export type React = keyof typeof REACT
 /** Poked by a finger, it starts, glances up at nothing and goes back to its model. Seconds. */
 export const POKED = 1.3
 
-export type Act = Idle | React | 'poked' | 'rest'
+/**
+ * The two showings, each given once: the neat way of a sheet's idea, where it
+ * pins a small model together the way that fails and then the way that holds
+ * and stands on it; and the one change, where it sets two small models side
+ * by side, loads both, swaps one part back and loads them again. Seconds.
+ */
+export const SHOWING = { shows: 7.5, compares: 9 } as const
+export type Showing = keyof typeof SHOWING
+
+export type Act = Idle | React | Showing | 'poked' | 'rest'
 
 const clamp01 = (t: number) => Math.max(0, Math.min(1, t))
 /** Rises from 0 to 1 and falls back, smoothly, over the span from a to b. */
@@ -108,6 +117,22 @@ export function poseOf(act: Act, t: number, out: ChiefPose = { ...STILL }): Chie
       // Then it holds still with its head well over to one side, listening.
       out.tilt = 0.55 * (ease(t, 0.5, 0.6) - ease(t, 0.84, 0.96))
       break
+    case 'shows':
+      // Head down, pinning: four pecks for the way that fails; it draws back as that folds; four more for the way that
+      // holds; then up onto the model, where it stands and looks down at it.
+      out.neck = 0.8 * (ease(t, 0, 0.06) - ease(t, 0.3, 0.36)) + 0.8 * (ease(t, 0.46, 0.52) - ease(t, 0.72, 0.78)) - 0.35 * swell(t, 0.34, 0.46) + 0.35 * swell(t, 0.84, 0.98)
+      for (let i = 0; i < 4; i++) out.peck += swell(t, 0.07 + 0.055 * i, 0.12 + 0.055 * i) + swell(t, 0.53 + 0.045 * i, 0.575 + 0.045 * i)
+      out.crest = 0.6 * swell(t, 0.34, 0.46)
+      out.hopY = 0.3 * swell(t, 0.76, 0.84) + 0.42 * (ease(t, 0.8, 0.84) - ease(t, 0.96, 1))
+      out.hopX = -0.9 * (ease(t, 0.76, 0.84) - ease(t, 0.96, 1))
+      break
+    case 'compares':
+      // It looks at one model, then the other, and again: its head goes from side to side. In the middle it swaps a part.
+      out.tilt = 0.4 * (swell(t, 0.05, 0.2) - swell(t, 0.2, 0.36)) + 0.4 * (swell(t, 0.62, 0.76) - swell(t, 0.76, 0.92))
+      out.neck = 0.5 * (ease(t, 0.02, 0.1) - ease(t, 0.92, 1))
+      out.peck = swell(t, 0.42, 0.48) + swell(t, 0.5, 0.56)
+      out.lean = 0.8 * (swell(t, 0.05, 0.2) - swell(t, 0.2, 0.36) + swell(t, 0.62, 0.76) - swell(t, 0.76, 0.92))
+      break
     case 'poked':
       // A start: the whole bird lifts a little, the head whips up and back, and it blinks it off.
       out.hopY = 0.12 * swell(t, 0, 0.3)
@@ -150,6 +175,20 @@ export class ChiefDirector {
     this.act = what
     this.into = 0
     this.span = REACT[what]
+  }
+
+  /** One of its two showings begins. */
+  showing(what: Showing): void {
+    this.act = what
+    this.into = 0
+    this.span = SHOWING[what]
+  }
+
+  /** Whatever it was doing, it stops and stands at rest: a touch ended a showing. */
+  rest(): void {
+    this.act = 'rest'
+    this.into = 0
+    this.span = 1.5
   }
 
   /** A finger poked it. */

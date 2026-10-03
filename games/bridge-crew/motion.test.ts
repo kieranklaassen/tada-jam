@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { stream } from './look'
-import { ChiefDirector, IDLE, REACT, STILL, poseOf, stringSway, waterDrift, type Act, type ChiefPose, type Idle } from './motion'
+import { ChiefDirector, IDLE, REACT, SHOWING, STILL, poseOf, stringSway, waterDrift, type Act, type ChiefPose, type Idle } from './motion'
 
 const channels = Object.keys(STILL) as (keyof ChiefPose)[]
-const acts = [...Object.keys(IDLE), ...Object.keys(REACT), 'poked'] as Act[]
+const acts = [...Object.keys(IDLE), ...Object.keys(REACT), ...Object.keys(SHOWING), 'poked'] as Act[]
 /** The most each channel moves over an act. */
 const reach = (act: Act): Record<string, number> => {
   const most: Record<string, number> = {}
@@ -18,7 +18,7 @@ describe('how the crew chief moves', () => {
       const most = reach(act)
       expect(most.neck).toBeLessThanOrEqual(1)
       expect(most.tilt).toBeLessThanOrEqual(0.6)
-      expect(most.hopX).toBeLessThanOrEqual(0.5)
+      expect(most.hopX).toBeLessThanOrEqual(0.95)
       for (const c of ['crest', 'peck', 'tuck', 'preen', 'lean'] as const) expect(most[c]).toBeLessThanOrEqual(1.01)
     }
   })
@@ -74,6 +74,10 @@ describe('how the crew chief moves', () => {
     expect(chief.act).toBe('feathers-on-end')
     expect(chief.step(0.2).crest).toBeGreaterThan(0.5)
     for (let i = 0; i < 60 * REACT['feathers-on-end']; i++) chief.step(1 / 60)
+    expect(chief.act).toBe('rest')
+    chief.showing('shows')
+    expect(chief.act).toBe('shows')
+    chief.rest()
     expect(chief.act).toBe('rest')
     chief.poke()
     expect(chief.act).toBe('poked')

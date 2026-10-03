@@ -86,3 +86,31 @@ export function rackSlot(count: number, x: number, y: number): number {
   for (let index = 0; index < count; index++) { const [rx, ry] = rackAt(index, count); if (Math.abs(x - rx) <= 0.55 && Math.abs(y - ry) <= 0.9) return index }
   return -1
 }
+
+/** The two tools that lie beside the tray on every sheet: the test trolley with its weights, and the tracing paper. */
+export type Tool = 'trolley' | 'tracing'
+export type ToolBay = { tool: Tool; x0: number; x1: number }
+
+/** Where the tools lie: two compartments under the far bank, to the right of the tray. */
+export function tools(at: Site): ToolBay[] {
+  const left = at.right[0] + 1.3
+  return [{ tool: 'trolley', x0: left, x1: left + 2.3 }, { tool: 'tracing', x0: left + 2.3, x1: left + 4.6 }]
+}
+
+export function toolAt(at: Site, x: number, y: number): ToolBay | null {
+  if (y > TRAY.top + 0.25 || y < TRAY.top - TRAY.tall - 0.6) return null
+  return tools(at).find((bay) => x >= bay.x0 && x < bay.x1) ?? null
+}
+
+/**
+ * What a touch in the tracing paper's compartment means: the pad at the
+ * bottom, where a tracing of the bridge is made, or one of the two tracings
+ * kept above it, the older on the left.
+ */
+export function tracingSpot(bay: ToolBay, x: number, y: number): 'pad' | 0 | 1 {
+  if (y < TRAY.top - TRAY.tall * 0.55) return 'pad'
+  return x < (bay.x0 + bay.x1) / 2 ? 0 : 1
+}
+
+/** How near a touch must be to the trolley, where it stands or hangs, to mean the trolley. */
+export const TROLLEY_REACH = 0.7

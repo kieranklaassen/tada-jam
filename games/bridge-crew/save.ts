@@ -196,7 +196,7 @@ export function edit(state: Save, bridge: readonly Part[]): Save {
     }
     // A hat is on the part, however it is turned or pinned: it leaves only when the part does.
     const still = (worn: Part) => bridge.findIndex((p) => p.kind === worn.kind && p.a[0] === worn.a[0] && p.a[1] === worn.a[1] && p.b[0] === worn.b[0] && p.b[1] === worn.b[1])
-    const hats = [...new Set(sheet.hats.map((index) => still(sheet.bridge[index])).filter((index) => index >= 0))].sort((a, b) => a - b)
+    const hats = [...new Set(sheet.hats.filter((index) => sheet.bridge[index]).map((index) => still(sheet.bridge[index])).filter((index) => index >= 0))].sort((a, b) => a - b)
     return { ...sheet, bridge: [...bridge], crossed: [], home: false, ring, hats }
   })
 }
@@ -315,3 +315,6 @@ export function parked(state: Save): VehicleId[] {
 /** The child brought a waiting vehicle to the front of the line at the near bank. */
 export const toFront = (state: Save, vehicle: VehicleId): Save =>
   onNewest(state) && state.waiting.includes(vehicle) ? { ...state, waiting: [vehicle, ...state.waiting.filter((id) => id !== vehicle)] } : state
+
+/** A part gave under the test trolley: the one ring moves to its spot. No run is counted. */
+export const ringed = (state: Save, ring: NonNullable<Sheet['ring']>): Save => withSheet(state, (sheet) => ({ ...sheet, ring }))

@@ -92,3 +92,14 @@ export function creaks(before: readonly number[], now: readonly number[]): { par
   now.forEach((use, part) => { if (CREAK_AT.some((threshold) => (before[part] ?? 0) < threshold && use >= threshold)) due.push({ part, use }) })
   return due
 }
+
+/** One computed step read as the frame model's answer, for whatever lies under a standing load. */
+export function answerOf(step: Step): Answer & { use: number[] } {
+  const use = Array.from(step.use)
+  return {
+    moved: (node) => [step.moved[2 * node], step.moved[2 * node + 1]],
+    parts: use.map((value, index) => ({ force: 0, bending: 0, use: value, strain: step.strain[index], spot: [0, 0] as const })),
+    held: true,
+    use,
+  }
+}
