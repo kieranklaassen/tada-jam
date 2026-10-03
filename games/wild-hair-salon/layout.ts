@@ -29,7 +29,15 @@ export const FRIEND_HEAD = { x: 708, y: 302, rx: 68, ry: 62 } as const
 
 /** The bench is across the room from the lock, by the left wall; the door is on the right, past the stool. */
 export const BENCH = { x: 30, w: 206, seatY: 560, backY: 470 } as const
-export const DOOR = { x: 962, y: 190, w: 168, h: FLOOR_Y - 190, window: { x: 1046, y: 330, r: 60 } } as const
+/** The door is glass from top to kick plate, and the street shows through it. */
+export const DOOR = { x: 938, y: 150, w: 214, h: FLOOR_Y - 150, glass: { x: 958, y: 172, w: 174, h: 424 } } as const
+/** The looking glass on the wall above the bench: it is turned to the chair, and the customer's face shows in it. */
+export const LOOKING_GLASS = { x: 134, y: 196, rx: 84, ry: 108 } as const
+/** The shelf above the ribbon's peg, and the trolley that stands under it. */
+export const SHELF = { x: 724, y: 150, w: 200 } as const
+export const TROLLEY = { x: 806, w: 104, top: 502 } as const
+/** Where the panelling on the lower wall begins. */
+export const DADO_Y = 506
 export const MIRROR = { x: 520, top: 64, bottom: 470, w: 340 } as const
 /** The peg the ribbon hangs from, on the wall between the stool and the door. */
 export const PEG = { x: 868, y: 196 } as const

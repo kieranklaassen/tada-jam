@@ -68,6 +68,34 @@ describe('an empty salon', () => {
   })
 })
 
+describe('the mane and the scissors', () => {
+  it('stands on end while the scissors are out over a customer under the cape, and not in an empty salon or with the cape off', () => {
+    const play = seated()
+    play.gesture({ type: 'press', at: AIR })
+    expect(play.hair.scared).toBe(true)
+    play.gesture({ type: 'tap', at: AIR })
+    expect(play.hair.scared).toBe(false)
+    const empty = opened()
+    empty.gesture({ type: 'press', at: AIR })
+    expect(empty.hair.scared).toBe(false)
+    const off = seated()
+    tap(off, knotOf(off))
+    through(off)
+    off.gesture({ type: 'press', at: AIR })
+    expect(off.hair.scared).toBe(false)
+  })
+
+  it('bumps the head of whoever is poked, and a pressed nose sneezes fluff', () => {
+    const play = seated()
+    tap(play, { x: HEAD.x, y: HEAD.y + 22 })
+    expect(play.customer()!.squash.v + play.customer()!.squash.x).toBeGreaterThan(0)
+    expect(play.hair.puffs.length).toBeGreaterThan(0)
+    const before = play.friend()!.squash.v
+    tap(play, onModel(10))
+    expect(play.friend()!.squash.v).toBeGreaterThan(before)
+  })
+})
+
 describe('a poke', () => {
   it('holds nothing afterwards: the hair it touched wobbles free and comes to rest', () => {
     for (const at of [onLock(10), onModel(10), { x: HEAD.x, y: HEAD.y - HEAD.ry - 40 }]) {

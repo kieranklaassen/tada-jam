@@ -92,6 +92,7 @@ export function notesForCue(cue: Cue, who: CustomerId | null, salon: Salon): Not
     case 'asLong': return [{ ...CELL_VOICES['lock/poke'], pitch: pitchForLength(salon.model) }, { ...CELL_VOICES['lock/poke'], pitch: pitchForLength(salon.lock), after: 0.03 }]
     // The piece that is too much flaps like paper; a paw that feels for hair and finds none makes a small puff of air.
     case 'flap': return [{ ...CELL_VOICES['lock/ruffle'], peak: 0.07 }]
+    case 'ping': return [CELL_VOICES['model/pull']]
     case 'air': return [{ ...OTHER_VOICES.sigh, length: 0.16, attack: 0.02 }]
     case 'nip': return [CELL_VOICES['tuft/snip']]
     case 'tug': return [CELL_VOICES['tuft/pull']]

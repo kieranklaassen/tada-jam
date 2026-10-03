@@ -147,7 +147,7 @@ describe('the cape coming off', () => {
     expect(c.cues).toEqual(expect.arrayContaining(['capeOff', cue]))
     expect(c.staging).toMatchObject({ cape: 0, fx: null })
     // What sounds is the two lengths, never a cheer or a buzzer: there is no such cue to give.
-    expect(c.cues.every((heard) => ['capeOff', 'landed', 'tooLong', 'tooShort', 'asLong', 'flap', 'air'].includes(heard))).toBe(true)
+    expect(c.cues.every((heard) => ['capeOff', 'landed', 'tooLong', 'tooShort', 'asLong', 'flap', 'air', 'ping'].includes(heard))).toBe(true)
     expect(c.staging.paw).toBeNull()
   })
 
@@ -170,17 +170,24 @@ describe('the cape coming off', () => {
   it('has the customer feel on down from the end of a lock that is too short, as far as the friend\'s end, and find air there', () => {
     const before = seated({ lock: 20, model: 60 }), done = capeOff(before), c = cast(done.game)
     const lockEnd = COLLAR_Y + 20 * STEP, modelEnd = COLLAR_Y + 60 * STEP
-    let top = Infinity, bottom = -Infinity, flicked = 0
+    let top = Infinity, bottom = -Infinity, flicked = 0, drawnOut = 0, sprang = 0
     playThrough(capeComesOff(c, before, done.game, done.showing!), () => {
       if (c.staging.fx && c.staging.paw) { top = Math.min(top, c.staging.paw.y); bottom = Math.max(bottom, c.staging.paw.y) }
       flicked = Math.min(flicked, c.hair.strands.model.kick.v)
+      drawnOut = Math.max(drawnOut, Math.round(c.staging.stretch))
+      sprang = Math.max(sprang, c.hair.strands.lock.stretch.x)
     })
     // From the end of its own lock down through the gap to where the friend's lock ends, and no further.
     expect(top).toBeLessThanOrEqual(lockEnd + 1)
     expect(bottom).toBeGreaterThan(modelEnd - 2)
     expect(bottom).toBeLessThanOrEqual(modelEnd + 1)
     expect(c.cues.filter((cue) => cue === 'air').length).toBeGreaterThanOrEqual(2)
-    // Then the friend's longer end flicks over at it.
+    // Then it draws its own lock down as far as the friend's end, and the lock springs back with a ping: hair that is not under the cape does.
+    expect(drawnOut).toBe(40)
+    expect(c.staging.stretch).toBe(0)
+    expect(c.cues).toContain('ping')
+    expect(sprang).toBeGreaterThan(2.5)
+    // And the friend's longer end flicks over at it.
     expect(flicked).toBeLessThan(-2)
     expect(c.customer()!.started).toContain('lion-pats-for-it-and-an-ear-flicks-out')
   })

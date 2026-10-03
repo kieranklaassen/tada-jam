@@ -1,9 +1,9 @@
-import { drawFigure, pencil, stamp, strip, type Wears } from './figure'
+import { drawFigure, features, pencil, stamp, strip, type Figure, type Wears } from './figure'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { FAN, type Strand } from './hair'
 import { BLADES } from './hand'
 import { hintFor, type Hint } from './ladder'
-import { BESIDE_X, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, PEG, STEP, STRIP_W, fit } from './layout'
+import { BESIDE_X, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, LOOKING_GLASS, PEG, STEP, STRIP_W, fit } from './layout'
 import { FLUFF, LOOKS, RIBBON, hueOf } from './looks'
 import type { Play } from './play'
 import { SPOT_Y, clippingBox, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
@@ -12,7 +12,7 @@ import { PAW_HOME, SHOULDER, TAIL_OF_CUSTOMER, tailOf } from './scenes'
 import type { Sprites } from './sprites'
 import { WINDOW, type Shown } from './staging'
 import { CUSTOMERS, type CustomerId } from './tastes'
-import { GRAPHITE, type Ctx } from './wash'
+import { GRAPHITE, PAPER, type Ctx } from './wash'
 import type { Salon, Who } from './world'
 
 // One frame of the game. The painted pieces are stamped where the staging,
@@ -23,9 +23,13 @@ import type { Salon, Who } from './world'
 // drew, for the grown-up overlay.
 
 const STEEL = '#cfd2dc', STEEL_EDGE = '#8a8fa0', HANDLE = '#ee7c62'
-const PANE = '#fbeeb5', PANE_EDGE = '#e0c66a', DOORWAY = '#5f8f82'
+const LEAF = '#b94a3a', RAIN = 'rgba(75,74,87,0.4)'
+/** Somebody goes by in the street every so many seconds, and takes this long to cross the door's glass. */
+const PASSER = { every: 13, takes: 5 }
 /** How far above the line its length is taken from a lock comes out of the mane. */
 const ROOT = 44
+/** Where the customer's head shows in the looking glass, and how big. */
+const GLASS_AT: Shown = { x: LOOKING_GLASS.x, y: LOOKING_GLASS.y + 18, s: 0.5, lift: 0, seen: 1 }
 /** A lock on someone who is walking: it only swings. */
 const WALKING: Strand = { swing: { x: 0, v: 0 }, stretch: { x: 1, v: 0 }, flutter: 0, kick: { x: 0, v: 0 } }
 
@@ -95,6 +99,8 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     })
     const customer = play.customer(), other = play.friend()
     if (customer) drawn += drawFigure(g, sprites, { who: chair, puppet: customer, at: customerAt, mane: { steps: game.mane, hair }, body: 1 - caped, wears: wearsOf('chair'), time: play.time })
+    // The looking glass shows the customer's face, the hair it has now, and what it thinks of both.
+    if (customer && inChair && staging.hats < 0.5) drawn += reflection(g, sprites, { who: chair, puppet: customer, at: GLASS_AT, mane: null, body: 0, wears: wearsOf('chair'), time: play.time, whole: sprites.mane(chair, game.mane, hair.holds === null), flipped: true })
 
     // The cape, over the chin when the customer ducks; it breathes a little. In the air it rises and fades.
     if (caped > 0 && inChair) {
@@ -126,7 +132,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     if (staging.hats < 0.5 && places.lock && places.model) {
       const dx = friendAt.x - places.friend.x, dy = friendAt.y - places.friend.y - friendAt.lift
       const modelRoot = { x: places.model.x + dx, y: places.model.y + dy }
-      const lockLength = game.lock + (hair.holds === 'lock' ? play.hand.drawnOut : 0), modelLength = game.model + (hair.holds === 'model' ? play.hand.drawnOut : 0)
+      const lockLength = game.lock + staging.stretch + (hair.holds === 'lock' ? play.hand.drawnOut : 0), modelLength = game.model + (hair.holds === 'model' ? play.hand.drawnOut : 0)
       const even = Math.min(game.lock, game.model) * STEP
       light(places.lock.x, places.lock.y + Math.max(60, game.lock * STEP) / 2, 114, Math.max(60, game.lock * STEP) + 70, glowOn('lock'))
       if (shape && !carriedRibbon && staging.ribbon === null && shape.kind === 'hang' && game.ribbon && game.ribbon.at !== 'peg') {
@@ -159,7 +165,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     const puppet = play.leaving[i]
     if (!puppet || goer.at.seen <= 0) return
     // Each goes out with what it has: the customer's mane as it was cut, whatever is stuck on its face, and its lock at its cheek, swinging as it walks.
-    drawn += drawFigure(g, sprites, { who: goer.who, puppet, at: goer.at, mane: goer.mane ? { steps: goer.mane, hair } : null, body: 1, wears: { pieces: goer.worn.map((c) => ({ y: SPOT_Y[c.spot], half: (c.len * STEP) / 2, hue: c.hue })), blindfold: false, hat: 0 }, time: play.time })
+    drawn += drawFigure(g, sprites, { who: goer.who, puppet, at: goer.at, mane: goer.mane ? { steps: goer.mane, hair } : null, whole: goer.mane ? sprites.mane(goer.who, goer.mane, true) : null, body: 1, wears: { pieces: goer.worn.map((c) => ({ y: SPOT_Y[c.spot], half: (c.len * STEP) / 2, hue: c.hue })), blindfold: false, hat: 0 }, time: play.time })
     const size = goer.at.s / goer.from.s, home = goer.part === 'chair' ? { x: LOCK_X, y: COLLAR_Y } : { x: BESIDE_X, y: COLLAR_Y }
     WALKING.swing.x = Math.sin(play.time * 8 + i * 2) * 0.14
     g.save()
@@ -245,38 +251,83 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   return drawn
 }
 
-/** The door's pane, the next pair behind it under their rain hats, and the dark of the doorway as the door swings open. */
+/** A head as the looking glass shows it: the other way round, smaller, and only as much of it as the oval holds. */
+function reflection(g: Ctx, sprites: Sprites, figure: Figure): number {
+  if (!figure.whole) return 0
+  g.save()
+  g.beginPath()
+  g.ellipse(LOOKING_GLASS.x, LOOKING_GLASS.y, LOOKING_GLASS.rx - 3, LOOKING_GLASS.ry - 3, 0, 0, Math.PI * 2)
+  g.clip()
+  const drawn = drawFigure(g, sprites, figure)
+  g.restore()
+  return drawn
+}
+
+/** The door's glass: the street behind it, the next pair at it under their rain hats, the rain on it, and the door's edge when it stands open. */
 function door(g: Ctx, sprites: Sprites, play: Play, game: Salon): number {
   const { staging } = play
   let drawn = 0
-  const w = DOOR.window
+  const pane = DOOR.glass
   const nudge = play.pressed === 'door' ? 3 : 0
   g.save()
   g.beginPath()
-  g.arc(w.x + nudge, w.y, w.r, 0, Math.PI * 2)
-  g.fillStyle = PANE
-  g.fill()
-  drawn++
+  g.rect(pane.x, pane.y, pane.w, pane.h)
+  g.clip()
+  // Somebody goes by in the street now and then, under an umbrella: nothing to do with the salon.
+  const walk = (play.time % PASSER.every) / PASSER.takes
+  if (walk < 1) {
+    g.save()
+    g.translate(pane.x - 70 + (pane.w + 140) * walk, pane.y + pane.h * 0.5 + Math.abs(Math.sin(walk * Math.PI * 9)) * -5)
+    g.scale(0.9, 0.9)
+    drawn += stamp(g, sprites.passer)
+    g.restore()
+  }
   if (staging.waiting > 0 && play.waiting) {
-    g.clip()
     game.waiting.forEach((who, i) => {
       const puppet = play.waiting?.[i]
       if (!puppet) return
-      const at: Shown = { ...WINDOW[i], x: WINDOW[i].x + nudge, lift: 0, seen: staging.waiting }
-      drawn += drawFigure(g, sprites, { who, puppet, at, mane: null, body: 0, wears: { pieces: [], blindfold: false, hat: 1 }, time: play.time })
+      // The whole figure is one sheet that sinks, bobs and tips as its puppet says; only its eyes are drawn on it.
+      const at = WINDOW[i], breath = Math.sin(puppet.breath * Math.PI * 2)
+      g.save()
+      g.globalAlpha = staging.waiting
+      g.translate(at.x + nudge + puppet.at('shift') * 30 * at.s, at.y - puppet.at('lift') * 46 * at.s + (puppet.at('sink') * 150 + puppet.at('bob') * 12) * at.s)
+      g.scale(at.s, at.s * (1 + breath * 0.008))
+      g.rotate(puppet.at('tilt') * 0.17)
+      drawn += stamp(g, sprites.waiting(who))
+      drawn += features(g, puppet, LOOKS[who], true, 'eyes')
+      g.restore()
     })
   }
-  g.restore()
-  g.strokeStyle = PANE_EDGE
-  g.lineWidth = 3
+  // Rain down the glass, and the light on it.
+  g.strokeStyle = RAIN
+  g.lineWidth = 2
+  g.lineCap = 'round'
   g.beginPath()
-  g.arc(w.x + nudge, w.y, w.r, 0, Math.PI * 2)
+  for (let i = 0; i < 9; i++) {
+    const x = pane.x + 12 + ((i * 53) % (pane.w - 20)), y = pane.y + ((play.time * (150 + (i % 3) * 40) + i * 97) % (pane.h + 30)) - 20
+    g.moveTo(x, y)
+    g.lineTo(x - 4, y + 16)
+  }
   g.stroke()
   drawn++
+  if (staging.door < 1) {
+    g.globalAlpha = 0.34 * (1 - staging.door)
+    g.strokeStyle = PAPER
+    g.lineWidth = 16
+    g.beginPath()
+    g.moveTo(pane.x + 24 + nudge, pane.y + 150)
+    g.lineTo(pane.x + 92 + nudge, pane.y + 18)
+    g.moveTo(pane.x + 58 + nudge, pane.y + 170)
+    g.lineTo(pane.x + 104 + nudge, pane.y + 82)
+    g.stroke()
+    g.globalAlpha = 1
+    drawn++
+  }
+  g.restore()
   if (staging.door > 0) {
-    // Open, the door shows the dark of the doorway, from its hinge side across.
-    g.fillStyle = DOORWAY
-    g.fillRect(DOOR.x + DOOR.w * (1 - staging.door), DOOR.y + 4, DOOR.w * staging.door, DOOR.h - 6)
+    // Open, the door stands edge on at its hinges.
+    g.fillStyle = LEAF
+    g.fillRect(DOOR.x + DOOR.w - 20 * staging.door, DOOR.y + 4, 20 * staging.door, DOOR.h - 6)
     drawn++
   }
   return drawn

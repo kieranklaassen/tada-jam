@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BLADES } from './hand'
-import { COLLAR_Y, LOCK_X, STEP } from './layout'
+import { COLLAR_Y, DOOR as DOOR_AT, LOCK_X, LOOKING_GLASS, STEP } from './layout'
 import { LOOKS, hueOf, tuftOutline } from './looks'
 import { Play } from './play'
 import { BUTTONS, placesOf } from './poses'
@@ -170,6 +170,62 @@ describe('one frame', () => {
     expect(kept.some((sheet) => sheet.canvas.width > 0)).toBe(true)
     sprites.dispose()
     expect(kept.every((sheet) => sheet.canvas.width === 0 && sheet.canvas.height === 0)).toBe(true)
+  })
+})
+
+describe('the salon around them', () => {
+  const frame = (play: Play, time = 0): { kept: Recording; sprites: Sprites } => {
+    const kept: Recording = { shapes: [], stamps: [], texts: 0 }
+    const sprites = new Sprites(blankSheets, 1180, 820, 1), surface = recordingSheet(1180, 820, kept)
+    play.time = time
+    for (let i = 0; i < 3; i++) { kept.shapes.length = 0; kept.stamps.length = 0; drawFrame(surface.g as Ctx, 1180, 820, sprites, { play, guidance: null }) }
+    return { kept, sprites }
+  }
+  const inBox = (corners: readonly { x: number; y: number }[], box: { x: number; y: number; w: number; h: number }, slack = 0): boolean => { const b = bounds(corners); return b.x + b.w / 2 >= box.x - slack && b.x + b.w / 2 <= box.x + box.w + slack && b.y + b.h / 2 >= box.y - slack && b.y + b.h / 2 <= box.y + box.h + slack }
+
+  it('shows the customer in the looking glass: its whole mane as one sheet, the other way round, with its face', () => {
+    const play = seated(), { kept, sprites } = frame(play)
+    const who = play.game!.chair!, mane = sprites.mane(who, play.game!.mane, true)!
+    const glass = { x: LOOKING_GLASS.x - LOOKING_GLASS.rx, y: LOOKING_GLASS.y - LOOKING_GLASS.ry, w: LOOKING_GLASS.rx * 2, h: LOOKING_GLASS.ry * 2 }
+    const shown = kept.stamps.filter((stamp) => stamp.image === mane.sheet.canvas)
+    expect(shown).toHaveLength(1)
+    expect(inBox(shown[0].corners, glass)).toBe(true)
+    // Flipped: the sheet's left edge is drawn to the right of its right edge.
+    expect(shown[0].corners[0].x).toBeGreaterThan(shown[0].corners[1].x)
+    const faces = kept.stamps.filter((stamp) => stamp.image === sprites.animal(who).face.sheet.canvas)
+    expect(faces).toHaveLength(2)
+    expect(faces.filter((stamp) => inBox(stamp.corners, glass))).toHaveLength(1)
+    // Nobody in the chair, nobody in the glass.
+    expect(frame(fresh()).kept.stamps.some((stamp) => inBox(stamp.corners, glass) && bounds(stamp.corners).w < 400)).toBe(false)
+  })
+
+  it('lays the whole mane together again only when a length has changed and nothing is in the fingers', () => {
+    const sprites = new Sprites(blankSheets, 1180, 820, 1), mane = [40, 90, 12, 50, 55, 61, 47, 33, 58]
+    const first = sprites.mane('lion', mane, true)!
+    expect(sprites.mane('lion', mane, true)).toBe(first)
+    const cut = mane.map((steps, i) => (i === 1 ? 45 : steps))
+    // While it is held, the sheet it has is shown.
+    expect(sprites.mane('lion', cut, false)).toBe(first)
+    const second = sprites.mane('lion', cut, true)!
+    expect(second).not.toBe(first)
+    expect(first.sheet.canvas.width).toBe(0)
+  })
+
+  it('draws each of the pair at the door as one sheet with its eyes on top, behind rain that moves', () => {
+    const play = fresh(), { kept, sprites } = frame(play)
+    const pane = DOOR_AT.glass
+    for (const who of play.game!.waiting) {
+      const stamps = kept.stamps.filter((stamp) => stamp.image === sprites.waiting(who).sheet.canvas)
+      expect(stamps).toHaveLength(1)
+      expect(inBox(stamps[0].corners, pane, 60)).toBe(true)
+    }
+    const rain = (k: Recording) => JSON.stringify(k.shapes.find((shape) => shape.kind === 'stroke' && shape.parts.length === 9)?.points.map((p) => Math.round(p.y)))
+    expect(rain(kept)).toBeDefined()
+    expect(rain(frame(fresh(), 0.5).kept)).not.toBe(rain(kept))
+    // Somebody goes by in the street now and then, and is not there the rest of the time.
+    const passing = (time: number): boolean => { const made = frame(fresh(), time); return made.kept.stamps.some((stamp) => stamp.image === made.sprites.passer.sheet.canvas) }
+    expect(passing(2)).toBe(true)
+    expect(passing(9)).toBe(false)
   })
 })
 

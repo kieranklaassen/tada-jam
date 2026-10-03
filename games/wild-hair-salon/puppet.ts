@@ -37,6 +37,8 @@ export class Puppet {
   /** How far a cheek is pulled out, in scene units. */
   readonly cheek = { x: { x: 0, v: 0 }, y: { x: 0, v: 0 } }
   private cheekTo: { x: number; y: number } | null = null
+  /** How squashed the head is: above nothing it is flat and wide, below it tall and thin. It bounces back by itself. */
+  readonly squash = { x: 0, v: 0 }
   /** The names of the bits that started since this was last read, for a test or a log. */
   readonly started: string[] = []
 
@@ -93,6 +95,11 @@ export class Puppet {
     this.cheekTo = offset ? { x: offset.x * give, y: offset.y * give } : null
   }
 
+  /** Something landed on it, or it landed on something: the head squashes and bounces back. */
+  bump(by = 1): void {
+    this.squash.v += 9 * by
+  }
+
   /** Plays `dt` seconds. `idle` says nobody is touching: only then does it start things of its own. */
   step(dt: number, idle: boolean): void {
     let left = dt
@@ -131,5 +138,6 @@ export class Puppet {
     const held = this.cheekTo !== null
     ease(this.cheek.x, this.cheekTo?.x ?? 0, held ? 600 : 170, held ? 44 : 9, dt)
     ease(this.cheek.y, this.cheekTo?.y ?? 0, held ? 600 : 170, held ? 44 : 9, dt)
+    ease(this.squash, 0, 240, 9, dt)
   }
 }

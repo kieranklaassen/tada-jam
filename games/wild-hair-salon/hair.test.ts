@@ -178,6 +178,40 @@ describe('the mane', () => {
     expect(hair.tufts.every((tuft) => tuft.frizz === 0)).toBe(true)
   })
 
+  it('stands the whole mane on end, trembling, for as long as scissors are near, and lets it down when they go', () => {
+    const hair = fresh()
+    run(hair, 1)
+    hair.scared = true
+    let leans = new Set<number>()
+    run(hair, 0.6, salon(), 60, () => leans.add(Math.round(hair.tufts[2].lean.x * 500)))
+    for (const tuft of hair.tufts) expect(tuft.stretch.x).toBeGreaterThan(1.08)
+    expect(leans.size).toBeGreaterThan(4)
+    expect(hair.settled).toBe(false)
+    hair.scared = false
+    run(hair, 3)
+    for (const tuft of hair.tufts) expect(tuft.stretch.x).toBeCloseTo(1, 1)
+    leans = new Set()
+  })
+
+  it('droops the mane or runs a wave through it for a while, each tuft in its turn, and then it is as it was', () => {
+    const droop = fresh()
+    droop.moodOf('droop', 1.2)
+    run(droop, 0.6)
+    for (const tuft of droop.tufts) expect(tuft.stretch.x).toBeLessThan(0.9)
+    // The two sides fall away from each other.
+    expect(droop.tufts[0].lean.x).toBeLessThan(-0.15)
+    expect(droop.tufts[TUFTS - 1].lean.x).toBeGreaterThan(0.15)
+    const wave = fresh(), peaks: number[] = Array(TUFTS).fill(0)
+    wave.moodOf('wave', 1.4)
+    let t = 0
+    const tallest: number[] = Array(TUFTS).fill(0)
+    run(wave, 1.4, salon(), 60, () => { t += 1 / 60; wave.tufts.forEach((tuft, i) => { if (tuft.stretch.x > tallest[i]) { tallest[i] = tuft.stretch.x; peaks[i] = t } }) })
+    for (const tall of tallest) expect(tall).toBeGreaterThan(1.05)
+    // The first tuft is at its tallest before the last one is.
+    expect(peaks[0]).toBeLessThan(peaks[TUFTS - 1])
+    for (const hair of [droop, wave]) { run(hair, 4); expect(hair.settled).toBe(true) }
+  })
+
   it('springs the whole head of hair out from under a hat, and it comes to its own length', () => {
     const hair = fresh()
     hair.sprungOut()

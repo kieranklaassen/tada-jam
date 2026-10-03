@@ -281,9 +281,11 @@ export class Play implements Cast {
         hair.scissorsIn(h.at)
         // In an empty salon there is nothing to cut: the pair at the door bob up at the window, wanting in.
         if (before.chair === null) for (const puppet of this.waiting ?? []) if (!puppet.busy) puppet.react('wantsIn')
+        // The mane does not like the look of scissors: it stands on end for as long as they are out.
+        hair.scared = before.chair !== null && before.cape === 'on'
         return
       case 'airSnip': hair.scissorsClose(); return
-      case 'away': hair.scissorsOut(); return
+      case 'away': hair.scissorsOut(); hair.scared = false; return
       case 'caught': this.caught(h.held, h.at, before); return
       case 'pressed':
         this.pressed = h.button
@@ -319,11 +321,11 @@ export class Play implements Cast {
         if (strand) hair.snipped(strand)
         hair.scissorsClose()
         for (const piece of added) hair.fly(after, piece, h.at)
-        if (strand === 'lock') react(chair, 'snipped')
-        if (strand === 'model') react(friend, 'friendSnipped')
+        if (strand === 'lock') { react(chair, 'snipped'); chair?.bump(0.7) }
+        if (strand === 'model') { react(friend, 'friendSnipped'); friend?.bump(1) }
         return
-      case 'lock/poke': hair.plucked('lock', 1); react(chair, 'plucked'); return
-      case 'model/poke': hair.plucked('model', -1); react(friend, 'friendPoked'); return
+      case 'lock/poke': hair.plucked('lock', 1); react(chair, 'plucked'); chair?.bump(0.5); return
+      case 'model/poke': hair.plucked('model', -1); react(friend, 'friendPoked'); friend?.bump(0.6); return
       case 'ribbon/poke': hair.plucked('ribbon', 1); return
       case 'lock/ruffle': hair.ruffled('lock'); react(chair, 'fluttered'); return
       case 'model/ruffle': hair.ruffled('model'); react(friend, 'friendRuffled'); return
@@ -334,11 +336,16 @@ export class Play implements Cast {
         hair.scissorsClose()
         react(chair, 'snipped', false)
         return
-      case 'tuft/poke': if (h.held?.object === 'tuft') hair.tuftPoked(h.held.index); react(chair, 'manePoked'); return
-      case 'tuft/ruffle': hair.maneFrizzed(); react(chair, 'frizzed'); return
-      case 'face/pull': mine?.cheekHeld(null); react(mine, 'cheekPulled'); return
+      case 'tuft/poke': if (h.held?.object === 'tuft') hair.tuftPoked(h.held.index); react(chair, 'manePoked'); chair?.bump(0.6); return
+      case 'tuft/ruffle': hair.maneFrizzed(); react(chair, 'frizzed'); chair?.bump(-0.5); return
+      case 'face/pull': mine?.cheekHeld(null); react(mine, 'cheekPulled'); mine?.bump(-0.8); return
       case 'face/snip': hair.scissorsClose(); react(mine, 'airSnipped'); return
-      case 'face/poke': react(mine, `${h.held?.object === 'face' ? h.held.part : 'cheek'}Tickled`); return
+      case 'face/poke':
+        react(mine, `${h.held?.object === 'face' ? h.held.part : 'cheek'}Tickled`)
+        mine?.bump(1)
+        // A nose that is pressed sneezes a little fluff.
+        if (h.held?.object === 'face' && h.held.part === 'nose') hair.fluff({ x: h.at.x, y: h.at.y + 10 }, 'fluff', 3)
+        return
       case 'face/ruffle': mine?.cheekHeld(null); react(mine, taste(who)?.rub === 'hates' ? 'rubHated' : 'rubLoved'); return
       // The ribbon was brought to something: it leaves the fingers and hangs there.
       case 'lock/ribbon': hair.carried = null; react(chair, 'wantsItSo', false); return
@@ -350,7 +357,7 @@ export class Play implements Cast {
       case 'clipping/pull':
         hair.carried = null
         for (const piece of added) if (piece.on === 'floor') hair.fly(after, piece, h.at)
-        if (h.place?.on === 'face') react(this.of(h.place.who), 'wearing')
+        if (h.place?.on === 'face') { react(this.of(h.place.who), 'wearing'); this.of(h.place.who)?.bump(0.8) }
         return
       case 'clipping/snip':
         hair.scissorsClose()

@@ -17,8 +17,8 @@ export type Shown = { x: number; y: number; s: number; lift: number; seen: numbe
 /** Standing in the doorway, and the two places behind the door's window where the next pair wait. */
 export const DOORWAY: Actor = { x: DOOR.x + DOOR.w / 2, y: 430, s: 0.65 }
 export const WINDOW: readonly [Actor, Actor] = [
-  { x: DOOR.window.x - 24, y: DOOR.window.y + 10, s: 0.4 },
-  { x: DOOR.window.x + 27, y: DOOR.window.y + 20, s: 0.34 },
+  { x: DOOR.glass.x + 50, y: 412, s: 0.56 },
+  { x: DOOR.glass.x + 132, y: 436, s: 0.5 },
 ]
 
 const shown = (a: Actor, seen = 1): Shown => ({ x: a.x, y: a.y, s: a.s, lift: 0, seen })
@@ -79,6 +79,8 @@ export class Staging {
   ribbon: { x: number; y: number; len: number } | null = null
   /** How far the two tails are held out straight to be measured, 0 to 1. */
   tails = 0
+  /** How many steps longer the customer's lock is drawn, while its own paw draws it out to see if it will reach. */
+  stretch = 0
 
   /** Everything where the model has it: nobody on the way anywhere, the door shut, no scene left over. */
   settle(salon: Salon): void {
@@ -94,6 +96,7 @@ export class Staging {
     this.paw = null
     this.ribbon = null
     this.tails = 0
+    this.stretch = 0
   }
 }
 

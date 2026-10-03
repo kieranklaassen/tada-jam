@@ -55,6 +55,10 @@ export type Figure = {
   body: number
   wears: Wears
   time: number
+  /** The whole mane in one sheet, drawn in place of the tufts: for a customer whose hair nobody is touching, in the looking glass or on its way out. */
+  whole?: Sprite | null
+  /** Seen in a glass: left and right change places. */
+  flipped?: boolean
 }
 
 /**
@@ -72,7 +76,7 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
   g.globalAlpha *= at.seen
   g.translate(at.x + puppet.at('shift') * 40 * at.s, at.y - at.lift - puppet.at('lift') * 46 * at.s)
   // A turn on the spot is seen as the figure narrowing and widening again.
-  g.scale(at.s * Math.cos(puppet.at('spin') * Math.PI * 2), at.s)
+  g.scale(at.s * Math.cos(puppet.at('spin') * Math.PI * 2) * (figure.flipped ? -1 : 1), at.s)
 
   if (figure.body > 0) {
     g.save()
@@ -83,10 +87,16 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
 
   g.translate(puppet.lean.x.x + puppet.cheek.x.x * 0.3, puppet.lean.y.x + puppet.cheek.y.x * 0.3 + puppet.at('sink') * 64 + puppet.at('bob') * 12 + breath * 1.6)
   g.rotate(puppet.at('tilt') * 0.17)
+  // A bump squashes the head down onto its chin, and it springs back taller than it was.
+  const squash = Math.max(-1, Math.min(1, puppet.squash.x))
+  g.translate(0, 80)
+  g.scale(1 + squash * 0.1, 1 - squash * 0.13)
+  g.translate(0, -80)
 
   const hatted = figure.wears.hat > 0.5
   if (!hatted) {
-    if (figure.mane) {
+    if (figure.whole) drawn += stamp(g, figure.whole)
+    else if (figure.mane) {
       const { steps, hair } = figure.mane, count = steps.length
       steps.forEach((length, index) => {
         const tuft = hair.tufts[index]
@@ -117,19 +127,21 @@ export function drawFigure(g: Ctx, sprites: Sprites, figure: Figure): number {
     }
   }
   // Long ears and horns stand behind the face; poms and round ears sit on it.
-  if (!hatted && look.ears.kind === 'long') ears()
+  // In one sheet the mane has the ears in it, where they are when nothing moves them.
+  const live = !hatted && !figure.whole
+  if (live && look.ears.kind === 'long') ears()
 
   // A pulled cheek draws the whole face out like dough.
   const cx = puppet.cheek.x.x, cy = puppet.cheek.y.x
   g.save()
   g.transform(1 + Math.abs(cx) / 230, 0, 0, 1 + Math.abs(cy) / 230 - breath * 0.006, cx * 0.25, cy * 0.25)
-  if (figure.mane || hatted) drawn += stamp(g, animal.face)
+  if (figure.mane || figure.whole || hatted) drawn += stamp(g, animal.face)
   else drawn += stamp(g, sprites.friendHead(who))
   drawn += features(g, puppet, look, at.s < 0.5)
   for (const piece of figure.wears.pieces) drawn += strip(g, 0, piece.y, piece.half, 0, piece.hue)
   if (figure.wears.blindfold) drawn += blindfold(g, puppet.at('brow') > 0.5 ? 1 : 0)
   g.restore()
-  if (!hatted && look.ears.kind !== 'long') ears()
+  if (live && look.ears.kind !== 'long') ears()
 
   if (figure.wears.hat > 0) {
     g.save()
@@ -201,100 +213,97 @@ function lines(g: Ctx, all: readonly (readonly Point[])[], weight: number, alpha
   g.restore()
 }
 
+/** A face at rest, for painting one that will not move: every part where it is when nothing is happening. */
+export const STILL = { at: () => 0 } as unknown as Puppet
+
 /**
  * The face: eyes, brows, nose, mouth and whiskers, in pencil and a few dark
- * dots, where the puppet's parts put them. Both eyes are one mark, and so are
- * their glints, the brows, and the whiskers. A figure drawn small, behind the
- * door's pane, has only its eyes.
+ * marks, where the puppet's parts put them. Everything dark is one mark (the
+ * eyes, the whiskers or the nostrils), and everything in pencil is one line
+ * (the brows, the mouth, and the eyes when they are shut). A figure drawn
+ * small has only its eyes. `part` draws the eyes alone or all but the eyes,
+ * for a figure whose face is painted once and only blinks.
  */
-function features(g: Ctx, puppet: Puppet, look: Look, small: boolean): number {
+export function features(g: Ctx, puppet: Puppet, look: Look, small: boolean, part: 'all' | 'eyes' | 'rest' = 'all'): number {
   const blink = Math.max(0, Math.min(1, puppet.at('blink'))), wide = puppet.at('wide'), cross = puppet.at('cross')
   // The eyes go where it looks, and after the finger that has hold of its hair or its cheek, as the head leans that way.
   const after = (lean: number): number => Math.max(-7, Math.min(7, lean * 0.4))
-  const lookX = puppet.at('lookX') * 9 + after(puppet.lean.x.x + puppet.cheek.x.x * 0.2), lookY = puppet.at('lookY') * 8 + after(puppet.lean.y.x + puppet.cheek.y.x * 0.2), brow = puppet.at('brow')
-  const { apart, size, y } = look.eyes
+  const leanX = puppet.lean ? puppet.lean.x.x + puppet.cheek.x.x * 0.2 : 0, leanY = puppet.lean ? puppet.lean.y.x + puppet.cheek.y.x * 0.2 : 0
+  const lookX = puppet.at('lookX') * 9 + after(leanX), lookY = puppet.at('lookY') * 8 + after(leanY), brow = puppet.at('brow')
+  const { apart, y } = look.eyes, size = look.eyes.size * 1.18
   const shut = blink > 0.75, r = size * (1 + wide * 0.3)
   const eye = (side: number): Point => ({ x: side * apart + lookX - side * cross * 15, y: y + lookY })
-  const pencilled: Point[][] = []
-  let drawn = 0
-  if (!shut) {
-    g.fillStyle = INK
-    g.beginPath()
-    for (const side of [-1, 1]) { const e = eye(side); g.moveTo(e.x + r, e.y + blink * 4); g.ellipse(e.x, e.y + blink * 4, r, r * (1 - blink * 0.85), 0, 0, Math.PI * 2) }
-    g.fill()
-    drawn++
-    // The dot of paper in each eye; a figure seen small behind the door's pane does without.
-    if (!small) {
-      g.fillStyle = PAPER
-      g.beginPath()
-      for (const side of [-1, 1]) { const e = eye(side); g.moveTo(e.x - 4 + size * 0.32, e.y - 4); g.arc(e.x - 4, e.y - 4, size * 0.32, 0, Math.PI * 2) }
-      g.fill()
-      drawn++
-    }
-  } else for (const side of [-1, 1]) { const e = eye(side); pencilled.push([{ x: e.x - 15, y: e.y }, { x: e.x, y: e.y + 7 }, { x: e.x + 15, y: e.y }]) }
-  if (small) { lines(g, pencilled, 2.4, 0.9); return drawn + (shut ? 1 : 0) }
-  // Brows: the inner end goes up when it wonders and down when it is cross.
-  for (const side of [-1, 1]) pencilled.push([{ x: side * apart - 19, y: y - 30 - brow * 7 + side * 2 - side * brow * 5 }, { x: side * apart, y: y - 37 - brow * 12 }, { x: side * apart + 19, y: y - 30 - brow * 7 - side * 2 + side * brow * 5 }])
-  lines(g, pencilled, 2.1, 0.85)
-  drawn++
-
+  const withEyes = part !== 'rest', withRest = part !== 'eyes' && !small
   const n = puppet.at('nose'), nx = n * 3.5
   const smile = puppet.at('smile'), open = Math.max(0, puppet.at('mouthOpen'))
-  g.fillStyle = look.nose
-  g.beginPath()
-  let mouthY = 44
-  if (look.snout === 'cat') {
-    g.moveTo(-15 + nx, 18)
-    g.quadraticCurveTo(nx, 12, 15 + nx, 18)
-    g.quadraticCurveTo(8 + nx, 33, nx, 34)
-    g.quadraticCurveTo(-8 + nx, 33, -15 + nx, 18)
-  } else if (look.snout === 'button') {
-    // A small round black nose, high on a narrow face.
-    g.ellipse(nx, 20, 12, 10 + Math.abs(n) * 2, 0, 0, Math.PI * 2)
-  } else if (look.snout === 'muzzle') {
-    // A wide soft muzzle with two nostrils that flare: the yak does everything with them.
-    mouthY = 62
-    g.ellipse(0, 34, 46, 26, 0, 0, Math.PI * 2)
+  const mouthY = look.snout === 'muzzle' ? 62 : 44
+  let drawn = 0
+
+  if (withRest) {
+    // The nose first, since the nostrils of a muzzle lie on it.
+    g.fillStyle = look.nose
+    g.beginPath()
+    if (look.snout === 'cat') {
+      g.moveTo(-15 + nx, 18)
+      g.quadraticCurveTo(nx, 12, 15 + nx, 18)
+      g.quadraticCurveTo(8 + nx, 33, nx, 34)
+      g.quadraticCurveTo(-8 + nx, 33, -15 + nx, 18)
+    } else if (look.snout === 'button') {
+      // A small round black nose, high on a narrow face.
+      g.ellipse(nx, 20, 12, 10 + Math.abs(n) * 2, 0, 0, Math.PI * 2)
+    } else if (look.snout === 'muzzle') {
+      // A wide soft muzzle with two nostrils that flare: the yak does everything with them.
+      g.ellipse(0, 34, 46, 26, 0, 0, Math.PI * 2)
+    } else {
+      // A pink nose that never stops, and two front teeth below it.
+      g.moveTo(-10 + nx, 16 + n * 2)
+      g.lineTo(10 + nx, 16 - n * 2)
+      g.lineTo(nx, 28)
+      g.closePath()
+    }
     g.fill()
     drawn++
+    if (open > 0.08) {
+      // An open mouth: round when it is surprised, wide and flat-topped when it laughs, with the tongue in it.
+      const wideOpen = 15 + open * 7 + Math.max(0, smile) * 8, deep = 4 + open * 17, top = mouthY + 8 + open * 9 - deep
+      g.fillStyle = '#a5483a'
+      g.beginPath()
+      if (smile > 0.3) {
+        g.moveTo(-wideOpen, top + deep * 0.5)
+        g.quadraticCurveTo(0, top + deep * 0.2, wideOpen, top + deep * 0.5)
+        g.quadraticCurveTo(wideOpen * 0.7, top + deep * 2.3, 0, top + deep * 2.3)
+        g.quadraticCurveTo(-wideOpen * 0.7, top + deep * 2.3, -wideOpen, top + deep * 0.5)
+      } else g.ellipse(0, mouthY + 8 + open * 9, 15 + open * 7, deep, 0, 0, Math.PI * 2)
+      g.fill()
+      drawn++
+      if (open > 0.3) {
+        g.fillStyle = '#f08f8f'
+        g.beginPath()
+        g.ellipse(0, top + deep * 1.75, wideOpen * 0.5, deep * 0.5, 0, 0, Math.PI * 2)
+        g.fill()
+        drawn++
+      }
+    }
+    if (look.snout === 'bunny') {
+      g.fillStyle = PAPER
+      g.strokeStyle = GRAPHITE
+      g.lineWidth = 1.4
+      g.beginPath()
+      g.rect(-9, mouthY + 2, 18, 14 + open * 6)
+      g.fill()
+      g.stroke()
+      drawn += 2
+    }
+  }
+
+  // Everything dark in one mark.
+  const eyesOpen = withEyes && !shut, dots = withRest && look.snout !== 'button'
+  if (eyesOpen || dots) {
     g.fillStyle = INK
     g.beginPath()
-    for (const side of [-1, 1]) { g.moveTo(side * 18 + 7 + Math.max(0, n) * 4, 30); g.ellipse(side * 18, 30, 7 + Math.max(0, n) * 4, 5 + Math.max(0, n) * 4 - Math.max(0, -n) * 3, 0, 0, Math.PI * 2) }
-  } else {
-    // A pink nose that never stops, and two front teeth below it.
-    g.moveTo(-10 + nx, 16 + n * 2)
-    g.lineTo(10 + nx, 16 - n * 2)
-    g.lineTo(nx, 28)
-    g.closePath()
-  }
-  g.fill()
-  drawn++
-  if (open > 0.08) {
-    g.fillStyle = '#a5483a'
-    g.beginPath()
-    g.ellipse(0, mouthY + 8 + open * 9, 15 + open * 7, 4 + open * 17, 0, 0, Math.PI * 2)
-    g.fill()
-    drawn++
-  }
-  if (look.snout === 'bunny') {
-    g.fillStyle = PAPER
-    g.strokeStyle = GRAPHITE
-    g.lineWidth = 1.4
-    g.beginPath()
-    g.rect(-9, mouthY + 2, 18, 14 + open * 6)
-    g.fill()
-    g.stroke()
-   drawn += 2
-  }
-  // The mouth: the line down from the nose, and a curve that smiles or droops.
-  const mouth: Point[][] = [[{ x: -27, y: mouthY + 3 - smile * 11 }, { x: -11, y: mouthY + 2 + smile * 6 }, { x: 0, y: mouthY }, { x: 11, y: mouthY + 2 + smile * 6 }, { x: 27, y: mouthY + 3 - smile * 11 }]]
-  if (look.snout !== 'muzzle') mouth.push([{ x: nx, y: look.snout === 'bunny' ? 28 : 34 }, { x: 0, y: mouthY }])
-  lines(g, mouth, 2, 0.85)
-  drawn++
-  if (look.snout === 'cat' || look.snout === 'bunny') {
-    g.fillStyle = INK
-    g.beginPath()
-    for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
+    if (eyesOpen) for (const side of [-1, 1]) { const e = eye(side); g.moveTo(e.x + r, e.y + blink * 4); g.ellipse(e.x, e.y + blink * 4, r, r * (1 - blink * 0.85), 0, 0, Math.PI * 2) }
+    if (dots && look.snout === 'muzzle') for (const side of [-1, 1]) { g.moveTo(side * 18 + 7 + Math.max(0, n) * 4, 30); g.ellipse(side * 18, 30, 7 + Math.max(0, n) * 4, 5 + Math.max(0, n) * 4 - Math.max(0, -n) * 3, 0, 0, Math.PI * 2) }
+    if (dots && look.snout !== 'muzzle') for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
       const wx = side * (34 + i * 9) + nx * 0.5, wy = 40 + (i % 2) * 6
       g.moveTo(wx + 1.7, wy)
       g.arc(wx, wy, 1.7, 0, Math.PI * 2)
@@ -302,5 +311,25 @@ function features(g: Ctx, puppet: Puppet, look: Look, small: boolean): number {
     g.fill()
     drawn++
   }
+  // The dot of paper in each eye; a figure seen small does without.
+  if (eyesOpen && !small) {
+    g.fillStyle = PAPER
+    g.beginPath()
+    for (const side of [-1, 1]) { const e = eye(side); g.moveTo(e.x - 4 + size * 0.36, e.y - 5); g.arc(e.x - 4, e.y - 5, size * 0.36, 0, Math.PI * 2) }
+    g.fill()
+    drawn++
+  }
+
+  // Everything in pencil in one line.
+  const pencilled: Point[][] = []
+  if (withEyes && shut) for (const side of [-1, 1]) { const e = eye(side); pencilled.push([{ x: e.x - 15, y: e.y }, { x: e.x, y: e.y + 7 }, { x: e.x + 15, y: e.y }]) }
+  if (withRest) {
+    // Brows: the inner end goes up when it wonders and down when it is cross.
+    for (const side of [-1, 1]) pencilled.push([{ x: side * apart - 19, y: y - 32 - brow * 7 + side * 2 - side * brow * 5 }, { x: side * apart, y: y - 39 - brow * 12 }, { x: side * apart + 19, y: y - 32 - brow * 7 - side * 2 + side * brow * 5 }])
+    // The mouth: the line down from the nose, and a curve that smiles or droops.
+    pencilled.push([{ x: -27, y: mouthY + 3 - smile * 11 }, { x: -11, y: mouthY + 2 + smile * 6 }, { x: 0, y: mouthY }, { x: 11, y: mouthY + 2 + smile * 6 }, { x: 27, y: mouthY + 3 - smile * 11 }])
+    if (look.snout !== 'muzzle') pencilled.push([{ x: nx, y: look.snout === 'bunny' ? 28 : 34 }, { x: 0, y: mouthY }])
+  }
+  if (pencilled.length) { lines(g, pencilled, 2.1, 0.85); drawn++ }
   return drawn
 }

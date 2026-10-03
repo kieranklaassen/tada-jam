@@ -161,6 +161,16 @@ describe('the puppet', () => {
     expect(Math.abs(puppet.cheek.x.x)).toBeLessThan(0.5)
   })
 
+  it('squashes at a bump, springs back taller than it was, and comes to rest', () => {
+    const puppet = new Puppet(LION, makeRng(3))
+    puppet.bump()
+    let flattest = 0, tallest = 0
+    for (let i = 0; i < 240; i++) { puppet.step(1 / 120, false); flattest = Math.max(flattest, puppet.squash.x); tallest = Math.min(tallest, puppet.squash.x) }
+    expect(flattest).toBeGreaterThan(0.3)
+    expect(tallest).toBeLessThan(-0.05)
+    expect(Math.abs(puppet.squash.x)).toBeLessThan(0.02)
+  })
+
   it('plays the same at any frame rate, since it steps in fixed ticks', () => {
     const run = (hz: number) => { const p = new Puppet(LION, makeRng(9)); p.react('snipped'); for (let i = 0; i < hz; i++) p.step(1 / hz, false); return [p.at('bob'), p.at('blink'), p.breath] }
     const a = run(60), b = run(120), c = run(30)

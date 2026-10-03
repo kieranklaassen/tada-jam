@@ -1,7 +1,8 @@
+import { STILL, features, stamp } from './figure'
 import { FRIEND_MANE } from './kits'
-import { CAPE, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, PEG, fit } from './layout'
+import { CAPE, CHAIR, COLLAR_Y, FLOOR_Y, HEAD, fit } from './layout'
 import { LOOKS, tuftOutline, type Look } from './looks'
-import { ROOM, paintBench, paintChair, paintMirror, paintStool, paintWalls, roughBox } from './paintRoom'
+import { ROOM, paintRoom, roughBox } from './paintRoom'
 import { PLAIN, capeOutline } from './paintStrips'
 import { tuftPose } from './poses'
 import { makeRng, type Rng } from './rng'
@@ -31,12 +32,16 @@ export type Animal = {
   tailEnd: Sprite
   /** The whole head as a friend wears it, hair and all, in one sheet. Made when it is first a friend. */
   friendHead: Sprite | null
+  /** The whole figure as it waits at the door under its rain hat, in one sheet: only its eyes are drawn on top. */
+  waiting: Sprite | null
+  /** The whole mane as the customer has it now, tufts and ruff in one sheet, for the looking glass and for going out of the door. */
+  mane: { key: string; sprite: Sprite } | null
   tufts: ({ steps: number; sprite: Sprite } | undefined)[]
 }
 
 const PARTS = ['ruff', 'face', 'ear', 'body', 'tailEnd'] as const
 type Part = (typeof PARTS)[number]
-type Making = Partial<Pick<Animal, Part>> & Pick<Animal, 'friendHead' | 'tufts'>
+type Making = Partial<Pick<Animal, Part>> & Pick<Animal, 'friendHead' | 'waiting' | 'mane' | 'tufts'>
 
 /** Sheets a frame may paint once the first frame is done: a new customer's hair comes up over a few frames, behind the opening door. */
 const PER_FRAME = 2
@@ -57,7 +62,7 @@ export class Sprites {
   private allowance = Infinity
   private fresh = true
 
-  /** The whole surface behind everything: paper, wall, floor, mirror, chair, bench, stool, door and peg. */
+  /** The whole surface behind everything: the salon as it stands with nobody in it. */
   readonly backdrop: Sheet
   /** The cape over the customer, the same cape draped over the chair, and its knot. */
   readonly cape: Sprite
@@ -65,6 +70,8 @@ export class Sprites {
   readonly knot: Sprite
   readonly hat: Sprite
   readonly glow: Sprite
+  /** Somebody going by in the street under an umbrella. */
+  readonly passer: Sprite
 
   constructor(makeSheet: MakeSheet, width: number, height: number, seed: number) {
     this.makeSheet = makeSheet
@@ -78,18 +85,7 @@ export class Sprites {
       const g = this.backdrop.g, rng = makeRng(seed + 1)
       this.paint.from(rng).paper(g, width, height)
       g.setTransform(f.scale, 0, 0, f.scale, f.dx, f.dy)
-      paintWalls(g, this.paint, rng)
-      paintMirror(g, this.paint, rng)
-      paintBench(g, this.paint, rng)
-      paintStool(g, this.paint, rng)
-      paintChair(g, this.paint, rng)
-      // The door, without its pane: the pane and who waits behind it are drawn each frame.
-      const leaf = roughBox(rng, DOOR.x, DOOR.y, DOOR.w, DOOR.h, 3)
-      this.paint.wash(g, leaf, { color: ROOM.door, edge: ROOM.doorEdge, blooms: [ROOM.wallBloom], reserve: true })
-      this.paint.pencil(g, leaf, true)
-      this.paint.wash(g, blob(rng, DOOR.x + 26, DOOR.y + DOOR.h * 0.56, 9, 9, 0.05, 8), { color: ROOM.frame, edge: ROOM.frameEdge, reserve: true })
-      // The peg the ribbon hangs from.
-      this.paint.wash(g, blob(rng, PEG.x, PEG.y - 30, 9, 9, 0.05, 8), { color: ROOM.wood, edge: ROOM.woodEdge, reserve: true })
+      paintRoom(g, this.paint, rng)
       g.setTransform(1, 0, 0, 1, 0, 0)
     }
 
@@ -125,6 +121,81 @@ export class Sprites {
       paint.pencil(g, brim, true, 0.8)
     })
     this.glow = this.makeGlow()
+    this.passer = this.piece(9, (rng) => blob(rng, 0, 0, 62, 96, 0.02, 10), (g, paint, _outline, rng) => {
+      paint.wash(g, blob(rng, 0, 46, 22, 46, 0.05, 10), { color: ROOM.steelEdge, strength: 0.8, reserve: true })
+      paint.pencil(g, [{ x: 4, y: -40 }, { x: 4, y: 30 }], false, 0.9)
+      const dome: Point[] = [{ x: -58, y: -34 }, { x: -40, y: -70 }, { x: 0, y: -86 }, { x: 40, y: -70 }, { x: 58, y: -34 }, { x: 30, y: -42 }, { x: 0, y: -34 }, { x: -30, y: -42 }]
+      paint.wash(g, dome, { color: ROOM.door, edge: ROOM.doorEdge, blooms: [ROOM.lamp], strength: 0.9, reserve: true })
+      paint.pencil(g, dome, true, 0.8)
+    })
+  }
+
+  /** Lays painted pieces together on one sheet, so that what never moves apart is one stamp. `lay` draws in the units of `box`. */
+  private together(box: Box, lay: (g: Ctx) => void): Sprite {
+    const s = Math.max(this.scale, 0.01)
+    const sheet = this.makeSheet(Math.max(1, Math.ceil(box.w * s)), Math.max(1, Math.ceil(box.h * s)))
+    sheet.g.setTransform(s, 0, 0, s, -box.x * s, -box.y * s)
+    lay(sheet.g)
+    sheet.g.setTransform(1, 0, 0, 1, 0, 0)
+    this.painted++
+    this.allowance--
+    return { sheet, box }
+  }
+
+  /** One of the pair at the door: body, face and rain hat in one sheet, with the hair that will not stay under the hat out at both sides. */
+  waiting(who: CustomerId): Sprite {
+    const animal = this.animal(who)
+    if (animal.waiting) return animal.waiting
+    const look = LOOKS[who], rng = makeRng(this.seed * 31 + 950 + ORDER.indexOf(who))
+    const made = this.together({ x: -176, y: -150, w: 352, h: 150 + HEAD.ry + 270 }, (g) => {
+      stamp(g, animal.body)
+      for (const side of [-1, 1]) this.paint.from(rng).wash(g, blob(rng, side * (HEAD.rx + 16), -34, 30, 22, 0.22, 9), { color: look.mane, edge: look.maneEdge, blooms: [look.maneBlooms[0]], reserve: true })
+      stamp(g, animal.face)
+      features(g, STILL, look, false, 'rest')
+      g.translate(0, -30)
+      stamp(g, this.hat)
+    })
+    animal.waiting = made
+    return made
+  }
+
+  /**
+   * The customer's whole mane in one sheet, as long as its tufts are now. It
+   * is laid together from the tufts' own sheets, so it costs no painting, and
+   * again only when a length has changed and `settled` says nothing is in the
+   * fingers. Until then the one before is given, or nothing.
+   */
+  mane(who: CustomerId, steps: readonly number[], settled: boolean): Sprite | null {
+    const animal = this.animal(who), key = steps.join(',')
+    if (animal.mane?.key === key) return animal.mane.sprite
+    if (!settled || this.allowance <= 0) return animal.mane?.sprite ?? null
+    const count = steps.length
+    const tufts = steps.map((length, index) => ({ pose: tuftPose(who, index, length, count), painted: this.tuft(who, index, length, count, false) }))
+    if (tufts.some((tuft) => !tuft.painted || tuft.painted.steps !== steps[tufts.indexOf(tuft)])) return animal.mane?.sprite ?? null
+    const reach = Math.max(...tufts.map((tuft) => tuft.pose.reach)) + HEAD.rx + 60
+    const sprite = this.together({ x: -reach, y: -reach, w: reach * 2, h: reach * 2 }, (g) => {
+      for (const tuft of tufts) {
+        g.save()
+        g.translate(tuft.pose.base.x, tuft.pose.base.y)
+        g.rotate(tuft.pose.angle)
+        stamp(g, tuft.painted!.sprite)
+        g.restore()
+      }
+      stamp(g, animal.ruff)
+      // The ears go in too, at rest: whoever is drawn from this sheet is not flicking them.
+      const look = LOOKS[who]
+      for (const side of [-1, 1]) {
+        g.save()
+        g.translate(side * look.ears.x, look.ears.y)
+        g.scale(side, 1)
+        g.rotate(look.ears.kind === 'long' ? 0.12 : 0)
+        stamp(g, animal.ear)
+        g.restore()
+      }
+    })
+    if (animal.mane) { animal.mane.sprite.sheet.canvas.width = 0; animal.mane.sprite.sheet.canvas.height = 0 }
+    animal.mane = { key, sprite }
+    return sprite
   }
 
   /** Paints one piece on a sheet of its own, from a stream of its own. `shape` gives the outline its box is taken from. */
@@ -172,11 +243,12 @@ export class Sprites {
       have[part] ??= this.recipe(who, part)
     }
     if (asFriend && this.allowance > 0) this.friendHead(who)
+    if (this.allowance > 0) this.waiting(who)
   }
 
   private pieces(who: CustomerId): Making {
     let have = this.animals.get(who)
-    if (!have) { have = { friendHead: null, tufts: [] }; this.animals.set(who, have) }
+    if (!have) { have = { friendHead: null, waiting: null, mane: null, tufts: [] }; this.animals.set(who, have) }
     return have
   }
 
@@ -261,8 +333,8 @@ export class Sprites {
 
   /** Gives back the memory of every sheet, before a new set is made for another size. */
   dispose(): void {
-    const sheets: (Sheet | undefined)[] = [this.backdrop, this.cape.sheet, this.drape.sheet, this.knot.sheet, this.hat.sheet, this.glow.sheet]
-    for (const animal of this.animals.values()) sheets.push(...PARTS.map((part) => animal[part]?.sheet), animal.friendHead?.sheet, ...animal.tufts.map((tuft) => tuft?.sprite.sheet))
+    const sheets: (Sheet | undefined)[] = [this.backdrop, this.cape.sheet, this.drape.sheet, this.knot.sheet, this.hat.sheet, this.glow.sheet, this.passer.sheet]
+    for (const animal of this.animals.values()) sheets.push(...PARTS.map((part) => animal[part]?.sheet), animal.friendHead?.sheet, animal.waiting?.sheet, animal.mane?.sprite.sheet, ...animal.tufts.map((tuft) => tuft?.sprite.sheet))
     for (const sheet of sheets) if (sheet) { sheet.canvas.width = 0; sheet.canvas.height = 0 }
     this.animals.clear()
     this.paint.dispose()

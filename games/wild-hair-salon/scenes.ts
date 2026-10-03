@@ -22,7 +22,7 @@ import { TASTES, type CustomerId } from './tastes'
 /** A sound a scene asks for, by name. The game turns it into notes. */
 export type Cue =
   | 'door' | 'doorShut' | 'step' | 'hatOff' | 'hairOut' | 'capeOn' | 'capeOff' | 'landed'
-  | 'tooLong' | 'tooShort' | 'asLong' | 'flap' | 'air' | 'nip' | 'tug' | 'ribbonTaken' | 'ribbonTick' | 'ribbonHome'
+  | 'tooLong' | 'tooShort' | 'asLong' | 'flap' | 'air' | 'ping' | 'nip' | 'tug' | 'ribbonTaken' | 'ribbonTick' | 'ribbonHome'
 
 export type Cast = {
   staging: Staging
@@ -94,7 +94,7 @@ export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
     // The customer leads the way in and the friend follows it, so each is seen whole.
     over(0.5, WALK, (p) => { staging.customer = { ...walk({ ...DOORWAY, x: DOORWAY.x - 22 }, to.customer, p, gait.customer, WALK, goers.length ? BACK : 0), seen: Math.min(1, p * 6) } }),
     over(0.5 + BEHIND, WALK - BEHIND, (p) => { staging.friend = { ...walk({ ...DOORWAY, x: DOORWAY.x + 26 }, to.friend, p, gait.friend, WALK - BEHIND, goers.length ? BACK : 0), seen: Math.min(1, p * 6) } }),
-    cueAt(0.5 + WALK, () => { if (!cast.cut) { cast.cue('landed', after.chair ?? undefined); cast.customer()?.react('sitsDown'); cast.friend()?.react('sitsDown') } }),
+    cueAt(0.5 + WALK, () => { if (!cast.cut) { cast.cue('landed', after.chair ?? undefined); cast.customer()?.react('sitsDown'); cast.friend()?.react('sitsDown'); cast.customer()?.bump(1.2); cast.friend()?.bump(0.8) } }),
     cueAt(0.7 + WALK, () => {
       staging.hats = 0
       if (cast.cut) return
@@ -146,7 +146,7 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
   // The customer's paw acts out the comparison on the two ends themselves, sized by the piece or the gap.
   const lock = to.lock ?? { x: 0, y: 0, unit: STEP }
   const lockEnd = lock.y + after.lock * lock.unit, modelEnd = lock.y + after.model * lock.unit
-  const times = 3 + Math.round(showing.comparison.muddle * 4)
+  const times = kind === 'too-short' ? 2 + Math.round(showing.comparison.muddle * 2) : 3 + Math.round(showing.comparison.muddle * 4)
   const paw = (x: number, y: number): void => { staging.paw = { x, y, scissors: null } }
   const reach = (p: number, x: number, y: number): void => paw(SHOULDER.x + (x - SHOULDER.x) * smooth(p), SHOULDER.y + (y - SHOULDER.y) * smooth(p))
   const reaction = kind === 'too-long' ? 'lockTooLong' as const : kind === 'too-short' ? 'lockTooShort' as const : 'lockAsLong' as const
@@ -160,6 +160,8 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
       ...Array.from({ length: times }, (_, i) => cueAt(2.5 + i * flap, () => { if (!cast.cut) { hair.kicked('lock', (i % 2 ? -1 : 1) * 7 * big); if (i > 0) cast.cue('flap', chair) } })),
       over(2.5, times * flap, (p) => paw(lock.x - 2 + Math.sin(p * times * Math.PI) * 5, modelEnd)),
     )
+    // And then it treads on it: its head goes down with a bump, its mane droops, and the friend cannot keep a straight face.
+    beats.push(cueAt(2.5 + times * flap, () => { if (!cast.cut) { customer?.bump(1.4); hair.moodOf('droop', 1.3); hair.kicked('lock', 9 * big); other?.react('friendRuffled'); cast.cue('landed', chair) } }))
     t = 2.5 + times * flap
   } else if (kind === 'too-short') {
     // It takes its lock by the end, feels on down for hair as far as the friend's end, and finds air; then the friend's longer end flicks over at it.
@@ -170,16 +172,33 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
       over(2.5, feel, (p) => paw(lock.x, lockEnd + (modelEnd - lockEnd) * smooth(p))),
       ...Array.from({ length: times }, (_, i) => cueAt(2.5 + feel + i * grab, () => { if (!cast.cut) cast.cue('air', chair) })),
       over(2.5 + feel, times * grab, (p) => paw(lock.x + Math.sin(p * times * Math.PI * 2) * 10, modelEnd - Math.abs(Math.sin(p * times * Math.PI)) * 14)),
-      cueAt(2.5 + feel + times * grab, () => { if (!cast.cut) { customer?.react(reaction); other?.react('friendPoked'); hair.kicked('model', -7 * big) } }),
     )
-    t = 2.5 + feel + times * grab
+    // Then it takes its lock by the end and draws it down to see if it will reach. It will, and it will not stay: hair that is
+    // not under the cape springs back, with a ping, and the friend's longer end flicks over at it.
+    const draw = 2.5 + feel + times * grab, gap = after.model - after.lock
+    beats.push(
+      over(draw, 0.2, (p) => paw(lock.x, modelEnd + (lockEnd - modelEnd) * smooth(p))),
+      over(draw + 0.2, 0.45, (p) => { staging.stretch = gap * smooth(p); paw(lock.x, lockEnd + (modelEnd - lockEnd) * smooth(p)) }),
+      cueAt(draw + 0.65, () => {
+        staging.stretch = 0
+        if (cast.cut) return
+        hair.strands.lock.stretch.x = after.model / Math.max(1, after.lock)
+        hair.strands.lock.stretch.v = -4
+        cast.cue('ping', chair)
+        customer?.bump(1.3)
+        customer?.react(reaction)
+        other?.react('friendPoked')
+        hair.kicked('model', -7 * big)
+      }),
+    )
+    t = draw + 0.65
   } else {
     // The two ends meet in its paw, and the two locks swing as one.
     beats.push(
       over(2.1, 0.4, (p) => reach(p, lock.x + 18, modelEnd)),
       cueAt(2.5, () => { staging.fx = { kind, muddle: showing.comparison.muddle }; if (!cast.cut) { customer?.react(reaction); other?.react(reaction); cast.cue('asLong', chair) } }),
       over(2.5, 0.5, () => paw(lock.x + 18, modelEnd)),
-      cueAt(3.0, () => { if (!cast.cut) { hair.strands.lock.swing.v = 2.4; hair.strands.model.swing.v = 2.4 } }),
+      cueAt(3.0, () => { if (!cast.cut) { hair.strands.lock.swing.v = 2.4; hair.strands.model.swing.v = 2.4; hair.moodOf('wave', 1.4); customer?.bump(0.7); other?.bump(0.7) } }),
     )
     t = 3.0
   }
@@ -192,7 +211,7 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
   if (showing.mane !== 'plain') {
     const reaction = showing.mane === 'liked' ? 'maneLiked' as const : 'maneHated' as const
     const at = t
-    beats.push(cueAt(at, () => { if (!cast.cut) customer?.react(reaction) }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
+    beats.push(cueAt(at, () => { if (!cast.cut) { customer?.react(reaction); hair.moodOf(showing.mane === 'liked' ? 'wave' : 'droop', 1.4) } }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
     t += (customer?.lasts(reaction) ?? 1) + 0.2
   }
   if (showing.bow !== null) {
@@ -213,7 +232,7 @@ export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Sho
     t += 1.1
   }
   // They settle, side by side, with the haircut on show.
-  beats.push(cueAt(t, () => { staging.fx = null; staging.paw = null; staging.cape = 0; staging.friend = { ...friendTo, lift: 0, seen: 1 } }))
+  beats.push(cueAt(t, () => { staging.fx = null; staging.paw = null; staging.stretch = 0; staging.cape = 0; staging.friend = { ...friendTo, lift: 0, seen: 1 } }))
   return beats
 }
 
@@ -292,6 +311,8 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
       // The tuft is drawn as long as it was until the paw has done its work.
       if (held) { held.rest = share; held.stretch.x = share; held.stretch.v = 0 }
       staging.paw = pawAt(0)
+      // The mane does not like the look of scissors, whoever holds them.
+      if (!cast.cut && idea === 'snip') hair.scared = true
       if (!cast.cut) cast.customer()?.react('showsAMove')
     }),
     over(0, 1.5, (p) => {
@@ -302,7 +323,8 @@ export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Be
     cueAt(idea === 'pull' ? 0.75 : 1.5, () => { if (!cast.cut) cast.cue(idea === 'snip' ? 'nip' : 'tug', chair) }),
     cueAt(1.5, () => {
       if (held) held.rest = 1
-      if (idea === 'snip' && !cast.cut) hair.tuftSnipped(tuft, tip(), '#f0c9a0')
+      hair.scared = false
+      if (idea === 'snip' && !cast.cut) { hair.tuftSnipped(tuft, tip(), '#f0c9a0'); cast.customer()?.bump(0.8) }
     }),
     // It holds the tuft up a moment to be seen, and goes back under the cape.
     over(1.5, 0.5, () => { staging.paw = pawAt(1) }),

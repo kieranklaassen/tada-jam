@@ -36,7 +36,7 @@ describe('the painted salon', () => {
     const surface = make(1180, 820)
     const pieces = paintSalon(surface.g as Ctx, make, 1180, 820)
     expect(pieces).toBeGreaterThan(80)
-    expect(pieces).toBeLessThan(260)
+    expect(pieces).toBeLessThan(520)
     for (const name of ['fillText', 'strokeText', 'measureText']) expect(calls).not.toContain(name)
   })
 

@@ -43,6 +43,10 @@ export class Hair {
   private held: { what: StrandId | number; to: Point; root: Point } | null = null
   /** The piece or the ribbon carried in the fingers, and where. */
   carried: { what: Clipping | 'ribbon'; at: Point } | null = null
+  /** Scissors are near: the whole mane stands on end and trembles for as long as this is set. */
+  scared = false
+  private bristle = 0
+  private mood: { kind: 'droop' | 'wave'; t: number; lasts: number } | null = null
   readonly flights = new Map<Clipping, Flight>()
   readonly puffs: Puff[] = []
   /** The scissors: where the finger is, how far the blades are open (0 shut, 1 open), and how much of them shows. */
@@ -143,6 +147,11 @@ export class Hair {
     for (const tuft of this.tufts) { tuft.frizz = 1; tuft.lean.v += this.rng.range(-4, 4) }
   }
 
+  /** The whole mane droops, or a wave runs through it from one side to the other, for so many seconds. */
+  moodOf(kind: 'droop' | 'wave', seconds: number): void {
+    this.mood = { kind, t: 0, lasts: seconds }
+  }
+
   /** The whole head of hair springs out, from tucked away to its own length: a hat has come off. */
   sprungOut(): void {
     this.tufts.forEach((tuft, index) => { tuft.stretch.x = 0.15; tuft.stretch.v = 3 + (index % 3); tuft.lean.v += this.rng.range(-3, 3) })
@@ -202,12 +211,15 @@ export class Hair {
     this.later = []
     this.held = null
     this.carried = null
+    this.mood = null
+    this.scared = false
+    this.bristle = 0
   }
 
   /** Nothing is moving any more: every spring is at rest and nothing is in the air. */
   get settled(): boolean {
     const still = (s: Spring, at: number): boolean => Math.abs(s.x - at) < 0.002 && Math.abs(s.v) < 0.01
-    return this.held === null && this.carried === null && this.flights.size === 0 && this.puffs.length === 0 && this.later.length === 0
+    return this.held === null && this.carried === null && this.mood === null && this.bristle < 0.02 && this.flights.size === 0 && this.puffs.length === 0 && this.later.length === 0
       && STRANDS.every((id) => still(this.strands[id].stretch, 1) && Math.abs(this.strands[id].swing.x) < 0.02 && Math.abs(this.strands[id].swing.v) < 0.05 && this.strands[id].flutter === 0)
       && this.tufts.every((t) => still(t.stretch, t.rest) && t.frizz === 0)
   }
@@ -277,6 +289,9 @@ export class Hair {
     for (let pass = 0; pass < 2; pass++) for (const pair of side) this.knock(pair.left, pair.right, pair.gap / Math.max(30, Math.min(reach(pair.left), reach(pair.right))))
 
     const who = salon.chair ?? 'lion'
+    this.bristle += ((this.scared ? 1 : 0) - this.bristle) * Math.min(1, dt * 14)
+    if (this.mood) { this.mood.t += dt; if (this.mood.t >= this.mood.lasts) this.mood = null }
+    const mood = this.mood
     this.tufts.forEach((tuft, index) => {
       const steps = salon.mane[index] ?? 0
       const pose = tuftPose(who, index, steps, this.tufts.length)
@@ -290,8 +305,16 @@ export class Hair {
         stiffness = 300
         damping = 28
       }
+      // The mane has feelings of its own: it stands on end and trembles at the scissors, droops, or lets a wave run through it.
+      let long = tuft.rest
+      if (this.bristle > 0.01) { long *= 1 + 0.15 * this.bristle; lean += 0.07 * this.bristle * Math.sin(this.time * 46 + index * 1.9) }
+      if (mood) {
+        const swell = Math.max(0, Math.min(1, mood.t / 0.15, (mood.lasts - mood.t) / 0.25)), middle = (this.tufts.length - 1) / 2
+        if (mood.kind === 'droop') { long *= 1 - 0.22 * swell; lean += ((index - middle) / Math.max(1, middle)) * 0.34 * swell }
+        else { const phase = mood.t * 7 - index * 0.75; long *= 1 + 0.2 * swell * Math.max(0, Math.sin(phase)); lean += 0.1 * swell * Math.sin(phase) }
+      }
       ease(tuft.lean, lean, stiffness, damping, dt)
-      ease(tuft.stretch, tuft.rest, 210, mine ? 24 : 8.5, dt)
+      ease(tuft.stretch, long, 210, mine ? 24 : 8.5, dt)
       tuft.frizz = Math.max(0, tuft.frizz - dt / 1.3)
     })
 
