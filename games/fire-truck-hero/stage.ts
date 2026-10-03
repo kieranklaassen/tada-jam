@@ -53,7 +53,7 @@ export type Stage = {
   /** Shows the game as it stands. */
   show: (game: Game) => void
   /** Shows an idle child where a touch could go: a glow, and the ghost hand when a demonstration plays. */
-  guide: (glow: number, hand: HandPose | null, at: Place, reach: number, now: number) => void
+  guide: (glow: number, hand: HandPose | null, at: Place, reach: number, high: number, now: number) => void
   /** Draws the frame. With no game yet it draws the bare yard. */
   draw: () => void
   under: (x: number, y: number) => Under
@@ -248,7 +248,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       hanging.scale.set(game.hangingDrop, game.hangingDrop * 1.35, game.hangingDrop)
       drops.show(game.drops)
     },
-    guide: (glow, hand, at, reach, now) => guide.show(glow, hand, at, reach, now),
+    guide: (glow, hand, at, reach, high, now) => guide.show(glow, hand, at, reach, high, now),
     draw: () => {
       if (paintOf) ground?.refresh(paintOf.paint)
       renderer.render(scene, camera)

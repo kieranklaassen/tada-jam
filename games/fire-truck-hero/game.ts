@@ -175,6 +175,13 @@ export class Game extends Toy {
     return kind === 'pool' ? 1.66 : kind === 'seed' ? 1.2 : 1.32
   }
 
+  /** How high the picture of that thing stands, so the ghost hand presses on the thing itself: the bell hangs well above the sand. */
+  get wantsHigh(): number {
+    if (this.yard.met) return 1.75
+    const kind = this.yard.things[this.yard.want]?.kind
+    return kind === 'fire' ? 0.9 : kind === 'seed' ? 1.3 : kind === 'pool' ? 0.6 : 0.35
+  }
+
   /** The kind of thing that wants water in the yard beyond the gate: what shows over the fence. */
   get waits(): Kind | null {
     const plan = arrangementsOf(this.save.next.place)[this.save.next.arrangement]
