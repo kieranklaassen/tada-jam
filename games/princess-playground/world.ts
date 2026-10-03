@@ -83,25 +83,42 @@ export function plankTopAt(along: number, tilt: number): number {
   return PLANK.pivotHeight + PLANK.thickness - Math.sin(tilt) * along
 }
 
+/** Places in the sand lie on a grid of hundredths of the tray's width, which is also how they are saved. */
+export const GRID = (TRAY.halfWidth * 2) / 100
+
+/** The grid line nearest `value` that lies inside [low, high]. */
+function onGrid(value: number, low: number, high: number, origin: number): number {
+  let cell = Math.round((Math.max(low, Math.min(high, value)) - origin) / GRID)
+  if (cell * GRID + origin > high + 1e-9) cell -= 1
+  if (cell * GRID + origin < low - 1e-9) cell += 1
+  return gridLine(cell, origin)
+}
+
+/** The grid line `cell` lines from `origin`, as one exact number however it was reached (and never minus zero). */
+export function gridLine(cell: number, origin: number): number {
+  return Math.round((cell * GRID + origin) * 1e6) / 1e6 + 0
+}
+
 /** Moves a spot to the nearest place a friend of this radius may stand. */
 export function standable(spot: Spot, radius: number): Spot {
-  let x = Math.max(-SAND.maxX + radius * 0.5, Math.min(SAND.maxX - radius * 0.5, spot.x))
-  let z = Math.max(SAND.minZ + radius * 0.5, Math.min(SAND.maxZ, spot.z))
+  const x = onGrid(spot.x, -SAND.maxX + radius * 0.5, SAND.maxX - radius * 0.5, -TRAY.halfWidth)
+  const nearRim = SAND.minZ + radius * 0.5
+  let z = onGrid(spot.z, nearRim, SAND.maxZ, -TRAY.halfDepth)
   const half = SAND.plankStrip + radius * 0.4
   if (Math.abs(x) < SAND.plankReach + radius && Math.abs(z - PLANK.z) < half) {
     // Under the plank: step out in front of it, or behind it where there is room and it is nearer.
     const behind = PLANK.z - half
-    z = z < PLANK.z && behind >= SAND.minZ + radius * 0.5 ? behind : PLANK.z + half
+    z = spot.z < PLANK.z && behind >= nearRim ? onGrid(behind, nearRim, behind, -TRAY.halfDepth) : onGrid(PLANK.z + half, PLANK.z + half, SAND.maxZ, -TRAY.halfDepth)
   }
-  return { x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100 }
+  return { x, z }
 }
 
 /** Where each friend stands by default on the right of the tray; mirrored for the left. Dot's is the rim. */
 export const HOME: Readonly<Record<FriendId, Spot>> = {
-  pim: { x: 1.7, z: 2.45 },
-  mog: { x: 3.0, z: 1.4 },
-  bo: { x: 4.65, z: 2.3 },
-  dot: { x: 4.75, z: -2.63 },
+  pim: standable({ x: 1.68, z: 2.49 }, FRIENDS.pim.radius),
+  mog: standable({ x: 2.88, z: 1.41 }, FRIENDS.mog.radius),
+  bo: standable({ x: 4.56, z: 2.37 }, FRIENDS.bo.radius),
+  dot: standable({ x: 4.68, z: -2.55 }, FRIENDS.dot.radius),
 }
 
 export function homeOn(id: FriendId, end: End): Spot {
