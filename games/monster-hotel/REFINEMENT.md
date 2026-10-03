@@ -51,16 +51,33 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### How the game meets the quality bar
 
-Nothing yet. One entry for each line of the quality bar, saying how the game meets it so far. Each frame rate comes with the engine, the throttle, the pixel ratio and the build it was measured on, and with whether a physical iPad was measured.
+So far there is a design sheet, the rules and a look spike; nothing is playable. Each line says what exists and what is still to come.
+
+- **Alive at idle.** In the spike: the troll pumps the tuba and its noise travels through the walls, sleepers breathe each at its own tempo, snow drifts, warmth rises, the wheel sways. All of it runs on the attended clock and stops when the game is unattended or hidden. Still to come: a motion personality for each guest.
+- **Motion and sound on every touch.** Not yet: the spike takes no touch but the template's tick. The toy is the next stage.
+- **Weight, squash and follow-through.** Not yet.
+- **Kid-clear.** Six rooms of about 200 logical pixels at 1180 by 820, one guest a room, each its own silhouette, rooms left light and the roof, cellar and night sky dense. What can be touched carries the one spot colour and nothing else does.
+- **Wordless clarity for the declared age.** No word, letter or numeral is drawn. The band starts at 9, so numerals are allowed; the game will lay them in one place only, beside the flames and icicles of the two dials, in `symbols.ts`, which is not written yet. `npm run wordless:check` passes.
+- **Wordless guidance.** The template's idle ladder is in the Mount and not yet given anything to show.
+- **60 fps on a mid-range iPad.** Not measured. This machine draws in software, so no frame rate is reported from it; the lead measures the spike on a real graphics card. Built for it: canvas 2D, the house painted once per resize into one cached layer, each figure a cached sprite, the pixel ratio capped at 2, and the sprites of a frame counted into the grown-up handle. No physical iPad has been measured.
+- **Procedural or committed assets only.** Everything is drawn at run time from a seeded generator. No file, font or address is loaded. `node scripts/egress-check.ts`, `npm run egress:built` and `npm run education:built` pass.
+- **Its own art direction.** Pen-and-ink crosshatch: black pen on cream paper, tone by hatching only, one vermilion spot colour. The art guide is in `ART.md` under "The look".
 
 ### The learning claim
 
-Nothing yet. The claim as the sheet has it, with each record's standing and its check state read again on the day of the pull request, in the pack's Summary or the game's own words only. A game with no learning goal says so.
+As the sheet has it, with every check state read from the lookup on 2026-10-03 (to be read again on the day of the pull request):
+
+Monster Hotel is designed from two content standards adopted by the California State Board of Education (`us-ca 4.4.2.S` for grade 4 and `us-ca 6.4.4.M` for grade 6), neither of which the game carries out, since both ask for practice or use among people; from three of California's Transformative Social and Emotional Learning competencies, which are voluntary guidance tied to no grade (`us-ca 3.B.2` and `us-ca 5.F.2`, Late Elementary, and `us-ca 4.E.3`, Middle School); from five fase goals of the Dutch curriculum institute, which are guidance on what a school can offer and not law (`nl ojw/ja/1/07/fase2`, `nl ojw/ja/1/06/fase2`, `nl ojw/ja/3/08/fase2`, `nl ojw/ja/1/06/fase3` and `nl ojw/ja/3/08/fase3`); and from two items of the Dutch draft core goals for 2027, a draft not in force (`nl 20 A d` and `nl 20 B e`). All twelve records were `confirmed`. The game says nothing about what a child has reached, practised or can do, and keeps no record of it.
 
 ### Defaults taken for the owner
 
-Nothing yet. Each default the game took in the owner's place, from the guide or from its own sheet.
+- Every default under "Symbols, and the defaults awaiting the owner" in the guide is kept as written. In particular: no symbol stands alone (the dials' flames and icicles say what the numerals say); no reading on the object (a room's warmth is marks, never a number); no written word; no speech; no camera shake or impact pause.
+- From the sheet: the older form of guided discovery for the whole band (the child tries first, the porter shows a neat way after); a first visit starts at the first place for 9, 10 and no age, and at the second from 11; a cycle goes well within three set-downs a guest, and only set-downs that change the house are counted; the coach waits with its blinds drawn, so a moved place shows on the very next coach-load; the guest on the bench may be one the child has not met yet.
 
 ### What the next builder should know
 
-Nothing yet. What this build taught that the guide and the template do not say.
+- **Write the rules before the content, and let a solver pick the content.** The thirty casts were chosen by running every candidate through a small exhaustive solver and reading three numbers: how many ways of giving out the rooms there are, how many settle the house bare, and how many settle it with the things placed. Hand-picked casts would have had houses that no arrangement settles and "neat ways" with an idle thing in them. The solver stays in the game folder for the tests and is never imported by anything the Mount reaches.
+- **A sheet sentence about how hard something is must be a number a test holds.** The first draft of "Guess" said most arrangements settle at the first places. Measured, it was between one in eight and all. The sentence was corrected and a test now fails if a cast drifts.
+- **A hand-drawn spike scene should be a state the rules produce.** `page.test.ts` builds the spike's house from the rules and compares the result with the scene the renderer was given. The first comparison showed the rules had a cross guest turning to the less obvious of its two troubles; the rule was changed (what others make comes first, loudest first), not the picture.
+- **Keep a spare bed.** A "harder option the child can choose" that cannot be housed is a trap. Every cast keeps beds for one more than its guests, and a test holds that the house can be settled with the extra guest in.
+- **A subagent can draw the spike while the rules are written,** if it is given a view-model type to draw from and the two never write the same file. Commit by path while it works.

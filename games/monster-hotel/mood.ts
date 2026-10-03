@@ -46,6 +46,18 @@ export function moodOf(arrangement: Arrangement, id: GuestId, phase: Phase): Moo
   const grievances: Grievance[] = []
   const delights: Delight[] = []
 
+  // What others make comes first, loudest first: it is what a cross guest turns to.
+  const reaching = madeAt(arrangement, phase)
+    .flatMap((source) => spread(arrangement, source))
+    .filter((arrival) => arrival.room === room && !madeBy(arrival, id))
+    .sort((a, b) => b.level - a.level)
+  for (const arrival of reaching) {
+    const air = arrival.source.air
+    if (air !== 'din' && air !== 'pong') continue
+    if (isAwake && taste.loves.includes(air)) delights.push({ kind: air, arrival })
+    else if (mindsNow(air === 'din' ? taste.mindsDin : taste.mindsPong, isAwake)) grievances.push({ kind: air, arrival })
+  }
+
   const warmth = temperature(arrangement, room)
   if (warmth < taste.comfort[0] || warmth > taste.comfort[1]) {
     const tooWarm = warmth > taste.comfort[1]
@@ -56,17 +68,6 @@ export function moodOf(arrangement: Arrangement, id: GuestId, phase: Phase): Moo
       .filter((arrival) => arrival.room === room && !madeBy(arrival, id))
       .sort((a, b) => b.level - a.level)
     grievances.push({ kind: tooWarm ? 'too-warm' : 'too-cold', temperature: warmth, from })
-  }
-
-  const reaching = madeAt(arrangement, phase)
-    .flatMap((source) => spread(arrangement, source))
-    .filter((arrival) => arrival.room === room && !madeBy(arrival, id))
-    .sort((a, b) => b.level - a.level)
-  for (const arrival of reaching) {
-    const air = arrival.source.air
-    if (air !== 'din' && air !== 'pong') continue
-    if (isAwake && taste.loves.includes(air)) delights.push({ kind: air, arrival })
-    else if (mindsNow(air === 'din' ? taste.mindsDin : taste.mindsPong, isAwake)) grievances.push({ kind: air, arrival })
   }
 
   if (holds(arrangement, id, 'quilt')) {
