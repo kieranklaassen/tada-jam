@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CROSSINGS, part } from './bridges.fixture'
 import { LADDER } from './config'
-import { JUDGE, crossedOutcome, differences, differingKinds, givenUpOn, isFairTest, layOut, modelInMargin, neatWayDue, oneChangeDue } from './order'
+import { JUDGE, crossedOutcome, differences, givenUpOn, isFairTest, layOut, modelInMargin, nearestDifferences, neatWayDue, oneChangeDue } from './order'
 import type { Ending } from './run'
 
 const bend: Ending = { kind: 'gives', part: 0, spot: [1, 1], strain: 'bend' }
@@ -27,6 +27,9 @@ describe('the designed order as rules', () => {
   it('the child tries first, and every idea gets its one showing: at the second failed run it answers, or at the end of the crossing', () => {
     expect(neatWayDue('profile', 1, bend, false, [])).toBe(false)
     expect(neatWayDue('profile', 2, bend, false, [])).toBe(true)
+    // A second failure of another kind shows nothing; the first later run that fails the way the idea answers does.
+    expect(neatWayDue('profile', 2, offTheEnd, false, [])).toBe(false)
+    expect(neatWayDue('profile', 5, bend, false, [])).toBe(true)
     expect(neatWayDue('profile', 2, bend, false, ['profile'])).toBe(false)
     expect(neatWayDue('profile', 2, offTheEnd, true, [])).toBe(false)
     expect(neatWayDue('triangle', 2, offTheEnd, true, [])).toBe(true)
@@ -55,10 +58,18 @@ describe('the designed order as rules', () => {
     expect(oneChangeDue(king, king.slice(0, 3), [])).toBe(true)
     expect(oneChangeDue(king, king.slice(0, 3), ['one-change'])).toBe(false)
     expect(oneChangeDue(king, turned, [])).toBe(false)
-    // What fills the chief's two models: the kinds of part the two designs differ in, two at most.
-    expect(differingKinds(king, king.slice(0, 3))).toEqual(['stick'])
-    expect(differingKinds(king, [...swapped.slice(1)])).toEqual(['plank', 'stick'])
-    expect(differingKinds(king, king)).toEqual([])
+    // What fills the chief's two models: two of the differences, the two nearest the trolley, each named for what was done.
+    expect(nearestDifferences(king, king, 12)).toEqual([])
+    expect(nearestDifferences(king, king.slice(0, 3), 9).map((d) => d.what)).toEqual(['added', 'added'])
+    expect(nearestDifferences(king.slice(0, 3), king, 9).map((d) => d.what)).toEqual(['left-out', 'left-out'])
+    expect(nearestDifferences(turned, king, 12)).toEqual([{ what: 'turned', kind: 'plank', at: [10.5, 6] }])
+    expect(nearestDifferences(swapped, king, 12)).toEqual([{ what: 'changed', kind: 'thread', at: [13.5, 5] }])
+    // A stick with one end still on its pin and the other on the next grid point was moved, not taken off and added.
+    const moved = king.map((p, i) => (i === 4 ? part('stick', 15, 6, 13, 4) : p))
+    expect(nearestDifferences(moved, king, 12).map((d) => d.what)).toEqual(['moved'])
+    // On a sheet of planks only there is still something to fill the models with, and with many differences only the two nearest the trolley.
+    const planks = [part('plank', 10, 6, 14, 6), part('plank', 6, 6, 10, 6), part('plank', 14, 6, 18, 6)]
+    expect(nearestDifferences(planks, [], 17).map((d) => d.at[0])).toEqual([16, 12])
     // A part hanging loose at one end is a change too.
     expect(differences(king, king.map((p, i) => (i === 2 ? { ...p, loose: 'a' as const } : p)))).toBe(1)
   })

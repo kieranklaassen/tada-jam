@@ -34,6 +34,8 @@ export type Sheet = {
   trolley: { weights: number; at: TrolleyPlace }
   /** The vehicles that have crossed the bridge as it stands now. */
   crossed: VehicleId[]
+  /** The job vehicle has been sent home since it crossed: it stands at the near bank again. */
+  home: boolean
   /** The part that gave first in the last give and the spot where it gave. One ring at most. */
   ring: { part: number; spot: readonly [number, number] } | null
   /** The parts a hat hangs on, since the bus that needs headroom passed under them. */
@@ -62,7 +64,7 @@ const isVehicle = (value: unknown): value is VehicleId => typeof value === 'stri
 const whole = (value: unknown, low: number, high: number): value is number => typeof value === 'number' && Number.isInteger(value) && value >= low && value <= high
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
 
-const emptySheet = (id: string, variant: number): Sheet => ({ site: id, variant, bridge: [], tracings: [], trolley: { weights: TROLLEY_WEIGHTS.fewest, at: null }, crossed: [], ring: null, hats: [] })
+const emptySheet = (id: string, variant: number): Sheet => ({ site: id, variant, bridge: [], tracings: [], trolley: { weights: TROLLEY_WEIGHTS.fewest, at: null }, crossed: [], home: false, ring: null, hats: [] })
 
 /**
  * A first visit. `startOn` puts another sheet on the board than the one the
@@ -113,6 +115,8 @@ function readSheet(raw: unknown): Sheet | null {
     sheet.trolley.at = readTrolleyPlace(raw.trolley.at, at)
   }
   if (Array.isArray(raw.crossed)) sheet.crossed = [...new Set(raw.crossed.filter(isVehicle))]
+  // Sent home means something only after a crossing.
+  sheet.home = raw.home === true && sheet.crossed.includes(at.job)
   const ring = raw.ring
   if (isRecord(ring) && whole(ring.part, 0, sheet.bridge.length - 1) && Array.isArray(ring.spot) && ring.spot.length === 2 && ring.spot.every((n) => typeof n === 'number' && Number.isFinite(n))) {
     sheet.ring = { part: ring.part, spot: [ring.spot[0] as number, ring.spot[1] as number] }
@@ -156,7 +160,7 @@ export function serialize(state: Save): unknown {
     ...writeBase(state),
     sheets: state.sheets.map((sheet) => ({
       site: sheet.site, variant: sheet.variant, bridge: writeParts(sheet.bridge), tracings: sheet.tracings.map(writeParts),
-      trolley: sheet.trolley, crossed: sheet.crossed, ring: sheet.ring, hats: sheet.hats,
+      trolley: sheet.trolley, crossed: sheet.crossed, home: sheet.home, ring: sheet.ring, hats: sheet.hats,
     })),
     on: state.on, next: state.next, waiting: state.waiting, tries: state.tries, laid: state.laid, shown: state.shown,
   }
@@ -189,7 +193,7 @@ export function edit(state: Save, bridge: readonly Part[]): Save {
     // A hat is on the part, however it is turned or pinned: it leaves only when the part does.
     const still = (worn: Part) => bridge.findIndex((p) => p.kind === worn.kind && p.a[0] === worn.a[0] && p.a[1] === worn.a[1] && p.b[0] === worn.b[0] && p.b[1] === worn.b[1])
     const hats = [...new Set(sheet.hats.map((index) => still(sheet.bridge[index])).filter((index) => index >= 0))].sort((a, b) => a - b)
-    return { ...sheet, bridge: [...bridge], crossed: [], ring, hats }
+    return { ...sheet, bridge: [...bridge], crossed: [], home: false, ring, hats }
   })
 }
 
@@ -218,6 +222,8 @@ export function crossed(state: Save, vehicle: VehicleId, hats: readonly number[]
   let next = withSheet(state, (sheet) => ({
     ...sheet,
     crossed: sheet.crossed.includes(vehicle) ? sheet.crossed : [...sheet.crossed, vehicle],
+    // Across again, the job vehicle is parked on the far bank once more.
+    home: vehicle === at.job ? false : sheet.home,
     ring: vehicle === at.job ? null : sheet.ring,
     hats: [...new Set([...sheet.hats, ...hats.filter((index) => whole(index, 0, sheet.bridge.length - 1))])].sort((a, b) => a - b),
   }))
@@ -227,23 +233,32 @@ export function crossed(state: Save, vehicle: VehicleId, hats: readonly number[]
   return { ...next, waiting }
 }
 
-/** A parked vehicle was sent home across the bridge and stands at the near bank again, beside whoever waits there. */
+/**
+ * A parked vehicle was sent home across the bridge and stands at the near bank
+ * again. On the newest sheet it stands beside whoever waits there, and
+ * `waiting` holds that. On any sheet the entry itself remembers that the job
+ * vehicle went home, so a sheet taken back from the rack shows it there too.
+ */
 export function sentHome(state: Save, vehicle: VehicleId): Save {
-  if (!onNewest(state) || state.waiting.includes(vehicle)) return state
-  const newest = state.sheets[state.on], at = site(newest.site, newest.variant)
-  return vehicle === at.job || vehicle === at.extra ? { ...state, waiting: [...state.waiting, vehicle] } : state
+  const board = state.sheets[state.on], at = site(board.site, board.variant)
+  if (vehicle !== at.job && vehicle !== at.extra) return state
+  let next = state
+  if (vehicle === at.job && board.crossed.includes(at.job) && !board.home) next = withSheet(next, (sheet) => ({ ...sheet, home: true }))
+  if (onNewest(state) && !state.waiting.includes(vehicle)) next = { ...next, waiting: [...state.waiting, vehicle] }
+  return next
 }
 
 /**
  * The vehicles at the near bank of the sheet on the board. The newest sheet
  * keeps its own list. A sheet taken back from the rack is rebuilt from its
  * own entry: its job vehicle is parked on the far bank if it has crossed the
- * bridge as it stands, and waits at the near bank otherwise.
+ * bridge as it stands and has not been sent home since, and waits at the near
+ * bank otherwise.
  */
 export function standing(state: Save): VehicleId[] {
   if (onNewest(state)) return state.waiting
   const sheet = state.sheets[state.on], job = site(sheet.site, sheet.variant).job
-  return sheet.crossed.includes(job) ? [] : [job]
+  return sheet.crossed.includes(job) && !sheet.home ? [] : [job]
 }
 
 /** The cycle is judged: the position moves by the template's rule, and the next sheet is laid out from it at once. */

@@ -150,7 +150,14 @@ describe('the saved state', () => {
     for (let i = 0; i < JUDGE.badly + 2; i++) old = failedRun(old, 'post-van', { part: 0, spot: [11, 6] })
     old = crossed(old, 'post-van')
     expect(old).toMatchObject({ tries: 1, waiting: ['post-van'], position: 'rock-prop', finished: false, next: null })
-    expect(sentHome(old, 'post-van')).toBe(old)
+    // Sent home on this older sheet, it stands at the near bank again, and is found there on load: the entry holds it.
+    const home = sentHome(old, 'post-van')
+    expect(home).toMatchObject({ tries: 1, waiting: ['post-van'], position: 'rock-prop' })
+    expect(standing(home)).toEqual(['post-van'])
+    expect(standing(round(home))).toEqual(['post-van'])
+    expect(sentHome(home, 'post-van')).toBe(home)
+    // Across once more, it is parked on the far bank again.
+    expect(standing(crossed(home, 'post-van'))).toEqual([])
     // Changed, nobody has crossed it as it stands, and its job vehicle is back at the near bank.
     expect(standing(edit(old, []))).toEqual(['post-van'])
     // The newest sheet kept its tries and its vehicles on the rack, and its cycle goes on.
@@ -164,6 +171,7 @@ describe('the saved state', () => {
     expect(state.waiting).toEqual(['jelly-truck'])
     state = sentHome(state, 'post-van')
     expect(state.waiting).toEqual(['jelly-truck', 'post-van'])
+    expect(state.sheets[0].home).toBe(true)
     expect(sentHome(state, 'post-van')).toBe(state)
     expect(sentHome(state, 'giraffe-bus')).toBe(state)
     state = crossed(state, 'jelly-truck')
@@ -199,7 +207,7 @@ describe('the saved state', () => {
     }
     expect(state.sheets).toHaveLength(RACK)
     state = { ...state, shown: ['profile', 'prop', 'triangle', 'row', 'tube', 'thread', 'wide-base', 'arch', 'one-change'], tries: JUDGE.badly, laid: Object.fromEntries(LADDER.map((id) => [id, 999999])), next: { site: 'mast-and-stay', variant: 2 } }
-    state = { ...state, sheets: state.sheets.map((sheet) => ({ ...sheet, bridge: full(0), tracings: [full(1), full(2)], trolley: { weights: 6, at: { x: 12.5, under: true } }, crossed: ['post-van', 'jelly-truck', 'piano-mover', 'giraffe-bus', 'caterpillar-bus'], ring: { part: 47, spot: [12.123456789, 6.123456789] }, hats: Array.from({ length: MAX_PARTS }, (_, i) => i) })), waiting: ['piano-mover', 'caterpillar-bus'] }
+    state = { ...state, sheets: state.sheets.map((sheet) => ({ ...sheet, bridge: full(0), tracings: [full(1), full(2)], trolley: { weights: 6, at: { x: 12.5, under: true } }, crossed: ['post-van', 'jelly-truck', 'piano-mover', 'giraffe-bus', 'caterpillar-bus'], home: true, ring: { part: 47, spot: [12.123456789, 6.123456789] }, hats: Array.from({ length: MAX_PARTS }, (_, i) => i) })), waiting: ['piano-mover', 'caterpillar-bus'] }
     const bytes = new TextEncoder().encode(JSON.stringify(serialize(state))).length
     expect(bytes).toBeLessThan(32 * 1024)
     expect(bytes).toBeGreaterThan(8 * 1024)

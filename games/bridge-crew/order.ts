@@ -31,12 +31,15 @@ export function layOut(position: string, laid: Readonly<Record<string, number>>)
 export type Showing = Idea | 'one-change'
 
 /**
- * Whether the crew chief shows this sheet's idea now. The child tries first,
- * and every idea gets its one showing: it comes at the second failed run of
- * the job vehicle, when the run failed in the way the idea answers; or, if
- * the job vehicle crosses before that, at the end of that crossing, once the
- * vehicle has parked. It never comes twice. `tries` counts the job vehicle's
- * failed runs on this sheet, this one included; `byJob` says whose run it was.
+ * Whether the crew chief shows this sheet's idea now. The child tries first:
+ * it comes at the first failed run of the job vehicle, from its second on,
+ * whose failure is one the idea answers; or, if the job vehicle crosses before
+ * any such run, at the end of that crossing, once the vehicle has parked. A
+ * position whose one new thing is not an idea (a vehicle, the barge, the thin
+ * kit, the longest gap, the free yard) has no neat way. An idea a cycle ends
+ * without showing is still owed the next time its position is laid out, since
+ * only a showing marks it shown. `tries` counts the job vehicle's failed runs
+ * on this sheet, this one included; `byJob` says whose run it was.
  */
 export function neatWayDue(idea: Idea | null, tries: number, ending: Ending, anyLoose: boolean, shown: readonly Showing[], byJob = true): boolean {
   if (idea === null || shown.includes(idea) || !byJob) return false
@@ -71,17 +74,32 @@ export const isFairTest = (bridge: readonly Part[], tracing: readonly Part[]): b
 export const oneChangeDue = (bridge: readonly Part[], tracing: readonly Part[], shown: readonly Showing[]): boolean =>
   !shown.includes('one-change') && differences(bridge, tracing) > 1
 
+/** One way two designs differ at one place: a part added, left out, moved, turned, or changed for another kind. */
+export type Difference = { what: 'added' | 'left-out' | 'moved' | 'turned' | 'changed'; kind: Kind; at: readonly [number, number] }
+
+const middle = (p: Part): [number, number] => [(p.a[0] + p.b[0]) / 2, (p.a[1] + p.b[1]) / 2]
+const sharesPin = (p: Part, q: Part) => [p.a, p.b].some((e) => [q.a, q.b].some((f) => e[0] === f[0] && e[1] === f[1]))
+
 /**
  * The two things the chief's two small models differ in, when it shows one
- * clean comparison: the kinds of part in which the child's bridge and tracing
- * differ, at most two of them. The models are never the child's bridge.
+ * clean comparison: two of the differences between the child's bridge and the
+ * tracing, the two nearest the trolley. The models are never the child's
+ * bridge. `x` is where the trolley stands.
  */
-export function differingKinds(bridge: readonly Part[], tracing: readonly Part[]): Kind[] {
-  const kinds: Kind[] = []
-  for (const part of [...bridge.filter((p) => !tracing.some((q) => same(p, q))), ...tracing.filter((q) => !bridge.some((p) => same(p, q)))]) {
-    if (!kinds.includes(part.kind)) kinds.push(part.kind)
+export function nearestDifferences(bridge: readonly Part[], tracing: readonly Part[], x: number): Difference[] {
+  const onlyBridge = bridge.filter((p) => !tracing.some((q) => same(p, q))), onlyTracing = tracing.filter((q) => !bridge.some((p) => same(p, q)))
+  const found: Difference[] = [], used = new Set<Part>()
+  for (const p of onlyBridge) {
+    // The same span in both designs: the part was turned (or hangs loose), or was changed for another kind.
+    const twin = onlyTracing.find((q) => !used.has(q) && sameSpan(p, q))
+    if (twin) { used.add(twin); found.push({ what: twin.kind === p.kind ? 'turned' : 'changed', kind: p.kind, at: middle(p) }); continue }
+    // The same kind on a neighbouring span, one end still on the same pin: the part was moved.
+    const from = onlyTracing.find((q) => !used.has(q) && q.kind === p.kind && sharesPin(p, q) && !onlyBridge.some((other) => other !== p && sameSpan(other, q)))
+    if (from) { used.add(from); found.push({ what: 'moved', kind: p.kind, at: middle(p) }); continue }
+    found.push({ what: 'added', kind: p.kind, at: middle(p) })
   }
-  return kinds.slice(0, 2)
+  for (const q of onlyTracing) if (!used.has(q)) found.push({ what: 'left-out', kind: q.kind, at: middle(q) })
+  return found.sort((d, e) => Math.abs(d.at[0] - x) - Math.abs(e.at[0] - x)).slice(0, 2)
 }
 
 /**
