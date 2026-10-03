@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { restPose, type TruckPose } from '../pose'
 import { LAYOUT } from '../props'
-import { PAINT, type VehicleDef } from '../roster'
+import { PAINT, built as shapesOf, type VehicleDef } from '../roster'
 import { MAT, Shape } from '../shapes'
 import { CELLS, GRID_H, GRID_W, type Surface } from '../surface'
 import { enamelMaterial, type EnamelKit } from './enamel'
@@ -59,7 +59,7 @@ export class TruckView {
     this.maskB = maskTexture()
     this.owned.push(this.maskA, this.maskB)
     const masks = { a: this.maskA, b: this.maskB, side: def.side }
-    const built = def.build()
+    const built = shapesOf(def)
     const bodyGeometry = toGeometry(built.body), partGeometry = toGeometry(built.part, built.pivot), wheelGeometry = toGeometry(unitWheel())
     this.owned.push(bodyGeometry, partGeometry, wheelGeometry)
 

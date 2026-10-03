@@ -1,4 +1,4 @@
-import type { VehicleDef } from './roster'
+import { built as shapesOf, type VehicleDef } from './roster'
 import { CELLS, GRID_H, GRID_W, type Surface } from './surface'
 
 // Which patches of the grid a vehicle's side view covers: its body, its
@@ -13,8 +13,8 @@ export function silhouette(def: VehicleDef): Surface {
   const known = cache.get(def.id)
   if (known) return known.slice()
   const { x0, x1, y0, y1 } = def.side
-  const built = def.build()
-  const flat = [...built.body.position, ...built.part.position]
+  const shapes = shapesOf(def)
+  const flat = [...shapes.body.position, ...shapes.part.position]
   const hits = new Uint8Array(CELLS * SAMPLES.length)
   // How far the near side stands out at each patch: the largest z of anything that covers it.
   const proud = new Float32Array(CELLS)

@@ -44,6 +44,18 @@ export type VehicleDef = {
   horn: { low: number; high: number; hold: number }
 }
 
+const builds = new Map<VehicleId, VehicleBuild>()
+
+/** A vehicle's shapes, built once for the life of the page: a second mount, the silhouette and the view all read the same arrays. */
+export function built(def: VehicleDef): VehicleBuild {
+  let build = builds.get(def.id)
+  if (!build) {
+    build = def.build()
+    builds.set(def.id, build)
+  }
+  return build
+}
+
 export const PAINT = {
   yellow: rgb(0xf5b301),
   orange: rgb(0xf06a0c),

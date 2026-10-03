@@ -52,7 +52,7 @@ async function everyTaste(d: Driver): Promise<void> {
 }
 
 export default {
-  enforce: false,
+  enforce: true,
   query: 'tier=0',
   childAge: 4,
   moments: [
@@ -113,8 +113,8 @@ export default {
     { a: 'body', b: 'pupil', kind: 'pose', upTo: 0.15, reason: 'The pupil slides over the lamp, which is part of the body, as the eye looks about.' },
     { a: 'tipper-body', b: 'tipper-part', kind: 'pose', upTo: 0.3, reason: 'The bed is hinged on the chassis: its tail dips between the rails as the front lifts.' },
     { a: '-(body|part)', b: '-wheels', kind: 'pose', upTo: 0.2, reason: 'The body rides on its springs over its wheels, which sit up in their arches; a press brings it down on them.' },
-    { a: 'tool-sponge', b: 'vehicle-', upTo: 0.3, reason: 'The sponge is soft and is pressed flat against the paint, the wheel, the mudguard or the lamp eye it is working on.' },
+    { a: 'tool-sponge', b: 'vehicle-', upTo: 0.25, reason: 'The sponge is soft and is pressed flat against the paint, the wheel, the mudguard or the lamp eye it is working on.' },
     { a: 'tool-cloth', b: 'vehicle-', upTo: 0.2, reason: 'The cloth is wiped along the paint and folds over whatever stands proud of it.' },
-    { a: 'rack', b: 'tool-', upTo: 0.2, reason: 'A tool on the rack hangs on its arm, in its coil or sits in the suds of the bucket.' },
+    { a: 'rack', b: 'tool-', upTo: 0.18, reason: 'A tool on the rack hangs on its arm, in its coil or sits in the suds of the bucket.' },
   ],
 } satisfies GameAudit
