@@ -60,7 +60,7 @@ Every open or reserved look below is one no game has claimed, described so that 
 
 - Every row has one state: `open` (free to be reserved), `reserved: <game-key>` (held as a candidate for that game, with its place in the game's order: first choice, second, third), or `claimed: <game-key>` (a merged game registered it in section 3).
 - Only the lead changes a state, and only the lead adds, rewrites, or removes a row. A builder never edits this table.
-- The lead writes at two moments. Before builders start: two or three rows are reserved for each game about to be built, and no row is reserved for two games. When the menu is too short for that, a game starts with one row, and its builder proposes a second in its status block if the first fails. After a game merges: its look becomes `claimed`, and its other rows go back to `open`.
+- The lead writes at three moments. Before builders start: two or three rows are reserved for each game about to be built, and no row is reserved for two games. When the menu is too short for that, a game starts with one row, and its builder proposes a second in its status block if the first fails. When the owner accepts a game's look at the toy checkpoint: its other rows go back to `open`. After a game merges: its look becomes `claimed`, and any of its rows that is still reserved goes back to `open`.
 - When a look is claimed, the lead re-reads the open and reserved rows against it and rewrites or removes any that a screenshot could now confuse with it.
 - A look that is not on the menu gets a row from the lead before anyone spikes it.
 
