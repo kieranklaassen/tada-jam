@@ -217,9 +217,15 @@ export class View {
     }
 
     // The crew chief and the small model it is fiddling with, on the near bank.
-    const [cx, cy] = at2([CHIEF.x, at.left[1]])
-    chief(pen, cx, cy, cell * 1.35, toy.chief.pose, stream(11))
-    chiefModel(pen, cx + cell * 1.35, cy, cell * 1.35, stream(12))
+    const [cx, cy] = at2([CHIEF.x, CHIEF.y])
+    // The ledge it stands on: one ruled line in the margin.
+    pen.strokeStyle = INK.line
+    pen.globalAlpha = 0.9
+    pen.lineWidth = Math.max(1.5, cell * 0.05)
+    pen.beginPath(); pen.moveTo(cx - cell * 0.7, cy); pen.lineTo(cx + cell * 2.6, cy); pen.stroke()
+    pen.globalAlpha = 1
+    chief(pen, cx, cy, cell * 1.1, toy.chief.pose, stream(11))
+    chiefModel(pen, cx + cell * 1.2, cy, cell * 1.1, stream(12))
     drawn += 2
 
     if (guidance && guidance.demo !== null) { this.ghost(pen, toy, guidance); drawn++ }

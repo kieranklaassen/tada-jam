@@ -130,6 +130,7 @@ A wrong design is run exactly as built, and the world shows where and why.
 | `on` | Which sheet of the rack is on the board. |
 | `next` | The sheet laid out at the last judging and waiting as a roll: position id and variant, or nothing. |
 | `waiting` | Which vehicles stand at the near bank of the newest sheet: its job vehicle until it has crossed, then the one other vehicle, and the job vehicle again once it has been sent home. |
+| `across` | Which vehicles are parked on the far bank of the newest sheet: each of its two vehicles from its crossing until it is sent home. A change to the bridge leaves them where they are. |
 | `tries` | Failed runs of the job vehicle in the newest sheet's cycle. Never shown. |
 | `laid` | For each position, how many times it has been laid out, which picks the variant. Never shown. |
 | `shown` | The ideas whose one showing has been given. |

@@ -36,8 +36,8 @@ export const RING = 0.8
 export const HOLD = 0.55
 /** A carried part let go further than this from where it lay goes back to the tray; nearer, it goes back where it was. */
 export const CARRY_OFF = 1
-/** Where the crew chief stands, in cells, and how near a touch must be to poke it. */
-export const CHIEF = { x: 0.9, reach: 1.5 } as const
+/** Where the crew chief stands, in cells: on a ruled ledge in the top left margin of the sheet, clear of both banks. And how near a touch must be to poke it. */
+export const CHIEF = { x: 0.7, y: 10.9, reach: 1.5 } as const
 
 /** A part on its way back to the tray after it was taken off: drawn until it gets there. */
 export type Flying = { part: Part; a: readonly [number, number]; b: readonly [number, number]; since: number }
@@ -62,8 +62,8 @@ export class Toy {
   flying: Flying[] = []
   readonly chief: ChiefDirector
   seconds = 0
-  private voices: VoiceSpec[] = []
-  private changed = false
+  protected voices: VoiceSpec[] = []
+  protected changed = false
 
   constructor(save: Save, random: () => number) {
     this.save = save
@@ -121,7 +121,7 @@ export class Toy {
       this.voices.push(pick(bay.kind))
       return
     }
-    if (Math.hypot(x - CHIEF.x, y - (this.at.left[1] + 1.4)) <= CHIEF.reach) {
+    if (Math.hypot(x - CHIEF.x - 0.4, y - (CHIEF.y + 1.2)) <= CHIEF.reach) {
       this.hand = { what: 'chief' }
       this.chief.poke()
       this.voices.push(chiefCroak)
@@ -297,11 +297,11 @@ export class Toy {
     return depth
   }
 
-  private pluckOf(index: number): VoiceSpec {
+  protected pluckOf(index: number): VoiceSpec {
     return plucked(this.bridge[index], this.answer.parts[index]).voice
   }
 
-  private model(): void {
+  protected model(): void {
     const footing = isFooting(this.at)
     this.frame = settle(this.bridge, footing)
     this.answer = solve(this.frame)
@@ -309,7 +309,7 @@ export class Toy {
   }
 
   /** Drops what the toy keeps beside each part, for parts that have left the bridge. */
-  private forget(gone: readonly number[]): void {
+  protected forget(gone: readonly number[]): void {
     const keep = <T,>(list: T[]) => list.filter((_, index) => !gone.includes(index))
     this.moving = keep(this.moving); this.rung = keep(this.rung); this.turned = keep(this.turned); this.laid = keep(this.laid)
   }
@@ -319,7 +319,7 @@ export class Toy {
    * heads for its new rest. `added` is the index of a part just laid: it lands
    * from a little above. Then the chief is told what the change did.
    */
-  private commit(bridge: readonly Part[], added = -1): void {
+  protected commit(bridge: readonly Part[], added = -1): void {
     const folded = this.frame.firm.filter((firm) => !firm).length
     this.save = edit(this.save, bridge)
     this.changed = true

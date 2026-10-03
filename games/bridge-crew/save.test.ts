@@ -3,7 +3,7 @@ import { CROSSINGS, part } from './bridges.fixture'
 import { FIRST_VISIT, LADDER } from './config'
 import { KINDS, MAX_PARTS, SPEC, type Part } from './kit'
 import { JUDGE } from './order'
-import { RACK, TRACINGS, crossed, deserialize, edit, failedRun, freshSave, markShown, onNewest, pluckHat, sentHome, serialize, setTrolley, standing, swapTracing, trace, turnTo, unroll, type Save } from './save'
+import { RACK, TRACINGS, crossed, deserialize, edit, failedRun, freshSave, markShown, onNewest, parked, pluckHat, sentHome, serialize, setTrolley, standing, swapTracing, toFront, trace, turnTo, unroll, type Save } from './save'
 import { COLS, ROWS, canPin, site } from './sites'
 import { STATE_VERSION } from './state'
 
@@ -79,9 +79,11 @@ describe('the saved state', () => {
     for (let i = 1; i < JUDGE.badly; i++) { state = failedRun(state, 'post-van', null); expect(state.finished).toBe(false) }
     state = failedRun(state, 'post-van', null)
     expect(state).toMatchObject({ finished: true, position: 'rock-prop', next: { site: 'rock-prop', variant: 0 } })
-    // The unfinished sheet stays on the rack as built, and crossing it later does not judge the cycle again.
+    // The unfinished sheet stays on the rack as built, and crossing it later does not judge the cycle again; the
+    // other vehicle draws up at that first crossing all the same.
     const later = crossed(state, 'post-van')
     expect(later.position).toBe('rock-prop')
+    expect(later).toMatchObject({ waiting: ['jelly-truck'], across: ['post-van'] })
     expect(unroll(later).sheets.map((s) => s.site)).toEqual(['first-triangle', 'rock-prop'])
   })
 
@@ -89,7 +91,7 @@ describe('the saved state', () => {
     let state = edit(freshSave(null), bridge)
     expect(state.next).toBeNull()
     state = crossed(state, 'post-van')
-    expect(state).toMatchObject({ finished: true, position: 'rock-prop', next: { site: 'rock-prop', variant: 0 }, waiting: ['jelly-truck'] })
+    expect(state).toMatchObject({ finished: true, position: 'rock-prop', next: { site: 'rock-prop', variant: 0 }, waiting: ['jelly-truck'], across: ['post-van'] })
     // The other vehicle is the child's own choice: it moves nothing.
     expect(crossed(state, 'jelly-truck').position).toBe('rock-prop')
     expect(failedRun(state, 'jelly-truck', null).tries).toBe(state.tries)
@@ -147,6 +149,7 @@ describe('the saved state', () => {
     let old = turnTo(state, 0)
     expect(onNewest(old)).toBe(false)
     expect(standing(old)).toEqual([])
+    expect(parked(old)).toEqual(['post-van'])
     for (let i = 0; i < JUDGE.badly + 2; i++) old = failedRun(old, 'post-van', { part: 0, spot: [11, 6] })
     old = crossed(old, 'post-van')
     expect(old).toMatchObject({ tries: 1, waiting: ['post-van'], position: 'rock-prop', finished: false, next: null })
@@ -174,10 +177,16 @@ describe('the saved state', () => {
     expect(state.sheets[0].home).toBe(true)
     expect(sentHome(state, 'post-van')).toBe(state)
     expect(sentHome(state, 'giraffe-bus')).toBe(state)
+    expect(state.across).toEqual([])
+    expect(toFront(state, 'post-van').waiting).toEqual(['post-van', 'jelly-truck'])
     state = crossed(state, 'jelly-truck')
-    expect(state.waiting).toEqual(['post-van'])
+    expect(state).toMatchObject({ waiting: ['post-van'], across: ['jelly-truck'] })
+    // A vehicle is on one bank or the other, whatever is done to the bridge, and is found there on load.
+    expect(parked(edit(state, []))).toEqual(['jelly-truck'])
+    expect(round(edit(state, []))).toMatchObject({ waiting: ['post-van'], across: ['jelly-truck'] })
+    expect(deserialize({ ...(JSON.parse(JSON.stringify(serialize(state))) as object), across: ['post-van', 'jelly-truck', 'tank'] }).across).toEqual(['jelly-truck'])
     // The second crossing of the job vehicle judges nothing and brings no third vehicle.
-    expect(crossed(state, 'post-van')).toMatchObject({ waiting: [], position: 'rock-prop' })
+    expect(crossed(state, 'post-van')).toMatchObject({ waiting: [], across: ['jelly-truck', 'post-van'], position: 'rock-prop' })
   })
 
   it('a hat stays on its part until it is plucked off or the part is taken off', () => {
@@ -207,7 +216,7 @@ describe('the saved state', () => {
     }
     expect(state.sheets).toHaveLength(RACK)
     state = { ...state, shown: ['profile', 'prop', 'triangle', 'row', 'tube', 'thread', 'wide-base', 'arch', 'one-change'], tries: JUDGE.badly, laid: Object.fromEntries(LADDER.map((id) => [id, 999999])), next: { site: 'mast-and-stay', variant: 2 } }
-    state = { ...state, sheets: state.sheets.map((sheet) => ({ ...sheet, bridge: full(0), tracings: [full(1), full(2)], trolley: { weights: 6, at: { x: 12.5, under: true } }, crossed: ['post-van', 'jelly-truck', 'piano-mover', 'giraffe-bus', 'caterpillar-bus'], home: true, ring: { part: 47, spot: [12.123456789, 6.123456789] }, hats: Array.from({ length: MAX_PARTS }, (_, i) => i) })), waiting: ['piano-mover', 'caterpillar-bus'] }
+    state = { ...state, sheets: state.sheets.map((sheet) => ({ ...sheet, bridge: full(0), tracings: [full(1), full(2)], trolley: { weights: 6, at: { x: 12.5, under: true } }, crossed: ['post-van', 'jelly-truck', 'piano-mover', 'giraffe-bus', 'caterpillar-bus'], home: true, ring: { part: 47, spot: [12.123456789, 6.123456789] }, hats: Array.from({ length: MAX_PARTS }, (_, i) => i) })), waiting: ['piano-mover'], across: ['caterpillar-bus'] }
     const bytes = new TextEncoder().encode(JSON.stringify(serialize(state))).length
     expect(bytes).toBeLessThan(32 * 1024)
     expect(bytes).toBeGreaterThan(8 * 1024)

@@ -212,7 +212,7 @@ describe('the toy', () => {
     drag(toy, [20, 6], [20, 8]); drag(toy, [20, 8], [22, 8])
     expect(toy.chief.act).toBe('feathers-on-end')
     settle(toy, 3)
-    toy.press(1, 7.2)
+    toy.press(1, 12)
     expect(toy.hand).toEqual({ what: 'chief' })
     expect(toy.chief.act).toBe('poked')
   })
