@@ -25,9 +25,11 @@ export type Fx =
   | { kind: 'fly'; x: number; y: number; tx: number; ty: number; from: Box; fruit: Fruit; age: number; life: number }
   /** The mark of a knock on something bare. */
   | { kind: 'knock'; x: number; y: number; age: number; life: number }
+  /** The tin's lid coming down on a misfit: it bounces on what sticks out, or shuts on a gap and springs back. */
+  | { kind: 'lid'; how: 'over' | 'under'; age: number; life: number }
 
 /** How a piece moves for a moment, on top of where it lies: a hop apart after a cut, a quiver, a landing, a slide to the shelf. */
-export type Shake = { id: number; kind: 'hop' | 'quiver' | 'land' | 'slide'; dir: number; from: Box | null; age: number; life: number }
+export type Shake = { id: number; kind: 'hop' | 'quiver' | 'land' | 'slide' | 'rattle'; dir: number; from: Box | null; age: number; life: number }
 
 export type FxState = {
   fx: Fx[]
@@ -38,11 +40,14 @@ export type FxState = {
   /** The crate's rock, the same way. */
   rock: number
   rockSpeed: number
+  /** The tin's jolt when it is poked, struck or skidded on: a stiff little spring. */
+  jolt: number
+  joltSpeed: number
   /** The state of the stream the effects scatter by. */
   seed: number
 }
 
-export const newFx = (seed: number): FxState => ({ fx: [], shakes: [], flap: 0, flapSpeed: 0, rock: 0, rockSpeed: 0, seed })
+export const newFx = (seed: number): FxState => ({ fx: [], shakes: [], flap: 0, flapSpeed: 0, rock: 0, rockSpeed: 0, jolt: 0, joltSpeed: 0, seed })
 
 /** The most effects alive at once, and the most spatters on the wall: the oldest go first. */
 export const MOST_FX = 90
@@ -110,6 +115,18 @@ export function spawn(state: FxState, event: GameEvent): FxState {
     case 'setDown':
       event.ids.forEach((id, i) => shake(id, 'slide', 0, 0.22, event.from[i]))
       break
+    case 'misfit':
+      // Too long, the lid bounces on it; too short, the piece slides and rattles in the gap, by no more than the gap.
+      next.fx.push({ kind: 'lid', how: event.how, age: -0.2, life: 0.7 })
+      if (event.how === 'under') shake(event.id, 'rattle', Math.min(1, -event.by / 200), 0.9)
+      next.joltSpeed += 5
+      break
+    case 'tinPoke':
+      next.joltSpeed += event.open ? 9 : 6
+      break
+    case 'burp':
+      next.rockSpeed += 7
+      break
     case 'given':
       shake(event.id, 'slide', 0, 0.2, event.from)
       break
@@ -118,12 +135,14 @@ export function spawn(state: FxState, event: GameEvent): FxState {
       break
     case 'bounce':
     case 'skid':
+      if (event.kind === 'skid' || event.off === 'tin') next.joltSpeed += 8
       next.fx.push({ kind: 'burst', x: event.x, y: event.y, size: 20, fruit: 'middle', seed: random() * 1000, age: 0, life: 0.2 })
       next.fx.push({ kind: 'lines', x: event.x, y: event.y, angle: -Math.PI / 2, reach: 50, age: 0, life: 0.2 })
       break
     case 'rolled':
       next.fx.push({ kind: 'knock', x: event.x, y: event.y, age: 0, life: 0.3 })
       if (event.on === 'crate') next.rockSpeed += 6
+      if (event.on === 'tin') next.joltSpeed += 5
       break
     case 'spill':
       next.rockSpeed += 9
@@ -183,6 +202,7 @@ export function step(state: FxState, dt: number): FxState {
   // Two springs, each with its own stiffness: the awning is loose cloth, the crate is heavy wood.
   const flapSpeed = (state.flapSpeed - state.flap * 60 * dt) * Math.max(0, 1 - 3.2 * dt)
   const rockSpeed = (state.rockSpeed - state.rock * 190 * dt) * Math.max(0, 1 - 7 * dt)
+  const joltSpeed = (state.joltSpeed - state.jolt * 420 * dt) * Math.max(0, 1 - 9 * dt)
   return trimmed({
     fx,
     shakes: state.shakes.map((shake) => ({ ...shake, age: shake.age + dt })).filter((shake) => shake.age < shake.life),
@@ -190,6 +210,8 @@ export function step(state: FxState, dt: number): FxState {
     flapSpeed,
     rock: state.rock + rockSpeed * dt,
     rockSpeed,
+    jolt: state.jolt + joltSpeed * dt,
+    joltSpeed,
     seed,
   })
 }
@@ -219,6 +241,9 @@ export function offsetOf(state: FxState, id: number, at: Box | null): Offset {
       const settle = t > 0.55 ? Math.sin(((t - 0.55) / 0.45) * Math.PI) : 0
       return { dx: 0, dy: -150 * (1 - fall * fall), squash: 0.22 * settle }
     }
+    case 'rattle':
+      // It slides back and forth in the gap, further the wider the gap, and comes to rest where it lies.
+      return { dx: 14 * shake.dir * Math.abs(Math.sin(t * Math.PI * 4)) * (1 - t), dy: 0, squash: 0 }
     case 'slide': {
       if (!shake.from || !at) return STILL
       const ease = 1 - (1 - t) * (1 - t)
@@ -229,7 +254,7 @@ export function offsetOf(state: FxState, id: number, at: Box | null): Offset {
 
 /** Whether anything is still moving, so the view knows the scene has settled. */
 export function settled(state: FxState): boolean {
-  return state.shakes.length === 0 && state.fx.every((one) => one.kind === 'spatter') && Math.abs(state.flap) < 0.002 && Math.abs(state.rock) < 0.002
+  return state.shakes.length === 0 && state.fx.every((one) => one.kind === 'spatter') && Math.abs(state.flap) < 0.002 && Math.abs(state.rock) < 0.002 && Math.abs(state.jolt) < 0.002
 }
 
 /** Where something flying to a mouth is now: an arc from where it started to that mouth, the dog's unless another is given. */

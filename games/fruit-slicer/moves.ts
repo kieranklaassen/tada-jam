@@ -50,7 +50,7 @@ export type GameEvent =
   /** A piece was laid in the tin. `opened` says the tin sprang open for it, and `firstShowing` names the idea shown now, once. */
   | { kind: 'given'; id: number; from: Box; opened: boolean; firstShowing: string | null; length: number; voice: VoiceId }
   /** What lies in the tin does not fit: it sticks out past the jaw, or leaves a gap, by so many points. */
-  | { kind: 'misfit'; how: 'over' | 'under'; by: number; length: number; voice: VoiceId }
+  | { kind: 'misfit'; id: number; how: 'over' | 'under'; by: number; length: number; voice: VoiceId }
   /** A customer ate a piece from the hand with nothing judged: one who waits, or one already served. */
   | { kind: 'ate'; whom: Whom; piece: Piece; from: Box; voice: VoiceId }
   /** A waiting pelican left as the glider, and another customer joined the queue in its place. */

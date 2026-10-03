@@ -134,6 +134,36 @@ describe('the other things a touch sets off', () => {
   })
 })
 
+describe('a misfit laid in the tin', () => {
+  const box = { x: 100, y: 260, w: 200, h: 42 }
+
+  it('brings the lid down on what sticks out, where it bounces, and jolts the tin', () => {
+    let state = spawn(newFx(1), { kind: 'misfit', id: 4, how: 'over', by: 300, length: 900, voice: 'clang' })
+    expect(state.fx.map((one) => one.kind)).toEqual(['lid'])
+    expect(state.shakes).toEqual([])
+    let furthest = 0
+    state = play(state, 1.2, (now) => (furthest = Math.max(furthest, Math.abs(now.jolt))))
+    expect(furthest).toBeGreaterThan(0.01)
+    expect(state.fx).toEqual([])
+    expect(settled(play(state, 2))).toBe(true)
+  })
+
+  it('lets a piece that is too short slide and rattle in the gap, further the wider the gap, and come to rest where it lies', () => {
+    const narrow = step(spawn(newFx(1), { kind: 'misfit', id: 4, how: 'under', by: -40, length: 500, voice: 'slide' }), 0.1)
+    const wide = step(spawn(newFx(1), { kind: 'misfit', id: 4, how: 'under', by: -400, length: 500, voice: 'slide' }), 0.1)
+    expect(offsetOf(wide, 4, box).dx).toBeGreaterThan(offsetOf(narrow, 4, box).dx)
+    expect(offsetOf(narrow, 4, box).dx).toBeGreaterThan(0)
+    expect(offsetOf(play(wide, 1), 4, box)).toEqual({ dx: 0, dy: 0, squash: 0 })
+  })
+
+  it('jolts the tin when it is poked or struck, and rocks the crate when it burps', () => {
+    expect(spawn(newFx(1), { kind: 'tinPoke', open: true, voice: 'castanet' }).joltSpeed).toBeGreaterThan(0)
+    expect(spawn(newFx(1), { kind: 'skid', x: 1, y: 2, length: 600, voice: 'skid' }).joltSpeed).toBeGreaterThan(0)
+    const piece = { id: 3, fruit: 'short' as const, length: 300, place: { on: 'shelf' as const, slot: 0 }, blind: true, ruled: 0, mark: 0 }
+    expect(spawn(newFx(1), { kind: 'burp', piece, from: box, voice: 'burp' }).rockSpeed).toBeGreaterThan(0)
+  })
+})
+
 describe('the budget', () => {
   it('holds however fast a child slices: never more than the cap alive, nor more spatters than the wall keeps', () => {
     let state = newFx(3)

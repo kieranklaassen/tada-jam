@@ -127,7 +127,7 @@ function roller(ctx: Ctx, dots: Dots, at: Point): number {
 function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
   let drawn = 0
   for (const one of fx.fx) {
-    if ((one.kind === 'spatter') !== wall || one.age < 0) continue
+    if ((one.kind === 'spatter') !== wall || one.age < 0 || one.kind === 'lid') continue
     const t = one.age / one.life
     drawn++
     switch (one.kind) {
@@ -239,7 +239,11 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
   // down: flat on a fit, and bouncing on what sticks out.
   const closing = show !== null && show.kind === 'serve' && scenery.ending !== null ? show.lid : 0
   const bounce = closing > 0 && scenery.ending!.result.kind === 'over' ? 0.35 + 0.25 * Math.abs(Math.sin(closing * Math.PI * 3)) : 1
-  const down = closing * bounce
+  // Outside the serve, a misfit just laid in brings the lid down too: it bounces on what sticks out, or shuts on a gap, and springs back open.
+  const tried = scenery.fx.fx.find((one) => one.kind === 'lid' && one.age >= 0)
+  const t = tried ? tried.age / tried.life : 0
+  const attempt = tried && tried.kind === 'lid' ? (tried.how === 'over' ? 0.55 * Math.abs(Math.sin(t * Math.PI * 3)) * (1 - t) + 0.3 * Math.sin(t * Math.PI) : Math.sin(t * Math.PI)) : 0
+  const down = Math.max(closing * bounce, attempt)
   inked(ctx, poly([[lid.x, lid.y + lid.h], [lid.x + 12 * (1 - down), lid.y + lid.h * down], [lid.x + lid.w + 12 * (1 - down), lid.y + lid.h * down], [lid.x + lid.w, lid.y + lid.h]]), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
   if (customer.written && down < 0.5) drawFraction(ctx, share, lid.x + lid.w / 2 + 6, lid.y + lid.h / 2, 17, { fill: INK, edge: WHITE, edgeWidth: 5 })
   // Shut, the lid lies over the tin and what is in it is no longer seen.
@@ -371,7 +375,11 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   // customer eats; what it held is read from the ending, since the game has already moved on.
   const serving = scenery.ending !== null && scenery.show !== null && scenery.show.kind !== 'glider' && game.window !== null
   const shape = tinAt(game) ?? (serving ? tinShape(tinParts(game.window!), WHOLE[game.window!.fruit], true) : null)
+  // The tin jolts on its rail when it is poked, struck or skidded on.
+  ctx.save()
+  ctx.translate(fx.jolt * 5, 0)
   if (shape && game.window) drawn += tin(ctx, dots, scenery, shape, game.window)
+  ctx.restore()
   if (serving && shape) {
     let eatenSoFar = 0
     scenery.ending!.result.parts.forEach((part, index) => {

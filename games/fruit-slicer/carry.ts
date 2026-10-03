@@ -166,7 +166,7 @@ function intoTin(game: Game, held: Held, part: number): { game: Game; events: Ga
       events.push(...fellEvents(now.world, given.strays, tin).map((event) => event))
       const worst = given.result
       if (given.ending) events.push({ kind: 'ending', ending: given.ending, how: 'shut' })
-      else if (worst.kind === 'over' || worst.kind === 'under') events.push({ kind: 'misfit', how: worst.kind, by: worst.by, length: piece.length, voice: worst.kind === 'over' ? 'clang' : 'slide' })
+      else if (worst.kind === 'over' || worst.kind === 'under') events.push({ kind: 'misfit', id: piece.id, how: worst.kind, by: worst.by, length: piece.length, voice: worst.kind === 'over' ? 'clang' : 'slide' })
     }
     now = result.game
   }
