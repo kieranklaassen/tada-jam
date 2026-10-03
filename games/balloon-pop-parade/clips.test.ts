@@ -21,24 +21,26 @@ function track(kind: KindName, id: ClipId): number[] {
     const still = sample(kind, null, 0), moving = sample(kind, id, (i / 30) * lasts)
     row.push(
       (moving.y - still.y) / BODIES[kind].height, moving.x - still.x, moving.squash - still.squash, Math.sin(moving.turn / 2), moving.bow, moving.lean - still.lean,
-      moving.nod - still.nod, moving.headTurn, moving.armL - still.armL, moving.armR - still.armR, moving.armLForward, moving.wag - still.wag, moving.flick, moving.puff - still.puff,
+      moving.nod - still.nod, moving.headTurn, moving.tilt - still.tilt, moving.armL - still.armL, moving.armR - still.armR, moving.armLForward, moving.wag - still.wag, moving.flick, moving.puff - still.puff,
     )
   }
   return row
 }
 
-const apart = (a: number[], b: number[]) => a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0) / a.length
+/** How far two motions are apart: the difference summed over every channel, averaged over the moments sampled. A hop of a tenth of a height, alone, scores about 0.06. */
+const CHANNELS = 15
+const apart = (a: number[], b: number[]) => a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0) / (a.length / CHANNELS)
 
 describe('the clips', () => {
   it('give no two kinds the same motion for anything', () => {
     for (const id of CLIPS) for (const a of KINDS) for (const b of KINDS) {
-      if (a < b) expect(apart(track(a, id), track(b, id)), `${id}: ${a} and ${b}`).toBeGreaterThan(0.03)
+      if (a < b) expect(apart(track(a, id), track(b, id)), `${id}: ${a} and ${b}`).toBeGreaterThan(0.3)
     }
   })
 
   it('give every kind six motions that differ from each other', () => {
     for (const kind of KINDS) for (const a of CLIPS) for (const b of CLIPS) {
-      if (a < b) expect(apart(track(kind, a), track(kind, b)), `${kind}: ${a} and ${b}`).toBeGreaterThan(0.03)
+      if (a < b) expect(apart(track(kind, a), track(kind, b)), `${kind}: ${a} and ${b}`).toBeGreaterThan(0.3)
     }
   })
 
@@ -125,10 +127,10 @@ describe('the cues', () => {
 
   it('answer a tap at once: every motion a touch starts is under way within a tenth of a second', () => {
     for (const kind of KINDS) for (const id of ['poke', 'liftOff', 'wave'] as const) {
-      const still = track(kind, id).slice(0, 14)
+      const still = track(kind, id).slice(0, 15)
       const early = sample(kind, id, 0.1), rested = sample(kind, null, 0)
       const moved = Math.abs(early.y - rested.y) + Math.abs(early.squash - rested.squash) + Math.abs(early.armL - rested.armL) + Math.abs(early.armR - rested.armR) + Math.abs(early.wag - rested.wag) + Math.abs(early.puff - rested.puff) + Math.abs(early.x - rested.x)
-      expect(still).toHaveLength(14)
+      expect(still).toHaveLength(15)
       expect(moved, `${kind} ${id}`).toBeGreaterThan(0.02)
     }
     // The one exception is the hippo startled by a pop: not noticing for a beat is its joke.
@@ -146,7 +148,7 @@ describe('the resting life', () => {
       }
       return row
     }
-    for (const a of KINDS) for (const b of KINDS) if (a < b) expect(apart(life(a, false), life(b, false)), `${a} and ${b}`).toBeGreaterThan(0.004)
+    for (const a of KINDS) for (const b of KINDS) if (a < b) expect(apart(life(a, false), life(b, false)) * (CHANNELS / 6), `${a} and ${b}`).toBeGreaterThan(0.04)
     for (const kind of KINDS) {
       expect(sample(kind, null, 0, false).armL).toBeGreaterThan(2)
       expect(sample(kind, null, 0, true).armL).toBeLessThan(0.5)

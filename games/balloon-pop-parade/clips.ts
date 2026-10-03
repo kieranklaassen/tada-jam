@@ -232,8 +232,8 @@ function hippo(id: ClipId, t: number, pose: Pose): void {
     pose.tilt += hold(t, 0.5, 0.9, 1.05, 1.3) * 0.12
   } else if (id === 'poke') {
     pose.puff = 1 + wobble(t, 0, 15, 3.6) * 0.3
-    pose.lean += wobble(t, 0.05, 7.5, 3) * 0.13
-    pose.tilt += wobble(t, 0.12, 7.5, 3) * -0.16
+    pose.lean += wobble(t, 0.05, 7.5, 2.4) * 0.16
+    pose.tilt += wobble(t, 0.12, 7.5, 2.4) * -0.22
     pose.squash += -hump(t, 0, 0.26) * 0.09
   } else {
     pose.armR = 0.3 + hold(t, 0, 0.35, 0.8, 1.05) * 2.2
