@@ -29,19 +29,62 @@ The fruit and its pieces are the working objects, so they stay plain: one flat c
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+Six things and five acts. A row is the thing an act is done to. Every cell works, none refuses, and the wrong use is at least as funny as the right one (pack: game-design, depth-from-combinations.md; pack: game-design, liveliness-from-causing-and-comedy.md).
+
+The things: the **fruit** (an uncut one on the board), a **piece** (anything cut from one), a customer's **tin**, the **customer**, the **crate** of fresh fruit, and the stall **dog** under the counter. The acts: **slice** it, **poke** it (a tap), **give** it a piece (carry one to it and let go), **fling** a piece at it, and **roll** it (carry the marking roller over it).
+
+| | Slice | Poke | Give a piece | Fling a piece at it | Roll |
+| --- | --- | --- | --- | --- | --- |
+| **Fruit** | Cut square where the stroke crosses: thwack, juice, two pieces hop apart. | It quivers end to end and gives its own low note. | The piece lies on top of it from the left end, so the two lengths can be compared edge to edge. | It bounces off with a rubber boing and the fruit shivers. | The roller presses the equal parts of the ticket into it, one tick a part. |
+| **Piece** | Cut again, a higher thwack the shorter it is; too thin, and a curl of peel spins off to the dog. | It rings: the shorter the piece, the higher the note, as a string does. | The two butt end to end and travel as a row; their lengths add. | It is knocked along like a puck and clacks into the next one. | The parts are pressed into the piece, as if it were a whole of its own. |
+| **Tin** | The blade skids off with sparks and the tin rings at the pitch of its length. | Shut, it rattles and stays shut. Open, its jaw snaps like a castanet. | It springs open to its true length beside the piece. The piece fits, sticks out, or leaves a gap. | It bongs off the lid and skitters back onto the counter. | The whole and its equal parts are ruled along the rail under the open tin. |
+| **Customer** | Only a tuft, a feather tip or a whisker end comes off, and it pops back; the customer looks about, puzzled. | Each has its own flinch and noise. | It eats the piece as it is, bypassing the tin, and its body shows exactly what went in. | Splat on the face; it licks the juice off in its own way. | It is rolled flat as a page, then springs back into shape with a honk. |
+| **Crate** | A slat splits and one fruit of each kind tumbles out. | One fresh fruit of the ordered kind thumps onto the board. | The crate chews and burps the piece across to the dog. | It rocks, and a fruit jumps out by itself. | The slats rattle like a washboard. |
+| **Dog** | It snaps at the passing blade and bites the speed lines. | Tail thumps and one bark. | It eats it, cheeks bulging by the length. | It catches it in the air; the longer the piece, the bigger the flip. | Its ears are ironed flat and spring up one at a time. |
+
+**On day 15** the child cuts a third, a fifth or five twelfths of any fruit by eye in one stroke; fills one order several ways from pieces left over (three quarters from a half and a quarter, a third from two sixths); knows what each customer cannot stand and serves it on purpose, or on purpose not; and has cut a row of pieces that plays a tune, having found that half the length rings an octave higher.
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+**A fraction is a share of a length.** The whole is one fruit lying along a straight board. A fraction of it is the piece from its left end to a square cut. Its size is a length the child can lay against another length, and nothing else about a piece varies. This was chosen before the game: the pack's table gives, for fraction size, a strip or a line with an estimate followed by the true answer beside it (pack: game-design, representation-before-game.md).
+
+- **The estimate, then the truth beside it.** The child cuts by eye. The customer's tin then opens at its true length beside the piece, both starting at the same left edge, with the whole and its equal parts ruled on the rail underneath. The difference between the two is a length that can be seen: this much too long, or this much too short.
+- **The whole changes size.** Three kinds of fruit have three lengths. Half of a long fruit is longer than half of a short one, so a share is always a share of this fruit, and pieces of different fruit are not compared as fractions.
+- **Equal shares get several names by cutting.** Two quarter pieces laid end to end lie exactly on a half piece. Nothing tells the child so; the lengths do.
+- **More than a whole** is a row longer than one fruit: a whole and a piece of a second one.
+
+**What stands behind it.** Estimating a place on a line and then seeing the true place has a trial behind it: the pack records large gains in under fifteen minutes for fractions on a line with that feedback, and none for the same estimates without it. That trial used a number line from 0 to 1 and written fractions. This game uses a strip with a picture of the share, which is school practice (the bar or strip of the Dutch tradition, the visual fraction model of the California standards) and has no trial of its own as built here.
+
+**Object, picture, symbol, and where it stops.**
+
+1. Object: the fruit and its pieces.
+2. Picture: the ticket each customer holds, a small strip in the fruit's colour with the ordered share filled in. It is much smaller than the fruit, so it can be read for its proportion and never copied for its length.
+3. Symbol: from the position named `written` on, the fraction is laid on the filled share of the ticket and on the open tin, with a horizontal bar. From the position named `bigger`, the sign for less than, equal or greater than is laid between two open tins.
+
+It stops there for this band. A symbol is never shown without the length it names, no symbol is ever the only way to know an order, and nothing is written on a piece the child cut: a cut piece is named by nothing but its length (pack: game-design, fade-to-school-symbols.md).
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No: the place of the cut along the fruit is the fraction, so with another subject put in its place there is no decision left and no game.
+- **Attention.** At the moment of decision the child looks at the whole length of this fruit and at the share on the ticket, and thinks about where that share of this length ends; the hairline shows where the cut will fall before the stroke commits, so the stroke asks for no aim and no timing.
+- **Fun.** The skill is used in the most enjoyable moment: the slice is the toy, and placing it is the fraction.
+- **Guess.** A stroke at random fits a tin about one time in twelve, and a continuous length has no list of options to try; a child can always finish an order by trimming a piece against the open tin, which is matching and not fraction work, and for that reason only a first cut made before the tin opened moves the child on in the designed order.
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+A tin is exactly as long as the share that was ordered, and its end wall is a sprung jaw with a little give. That one fact carries every consequence (pack: game-design, errors-show-as-consequences.md).
+
+- **Too long.** The piece sticks out past the jaw by exactly the excess. The lid comes down on it, clangs and bounces, and will not shut. Where: at the jaw end of the tin. Why: on the rail under it the whole is ruled into its equal parts, the tin covers the ordered number of them, and the piece runs on into the next.
+- **Too short.** The jaw closes on air. The piece slides and rattles in a gap exactly as long as what is missing, and the same ruled parts show how much of a part that is.
+- **Within the give.** The jaw takes up the slack, the lid shuts with a click, and the customer eats. This is a consequence too, not an approval: nothing lights, chimes or cheers.
+- **The wrong fruit.** A piece of another kind of fruit is a share of a different whole. The customer picks it out between two fingers and drops it to the dog.
+- **Against a customer's taste.** The order still counts, and the customer's body shows what it thinks of these exact pieces ("The characters and their fixed tastes").
+
+**The state stays.** Every piece stays where it lies and nothing is taken back, reset or lost. The child changes one thing: trims the piece against the jaw, lays another piece beside it, or cuts afresh from a new fruit, which a tap on the crate supplies at no cost. The child may also send the customer off with the order as it is, and the customer eats it as it is.
+
+**The give is the game's own choice.** It is one twenty-fourth of the whole fruit, to either side. No record says how close a cut by eye should be. The same measure is the thinnest piece a cut can make, so anything thinner than the give is a curl of peel and not a piece.
+
+Feedback is fullest when an idea is new: the first time a new idea is met, the roller rules the parts under the open tin one at a time ("The scenes"). After that the ruled parts simply appear with the tin.
 
 ## The designed order, and what is stored
 
