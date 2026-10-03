@@ -78,7 +78,7 @@ export function plasticMaterial(seams = true): ShaderMaterial {
 }
 
 /** A build as one geometry. */
-export function brickGeometry(bricks: readonly Brick[], withBottoms = false): BufferGeometry {
+export function brickGeometry(bricks: readonly Brick[], withBottoms = true): BufferGeometry {
   return meshGeometry(buildMesh(bricks, withBottoms))
 }
 

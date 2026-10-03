@@ -69,7 +69,7 @@ export function react(game: Game, deed: Deed): void {
     case 'grab': {
       const body = game.bodies[deed.toy]
       game.held = deed.toy
-      body.hang = 0; body.squash = 1.22; body.squashV = 0
+      body.hang = 0; body.squash = 1; body.squashV = 0
       claw.load = body.heavy; claw.grip = body.heavy === 2 ? 0.52 : 0.3
       game.shake(body.x, body.z, 13, 6, deed.toy)
       // What it stood on wobbles as its top goes.

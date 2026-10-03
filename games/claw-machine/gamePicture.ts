@@ -85,7 +85,9 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   const look = (key: number, body: Body, x = body.x, y = body.y, z = body.z, turn = 0): ToyLook => ({ key, toy: body.toy, x, y, z, squash: body.squash, leanX: body.leanX, leanZ: body.leanZ, scale: body.scale, turn })
   /** A thing in or on a gobbler rides its pose as if fixed to it: it shifts, leans and turns with it and rises as it stretches. */
   const riding = (actor: Actor, body: Body, key: number) => {
-    const at = turned(body.x - actor.x, (body.y - actor.y) * pose.squash, body.z - actor.z, pose)
+    // The body draws wider as it squashes and narrower as it stretches, and what is in it keeps its place in it.
+    const wide = 1 / Math.sqrt(Math.max(0.2, pose.squash))
+    const at = turned((body.x - actor.x) * wide, (body.y - actor.y) * pose.squash, (body.z - actor.z) * wide, pose)
     const one = look(key, body, actor.x + pose.dx * actor.scale + at.x, actor.y + pose.dy + at.y, actor.z + pose.dz * actor.scale + at.z, pose.turn)
     one.leanX += pose.leanZ; one.leanZ -= pose.leanX
     toys.push(one)
@@ -118,11 +120,14 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   }
   for (const actor of game.waiting) stand(actor)
   for (const actor of game.leaving) stand(actor)
+  // What a gobbler carries off is drawn with it, and not a second time.
+  const carried = new Set<Body>()
+  for (const actor of game.leaving) for (const body of actor.cargo) carried.add(body)
 
   game.bodies.forEach((body, toy) => {
     const where = game.world.cycle.where[toy]
     const inside = toy !== game.held && ((body.mode === 'resting' && where.at === 'belly') || body.mode === 'mouth')
-    if (inside) return
+    if (inside || carried.has(body)) return
     toys.push(look(game.generation * 100 + toy, body))
     // A toy in the jaws has no shadow of its own, and neither has one on a crate or behind the parapet.
     if (toy === game.held || body.z < TRAY.z - 0.5) return
@@ -162,7 +167,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     // Left alone, the claw is never quite still: the cable sways a hair and the jaws work a little.
     claw: {
       x: claw.x, z: claw.z, length: claw.length,
-      swingX: claw.swingX + (resting ? 0.012 * Math.sin(game.time * 1.3) : 0), swingZ: claw.swingZ + (resting ? 0.008 * Math.sin(game.time * 0.9 + 1) : 0),
+      swingX: claw.swingX + (resting && game.held < 0 ? 0.012 * Math.sin(game.time * 1.3) : 0), swingZ: claw.swingZ + (resting && game.held < 0 ? 0.008 * Math.sin(game.time * 0.9 + 1) : 0),
       open: claw.open + (resting && game.held < 0 ? 0.06 * Math.sin(game.time * 1.1) : 0), squash: claw.squash,
     },
   }

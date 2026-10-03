@@ -152,8 +152,13 @@ function covered(bricks: readonly Brick[], brick: Brick, sx: number, sz: number)
   return false
 }
 
-/** One mesh for a whole build. A build that never comes apart is one draw. */
-export function buildMesh(bricks: readonly Brick[], withBottoms = false): BrickMesh {
+/**
+ * One mesh for a whole build. A build that never comes apart is one draw.
+ * Every brick and every stud is built closed, underside and all: a closed
+ * solid has an inside, so the intersection audit can tell what is in it from
+ * what only stands on it.
+ */
+export function buildMesh(bricks: readonly Brick[], withBottoms = true): BrickMesh {
   const b = new Builder()
   for (const brick of bricks) {
     const y0 = brick.y * PLATE, y1 = (brick.y + brick.h) * PLATE
@@ -177,7 +182,7 @@ export function buildMesh(bricks: readonly Brick[], withBottoms = false): BrickM
     else for (let ix = 0; ix + 1 <= brick.w + 1e-6; ix++) for (let iz = 0; iz + 1 <= brick.d + 1e-6; iz++) cells.push([brick.x + ix, brick.z + iz])
     for (const [sx, sz] of cells) {
       if (covered(bricks, brick, sx, sz)) continue
-      b.cylinder(sx + 0.5, y1, sz + 0.5, STUD_RADIUS, STUD_HEIGHT, 'y', STUD_SIDES, brick.colour, false)
+      b.cylinder(sx + 0.5, y1, sz + 0.5, STUD_RADIUS, STUD_HEIGHT, 'y', STUD_SIDES, brick.colour, true)
       b.studs++
     }
   }

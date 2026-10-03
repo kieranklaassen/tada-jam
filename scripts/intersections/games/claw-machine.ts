@@ -56,7 +56,28 @@ export default {
     // The clear front of a belly: a pane with depth writing off, set a quarter stud inside its frame.
     '-window$',
   ],
-  allow: [],
+  allow: [
+    {
+      a: '^cabinet$', b: '^toy-', kind: 'penetration', upTo: 0.12,
+      reason: 'a toy stands on the studs of the tray, as a brick does: the studs under it reach a fifth of a stud into its base and its wheels.',
+    },
+    {
+      a: '^toy-', b: '^toy-', kind: 'penetration', upTo: 0.12,
+      reason: 'a toy stood on another seats on its studs, which reach a fifth of a stud into its base.',
+    },
+    {
+      a: '^crate-', b: '^toy-', kind: 'penetration', upTo: 0.12,
+      reason: 'the load of a crate stands on the studs of its deck.',
+    },
+    {
+      a: '^cabinet$', b: 'gobbler-.*-body$', kind: 'penetration', upTo: 0.06,
+      reason: 'a gobbler stands on the studs of the step: they reach a fifth of a stud into its feet.',
+    },
+    {
+      a: 'gobbler-.*-body$', b: 'gobbler-.*-pupils$', kind: 'penetration', upTo: 0.75,
+      reason: 'a pupil is a small ball set into the ball of its eye, so that it rides on the eye as the gobbler looks about; it is meant to sit half in it.',
+    },
+  ],
   moments: [
     {
       name: 'first-visit',

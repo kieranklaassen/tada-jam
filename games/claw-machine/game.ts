@@ -263,7 +263,9 @@ export class Game {
       const actor = this.crew[target.slot]
       if (!actor) return { x: aim.x, z: SLOT_Z }
       const knob = knobAt(shapeOf(actor.id))
-      return this.held >= 0 ? { x: actor.x, z: actor.z } : { x: actor.x + knob.x, z: actor.z + knob.z }
+      // With a toy in the jaws the toy is brought over the middle of the mouth, and the toy hangs by its
+      // highest part, which may be off its middle.
+      return this.held >= 0 ? { x: actor.x + holdOf(this.bodies[this.held].toy).x, z: actor.z } : { x: actor.x + knob.x, z: actor.z + knob.z }
     }
     if (target.on === 'rail-end') return { x: target.side * RAIL.maxX, z: BELL.z }
     // The ledge: the front of a crate, a waiting head, or the gate.
@@ -303,6 +305,8 @@ export class Game {
         // The claw comes down over the highest part of the toy, which is what its teeth close beside.
         const stack = this.tray()[place]
         if (this.held < 0 && stack.length > 0) to = { x: to.x + holdOf(this.bodies[stack[stack.length - 1]].toy).x, z: to.z }
+        // And a toy in the jaws is let go with its own middle over the place.
+        if (this.held >= 0) to = { x: to.x + holdOf(this.bodies[this.held].toy).x, z: to.z }
       }
     }
     this.pending = target
@@ -509,8 +513,9 @@ export class Game {
       const down = (hub.y - RAIL.top) / claw.length, across = (hub.x - claw.x) / claw.length, along = (hub.z - claw.z) / claw.length
       const drop = HINGE_DROP + this.hang(toy)
       body.mode = 'held'
-      body.hang = Math.min(1, body.hang + STEP / 0.18)
-      const ease = body.hang * body.hang * (3 - 2 * body.hang)
+      // It was standing where the jaws closed, so it hangs true at once.
+      body.hang = 1
+      const ease = 1
       // The part the teeth hold is under the hub, so a toy whose highest part is off its middle hangs off its middle.
       const off = holdOf(body.toy).x
       body.x += (hub.x + across * drop - off - body.x) * ease

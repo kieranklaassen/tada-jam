@@ -91,9 +91,13 @@ const OFF = 44
 export function tipOut(game: Game, tipped: readonly number[]): void {
   const world = game.world, cycle = world.cycle
   const old = game.crew, first = cycle.toys[0]
-  // The toys stay in the bellies they were in until each is tipped.
+  // The toys stay in the bellies they were in, and ride them, until each is tipped.
   for (const toy of tipped) game.bodies[toy].mode = 'parked'
-  for (const actor of old) actor.role = 'leaving'
+  for (const actor of old) {
+    actor.role = 'leaving'
+    actor.cargo = tipped.filter((toy) => Math.abs(game.bodies[toy].x - actor.x) < 6.6).map((toy) => game.bodies[toy])
+    actor.cargoAt = actor.cargo.map((body) => ({ x: body.x - actor.x, y: body.y - actor.y, z: body.z - actor.z }))
+  }
   game.leaving = old
   const crew = crewNow(world)
   game.crew = game.waiting
@@ -113,6 +117,8 @@ export function tipOut(game: Game, tipped: readonly number[]): void {
       beats.push(cue(game, start + 0.3 + j * 0.14, () => {
         const body = game.bodies[toy], home = game.spotOf(toy)
         game.say({ type: 'tip', nth: n })
+        const held = actor.cargo.indexOf(body)
+        if (held >= 0) { actor.cargo.splice(held, 1); actor.cargoAt.splice(held, 1) }
         // Chewed small again, up the throat, out of the mouth growing as it comes, and over the teeth onto the tray.
         const tongue = game.mouthOf(actor).y
         const under = { x: actor.x, y: tongue - 0.75, z: actor.z, seconds: 0.12, scale: DOWN_THE_THROAT, landing: 'again' as const, fixed: true }
