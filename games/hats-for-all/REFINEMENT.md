@@ -3,59 +3,100 @@
 
 ## Status
 
-- Stage: game, being built on the toy (the game run of `docs/build/runs/game.md`). This block is rewritten at the end of the run.
+- Stage: gates. The game is built on the toy and the gates were run as far as the build machine takes them (below). It stands on the sheet as it is after round 3 of its check, with the two replacements of that round pasted; round 4 has not reported.
 - Sheet, round 1: checker B, open, 14 findings, all pasted at commit `06c946d`.
-- Sheet, round 2: checker D, on the text with sheet part sha256 `0db3c2a0d4d45341c6386f07f99d80b60d4fc49c26696366a34dfb5c6644638d`. Outcome: open, 4 findings. All 4 replacements are pasted as the checker wrote them, none disputed, at commit `d9a0c46` (sheet part sha256 `26cdd160de55cad7ff69e3dc309676351c6b290327f1de763efc3b89cdbf2e78`). Brought into line: the three sounds the grid's cells now name (the squeal, the whirr and the falling whistle) are voices of the game and are heard in those cells, by test.
-- Open: sheet ready for check, round 3
+- Sheet, round 2: checker D, open, 4 findings, all pasted at commit `d9a0c46`.
+- Sheet, round 3: checker E, on the text with sheet part sha256 `26cdd160de55cad7ff69e3dc309676351c6b290327f1de763efc3b89cdbf2e78`. Outcome: open, 2 findings. Both replacements are pasted as the checker wrote them, none disputed, at commit `8f106a2` (sheet part sha256 `3c3a46542314229cc47bae57cd57ac510e4a7cbc345796262c7f43d843317e3b`). Brought into line at commit `90798d1`: every sound the grid's cells now name is a voice of the game (twenty-one new ones in `voices.ts`, held to the stated ranges), and each of the thirty cells is played through the game in a test and heard as the sheet has it.
+- Look in use: foam play mats, the first reserved look. The owner had been shown the toy and had not answered when this run began; the game was built on at the builder's risk. Everything that is not drawing is outside `view/`, so another look replaces only that folder.
+- Open: sheet ready for check, round 4
 
-**For the next checker, from the builder**
+**What the lead should try first**
 
-- The row for `crew` in the table of saved fields does not name the spot, and the save holds one: a creature keeps its round spot when another walks out, so the row order alone cannot rebuild where each stands. If the row should say so, the sentence would be: "The creatures on the mat in row order, at most five: each one's kind, the round spot it stands on, and the hats on its head from the bottom up, each hat named by its hole in `tile`." Nothing was pasted for this: it is not a finding of round 1.
+1. A first visit with a fresh slot: the first showing plays by itself, once (a creature walks to the tile, stamps, and the hat pops onto its own head). Then touch nothing for ten seconds: thin orange rings come up round the hats that can be taken, and the ghost hand presses one.
+2. Tap every hat. With a spare hat in the tile the last one comes out with nobody under it and scuttles beside a round spot; tap it and it goes home; leave the crew alone for two seconds and it parades.
+3. After the parade the next crew's first creature waits in the arch, ringed. Tap it or the arch.
+4. Drag a hat onto a head that has one (the tower slips over its eyes), then a third (the tower of three falls, every time). Pull a creature to another, to the tile, to nowhere.
+5. Put the game away in the middle of any scene and open it: nothing replays, and the world is as the scene leaves it.
+6. `?seed=<n>` in the address fixes a first visit's crews; `?tier=3` shows the lowest tier; three quick taps in the top right corner show the grown-up overlay.
+
+**What ran on the build machine, and what did not**
+
+- Ran and passed: `npx tsc --noEmit`; `npx vitest run games/hats-for-all test/games.test.ts` (346 tests, about 6 seconds); `npx vitest run`, the whole repository (2176 passed, 1 skipped); `npm run -s wordless:check`; `node scripts/egress-check.ts`; `npm run build`; `npm run egress:built`; `npm run education:built`.
+- The intersection audit, `npm run check:intersections -- hats-for-all --ci`: `enforce: true`, eleven moments from saved worlds, 1203 samples, 32 pieces. Passes: 46 findings, then 13, then 1, then none. Five enforced runs in a row came back clean with the same samples, pieces and findings each time (0 open, 0 allowed, 2 under the pixel floor), the first of them while stills were being taken on the same machine, and a sixth with a replay of the second pass's thirteen findings. No contact is allowed: every finding was fixed at its root. A seventh run, on the final build, was clean as well.
+- The audit ran with the Chromium already on the machine (141), reached through a private browsers folder outside the repository, because Playwright's own build could not be downloaded here. CI uses Playwright's own.
+- Not run: any frame rate (the machine draws in software); any listening (it has no sound); `compound audit` (no file under `docs/solutions/` was touched).
+
+**What is still weak**
+
+- Nobody has heard the game. Thirty-three voices and twenty tunes of babble are numbers held to ranges; whether "pomf" sounds muffled and "plap" flat is for ears.
+- Nobody has seen it move at speed. The stills say layout, colour and that nothing passes through anything; the weight of a landing and the comedy of the acts are untested by eye.
+- The same kind of creature can be in two crews running: it walks off to the left and a moment later walks in from the right.
+- The idle rings round neighbouring hats in the tile touch at their sides.
+- The two free round spots at the ends of the row may read as places to put something.
+- A hat on a round head rests on its very top and stands proud at the sides.
+- The acts are short and simple; "walks as a hat with legs" and "runs a circle under it" are the two that carry most of the comedy.
 
 **Requests to the lead**
 
-- The check of the sheet, round 1.
-- The frame rate of the spike and the toy at a pixel ratio of 2 on a real graphics card. On the build machine the scene is 14 draw calls and about 31,000 triangles at every tier.
-- A row in the claimed-styles registry of `docs/art-direction.md` (the file, the change, the reason: section 3, one new row, because the look must be registered in the same pull request). Proposed row: Hats for All; "Foam play mats 3D: thick matte foam slabs with a fine stipple and a small soft bevel, a jigsaw-toothed teal floor, a cream tile the hats press out of and leave their holes in, hats in the three flat primaries, cut-out creatures in secondaries, plain daylight"; art guide `games/hats-for-all/ART.md`.
+- The check of the sheet, round 4.
+- Frame rates on a real graphics card at a pixel ratio of 2. Counted on the build machine in the busiest stretch: 20 draw calls at the most, about 39,000 triangles, no shadow map, no post pass.
+- A listen to the sounds on a real machine.
+- The registry row in section 3 of `docs/art-direction.md`: its text is at the end of `ART.md`.
+- `scripts/jam-intersections.mjs` (the file, the change, the reason): its cache of prepared pieces is keyed by the geometry's uuid, and the audit seeds `Math.random`, so after a reload a new geometry gets the uuid an older one had and the old triangles are used. A game that cuts a mesh from its saved state is then checked against the wrong mesh (here the hat tile: three false z-fights). Worked around in the game by naming each cut of the tile; the audit would be safer keyed by the positions it was sent.
+
+**For the next checker, from the builder**
+
+Places where the build has had to settle something the sheet leaves open, or says in other words. Nothing was pasted for these; they are not findings of a round.
+
+- The row for `crew` in the table of saved fields does not name the spot, and the save holds one: a creature keeps its round spot when another walks out. The sentence would be: "The creatures on the mat in row order, at most five: each one's kind, the round spot it stands on, and the hats on its head from the bottom up, each hat named by its hole in `tile`."
+- Two loose hats never rest beside one round spot: the second takes the nearest free one. The sheet says "the nearest round spot".
+- The first showing's cause is built as the first time the game is opened: the first crew already stands on its spots, and nothing walks in before a touch. The sheet has "the very first crew walks in".
+- The parade ends with the creatures back on their own round spots, looking towards the arch. The sheet has "in a row on the far side, facing the arch"; the row of round spots is the far side of the mat from the child.
+- Who waits in the arch is a creature of the next crew whose kind is not on the mat, where there is one, so the same creature is not seen twice at rest. The sheet has "the first creature of the next crew".
+- The finished crew walks off to the left, since the one who waits stands in the arch. The sheet does not say where it goes.
 
 **Findings not yet fixed**
 
-- The toy saves nothing of its own: it is the same scene at every load. `save.ts` is written and tested and is not wired into the Mount yet.
-- Of the idle ladder only the glow is drawn (the hats that can be taken stir). The ghost hand comes with the game.
-- No drag yet. A finger that slides before it lifts counts as a tap on what it landed on.
-- The fifteen acts of the tastes are named in `tastes.ts` and not animated: the toy plays a bounce and a babble in the tune of the taste.
-- No mesh is named or tagged for the intersection audit, and `scripts/intersections/games/hats-for-all.ts` is not written. The toy's model test holds only that nothing goes below the floor.
-- Nobody has heard a sound of this game. Every voice is numbers in `voices.ts`, held to stated ranges by its test.
+- None from the audit. From the cold playtest proxy, see "What is still weak".
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
 ### Template notes
 
-- `hats-for-all.tsx` (the Mount): changed where its comments say to. The renderer, the toy and its sounds went in at `applyTier`, `draw`, `resize`, `act` and the loop; the import of `tick` went out. **For the template**: `draw` needs the idle ladder's glow, and the only way to it is to call `ladder.update` a second time; keeping the loop's result in a variable that `draw` reads would save every game that call.
-- `config.ts`: tuned as meant. `Tier` gained `stipple`; `LADDER` holds the eight ids; `FIRST_VISIT` has three rows written out, one for each age of the band, in place of the generated two.
-- `state.ts`: as copied. `save.ts` wraps it as the file asks, reading the same record a second time. **For the template**: the wrapper has to repeat the test for "a record of this version" to know whether to give a first visit or to repair; an exported helper for that test would keep the two reads from drifting apart.
-- `audio.ts`: as copied. `sound.ts` turns a voice written as numbers into its `tone` and `noise`. A delay is passed inside the voice, which works.
-- `input.ts`, `guidance.ts`, `overlay.ts`: as copied. Of `guidance.ts` only the glow is used so far.
-- `scene.ts`: as copied and not used yet: the toy has no scene.
+- `hats-for-all.tsx` (the Mount): changed where its comments say to, and as the pilot notes say. The game is made when the slot has been read; `draw` has a case with no game (the bare mat); sounds are played inside the gesture handler and after the step; a scene playing touches the ladder; the ladder's result is kept in a variable for `draw`; `?seed=<n>` fixes a first visit. **For the template**: a threshold between a smeared tap and a drag belongs in the Mount or in `input.ts` for a band that starts below 4 (here 44 pixels): `TAP_SLOP` alone turns a toddler's tap into a drag of nothing.
+- `config.ts`: tuned as meant. `Tier` has `stipple`; `LADDER` holds the eight ids; `FIRST_VISIT` has a row for each age of the band.
+- `state.ts`: as copied. `save.ts` wraps it as the file asks. **For the template**: the wrapper repeats the test for "a record of this version"; an exported helper would keep the two reads from drifting apart.
+- `scene.ts`: as copied. Each scene is a few cues and one last beat that settles the theatre; the walking and flying between cues are chains in `play.ts`, which `settle` runs to their ends, so a finished scene leaves the stage as the save has it. **For the template**: `Scene` has no way to ask how long it has run or to hold a chain; a game whose beats are "walk there, then do that" builds its own, as here.
+- `audio.ts`: as copied; `sound.ts` turns a voice written as numbers into its `tone` and `noise`.
+- `guidance.ts`: as copied; `handPose` and the ladder drive the rings and the ghost hand. What they show is in `guide.ts`.
+- `input.ts`, `overlay.ts`: as copied. The Mount reads `CORNER` from `overlay.ts` to keep the grown-up's corner bare.
 - `perf.ts`, `quality.ts`, `attention.ts`, `saveCadence.ts`: frozen and untouched.
-- The generator ran once and its untouched copy passed the typecheck and the tests.
-- The machine: Node 24 came from `nvm` under `/opt/nvm`, with its `bin` put first on `PATH` in every command. A Chromium was already on the machine and Playwright drove it by its path, so nothing was downloaded. In software, with the canvas antialiased, a frame at a pixel ratio of 2 takes about half a second, and a screenshot there needs a timeout well above the default. **For the template or the cloud page**: `ExtrudeGeometry` with a negative `bevelOffset` breaks on an outline with sharp teeth (the inner edge crosses itself and faces go missing), so a jigsaw edge is bevelled outside its outline.
+- three.js: `ExtrudeGeometry` with a negative `bevelOffset` breaks on an outline with sharp teeth or a sharp point (the inner edge crosses itself): cut the top face inside the outline yourself and bevel outwards. A body that leans by rotating about its feet puts a foot through the floor: lean by a shear.
+- The machine: Node 24 from `nvm` under `/opt/nvm`. Playwright drove the Chromium already on the machine; for stills by its path, and for the audit through a folder of links named as Playwright expects, kept outside the repository. In software a frame at a pixel ratio of 2 takes about half a second.
 
 ### For the owner to decide
 
-- The look, foam play mats, and the toy, at the toy checkpoint.
-- Speech. The game speaks no number word, by the guide's default that no game depends on speech until he has tried it on his iPad. With a number word heard on each hat as it is given, the game could also be designed from the records on number words, and a two-year-old in California would then have a record under the game; as it stands that child has none. Whether this game should wait for the speech trial is his call.
-- Whether the cycle's change may come by itself. In the sheet one more creature walks in, or one walks out, once the crew is as paired as it can be and has been left alone for two seconds, as the consequence of the child's last move. If he wants it to wait for the child's touch, the scenes change.
-- Whether this band needs a harder option laid beside an easier one for the child to pick. The sheet offers none, because one next act is offered at a time at this age, and says what the child can choose in its place.
+- The look, foam play mats, and the toy: shown to him before this run, not yet answered.
+- Speech. The game speaks no number word, by the guide's default. With a number word heard on each hat as it is given, the game could also be designed from the records on number words, and a two-year-old in California would then have a record under the game; as it stands that child has none.
+- Whether the cycle's change and the parade may come by themselves. They come two seconds after the crew is left alone, as the consequence of the child's last move. If he wants them to wait for a touch, the scenes change.
+- Whether this band needs a harder option laid beside an easier one for the child to pick. The sheet offers none and says what the child can choose in its place.
 - Whether three kinds of hat are plain enough for working pieces. Each is one flat colour and one simple outline; the kinds exist so that the creatures can have tastes.
+- Whether the first showing may play by itself on a first visit. It is the one scene that no touch causes; it plays once ever.
 
 ## Pass log
 
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
 | Spike 1 | The first still of the scene, software, 1180 by 820, pixel ratio 1 | Half the floor was missing and a stray triangle crossed it; the hats and the creatures already read. | The jigsaw tiles' bevel is cut outside the outline; the mat widened to fill the view. | Not measured (software) | The top third is empty wall; the shadows are faint. |
-| Spike 2 | Stills after four taps and a poke in the floor, pixel ratios 1 and 2; the lowest tier | A hat on a head, in its hole and loose on the floor cannot be confused. At ratio 2 the stipple and the bevels show. The lowest tier still looks like the game. Bare creatures did nothing to show they want a hat. | The camera moved in and down a little; a bare creature pats its head now and then; darker shadows; one step of bevel on the floor. | Not measured (software): 14 draw calls, about 31,000 triangles | The wall above the row is kept empty on purpose, as room for a tower of hats; the lime creature is the weakest against the teal floor; nothing here says how it moves on a real tablet. |
-| Round spots | A still after four taps, software, pixel ratio 1 | The sheet has the creatures stand on round spots and a loose hat rest beside one; the scene drew none. | Five lighter discs inlaid flush in the mat; the loose hat circles beside its spot. | Not measured (software): 14 draw calls, about 31,000 triangles | The two empty spots at the ends of the row may read as places to put something. |
+| Spike 2 | Stills after four taps and a poke in the floor, pixel ratios 1 and 2; the lowest tier | A hat on a head, in its hole and loose on the floor cannot be confused. At ratio 2 the stipple and the bevels show. Bare creatures did nothing to show they want a hat. | The camera moved in and down; a bare creature pats its head now and then; darker shadows; one step of bevel on the floor. | Not measured (software) | The wall above the row is kept empty on purpose, as room for a tower of hats. |
+| Round spots | A still after four taps | The sheet has the creatures stand on round spots; the scene drew none. | Five lighter discs inlaid flush in the mat. | Not measured (software) | The two empty spots at the ends may read as places to put something. |
+| Game 1 | A whole first cycle on the dev server: the first showing, the hand, the parade, the next crew | "The orange light is on the hats and the red one goes orange. The hand is under the hat, not on it. There are two purple ones." | The glow became a ring round a thing; the hand's finger sits on its target; a creature not already on the mat waits in the arch. | Not measured (software) | The rings were wide and ran together. |
+| Audit 1 | The intersection audit's first run: 46 findings | Hats sank into heads and the floor, leaning bodies put a foot through the mat, ears and hands were inside bodies, a flying hat's tip dived into the tile. | A body leans by a shear; a hat rests on the head and is lifted by as much as a tipped corner dips; flights lie down or stand up in the high middle of their way and come over a hole before going in; ears and hands lie in front of the body; a creature's parts share no plane; the moments find their meshes. | Not measured | 13 findings. |
+| Audit 2 | The second run: 13 findings | A pressed hat sank into the mat; a tower's hats crossed; Flop's ear brushed the arch; three z-fights were the audit taking one tile for another. | A pressed hat gets thinner and keeps its underside on the mat; a tower's hats stand square; ears swing less; each cut of the tile carries its own name. | Not measured | 1 finding. |
+| Audit 3 | The third run: 1 finding | A hat carried to the top of a tower rose through the hat below it. | A hat on its way to a head is as high as the head before it comes in over it; a falling tower's hats leave from the top down. | Not measured | None: five enforced runs clean, and one with a replay. |
+| Cold 1 | The cold playtest proxy on the production build, fresh slot, the shell's default age: ten seconds hands off, then a newcomer's minute, two dozen stills | "All the hats are in one long orange stripe. Which one do I press? The yellow hat has orange on it. When they walk round they are all in a heap by the door." Unclear moments: 4 (the stripe, the tint, the heap at the turn, the same creature leaving left and coming in right). | A thin ring that hugs each thing and stops short of the next; the parade's line opens out. | Not measured (software): 19 draw calls, about 36,000 triangles | The rings touched the hats' near edges. |
+| Cold 2 | The same stills again, same seed | "Each hat has its own ring now. The ring cuts the bottom of the blue hat." Unclear moments: 2 (the ring on the near edge; the same creature twice running). | A little more room inside each ring; the grown-up's corner answers nothing; a touch on the wall presses the mat's far edge. | Not measured (software) | The same creature in two crews running. |
+| Cold 3 | The same stills a third time, same seed | "The hand shows me the blue hat. They walk in a line now." Unclear moments: 1 (the same creature in two crews running). | None: the list is as short as this run gets it. | Not measured (software) | See "What is still weak". |
 
 ## For the pull request
 
@@ -63,21 +104,22 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### How the game meets the quality bar
 
-So far, at the toy stage. No frame rate has been measured on any machine, and no physical iPad has been measured.
+No frame rate has been measured on any machine, and no physical iPad has been measured. The lead measures on a real graphics card.
 
-- **Alive at idle.** Each creature breathes at its own tempo, sways, blinks at moments of its own, looks at the hats while bare and up at its hat when it has one, and a bare one pats its head now and then. A loose hat scuttles. All of it runs on the attended clock and stops when the game rests.
-- **Motion and sound on every touch.** A hat, a creature, the arch and the bare floor each answer when the finger lands, with a squash and a voice, and the lift plays the move. Sound is synthesized from numbers in `voices.ts`.
-- **Weight, squash, and follow-through.** A hat squashes under the finger, turns over in the air and squashes on landing; what it lands on squashes too and springs back with that creature's own spring.
-- **Kid-clear.** Three creatures, four hats and one arch, each with its own outline and colour, on a floor of a hue no piece uses; the hats lie on the lightest, plainest surface.
-- **Wordless clarity for the declared age.** No word, letter, numeral or symbol anywhere on the kid side; `npm run wordless:check` passes. Everything essential is a tap.
-- **Wordless guidance.** The idle ladder's glow is drawn as the takeable hats stirring. The ghost hand is not drawn yet.
-- **60 fps on a mid-range iPad.** Not measured. Built for it: pixel ratio capped at 2, 14 draw calls, about 31,000 triangles, no shadow map, no post pass, geometry built once, the loop paused when unattended, four tiers.
+- **Alive at idle.** Each creature breathes at its own tempo, sways, blinks at moments of its own, looks at the hats while bare and up at its hat when it has one, and a bare one pats its head now and then. A loose hat scuttles in a small circle. All of it runs on the attended clock and stops when the game rests.
+- **Motion and sound on every touch.** A hat, a creature, the arch and the bare floor each answer when the finger lands, and each of the grid's thirty cells has its own motion and its own sequence of sounds, by test (`game.test.ts`). Sound is synthesized from numbers in `voices.ts`.
+- **Weight, squash, and follow-through.** A hat squashes under the finger, turns over in the air and squashes on landing; what it lands on squashes and springs back with that creature's own spring; a body leans as foam does, feet planted.
+- **Kid-clear.** At most five creatures and five hats, each with its own outline and colour, on a floor of a hue no piece uses; the hats lie on the lightest, plainest surface; the hats themselves stay plain.
+- **Wordless clarity for the declared age.** No word, letter, numeral or symbol on the kid side; `npm run wordless:check` passes. Everything essential is a tap; a drag is an extra, and a smeared tap still counts as a tap. One want in every scene: bare heads look at the hats and pat themselves; after the parade one creature waits in the arch.
+- **Wordless guidance.** The idle ladder is whole: a thin ring round each thing that can be touched now, then the ghost hand presses one of them once (`guide.ts`), and it shows nothing while there is nothing to do but wait. A cold playtest proxy was run three times on the production build.
+- **60 fps on a mid-range iPad.** Not measured. Built for it: pixel ratio capped at 2, 20 draw calls at the most and about 39,000 triangles in the busiest stretch by a counted test (`frameBudget.test.ts`), no shadow map, no post pass, geometry built once, the loop paused when unattended, four tiers, the grown-up overlay.
+- **Nothing passes through anything.** The intersection audit is enforced with no allowance, on eleven moments that start from saved worlds and reach every creature under every hat, towers, loose hats, a carried hat, pulled creatures, each scene and a touch in the middle of each. Model tests hold what it cannot see between samples: no walker meets a stander, the tile, the arch or a loose hat in any scene of any position.
 - **Procedural or committed assets only.** Everything is built in code: no texture file, no font, no clip.
 - **Its own art direction.** Foam play mats; the art guide is the part of `ART.md` under "The look".
 
 ### The learning claim
 
-As the sheet has it after its first check, not yet passed: Hats for All is designed from three California preschool and transitional kindergarten learning foundations, which are foundations published by a state department and not standards, and from four records of guidance by the Dutch curriculum institute, which is guidance and not law. The pairing of one with one is taken from the Dutch record alone, and of the California foundation on dealing the game takes only one for each. Every record named was `confirmed` when the lookup was read on 2026-10-03; the states are to be read again on the day of the pull request. For a two-year-old in California the game rests on no record. Nothing here says what a child has reached. The records are named by pack id in `ART.md`, "The records".
+As the sheet has it after round 3 of its check, not yet passed: Hats for All is designed from three California preschool and transitional kindergarten learning foundations, which are foundations published by a state department and not standards (two of them in part), and from four records of guidance by the Dutch curriculum institute, which is guidance and not law (two of them in part). The pairing of one with one is taken from the Dutch record alone. Every record named was `confirmed` when each checker read the lookup on 2026-10-03; the states are to be read again on the day of the pull request. For a two-year-old in California the game rests on no record. Nothing here says what a child has reached. The records are named by pack id in `ART.md`, "The records", with what is taken and not taken of each.
 
 ### Defaults taken for the owner
 
@@ -85,11 +127,13 @@ As the sheet has it after its first check, not yet passed: Hats for All is desig
 - No speech: every creature's voice is invented and synthesized, and no number word is spoken.
 - No camera shake and no pause on impact: the answer to a touch is carried by chains of consequence, sound and squash.
 - The look is the first row reserved for the game; no other row was spiked.
-- From the sheet: sets of five or fewer; three kinds of hat; the cycle's change and the parade come by themselves once the crew has been left alone for two seconds; no harder option laid beside an easier one.
+- From the sheet: sets of five or fewer; three kinds of hat; the cycle's change and the parade come by themselves once the crew has been left alone for two seconds; no harder option laid beside an easier one; the first showing plays by itself once.
 
 ### What the next builder should know
 
 - Write every sound as numbers with a range test before wiring it: the test caught a voice below its lowest pitch on a machine that cannot hear.
-- Keep the motion as a pure module that returns numbers and let the view only draw them. The toy's seven tests press, tap and step it with no renderer.
-- When the rules say which thing is nearest, give the rules and the view the same pure geometry (`stage.ts`), so what looks nearest is nearest.
-- A fixed scene at load, with every seed fixed, is what lets a still be taken again.
+- Keep the stage as a pure "theatre" of numbers that the game tells what happened and the view only draws. The game, its thirty cells and its scenes are then tested with no renderer, and the scene graph can be built in a test to count a frame's draws.
+- Write the grid as data and play every cell through the game in a test that compares what was seen and heard with the grid. When the sheet's check asked three times for sounds in the cells, the test said which cells were still the same.
+- Give the rules and the view the same pure geometry, lanes included, and test the lanes: who walks where, and that no walker meets a stander. It found two walkers entering on the same spot before the audit ran.
+- Start every audit moment from a saved world. A drag in an audit moment needs the mesh found by name; a pattern that ends in `$` misses, because the label carries a colour after the name.
+- A fixed seed in the address is what lets a still be taken again.

@@ -20,7 +20,7 @@ import { FoamStage, type Guide } from './view/stage3d'
 const FRAME = 1 / 60
 /** The jam's bar is about 80 draw calls; this look's own is about 30. */
 const DRAW_BUDGET = 30
-/** Measured when written: 39,730 at the most, counting every mesh whole. */
+/** Measured when written: 38,714 at the most, counting every mesh whole. */
 const TRIANGLE_BUDGET = 45000
 
 function count(stage: FoamStage): { draws: number; triangles: number } {
