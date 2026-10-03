@@ -108,11 +108,12 @@ function readRiders(value: unknown): Rider[] {
  * Reads a saved world. Anything that is not this game's record, or that a
  * newer build wrote, gives a first visit. Inside a record each field is
  * repaired by itself, and a world left with nobody in play is given a rider,
- * so the game always opens on something to do.
+ * so the game always opens on something to do. With `cycle` off, as at the
+ * toy stage, no rider is read and none is laid out.
  */
-export function deserialize(raw: unknown, childAge: number | null, seed: number): World {
+export function deserialize(raw: unknown, childAge: number | null, seed: number, cycle = true): World {
   const r = record(raw)
-  if (!r || r.v !== STATE_VERSION) return freshWorld(childAge, seed)
+  if (!r || r.v !== STATE_VERSION) return freshWorld(childAge, seed, cycle)
   const base = readBase(raw, childAge)
   let world: World = {
     ...base,
@@ -121,14 +122,14 @@ export function deserialize(raw: unknown, childAge: number | null, seed: number)
     chalk: whole(r.chalk, 0, CHALK_COUNT - 1) ?? 0,
     train: readTrain(r.train),
     water: colour(r.water),
-    riders: readRiders(r.riders),
+    riders: cycle ? readRiders(r.riders) : [],
     // An unknown id is read as the position.
     ahead: typeof r.ahead === 'string' && LADDER.includes(r.ahead) ? r.ahead : base.position,
     shown: r.shown === true,
   }
   const someoneInPlay = (w: World) => w.riders.some(inPlay)
   // Someone waiting steps in, or a rider is laid out for the position as it stands.
-  if (!world.finished && !someoneInPlay(world)) world = stepIn(ensureNext(world))
+  if (cycle && !world.finished && !someoneInPlay(world)) world = stepIn(ensureNext(world))
   // A finished cycle with nobody home and someone still in play has no ending to stand.
   if (world.finished && someoneInPlay(world) && !world.riders.some((x) => x.at === 'home')) world = { ...world, finished: false }
   return world

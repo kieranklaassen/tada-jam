@@ -32,12 +32,27 @@ describe('the ride a mark gives', () => {
     expect(route.length).toBeCloseTo(300 + m.reading.length)
   })
 
-  it('rides from the nearer end, whichever way the mark was drawn', () => {
+  it('rides a mark the way it was drawn, from where the finger landed', () => {
     const m = mark(line({ x: 900, y: 400 }, { x: 250, y: 400 }))
     const route = routeAlong(train, m.p, m.reading, [])
-    // The nearer end is the one the finger lifted at.
-    expect(route.legs[0].pts[1].x).toBeLessThan(260)
-    expect(restOf(route, { ...train, face: -1 })).toEqual({ x: 900, y: 400, face: 1 })
+    expect(route.legs[0].pts[1]).toEqual({ x: 900, y: 400 })
+    const end = restOf(route, { ...train, face: 1 })
+    expect(end.x).toBeLessThan(260)
+    expect(end.face).toBe(-1)
+  })
+
+  it('marks the stretch of a loop, and the whole of a ring, as ridden all the way round', () => {
+    const arc = (from: number, to: number) => Array.from({ length: 51 }, (_, i) => ({ x: 500 + Math.cos(from + ((to - from) * i) / 50) * 113, y: 300 + Math.sin(from + ((to - from) * i) / 50) * 113 }))
+    const loop = mark([...line({ x: 200, y: 420 }, { x: 580, y: 380 }, 14), ...arc(Math.PI / 4, Math.PI / 4 - Math.PI * 1.6), ...line({ x: 449, y: 401 }, { x: 716, y: 536 }, 12)])
+    const route = routeAlong({ x: 190, y: 420 }, loop.p, loop.reading, [])
+    expect(route.rounds.length).toBe(1)
+    expect(route.rounds[0].from).toBeGreaterThan(150)
+    expect(route.rounds[0].to).toBeLessThan(route.length - 150)
+    const ring = mark(Array.from({ length: 61 }, (_, i) => ({ x: 600 + Math.cos((i / 60) * Math.PI * 1.97) * 120, y: 350 + Math.sin((i / 60) * Math.PI * 1.97) * 120 })))
+    const round = routeAlong({ x: 720, y: 350 }, ring.p, ring.reading, [])
+    expect(round.rounds).toEqual([{ from: 0, to: round.length }])
+    expect(round.happenings[round.happenings.length - 1]).toEqual({ at: round.length, what: 'roundabout' })
+    expect(routeAlong(train, mark(line({ x: 200, y: 400 }, { x: 800, y: 400 })).p, mark(line({ x: 200, y: 400 }, { x: 800, y: 400 })).reading, []).rounds).toEqual([])
   })
 
   it('gives a fast run on a long straight, a corner at every corner, a loop on a loop', () => {

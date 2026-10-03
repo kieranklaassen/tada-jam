@@ -123,11 +123,12 @@ function standing(riders: readonly Rider[]): { at: Pt; index: number }[] {
  * The child makes a mark. `raw` is where the finger went, in tar units. The
  * world that comes back is at rest and ready to be saved.
  */
-export function makeMark(before: World, raw: readonly Pt[]): { world: World; told: Told[] } {
+export function makeMark(before: World, raw: readonly Pt[], cycle = true): { world: World; told: Told[] } {
   const p = tidy(raw)
   const told: Told[] = []
   if (p.length === 0) return { world: before, told }
-  const settled = settleIn(before)
+  // With `cycle` off, as at the toy stage, no cycle begins and nobody is laid out.
+  const settled = cycle ? settleIn(before) : { world: before, began: false, boarded: [] }
   let world = settled.world
   if (settled.began) told.push({ what: 'began' })
   for (const i of settled.boarded) told.push({ what: 'boarded', at: 0, rider: world.riders[i].kind, walked: true })

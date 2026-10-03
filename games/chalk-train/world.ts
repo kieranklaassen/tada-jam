@@ -87,13 +87,20 @@ export function busyPlaces(riders: readonly Rider[]): PlaceId[] {
 /** The engine's stub of rail on a first visit: a mark like any other. */
 const STUB: Pt[] = [{ x: ENGINE_START.x - 64, y: ENGINE_START.y + 4 }, { x: ENGINE_START.x + 76, y: ENGINE_START.y }]
 
-/** A first visit: the engine on its stub of rail, and one rider waiting, laid out for the starting position. */
-export function freshWorld(childAge: number | null, seed: number): World {
+/**
+ * A first visit: the engine on its stub of rail, and one rider waiting, laid
+ * out for the starting position. With `cycle` off, as at the toy stage, the
+ * engine is alone on the tar.
+ */
+export function freshWorld(childAge: number | null, seed: number, cycle = true): World {
   const base = freshState(childAge)
   const rng = makeRng(seed)
-  const first = layOut(base.position, rng, ENGINE_START, [ENGINE_PLACE], [])
-  const riders = [rider(first, 'stop')]
-  if (base.position === 'two-at-once') riders.push(rider(layOutCompanion(rng, [ENGINE_PLACE, first.stop, first.home], [first.kind]), 'stop'))
+  const riders: Rider[] = []
+  if (cycle) {
+    const first = layOut(base.position, rng, ENGINE_START, [ENGINE_PLACE], [])
+    riders.push(rider(first, 'stop'))
+    if (base.position === 'two-at-once') riders.push(rider(layOutCompanion(rng, [ENGINE_PLACE, first.stop, first.home], [first.kind]), 'stop'))
+  }
   return {
     ...base,
     seed: rng.state,
@@ -209,4 +216,9 @@ export function wetStretches(mark: Mark): [number, number][] {
   })
   if (from >= 0) out.push([from, mark.p.length - 1])
   return out
+}
+
+/** Stands the train somewhere else, as when it has ridden part of a line that is then gone. */
+export function moveTrain(world: World, to: Pt, face: 1 | -1 = world.train.face): World {
+  return { ...world, train: { ...world.train, x: Math.round(to.x), y: Math.round(to.y), face } }
 }

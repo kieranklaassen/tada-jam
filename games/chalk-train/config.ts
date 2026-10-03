@@ -102,3 +102,11 @@ export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
   { fromAge: 3, position: 'long-way' },
   { fromAge: OLDEST, position: 'up-and-down' },
 ]
+
+// --- The stage the game is built to ---------------------------------------
+/**
+ * Whether the riders and the designed order are in play. The toy stage has
+ * the engine alone on the tar: the rules for riders, layouts and the judging
+ * of a cycle are written and tested, and wired in at the game stage.
+ */
+export const CYCLE_WIRED = false

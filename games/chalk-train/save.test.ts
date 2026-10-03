@@ -114,4 +114,17 @@ describe('the saved world', () => {
     // And it reads back whole.
     expect(deserialize(JSON.parse(JSON.stringify(serialize(largest))), null, 1)).toEqual(largest)
   })
+
+  it('reads and lays out no rider with the cycle off, as at the toy stage, and keeps everything else', () => {
+    const toy = makeMark(freshWorld(null, 4, false), line({ x: 220, y: 460 }, { x: 700, y: 300 }), false).world
+    expect(toy.riders).toEqual([])
+    expect(deserialize(stored(toy), null, 1, false)).toEqual(toy)
+    // A save from the game stage opens in the toy with the chalk and the train kept, and nobody on the tar.
+    const game = makeMark(freshWorld(null, 4), line({ x: 220, y: 460 }, { x: 700, y: 300 })).world
+    const opened = deserialize(stored(game), null, 1, false)
+    expect(opened.riders).toEqual([])
+    expect(opened.marks).toEqual(game.marks)
+    expect(opened.train).toEqual(game.train)
+    expect(deserialize(null, null, 9, false).riders).toEqual([])
+  })
 })

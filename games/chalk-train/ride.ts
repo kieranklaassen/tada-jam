@@ -15,7 +15,10 @@ export type Leg = { on: 'chalk' | 'tar'; pts: Pt[] }
 /** Something that happens at a distance along a route. A feel is felt by whoever is aboard. */
 export type Happening = { at: number; what: Feel | 'twang' | 'clack' | 'roundabout' }
 
-export type Route = { legs: Leg[]; length: number; happenings: Happening[] }
+/** A stretch of a route ridden all the way round, by distance along the route: a loop in the line, or a ring. */
+export type Round = { from: number; to: number }
+
+export type Route = { legs: Leg[]; length: number; happenings: Happening[]; rounds: Round[] }
 
 /** A mark that starts this near the train is joined to it: the hop across counts as chalk. */
 export const JOIN = 70
@@ -81,28 +84,39 @@ function alongMark(p: readonly Pt[], reading: Reading, from: number, to: number,
   return out
 }
 
-function join(legs: (Leg | null)[], perLeg: Happening[][]): Route {
-  const kept: Leg[] = [], happenings: Happening[] = []
+function join(legs: (Leg | null)[], perLeg: Happening[][], perLegRounds: Round[][] = []): Route {
+  const kept: Leg[] = [], happenings: Happening[] = [], rounds: Round[] = []
   let length = 0
   legs.forEach((leg, i) => {
     if (!leg) return
     const own = legLength(leg)
     if (leg.on === 'tar') for (let s = 0; s < own; s += BUMP_EVERY) happenings.push({ at: length + s, what: 'bump' })
-    for (const h of perLeg[i] ?? []) happenings.push({ at: length + h.at, what: h.what })
+    // Held inside the leg, so a happening at its very end is never a hair past the end of the route.
+    for (const h of perLeg[i] ?? []) happenings.push({ at: length + Math.min(own, h.at), what: h.what })
+    for (const r of perLegRounds[i] ?? []) rounds.push({ from: length + Math.min(own, r.from), to: length + Math.min(own, r.to) })
     kept.push(leg)
     length += own
   })
   happenings.sort((a, b) => a.at - b.at)
-  return { legs: kept, length, happenings }
+  return { legs: kept, length, happenings, rounds }
 }
 
-/** The ride a new mark gives: to its nearer end, then along it to the other. */
+/** Where a stretch of a mark goes all the way round, at distances from the start of the stretch as travelled. */
+function roundsOn(reading: Reading, from: number, to: number): Round[] {
+  const lo = Math.min(from, to), hi = Math.max(from, to)
+  if (reading.ring) return [{ from: 0, to: hi - lo }]
+  const at = (s: number) => (from <= to ? s - from : from - s)
+  return reading.loops.filter((l) => l.from >= lo && l.to <= hi).map((l) => ({ from: Math.min(at(l.from), at(l.to)), to: Math.max(at(l.from), at(l.to)) }))
+}
+
+/**
+ * The ride a new mark gives: to where the finger landed, then along the mark
+ * the way it was drawn. So the engine can set off for the landing spot at
+ * once and follow the chalk as it comes.
+ */
 export function routeAlong(train: Pt, p: readonly Pt[], reading: Reading, older: readonly Mark[]): Route {
-  const first = p[0], last = p[p.length - 1]
-  const forward = distance(train, first) <= distance(train, last)
-  const from = forward ? 0 : reading.length, to = forward ? reading.length : 0
-  const along: Leg = { on: 'chalk', pts: stretch(p, from, to) }
-  return join([approach(train, forward ? first : last), along], [[], alongMark(p, reading, from, to, older)])
+  const along: Leg = { on: 'chalk', pts: stretch(p, 0, reading.length) }
+  return join([approach(train, p[0]), along], [[], alongMark(p, reading, 0, reading.length, older)], [[], roundsOn(reading, 0, reading.length)])
 }
 
 /** The ride a tap on bare tar gives: straight to the dot. */
@@ -119,11 +133,11 @@ export function routeCalled(train: Pt, tapped: Pt, mark: Mark, reading: Reading,
   const to = nearestOn(mark.p, tapped).s, here = nearestOn(mark.p, train)
   if (here.gap <= JOIN) {
     const on = spotAt(mark.p, here.s)
-    return join([approach(train, on), { on: 'chalk', pts: stretch(mark.p, here.s, to) }], [[], alongMark(mark.p, reading, here.s, to, older)])
+    return join([approach(train, on), { on: 'chalk', pts: stretch(mark.p, here.s, to) }], [[], alongMark(mark.p, reading, here.s, to, older)], [[], roundsOn(reading, here.s, to)])
   }
   const first = mark.p[0], last = mark.p[mark.p.length - 1]
   const from = distance(train, first) <= distance(train, last) ? 0 : reading.length
-  return join([approach(train, from === 0 ? first : last), { on: 'chalk', pts: stretch(mark.p, from, to) }], [[], alongMark(mark.p, reading, from, to, older)])
+  return join([approach(train, from === 0 ? first : last), { on: 'chalk', pts: stretch(mark.p, from, to) }], [[], alongMark(mark.p, reading, from, to, older)], [[], roundsOn(reading, from, to)])
 }
 
 /** Where a route ends, and which way the train faces there. */
