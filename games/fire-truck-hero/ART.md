@@ -218,13 +218,13 @@ Fire Truck Hero is designed from five learning foundations published by Californ
 
 - Sand: pale warm `SAND.dry`, with a faint speckle and soft raked ridges. Wet sand is clearly darker (`SAND.damp`), mud darker again and lumpy with a wet shine, standing water a pale blue sheet with a light rim.
 - The truck: faded tomato red with a cream stripe and bumper, yellow ladder, hubs and nozzle, a blue roof light, grey tyres.
-- Each thing has a hue of its own, so a two-year-old tells them apart by colour alone: the pool blue, the duck yellow, the fire orange, the cat lilac, the pot terracotta, the plant green with a pink flower, the boat teal, the wheel amber.
+- Each thing has a hue of its own, so a two-year-old tells them apart by colour alone: the pool blue with a cream floor, the duck yellow, the fire orange, the cat lilac, the pot terracotta, the plant green with a pink flower, the boat teal with a cream rim, the wheel amber with red and cream paddles, the dry patch a mound paler than the sand, the snail's shell tan, the bee yellow with dark stripes.
 - Water in the air: light blue with a white shine.
 - The idle cue: a blue ring and a blue ghost hand with a cream cuff, a hue that neither the sand nor the grass has.
 
-**Materials.** One satin plastic for every toy: a single material with the colour in the vertices, so a toy is one moulding and one draw call. Flames are a second, unlit material, so a flame never has a shaded side. Water is a third, shiny and a little clear. The ground is one plane with one small shader: sand inside the yard with a soft wobbly edge, grass outside, and the wet sand read from a small picture (`wetPaint.ts`). No texture is loaded: everything is drawn by code.
+**Materials.** One satin plastic for every toy: a single material with the colour in the vertices. Each part of a toy that moves by itself is one moulding and one draw call, so a toy is one to seven of them: the truck is seven, the cat five, the pool two. Flames are a second, unlit material, so a flame never has a shaded side. Water is a third, shiny and a little clear, for the drops, the pool and what gathers in the boat. The soil in the pot and the dry patch have a matte material each, whose colour the stage turns darker as they are watered. Steam and ripples are unlit and see-through. The ground is one plane with one small shader: sand inside the yard with a soft wobbly edge, grass outside, and the wet sand read from a small picture (`wetPaint.ts`). No texture is loaded: everything is drawn by code.
 
-**Lighting.** One sun from the upper left and a pale sky light with a warm bounce from the sand. No shadow maps: every toy has a soft blob shadow on the sand, drawn as one instanced mesh. No post pass and no tone mapping, so the colours stay as chosen.
+**Lighting.** One sun from the upper left and a pale sky light with a warm bounce from the sand. No shadow maps: every thing has a soft blob shadow on the sand, drawn as one instanced mesh a yard, and the truck has its own. No post pass and no tone mapping, so the colours stay as chosen.
 
 **Faces.** The animals and the truck have faces; the six things of the grid other than the cat have none. The truck's face is its windscreen: two big whites with pupils that look where the nozzle points, and a cream bumper for a mouth.
 
@@ -238,11 +238,13 @@ Fire Truck Hero is designed from five learning foundations published by Californ
 - Nothing eases in on load. Every thing and every animal is in its first frame as it was left.
 - A scene moves channels from 0 to 1 and they stay at 1, so an ending stays as it ended (`scenes.ts`).
 
-**The way on.** On the third ring the gate swings open, the truck's light turns once, the truck turns up its lane and rolls to the gate, and then the yard slides toward the child under it while the next one slides in from beyond the fence. The stage keeps two yards built for this, and they change places after each drive.
+**The way on.** On the third ring the gate swings open, the truck's light turns once, the truck turns up its lane and rolls to the gate, and then the yard slides toward the child under it while the next one slides in from beyond the fence. The stage keeps two yards built for this, and they change places after each drive. Only the yard on screen is in the scene; the other joins it for the drive.
 
-**The idle cue.** A blue ring round the thing that wants water, wider than the thing so it is never hidden under it, and after it a blue ghost hand that taps there once. Once the want is met both go to the bell.
+**The idle cue.** A blue ring round the thing that wants water, wider than the thing so it is never hidden under it, and after it a blue ghost hand that presses once on the thing itself, at the height its picture stands. Once the want is met both go to the bell.
 
-**Quality tiers** (`config.ts`). A tier changes drawing only. Tier 0 is the full look at a pixel ratio of 2. Tier 1 lowers the pixel ratio to 1.5. Tier 2 lowers it to 1.25, flattens the ground's grain to plain colours and draws seven in ten of the stream's small drops. Tier 3 is a pixel ratio of 1, matte plastic without the satin highlight, and half the small drops with no splashes. The toys, the colours, the blob shadows and the water's marks on the sand are the same on every tier, and so is how much water lands and where.
+**Quality tiers** (`config.ts`). A tier changes drawing only. Tier 0 is the full look at a pixel ratio of 2. Tier 1 lowers the pixel ratio to 1.5. Tier 2 lowers it to 1.25, flattens the ground's grain to plain colours, draws seven in ten of the stream's small drops and throws up one splash drop a landing in place of two. Tier 3 is a pixel ratio of 1, matte plastic without the satin highlight, and half the small drops. The toys, the colours, the blob shadows and the water's marks on the sand are the same on every tier, and so is how much water lands and where.
+
+**The first frame.** Everything the game will ever draw is drawn once, unseen, when the stage is made, so the first water in the pool, the first steam and the first ripple do not stall a frame.
 
 ## The registry row
 
