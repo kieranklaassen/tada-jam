@@ -6,9 +6,10 @@
 
 import type { GuestId } from './guests'
 import { SHAPES } from './hotel'
-import { GUEST_BOX, STANCE, TUBA_BELL, YETI_WRIST, drawGuest, restsInBed, type Pose } from './inkGuests'
+import { GUEST_BOX, TUBA_BELL, YETI_WRIST, drawGuest, type Pose } from './inkGuests'
 import { INK, PAPER, SPOT, Pen, buildHatch, seedOf, type HatchTiles, type MakeSurface, type Surface } from './inkHatch'
 import { paintHouse, paintPaper } from './inkHouse'
+import { spotOf } from './inkPlaces'
 import { drawCloud, drawCoachDoor, drawPorter, drawThing, drawWheel } from './inkProps'
 import { INK_THING_KINDS, type InkAir, type InkGuest, type InkScene } from './inkScene'
 import { layoutPage, type PageLayout } from './layout'
@@ -157,35 +158,9 @@ export class InkPage {
     return count
   }
 
-  /** Where a guest is drawn: its origin on the page and whether it is mirrored. */
+  /** Where a guest is drawn: its origin on the page and whether it is mirrored (inkPlaces.ts). */
   private place(guest: InkGuest, page: PageLayout, lobbyPlace: number): { x: number; y: number; flip: boolean } | null {
-    const u = page.scale, stance = STANCE[guest.id]
-    /** Mirrors a figure so that it faces the way asked. */
-    const flipTo = (way: 'left' | 'right') => stance.faces !== 'front' && stance.faces !== way
-    if (guest.place === 'bench') {
-      const box = page.benchGuest
-      return { x: box.x + 36 * u, y: box.y + box.h, flip: false }
-    }
-    if (guest.place === 'lobby') {
-      const spot = page.lobbySpots[Math.min(lobbyPlace, page.lobbySpots.length - 1)]
-      // It faces the house, whose doors it stares at.
-      return spot ? { x: spot.x, y: spot.y, flip: flipTo('left') } : null
-    }
-    const room = page.rooms[guest.place.room]
-    if (!room) return null
-    const inward = room.bedSide === 'right' ? 'right' : 'left'
-    const turned = guest.turnedTo === 'left' || guest.turnedTo === 'right' ? guest.turnedTo : null
-    const pose = { awake: guest.awake, mood: guest.mood, turnedTo: guest.turnedTo, wrapped: guest.wrapped, bag: false, frame: 0 }
-    if (restsInBed(guest.id, pose)) {
-      // Sitting up against the head of the bed it looks down the bed; turned to the wall behind it, it sits at the foot.
-      const away = room.bedSide === 'right' ? 'left' : 'right'
-      const way = turned ?? away
-      const fromHead = way === away ? 22 : 70
-      const x = room.bedSide === 'right' ? room.bed.x + room.bed.w - fromHead * u : room.bed.x + fromHead * u
-      return { x, y: room.stand.y, flip: flipTo(way) }
-    }
-    const flip = flipTo(turned ?? inward)
-    return { x: room.stand.x + stance.shift * u * (flip ? -1 : 1), y: room.stand.y, flip }
+    return spotOf(guest, page, lobbyPlace)
   }
 
   /** The still layer for this house at this hour, painted when it is first needed. */
