@@ -5,9 +5,16 @@ on:
     branches: ['**']
   pull_request:
 
+# A branch named lane/<key> is one remote builder's game in progress. It gets
+# the check job alone, and a newer push cancels the run before it: a wave has
+# many such branches pushing often, and the lead runs the audits, the lab and
+# the education checks on the merged tree.
 jobs:
   check:
     runs-on: ubuntu-latest
+    concurrency:
+      group: check-${{ github.ref }}
+      cancel-in-progress: ${{ startsWith(github.ref_name, 'lane/') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -41,6 +48,7 @@ jobs:
   # shards by name, so a new game needs no change here.
   intersections:
     name: Intersection audit (${{ matrix.shard }}/4)
+    if: ${{ !startsWith(github.ref_name, 'lane/') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -74,6 +82,7 @@ jobs:
   # It shares nothing with the jam's checks above.
   lab:
     name: Mechanic lab
+    if: ${{ !startsWith(github.ref_name, 'lane/') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -93,6 +102,7 @@ jobs:
   # stale or unchecked, every frame as generated, the coverage report fresh.
   education:
     name: Education pack
+    if: ${{ !startsWith(github.ref_name, 'lane/') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
