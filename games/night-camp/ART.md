@@ -95,9 +95,55 @@ The state stays. After any night the camp, the rods and the dials are exactly as
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**A cycle is one site.** The child plans the camp, slides the night as often as they like, changing the plan between nights, and moves on when they choose, by touching the folded edge of the map where the mule waits. That touch ends the cycle, judges it, and lays out the next site.
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+**The order.** One new thing at a time, then combinations (pack: game-design, ordered-challenges-high-success.md). The ids name kinds of place on a map sheet and nothing else. They stand in `LADDER` in `config.ts` in this order.
+
+| Id | The one new thing | What the site holds |
+| --- | --- | --- |
+| `meadow` | A stock, an amount for one hour, and a night. | The fire alone, with one fixed amount of so many logs for one hour; a short night; two campers. |
+| `birchwood` | Choosing the amount. | The fire's dial has three amounts for one hour, the tents stand at different distances, and two cards stamped along one ruler can be compared hour by hour. |
+| `ford` | A second multiplier, and a remainder that means one more. | The kettle: a cup for every camper at every hour, with water laid in by the can, each can holding six cups. |
+| `quarry` | An amount for a span longer than one hour. | The lantern: one flask lasts two hours, or three on the low wick, on a supply that pours. A night that is not a multiple leaves a part flask. |
+| `ridge` | A limit. | The sled: its bed has only so many places, a log takes one, a flask two and a can three, and all three supplies must fit together. |
+| `tarn` | Several pieces for several hours. | Amounts where neither number is one, such as five logs for two hours or two flasks for three; the card is doubled or halved to reach the night. |
+| `saddle` | The question turned round. | The sled arrives loaded and strapped, so the stock is given, and the child sets the dials so that it lasts: the amount for one hour is what has to be found. |
+| `summit` | Nothing new: everything together. | A long night, five campers, two lanterns, the kettle and a sled with little room to spare. |
+
+- **The same skill in a slightly different form.** Each position has a few variants that differ only in their numbers (the length of the night, the campers, the amounts). A new site takes the next variant in turn, so a return visit is never the same sum (pack: game-design, many-short-visits.md).
+- **A harder option, chosen by the child.** At any site the child may unfold one or two more sections of the folding ruler, two hours each. A longer night is a visibly longer ruler, and the child may fold it back at any time. Nothing else makes a site harder, and nothing makes it harder unasked.
+- **Number ranges.** No record the game is designed from sets a range (see "The records"), so these are the game's own choice: nights of 4 to 12 hours, or up to 16 unfolded; 2 to 5 campers; amounts of at most 6 pieces for a span of at most 3 hours; rods of at most 60 logs, 12 flasks and 10 cans; every total below 100. From `meadow` to `ridge` every amount is a whole number of pieces for one hour, or one piece for a whole number of hours, and every answer is a whole number of pieces. From `tarn` the amount for one hour may be a fraction of two whole numbers, such as five halves, and never a fraction inside a fraction.
+
+**How a cycle is judged.** When the child moves on, from the last night that was slid to dawn at this site:
+
+- **Well:** nothing ran short, no supply had more left over than one more hour of its user would take (at least one piece), and this was reached by the third night at the site.
+- **Badly:** something ran short in that last night.
+- **Mixed:** anything else: nothing short but a lot left over, a good night reached only after more than three, or no night slid to dawn at all.
+
+The position moves one step up after "well", one step down after "badly", and stays after "mixed". It moves only at that touch, never inside a cycle, and nothing shows it or that it moved. A first visit starts at `meadow`, or at `birchwood` for a child of 11 or more; a saved position wins over the age.
+
+**Which site a new position lays out.** The next site is laid out at the touch on the fold, after the cycle is judged, so a new position lays out the very next site. What waits on screen before that touch is the folded edge of the map with the mule on it, and it shows nothing of the site to come.
+
+**What is stored.** Plain JSON, versioned, each field repaired by itself on reading.
+
+| Field | What it is |
+| --- | --- |
+| `v` | The version of the saved shape. |
+| `position` | The id of the child's place in the order. |
+| `finished` | Kept from the template. Always false in a save, because the touch that ends a cycle begins the next. |
+| `variant` | Which variant of the position is laid out at this site. |
+| `unfolded` | How many extra sections of the ruler the child has unfolded: 0, 1 or 2. |
+| `logs`, `oil`, `water` | The pieces laid in on each rod. |
+| `fire` | The fire dial's setting. |
+| `lanterns` | For each lantern, the pin it stands on, or none, and its wick, low or high. |
+| `strips` | For each user, how many spans of its card are stamped along the ruler in pencil. |
+| `trail` | The marshmallow trail, as the cells of a coarse grid over the map, at most 24. |
+| `phase` | `dusk`, with the cursor at its stop and the plan open, or `morning`, after a night slid to dawn. |
+| `nights` | How many nights were slid to dawn at this site with a changed plan. Never shown. |
+| `changed` | Whether the plan changed since the last night slid to dawn. |
+| `shown` | The ids of the first showings already given, so each is shown once. |
+
+A running night is a view of the saved plan and is not saved: put away in the middle of a night, the camp is found at dusk with the plan as it was. The morning is saved when its scene starts, and everything in it (the ash, the pins, each camper's state) is worked out again from the saved plan, so on load it stands finished and nothing replays. A piece in the hand is saved where it came from. Nothing reads a clock: the night moves only with the cursor, on attended time.
 
 ## The characters and their fixed tastes
 
