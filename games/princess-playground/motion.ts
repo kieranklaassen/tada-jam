@@ -274,6 +274,8 @@ export class Playground {
 
   /** The plank has come to lie where the weights on it leave it, or nearly, and is no longer swinging hard. */
   get plankArrived(): boolean {
+    // Everyone the arrangement has on the plank must have landed on it, or the plank has not yet been asked.
+    for (const end of ENDS) for (const id of this.arrangement[end]) if (!this.bodies[id].landed) return false
     const target = this.restingTilt()
     return Math.abs(this.plank.tilt - target) < 0.06 && Math.abs(this.plank.spin) < 1.2
   }
