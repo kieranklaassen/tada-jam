@@ -3,8 +3,8 @@
 
 ## Status
 
-- Stage: sheet, waiting for its second check. The rules are written as pure modules with tests, at the builder's own risk, and stand on the sheet at commit `b0bcc0a42cf827c8e47177b1159725850c0e05a8`. No toy yet: it waits for the template version the canvas pilot proves.
-- Look in use: first reserved look, glossy die-cut stickers. The spike is being built; this line is replaced when it is in.
+- Stage: toy, being built (the second run). The sheet waits for its second check. The rules are written as pure modules with tests, at the builder's own risk, and stand on the sheet at commit `b0bcc0a42cf827c8e47177b1159725850c0e05a8`.
+- Look in use: first reserved look, glossy die-cut stickers. The spike is in at commit `cdec9af`: the room in one fixed state (`view/spike.ts`), stills taken at 1180 by 820 in software drawing and kept outside the repository. Its frame rate has not been measured: that is the lead's, on a real graphics card.
 - Sheet check, round 1 (checker: B): open, 16 findings, on the sheet part with hash `0659dc7f45ee29208c1d79cf31059c38e93c2e68155b656e5d1e3e359aa2e3b2` (commit `e24e096051c073276cc2920f61540190af7ec486`). All sixteen replacements are pasted as written, none refused, and nothing else in the sheet part was changed. The rules and their tests were brought into line in the commit after it.
 - Open: sheet ready for check, round 2. The sheet as it now stands is at commit `b0bcc0a42cf827c8e47177b1159725850c0e05a8`; the hash of its sheet part is `55977cef6da87dafa04f895ade0ae94c2187597008f67cba6a9334e18b475b1e`.
 - For the next checker, one reading the rules took where two pasted sentences meet: the carrier "is laid out ... whenever a patient comes in and no carrier stands there" (the designed order) and is "none when it was touched; laid out again as 'A harder option the child picks' says" (scene 4). The model leaves the carrier's place empty when its patient comes in, and lays the next one out when a patient next comes in from the door. If it should be filled at once, `comeIn` in `clinic.ts` is the one place.
@@ -21,7 +21,7 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 - `state.ts`, same header: `finished` is true here from the moment the last need is met until the child brings the next one in, since the ending stays as long as the child likes. On load the wrapper sets it from the table (an animal that is well) and never from the stored flag, so the two cannot disagree.
 - `manifest.ts`, `index.ts`, `audio.ts`, `input.ts`, `guidance.ts`, `scene.ts`, `overlay.ts` and their tests: as copied, not yet used.
 - `perf.ts`, `quality.ts`, `attention.ts`, `saveCadence.ts`: frozen, untouched.
-- `boo-boo-vet.tsx` (the Mount): see the entry under the look spike below, once it is in.
+- `boo-boo-vet.tsx` (the Mount): changed for the spike in one place, `draw`, which gets the 2D context once, clears the surface and draws the scene at the attended clock's time, and sets `drawn.drawCalls` to the sprites drawn. **For the template:** composing a moving gloss off screen cost about 270 ms a frame in software drawing; a gradient filled through a clip on the main surface costs almost nothing. The first frame bakes every sprite (about 0.8 s on this machine), and a tier change bakes them again.
 - The generator ran clean and the untouched copy passed its tests.
 
 ### For the owner to decide
