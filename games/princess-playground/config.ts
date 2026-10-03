@@ -6,7 +6,7 @@ import { princessPlaygroundManifest } from './manifest'
 // template and a template fix can be copied over them.
 
 /** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+export const BACKDROP = '#6f8794'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 
@@ -19,10 +19,12 @@ export const BACKDROP = '#f4efe6'
 export type Tier = {
   /** Canvas pixel ratio cap; the jam's bar caps it at 2. */
   dpr: number
+  /** How much of the sand's grain is drawn, 0 to 1: the speckle, the tilted grains and the flashes. */
+  grain: number
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
-export const TIERS: readonly Tier[] = [{ dpr: 2 }, { dpr: 1.5 }, { dpr: 1.25 }, { dpr: 1 }]
+export const TIERS: readonly Tier[] = [{ dpr: 2, grain: 1 }, { dpr: 1.5, grain: 1 }, { dpr: 1.25, grain: 0.7 }, { dpr: 1, grain: 0.5 }]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */
 export const GOVERNOR = {

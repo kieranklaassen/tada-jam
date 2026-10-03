@@ -12,6 +12,9 @@ import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { deserialize, serialize, type GameState } from './state'
+import { putOnEnd, emptyArrangement } from './arrangement'
+import { restFrame } from './rest'
+import { Stage } from './view/stage'
 
 // The Mount, showing a blank surface. Everything a game needs around its
 // renderer is wired and running: the saved state, attention, the attended
@@ -36,7 +39,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const overlay = new Overlay(root, window.location.search)
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
-    const drawn = { drawCalls: 0, triangles: 0 }
+    const stage = new Stage(canvas)
+    const drawn = stage.drawn
+    // The look spike: the first ride as it is laid out, at rest.
+    const frameNow = restFrame(putOnEnd(emptyArrangement(), 'pim', 'left'))
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
@@ -54,12 +60,15 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // of `resize`, since `resize` does nothing when the size and the pixel ratio stay as they were (on a display
     // of ratio 1 they always do). The blank surface has nothing to switch: it marks the tier it was given on its
     // canvas, where a still or a probe can read which tier is applied.
-    const applyTier = () => { canvas.dataset.tier = String(governor.tier) }
+    const applyTier = () => {
+      canvas.dataset.tier = String(governor.tier)
+      stage.setGrain(governor.settings.grain)
+    }
 
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => {}
+    const draw = () => { if (width > 0) stage.render(frameNow) }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
@@ -72,7 +81,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       width = w; height = h; dpr = ratio
       // Sizing the backing store wipes the surface, so it is redrawn at once: a resize lands after the frame's
       // own draw, or while the game rests and no frame is coming, and either would leave the surface blank.
-      canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
+      stage.resize(w, h, ratio)
       draw()
       return true
     }
@@ -184,6 +193,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       root.removeEventListener('pointercancel', onCancel)
       uninstallPerf()
       overlay.dispose()
+      stage.dispose()
       audio.dispose()
     }
   }, [])
