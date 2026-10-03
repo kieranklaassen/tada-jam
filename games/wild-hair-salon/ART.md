@@ -72,17 +72,84 @@ A length is a **plain straight strip that hangs from a level line**. Two strips 
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**A cycle** is one customer: a pair comes in, the customer sits under the cape with the friend as its model, the child works on the hair, the child pulls the cape off, and the pair stand together. A cycle fits in a minute or two, and a visit of a few minutes holds two or three (pack: game-design, many-short-visits.md).
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+**The order.** Six positions, one new thing at a time and then combinations of what is known. The ids are the ones in `LADDER` in `config.ts`; each names a place in the salon's own order.
+
+| Id | Where the model is | How the lock starts | What is new |
+| --- | --- | --- | --- |
+| `beside-long` | The friend stands beside the chair, its lock next to the customer's | Plainly longer than the model | Matching by snipping |
+| `beside-short` | Beside | Plainly shorter | Pulling |
+| `beside-either` | Beside | Plainly longer or plainly shorter | Nothing new: the child has to see which it is |
+| `beside-close` | Beside | A little longer or a little shorter | A small difference |
+| `across` | The friend sits on the bench across the room | Plainly longer or plainly shorter | A model that cannot be held beside the lock, and the ribbon |
+| `across-close` | Across | A little longer or a little shorter | Nothing new: the two before it together |
+
+**The sizes** are the game's own choice, since no record named below gives a size. Lengths are whole steps from 4 (a stub) to 100 (down to the floor), and a step is never shown. A model is between 34 and 66. "Plainly" is a difference of 24 to 30 steps, "a little" is 9 to 14, and two ends meet when they are within 5.
+
+**The harder option the child can pick.** The stool beside the chair and the bench across the room are both in the salon. A touch on the empty one sends the friend there, at any moment and as often as the child likes. A model across the room looks harder, because it is further away, and the child may always choose it or undo it. The position only decides where the friend sits when the pair comes in.
+
+**How a cycle goes**, judged once, when the cape first comes off: **well** when the lock is within 5 steps of the model, **mixed** when it is within 12, and **badly** otherwise. The position then moves one step up, stays, or moves one step down, for the next customer. Pulling the cape off again in the same cycle plays the scene again from the hair as it then is and judges nothing. A visit put away before the cape comes off leaves the position where it was. Nothing on screen shows the position or that it moved.
+
+**Which customer a new position lays out.** The next pair waits at the door with their hair tucked under rain hats. What is laid out before they come in is only who they are. Their lengths and the friend's seat are laid out as they come in, from the position as it stands then. So a position that moved when the cape came off shows on the very next customer, never on the one after.
+
+**What is stored**, as plain versioned JSON through `ctx.storage`, saved on every change and read defensively field by field:
+
+- `v`: the version of the shape.
+- `position`: the id of the place in the order where the next customer is laid out.
+- `finished`: the cape has come off in this cycle, so the cycle is judged and nothing judges it twice.
+- `chair` and `friend`: who is in the chair and who is the model.
+- `waiting`: the pair at the door, as two ids.
+- `seed`: a whole number that the next layout and the next pair are drawn from. No clock and no other source of chance is read.
+- `lock` and `model`: the two lengths, in whole steps.
+- `seat`: `beside` or `across`, where the friend is now.
+- `cape`: `on` or `off`. With `off` the pair stand together as the scene left them.
+- `mane`: the lengths of the nine tufts of the customer's mane.
+- `ribbon`: nothing until the ribbon has first been shown, then its length and where it hangs: on its peg, beside the lock, beside the model, tied in the mane, round a face, or on the floor.
+- `clippings`: up to twelve pieces, each with a length, a colour, and where it lies: a place along the floor, or stuck on the customer's or the friend's face. A thirteenth piece turns the oldest one on the floor into fluff that blows away.
+- `shown`: three marks, for the three things a character shows once: the snip, the pull and the ribbon.
+
+A lock held in the fingers is stored at the length it has. A ribbon or a clipping carried in the fingers is stored where it was picked up. The scene that plays when the cape comes off is not stored: `cape`, `finished` and the new position are saved when it starts, so a game put away in the middle of it opens with the pair standing together and plays nothing again. The largest state the game can reach is under two kilobytes, and a test holds it under half the 64 KB cap.
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+Four customers. Each comes as the customer on one day and as somebody's friend on another, and is the same animal in both parts.
+
+**The one want, always visible.** The customer wants its lock as long as its friend's. Its eyes go from its own lock to the friend's and back, and a paw pats its own. That want is about two things in the scene and is never about the child.
+
+**The tastes never change.** A child can learn them and try them on purpose, and a dislike is as good to watch as a like.
+
+| | The lion | The poodle | The yak | The angora rabbit |
+| --- | --- | --- | --- | --- |
+| Tempo and weight | Slow and heavy | Quick and light | Slow and soft | Fast and twitchy |
+| Funniest part | The tail tuft | The pom on the tail | The nostrils | The ears |
+| The mane | Likes it pulled big: shakes it out and rumbles. Hates it short: pulls the cape over his head and peeks out with one eye | Likes it snipped into round poms: prances on tiptoe, nose up. Hates it long over her nose: three sneezes, each bigger, and the last blows it straight up | Likes it long over his eyes: plays peekaboo through it with a low chuckle. Hates his eyes showing: blushes and hides behind his hooves | Likes it short so the ears stand free: the ears pop up and twirl. Hates it long: the ears flop like wet socks and it hops in a circle |
+| A bow in the mane | Hates it: goes cross-eyed and bats at it like a kitten | Loves it: turns her head from side to side at the mirror | Loves it: tucks it under his hair and pats the place | Hates it: thumps a hind foot until it slides off an ear |
+| A head rub | Loves it: purrs and melts down in the chair | Hates it: huffs and puts every curl back with a paw | Hates it: sinks into his hair until only the nose shows | Loves it: one hind leg kicks by itself |
+| Lock too long | Treads on it and turns the stumble into a slow bow | Trips, spins out of it and holds the pose | Finds it in his mouth and chews it, thinking | Gets wound up in it like a spindle and unspins |
+| Lock too short | Pats for it; an ear pops out and flicks | Gasps and fans herself with a paw | Snorts, and his own fringe flies up | The ears shoot up, and one droops |
+| Lock as long as the model | A slow head toss in step with the friend | A tiptoe turn with the friend | A low hum, rocking from side to side | A jump with a twist |
+
+No two customers share a reaction. As the friend, each has its own way of having its lock pulled, snipped or ruffled (the grid's second row, in that animal's voice and with its funniest part). A friend's feelings are about the hair too, and no one in the salon refers to the child stopping, staying, leaving or coming back.
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Each scene is a list of timed beats filled in from the state of play, on the template's `scene.ts`. Any touch ends a scene at once and leaves everyone where the scene would have put them.
+
+- **Coming in** (4 to 6 seconds). Cause: the child touches the door where the next pair waits. Beats: the door swings, the pair walk in, each with its own gait; the rain hats pop off and the hair springs out; the customer hops into the chair and the cape lands on it; the friend takes its seat; the customer looks from its lock to the friend's and pats its own. Filled in from who the two are, the nine tuft lengths, the two lock lengths and the friend's seat.
+- **The cape comes off** (6 to 10 seconds; the ending). Cause: the child pulls the cape off by its knot. Beats: the cape flies; the customer hops down and goes to the friend; they stand cheek to cheek with the two locks side by side and their top ends level; both look down at the free ends; the customer does its own too long, too short or as-long reaction, sized by the piece or the gap; then it answers to its mane, its bow and whatever is stuck on its face, by its tastes; the pair settle by the door. Filled in from the two lengths, the mane, the ribbon, the clippings on faces and who the two are, so it stars exactly the haircut the child gave.
+- **A thing shown once** (3 to 8 seconds each; the three marks in `shown`). Each is a move in the salon, done once by a character on something that is not the problem in front of the child, and never again unasked (pack: game-design, guided-discovery.md).
+  - *The snip*, in the first cycle ever: the customer pokes a paw out of the cape and nips one tuft of its own mane; the piece falls.
+  - *The pull*, the first time a lock starts shorter than its model: the customer tugs one tuft of its own mane longer, and it stays.
+  - *The ribbon*, the first time the friend sits across the room: the friend takes the ribbon from its peg, holds it beside its own tail, pulls it until it is as long as the tail, trots over, holds it beside the customer's tail, and hangs it back on the peg. From then on the ribbon is in the salon.
+
+**How a cycle ends.** The child ends it, by pulling the cape off. The pair then stand together by the door for as long as the child likes, breathing and blinking, with the haircut on show. A touch on the chair brings the customer back under the cape for more.
+
+**How the next one starts.** The next pair is visible at the door the whole time, under their rain hats. They come in when the child touches the door, and the pair that was done go out past them. If the child does nothing, nothing starts: no next round begins by itself and nothing counts down. The ones who wait look about and rock on their heels; they never knock, wave the child over or look at a clock.
+
+**On load** no scene plays. The salon is as it was left: the cape on or off, the friend on its seat, every length as it was, the clippings where they lay, and the next pair at the door.
+
+**The idle ladder** (the template's `guidance.ts`, on attended time) shows what can be touched and then one move, never a solution: first a breathing glow on the lock, then a ghost hand that snips or pulls one tuft of the mane, which is the verb and not the answer, and after that the cape's knot. It backs off and stops after a few tries.
 
 ## The records
 
