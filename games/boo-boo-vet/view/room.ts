@@ -3,7 +3,7 @@
 // stands on them is what the eye finds.
 
 import { CART, CART_HEIGHT, TABLE_HEIGHT } from './layout'
-import { blob, box, ell, fill, line, puff, type Pen } from './paint'
+import { blob, box, ell, fill, line, puff, within, type Pen } from './paint'
 import { PAL } from './palette'
 import type { Bounds } from './sticker'
 
@@ -28,18 +28,17 @@ function arch(hw: number, top: number): Path2D {
 
 /** The doorway, open onto the garden path, with the door swung back on its hinges. Origin: the middle of the threshold. */
 export function door(pen: Pen): void {
-  const c = PAL.door, { g } = pen
+  const c = PAL.door
   puff(pen, arch(118, -490), c.frame)
-  g.save()
-  g.clip(arch(94, -466))
-  fill(pen, box(-120, -500, 240, 500, 0), c.sky)
-  puff(pen, ell(60, -150, 150, 70), c.hill, 0.8)
-  puff(pen, ell(-10, -40, 200, 110), c.grass, 0.8)
-  fill(pen, blob([-10, 0, 22, -128, 44, -128, 84, 0], 0.4), c.path)
-  // The door itself, swung in on the hinge side: a tall panel with a round knob.
-  puff(pen, blob([-98, 6, -98, -480, -44, -452, -44, 6], 0.08), c.leaf, 0.8)
-  fill(pen, ell(-58, -262, 8.5, 8.5), c.knob)
-  g.restore()
+  within(pen, arch(94, -466), () => {
+    fill(pen, box(-120, -500, 240, 500, 0), c.sky)
+    puff(pen, ell(60, -150, 150, 70), c.hill, 0.8)
+    puff(pen, ell(-10, -40, 200, 110), c.grass, 0.8)
+    fill(pen, blob([-10, 0, 22, -128, 44, -128, 84, 0], 0.4), c.path)
+    // The door itself, swung in on the hinge side: a tall panel with a round knob.
+    puff(pen, blob([-98, 6, -98, -480, -44, -452, -44, 6], 0.08), c.leaf, 0.8)
+    fill(pen, ell(-58, -262, 8.5, 8.5), c.knob)
+  })
 }
 
 export const TABLE_BOUNDS: Bounds = { x0: -172, y0: -4, x1: 172, y1: TABLE_HEIGHT + 8 }
@@ -79,19 +78,18 @@ export const WINDOW_BOUNDS: Bounds = { x0: -172, y0: -108, x1: 172, y1: 118 }
 
 /** The window onto the garden: sky, two hills and a bush, in a frame with a sill. Origin: the middle of the glass. */
 export function windowFrame(pen: Pen): void {
-  const c = PAL.window, { g } = pen
+  const c = PAL.window
   puff(pen, box(-170, -106, 340, 212, 30), c.frame)
   const glass = box(-150, -86, 300, 172, 16)
-  g.save()
-  g.clip(glass)
-  const sky = g.createLinearGradient(0, -86, 0, 86)
-  sky.addColorStop(0, c.sky)
-  sky.addColorStop(1, c.skyLow)
-  fill(pen, glass, sky)
-  puff(pen, ell(110, 78, 170, 74), c.hillFar, 0.8)
-  puff(pen, ell(-60, 108, 210, 78), c.hill, 0.8)
-  puff(pen, blob([118, 86, 104, 40, 130, 14, 156, 40, 150, 86]), c.bush, 0.7)
-  g.restore()
+  within(pen, glass, () => {
+    const sky = pen.g.createLinearGradient(0, -86, 0, 86)
+    sky.addColorStop(0, c.sky)
+    sky.addColorStop(1, c.skyLow)
+    fill(pen, glass, sky)
+    puff(pen, ell(110, 78, 170, 74), c.hillFar, 0.8)
+    puff(pen, ell(-60, 108, 210, 78), c.hill, 0.8)
+    puff(pen, blob([118, 86, 104, 40, 130, 14, 156, 40, 150, 86]), c.bush, 0.7)
+  })
   puff(pen, box(-172, 92, 344, 24, 12), c.sill, 0.6)
 }
 

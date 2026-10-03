@@ -1,10 +1,11 @@
 // The sticker pipeline. A drawing (fills only) is baked once into a sprite
 // that carries the white cut border of even width and the small soft shadow;
-// each frame then costs one drawImage for the sticker and one for its gloss.
-// Sprites are made lazily at first draw, at the pixel ratio in use, and made
-// again only when that changes.
+// each frame then costs one drawImage for the sticker, and for its gloss one
+// gradient filled through the drawing's outline. Nothing is composited off
+// screen per frame. Sprites are made lazily at first draw, at the pixel ratio
+// in use, and made again only when that changes.
 
-import type { Ctx, Pen } from './paint'
+import { penFor, type Ctx, type Pen } from './paint'
 
 /** The look's numbers, in design units (one unit is one logical pixel at 1180×820). */
 export const BORDER = 7
@@ -19,8 +20,8 @@ export type Paint = (pen: Pen) => void
 export type Sticker = {
   /** The sticker as it lies on the sheet: shadow, border, drawing. */
   face: HTMLCanvasElement
-  /** The cut shape, border included: what the gloss is clipped to. */
-  mask: HTMLCanvasElement
+  /** The drawing's outline, in its own units: what the gloss is clipped to. The border is white, so gloss on it would not show. */
+  cut: Path2D
   /** Size in design units, and where the drawing's origin sits inside it. */
   w: number
   h: number
@@ -37,6 +38,18 @@ function surface(w: number, h: number): [HTMLCanvasElement, Ctx] {
   return [canvas, canvas.getContext('2d')!]
 }
 
+/** The working surfaces of a bake, kept and reused, so baking leaves nothing behind to be collected but the sprite itself. */
+const bench: [HTMLCanvasElement, Ctx][] = []
+
+function work(i: number, w: number, h: number): [HTMLCanvasElement, Ctx] {
+  const held = bench[i]
+  if (!held) return (bench[i] = surface(w, h))
+  // Sizing a canvas wipes it and resets its state.
+  held[0].width = w
+  held[0].height = h
+  return held
+}
+
 /**
  * Bakes one sticker. `bounds` is the box the drawing stays inside, in its own
  * units; `k` is device pixels per unit. `peel` from 0 to 1 curls the lower
@@ -45,12 +58,13 @@ function surface(w: number, h: number): [HTMLCanvasElement, Ctx] {
 export function bake(paint: Paint, bounds: Bounds, k: number, peel = 0): Sticker {
   const W = Math.ceil((bounds.x1 - bounds.x0 + PAD * 2) * k), H = Math.ceil((bounds.y1 - bounds.y0 + PAD * 2) * k)
   const ox = PAD - bounds.x0, oy = PAD - bounds.y0
-  const [art, ag] = surface(W, H)
+  const [art, ag] = work(0, W, H)
   ag.setTransform(k, 0, 0, k, ox * k, oy * k)
-  paint({ g: ag, k })
+  const pen = penFor(ag, k)
+  paint(pen)
 
   // The cut shape: the drawing grown by the border on every side, so the border is the same width everywhere.
-  const [mask, mg] = surface(W, H)
+  const [mask, mg] = work(1, W, H)
   const r = BORDER * k
   for (const [ring, steps] of [[1, 28], [0.5, 12]] as const) {
     for (let i = 0; i < steps; i++) {
@@ -66,7 +80,7 @@ export function bake(paint: Paint, bounds: Bounds, k: number, peel = 0): Sticker
   mg.drawImage(mask, 0, 0)
   mg.drawImage(mask, 0, 0)
 
-  const [top, tg] = surface(W, H)
+  const [top, tg] = work(2, W, H)
   tg.drawImage(mask, 0, 0)
   tg.drawImage(art, 0, 0)
   if (peel > 0) curl(tg, mg, mask, (bounds.x1 + BORDER + ox) * k, (bounds.y1 + BORDER + oy) * k, peel * Math.min(W, H) * 0.5, k)
@@ -78,7 +92,7 @@ export function bake(paint: Paint, bounds: Bounds, k: number, peel = 0): Sticker
   fg.drawImage(mask, 0, 0)
   fg.shadowColor = 'transparent'
   fg.drawImage(top, 0, 0)
-  return { face, mask, w: W / k, h: H / k, ox, oy }
+  return { face, cut: pen.cut, w: W / k, h: H / k, ox, oy }
 }
 
 /**
@@ -99,7 +113,7 @@ function curl(tg: Ctx, mg: Ctx, mask: HTMLCanvasElement, cx: number, cy: number,
     g.fill()
   }
   // The lifted corner, seen from the back.
-  const [corner, cg] = surface(W, H)
+  const [corner, cg] = work(3, W, H)
   cg.drawImage(mask, 0, 0)
   cg.globalCompositeOperation = 'destination-in'
   beyond(cg)
@@ -142,47 +156,36 @@ export function drawSticker(g: Ctx, s: Sticker, pose: Pose): void {
   g.restore()
 }
 
-let scratch: [HTMLCanvasElement, Ctx] | null = null
-
 /**
  * The gloss: one slanted streak of light (a wide band and a thin one beside
- * it) clipped to the sticker's cut shape. `at` from 0 to 1 is where across the
- * sticker it lies; moving it is what makes the sticker shine. `strength` dims it for a large calm piece.
+ * it) clipped to the sticker's outline. `at` from 0 to 1 is where across the
+ * sticker it lies; moving it is what makes the sticker shine. `strength` dims
+ * it for a large calm piece.
  */
 export function drawGloss(g: Ctx, s: Sticker, pose: Pose, at: number, strength = 1): void {
-  const W = s.mask.width, H = s.mask.height
-  if (!scratch || scratch[0].width < W || scratch[0].height < H) {
-    scratch = surface(Math.max(W, scratch?.[0].width ?? 0), Math.max(H, scratch?.[0].height ?? 0))
-  }
-  const [canvas, sg] = scratch
   // The streak lies across a slanted axis, so it leans like light on a curled sheet. Its widths follow the sticker's size.
-  const size = Math.min(W, H), reach = W + H
-  const ax = Math.cos(GLOSS.angle), ay = Math.sin(GLOSS.angle), cx = at * W, cy = H / 2
+  const size = Math.min(s.w, s.h), reach = s.w + s.h
+  const ax = Math.cos(GLOSS.angle), ay = Math.sin(GLOSS.angle), cx = at * s.w - s.ox, cy = s.h / 2 - s.oy
   const w = (GLOSS.width * size) / 2, gap = GLOSS.gap * size, thin = GLOSS.thin * size, soft = GLOSS.soft * size, a = GLOSS.alpha * strength
-  // Only the upright strip of the sprite that the streak crosses is touched: on a long sticker that is a small part of it.
-  const lean = (H / 2) * (ay / ax)
-  const x0 = Math.max(0, Math.floor(cx - (w + soft) / ax - lean)), x1 = Math.min(W, Math.ceil(cx + (w + gap + thin + 2) / ax + lean))
+  // Only the upright strip of the sticker that the streak crosses is filled: on a long sticker that is a small part of it.
+  const lean = (s.h / 2) * (ay / ax)
+  const x0 = Math.max(-s.ox, cx - (w + soft) / ax - lean), x1 = Math.min(s.w - s.ox, cx + (w + gap + thin + 1) / ax + lean)
   if (x1 <= x0) return
-  const band = sg.createLinearGradient(cx - ax * reach, cy - ay * reach, cx + ax * reach, cy + ay * reach)
-  const stop = (px: number, alpha: number) => band.addColorStop(0.5 + px / (reach * 2), `rgba(255, 255, 255, ${alpha})`)
+  g.save()
+  place(g, pose)
+  g.clip(s.cut)
+  const band = g.createLinearGradient(cx - ax * reach, cy - ay * reach, cx + ax * reach, cy + ay * reach)
+  const stop = (units: number, alpha: number) => band.addColorStop(0.5 + units / (reach * 2), `rgba(255, 255, 255, ${alpha})`)
   stop(-w - soft, 0)
   stop(-w, a)
   stop(w, a * 0.75)
-  stop(w + 1.5, 0)
+  stop(w + 0.75, 0)
   stop(w + gap, 0)
-  stop(w + gap + 1.5, a * 0.7)
+  stop(w + gap + 0.75, a * 0.7)
   stop(w + gap + thin, a * 0.7)
-  stop(w + gap + thin + 1.5, 0)
-  sg.globalCompositeOperation = 'source-over'
-  sg.clearRect(x0, 0, x1 - x0, H)
-  sg.drawImage(s.mask, x0, 0, x1 - x0, H, x0, 0, x1 - x0, H)
-  sg.globalCompositeOperation = 'source-in'
-  sg.fillStyle = band
-  sg.fillRect(x0, 0, x1 - x0, H)
-  const u = s.w / W
-  g.save()
-  place(g, pose)
-  g.drawImage(canvas, x0, 0, x1 - x0, H, x0 * u - s.ox, -s.oy, (x1 - x0) * u, s.h)
+  stop(w + gap + thin + 0.75, 0)
+  g.fillStyle = band
+  g.fillRect(x0, -s.oy, x1 - x0, s.h)
   g.restore()
 }
 

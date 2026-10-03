@@ -6,7 +6,46 @@
 // is measured in device pixels whatever the transform, so the blur needs it.
 
 export type Ctx = CanvasRenderingContext2D
-export type Pen = { g: Ctx; k: number }
+/**
+ * What a drawing is handed. `cut` gathers the shapes it fills, in the
+ * drawing's own units: the outline the gloss is clipped to each frame. A shape
+ * drawn inside another (under a clip, or a feature of a face) is not gathered:
+ * `mute` counts how deep the drawing is inside such a part.
+ */
+export type Pen = { g: Ctx; k: number; cut: Path2D; toUnits: DOMMatrix; mute: number }
+
+/** A pen for one bake: `g` is already set to draw in the drawing's units. */
+export function penFor(g: Ctx, k: number): Pen {
+  return { g, k, cut: new Path2D(), toUnits: g.getTransform().inverse(), mute: 0 }
+}
+
+function gather(pen: Pen, path: Path2D): void {
+  if (!pen.mute) pen.cut.addPath(path, pen.toUnits.multiply(pen.g.getTransform()))
+}
+
+/** Draws `inside` clipped to `clip`. What it draws lies inside a shape already drawn, so it adds nothing to the outline. */
+export function within(pen: Pen, clip: Path2D, inside: () => void): void {
+  pen.g.save()
+  pen.g.clip(clip)
+  pen.mute++
+  inside()
+  pen.mute--
+  pen.g.restore()
+}
+
+/** Turns a list of points to run clockwise on screen, so every gathered shape winds the same way and their union has no holes. */
+function clockwise(points: readonly number[]): readonly number[] {
+  let area = 0
+  const n = points.length / 2
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n
+    area += points[i * 2] * points[j * 2 + 1] - points[j * 2] * points[i * 2 + 1]
+  }
+  if (area >= 0) return points
+  const turned: number[] = []
+  for (let i = n - 1; i >= 0; i--) turned.push(points[i * 2], points[i * 2 + 1])
+  return turned
+}
 
 /** An ellipse, turned clockwise by `rot` radians. */
 export function ell(cx: number, cy: number, rx: number, ry: number, rot = 0): Path2D {
@@ -26,8 +65,8 @@ export function box(x: number, y: number, w: number, h: number, r: number, rot =
 }
 
 /** A closed smooth shape through the points `[x0, y0, x1, y1, ...]`. `round` 0 gives corners, 1 a soft blob. */
-export function blob(points: readonly number[], round = 1): Path2D {
-  const n = points.length / 2, p = new Path2D()
+export function blob(given: readonly number[], round = 1): Path2D {
+  const points = clockwise(given), n = points.length / 2, p = new Path2D()
   const at = (i: number): [number, number] => { const j = ((i % n) + n) % n; return [points[j * 2], points[j * 2 + 1]] }
   const t = round / 6
   p.moveTo(...at(0))
@@ -40,17 +79,18 @@ export function blob(points: readonly number[], round = 1): Path2D {
 }
 
 /** A straight-edged closed shape: machine-cut corners (spines, bristles). */
-export function poly(points: readonly number[]): Path2D {
-  const p = new Path2D()
+export function poly(given: readonly number[]): Path2D {
+  const points = clockwise(given), p = new Path2D()
   p.moveTo(points[0], points[1])
   for (let i = 2; i < points.length; i += 2) p.lineTo(points[i], points[i + 1])
   p.closePath()
   return p
 }
 
-export function fill({ g }: Pen, path: Path2D, color: string | CanvasGradient): void {
-  g.fillStyle = color
-  g.fill(path)
+export function fill(pen: Pen, path: Path2D, color: string | CanvasGradient): void {
+  pen.g.fillStyle = color
+  pen.g.fill(path)
+  gather(pen, path)
 }
 
 /** A round-ended line through the points, straight or (with `smooth`) curved through them. */
@@ -72,13 +112,23 @@ export function line({ g }: Pen, points: readonly number[], color: string, width
   g.stroke()
 }
 
-const FAR = 3000
+/** Everything outside `path` as far as it matters to the surface being drawn on: the surface's own box and a margin, in the current units. */
+function outsideOf(g: Ctx, path: Path2D, margin: number): Path2D {
+  const inverse = g.getTransform().inverse(), w = g.canvas.width, h = g.canvas.height
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (const [x, y] of [[-margin, -margin], [w + margin, -margin], [w + margin, h + margin], [-margin, h + margin]]) {
+    const at = inverse.transformPoint({ x, y })
+    x0 = Math.min(x0, at.x); y0 = Math.min(y0, at.y); x1 = Math.max(x1, at.x); y1 = Math.max(y1, at.y)
+  }
+  const outside = new Path2D()
+  outside.rect(x0, y0, x1 - x0, y1 - y0)
+  outside.addPath(path)
+  return outside
+}
 
 /** A soft band just inside a shape's edge, lit or shaded: the shadow of everything outside the shape, pushed in by (dx, dy). */
 function innerEdge({ g, k }: Pen, path: Path2D, color: string, dx: number, dy: number, blur: number): void {
-  const outside = new Path2D()
-  outside.rect(-FAR, -FAR, FAR * 2, FAR * 2)
-  outside.addPath(path)
+  const outside = outsideOf(g, path, (blur + Math.abs(dx) + Math.abs(dy)) * k * 3)
   g.save()
   g.clip(path)
   g.shadowColor = color
@@ -108,8 +158,10 @@ export function eye(pen: Pen, x: number, y: number, r: number, ink: string, fur:
     line(pen, [x - r, y, x, y + r * 0.55, x + r, y], ink, r * 0.5)
     return
   }
+  pen.mute++
   fill(pen, ell(x, y, r * 0.86, r), ink)
   fill(pen, ell(x - r * 0.3, y - r * 0.34 + lid * r * 0.7, r * 0.3, r * 0.3), '#ffffff')
+  pen.mute--
   if (lid <= 0) return
   g.save()
   g.clip(ell(x, y, r * 0.86 + 0.6, r + 0.6))

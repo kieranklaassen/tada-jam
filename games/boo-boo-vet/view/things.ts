@@ -4,7 +4,7 @@
 
 import type { Care } from '../needs'
 import { plasterStrip } from './critters'
-import { blob, box, ell, fill, line, puff, type Pen } from './paint'
+import { blob, box, ell, fill, line, puff, within, type Pen } from './paint'
 import { PAL } from './palette'
 import type { Bounds, Paint } from './sticker'
 
@@ -20,15 +20,12 @@ function bowl(pen: Pen): void {
 
 /** A folded blanket: three thick layers, the fold showing at one end, one band of trim. */
 function blanket(pen: Pen): void {
-  const c = PAL.blanket, { g } = pen
+  const c = PAL.blanket
   const layers: [number, number, number][] = [[-58, 14, 116], [-56, -14, 112], [-54, -42, 108]]
   for (const [x, y, w] of layers) {
     const slab = box(x, y, w, 32, 15)
     puff(pen, slab, c.cloth, 0.8)
-    g.save()
-    g.clip(slab)
-    fill(pen, box(x + w - 30, y, 10, 32, 0), c.trim)
-    g.restore()
+    within(pen, slab, () => fill(pen, box(x + w - 30, y, 10, 32, 0), c.trim))
   }
   // The folds: where one layer turns into the next, at the left.
   line(pen, [-50, -11, -58, 2, -50, 15], c.fold, 4)
@@ -64,23 +61,21 @@ function brush(pen: Pen): void {
 
 /** A basket bed: woven wicker with a high back and a low front, and a cushion in it. */
 function basket(pen: Pen): void {
-  const c = PAL.basket, { g } = pen
+  const c = PAL.basket
   // The back wall, standing up behind the cushion, woven like the front.
   const back = blob([-60, 4, -56, -30, -30, -44, 30, -44, 56, -30, 60, 4, 0, 14], 0.9)
   puff(pen, back, c.inside, 0.8)
-  g.save()
-  g.clip(back)
-  for (let x = -50; x <= 50; x += 20) line(pen, [x, -46, x, 10], c.wicker, 3, false)
-  g.restore()
+  within(pen, back, () => {
+    for (let x = -50; x <= 50; x += 20) line(pen, [x, -46, x, 10], c.wicker, 3, false)
+  })
   puff(pen, ell(0, 4, 47, 17), c.cushion, 0.8)
   const front = blob([-62, -8, -40, 12, 0, 18, 40, 12, 62, -8, 56, 30, 34, 46, -34, 46, -56, 30], 0.9)
   puff(pen, front, c.wicker)
-  g.save()
-  g.clip(front)
-  line(pen, [-62, 10, -36, 25, 0, 30, 36, 25, 62, 10], c.weave, 3.5)
-  line(pen, [-60, 26, -32, 39, 0, 43, 32, 39, 60, 26], c.weave, 3.5)
-  for (let x = -45; x <= 45; x += 18) line(pen, [x, 4, x, 50], c.weave, 3, false)
-  g.restore()
+  within(pen, front, () => {
+    line(pen, [-62, 10, -36, 25, 0, 30, 36, 25, 62, 10], c.weave, 3.5)
+    line(pen, [-60, 26, -32, 39, 0, 43, 32, 39, 60, 26], c.weave, 3.5)
+    for (let x = -45; x <= 45; x += 18) line(pen, [x, 4, x, 50], c.weave, 3, false)
+  })
 }
 
 /** What each care thing draws, and the box it stays inside. Every one fits its touch target (layout.ts). */

@@ -54,6 +54,25 @@ const grown = (pen: Pen, scale: number, paint: (pen: Pen) => void) => { pen.g.sc
 const CALM = 0.55
 
 const sheet = new Sheet()
+
+// What changes inside a character (a blink, the tongue, the paws) is a second drawing with its own sprite.
+const rabbitAs = (shut: boolean) => sheet.get(`rabbit ${shut}`, RABBIT_BOX, (pen) => grown(pen, RABBIT_SIZE, (q) => rabbit(q, shut)))
+const dogAs = (shut: boolean, hang: number) => sheet.get(`dog ${shut} ${hang}`, DOG_BOX, (pen) => grown(pen, DOG_SIZE, (q) => dog(q, shut, hang / 2)))
+const mouseAs = (shut: boolean, fuss: boolean) => sheet.get(`mouse ${shut} ${fuss}`, MOUSE_BOUNDS, (pen) => mouse(pen, shut, fuss))
+const hedgehogAs = (shut: boolean) => sheet.get(`hedgehog ${shut}`, HEDGEHOG_BOUNDS, (pen) => hedgehog(pen, shut))
+const duckAs = (shut: boolean) => sheet.get(`duck ${shut}`, DUCK_BOUNDS, (pen) => duck(pen, shut))
+
+/**
+ * Every drawing a character can change to. One is baked on each frame after
+ * the sprites were emptied, until all are held, so a first blink never waits
+ * for its sprite and no frame bakes more than one.
+ */
+const SPARE: readonly (() => Sticker)[] = [
+  () => rabbitAs(true), () => dogAs(false, 0), () => dogAs(false, 1), () => dogAs(false, 2), () => mouseAs(false, true), () => mouseAs(false, false),
+  () => dogAs(true, 0), () => dogAs(true, 1), () => dogAs(true, 2), () => mouseAs(true, true), () => mouseAs(true, false),
+  () => hedgehogAs(true), () => duckAs(true), () => rabbitAs(false), () => hedgehogAs(false), () => duckAs(false),
+]
+let spared = 0
 /** The pieces that never move (wall, door, floor, window, table), painted once for a size and blitted each frame. */
 let ground: { canvas: HTMLCanvasElement; key: string } | null = null
 
@@ -99,10 +118,19 @@ function paintGround(room: Layout, pieces: Still[], width: number, height: numbe
 export function drawSpike(g: Ctx, width: number, height: number, dpr: number, seconds: number): number {
   const room = layout(width, height), t = seconds, p = room.pieces
   const k = dpr * room.scale
-  sheet.use(k)
+  if (sheet.use(k)) spared = 0
   const pieces = stills(room), key = `${width} ${height} ${dpr}`
   if (ground?.key !== key) ground = { canvas: paintGround(room, pieces, width, height, dpr), key }
   g.setTransform(1, 0, 0, 1, 0, 0)
+  // A spare drawing is baked and drawn once here, under the ground that is about to cover it, so the first frame
+  // that shows it finds its sprite already held by the canvas.
+  if (spared < SPARE.length) {
+    const spare = SPARE[spared++](), under = { x: spare.ox, y: spare.oy }
+    g.setTransform(k, 0, 0, k, 0, 0)
+    drawSticker(g, spare, under)
+    drawGloss(g, spare, under, 0.5)
+    g.setTransform(1, 0, 0, 1, 0, 0)
+  }
   g.drawImage(ground.canvas, 0, 0)
   g.setTransform(k, 0, 0, k, dpr * room.ox, dpr * room.oy)
   let draws = 1, n = 0
@@ -121,29 +149,27 @@ export function drawSpike(g: Ctx, width: number, height: number, dpr: number, se
 
   // The garden, through the window: a sprig in the air, and the two who were made well.
   put(sheet.get('leaf', LEAF_BOUNDS, leaf), { ...p.leaf, rot: 0.16 * Math.sin(t * 1.1) + 0.05 * Math.sin(t * 2.7) })
-  const hedgehogShut = blinking(t, 1), duckShut = blinking(t, 2)
-  put(sheet.get(`hedgehog ${hedgehogShut}`, HEDGEHOG_BOUNDS, (pen) => hedgehog(pen, hedgehogShut)), { ...p.gardenLeft, ...breath(t, of('hedgehog'), 1, 0.03) })
-  put(sheet.get(`duck ${duckShut}`, DUCK_BOUNDS, (pen) => duck(pen, duckShut)), { ...p.gardenRight, ...breath(t, of('duck'), 2, 0.03), rot: 0.05 * Math.sin(t * of('duck') * 0.7) })
+  put(hedgehogAs(blinking(t, 1)), { ...p.gardenLeft, ...breath(t, of('hedgehog'), 1, 0.03) })
+  put(duckAs(blinking(t, 2)), { ...p.gardenRight, ...breath(t, of('duck'), 2, 0.03), rot: 0.05 * Math.sin(t * of('duck') * 0.7) })
   put(sheet.get('lamp', LAMP_BOUNDS, lamp), { ...p.lamp, rot: 0.012 * Math.sin(t * 0.7) })
 
   // The rabbit is cold: under its breathing the whole sticker shivers, finely and in gusts.
-  const rabbitShut = blinking(t, 3)
   const gust = 0.55 + 0.45 * Math.sin(t * 1.9) ** 2
   const shiver = { x: gust * (1.5 * Math.sin(TAU * 11.3 * t) + 0.8 * Math.sin(TAU * 17.9 * t + 1)), rot: gust * 0.011 * Math.sin(TAU * 13.1 * t + 2) }
-  put(sheet.get(`rabbit ${rabbitShut}`, RABBIT_BOX, (pen) => grown(pen, RABBIT_SIZE, (q) => rabbit(q, rabbitShut))), { x: p.patient.x + shiver.x, y: p.patient.y, rot: shiver.rot, ...breath(t, of('rabbit'), 3, 0.018) })
+  put(rabbitAs(blinking(t, 3)), { x: p.patient.x + shiver.x, y: p.patient.y, rot: shiver.rot, ...breath(t, of('rabbit'), 3, 0.018) })
 
   put(sheet.get('cart', CART_BOUNDS, cart), p.cart, CALM)
   for (const care of CARES) put(sheet.get(care, THINGS[care].bounds, THINGS[care].paint), room.things[care])
 
   // The mouse fusses: it shifts along its place, turns a little, and tidies its whiskers now and then.
-  const mouseShut = blinking(t, 4), fuss = (t * 0.45 + chance(9)) % 1 < 0.38
+  const fuss = (t * 0.45 + chance(9)) % 1 < 0.38
   const hop = Math.abs(Math.sin(t * 3.1)) * (fuss ? 2.5 : 0)
-  put(sheet.get(`mouse ${mouseShut} ${fuss}`, MOUSE_BOUNDS, (pen) => mouse(pen, mouseShut, fuss)), { x: p.mouse.x + 7 * Math.sin(t * 0.8), y: p.mouse.y - hop, rot: 0.07 * Math.sin(t * 1.6), ...breath(t, 4, 4, 0.03) })
+  put(mouseAs(blinking(t, 4), fuss), { x: p.mouse.x + 7 * Math.sin(t * 0.8), y: p.mouse.y - hop, rot: 0.07 * Math.sin(t * 1.6), ...breath(t, 4, 4, 0.03) })
 
   // The dog is thirsty: it pants slowly, and the whole sticker sags and lifts with each pant.
-  const dogShut = blinking(t, 5), panting = Math.sin(TAU * t * of('dog') * 0.5)
+  const panting = Math.sin(TAU * t * of('dog') * 0.5)
   const hang = panting > 0.4 ? 2 : panting > -0.4 ? 1 : 0
-  put(sheet.get(`dog ${dogShut} ${hang}`, DOG_BOX, (pen) => grown(pen, DOG_SIZE, (q) => dog(q, dogShut, hang / 2))), { ...p.waiting, sx: 1 + panting * 0.012, sy: 1 - panting * 0.02, rot: 0.012 * Math.sin(t * 0.5) })
+  put(dogAs(blinking(t, 5), hang), { ...p.waiting, sx: 1 + panting * 0.012, sy: 1 - panting * 0.02, rot: 0.012 * Math.sin(t * 0.5) })
 
   g.setTransform(1, 0, 0, 1, 0, 0)
   return draws
