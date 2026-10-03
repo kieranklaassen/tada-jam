@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { CREATURE_KINDS, HAT_KINDS, MOST, type CreatureKind, type HatKind } from '../kinds'
 import { ROW_Z, holeX, spotX } from '../stage'
-import { SLAB, TILE_DEPTH } from '../sizes'
+import { ARCH, CREATURE_DEPTH, HAND, SLAB, TILE_DEPTH } from '../sizes'
 import { disc, laidFlat, merged, paint, roundedRect, slab } from './foam'
 import { archOutline, creatureCut, earOutline, hatOutline, holeBase, matTileOutline, tileWidth, type Cut } from './shapes'
 
@@ -19,14 +19,11 @@ export const PALETTE = {
   white: '#fbfaf5',
   dot: '#22252e',
   shadow: '#0c4f48',
+  glow: '#ff9a1f',
 } as const
 
 export const HAT_COLOUR: Record<HatKind, string> = { cone: '#e3382c', dome: '#2d6fe0', brim: '#f7c41d' }
 export const CREATURE_COLOUR: Record<CreatureKind, string> = { bop: '#f58a1f', lanky: '#8b52d4', flop: '#f0609f', wig: '#a9d83c', pip: '#4b4f5c' }
-
-/** How thick a creature and the arch are. */
-export const CREATURE_DEPTH = 0.7
-export const ARCH_DEPTH = 0.9
 
 /** The mat: columns by rows of jigsaw tiles `MAT_TILE` across, in two tones, its top at y = 0. */
 export const MAT_TILE = 4.7
@@ -61,7 +58,7 @@ export function buildRoom(): THREE.BufferGeometry {
 
 /** The arch, standing on the origin: the view puts it at the mat's edge, and it squashes about its own feet. */
 export function buildArch(): THREE.BufferGeometry {
-  return slab(archOutline(), ARCH_DEPTH, PALETTE.furniture)
+  return slab(archOutline(), ARCH.depth, PALETTE.furniture)
 }
 
 /** The hat tile for this cycle: a slab with one hole for each hat, lying on the mat. The mat shows through an empty hole. */
@@ -100,7 +97,7 @@ export function buildPieces(): Pieces {
   return {
     hats, bodies, cuts,
     ear: slab(earOutline(), 0.3, CREATURE_COLOUR.flop),
-    hand: slab(disc(0.27), 0.34, '#ffffff'),
+    hand: slab(disc(HAND.radius), 0.34, '#ffffff'),
     dot: new THREE.CircleGeometry(1, 20),
     blob: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
   }

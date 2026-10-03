@@ -1,4 +1,5 @@
 import { LADDER } from './config'
+import type { CreatureKind } from './kinds'
 import { layCrew } from './layout'
 import { changeDue, judge, ready, type World } from './rules'
 import { worldOf, type Saved } from './save'
@@ -86,6 +87,15 @@ export function finishIfReady(saved: Saved, ladder: readonly string[] = LADDER):
  */
 export function waitingCrew(saved: Saved): World {
   return layCrew(saved.position, saved.seed).world
+}
+
+/**
+ * Which creature of the waiting crew stands in the arch: one whose kind is not on the mat with the finished crew,
+ * where there is one, so the child never sees the same creature twice at rest; otherwise the first of its row.
+ */
+export function waitingLead(saved: Saved): CreatureKind {
+  const next = waitingCrew(saved).crew, here = saved.crew.map((creature) => creature.kind)
+  return (next.find((creature) => !here.includes(creature.kind)) ?? next[0]).kind
 }
 
 /** The child lets the waiting crew in: the finished crew is gone and the new one stands bare on the mat. Only a finished cycle can be followed. */

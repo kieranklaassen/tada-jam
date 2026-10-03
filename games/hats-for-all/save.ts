@@ -22,9 +22,9 @@ export type Saved = GameState & World & {
   shown: boolean
 }
 
-/** A first visit: the position the age gives, and the first crew ever, with the showing still to play. */
-export function freshSave(childAge: number | null): Saved {
-  const base = freshState(childAge), first = layFirstCrew(base.position, FIRST_SEED)
+/** A first visit: the position the age gives, and the first crew ever, with the showing still to play. The seed is the visit's own; with none given it is a fixed one. */
+export function freshSave(childAge: number | null, seed: number = FIRST_SEED): Saved {
+  const base = freshState(childAge), first = layFirstCrew(base.position, seed)
   // Where the first crew has no room for a leader there is nothing to show.
   return { ...base, ...first.world, seed: first.seed, shown: first.leader < 0 }
 }
@@ -67,8 +67,8 @@ function readWorld(record: Record<string, unknown>): Pick<World, 'crew' | 'tile'
  * and the finished mark are the template's to repair, and each field of the
  * game's own is repaired here.
  */
-export function deserialize(raw: unknown, childAge: number | null = null, ladder: readonly string[] = LADDER): Saved {
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw) || (raw as Record<string, unknown>).v !== STATE_VERSION) return freshSave(childAge)
+export function deserialize(raw: unknown, childAge: number | null = null, ladder: readonly string[] = LADDER, firstSeed: number = FIRST_SEED): Saved {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw) || (raw as Record<string, unknown>).v !== STATE_VERSION) return freshSave(childAge, firstSeed)
   const record = raw as Record<string, unknown>, base = readPosition(raw, childAge, ladder)
   const seed = isIndex(record.seed, 2 ** 32) ? record.seed : FIRST_SEED
   // A record of this game has been played: a damaged mark never brings the first showing back.

@@ -4,35 +4,36 @@ import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio } from './audio'
 import { BACKDROP } from './config'
-import { IdleLadder } from './guidance'
+import { Game, type Target } from './game'
+import { hint } from './guide'
+import { IdleLadder, handPose, type Guidance, type HandPose } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { hatsForAllManifest } from './manifest'
 import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
-import type { World } from './rules'
+import { deserialize, serialize, type Saved } from './save'
 import { SaveCadence } from './saveCadence'
 import { sounding } from './sound'
-import { deserialize, serialize, type GameState } from './state'
-import { Toy, type Target } from './toy'
+import type { Guide } from './view/stage3d'
 import { FoamView } from './view/view'
 
-// The Mount. At this stage it shows the toy (ART.md, "The toy"): the foam
-// scene with three creatures and four hats, where pressing a hat out of its
-// tile and onto a head is all there is to do. It has no goal, no cycle and no
-// ending yet, and it is the same scene at every load, so a still of it can be
-// taken again. Around it everything the template wires is running: the saved
-// state, attention, the attended clock, touch, sound from the first touch,
-// the idle ladder, adaptive quality, the grown-up performance handle and the
-// grown-up overlay.
+// The Mount. Everything that decides anything is in pure modules: the rules
+// (rules.ts), the cycle and what is saved (cycle.ts, save.ts), the game that
+// plays them (game.ts) on a theatre of numbers (play.ts). The view draws the
+// theatre (view/). This file joins them to the shell: the saved slot,
+// attention and the attended clock, touch, sound from the first touch, the
+// idle ladder, adaptive quality, and the grown-up handle and overlay.
 
-/** The toy's scene: three creatures, and one hat more than there are heads, so the last hat out has nobody under it. */
-function toyScene(): World {
-  return {
-    crew: [{ kind: 'bop', spot: 1, hats: [] }, { kind: 'lanky', spot: 2, hats: [] }, { kind: 'wig', spot: 3, hats: [] }],
-    tile: ['cone', 'dome', 'brim', 'cone'],
-    loose: [], changes: [], guest: null, leaver: null, slips: 0,
-  }
+/** A finger that has slid less than this far, in pixels of the surface, is still tapping: at two a tap is often a small smear. */
+const SMEAR = 44
+/** How far a finger pulls a creature before it is stretched as far as it goes, in pixels. */
+const PULL = 130
+
+/** A fixed seed from the address, `?seed=<n>`, so a still can be taken again; otherwise a new one for a first visit. */
+function firstSeed(search: string): number {
+  const asked = Number(new URLSearchParams(search).get('seed'))
+  return Number.isInteger(asked) && asked > 0 ? asked >>> 0 : Math.floor(Math.random() * 2 ** 32) >>> 0
 }
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
@@ -54,11 +55,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
-    const toy = new Toy(toyScene()), view = new FoamView(canvas)
-    view.layOut(toy.world)
-    // What the finger that is down landed on, until it lifts.
-    let held: Target | null = null
+    let state: Saved | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    const view = new FoamView(canvas)
+    // The game is made when the slot has been read, and not before: until then the surface shows the bare mat.
+    let game: Game | null = null
+    // What the finger that is down landed on and where, and whether it has slid far enough to be dragging.
+    let held: Target | null = null, from: Point = { x: 0, y: 0 }, dragging = false
+    // What the idle ladder shows this frame, kept from the loop for `draw`.
+    let guidance: Guidance | null = null
+    const hand: HandPose = { travel: 0, press: 0, opacity: 0 }
+    const guide: Guide = { hint: { glow: [], hand: null }, glow: 0, press: 0, opacity: 0 }
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     // The game hands a change to storage where it makes it, at one of two speeds:
@@ -82,7 +88,17 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // been read.
     const draw = () => {
       if (width <= 0) return
-      const counts = view.draw(toy, ladder.update(clock.seconds).glow)
+      if (game && guidance) {
+        guide.hint = hint(game.saved)
+        guide.glow = guidance.glow
+        if (guidance.demo === null) guide.opacity = 0
+        else {
+          handPose(guidance.demo, false, hand)
+          guide.press = hand.press
+          guide.opacity = hand.opacity
+        }
+      }
+      const counts = view.draw(game ? game.play : null, game && guidance ? guide : null)
       drawn.drawCalls = counts.drawCalls
       drawn.triangles = counts.triangles
     }
@@ -105,26 +121,48 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const observer = new ResizeObserver(resize)
     observer.observe(root)
 
-    // What the toy does with a gesture. The answer starts on `press`, when the finger lands. A tap plays the
-    // move. A finger that slid before it lifted still counts as a tap on what it landed on: at two a tap is
-    // often a small smear, and the simplest use always works. Dragging a hat to a head of the child's choice
-    // comes with the game.
+    // What the game does with a gesture. A scene that is playing ends first thing in every press, inside
+    // `game.press`, and the press is then an ordinary touch. The answer starts on `press`, when the finger
+    // lands. A finger that slides only a little is still tapping; further, it drags: a hat comes away in the
+    // hand, a creature stretches after the finger. Every press has one ending.
     const act = (gestures: Gesture[]) => {
+      if (!game) return
       for (const gesture of gestures) {
         if (gesture.type === 'press') {
-          held = view.pick(gesture.at.x, gesture.at.y, toy)
-          toy.press(held)
-        } else if (held && (gesture.type === 'tap' || gesture.type === 'dragEnd' || gesture.type === 'pressEnd')) {
-          toy.release(held, gesture.type !== 'pressEnd')
+          held = view.pick(gesture.at.x, gesture.at.y, game.play)
+          from = gesture.at
+          dragging = false
+          game.press(held)
+        } else if (!held) continue
+        else if (gesture.type === 'tap') { game.tap(); held = null }
+        else if (gesture.type === 'pressEnd') { game.pressEnd(); held = null }
+        else if (gesture.type === 'dragMove' || gesture.type === 'dragLift') {
+          if (!dragging && Math.hypot(gesture.at.x - from.x, gesture.at.y - from.y) < SMEAR) continue
+          if (!dragging) { dragging = true; game.dragStart() }
+          const point = view.handPoint(gesture.at.x, gesture.at.y)
+          game.dragTo(point.x, point.y, point.z, (gesture.at.x - from.x) / PULL, (from.y - gesture.at.y) / PULL)
+        } else if (gesture.type === 'dragEnd') {
+          if (dragging) game.letGo(view.letGoAt(gesture.at.x, gesture.at.y, game.play, held))
+          else game.tap()
           held = null
         }
       }
       sound()
+      keep()
     }
-    // Plays what the toy has asked to be heard since the last call.
+    // Plays what the game has asked to be heard since the last call: inside the gesture, so the first sound
+    // falls within the touch, and again after each step of the loop.
     const sound = () => {
-      for (const cue of toy.cues) audio.play(sounding(cue.voice, cue.delay))
-      toy.cues.length = 0
+      if (!game) return
+      for (const cue of game.play.cues) audio.play(sounding(cue.voice, cue.delay))
+      game.play.cues.length = 0
+    }
+    // Hands a change to storage: a move at the throttle, a scene's outcome at once.
+    const keep = () => {
+      if (!game || !game.dirty) return
+      state = game.saved
+      cadence.change(performance.now(), game.dirty === 'now')
+      game.dirty = null
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -165,11 +203,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
       if (touch.active) ladder.touch(clock.seconds)
+      // The game plays the step: the theatre, a scene, and whatever falls due once the crew has been left alone.
+      if (game) {
+        game.step(step)
+        sound()
+        keep()
+        // A scene that is playing is not idleness.
+        if (game.sceneRunning) ladder.touch(clock.seconds)
+      }
       // What to show an idle child: a glow on what can be touched, then one move.
-      ladder.update(clock.seconds)
-      // The toy plays the step: flights, springs and whatever sounds as a hat lands.
-      toy.step(step)
-      sound()
+      guidance = ladder.update(clock.seconds)
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that
       // frame's work.
@@ -196,6 +239,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       act(touch.clear())
+      held = null
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)
@@ -203,8 +247,13 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
-      state = deserialize(value, ctxRef.current.childAge)
-      // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
+      state = deserialize(value, ctxRef.current.childAge, undefined, firstSeed(window.location.search))
+      // The game sets itself up from the state, as it was left: nothing eases in and no scene replays. Only the
+      // first showing, which plays once ever, starts by itself, and its outcome is saved as it starts.
+      game = new Game(state)
+      game.begin()
+      keep()
+      ladder.touch(clock.seconds)
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.
       draw()

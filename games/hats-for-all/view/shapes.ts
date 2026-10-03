@@ -1,8 +1,10 @@
 import * as THREE from 'three'
 import type { CreatureKind, HatKind } from '../kinds'
-import { BODY, HAT_HEIGHT, type Body } from '../sizes'
-import { HOLE_GAP } from '../stage'
+import { ARCH, BODY, HAT_HEIGHT, type Body } from '../sizes'
+import { tileWidth } from '../tile'
 import { disc, roundedRect } from './foam'
+
+export { tileWidth }
 
 // The outlines everything is cut from. A hat's outline is drawn with its base
 // on y = 0 and is used twice: for the hat, and a little larger for the hole it
@@ -47,11 +49,6 @@ export function hatOutline(kind: HatKind, grow = 0): THREE.Shape {
   shape.quadraticCurveTo(-1.0 - g, 0.34 + g, -1.0 - g, 0.22)
   shape.closePath()
   return shape
-}
-
-/** How wide the hat tile is for this many hats. */
-export function tileWidth(hats: number): number {
-  return Math.max(1, hats) * HOLE_GAP + 0.9
 }
 
 /** Where a hat's base lies in its tile, measured towards the back wall from the tile's middle. A hat lies with its top away from the child. */
@@ -101,15 +98,15 @@ export function earOutline(): THREE.Shape {
 
 /** The foam arch the creatures come and go through, standing on y = 0. */
 export function archOutline(): THREE.Shape {
-  const shape = new THREE.Shape()
-  shape.moveTo(-2.3, 0)
-  shape.lineTo(-1.45, 0)
-  shape.lineTo(-1.45, 2.5)
-  shape.absarc(0, 2.5, 1.45, Math.PI, 0, true)
-  shape.lineTo(1.45, 0)
-  shape.lineTo(2.3, 0)
-  shape.lineTo(2.3, 2.6)
-  shape.absarc(0, 2.6, 2.3, 0, Math.PI, false)
+  const { inner, outer, straight } = ARCH, shape = new THREE.Shape()
+  shape.moveTo(-outer, 0)
+  shape.lineTo(-inner, 0)
+  shape.lineTo(-inner, straight)
+  shape.absarc(0, straight, inner, Math.PI, 0, true)
+  shape.lineTo(inner, 0)
+  shape.lineTo(outer, 0)
+  shape.lineTo(outer, straight)
+  shape.absarc(0, straight, outer, 0, Math.PI, false)
   shape.closePath()
   return shape
 }

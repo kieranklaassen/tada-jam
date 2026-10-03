@@ -1,4 +1,4 @@
-import { beginNext, finishIfReady, markShown, waitingCrew, withWorld } from './cycle'
+import { beginNext, finishIfReady, markShown, waitingLead, withWorld } from './cycle'
 import type { Game } from './game'
 import { waits } from './game'
 import { PERSONALITY } from './motion'
@@ -29,6 +29,8 @@ export type Show = {
 }
 
 const WALK = 6.5
+/** How far apart creatures walk in a line: wide enough that the two widest never brush at a turn. */
+const LINE_GAP = 4
 /** How far the tile slides to be out of sight, towards the child. */
 const TILE_AWAY = 9.5
 const cue = (at: number, play: () => void): Beat => ({ at, lasts: 0, play })
@@ -156,7 +158,7 @@ export function paradeShow(game: Game): Show {
   for (let beat = 0; march + 0.3 + beat * 0.45 < march + marches - 0.3; beat++) beats.push(cue(march + 0.3 + beat * 0.45, () => game.says(crew[beat % crew.length].kind, moodFor(feels[beat % crew.length]))))
   beats.push(cue(Math.max(0, march + marches - wayLength(wayToArch()) / WALK - 0.2), () => {
     // The first of the next crew comes to wait in the arch, calm and in plain view.
-    const kind = waitingCrew(game.saved).crew[0].kind
+    const kind = waitingLead(game.saved)
     if (play.has(waits(kind))) return
     play.enter(waits(kind), kind, OFF_RIGHT)
     play.walk(waits(kind), wayToArch(), WALK)
@@ -172,9 +174,12 @@ export function paradeShow(game: Game): Show {
  */
 export function nextCrewShow(game: Game): Show {
   const play = game.play, old = [...game.saved.crew], next = counter()
-  const laid = worldOf(beginNext(game.saved)), crew = [...laid.crew].sort((a, b) => a.spot - b.spot)
-  const ways = crew.map((creature, i) => (i === 0 ? wayFromArch(creature.spot) : [OFF_RIGHT, BEHIND_ARCH, ...wayFromArch(creature.spot)]))
-  const slowest = Math.max(...ways.map((way, i) => i * 0.45 + wayLength(way) / WALK))
+  const laid = worldOf(beginNext(game.saved)), lead = waitingLead(game.saved)
+  // The one who waited in the arch comes first; the others follow in the order of their spots, furthest spot first, so nobody has to pass anybody.
+  const crew = [...laid.crew].sort((a, b) => (a.kind === lead ? -1 : b.kind === lead ? 1 : a.spot - b.spot))
+  // The first comes from the arch. The others come in a line from off the mat, each starting further off, so the line has its gaps from the first step.
+  const ways = crew.map((creature, i) => (i === 0 ? wayFromArch(creature.spot) : [{ x: OFF_RIGHT.x + (i - 1) * LINE_GAP, z: OFF_RIGHT.z }, BEHIND_ARCH, ...wayFromArch(creature.spot)]))
+  const slowest = Math.max(...ways.map((way) => wayLength(way) / WALK))
   return {
     name: 'a-crew-walks-in',
     save: beginNext,
@@ -200,8 +205,8 @@ export function nextCrewShow(game: Game): Show {
         play.cue('creak', creak(next()), 0.7)
         crew.forEach((creature, i) => {
           if (i === 0 && play.has(waits(creature.kind))) play.rename(waits(creature.kind), creature.kind)
-          else play.enter(creature.kind, creature.kind, i === 0 ? IN_ARCH : OFF_RIGHT)
-          play.walk(creature.kind, ways[i], WALK, i * 0.45, () => {
+          else play.enter(creature.kind, creature.kind, ways[i][0])
+          play.walk(creature.kind, ways[i], WALK, 0, () => {
             play.look(creature.kind, 0, TILE_Z, 1.5)
             play.act(creature.kind, 'pats-its-bare-head')
             game.says(creature.kind, 'ask', 0.1)

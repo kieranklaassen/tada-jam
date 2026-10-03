@@ -122,3 +122,43 @@ export function blobTexture(size = 64): THREE.DataTexture {
   texture.needsUpdate = true
   return texture
 }
+
+/**
+ * The ghost hand: a white mitten with one finger out and a dark edge, drawn
+ * from distances so it needs no canvas. Its fingertip is at the middle of the
+ * top edge. It is a picture of a hand and no symbol to decode: it only ever
+ * presses the thing a child could press.
+ */
+export function handTexture(size = 64): THREE.DataTexture {
+  const data = new Uint8Array(size * size * 4)
+  const capsule = (x: number, y: number, ax: number, ay: number, bx: number, by: number, r: number): number => {
+    const t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / ((bx - ax) ** 2 + (by - ay) ** 2)))
+    return Math.hypot(x - ax - (bx - ax) * t, y - ay - (by - ay) * t) - r
+  }
+  for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) {
+    // x across, y up from the bottom edge, both 0..1.
+    const x = (i + 0.5) / size, y = (j + 0.5) / size
+    const d = Math.min(capsule(x, y, 0.5, 0.5, 0.5, 0.86, 0.085), capsule(x, y, 0.42, 0.2, 0.62, 0.36, 0.2), capsule(x, y, 0.3, 0.42, 0.34, 0.5, 0.07))
+    const edge = 0.035, inside = Math.max(0, Math.min(1, -d / 0.015)), rim = Math.max(0, Math.min(1, (edge - d) / 0.015))
+    const shade = Math.round(40 + 215 * inside)
+    data.set([shade, shade, Math.round(46 + 209 * inside), Math.round(255 * rim)], (j * size + i) * 4)
+  }
+  const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)
+  texture.magFilter = texture.minFilter = THREE.LinearFilter
+  texture.needsUpdate = true
+  return texture
+}
+
+/** A soft ring, clear in the middle: the glow that lies round a thing and never over it, so a hat keeps its own colour while it is lit. */
+export function ringTexture(size = 64): THREE.DataTexture {
+  const data = new Uint8Array(size * size * 4)
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const d = Math.hypot(x - size / 2 + 0.5, y - size / 2 + 0.5) / (size / 2)
+    const a = Math.max(0, Math.min(1, (d - 0.5) / 0.22)) * Math.max(0, Math.min(1, (1 - d) / 0.3))
+    data.set([255, 255, 255, Math.round(255 * a)], (y * size + x) * 4)
+  }
+  const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat)
+  texture.magFilter = texture.minFilter = THREE.LinearFilter
+  texture.needsUpdate = true
+  return texture
+}

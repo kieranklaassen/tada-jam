@@ -1,4 +1,4 @@
-import { due, freshPace, touched, waited, waitingCrew, withWorld, type Pace } from './cycle'
+import { due, freshPace, touched, waited, waitingLead, withWorld, type Pace } from './cycle'
 import { GRID, type Action, type ObjectKind } from './grid'
 import type { CreatureKind } from './kinds'
 import { PERSONALITY } from './motion'
@@ -64,7 +64,7 @@ export class Game {
 
   /** The next crew's first creature stands in the arch. */
   someoneWaits(): string {
-    const kind = waitingCrew(this.saved).crew[0].kind
+    const kind = waitingLead(this.saved)
     if (!this.play.has(waits(kind))) this.play.enter(waits(kind), kind, IN_ARCH)
     return waits(kind)
   }

@@ -370,7 +370,8 @@ export class Play {
     const tower = actor.hats > 1, slip = tower ? -(body.top - body.faceY) + 0.15 : 0, fwd = Math.max(mods.hatFwd, tower ? 1 : 0)
     let under = 0
     for (let level = 0; level < seen.level; level++) under += HAT_HEIGHT[this.hatKind(this.hatOn(seen.who, level) ?? hat)] * 0.72
-    const lean = actor.lean.x + mods.lean, top = body.top * actor.squash.x * mods.squash + under + slip + mods.hatLift
+    // However far an act and a slipping tower bring a hat down, it stays above the feet.
+    const lean = actor.lean.x + mods.lean, top = Math.max(0.45, body.top * actor.squash.x * mods.squash + slip + mods.hatLift) + under
     out.x = actor.x + mods.dx - Math.sin(lean) * top
     out.y = actor.hop.x + mods.dy + Math.cos(lean) * top - 0.06
     out.z = actor.z + 0.02 * (seen.level + 1) + fwd * HAT_FWD
