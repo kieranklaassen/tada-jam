@@ -168,19 +168,32 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   const truckBall = new THREE.Sphere(new THREE.Vector3(TRUCK.x, 1.2, TRUCK.z), TRUCK_REACH)
   let driving = false
 
-  // Every program the game will ever need is compiled now, with everything shown for the moment: the water in
-  // the pool, the steam, the ghost hand, and the lowest tier's plastic. So the first gulp, the first puff and a
-  // tier change never stall a frame.
+  // Everything the game will ever draw is drawn once now, with every part shown for the moment: the water in the
+  // pool, the steam, the ripples, the ghost hand, both yards, and the lowest tier's plastic. A program is only
+  // fully made ready by its first real draw, so without this the first gulp into the pool, the first puff of
+  // steam and the first ripple each stall a frame. Nothing of it is seen: the Mount draws the sky over it at once.
   const hidden: THREE.Object3D[] = []
+  const empty: THREE.InstancedMesh[] = []
   scene.traverse((object) => {
     if (!object.visible) {
       hidden.push(object)
       object.visible = true
     }
+    const instanced = object as THREE.InstancedMesh
+    if (instanced.isInstancedMesh && instanced.count === 0) {
+      empty.push(instanced)
+      instanced.count = 1
+    }
   })
   renderer.compile(scene, camera)
-  renderer.compile(new THREE.Mesh(shadowPlane, matte), camera, scene)
+  renderer.render(scene, camera)
+  const matteTwin = new THREE.Mesh(shadowPlane, matte)
+  scene.add(matteTwin)
+  renderer.render(scene, camera)
+  scene.remove(matteTwin)
   for (const object of hidden) object.visible = false
+  for (const instanced of empty) instanced.count = 0
+  scene.remove(other.root)
 
   const counts: StageCounts = { drawCalls: 0, triangles: 0 }
   const everything = [satin, matte, glow, water, shadowMaterial]
@@ -227,7 +240,10 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       here.root.position.z = slid - (driving ? YARD_PITCH : 0)
       // The yard that slides in is at rest; the drive's own channels (the gate) belong to the yard that leaves.
       here.show(game.yard, game.motion, driving ? atRest : game.channels, game.wormAt, game.waits)
+      // The second yard is in the scene only while both are on screen, so a still yard costs nothing.
       other.root.visible = driving
+      if (driving && other.root.parent === null) scene.add(other.root)
+      else if (!driving && other.root.parent !== null) scene.remove(other.root)
       if (game.leaving) {
         other.root.position.z = slid
         Object.assign(leftAs, game.leaving.motion.ownChannels)
@@ -281,10 +297,12 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
     },
     counts,
     dispose: () => {
-      scene.traverse((object) => {
-        const mesh = object as THREE.Mesh
-        if (mesh.isMesh) mesh.geometry.dispose()
-      })
+      for (const root of [scene, other.root]) {
+        root.traverse((object) => {
+          const mesh = object as THREE.Mesh
+          if (mesh.isMesh) mesh.geometry.dispose()
+        })
+      }
       here.dispose()
       other.dispose()
       ground?.dispose()
