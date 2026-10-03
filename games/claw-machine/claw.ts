@@ -1,0 +1,218 @@
+import { HINGE_DROP, JAW_REACH } from './clawBuild'
+import { RAIL } from './places'
+
+// The claw as numbers: a trolley that runs to where the finger is, a cable
+// that swings against every change of the trolley's speed, and a drop that
+// always ends in a catch. No renderer and no clock: it is stepped by a fixed
+// amount of game time, so the same touches always play the same way.
+
+export type ClawPhase = 'ready' | 'dropping' | 'closing' | 'rising' | 'letting-go'
+
+export type Claw = {
+  /** The trolley, and where it is headed. */
+  x: number
+  z: number
+  vx: number
+  vz: number
+  targetX: number
+  targetZ: number
+  /** Cable out, in world units, and how fast it is running. */
+  length: number
+  lengthV: number
+  /** Swing of the cable in radians, toward +x and toward +z. */
+  swingX: number
+  swingZ: number
+  swingVX: number
+  swingVZ: number
+  /** Jaws: 0 shut, 1 wide open. `grip` is how far they stay open around what they hold. */
+  open: number
+  openV: number
+  grip: number
+  squash: number
+  squashV: number
+  phase: ClawPhase
+  /** Seconds into the phase. */
+  t: number
+  /** The finger is on the glass and the trolley follows it. */
+  following: boolean
+  /** A tap: drop (or let go) as soon as the trolley gets there. */
+  dropOnArrival: boolean
+  /** How heavy the thing in the jaws is: 0 nothing, 1 a small toy, 2 a big one. */
+  load: number
+  /** The height the hinge of the jaws rides at, and the height it drops to. */
+  rideY: number
+  landY: number
+  /** How far the hoist has come, for the ratchet, and the length of cable it started from. */
+  ratchet: number
+  riseFrom: number
+}
+
+export type ClawEvent =
+  | { type: 'chirp'; distance: number } // the finger landed and the trolley set off
+  | { type: 'tick' } // a stud of travel
+  | { type: 'buffer'; side: -1 | 1; speed: number } // the trolley hit the end of the rail
+  | { type: 'landed'; x: number; z: number; swing: number } // the jaws reached what was under them
+  | { type: 'closed' } // the jaws shut on what the scene gave them when they landed
+  | { type: 'ratchet'; progress: number } // one click of the hoist
+  | { type: 'up' } // the hoist is home
+  | { type: 'let-go'; x: number; z: number; vx: number; vz: number } // the jaws opened under a load
+
+export const STEP = 1 / 120
+const TROLLEY_PULL = 150
+const TROLLEY_DAMP = 21
+const TROLLEY_TOP_SPEED = 70
+const DROP_GRAVITY = 150
+const DROP_TOP_SPEED = 46
+const CLOSE_SECONDS = 0.16
+const LET_GO_SECONDS = 0.14
+export const REST_OPEN = 0.55
+
+export function newClaw(x = 0, z = 6, rideY = 12.5): Claw {
+  return {
+    x, z, vx: 0, vz: 0, targetX: x, targetZ: z,
+    length: RAIL.top - rideY - HINGE_DROP, lengthV: 0,
+    swingX: 0, swingZ: 0, swingVX: 0, swingVZ: 0,
+    open: REST_OPEN, openV: 0, grip: 0, squash: 1, squashV: 0,
+    phase: 'ready', t: 0, following: false, dropOnArrival: false, load: 0, rideY, landY: 0, ratchet: 0, riseFrom: 0,
+  }
+}
+
+/** Where the tips of the jaws are when the cable hangs straight: the lowest point of the claw. */
+export function tipY(claw: Claw): number {
+  return RAIL.top - claw.length - HINGE_DROP - JAW_REACH
+}
+
+/** Where the hub is, with the swing: what the cable ends in. */
+export function hubAt(claw: Claw): { x: number; y: number; z: number } {
+  const dx = Math.sin(claw.swingX), dz = Math.sin(claw.swingZ), dy = Math.cos(claw.swingX) * Math.cos(claw.swingZ)
+  const n = Math.hypot(dx, dy, dz)
+  return { x: claw.x + (dx / n) * claw.length, y: RAIL.top - (dy / n) * claw.length, z: claw.z + (dz / n) * claw.length }
+}
+
+const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value))
+
+/** The finger landed, or moved while down. The first landing snaps the jaws open and sets the trolley off. */
+export function follow(claw: Claw, x: number, z: number, events: ClawEvent[]): void {
+  const landing = !claw.following
+  claw.following = true
+  claw.dropOnArrival = false
+  claw.targetX = clamp(x, RAIL.minX, RAIL.maxX)
+  claw.targetZ = clamp(z, RAIL.minZ, RAIL.maxZ)
+  if (!landing) return
+  events.push({ type: 'chirp', distance: Math.hypot(claw.targetX - claw.x, claw.targetZ - claw.z) })
+  if (claw.phase === 'ready' && claw.load === 0) { claw.open = 1; claw.openV = 4 }
+}
+
+/** The finger lifted: the claw drops where it is, or lets go of what it holds. With `tap`, it first runs to where the tap was. */
+export function release(claw: Claw, tap: boolean): void {
+  claw.following = false
+  if (tap) { claw.dropOnArrival = true; return }
+  claw.targetX = claw.x; claw.targetZ = claw.z
+  act(claw)
+}
+
+/** The press ended without a lift that counts (the game was parked under the finger): the claw stays as it is. */
+export function letBe(claw: Claw): void {
+  claw.following = false
+  claw.targetX = claw.x; claw.targetZ = claw.z
+}
+
+function act(claw: Claw): void {
+  if (claw.phase !== 'ready') return
+  claw.dropOnArrival = false
+  claw.t = 0
+  claw.phase = claw.load > 0 ? 'letting-go' : 'dropping'
+  claw.lengthV = 0
+}
+
+/**
+ * One fixed step. `rideY` is the height the hinge should ride at here (the
+ * scene raises it over tall things) and `landY` the height of whatever is
+ * under the jaws, which is where a drop ends.
+ */
+export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawEvent[], dt = STEP): void {
+  claw.t += dt
+  // The trolley: pulled toward its target, damped, and never faster than its motor allows. It stands still
+  // while the claw is down.
+  const free = claw.phase === 'ready'
+  const before = { vx: claw.vx, vz: claw.vz, x: claw.x, z: claw.z }
+  if (free) {
+    claw.vx += ((claw.targetX - claw.x) * TROLLEY_PULL - claw.vx * TROLLEY_DAMP) * dt
+    claw.vz += ((claw.targetZ - claw.z) * TROLLEY_PULL - claw.vz * TROLLEY_DAMP) * dt
+    const speed = Math.hypot(claw.vx, claw.vz)
+    if (speed > TROLLEY_TOP_SPEED) { claw.vx *= TROLLEY_TOP_SPEED / speed; claw.vz *= TROLLEY_TOP_SPEED / speed }
+  } else {
+    claw.vx *= Math.max(0, 1 - 30 * dt); claw.vz *= Math.max(0, 1 - 30 * dt)
+  }
+  claw.x += claw.vx * dt; claw.z += claw.vz * dt
+  // The buffers at either end of the rail.
+  for (const side of [-1, 1] as const) {
+    const end = side < 0 ? RAIL.minX : RAIL.maxX
+    if ((claw.x - end) * side > 0) {
+      claw.x = end
+      if (claw.vx * side > 6) events.push({ type: 'buffer', side, speed: Math.abs(claw.vx) })
+      claw.vx = -claw.vx * 0.25
+    }
+  }
+  claw.z = clamp(claw.z, RAIL.minZ, RAIL.maxZ)
+  if (Math.floor(claw.x) !== Math.floor(before.x) || Math.floor(claw.z) !== Math.floor(before.z)) events.push({ type: 'tick' })
+
+  // The cable swings against the trolley's change of speed. A load makes it swing slower and die down later.
+  const heavy = 1 + 0.35 * claw.load
+  const stiffness = 62 / heavy, damping = 2.6 / heavy, push = 0.011
+  const ax = clamp((claw.vx - before.vx) / dt, -2600, 2600), az = clamp((claw.vz - before.vz) / dt, -2600, 2600)
+  claw.swingVX += (-stiffness * claw.swingX - damping * claw.swingVX - ax * push) * dt
+  claw.swingVZ += (-stiffness * claw.swingZ - damping * claw.swingVZ - az * push) * dt
+  claw.swingX = clamp(claw.swingX + claw.swingVX * dt, -0.7, 0.7)
+  claw.swingZ = clamp(claw.swingZ + claw.swingVZ * dt, -0.7, 0.7)
+
+  // The jaws and the squash are springs toward where the phase wants them.
+  const wantOpen = claw.phase === 'dropping' || claw.phase === 'letting-go' ? 1 : claw.phase === 'closing' || claw.phase === 'rising' || claw.load > 0 ? claw.grip : claw.following ? 1 : REST_OPEN
+  claw.openV += ((wantOpen - claw.open) * 420 - claw.openV * 26) * dt
+  claw.open = clamp(claw.open + claw.openV * dt, 0, 1.25)
+  claw.squashV += ((1 - claw.squash) * 520 - claw.squashV * 18) * dt
+  claw.squash = clamp(claw.squash + claw.squashV * dt, 0.6, 1.4)
+
+  claw.rideY = rideY
+  claw.landY = landY
+  const restLength = RAIL.top - rideY - HINGE_DROP
+  if (claw.phase === 'ready') {
+    // Winding to the riding height, and a tap's drop once the trolley is there and nearly still.
+    claw.lengthV += ((restLength - claw.length) * 90 - claw.lengthV * 17) * dt
+    claw.length += claw.lengthV * dt
+    if (claw.dropOnArrival && Math.hypot(claw.targetX - claw.x, claw.targetZ - claw.z) < 0.5 && Math.hypot(claw.vx, claw.vz) < 9) act(claw)
+  } else if (claw.phase === 'dropping') {
+    claw.lengthV = Math.min(DROP_TOP_SPEED, claw.lengthV + DROP_GRAVITY * dt)
+    claw.length += claw.lengthV * dt
+    const bottom = RAIL.top - landY - HINGE_DROP - JAW_REACH * 0.55
+    if (claw.length >= bottom) {
+      claw.length = bottom
+      claw.squash = 0.72; claw.squashV = 0
+      const hub = hubAt(claw)
+      events.push({ type: 'landed', x: hub.x, z: hub.z, swing: Math.hypot(claw.swingX, claw.swingZ) })
+      claw.phase = 'closing'; claw.t = 0; claw.lengthV = 0
+    }
+  } else if (claw.phase === 'closing') {
+    if (claw.t >= CLOSE_SECONDS) {
+      events.push({ type: 'closed' })
+      claw.phase = 'rising'; claw.t = 0; claw.ratchet = 0; claw.riseFrom = claw.length
+    }
+  } else if (claw.phase === 'rising') {
+    // Up through a ratchet that clicks quicker the higher it gets. A heavier catch comes up slower.
+    const seconds = 0.5 + 0.22 * claw.load
+    const from = claw.riseFrom
+    const progress = Math.min(1, claw.t / seconds), eased = progress * progress * (3 - 2 * progress)
+    claw.length = from + (restLength - from) * eased
+    const clicks = Math.floor(progress * progress * (7 + 2 * claw.load))
+    if (clicks > claw.ratchet) { claw.ratchet = clicks; events.push({ type: 'ratchet', progress }) }
+    if (progress >= 1) { claw.phase = 'ready'; claw.t = 0; claw.lengthV = 0; events.push({ type: 'up' }) }
+  } else if (claw.phase === 'letting-go') {
+    if (claw.t >= LET_GO_SECONDS) {
+      const hub = hubAt(claw)
+      // What falls keeps the speed the swing gave it.
+      events.push({ type: 'let-go', x: hub.x, z: hub.z, vx: claw.vx + claw.swingVX * claw.length, vz: claw.vz + claw.swingVZ * claw.length })
+      claw.load = 0; claw.grip = 0
+      claw.phase = 'ready'; claw.t = 0
+    }
+  }
+}
