@@ -55,7 +55,7 @@ The school idea is cause and effect with water: a child gives water to a thing a
 
 - **Water is shown as water behaving truly on true materials.** It flies in an arc and lands. It soaks into dry sand and darkens it. It collects in a hollow thing from the bottom up under a level surface. It lifts a light thing once it is deep enough and not before. It runs over the lowest point of a full thing and then downhill. It pushes what is light and turns a wheel. It puts out a fire and leaves steam. A boat full of water sinks. Each of these is what a child sees with a real hose in a real garden.
 - **The amount is visible and never counted.** How much water a thing has had is seen in the thing: the height of the flame, the level under the duck, the stage of the plant, the darkness of the sand. No number, tick mark or meter stands for it.
-- **One thing is faster than life.** A seed goes from shoot to flower in three gulps. The direction is true (with water it grows, and a seed that gets none stays a seed for as long as the yard is on screen) and the speed is not: it is a time-lapse. The pack's table of ideas by age gives "seed to flower in one sitting, the child giving water" for ages 2 to 4, and this is that.
+- **One thing is faster than life.** A seed goes from shoot to flower in three gulps. The direction is true (with water it grows, and a seed that gets none stays a seed for as long as the yard is on screen) and the speed is not: it is a time-lapse. The pack's table of ideas by age gives "Seed to flower in one sitting, the child giving water and light" for ages 2 to 4. This is that row with the water only: the sun is in the yard and is not the child's to give.
 - **Evidence.** The rows of that table this game uses (cause and effect as "touch it and something reliable happens; the same touch gives the same result", and the seed to flower row) cite no trial. So the representation is early-years practice with water play and a proposal of the pack, without a trial behind it (pack: game-design, representation-before-game.md).
 - **Where the order stops.** At the object. The things on screen are the objects, there is no picture stage, and a band that starts below 6 has no symbol stage (pack: game-design, fade-to-school-symbols.md).
 
@@ -68,21 +68,89 @@ The school idea is cause and effect with water: a child gives water to a thing a
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+Nothing a child does with the hose is wrong, so there is no wrong answer to mark. Three things can turn out other than the child meant, and each shows in the world where and why.
+
+- **Not enough water yet.** The flame stands up again, lower. The duck still sits on the pool floor with the water line under its belly. The bud is closed. The thing itself shows how far it is, and the water already given stays: the flame does not grow back and the pool does not drain. One more gulp is the one thing to change.
+- **Water on another thing.** That thing answers in its own way (the cat most of all) and the one that wanted water is as it was, still wanting.
+- **Too much.** The water goes where real water goes: over the low side of the rim, out of the hole under the pot, into the boat until it sinks. The overflow is as good to watch as the fill and nothing is spoiled by it: the plant stands, the boat pops up, the duck paddles back.
+
+A stream that lands beside its target leaves a dark line on the sand, which shows exactly where the water went. There is no buzzer, no cross, no reset, and no face turned to the child (pack: game-design, errors-show-as-consequences.md).
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**A cycle is a yard.** The truck stands in a yard that holds one to five things. One of them wants water, or the truck wants to put it out. The child ends the yard by ringing the bell on the gate with the hose, which opens the gate, and the truck rolls on to the next yard.
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+**The order**, one new thing at a time and then combinations. Each place has a few arrangements that take turns, so a return visit meets the same idea in a slightly different yard.
+
+1. `one-thing`. One thing alone with the truck: the small fire, or the seed, or the pool with the duck in it, or a dry patch with the snail on it. Water does something to a thing.
+2. `two-things`. One thing that wants water and beside it one that answers differently: the cat or the wheel. Water does different things to different things.
+3. `afloat`. The pool with the boat and the duck in it. How much water matters: nothing floats until the pool is deep enough.
+4. `downhill`. The pool stands above the seed, the dry patch or the fire, with its low side toward it. Water goes on from one thing to the next.
+5. `round-and-round`. The wheel stands beside the thing that wants water, with the cat near by. Water that turns the wheel is flung on.
+6. `whole-garden`. Four or five things together, one want, and every earlier idea at hand.
+
+**The harder option** is in the yard and is the child's to pick. From `downhill` on, a want can be met by aiming at it or at one remove, by overfilling the pool above it or spinning the wheel beside it. The longer way looks longer: the child can see the low side of the rim pointing at the pot. Either way stands.
+
+**The positions and their ids** are the six names above, as they stand in `LADDER` in `config.ts`. They name what a yard holds. A first visit starts at `one-thing` for age 2 or younger and for no age, at `two-things` for age 3, and at `afloat` for age 4 or older.
+
+**How a yard is judged**, when the child leaves it or its want is met, whichever comes first:
+
+- **Well:** its want was met, by any route.
+- **Mixed:** the child rang the bell with the want unmet, having brought some other thing in the yard to its fill. The child was busy with an idea of their own.
+- **Badly:** the child rang the bell with the want unmet and nothing in the yard at its fill.
+
+The position moves one step up after a yard that went well, one step down after one that went badly, and stays after a mixed one. Nothing shows it.
+
+**Which yard a new position lays out.** The next yard already waits beyond the gate while the child plays, laid out when the yard on screen was. So a moved position shows in the yard after next.
+
+**Every field of the saved state.**
+
+- `v`: the version of the shape.
+- `position`: the id of the place in the order for the next yard to be laid out.
+- `finished`: the want of the yard on screen has been met. Its ending is not played again on load.
+- `yard`: the yard on screen, as the id of its place and the number of its arrangement.
+- `things`: one entry for each thing in the yard, in the order of the arrangement: the gulps of water it holds (0 to its fill, and one step more for "too much") and the spot it is at, for the things that move (the cat, the boat, the duck, the snail, the floated logs).
+- `wet`: the ground as a coarse grid of 16 by 10 cells, each dry, damp, wet or mud.
+- `next`: the yard that waits beyond the gate, as place id and arrangement number.
+- `turn`: a small number that picks which arrangement comes next for each place. It wraps round and is never shown.
+- `seen`: the kinds of thing whose first showing has been given, so that it is given once.
+
+**Not saved**, because each is a view of what is: water in the air, steam, ripples, the wheel's spin, the bee in flight, and how far the gate's latch has been lifted. Sand dries on attended game time only, and no clock is read. The largest legal state is far under half of the 64 KB cap, and a test says so.
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+Four animals and the truck. Their tastes never change, so a child can learn them and test them on purpose. No animal has a feeling about the child. The seven things of the grid stay plain: they have no faces.
+
+- **The truck** wants to squirt. It leans toward a flame with its roof light turning, and rocks back with every gulp. It likes having something to aim at. It has no dislikes.
+- **The cat** wants a warm dry place. She likes the fire, which she sits beside with her eyes shut, dry sand, and the truck's roof. She dislikes water on her, wet ground under her paws, and a fire that has gone out: she looks at the wet logs, then at the truck, and walks off with her tail up. The joke is on her every time. She is put out and never hurt.
+- **The duck** wants to float. It likes water under it and on it: sprayed, it wriggles and quacks. It likes puddles and a ride over the rim. It dislikes a dry pool floor, which it taps with its beak.
+- **The snail** wants wet ground. It likes dark sand and puddles, and glides along the line the child drew. It dislikes dry sand, where it stops and pulls in, and the heat of the fire.
+- **The bee** wants a flower. She likes an open one: she lands, and it dips under her. She dislikes drops on her wings: she zigzags up with a rising buzz and comes back when the water stops.
+
+The same water delights the duck and the snail and offends the cat and the bee. That is the game's comedy and its feedback (pack: game-design, characters-with-opinions.md).
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Every scene is a list of timed beats on the template's `scene.ts`, filled in from the yard as it stands. Each gives way to any touch: the hose works all through it, and what the water hits answers at once.
+
+**The first showing of a new thing** is not a scene. The first time a kind of thing stands in a yard, and after a moment with no touch, the truck swings its nozzle to it and lets go one small spit of water. The thing gives its one-gulp answer at half size. Then the truck waits. It happens once for each kind (`seen`), never after a touch, and never again on load (pack: game-design, guided-discovery.md).
+
+**The want is met** (the ending of a yard, 5 to 9 seconds, caused by the gulp that met it):
+
+- *The fire is out.* The hiss falls, the steam cloud rises and drifts off, the logs drip twice. Whoever is in the yard comes to look, each in its own way: the cat stalks round the wet ring, the snail sets off toward it, the duck waddles through the puddle. The truck settles on its springs and its light stops.
+- *The duck floats.* It lifts off the floor, paddles a lap round whatever else floats there, puts its head under with its tail up, and shakes. The ripples settle.
+- *The flower opens*, in the colour of this arrangement, petal by petal. The bee lands and the flower dips. A drop slides off a leaf.
+- *The snail comes out.* Its eyes unroll, and it glides along the dark line the child made, the same shape, to the wettest place.
+
+**Secrets**, each a short scene that one combination always gives, never hinted at and never counted:
+
+- *The worm.* Ground brought to mud sends up a worm, which looks about and goes back down.
+- *The cat on the roof.* Too much water on the cat, as in the grid. A honk sends her off again.
+- *The marooned cat.* Where the cat naps in the dry boat, filling the pool floats her out to the middle, where she sits bolt upright.
+
+**Driving on** (about 4 seconds, caused by the third ring of the bell). The gate swings, the truck's light turns, and it rolls through while the yard slides away and the next one slides in with its animal already in the middle of wanting something.
+
+**How a cycle ends, and how the next starts.** A yard ends when the child ends it. After its ending scene the yard stays as it is for as long as the child likes, and everything in it still answers the hose. The gate stands at the right edge with a bell on its post, and over the hedge beside it the next yard shows: a wisp of smoke, a duck's head, a circling bee or a shell on the post. Each gulp on the bell rings it and lifts the latch by a third. The latch drops again after a few seconds without a ring, so a passing sweep rings the bell and opens nothing. The third ring opens the gate. If the child does nothing, nothing starts. The one who waits does not call, hurry or complain. On load no scene plays: the yard is as it was left, with the next one waiting (pack: game-design, endings-and-short-scenes.md).
 
 ## The records
 
