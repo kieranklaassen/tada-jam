@@ -1,7 +1,7 @@
 // template: cartridge/overlay.ts v2
 
 // The grown-up performance overlay. It is no part of the game a child plays:
-// it shows only after three quick taps in the top right corner, or with
+// it shows only after three quick taps of one finger in the top right corner, or with
 // `?fps=1` in the address, and three more taps hide it again. It reads what
 // the Mount already measures and changes nothing, in the game or in a save.
 // Its readout is the only text in the game. The wordless check accepts text
@@ -36,10 +36,15 @@ export class Overlay {
     if (new URLSearchParams(search).get('fps') === '1') this.toggle()
   }
 
-  /** Every touch-down on the surface, where it landed and how wide the surface is. Three in the corner in quick succession show or hide the numbers; one anywhere else starts the count again. */
-  press(x: number, y: number, width: number, timeMs: number): void {
+  /**
+   * Every touch-down on the surface, where it landed and how wide the surface is. Three in the corner in quick
+   * succession show or hide the numbers; one anywhere else starts the count again. `alone` is false when another
+   * finger was already down: a small child's three fingers landing together are not three taps, so such a touch
+   * starts the count again too.
+   */
+  press(x: number, y: number, width: number, timeMs: number, alone = true): void {
     // A surface that has not been measured yet has no corner.
-    if (width <= 0 || x < width - CORNER || y > CORNER) {
+    if (!alone || width <= 0 || x < width - CORNER || y > CORNER) {
       this.taps.length = 0
       return
     }

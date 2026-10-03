@@ -35,6 +35,23 @@ describe('the grown-up performance overlay', () => {
     expect(box.style.display).toBe('none')
   })
 
+  it('is not opened by three fingers landing together: a touch that comes while another finger is down starts the count again', () => {
+    const { overlay, box, taps } = mount()
+    // A small child's hand in the corner: one finger lands, and two more land while it is still down.
+    overlay.press(CORNER_AT[0], CORNER_AT[1], WIDTH, 0, true)
+    overlay.press(CORNER_AT[0] - 20, CORNER_AT[1], WIDTH, 30, false)
+    overlay.press(CORNER_AT[0] - 40, CORNER_AT[1], WIDTH, 60, false)
+    expect(box.style.display).toBe('none')
+    // And again, as the hand pats the corner.
+    overlay.press(CORNER_AT[0], CORNER_AT[1], WIDTH, 300, true)
+    overlay.press(CORNER_AT[0] - 20, CORNER_AT[1], WIDTH, 320, false)
+    overlay.press(CORNER_AT[0], CORNER_AT[1], WIDTH, 500, true)
+    expect(box.style.display).toBe('none')
+    // One finger tapping three times still opens it.
+    taps(CORNER_AT, [2000, 2200, 2400])
+    expect(box.style.display).toBe('block')
+  })
+
   it('is not opened by slow taps, by taps anywhere else, or by a tap elsewhere in between', () => {
     const { overlay, box, taps } = mount()
     taps(CORNER_AT, [0, WITHIN_MS, 2 * WITHIN_MS + 1, 3 * WITHIN_MS + 2])

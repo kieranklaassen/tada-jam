@@ -57,6 +57,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     let game: Game | null = null
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    // The fingers on the glass, so the overlay can tell one finger tapping from several landing together.
+    const fingers = new Set<number>()
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     // The game hands a change to storage where it makes it, at one of two speeds:
@@ -136,17 +138,21 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       audio.touchDown()
       ladder.touch(clock.seconds)
       const where = at(event)
-      overlay.press(where.x, where.y, width, event.timeStamp)
+      // A touch that lands while another finger is down opens nothing: three fingers at once are not three taps.
+      overlay.press(where.x, where.y, width, event.timeStamp, fingers.size === 0)
+      fingers.add(event.pointerId)
       act(touch.down(event.pointerId, where, event.timeStamp))
       // Captured, so the lift is reported even when the finger has slid off the surface.
       root.setPointerCapture(event.pointerId)
     }
     const onMove = (event: PointerEvent) => act(touch.move(event.pointerId, at(event)))
     const onUp = (event: PointerEvent) => {
+      fingers.delete(event.pointerId)
       act(touch.up(event.pointerId, at(event), event.timeStamp))
       audio.touchUp()
     }
     const onCancel = (event: PointerEvent) => {
+      fingers.delete(event.pointerId)
       act(touch.cancel(event.pointerId, event.timeStamp))
       audio.touchUp()
     }
@@ -199,6 +205,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       cancelAnimationFrame(frame)
       frame = 0
       clock.rest()
+      // A lift that happens while the game rests is never reported.
+      fingers.clear()
       act(touch.clear())
       // A scene lands at its end and water in the air lands at once, silently, so nothing is lost.
       game?.rest()
