@@ -1,4 +1,4 @@
-// template: cartridge/state.ts v1
+// template: cartridge/state.ts v2
 import { FIRST_VISIT, LADDER } from './config'
 
 // What goes into ctx.storage: small plain JSON, versioned, and read
@@ -14,6 +14,17 @@ import { FIRST_VISIT, LADDER } from './config'
 // - No clock is read. After a long break the first cycle is played where the
 //   child left off, and if it goes badly the same rule steps down.
 // Nothing on screen shows the position or that it moved.
+//
+// For the game that builds on it:
+// - `deserialize` returns these fields and no others. A game that saves more
+//   keeps this file as it is and wraps it in a module of its own, which calls
+//   `deserialize` for these fields and then reads the same raw record again
+//   for its own, each repaired by itself. That second read is the intended
+//   way; its `serialize` spreads this one's result and adds its fields.
+// - Where the touch that ends a cycle also begins the next, `finishCycle` is
+//   followed at once by `beginCycle`, and `finished` is false in every save.
+//   That is as meant. The guard against finishing one cycle twice never comes
+//   into play there, so such a game makes the pair of calls in one place.
 
 export const STATE_VERSION = 1
 

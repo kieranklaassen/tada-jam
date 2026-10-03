@@ -1,4 +1,4 @@
-<!-- template: cartridge/ART.md v1 -->
+<!-- template: cartridge/ART.md v2 -->
 # Design sheet
 
 Written before any game code, and checked by someone who did not write it before the game is built on the toy. The headings stay in this order. The look follows the sheet at the end of this file.
@@ -32,6 +32,8 @@ What a wrong attempt does in the world, where it shows, and that the state stays
 ## The designed order, and what is stored
 
 The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+
+Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
 
 ## The characters and their fixed tastes
 

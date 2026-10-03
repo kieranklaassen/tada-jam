@@ -1,4 +1,4 @@
-// template: cartridge/saveCadence.test.ts v1
+// template: cartridge/saveCadence.test.ts v2
 import { describe, expect, it } from 'vitest'
 import { SAVE_THROTTLE_MS } from './config'
 import { SaveCadence } from './saveCadence'

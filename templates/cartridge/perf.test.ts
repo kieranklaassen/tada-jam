@@ -1,4 +1,4 @@
-// template: cartridge/perf.test.ts v1
+// template: cartridge/perf.test.ts v2
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { installJamPerf } from './perf'
 import { PerfRing } from './quality'

@@ -97,7 +97,7 @@ Detail: checklist items 5 to 13 of [wordless clarity](wordless-clarity-for-the-d
 **7. Build performance in from day one.** The template already carries adaptive quality (`quality.ts`, with the tier table and thresholds in `config.ts`) and the grown-up performance handle the probe reads (`perf.ts`), so no game writes a governor or a `window.__jamPerf` declaration again ([why the declaration must match](../build-errors/jam-perf-global-declaration-must-match-in-every-game.md)). What the game adds:
 
 - Its tier table in `config.ts`: what each tier sheds for this look (pixel ratio, per-object detail, the post pass). Tiers are counted from 0 as full quality. A tier changes how the game is drawn, never what happens in it, and the lowest tier still looks like the game.
-- A grown-up frame-rate overlay behind a triple tap. The template has no overlay yet, so each game writes its own, in a file named `overlay`. The wordless check accepts grown-up text only in a file named `overlay` or `perf`, and in a game made from the template `perf.ts` is frozen, which leaves `overlay`. Every game needs one, so a shared overlay is a candidate for the template after the pilot games.
+- A grown-up frame-rate overlay behind a triple tap. The template ships it as `overlay.ts`: three quick taps in the top right corner, or `fps=1` in the address. The wordless check accepts grown-up text only in a file named `overlay` or `perf`, and in a game made from the template `perf.ts` is frozen, so `overlay.ts` is the one file of a game that may hold text.
 - A frame-budget test that CI runs through `npm test`, counting the work where the code exposes it ([frame-budget tests](../test-failures/frame-budget-tests-that-hold-on-a-shared-ci-runner.md); `games/bad-neighbours/frameBudget.test.ts` is the counted form).
 - Measurements with the shared probe on a production build: `npm run perf:jam -- <game> [webkit|chrome] [cpuThrottle] [auto|full|tierN] [base]`. Run WebKit, Chrome at 6x and 20x CPU throttle, and the fill test with four times the pixels (`SIZE=2 npm run perf:jam -- <game> webkit 1 full`). The probe pins a tier through the `tier` query, so the game reads that query, as `tierOverride` does in Bad Neighbours. No game needs a perf script of its own. On a machine with no graphics card the numbers are read as "Building several games at once" says for a remote builder.
 
@@ -131,19 +131,20 @@ Detail: [agent delivery](../workflow-issues/agent-delivery-push-branches-and-kee
 games/<key>/
   manifest.ts      filled by the generator; no JSX, React imports, or Vite globals
   index.ts         jam registration, deleted at port time
-  <key>.tsx        the Mount, showing a blank surface (game.tsx in the template)
-  config.ts        the one module a game tunes: the tier table and its thresholds, the position ladder, the save throttle
+  <key>.tsx        the Mount, showing a blank surface (game.tsx in the template); applies a quality tier in one place, draws once after the load
+  config.ts        the one module a game tunes: the tier table and its thresholds, the position ladder, the save throttle, the taps the ghost hand shows
   perf.ts          frozen: the performance handle and its global declaration
   quality.ts       frozen: the governor's stepping logic, tiers counted from 0 as full
   attention.ts     frozen: attended and not hidden
   saveCadence.ts   frozen
   state.ts         versioned state, a defensive deserialize, the hidden position rules
-  audio.ts         unlocks on touch-down and again on lift; rebuilds an interrupted context
+  audio.ts         unlocks on touch-down and again on lift; rebuilds an interrupted context; `tone` and `noise` to build voices from
+  overlay.ts       the grown-up frame-rate overlay, plain DOM: the one file that may hold text
   input.ts         pointer tracking that forgives a lifted finger and extra fingers; every press has one ending
-  guidance.ts      the idle guidance ladder, on attended time
-  scene.ts         a cue list of timed beats over game time
+  guidance.ts      the idle guidance ladder, on attended time; the ghost hand taps once for a band that starts below 4
+  scene.ts         a cue list of timed beats over game time; one scene can follow another
   ART.md           the design sheet outline
-  REFINEMENT.md    the status block and the pass log
+  REFINEMENT.md    the status block (with template notes and what the owner must decide), the pass log, and the part for the pull request
   *.test.ts        beside each module
 ```
 
@@ -151,7 +152,7 @@ games/<key>/
 - A frozen file is never edited in a game. What a game tunes is in `config.ts`, which the frozen files read.
 - The frozen-copy test decides from the folder, not from the file. A game folder in which any file carries a template header must hold all four frozen files (`perf.ts`, `quality.ts`, `attention.ts`, `saveCadence.ts`), each with its frozen header, and each byte-equal to the template unless it is on an earlier version. A missing file, a stripped header or a version later than the template's fails the test. A builder that changed a frozen file by mistake copies `templates/cartridge/<file>` over it.
 - A fault in a frozen file is a request to the lead, who fixes the template and raises its version. `npm run new:game -- --refresh <key>` rewrites the frozen files of an existing game from the template and nothing else, and the lead runs it for each game after raising the version. Until then a copy on the earlier version is not held byte-equal: it is waiting for the refresh.
-- The other files are free: `state.ts`, `audio.ts`, `input.ts`, `guidance.ts`, `scene.ts` and the Mount are starting points that a game changes as it needs. Keep their tests passing or change the tests with them.
+- The other files are free: `state.ts`, `audio.ts`, `input.ts`, `guidance.ts`, `scene.ts`, `overlay.ts` and the Mount are starting points that a game changes as it needs. Keep their tests passing or change the tests with them.
 - The Mount already pauses when `ctx.attention.attended` is false or the document is hidden, and watches its own element with a `ResizeObserver` that ignores 0×0. Keep both when the renderer goes in.
 - `input.ts` turns pointer events into gestures. Every `press` is followed by exactly one of `tap`, `dragStart` or `pressEnd`. `pressEnd` says the press is over and was not a tap, as when the browser takes the touch away or the game is parked under the finger. So whatever a game squashes or lights on `press`, it lets go on whichever of the three arrives.
 - The template has no speech and no language pack. Both arrive with the first game that needs them, after a trial on the owner's iPad.
@@ -172,7 +173,7 @@ The sheet is the first part of `games/<key>/ART.md`, written before any game cod
    - **Fun.** Is the skill used in the most enjoyable moment of play, or does play stop for it?
    - **Guess.** Can the child succeed by tapping at random or by trying every option?
 6. **The error as a consequence.** What a wrong attempt does in the world, where and why it shows, and that the state stays so the child changes one thing and tries again (pack: game-design, errors-show-as-consequences.md).
-7. **The designed order, and what is stored.** The order of challenges, one new thing at a time and then combinations; how a harder option looks harder in the world and is chosen by the child; the positions and their stable ids, which name places in the game's own order and never a grade, a groep or a level; and every field of the saved state (pack: game-design, ordered-challenges-high-success.md; pack: game-design, many-short-visits.md; "The hidden position" and "Found as left" below).
+7. **The designed order, and what is stored.** The order of challenges, one new thing at a time and then combinations; how a harder option looks harder in the world and is chosen by the child; the positions and their stable ids, which name places in the game's own order and never a grade, a groep or a level; every field of the saved state; and, where the next customer already waits on screen, which customer a new position lays out, since the position moves when a cycle is judged and the one who waits was laid out before that (pack: game-design, ordered-challenges-high-success.md; pack: game-design, many-short-visits.md; "The hidden position" and "Found as left" below).
 8. **The characters and their fixed tastes.** Each character's one visible want and its likes and dislikes that never change, so a child can learn them and test them on purpose. A game with no character says what gives the feedback (pack: game-design, characters-with-opinions.md).
 9. **The scenes.** Each short scene: what causes it, its beats, what from the state of play fills it in, and how it gives way to a touch. Then how a cycle ends and how the next one starts (pack: game-design, endings-and-short-scenes.md; "How a cycle restarts" below).
 10. **The records.** One heading per jurisdiction, `us-ca` and `nl`, never one list or table that pairs them (pack: education, two-jurisdictions-are-never-equated.md). Under each heading:

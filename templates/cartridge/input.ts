@@ -1,18 +1,26 @@
-// template: cartridge/input.ts v1
+// template: cartridge/input.ts v2
 
 // Touch for a small hand (pack: game-design, ages-2-to-4.md). The tracker
 // turns pointer events into gestures and leaves their meaning to the game.
 // - One finger works at a time. Other fingers, or a palm resting on the
-//   glass, are ignored: they never cancel the finger that is working.
+//   glass, are ignored: they never cancel the finger that is working, and
+//   they do nothing of their own, so a second finger on a thing gets no
+//   answer. For a whole small hand on the glass that is the safer rule.
 // - A drag survives a briefly lifted finger. The thing in hand waits where it
 //   was let go, and a finger coming back near it soon enough carries on with
 //   the same drag.
 // - A drag counts when partly done: `countsAsDone` says whether it got far
-//   enough toward where it was going for the game to finish it.
+//   enough toward where it was going for the game to finish it. It and
+//   `progressToward` are for a drag that has a target. A rub has none: it
+//   counts stroke by stroke as `dragMove` arrives, and uses neither.
 // - A parked surface clears every gesture, since the lifts never arrive.
 // - Every `press` is followed by exactly one of `tap`, `dragStart` or
 //   `pressEnd`, so whatever the game squashes or lights on a press always has
 //   a gesture on which to let it go.
+// - A `press` is not followed by a `dragMove` until the finger has gone
+//   further than `TAP_SLOP` from where it landed. Whatever starts on `press`
+//   (the answer to the touch, the first stroke of a rub) starts there and
+//   then, and never waits for a move.
 // Points are in whatever space the Mount passes in; times are in ms.
 
 export type Point = { x: number; y: number }

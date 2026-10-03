@@ -1,4 +1,4 @@
-// template: cartridge/input.test.ts v1
+// template: cartridge/input.test.ts v2
 import { describe, expect, it } from 'vitest'
 import { COUNTS_FROM, ForgivingTouch, LIFT_GRACE_MS, REGRAB_RADIUS, TAP_SLOP, countsAsDone, progressToward, type Gesture } from './input'
 

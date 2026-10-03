@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { act, cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CartridgeContext, CartridgeStorage } from '../harness/contract'
 import { templateCartridge } from '../templates/cartridge/game'
 import { IDLE_BEFORE_DEMO, IdleLadder, type Guidance } from '../templates/cartridge/guidance'
 import { ForgivingTouch, type Gesture } from '../templates/cartridge/input'
+import { TierGovernor } from '../templates/cartridge/quality'
 import { SaveCadence } from '../templates/cartridge/saveCadence'
 import { STATE_VERSION, deserialize } from '../templates/cartridge/state'
 
@@ -17,7 +21,8 @@ import { STATE_VERSION, deserialize } from '../templates/cartridge/state'
 //
 // The blank surface draws nothing, so the test reads what the Mount's own
 // helpers report: the gestures the touch tracker yields, what the idle ladder
-// would show, and what reaches storage.
+// would show, what reaches storage, the tier marked on the canvas and the
+// grown-up overlay's box.
 
 // `deserialize` is wrapped, not replaced, to see when the Mount reads the slot.
 vi.mock('../templates/cartridge/state', async (original) => {
@@ -177,9 +182,34 @@ describe('the template Mount', () => {
     cleanup()
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
+    window.history.replaceState(null, '', window.location.pathname)
   })
 
   const types = (): string[] => gestures.map((gesture) => gesture.type)
+  /** Opens the page with a query string, as a grown-up measuring the game does. */
+  const address = (search: string): void => window.history.replaceState(null, '', search)
+  /** The governor steps to `tier` on the next frame it judges, as it does after a run of slow or clean windows. */
+  const stepTo = (tier: number): void => {
+    vi.spyOn(TierGovernor.prototype, 'sample').mockImplementationOnce(function (this: TierGovernor) {
+      this.tier = tier
+      return true
+    })
+  }
+  /** Every sizing of the backing store from now on, each with the tier that was applied when it happened. */
+  const sizings = (canvas: HTMLCanvasElement): string[] => {
+    const seen: string[] = []
+    let width = canvas.width
+    Object.defineProperty(canvas, 'width', {
+      configurable: true,
+      get: () => width,
+      set: (value: number) => {
+        width = value
+        seen.push(`${value} wide at tier ${canvas.dataset.tier}`)
+      },
+    })
+    return seen
+  }
+  const overlayOf = (root: HTMLElement): HTMLElement | null => root.querySelector('[data-perf-overlay]')
 
   it('saves nothing when it is parked before the slot has been read, and saves the state it read after that', async () => {
     const game = open(frames)
@@ -283,12 +313,97 @@ describe('the template Mount', () => {
     expect([game.canvas.width, game.canvas.height]).toEqual([1024, 700])
   })
 
+  it('applies the tier it starts on before its first frame, attended or not', () => {
+    expect(open(frames, false).canvas.dataset.tier).toBe('0')
+    expect(frames.pending.size).toBe(0)
+    cleanup()
+    // A touch device starts one tier down.
+    vi.stubGlobal('matchMedia', () => ({ matches: true }))
+    expect(open(frames, false).canvas.dataset.tier).toBe('1')
+    cleanup()
+    // A tier pinned in the address is applied the same way.
+    address('?tier=3')
+    expect(open(frames, false).canvas.dataset.tier).toBe('3')
+  })
+
+  it('applies a tier the governor steps to on a display of ratio 1, where the surface is not sized again', () => {
+    const game = open(frames)
+    // The first frame after waking has no interval, so the governor judges from the second.
+    frames.run(1)
+    const sized = sizings(game.canvas)
+    stepTo(2)
+    frames.run(1)
+    expect(game.canvas.dataset.tier).toBe('2')
+    // Every tier's pixel ratio cap is at or over 1: the ratio in use did not change, and nothing was resized.
+    expect(sized).toEqual([])
+    expect([game.canvas.width, game.canvas.height]).toEqual([800, 600])
+    // A step back up is applied as well.
+    frames.run(1)
+    stepTo(0)
+    frames.run(1)
+    expect(game.canvas.dataset.tier).toBe('0')
+  })
+
+  it('applies a tier before it sizes the surface for that tier\'s pixel ratio', () => {
+    vi.stubGlobal('devicePixelRatio', 2)
+    const game = open(frames)
+    expect([game.canvas.width, game.canvas.height]).toEqual([1600, 1200])
+    frames.run(1)
+    const sized = sizings(game.canvas)
+    stepTo(1)
+    frames.run(1)
+    expect(sized).toEqual(['1200 wide at tier 1'])
+    expect(game.canvas.height).toBe(900)
+  })
+
+  it('draws once itself when the slot has been read, since a resting or parked game has no frame coming', () => {
+    // The blank surface draws nothing, so a draw cannot be seen from outside. What is held here is the wiring,
+    // read from the source: the load's callback sets the state and its last act is a draw.
+    const source = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../templates/cartridge/game.tsx'), 'utf8')
+    const callback = /\.load<unknown>\(\)[^\n]*\.then\(\(value\) => \{\n([\s\S]*?)\n {4}\}\)\n/.exec(source)?.[1] ?? ''
+    const code = callback.split('\n').map((line) => line.trim()).filter((line) => line !== '' && !line.startsWith('//'))
+    expect(code[0]).toBe('if (disposed) return')
+    expect(code.some((line) => line.startsWith('state = deserialize('))).toBe(true)
+    expect(code.at(-1)).toBe('draw()')
+    expect(code.filter((line) => line === 'draw()')).toHaveLength(1)
+  })
+
+  it('opens the grown-up overlay on three quick taps in its top right corner, and feeds it every frame', () => {
+    const game = open(frames)
+    const box = overlayOf(game.root)!
+    expect(box.style.display).toBe('none')
+    frames.run(3, 20)
+    expect(box.textContent).toBe('')
+    // A touch in the corner is still a touch: the game gets it too.
+    for (let tap = 0; tap < 3; tap++) {
+      game.pointer('pointerdown', 1, 790, 10)
+      game.pointer('pointerup', 1, 790, 10)
+    }
+    expect(types()).toEqual(['press', 'tap', 'press', 'tap', 'press', 'tap'])
+    expect(box.style.display).toBe('block')
+    frames.run(2, 20)
+    expect(box.textContent).toContain('50 fps')
+    expect(box.textContent).toContain(`tier ${game.canvas.dataset.tier}`)
+    // Three taps anywhere else leave it as it is.
+    for (let tap = 0; tap < 3; tap++) {
+      game.pointer('pointerdown', 1, 400, 300)
+      game.pointer('pointerup', 1, 400, 300)
+    }
+    expect(box.style.display).toBe('block')
+  })
+
+  it('opens the grown-up overlay from the start with fps=1 in the address', () => {
+    address('?fps=1')
+    expect(overlayOf(open(frames).root)!.style.display).toBe('block')
+  })
+
   it('ends the touch, saves, and leaves nothing behind when it is unmounted', async () => {
     const game = open(frames)
     await game.loaded(null)
     game.pointer('pointerdown')
     game.pointer('pointermove', 1, 200, 40)
     expect(window.__jamPerf).toBeDefined()
+    expect(overlayOf(game.root)).not.toBeNull()
     const clear = vi.mocked(ForgivingTouch.prototype.clear)
     const settle = vi.mocked(SaveCadence.prototype.settle)
 
@@ -298,6 +413,7 @@ describe('the template Mount', () => {
     expect(game.storage.save).toHaveBeenCalledTimes(1)
     expect(clear.mock.invocationCallOrder.at(-1)!).toBeLessThan(settle.mock.invocationCallOrder.at(-1)!)
     expect(window.__jamPerf).toBeUndefined()
+    expect(overlayOf(game.root)).toBeNull()
     expect(frames.pending.size).toBe(0)
     expect(observers).toEqual([{ disconnected: true }])
 

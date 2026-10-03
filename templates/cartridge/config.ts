@@ -1,4 +1,4 @@
-// template: cartridge/config.ts v1
+// template: cartridge/config.ts v2
 import { templateManifest } from './manifest'
 
 // The one module a game tunes. The frozen files (quality.ts, attention.ts and
@@ -68,6 +68,18 @@ export const LONGEST_FRAME_S = 0.1
 /** A change that keeps coming (a drag, a stroke) is handed to storage at most this often, in ms. */
 export const SAVE_THROTTLE_MS = 400
 
+const [YOUNGEST, OLDEST] = templateManifest.ageBand
+
+// --- Guidance (guidance.ts) -------------------------------------------------
+
+/**
+ * How many times the ghost hand presses to show a tap. Two presses read as a
+ * tap and not as a hold, but a child under 4 copies what the hand does and
+ * taps twice, so a band that starts below 4 is shown one. It follows the
+ * manifest band, never the child's age while playing.
+ */
+export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
+
 // --- The designed order (state.ts) -----------------------------------------
 
 /**
@@ -77,8 +89,6 @@ export const SAVE_THROTTLE_MS = 400
  * shipped. Nothing on screen shows where the child is.
  */
 export const LADDER: readonly string[] = ['first', 'second', 'third']
-
-const [YOUNGEST, OLDEST] = templateManifest.ageBand
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the

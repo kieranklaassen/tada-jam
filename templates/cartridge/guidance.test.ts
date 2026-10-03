@@ -1,6 +1,7 @@
-// template: cartridge/guidance.test.ts v1
+// template: cartridge/guidance.test.ts v2
 import { describe, expect, it } from 'vitest'
 import { AttendedClock } from './attention'
+import { TAP_PRESSES } from './config'
 import { DEMO_SECONDS, GLOW_FADE, IDLE_BEFORE_DEMO, IDLE_BEFORE_GLOW, IdleLadder, MAX_DEMOS, handPose, type HandPose } from './guidance'
 
 function demoStarts(ladder: IdleLadder, until: number): number[] {
@@ -61,11 +62,35 @@ describe('the idle ladder', () => {
 describe('the ghost hand', () => {
   const pose: HandPose = { travel: 0, press: 0, opacity: 0 }
 
-  it('fades in, presses, and fades out; a tap stays where it is', () => {
-    expect(handPose(0, false, pose).opacity).toBe(0)
-    expect(handPose(0.3, false, pose)).toMatchObject({ travel: 0, opacity: 1 })
-    expect(handPose(0.3, false, pose).press).toBeGreaterThan(0.5)
-    expect(handPose(1, false, pose).opacity).toBe(0)
+  /** How many times the hand goes down over one demonstration of a tap. */
+  function pressesShown(presses?: 1 | 2): number {
+    let count = 0
+    let down = false
+    for (let i = 0; i <= 200; i++) {
+      const pressed = handPose(i / 200, false, pose, presses).press > 0.5
+      if (pressed && !down) count += 1
+      down = pressed
+    }
+    return count
+  }
+
+  it.each([1, 2] as const)('fades in, presses, and fades out; a tap of %i stays where it is', (presses) => {
+    expect(handPose(0, false, pose, presses)).toMatchObject({ press: 0, opacity: 0 })
+    const at = presses === 1 ? 0.43 : 0.28
+    expect(handPose(at, false, pose, presses)).toMatchObject({ travel: 0, opacity: 1 })
+    expect(handPose(at, false, pose, presses).press).toBeCloseTo(1)
+    // The hand is up again before it fades.
+    expect(handPose(0.8, false, pose, presses)).toMatchObject({ travel: 0, opacity: 1 })
+    expect(handPose(0.8, false, pose, presses).press).toBeCloseTo(0)
+    expect(handPose(1, false, pose, presses).opacity).toBe(0)
+  })
+
+  it('shows a tap as two presses with a lift between them, or as one press for a band that starts below 4', () => {
+    expect(pressesShown(2)).toBe(2)
+    expect(handPose(0.43, false, pose, 2).press).toBeCloseTo(0)
+    expect(pressesShown(1)).toBe(1)
+    // Left to itself it shows what config.ts gives the game's band.
+    expect(pressesShown()).toBe(TAP_PRESSES)
   })
 
   it('carries a drag from its start to its end while pressed', () => {

@@ -1,4 +1,5 @@
-// template: cartridge/guidance.ts v1
+// template: cartridge/guidance.ts v2
+import { TAP_PRESSES } from './config'
 
 // Wordless guidance: show, never tell. When the child has been idle a while,
 // whatever can be touched glows; a little later a ghost hand shows one move
@@ -79,13 +80,19 @@ function span(t: number, a: number, b: number): number {
   return clamp01((t - a) / (b - a))
 }
 
-/** The ghost hand over one demonstration: it fades in, presses (twice for a tap; once, carrying, for a drag), lifts and fades out. Writes into `out`. */
-export function handPose(progress: number, drag: boolean, out: HandPose): HandPose {
+/**
+ * The ghost hand over one demonstration: it fades in, presses, lifts and fades out. Writes into `out`.
+ * A drag is one press that carries. A tap is `presses` presses where it stands: the number config.ts gives
+ * the game's band unless the game passes its own. A child may copy two presses as two taps, so wherever the
+ * hand shows two, a second tap on the same thing must do no harm.
+ */
+export function handPose(progress: number, drag: boolean, out: HandPose, presses: 1 | 2 = TAP_PRESSES): HandPose {
   out.opacity = Math.min(span(progress, 0, 0.1), 1 - span(progress, 0.88, 1))
   if (!drag) {
     const bump = (a: number, b: number) => Math.sin(span(progress, a, b) * Math.PI)
     out.travel = 0
-    out.press = Math.max(bump(0.18, 0.38), bump(0.48, 0.68))
+    // One press sits in the middle of the stretch that two presses share.
+    out.press = presses === 1 ? bump(0.33, 0.53) : Math.max(bump(0.18, 0.38), bump(0.48, 0.68))
     return out
   }
   const t = span(progress, 0.26, 0.72)

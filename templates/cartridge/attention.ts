@@ -1,4 +1,4 @@
-// template: cartridge/attention.ts v1 (frozen: do not edit; tune through config.ts)
+// template: cartridge/attention.ts v2 (frozen: do not edit; tune through config.ts)
 import { LONGEST_FRAME_S } from './config'
 
 // Attention. A game runs only while the child attends and the page is visible.

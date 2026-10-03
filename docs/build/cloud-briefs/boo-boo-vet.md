@@ -49,13 +49,13 @@ These were read from the education pack on 2026-10-02. They are where your sheet
 
 ## This run
 
-This run covers the design and the rules. Two pilot games are proving the template's helpers in a running game first, so you do not build your toy yet.
+This run covers the design and the rules. The template you start from is its second version, proven by a three.js game; the canvas pilot (Monster Pizza) is proving it for a canvas game first, so you do not build your toy yet.
 
 1. The steps under "Getting the code" in the cloud page.
 2. The design sheet, pushed with `Open: sheet ready for check, round 1`.
 3. The look spike for your first reserved look: the game's real scene in the style, at the quality bar, shown by the Mount at load with a fixed seed and with nothing playable behind it.
 4. The rules as pure modules with tests beside them (no renderer, no DOM), in new files of your own, leaving the copied template files as they are wherever you can: the model of the world, the object-by-action grid, the errors as consequences, the characters' tastes, the designed order with its position ids in `config.ts`, the saved state with its defensive `deserialize`, and the size test. The guide lets a remote builder write rules while the check of its sheet runs, at its own risk: record in the status block the sheet commit they were written against.
-5. Stop there: write the status block, push, and report. Your next message brings the checker's report on your sheet and the commit that holds what the pilots changed in the template.
+5. Stop there: write the status block, push, and report. Your next message brings the checker's report on your sheet and the commit that holds what the canvas pilot changed in the template.
 
 ## Defaults that bind you
 

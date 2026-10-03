@@ -1,4 +1,4 @@
-// template: cartridge/attention.test.ts v1
+// template: cartridge/attention.test.ts v2
 import { describe, expect, it } from 'vitest'
 import { AttendedClock, Attention, type VisibilitySource } from './attention'
 import { LONGEST_FRAME_S } from './config'

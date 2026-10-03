@@ -49,7 +49,7 @@ These were read from the education pack on 2026-10-02. They are where your sheet
 
 ## This run
 
-You are one of two pilot games: the first to use the cartridge template in a running game. This run goes as far as it can.
+You are one of two pilot games, the first of your kind of renderer to use the cartridge template in a running game. This run goes as far as it can.
 
 1. The steps under "Getting the code" in the cloud page.
 2. The design sheet, pushed with `Open: sheet ready for check, round 1`.
@@ -57,7 +57,7 @@ You are one of two pilot games: the first to use the cartridge template in a run
 4. The toy: the one action the finger performs most, in the look, with its sound and motion.
 5. Then the rules as pure modules with tests, the characters, the errors as consequences, the guidance ladder and the short scenes. The guide lets a remote builder write rules while the check of its sheet runs, at its own risk: record in the status block the sheet commit they were written against.
 
-As a pilot you have one more duty. Use every copied helper in the running game (`input.ts`, `audio.ts`, `guidance.ts`, `scene.ts`, the position rules in `state.ts`, the Mount's resize and attention handling), and write under **Template notes** in your status block, for each file: used as copied, or what you had to change and why. The other seventeen games wait for those notes before they build their toys, so push them as you learn them, not at the end.
+As a pilot you have one more duty. Use every copied helper in the running game (`input.ts`, `audio.ts`, `guidance.ts`, `scene.ts`, the position rules in `state.ts`, the Mount's resize and attention handling), and write under **Template notes** in your status block, for each file: used as copied, or what you had to change and why. Muddy Truck Wash has done the same for three.js and the template you start from already holds what it learned. The other canvas games wait for your notes before they build their toys, so push them as you learn them, not at the end.
 
 ## Defaults that bind you
 

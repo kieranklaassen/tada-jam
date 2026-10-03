@@ -1,4 +1,4 @@
-// template: cartridge/state.test.ts v1
+// template: cartridge/state.test.ts v2
 import { describe, expect, it } from 'vitest'
 import { FIRST_VISIT, LADDER } from './config'
 import { STATE_VERSION, beginCycle, deserialize, finishCycle, firstPosition, freshState, serialize, type CycleOutcome, type GameState } from './state'

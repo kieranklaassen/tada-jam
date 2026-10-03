@@ -1,4 +1,4 @@
-// template: cartridge/audio.ts v1
+// template: cartridge/audio.ts v2
 
 // Every sound is synthesized with raw Web Audio. The context is created inside
 // the child's first touch, suspended while the game is unattended or hidden,
@@ -136,6 +136,53 @@ export function tone(context: AudioContext, out: AudioNode, at: number, frequenc
   osc.stop(at + attack + decay + 0.05)
   osc.onended = () => {
     osc.disconnect()
+    gain.disconnect()
+  }
+}
+
+/** One and a half seconds of white noise for each context, made the first time a sound asks for it. */
+const noiseBuffers = new WeakMap<BaseAudioContext, AudioBuffer>()
+
+function noiseBuffer(context: AudioContext): AudioBuffer {
+  let buffer = noiseBuffers.get(context)
+  if (!buffer) {
+    buffer = context.createBuffer(1, Math.round(context.sampleRate * 1.5), context.sampleRate)
+    const data = buffer.getChannelData(0)
+    // A fixed stream, so the grain is the same on every device.
+    let s = 0x1234abcd
+    for (let i = 0; i < data.length; i++) {
+      s ^= s << 13; s ^= s >>> 17; s ^= s << 5
+      data[i] = (s >>> 0) / 2 ** 31 - 1
+    }
+    noiseBuffers.set(context, buffer)
+  }
+  return buffer
+}
+
+/**
+ * An enveloped band of noise, the other building block: a scrub, a spray, wind, an engine. `frequency` is the
+ * middle of the band and `q` how narrow it is: under 1 is a wide hiss, 10 and over is close to a whistle.
+ */
+export function noise(context: AudioContext, out: AudioNode, at: number, frequency: number, q: number, peak: number, attack: number, decay: number, glideTo?: number): void {
+  const source = context.createBufferSource()
+  source.buffer = noiseBuffer(context)
+  source.loop = true
+  const band = context.createBiquadFilter()
+  band.type = 'bandpass'
+  band.Q.value = q
+  band.frequency.setValueAtTime(frequency, at)
+  if (glideTo) band.frequency.exponentialRampToValueAtTime(glideTo, at + attack + decay)
+  const gain = context.createGain()
+  gain.gain.setValueAtTime(0.0001, at)
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), at + attack)
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + attack + decay)
+  source.connect(band).connect(gain).connect(out)
+  // Each sound starts somewhere else in the noise, so two never sound the same.
+  source.start(at, (at * 7.31) % 1.2)
+  source.stop(at + attack + decay + 0.05)
+  source.onended = () => {
+    source.disconnect()
+    band.disconnect()
     gain.disconnect()
   }
 }
