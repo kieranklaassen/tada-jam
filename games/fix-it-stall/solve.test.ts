@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { boardOf, GADGET_KINDS, isSocket } from './board'
-import { benchOdd, clipLead, clipProbe, crackTrace, placePart, removeLead, removePart, trayPart, turnPart, type Circuit } from './circuit'
+import { benchOdd, clipLead, clipProbe, crackTrace, flickPart, placePart, removeLead, removePart, trayPart, turnPart, type Circuit } from './circuit'
 import { asBuilt } from './gadgets'
 import { settle } from './settle'
 import { level, read, RUNS_FROM } from './solve'
@@ -124,6 +124,18 @@ describe('the cell', () => {
     expect(pop.hot.traces).toEqual([])
     // With the flag up nothing runs, and it pops again for as long as the short is there.
     expect(level(settled.reading.parts[indexOf(settled.circuit, 'lamp')])).toBe(0)
+  })
+
+  it('its flag stays up until it is flicked, and pops again while the short is still there', () => {
+    const shorted = settle(clipLead(asBuilt('lamp-plain'), base, cap)).circuit
+    const cell = indexOf(shorted, 'cell')
+    expect(settle(shorted).consequences).toEqual([])
+    expect(shorted.parts[cell]).toMatchObject({ popped: true })
+    expect(settle(flickPart(shorted, cell)).consequences.map((c) => c.type)).toEqual(['pop'])
+    // With the lead taken off, a flick sets it back and the lamp is lit: nothing was lost.
+    const cleared = settle(flickPart(removeLead(shorted, 1), cell))
+    expect(cleared.consequences).toEqual([])
+    expect(level(cleared.reading.parts[indexOf(cleared.circuit, 'lamp')])).toBe(2)
   })
 
   it('a flat one pushes nothing', () => {
