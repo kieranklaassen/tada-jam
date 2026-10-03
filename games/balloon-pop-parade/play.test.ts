@@ -239,8 +239,8 @@ describe('the position in the designed order', () => {
     expect(emptied.events).toEqual([{ type: 'popped', friend: 0 }])
     expect(emptied.save).toEqual({ ...ended, troop: { ...ended.troop, held: [false] } })
     const again = sendBunch(emptied.save, singleSlot(emptied.save))
-    // Taken, and no second ending: the cycle was judged once.
-    expect(again.events.map((event) => event.type)).toEqual(['taken'])
+    // The ending plays again, since the last friend took its balloon again, and it saves nothing more: the cycle was judged once.
+    expect(again.events).toEqual([{ type: 'taken', slot: singleSlot(emptied.save), bunch: emptied.save.sky[singleSlot(emptied.save)], takers: [0] }, { type: 'served', together: false, order: [0] }])
     expect(again.save).toEqual(ended)
   })
 
@@ -436,7 +436,7 @@ describe('a long run of random taps', () => {
         expect(reopened(after), `seed ${seed}, tap ${tap}`).toEqual(after)
         // The position moves only with the ending of a cycle, and one step at most.
         const moved = Math.abs(LADDER.indexOf(after.position) - LADDER.indexOf(save.position))
-        expect(moved).toBeLessThanOrEqual(result.events.some((event) => event.type === 'served') ? 1 : 0)
+        expect(moved).toBeLessThanOrEqual(result.events.some((event) => event.type === 'served') && !save.finished ? 1 : 0)
         // The sky is the same for the whole cycle.
         if (!result.events.some((event) => event.type === 'steppedIn')) expect(after.sky).toEqual(save.sky)
         positions.add(after.position)

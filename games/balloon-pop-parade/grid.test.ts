@@ -50,19 +50,14 @@ describe('the object-by-action grid', () => {
     }
   })
 
-  it('answers a troop that already has its balloons with the lift-off for fun, whatever of its colour is sent', () => {
-    expect(GRID.ownColour.served).toEqual({ motion: 'liftOffForFun', voice: GRID.tooMany.served.voice })
-    expect(GRID.fittingBunch.served).toEqual(GRID.tooMany.served)
-    expect(GRID.tooMany.served.motion).toBe('liftOffForFun')
-  })
-
-  it('still tells the other rows of a served troop apart, in what is seen and in what is heard', () => {
-    expect(GRID.otherColour.served.motion).toBe('refusesStill')
-    expect(GRID.popHeld.served.motion).toBe('reachesAgain')
-    expect(GRID.poke.served.motion).toBe('pokeWithBalloon')
-    const differing = [GRID.tooMany.served, GRID.otherColour.served, GRID.popHeld.served, GRID.poke.served]
-    expect(new Set(differing.map((cell) => cell.motion)).size).toBe(differing.length)
-    expect(new Set(differing.map((cell) => cell.voice)).size).toBe(differing.length)
+  it('gives a troop that already has its balloons a result of its own in every row, seen and heard', () => {
+    const cells = ROWS.map((row) => GRID[row].served)
+    expect(new Set(cells.map((cell) => cell.motion)).size).toBe(ROWS.length)
+    expect(new Set(cells.map((cell) => cell.voice)).size).toBe(ROWS.length)
+    // Whatever of its colour is sent is one too many, so the first, third and fourth rows are all a carrying-off, each a different one.
+    expect(GRID.ownColour.served.motion).toBe('liftOffAloneTwoBalloons')
+    expect(GRID.fittingBunch.served.motion).toBe('liftOffWholeTroop')
+    expect(GRID.tooMany.served.motion).toBe('sparesBumpCloud')
     // Nothing in the served column is one kind's own id: it stands for whichever kind is there.
     const ofKinds = new Set(ROWS.flatMap((row) => KINDS.flatMap((kind) => [GRID[row][kind].motion, GRID[row][kind].voice])))
     for (const row of ROWS) {

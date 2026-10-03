@@ -21,8 +21,10 @@ export type PlayEvent =
   /** Too many: `grabber` held on, was lifted and let go, and `spare` balloons had nobody under them. */
   | { type: 'gotAway'; slot: number; bunch: Bunch; grabber: number; spare: number }
   /**
-   * The ending scene starts. `together` when the last bunch served two or more friends at once. `order` is the order
-   * the friends got their balloons in as far as it is known: the takers of the last give.
+   * The ending scene starts: the last friend of the troop took its balloon. It comes each time that happens, also
+   * for a troop filled again after a pop; the cycle is judged only the first time. `together` when the last bunch
+   * served two or more friends at once. `order` is the order the friends got their balloons in as far as it is
+   * known, the takers of the last give; it is short-lived and never stored.
    */
   | { type: 'served'; together: boolean; order: number[] }
   | { type: 'popped'; friend: number }
@@ -56,13 +58,13 @@ export function sendBunch(save: Save, slot: number): { save: Save; events: PlayE
     return { save: after, events: [{ type: 'gotAway', slot, bunch, grabber: given.grabber, spare: given.spare }] }
   }
   const taken: PlayEvent = { type: 'taken', slot, bunch, takers: given.takers }
-  if (!given.served || save.finished) return { save: { ...save, troop }, events: [taken] }
-  // The last friend took its balloon: the cycle is judged here, once, and the ending starts.
+  if (!given.served) return { save: { ...save, troop }, events: [taken] }
+  // The last friend took its balloon, and the ending plays: each time that happens, also when a troop already
+  // served is filled again after a pop. The cycle is judged the first time only, and a later ending saves nothing more.
+  const served: PlayEvent = { type: 'served', together: given.takers.length > 1, order: given.takers }
+  if (save.finished) return { save: { ...save, troop }, events: [taken, served] }
   const judged = finishCycle(save, outcomeOf(save.slips))
-  return {
-    save: { ...save, troop, position: judged.position, finished: judged.finished },
-    events: [taken, { type: 'served', together: given.takers.length > 1, order: given.takers }],
-  }
+  return { save: { ...save, troop, position: judged.position, finished: judged.finished }, events: [taken, served] }
 }
 
 /** The child tapped the balloon this friend holds. It pops and the friend reaches up again; the cycle and its judgement are left alone. */

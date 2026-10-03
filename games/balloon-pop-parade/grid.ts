@@ -33,21 +33,30 @@ function kindCells(row: Row, motion: (taste: Taste) => string): Record<Kind, Cel
 }
 
 // A troop that already has its balloons has no friend without one, so whatever
-// of its colour is sent is one too many: the first and third rows are the
-// fourth there, the same lift-off, for fun, as often as the child likes. The
-// troop is of some kind, so a voice in this column names which of that kind's
-// own sounds is heard.
-const LIFT_OFF_FOR_FUN: Cell = { motion: 'liftOffForFun', voice: 'kindLiftOffVoice' }
+// of its colour is sent is one too many, and whatever is done to it is done to
+// friends with a balloon in hand. Each row has a result of its own there, seen
+// and heard, which every kind plays with its own lift-off, refusal or start.
+const SERVED: Record<Row, Cell> = {
+  // The nearest friend catches it in its other hand and is carried off alone, a balloon in each hand.
+  ownColour: { motion: 'liftOffAloneTwoBalloons', voice: 'balloonsSqueal' },
+  // Its refusal knocks the balloon it already holds, which swings round and bumps it on the head.
+  otherColour: { motion: 'refusalKnocksHeld', voice: 'hollowBonk' },
+  // Every friend grabs one more and the whole troop is carried off at the same moment.
+  fittingBunch: { motion: 'liftOffWholeTroop', voice: 'squeaksClimbTogether' },
+  // A bunch bigger than the whole troop: the spare balloons bump the cloud on their way out and it sheds its drops.
+  tooMany: { motion: 'sparesBumpCloud', voice: 'cloudSqueakAndDrops' },
+  // Its kind's own start, then the troop stops swaying and looks at the empty hand.
+  popHeld: { motion: 'troopStopsAndLooks', voice: 'squeakOfHeels' },
+  // Its kind's own squeak, and the balloon it holds bobs along on its string.
+  poke: { motion: 'pokeWithBalloon', voice: 'stringHum' },
+}
 
 export const GRID: Record<Row, Record<Column, Cell>> = {
-  ownColour: { ...kindCells('ownColour', (taste) => taste.catch), served: LIFT_OFF_FOR_FUN },
-  // Each kind still refuses in its own way when it already has its balloons.
-  otherColour: { ...kindCells('otherColour', (taste) => taste.refuse), served: { motion: 'refusesStill', voice: 'kindRefusalVoice' } },
+  ownColour: { ...kindCells('ownColour', (taste) => taste.catch), served: SERVED.ownColour },
+  otherColour: { ...kindCells('otherColour', (taste) => taste.refuse), served: SERVED.otherColour },
   // A bunch with one for each friend is the catch, done by all of them together.
-  fittingBunch: { ...kindCells('fittingBunch', (taste) => `${taste.catch}Together`), served: LIFT_OFF_FOR_FUN },
-  tooMany: { ...kindCells('tooMany', (taste) => taste.liftOff), served: LIFT_OFF_FOR_FUN },
-  // After the pop the friend reaches up again and can be given another.
-  popHeld: { ...kindCells('popHeld', (taste) => taste.popped), served: { motion: 'reachesAgain', voice: 'kindPopVoice' } },
-  // The same poke, with its balloon bobbing along.
-  poke: { ...kindCells('poke', (taste) => taste.poke), served: { motion: 'pokeWithBalloon', voice: 'kindPokeVoice' } },
+  fittingBunch: { ...kindCells('fittingBunch', (taste) => `${taste.catch}Together`), served: SERVED.fittingBunch },
+  tooMany: { ...kindCells('tooMany', (taste) => taste.liftOff), served: SERVED.tooMany },
+  popHeld: { ...kindCells('popHeld', (taste) => taste.popped), served: SERVED.popHeld },
+  poke: { ...kindCells('poke', (taste) => taste.poke), served: SERVED.poke },
 }
