@@ -26,7 +26,7 @@ export type Part = {
 export type VoiceSpec = readonly Part[]
 
 /** What every voice is held to. */
-export const LIMITS = { minFreq: 60, maxFreq: 4200, maxPeak: 0.2, minAttack: 0.002, maxSeconds: 0.9 } as const
+export const LIMITS = { minFreq: 60, maxFreq: 4200, maxPeak: 0.2, minAttack: 0.002, maxSeconds: 1.2 } as const
 
 /** How long a voice sounds, in seconds. */
 export function seconds(spec: VoiceSpec): number {
@@ -95,3 +95,101 @@ export function babble(voiceHz: number, shape: 'ask' | 'glee' | 'grumble' | 'gig
   const each = shape === 'giggle' ? 0.07 : 0.11
   return tunes[shape].map((k, i) => ({ wave: i % 2 === 0 ? ('triangle' as const) : ('sine' as const), freq: voiceHz * k, peak: 0.13, attack: 0.012, decay: each, glideTo: voiceHz * k * (shape === 'grumble' ? 0.92 : 1.06), delay: i * each }))
 }
+
+// --- The game's own voices: the job, the tasting and the eating ----------------
+
+/** A drawn piece appearing on the card: a dry tick on the step it counts. */
+export function tickOn(count: number): VoiceSpec {
+  return [{ wave: 'triangle', freq: stepFreq(count) * 2, peak: 0.09, attack: 0.002, decay: 0.05 }]
+}
+
+/** The roll opening into a card. */
+export const unroll: VoiceSpec = [{ wave: 'noise', freq: 1800, q: 1.2, peak: 0.1, attack: 0.01, decay: 0.22, glideTo: 3200 }]
+
+/** Something sliding over the worktop: the pizza, a base, the tubs. */
+export const slide: VoiceSpec = [{ wave: 'noise', freq: 500, q: 0.9, peak: 0.1, attack: 0.03, decay: 0.3, glideTo: 900 }]
+
+/** The oven's door. */
+export const door: VoiceSpec = [{ wave: 'sine', freq: 140, peak: 0.16, attack: 0.004, decay: 0.14, glideTo: 100 }, { wave: 'noise', freq: 700, q: 2, peak: 0.08, attack: 0.003, decay: 0.07, delay: 0.02 }]
+
+/** How each kind bakes. */
+export function bake(kind: Kind): VoiceSpec {
+  switch (kind) {
+    case 'pepper':
+      return [{ wave: 'noise', freq: 3600, q: 1.4, peak: 0.1, attack: 0.02, decay: 0.5, glideTo: 2400 }]
+    case 'mushroom':
+      return [{ wave: 'sine', freq: 900, peak: 0.1, attack: 0.02, decay: 0.16, glideTo: 1500 }]
+    case 'olive':
+      return [{ wave: 'sine', freq: 320, peak: 0.16, attack: 0.002, decay: 0.05, glideTo: 180 }]
+    case 'cheese':
+      return [0, 0.11, 0.2, 0.33].map((delay, i) => ({ wave: 'sine' as const, freq: 150 + i * 28, peak: 0.12, attack: 0.01, decay: 0.07, glideTo: 240 + i * 30, delay }))
+    case 'sock':
+      return [{ wave: 'sine', freq: 1300, peak: 0.08, attack: 0.06, decay: 0.36, glideTo: 1900 }, { wave: 'noise', freq: 2600, q: 6, peak: 0.05, attack: 0.05, decay: 0.3 }]
+    case 'worm':
+      return [{ wave: 'sawtooth', freq: 300, peak: 0.07, attack: 0.004, decay: 0.16, glideTo: 1400 }]
+  }
+}
+
+/** The lick. */
+export const lick: VoiceSpec = [{ wave: 'noise', freq: 700, q: 2.5, peak: 0.13, attack: 0.05, decay: 0.34, glideTo: 2200 }, { wave: 'sine', freq: 260, peak: 0.08, attack: 0.04, decay: 0.3, glideTo: 520 }]
+
+/** One piece too many, by kind. `big` is the one big version for more than three. */
+export function tooMany(kind: Kind, big: boolean): VoiceSpec {
+  const long = big ? 0.8 : 0.26
+  switch (kind) {
+    case 'pepper':
+      return [{ wave: 'noise', freq: 900, q: 0.7, peak: 0.16, attack: 0.02, decay: long, glideTo: 2600 }, { wave: 'sawtooth', freq: 110, peak: 0.07, attack: 0.02, decay: long, glideTo: 180 }]
+    case 'mushroom':
+      return [{ wave: 'sine', freq: 330, peak: 0.17, attack: 0.004, decay: 0.09, glideTo: 880 }, ...(big ? [0.18, 0.36, 0.54].map((delay) => ({ wave: 'sine' as const, freq: 330, peak: 0.15, attack: 0.004, decay: 0.09, glideTo: 880, delay })) : [])]
+    case 'olive':
+      return [{ wave: 'sine', freq: 500, peak: 0.12, attack: 0.03, decay: long, glideTo: 1100 }, { wave: 'sine', freq: 1100, peak: 0.1, attack: 0.03, decay: long, glideTo: 500, delay: long * 0.5 }]
+    case 'cheese':
+      return [{ wave: 'triangle', freq: 190, peak: 0.16, attack: 0.003, decay: long + 0.12, glideTo: 380 }, { wave: 'triangle', freq: 760, peak: 0.07, attack: 0.003, decay: 0.12, delay: long * 0.6 }]
+    case 'sock':
+      return [{ wave: 'sawtooth', freq: 90, peak: 0.1, attack: 0.02, decay: long, glideTo: 70 }, { wave: 'noise', freq: 240, q: 1.5, peak: 0.13, attack: 0.03, decay: long }]
+    case 'worm':
+      return [0, 1, 2, 3].slice(0, big ? 4 : 2).map((i) => ({ wave: 'sine' as const, freq: 520 - i * 60, peak: 0.12, attack: 0.02, decay: 0.1, glideTo: 700 - i * 60, delay: i * 0.12 }))
+  }
+}
+
+/** One piece too few: the tummy rumbles, lower for a bigger customer, and each kind rumbles on its own beat. */
+export function rumble(kind: Kind, voiceHz: number, big: boolean): VoiceSpec {
+  const base = Math.max(LIMITS.minFreq + 4, voiceHz * 0.36)
+  const beat = { pepper: 0.07, mushroom: 0.1, olive: 0.13, cheese: 0.16, sock: 0.19, worm: 0.05 }[kind]
+  return [0, 1, 2, 3, 4, 5].slice(0, big ? 6 : 3).map((i) => ({ wave: 'sawtooth' as const, freq: base * (1 + (i % 2) * 0.18), peak: 0.11, attack: 0.015, decay: beat, glideTo: base * 0.86, delay: i * beat }))
+}
+
+/** A pat on the card. */
+export const pat: VoiceSpec = [{ wave: 'noise', freq: 1200, q: 1.5, peak: 0.1, attack: 0.002, decay: 0.04 }, { wave: 'sine', freq: 200, peak: 0.1, attack: 0.002, decay: 0.05 }]
+
+/** Raw dough on the tongue: it stretches, and snaps back. */
+export const stretch: VoiceSpec = [{ wave: 'sine', freq: 220, peak: 0.13, attack: 0.08, decay: 0.9, glideTo: 880 }]
+export const snap: VoiceSpec = [{ wave: 'noise', freq: 2400, q: 1.2, peak: 0.16, attack: 0.002, decay: 0.05 }, { wave: 'sine', freq: 700, peak: 0.12, attack: 0.002, decay: 0.08, glideTo: 160 }]
+
+/** A bite: the crust, and the crunch of what was on it. */
+export function bite(n: number): VoiceSpec {
+  return [{ wave: 'noise', freq: 1500 + n * 300, q: 0.8, peak: 0.17, attack: 0.003, decay: 0.09 }, { wave: 'noise', freq: 700, q: 1.2, peak: 0.12, attack: 0.003, decay: 0.07, delay: 0.1 }, { wave: 'sine', freq: 130, peak: 0.12, attack: 0.004, decay: 0.08, glideTo: 90 }]
+}
+
+/** The burp after a whole pizza, on the customer's own pitch. */
+export function burp(voiceHz: number): VoiceSpec {
+  const f = Math.max(LIMITS.minFreq + 10, voiceHz * 0.5)
+  return [{ wave: 'sawtooth', freq: f * 1.3, peak: 0.13, attack: 0.02, decay: 0.38, glideTo: f * 0.7 }, { wave: 'noise', freq: 260, q: 1, peak: 0.07, attack: 0.02, decay: 0.3 }]
+}
+
+/** One step of a customer's walk, on its own pitch. */
+export function footstep(voiceHz: number): VoiceSpec {
+  return [{ wave: 'sine', freq: Math.max(70, voiceHz * 0.5), peak: 0.1, attack: 0.003, decay: 0.07, glideTo: Math.max(64, voiceHz * 0.36) }]
+}
+
+/** A piece swallowed from the hand, by kind. */
+export function gulp(kind: Kind): VoiceSpec {
+  const f = { pepper: 420, mushroom: 260, olive: 340, cheese: 300, sock: 200, worm: 480 }[kind]
+  return [{ wave: 'sine', freq: f, peak: 0.15, attack: 0.01, decay: 0.12, glideTo: f * 0.5 }, { wave: 'sine', freq: f * 0.6, peak: 0.12, attack: 0.01, decay: 0.1, glideTo: f * 1.2, delay: 0.13 }]
+}
+
+/** The base that puffed up in the oven, sinking. */
+export const wheeze: VoiceSpec = [{ wave: 'noise', freq: 1600, q: 3, peak: 0.11, attack: 0.05, decay: 0.75, glideTo: 500 }, { wave: 'sine', freq: 600, peak: 0.06, attack: 0.05, decay: 0.7, glideTo: 200 }]
+
+/** The oven handing a baked pizza straight back. */
+export const hiccup: VoiceSpec = [{ wave: 'sine', freq: 200, peak: 0.16, attack: 0.004, decay: 0.08, glideTo: 620 }, { wave: 'noise', freq: 900, q: 1, peak: 0.08, attack: 0.01, decay: 0.16, delay: 0.08 }]

@@ -12,7 +12,7 @@ import { monsterPizzaManifest } from './manifest'
 import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
-import { deserialize, serialize, type Save } from './save'
+import { deserialize, serialize } from './save'
 import { SaveCadence } from './saveCadence'
 import { voiceOf } from './sounds'
 import { spikeShow } from './spike'
@@ -53,7 +53,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     let kitchen: Kitchen | null = null
     const still = new URLSearchParams(window.location.search).has('spike') ? spikeShow() : null
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let state: Save | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     // The game hands a change to storage where it makes it, at one of two speeds:
@@ -62,12 +62,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     //   cadence.change(performance.now(), true)  a scene's outcome, a cycle judged, the position moved: at once,
     //                                            since a put-away in the next moment must find it saved
     // Going to rest writes whatever the throttle still holds (`cadence.settle`, below).
-    const cadence = new SaveCadence(() => {
-      if (!state) return
-      // Nothing is saved in the air: the pieces are taken at rest.
-      if (kitchen) state.pizza.pieces = kitchen.pieces()
-      ctxRef.current.storage.save(serialize(state))
-    })
+    // The game hands over the outcome of whatever is playing, with every piece at rest: nothing is saved in the air.
+    const cadence = new SaveCadence(() => { if (kitchen) ctxRef.current.storage.save(serialize(kitchen.toSave())) })
 
     // The one place the game applies a quality tier: whatever its tiers set besides the pixel ratio, which
     // `resize` applies. It runs once before the first frame and again each time the governor changes tier, ahead
@@ -176,7 +172,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
-      if (touch.active) ladder.touch(clock.seconds)
+      if (touch.active || kitchen?.busy) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
       ladder.update(clock.seconds)
       // The game steps its rules and its scene here, and hands what they changed to storage (`cadence`, above).
@@ -218,11 +214,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
-      state = deserialize(value, ctxRef.current.childAge)
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
+      kitchen = new Kitchen(deserialize(value, ctxRef.current.childAge), seedOf(window.location.search))
+      // A first visit seats its first customer, and that is saved at once.
+      keep()
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.
-      kitchen = new Kitchen(state, seedOf(window.location.search))
       draw()
     })
     applyTier()

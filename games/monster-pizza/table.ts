@@ -27,7 +27,7 @@ export type Flight = {
   t: number
   lasts: number
   /** Where it ends: on the pizza at this spot, home in its tub, or off the heap and home. */
-  end: { on: 'pizza'; x: number; y: number } | { on: 'tub'; tub: number } | { on: 'bounce'; tub: number }
+  end: { on: 'pizza'; x: number; y: number } | { on: 'tub'; tub: number } | { on: 'bounce'; tub: number } | { on: 'mouth' }
 }
 
 export type Hand = { kind: Kind; turn: number; x: number; y: number; tub: number; from: { x: number; y: number } | null; waiting: boolean }
@@ -38,6 +38,8 @@ export type TableEvent =
   | { type: 'pip'; kind: Kind; count: number }
   | { type: 'home'; kind: Kind }
   | { type: 'boing'; kind: Kind }
+  /** A piece reached a customer's mouth. */
+  | { type: 'fed'; kind: Kind }
   | { type: 'jiggle' }
 
 export type Table = {
@@ -285,11 +287,44 @@ export function stepTable(table: Table, dt: number): void {
       table.jiggle.v += 3.2
       for (const piece of table.pieces) piece.settle.v += 1.4
       table.events.push({ type: 'plop', kind: f.kind, count: countOf(table, f.kind) })
-    } else {
+    } else if (f.end.on === 'mouth') table.events.push({ type: 'fed', kind: f.kind })
+    else {
       table.tubs[f.end.tub].squash.v -= 4
       table.events.push({ type: 'home', kind: f.kind })
     }
   }
+}
+
+/** The piece in the hand flies to a mouth at `to`, in stage units, and is eaten there. */
+export function feedHand(table: Table, to: { x: number; y: number }): void {
+  const hand = table.hand
+  if (!hand) return
+  table.hand = null
+  if (hand.from) table.events.push({ type: 'pip', kind: hand.kind, count: countOf(table, hand.kind) })
+  fly(table, hand.kind, hand.turn, { x: hand.x, y: hand.y }, to, { on: 'mouth' })
+}
+
+/** A piece comes flying out of a mouth at `from` and lands back in its tub. */
+export function spitHome(table: Table, kind: Kind, from: { x: number; y: number }): void {
+  const tub = table.tubs.findIndex((t) => t.kind === kind)
+  if (tub >= 0) fly(table, kind, 0, from, tubAt(table, tub), { on: 'tub', tub })
+}
+
+/** One piece hops out of a tub by itself and flies to a spot on the pizza: the customer poked the tub. */
+export function hopFromTub(table: Table, index: number, spot: { x: number; y: number }): void {
+  const tub = table.tubs[index]
+  if (!tub) return
+  const at = tubAt(table, index)
+  tub.squash.v -= 7
+  table.events.push({ type: 'pop', kind: tub.kind })
+  fly(table, tub.kind, table.rng.range(-0.5, 0.5), { x: at.x, y: at.y - TUB.r * 0.9 }, onPizza(spot.x, spot.y), { on: 'pizza', x: spot.x, y: spot.y })
+}
+
+/** Everything in the air comes down at once, and the hand is emptied: the pizza is about to leave the board. */
+export function landNow(table: Table): void {
+  releaseHand(table)
+  for (const f of table.flights) f.t = 1
+  stepTable(table, 0)
 }
 
 /** Where a flight is now, in stage units, with the arc it flies and how far it has turned. */
@@ -303,7 +338,7 @@ export function flightAt(f: Flight): { x: number; y: number; turn: number } {
     const a = out ? f.from : f.to, b = out ? f.to : tubHome
     return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k - Math.sin(k * Math.PI) * (out ? 120 : 170), turn: f.turn + t * 9 }
   }
-  const arc = Math.min(150, Math.max(26, Math.hypot(f.to.x - f.from.x, f.to.y - f.from.y) * 0.32))
+  const arc = f.end.on === 'mouth' ? 60 : Math.min(150, Math.max(26, Math.hypot(f.to.x - f.from.x, f.to.y - f.from.y) * 0.32))
   return { x: f.from.x + (f.to.x - f.from.x) * t, y: f.from.y + (f.to.y - f.from.y) * t - Math.sin(t * Math.PI) * arc, turn: f.turn + (1 - t) * (f.end.on === 'pizza' ? 2.4 : -3) }
 }
 

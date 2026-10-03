@@ -49,9 +49,13 @@ export function tubPlace(index: number, count: number): { x: number; y: number }
 }
 
 /** Where the customer at the counter stands: its feet, hidden behind the counter. */
-export const CUSTOMER = { x: 236, y: COUNTER_Y + 24 }
-/** The card the customer holds up. */
-export const CARD = { x: 428, y: 32, w: 300, h: 214 }
+export const CUSTOMER = { x: 596, y: COUNTER_Y + 24 }
+/** The card the customer holds up, to its left, over the tubs. */
+export const CARD = { x: 84, y: 34, w: 300, h: 214 }
+/** Where a pizza is slid to be served: up against the counter, under the customer's mouth. */
+export const SERVE = { x: PIZZA.x, y: PIZZA.y - 70 }
+/** Where a pizza goes to be baked: the oven's mouth. */
+export const OVEN_MOUTH = { x: 1014, y: 566 }
 export const OVEN = { x: 1014, y: 548, w: 250, h: 270 }
 /** The doorway where the next customers wait, clear of the grown-up corner at the top right. */
 export const DOOR = { x: 936, y: 92, w: 200, h: 214 }

@@ -1,13 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import { CHARACTERS, CUSTOMERS } from './customers'
 import { KINDS } from './kinds'
-import { LIMITS, babble, boing, home, jiggle, knock, pip, plop, pop, seconds, stepFreq, type VoiceSpec } from './voices'
+import { LIMITS, babble, bake, bite, boing, burp, door, footstep, gulp, hiccup, home, jiggle, knock, lick, pat, pip, plop, pop, rumble, seconds, slide, snap, stepFreq, stretch, tickOn, tooMany, unroll, wheeze, type VoiceSpec } from './voices'
 
 // The builder's machine cannot hear, so every voice is held to a range here.
 
 function all(): [string, VoiceSpec][] {
   const out: [string, VoiceSpec][] = [['pop', pop], ['home', home], ['boing', boing], ['jiggle', jiggle], ['knock', knock]]
+  out.push(['unroll', unroll], ['slide', slide], ['door', door], ['lick', lick], ['pat', pat], ['stretch', stretch], ['snap', snap], ['wheeze', wheeze], ['hiccup', hiccup])
+  for (let n = 0; n < 3; n++) out.push([`bite ${n}`, bite(n)])
+  for (let count = 1; count <= 10; count++) out.push([`tickOn ${count}`, tickOn(count)])
+  for (const who of CUSTOMERS) out.push([`burp ${who}`, burp(CHARACTERS[who].voice)], [`footstep ${who}`, footstep(CHARACTERS[who].voice)])
   for (const kind of KINDS) {
+    out.push([`bake ${kind}`, bake(kind)], [`gulp ${kind}`, gulp(kind)])
+    for (const big of [false, true]) {
+      out.push([`tooMany ${kind} ${big}`, tooMany(kind, big)])
+      for (const who of CUSTOMERS) out.push([`rumble ${kind} ${who} ${big}`, rumble(kind, CHARACTERS[who].voice, big)])
+    }
     for (let count = 1; count <= 12; count++) out.push([`plop ${kind} ${count}`, plop(kind, count)])
     for (let count = 0; count <= 11; count++) out.push([`pip ${kind} ${count}`, pip(kind, count)])
   }
@@ -62,6 +71,13 @@ describe('voices', () => {
   it('gives every kind a landing of its own', () => {
     const seen = new Set(KINDS.map((kind) => JSON.stringify(plop(kind, 4).map((p) => [p.wave, p.decay, p.q ?? 0, Math.round((p.glideTo ?? p.freq) / p.freq * 100)]))))
     expect(seen.size).toBe(KINDS.length)
+  })
+
+  it('gives every kind its own sound for baking, for too many and for too few', () => {
+    const shape = (spec: VoiceSpec): string => JSON.stringify(spec.map((p) => [p.wave, Math.round(p.freq), p.decay, p.delay ?? 0]))
+    for (const make of [bake, (kind: (typeof KINDS)[number]) => tooMany(kind, false), (kind: (typeof KINDS)[number]) => tooMany(kind, true), (kind: (typeof KINDS)[number]) => rumble(kind, 220, false), gulp]) {
+      expect(new Set(KINDS.map((kind) => shape(make(kind)))).size).toBe(KINDS.length)
+    }
   })
 
   it('gives every customer a voice of its own pitch', () => {
