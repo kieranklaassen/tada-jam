@@ -3,7 +3,7 @@
 
 ## Status
 
-- Stage: sheet passed to round 3; the toy run has begun (see below).
+- Stage: toy, in progress. The sheet is still open: round 3 of its check is asked for below.
 - The sheet's check so far: round 1 (checker B) open with 10 findings, all pasted; round 2 (checker D) confirmed all ten and came back open with 6 findings, all pasted as they stand, none held back. Round 2's findings 4, 5 and 6 changed sentences only: the rules already did what the new sentences say, so no rule or test changed.
 - **The text to check in round 3 is the sheet as it stands at commit `848cffc`**, sheet hash (everything above `## The look`) `dff8bd6113d97ed2231a67c4bf41c8a0aa6be979220268e8f4a6213db9d971c2`. Nothing differs from the text round 2 read but the six pastes.
 - Rules: written as pure modules with tests while the check ran, at the builder's own risk, and brought into line with the sheet after the pastes of round 1 (the basket has no egg in a first clutch and gets one when the next clutch is laid out; what waits at the edge says which way of asking it is): `voices.ts`, `tastes.ts`, `places.ts`, `layout.ts`, `world.ts`, `save.ts`, `grid.ts`, `guide.ts`, `beats.ts`, and the tests beside them with `play.test.ts` and `consequence.test.ts`. A finding of round 2 under the representation, the mechanic questions, the error, the designed order or the records reopens them.
