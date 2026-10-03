@@ -3,10 +3,10 @@ import { fits, lanternAmount, leftover, load, moment, normalise, openingPlan, ra
 import { ROD_LENGTH, SITES } from './world'
 
 const meadow = SITES.meadow[0] // six hours, three logs for one hour
-const ford = SITES.ford[0] // seven hours, four campers, a cup each every hour
+const ford = SITES.ford[1] // seven hours, four campers, a cup each every hour
 const quarry = SITES.quarry[0] // eight hours, one lantern: a flask for three hours low, for two hours high
 const ridge = SITES.ridge[0] // a sled of 42 places
-const summit = SITES.summit[0] // two lanterns
+const summit = SITES.summit[0] // eight hours, two lanterns
 const plan = (site: typeof meadow, part: Partial<Plan>): Plan => normalise(site, part)
 
 describe('a legal plan', () => {
@@ -80,8 +80,8 @@ describe('the lanterns', () => {
   it('add their amounts when two share the oil', () => {
     const both = plan(summit, { lanterns: [{ pin: 0, wick: 0 }, { pin: 1, wick: 1 }] })
     expect(lanternAmount(summit, both)).toEqual({ pieces: 5, hours: 6 })
-    expect(runNight(summit, { ...both, oil: 10 }).lantern).toMatchObject({ short: false, needed: 10 })
-    expect(runNight(summit, { ...both, oil: 9 }).lantern!.short).toBe(true)
+    expect(runNight(summit, { ...both, oil: 7 }).lantern).toMatchObject({ short: false, needed: 7 })
+    expect(runNight(summit, { ...both, oil: 6 }).lantern!.short).toBe(true)
     expect(lanternAmount(meadow, openingPlan(meadow))).toBeNull()
     expect(runNight(meadow, openingPlan(meadow)).lantern).toBeNull()
   })
@@ -97,10 +97,10 @@ describe('the kettle', () => {
   it('runs dry down the line: the campers at its end hold empty mugs at that hour', () => {
     const night = runNight(ford, plan(ford, { logs: 21, fire: 1, water: 4 }))
     expect(night.kettle).toMatchObject({ short: true, firstShort: 6, usedCups: 24, leftCups: 0 })
-    expect(night.kettle!.rounds[6]).toMatchObject({ served: [], missed: ['cook', 'reader', 'scout', 'sleeper'] })
+    expect(night.kettle!.rounds[6]).toMatchObject({ served: [], missed: ['cook', 'small', 'scout', 'reader'] })
     const part = runNight(ford, plan(ford, { logs: 21, fire: 1, water: 1 }))
-    expect(part.kettle!.rounds[1]).toMatchObject({ served: ['cook', 'reader'], missed: ['scout', 'sleeper'] })
-    expect(part.campers.find((night) => night.camper === 'sleeper')).toMatchObject({ cups: 1, emptyMugs: 6 })
+    expect(part.kettle!.rounds[1]).toMatchObject({ served: ['cook', 'small'], missed: ['scout', 'reader'] })
+    expect(part.campers.find((night) => night.camper === 'reader')).toMatchObject({ cups: 1, emptyMugs: 6 })
   })
 
   it('pours cold once the fire is out', () => {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { normalise, runNight, type Plan } from './night'
-import { ACTS, DISLIKED, WANTS, content, reactions, type Act } from './tastes'
+import { ACTS, AT_DUSK, DISLIKED, WANTS, content, reactions, type Act } from './tastes'
 import { CAMPERS, SITES, type CamperId, type Site } from './world'
 
 const quarry = SITES.quarry[0] // cook ring 1, reader ring 3, scout ring 2, sleeper ring 2; pin 0 lights the reader, and the sleeper on the high wick
-const ford = SITES.ford[0]
+const ford = SITES.ford[1] // seven hours; cook, small one, scout, reader; the fire's dial goes two, three, four
 const ridge = SITES.ridge[1] // the small one at ring 3; pin 0 lights the small one, and the reader on the high wick
 const acts = (site: Site, part: Partial<Plan>, camper: CamperId, left = 0): Act[] =>
   reactions(site, runNight(site, normalise(site, part)), left).filter((reaction) => reaction.camper === camper).map((reaction) => reaction.act)
@@ -16,6 +16,13 @@ describe('the tastes are fixed', () => {
       expect(ACTS[camper].some((act) => !DISLIKED.has(act)), camper).toBe(true)
       expect(ACTS[camper].some((act) => DISLIKED.has(act)), camper).toBe(true)
     }
+  })
+
+  it('shows every want at dusk, before any night is slid, each in a pose of its own', () => {
+    const poses = CAMPERS.map((camper) => AT_DUSK[camper].pose)
+    expect(new Set(poses).size).toBe(CAMPERS.length)
+    for (const camper of CAMPERS) expect(AT_DUSK[camper].toward.length, camper).toBeGreaterThan(0)
+    expect(WANTS.cook).toBe('a big fire')
   })
 
   it('shares no act between two campers', () => {
@@ -63,7 +70,7 @@ describe('the sleeper wants warmth and the dark', () => {
   })
 })
 
-describe('the cook wants a big fire and a full kettle', () => {
+describe('the cook wants a big fire, and likes a full kettle', () => {
   it('beams at the highest setting, tends a middle one and fans the lowest', () => {
     expect(acts(ford, { logs: 35, fire: 2, water: 5 }, 'cook')).toEqual(['beams-at-the-fire'])
     expect(acts(ford, { logs: 21, fire: 1, water: 5 }, 'cook')).toEqual(['tends-the-fire'])

@@ -16,9 +16,21 @@ import type { CamperId, Site } from './world'
 export const WANTS: Readonly<Record<CamperId, string>> = {
   reader: 'light to read by, all night',
   sleeper: 'to sleep through, warm and in the dark',
-  cook: 'a big fire and a full kettle',
+  cook: 'a big fire',
   scout: 'to carry nothing back',
   small: 'never to be in the dark',
+}
+
+/**
+ * How each want shows at dusk, before any night is slid, so that it is always
+ * visible: what the camper turns toward. The view picks the nearest of these.
+ */
+export const AT_DUSK: Readonly<Record<CamperId, { readonly pose: string; readonly toward: readonly ('lantern-pin' | 'fire-ring' | 'mule' | 'rods')[] }>> = {
+  reader: { pose: 'book-open-and-tilted', toward: ['lantern-pin', 'fire-ring'] },
+  sleeper: { pose: 'hat-down-feet-to-the-fire', toward: ['fire-ring'] },
+  cook: { pose: 'pan-raised-over-the-ring', toward: ['fire-ring'] },
+  scout: { pose: 'empty-straps-over-one-arm', toward: ['mule', 'rods'] },
+  small: { pose: 'sitting-pressed-against-the-light', toward: ['lantern-pin', 'fire-ring'] },
 }
 
 /** Everything a camper can be seen doing because of the plan. A liked thing and a disliked thing are both worth causing. */

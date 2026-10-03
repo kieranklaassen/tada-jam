@@ -3,7 +3,7 @@ import { consequences, towerPlaces, type Consequence } from './consequences'
 import { normalise, runNight, type Plan } from './night'
 import { SITES, type Site } from './world'
 
-const meadow = SITES.meadow[0], ford = SITES.ford[0], quarry = SITES.quarry[0]
+const meadow = SITES.meadow[0], ford = SITES.ford[1], quarry = SITES.quarry[0]
 const night = (site: Site, part: Partial<Plan>): Consequence[] => { const plan = normalise(site, part); return consequences(site, plan, runNight(site, plan)) }
 const kinds = (list: Consequence[]) => list.map((one) => one.kind)
 
@@ -18,7 +18,7 @@ describe('a consequence says where and why', () => {
 
   it('shows a dry kettle at its hour, at the end of the line', () => {
     const list = night(ford, { logs: 21, fire: 1, water: 1 })
-    expect(list.find((one) => one.kind === 'dry-round')).toEqual({ kind: 'dry-round', hour: 1, emptyMugs: ['scout', 'sleeper'], emptyRod: 'water' })
+    expect(list.find((one) => one.kind === 'dry-round')).toEqual({ kind: 'dry-round', hour: 1, emptyMugs: ['scout', 'reader'], emptyRod: 'water' })
   })
 
   it('shows too much as a length still lying on its rod in the morning', () => {

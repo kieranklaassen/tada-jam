@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compare, forOneHour, fraction, gcd, isAmount, isWhole, lastsHours, least, neededFor, sameAmount, strip, times, usedIn, value, whole } from './ratio'
+import { compare, forOneHour, fraction, gcd, isAmount, isWhole, lastsHours, least, neededFor, sameAmount, stampedStrip, strip, times, usedIn, value, whole } from './ratio'
 
 describe('fractions', () => {
   it('are kept in lowest terms with a positive denominator', () => {
@@ -85,5 +85,35 @@ describe('the strip a card stamps along the ruler', () => {
         const rows = strip(amount, night)
         expect(rows[rows.length - 1].pieces).toBe(Math.ceil(night / amount.hours) * amount.pieces)
       }
+  })
+})
+
+describe('a strip stamped from a card on any of its sides', () => {
+  const card = { pieces: 5, hours: 2 }
+
+  it('runs its totals on from stamp to stamp, whatever side each was made with', () => {
+    expect(stampedStrip(card, ['single', 'doubled', 'single'], 10)).toEqual([
+      { hours: { num: 2, den: 1 }, pieces: { num: 5, den: 1 } },
+      { hours: { num: 6, den: 1 }, pieces: { num: 15, den: 1 } },
+      { hours: { num: 8, den: 1 }, pieces: { num: 20, den: 1 } },
+    ])
+  })
+
+  it('carries halves under a halved card: the amount for one hour, laid out', () => {
+    expect(stampedStrip(card, ['halved', 'halved', 'halved'], 10).map((row) => [row.hours, row.pieces])).toEqual([
+      [{ num: 1, den: 1 }, { num: 5, den: 2 }],
+      [{ num: 2, den: 1 }, { num: 5, den: 1 }],
+      [{ num: 3, den: 1 }, { num: 15, den: 2 }],
+    ])
+  })
+
+  it('agrees with the plain strip when every stamp is single', () => {
+    for (const amount of [{ pieces: 3, hours: 1 }, { pieces: 1, hours: 3 }, card])
+      expect(stampedStrip(amount, Array(40).fill('single'), 9).map((row) => ({ hours: row.hours.num, pieces: row.pieces.num }))).toEqual(strip(amount, 9))
+  })
+
+  it('lays no stamp that would start at dawn or after', () => {
+    expect(stampedStrip({ pieces: 3, hours: 1 }, ['doubled', 'doubled', 'doubled', 'single'], 4).length).toBe(2)
+    expect(stampedStrip({ pieces: 3, hours: 1 }, ['halved', 'halved'], 0)).toEqual([])
   })
 })

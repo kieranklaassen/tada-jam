@@ -84,7 +84,13 @@ const pin = (near: CamperId[], far: CamperId[] = []): Pin => ({ near, far })
 type Draft = Omit<Site, 'position' | 'lanterns' | 'wicks' | 'pins' | 'kettle' | 'sled' | 'given'> & Partial<Site>
 const site = (position: string, draft: Draft): Site => ({ lanterns: 0, wicks: NO_WICKS, pins: [], kettle: null, sled: null, given: null, ...draft, position })
 
-/** The variants of each position. They differ only in their numbers, and a new site takes the next in turn. */
+/**
+ * The variants of each position. They differ only in their numbers. Every
+ * variant is chosen so that its night, with both extra sections unfolded and
+ * every dial at its highest, can still be supplied from the rods; a test holds
+ * that. So a night of five campers pouring hourly, or one with two lanterns,
+ * is a short one, and a long night burns low.
+ */
 export const SITES: Readonly<Record<string, readonly Site[]>> = {
   // A stock, an amount for one hour, and a night.
   meadow: [
@@ -95,14 +101,14 @@ export const SITES: Readonly<Record<string, readonly Site[]>> = {
   // Choosing the amount: three settings, and tents at different distances.
   birchwood: [
     site('birchwood', { hours: 8, tents: [tent('cook', 1), tent('scout', 2), tent('sleeper', 3)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(5, 1), 3]) }),
-    site('birchwood', { hours: 6, tents: [tent('cook', 1), tent('sleeper', 2), tent('scout', 2)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(4, 1), 3]) }),
-    site('birchwood', { hours: 10, tents: [tent('cook', 1), tent('scout', 3), tent('sleeper', 2)], fire: fire([per(2, 1), 1], [per(4, 1), 2], [per(6, 1), 3]) }),
+    site('birchwood', { hours: 6, tents: [tent('cook', 1), tent('sleeper', 2), tent('scout', 2)], fire: fire([per(3, 1), 1], [per(4, 1), 2], [per(6, 1), 3]) }),
+    site('birchwood', { hours: 10, tents: [tent('cook', 1), tent('scout', 3), tent('sleeper', 2)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(4, 1), 3]) }),
   ],
-  // The kettle: a second multiplier, and a remainder that means one more can.
+  // The kettle: a second multiplier. In the first variant the cups come out as whole cans; from the second a part can means one more.
   ford: [
-    site('ford', { hours: 7, tents: [tent('cook', 1), tent('reader', 2), tent('scout', 2), tent('sleeper', 3)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(5, 1), 3]), kettle: { cups: 1, everyHours: 1 } }),
-    site('ford', { hours: 8, tents: [tent('cook', 1), tent('small', 1), tent('scout', 2)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(4, 1), 3]), kettle: { cups: 1, everyHours: 1 } }),
-    site('ford', { hours: 9, tents: [tent('cook', 1), tent('reader', 2), tent('small', 1), tent('scout', 2), tent('sleeper', 3)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(4, 1), 3]), kettle: { cups: 1, everyHours: 1 } }),
+    site('ford', { hours: 6, tents: [tent('cook', 1), tent('reader', 2), tent('scout', 2), tent('sleeper', 3)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(5, 1), 3]), kettle: { cups: 1, everyHours: 1 } }),
+    site('ford', { hours: 7, tents: [tent('cook', 1), tent('small', 1), tent('scout', 2), tent('reader', 3)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(4, 1), 3]), kettle: { cups: 1, everyHours: 1 } }),
+    site('ford', { hours: 8, tents: [tent('cook', 1), tent('reader', 2), tent('small', 1), tent('scout', 2), tent('sleeper', 3)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(4, 1), 3]), kettle: { cups: 1, everyHours: 1 } }),
   ],
   // The lantern: one flask for a span longer than one hour.
   quarry: [
@@ -120,19 +126,19 @@ export const SITES: Readonly<Record<string, readonly Site[]>> = {
   tarn: [
     site('tarn', { hours: 8, tents: [tent('cook', 1), tent('reader', 3), tent('scout', 2), tent('sleeper', 2)], fire: fire([per(3, 2), 1], [per(5, 2), 2], [per(6, 2), 3]), lanterns: 1, wicks: wicks(per(1, 2), per(2, 3)), pins: [pin(['reader'], ['sleeper']), pin(['scout'], ['reader'])], kettle: { cups: 2, everyHours: 3 }, sled: 44 }),
     site('tarn', { hours: 9, tents: [tent('cook', 1), tent('reader', 2), tent('small', 3), tent('scout', 2), tent('sleeper', 1)], fire: fire([per(4, 3), 1], [per(5, 3), 2], [per(6, 3), 3]), lanterns: 1, wicks: wicks(per(1, 3), per(2, 3)), pins: [pin(['small'], ['reader']), pin(['reader'], ['sleeper'])], kettle: { cups: 2, everyHours: 3 }, sled: 42 }),
-    site('tarn', { hours: 10, tents: [tent('cook', 1), tent('reader', 3), tent('scout', 2)], fire: fire([per(4, 3), 1], [per(5, 2), 2], [per(6, 2), 3]), lanterns: 1, wicks: wicks(per(1, 3), per(2, 3)), pins: [pin(['reader'], ['scout']), pin(['scout'], ['reader'])], kettle: { cups: 3, everyHours: 2 }, sled: 64 }),
+    site('tarn', { hours: 10, tents: [tent('cook', 1), tent('reader', 3), tent('scout', 2)], fire: fire([per(4, 3), 1], [per(5, 2), 2], [per(6, 2), 3]), lanterns: 1, wicks: wicks(per(1, 3), per(2, 3)), pins: [pin(['reader'], ['scout']), pin(['scout'], ['reader'])], kettle: { cups: 2, everyHours: 2 }, sled: 54 }),
   ],
   // The question turned round: the stock is given, and the dials are set so that it lasts.
   saddle: [
-    site('saddle', { hours: 10, tents: [tent('cook', 1), tent('reader', 3), tent('scout', 2)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(4, 1), 2], [per(5, 1), 3]), lanterns: 1, wicks: wicks(per(1, 2), per(2, 3)), pins: [pin(['reader'], ['scout']), pin(['scout'], ['reader'])], given: { logs: 30, oil: 5, water: 0 } }),
+    site('saddle', { hours: 10, tents: [tent('cook', 1), tent('reader', 3), tent('scout', 2)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(4, 1), 3]), lanterns: 1, wicks: wicks(per(1, 2), per(2, 3)), pins: [pin(['reader'], ['scout']), pin(['scout'], ['reader'])], given: { logs: 30, oil: 5, water: 0 } }),
     site('saddle', { hours: 8, tents: [tent('cook', 1), tent('reader', 3), tent('sleeper', 2)], fire: fire([per(3, 2), 1], [per(5, 2), 2], [per(6, 2), 3]), lanterns: 1, wicks: wicks(per(1, 2), per(2, 3)), pins: [pin(['reader'], ['sleeper']), pin(['sleeper'], ['reader'])], kettle: { cups: 2, everyHours: 2 }, given: { logs: 20, oil: 4, water: 4 } }),
-    site('saddle', { hours: 12, tents: [tent('cook', 1), tent('reader', 2), tent('small', 3), tent('scout', 2)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(4, 1), 2], [per(6, 1), 3]), lanterns: 1, wicks: wicks(per(1, 3), per(1, 2)), pins: [pin(['small'], ['reader']), pin(['reader'], ['small'])], given: { logs: 36, oil: 6, water: 0 } }),
+    site('saddle', { hours: 12, tents: [tent('cook', 1), tent('reader', 2), tent('small', 3), tent('scout', 2)], fire: fire([per(3, 2), 1], [per(2, 1), 2], [per(3, 1), 3]), lanterns: 1, wicks: wicks(per(1, 3), per(1, 2)), pins: [pin(['small'], ['reader']), pin(['reader'], ['small'])], given: { logs: 24, oil: 6, water: 0 } }),
   ],
-  // Nothing new: everything together.
+  // Nothing new: everything together. Two lanterns on one rod of oil keep these nights to eight hours.
   summit: [
-    site('summit', { hours: 12, tents: [tent('cook', 1), tent('reader', 3), tent('small', 3), tent('scout', 2), tent('sleeper', 2)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(5, 1), 3]), lanterns: 2, wicks: wicks(per(1, 3), per(1, 2)), pins: [pin(['reader'], ['sleeper']), pin(['small'], ['scout']), pin(['scout'], ['reader'])], kettle: { cups: 1, everyHours: 2 }, sled: 70 }),
-    site('summit', { hours: 10, tents: [tent('cook', 1), tent('reader', 3), tent('small', 2), tent('scout', 2), tent('sleeper', 3)], fire: fire([per(3, 2), 1], [per(5, 2), 2], [per(6, 2), 3]), lanterns: 2, wicks: wicks(per(1, 2), per(2, 3)), pins: [pin(['reader'], ['sleeper']), pin(['sleeper'], ['small']), pin(['small'], ['reader'])], kettle: { cups: 2, everyHours: 3 }, sled: 68 }),
-    site('summit', { hours: 12, tents: [tent('cook', 1), tent('reader', 3), tent('small', 3), tent('scout', 2)], fire: fire([per(3, 2), 1], [per(2, 1), 2], [per(3, 1), 3]), lanterns: 2, wicks: wicks(per(1, 3), per(1, 2)), pins: [pin(['reader'], ['scout']), pin(['small'], ['reader']), pin(['scout'], ['small'])], kettle: { cups: 1, everyHours: 1 }, sled: 64 }),
+    site('summit', { hours: 8, tents: [tent('cook', 1), tent('reader', 3), tent('small', 3), tent('scout', 2), tent('sleeper', 2)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(5, 1), 3]), lanterns: 2, wicks: wicks(per(1, 3), per(1, 2)), pins: [pin(['reader'], ['sleeper']), pin(['small'], ['scout']), pin(['scout'], ['reader'])], kettle: { cups: 1, everyHours: 1 }, sled: 58 }),
+    site('summit', { hours: 8, tents: [tent('cook', 1), tent('reader', 3), tent('small', 2), tent('scout', 2), tent('sleeper', 3)], fire: fire([per(3, 2), 1], [per(5, 2), 2], [per(6, 2), 3]), lanterns: 2, wicks: wicks(per(1, 3), per(1, 2)), pins: [pin(['reader'], ['sleeper']), pin(['sleeper'], ['small']), pin(['small'], ['reader'])], kettle: { cups: 2, everyHours: 3 }, sled: 48 }),
+    site('summit', { hours: 7, tents: [tent('cook', 1), tent('reader', 3), tent('small', 3), tent('scout', 2)], fire: fire([per(2, 1), 1], [per(3, 1), 2], [per(4, 1), 3]), lanterns: 2, wicks: wicks(per(1, 3), per(1, 2)), pins: [pin(['reader'], ['scout']), pin(['small'], ['reader']), pin(['scout'], ['small'])], kettle: { cups: 1, everyHours: 1 }, sled: 47 }),
   ],
 }
 
@@ -146,6 +152,13 @@ export function siteFor(position: string, variant: number): Site {
 /** The night's length with the sections the child unfolded. */
 export function nightHours(site: Site, unfolded: number): number {
   return site.hours + SECTION_HOURS * Math.max(0, Math.min(MAX_UNFOLDED, Math.trunc(unfolded) || 0))
+}
+
+/** The sides an amount card can lie on. Halved comes with the position that brings several pieces for several hours. */
+export type Side = 'halved' | 'single' | 'doubled'
+export const SIDES: readonly Side[] = ['halved', 'single', 'doubled']
+export function sidesAt(site: Site): Side[] {
+  return LADDER.indexOf(site.position) >= LADDER.indexOf('tarn') ? ['single', 'doubled', 'halved'] : ['single', 'doubled']
 }
 
 /** Which users a site holds. The fire is at every site. */

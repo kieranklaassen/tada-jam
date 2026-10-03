@@ -77,3 +77,24 @@ export function strip(amount: Amount, nightHours: number): { hours: number; piec
   for (let n = 1; (n - 1) * amount.hours < nightHours; n++) rows.push({ hours: n * amount.hours, pieces: n * amount.pieces })
   return rows
 }
+
+/** How much of its card one stamp lays: a half, the card as it is, or two of it. Kept as halves so the sums stay whole. */
+export const HALVES = { halved: 1, single: 2, doubled: 4 } as const
+
+/**
+ * The strip as it is stamped, side by side: each stamp lays its card halved,
+ * single or doubled, and the totals run on from the stamp before. A stamp is
+ * laid only if it starts inside the night, so the list is cut at the first
+ * one that would start at dawn or after. Under a halved card a total may be a
+ * whole number and a half.
+ */
+export function stampedStrip(amount: Amount, sides: readonly (keyof typeof HALVES)[], nightHours: number): { hours: Fraction; pieces: Fraction }[] {
+  const rows: { hours: Fraction; pieces: Fraction }[] = []
+  let halves = 0
+  for (const side of sides) {
+    if (halves * amount.hours >= 2 * nightHours) break
+    halves += HALVES[side]
+    rows.push({ hours: fraction(halves * amount.hours, 2), pieces: fraction(halves * amount.pieces, 2) })
+  }
+  return rows
+}

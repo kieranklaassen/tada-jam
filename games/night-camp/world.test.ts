@@ -73,7 +73,7 @@ describe('the number ranges of the design sheet', () => {
       }
       if (site.kettle) expect(site.kettle.cups * site.tents.length * Math.ceil(site.hours / site.kettle.everyHours), name(site)).toBeLessThan(100)
     }
-    expect(nightHours(SITES.summit[0], MAX_UNFOLDED)).toBe(12 + MAX_UNFOLDED * SECTION_HOURS)
+    expect(nightHours(SITES.saddle[2], MAX_UNFOLDED)).toBe(12 + MAX_UNFOLDED * SECTION_HOURS)
     expect(nightHours(SITES.meadow[0], 9)).toBe(6 + MAX_UNFOLDED * SECTION_HOURS)
     expect(nightHours(SITES.meadow[0], Number.NaN)).toBe(6)
   })
@@ -121,6 +121,26 @@ describe('every site can be camped at', () => {
         expect(plan.water).toBeLessThanOrEqual(ROD_LENGTH.water)
       }
     }
+  })
+
+  it('can still be supplied from the rods with both extra sections unfolded and every dial at its highest, below 100', () => {
+    for (const site of every()) {
+      const top = normalise(site, { fire: site.fire.length - 1, lanterns: Array.from({ length: site.lanterns }, (_, i) => ({ pin: i, wick: 1 as const })) })
+      const night = runNight(site, top, MAX_UNFOLDED)
+      expect(night.hours).toBeLessThanOrEqual(16)
+      expect(night.fire.needed, `${name(site)} logs`).toBeLessThanOrEqual(ROD_LENGTH.logs)
+      if (night.lantern) expect(night.lantern.needed, `${name(site)} oil`).toBeLessThanOrEqual(ROD_LENGTH.oil)
+      if (night.kettle) {
+        expect(night.kettle.needed, `${name(site)} water`).toBeLessThanOrEqual(ROD_LENGTH.water)
+        expect(night.kettle.needed * CUPS_IN_A_CAN, `${name(site)} cups`).toBeLessThan(100)
+      }
+    }
+  })
+
+  it('brings the remainder at the kettle only from its second variant', () => {
+    const cups = (site: Site) => site.tents.length * site.kettle!.cups * Math.ceil(site.hours / site.kettle!.everyHours)
+    expect(cups(SITES.ford[0]) % CUPS_IN_A_CAN).toBe(0)
+    for (const site of SITES.ford.slice(1)) expect(cups(site) % CUPS_IN_A_CAN, name(site)).not.toBe(0)
   })
 
   it('has a sled that does not hold everything at its highest', () => {
