@@ -133,7 +133,7 @@ A wrong design is run exactly as built, and the world shows where and why.
 | `across` | Which vehicles are parked on the far bank of the newest sheet: each of its two vehicles from its crossing until it is sent home. A change to the bridge leaves them where they are. |
 | `tries` | Failed runs of the job vehicle in the newest sheet's cycle. Never shown. |
 | `laid` | For each position, how many times it has been laid out, which picks the variant. Never shown. |
-| `shown` | The ideas whose one showing has been given. |
+| `shown` | The showings that have been given: each idea whose neat way has been shown, and whether the one change has been shown. |
 
 - A part in the hand is saved where it came from. A run is a view of the saved bridge and is not saved: after a put-away in the middle of one, the vehicle stands at the near bank and the bridge is as built.
 - A scene's outcome is saved when the scene starts. No clock is read.
@@ -184,7 +184,7 @@ Levels, as the lookup prints them for science at ages 9 to 12: `grade-4` at 9 an
 The game is designed from the `cross-grade` lane and the `grade-6` lane, for the loop of testing, improving and comparing only. No `us-ca` record is named for the building principles (what makes a structure stable and sturdy): none of the four science lanes returned at these ages holds one, and nothing is named in its place. The `grade-4` and `grade-5` lanes hold no record on built structures (`us-ca 4-ESS3-2` gives a building that withstands earthquakes only as an example of a solution to a natural hazard), so no record of either is named.
 
 - `edu.us-ca.cross-grade.science.objective.3-5-ets1-3` (`us-ca 3-5-ETS1-3`) [cross-grade]: state-board-adopted-standard, confirmed. In the game: the child runs the same load over the model bridge, changes one part, runs it again, and looks at where it gave to find what to improve.
-  Limits taken: a band record for grades 3 to 5, not one grade; the tests are fair tests with the other variables held, aimed at finding what to improve. Left open by Limits: the load, the material and the kind of structure, which are the game's own choice.
+  Limits taken: a band record for grades 3 to 5, not one grade; the tests are fair tests with the other variables held, aimed at finding what to improve. Not in Limits: the load, the material and the kind of structure, which are the game's own choice.
 - `edu.us-ca.cross-grade.science.objective.3-5-ets1-2` (`us-ca 3-5-ETS1-2`) [cross-grade]: state-board-adopted-standard, confirmed. In the game: the child keeps two or three designs for one gap as tracings, lays one over another and picks which to build before any run.
   Limits taken: a band record for grades 3 to 5; the comparison is by how well each design is expected to do, and building and testing are not in this record. Only the choice made before a run rests on it.
 - `edu.us-ca.grade-6.science.objective.ms-ets1-engineering-design-ms-ets1-2` (`us-ca MS-ETS1-2`): state-board-adopted-standard, confirmed. In the game: a tracing laid on the board is run under the same load at the same place as the bridge, so two designs are judged by one fixed procedure.
@@ -215,10 +215,10 @@ Named in the brief and not used: `nl ojw/nattech/2/04/fase3` (it names four forc
 
 ### Where the two differ
 
-- **What is named.** The `nl` fase 2 and fase 3 records name the content: principles that make a construction stable and sturdy, a bridge among the examples. The `us-ca` records name only the design process and hold no record on structures at these ages. The game follows `nl` for what the kit shows (the triangle, the profile, the arch, the wide base, the tube) and `us-ca` for the loop (test fairly, look at the failure, improve, compare designs).
+- **What is named.** The `nl` fase 2 and fase 3 records name the content: principles that make a construction stable and sturdy, a bridge among the examples. The `us-ca` records named here name only the design process, and no `us-ca` record is named for structures. The game follows `nl` for what the kit shows (the triangle, the profile, the arch, the wide base, the tube) and `us-ca` for the loop (test fairly, look at the failure, improve, compare designs).
 - **Where the levels change.** As the lookup prints them, `us-ca` returns `grade-4` or `grade-5` at 9, 10 and 11, where the records used are the cross-grade band for grades 3 to 5, and `grade-6` at 11 and 12, whose engineering records hold for grades 6 to 8; `nl` returns `fase-2` at 9 and 10 and `fase-3` at 10, 11 and 12. The two change at different ages and neither names one year. The game follows neither change: nothing in it turns on a level, and the first-visit default at 11 is the game's own choice.
 - **Comparing two designs.** `us-ca` names the fair test for grades 3 to 5 and the judging of rival designs by one procedure for grades 6 to 8. Of the `nl` records named here, the fase 2 ones name investigating and making; designing and the comparing experiment are named at fase 3. The game follows `us-ca` here: testing one change under the same load, and comparing by tracing, are open at every age, and nothing in the designed order holds the trolley or the tracing back.
-- **Not carried by either.** No record of either jurisdiction ties a force to a structure, and none names tension, compression, a beam, a cable or a prop. Those are in the game's model as its own choice and in no claim.
+- **Not carried by either.** None of the ten records the game is designed from ties a force to a structure, and none names tension, compression, a beam, a cable or a prop. Those are in the game's model as its own choice and in no claim.
 
 ### The claim
 
