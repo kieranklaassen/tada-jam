@@ -3,9 +3,9 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
-- Look in use: none yet.
-- Open: the design sheet in `ART.md` and its check.
+- Stage: sheet, being written (first two headings done). This run covers the sheet, the look spike and the rules; the toy waits for the template version the canvas pilot proves.
+- Look in use: none yet. First reserved look: comic-book halftone.
+- Open: the rest of the design sheet in `ART.md`, then its check.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
