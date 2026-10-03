@@ -21,7 +21,8 @@ export function voiceOf(notes: readonly Note[], make: Makers = { tone, noise }):
   }
 }
 
-/** The voice of a thing that happened: its id, the length it is about, and a count where it counts something. */
-export function voiceFor(id: VoiceId, length?: number, count?: number): Voice {
-  return voiceOf(notesOf(id, length, count))
+/** The voice of a thing that happened: its id, the length it is about, a count where it counts something, and seconds to wait before it starts. */
+export function voiceFor(id: VoiceId, length?: number, count?: number, delay = 0, make?: Makers): Voice {
+  const notes = notesOf(id, length, count)
+  return voiceOf(delay > 0 ? notes.map((note) => ({ ...note, after: (note.after ?? 0) + delay })) : notes, make)
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { NOISE_Q, voiceOf } from './sound'
+import { NOISE_Q, voiceFor, voiceOf } from './sound'
 import { VOICES, notesOf, type VoiceId } from './voices'
 
 type Made = { kind: 'tone' | 'noise'; args: unknown[] }
@@ -24,6 +24,14 @@ describe('the bridge from numbers to sound', () => {
     const r = recorder()
     voiceOf([{ kind: 'noise', hz: 900, peak: 0.1, attack: 0.02, length: 0.2 }], r.make)(context, out, 3)
     expect(r.made).toEqual([{ kind: 'noise', args: [3, 900, NOISE_Q, 0.1, 0.02, 0.2, undefined] }])
+  })
+
+  it('can start a whole voice late, so the cuts of one stroke sound one after another', () => {
+    const now = recorder(), late = recorder()
+    voiceFor('snick', 600, undefined, 0, now.make)(context, out, 2)
+    voiceFor('snick', 600, undefined, 0.11, late.make)(context, out, 2)
+    expect(late.made.map((one) => one.args[0])).toEqual(now.made.map((one) => (one.args[0] as number) + 0.11))
+    expect(late.made.map((one) => one.args.slice(1))).toEqual(now.made.map((one) => one.args.slice(1)))
   })
 
   it('plays every note of every voice, and adds none', () => {

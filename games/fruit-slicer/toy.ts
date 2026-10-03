@@ -88,7 +88,8 @@ export function slice(game: Game, a: Point, b: Point, stroke: Stroke): { game: G
   const met: { t: number; id: number; x: number; y: number; h: number; at: number }[] = []
   for (const { piece, box } of shown(game.world)) {
     const mid = box.y + box.h / 2
-    if ((a.y - mid) * (b.y - mid) >= 0) continue
+    // A step that ends exactly on the line has crossed it; the next step, which starts there, has not.
+    if (a.y < mid === b.y < mid) continue
     const t = (mid - a.y) / (b.y - a.y)
     const x = a.x + t * (b.x - a.x)
     if (x >= box.x && x <= box.x + box.w) met.push({ t, id: piece.id, x, y: mid, h: box.h, at: (x - box.x) / PX })

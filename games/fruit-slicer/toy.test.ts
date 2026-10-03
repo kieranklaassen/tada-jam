@@ -25,6 +25,17 @@ describe('a stroke', () => {
     expect(total(straight.game)).toBe(WHOLE.long)
   })
 
+  it('cuts once when a step of the stroke ends exactly on the middle line', () => {
+    const x = X0 + 600 * PX
+    const first = slice(game, { x, y: NEAR - 40 }, { x, y: NEAR }, newStroke())
+    expect(first.stroke.cuts).toBe(1)
+    const second = slice(first.game, { x, y: NEAR }, { x, y: NEAR + 40 }, first.stroke)
+    expect(second.stroke.cuts).toBe(1)
+    // And coming up from below, the same.
+    const up = slice(game, { x, y: NEAR + 40 }, { x, y: NEAR }, newStroke())
+    expect(slice(up.game, { x, y: NEAR }, { x, y: NEAR - 40 }, up.stroke).stroke.cuts).toBe(1)
+  })
+
   it('does nothing to a fruit it does not cross', () => {
     const beside = slice(game, { x: X0 + 100, y: NEAR - 80 }, { x: X0 + 300, y: NEAR - 40 }, newStroke())
     expect(beside.events).toEqual([])
