@@ -87,6 +87,14 @@ export function rackSlot(count: number, x: number, y: number): number {
   return -1
 }
 
+/** How long the oldest sheet takes to slide off the end of the rack when a seventh is unrolled, in seconds. */
+export const SLIDE_OFF = 0.8
+/** Where that sheet is on its way: from the place beyond the oldest, along the rack to its end, and down off it, fading. `count` is how many sheets hang there now. */
+export function slideOff(since: number, count: number): { x: number; y: number; fade: number } {
+  const t = Math.max(0, Math.min(1, since / SLIDE_OFF)), [x, y] = rackAt(-1, count)
+  return { x: x - 1.4 * t * t, y: y - 0.9 * t * t * t, fade: 1 - t * t }
+}
+
 /** The two tools that lie beside the tray on every sheet: the test trolley with its weights, and the tracing paper. */
 export type Tool = 'trolley' | 'tracing'
 export type ToolBay = { tool: Tool; x0: number; x1: number }

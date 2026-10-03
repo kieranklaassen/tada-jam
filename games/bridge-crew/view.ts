@@ -6,7 +6,7 @@ import { vehicle } from './fleet'
 import type { Game } from './game'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { key, length, samePoint, type Kind, type Part, type Point } from './kit'
-import { ROLL, TRAY, bays, parkAt, rackAt, tools, waitAt } from './layout'
+import { ROLL, SLIDE_OFF, TRAY, bays, parkAt, rackAt, slideOff, tools, waitAt } from './layout'
 import { INK, THICK, pin, stream, string, wood, woodShadow, type Pen, type Wood } from './look'
 import { stringSway } from './motion'
 import { WATER, ends } from './pose'
@@ -252,7 +252,15 @@ export class View {
     // The models are drawn large enough to read from across the sheet: a cell and a half to the model's own cell.
     if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * 1.5, cy, cell * 1.9, t >= 0.5, span(0.34, 0.46), stream(12))
     else if (showing && 'differences' in showing) compareModels(pen, showing.differences, cx + cell * 1.4, cy, cell * 1.35, t >= 0.5, t < 0.5 ? span(0.2, 0.34) : span(0.62, 0.76), stream(12))
-    else if (toy.marginModel) ideaModel(pen, toy.marginModel, cx + cell * 1.5, cy, cell * 1.9, true, 0, stream(12))
+    else if (toy.marginModel) {
+      // Pressed, it gives a little on its ledge; plucked, it shakes from side to side and dies away.
+      const rung = toy.modelRung, shake = rung < RING ? 0.06 * Math.exp(-rung / 0.2) * Math.sin(2 * Math.PI * 16 * rung) : 0
+      pen.save()
+      pen.translate(cx + cell * (1.5 + shake), cy)
+      if (hand?.what === 'model') pen.scale(1.03, 0.9)
+      ideaModel(pen, toy.marginModel, 0, 0, cell * 1.9, true, 0, stream(12))
+      pen.restore()
+    }
     else chiefModel(pen, cx + cell * 1.2, cy, cell * 1.1, stream(12))
     // While it shows something, corner marks round its models lead the eye to the margin.
     if (showing && (toy.chief.act === 'shows' || toy.chief.act === 'compares')) this.brackets(pen, [cx + cell * 1.05, cy - cell * 2.5], [cx + cell * 4.7, cy + cell * 0.25], 0.55 + 0.35 * Math.sin(toy.seconds * 4))
@@ -390,6 +398,14 @@ export class View {
       const [x, y] = at2(...rackAt(index, count))
       roll(pen, x, y + cell * 0.7, cell * 1.3, cell * 0.6)
       if (index === game.save.on) this.brackets(pen, [x - cell * 0.42, y - cell * 0.75], [x + cell * 0.42, y + cell * 0.8], 0.9)
+      drawn++
+    }
+    // The oldest sheet, when a seventh was unrolled: it slides off the end of the rack and is gone.
+    if (game.slidOff < SLIDE_OFF) {
+      const off = slideOff(game.slidOff, count), [x, y] = at2(off.x, off.y)
+      pen.globalAlpha = off.fade
+      roll(pen, x, y + cell * 0.7, cell * 1.3, cell * 0.6)
+      pen.globalAlpha = 1
       drawn++
     }
     return drawn

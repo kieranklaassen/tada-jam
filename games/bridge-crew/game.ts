@@ -1,6 +1,7 @@
 import { consequence } from './consequence'
-import { length, type Part } from './kit'
-import { TROLLEY_REACH, onRoll, onVehicle, parkAt, rackSlot, toolAt, tracingSpot, waitAt } from './layout'
+import { layPart } from './grid'
+import { length, pinsOf, samePoint, type Part, type Point } from './kit'
+import { PART_REACH, PIN_REACH, SLIDE_OFF, TROLLEY_REACH, farFromStretch, gridPointAt, onRoll, onVehicle, parkAt, rackSlot, toolAt, touched, tracingSpot, waitAt } from './layout'
 import { modelInMargin, nearestDifferences, neatWayDue, oneChangeDue, type Difference } from './order'
 import { DRAWN_DIP, atRest, rests, type Rest } from './pose'
 import { answerOf, between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
@@ -11,9 +12,9 @@ import { Scene } from './scene'
 import { groundAt } from './sheet'
 import { isFooting, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, givePlace, idleShow, type Cue, type Show } from './stage'
-import { RING, Toy } from './toy'
+import { CHIEF, RING, Toy } from './toy'
 import { TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
-import { bargeHorn, chiefTaps, chord, creak, give, gurgle, honk, plop, lay as layVoice, pendulum, pinTick, reactVoice, restore, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
+import { bargeHorn, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, pendulum, pinTick, pluck as pluckVoice, reactVoice, restore, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
 
 // The game on the toy: the vehicles at the two banks, a run over the bridge,
 // the two scenes a run ends in, and the sheets (the roll and the rack). Pure,
@@ -35,6 +36,31 @@ export type Drive = {
 const longOf = (id: VehicleId): number => Math.max(...VEHICLES[id].axles)
 /** How tall each vehicle stands with its load, in cells: what a touch on it can reach. */
 const TALL: Readonly<Record<VehicleId, number>> = { 'post-van': 2.1, 'jelly-truck': 1.9, 'piano-mover': 2.2, 'giraffe-bus': 3.3, 'caterpillar-bus': 1.6 }
+
+/** Where the small model stands in the margin, beside the chief, in cells: a touch in this box means the model. */
+export const MODEL = { x0: CHIEF.x + 1.55, x1: CHIEF.x + 4.6, y0: CHIEF.y - 0.2, y1: CHIEF.y + 2.3 } as const
+
+/**
+ * A whole arch over a stretch of the river: three or more firm parts, none a
+ * thread, pinned end to end in a curve from one footing to another, rising
+ * from the first and falling to the last and bending the same way at every
+ * joint, with every joint in the air, and with both feet outside the stretch.
+ */
+export function wholeArch(bridge: readonly Part[], firm: readonly boolean[], footing: (point: Point) => boolean, over: readonly [number, number]): boolean {
+  type Piece = { to: Point; slope: number }
+  const onward = (from: Point): Piece[] => bridge.flatMap((part, index) => {
+    if (!firm[index] || part.kind === 'thread' || part.loose) return []
+    const [a, b] = pinsOf(part), other = samePoint(a, from) ? b : samePoint(b, from) ? a : null
+    return other && other[0] > from[0] ? [{ to: other, slope: (other[1] - from[1]) / (other[0] - from[0]) }] : []
+  })
+  const climb = (at: Point, slope: number, pieces: number): boolean => onward(at).some((piece) => {
+    if (piece.slope >= slope) return false
+    if (footing(piece.to)) return pieces >= 2 && piece.slope < 0 && piece.to[0] >= over[1]
+    return climb(piece.to, piece.slope, pieces + 1)
+  })
+  const feet = bridge.flatMap((part) => pinsOf(part)).filter((point) => footing(point) && point[0] <= over[0])
+  return feet.some((foot) => onward(foot).some((first) => first.slope > 0 && !footing(first.to) && climb(first.to, first.slope, 1)))
+}
 
 export class Game extends Toy {
   drive: Drive | null = null
@@ -59,6 +85,9 @@ export class Game extends Toy {
   showing: { idea: Idea } | { differences: Difference[] } | null = null
   /** How the barge took the last crossing, on a sheet where one passes underneath: what it does during that crossing's scene. */
   bargeTook: Reaction | null = null
+  /** Seconds since the oldest sheet slid off the end of the rack, and since the model in the margin was plucked. Short-lived: not saved. */
+  slidOff = Infinity
+  modelRung = Infinity
   /** A hat the chief has plucked off a part and wears until the next sheet is unrolled. Short-lived: not saved. */
   chiefHat = false
   private owed: Idea | null = null
@@ -204,7 +233,37 @@ export class Game extends Toy {
     if (this.save.next && onNewest(this.save) && onRoll(this.at, x, y)) { this.hand = { what: 'roll' }; this.voices.push(unrollVoice(0)); return }
     const slot = this.save.sheets.length > 1 ? rackSlot(this.save.sheets.length, x, y) : -1
     if (slot >= 0) { this.hand = { what: 'rack', index: slot }; this.voices.push(unrollVoice(0)); return }
+    // The model in the margin gives under a finger with a creak, like the bridge it is a model of.
+    if (this.marginModel && x >= MODEL.x0 && x <= MODEL.x1 && y >= MODEL.y0 && y <= MODEL.y1) { this.hand = { what: 'model' }; this.voices.push(creak(0.35)); return }
+    const traced = this.tracedAt(x, y)
+    if (traced !== null) {
+      const part = sheet.tracings[this.laidTracing!][traced]
+      this.hand = { what: 'traced', index: traced }
+      this.voices.push(snapTick(part.kind, length(part)))
+      return
+    }
     super.press(x, y)
+  }
+
+  /**
+   * The part of the laid tracing under a touch that the bridge does not have:
+   * a tap on it copies that one part onto the bridge. A touch on a pin or on a
+   * part of the bridge itself means that pin or that part, as ever.
+   */
+  private tracedAt(x: number, y: number): number | null {
+    const tracing = this.laidTracing === null ? null : this.save.sheets[this.save.on].tracings[this.laidTracing]
+    if (!tracing) return null
+    const grid = gridPointAt(this.at, x, y), own = touched(this.at, this.bridge, this.drawn(), x, y)
+    if ((grid && grid.far <= PIN_REACH) || (own && 'part' in own)) return null
+    const same = (a: Part, b: Part) => a.kind === b.kind && ((samePoint(a.a, b.a) && samePoint(a.b, b.b)) || (samePoint(a.a, b.b) && samePoint(a.b, b.a)))
+    let found: number | null = null, far = PART_REACH
+    tracing.forEach((part, index) => {
+      const rest = this.tracingRest[index]
+      if (!rest || this.bridge.some((built) => same(built, part))) return
+      const d = farFromStretch(x, y, rest.a, rest.b)
+      if (d <= far) { far = d; found = index }
+    })
+    return found
   }
 
   override tap(): void {
@@ -220,7 +279,26 @@ export class Game extends Toy {
     }
     if (hand?.what === 'trolley') { this.hand = null; this.tapTrolley(hand.placed); return }
     if (hand?.what === 'tracing') { this.hand = null; this.tapTracing(hand.spot); return }
-    if (hand?.what === 'roll') { this.hand = null; this.chiefHat = false; this.turn(unroll(this.save)); return }
+    if (hand?.what === 'roll') {
+      this.hand = null
+      this.chiefHat = false
+      const had = this.save.sheets
+      this.turn(unroll(this.save))
+      // The rack was full: the oldest sheet slides off its end, in view.
+      if (this.save.sheets.length === had.length && this.save.sheets[0] !== had[0]) this.slidOff = 0
+      return
+    }
+    if (hand?.what === 'model') { this.hand = null; this.modelRung = 0; this.voices.push(pluckVoice('stick', 0.5, 0.8, false)); return }
+    if (hand?.what === 'traced') {
+      this.hand = null
+      const tracing = this.laidTracing === null ? null : this.save.sheets[this.save.on].tracings[this.laidTracing], part = tracing?.[hand.index]
+      if (!part) return
+      // One part of the tracing is copied onto the bridge, if the kit still has one of its kind.
+      const copy = layPart(this.bridge, { kind: part.kind, a: part.a, b: part.b, turned: part.turned }, this.at.kit)
+      this.voices.push(copy.result.voice)
+      if (copy.bridge.length > this.bridge.length) { this.commit(copy.bridge, this.bridge.length); this.compare() }
+      return
+    }
     if (hand?.what === 'rack') { this.hand = null; if (hand.index !== this.save.on) this.turn(turnTo(this.save, hand.index)); return }
     super.tap()
   }
@@ -365,6 +443,8 @@ export class Game extends Toy {
   override step(dt: number): void {
     this.sceneClock += dt
     this.trolleyRung += dt
+    this.modelRung += dt
+    this.slidOff = this.slidOff < SLIDE_OFF ? this.slidOff + dt : Infinity
     if (this.trolleyRolled && (this.trolleyRolled.since += dt) > 0.7) this.trolleyRolled = null
     if (this.trolleyFell && (this.trolleyFell.since += dt) > 1.1) this.trolleyFell = null
     if (this.showing && 'differences' in this.showing && this.chief.act !== 'compares') this.showing = null
@@ -459,6 +539,8 @@ export class Game extends Toy {
       this.bridge.forEach((_, index) => { this.rung[index] = 0.2 })
     }
     if (what === 'react' && this.show.reaction) this.voices.push(reactVoice(drive.vehicle, this.show.reaction.mood), ...(this.bargeTook ? [bargeHorn(this.bargeTook.mood === 'like')] : []))
+    // A secret: under a whole arch the barge's toot comes back as a chord.
+    if (what === 'react' && this.at.channel && this.bargeTook?.mood === 'like' && wholeArch(this.bridge, this.frame.firm, isFooting(this.at), this.at.channel)) this.voices.push(hornEcho)
     if (what === 'arrive') this.voices.push(unrollVoice(1))
     if (what === 'restore') this.voices.push(restore)
   }

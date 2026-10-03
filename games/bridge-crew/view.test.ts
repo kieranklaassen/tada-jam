@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { IdleLadder } from './guidance'
 import { stream, type Pen } from './look'
-import { CROSSINGS } from './bridges.fixture'
-import { tools, waitAt } from './layout'
+import { CROSSINGS, part } from './bridges.fixture'
+import { RAIL_TILT, reactPose } from './acts'
+import { vehicle } from './fleet'
+import { MODEL } from './game'
+import { ROLL, TRAY, bays, tools, waitAt } from './layout'
 import { edit, freshSave } from './save'
 import { Game } from './game'
 import { View, demoMove } from './view'
@@ -133,6 +136,61 @@ describe('the toy drawn', () => {
     tapAt(river, waitAt(river.at, 0) - 0.4, 7); play(river, 16)
     expect(river.bargeTook).toMatchObject({ mood: 'dislike' })
     expect(river.show.kind).toBeNull()
+  })
+
+  it('draws what the sheet says a child sees with real numbers: the lean, the V of a thread, the rail, the model pressed and plucked, the sheet leaving the rack, the driver on foot', () => {
+    const { pen, calls, canvas } = recording()
+    const view = new View(1, canvas)
+    view.size(1180, 820, 2, true)
+    const ladder = new IdleLadder(0)
+    let clock = 0
+    const play = (game: Game, seconds: number) => {
+      let most = 0
+      for (let i = 0; i < seconds * 30; i++) {
+        game.step(1 / 30); clock += 1 / 30
+        calls.length = 0
+        view.draw(pen, game, ladder.update(clock))
+        for (const n of numbers(calls)) if (!Number.isFinite(n)) throw new Error(`a number that is not real at ${clock.toFixed(2)} s`)
+        most = Math.max(most, calls.length)
+      }
+      return most
+    }
+    const tapAt = (game: Game, x: number, y: number) => { game.press(x, y); game.tap() }
+    const drag = (game: Game, a: [number, number], b: [number, number]) => { game.press(...a); game.dragStart(); game.dragMove(...b); game.dragEnd() }
+    const pile = (game: Game, kind: string) => { const bay = bays(game.at).find((b) => b.kind === kind)!; tapAt(game, (bay.x0 + bay.x1) / 2, TRAY.top - 1) }
+    // A thread from lip to lip, and a vehicle sent onto it: the V, the water, the paddle home.
+    const rope = new Game(freshSave(null, 'high-thread'), stream(4))
+    pile(rope, 'thread'); drag(rope, [8, 6], [16, 6])
+    tapAt(rope, waitAt(rope.at, 0) - 0.4, 7); play(rope, 1.2)
+    expect(rope.dipPoint()).not.toBeNull()
+    play(rope, 6)
+    // A rail of short sticks held from the banks, ridden by the van; and a part being laid beside what is built.
+    const rail = new Game(edit(freshSave(null), [part('stick', 10, 6, 11, 6), part('stick', 11, 6, 12, 6), part('stick', 12, 6, 13, 6), part('stick', 13, 6, 14, 6), part('stick', 11, 6, 10, 5), part('stick', 12, 6, 10, 4), part('stick', 13, 6, 14, 5)]), stream(4))
+    rail.press(14, 6); rail.dragStart(); rail.dragMove(13.2, 8.1); play(rail, 0.5)
+    expect(rail.leaning).toBeGreaterThan(0.9)
+    rail.dragEnd(); play(rail, 1)
+    tapAt(rail, waitAt(rail.at, 0) - 0.4, 7); play(rail, 1)
+    expect(rail.seatNow()?.rail).toBeGreaterThan(0)
+    play(rail, 12)
+    expect(rail.across).toContain('post-van')
+    // The rack full, and a seventh sheet unrolled.
+    const base = freshSave(null), full = new Game({ ...base, sheets: Array.from({ length: 6 }, () => ({ ...base.sheets[0] })), on: 5, next: { site: 'rock-prop', variant: 0 } }, stream(3))
+    tapAt(full, ROLL.x - 0.3, full.at.right[1] + 1.5)
+    expect(full.slidOff).toBe(0)
+    const leaving = play(full, 0.3), gone = (play(full, 1.5), play(full, 0.2))
+    expect(leaving).toBeGreaterThan(gone)
+    // The model in the margin, pressed and then plucked.
+    const shown = new Game({ ...freshSave(null), shown: ['profile'] }, stream(5))
+    expect(shown.marginModel).toBe('profile')
+    shown.press((MODEL.x0 + MODEL.x1) / 2, (MODEL.y0 + MODEL.y1) / 2); play(shown, 0.2); shown.tap(); play(shown, 1)
+    // The van's driver, out of the cab and back: more is drawn while it is on foot.
+    const count = (t: number) => { calls.length = 0; vehicle(pen, 'post-van', 48, reactPose('post-van', { mood: 'dislike', act: 'x', amount: 1, parts: [] }, t), 0, stream(1)); for (const n of numbers(calls)) expect(Number.isFinite(n)).toBe(true); return calls.length }
+    for (let t = 0; t <= 1; t += 0.02) count(t)
+    expect(count(0.8)).toBeGreaterThan(count(0.3))
+    expect(count(1)).toBe(count(0.3))
+    // On a rail the back wheels come off the stick and never go under it.
+    expect(RAIL_TILT).toBeGreaterThan(0)
+    expect(RAIL_TILT).toBeLessThan(0.2)
   })
 
   it('maps a touch back to the grid it draws on, at any size', () => {

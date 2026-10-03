@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { CROSSINGS } from './bridges.fixture'
+import { CROSSINGS, part } from './bridges.fixture'
 import { driverAt } from './fleet'
-import { Game } from './game'
-import { ROLL, TRAY, bays, parkAt, rackAt, tools, waitAt } from './layout'
+import { Game, MODEL, wholeArch } from './game'
+import { ROLL, SLIDE_OFF, TRAY, bays, parkAt, rackAt, slideOff, tools, waitAt } from './layout'
 import { stream } from './look'
 import { WATER } from './pose'
 import { crossingTime } from './ride'
 import { deserialize, edit, freshSave, serialize } from './save'
+import { isFooting, site } from './sites'
+import { CHIEF } from './toy'
 import { VEHICLES, trainOf } from './vehicles'
+import { bargeHorn, hornEcho } from './voices'
 
 const fresh = () => new Game(freshSave(null), stream(5))
 const drag = (game: Game, from: [number, number], to: [number, number]) => { game.press(...from); game.dragStart(); game.dragMove(...to); game.dragEnd() }
@@ -399,8 +402,9 @@ describe('what the sheet says a child sees and hears', () => {
       expect(v.at[1]).toBeLessThanOrEqual(last + 1e-6)
       last = v.at[1]; lowest = Math.min(lowest, v.at[1])
     }
-    // Down to where the wheels sit in the water.
+    // Down to where the wheels sit in the water, and never under it.
     expect(lowest).toBeLessThan(WATER + 0.4)
+    expect(lowest).toBeGreaterThanOrEqual(WATER)
     steps(game, 1.2)
     expect(game.dipPoint()).toBeNull()
     steps(game, 5)
@@ -436,5 +440,142 @@ describe('what the sheet says a child sees and hears', () => {
     expect(game.show).toMatchObject({ kind: 'crossing', homeward: true })
     // Facing home it is drawn mirrored: its driver is as far the other way.
     expect(game.show.from[0] - driverAt(long, 1)).toBeLessThanOrEqual(game.at.left[0])
+  })
+
+  it('when a seventh sheet is unrolled the oldest slides off the end of the rack, in view, once', () => {
+    const base = freshSave(null), full = { ...base, sheets: Array.from({ length: 6 }, () => ({ ...base.sheets[0] })), on: 5, next: { site: 'rock-prop', variant: 0 } }
+    const game = new Game(full, stream(3))
+    expect(game.slidOff).toBe(Infinity)
+    tapAt(game, ROLL.x - 0.3, game.at.right[1] + 1.5)
+    expect(game.save.sheets).toHaveLength(6)
+    expect(game.at.id).toBe('rock-prop')
+    expect(game.slidOff).toBe(0)
+    // It goes along the rack away from the sheets that hang there, down off its end, and fades: never toward the chief's margin.
+    let last = slideOff(0, 6)
+    expect(last.x).toBeLessThan(rackAt(0, 6)[0])
+    for (let since = 0.05; since <= SLIDE_OFF; since += 0.05) {
+      const now = slideOff(since, 6)
+      expect(now.x).toBeLessThan(last.x); expect(now.y).toBeLessThan(last.y); expect(now.fade).toBeLessThan(last.fade)
+      expect(now.x).toBeGreaterThan(CHIEF.x + 6)
+      last = now
+    }
+    expect(slideOff(SLIDE_OFF, 6).fade).toBeCloseTo(0, 6)
+    steps(game, 0.4)
+    expect(game.slidOff).toBeGreaterThan(0.3)
+    expect(game.slidOff).toBeLessThan(SLIDE_OFF)
+    steps(game, 1)
+    expect(game.slidOff).toBe(Infinity)
+    // It is not saved, so a game opened again shows no sheet leaving; nor does a sheet taken back from the rack.
+    expect(JSON.stringify(stored(game))).not.toContain('slidOff')
+    expect(new Game(deserialize(stored(game), null), stream(1)).slidOff).toBe(Infinity)
+    tapAt(game, ...rackAt(0, 6))
+    expect(game.save.on).toBe(0)
+    expect(game.slidOff).toBe(Infinity)
+    // With room on the rack nothing leaves it.
+    const roomy = new Game({ ...base, next: { site: 'rock-prop', variant: 0 } }, stream(3))
+    tapAt(roomy, ROLL.x - 0.3, roomy.at.right[1] + 1.5)
+    expect(roomy.save.sheets).toHaveLength(2)
+    expect(roomy.slidOff).toBe(Infinity)
+  })
+
+  it('the model in the margin can be pressed and plucked, and the chief beside it still has its own answer', () => {
+    const game = fresh(), mx = (MODEL.x0 + MODEL.x1) / 2, my = (MODEL.y0 + MODEL.y1) / 2
+    // With no model there, the place is not the model's.
+    game.press(mx, my)
+    expect(game.hand?.what).not.toBe('model')
+    game.pressEnd()
+    drag(game, [10, 6], [14, 6])
+    send(game); steps(game, 6); send(game); steps(game, 6 + 9)
+    expect(game.marginModel).toBe('profile')
+    game.takeVoices()
+    game.press(mx, my)
+    expect(game.hand).toEqual({ what: 'model' })
+    expect(game.takeVoices()).toHaveLength(1)
+    expect(game.chief.act).not.toBe('poked')
+    expect(game.modelRung).toBe(Infinity)
+    game.tap()
+    expect(game.modelRung).toBe(0)
+    expect(game.takeVoices()).toHaveLength(1)
+    steps(game, 2)
+    expect(game.modelRung).toBeGreaterThan(1)
+    // Nothing of the bridge changed for it.
+    expect(game.bridge).toHaveLength(1)
+    game.press(CHIEF.x + 0.4, CHIEF.y + 1.2)
+    expect(game.hand).toEqual({ what: 'chief' })
+    expect(game.chief.act).toBe('poked')
+  })
+
+  it('a whole arch is three or more firm parts in a curve from footing to footing, over the whole stretch', () => {
+    const at = site('barge-below', 0), footing = isFooting(at), over = at.channel!
+    const arch = [part('stick', 7, 6, 9, 9), part('stick', 9, 9, 12, 10), part('stick', 12, 10, 15, 9), part('stick', 15, 9, 17, 6)]
+    const firm = (parts: unknown[]) => parts.map(() => true)
+    expect(wholeArch(arch, firm(arch), footing, over)).toBe(true)
+    // Not whole with a part that is not firm, with a part missing, or with a thread in it.
+    expect(wholeArch(arch, [true, true, false, true], footing, over)).toBe(false)
+    expect(wholeArch(arch.slice(0, 3), firm(arch), footing, over)).toBe(false)
+    expect(wholeArch(arch.map((p, i) => (i === 1 ? { ...p, kind: 'thread' as const } : p)), firm(arch), footing, over)).toBe(false)
+    // Two parts make a gable and no curve; a curve that bends back is no arch; nor is one that stops short of the stretch's far side.
+    const gable = [part('stick', 7, 6, 9, 9), part('stick', 9, 9, 10, 3)]
+    expect(wholeArch(gable, firm(gable), footing, [8, 9])).toBe(false)
+    const kinked = [part('stick', 7, 6, 9, 7), part('stick', 9, 7, 12, 10), part('stick', 12, 10, 15, 9), part('stick', 15, 9, 17, 6)]
+    expect(wholeArch(kinked, firm(kinked), footing, over)).toBe(false)
+    const short = [part('stick', 7, 6, 8, 8), part('stick', 8, 8, 9, 8), part('stick', 9, 8, 10, 3)]
+    expect(wholeArch(short, firm(short), footing, [7, 9])).toBe(true)
+    expect(wholeArch(short, firm(short), footing, over)).toBe(false)
+  })
+
+  it('a secret that works every time: under a whole arch the barge\'s toot comes back as a chord', () => {
+    const on = (bridge: typeof CROSSINGS['barge-below']) => new Game(edit({ ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'barge-below' }] }, bridge), stream(2))
+    const heard = (game: Game) => { const all = []; send(game); for (let i = 0; i < 60 * 9; i++) { game.step(1 / 60); all.push(...game.takeVoices()) } return all }
+    // The arch stands over the deck from lip to lip, and three posts from the deck hold its joints.
+    const arch = [...CROSSINGS['barge-below'], part('stick', 7, 6, 9, 9), part('stick', 9, 9, 12, 10), part('stick', 12, 10, 15, 9), part('stick', 15, 9, 17, 6), part('stick', 9, 6, 9, 9), part('stick', 12, 6, 12, 10), part('stick', 15, 6, 15, 9)]
+    for (const again of [0, 1]) {
+      const game = on(arch)
+      expect(game.frame.firm.every(Boolean), `time ${again + 1}`).toBe(true)
+      const voices = heard(game)
+      expect(game.save.sheets[0].crossed).toContain('post-van')
+      expect(voices.filter((voice) => voice === hornEcho)).toHaveLength(1)
+    }
+    // The same bridge without the arch: the barge toots, and nothing comes back.
+    const plain = heard(on(CROSSINGS['barge-below']))
+    expect(plain.some((voice) => JSON.stringify(voice) === JSON.stringify(bargeHorn(true)))).toBe(true)
+    expect(plain).not.toContain(hornEcho)
+  })
+
+  it('one part of a tracing laid on the board can be copied onto the bridge with a tap', () => {
+    const game = fresh(), paper = tools(game.at).find((t) => t.tool === 'tracing')!
+    drag(game, [10, 6], [14, 6]); tapAt(game, 12.5, 6.1); tapAt(game, 12.5, 6.1)
+    expect(game.bridge).toMatchObject([{ turned: true }])
+    // A tracing is kept, the plank goes back to the tray, and the tracing is laid on the bare board.
+    tapAt(game, (paper.x0 + paper.x1) / 2, TRAY.top - TRAY.tall + 0.3)
+    steps(game, 1)
+    game.press(12.5, 6.1); game.dragStart(); game.dragMove(12.5, 2); game.dragEnd()
+    expect(game.bridge).toEqual([])
+    steps(game, 1)
+    tapAt(game, paper.x0 + 0.4, TRAY.top - 0.4)
+    expect(game.laidTracing).toBe(0)
+    // A touch on a pin of the traced part is still a pin.
+    game.press(10, 6)
+    expect(game.hand?.what).toBe('pin')
+    game.pressEnd()
+    steps(game, 1)
+    game.takeChange(); game.takeVoices()
+    game.press(12.5, 6.1)
+    expect(game.hand).toEqual({ what: 'traced', index: 0 })
+    expect(game.takeVoices()).toHaveLength(1)
+    game.tap()
+    expect(game.bridge).toEqual([{ kind: 'plank', a: [10, 6], b: [14, 6], turned: true }])
+    expect(game.takeChange()).toBe(true)
+    expect(game.frame.firm).toEqual([true])
+    // The bridge has that part now: the same touch means the bridge's own part, and nothing is laid twice.
+    steps(game, 1.5)
+    game.press(12.5, 6.1)
+    expect(game.hand?.what).toBe('part')
+    game.tap()
+    expect(game.bridge).toHaveLength(1)
+    // With the tracing lifted, the place is the board's again.
+    const bare = fresh()
+    bare.press(12.5, 6.1)
+    expect(bare.hand?.what).not.toBe('traced')
   })
 })
