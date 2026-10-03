@@ -32,19 +32,48 @@ It is a pleasure with no goal because it is covering and uncovering, which a two
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+The objects are the six things that can be on a patch of the vehicle. The actions are the five things a child can do to it. Each tool does only its own job, and every cell looks and sounds different.
+
+| On the patch | Bare finger | Sponge | Hose | Cloth | Sent off like this |
+| --- | --- | --- | --- | --- | --- |
+| **Dried mud** (pale, cracked) | A knock: a thud, a crack runs across, crumbs trickle | A dry rasp: crumbs and dust, suds dribble over the top and slide off; the mud stays | It darkens from the finger outward and turns to soft mud, a hiss that becomes a gurgle | A scratch and a puff of dust; the mud stays | Plates of mud crack off on the way out and lie in a row of clods |
+| **Soft mud** (dark, wet) | A squelch and a dent that slowly fills | It lifts into brown foam that stays on the vehicle | It glistens, slumps and drips brown, and clings | It smears onto the clean paint beside it | Splats fly off the wheels; brown tyre tracks |
+| **Foam** (brown from mud, white on clean paint) | A hole pops in it, plip by plip | More foam, taller, and bubbles drift off | It slides off in rafts that sail to the drain; clean wet paint | It is pushed along onto the paint beside it; the cloth wears a foam beard | Blobs of foam peel off behind and a line of bubbles follows |
+| **Wet paint** | A squeaky wet slide, drops scatter | White foam | Water sheets off the sills, drops bounce | It dries and shines, a rising squeak | The vehicle shakes like a dog first; wet tyre lines |
+| **Dull paint** (clean, dry) | The body bounces and the metal rings | White foam | Beads of water; wet paint | It shines, with one glint | A plain toot and off |
+| **Shiny paint** | A dull fingerprint | Foam hides the shine | Fat round drops race off; wet paint | A higher squeak and a second glint; still shiny | Lamps flash, a glint runs nose to tail, a proud horn |
+
+The wrong use of each tool works and is funny: the cloth on mud paints with it, the cloth on foam pushes a beard of it about, the sponge on a shiny vehicle buries it in foam, the hose on dried mud makes it worse to look at before it is better. Each vehicle adds its own row of reactions (see the characters), and the puddle adds mud back whenever the child likes.
+
+On day 15 the child washes dried mud in the order that works (wet, soap, rinse, dry) with no wasted strokes, knows each vehicle's like and dislike and sets them off on purpose, and has found the combinations that always do the same thing, such as the sneeze that empties a tipper bed full of foam.
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+The two ideas are the order of the steps of a wash, and how a material changes when something is done to it. Both appear as the materials themselves, on a toy vehicle, with nothing standing for anything else.
+
+- **The order is in the materials, not in a rule.** Dried mud does not lift under the sponge until water has softened it. Soft mud lifts into foam under the sponge and stays on the vehicle as foam. Water carries foam away and leaves wet paint. The cloth dries wet paint and shines it. So the order wet, soap, rinse, dry is the only one in which every stroke takes the vehicle forward, and the child can see why on the patch under the finger. No tool is ever locked, greyed or refused.
+- **Every change is one the real material makes.** Water softens dried mud. Soap and rubbing lift dirt into suds. Rinsing carries suds off. Wiping dries. A cloth on wet mud smears it. The model leaves things out (a patch has one state, and it changes in one dab) and shows no change that is not real (pack: game-design, representation-before-game.md).
+- **Standing of the representation.** Washing a real thing in steps is school practice in early-years rooms. It has no trial behind it that this sheet can cite, and the research tables of the game-design pack have no row for it.
+- **Where the order of object, picture and symbol stops.** At the object. The band starts below 6, so there is no symbol stage, and the game uses no picture of a step either: no icon of a tool, no card of the order.
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No: the content is the mud, the foam, the water and the three tools, and with another subject in their place there is no game left to play.
+- **Attention.** At the moment of decision, which is taking a tool in hand, the child must look at what is on the vehicle now (dried mud, soft mud, foam, wet paint) and think about what that tool will do to it.
+- **Fun.** The skill is used in the rub itself, the most enjoyable moment of play, and play never stops for it.
+- **Guess.** A child can get a clean vehicle by trying every tool on every patch, and at two that is meant: every touch does something and none is a dead end. What trying everything cannot do is wash without the consequences of a wrong order, which stay on the vehicle to be seen: smears, foam left on, mud gone dark and still there.
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+A wrong attempt is a tool on a patch it cannot take forward. The patch shows what happened, where the finger was:
+
+- The hose on dried mud: the mud is still there, now dark and dripping. Water alone did not take it off.
+- The sponge on dried mud: crumbs and a dribble of suds, and the mud unchanged.
+- The cloth on soft mud: a brown smear on paint that was clean.
+- The cloth on foam: the foam has moved, not gone.
+- The sponge on a rinsed vehicle: foam again, to be rinsed again.
+
+The state stays. Nothing resets, nothing is taken back and no tool is refused, so the child changes one thing, another tool on the same patch, and sees the difference. A vehicle sent off half washed leaves as it is, dropping clods or trailing bubbles, and that exit is as good to watch as a shining one. Nothing buzzes, crosses, sighs or turns a sad face to the child. A vehicle's reactions are about the soap in its eyes or the cloth on its nose, never about how the wash is going.
 
 ## The designed order, and what is stored
 
