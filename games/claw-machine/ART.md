@@ -61,21 +61,84 @@ The wrong use of each: a toy on a toy makes a stack, a toy on the wrong gobbler 
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+A toy let go over a gobbler that does not take its sort is chewed and comes back.
+
+- **What happens.** The gobbler chomps once and freezes. It sticks out its tongue with the toy on it and holds the toy up beside the part of its own body that shows what it takes: a blue toy against a red flank, a car against the duck on its head. Then it spits the toy in an arc back onto the tray, where it clicks onto the nearest free studs and its neighbours hop. With the size crew the world does the same job more directly: a big toy does not go into the little gobbler's mouth and sits on its head until it slides off, and a small toy falls straight through the wide bars of the big gobbler's belly onto the tray.
+- **Where and why.** On the tongue, beside the body: the two things that do not match are held next to each other for a beat. That beat is long at the positions where an attribute is new and short afterwards, so the feedback thins once the child can do it.
+- **The state stays.** The toy is back on the tray, whole and in reach, every other toy is where it was, and every belly keeps what it holds. The child changes one thing, the gobbler, and tries again.
+- **No verdict.** The gobbler's face is about the taste of the toy and never turns to the child. There is no buzzer, no cross and no lost piece, and a spit is at least as good to watch as a gulp. A right toy is a consequence too: it is swallowed and lies with its group behind the window (pack: game-design, errors-show-as-consequences.md).
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**A cycle** is one load of toys, sorted by each of its crews in turn (one, two or three sorts of the same toys). It ends when the last toy of its last sort is swallowed.
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+**The positions**, easiest first, one new thing at a time and then combinations. The ids are the ones in `LADDER` in `config.ts`; each names a place in this game's own order.
+
+| Id | Sorts | The load | What is new |
+| --- | --- | --- | --- |
+| `two-colours` | one: two colour gobblers | 4 small toys of one kind, two of each colour | sorting, by colour |
+| `three-colours` | one: three colour gobblers | 6 small toys of one kind, two of each colour | a third group |
+| `colours-among-kinds` | one: three colour gobblers | 6 small toys in two kinds, two of each colour | an attribute to leave aside |
+| `two-kinds` | one: two kind gobblers | 6 small toys of one colour, three of each kind | sorting by kind |
+| `colours-then-kinds` | two: three colour gobblers, then two kind gobblers | 6 small toys, one of each colour in each of two kinds | the same toys a second way |
+| `two-sizes` | one: the big and the little gobbler | 6 toys of one colour and kind, three big and three small | sorting by size |
+| `kinds-then-sizes` | two: two kind gobblers, then the size gobblers | 8 toys, two kinds in two sizes, colours mixed | a second way with size |
+| `three-ways` | three, in an order that changes from load to load | 8 toys: two colours, two kinds, two sizes, one of each | three ways, and reading which way this crew goes by |
+| `three-ways-wide` | three, in a changing order | 9 toys: one of each colour in each kind, sizes mixed | the widest load, with three groups in two of its sorts |
+
+Which colours, which kinds and where the toys lie are drawn from a seed, so a return visit meets the same step in a slightly different form (pack: game-design, many-short-visits.md).
+
+**How a cycle goes.** Only a toy's first let-go into a gobbler in each sort is looked at. With P such first tries in the cycle (toys times sorts) and M of them spat back: the cycle went well when 6 × M is at most P, badly when 2 × M is at least P, and mixed otherwise. Well moves the position one step up, badly one step down, mixed leaves it; a visit put away before the cycle ends leaves it too. Nothing on screen shows the position or that it moved (pack: game-design, ordered-challenges-high-success.md).
+
+**The harder option.** When a cycle has ended, two crates stand on the ledge: the next load for the stored position, and beside it a taller one holding what the next step up would bring, which is visibly more: more toys, more kinds of toy, or more crews riding on it. The child puts the claw on either. A taller crate that goes well moves the position that one step up; one that goes mixed or badly moves nothing, so choosing the harder load never costs a step. At `three-ways-wide` there is one crate.
+
+**Who a new position lays out.** While the child works, what waits on the ledge is the next crew of the same cycle, laid out with the load when the cycle began. The crates are laid out at the moment the cycle is judged, after the position has moved, so a new position shows on the very next load and no one who waits was laid out before it.
+
+**The saved state**, every field:
+
+- `v`: the version of the shape.
+- `position`: the id of the stored position.
+- `finished`: the cycle on screen has ended; its ending stays, and nothing replays on load.
+- `cycle.from`: the id of the position this cycle was laid out from, and `cycle.harder`: whether it came from the taller crate.
+- `cycle.crews`: the cycle's crews in order, each a list of gobbler ids, and `cycle.sort`: which of them is at the tray.
+- `cycle.toys`: each toy of the load with its colour, kind and size and where it is: a place on the tray with its height in a stack, or a gobbler with its place in the belly's order.
+- `cycle.tried`: for each toy, whether its first try of this sort has been made, and `cycle.misses`: how many first tries of the cycle were spat back. Neither is ever shown.
+- `shown`: for colour, kind and size, whether the first showing of that attribute has played.
+- `crates`: when the cycle has ended, the seed and the position id of each waiting crate.
+
+Nothing is saved in the air. A toy in the jaws is saved at the place it was taken from. A toy being chewed is saved by its outcome, which is stored when the chewing starts: in the belly, or on the studs it will land on. A scene's outcome is saved when the scene starts. The claw and a lifted gobbler are not saved: on load the claw hangs at rest and every gobbler stands in its place. The largest legal state is under a kilobyte, and a test holds it under half the 64 KB cap.
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+The gobblers: eight brick-built creatures, each a mouth on legs with a clear belly window. The one visible want of each is the same and is about the scene: an open mouth turned to the tray and a belly with room in it. A gobbler's feelings are about the toy in its mouth and never about the child (pack: game-design, characters-with-opinions.md).
+
+Each takes one sort of toy, which never changes, and has one more like or dislike that never changes, so a child can learn it and try it on purpose:
+
+| Gobbler | Takes | Its way with a toy that is not its sort | Its other fixed taste |
+| --- | --- | --- | --- |
+| Red (built in red) | red toys | goes stiff, whistles like a kettle and fires the toy out, blown back a step by it | loves being lifted: kicks its legs and squeals up a scale |
+| Blue (built in blue) | blue toys | chews slowly, slowly notices, and lets the toy slide off its tongue | hates being lifted: goes rigid with its eyes shut and its teeth chattering until it is down |
+| Yellow (built in yellow) | yellow toys | gets hiccups, and the toy pops out on the third | ticklish: a brush from the passing claw sets off the hiccups too |
+| Duck-head (white, a duck on its head) | ducks | shakes its head until the toy flies out sideways | flaps its side plates when anything is carried over it |
+| Car-head (white, a car on its head) | cars | reverses fast and leaves the toy behind in the air | its wheels spin when it is lifted, and it shoots forward a little when put down |
+| Rocket-head (white, a rocket on its head) | rockets | puffs up and shoots the toy straight up, then watches it come down | stretches up tall on tiptoe when the claw rises |
+| Big (white, large) | big toys | a small toy drops through the wide bars of its belly, and it looks for it everywhere but down | sleepy: yawns hugely, and lifting it only raises it a stud before it thuds back and the tray hops |
+| Little (white, small) | small toys | a big toy will not go in and sits on its head, and it staggers about under it until it slides off | bouncy: hops to reach the claw, and spins like a top when lifted |
+
+Each gobbler arrives with one toy of its own sort already in its belly, its snack, so every group is begun and shown before the child adds to it. The snacks of one crew differ only in the attribute that crew goes by. A snack is the gobbler's own and never joins the load.
+
+Before a toy is in its mouth, every gobbler behaves the same way toward any toy: it opens wide. The taste shows only in the chewing.
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Each is a list of timed beats filled in from the state of play, and each gives way to any touch: the touch sets everything where the scene would have left it, and is then answered as a touch (pack: game-design, endings-and-short-scenes.md).
+
+- **The first showing** (5 to 8 seconds). Cause: a crew comes in that goes by an attribute whose showing has not yet played. Beats, for each gobbler in turn: it holds its snack up beside the part of its body that shows what it takes, looks from one to the other, gulps, and the snack drops into the belly window. Filled in from: which gobblers the crew has. It plays once for each attribute; on every later arrival the snacks are already in the bellies (pack: game-design, guided-discovery.md).
+- **The tip-out** (5 to 8 seconds). Cause: the claw hooks the gate of the ledge when the tray is clear and another crew of this cycle waits. Beats: each gobbler leans over and tips its toys back onto the tray in the order they went in, each clicking onto free studs with its note; the crew shuffles off one side while the waiting crew hops down on the other and lines up with open mouths. Filled in from: exactly the toys in each belly, and their order.
+- **The ending** (6 to 10 seconds). Cause: the last toy of the cycle's last sort is swallowed. Beats: half a second of quiet; then each gobbler in turn drums on its belly and its toys ring in the order they went in, low for a big toy and high for a small one, with a voice for each kind, so the tune is the order the child chose; then all of them burp at once and settle; then the crates slide onto the ledge with their crews riding. Filled in from: every belly's toys and their order.
+- **The delivery** (5 to 8 seconds). Cause: the claw is put on a crate when a cycle has ended. Beats: the old crew waddles off with its bellies rattling; the claw hoists the chosen crate over the tray and tips it, and the toys rain onto their studs; the crew that rode on it lines up; the other crate slides away. Filled in from: which crate, and its load and crews.
+
+**How a cycle ends and the next begins.** The cycle ends on the child's own last gulp. The ending then stays as long as the child likes: full gobblers breathing, crates waiting, nothing new starting and no one hurrying, complaining or looking at the child for it. The next cycle begins when the child puts the claw on a crate. On load no scene replays: the world is as the last scene left it, with whoever waited still waiting ("How a cycle restarts" in the guide).
 
 ## The records
 
