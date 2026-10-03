@@ -34,11 +34,11 @@ export const POUR = {
   /** Seconds a hop to another cup takes. */
   hopSeconds: 0.34,
   /** How far in front of the pot's middle the tea lands. The spout stops short of that, so it never hangs over the cup and hides the tea: the stream arcs the rest of the way. */
-  reach: 2.5,
+  reach: 2.75,
 } as const
 
 /** Where the pot stands to pour on a spot: to its right and a little nearer the child, so neither pot nor hand covers the cup. */
-const STATION = { x: 2.12, z: 1.325 } as const
+const STATION = { x: 2.332, z: 1.4575 } as const
 
 export type Pot = {
   /** Where its foot stands on the cloth. */

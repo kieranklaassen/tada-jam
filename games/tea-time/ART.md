@@ -200,4 +200,40 @@ Tea Time is designed from two of California's preschool and transitional kinderg
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Not part of the sheet. Written after the spike of the first reserved row, **blue-and-white glazed pottery**, on the game's real scene (`look=1` in the address) and on the toy.
+
+**What it is.** A tea table of fired, tin-glazed pottery seen from the child's side: an opaque white glaze with one small hard highlight, cobalt brushwork painted by hand under it, fine crazing, and a wall of picture tiles behind. Everything is blue and white. One warm colour, a honey gilt, is kept for what a finger can take hold of: the lip of a cup, the cane handle and knob of the pot, the tip of a spoon, the rim of a saucer, a nose, a beak, a comb. The tea is the other warm thing on the table, and it is what the child reads. The guests are glazed figurines come to life.
+
+**Palette.**
+
+| Use | Colour |
+| --- | --- |
+| Glaze, the white of every piece | `#f4f6fa`, shaded to `#8d9dbb` |
+| Cobalt, the brushwork and the rings | `#1d3f9e`, with a wash of `#6f8fd6` |
+| Gilt, what can be touched | `#e3a23f` |
+| Tea | `#c06f24`, lit to `#d98a34`, `#8c4a12` where it meets the wall of a cup |
+| The cloth | `#4a6eb0`, plain |
+| The sponge | `#e6b545`, matte |
+
+**Materials.** One material draws all the pottery: a matcap of a glazed ball painted at load, the brushwork atlas as its map, and vertex colours for a ring, a gilt lip or a warm knob. The material keeps the matcap's hot spot white over whatever is painted under it, which is what makes cobalt read as under the glaze and not as blue plastic. The sponge has a second, matte matcap. Tea, puddles, the cloth and the wall are unlit. Nothing is fetched: the matcaps, the atlas (1024 square) and the sheet of tiles are drawn on canvases from a seeded stream, so every load paints the same strokes (`glaze.ts`, `atlas.ts`).
+
+**Forms.** Every glazed piece is a profile turned on a lathe (`forms.ts` holds the numbers, `pieces.ts` and `props.ts` turn them). The pot has a tapered spout and a cane handle over the top. A guest is a painted body, a head that turns on it, bead eyes that blink and one part of its own (`figurines.ts`). A small guest sits on a pottery stool so its face clears the table.
+
+**The working objects stay plain.** The inside of a cup is white and carries at most one cobalt ring; the tea is one flat amber disc; the cloth has no pattern. Brushwork is on the outside of the pot, the rim of a saucer, the guests and the wall, never where an amount is read.
+
+**Lighting.** There are no lights and no shadow maps. The matcap is lit from the upper left; the wall is shaded a little toward the table so the guests stand clear of it; the cloth is a little lighter in the middle. Each piece has a soft blob shadow on the cloth, all in one instanced draw. There is no post pass.
+
+**The camera.** Fixed, above and in front, 27 degrees of view, pitched about 46 degrees down, far enough that the whole table fits the width of the surface (or its depth, on a tall one). It is steep enough that the tea in a wide cup can be seen from the first drop, and a cup's wall hides none of the disc from half a cup up.
+
+**Motion rules.**
+
+- Pottery is hard. A piece that is touched squashes a little and rings back on a stiff spring; it never bends.
+- The pot is heavy: it rises as it tips, its lid chatters while the tea runs and drops home with a click, and it lands with a knock.
+- Tea is the soft thing. The stream falls from the spout and is not suddenly there, it wavers, a drop is longer than it is wide, and a landing rings the surface.
+- A pot in the hand or in a hop rides above everything on the table; it never passes through a cup.
+- A guest breathes, blinks and looks from its cup to the pot in its own tempo: the Bear slow, the Mouse quick, the Hen in jerks. Their reactions come with the game.
+- Nothing moves when the game is unattended or hidden.
+
+**Tiers** (`config.ts`). A tier sets the pixel ratio: 2, 1.5, 1.25, 1. The lathe turns each form in 40, 32, 24 or 20 slices by the tier the game starts on. Every tier keeps the glaze, the brushwork, the shadows and the tea, so the lowest still looks like the game.
+
+**What a still on this machine can and cannot say.** The stills behind this section were drawn in software, with the clock paused before load and stepped. They show layout, silhouettes, colour and that the tea reads. They say nothing about frame rate. The look scene draws 36 calls and about 32,000 triangles; the toy draws 8 to 13 calls.
