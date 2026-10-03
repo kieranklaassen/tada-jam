@@ -148,23 +148,55 @@ A scene is a list of timed beats over a handful of poses joined by springs, buil
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+Read from the education pack with `npm run -s education:find` on 2026-10-03, once for each jurisdiction. The two lists are separate, and no record of one stands for a record of the other.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels, as the lookup prints them for mathematics and for practical life and feelings: at age 4, `preschool-tk`, in both of its printed age ranges (Early, 3 to 4 ½ years, and Later, 4 to 5 ½ years); at age 5, `preschool-tk` in its Later range and `kindergarten`; at age 6, `kindergarten` and `grade-1`. Age mapping: official. At ages 5 and 6 the lookup also returns the subject's `cross-grade` lane, labelled cross-grade: its statements hold for every grade, not for this age in particular. Gap: none printed at these ages.
+
+The game is designed from `preschool-tk` and `kindergarten`. It names no `grade-1` record: the measurement records of that grade are about length, time and data, and none is about how much a container holds.
+
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-1` (`us-ca 3.1`, Mathematics, Strand 3.0, of the preschool and transitional kindergarten foundations): department-published-foundation, confirmed. In the pack's Summary: at the earlier age a child shows awareness that things can be compared in how much they hold, among other attributes, and at the later age compares two objects on one of these attributes and communicates what the comparison shows.
+  Limits taken: capacity is one of the three attributes named, and the game uses that one. Earlier age: awareness, with no procedure asked, so the game only puts cups of different sizes in the child's hands. Later age: two objects, as at `twins` and `whose-cup`. No units, numbers or measuring tools. Left open by Limits: how the two are compared. Side by side and by tipping one cup into the other are the game's own choice.
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-3-0-measurement-and-data-3-2` (`us-ca 3.2`, same strand): department-published-foundation, confirmed. In the pack's Summary: a child puts objects in order by length or by another attribute, and capacity is one of the others named as examples.
+  Limits taken: a few objects at the earlier age, three in the example, and slightly more at the later age. Capacity is an example attribute. No units or numbers. The game uses three cups, at `three-cups`. Left open by Limits: which way the order runs. Smallest at the left is the game's own choice.
+- `edu.us-ca.kindergarten.mathematics.objective.k-md-2` (`us-ca K.MD.2`): state-board-adopted-standard, confirmed. In the pack's Summary: the child puts two objects against each other to compare them on a measurable feature they share and finds which one has more of it and which has less.
+  Limits taken: exactly two objects, compared directly on one shared feature, with no units, rulers or numbers. Three or more in order is not in the statement. The statement's own example is height. Left open by Limits: the feature. How much tea is in a cup (`twins`) and how much a cup holds (`whose-cup`) are the game's own choice.
+- `edu.us-ca.kindergarten.mathematics.objective.k-cc-6` (`us-ca K.CC.6`): state-board-adopted-standard, confirmed. In the pack's Summary: looking at two groups of things, the child tells whether the first holds more, fewer, or just as many as the second, and pairing things off one against one is named as an example way to find out.
+  Limits taken: the comparison is between groups of objects, and matching is an example way. Groups of as many as ten are included; the game's groups are at most four, which is its own choice. The game uses this for one thing only: a saucer and a spoon for each guest.
+- `edu.us-ca.cross-grade.practical-life-feelings.objective.early-elementary-2-h-1` (`us-ca 2.H.1`, Early Elementary) [cross-grade]: voluntary-guidance, confirmed. In the pack's Summary: in the Early Elementary band, a child, with guidance, keeps order in the places they use and among their own things.
+  Limits taken: it is voluntary guidance, not an adopted standard; its band is tied to no grade; the child does this with guidance, which in the game is a guest who lays a place first and guests who put their things back. Left open by Limits: which places and things, and how tidy. The tea table, with a saucer, a cup and a spoon at each place, is the game's own choice.
+
+Pouring up to a painted ring, which is what the child does at the first six positions, has no California record of its own in the pack: these records are about comparing and ordering, and none is about filling a container to a level. Keeping things in their place has no record in the `preschool-tk` lane: `us-ca 2.H.1` is returned only from age 5, beside kindergarten.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels, as the lookup prints them for both subjects: at age 4, `peuters` (up to the fourth birthday, returned for a child who has only just turned four) and `fase-1`, sub-band groep 1; at age 5, `fase-1`, groep 1 or groep 2; at age 6, `fase-1`, groep 2 or groep 3. Age mapping: convention. From age 4 the lookup also returns the subject's `einde-po` lane, labelled end-of-primary goals; the game names no record from it. Gap: none printed at these ages.
+
+The game is designed from `fase-1`, and from `peuters` for a child who has only just turned four.
+
+- `edu.nl.fase-1.mathematics.objective.9de7e388-f85c-4ef6-9fbd-d5911b20db6a` (`nl rw/m/3/02/fase1`): curriculum-institute-guidance, confirmed. In the game's words: working with the ideas around how much a thing holds or has in it, such as full, fuller and equally full, too much, too little and enough.
+  Limits taken: it says what a school can offer in groep 1 to 3, not what a child must be able to do. The ideas listed are examples, and no unit is among them. The Dutch term can mean capacity, volume or contents and the statement does not choose; the game uses contents at the ringed cups and capacity at the plain ones.
+- `edu.nl.fase-1.mathematics.objective.2851b1d6-b3b5-4cbe-bc68-e95640898948` (`nl rw/m/3/04/fase1`): curriculum-institute-guidance, confirmed. In the game's words: comparing and ordering by how much things hold or have in them, in ways such as by eye, side by side and pouring from one into the other.
+  Limits taken: what a school can offer, as above. The ways listed are examples. No units and no number of containers. Two cups at `twins` and `whose-cup` and three at `three-cups` are the game's own choice.
+- `edu.nl.fase-1.practical-life-feelings.objective.f6f10753-a49c-408e-81b7-03206cb9edc0` (`nl ojw/ds/1/01/fase1`): curriculum-institute-guidance, confirmed. In the game's words: taking care of one's own surroundings at home, in class and at school.
+  Limits taken: what a school can offer, as above. It names no tasks and no level of independence. Laying a place and putting things back on the tray are the game's own choice of task.
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-inhoud-2` (`nl Inhoud / 2`, the pack's code for a bullet of the peuter mathematics card): curriculum-institute-guidance, confirmed. In the game's words: getting to know how much things hold by filling, pouring from one into another and emptying.
+  Limits taken: it says what is offered to children before they start school, not what a child must be able to do. Three acts are named; no measures and no counting of scoops.
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-3` (`nl Hoeveelheden / 3`, the pack's code for a bullet of the same card): curriculum-institute-guidance, confirmed. In the game's words: making one-to-one pairs by putting objects with each other; a saucer by each cup is the statement's own example.
+  Limits taken: what is offered before school, as above. No counting, no number words and no number of objects.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **Filling to a level.** The Dutch records name the ideas of full, too much, too little and enough, and the acts of filling, pouring over and emptying. The California records name comparing and ordering only. So the first six positions are designed from the Dutch records alone, and the game follows them there. The California records come in at `twins`, `whose-cup` and `three-cups`, and at the laying of places.
+- **How many objects.** `us-ca K.MD.2` is about exactly two objects and `us-ca 3.2` about a few. The Dutch records set no number. The game follows the California limits: two cups at `twins` and `whose-cup`, three at `three-cups`.
+- **Ages.** The California records sit in two levels, the foundations for ages 4 and 5 and kindergarten for ages 5 and 6, and at age 6 in grade 1 the game names none. The Dutch fase 1 records cover the whole band in one level, by convention.
+- **Keeping things in their place.** `us-ca 2.H.1` says with guidance and is voluntary guidance returned only from age 5. The Dutch record names no task and no level of independence. The game follows the California wording at every age: a guest shows the laying first and the guests put their own things back.
+- **Standing.** The California records are two foundations, two adopted standards and one statement of voluntary guidance. The Dutch records are all guidance of the curriculum institute, and none is law.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Tea Time is designed from two of California's preschool and transitional kindergarten learning foundations for mathematics (`us-ca 3.1` and `us-ca 3.2`, department-published foundations), two kindergarten mathematics standards adopted by the State Board of Education (`us-ca K.MD.2` and `us-ca K.CC.6`) and one statement of California's voluntary guidance on social and emotional learning (`us-ca 2.H.1`, in a cross-grade band tied to no grade); and from five statements of the Dutch curriculum institute's guidance, which is not law: three fase 1 goals (`nl rw/m/3/02/fase1`, `nl rw/m/3/04/fase1`, `nl ojw/ds/1/01/fase1`) and two bullets of the peuter mathematics card (`nl Inhoud / 2`, `nl Hoeveelheden / 3`). All ten records are confirmed. From the California records it takes comparing two cups, ordering three, and a place for each thing; pouring to a level is designed from the Dutch records only. The game says nothing about what a child has reached.
 
 ## The look
 
