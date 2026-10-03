@@ -167,16 +167,20 @@ export function give(game: Game, id: number, part: number): { game: Game; given:
 /**
  * The child touches one of the two who wait. With the window free, or its customer served, that one steps
  * up: the served one leaves with its tin, and a new customer joins the queue, laid out for the position as it
- * stands now. With an unserved customer at the window and an empty tin, the two change places. With something
- * in the tin, the touch sends the customer at the window off first.
+ * stands now. With an unserved customer at the window and an empty tin, the two change places, a tin that
+ * stood open shuts, and nothing is judged. With something in the tin, the touch sends the customer at the
+ * window off first.
  */
 export function call(game: Game, index: 0 | 1): { game: Game; did: 'stepped' | 'swapped' | 'sentOff'; ending: Ending | null } {
   const called = game.queue[index]
   if (game.window && !game.finished) {
     const sent = sendOff(game)
     if (sent.ending) return { game: sent.game, did: 'sentOff', ending: sent.ending }
-    const queue: [Customer, Customer] = index === 0 ? [game.window, game.queue[1]] : [game.queue[0], game.window]
-    return { game: { ...game, window: called, queue }, did: 'swapped', ending: null }
+    // A tin that stood open shuts. The customer who steps back has had the truth of its order shown, so from
+    // then on it carries the new thing of no position, and its cycle moves nothing.
+    const back: Customer = game.world.tinOpen ? { ...game.window, carries: null } : game.window
+    const queue: [Customer, Customer] = index === 0 ? [back, game.queue[1]] : [game.queue[0], back]
+    return { game: { ...game, window: called, queue, world: { ...game.world, tinOpen: false } }, did: 'swapped', ending: null }
   }
   // The one who joins takes the place in the queue of the one who stepped up: with the new thing, or without.
   const arrival = layOut(game.position, called.carries === null ? 'known' : 'new', game.seed)

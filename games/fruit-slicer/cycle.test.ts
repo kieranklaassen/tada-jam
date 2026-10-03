@@ -277,6 +277,24 @@ describe('the two who wait', () => {
     expect(swapped.game.seed).toBe(start.game.seed)
   })
 
+  it('shut a tin that stood open and empty when they change places, and the one who steps back then moves nothing', () => {
+    // A piece of the wrong fruit springs the tin open and is picked out: the tin is open and empty, and the truth has been shown.
+    const other = crate({ ...start.game, window: { ...start.game.window!, fruit: start.game.window!.fruit === 'short' ? 'long' : 'short' } })
+    const open = give({ ...other.game, window: start.game.window }, other.id, 0).game
+    expect(open.world.tinOpen).toBe(true)
+    expect(open.window!.carries).toBe(LADDER[0])
+    const swapped = call(open, 1)
+    expect(swapped.did).toBe('swapped')
+    expect(swapped.game.world.tinOpen).toBe(false)
+    expect(swapped.game.queue[1]).toEqual({ ...open.window!, carries: null })
+    // Called back and served well, with the tin shut again: the position stays where it was.
+    const back = call(swapped.game, 1).game
+    expect(back.window!.carries).toBeNull()
+    expect(serve(back).game.position).toBe(LADDER[0])
+    // A change of places with a tin that never opened leaves the customer as it was.
+    expect(call(start.game, 1).game.queue[1]).toEqual(start.game.window)
+  })
+
   it('send the customer at the window off first when its tin holds something', () => {
     const misfit = serve(start.game, 600).game
     const touched = call(misfit, 0)
