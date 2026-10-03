@@ -5,8 +5,8 @@ import { chalkTrainManifest } from './manifest'
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
 // template and a template fix can be copied over them.
 
-/** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+/** The surface's colour before the tar is painted: the tar's own grey, so nothing flashes at load. */
+export const BACKDROP = '#63676c'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 
@@ -88,7 +88,7 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = ['short-hop', 'long-way', 'up-and-down', 'round-the-water', 'far-rider', 'two-at-once']
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -98,6 +98,7 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'short-hop' },
+  { fromAge: 3, position: 'long-way' },
+  { fromAge: OLDEST, position: 'up-and-down' },
 ]
