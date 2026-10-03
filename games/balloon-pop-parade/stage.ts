@@ -113,7 +113,7 @@ export class Stage {
     if (this.balloons >= MAX_BALLOONS) return
     this.quaternion.setFromAxisAngle(this.along.set(0, 0, 1), lean)
     // The breathing glow on a balloon that can be touched is a swell, never a change of colour: its colour is what the child sorts by.
-    const swell = 1 + glow * 0.09
+    const swell = 1 + glow * 0.15
     this.matrix.compose(this.position.set(x, y, z), this.quaternion, this.scale.set(BALLOON * wide * swell, BALLOON * tall * swell, BALLOON * wide * swell))
     this.scenery.balloons.setMatrixAt(this.balloons, this.matrix)
     this.scenery.balloons.setColorAt(this.balloons, this.colourOf(colour))

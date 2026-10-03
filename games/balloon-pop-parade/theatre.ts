@@ -114,6 +114,8 @@ export class Theatre {
   private walkIn = 1
   private nextIn = 1
   private skyIn = true
+  /** At the opening of a new game the child's troop comes in from beyond the edge, so it is not seen until it walks. */
+  private fromBeyond = false
   /** The friends who hold a balloon, in the order they came by it. Short-lived: as the game is found, those who hold one stand in it in the order they stand. */
   private took: number[] = []
   /** The other friends look at a friend whose balloon was popped, until this time. */
@@ -429,6 +431,7 @@ export class Theatre {
     this.leaving = null
     this.passer = null
     this.endingDue = null
+    this.fromBeyond = marched === null
     if (marched) {
       this.leaving = { kind: marched.kind, size: marched.size, held: [...held], actors: actorsFor(marched.size) }
       this.leaveU = 0
@@ -462,7 +465,8 @@ export class Theatre {
       } })
       at += p.lasts.catch + after
       beats.push({ at, lasts: out, play: (u) => { this.passOut = u; if (u >= 1) this.passer = null } })
-      at += out * 0.7
+      // The child's troop sets off as the passing one turns to go, so the middle is never left empty.
+      at += out * 0.3
     }
     const kind = this.troop.kind, walkFor = PERSONALITIES[kind].walk
     beats.push({ at, lasts: walkFor, play: (u) => { this.walkIn = u } })
@@ -878,8 +882,8 @@ export class Theatre {
       if (this.walkIn < 1) {
         // On its way in from the edge, where it waited: nearer, larger, and in its kind's own gait.
         // The friend at the head of the waiting troop, nearest the middle, goes furthest: nobody has to pass anybody.
-        const from = waitingSpot(this.troop.size - 1 - i, view), gone = stride(kind, this.walkIn)
-        pose.x = from.x + (spot.x - from.x) * gone
+        const from = waitingSpot(this.troop.size - 1 - i, view), gone = stride(kind, this.walkIn), beyond = this.fromBeyond ? 3.6 : 0
+        pose.x = from.x - beyond + (spot.x - from.x + beyond) * gone
         // They spread out sideways before they come forward, so no friend walks through another.
         pose.z = from.z * (1 - gone * gone * gone)
         pose.y = groundAt(pose.x, pose.z) + (pose.y - spot.y)

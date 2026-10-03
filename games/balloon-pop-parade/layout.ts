@@ -32,7 +32,7 @@ export const WAITING_DEPTH = -3.2
 export const HILL = { x: 0, z: -0.4, rx: 22, ry: 4.6, rz: 10 } as const
 
 /** The far hill, where the troops that were served go round: the top of another pillow, a long way back and to the right. */
-export const FAR_HILL = { x: 9, y: GROUND - 4.4, z: -19, rx: 11, ry: 5.6, rz: 5 } as const
+export const FAR_HILL = { x: 10.4, y: GROUND - 4.4, z: -19, rx: 11, ry: 5.6, rz: 5 } as const
 /** The clouds: pillows far behind, kept below the row of balloons so nothing stands behind a balloon but sky. The last hangs over the troop. */
 export const CLOUDS = [
   { x: -9.5, y: 1.6, z: -15, scale: 1.25 },
@@ -116,7 +116,7 @@ export function farGroundAt(x: number, z: number): number {
 export const PARADE_TROOPS = 4
 export const PARADE_FRIENDS = PARADE_TROOPS * 3
 /** The ring they walk, as half-widths across and in depth and how far forward of the hill's middle it lies; and the angle from one friend to the next, which shares the ring out evenly among twelve, so each follows the one in front at more than a body's depth all the way round. */
-export const PARADE_RING = { x: 5, z: 2.9, forward: 0.7 } as const
+export const PARADE_RING = { x: 3.7, z: 2.9, forward: 0.7 } as const
 export const PARADE_STEP = (Math.PI * 2) / PARADE_FRIENDS
 /** They are drawn a little smaller than the friends in front, on top of what the distance does. */
 export const PARADE_SCALE = 0.8
