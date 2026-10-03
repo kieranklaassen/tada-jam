@@ -86,7 +86,8 @@ export function ordersFor(who: Who, fruit: Fruit, parts: readonly number[]): Sha
     const least = who === 'boa' ? den + 1 : who === 'ants' ? 2 : 1
     for (let num = least; num <= most; num++) {
       const share = { num, den }
-      if (who === 'twins' && !PARTS.includes(twinShare(share).den)) continue
+      // Each twin's share has to come out in parts that are in play, which are always parts on the list.
+      if (who === 'twins' && !parts.includes(twinShare(share).den)) continue
       if (shareLength(fruit, share) > RAIL) continue
       single.push(share)
     }

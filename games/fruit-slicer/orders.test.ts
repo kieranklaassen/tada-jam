@@ -53,6 +53,7 @@ describe('every order laid out', () => {
         for (const customer of crowd(id, role, 120)) {
           expect(play.who, id).toContain(customer.who)
           for (const share of customer.shares) expect(play.parts, id).toContain(share.den)
+          if (customer.who === 'twins') expect(play.parts, `${id}: what each twin gets`).toContain(twinShare(customer.shares[0]).den)
         }
     }
   })

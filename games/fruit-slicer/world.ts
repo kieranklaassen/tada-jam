@@ -10,8 +10,8 @@ import { RAIL, WHOLE, giveOf, type Fruit } from './measure'
 
 /** The board has two lanes, so two lengths can lie edge to edge from the same left end. */
 export const LANES = 2
-/** The shelf keeps this many leftovers, oldest first. One more, and the oldest drops to the dog. */
-export const SHELF = 8
+/** The shelf keeps this many leftovers, oldest first, each on a row of its own from one left edge. One more, and the oldest drops to the dog. */
+export const SHELF = 4
 
 export type Place =
   /** On the board: which lane, and how far its left end is from the board's left end, in points. */

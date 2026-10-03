@@ -234,4 +234,22 @@ It is built on a representation with evidence behind it for fraction size: an es
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Written after the style spike, and not part of the sheet. The look is **comic-book halftone**, the first row reserved for this game in the look ledger. It is not yet claimed: the owner sees it at the toy checkpoint, and the registry row is a request to the lead.
+
+**What it is.** A printed page of a comic. Three panels with heavy black borders and hard shadows on off-white newsprint: the window, where the customer being served stands with its ticket; the queue, where two wait; and the counter, seen from above, with the tin on its rail, the board, the shelf, the crate, the roller and the dog. Black brush-ink outlines round everything, flat primaries, and coarse dot screens for every tone. An impact burst and speed lines mark where the blade last fell. No pastels, no gradients, no soft shadows, no 3D shading, no lettering: a comic's sound words are left out, and the bursts and lines do their work.
+
+**Palette.** Ink `#17130f`. Newsprint `#f2e8d2`, and a warmer white `#fffaf0` for cards and bursts. Three primaries and the green they print: red `#e3382b`, yellow `#f7c518`, blue `#2468c8`, green `#2fa24a`. The three fruits are the red (long), the yellow (middle) and the green (short), each with a darker line of its own hue. The board and the shelf are one pale cool slab, `#dce6ea`, against which all three fruit colours stand out by hue and by lightness.
+
+**Dots.** A screen is a tile made once for a colour and a tone, laid at 45 degrees at a pitch of 8 design units, which shows clearly in the still at 1180 by 820. A tile is a whole number of device pixels and is drawn in device pixels whatever the page is scaled by, so the dots do not shimmer. A tone is a colour of dots over paper or over a flat colour: blue dots on white for the shaded side of a figure, red dots on yellow for orange, black dots for a grey coat.
+
+**Where the dots go, and where they never go.** On the walls, the counter top, the crate, the tin's lid, the roller and the characters. Never on a fruit, a piece, the board, the shelf, the body of the tin, the ruled rail or a ticket: the things a child measures with are flat, with a line round them and nothing else (pack: game-design, working-objects-stay-plain.md). The burst and the drops stay clear of the cut end, which is the thing to be read.
+
+**Line.** Silhouettes are inked at 5 to 6 design units, inner detail at 2.5 to 4. A fruit's own line is 3, in its darker hue, so that a fruit never looks like a character.
+
+**Symbols.** Drawn only by `symbols.ts`, in ink on a white card, or in ink with a white edge on the tin's lid. A fraction sits on a bracket that spans the filled share of the ticket, and on the lid, which is as long as the tin: each names the length under it.
+
+**Motion rules, for the toy.** Nothing eases softly. A thing snaps to a pose, overshoots and settles in a few frames, as in a comic's two-pose action; a burst pops and is gone; speed lines fan behind anything that moves fast; drops arc and land as flat dots. Each character keeps its own tempo and funny part, as the sheet gives them. Working pieces move only as the idea needs: they hop apart on a cut, slide in a tin, and lie still.
+
+**Layout.** The page is laid out in design units, 1180 by 820, and scaled whole to the surface it is given, centred, on newsprint. Every length on the counter starts from one left edge at one scale, so the tin, the ruled rail, both lanes of the board and every row of the shelf can be compared by eye.
+
+**Tiers.** The still is painted once for a size of surface and copied on each frame, which is one draw. The tiers in `config.ts` lower only the pixel ratio; the dot tile is remade for the ratio, so the lowest tier has fewer, crisper pixels and the same dots. What the moving game sheds at each tier is written when the toy is built.
