@@ -81,14 +81,27 @@ export function startCycle(from: PositionId, seed: number, harder: boolean): Cyc
   }
 }
 
-export function newWorld(childAge: number | null, seed = 1): World {
-  const position = firstPosition(childAge) as PositionId
-  return { position, finished: false, cycle: startCycle(position, seed, false), shown: { colour: false, kind: false, size: false }, crates: [] }
+/** The seed of the one crate that waits on a first visit. */
+export const FIRST_SEED = 1
+
+/**
+ * A bare tray with one crate waiting on the ledge, its crew riding: the
+ * world as an ended cycle leaves it, with nothing to replay. A first visit
+ * opens like this, and so does a save whose cycle cannot be read. Nothing
+ * comes in until the child puts the claw on the crate.
+ */
+export function waitingAt(position: PositionId, shown: Record<Attribute, boolean>, seed = FIRST_SEED): World {
+  const cycle: Cycle = { from: position, harder: false, crews: [], sort: 0, toys: [], where: [], tried: [], misses: 0 }
+  return { position, finished: true, cycle, shown, crates: [{ from: position, seed }] }
 }
 
-/** The crew at the tray. */
+export function newWorld(childAge: number | null): World {
+  return waitingAt(firstPosition(childAge) as PositionId, { colour: false, kind: false, size: false })
+}
+
+/** The crew at the tray: no one, on a bare tray before the first crate is taken. */
 export function crewNow(world: World): GobblerId[] {
-  return world.cycle.crews[world.cycle.sort]
+  return world.cycle.crews[world.cycle.sort] ?? []
 }
 
 /** The tray as stacks of toy numbers, bottom first. A toy in the jaws is left out of it by naming it in `held`. */
@@ -164,6 +177,8 @@ export function endCycle(world: World): CycleOutcome {
 
 /** The crates that wait after a cycle: one for the stored position and, unless that is the top, a taller one for the step above. */
 export function cratesFor(position: PositionId, ended: Cycle): Crate[] {
+  // Before any load has been sorted there is the one crate of a first visit, and no taller one.
+  if (ended.toys.length === 0) return [{ from: position, seed: FIRST_SEED }]
   const first = seedAfter(cycleNumber(ended)), second = seedAfter(first)
   const up = nextUp(position)
   return up ? [{ from: position, seed: first }, { from: up, seed: second }] : [{ from: position, seed: first }]

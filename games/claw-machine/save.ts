@@ -5,7 +5,7 @@ import { PLACES } from './places'
 import { STATE_VERSION, deserialize, serialize } from './state'
 import { readToy, type Toy } from './toys'
 import { STACK_MOST, emptyTray, nearestFree } from './tray'
-import { cratesFor, newWorld, startCycle, trayIsClear, type Crate, type Cycle, type Where, type World } from './world'
+import { FIRST_SEED, cratesFor, newWorld, trayIsClear, waitingAt, type Crate, type Cycle, type Where, type World } from './world'
 
 // What goes into ctx.storage for the game, and how it is read back (ART.md,
 // "The designed order, and what is stored"). state.ts keeps the version, the
@@ -132,8 +132,13 @@ export function deserializeWorld(raw: unknown, childAge: number | null): World {
   const shownRaw = isRecord(raw.shown) ? raw.shown : {}
   const shown = { colour: shownRaw.colour === true, kind: shownRaw.kind === true, size: shownRaw.size === true }
   const cycle = readCycle(raw.cycle)
-  // A cycle that cannot be read is laid out again at the stored position: the child's place in the order is kept.
-  if (!cycle) return { position, finished: false, cycle: startCycle(position, 1, false), shown, crates: [] }
+  // With no load that can be read, the world is as a first visit finds it, at the stored position: a bare tray
+  // and one crate waiting. That is both a first visit saved before its crate was taken and a damaged cycle: the
+  // child's place in the order is kept either way, and nothing starts until the crate is taken.
+  if (!cycle) {
+    const crate = Array.isArray(raw.crates) && isRecord(raw.crates[0]) && isCount(raw.crates[0].seed, 0xffffffff) ? raw.crates[0].seed : FIRST_SEED
+    return waitingAt(position, shown, crate)
+  }
   // An ending is an ending exactly when the last toy of the last sort is in a belly, whatever the flag says:
   // a tray still holding toys is never shown as ended, and a finished load is never left with no crate to take.
   const ended = trayIsClear(cycle) && cycle.sort === cycle.crews.length - 1

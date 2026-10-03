@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { LADDER, type PositionId } from './config'
 import { toyLetGo } from './deeds'
 import { crewGoesBy } from './gobblers'
+import { nextUp } from './order'
 import { PLACES } from './places'
-import { bellyOf, crewArrives, crewNow, endCycle, homeOf, judge, newWorld, nextCrew, startCycle, takeCrate, trayIsClear, trayOf, type World } from './world'
+import { FIRST_SEED, bellyOf, crewArrives, crewNow, endCycle, homeOf, judge, newWorld, nextCrew, someoneWaits, startCycle, takeCrate, trayIsClear, trayOf, type World } from './world'
 
-const at = (position: PositionId, seed = 7): World => ({ ...newWorld(null), position, cycle: startCycle(position, seed, false) })
+const at = (position: PositionId, seed = 7): World => ({ ...newWorld(null), position, finished: false, crates: [], cycle: startCycle(position, seed, false) })
 
 /** Feeds every toy on the tray to a gobbler: its home, or for the first `wrong` toys another gobbler first. */
 function sortAll(world: World, wrong = 0): void {
@@ -32,6 +33,40 @@ describe('the world', () => {
     expect(newWorld(5).position).toBe('colours-among-kinds')
     expect(newWorld(6).position).toBe('colours-then-kinds')
     expect(newWorld(11).position).toBe('colours-then-kinds')
+  })
+
+  it('opens a first visit as an ended cycle: a bare tray and one crate waiting, with nothing to replay', () => {
+    const world = newWorld(5)
+    expect(world.finished).toBe(true)
+    expect(world.cycle.toys).toEqual([])
+    expect(crewNow(world)).toEqual([])
+    expect(world.crates).toEqual([{ from: 'colours-among-kinds', seed: FIRST_SEED }])
+    expect(someoneWaits(world)).toBe(true)
+    // Nothing comes in until the child puts the claw on the crate; then the load and its first crew do.
+    expect(takeCrate(world, 1)).toBe(false)
+    expect(takeCrate(world, 0)).toBe(true)
+    expect(world.finished).toBe(false)
+    expect(world.cycle).toEqual(startCycle('colours-among-kinds', FIRST_SEED, false))
+    expect(world.position).toBe('colours-among-kinds')
+    expect(crewArrives(world)).toEqual({ by: 'colour', showing: true })
+  })
+
+  it('tells the taller crate apart at every step, by more to sort or by a crew that goes by something new', () => {
+    for (const position of LADDER.slice(0, -1)) for (let seed = 1; seed <= 40; seed++) {
+      // The two crates that wait when the stored position is this one: its own load, and the load of the step above.
+      const plain = startCycle(position, seed, false), taller = startCycle(nextUp(position)!, seed * 31 + 7, true)
+      const kinds = (cycle: typeof plain) => new Set(cycle.toys.map((toy) => toy.kind)).size
+      const more = taller.toys.length > plain.toys.length || taller.crews.length > plain.crews.length || taller.crews[0].length > plain.crews[0].length || kinds(taller) > kinds(plain)
+      const sortedBy = new Set(plain.crews.map(crewGoesBy))
+      const somethingNew = taller.crews.some((crew) => !sortedBy.has(crewGoesBy(crew)))
+      expect(more || somethingNew, position).toBe(true)
+    }
+    // The two steps that bring a new attribute and no more of anything.
+    for (const position of ['colours-among-kinds', 'colours-then-kinds'] as const) {
+      const up = startCycle(nextUp(position)!, 3, true), here = startCycle(position, 3, false)
+      expect(up.toys.length).toBeLessThanOrEqual(here.toys.length)
+      expect(here.crews.map(crewGoesBy)).not.toContain(crewGoesBy(up.crews[0]))
+    }
   })
 
   it('stands every toy of a load alone on a place of its own, the same way for the same seed', () => {
@@ -147,6 +182,7 @@ describe('the world', () => {
 
   it('can be played through every position from the first to the last', () => {
     const world = newWorld(null)
+    expect(takeCrate(world, 0)).toBe(true)
     for (let cycles = 0; cycles < LADDER.length - 1; cycles++) { playCycle(world); expect(takeCrate(world, 0)).toBe(true) }
     expect(world.position).toBe('three-ways-wide')
   })

@@ -65,8 +65,15 @@ function freePlace(tray: Tray, x: number, z: number, skip = -1): number {
   return room >= 0 ? room : Math.max(0, skip)
 }
 
+/** A gobbler that is not there (a slot past the crew, or a bare tray with no crew yet) is the back of the tray. */
+function real(world: World, target: Target): Target {
+  if (target.on !== 'gobbler' || crewNow(world)[target.slot]) return target
+  return { on: 'place', place: Math.min(TRAY.columns - 1, Math.max(0, target.slot)) }
+}
+
 /** The empty claw lands on a thing. It always closes on what it is put on. */
-export function clawLands(world: World, target: Target): Deed {
+export function clawLands(world: World, aimed: Target): Deed {
+  const target = real(world, aimed)
   if (target.on === 'place') {
     const stack = trayOf(world.cycle)[target.place]
     // The toy stays where it is for the rules until it is put down: nothing is kept in the air.
@@ -86,7 +93,8 @@ export function clawLands(world: World, target: Target): Deed {
 }
 
 /** A toy in the jaws is let go over a thing. `toy` is still where it was taken from until this is called. */
-export function toyLetGo(world: World, toy: number, target: Target): Deed {
+export function toyLetGo(world: World, toy: number, aimed: Target): Deed {
+  const target = real(world, aimed)
   const cycle = world.cycle, heavy = isBig(world, toy)
   const tray = trayOf(cycle, toy)
   const stand = (place: number) => { const level = tray[place].length; cycle.where[toy] = { at: 'tray', place, level }; return level }
@@ -152,7 +160,8 @@ export function toyLetGo(world: World, toy: number, target: Target): Deed {
 }
 
 /** The claw, bare or with a toy in its jaws, swings into a thing. `direction` is -1 toward the left, 1 toward the right. */
-export function clawSwingsInto(world: World, target: Target, direction: -1 | 1, carrying: boolean): Deed {
+export function clawSwingsInto(world: World, aimed: Target, direction: -1 | 1, carrying: boolean): Deed {
+  const target = real(world, aimed)
   if (target.on === 'gobbler') {
     const gobbler = crewNow(world)[target.slot]
     return carrying ? { type: 'snap-miss', gobbler } : { type: 'duck', gobbler }
@@ -180,7 +189,8 @@ export function clawSwingsInto(world: World, target: Target, direction: -1 | 1, 
 }
 
 /** The claw waits above a thing. Nothing changes; the thing shows that it has noticed. */
-export function clawWaitsAbove(world: World, target: Target): Deed {
+export function clawWaitsAbove(world: World, aimed: Target): Deed {
+  const target = real(world, aimed)
   if (target.on === 'gobbler') return { type: 'open-wide', gobbler: crewNow(world)[target.slot] }
   if (target.on === 'ledge') return someoneWaits(world) ? { type: 'stare' } : { type: 'gate-creak' }
   if (target.on === 'rail-end') return { type: 'hum' }

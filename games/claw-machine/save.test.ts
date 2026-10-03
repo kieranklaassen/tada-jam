@@ -7,7 +7,7 @@ import { STATE_VERSION } from './state'
 import { STACK_MOST } from './tray'
 import { bellyOf, crewNow, homeOf, newWorld, nextCrew, startCycle, trayOf, type World } from './world'
 
-const at = (position: PositionId, seed = 5): World => ({ ...newWorld(null), position, cycle: startCycle(position, seed, false) })
+const at = (position: PositionId, seed = 5): World => ({ ...newWorld(null), position, finished: false, crates: [], cycle: startCycle(position, seed, false) })
 const through = (world: World, childAge: number | null = null) => deserializeWorld(JSON.parse(JSON.stringify(serializeWorld(world))), childAge)
 const feedAll = (world: World) => world.cycle.toys.forEach((_, toy) => { if (world.cycle.where[toy].at === 'tray') toyLetGo(world, toy, { on: 'gobbler', slot: homeOf(world, toy) }) })
 
@@ -24,6 +24,8 @@ function whole(world: World): void {
 
 describe('the saved state', () => {
   it('comes back as it was left: at the start, in the middle of a sort, between crews and after the ending', () => {
+    // A first visit put away before its crate was taken is found the same: a bare tray and the crate waiting.
+    for (const age of [null, 4, 5, 6]) expect(through(newWorld(age), age)).toEqual(newWorld(age))
     for (const position of LADDER) {
       const world = at(position)
       expect(through(world)).toEqual(world)
@@ -47,12 +49,12 @@ describe('the saved state', () => {
     }
   })
 
-  it('keeps the position when the cycle cannot be read, and lays a fresh load out there', () => {
+  it('keeps the position when the cycle cannot be read, and waits there with a crate', () => {
     for (const cycle of [undefined, 5, {}, { from: 'two-kinds', crews: [], toys: [] }, { from: 'nowhere', crews: [['red', 'blue']], toys: [{ colour: 'red', kind: 'duck', size: 'small', place: 0, level: 0 }] }]) {
-      const world = deserializeWorld({ v: STATE_VERSION, position: 'two-kinds', finished: true, cycle }, null)
-      expect(world.position).toBe('two-kinds')
-      expect(world.finished).toBe(false)
-      expect(world.cycle).toEqual(startCycle('two-kinds', 1, false))
+      const world = deserializeWorld({ v: STATE_VERSION, position: 'two-kinds', finished: false, shown: { colour: true }, cycle }, null)
+      // As a first visit finds it, at the stored position: a bare tray and one crate waiting for the child's touch.
+      expect(world).toEqual({ ...newWorld(null), position: 'two-kinds', shown: { colour: true, kind: false, size: false }, cycle: { ...newWorld(null).cycle, from: 'two-kinds' }, crates: [{ from: 'two-kinds', seed: 1 }] })
+      expect(world.finished).toBe(true)
     }
   })
 

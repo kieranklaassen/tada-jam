@@ -5,7 +5,7 @@ import { STACK_MOST } from './tray'
 import { bellyOf, crewNow, homeOf, newWorld, startCycle, trayOf, type World } from './world'
 
 /** A world at the step with every kind of toy: two colours, two kinds, two sizes, one of each, sorted three ways. */
-const world = (seed = 11): World => ({ ...newWorld(null), position: 'three-ways', cycle: startCycle('three-ways', seed, false) })
+const world = (seed = 11): World => ({ ...newWorld(null), position: 'three-ways', finished: false, crates: [], cycle: startCycle('three-ways', seed, false) })
 const toysOf = (w: World, size: 'small' | 'big') => w.cycle.toys.map((toy, i) => ({ toy, i })).filter(({ toy }) => toy.size === size).map(({ i }) => i)
 const placeOf = (w: World, toy: number) => { const where = w.cycle.where[toy]; if (where.at !== 'tray') throw new Error('not on the tray'); return where.place }
 const barePlace = (w: World) => trayOf(w.cycle).findIndex((stack) => stack.length === 0)
@@ -76,6 +76,19 @@ describe('the object-by-action grid', () => {
     expect(spat.type === 'spit' && spat.way).toBe(GOBBLER[crewNow(w)[other]].wrong)
     expect(clawSwingsInto(w, { on: 'gobbler', slot: other }, 1, true).type).toBe('snap-miss')
     expect(clawLands(w, { on: 'gobbler', slot: other })).toEqual({ type: 'lift-gobbler', gobbler: crewNow(w)[other], way: GOBBLER[crewNow(w)[other]].lifted })
+  })
+})
+
+describe('a bare tray before the first crate', () => {
+  it('answers the claw everywhere, and brings the load in only from the crate', () => {
+    const w = newWorld(null)
+    expect(clawLands(w, { on: 'place', place: 3 }).type).toBe('bonk')
+    expect(clawLands(w, { on: 'gobbler', slot: 1 }).type).toBe('bonk')
+    expect(clawWaitsAbove(w, { on: 'gobbler', slot: 0 }).type).toBe('breathe')
+    expect(clawSwingsInto(w, { on: 'ledge', which: 0 }, 1, false).type).toBe('lean')
+    expect(w.finished).toBe(true)
+    expect(clawLands(w, { on: 'ledge', which: 0 })).toEqual({ type: 'take-crate', which: 0 })
+    expect(w.cycle.toys.length).toBe(4)
   })
 })
 
