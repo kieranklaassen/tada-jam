@@ -19,10 +19,23 @@ export const BACKDROP = '#f4efe6'
 export type Tier = {
   /** Canvas pixel ratio cap; the jam's bar caps it at 2. */
   dpr: number
+  /** A moving figure's line boils between two drawings of itself. Without it each figure keeps one drawing. */
+  boil: boolean
+  /** How many flakes drift through a snow hole. */
+  snow: number
+  /** The paper's faint fibre speckle. */
+  speckle: boolean
+  /** A view drawn several times over, slightly apart (the blob's many eyes). Without it the view is drawn once. */
+  doubled: boolean
 }
 
-/** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
-export const TIERS: readonly Tier[] = [{ dpr: 2 }, { dpr: 1.5 }, { dpr: 1.25 }, { dpr: 1 }]
+/** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. Every tier is the same drawing: the same lines, figures and marks. */
+export const TIERS: readonly Tier[] = [
+  { dpr: 2, boil: true, snow: 30, speckle: true, doubled: true },
+  { dpr: 1.5, boil: true, snow: 30, speckle: true, doubled: true },
+  { dpr: 1.25, boil: false, snow: 16, speckle: true, doubled: false },
+  { dpr: 1, boil: false, snow: 16, speckle: false, doubled: false },
+]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */
 export const GOVERNOR = {

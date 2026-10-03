@@ -6,6 +6,7 @@ import { GameAudio, tick } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { InkPage } from './ink'
+import { demoScene } from './inkDemo'
 import { SPIKE_SCENE } from './inkScene'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { monsterHotelManifest } from './manifest'
@@ -63,7 +64,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => { if (surface) drawn.drawCalls = page.draw(surface, SPIKE_SCENE, clock.seconds) }
+    // Grown-ups and stills only: `demo=<name>` in the address draws one of the page's fixed scenes (inkDemo.ts) in place of the game.
+    const demo = new URLSearchParams(window.location.search).get('demo')
+    const draw = () => { if (surface) drawn.drawCalls = page.draw(surface, demo ? demoScene(demo, clock.seconds) : SPIKE_SCENE, clock.seconds) }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
