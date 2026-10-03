@@ -5,13 +5,14 @@
 
 - Stage: game, being built on the toy. The owner has been shown the toy and has not answered; the lead has the lanes build on. The Mount now shows the game: a yard of things that answer the hose, the bell on the gate, and the drive to the next yard. Tests for the game's own modules, the scenes' saves, the audit and the passes are still to come in this run.
 - Sheet, round 1: checked by checker B, outcome open with 11 findings. All eleven replacements are pasted as they stand, in commit `0b2db37`. None was disputed.
-- Sheet, as it stands now: commit `283d66702e6c5701c09c9f5d316009e9878f616f`. The hash of its sheet part is `4bd44585782b608ca8b408108484fc3595e4c50cfd1ff9933a9c9373fd073a94`. It holds the eleven pastes and three sentences of the builder's own, listed below, for round 2 to read.
+- Sheet, round 2: checked by checker D, outcome open with 3 findings. All three replacements are pasted as they stand, in commit `98fb2e4`. None was disputed. The game's rules keep no spot for the duck, the snail or the logs, so both replacements of finding 1 are pasted.
+- Sheet, as it stands now: commit `cd41e93972c62a4116629321d76e3e643c56a3f7`. The hash of its sheet part is `ff852ea5c8f4f22fceea0f556600570110a84060f7d6f90ed020b1e5348649ec`. It holds the pastes of both rounds and one sentence of the builder's own that changed after round 2, below.
 - A correction: the status block of commit `9a3a3b0` gave a wrong ending for the round 1 hash. The text round 1 checked is the text of commit `471110b`, with the hash the checker's report names.
 - Look in use: the first reserved look, Garden-toy plastic. The spike is clear at age two on a software-rendered still: a few big separate toys, each a hue of its own, on plain pale sand. The second look was not needed and not spiked. The frame rate of the spike is the lead's to take.
 - Renderer: three.js (raw), as the brief suggests. 10 draw calls and about 38,000 triangles in the heaviest moment of the toy; 20 draw calls and about 44,000 triangles in the spike.
 - What the Mount shows: the toy, at `?chrome=0#/play/fire-truck-hero`. The look spike, for the still at 1180 by 820, is at `?chrome=0&spike=1#/play/fire-truck-hero`. Both use fixed seeds.
 - Rules: pure modules, tested and not wired into the Mount: `things.ts`, `grid.ts`, `world.ts`, `tastes.ts`, `yards.ts`, `save.ts`, with `ground.ts` and `layout.ts` under them. Written against the sheet at `471110b` and brought into line with the sheet as it stands now. A finding in round 2 on the grid, the designed order, the error or the records reopens them.
-- Open: sheet ready for check, round 2
+- Open: sheet ready for check, round 3
 - Open: the owner's answer on the look and the toy.
 - Open: two requests to the lead, below.
 - Open: the truck's want at rest (its nozzle turned to what wants water, a drop at its tip) and the bee at the closed bud are in the sheet and in `tastes.ts` as cues, and are not drawn yet. They belong to the game on the toy.
@@ -24,19 +25,17 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 1. **The registry row** for the look, in section 3 of `docs/art-direction.md`, and the ledger row to `claimed` after the merge. Proposed row: Game "Fire Truck Hero"; Style "Garden-toy plastic 3D: fat blow-moulded toys with a mould seam and screw bosses, sun-faded primaries with a satin shine, on a pale sand pit inside a cream picket fence and green hedges, in daylight"; Art guide `games/fire-truck-hero/ART.md`.
 2. **The frame rates.** Every number here was taken on a software renderer. The spike's frame rate at a pixel ratio of 2, and the toy's in WebKit and in throttled Chrome, are the lead's to take on a real graphics card. The game reads the `tier` query, so the shared probe can pin a tier.
 
-### What changed in the sheet after round 1
+### What changed in the sheet after round 2
 
-**The eleven replacements**, pasted from the checker's report without a change: a sound in every cell of the grid; what dries and what never does, in "The toy" and in the `wet` field; the Guess answer; the cat as a character in the grid; the truck's and the bee's wants that show all the time; the bell held to the size and place rule; the fire and the wetting set apart from `us-ca 2.3`; the Summary and the gloss named as the pack's text; the pack's code for the fase 1 bullet; which jurisdiction the game follows for growing and for filling; and which jurisdiction each part of the claim is taken from.
+**The three replacements**, pasted from the checker's report without a change: what is saved of the animals and where each is put on load (lines 112 and 118 of the sheet as checked); which marks on open sand dry and which stay, with the saved grid's states named (lines 26 and 113); and the school skill said for the ten records named and no others, with filling, the force of water and growing as its outcomes (line 159).
 
-**One word for the next checker.** Finding 1 has the cat climb onto the truck's roof "with a scrabble of claws on tin". It is pasted as given. In the look the truck is plastic, so "on tin" may want to read "on plastic".
+**One sentence of the builder's own, changed after round 2 read it.** In "The scenes", under how a cycle ends: "The gate stands in the far fence, straight ahead of the truck, with a bell hanging out over the sand from its post, and over the fence beside it the next yard shows:". Round 2 read "toward the right" there and found it sound. Reason for the change: the truck drives on through the gate, and from its place any way to a gate on the right crosses the spots where things stand. Straight ahead of the truck it crosses none (`layout.test.ts` holds that).
 
-**Three sentences of the builder's own**, added in the commit after the pastes, where the build had gone past the sheet. They were not in round 1 and are for round 2 to check:
+**One word still open from round 1.** The cat climbs onto the truck's roof "with a scrabble of claws on tin", as pasted. In the look the truck is plastic.
 
-1. In "The toy", after the pasted sentences on drying: "On open sand a place that has had its fill stands as a puddle, and with more water is mud, and neither dries while the yard is on screen: what the child brought to its fill stays." Reason: drying a puddle would undo something the child finished, and only time would have done it. `ground.ts` dries damp sand only.
-2. In "The scenes", the gate: "The gate stands in the far fence, toward the right, with a bell hanging out over the sand from its post, and over the fence beside it the next yard shows:" in place of the gate at the right edge. Reason: from this camera a gate in the right hedge is seen edge-on and what is beyond it is off the screen.
-3. In "Every field of the saved state", `things`: "for the things that move (the cat and the boat)" in place of the longer list. Reason: the duck, the snail and the logs are drawn from the state of the thing they belong to and have no place of their own in the model.
+**What followed in the code.** A snail found on load is on its patch and out, however far it had glided (`game.test.ts`). The duck, the snail and the logs are placed from the gulps of the thing they belong to. Puddles and mud on open sand stay; damp sand dries.
 
-**What followed in the code.** `grid.ts` names a sound for every cell that no other cell has, and its test holds all 35 looks and all 35 sounds apart. `tastes.ts` has a rest cue for the truck and the bee. `world.test.ts` holds that the water a thing holds never dries while the open sand does, and that a want once met stays met. Nothing in the designed order, the positions or the saved state changed.
+Rounds 1's pastes and the three sentences added then are in the history of this file at commit `751dd34`.
 
 Two smaller points the rules settled where the sheet is silent, to be confirmed with the game: when every spot is taken the soaked cat stays where she is, and a boat carried over the rim stays aground beside the pool. And one rule is wider than its sentence: a yard is judged "mixed" also when the child made a puddle on open sand, since the dry ground is a thing of the grid with a fill.
 
