@@ -121,9 +121,9 @@ export class TruckView {
     const t = this.target
     for (let cell = 0; cell < CELLS; cell++) {
       const patch = surface[cell], k = cell * 6
-      const mud = patch === 'c' || patch === 's', foam = patch === 'b' || patch === 'f'
+      const mud = patch === 'c' || patch === 's' || patch === 'm', foam = patch === 'b' || patch === 'f'
       t[k] = mud ? 1 : 0
-      t[k + 1] = patch === 's' ? 1 : 0
+      t[k + 1] = patch === 's' || patch === 'm' ? 1 : 0
       t[k + 2] = foam ? 1 : 0
       t[k + 3] = patch === 'b' ? 1 : 0
       t[k + 4] = patch === 'w' ? 1 : 0

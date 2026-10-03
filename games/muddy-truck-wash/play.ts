@@ -361,8 +361,9 @@ export class Play {
   /** The child sends the vehicle in the bay off as it is, and the one that waits rolls in. */
   private sendOff(): void {
     this.release()
-    // The tool in hand goes up out of the lane, so nothing drives through it.
+    // The tool in hand goes up out of the lane, so nothing drives through it, and a cloth forgets what it had on it from the vehicle that is leaving.
     this.rest()
+    this.carried = null
     const leaving = this.bay, incoming = this.next
     let result = sendOff(this.state)
     const newcomer = this.stand(result.state.next.who, result.state.next.cells, { x: LAYOUT.door.x + 7, z: LAYOUT.door.z })

@@ -36,7 +36,7 @@ type Exit = 'dried' | 'soft' | 'foam' | 'wet' | 'dull' | 'shiny'
 
 function exitOf(surface: Surface): { lead: Exit; trail: Kind[] } {
   const t = tally(surface)
-  const counts: [Exit, number, Kind][] = [['dried', t.c, KIND.crumb], ['soft', t.s, KIND.splat], ['foam', t.foam, KIND.blob], ['wet', t.w, KIND.drop], ['shiny', t.p, KIND.glint], ['dull', t.d, KIND.dust]]
+  const counts: [Exit, number, Kind][] = [['dried', t.c, KIND.crumb], ['soft', t.s + t.m, KIND.splat], ['foam', t.foam, KIND.blob], ['wet', t.w, KIND.drop], ['shiny', t.p, KIND.glint], ['dull', t.d, KIND.dust]]
   let lead = counts[0]
   for (const entry of counts) if (entry[1] > lead[1]) lead = entry
   // The trail is every state on it, in the shares it holds: the lead comes first and the others add theirs.
@@ -113,7 +113,7 @@ export function sendOffScene(play: Play, leaving: Vehicle, incoming: Vehicle, ne
       play.say(voices.brake())
       incoming.motion.kick(-2, 1.3)
       const t = tally(incoming.surface)
-      if (t.s) play.particles.burst(KIND.splat, 4, incoming.motion.homeX, 0.9, incoming.motion.homeZ + 0.95, 0.5, -0.2, 0.1, 1.2)
+      if (t.s + t.m) play.particles.burst(KIND.splat, 4, incoming.motion.homeX, 0.9, incoming.motion.homeZ + 0.95, 0.5, -0.2, 0.1, 1.2)
       if (t.c) play.particles.burst(KIND.crumb, 3, incoming.motion.homeX, 1.2, incoming.motion.homeZ + 0.95, 0.5, 0.2, 0.07, 1.4)
     }),
     drive(4.2, 1.8, newcomer, { x: door.x + 7, z: door.z }, door, outCubic),

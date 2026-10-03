@@ -30,7 +30,9 @@ export type Moment = { speed: number; variant: number; rise: number }
 
 const burst = (kind: Kind, count: number, speed: number, up: number, size: number, life: number): Burst => ({ kind, count, speed, up, size, life })
 
-export function react(hand: Hand, met: Patch, m: Moment): Reaction {
+export function react(hand: Hand, on: Patch, m: Moment): Reaction {
+  // A smear is soft mud to every hand's eye and ear.
+  const met = on === 'm' ? 's' : on
   if (hand === 'sponge') {
     // Dried mud does not lift: crumbs, dust and a dribble of suds that slides off.
     if (met === 'c') return { voices: [voices.rasp(m.variant)], bursts: [burst(KIND.crumb, 5, 1.1, 0.8, 0.07, 1.6), burst(KIND.dust, 2, 0.4, 0.3, 0.3, 0.7), burst(KIND.blob, 2, 0.3, -0.2, 0.11, 1.2)], force: 1, kick: 0.25 }

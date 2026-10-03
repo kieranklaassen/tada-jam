@@ -95,8 +95,8 @@ export function puddled(surface: Surface, dip: number, seed: number): Surface {
   let s = seed
   for (let i = 0; i < 2; i++) {
     let at: [number, number] | null
-    ;[at, s] = pickIn(out, [top + 1, Math.min(GRID_H - 1, top + 1)], s, ['d', 'w', 'p', 'c', 'f', 'b'])
-    if (at) s = blob(out, at[0], at[1], 2, 's', s, ['d', 'w', 'p', 'c', 'f', 'b'])
+    ;[at, s] = pickIn(out, [top + 1, Math.min(GRID_H - 1, top + 1)], s, ['d', 'w', 'p', 'c', 'm', 'f', 'b'])
+    if (at) s = blob(out, at[0], at[1], 2, 's', s, ['d', 'w', 'p', 'c', 'm', 'f', 'b'])
   }
   return out
 }

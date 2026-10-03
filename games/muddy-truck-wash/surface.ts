@@ -9,11 +9,16 @@ export const CELLS = GRID_W * GRID_H
 
 /**
  * One patch. The characters are what a save stores:
- * `.` no body here, `c` dried mud, `s` soft mud, `b` brown foam (mud lifted
- * into suds), `f` white foam, `w` wet paint, `d` dull paint, `p` shiny paint.
+ * `.` no body here, `c` dried mud, `s` soft mud, `m` a smear (thin mud a
+ * cloth has laid), `b` brown foam (mud lifted into suds), `f` white foam,
+ * `w` wet paint, `d` dull paint, `p` shiny paint.
+ *
+ * A smear is mud to every tool but the cloth: the sponge lifts it into foam
+ * and the hose leaves it clinging, as with soft mud. The cloth picks nothing
+ * up from it, so a smear can never be spread further.
  */
-export type Patch = '.' | 'c' | 's' | 'b' | 'f' | 'w' | 'd' | 'p'
-export const PATCHES: readonly Patch[] = ['.', 'c', 's', 'b', 'f', 'w', 'd', 'p']
+export type Patch = '.' | 'c' | 's' | 'm' | 'b' | 'f' | 'w' | 'd' | 'p'
+export const PATCHES: readonly Patch[] = ['.', 'c', 's', 'm', 'b', 'f', 'w', 'd', 'p']
 
 export type Tool = 'sponge' | 'hose' | 'cloth'
 /** What the finger holds: a tool, or nothing. */
@@ -22,23 +27,32 @@ export type Hand = Tool | 'finger'
 /** What one touch of `hand` turns each patch into. A patch that maps to itself still answers, in sound and motion. */
 export const TURNS: Readonly<Record<Hand, Readonly<Record<Patch, Patch>>>> = {
   // Soap lifts soft mud into foam, which stays on the vehicle. Dried mud does not lift until it has been wetted.
-  sponge: { '.': '.', c: 'c', s: 'b', b: 'b', f: 'f', w: 'f', d: 'f', p: 'f' },
+  sponge: { '.': '.', c: 'c', s: 'b', m: 'b', b: 'b', f: 'f', w: 'f', d: 'f', p: 'f' },
   // Water carries foam away and only softens dried mud. Soft mud clings.
-  hose: { '.': '.', c: 's', s: 's', b: 'w', f: 'w', w: 'w', d: 'w', p: 'w' },
-  // The cloth dries and shines. On mud and foam it changes nothing where it is; see `SPREADS`.
-  cloth: { '.': '.', c: 'c', s: 's', b: 'b', f: 'f', w: 'p', d: 'p', p: 'p' },
+  hose: { '.': '.', c: 's', s: 's', m: 'm', b: 'w', f: 'w', w: 'w', d: 'w', p: 'w' },
+  // The cloth dries and shines. On mud and foam it changes nothing where it is; what it carries on from them is in `dab`.
+  cloth: { '.': '.', c: 'c', s: 's', m: 'm', b: 'b', f: 'f', w: 'p', d: 'p', p: 'p' },
   // A bare finger leaves a print on a shine and changes nothing else.
-  finger: { '.': '.', c: 'c', s: 's', b: 'b', f: 'f', w: 'w', d: 'd', p: 'd' },
+  finger: { '.': '.', c: 'c', s: 's', m: 'm', b: 'b', f: 'f', w: 'w', d: 'd', p: 'd' },
 }
 
-/** What a cloth picks up and drags along: wet mud smears, foam is pushed. Dried mud does not come away on it. */
-const SPREADS: readonly Patch[] = ['s', 'b', 'f']
 const CLEAN: readonly Patch[] = ['w', 'd', 'p']
-/** A cloth lets go of what it carries over this many patches, so a smear is short and mended in a moment. */
+const FOAM: readonly Patch[] = ['b', 'f']
+/** A cloth that has been on soft mud smears the next patches it moves onto, this many at most, and is then clean. */
 export const SMEAR_PATCHES = 3
 
-/** What a cloth has picked up and has not yet wiped off: the patch it leaves, and on how many more patches. */
-export type Carried = { patch: Patch; left: number }
+/**
+ * What a cloth has on it from the patch it was last on.
+ * - From soft mud it carries mud (`patch` is `m`): each of the next `left`
+ *   patches it moves onto gets a smear if it is clean, and then the cloth is
+ *   clean, whether it found clean paint or not.
+ * - From foam it pushes that foam along (`patch` is the foam): when it moves
+ *   onto clean paint the foam moves there with it, and the patch it came from
+ *   is left wet. There is never more foam than before.
+ * `at` is the patch the cloth was last on, so a second dab on the same patch
+ * changes nothing.
+ */
+export type Carried = { patch: Patch; at: number; left: number }
 
 export type Surface = Patch[]
 
@@ -70,10 +84,11 @@ export type Dab = {
 /**
  * One touch of `hand` at a patch. Off the body it meets nothing.
  *
- * A cloth that has just been on soft mud or foam carries some along: the
- * next clean patch under the finger gets it instead of a shine, for a few
- * patches, and then the cloth is clean again. So a wipe through mud leaves a
- * short streak where the finger went, never mud all over.
+ * The cloth alone carries anything from one dab to the next (see `Carried`).
+ * It picks mud up only from soft mud, never from a smear it or an earlier
+ * wipe has laid, and it only moves foam, so however long or often a cloth is
+ * rubbed over a vehicle the mud on it grows by a few patches beside each
+ * patch of soft mud and no more, and the foam not at all.
  */
 export function dab(surface: Surface, hand: Hand, col: number, row: number, carried: Carried | null = null): Dab {
   const cells = dabCells(col, row).filter((cell) => surface[cell] !== '.')
@@ -83,23 +98,35 @@ export function dab(surface: Surface, hand: Hand, col: number, row: number, carr
   let carries: Carried | null = null
   const under = cellAt(col, row)
   if (hand === 'cloth' && cells.includes(under)) {
-    if (SPREADS.includes(surface[under])) carries = { patch: surface[under], left: SMEAR_PATCHES }
-    else if (carried && CLEAN.includes(surface[under])) {
+    const here = surface[under]
+    if (carried && carried.at === under) carries = carried
+    else if (here === 's') carries = { patch: 'm', at: under, left: SMEAR_PATCHES }
+    else if (FOAM.includes(here)) carries = { patch: here, at: under, left: 1 }
+    else if (carried && carried.patch === 'm') {
+      // A muddy cloth moved onto another patch: a smear if the paint is clean, and one patch nearer to being clean itself.
+      if (CLEAN.includes(here)) next[under] = 'm'
+      carries = carried.left > 1 ? { patch: 'm', at: under, left: carried.left - 1 } : null
+    } else if (carried && CLEAN.includes(here) && surface[carried.at] === carried.patch) {
+      // Foam pushed onto clean paint: it is here now, and where it was is wet.
       next[under] = carried.patch
-      carries = carried.left > 1 ? { patch: carried.patch, left: carried.left - 1 } : null
+      next[carried.at] = 'w'
+      carries = { patch: carried.patch, at: under, left: 1 }
     }
   }
-  const changed = cells.filter((cell) => next[cell] !== surface[cell])
+  // Every patch that changed: the ones under the dab, and the one a pushed foam left behind.
+  const changed: number[] = []
+  for (let cell = 0; cell < next.length; cell++) if (next[cell] !== surface[cell]) changed.push(cell)
   return { surface: changed.length ? next : surface, met, changed, carries }
 }
 
+/** Counts of each patch, and of body, of mud (dried, soft and smeared) and of foam. */
 export type Tally = Record<Patch, number> & { body: number; mud: number; foam: number }
 
 export function tally(surface: Surface): Tally {
-  const t: Tally = { '.': 0, c: 0, s: 0, b: 0, f: 0, w: 0, d: 0, p: 0, body: 0, mud: 0, foam: 0 }
+  const t: Tally = { '.': 0, c: 0, s: 0, m: 0, b: 0, f: 0, w: 0, d: 0, p: 0, body: 0, mud: 0, foam: 0 }
   for (const patch of surface) t[patch] += 1
   t.body = CELLS - t['.']
-  t.mud = t.c + t.s
+  t.mud = t.c + t.s + t.m
   t.foam = t.b + t.f
   return t
 }
@@ -111,7 +138,7 @@ export function allShiny(surface: Surface): boolean {
 }
 
 /** The patches each tool has work on: what it would take forward in a wash. */
-export const WORK: Readonly<Record<Tool, readonly Patch[]>> = { hose: ['c', 'b', 'f'], sponge: ['s'], cloth: ['w', 'd'] }
+export const WORK: Readonly<Record<Tool, readonly Patch[]>> = { hose: ['c', 'b', 'f'], sponge: ['s', 'm'], cloth: ['w', 'd'] }
 
 /**
  * The tool a wash would take up next, or null when the vehicle is all shiny.
@@ -121,7 +148,7 @@ export const WORK: Readonly<Record<Tool, readonly Patch[]>> = { hose: ['c', 'b',
 export function nextTool(surface: Surface): Tool | null {
   const has = (patches: readonly Patch[]): boolean => surface.some((patch) => patches.includes(patch))
   if (has(['c'])) return 'hose'
-  if (has(['s'])) return 'sponge'
+  if (has(['s', 'm'])) return 'sponge'
   if (has(['b', 'f'])) return 'hose'
   if (has(['w', 'd'])) return 'cloth'
   return null

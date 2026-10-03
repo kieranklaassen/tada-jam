@@ -37,13 +37,15 @@ The objects are the six things that can be on a patch of the vehicle. The action
 | On the patch | Bare finger | Sponge | Hose | Cloth | Sent off like this |
 | --- | --- | --- | --- | --- | --- |
 | **Dried mud** (pale, cracked) | A knock: a thud, a crack runs across, crumbs trickle | A dry rasp: crumbs and dust, suds dribble over the top and slide off; the mud stays | It darkens from the finger outward and turns to soft mud, a hiss that becomes a gurgle | A scratch and a puff of dust; the mud stays | Plates of mud crack off on the way out and lie in a row of clods |
-| **Soft mud** (dark, wet) | A squelch and a dent that slowly fills | It lifts into brown foam that stays on the vehicle | It glistens, slumps and drips brown, and clings | It smears along the rub: the next three clean patches under the finger turn to soft mud, and then the cloth is clean | Splats fly off the wheels; brown tyre tracks |
-| **Foam** (brown from mud, white on clean paint) | Bubbles pop off it, plip by plip; the foam stays | More foam, taller, and bubbles drift off | It slides off in rafts that sail to the drain; clean wet paint | It is pushed along the rub onto the next three clean patches under the finger; the cloth wears a foam beard | Blobs of foam peel off behind and a line of bubbles follows |
+| **Soft mud** (dark, wet) | A squelch and a dent that slowly fills | It lifts into brown foam that stays on the vehicle | It glistens, slumps and drips brown, and clings | It smears along the rub: of the next three patches under the finger, each one that is clean gets a thin smear, and then the cloth is clean | Splats fly off the wheels; brown tyre tracks |
+| **Foam** (brown from mud, white on clean paint) | Bubbles pop off it, plip by plip; the foam stays | More foam, taller, and bubbles drift off | It slides off in rafts that sail to the drain; clean wet paint | It is pushed along the rub: the foam moves with the cloth onto clean paint and the paint behind it is left wet, so there is never more foam than before; the cloth wears a foam beard | Blobs of foam peel off behind and a line of bubbles follows |
 | **Wet paint** | A squeaky wet slide, drops scatter | Thin white foam that slides and runs in streaks, a wet slurp | Water sheets off the sills, drops bounce | It dries and shines, a rising squeak | The vehicle shakes like a dog first; wet tyre lines |
 | **Dull paint** (clean, dry) | The body bounces and the metal rings | Thick white foam that stands in peaks, a dry squeak going soft | Beads of water; wet paint | It shines, with one glint | A plain toot and off |
 | **Shiny paint** | A dull fingerprint | Foam hides the shine | Fat round drops race off; wet paint | A higher squeak and a second glint; still shiny | Lamps flash, a glint runs nose to tail, a proud horn |
 
 The wrong use of each tool works and is funny: the cloth on mud paints with it, the cloth on foam pushes a beard of it about, the sponge on a shiny vehicle buries it in foam, the hose on dried mud makes it worse to look at before it is better. Each vehicle adds its own row of reactions (see the characters), and the puddle makes the vehicle that waits muddier when the child taps it, up to two times.
+
+**What the cloth does with mud it has itself laid down: nothing.** A smear is thin mud of its own kind, and a patch holds it as its own thing. It is not a seventh row of the grid: it looks and sounds as soft mud does, and to the sponge and the hose it is soft mud: soap lifts it into foam and water leaves it clinging. The cloth picks mud up only from soft mud, never from a smear, whether this rub laid it or an earlier one did, and a muddy cloth is clean again three patches on whatever those patches hold. So however long or often the cloth is rubbed over a vehicle, the mud on it grows by at most three patches along a rub from each patch of soft mud, and a put-away changes none of this, since the smear is in the saved grid. A wrong attempt stays small, where it happened, and is mended by one stroke of the sponge and one of the hose.
 
 On day 15 the child washes dried mud in the order that works (wet, soap, rinse, dry) with no wasted strokes, knows each vehicle's like and dislike and sets them off on purpose, and has found the combinations that always do the same thing, such as the sneeze that empties a tipper bed full of foam.
 
@@ -69,7 +71,7 @@ A wrong attempt is a tool on a patch it cannot take forward. The patch shows wha
 
 - The hose on dried mud: the mud is still there, now dark and dripping. Water alone did not take it off.
 - The sponge on dried mud: crumbs and a dribble of suds, and the mud unchanged.
-- The cloth on soft mud: a short brown smear along the rub, on paint that was clean.
+- The cloth on soft mud: a short brown smear along the rub, on paint that was clean, and never more than that.
 - The cloth on foam: the foam has moved, not gone.
 - The sponge on a rinsed vehicle: foam again, to be rinsed again.
 
@@ -100,7 +102,7 @@ The position moves one step up after a wash that went well, one down after one t
 - `v`: the version of the shape.
 - `position`: an id from the ladder.
 - `finished`: the template's mark that the cycle on screen is over. In this game the touch that sends one vehicle off also brings the next one in, so it is false in every save.
-- `bay`: the vehicle in the bay. `who` is its id in the roster; `cells` is the coarse grid of its surface, one character a patch, in rows (no body here, dried mud, soft mud, brown foam, white foam, wet, dull, shiny); `came` is how many patches held mud when it rolled in.
+- `bay`: the vehicle in the bay. `who` is its id in the roster; `cells` is the coarse grid of its surface, one character a patch, in rows (no body here, dried mud, soft mud, a smear the cloth left, brown foam, white foam, wet, dull, shiny); `came` is how many patches held mud when it rolled in.
 - `next`: the vehicle that waits, as `who`, `cells` and `dips`, so mud from the puddle and foam that landed on it are kept. `dips` is how many times it has been through the puddle, 0 to 2, so a third tap only splashes after a put-away too; nothing shows it.
 - `seed`: the state of the seeded stream that lays out the mud of each vehicle as it comes to the door. It is not a count of anything, and it does not pick who comes: the roster comes in its own order, round and round, so every vehicle is back within four washes.
 - `shown`: the ids of the first showings that have played, so each plays once.

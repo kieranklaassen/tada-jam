@@ -52,7 +52,7 @@ describe('a touch is answered when the finger lands', () => {
   })
 
   it('answers every hand on every state: nothing is ever refused', () => {
-    for (const patch of ['c', 's', 'b', 'f', 'w', 'd', 'p'] as const) for (const tool of ['finger', 'sponge', 'hose', 'cloth'] as const) {
+    for (const patch of ['c', 's', 'm', 'b', 'f', 'w', 'd', 'p'] as const) for (const tool of ['finger', 'sponge', 'hose', 'cloth'] as const) {
       const play = new Play(coated(patch))
       if (tool !== 'finger') play.press({ kind: 'tool', tool })
       play.sounds.length = 0

@@ -28,7 +28,7 @@ describe('what each tool does', () => {
   it('the cloth dries and shines, and takes no mud or foam off', () => {
     expect(TURNS.cloth.w).toBe('p')
     expect(TURNS.cloth.d).toBe('p')
-    for (const patch of ['c', 's', 'b', 'f'] as const) expect(TURNS.cloth[patch]).toBe(patch)
+    for (const patch of ['c', 's', 'm', 'b', 'f'] as const) expect(TURNS.cloth[patch]).toBe(patch)
   })
 
   it('a bare finger only leaves a print on a shine', () => {
@@ -66,7 +66,7 @@ describe('the order of a wash follows from the materials', () => {
   })
 
   it('a wrong order is never a dead end: any state can still be washed to a shine', () => {
-    for (const start of ['c', 's', 'b', 'f', 'w', 'd', 'p'] as const) {
+    for (const start of ['c', 's', 'm', 'b', 'f', 'w', 'd', 'p'] as const) {
       // The worst a child can do first: every tool in the wrong order, twice.
       let s = all(start)
       for (const hand of ['cloth', 'sponge', 'cloth', 'finger', 'hose', 'cloth', 'sponge'] as const) s = wipe(s, hand)
@@ -109,41 +109,118 @@ describe('a dab', () => {
     expect(result.surface).toBe(s)
   })
 
-  it('a cloth wiped through soft mud leaves a short streak where the finger goes next, and is then clean again', () => {
-    let s = all('d')
-    s[cellAt(2, 3)] = 's'
-    let carried = null as ReturnType<typeof dab>['carries']
-    for (let col = 2; col <= 8; col++) {
-      const result = dab(s, 'cloth', col, 3, carried)
+  /** Rubs the cloth along a row from `from` to `to`, `times` dabs on each patch, as a slow finger does. */
+  function wipe(surface: Surface, row: number, from: number, to: number, times = 1): { surface: Surface; carried: ReturnType<typeof dab>['carries'] } {
+    let s = surface, carried = null as ReturnType<typeof dab>['carries']
+    const step = to >= from ? 1 : -1
+    for (let col = from; col !== to + step; col += step) for (let i = 0; i < times; i++) {
+      const result = dab(s, 'cloth', col, row, carried)
       s = result.surface
       carried = result.carries
     }
+    return { surface: s, carried }
+  }
+
+  it('a cloth wiped through soft mud leaves a smear on the next three patches, and is then clean', () => {
+    const start = all('d')
+    start[cellAt(2, 3)] = 's'
+    const { surface: s, carried } = wipe(start, 3, 2, 8)
     // The mud is still where it was, three patches after it are smeared, and the rest of the rub shines.
-    expect([2, 3, 4, 5].map((col) => s[cellAt(col, 3)])).toEqual(['s', 's', 's', 's'])
-    expect([6, 7, 8].map((col) => s[cellAt(col, 3)])).toEqual(['p', 'p', 'p'])
+    expect([2, 3, 4, 5, 6, 7, 8].map((col) => s[cellAt(col, 3)])).toEqual(['s', 'm', 'm', 'm', 'p', 'p', 'p'])
     expect(carried).toBeNull()
     // Never mud all over: the rows beside the rub are shined, not smeared.
     expect(s[cellAt(4, 2)]).toBe('p')
-    expect(tally(s).s).toBe(1 + SMEAR_PATCHES)
+    expect(tally(s).mud).toBe(1 + SMEAR_PATCHES)
   })
 
-  it('the cloth pushes foam along the same way, and dried mud does not come away on it', () => {
-    const foamy = all('w')
-    foamy[cellAt(5, 3)] = 'f'
-    const first = dab(foamy, 'cloth', 5, 3)
-    expect(first.carries).toEqual({ patch: 'f', left: SMEAR_PATCHES })
-    expect(dab(first.surface, 'cloth', 6, 3, first.carries).surface[cellAt(6, 3)]).toBe('f')
+  it('the cloth picks nothing up from a smear: no number of dabs or passes spreads one further', () => {
+    const start = all('d')
+    start[cellAt(2, 3)] = 's'
+    // A slow finger dabs each patch three times before it moves on. This is what turned a vehicle brown.
+    let s = wipe(start, 3, 2, 10, 3).surface
+    expect(tally(s).mud).toBe(1 + SMEAR_PATCHES)
+    // The same rub again and again, and a rub that begins on the smear itself.
+    for (let pass = 0; pass < 5; pass++) s = wipe(s, 3, 2, 10, 2).surface
+    s = wipe(s, 3, 4, 10).surface
+    expect(tally(s).mud).toBe(1 + SMEAR_PATCHES)
+    expect([2, 3, 4, 5, 6].map((col) => s[cellAt(col, 3)])).toEqual(['s', 'm', 'm', 'm', 'p'])
+  })
+
+  it('a muddy cloth comes clean over three patches whatever they hold, so mud is never carried far', () => {
+    const start = all('d')
+    start[cellAt(2, 3)] = 's'
+    for (const col of [3, 4, 5]) start[cellAt(col, 3)] = 'c'
+    const { surface: s, carried } = wipe(start, 3, 2, 8)
+    // The three patches after the mud were dried mud: nothing was laid on them, and the cloth is clean beyond them.
+    expect([3, 4, 5, 6, 7].map((col) => s[cellAt(col, 3)])).toEqual(['c', 'c', 'c', 'p', 'p'])
+    expect(carried).toBeNull()
+  })
+
+  it('every way of rubbing from one patch of soft mud leaves mud only within three patches of it', () => {
+    let s = all('p')
+    s[cellAt(6, 3)] = 's'
+    // Out from the mud in all four directions, over and over.
+    for (let pass = 0; pass < 4; pass++) {
+      s = wipe(s, 3, 6, 11).surface
+      s = wipe(s, 3, 6, 0).surface
+      for (const dir of [1, -1]) {
+        let carried = null as ReturnType<typeof dab>['carries']
+        for (let row = 3; row >= 0 && row < GRID_H; row += dir) {
+          const result = dab(s, 'cloth', 6, row, carried)
+          s = result.surface
+          carried = result.carries
+        }
+      }
+    }
+    s.forEach((patch, cell) => {
+      if (patch !== 's' && patch !== 'm') return
+      const col = cell % GRID_W, row = Math.floor(cell / GRID_W)
+      expect(Math.abs(col - 6) + Math.abs(row - 3)).toBeLessThanOrEqual(SMEAR_PATCHES)
+    })
+    expect(tally(s).mud).toBe(1 + 4 * SMEAR_PATCHES)
+  })
+
+  it('a smear is mud to the sponge and the hose: soap lifts it, water leaves it', () => {
+    expect(TURNS.sponge.m).toBe('b')
+    expect(TURNS.hose.m).toBe('m')
+    expect(TURNS.cloth.m).toBe('m')
+    expect(tally(all('m')).mud).toBe(CELLS)
+  })
+
+  it('the cloth pushes foam along: it moves with the rub, the paint behind is left wet, and there is never more of it', () => {
+    const start = all('w')
+    start[cellAt(5, 3)] = 'f'
+    const first = dab(start, 'cloth', 5, 3)
+    expect(first.carries).toEqual({ patch: 'f', at: cellAt(5, 3), left: 1 })
+    const { surface: s } = wipe(start, 3, 5, 9, 2)
+    expect(tally(s).foam).toBe(1)
+    expect(s[cellAt(9, 3)]).toBe('f')
+    expect(s[cellAt(5, 3)]).not.toBe('f')
+    // Brown foam the same, and any number of passes over a foamy vehicle makes no more foam.
+    let foamy = all('w')
+    for (const col of [1, 4, 5, 9]) foamy[cellAt(col, 2)] = 'b'
+    for (let pass = 0; pass < 4; pass++) for (let row = 0; row < GRID_H; row++) foamy = wipe(foamy, row, 0, GRID_W - 1, 2).surface
+    expect(tally(foamy).foam).toBe(4)
+    expect(tally(foamy).b).toBe(4)
+  })
+
+  it('dried mud does not come away on the cloth, and foam that is gone is not laid down', () => {
     const caked = all('w')
     caked[cellAt(5, 3)] = 'c'
     const after = dab(caked, 'cloth', 5, 3)
     expect(after.carries).toBeNull()
     expect(after.surface[cellAt(5, 3)]).toBe('c')
     expect(after.surface[cellAt(4, 3)]).toBe('p')
+    // The foam the cloth was pushing has been taken off by something else: nothing is made of it.
+    const gone = all('w')
+    const result = dab(gone, 'cloth', 6, 3, { patch: 'f', at: cellAt(5, 3), left: 1 })
+    expect(tally(result.surface).foam).toBe(0)
+    expect(result.carries).toBeNull()
   })
 
   it('only a cloth carries anything', () => {
     const s = all('s')
-    for (const hand of ['finger', 'sponge', 'hose'] as const) expect(dab(s, hand, 5, 3, { patch: 's', left: 3 }).carries).toBeNull()
+    for (const hand of ['finger', 'sponge', 'hose'] as const) expect(dab(s, hand, 5, 3, { patch: 'm', at: 0, left: 3 }).carries).toBeNull()
   })
 })
 
