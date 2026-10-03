@@ -5,7 +5,7 @@ import { KINDS } from './kinds'
 import { OVEN_MOUTH, OVEN_WAY, PIZZA, SERVE } from './layout'
 import type { Delta } from './motion'
 import { Scene, sceneLength } from './scene'
-import { EATING_SECONDS, baking, bakedAlready, delightAct, eating, fedAct, fewAct, firstShowing, handFed, manyAct, ovenShowing, rawTasting, steppingUp, tasting, walk } from './scenes'
+import { EATING_SECONDS, baking, bakedAlready, cannotStandAct, delightAct, eating, fedAct, fewAct, firstShowing, handFed, mannerAct, manyAct, ovenShowing, rawTasting, steppingUp, tasting, walk } from './scenes'
 import { restStaging } from './staging'
 import { planTasting } from './tasting'
 
@@ -45,9 +45,11 @@ describe('the grid: every cell moves differently', () => {
     allDiffer(KINDS.map((kind) => curve((u) => fedAct(kind, u))), KINDS)
   })
 
-  it('each customer\'s walk and each customer\'s delight', () => {
+  it('each customer\'s walk, delight, manner, and answer to the kind it cannot stand', () => {
     allDiffer(CUSTOMERS.map((who) => curve((u) => walk(who, u))), CUSTOMERS)
     allDiffer(CUSTOMERS.map((who) => curve((u) => delightAct(who, u))), CUSTOMERS)
+    allDiffer(CUSTOMERS.map((who) => curve((u) => mannerAct(who, u))), CUSTOMERS)
+    allDiffer(CUSTOMERS.map((who) => curve((u) => cannotStandAct(who, u))), CUSTOMERS)
   })
 
   it('leaves every body at rest when its beat ends', () => {

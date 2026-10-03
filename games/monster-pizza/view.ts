@@ -80,6 +80,16 @@ function paintCrumbs(g: Pen): void {
   }
 }
 
+/** How a kind answers the spring it lands on: a turn, a hop, and a squash wide and tall, for each unit of the spring. */
+const LANDING: Record<Kind, { turn: number; hop: number; wide: number; tall: number }> = {
+  pepper: { turn: 0.22, hop: 0, wide: 0.03, tall: 0.03 },
+  mushroom: { turn: 0, hop: 5, wide: 0.07, tall: 0.07 },
+  olive: { turn: 0, hop: 9, wide: 0.03, tall: 0.03 },
+  cheese: { turn: 0, hop: 0, wide: 0.02, tall: 0.02 },
+  sock: { turn: 0, hop: 0, wide: 0.11, tall: -0.09 },
+  worm: { turn: -0.3, hop: 0, wide: 0.06, tall: -0.04 },
+}
+
 /** Where the bites are taken, as shares of the pizza's radius: each takes about a third. */
 const BITES = [{ x: -0.8, y: -0.5, r: 0.86 }, { x: 0.85, y: -0.35, r: 0.9 }, { x: 0, y: 0.5, r: 1.3 }] as const
 
@@ -127,13 +137,16 @@ export class KitchenView {
     this.draws = 0
   }
 
-  private piece(kind: Kind, x: number, y: number, turn: number, size: number): void {
+  private piece(kind: Kind, x: number, y: number, turn: number, size: number, baked = false, settle = 0): void {
     const g = this.g
+    // Each kind lands in its own way, on the same spring: the pepper skids round, the mushroom bobs, the olive
+    // hops, the cheese barely stirs, the sock flumps wide, the worm wriggles once. At rest all lie still.
+    const land = LANDING[kind]
     g.save()
-    g.translate(x, y)
-    g.rotate(turn)
-    g.scale(size, size)
-    stamp(g, this.scenery!.pieces[kind])
+    g.translate(x, y - settle * land.hop)
+    g.rotate(turn + settle * land.turn)
+    g.scale(size * (1 + settle * land.wide), size * (1 + settle * land.tall))
+    stamp(g, baked ? this.scenery!.piecesBaked[kind] : this.scenery!.pieces[kind])
     g.restore()
     this.draws += 1
   }
@@ -181,7 +194,7 @@ export class KitchenView {
         stamp(g, this.halo)
         g.restore()
       }
-      this.piece(piece.kind, piece.x * PIZZA.r, piece.y * PIZZA.r, piece.turn + hot * 0.5 * Math.sin(show.time * 40), 1 + piece.settle.x * 0.05 + hot * 0.3)
+      this.piece(piece.kind, piece.x * PIZZA.r, piece.y * PIZZA.r, piece.turn + hot * 0.5 * Math.sin(show.time * 40), 1 + hot * 0.3, show.baked, piece.settle.x)
     }
     g.restore()
   }

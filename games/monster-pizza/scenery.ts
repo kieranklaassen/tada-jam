@@ -65,7 +65,23 @@ export function paintPizza(g: Pen, baked: boolean): void {
 
 /** One piece, plain, about (0, 0). */
 export function paintPiece(g: Pen, kind: Kind, r: number, baked = false): void {
-  plain(g, pieceRing(kind, 0, 0, r), LOOKS[kind].fill, Math.max(3, r * 0.19), baked ? '#3a2416' : INK)
+  if (!baked) return plain(g, pieceRing(kind, 0, 0, r), LOOKS[kind].fill, Math.max(3, r * 0.19), INK)
+  // Baked, a piece takes one small step and stays whole, flat and countable: a browned rim, and its kind's own change.
+  const look = BAKED[kind]
+  g.save()
+  g.scale(look.sx, look.sy)
+  plain(g, pieceRing(kind, 0, 0, r), look.fill, Math.max(3, r * 0.19), '#5a3418')
+  g.restore()
+}
+
+/** How each kind comes out of the oven: the pepper deepens, the mushroom shrinks a touch, the olive darkens, the cheese goes golden, the sock is as it was, the worm curls up shorter. */
+const BAKED: Record<Kind, { fill: string; sx: number; sy: number }> = {
+  pepper: { fill: '#c9261f', sx: 1, sy: 1 },
+  mushroom: { fill: '#a87748', sx: 0.9, sy: 0.9 },
+  olive: { fill: '#3f6a22', sx: 1, sy: 1 },
+  cheese: { fill: '#f7b90c', sx: 1, sy: 1 },
+  sock: { fill: '#2f7fe0', sx: 1, sy: 1 },
+  worm: { fill: '#f47aa3', sx: 0.86, sy: 1 },
 }
 
 /** A tub of one kind, about the middle of its rim: a coloured-in bowl with a heap of plain pieces in it. */
@@ -120,6 +136,7 @@ export type Scenery = {
   bigRoll: Sprite
   tubs: Record<Kind, Sprite>
   pieces: Record<Kind, Sprite>
+  piecesBaked: Record<Kind, Sprite>
 }
 
 export function makeScenery(density: number, kinds: readonly Kind[], view: { x: number; y: number; w: number; h: number }): Scenery {
@@ -137,5 +154,6 @@ export function makeScenery(density: number, kinds: readonly Kind[], view: { x: 
     bigRoll: sprite({ x: -46, y: -20, w: 92, h: 40 }, density, 8, (g) => paintRoll(g, true)),
     tubs: each((kind) => sprite({ x: -TUB.r, y: -TUB.r, w: TUB.r * 2, h: TUB.r * 1.9 }, density, 22, (g) => paintTub(g, kind))),
     pieces: each((kind) => sprite({ x: -PIECE_R, y: -PIECE_R, w: PIECE_R * 2, h: PIECE_R * 2 }, density, 6, (g) => paintPiece(g, kind, PIECE_R))),
+    piecesBaked: each((kind) => sprite({ x: -PIECE_R, y: -PIECE_R, w: PIECE_R * 2, h: PIECE_R * 2 }, density, 6, (g) => paintPiece(g, kind, PIECE_R, true))),
   }
 }

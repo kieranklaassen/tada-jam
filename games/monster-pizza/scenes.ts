@@ -229,6 +229,55 @@ export function manyAct(kind: Kind, u: number, big: boolean): Delta {
   }
 }
 
+/**
+ * A kind it cannot stand, on its pizza: each customer's own answer, on top of
+ * what that kind does to anyone. Bim's eye stalk ties itself in a knot, steam
+ * drives Grum's belly out like a lamp, Fizz's neck goes limp, every hair on
+ * Mops stands on end, and Ooze melts into a puddle and pulls itself together.
+ */
+export function cannotStandAct(who: Customer, u: number): Delta {
+  switch (who) {
+    case 'bim':
+      return { part: 2.2 * Math.sin(u * TAU * 3) * (1 - u) + 1.4 * hump(u), lookX: Math.sin(u * TAU * 3), lift: 10 * hump(u) }
+    case 'grum':
+      return { part: 2 * hump(u), squash: -0.06 * hump(u), blink: 0.8 * hump(ramp(u, 0.2, 0.8)) }
+    case 'fizz':
+      return { squash: 0.3 * hump(u), part: -1.4 * hump(u), lean: 0.08 * Math.sin(u * TAU) * hump(u) }
+    case 'mops':
+      return { part: 1.7 * hump(ramp(u, 0, 0.7)), squash: -0.12 * hump(ramp(u, 0, 0.5)), blink: -0.4 * hump(u) }
+    case 'ooze':
+      return { squash: 0.46 * hump(ramp(u, 0, 0.6)) - 0.12 * hump(ramp(u, 0.6, 1)), blink: hump(ramp(u, 0.1, 0.5)) }
+  }
+}
+
+/**
+ * Every reaction is played in the customer's own manner: Bim's in quick
+ * double beats with a hop, Grum's slow and late with his belly following,
+ * Fizz's with a shiver through it, Mops's with her ears a moment behind, and
+ * Ooze's with a sag. This is added to what the kind does.
+ */
+export function mannerAct(who: Customer, u: number): Delta {
+  switch (who) {
+    case 'bim':
+      return { lift: 16 * Math.abs(Math.sin(u * Math.PI * 2)), part: 0.6 * Math.sin(u * TAU * 2) * (1 - u) }
+    case 'grum':
+      return { part: 1.1 * hump(ramp(u, 0.3, 1)), squash: 0.03 * hump(ramp(u, 0.4, 1)) }
+    case 'fizz':
+      return { lean: 0.025 * Math.sin(u * TAU * 7) * (1 - u), part: 0.7 * Math.sin(u * TAU * 7) * (1 - u) }
+    case 'mops':
+      return { part: -0.7 * hump(ramp(u, 0, 0.4)) + 0.9 * hump(ramp(u, 0.4, 1)), blink: 0.35 * hump(u), lean: 0.04 * hump(u) }
+    case 'ooze':
+      return { squash: 0.09 * hump(ramp(u, 0.2, 1)), lean: 0.03 * Math.sin(u * TAU) }
+  }
+}
+
+/** Adds one set of pose changes to another. */
+function plus(a: Delta, b: Delta): Delta {
+  const out: Delta = { ...a }
+  for (const key of Object.keys(b) as (keyof Delta)[]) out[key] = (out[key] ?? 0) + (b[key] ?? 0)
+  return out
+}
+
 /** What its body does for one piece too few, by kind, while it pats the card and looks at that kind's tub. */
 export function fewAct(kind: Kind, u: number): Delta {
   switch (kind) {
@@ -287,7 +336,8 @@ export function tasting(
           st.effect = u < 1 ? { kind: taste.kind, way: 'many', big: taste.big, t: u } : null
           st.sizzling = u < 1 ? extras(taste.kind, taste.index) : -1
           st.sizzle = hump(u)
-          st.act = manyAct(taste.kind, u, taste.big)
+          const body = plus(manyAct(taste.kind, u, taste.big), u < 1 ? mannerAct(who, u) : {})
+          st.act = taste.kind === CHARACTERS[who].cannotStand && u < 1 ? plus(body, cannotStandAct(who, u)) : body
           st.lookAt = null
           if (taste.big && taste.kind === 'pepper' && u > 0.6) st.soot = 1
         }),
@@ -305,7 +355,7 @@ export function tasting(
           st.patted = u < 1 ? spot.index : -1
           st.pat = hump(u)
           st.hand = u < 1 ? { x: at.x + 8, y: at.y + 14 - 10 * hump(ramp(u, 0, 0.4)) } : null
-          st.act = { ...fewAct(taste.kind, u), part: (fewAct(taste.kind, u).part ?? 0) + 0.8 * Math.sin(u * TAU * 4) * (1 - u) }
+          st.act = u < 1 ? plus(plus(fewAct(taste.kind, u), mannerAct(who, u)), { part: 0.8 * Math.sin(u * TAU * 4) * (1 - u) }) : {}
           st.lookAt = u < 1 ? tubOf(taste.kind) : null
         }),
       )
