@@ -3,7 +3,8 @@ import { PLATE, buildMesh, mergeMeshes, type Brick, type BrickMesh } from './bri
 import { toyBricks } from './builds'
 import { EYE, eyeCentres, gobblerParts } from './gobblerBuild'
 import { shapeOf, type GobblerId } from './gobblers'
-import { RIDER, RISER, deckSpots, deckTop, riderSpots } from './layout'
+import { ARCH, HANDLE, RIDER, RIDER_STEP, RIDER_Z, RISER, RISER_BASE, deckSpots, deckTop, handleSpot, riderSpots } from './layout'
+import { STEEL } from './palette'
 import { CRATE as CRATE_COLOUR, CRATE_DARK } from './palette'
 import { CRATE } from './places'
 import type { Toy } from './toys'
@@ -25,9 +26,18 @@ function box(which: number, rows: number): Brick[] {
     out.push({ x: -half, y, z: -depth, w: joint, d: CRATE.depth, h, colour, studs: y + h >= deck })
     out.push({ x: -half + joint, y, z: -depth, w: CRATE.width - joint, d: CRATE.depth, h, colour, studs: y + h >= deck })
   }
-  // A lip along the front of the deck, and a riser for each row of riders.
-  out.push({ x: -half, y: deck, z: depth - 0.5, w: CRATE.width, d: 0.5, h: 1, colour: CRATE_DARK, studs: false })
-  for (let row = 0; row < rows; row++) out.push({ x: -half, y: deck, z: -depth - row * 0.5, w: CRATE.width, d: 2.2, h: Math.round((0.4 + row * RISER) / PLATE), colour: row % 2 === 0 ? CRATE_DARK : CRATE_COLOUR, studs: false })
+  // A lip along the front of the deck, with the handle the claw lifts the crate by.
+  out.push({ x: -half, y: deck, z: depth - 0.2, w: CRATE.width, d: 0.2, h: 1, colour: CRATE_DARK, studs: false })
+  // The arch over the front of the load, and the knob on it.
+  const handle = handleSpot(), arch = Math.round(ARCH / PLATE)
+  for (const side of [-1, 1]) out.push({ x: side * (half - 0.25) - 0.25, y: deck, z: handle.z - 0.25, w: 0.5, d: 0.5, h: arch - 1, colour: STEEL, studs: false })
+  out.push({ x: -half, y: deck + arch - 1, z: handle.z - 0.25, w: CRATE.width, d: 0.5, h: 1, colour: STEEL, studs: false })
+  out.push({ x: handle.x - 0.8, y: deck + arch, z: handle.z - 0.8, w: 1.6, d: 1.6, h: Math.round(HANDLE / PLATE), colour: STEEL, round: true, studs: true })
+  // A riser for each row of riders: each a step higher and a step further back, none standing in another.
+  for (let row = 0; row < rows; row++) {
+    const front = RIDER_Z + RIDER_STEP / 2 - row * RIDER_STEP
+    out.push({ x: -half, y: deck, z: front - RIDER_STEP + 0.02, w: CRATE.width, d: RIDER_STEP - 0.04, h: Math.round((RISER_BASE + row * RISER) / PLATE), colour: row % 2 === 0 ? CRATE_DARK : CRATE_COLOUR, studs: false })
+  }
   return out
 }
 

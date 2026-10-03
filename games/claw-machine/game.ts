@@ -2,13 +2,14 @@ import type { Aim } from './aim'
 import { MINI } from './belly'
 import { fly, newBody, settle, type Body, type Landing } from './bodies'
 import { STEP, follow, hubAt, letBe, newClaw, release, stepClaw, type Claw, type ClawEvent } from './claw'
-import { HINGE_DROP, JAW_REACH } from './clawBuild'
+import { holdOf } from './builds'
+import { HINGE_DROP, JAW_REACH, TOOTH_DROP } from './clawBuild'
 import type { PositionId } from './config'
 import { clawLands, clawSwingsInto, clawWaitsAbove, toyLetGo, type Deed, type Target } from './deeds'
 import type { GameEvent } from './events'
-import { knobAt, rimHeight, tongueTravel } from './gobblerBuild'
+import { knobAt, tongueTravel } from './gobblerBuild'
 import { GOBBLER, shapeOf, snackOf, type GobblerId } from './gobblers'
-import { bellySpots, crateSpot, crateTop, crewSpot, deckTop, headTop, waitingSpot, type Spot } from './layout'
+import { bellySpots, crateSpot, crateTop, crewSpot, deckTop, handleSpot, headTop, waitingSpot, type Spot } from './layout'
 import { LIFT_SECONDS, WRONG, actSeconds, type Act } from './motion'
 import { layCycle } from './order'
 import { BELL, GATE, RAIL, SHELF, SLOT_Z, TRAY, WAIT_Z, placeAt } from './places'
@@ -57,7 +58,23 @@ export type Actor = {
   cargoAt: Spot[]
 }
 
-export type CrateBody = { from: PositionId; seed: number; which: number; toys: Toy[]; crews: GobblerId[][]; x: number; z: number; /** 0 standing, 1 sunk out of sight behind the parapet. */ sink: number; /** 0 upright, 1 tipped over the parapet. */ tip: number }
+export type CrateBody = {
+  from: PositionId
+  seed: number
+  which: number
+  toys: Toy[]
+  crews: GobblerId[][]
+  /** The middle of its foot. */
+  x: number
+  y: number
+  z: number
+  /** 0 standing in its place, 1 slid away to the side, out of sight. */
+  away: number
+  /** 0 upright, 1 tipped forward to pour. */
+  tip: number
+  /** In the jaws: it hangs from its handle under the claw. */
+  carried: boolean
+}
 
 /** What becomes of a toy that is on a gobbler's tongue. */
 export type Plan =
@@ -67,6 +84,10 @@ export type Plan =
 /** How far from the middle of a toy the claw can land and still close on it. */
 export const REACH = 4.6
 const LOWEST_RIDE = 9.2
+/** How far above a thing the hinge stops when the shut jaws are only to touch it. */
+const TOUCH = JAW_REACH + 0.5
+/** How far above the top of a gobbler's knob the hinge is when the teeth hold the knob by its middle. */
+export const KNOB_HOLD = TOOTH_DROP - 0.6
 /** How long the claw has to wait above a thing before the thing notices. */
 const WAIT_SECONDS = 0.7
 
@@ -110,6 +131,8 @@ export class Game {
   private buffered = false
   /** The gate shaking, 1 to 0. */
   gateShake = 0
+  /** While the claw carries a crate in a scene: the height its hinge rides at. Otherwise null. */
+  hoist: number | null = null
   private owed = 0
   private readonly fromClaw: ClawEvent[] = []
   /** Set by the scenes module: starts the scene a deed calls for. */
@@ -148,7 +171,7 @@ export class Game {
   arrangeCrates(): void {
     this.crates = this.world.crates.map((crate, which) => {
       const laid = layCycle(crate.from, crate.seed), at = crateSpot(which, this.world.crates.length)
-      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, crews: laid.crews, x: at.x, z: at.z, sink: 0, tip: 0 }
+      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, crews: laid.crews, x: at.x, y: SHELF.top, z: at.z, away: 0, tip: 0, carried: false }
     })
   }
 
@@ -181,7 +204,8 @@ export class Game {
     })
     this.leaving = []
     if (this.world.crates.length === 0) this.crates = []
-    for (const crate of this.crates) { crate.sink = 0; crate.tip = 0 }
+    this.crates.forEach((crate) => { const at = crateSpot(crate.which, this.crates.length); crate.x = at.x; crate.y = SHELF.top; crate.z = at.z; crate.away = 0; crate.tip = 0; crate.carried = false })
+    if (this.hoist !== null) { this.hoist = null; this.claw.load = 0; this.claw.grip = 0; this.claw.targetX = this.claw.x; this.claw.targetZ = this.claw.z }
     this.flights.clear(); this.causes.clear()
   }
 
@@ -243,8 +267,8 @@ export class Game {
       return this.held >= 0 ? { x: actor.x, z: actor.z } : { x: actor.x + knob.x, z: actor.z + knob.z }
     }
     if (target.on === 'rail-end') return { x: target.side * RAIL.maxX, z: BELL.z }
-    // The ledge: a crate, a waiting head, or the gate.
-    if (this.crates.length > 0) { const crate = this.crates[Math.min(target.which, this.crates.length - 1)]; return { x: crate.x, z: crate.z + 1.2 } }
+    // The ledge: the front of a crate, a waiting head, or the gate.
+    if (this.crates.length > 0) { const crate = this.crates[Math.min(target.which, this.crates.length - 1)]; return { x: crate.x, z: crate.z + handleSpot().z } }
     if (this.waiting.length > 0 && (this.held >= 0 || this.tray().some((stack) => stack.length > 0))) {
       const nearest = this.waiting.reduce((best, actor) => (Math.abs(actor.x - aim.x) < Math.abs(best.x - aim.x) ? actor : best))
       return { x: nearest.x, z: WAIT_Z }
@@ -314,6 +338,7 @@ export class Game {
 
   /** How high the hinge of the jaws rides here: clear of whatever is near, with what it carries. */
   rideY(): number {
+    if (this.hoist !== null) return this.hoist
     const claw = this.claw
     let near: number = TRAY.top
     const tray = this.tray()
@@ -327,24 +352,40 @@ export class Game {
       for (const actor of this.waiting) near = Math.max(near, actor.y + headTop(actor.id))
       for (const crate of this.crates) near = Math.max(near, SHELF.top + crateTop(crate.which, crate.crews.length))
     }
-    const below = this.held >= 0 ? this.bodies[this.held].height + JAW_REACH * 0.5 : JAW_REACH
+    const below = this.held >= 0 ? this.hang(this.held) : JAW_REACH + 0.1
     if (this.lifted >= 0) {
-      // A gobbler in the jaws comes up a little way and no further; Big barely leaves the step.
-      const actor = this.crew[this.lifted], up = actor.id === 'big' ? 0.5 : 2.6
-      return crewSpot(actor.slot, this.crew.length).y + knobAt(shapeOf(actor.id)).y + JAW_REACH * 0.55 + up
+      // A gobbler in the jaws comes up a little way and no further. Big barely leaves the step; Little, who
+      // spins like a top, is lifted clear of the gate behind it.
+      const actor = this.crew[this.lifted], up = actor.id === 'big' ? 0.5 : actor.id === 'little' ? 5.6 : 2.6
+      return crewSpot(actor.slot, this.crew.length).y + knobAt(shapeOf(actor.id)).y + KNOB_HOLD + up
     }
     return Math.max(LOWEST_RIDE, near + below + 1)
   }
 
-  /** The height of what the jaws will land on when they drop for the thing the claw is going for. */
+  /** How far below the hinge of the jaws the base of a held toy hangs: the teeth close beside its highest part. */
+  hang(toy: number): number {
+    const hold = holdOf(this.bodies[toy].toy)
+    return TOOTH_DROP - hold.height / 2 + hold.top
+  }
+
+  /**
+   * The height the hinge of the jaws stops at when the claw drops for the thing it is going for: beside the
+   * highest part of a toy or the knob of a gobbler, and with the shut jaws just touching anything else.
+   */
   landY(): number {
     const target = this.pending, claw = this.claw
-    if (target.on === 'place') { const toy = nearestToy(this.tray(), claw.x, claw.z, REACH); return toy >= 0 ? this.stackTop(toy) : TRAY.top }
-    if (target.on === 'gobbler') { const actor = this.crew[target.slot]; return actor ? actor.y + knobAt(shapeOf(actor.id)).y : TRAY.top }
-    if (target.on === 'rail-end') return BELL.top
-    if (this.crates.length > 0) return SHELF.top + deckTop(Math.min(target.which, this.crates.length - 1)) + 0.8
-    if (Math.abs(claw.z - WAIT_Z) < 1 && this.waiting.length > 0) return SHELF.top + rimHeight(shapeOf(this.waiting[0].id)) + 1.6
-    return GATE.top
+    if (target.on === 'place') {
+      const place = nearestToy(this.tray(), claw.x, claw.z, REACH)
+      if (place < 0) return TRAY.top + TOUCH
+      const stack = this.tray()[place], top = stack[stack.length - 1]
+      return this.stackTop(place, top) + this.hang(top)
+    }
+    if (target.on === 'gobbler') { const actor = this.crew[target.slot]; return actor ? actor.y + knobAt(shapeOf(actor.id)).y + KNOB_HOLD : TRAY.top + TOUCH }
+    if (target.on === 'rail-end') return BELL.top + TOUCH
+    // A crate is held by the knob on its arch, as a gobbler is by the knob on its head.
+    if (this.crates.length > 0) return SHELF.top + deckTop(Math.min(target.which, this.crates.length - 1)) + handleSpot().y + KNOB_HOLD
+    if (Math.abs(claw.z - WAIT_Z) < 1 && this.waiting.length > 0) return SHELF.top + headTop(this.waiting[0].id) + TOUCH
+    return GATE.top + TOUCH
   }
 
   private step(): void {
@@ -360,6 +401,12 @@ export class Game {
     for (const actor of this.leaving) { this.moveActor(actor); this.moveSnack(actor) }
     this.leaving = this.leaving.filter((actor) => !(actor.walk === null && actor.role === 'leaving'))
     this.gateShake = Math.max(0, this.gateShake - STEP / 0.5)
+    // A crate in the jaws hangs from its handle under the hub.
+    for (const crate of this.crates) if (crate.carried) {
+      const hub = hubAt(claw), handle = handleSpot()
+      crate.x = hub.x; crate.z = hub.z - handle.z
+      crate.y = hub.y - HINGE_DROP - KNOB_HOLD - handle.y - deckTop(crate.which)
+    }
     this.watchBuffer()
     this.watchWaiting()
     if (this.scene) { this.scene.update(this.time); if (!this.scene.running) this.endScene(false) }
@@ -400,7 +447,7 @@ export class Game {
         const left = where.at === 'tray' ? this.tray()[where.place].length : 0
         this.say({ type: 'pop', heavy: this.bodies[this.held].heavy, level: left })
         if (left > 0) this.say({ type: 'settle' })
-      } else if (this.lifted < 0) this.say({ type: 'bite' })
+      } else if (this.lifted < 0 && this.hoist === null) this.say({ type: 'bite' })
     } else if (event.type === 'let-go') {
       if (this.lifted >= 0) { this.dropGobbler(); return }
       if (this.held < 0) return
@@ -456,11 +503,13 @@ export class Game {
       // Hangs under the jaws along the cable, easing from where it stood to where it hangs.
       const claw = this.claw, hub = hubAt(claw)
       const down = (hub.y - RAIL.top) / claw.length, across = (hub.x - claw.x) / claw.length, along = (hub.z - claw.z) / claw.length
-      const drop = HINGE_DROP + JAW_REACH * 0.5 + body.height
+      const drop = HINGE_DROP + this.hang(toy)
       body.mode = 'held'
       body.hang = Math.min(1, body.hang + STEP / 0.18)
       const ease = body.hang * body.hang * (3 - 2 * body.hang)
-      body.x += (hub.x + across * drop - body.x) * ease
+      // The part the teeth hold is under the hub, so a toy whose highest part is off its middle hangs off its middle.
+      const off = holdOf(body.toy).x
+      body.x += (hub.x + across * drop - off - body.x) * ease
       body.y += (hub.y + down * drop - body.y) * ease
       body.z += (hub.z + along * drop - body.z) * ease
       body.leanX = claw.swingX * ease; body.leanZ = claw.swingZ * ease
@@ -538,7 +587,7 @@ export class Game {
       const hub = hubAt(this.claw), knob = knobAt(shapeOf(actor.id)), home = crewSpot(actor.slot, this.crew.length)
       if (actor.liftedT < 0) return
       actor.liftedT += STEP
-      actor.y = Math.max(home.y, hub.y - HINGE_DROP - JAW_REACH * 0.55 - knob.y)
+      actor.y = Math.max(home.y, hub.y - HINGE_DROP - KNOB_HOLD - knob.y)
       actor.x = home.x + (hub.x - this.claw.x) * 0.5
       return
     }

@@ -11,7 +11,7 @@ import type { Toy } from './toys'
 // numbers, read by the game and by the view.
 
 /** How small a gobbler is while it rides on a crate. Like a toy in a belly, it is its full size once it is out. */
-export const RIDER = 0.3
+export const RIDER = 0.28
 /** How much taller the taller crate stands: its deck is this far above the plain one's. */
 export const TALLER = 4 * PLATE
 
@@ -50,6 +50,8 @@ export function deckTop(which: number): number {
  */
 export function deckSpots(toys: readonly Toy[]): Spot[] {
   const out: Spot[] = [], usable = CRATE.width - 1.2, gap = 0.3
+  // Two rows at the front of the deck, each clear of the other and of the lip in front and the riders behind.
+  const rowZ = [2.25, 0.82]
   const rows: Toy[][] = [[]]
   let used = 0
   for (const toy of toys) {
@@ -63,7 +65,7 @@ export function deckSpots(toys: readonly Toy[]): Spot[] {
     let x = -total / 2
     for (const toy of row) {
       const length = toySpan(toy).length * MINI
-      out.push({ x: x + length / 2, y: 0, z: 1.4 - r * 1.5 })
+      out.push({ x: x + length / 2, y: 0, z: rowZ[Math.min(r, rowZ.length - 1)] })
       x += length + gap
     }
   })
@@ -77,26 +79,41 @@ export function deckSpots(toys: readonly Toy[]): Spot[] {
  */
 export function riderSpots(crews: readonly (readonly GobblerId[])[]): Spot[][] {
   return crews.map((crew, row) => {
-    const widths = crew.map((id) => shapeOf(id).width * RIDER + 0.5)
+    const widths = crew.map((id) => shapeOf(id).width * RIDER + 0.75)
     const total = widths.reduce((sum, width) => sum + width, 0)
     let x = -total / 2
     return crew.map((_, i) => {
-      const spot = { x: x + widths[i] / 2, y: 0.4 + row * RISER, z: -1.3 - row * 0.5 }
+      const spot = { x: x + widths[i] / 2, y: RISER_BASE + row * RISER, z: RIDER_Z - row * RIDER_STEP }
       x += widths[i]
       return spot
     })
   })
 }
 
-/** How much higher each row of riders sits than the row in front. */
-export const RISER = 1.8
+/** The first row of riders stands this far above the deck and this far behind its middle; each further row a riser higher and a step further back. */
+export const RISER_BASE = 0.4
+export const RISER = 2
+export const RIDER_Z = -0.75
+export const RIDER_STEP = 1.6
 
 /** The top of everything on a crate, above the shelf: what the claw has to clear. */
 export function crateTop(which: number, crews: number): number {
-  return deckTop(which) + 0.4 + (crews - 1) * RISER + 2.9
+  return deckTop(which) + Math.max(ARCH + HANDLE, RISER_BASE + Math.max(0, crews - 1) * RISER + 2.5)
 }
 
 /** Where a crate stands. */
 export function crateSpot(which: number, crates: number): Spot {
   return { x: crateX(which, crates), y: 0, z: CRATE.z }
+}
+
+/**
+ * The handle of a crate: an arch over the front of its load with a knob on
+ * top, which the claw lifts the crate by. The height of the top of the arch
+ * above the deck, the height of the knob on it, and where the middle of the
+ * knob's top is, measured like the deck spots.
+ */
+export const ARCH = 3.6
+export const HANDLE = 1.2
+export function handleSpot(): Spot {
+  return { x: 0, y: ARCH + HANDLE, z: 2.25 }
 }

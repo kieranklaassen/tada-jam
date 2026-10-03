@@ -43,7 +43,7 @@ export function aimAt(ray: Ray, crew: readonly Standing[]): Aim {
     if (t < best) { best = t; target = { on: 'gobbler', slot } }
   })
   // The ledge: the parapet and everything behind it. Which crate is meant is told by the side.
-  const ledge = enters(ray, -19, 0, -17.5, 19, WALL.top + 8, WALL.z + 1)
+  const ledge = enters(ray, -19, 0, WALL.z - 8.5, 19, WALL.top + 8, WALL.z + 1)
   const at = (t: number) => ({ x: ray.ox + ray.dx * t, z: ray.oz + ray.dz * t })
   if (ledge < best) { best = ledge; target = { on: 'ledge', which: at(ledge).x < 0 ? 0 : 1 } }
   for (const side of [-1, 1] as const) {

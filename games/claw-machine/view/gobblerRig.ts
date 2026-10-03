@@ -24,23 +24,23 @@ export class GobblerRig {
   constructor(look: GobblerLook, plastic: ShaderMaterial) {
     this.waiting = look.waiting
     const parts = gobblerParts(look.shape)
-    this.group.name = `gobbler-${look.id}`
+    this.group.name = `gobbler-${look.who}`
     const body = new Mesh(brickGeometry(parts.body, true), plastic)
-    body.name = `gobbler-${look.id}-body`
+    body.name = `gobbler-${look.who}-body`
     this.group.add(body)
     const eye = eyeCentres(look.shape)[0]
     this.eyeY = eye.y; this.eyeZ = eye.z
     this.pupils = new Mesh(brickGeometry(parts.pupils, true), plastic)
-    this.pupils.name = `gobbler-${look.id}-pupils`
+    this.pupils.name = `gobbler-${look.who}-pupils`
     this.group.add(this.pupils)
     this.tongue = new Mesh(brickGeometry(parts.tongue, true), plastic)
-    this.tongue.name = `gobbler-${look.id}-tongue`
+    this.tongue.name = `gobbler-${look.who}-tongue`
     this.group.add(this.tongue)
     this.travel = tongueTravel(look.shape)
     // The ones who wait show no belly: they are seen from the eyes up.
     if (!look.waiting) {
       const window = new Mesh(brickGeometry(parts.window, true), glass)
-      window.name = `gobbler-${look.id}-window`
+      window.name = `gobbler-${look.who}-window`
       window.renderOrder = 2
       this.group.add(window)
     }

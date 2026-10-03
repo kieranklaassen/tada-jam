@@ -30,7 +30,7 @@ describe('what a finger points at', () => {
     expect(aimAt(toward(-8, 11, WAIT_Z), crew).target).toEqual({ on: 'ledge', which: 0 })
     expect(aimAt(toward(8, 11, WAIT_Z), crew).target).toEqual({ on: 'ledge', which: 1 })
     // With no crew at the tray the parapet itself is the ledge.
-    expect(aimAt(toward(-3, 6, -8.5), []).target).toEqual({ on: 'ledge', which: 0 })
+    expect(aimAt(toward(-3, 6, -10.5), []).target).toEqual({ on: 'ledge', which: 0 })
   })
 
   it('finds the bell post at either end of the rail', () => {

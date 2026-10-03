@@ -1,4 +1,4 @@
-import { bounds, centred, type Brick, type Rgb } from './bricks'
+import { PLATE, bounds, centred, type Brick, type Rgb } from './bricks'
 import { TOY_COLOUR, WHITE } from './palette'
 import type { Kind, Size, Toy } from './toys'
 
@@ -70,6 +70,17 @@ export function modelBricks(kind: Kind, size: Size = 'small'): Brick[] {
   return centred(BUILD[kind](WHITE, size === 'big'))
 }
 
+
+/**
+ * What the claw holds a toy by: the highest part of it. `half` is half its
+ * width, `x` how far its middle is from the middle of the toy, `height` how
+ * tall that part is and `top` how high its top is. The teeth close beside it.
+ */
+export function holdOf(toy: Toy): { half: number; x: number; height: number; top: number } {
+  const bricks = toyBricks(toy)
+  const highest = bricks.reduce((best, brick) => (brick.axis !== 'z' && brick.y + brick.h > best.y + best.h ? brick : best), bricks[0])
+  return { half: highest.w / 2, x: highest.x + highest.w / 2, height: highest.h * PLATE, top: (highest.y + highest.h) * PLATE }
+}
 
 /** How much room a toy takes: its length across, its depth and its height, in world units. */
 export function toySpan(toy: Toy): { length: number; depth: number; height: number } {

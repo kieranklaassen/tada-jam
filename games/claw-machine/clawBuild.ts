@@ -13,6 +13,20 @@ export const HINGE_DROP = 1.6
 export const HINGE_OUT = 1
 /** How far below its hinge a jaw reaches, in world units: where its tooth is. */
 export const JAW_REACH = 2.8
+/** How far a tooth turns in from its arm, and how far below the hinge the middle of a tooth is. */
+export const TOOTH = 0.9
+export const TOOTH_DROP = 2.6
+
+/**
+ * How far open the jaws stand to hold something `half` wide between their teeth, as the claw counts it (0 shut,
+ * 1 wide open): the teeth close beside the thing and never into it.
+ */
+export function gripFor(half: number): number {
+  const inner = 1 - TOOTH
+  return Math.asin(Math.min(0.95, Math.max(0, (half + 0.06 - inner) / TOOTH_DROP))) / JAW_SWING
+}
+/** How far a jaw swings, in radians, when the claw is wide open. */
+export const JAW_SWING = 0.75
 
 export function hubBricks(): Brick[] {
   return [
@@ -24,6 +38,6 @@ export function hubBricks(): Brick[] {
 /** One jaw, for the side `side` (-1 left, 1 right): an arm down from the hinge and a tooth turned inward. */
 export function jawBricks(side: -1 | 1): Brick[] {
   const arm = box(STEEL, side > 0 ? 0 : -1, -6, -1, 1, 2, 6)
-  const tooth = box(TRIM, side > 0 ? -1.3 : -1, -7, -1, 2.3, 2, 1)
+  const tooth = box(TRIM, side > 0 ? -TOOTH : -1, -7, -1, 1 + TOOTH, 2, 1)
   return [arm, tooth]
 }

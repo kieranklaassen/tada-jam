@@ -6,7 +6,7 @@ import { GOBBLER, shapeOf } from './gobblers'
 import type { Guidance } from './guidance'
 import { handPose, type HandPose } from './guidance'
 import { hintFor } from './guide'
-import { WRONG, actPose, idlePose, liftedPose, restPose, wrongPose, type Pose } from './motion'
+import { PERSONALITY, WRONG, actPose, idlePose, liftedPose, restPose, wrongPose, type Pose } from './motion'
 import type { GlowLook, GobblerLook, Picture, Shadow, ToyLook } from './picture'
 import { RAIL, TRAY } from './places'
 import { nearestPlace } from './tray'
@@ -16,6 +16,8 @@ import { nearestPlace } from './tray'
 // the game and changes nothing in it.
 
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value))
+/** How far to the side a crate slides to be out of sight. */
+const AWAY = 34
 const scratch: Pose = restPose({} as Pose), idle: Pose = restPose({} as Pose)
 const hand: HandPose = { travel: 0, press: 0, opacity: 0 }
 
@@ -33,6 +35,16 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
   out.leanX = scratch.leanX; out.leanZ = scratch.leanZ + idle.leanZ; out.turn = scratch.turn
   out.looks = scratch.looks; out.gazeX = scratch.gazeX; out.gazeY = scratch.gazeY
   out.blink = Math.max(scratch.blink, idle.blink)
+  if (actor.role === 'crew' && actor.liftedT < 0 && actor.scale > 0.95) {
+    const claw = game.claw, near = Math.abs(claw.x - actor.x) < shapeOf(actor.id).width / 2 + 1.5 && claw.z < 1.5
+    // A toy in the jaws: every gobbler stretches toward it the same way, whatever the toy is.
+    if (game.held >= 0) out.squash *= 1.04 + 0.02 * Math.sin(game.time * PERSONALITY[actor.id].tempo * 3)
+    // Their own habits. The duck-head flaps when anything is carried over it; the rocket-head goes up on tiptoe
+    // as the hoist climbs; the little one hops to reach the claw whenever it is near.
+    if (actor.id === 'duck' && game.held >= 0 && near) out.leanZ += 0.2 * Math.sin(game.time * 12)
+    if (actor.id === 'rocket' && claw.phase === 'rising') out.squash *= 1 + 0.14 * Math.min(1, claw.t * 2)
+    if (actor.id === 'little' && near && claw.phase === 'ready') out.dy += 0.6 * Math.abs(Math.sin(game.time * 7))
+  }
   // A walk is a waddle: it rocks from foot to foot as it goes.
   if (actor.walk && actor.walk.arc === 0) out.leanZ += 0.14 * Math.sin(actor.walk.t * 26)
   return out
@@ -62,7 +74,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     const shape = shapeOf(actor.id)
     const eyeY = actor.y + (rimHeight(shape) + EYE / 2) * actor.scale
     gobblers.push({
-      id: `g${actor.key}`, shape, x: actor.x + pose.dx * actor.scale, y: actor.y + pose.dy, z: actor.z + pose.dz * actor.scale,
+      id: `g${actor.key}`, who: actor.id, shape, x: actor.x + pose.dx * actor.scale, y: actor.y + pose.dy, z: actor.z + pose.dz * actor.scale,
       squash: pose.squash, leanX: pose.leanX, leanZ: pose.leanZ, turn: pose.turn, scale: actor.scale,
       gazeX: pose.looks ? pose.gazeX : clamp((watched.x - actor.x) / 11, -1, 1),
       gazeY: pose.looks ? pose.gazeY : clamp((watched.y - eyeY) / 9 - (watched.z - actor.z) / 30, -1, 1),
@@ -120,7 +132,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     toys, gobblers, shadows, glows, hand: ghost, gate: game.gateShake,
     crates: game.crates.map((crate) => ({
       key: `${crate.from}-${crate.seed}-${crate.toys.length}-${crate.crews.length}`, which: crate.which, toys: crate.toys, crews: crate.crews,
-      x: crate.x, z: crate.z, drop: crate.sink * 14, tip: crate.tip,
+      x: crate.x + crate.away * AWAY * (crate.x < 0 ? -1 : 1), y: crate.y, z: crate.z, tip: crate.tip,
     })),
     // Left alone, the claw is never quite still: the cable sways a hair and the jaws work a little.
     claw: {

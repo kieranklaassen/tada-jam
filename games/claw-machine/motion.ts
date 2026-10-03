@@ -126,14 +126,14 @@ export function wrongPose(way: WrongWay, t: number, out: Pose): Pose {
     case 'head-shake': {
       // Shakes its head wider and wider until the toy flies out sideways.
       const wide = ramp(t, 0, 0.55) * (1 - ramp(t, 0.6, 0.85))
-      out.turn = 0.75 * wide * Math.sin(t * TAU * 4.5)
-      out.leanZ = 0.12 * wide * Math.sin(t * TAU * 4.5 + 1)
+      out.turn = 0.42 * wide * Math.sin(t * TAU * 4.5)
+      out.leanZ = 0.08 * wide * Math.sin(t * TAU * 4.5 + 1)
       out.blink = wide > 0.5 ? 1 : 0
       break
     }
     case 'reverse': {
       // Revs on the spot, then reverses out from under the toy and rolls back.
-      out.dz = 0.18 * Math.sin(t * 150) * (1 - ramp(t, 0.24, 0.3)) - 3 * ramp(t, 0.28, 0.42) * (1 - ramp(t, 0.66, 0.96))
+      out.dz = 0.18 * Math.sin(t * 150) * (1 - ramp(t, 0.24, 0.3)) - 2.1 * ramp(t, 0.28, 0.42) * (1 - ramp(t, 0.66, 0.96))
       out.leanX = 0.14 * bump(t, 0.28, 0.5) - 0.1 * bump(t, 0.66, 0.96)
       out.looks = true; out.gazeY = 0.8 * bump(t, 0.3, 0.9)
       break
@@ -149,15 +149,17 @@ export function wrongPose(way: WrongWay, t: number, out: Pose): Pose {
       out.looks = true
       out.gazeX = Math.sin(t * TAU * 1.5) * ramp(t, 0.1, 0.25)
       out.gazeY = 0.8 * Math.abs(Math.sin(t * TAU * 0.75))
-      out.turn = 0.3 * Math.sin(t * TAU * 1.5) * (1 - ramp(t, 0.85, 1))
+      // Too wide to turn where it stands: it leans from side to side to look.
+      out.leanZ = 0.05 * Math.sin(t * TAU * 1.5) * (1 - ramp(t, 0.85, 1))
+      out.squash = 1 + 0.05 * bump(t, 0.1, 0.5)
       break
     }
     case 'hat': {
       // The toy sits on its head, and it staggers about under it until it slides off.
       const stagger = ramp(t, 0.05, 0.2) * (1 - ramp(t, 0.72, 0.85))
       out.squash = 1 - 0.12 * stagger + 0.14 * bump(t, 0.76, 0.96)
-      out.dx = 1.1 * stagger * Math.sin(t * TAU * 2.2)
-      out.leanZ = -0.16 * stagger * Math.sin(t * TAU * 2.2)
+      out.dx = 0.7 * stagger * Math.sin(t * TAU * 2.2)
+      out.leanZ = -0.07 * stagger * Math.sin(t * TAU * 2.2)
       out.dy = 0.5 * bump(t, 0.78, 0.96)
       out.looks = true; out.gazeY = 1 - 1.2 * ramp(t, 0.75, 0.9)
       break
@@ -174,7 +176,7 @@ export function liftedPose(way: LiftWay, seconds: number, out: Pose): Pose {
   restPose(out)
   switch (way) {
     case 'kicks-and-squeals': // loves it: kicks its legs
-      out.leanZ = 0.26 * Math.sin(seconds * 17); out.squash = 1 + 0.05 * Math.sin(seconds * 34)
+      out.leanZ = 0.15 * Math.sin(seconds * 17); out.squash = 1 + 0.07 * Math.sin(seconds * 34)
       break
     case 'goes-rigid': // hates it: stiff as a board, eyes shut, trembling
       out.squash = 1.16; out.blink = 1; out.dx = 0.05 * Math.sin(seconds * 120)
@@ -183,7 +185,7 @@ export function liftedPose(way: LiftWay, seconds: number, out: Pose): Pose {
       out.dy = 0.5 * Math.pow(Math.abs(Math.sin(seconds * 6.5)), 6); out.blink = out.dy > 0.2 ? 1 : 0
       break
     case 'flaps': // flaps its side plates
-      out.leanZ = 0.4 * Math.sin(seconds * 9); out.turn = 0.15 * Math.sin(seconds * 4.5)
+      out.leanZ = 0.15 * Math.sin(seconds * 9); out.turn = 0.2 * Math.sin(seconds * 4.5); out.dy = 0.25 * Math.abs(Math.sin(seconds * 9))
       break
     case 'wheels-spin': // wheels spinning in the air: it shakes with them
       out.dz = 0.1 * Math.sin(seconds * 90); out.leanX = 0.1 * Math.sin(seconds * 6)
@@ -233,7 +235,7 @@ export function actPose(who: GobblerId, act: Act, t: number, n: number, out: Pos
       break
     case 'open-wide': // wider and wider, on tiptoe, shuffling to stay under the claw
       out.squash = 1 + (0.06 + 0.1 * t) * (1 + 0.15 * Math.sin(t * 30 * p.tempo))
-      out.dx = 0.18 * Math.sin(t * 22 * p.tempo)
+      out.dx = 0.14 * Math.sin(t * 22 * p.tempo)
       out.looks = true; out.gazeY = 1
       break
     case 'duck': // ducks the bare claw and pops up again
@@ -242,7 +244,7 @@ export function actPose(who: GobblerId, act: Act, t: number, n: number, out: Pos
       break
     case 'snap': // snaps at a toy swinging past, and misses
       out.squash = 1 + 0.2 * bump(t, 0, 0.3) - 0.14 * bump(t, 0.3, 0.5)
-      out.leanZ = 0.2 * n * bump(t, 0, 0.5)
+      out.leanZ = 0.07 * n * bump(t, 0, 0.5)
       out.dy = 0.5 * s * bump(t, 0, 0.4)
       break
     case 'start': // a start at a bang: down and up past rest
@@ -263,13 +265,13 @@ export function actPose(who: GobblerId, act: Act, t: number, n: number, out: Pos
       out.squash = 1 + 0.2 * bump(t, 0, 0.5) - 0.1 * bump(t, 0.5, 0.75); out.blink = t > 0.4 && t < 0.7 ? 1 : 0
       break
     case 'bonked': // ducks, and pops up further along, then shuffles back
-      out.squash = 1 - 0.5 * bump(t, 0, 0.3)
-      out.dy = -3.2 * bump(t, 0.05, 0.42)
-      out.dx = 3 * n * ramp(t, 0.2, 0.4) * (1 - ramp(t, 0.6, 1))
+      // It ducks by squashing flat where it stands, and comes up a little way along.
+      out.squash = 1 - 0.5 * bump(t, 0, 0.45) + 0.12 * s * bump(t, 0.45, 0.7)
+      out.dx = 0.9 * n * ramp(t, 0.15, 0.4) * (1 - ramp(t, 0.6, 1))
       out.blink = t < 0.3 ? 1 : 0
       break
     case 'lean': // leans out of the way like grass
-      out.leanZ = -0.45 * n * bump(t, 0, 1)
+      out.leanZ = -0.2 * n * bump(t, 0, 1)
       break
     case 'stare': // stares up, following the sway
       out.looks = true; out.gazeY = 1; out.gazeX = 0.8 * Math.sin(t * TAU * 1.2)
@@ -280,11 +282,13 @@ export function actPose(who: GobblerId, act: Act, t: number, n: number, out: Pos
       out.leanX = -0.25 * bump(t, 0.2, 0.5) + 0.3 * bump(t, 0.5, 0.75)
       break
     case 'heave': // staggers under a big one, then heaves
-      out.dx = 0.6 * Math.sin(t * TAU * 2) * (1 - ramp(t, 0.55, 0.65)); out.squash = 1 - 0.18 * ramp(t, 0, 0.08) * (1 - ramp(t, 0.6, 0.7)) + 0.24 * bump(t, 0.62, 0.9)
+      out.dx = 0.4 * Math.sin(t * TAU * 2) * (1 - ramp(t, 0.55, 0.65)); out.squash = 1 - 0.18 * ramp(t, 0, 0.08) * (1 - ramp(t, 0.6, 0.7)) + 0.24 * bump(t, 0.62, 0.9)
       out.leanX = 0.3 * bump(t, 0.6, 0.85)
       break
     case 'land': // down onto the step: a squash that springs back, deeper for a heavy one
       out.squash = 1 - (0.2 / s) * bump(t, 0, 0.5) + 0.08 * s * bump(t, 0.5, 1)
+      // The car-head shoots forward a little when it is put down, and rolls back.
+      if (who === 'car') out.dz = 1.3 * bump(t, 0.05, 0.9)
       break
   }
   return out

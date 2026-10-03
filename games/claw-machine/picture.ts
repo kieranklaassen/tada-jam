@@ -26,6 +26,8 @@ export type ToyLook = {
 
 export type GobblerLook = {
   id: string
+  /** Which gobbler it is: its parts are named for it on the stage. */
+  who: GobblerId
   shape: GobblerShape
   /** Where its feet stand. */
   x: number
@@ -72,9 +74,9 @@ export type CrateLook = {
   which: number
   toys: readonly Toy[]
   crews: readonly (readonly GobblerId[])[]
+  /** The middle of its foot, and how far it is tipped forward, 0 to 1. */
   x: number
-  /** How far it has sunk behind the parapet, in world units, and how far it is tipped, 0 to 1. */
-  drop: number
+  y: number
   z: number
   tip: number
 }

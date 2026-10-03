@@ -58,7 +58,7 @@ export function bellyBox(shape: GobblerShape): { x: number; y: number; z: number
 
 /** The knob on its head that the claw lifts it by: the middle of its top, measured from the feet. */
 export function knobAt(shape: GobblerShape): { x: number; y: number; z: number } {
-  return { x: shape.width / 2 - 2, y: (LEGS + 1 + shape.belly + KNOB) * PLATE, z: -DEPTH / 2 + 0.5 }
+  return { x: shape.width / 2 - 1.6, y: (LEGS + 1 + shape.belly + KNOB) * PLATE, z: -DEPTH / 2 + 0.2 }
 }
 
 /** How far the floor of the mouth is above the feet, and how far the tongue can rise from it: to just under the rim. */
@@ -74,29 +74,32 @@ export function gobblerParts(shape: GobblerShape): GobblerParts {
     { x: -foot - 0.8, y: 1, z: -0.3, w: 1.6, d: 1.6, h: LEGS - 1, colour: c, round: true, studs: false }, // legs
     { x: foot - 0.8, y: 1, z: -0.3, w: 1.6, d: 1.6, h: LEGS - 1, colour: c, round: true, studs: false },
     box(c, -half, at, -3, shape.width, DEPTH, 1), // floor of the belly
-    box(WHITE, -half + 1, at + 1, -2, shape.width - 2, 0.3, shape.belly), // a white lining behind the group, so a toy of the gobbler's own colour shows
+    // A white lining behind the group, so a toy of the gobbler's own colour shows. It stands a hair off the wall and short of the rim.
+    box(WHITE, -half + 1.05, at + 1.05, -1.95, shape.width - 2.1, 0.25, shape.belly - 0.3),
     box(c, -half, at + 1, -3, shape.width, 1, shape.belly, true), // back
     box(c, -half, at + 1, -2, 1, 5, shape.belly, true), // sides
     box(c, half - 1, at + 1, -2, 1, 5, shape.belly, true),
     box(c, -half + 1, at + 1, 2, shape.width - 2, 1, 1), // the sill under the window
     box(c, -half + 1, rim - 1, 2, shape.width - 2, 1, 1), // the bar over it
     // The knob the claw lifts it by, at the back of its head.
-    { x: half - 2.8, y: rim, z: -3.3, w: 1.6, d: 1.6, h: KNOB, colour: c, round: true, studs: true },
+    { x: half - 2.4, y: rim, z: -3.6, w: 1.6, d: 1.6, h: KNOB, colour: c, round: true, studs: true },
   ]
   // Peg teeth along the front and the back of the rim.
-  for (let x = -half + 1.6; x < half - 3; x += 2) body.push(peg(x, rim, 2.1), peg(x + 1, rim, -2.9))
+  // The back row stops short of the knob, so the jaws have room beside it.
+  for (let x = -half + 1.6; x < half - 3; x += 2) { body.push(peg(x, rim, 2.1)); if (x + 1 < half - 4.6) body.push(peg(x + 1, rim, -2.9)) }
   // Eyes like a frog's, on the front corners, clear of the mouth.
   for (const eye of eyeCentres(shape)) body.push({ x: eye.x - EYE / 2, y: (eye.y - EYE / 2) / PLATE, z: eye.z - EYE / 2, w: EYE, d: EYE, h: 0, colour: WHITE, ball: true, studs: false })
   if (shape.model) {
     // A bracket on the back of the rim, and the white model of its kind standing on it.
-    body.push(box(c, -1, rim, -3, 2, 1, 1), box(c, -3, rim + 1, -4, 6, 3, 1, true))
-    for (const brick of modelBricks(shape.model)) body.push({ ...brick, y: brick.y + rim + 2, z: brick.z - 2.5 })
+    // It stands out behind the mouth, so a toy coming down into the mouth never meets it.
+    body.push(box(c, -1, rim, -3, 2, 1, 1), box(c, -2.4, rim + 1, -5.4, 4.8, 3.2, 1, true))
+    for (const brick of modelBricks(shape.model)) body.push({ ...brick, y: brick.y + rim + 2, z: brick.z - 3.8 })
   }
   const window: Brick[] = [box(WHITE, -half + 1, at + 2, 2.25, shape.width - 2, 0.5, shape.belly - 2)]
   const [left, right] = eyeCentres(shape)
   const dot = EYE * 0.42
   const pupils: Brick[] = [left, right].map((eye) => ({ x: eye.x - dot / 2, y: -dot / 2 / PLATE, z: -dot / 2, w: dot, d: dot, h: 0, colour: BLACK, ball: true, studs: false }))
   // The tongue lies on the floor of the mouth, a little clear of the walls.
-  const tongue: Brick[] = [box(TONGUE, -half + 1.2, 0, -1.6, shape.width - 2.4, 3.6, 0.5, false)]
+  const tongue: Brick[] = [box(TONGUE, -half + 1.3, 0, -1.5, shape.width - 2.6, 3.3, 0.5, false)]
   return { body, pupils, window, tongue }
 }

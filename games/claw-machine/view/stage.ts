@@ -6,10 +6,9 @@ import type { Ray } from '../aim'
 import { toyBricks } from '../builds'
 import { cabinetBricks, gateBricks } from '../cabinet'
 import { crateMesh } from '../crateBuild'
-import { deckTop } from '../layout'
-import { HINGE_DROP, HINGE_OUT, hubBricks, jawBricks } from '../clawBuild'
+import { HINGE_DROP, HINGE_OUT, JAW_SWING, hubBricks, jawBricks } from '../clawBuild'
 import { BACKDROP_HEX, GLOVE } from '../palette'
-import { CRATE, GATE, RAIL, SHELF } from '../places'
+import { CRATE, GATE, RAIL } from '../places'
 import { fitCamera } from './fit'
 import type { Picture, ToyLook } from '../picture'
 import { GobblerRig } from './gobblerRig'
@@ -20,6 +19,8 @@ import { brickGeometry, meshGeometry, plasticMaterial } from './plastic'
 
 const MAX_SHADOWS = 24
 const MAX_GLOWS = 12
+/** How far a crate tips to pour its load, in radians. */
+export const TIP = 1.0
 const UP = new Vector3(0, 1, 0)
 
 export class Stage {
@@ -199,16 +200,16 @@ export class Stage {
       if (!crate) {
         const mesh = new Mesh(meshGeometry(crateMesh(look.which, look.toys, look.crews)), this.shaded)
         mesh.name = `crate-${look.which}`
-        // It tips about the front edge of its deck.
-        mesh.position.set(0, -deckTop(look.which), -CRATE.depth / 2)
+        // It tips about the front edge of its foot.
+        mesh.position.set(0, 0, -CRATE.depth / 2)
         const pivot = new Group()
         pivot.name = `crate-${look.which}-pivot`
         pivot.add(mesh)
         this.scene.add(pivot)
         this.crates.set(look.which, (crate = { key: look.key, pivot }))
       }
-      crate.pivot.position.set(look.x, SHELF.top + deckTop(look.which) - look.drop, look.z + CRATE.depth / 2)
-      crate.pivot.rotation.x = look.tip * 0.85
+      crate.pivot.position.set(look.x, look.y, look.z + CRATE.depth / 2)
+      crate.pivot.rotation.x = look.tip * TIP
     }
     for (const [which, crate] of this.crates) if (!standing.has(which)) { this.scene.remove(crate.pivot); (crate.pivot.children[0] as Mesh).geometry.dispose(); this.crates.delete(which) }
 
@@ -254,8 +255,8 @@ export class Stage {
     this.clawGroup.position.set(claw.x, RAIL.top, claw.z).addScaledVector(this.position, claw.length)
     this.clawGroup.quaternion.copy(this.quaternion)
     this.clawGroup.scale.set(1 / Math.sqrt(claw.squash), claw.squash, 1 / Math.sqrt(claw.squash))
-    this.jaws[0].rotation.z = -claw.open * 0.75
-    this.jaws[1].rotation.z = claw.open * 0.75
+    this.jaws[0].rotation.z = -claw.open * JAW_SWING
+    this.jaws[1].rotation.z = claw.open * JAW_SWING
 
     this.scene.updateMatrixWorld(true)
     this.renderer.render(this.scene, this.camera)

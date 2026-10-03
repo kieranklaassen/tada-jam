@@ -39,7 +39,7 @@ export type Claw = {
   dropOnArrival: boolean
   /** How heavy the thing in the jaws is: 0 nothing, 1 a small toy, 2 a big one. */
   load: number
-  /** The height the hinge of the jaws rides at, and the height it drops to. */
+  /** The height the hinge of the jaws rides at, and the height the hinge drops to. */
   rideY: number
   landY: number
   /** How far the hoist has come, for the ratchet, and the length of cable it started from. */
@@ -127,8 +127,9 @@ function act(claw: Claw): void {
 
 /**
  * One fixed step. `rideY` is the height the hinge should ride at here (the
- * scene raises it over tall things) and `landY` the height of whatever is
- * under the jaws, which is where a drop ends.
+ * scene raises it over tall things) and `landY` the height the hinge stops at
+ * when it drops: the scene sets it so that the teeth close beside the thing
+ * under the jaws, or the shut jaws just touch a thing that cannot be held.
  */
 export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawEvent[], dt = STEP): void {
   claw.t += dt
@@ -191,7 +192,7 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
   } else if (claw.phase === 'dropping') {
     claw.lengthV = Math.min(DROP_TOP_SPEED, claw.lengthV + DROP_GRAVITY * dt)
     claw.length += claw.lengthV * dt
-    const bottom = RAIL.top - landY - HINGE_DROP - JAW_REACH * 0.55
+    const bottom = Math.max(restLength, RAIL.top - landY - HINGE_DROP)
     if (claw.length >= bottom) {
       claw.length = bottom
       claw.squash = 0.72; claw.squashV = 0

@@ -80,6 +80,16 @@ export function toss(body: Body, to: Leg): void {
   body.hop = 0; body.hopV = 0
 }
 
+/**
+ * How long a throw takes that rises to `peak` on its way: a toy thrown over
+ * something clears it by being thrown high enough, never by passing through.
+ */
+export function airTime(fromY: number, toY: number, peak: number): number {
+  const top = Math.max(peak, fromY + 0.3, toY + 0.3)
+  const up = Math.sqrt((2 * (top - fromY)) / FALL), down = Math.sqrt((2 * (top - toY)) / FALL)
+  return up + down
+}
+
 /** Throws a body along several legs, one after another. */
 export function tossAlong(body: Body, legs: Leg[]): void {
   body.legs = legs.slice(1)

@@ -1,5 +1,5 @@
 import { MINI } from './belly'
-import { toss, type Body, type Leg } from './bodies'
+import { airTime, toss, type Body, type Leg } from './bodies'
 import { STEP } from './claw'
 import type { Deed } from './deeds'
 import type { Actor, Game, Plan } from './game'
@@ -17,12 +17,27 @@ import { BELL, GATE, SHELF, STEP as STEP_PLACE, TRAY, TRAY_WIDTH } from './place
 /** The positions at which an attribute is new, where a wrong toy is held up on the tongue for longer. */
 const NEW_HERE = ['two-colours', 'three-colours', 'two-kinds', 'two-sizes']
 
-const leg = (at: Spot, seconds: number, landing: Leg['landing'], scale = 1): Leg => ({ x: at.x, y: at.y, z: at.z, seconds, scale, landing })
+/** One stop of a flight: a point (or home, where the rules have the toy), how it lands there, and how high the throw to it rises. */
+type Stop = { at?: Spot; landing: Leg['landing']; peak?: number; seconds?: number; scale?: number }
 
-/** Throws a body along some points and then home to where the rules have it. */
-function send(game: Game, body: Body, toy: number, via: Leg[], home: { seconds: number; landing: 'stand' | 'belly' | 'mouth'; scale?: number }, deed?: Deed): void {
-  const at = home.landing === 'mouth' ? game.mouthOf(game.crew[body.slot]) : game.spotOf(toy)
-  const legs = [...via, leg(at, home.seconds, home.landing, home.scale ?? (home.landing === 'belly' ? MINI : 1))]
+/** How far above the higher end of a throw it rises when nothing is said: a short hop. */
+const HOP = 0.3
+/** The height a throw rises to when it has to pass over the crew at the tray, models and all. */
+const OVER_THE_CREW = 14.5
+
+/**
+ * Throws a body from stop to stop. A throw takes as long as its rise needs:
+ * what flies over something clears it by going high enough, and never by
+ * passing through it.
+ */
+function send(game: Game, body: Body, toy: number, stops: Stop[], deed?: Deed): void {
+  let y = body.y
+  const legs: Leg[] = stops.map((stop) => {
+    const at = stop.at ?? (stop.landing === 'mouth' ? game.mouthOf(game.crew[body.slot]) : game.spotOf(toy))
+    const seconds = stop.seconds ?? airTime(y, at.y, stop.peak ?? Math.max(y, at.y) + HOP)
+    y = at.y
+    return { x: at.x, y: at.y, z: at.z, seconds, scale: stop.scale ?? (stop.landing === 'belly' ? MINI : 1), landing: stop.landing }
+  })
   body.legs = legs.slice(1)
   body.hang = 0
   if (deed) game.causes.set(body, deed)
@@ -84,23 +99,24 @@ export function react(game: Game, deed: Deed): void {
       game.say({ type: 'gate-rattle' }); game.gateShake = 1
       break
     case 'click':
-      send(game, game.bodies[deed.toy], deed.toy, [], { seconds: 0.26, landing: 'stand' }, deed)
+      send(game, game.bodies[deed.toy], deed.toy, [{ landing: 'stand', seconds: 0.26 }], deed)
       break
     case 'bounce': {
       const body = game.bodies[deed.toy]
       const top = { x: body.x, y: game.stackTop(deed.off), z: body.z }
-      send(game, body, deed.toy, [leg(top, 0.24, 'again')], { seconds: 0.44, landing: 'stand' }, deed)
+      send(game, body, deed.toy, [{ at: top, landing: 'again', seconds: 0.24 }, { landing: 'stand', peak: top.y + 3 }], deed)
       break
     }
     case 'topple':
       game.say({ type: 'teeter' })
-      deed.moved.forEach(({ toy }, i) => send(game, game.bodies[toy], toy, [], { seconds: 0.36 + i * 0.15, landing: 'stand' }, deed))
+      // The top comes down first and furthest up; each one after it a little later.
+      deed.moved.forEach(({ toy }, i) => send(game, game.bodies[toy], toy, [{ landing: 'stand', peak: game.bodies[toy].y + 2 + i * 1.6 }], deed))
       break
     case 'gulp': {
       const body = game.bodies[deed.toy]
       body.slot = deed.slot
       game.plans.set(body, { kind: 'gulp', chomps: deed.chomps, ends: deed.ends, chompsDone: 0 })
-      send(game, body, deed.toy, [], { seconds: 0.26, landing: 'mouth' }, deed)
+      send(game, body, deed.toy, [{ landing: 'mouth', seconds: 0.26 }], deed)
       break
     }
     case 'spit': {
@@ -110,37 +126,39 @@ export function react(game: Game, deed: Deed): void {
       game.plans.set(body, { kind: 'spit', hold, started: false, released: false, place: deed.place })
       if (deed.way === 'falls-through') {
         // Too small for it: straight through its belly and out underneath, and then onto the tray.
-        const under = { x: actor.x, y: STEP_PLACE.top, z: actor.z + 3.6 }
+        const under = { x: actor.x, y: STEP_PLACE.top, z: actor.z }
         game.plans.delete(body)
         actor.wrongT = 0
         game.say({ type: 'wrong', way: 'falls-through' })
-        send(game, body, deed.toy, [leg(game.mouthOf(actor), 0.24, 'again'), leg(under, 0.3, 'again')], { seconds: WRONG['falls-through'].air, landing: 'stand' }, deed)
-      } else send(game, body, deed.toy, [], { seconds: 0.26, landing: 'mouth' }, deed)
+        send(game, body, deed.toy, [{ at: game.mouthOf(actor), landing: 'again', seconds: 0.24 }, { at: under, landing: 'again', seconds: 0.3 }, { landing: 'stand', peak: STEP_PLACE.top + 2.2 }], deed)
+      } else send(game, body, deed.toy, [{ landing: 'mouth', seconds: 0.26 }], deed)
       break
     }
     case 'thrown-back': {
       const body = game.bodies[deed.toy]
-      send(game, body, deed.toy, [leg(ledgePoint(game), 0.42, 'again')], { seconds: deed.heavy ? 0.8 : 0.62, landing: 'stand' }, deed)
+      send(game, body, deed.toy, [{ at: ledgePoint(game), landing: 'again', seconds: 0.42 }, { landing: 'stand', peak: OVER_THE_CREW + (deed.heavy ? 0 : 1.5) }], deed)
       break
     }
     case 'gate-roll': {
       const body = game.bodies[deed.toy]
-      const sill = { x: GATE.x, y: STEP_PLACE.top, z: GATE.z + 5.5 }
-      send(game, body, deed.toy, [leg({ x: GATE.x, y: GATE.top + 0.2, z: GATE.z }, 0.36, 'again'), leg(sill, deed.heavy ? 0.34 : 0.24, 'again')], { seconds: 0.34, landing: 'stand' }, deed)
+      // Onto the gate, a roll along its bar, and off it over the crew onto the tray.
+      const on = { x: GATE.x, y: GATE.top + 0.05, z: GATE.z }, along = { x: GATE.x + (body.x < 0 ? 1.6 : -1.6), y: GATE.top + 0.05, z: GATE.z }
+      send(game, body, deed.toy, [{ at: on, landing: 'again', seconds: 0.36 }, { at: along, landing: 'again', seconds: deed.heavy ? 0.5 : 0.3, peak: GATE.top + 0.1 }, { landing: 'stand', peak: OVER_THE_CREW }], deed)
       break
     }
     case 'rim-slide': {
       const body = game.bodies[deed.toy], side = Math.sign(claw.x) || 1
-      const rim = { x: side * (TRAY_WIDTH / 2 + 0.5), y: TRAY.top + 0.5, z: BELL.z }
-      send(game, body, deed.toy, [leg({ x: side * BELL.x, y: BELL.top, z: BELL.z }, 0.26, 'again'), leg(rim, 0.2, 'again')], { seconds: 0.3, landing: 'stand' }, deed)
+      // Onto the bell, off it onto the rim of the tray, and down the rim onto the edge studs.
+      const rim = { x: side * (TRAY_WIDTH / 2 + 0.5), y: TRAY.top + 0.45, z: BELL.z }
+      send(game, body, deed.toy, [{ at: { x: side * BELL.x, y: BELL.top + 0.05, z: BELL.z }, landing: 'again', seconds: 0.26 }, { at: rim, landing: 'again', peak: BELL.top + 1.4 }, { landing: 'stand', peak: TRAY.top + 2 + body.height }], deed)
       break
     }
     case 'knock':
       game.say({ type: 'knock' })
-      send(game, game.bodies[deed.toy], deed.toy, [], { seconds: 0.24, landing: 'stand' }, deed)
+      send(game, game.bodies[deed.toy], deed.toy, [{ landing: 'stand', peak: game.bodies[deed.toy].y + 1.1 }], deed)
       break
     case 'dominoes':
-      deed.moved.forEach(({ toy }, i) => { game.say({ type: 'domino', nth: i }); send(game, game.bodies[toy], toy, [], { seconds: 0.22 + i * 0.11, landing: 'stand' }, deed) })
+      deed.moved.forEach(({ toy }, i) => { game.say({ type: 'domino', nth: i }); send(game, game.bodies[toy], toy, [{ landing: 'stand', peak: game.bodies[toy].y + 1.6 + i * 1.4 }], deed) })
       break
     case 'rattle':
       game.say({ type: 'rattle' })
@@ -226,7 +244,8 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
   const way = GOBBLER[actor.id].wrong
   // A toy that will not go in sits on the head; any other lies on the tongue.
   const onHead = plan.kind === 'spit' && way === 'hat'
-  body.x = at.x; body.z = at.z; body.y = onHead ? actor.y + rimHeight(shapeOf(actor.id)) + 0.5 : at.y
+  // On the head it rests on the teeth, clear of the rim.
+  body.x = at.x; body.z = at.z; body.y = onHead ? actor.y + rimHeight(shapeOf(actor.id)) + 0.85 : at.y
   if (body.chewed === 0) {
     if (plan.kind === 'gulp') game.startAct(actor, 'gulp', plan.chomps)
     else { game.startAct(actor, 'hold'); game.say({ type: 'chomp', heavy: body.heavy, who: actor.id }); game.say({ type: 'hmm', who: actor.id }) }
@@ -238,8 +257,7 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
     if (body.chewed < chewing) return
     game.say({ type: 'gulp', heavy: body.heavy, who: actor.id })
     game.plans.delete(body)
-    const home = game.spotOf(toy)
-    toss(body, { x: home.x, y: home.y, z: home.z, seconds: 0.24, scale: MINI, landing: 'belly' })
+    send(game, body, toy, [{ landing: 'belly', seconds: 0.24 }])
     if (plan.ends) onEnd(plan.ends)
     return
   }
@@ -248,6 +266,6 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
   const spec = WRONG[way]
   if (actor.wrongT >= 0 && actor.wrongT < spec.release * spec.seconds) return
   game.plans.delete(body)
-  const home = game.spotOf(toy)
-  toss(body, { x: home.x, y: home.y, z: home.z, seconds: spec.air, scale: 1, landing: 'stand' })
+  // Out over its own teeth and eyes and onto the tray: high for the one that shoots straight up.
+  send(game, body, toy, [{ landing: 'stand', peak: body.y + (way === 'straight-up' ? 11 : way === 'cannon' ? 3.6 : 4.4) }])
 }

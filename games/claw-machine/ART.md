@@ -197,7 +197,7 @@ Claw Machine is designed from one California learning foundation for preschool a
 
 **Materials** (`view/plastic.ts`). One plastic for every brick, with the colour in the vertices, so a whole build is one draw. The light is fixed to the camera as a matcap would be: a soft shade that keeps the hue, a small hard white highlight and a pale sheen from above. The seam is drawn at the edge of each brick face from the face's own size, with a lighter bevel just inside it. The belly windows are clear panels. No texture, no light, no shadow map and no post pass.
 
-**Shapes** (`bricks.ts`, `builds.ts`, `gobblerBuild.ts`, `clawBuild.ts`, `cabinet.ts`). Boxes and round bricks only, with studs at eight sides each. A stud is built only where no brick sits on it. The one part that is not a brick is a gobbler's eyeball, a plain ball, so a face reads from across a room.
+**Shapes** (`bricks.ts`, `builds.ts`, `gobblerBuild.ts`, `clawBuild.ts`, `cabinet.ts`). Boxes and round bricks only, with studs at eight sides each. A stud is built only where no brick sits on it. The one part that is not a brick is a gobbler's eyeball, a plain ball, so a face reads from across a room. A gobbler is a bin on legs: its open top is its mouth, its clear front is its belly, a pink tongue lies on the floor of the mouth and rises to the rim with whatever is on it, and a knob at the back of its head is what the claw lifts it by.
 
 **The working pieces stay plain.** A toy has no face, no pattern and no motion of its own; a small one and a big one of a kind are two different builds on the same grid, not one build scaled. The texture of the look is on the gobblers, the cabinet and the claw.
 
@@ -209,6 +209,23 @@ Claw Machine is designed from one California learning foundation for preschool a
 - The claw has weight: the trolley is pulled toward the finger and damped, the cable swings against every change of speed, and a load makes the swing slower and longer.
 - A hop is a small throw straight up, sized by distance from what caused it, so a ring of hops spreads from every landing.
 - Working pieces move only when something moves them. A gobbler breathes, blinks and watches the claw, each at its own pace; no two share a pace or a blink.
+- Every gobbler has its own tempo and weight, its own way with a toy that is not its sort and its own way of being lifted (`motion.ts`); the tests there fail on two that are near copies.
 - Nothing moves on a clock of its own while the game is unattended or hidden.
 
+**The cabinet** (`places.ts`, `cabinet.ts`). In front, the tray: five places across and two deep, with a bell post at either end of the rail. Behind it the step the crew stands on. Behind that a low parapet with the gate on it, and behind the parapet a shelf sunk below the floor: a gobbler waiting there shows only its eyes and the model on its head, and a crate standing there shows its deck, its load and its riders over the heads of the crew. Keeping the back low keeps the whole scene large.
+
+**Crates** (`crateBuild.ts`). A warm brown `#b7793f` that is no toy colour. A crate is one mesh: its box, its load standing small on the deck, and its crews riding in rows behind, each row a step higher, so more crews make a taller crate. The taller crate also stands four plates higher. A rider is a gobbler at three tenths of its size; like a toy in a belly, it is its full size once it is out.
+
+**What is small.** Two things in the world are drawn small: a toy in a belly or on a crate, and a gobbler riding a crate. Both grow to their full size as they come out, with a sound of their own. Nothing else changes size.
+
+**The glow and the ghost hand** (`guide.ts`, `view/stage.ts`). The glow is a thin gold ring with a dark edge, lying on the thing that can be touched, so it reads on the pale tray and on the dark wall alike; it marks things and does not light the scene. The ghost hand is a pale brick glove with one finger out, seen through, tapping one of the marked things.
+
 **Tiers** (`config.ts`). A tier changes the pixel ratio only (2, 1.5, 1.25, 1). The look has no post pass and no shadow map to shed, and the lowest tier is the same bricks at a lower ratio.
+
+## The registry row
+
+For the lead, for section 3 of `docs/art-direction.md` when the look is accepted:
+
+| Game | Style | Art guide |
+| --- | --- | --- |
+| Claw Machine | Stud bricks 3D: moulded plastic bricks on one stud grid with a seam round every brick, flat red, blue and yellow toys on a pale studded tray in a green rim, brick bins with frog eyes and peg teeth in a dark cabinet, seen in perspective from the front and above | [`games/claw-machine/ART.md`](../games/claw-machine/ART.md) |

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { STEP, follow, hubAt, newClaw, release, stepClaw, tipY, type Claw, type ClawEvent } from './claw'
-import { HINGE_DROP, JAW_REACH } from './clawBuild'
+import { STEP, follow, hubAt, newClaw, release, stepClaw, type Claw, type ClawEvent } from './claw'
+import { HINGE_DROP, gripFor } from './clawBuild'
 import { RAIL } from './places'
 
 const RIDE = 12.5
@@ -60,13 +60,19 @@ describe('the claw', () => {
     expect(claw.length).toBeCloseTo(RAIL.top - RIDE - HINGE_DROP, 1)
   })
 
-  it('stops its jaws a little into the thing it lands on, never through the tray', () => {
+  it('stops its hinge at the height it is given, so its teeth close beside a thing and never in it', () => {
+    for (const stop of [3.3, 5.5, 8]) {
+      const claw = newClaw(0, 6, RIDE)
+      release(claw, false)
+      let lowest = Infinity
+      for (let i = 0; i < 400; i++) { stepClaw(claw, RIDE, stop, []); lowest = Math.min(lowest, RAIL.top - claw.length - HINGE_DROP) }
+      expect(lowest).toBeCloseTo(stop, 5)
+    }
+    // A stop above where it rides is no drop at all: the claw closes where it hangs.
     const claw = newClaw(0, 6, RIDE)
     release(claw, false)
-    let lowest = Infinity
-    for (let i = 0; i < 400; i++) { stepClaw(claw, RIDE, 0.4, []); lowest = Math.min(lowest, tipY(claw)) }
-    expect(lowest).toBeGreaterThan(0.4 - JAW_REACH * 0.5)
-    expect(lowest).toBeLessThan(0.4)
+    for (let i = 0; i < 400; i++) stepClaw(claw, RIDE, RIDE + 3, [])
+    expect(RAIL.top - claw.length - HINGE_DROP).toBeCloseTo(RIDE, 1)
   })
 
   it('lands straight under the trolley however far the cable has swung', () => {
@@ -137,5 +143,12 @@ describe('the claw', () => {
       return { claw, events, hub: hubAt(claw) }
     }
     expect(play()).toEqual(play())
+  })
+
+  it('opens its jaws just wide enough to hold a thing between its teeth, wider for a wider thing', () => {
+    expect(gripFor(0.4)).toBeGreaterThan(0)
+    expect(gripFor(0.8)).toBeGreaterThan(gripFor(0.4))
+    expect(gripFor(1.5)).toBeGreaterThan(gripFor(1.0))
+    expect(gripFor(1.5)).toBeLessThan(1)
   })
 })

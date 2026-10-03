@@ -41,14 +41,15 @@ export function cabinetBricks(): Brick[] {
     out.push({ x: TRAY.x + TRAY_WIDTH, y: 0, z, w: 1, d: 4, h: 2, colour: TRIM })
   }
   // The step the gobblers stand on.
-  for (let x = STEP.x; x < STEP.x + STEP.w; x += 6) out.push({ x, y: 0, z: STEP.z, w: Math.min(6, STEP.x + STEP.w - x), d: STEP.d - 2, h: plates(STEP.top), colour: STEP_COLOUR })
+  for (let x = STEP.x; x < STEP.x + STEP.w; x += 6) out.push({ x, y: 0, z: STEP.z, w: Math.min(6, STEP.x + STEP.w - x), d: STEP.d, h: plates(STEP.top), colour: STEP_COLOUR })
   // The parapet, the shelf behind it and the back wall.
   wall(out, SHELF.x, SHELF.x + SHELF.w, WALL.z, 1, plates(WALL.top), 3)
   for (let x = SHELF.x; x < SHELF.x + SHELF.w; x += 8) out.push({ x, y: plates(SHELF.top) - 3, z: SHELF.z, w: Math.min(8, SHELF.x + SHELF.w - x), d: SHELF.d, h: 3, colour: STEP_COLOUR })
   wall(out, SHELF.x - 2, SHELF.x + SHELF.w + 2, BACK.z, 1, plates(BACK.top), 5)
   // Corner posts in the machine's own colour.
   for (const x of [SHELF.x - 2, SHELF.x + SHELF.w]) {
-    for (let y = 0; y < plates(BACK.top); y += 6) out.push({ x, y, z: WALL.z - 1, w: 2, d: 2, h: 6, colour: TRIM })
+    // They stand in front of the line of the parapet, clear of whoever waits behind it.
+    for (let y = 0; y < plates(BACK.top); y += 6) out.push({ x, y, z: WALL.z, w: 2, d: 2, h: 6, colour: TRIM })
   }
   // The bell post at either end of the rail: a buffer brick with a bell on it.
   for (const side of [-1, 1]) {
@@ -56,14 +57,16 @@ export function cabinetBricks(): Brick[] {
     out.push({ x: side * BELL.x - 1, y: 8, z: BELL.z - 1, w: 2, d: 2, h: 3, colour: LAMP, round: true })
   }
   // The posts of the gate, on the parapet.
-  for (const side of [-1, 1]) out.push({ x: GATE.x + side * GATE.half - 0.5, y: plates(WALL.top), z: WALL.z, w: 1, d: 1, h: 3, colour: TRIM, round: true })
+  for (const side of [-1, 1]) out.push({ x: GATE.x + side * GATE.half - 0.5, y: plates(WALL.top), z: WALL.z, w: 1, d: 1, h: 2, colour: TRIM, round: true, studs: false })
   return out
 }
 
 /** The bar of the gate: the one part of the cabinet that moves. It is built about the middle of its own top. */
 export function gateBricks(): Brick[] {
+  // The bar lies a hair above its posts, and its latch hangs a hair above the parapet: two things that touch are
+  // drawn with a sliver of air between them.
   return [
-    { x: -GATE.half - 0.5, y: -1, z: -0.4, w: GATE.half * 2 + 1, d: 0.8, h: 1, colour: STEEL, studs: false },
-    { x: -0.8, y: -3, z: -0.5, w: 1.6, d: 1, h: 2, colour: TRIM, studs: false },
+    { x: -GATE.half - 0.5, y: -0.9, z: -0.4, w: GATE.half * 2 + 1, d: 0.8, h: 0.9, colour: STEEL, studs: false },
+    { x: -0.8, y: -2.9, z: -0.45, w: 1.6, d: 0.9, h: 2, colour: TRIM, studs: false },
   ]
 }
