@@ -4,10 +4,9 @@
 ## Status
 
 - Stage: gates. The game is built on the toy and the gates were run as far as this machine takes them. What is left is the lead's and the owner's: frame rates on a graphics card, ears on the voices, the look registry row, and the pull request.
-- The sheet the game stands on: round 3 pasted, at commit `16b26764361ec8e63d4679fe28882986f5bff132`, sheet hash `d75923063bacbf520dc92ed531f07ace0fc7dd7b655ee038af96fb9e0e6dea7a` (unchanged at the tip of this run). It has not passed yet.
-- Check of the sheet. Round 1 (checker B): open, 16 findings. Round 2 (checker D): open, 3 findings, and a fourth point from the lead written in the builder's own sentences. Round 3 (checker E): open, 4 findings; it judged the hash `9e8166f69b49578f037e3cf3f528bef8cb5cdba6a6ad334d6aeb6bdfe307edbd` (commit `cc46a75`). Every replacement of all three rounds is pasted as given and none was refused. What round 3 changed in the rules: a change of places with a tin that stood open and empty shuts the tin, and the customer who steps back carries the new thing of no position from then on (`cycle.ts`); the glider plays for a pelican that waits as well (`gameRun.ts`).
-- Open: sheet ready for check, round 4
-- Look in use: comic-book halftone, the first reserved row. The owner had been shown the toy and had not answered when this run was built; the game went on at the builder's own risk. Everything that is not drawing is outside the view (`gameView.ts`, `castFigures.ts`, `figures.ts`, `look.ts`, `gameCanvas.ts`), so a second look would redo those five files and nothing else.
+- The sheet the game stands on passed its check: round 4, checker F, sheet hash `d75923063bacbf520dc92ed531f07ace0fc7dd7b655ee038af96fb9e0e6dea7a`, held at commit `16b26764361ec8e63d4679fe28882986f5bff132`. Nothing above `## The look` in `ART.md` has changed since that commit, and the hash is the same at the tip.
+- Check of the sheet, in order. Round 1 (checker B): 16 findings. Round 2 (checker D): 3 findings, and a fourth point from the lead written in the builder's own sentences. Round 3 (checker E): 4 findings; it judged the hash `9e8166f69b49578f037e3cf3f528bef8cb5cdba6a6ad334d6aeb6bdfe307edbd` (commit `cc46a75`). Round 4 (checker F): passed, no findings. Every replacement of the first three rounds is pasted as given and none was refused. What round 3 changed in the rules: a change of places with a tin that stood open and empty shuts the tin, and the customer who steps back carries the new thing of no position from then on (`cycle.ts`); the glider plays for a pelican that waits as well (`gameRun.ts`).
+- Look in use: comic-book halftone, the first reserved row. The owner had been shown the toy and had not answered when the game was built on it; the game went on at the builder's own risk. Everything that is not drawing is outside the view (`gameView.ts`, `castFigures.ts`, `figures.ts`, `look.ts`, `gameCanvas.ts`), so a second look would redo those five files, and the spike's still (`spike.ts`, `spikeScene.ts`) if it is kept, and nothing else.
 - For the lead, what to try first (`?chrome=0&seed=7#/play/fruit-slicer`; `&fps=1` for the overlay; a fresh slot):
   1. Hands off for seven seconds: the two who wait glow, and the ghost hand taps one. Tap one: it steps up with its ticket, and a folded tin sits on the rail.
   2. Land a finger on the bare strip above the board and pull straight down through the fruit, a little short of half. Take the left part by its middle and carry it to the tin: the tin springs open at its true length, the roller rules the rail (the first showing, once), and the piece lies in a gap. The lid comes down on the gap and springs back.
@@ -15,12 +14,13 @@
   4. Tap the crate: the kind on order stands up out of it and is the one that lands. Carry the roller to a fruit: the ticket's parts are pressed in.
   5. For a laugh: feed the pelican a whole uncut fruit by hand. Fling a piece at a customer, at the dog, at the crate. Swipe across a customer. Roll one flat.
   6. Later positions need play to reach, or a saved state: the twins come at the third, the ants at the fourth, the written fraction at the fifth, the cat at the tenth, the boa at the eleventh. Each cycle that goes well with the customer who carries the new thing moves one step.
-- Sound: every touch and every beat of a scene has a voice, held as plain numbers in `voices.ts` and played through `audio.ts`. No one has listened to any of them.
+- Sound: every touch and every beat of a scene has a voice, held as plain numbers in `voices.ts` and played through `sound.ts` and `audio.ts`. No one has listened to any of them.
 - Open, requests to the lead:
   - Stills and a frame rate on a real graphics card, at pixel ratio 2; ears on the voices; the registry row, whose text is at the end of `ART.md`.
-  - `symbols.ts`: unchanged in this run in what its functions take and return. The game draws through `drawFraction` and `drawSign` only. `drawMixed`, `drawWhole` and `drawDecimal` are not used by this game.
+  - `symbols.ts`: the lead took it into the template, and what its functions take and return has not changed since. The game keeps its own copy, the same code without the template's header line. The game draws through `drawFraction` and `drawSign` only. `drawMixed`, `drawWhole` and `drawDecimal` are not used by this game.
   - No frozen file needs changing.
-- Open, built beyond what the sheet states, for the next checker to rule on (each is a choice the rules had to make):
+- For the lead, the sheet part of `ART.md`. It holds no sentence about what a run does not draw or build, and no sentence the built game has made untrue in its rules. One sentence is true of the state and not of the drawing, in "How a cycle ends, and how the next one starts": "Nothing new starts unless the child touches one of them; that one then steps up, and the served one leaves as it does." The served customer is gone the moment the next one steps up; no leaving is drawn. If the sheet is to say what is built, the sentence that should stand there is: "Nothing new starts unless the child touches one of them; that one then steps up, and the served one is gone as it does." It was not edited: the sheet keeps its hash.
+- For the lead, built beyond what the sheet states. Each is a choice the rules had to make. The check reads the sheet and not the code, so nobody but the builder has ruled on these:
   - A drag that starts on a piece carries it; a drag that starts anywhere else is the blade. The sheet says the finger is a blade and that a piece is carried, and not how the two are told apart.
   - A piece let go over a thing is given to that thing however fast the hand was going; only one let go at speed over bare wood or the wall is thrown, and it comes down further off the faster it was thrown.
   - Taking hold of a piece that lies in a row takes the row on the side of the half it is held by. The two parts of a cut hop apart by a quarter of the give, so a cut is not a row.
@@ -39,15 +39,16 @@
   - Commit `2266bcd` (first run) failed the typecheck and was fixed by the next; CI is red on that one push.
 - What could not be run here, and why: frame rates (no graphics card: Chromium draws in software); WebKit (not installed); sound (no sound card); `compound find` and the education overlap checks (no key and no wording store, and nothing under `education/` or `docs/` was touched).
 - What was measured here, on the production build, Chromium drawing in software, tier 0 pinned, pixel ratio 2, 1180 by 820, processor throttled six times, a customer at the window, through twenty seconds of strokes and crate taps: the game's own work a frame, 95th percentile 5.9 and 6.1 ms in two runs (median 3.6 and 3.8), against the jam's target of under 8 ms; unthrottled, 0.7 ms. Not a frame rate; no physical iPad was measured. Counted, on no machine at all: a quiet frame is 81 figures and 444 context calls, the heaviest the rules allow is 301 figures and 2,753 calls, and neither has a full-surface composite beyond the one stamp of the plate.
-- What ran at the end of this run, all passing here: `npx tsc --noEmit`; `npx vitest run games/fruit-slicer test/games.test.ts` (36 files, 474 tests; the game's own take about six seconds); `npm run -s wordless:check`; `node scripts/egress-check.ts`; `npm run check` whole (228 files, 2304 tests passed, 1 skipped); `npm run build`, `npm run egress:built`, `npm run education:built`. A green run here is not the gate: CI is.
-- Answer files handled: `docs/build/answers/fruit-slicer-1.md`, `-2.md` and `-3.md`. None with a higher number was on the base branch when this run ended.
-- Next run: the owner's answer on the look and the toy, the fourth check of the sheet, and whatever both change.
+- What ran at the tip, all passing here: `npx tsc --noEmit`; `npx vitest run games/fruit-slicer test/games.test.ts` (36 files, 475 tests; the game's own take about six seconds); `npm run -s wordless:check`; `node scripts/egress-check.ts`; `npm run check` whole (228 files, 2305 tests passed, 1 skipped); `npm run build`, `npm run egress:built`, `npm run education:built`. A green run here is not the gate: CI is.
+- Answer files handled: `docs/build/answers/fruit-slicer-1.md`, `-2.md`, `-3.md` and `-4.md`, the last being the pass. None with a higher number was on the base branch when the closing run ended.
+- The closing run changed no rule and nothing drawn: it recorded the pass, brought this file and the art guide below the look into line with the game as built, and took the template's one fix to `audio.ts` with its test (the fingers on the glass are counted, so a second finger or a palm lifting does not end the wait for the sound unlock).
+- Nothing is waiting on the builder. The owner's answer on the look and the toy is still to come, and whatever it changes is a new run.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
 ### Template notes
 
-- `symbols.ts` (new; **for the template**). This game is the pilot for it. It draws a whole number, a fraction with a horizontal bar, a mixed number, the eight signs by name, and a decimal number with a point or a comma; it takes numbers, a fraction as two integers or a sign by name, never a string; it imports nothing and knows nothing of fruit, and its test holds that. What writing it showed:
+- `symbols.ts` (written here as the pilot, and since taken into the template by the lead). It draws a whole number, a fraction with a horizontal bar, a mixed number, the eight signs by name, and a decimal number with a point or a comma; it takes numbers, a fraction as two integers or a sign by name, never a string; it imports nothing and knows nothing of fruit, and its test holds that. What writing it showed:
   - The check refuses a helper that takes the text as a parameter, so every `fillText` and `strokeText` formats its number in place (`String(Math.round(n))`) and carries its own `wordless-ok: numeral` comment. An outline under a fill is therefore two commented calls, not one helper.
   - A sign is chosen by a chain of conditionals whose branches are all literals, in one text call. That passes the check, and a `switch` with a call a case would need a comment a case.
   - The fraction bar is a filled rectangle. The check cannot see it, so it is on the reviewer's list: a bar drawn anywhere but `symbols.ts` would pass unseen.
@@ -56,21 +57,21 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
   - The decimal number is drawn digit by digit on cells of one width, since a comma cannot be put into a formatted number without a call the check refuses.
   - The font is the system stack at weight 800, set in the module. A look that wants its own numerals has only the ink (fill, edge, edge width) to change.
   - Its test runs on a small recorder that stands in for the canvas, so it needs no DOM, and it reads the source to hold the comment on every text call.
-- `config.ts`: changed in two places only, as the brief asks: `LADDER` holds the twelve position ids of the sheet and `FIRST_VISIT` has a second row at age 11. Nothing else was touched; the game's own numbers (lengths, the give, the shelf) are in `measure.ts` and `world.ts`.
+- `config.ts`: changed as the brief asks: `LADDER` holds the twelve position ids of the sheet and `FIRST_VISIT` has a second row at age 11. Beside those, `BACKDROP` is the look's newsprint and the manifest import carries the game's name. Nothing else was touched; the game's own numbers (lengths, the give, the shelf) are in `measure.ts` and `world.ts`.
 - `state.ts`: used as copied and wrapped by `save.ts`, as its header says to. It worked as described. One gap **for the template**: `deserialize` gives a fresh state for a record it cannot read without saying that it did, so a wrapper has to repeat the test (not a record, or another version) to know whether to build its own fresh fields. A small exported `isReadable(raw)` would save every game that copy.
 - `fruit-slicer.tsx` (the Mount): changed where its comments say a game goes in, following the pilot notes, and nowhere else:
   - `draw` has a case with no state: the bare page of the look, until the slot has been read.
-  - The toy is built in the loading `then`, which draws once itself.
+  - The game is built in the loading `then`, from the saved state as read, which draws once itself.
   - The game queues its sounds, and they are played in the gesture handler right after the game has answered, and again after the step in the loop (`flush`).
   - What `ladder.update` returns is kept and handed to the draw.
   - `seed=<n>` in the address fixes the visit's random streams; without it a new seed is drawn.
   - A touch in the top right corner, 72 by 72, goes to the overlay and to nothing else.
   - The state is the game of `save.ts`, not the template's three fields, and it is saved at the throttle when a touch has changed it. Nothing is saved in the air, since the world changes on the touch and what moves afterwards is only shown.
-  - One thing **for the template**: the pilot notes say a press has one ending, `tap`, `dragLift`, `dragEnd` or `pressEnd`. A drag in fact gets two, `dragLift` and then `dragEnd` after the grace, so whatever a game does on the lift has to be safe to do twice. The toy's `lift` is.
-- For the game stage, three more things **for the template** from this build: the template's `scene.ts` plays a cue (a beat that lasts no time) when a touch ends the scene, so a scene's sounds have to be muted by the game while it finishes one; a shared `Scene`-plus-show pattern (beats that write numbers into one plain record the figures read) kept every scene testable without a canvas; and `guidance.ts` returns the same object every frame, so a test that keeps two frames of it sees the second overwrite the first.
-- New files of this game's own that any canvas game would want, **for the template** if the lead agrees: `stage.ts` (`fit`, `toStage`, about twenty lines, as the pilot notes describe); `sound.ts` (the bridge from notes to a `Voice`, with a delay for a run of notes); the counted frame-budget test (`frameBudget.test.ts`: the painters run on a stand-in context that counts every call, so no canvas and no DOM is needed).
-- `audio.ts`: as copied; the toy plays through it. One gap **for the template**: the cloud page asks for every voice as plain numbers in a pure module with a range test, and the template has no shape for that. `voices.ts` here uses a note of kind, pitch, glide, wave, peak, attack, length and delay, which maps one to one onto `tone` and `noise`; the adapter that plays a list of notes is a few lines the toy will add. The note type, the adapter and the range test would serve every game.
-- `input.ts`, `guidance.ts`, `scene.ts`, `overlay.ts`, `ART.md`, `REFINEMENT.md`: as copied.
+  - One thing **for the template**: the pilot notes say a press has one ending, `tap`, `dragLift`, `dragEnd` or `pressEnd`. A drag in fact gets two, `dragLift` and then `dragEnd` after the grace, so whatever a game does on the lift has to be safe to do twice. This game's `lift` is.
+- From the game stage, three more things **for the template**: the template's `scene.ts` plays a cue (a beat that lasts no time) when a touch ends the scene, so a scene's sounds have to be muted by the game while it finishes one; a shared `Scene`-plus-show pattern (beats that write numbers into one plain record the figures read) kept every scene testable without a canvas; and `guidance.ts` returns the same object every frame, so a test that keeps two frames of it sees the second overwrite the first.
+- New files of this game's own that any canvas game would want, **for the template** if the lead agrees: the two functions `fit` and `toStage` of `stage.ts` (about twenty lines, as the pilot notes describe; the rest of that file is this game's own layout); `sound.ts` (the bridge from notes to a `Voice`, with a delay for a run of notes); the counted frame-budget test (`frameBudget.test.ts`: the painters run on a stand-in context that counts every call, so no canvas and no DOM is needed).
+- `audio.ts`: as copied, with the one fix the template took later, brought over in the closing run with its test: the fingers on the glass are counted. The game plays through it. One gap **for the template**: the cloud page asks for every voice as plain numbers in a pure module with a range test, and the template has no shape for that. `voices.ts` here uses a note of kind, pitch, glide, wave, peak, attack, length and delay, which maps one to one onto `tone` and `noise`; the adapter that plays a list of notes is `sound.ts`, a few lines. The note type, the adapter and the range test would serve every game.
+- `input.ts`, `guidance.ts`, `scene.ts`, `overlay.ts`: as copied, byte for byte, and all four in use. `ART.md`, `REFINEMENT.md`: the template's headings in the template's order, filled in.
 - The four frozen files are untouched.
 - Not the template, but for the next cloud builder: a check script that pipes each command through `tail` hides its exit code. Mine did, and one red commit was pushed. Read the exit code, not the last line.
 
@@ -78,18 +79,18 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 
 The game works under every default of the guide as written and asks for none to be changed. These are for the owner all the same:
 
-- **The give of a tin**: a cut within one twenty-fourth of the fruit's length counts as a fit. No record sets it. It decides how often a first cut succeeds, so it is the first thing to judge with a child at the toy checkpoint.
+- **The give of a tin**: a cut within one twenty-fourth of the fruit's length counts as a fit. No record sets it. It decides how often a first cut succeeds, so it is the first thing to judge with a child.
 - **No fraction on a piece the child cut.** Under the default on readings, the written fraction is laid only on what was ordered (the ticket and the tin), never on a cut piece. A child therefore never sees a name for a piece of its own making. If the owner would like a piece that lies exactly on ruled parts to show its fraction, that is a change to the default.
 - **A piece rings by its length** (half the length, an octave higher). It is true of a string and is used as a toy, not taught. Whether it stays is a matter of taste.
-- **The look**: comic-book halftone, at the toy checkpoint.
-- **The toy**: the slice. Whether cutting fruit again and again, with its thwack, its juice on the wall and the dog, is a pleasure with nothing to achieve is his to say at the same checkpoint.
+- **The look**: comic-book halftone. He was shown the toy in it and had not answered when the game was built on it.
+- **The toy**: the slice. Whether cutting fruit again and again, with its thwack, its juice on the wall and the dog, is a pleasure with nothing to achieve is his to say.
 - **Carrying**: a finger that lands on a piece takes hold of it, and one that lands anywhere else is the blade. Whether that reads to a child, or whether a piece should be cut wherever the finger lands, is his to try.
 - **The size of the queue**: the two who wait are small. Giving them more of the page takes it from the counter.
 - **The voices**: nobody has heard them.
 
 ## Pass log
 
-One row per pass: what was looked at, the critique written as the child, the one themed fix set, what was reverted, the measured frame rate, and what is still weak. Passes 1 and 2 are on the look spike, a still; pass 3 is on the toy; passes 4 to 6 are on the game, the last of them the cold playtest proxy.
+One row per pass: what was looked at, the critique written as the child, the one themed fix set, what was reverted, the measured frame rate, and what is still weak. Passes 1 and 2 are on the look spike, a still; pass 3 is on the toy; passes 4 to 6 are on the game, the last of them the cold playtest proxy. The last column is what was weak when that pass ended; what is weak now is in the status block.
 
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
@@ -130,7 +131,7 @@ Fruit Slicer is designed from four content standards adopted by the California S
 
 It is built on a representation taken from one with evidence behind it for fraction size: an estimate on a line followed by the true place beside it. The strip with a pictured share, as built here, is school practice and has no trial of its own. It makes no claim about what a child who plays it has reached.
 
-It names no California grade 6 record. The sheet has been checked three times by people who did not write it (16 findings, then 3, then 4, all pasted) and waits for its fourth check; it has not passed.
+It names no California grade 6 record. The sheet was checked four times by people who did not write it: 16 findings, then 3, then 4, all pasted, and the fourth check passed it with none (checker F, sheet hash `d75923063bacbf520dc92ed531f07ace0fc7dd7b655ee038af96fb9e0e6dea7a`).
 
 ### Defaults taken for the owner
 

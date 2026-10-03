@@ -235,7 +235,7 @@ It is built on a representation taken from one with evidence behind it for fract
 
 ## The look
 
-Written after the style spike, and not part of the sheet. The look is **comic-book halftone**, the first row reserved for this game in the look ledger. It is not yet claimed: the owner sees it at the toy checkpoint, and the registry row is a request to the lead.
+Written after the style spike, and not part of the sheet. The look is **comic-book halftone**, the first row reserved for this game in the look ledger. The row is still reserved, not claimed: the owner was shown the toy in this look and had not answered when the game was built on it, and the registry row is a request to the lead.
 
 **What it is.** A printed page of a comic: panels with heavy black borders and hard shadows on off-white newsprint, black brush-ink outlines round everything, flat primaries, and coarse dot screens for every tone. An impact burst and speed lines mark where the blade fell. No pastels, no gradients, no soft shadows, no 3D shading, no lettering: a comic's sound words are left out, and the bursts and lines do their work. The page has two panels. Above, the wall behind the stall under its awning: the customer being served stands at the window on the left with its ticket, and the two who wait stand behind a rope on the right, each with its ticket; the juice of a cut lands on this wall. Below, the counter seen from above: the tin on its rail, a bare strip to land a blade on, the board with its two lanes, the shelf with its four rows, and down the right-hand side the roller on its hook, the crate and the dog looking out of its arch. `spike=1` in the address still shows the first still of the look.
 
@@ -255,7 +255,7 @@ Written after the style spike, and not part of the sheet. The look is **comic-bo
 
 **Tiers.** Everything still is painted once onto a plate for a size of surface, and a frame stamps the plate and draws what moves: one full-surface composite a frame. The tiers in `config.ts` lower only the pixel ratio; the plate and the dot tiles are made again for the new ratio, so the lowest tier has fewer pixels and the same dots, lines and colours. Nothing else is shed: a frame at its heaviest is about three hundred small figures.
 
-**The registry row**, for the lead to place in `docs/art-direction.md` once the owner has seen the look:
+**The registry row**, for the lead to place in `docs/art-direction.md` when the look is claimed:
 
 | Game | Style | Art guide |
 | --- | --- | --- |
