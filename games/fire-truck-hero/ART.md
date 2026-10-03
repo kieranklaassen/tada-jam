@@ -23,7 +23,7 @@ The manifest band is 2 to 4, so the game is designed for a two-year-old and noth
 - **A lifted finger loses nothing.** Water already in the air still lands. A stream that is interrupted and taken up again counts as the same watering.
 - **The truck itself** is the one place that takes no water. A touch on it makes it honk, hop on its springs and turn its roof light once.
 
-**In an empty yard.** The yard is pale dry sand. Where water lands the sand turns dark, as wet sand does, and the dark patch has the shape of what the finger did: a blot for a tap, a line for a sweep. The patches dry back to pale over about half a minute of play, edge first, so the sand is never used up and there is always room for more. Only marks on open sand dry: the water a thing holds never dries or drains, the dry patch of a yard included, so a thing part-watered waits as it is and a want once met stays met. On open sand a place that has had its fill stands as a puddle, and with more water is mud, and neither dries while the yard is on screen: what the child brought to its fill stays. Drops bounce off the landing point and leave their own small dots.
+**In an empty yard.** The yard is pale dry sand. Where water lands the sand turns dark, as wet sand does, and the dark patch has the shape of what the finger did: a blot for a tap, a line for a sweep. The patches that have not had their fill dry back to pale over about half a minute of play, edge first, so drawing never uses the sand up and there is room for more. Only those marks dry: the water a thing holds is never lost to time, the dry patch of a yard included, so a thing part-watered waits as it is and a want once met stays met. (A boat that sinks empties itself, and that is the child's water at work, not time.) On open sand a place that has had its fill stands as a puddle, and with more water is mud, and neither dries while the yard is on screen: what the child brought to its fill stays, and a puddle and mud still answer every landing. Drops bounce off the landing point and leave their own small dots.
 
 **The answer starts when the finger lands**, in the same frame: the nozzle snaps round, the truck squashes back, water leaves the nozzle and the hiss of the hose begins. The water itself needs about a quarter of a second to arrive, because it flies.
 
@@ -109,13 +109,13 @@ The position moves one step up after a yard that went well, one step down after 
 - `position`: the id of the place in the order for the next yard to be laid out.
 - `finished`: the want of the yard on screen has been met. Its ending is not played again on load.
 - `yard`: the yard on screen, as the id of its place and the number of its arrangement.
-- `things`: one entry for each thing in the yard, in the order of the arrangement: the gulps of water it holds (0 to its fill, and one step more for "too much") and the spot it is at, for the things that move (the cat and the boat).
-- `wet`: the open ground as a coarse grid of 16 by 10 cells, each dry, damp, wet or mud. Only this grid dries; the gulps in `things` never do.
+- `things`: one entry for each thing in the yard, in the order of the arrangement: the gulps of water it holds (0 to its fill, and one step more for "too much") and, for the cat and the boat, the spot it is at. The duck, the snail and the floated logs move too and have no spot here: each is placed from the gulps, as "Not saved" says.
+- `wet`: the open ground as a coarse grid of 16 by 10 cells, each dry, damp, wet (a cell at its fill, which stands as a puddle) or mud. Of these only damp dries; a wet cell and a mud cell stay as they are while the yard is on screen. The gulps in `things` are never lost to time.
 - `next`: the yard that waits beyond the gate, as place id and arrangement number.
 - `turn`: a small number that picks which arrangement comes next for each place. It wraps round and is never shown.
 - `seen`: the kinds of thing whose first showing has been given, so that it is given once.
 
-**Not saved**, because each is a view of what is: water in the air, steam, ripples, the wheel's spin, the bee in flight, and how far the gate's latch has been lifted. Sand dries on attended game time only, and no clock is read. The largest legal state is far under half of the 64 KB cap, and a test says so.
+**Not saved**, because each is a view of what is: water in the air, steam, ripples, the wheel's spin, the bee in flight, and how far the gate's latch has been lifted. The duck, the snail and the floated logs keep no spot either. On load each is put where the gulps in `things` say it belongs: the duck in its pool, on the floor or afloat by the water's level; the snail on its dry patch, pulled in or out by the patch's water; the logs on the fire's own puddle beside the ring. How far each had gone from there (a ride over the rim, a glide along a line, a drift) is short-lived and gone on load. Sand dries on attended game time only, and no clock is read. The largest legal state is far under half of the 64 KB cap, and a test says so.
 
 ## The characters and their fixed tastes
 
@@ -156,7 +156,7 @@ Every scene is a list of timed beats on the template's `scene.ts`, filled in fro
 
 Read through the lookup on 2026-10-03. Each record below printed the standing and the check state given beside it on that day. What a record asks is given in the game's own words, in a California record's Summary, or in a Dutch record's English gloss. The Summary and the gloss are the pack's text, and the gloss is not an official translation.
 
-The school skill these records carry is narrower than "what water does to different things". It is cause and effect with water: a child gives water to a thing, can guess what will happen, and sees what does, with filling and growing as the two outcomes the records name. Putting out a fire is the game's story. No record in either jurisdiction names fire or burning, or washing something away, and the game claims no school skill for them. No record names wetting either: the sand that turns dark and then to mud is taken only as a material that changes colour and texture (`us-ca 2.3`).
+The school skill these records carry is narrower than "what water does to different things". It is cause and effect with water: a child gives water to a thing, can guess what will happen, and sees what does, with filling, the force of water and growing as the outcomes the records name. Putting out a fire is the game's story. None of the records named below names fire or burning, or washing something away, and the game claims no school skill for them. None of them names wetting either: the sand that turns dark and then to mud is taken only as a material that changes colour and texture (`us-ca 2.3`).
 
 ### us-ca
 
