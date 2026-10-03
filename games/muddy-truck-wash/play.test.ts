@@ -365,7 +365,7 @@ describe('the work of a frame stays inside its budget', () => {
 
   it('every vehicle of the roster can be built and stood in the bay', () => {
     for (const def of ROSTER) {
-      const state: WashState = { ...freshWash(null), bay: { who: def.id, cells: encode(silhouette(def)), came: 0 }, next: { who: ROSTER[(ROSTER.indexOf(def) + 1) % ROSTER.length].id, cells: encode(silhouette(ROSTER[(ROSTER.indexOf(def) + 1) % ROSTER.length])) } }
+      const state: WashState = { ...freshWash(null), bay: { who: def.id, cells: encode(silhouette(def)), came: 0 }, next: { who: ROSTER[(ROSTER.indexOf(def) + 1) % ROSTER.length].id, cells: encode(silhouette(ROSTER[(ROSTER.indexOf(def) + 1) % ROSTER.length])), dips: 0 } }
       const play = new Play(state)
       run(play, 0.5)
       expect(play.bay.def.id).toBe(def.id)

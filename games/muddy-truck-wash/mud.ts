@@ -78,30 +78,18 @@ export function arrive(clean: Surface, position: string, seed: number): Surface 
   return surface
 }
 
-/** Every patch of body in rows 0 to `top` holds mud. */
-function muddyUpTo(surface: Surface, top: number): boolean {
-  for (let r = 0; r <= top; r++) for (let c = 0; c < GRID_W; c++) {
-    const patch = surface[cellAt(c, r)]
-    if (patch !== '.' && patch !== 'c' && patch !== 's') return false
-  }
-  return true
-}
-
-/** How many more trips through the puddle will add mud: 2, 1 or 0. Read from the surface, so nothing counts them. */
-export function dipsLeft(surface: Surface): number {
-  return muddyUpTo(surface, 3) ? 0 : muddyUpTo(surface, 1) ? 1 : 2
-}
+/** The most trips through the puddle that add mud. A further tap only splashes. */
+export const MAX_DIPS = 2
 
 /**
- * One trip through the puddle. The first covers the wheels and sills in soft
- * mud, the second reaches halfway up, and each throws a few splashes higher.
- * Dried mud and foam it lands on become soft mud too. A third changes
- * nothing and returns the same surface.
+ * One trip through the puddle, the first (`dip` 0) or the second (`dip` 1).
+ * The first covers the wheels and sills in soft mud, the second reaches
+ * halfway up, and each throws a few splashes higher. Dried mud and foam it
+ * lands on become soft mud too. How many trips a vehicle has had is kept
+ * beside its surface in the save: it cannot be read back from the mud.
  */
-export function puddled(surface: Surface, seed: number): Surface {
-  const left = dipsLeft(surface)
-  if (left === 0) return surface
-  const top = left === 2 ? 1 : 3
+export function puddled(surface: Surface, dip: number, seed: number): Surface {
+  const top = dip <= 0 ? 1 : 3
   const out = surface.slice()
   for (let r = 0; r <= top; r++) for (let c = 0; c < GRID_W; c++) if (out[cellAt(c, r)] !== '.') out[cellAt(c, r)] = 's'
   let s = seed

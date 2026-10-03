@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { ROSTER } from './cycle'
-import { arrive, dipsLeft, next, puddled } from './mud'
+import { MAX_DIPS, arrive, next, puddled } from './mud'
 import { patchAt, patchCentre, silhouette } from './silhouette'
 import { CELLS, GRID_H, GRID_W, cellAt, tally } from './surface'
 import { tipper } from './tipper'
@@ -77,17 +77,14 @@ describe('the mud a vehicle rolls in with', () => {
     expect(arrive(clean, 'somewhere-else', 9)).toEqual(arrive(clean, LADDER[0], 9))
   })
 
-  it('the puddle adds soft mud twice, from the wheels up, and a third trip changes nothing', () => {
+  it('the first trip through the puddle covers the wheels and sills, the second reaches halfway up', () => {
     const clean = silhouette(tipper)
-    expect(dipsLeft(clean)).toBe(2)
-    const once = puddled(clean, 3)
-    expect(dipsLeft(once)).toBe(1)
+    expect(MAX_DIPS).toBe(2)
+    const once = puddled(clean, 0, 3)
     for (let col = 0; col < GRID_W; col++) for (const row of [0, 1]) if (clean[cellAt(col, row)] !== '.') expect(once[cellAt(col, row)]).toBe('s')
-    const twice = puddled(once, 4)
-    expect(dipsLeft(twice)).toBe(0)
+    const twice = puddled(once, 1, 4)
+    for (let col = 0; col < GRID_W; col++) for (let row = 0; row <= 3; row++) if (clean[cellAt(col, row)] !== '.') expect(twice[cellAt(col, row)]).toBe('s')
     expect(tally(twice).s).toBeGreaterThan(tally(once).s)
-    // The third only splashes: the very same surface comes back.
-    expect(puddled(twice, 5)).toBe(twice)
     // The top of the vehicle stays as it was.
     for (let col = 0; col < GRID_W; col++) expect(twice[cellAt(col, GRID_H - 1)]).toBe(clean[cellAt(col, GRID_H - 1)])
   })
@@ -95,7 +92,7 @@ describe('the mud a vehicle rolls in with', () => {
   it('the puddle wets dried mud and never changes the shape of the body', () => {
     const clean = silhouette(tipper)
     const caked = arrive(clean, 'caked-all-over', 2)
-    const dipped = puddled(puddled(caked, 5), 6)
+    const dipped = puddled(puddled(caked, 0, 5), 1, 6)
     expect(tally(dipped).body).toBe(tally(clean).body)
     for (let col = 0; col < GRID_W; col++) for (let row = 0; row <= 3; row++) expect(['.', 's']).toContain(dipped[cellAt(col, row)])
   })

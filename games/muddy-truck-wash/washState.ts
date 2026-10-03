@@ -1,5 +1,5 @@
 import { ROSTER, isVehicle, judge, vehicle, whoNext } from './cycle'
-import { arrive, dipsLeft, next as draw, puddled } from './mud'
+import { MAX_DIPS, arrive, next as draw, puddled } from './mud'
 import type { VehicleId } from './roster'
 import { silhouette } from './silhouette'
 import { beginCycle, deserialize, finishCycle, freshState, serialize, type CycleOutcome, type GameState } from './state'
@@ -19,8 +19,8 @@ export const FIRST_SEED = 20261003
 export type WashState = GameState & {
   /** The vehicle in the bay: who, its surface, and how many patches held mud when it rolled in. */
   bay: { who: VehicleId; cells: string; came: number }
-  /** The vehicle that waits at the door, with whatever the puddle or a flying blob has put on it. */
-  next: { who: VehicleId; cells: string }
+  /** The vehicle that waits at the door, with whatever the puddle or a flying blob has put on it, and how many times it has been through the puddle (0 to 2). Nothing shows the number. */
+  next: { who: VehicleId; cells: string; dips: number }
   /** The state of the seeded stream that picks who waits next and lays out mud. Not a count of anything. */
   seed: number
   /** The first showings that have played. */
@@ -43,7 +43,7 @@ export function freshWash(childAge: number | null): WashState {
   const [, s2] = draw(s1)
   seed = s2
   const cells = arrival(ROSTER[0].id, base.position, s1)
-  return { ...base, bay: { who: ROSTER[0].id, cells, came: mudOn(cells) }, next: { who: ROSTER[1].id, cells: arrival(ROSTER[1].id, base.position, s2) }, seed, shown: [] }
+  return { ...base, bay: { who: ROSTER[0].id, cells, came: mudOn(cells) }, next: { who: ROSTER[1].id, cells: arrival(ROSTER[1].id, base.position, s2), dips: 0 }, seed, shown: [] }
 }
 
 /** A saved grid is kept only when it is a whole grid whose body is this vehicle's body. */
@@ -77,14 +77,17 @@ export function deserializeWash(raw: unknown, childAge: number | null = null): W
   const rawNext = typeof record.next === 'object' && record.next !== null ? (record.next as Record<string, unknown>) : {}
   // The one who waits is never the one in the bay.
   const nextWho = isVehicle(rawNext.who) && rawNext.who !== bayWho ? rawNext.who : whoNext(seed, [bayWho])[0]
-  const nextCells = (rawNext.who === nextWho ? grid(rawNext.cells, nextWho) : null) ?? arrival(nextWho, base.position, draw(seed)[1])
+  const kept = rawNext.who === nextWho ? grid(rawNext.cells, nextWho) : null
+  const nextCells = kept ?? arrival(nextWho, base.position, draw(seed)[1])
+  // A count that cannot be one, or one for a vehicle whose mud had to be laid out afresh, starts again at none.
+  const dips = kept !== null && typeof rawNext.dips === 'number' && Number.isInteger(rawNext.dips) && rawNext.dips >= 0 && rawNext.dips <= MAX_DIPS ? rawNext.dips : 0
 
   // In this game the touch that ends a wash begins the next, so nothing is ever left finished.
-  return { ...base, finished: false, bay: { who: bayWho, cells: bayCells, came }, next: { who: nextWho, cells: nextCells }, seed, shown }
+  return { ...base, finished: false, bay: { who: bayWho, cells: bayCells, came }, next: { who: nextWho, cells: nextCells, dips }, seed, shown }
 }
 
 export function serializeWash(state: WashState): WashState {
-  return { ...serialize(state), bay: { who: state.bay.who, cells: state.bay.cells, came: state.bay.came }, next: { who: state.next.who, cells: state.next.cells }, seed: state.seed, shown: [...state.shown] }
+  return { ...serialize(state), bay: { who: state.bay.who, cells: state.bay.cells, came: state.bay.came }, next: { who: state.next.who, cells: state.next.cells, dips: state.next.dips }, seed: state.seed, shown: [...state.shown] }
 }
 
 /** The surface of the vehicle in the bay changed. */
@@ -104,13 +107,14 @@ export function markShown(state: WashState, id: Showing): WashState {
 
 /**
  * The vehicle that waits goes through the puddle: more soft mud, up to twice.
- * Returns the same state when the puddle has no more to add.
+ * The count of its trips is saved with it, so a third tap only splashes after
+ * a put-away too. Returns the same state when the puddle has no more to add.
  */
 export function throughPuddle(state: WashState): WashState {
   const before = decode(state.next.cells)
-  if (!before || dipsLeft(before) === 0) return state
+  if (!before || state.next.dips >= MAX_DIPS) return state
   const [, seed] = draw(state.seed)
-  return { ...state, seed, next: { ...state.next, cells: encode(puddled(before, seed)) } }
+  return { ...state, seed, next: { ...state.next, cells: encode(puddled(before, state.next.dips, seed)), dips: state.next.dips + 1 } }
 }
 
 export type SendOff = { state: WashState; outcome: CycleOutcome; left: VehicleId }
@@ -133,7 +137,7 @@ export function sendOff(state: WashState): SendOff {
     position: moved.position,
     finished: false,
     bay: { who: state.next.who, cells: state.next.cells, came: mudOn(state.next.cells) },
-    next: { who, cells: arrival(who, moved.position, s2) },
+    next: { who, cells: arrival(who, moved.position, s2), dips: 0 },
     seed: s2,
   }
   return { state: next, outcome, left }

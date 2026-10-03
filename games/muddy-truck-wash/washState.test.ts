@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { ROSTER, judge, vehicle, whoNext } from './cycle'
-import { dipsLeft } from './mud'
 import { silhouette } from './silhouette'
 import { STATE_VERSION } from './state'
 import { CELLS, decode, encode, tally, type Patch, type Surface } from './surface'
@@ -93,10 +92,12 @@ describe('the save', () => {
 
   it('never has the same vehicle in the bay and at the door, and is never left finished', () => {
     const raw = save(freshWash(null)) as Record<string, any>
-    const twin = deserializeWash({ ...raw, next: { who: raw.bay.who, cells: raw.bay.cells }, finished: true })
+    const twin = deserializeWash({ ...raw, next: { who: raw.bay.who, cells: raw.bay.cells, dips: 2 }, finished: true })
     expect(twin.next.who).not.toBe(twin.bay.who)
     expect(decode(twin.next.cells)).not.toBeNull()
     expect(twin.finished).toBe(false)
+    // The vehicle put in its place has not been through the puddle.
+    expect(twin.next.dips).toBe(0)
   })
 })
 
@@ -193,11 +194,29 @@ describe('the puddle and what lands on the one that waits', () => {
     const fresh = freshWash(null)
     const once = throughPuddle(fresh), twice = throughPuddle(once)
     expect(tally(decode(once.next.cells)!).s).toBeGreaterThan(tally(decode(fresh.next.cells)!).s)
-    expect(dipsLeft(decode(twice.next.cells)!)).toBe(0)
+    expect([fresh.next.dips, once.next.dips, twice.next.dips]).toEqual([0, 1, 2])
     expect(throughPuddle(twice)).toBe(twice)
     // The position is the child's place in the order: the puddle does not move it.
     expect(twice.position).toBe(fresh.position)
     expect(twice.bay).toBe(fresh.bay)
+  })
+
+  it('a third tap only splashes after a put-away too: the count of trips is in the save', () => {
+    const twice = throughPuddle(throughPuddle(freshWash(null)))
+    const back = deserializeWash(save(twice))
+    expect(back.next.dips).toBe(2)
+    expect(throughPuddle(back)).toBe(back)
+    // Even when what is on it no longer looks like two trips: the child washed nothing, but foam landed on its sills.
+    const foamed = landedOnNext(twice, decode(twice.next.cells)!.map((patch, cell) => (cell < 12 && patch !== '.' ? 'f' : patch)))
+    const again = deserializeWash(save(foamed))
+    expect(throughPuddle(again)).toBe(again)
+  })
+
+  it('reads the count of trips defensively, and the next vehicle to wait starts at none', () => {
+    const raw = save(throughPuddle(freshWash(null))) as Record<string, any>
+    expect(deserializeWash(raw).next.dips).toBe(1)
+    for (const dips of [-1, 3, 1.5, '1', null, undefined]) expect(deserializeWash({ ...raw, next: { ...raw.next, dips } }).next.dips).toBe(0)
+    expect(sendOff(throughPuddle(throughPuddle(freshWash(null)))).state.next.dips).toBe(0)
   })
 
   it('keeps what landed on the waiting vehicle, and rolls in with it', () => {
