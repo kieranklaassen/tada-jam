@@ -6,7 +6,7 @@ import { muddyTruckWashManifest } from './manifest'
 // template and a template fix can be copied over them.
 
 /** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+export const BACKDROP = '#1c2026'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 
@@ -19,10 +19,17 @@ export const BACKDROP = '#f4efe6'
 export type Tier = {
   /** Canvas pixel ratio cap; the jam's bar caps it at 2. */
   dpr: number
+  /** The wet floor gives back a faded copy of each vehicle. Without it the floor is still dark, wet and streaked. */
+  reflections: boolean
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
-export const TIERS: readonly Tier[] = [{ dpr: 2 }, { dpr: 1.5 }, { dpr: 1.25 }, { dpr: 1 }]
+export const TIERS: readonly Tier[] = [
+  { dpr: 2, reflections: true },
+  { dpr: 1.5, reflections: true },
+  { dpr: 1.25, reflections: false },
+  { dpr: 1, reflections: false },
+]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */
 export const GOVERNOR = {

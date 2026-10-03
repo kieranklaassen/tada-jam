@@ -7,10 +7,17 @@ import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { muddyTruckWashManifest } from './manifest'
+import { arrive } from './mud'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
+import { silhouette } from './silhouette'
+import { fireEngine } from './fireEngine'
+import { LAYOUT } from './props'
 import { deserialize, serialize, type GameState } from './state'
+import { tipper } from './tipper'
+import { restPose } from './view/truck'
+import { WashView } from './view/washView'
 
 // The Mount, showing a blank surface. Everything a game needs around its
 // renderer is wired and running: the saved state, attention, the attended
@@ -32,7 +39,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
     // A canvas 2D game reports the sprites and figures it drew as drawCalls; a three.js game reports the renderer's own counts.
-    const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, drawCalls: 0, triangles: 0 }))
+    const view = new WashView(canvas, [tipper, fireEngine])
+    const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...view.counts }))
+    // The look spike: the game's real scene with a fixed seed, before any play.
+    const pose = restPose(), waiting = { ...restPose(), x: LAYOUT.door.x, z: LAYOUT.door.z }
+    const poses = new Map([[tipper.id, pose], [fireEngine.id, waiting]])
+    view.show([tipper.id, fireEngine.id])
+    view.setSurface(fireEngine.id, arrive(silhouette(fireEngine), 'fresh-splashes', 77), true)
+    view.setSurface(tipper.id, arrive(silhouette(tipper), 'dried-patches', 20261003), true)
     let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
@@ -40,7 +54,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame
     // and `resize` calls it after sizing, which can be before the slot is read and while the game rests.
-    const draw = () => {}
+    const draw = () => view.render()
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
@@ -53,7 +67,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       width = w; height = h; dpr = ratio
       // Sizing the backing store wipes the surface, so it is redrawn at once: a resize lands after the frame's
       // own draw, or while the game rests and no frame is coming, and either would leave the surface blank.
-      canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
+      view.setTier(governor.settings)
+      view.resize(w, h, ratio)
       draw()
       return true
     }
@@ -94,7 +109,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       if (!attention.awake || disposed) return
       // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
-      clock.advance(now)
+      const dt = clock.advance(now)
       const start = performance.now()
       act(touch.advance(now))
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
@@ -102,6 +117,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // What to show an idle child: a glow on what can be touched, then one move.
       ladder.update(clock.seconds)
       // The game steps its rules here.
+      pose.lift = Math.sin(clock.seconds * 1.7) * 0.012
+      view.update(dt, poses)
       // A tier change is applied ahead of the draw: the pixel ratio now, and whatever else the game's tiers set.
       // The interval just measured belongs to the frame before, so it is judged with that frame's work.
       const sized = clock.intervalMs > 0 && governor.sample(clock.intervalMs, lastWork) && resize()
@@ -149,6 +166,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       root.removeEventListener('pointerup', onUp)
       root.removeEventListener('pointercancel', onCancel)
       uninstallPerf()
+      view.dispose()
       audio.dispose()
     }
   }, [])
