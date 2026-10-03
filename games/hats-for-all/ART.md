@@ -7,11 +7,24 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.
+Band: 2 to 4, as in `manifest.ts`. The youngest age, 2, governs every choice below.
+
+- **Age rule.** (pack: game-design, ages-2-to-4.md) Everything essential works with one tap. A drag is an extra, survives a lifted finger and counts when partly done. No pinch, tilt, shake or double tap. Essential targets are about 100 logical pixels across, well apart, and none sits in the bottom strip. Every touch is answered and there is no dead end. A whole cycle fits in one to three minutes. Sets stay at five or fewer.
+- **Cue table.** The table in the wordless-clarity convention has no row below 3, so its 3 to 4 row is the ceiling and is cut further: one next act offered, one live activity at a time, a creature or the ghost hand showing one move, a glow on what can be touched now. Its "Avoid" column binds: no text, numeral or icon to decode, no spoken instruction, no verdict, never several activities at once, and no tool on screen before it means something.
+- **Symbol rule.** The band starts below 6, so the kid side shows no word, letter, numeral or symbol, optional or not. The game has no `symbols.ts`.
+- **What `ctx.childAge` sets.** Only the place in the designed order where a first visit starts: 2 or younger starts at `two-heads`, 3 at `three-heads`, 4 or older at `spare-hat`. `null` starts at `two-heads`. The top and bottom defaults are open-ended, a saved position wins over the age, and the age never hides or locks anything.
 
 ## The toy
 
-The one action the finger performs most, what it does in an empty scene with its sound and motion, and why repeating it is a pleasure with no goal.
+**Pressing a foam hat out of its mat.** The finger lands on a hat shape cut into a foam tile. In that same frame the hat sinks under the finger, the tile dimples around it and the foam creaks. When the finger lifts, the hat pops out with a hollow "pok", flips once in the air and lands with a squash on the nearest bare head; the creature under it bounces and babbles. The hat leaves its hole behind in the tile.
+
+Touching a hat that is on a head does the same in reverse: it squashes, pops off, flies home and is pressed back into its own hole with a soft "fwump" and a ripple through the tile.
+
+In an empty scene, with no creature at all, the hat pops out, flips and lands on the mat beside the tile, wobbling like a dropped bowl, and the next touch sends it back into its hole.
+
+Why it is a pleasure with no goal (pack: game-design, toy-first.md): it is the press-out play of a foam puzzle mat, the covering and joining a toddler repeats unprompted, and each direction has its own sound, its own flip and a hole that fills or empties. The answer starts when the finger lands, runs alongside the next touch, and is bigger than the touch: the tile dimples, the hat flies, the creature bounces, its neighbours look (pack: game-design, touch-answers-bigger-than-the-touch.md). A person watching sees within three seconds what the child is doing: taking hats out and putting them on heads.
+
+A tap anywhere else is answered too: the foam floor dimples under the finger with a squeak and whatever stands near hops.
 
 ## The object-by-action grid, and what is new on day 15
 
