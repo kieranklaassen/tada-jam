@@ -1,7 +1,7 @@
 import { playAct, rest, type Mods } from './acts'
 import type { CreatureKind, HatKind } from './kinds'
 import { PERSONALITY, hash, stepSpring, type Spring } from './motion'
-import { BODY, CREATURE_DEPTH, HAT_HEIGHT, SLAB } from './sizes'
+import { BODY, HAND, HAT_HEIGHT, SLAB } from './sizes'
 import { LOOSE_Z, TILE_Z, alongWay, holeX, spotX, wayLength, type Point } from './stage'
 import type { Partial } from './voices'
 
@@ -61,6 +61,8 @@ type Actor = {
   act: { name: string; t: number } | null
   /** How many hats are seen on its head, and whether it cannot stand the one it wears. */
   hats: number; grumpy: boolean
+  /** How far a tower has slipped over its eyes, from 0 to 1: it eases there, forward of the face first and then down. */
+  slip: number
   mods: Mods
 }
 
@@ -69,7 +71,7 @@ const ease = (t: number): number => t * t * (3 - 2 * t)
 export const LOOSE_CIRCLE = 0.3
 export const LOOSE_TURN = 1.1
 /** How far in front of a face a hat stands when it comes down over it. */
-export const HAT_FWD = CREATURE_DEPTH / 2 + SLAB / 2 + 0.22
+export const HAT_FWD = HAND.front + SLAB / 2 + 0.04
 const blank = (): Mods => rest({} as Mods)
 
 export class Play {
@@ -115,7 +117,7 @@ export class Play {
   /** Puts a creature on the mat at a point, standing still. */
   enter(who: string, kind: CreatureKind, at: Point): void {
     const n = this.actors.size + 1
-    this.actors.set(who, { kind, x: at.x, z: at.z, heading: 0, squash: { x: 1, v: 0 }, lean: { x: 0, v: 0 }, hop: { x: 0, v: 0 }, pressed: false, pullX: 0, pullY: 0, gazeX: 0, gazeY: 0, lookX: 0, lookY: 0, lookFor: 0, pat: 0, mouth: 0, phase: hash(n + kind.length * 7) * 6.28, walk: null, act: null, hats: 0, grumpy: false, mods: blank() })
+    this.actors.set(who, { kind, x: at.x, z: at.z, heading: 0, squash: { x: 1, v: 0 }, lean: { x: 0, v: 0 }, hop: { x: 0, v: 0 }, pressed: false, pullX: 0, pullY: 0, gazeX: 0, gazeY: 0, lookX: 0, lookY: 0, lookFor: 0, pat: 0, mouth: 0, phase: hash(n + kind.length * 7) * 6.28, walk: null, act: null, hats: 0, grumpy: false, slip: 0, mods: blank() })
   }
 
   leave(who: string): void { this.actors.delete(who) }
@@ -235,8 +237,9 @@ export class Play {
     for (let guard = 0; guard < 12; guard++) {
       let busy = this.timers.length > 0
       for (const timer of this.timers.splice(0)) timer.run()
-      for (const actor of [...this.actors.values()]) {
+      for (const [who, actor] of [...this.actors]) {
         actor.act = null
+        actor.slip = this.worn(who) > 1 ? 1 : 0
         const walk = actor.walk
         if (!walk) continue
         busy = true
@@ -323,6 +326,7 @@ export class Play {
     stepSpring(actor.hop, walking ? 0.3 * stride * p.hop : 0, walking ? 400 : 90, walking ? 40 : 9, dt)
     if (actor.hop.x < 0) { actor.hop.x = 0; actor.hop.v = Math.abs(actor.hop.v) * 0.35; actor.squash.v -= 1.5 }
     actor.pat = Math.max(0, actor.pat - dt)
+    actor.slip = Math.max(0, Math.min(1, actor.slip + (actor.hats > 1 ? 1 : -1) * dt * 4))
     actor.mouth = Math.max(0, actor.mouth - dt)
     actor.lookFor = Math.max(0, actor.lookFor - dt)
     const bare = actor.hats === 0
@@ -367,7 +371,8 @@ export class Play {
     if (!actor) { out.x = holeX(hat, this.hats.length); out.y = SLAB / 2; out.z = this.tileZ; out.up = 0; out.tilt = 0; return out }
     const mods = actor.mods, body = BODY[actor.kind]
     // A second hat on one head pushes the first down over the eyes: a tower slips, and is worn in front of the face.
-    const tower = actor.hats > 1, slip = tower ? -(body.top - body.faceY) + 0.15 : 0, fwd = Math.max(mods.hatFwd, tower ? 1 : 0)
+    const tower = actor.hats > 1, fwd = Math.max(mods.hatFwd, Math.min(1, actor.slip / 0.35))
+    const slip = (-(body.top - body.faceY) + 0.15) * Math.max(0, (actor.slip - 0.35) / 0.65)
     let under = 0
     for (let level = 0; level < seen.level; level++) under += HAT_HEIGHT[this.hatKind(this.hatOn(seen.who, level) ?? hat)] * 0.72
     // However far an act and a slipping tower bring a hat down, it stays above the feet.

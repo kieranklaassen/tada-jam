@@ -45,12 +45,16 @@ const bump = (u: number, a = 0, b = 1): number => (u <= a || u >= b ? 0 : Math.s
 /** Rises to 1 over the first `inFor` of the act and falls back over the last `outFor`. */
 const hold = (u: number, inFor = 0.15, outFor = 0.2): number => Math.min(1, u / inFor, (1 - u) / outFor)
 const swing = (u: number, times: number): number => Math.sin(u * TAU * times)
+/** A hat comes forward of the face before it comes down over it, and goes up again before it goes back: how far forward at `u`. */
+const forward = (u: number): number => Math.max(0, Math.min(1, u / 0.07, (1 - u) / 0.07))
+/** And how far down, which is none until it is fully forward. */
+const down = (u: number): number => Math.max(0, Math.min(1, (u - 0.07) / 0.16, (0.93 - u) / 0.16))
 const hops = (u: number, times: number): number => Math.abs(Math.sin(u * Math.PI * times))
 
 export const ACTS: Record<string, Act> = {
   // --- The fifteen acts of the tastes (tastes.ts) ---
   'spins-until-dizzy': { lasts: 1.8, play: (u, m) => { m.turn = TAU * 2 * Math.min(1, u / 0.6) ** 0.8 * (u < 0.6 ? 1 : 0); m.squash = 1 - 0.2 * bump(u, 0.6, 1); m.lean = 0.2 * swing(u, 4) * bump(u, 0.6, 1); m.cross = bump(u, 0.55, 1) } },
-  'walks-as-a-hat-with-legs': { lasts: 1.9, play: (u, m, top) => { const down = hold(u, 0.18, 0.22); m.hatLift = -(top - 0.55) * down; m.hatFwd = down; m.dx = 0.42 * swing(u, 2) * down; m.dy = 0.1 * hops(u, 8) * down; m.pat = bump(u, 0.78, 1) } },
+  'walks-as-a-hat-with-legs': { lasts: 1.9, play: (u, m, top) => { const low = down(u); m.hatLift = -(top - 0.55) * low; m.hatFwd = forward(u); m.dx = 0.42 * swing(u, 2) * low; m.dy = 0.1 * hops(u, 8) * low; m.pat = bump(u, 0.78, 1) } },
   'bounces-twice': { lasts: 0.9, play: (u, m) => { m.dy = 0.5 * hops(u, 2) * (1 - u * 0.4); m.squash = 1 - 0.12 * bump(u, 0.42, 0.58) } },
   'stretches-and-struts': { lasts: 1.8, play: (u, m) => { const tall = hold(u); m.squash = 1 + 0.16 * tall; m.dx = 0.45 * swing(u, 1) * tall; m.lean = -0.08 * swing(u, 3) * tall; m.looks = tall; m.gazeY = 0.6 } },
   'goes-cross-eyed': { lasts: 1.6, play: (u, m) => { const on = hold(u); m.cross = on; m.looks = on; m.gazeY = 0.9; m.hatTilt = 0.18 * swing(u, 3) * on; m.lean = 0.04 * swing(u, 3) * on } },
@@ -58,12 +62,12 @@ export const ACTS: Record<string, Act> = {
   'flaps-ears-out': { lasts: 1.4, play: (u, m) => { m.ears = hops(u, 5) * hold(u); m.dy = 0.14 * hops(u, 5) * hold(u) } },
   'huffs-it-askew': { lasts: 1.3, play: (u, m) => { m.ears = -hold(u); m.squash = 1 + 0.07 * bump(u, 0.1, 0.35) - 0.09 * bump(u, 0.35, 0.6); m.hatTilt = 0.3 * bump(u, 0.35, 0.9) } },
   'tucks-ears-under': { lasts: 1.0, play: (u, m) => { m.ears = -0.6 * hold(u); m.hatLift = 0.25 * bump(u, 0, 0.5); m.pat = bump(u, 0.2, 0.9) } },
-  'drums-its-belly': { lasts: 1.6, play: (u, m) => { m.squash = 1 + 0.07 * swing(u, 7) * hold(u); m.lean = 0.05 * swing(u, 7) * hold(u); m.dy = 0.05 * hops(u, 7) * hold(u) } },
-  'pops-it-back-up-with-a-belly-bounce': { lasts: 1.6, play: (u, m) => { m.hatFwd = hold(u, 0.1, 0.25); m.hatLift = -0.5 * bump(u, 0, 0.55) + 1.1 * bump(u, 0.55, 0.9); m.squash = 1 - 0.16 * bump(u, 0.4, 0.56) + 0.12 * bump(u, 0.56, 0.75); m.looks = hold(u); m.gazeY = 1 } },
+  'drums-its-belly': { lasts: 1.6, play: (u, m) => { m.squash = 1 + 0.11 * swing(u, 7) * hold(u); m.lean = 0.06 * swing(u, 7) * hold(u); m.dy = 0.08 * hops(u, 7) * hold(u); m.pat = 0.3 * hops(u, 7) * hold(u) } },
+  'pops-it-back-up-with-a-belly-bounce': { lasts: 1.6, play: (u, m) => { m.hatFwd = forward(u); m.hatLift = -0.5 * down(u) * (u < 0.55 ? 1 : 0) * bump(u, 0.07, 0.55) + 1.1 * bump(u, 0.55, 0.9); m.squash = 1 - 0.16 * bump(u, 0.4, 0.56) + 0.12 * bump(u, 0.56, 0.75); m.looks = hold(u); m.gazeY = 1 } },
   'wobbles-once': { lasts: 1.1, play: (u, m) => { m.lean = 0.12 * swing(u, 1.5) * (1 - u); m.squash = 1 + 0.05 * swing(u, 3) * (1 - u) } },
   'tap-dances': { lasts: 1.5, play: (u, m) => { m.dy = 0.12 * hops(u, 12) * hold(u); m.lean = 0.12 * swing(u, 6) * hold(u); m.dx = 0.2 * swing(u, 1.5) * hold(u) } },
-  'runs-a-circle-under-it': { lasts: 1.9, play: (u, m, top) => { const under = hold(u, 0.15, 0.2); m.hatLift = -(top - 0.5) * under; m.hatFwd = under; m.dx = 0.5 * swing(u, 2) * under; m.dy = 0.08 * hops(u, 10) * under; m.hatTilt = 0.1 * swing(u, 2) * under } },
-  'peeks-from-under': { lasts: 1.3, play: (u, m) => { m.hatFwd = hold(u, 0.12, 0.2); m.hatLift = -0.5 * hold(u, 0.15, 0.5); m.hatTilt = -0.25 * bump(u, 0.45, 1); m.pat = bump(u, 0.5, 1) } },
+  'runs-a-circle-under-it': { lasts: 1.9, play: (u, m, top) => { const under = down(u); m.hatLift = -(top - 0.5) * under; m.hatFwd = forward(u); m.dx = 0.5 * swing(u, 2) * under; m.dy = 0.08 * hops(u, 10) * under; m.hatTilt = 0.1 * swing(u, 2) * under } },
+  'peeks-from-under': { lasts: 1.3, play: (u, m) => { m.hatFwd = forward(u); m.hatLift = -0.5 * down(u); m.hatTilt = -0.25 * bump(u, 0.45, 0.93); m.pat = bump(u, 0.5, 1) } },
 
   // --- What a creature does in a cell of the grid, or when its hats change ---
   'pats-its-bare-head': { lasts: 1.2, play: (u, m) => { m.pat = hold(u) * (0.8 + 0.2 * hops(u, 4)); m.looks = hold(u); m.gazeY = -0.8 } },

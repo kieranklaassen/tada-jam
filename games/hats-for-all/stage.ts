@@ -23,7 +23,7 @@ export function holeX(hole: number, hats: number): number {
 }
 
 /** Where a loose hat rests: in front of its round spot, clear of the lane the creatures walk along. */
-export const LOOSE_Z = ROW_Z + 2.3
+export const LOOSE_Z = ROW_Z + 2.7
 
 /** The foam arch the creatures come in through, at the back right of the mat. */
 export const ARCH_X = 10.2

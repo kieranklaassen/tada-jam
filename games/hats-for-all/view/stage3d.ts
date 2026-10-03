@@ -3,7 +3,7 @@ import type { LetGo, Target } from '../game'
 import type { Hint } from '../guide'
 import { MOST, type HatKind } from '../kinds'
 import { DIMPLE_SECONDS, type ActorPose, type Play } from '../play'
-import { CREATURE_DEPTH, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
+import { CREATURE_DEPTH, HAND, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
 import { ARCH_X, ARCH_Z, LANE_Z, TILE_Z } from '../stage'
 import { tileWidth } from '../tile'
 import { CREATURE_COLOUR, PALETTE, buildArch, buildMat, buildPieces, buildRoom, buildTile, type Pieces } from './build'
@@ -20,7 +20,7 @@ const BLOBS = BODIES + MOST + 8
 const GLOWS = MOST
 const HAT_REACH = 1.15
 /** A hat in the hand floats on a wall in front of the row, and never lower than this above the floor: clear of every head, loose hat and the tile. */
-const HOLD_Z = LANE_Z + 0.25
+const HOLD_Z = LANE_Z + 0.45
 const CARRY_Y = 1.95
 
 export type Guide = { hint: Hint; glow: number; press: number; opacity: number }
@@ -182,7 +182,7 @@ export class FoamStage {
         this.dots.setMatrixAt(i * 3 + (side + 1) / 2, part(side * cut.eyeGap + lookX * wander, cut.faceY + pose.gazeY * wander, front + 0.17, pupil, pupil * pose.eyes))
         // A hand rests at its side, and goes up to pat the top of its bare head.
         const hx = side * (cut.reach + (0.36 - cut.reach) * pose.pat), hy = cut.top * 0.42 + (cut.top * 0.56 + 0.08) * pose.pat
-        this.hands.setMatrixAt(i * 2 + (side + 1) / 2, part(hx, hy, 0.16 + 0.2 * pose.pat, 1, 1))
+        this.hands.setMatrixAt(i * 2 + (side + 1) / 2, part(hx, hy, HAND.front - HAND.depth / 2, 1, 1))
         this.hands.setColorAt(i * 2 + (side + 1) / 2, this.colour.set(CREATURE_COLOUR[kind]).multiplyScalar(0.86))
         if (kind === 'flop' && ear < this.ears.length) this.swing(this.ears[ear++], i, side, cut.top, pose)
       }

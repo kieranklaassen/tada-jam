@@ -36,8 +36,8 @@ export const BODY: Record<CreatureKind, Body> = {
 /** The arch, standing on y = 0: half the width of its opening and of the whole, how high its sides stand before they curve, and how thick it is. */
 export const ARCH = { inner: 1.9, outer: 2.7, straight: 2.6, depth: 0.9 } as const
 
-/** A creature's hand: a small disc at its side. How wide it is from its middle, and how far its front stands out from the middle of the body when it pats. */
-export const HAND = { radius: 0.27, front: 0.53 } as const
+/** A creature's hand: a small disc at its side. How wide it is from its middle, and how thick it is, and how far its front stands out from the middle of the body: a hand lies in front of the body, never in it. */
+export const HAND = { radius: 0.27, depth: 0.34, front: 0.72 } as const
 
 /** How thick a creature is. */
 export const CREATURE_DEPTH = 0.7

@@ -97,7 +97,7 @@ export function buildPieces(): Pieces {
   return {
     hats, bodies, cuts,
     ear: slab(earOutline(), 0.3, CREATURE_COLOUR.flop),
-    hand: slab(disc(HAND.radius), 0.34, '#ffffff'),
+    hand: slab(disc(HAND.radius), HAND.depth, '#ffffff'),
     dot: new THREE.CircleGeometry(1, 20),
     blob: new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
   }
