@@ -175,23 +175,55 @@ Each scene is a list of timed beats on game time, built on the template's `scene
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+Read from the education pack through the lookup on 2026-10-03, each record again by its pack id. What a record asks is given in the game's own words. Every limit is from that record's Limits; what Limits leaves open is marked as the game's own choice.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels: `grade-4` at ages 9 and 10, `grade-5` at ages 10 and 11, `grade-6` at ages 11 and 12. Age mapping: derived, as the lookup prints. Gaps, as printed: at age 9, grade 3 is not in the pack (a third grader turns nine during the year; grade 4 starts at nine); at age 12, grade 7 is not in the pack (a child who starts the school year at twelve is in grade 7). The lookup also returns the `cross-grade` lane at every one of these ages; the game is designed from no record of that lane.
+
+- `edu.us-ca.grade-4.mathematics.objective.4-oa-3` (`us-ca 4.OA.3`): state-board-adopted-standard, confirmed. Asks for story problems of more than one step, set in whole numbers with whole-number answers, including deciding what a remainder means and checking by estimate that an answer is sensible. In the game: hours times the amount for one hour, campers times cups times hours, and cups into cans with a part can meaning one more can.
+  Limits taken: whole numbers in the problem and in the answer. Left open by Limits: the number range (the game's own choice, under "The designed order"). Not used: the record writes the unknown as a letter, and the game shows no letter.
+- `edu.us-ca.grade-4.mathematics.objective.4-md-2` (`us-ca 4.MD.2`): state-board-adopted-standard, confirmed. Asks for story problems about spans of time, liquid volumes, masses, distances and money with the four operations, with the amounts shown on a diagram such as a line that carries a scale. In the game: spans of time on the ruler and water by the cup and the can, each amount a length on a scaled line.
+  Limits taken: two of the five named kinds of quantity (time and liquid volume); a change of unit only from the larger to the smaller (cans into cups). Left open by Limits: the number range, and what a simple fraction is. Beyond the record: logs and flasks are counted supplies of the game's own, not one of its five kinds; a can of six cups is the game's own unit.
+- `edu.us-ca.grade-5.mathematics.objective.5-oa-3` (`us-ca 5.OA.3`): state-board-adopted-standard, confirmed. Asks the child, from two given rules, to build two number rows, see how the terms in the same position relate, pair them and draw the pairs as points. In the game, in part: two amount cards stamped along one ruler give two rows of running totals, and the child compares them hour by hour. The game does not pair the terms as points and draws no coordinate plane.
+  Limits taken: two rules, both given, each adding a fixed number from zero. Left open by Limits: the number range, and which kinds of rule are allowed.
+- `edu.us-ca.grade-6.mathematics.objective.6-rp-2` (`us-ca 6.RP.2`): state-board-adopted-standard, confirmed. Asks for understanding the amount for one that belongs to a ratio, and for talking in rates. In the game, from `tarn`: halving or dividing a card to find what one hour takes.
+  Limits taken: the amount for one goes no further than a fraction of two whole numbers, never a fraction inside a fraction; the second number of a ratio is not zero. Left open by Limits: any other number range.
+- `edu.us-ca.grade-6.mathematics.objective.6-rp-3-a` (`us-ca 6.RP.3.a`): state-board-adopted-standard, confirmed. Asks for tables of matching ratio pairs with their gaps worked out, the pairs drawn as points, and two ratios compared by their tables. In the game, in part: the stamped strip is such a table, its gaps are what the child lays in, and two strips are compared. The game draws no points.
+  Limits taken: the amounts in the tables are whole numbers; a table, a tape and a double line are tools the record gives as examples, and the game uses the table and the double line.
+- `edu.us-ca.grade-6.mathematics.objective.6-rp-3-b` (`us-ca 6.RP.3.b`): state-board-adopted-standard, confirmed. Asks for problems about the amount for one, with price for one item and steady speed among them. In the game, from `saddle`: a given stock and a given night, and the amount for one hour to be found.
+  Limits taken: the two named kinds are included kinds and not the only ones, so fuel for one hour is the game's own kind; the limit of `us-ca 6.RP.2` on fractions holds. Left open by Limits: the number range.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels: `fase-2` at ages 9 and 10 (sub-band as printed: groep 5 or groep 6 at age 9, groep 6 at age 10), `fase-3` at ages 10, 11 and 12 (groep 7 at age 10, groep 7 or groep 8 at age 11, groep 8 at age 12). Age mapping: convention, as the lookup prints. As printed at age 12: a child who starts the school year at twelve is usually in secondary school, which is not in the pack. The `einde-po` lane is returned beside the levels of every one of these ages, labelled end-of-primary goals: what a school works towards by the end of groep 8, not what a child of this age should master.
+
+- `edu.nl.fase-2.mathematics.objective.c68e65fb-31aa-4aef-a8ec-b80019d39a63` (`nl rw/verh/2/03/fase2`): curriculum-institute-guidance, confirmed. An offer for the band: simple ratio problems in numbers, with a ratio model prepared for the child, solved by doubling, halving, multiplying and dividing. In the game: the amount card and the ruler are the prepared model, and the card is doubled and halved.
+  Limits taken: the model is prepared for the child; the ways of calculating are examples. Left open by Limits: which model, what counts as simple, the year within the band, and the number range.
+- `edu.nl.fase-2.mathematics.objective.7f3b4b24-85f4-42ea-b5e8-3494e5ce140c` (`nl rw/verh/2/02/fase2`): curriculum-institute-guidance, confirmed. An offer for the band: discovering how a ratio table is built and how it can be used. In the game: the child builds the table stamp by stamp along the ruler.
+  Limits taken: the verb is discovering. Left open by Limits: what counts as simple, and the number range.
+- `edu.nl.fase-2.mathematics.objective.04dd6299-7923-43a0-9bf1-f0f42a41f7c1` (`nl rw/m/8/01/fase2`): curriculum-institute-guidance, confirmed. An offer for the band: calculating, in simple and meaningful situations, with combined quantities such as a price for each kilogram, metre or litre and a speed in kilometres for each hour. In the game: an amount of fuel for each hour.
+  Limits taken: the four named quantities are examples. Left open by Limits: the situations and the number range. The game's own choice: fuel for each hour is not one of the four named, and stands under "such as".
+- `edu.nl.fase-3.mathematics.objective.87b06a71-c7bb-468a-8596-32f990748f3b` (`nl rw/m/8/03/fase3`): curriculum-institute-guidance, confirmed. An offer for the band: interpreting, comparing and calculating with a price or a number for each unit of length, area, capacity, weight or time. In the game: a number of pieces for each unit of time, read off a card, compared between settings and calculated with.
+  Limits taken: five kinds of unit, of which the game uses time. Left open by Limits: the particular unit and the number range.
+- `edu.nl.fase-3.mathematics.objective.dcc92663-f69d-42d8-80ee-4bdb1575f789` (`nl rw/verh/2/07/fase3`): curriculum-institute-guidance, confirmed. An offer for the band: using strip tables, ratio tables and scale lines as a means of solving ratio problems. In the game: the stamped strip under the scaled ruler.
+  Limits taken: the tools are named. Left open by Limits: what the problems are about, and the number range.
+- `edu.nl.einde-po.mathematics.objective.26c57e57-5ee4-459f-9a5f-9044cf3f2e8e` (`nl 10 C e`) [end-of-primary goals]: legal-core-goal, regime 2026, confirmed. An item under a goal sentence: solving ratio problems.
+  Left open by Limits: the kinds of problem, the method and the number range.
+- `edu.nl.einde-po.mathematics.objective.referentieniveau-1f-rekenen-2-verhoudingen-c-gebruiken-functioneel-gebruiken-1` (no printed code) [end-of-primary goals]: legal-reference-level, confirmed. A statement of reference level 1F: solving simple ratio problems with easy numbers in practical situations.
+  Left open by Limits: what counts as simple and as easy numbers, and the number range. The game's own choice: its ranges under "The designed order".
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **At ages 9 and 10 the two name different things.** The Dutch fase 2 guidance already offers ratio problems with a prepared model and quantities "for each" unit. California names ratio and the amount for one first in grade 6, at 11 to 12, and at grades 4 and 5 gives whole-number problems of several steps, measurement problems and two-rule number rows. The game follows California here, because its limit is the tighter one: from `meadow` to `ridge` everything is whole numbers with whole-number answers and a table laid out for the child, which also lies inside the Dutch offer.
+- **A number for each unit of time** is named by the Dutch fase 3 guidance. The Dutch fase 2 guidance names prices and a speed as its examples, and California names price for one and steady speed as included kinds. Fuel for each hour at age 9 is therefore the game's own choice on both sides, and the sheet says so under each record.
+- **The word "rate"** is used of California only for the grade 6 records, which is where California uses it.
+- **Fractions.** California's grade 6 limit (no fraction inside a fraction) is the only stated limit on the amount for one; the Dutch records set none. The game follows California from `tarn`.
+- **Not carried by either:** planning as such is in no mathematics record of either jurisdiction, and no record asks for working against a clock. The game claims neither, and its night is not a countdown.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Night Camp is designed from six California content standards adopted by the State Board of Education (`us-ca 4.OA.3`, `4.MD.2`, `5.OA.3` in part, `6.RP.2`, `6.RP.3.a` in part, `6.RP.3.b`), and, separately, from five statements of guidance by the Dutch curriculum institute on what a school can offer in fase 2 and fase 3 (`nl rw/verh/2/03/fase2`, `rw/verh/2/02/fase2`, `rw/m/8/01/fase2`, `rw/m/8/03/fase3`, `rw/verh/2/07/fase3`), one item of a Dutch legal core goal of the 2026 regime (`nl 10 C e`) and one statement of the Dutch legal reference level 1F, the last two being end-of-primary goals. Every record named was `confirmed` when read on 2026-10-03. What the game is designed for is working out whether a stock lasts: whole-number reasoning in several steps first, then ratio tables and reasoning about the amount for one hour. It measures no child and claims nothing about what a child has reached.
 
 ## The look
 
