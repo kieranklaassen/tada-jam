@@ -85,6 +85,7 @@ export function paintRoom(g: Ctx, paint: Watercolour, rng: Rng): void {
   paintShelf(g, paint, rng)
   paintDoor(g, paint, rng)
   paintTrolley(g, paint, rng)
+  paintRug(g, paint, rng)
   paintBench(g, paint, rng)
   paintStool(g, paint, rng)
   paintChair(g, paint, rng)
@@ -143,6 +144,14 @@ export function paintLamps(g: Ctx, paint: Watercolour, rng: Rng): void {
     paint.pencil(g, shade, true, 0.8, true)
     paint.wash(g, blob(rng, x, drop + 38, 10, 7, 0.05, 8), { color: ROOM.pane, edge: ROOM.paneEdge, strength: 0.9, reserve: true })
   }
+}
+
+/** A round rug under the chair, pale so that what is cut and falls on it stays plain to see, with a darker band near its rim and a fringe at both ends. */
+export function paintRug(g: Ctx, paint: Watercolour, rng: Rng): void {
+  const cx = CHAIR.x, cy = FLOOR_Y + 96
+  paint.wash(g, blob(rng, cx, cy, 372, 74, 0.012, 26), { color: ROOM.towel[1], edge: ROOM.door, blooms: [ROOM.towel[0], ROOM.floorBloom], strength: 0.6, bleed: 5, pool: 9, reserve: true })
+  paint.pencil(g, blob(rng, cx, cy, 340, 60, 0.01, 26), true, 0.6)
+  for (const side of [-1, 1]) for (let i = -3; i <= 3; i++) paint.pencil(g, [{ x: cx + side * (368 - Math.abs(i) * 5), y: cy + i * 10 }, { x: cx + side * (384 - Math.abs(i) * 5), y: cy + i * 11 }], false, 0.6)
 }
 
 /** A bottle: a body, a neck and a stopper, standing on `base`. */

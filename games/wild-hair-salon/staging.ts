@@ -14,11 +14,11 @@ import type { FaceSpot, Salon } from './world'
 /** One figure as it is drawn: where the middle of its head is, how big, how far off the ground mid-hop, and how much of it shows. */
 export type Shown = { x: number; y: number; s: number; lift: number; seen: number }
 
-/** Standing in the doorway, and the two places behind the door's window where the next pair wait. */
+/** Standing in the doorway, and the two places outside the door's glass where the next pair wait. */
 export const DOORWAY: Actor = { x: DOOR.x + DOOR.w / 2, y: 430, s: 0.65 }
 export const WINDOW: readonly [Actor, Actor] = [
-  { x: DOOR.glass.x + 50, y: 412, s: 0.56 },
-  { x: DOOR.glass.x + 132, y: 436, s: 0.5 },
+  { x: DOOR.glass.x + 56, y: 392, s: 0.62 },
+  { x: DOOR.glass.x + 132, y: 426, s: 0.52 },
 ]
 
 const shown = (a: Actor, seen = 1): Shown => ({ x: a.x, y: a.y, s: a.s, lift: 0, seen })
@@ -65,7 +65,7 @@ export class Staging {
   leaving: Goer[] = []
   /** 0 shut, 1 open. */
   door = 0
-  /** How much of the next pair shows at the door's window. */
+  /** How much of the next pair shows behind the door's glass. */
   waiting = 1
   /** The cape: 1 over the customer, 0 draped over the chair behind the pair, and between the two in the air. */
   cape = 0

@@ -23,8 +23,11 @@ import type { Salon, Who } from './world'
 // ordinary touch. No canvas and no Web Audio in this file: the Mount draws
 // it and plays its notes.
 
-/** The colour of each customer's hair, for the fluff and pieces that fly: by name, since the view owns the colours. */
+/** How soon a change has to be in storage: a scene's outcome now, a small change at the throttle. */
 export type Save = 'now' | 'soon'
+
+/** How often, in seconds, something stirs by itself while nobody is touching. */
+const STIR_EVERY = 6
 
 export class Play implements Cast {
   /** The saved salon, or nothing until the slot has been read. */
@@ -39,12 +42,14 @@ export class Play implements Cast {
   private readonly seed: number
   private made = 0
   private puppets: { chair: Puppet | null; friend: Puppet | null } = { chair: null, friend: null }
-  /** The next pair, behind the door's window, and the pair on its way out. */
+  /** The next pair, outside the door's glass, and the pair on its way out. */
   waiting: [Puppet, Puppet] | null = null
   leaving: Puppet[] = []
   private scene: Scene | null = null
   private notes: Note[] = []
   private pressedAt: Point | null = null
+  private untilStir = STIR_EVERY / 2
+  private stirs = 0
   private save: Save | null = null
   /** The thing that moves the game on which is under the finger now, for the view to show it give. */
   pressed: Button | null = null
@@ -244,6 +249,16 @@ export class Play implements Cast {
     this.puppets.chair?.step(dt, calm)
     this.puppets.friend?.step(dt, calm)
     for (const puppet of this.waiting ?? []) puppet.step(dt, true)
+    // Left alone, things go on by themselves: in an empty salon the pair at the door want in, turn about; under the cape the mane stirs.
+    if (calm) {
+      this.untilStir -= dt
+      if (this.untilStir <= 0) {
+        this.untilStir = STIR_EVERY
+        this.stirs++
+        if (game.chair === null) this.waiting?.[this.stirs % 2]?.react('wantsIn')
+        else if (game.cape === 'on' && this.hair.settled) this.hair.moodOf('wave', 1.3)
+      }
+    }
     for (const puppet of this.leaving) puppet.step(dt, false)
     this.hair.step(dt, this.game ?? game)
   }
@@ -279,7 +294,7 @@ export class Play implements Cast {
     switch (h.kind) {
       case 'scissors':
         hair.scissorsIn(h.at)
-        // In an empty salon there is nothing to cut: the pair at the door bob up at the window, wanting in.
+        // In an empty salon there is nothing to cut: the pair at the door bob up at its glass, wanting in.
         if (before.chair === null) for (const puppet of this.waiting ?? []) if (!puppet.busy) puppet.react('wantsIn')
         // The mane does not like the look of scissors: it stands on end for as long as they are out.
         hair.scared = before.chair !== null && before.cape === 'on'

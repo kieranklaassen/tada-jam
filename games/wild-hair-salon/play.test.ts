@@ -68,6 +68,28 @@ describe('an empty salon', () => {
   })
 })
 
+describe('left alone', () => {
+  it('has the pair at the door want in, turn about, while the salon is empty, and changes nothing', () => {
+    const play = opened()
+    let lively = [0, 0]
+    for (let i = 0; i < 60 * 14; i++) { play.step(1 / 60, true); play.waiting!.forEach((puppet, n) => { if (puppet.started.some((id) => PERSONALITIES[play.game!.waiting[n]].reactions.wantsIn.some((bit) => bit.id === id))) lively[n] = 1 }) }
+    expect(lively).toEqual([1, 1])
+    expect(play.game).toEqual(freshGame(null))
+    expect(play.takeSave()).toBeNull()
+  })
+
+  it('has the mane stir by itself under the cape now and then, and never while a finger is at work', () => {
+    const play = seated()
+    let stirred = false
+    for (let i = 0; i < 60 * 8; i++) { play.step(1 / 60, true); if (!play.hair.settled) stirred = true }
+    expect(stirred).toBe(true)
+    const busy = seated()
+    let moved = false
+    for (let i = 0; i < 60 * 8; i++) { busy.step(1 / 60, false); if (busy.hair.tufts.some((tuft) => tuft.stretch.x > 1.05)) moved = true }
+    expect(moved).toBe(false)
+  })
+})
+
 describe('the mane and the scissors', () => {
   it('stands on end while the scissors are out over a customer under the cape, and not in an empty salon or with the cape off', () => {
     const play = seated()

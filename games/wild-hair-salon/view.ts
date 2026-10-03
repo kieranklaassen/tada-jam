@@ -67,7 +67,7 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     g.restore()
   }
 
-  // The door: its pane, who waits behind it under their rain hats, and the doorway when it stands open.
+  // The door: the street behind its glass, who waits there under their rain hats, and its edge when it stands open.
   light(DOOR.x + DOOR.w / 2, DOOR.y + DOOR.h / 2, DOOR.w * 1.5, DOOR.h * 1.25, glowOn('door'))
   drawn += door(g, sprites, play, game)
 
