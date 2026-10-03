@@ -75,17 +75,67 @@ Six kinds of topping by five things a child can do with them. Every cell looks a
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No: the play is making a set that holds as many as a pictured set, so taking the counting out leaves a tub to tap and no reason to stop tapping.
+- **Attention.** At the moment of decision, which is when to stop tapping a tub, the child must look at the pieces of that kind on the pizza and the pieces of that kind on the card, and think about whether there are as many; where to tap and when to tap do not matter, since a tapped piece finds its own free spot and nothing is timed.
+- **Fun.** The skill is the most enjoyable touch of the game: every count is a plop a note higher than the last, and the count as a whole is what the customer's reaction is about.
+- **Guess.** Not by tapping at random, since each kind has to hold exactly as many as its picture; a child who adds one piece and serves again each time does get there, but each serving plays a tasting that takes longer than a count and shows which kind is off and by how many, so every try is itself a comparison of the two sets.
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+A pizza is judged only when the child serves it, and it is judged by being tasted.
+
+- **What a wrong pizza does.** The customer leans in, licks the pizza, and the difference between its card and the pizza plays out on its own body: the grid's "too many" cell for a kind with extra pieces and its "too few" cell for a kind with pieces missing. A kind that is not on the card at all counts as too many of that kind.
+- **Where and why.** Each extra piece on the pizza sizzles in its turn as its puff, hiccup or string plays, so the child sees which pieces had no partner on the card. Each missing piece is a drawn piece on the card that the customer pats in its turn, with a rumble and a look at that kind's tub. One to three pieces off are played one by one; more than three are played as one big version, so nothing has to be counted to know there were far too many.
+- **The state stays.** The customer pushes the pizza back to the board exactly as it was: baked, every piece where it lay. Nothing is eaten, lost or reset. The sizzling and the patting stop when the tasting ends and leave no mark, so the child still has to find the pieces to change: tap one off, or tap one more on, and serve again.
+- **As interesting as success.** A flame, a hiccup storm or a harp of cheese strings is worth causing on purpose, and a child may.
+- **Success is a consequence too.** When every kind pairs off with none left over, the customer eats the whole pizza in three bites ("The scenes").
+- **Never about the child.** The customer's feelings are about the pizza. There is no buzzer, cross, sad face turned to the child, praise or cheer, and no sound that means wrong.
+- **Out of order.** A pizza served raw is tasted as raw dough and pushed back, and the customer looks at the oven. A pizza baked twice comes straight back. Neither is a count, and neither changes the pizza.
+
+(pack: game-design, errors-show-as-consequences.md)
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**The order.** Eight places, one new thing at each, and then what is known in combination. The ids are as they stand in `LADDER` in `config.ts`; each names a place in the game's own order.
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+| Id | An order holds | Tubs on the table | The one new thing |
+| --- | --- | --- | --- |
+| `a-few` | one kind, 1 to 3 pieces, in a row | that kind only | the job itself: top, bake, serve |
+| `to-five` | one kind, 2 to 5, in a row | that kind only | sets up to five |
+| `spare-tub` | one kind, 2 to 5, in a row | that kind and one kind not wanted | choosing the kind |
+| `two-kinds` | two kinds, 2 to 5 pieces in all | both kinds and one not wanted | two sets on one pizza |
+| `to-ten` | one kind, 6 to 10, as a row of five and a row beneath | that kind and one not wanted | sets past five |
+| `two-kinds-to-ten` | two kinds, 6 to 10 pieces in all | both kinds and one not wanted | known things combined |
+| `three-kinds` | three kinds, 6 to 10 pieces in all | all three and one not wanted | three sets on one pizza |
+| `scattered` | one to three kinds, up to 10 in all, pictured with no pattern | the kinds wanted and one not wanted | a picture that has to be counted |
+
+No order asks for more than ten pieces in all. The pizza has room for twelve, so that too many can still happen on an order of ten.
+
+**Where a first visit starts.** `a-few` for a child of four or younger and for no age, `to-five` at five, `two-kinds` at six, `to-ten` at seven or older. A saved position wins over the age.
+
+**How the position moves.** A cycle is one customer, from stepping up to the counter to eating. It goes *well* when the first pizza served is eaten, *mixed* when one pizza was pushed back before the one that was eaten, and *badly* when two or more were pushed back. A raw serving is not counted. The position moves one place up after a cycle that goes well, one place down after one that goes badly, and stays after a mixed one. It moves when the eating starts and never inside a cycle. Nothing on screen shows it.
+
+**The harder option the child picks.** Two customers wait at the door, each with its order rolled up. One holds a small roll and one a big roll. The small roll is an order at the stored position; the big roll is an order one place higher, and the customer who holds it is visibly the bigger eater. The child calls in whichever they like by touching it. A big-roll cycle that goes well moves the position up one place, to where that order was; one that goes any other way moves nothing. At the last place both rolls are the same size.
+
+**Which customer a new position lays out.** The very next one. A customer who waits has no order yet: its roll opens into a card only when it reaches the counter, and the card is drawn from the position as it stands at that moment. Which two customers wait is settled when they come to the door, and that does not depend on the position.
+
+**What is stored.** Small plain JSON under one version number, read field by field.
+
+- `v`: the version.
+- `position`: an id from the table above.
+- `finished`: the customer at the counter has eaten. The scene stays as it ended and nothing replays on load.
+- `customer`: which monster is at the counter.
+- `order`: the card, as a list of kind and amount, and whether it is pictured in rows or scattered.
+- `tubs`: the kinds on the table, in their places.
+- `bigRoll`: whether this customer was called in with the big roll.
+- `pizza`: the pieces on it, each a kind and a spot, and whether it is baked.
+- `pushedBack`: how many pizzas this customer has pushed back, kept only up to two.
+- `waiting`: the two monsters at the door, and which holds the big roll.
+- `shown`: the new ideas a character has already shown once.
+
+A piece in the hand is saved in its tub, or on the spot it was picked up from. Baking is saved as baked when the pizza goes in, a tasting adds to `pushedBack` when it starts, and an eating sets `finished` and moves the position when it starts, so a put-away in the middle of any of them loses nothing and plays nothing again. The oven runs on attended game time. The largest legal state is far below half of the 64 KB cap, and a test says so.
+
+(pack: game-design, ordered-challenges-high-success.md; pack: game-design, many-short-visits.md)
 
 ## The characters and their fixed tastes
 
