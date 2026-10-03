@@ -26,7 +26,8 @@ export type Hang = { x: number; y: number; unit: number }
 export const FRIEND_SIZE = 0.65
 /** The friend on the stool, cheek to cheek with the customer, and on the bench across the room. */
 const BESIDE: Actor = { x: 708, y: 302, s: FRIEND_SIZE }
-const ACROSS: Actor = { x: BENCH.x + BENCH.w / 2, y: 432, s: FRIEND_SIZE }
+// A little towards the room from the middle of the bench, so the biggest head of hair is all in the scene.
+const ACROSS: Actor = { x: BENCH.x + BENCH.w / 2 + 16, y: 432, s: FRIEND_SIZE }
 /** Where the friend's lock hangs when it sits across the room: at its cheek, on the side of the room. */
 const ACROSS_MODEL: Hang = { x: ACROSS.x + 63, y: 470, unit: STEP }
 

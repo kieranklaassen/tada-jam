@@ -3,7 +3,7 @@ import { handPose, type Guidance, type HandPose } from './guidance'
 import { FAN, type Strand } from './hair'
 import { BLADES } from './hand'
 import { hintFor, type Hint } from './ladder'
-import { BESIDE_X, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, STEP, STRIP_W, fit } from './layout'
+import { BESIDE_X, CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, LOCK_X, PEG, STEP, STRIP_W, fit } from './layout'
 import { FLUFF, LOOKS, RIBBON, hueOf } from './looks'
 import type { Play } from './play'
 import { SPOT_Y, clippingBox, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
@@ -134,13 +134,16 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
         drawn += hanging(g, root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, 0, true)
       }
       drawn += hanging(g, places.lock, lockLength * places.lock.unit, hair.strands.lock, play.time, { fill: look.lock, edge: look.lockEdge }, ROOT, staging.fx ? even : 0, false)
-      drawn += hanging(g, modelRoot, modelLength * places.model.unit, hair.strands.model, play.time, { fill: LOOKS[friend].lock, edge: LOOKS[friend].lockEdge }, 0, staging.fx ? even : 0, false)
+      // While the friend shows what the ribbon is for, its paw has the ribbon and its own lock is tucked away behind it: one strip at a time beside a tail.
+      const inPaw = staging.ribbon !== null && (staging.ribbon.x !== PEG.x || staging.ribbon.y !== PEG.y) ? staging.ribbon : null
+      if (!inPaw) drawn += hanging(g, modelRoot, modelLength * places.model.unit, hair.strands.model, play.time, { fill: LOOKS[friend].lock, edge: LOOKS[friend].lockEdge }, 0, staging.fx ? even : 0, false)
       // The friend's paw, holding the top of its lock out where the customer can see it.
+      const pawAt = inPaw ?? modelRoot
       g.fillStyle = LOOKS[friend].fur
       g.strokeStyle = LOOKS[friend].furEdge
       g.lineWidth = 2
       g.beginPath()
-      g.arc(modelRoot.x, modelRoot.y - 2, 15, 0, Math.PI * 2)
+      g.arc(pawAt.x, pawAt.y - 2, 15, 0, Math.PI * 2)
       g.fill()
       g.stroke()
      drawn += 2
@@ -417,7 +420,7 @@ function tail(g: Ctx, sprites: Sprites, who: CustomerId, from: Point, straight: 
   const x = straight ? tipX + (straight.x - tipX) * held : tipX
   const y = straight ? tipY + (straight.y + long - tipY) * held : tipY
   const rootX = straight ? from.x + (straight.x - from.x) * held : from.x, rootY = straight ? from.y + (straight.y - from.y) * held : from.y
-  pencil(g, [{ x: rootX, y: rootY }, { x: rootX + (x - rootX) * 0.5 - 30 * s * (1 - held), y: rootY + (y - rootY) * 0.4 }, { x, y }], 1.6 + held * 4, 0.6 + held * 0.3)
+  pencil(g, [{ x: rootX, y: rootY }, { x: rootX + (x - rootX) * 0.5 - 30 * s * (1 - held), y: rootY + (y - rootY) * 0.4 }, { x, y }], 1.6 + held * 6, 0.6 + held * 0.3)
   g.save()
   g.translate(x, y)
   g.rotate((0.5 + sway) * (1 - held) + Math.PI * held)

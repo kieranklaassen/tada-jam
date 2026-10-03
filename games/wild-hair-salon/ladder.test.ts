@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { VERB_DEMOS, hintFor } from './ladder'
+import { hintFor } from './ladder'
 import { TUFTS } from './rules'
 import type { Salon } from './world'
 
@@ -32,14 +32,14 @@ describe('what the idle ladder shows', () => {
 
   it('under the cape glows on the lock first, then shows the verb on a tuft of the mane, never on the lock', () => {
     expect(hintFor(salon(), glowing, false)).toEqual({ glow: ['lock'], hand: null })
-    // A snip is shown on the longest tuft and a pull on the shortest, turn about, whatever the lock needs.
+    // A snip is shown on the longest tuft, and the next time a pull on the shortest, whatever the lock needs.
     expect(hintFor(salon(), demo(0), false)).toEqual({ glow: ['lock'], hand: { on: 'tuft', move: 'snip', tuft: 1 } })
-    expect(hintFor(salon(), demo(1), false)).toEqual({ glow: ['lock'], hand: { on: 'tuft', move: 'pull', tuft: 2 } })
+    expect(hintFor(salon(), demo(2), false)).toEqual({ glow: ['lock'], hand: { on: 'tuft', move: 'pull', tuft: 2 } })
     for (const s of [salon({ lock: 10 }), salon({ lock: 100 })]) expect(hintFor(s, demo(0), false).hand).toEqual({ on: 'tuft', move: 'snip', tuft: 1 })
   })
 
-  it('after that goes to the cape\'s knot', () => {
-    for (let i = VERB_DEMOS; i < VERB_DEMOS + 2; i++) expect(hintFor(salon(), demo(i), false)).toEqual({ glow: ['knot'], hand: { on: 'knot' } })
+  it('after each verb goes to the cape\'s knot', () => {
+    for (const i of [1, 3]) expect(hintFor(salon(), demo(i), false)).toEqual({ glow: ['knot'], hand: { on: 'knot' } })
     expect(Array(TUFTS).fill(0)).toHaveLength(9)
   })
 })
