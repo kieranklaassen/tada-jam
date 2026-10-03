@@ -76,7 +76,7 @@ export const SAVE_THROTTLE_MS = 400
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = ['fresh-splashes', 'dried-patches', 'caked-all-over']
 
 const [YOUNGEST, OLDEST] = muddyTruckWashManifest.ageBand
 
@@ -88,6 +88,6 @@ const [YOUNGEST, OLDEST] = muddyTruckWashManifest.ageBand
  * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'fresh-splashes' },
+  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'dried-patches' }] : []),
 ]

@@ -135,23 +135,48 @@ Each scene is a list of timed beats on the template's `scene.ts`, filled in from
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+Standing and check state are as `npm run education:find -- --id <pack id>` printed them on 2026-10-03. Each record is described by what the child does with this game's objects, never by its official wording.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels: `infant-toddler` for age 2 (sub-band: the indicator for 23 through 36 months of each foundation), and `preschool-tk` for ages 3 and 4 (sub-band: Early, 3 to 4½ years, at age 3; Early and Later, 4 to 5½ years, at age 4, where the two printed bands overlap). Age mapping: official, as the lookup prints. Gap: none printed. No lane label is printed for these ages.
+
+- `edu.us-ca.infant-toddler.practical-life-feelings.objective.cognitive-development-strand-4-0-memory-4-1` (`us-ca 4.1`, Cognitive Development, Strand 4.0: Memory): department-published-foundation, confirmed. In the game: a wash is the same routine every time, and the child takes up the next tool before the game has shown anything.
+  Limits taken: familiar routines only, so the routine never changes. Left open by Limits: the number of steps; three steps for soft mud and four for dried mud are the game's own choice.
+- `edu.us-ca.infant-toddler.science.objective.cognitive-development-strand-1-0-exploration-1-1` (`us-ca 1.1`, Cognitive Development, Strand 1.0: Exploration): department-published-foundation, confirmed. In the game: the child picks a tool expecting something of it, and sees on the patch what it did.
+  Limits taken: the predictions are simple, and nothing says a prediction has to be right, so no touch is treated as wrong. Left open by Limits: what the predictions are about; water, soap and mud are the game's own choice.
+- `edu.us-ca.preschool-tk.practical-life-feelings.objective.health-strand-2-0-health-and-safety-habits-2-1` (`us-ca 2.1`, Health, Strand 2.0: Health and Safety Habits): department-published-foundation, confirmed. In the game: the steps of a wash come in an order, and a child at the earlier age needs only part of it to get somewhere. The foundation is about washing the child's own hands. The game washes a toy vehicle, so it takes the shape of a wash from this record and nothing about hands or health.
+  Limits taken: knowing the steps, part of the order at the earlier age and most or all of it at the later. Left open by Limits: the statements list no steps and give no count; the order wet, soap, rinse, dry is the game's own choice. A note beneath the statements describes a routine in which wetting, soap, rinsing and drying come in that order, among other steps the game leaves out.
+- `edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-3` (`us-ca 2.3`, Science, Strand 2.0: Physical Science): department-published-foundation, confirmed. In the game: the child changes mud, foam and paint with water, soap and a cloth, and sees and hears each change.
+  Limits taken: exploring at both ages; texture and colour are among the examples the statement gives. The statement also has the child describe the changes, and at the later age explain them. The game hears nothing a child says, so describing and explaining are left to the child and whoever is beside them, and the game is designed from the exploring only. Left open by Limits: which materials; mud, foam and water are the game's own choice.
+
+Looked at and not used: `us-ca 5.2` of Science Strand 5.0, on how tools help people. At the earlier age it is with adult support, which a game cannot supply, so the game does not rest on it.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels: `peuters` for ages 2 and 3, and for a child who has only just turned four (sub-band: up to the fourth birthday, when a child may start school); `fase-1` for age 4 (sub-band: groep 1). Age mapping: convention, as the lookup prints: the mapping from groep to age is convention, not law. At age 4 the lookup also returns the `einde-po` lane, labelled end-of-primary goals; the game uses no record from it.
+
+- `edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-verschijnselen-uit-natuurkunde-en-techniek-materialen-stoffen-en-voorwerpen-1` (`nl Materialen, stoffen en voorwerpen / 1`, peuters): curriculum-institute-guidance, confirmed. In the game: the child tries water, soap and a cloth on mud, foam and paint.
+  Limits taken: experimenting, with no question to answer and no result to reach, so nothing in the game has to be finished. Left open by Limits: which materials; the game's own choice.
+- `edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-verschijnselen-uit-natuurkunde-en-techniek-natuurkundige-verschijnselen-2` (`nl Natuurkundige verschijnselen / 2`, peuters): curriculum-institute-guidance, confirmed. In the game: the jet from the hose pushes foam off the vehicle and along the floor.
+  Limits taken: discovering and wondering only, with no explaining and no measuring; of water the record names only its force, so the game rests on it for the push of the jet and for nothing else water does.
+- `edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-de-samenleving-veilige-leefomgeving-1` (`nl (Veilige) leefomgeving / 1`, peuters): curriculum-institute-guidance, confirmed. In the game: the child looks after a thing by washing it.
+  Limits taken: none stated beyond paying attention and taking care. Left open by Limits: the task and what the surroundings are; washing a toy vehicle is the game's own choice.
+- `edu.nl.peuters.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-de-samenleving-veilige-leefomgeving-2` (`nl (Veilige) leefomgeving / 2`, peuters): curriculum-institute-guidance, confirmed. In the game: the child handles three tools to get a thing clean.
+  Limits taken: discovering only; handling tools is given as an example. Left open by Limits: which tools; sponge, hose and cloth are the game's own choice. The record states no order of steps.
+- `edu.nl.fase-1.practical-life-feelings.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-fase-1-de-samenleving-veilige-leefomgeving-2` (`nl (Veilige) leefomgeving / 2`, fase 1): curriculum-institute-guidance, confirmed. In the game: the same handling of tools with care, for a child of 4.
+  Limits taken: discovering only; it says what a school offers in fase 1 and names no year. Left open by Limits: which tools; the game's own choice. The record states no order of steps.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **The order of the steps.** The California records include a foundation about the next step of a known routine and one about the order of washing hands. No Dutch record named here states an order of steps. On the order the game follows California, and what it is designed from in the Netherlands does not include the order.
+- **Describing.** California's `us-ca 2.3` has the child describe a change; the Dutch record on materials asks only for experimenting. The game follows neither further than exploring, since it cannot hear a child.
+- **Water.** The Dutch record on physical phenomena names the force of water. No California record named here names water at all.
+- **Standing and age.** The California records are foundations published by a state department, for 23 to 36 months and for 3 to 5½ years. The Dutch records are guidance from the curriculum institute, for children before school and for the first school years, and say what is offered, not what a child can do.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Muddy Truck Wash is designed from four California learning foundations published by a state department (`us-ca 4.1` on memory and `us-ca 1.1` on exploration for infants and toddlers, and `us-ca 2.1` on health habits, taken only as the shape of a wash, and `us-ca 2.3` on physical science for preschool and transitional kindergarten), and from five pieces of guidance from the Dutch curriculum institute SLO (the peuter content cards on materials, on the force of water, and on looking after one's surroundings and handling tools, and the fase 1 card on handling tools with care). All nine records are confirmed. The game is designed from the order of a wash and from exploring how a material changes, and it says nothing about what any child has reached.
 
 ## The look
 
