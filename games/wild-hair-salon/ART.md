@@ -7,11 +7,23 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.
+The manifest band is 4 to 6, and its youngest age, 4, governs the design.
+
+- **The cue-table row.** The row for a youngest age of 3 to 4 in wordless clarity. From it the game takes direct handling of objects, a character who shows one move, a breathing glow on what can be touched now, tools that appear only when they mean something, and a material that corrects itself: two strips that hang from one level line show their difference without help. Its "Avoid" column is a hard constraint: no text, numeral or icon to decode, no spoken instruction, no verdict, no second activity live beside the first, and no tool on screen before it means anything. One next act is offered at a time.
+- **The pack's rule for the range** (pack: game-design, ages-4-to-6.md). The salon is a place with props and two characters who react, and the child supplies the plot, a terrible haircut on purpose included. Everything is done with a tap or a drag, a drag survives a lifted finger, and nothing needs a double tap or reading. The joke is on a customer who overreacts and is never hurt.
+- **The symbol rule.** The band starts below 6, so the kid side shows no word, letter, numeral or symbol, and the game has no `symbols.ts`. No length is ever shown as a number, a mark or a scale.
+- **What `ctx.childAge` sets.** Only the position a first visit starts at, read once when no save exists: `beside-long` at 4 or younger, `beside-close` at 5, `across` at 6 or older. A saved position always wins over the age, every position stays reachable by play from any start, and nothing is locked or hidden by age.
+- **What `null` gives.** The youngest default, `beside-long`.
 
 ## The toy
 
-The one action the finger performs most, what it does in an empty scene with its sound and motion, and why repeating it is a pleasure with no goal.
+The action the finger performs most is **pulling a lock longer and snipping it shorter**, with no tool to pick up first.
+
+- **Pull.** The finger lands on hair and the lock is caught at once: it squashes under the finger and gives a short squeak. As the finger moves away from the root the lock stretches like warm toffee, with a creak that falls in pitch as the lock gets longer, and the customer's head leans after it. Let go, and the lock stays as long as it was pulled, drops with a bounce, swings twice and hangs.
+- **Snip.** The finger lands anywhere that is not hair and a pair of scissors is in the hand at once, blades open, with a small ring of steel. Wherever the scissors cross a lock they close on it: a crisp snip, the cut piece tumbles to the floor and lies there, the stump twangs up, and the customer blinks or giggles.
+- **The chain.** One touch sets off several things: the lock, the head that leans or wobbles, the eyes that follow the finger, the neighbouring tufts that ripple, the clipping that falls and bounces. Nothing blocks the next touch.
+- **In an empty scene** there is one head of wild hair and nothing to match. A lock pulled to the floor lies there in a heap; a head snipped all over is a field of stubs that each stand up and twang; every lock is a string with its own note, lower the longer it is. Hair that was cut is pulled long again, so nothing is ever used up.
+- **Why it is a pleasure with no goal.** The hair is elastic and noisy and answers when the finger lands, the head it grows on has feelings about it, and both actions undo each other, so the child can go back and forth for as long as it is funny. Random tapping pokes a face, plucks a lock or snips the air, and each of those answers. The simplest use, one swipe through the hair, always cuts something.
 
 ## The object-by-action grid, and what is new on day 15
 
