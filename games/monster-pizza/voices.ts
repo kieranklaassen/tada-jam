@@ -135,7 +135,7 @@ export const lick: VoiceSpec = [{ wave: 'noise', freq: 700, q: 2.5, peak: 0.13, 
 
 /** One piece too many, by kind. `big` is the one big version for more than three. */
 export function tooMany(kind: Kind, big: boolean): VoiceSpec {
-  const long = big ? 0.8 : 0.26
+  const long = big ? 0.7 : 0.26
   switch (kind) {
     case 'pepper':
       return [{ wave: 'noise', freq: 900, q: 0.7, peak: 0.16, attack: 0.02, decay: long, glideTo: 2600 }, { wave: 'sawtooth', freq: 110, peak: 0.07, attack: 0.02, decay: long, glideTo: 180 }]
@@ -154,9 +154,9 @@ export function tooMany(kind: Kind, big: boolean): VoiceSpec {
 
 /** One piece too few: the tummy rumbles, lower for a bigger customer, and each kind rumbles on its own beat. */
 export function rumble(kind: Kind, voiceHz: number, big: boolean): VoiceSpec {
-  const base = Math.max(LIMITS.minFreq + 4, voiceHz * 0.36)
+  const base = Math.max(LIMITS.minFreq + 12, voiceHz * 0.36)
   const beat = { pepper: 0.07, mushroom: 0.1, olive: 0.13, cheese: 0.16, sock: 0.19, worm: 0.05 }[kind]
-  return [0, 1, 2, 3, 4, 5].slice(0, big ? 6 : 3).map((i) => ({ wave: 'sawtooth' as const, freq: base * (1 + (i % 2) * 0.18), peak: 0.11, attack: 0.015, decay: beat, glideTo: base * 0.86, delay: i * beat }))
+  return [0, 1, 2, 3, 4, 5].slice(0, big ? 6 : 3).map((i) => ({ wave: 'sawtooth' as const, freq: base * (1 + (i % 2) * 0.18), peak: 0.11, attack: 0.015, decay: beat, glideTo: Math.max(LIMITS.minFreq + 1, base * 0.86), delay: i * beat }))
 }
 
 /** A pat on the card. */
@@ -174,7 +174,7 @@ export function bite(n: number): VoiceSpec {
 /** The burp after a whole pizza, on the customer's own pitch. */
 export function burp(voiceHz: number): VoiceSpec {
   const f = Math.max(LIMITS.minFreq + 10, voiceHz * 0.5)
-  return [{ wave: 'sawtooth', freq: f * 1.3, peak: 0.13, attack: 0.02, decay: 0.38, glideTo: f * 0.7 }, { wave: 'noise', freq: 260, q: 1, peak: 0.07, attack: 0.02, decay: 0.3 }]
+  return [{ wave: 'sawtooth', freq: f * 1.3, peak: 0.13, attack: 0.02, decay: 0.38, glideTo: Math.max(LIMITS.minFreq + 2, f * 0.7) }, { wave: 'noise', freq: 260, q: 1, peak: 0.07, attack: 0.02, decay: 0.3 }]
 }
 
 /** One step of a customer's walk, on its own pitch. */
