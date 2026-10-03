@@ -41,7 +41,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const moment = momentFor(window.location.search)
     const sound = () => {
       if (!theatre) return
-      for (const cue of theatre.sounds) audio.play(voiceOf(cue.voice, cue.pitch, cue.gain, cue.after))
+      for (const cue of theatre.sounds) audio.play(voiceOf(cue.voice, cue.pitch, cue.gain, cue.after, cue.pace))
       theatre.sounds.length = 0
     }
     // What a touch or a step changed goes to storage: the end of a cycle and a troop stepping in at once, the rest at the throttle.

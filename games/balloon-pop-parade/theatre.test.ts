@@ -150,6 +150,34 @@ describe('a bunch the child sends', () => {
     expect(frame.balloons, 'two in the sky and the one it holds').toHaveLength(3)
   })
 
+  it('is answered well inside half a second when it is the wrong colour: the friend begins to refuse it as it arrives', () => {
+    const theatre = solo('duck', ['duck', 'frog'])
+    tapSlot(theatre, 1)
+    play(theatre, 0.42)
+    expect(voices(theatre)).toContain('duckRefuse')
+  })
+
+  it('is refused at full length where colour is new, and more shortly once bunches have come', () => {
+    const lasts = (position: string) => {
+      const theatre = new Theatre(saveOf({ position, troop: { kind: 'crab', size: 1, held: [false] }, sky: [{ colour: 'crab', count: 1 }, { colour: 'duck', count: 1 }], waiting: { kind: 'frog', size: 1 } }))
+      tapSlot(theatre, 1)
+      let waited = 0
+      while (!voices(theatre).includes('pop') && waited < 3) { theatre.step(1 / 60); waited += 1 / 60 }
+      return waited
+    }
+    expect(lasts('solo-two-colours')).toBeGreaterThan(lasts('bunches-mixed') + 0.04)
+  })
+
+  it('bounces the clouds when a hippo that was carried off sits down', () => {
+    const theatre = solo('hippo', ['hippo', 'hippo']), { frame, painter } = recorder()
+    tapSlot(theatre, 0)
+    play(theatre, 1.5)
+    tapSlot(theatre, 1)
+    play(theatre, FLIGHT + PERSONALITIES.hippo.cue.land + 0.1)
+    theatre.paint(painter, VIEW)
+    expect(frame.clouds.every((squash) => squash > 1.01)).toBe(true)
+  })
+
   it('goes one each to a troop it fits, all at once', () => {
     const moment = MOMENTS.bunches
     const theatre = new Theatre(saveOf(moment))

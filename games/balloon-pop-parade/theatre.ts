@@ -4,6 +4,7 @@ import { handPose, type Guidance, type HandPose } from './guidance'
 import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
 import { KIND_COLOURS, PALETTE, shade } from './palette'
 import { copyPose, forwardOf, mirror, REST, restPose, spread, type Pose } from './pose'
+import { LADDER } from './config'
 import type { VoiceId } from './voices'
 import { callNext, popHeld, sendBunch } from './play'
 import type { Marched, Save } from './save'
@@ -32,14 +33,14 @@ export type Painter = {
   shadow(x: number, y: number, z: number, wide: number, deep: number, colour: string): void
 }
 
-/** A sound to play: `after` is seconds from now, for a run of catches or one landing after another. */
-export type Sound = { voice: VoiceId; pitch: number; gain: number; after: number }
+/** A sound to play: `after` is seconds from now, for a run of catches or one landing after another, and `pace` is how fast its parts follow each other, for a motion played faster than it was written. */
+export type Sound = { voice: VoiceId; pitch: number; gain: number; after: number; pace: number }
 
 /** What a point of the surface is on. */
 export type Hit = { on: 'held'; friend: number } | { on: 'bunch'; slot: number } | { on: 'friend'; friend: number } | { on: 'waiting' } | { on: 'cloud'; index: number } | { on: 'hill' } | { on: 'air' }
 
 type Place = { squash: number; squashSpeed: number; pressed: boolean; push: number; pushSpeed: number; away: number; grow: number }
-type Flight = { bunch: Bunch; slot: number; given: Given; t: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number }
+type Flight = { bunch: Bunch; slot: number; given: Given; t: number; fromX: number; fromY: number; landed: boolean; after: number; friend: number; met?: boolean }
 type Held = { x: number; y: number; vx: number; vy: number; shown: boolean }
 type Loose = { x: number; y: number; vx: number; vy: number; colour: string; flat: boolean; t: number; popAt: number }
 type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; life: number }
@@ -57,6 +58,9 @@ export const PASS_BY = { shortest: 4, longest: 6 } as const
 
 /** How long an ending may last, in seconds (the sheet: 5 to 7). */
 export const ENDING = { shortest: 5, longest: 7 } as const
+
+/** How long before a bunch of another colour arrives the friend begins to refuse it, in seconds. */
+const REFUSAL_LEAD = 0.12
 
 /** Seconds a bunch takes from the sky to the friend, and before a new one drifts into its place. */
 export const FLIGHT = 0.5
@@ -182,9 +186,9 @@ export class Theatre {
     return this.rng / 2 ** 32
   }
 
-  private sound(voice: VoiceId, pitch = 1, gain = 1, after = 0): void {
+  private sound(voice: VoiceId, pitch = 1, gain = 1, after = 0, pace = 1): void {
     // Never quite the same twice: a few per cent either way.
-    this.sounds.push({ voice, pitch: pitch * (0.95 + this.random() * 0.1), gain, after })
+    this.sounds.push({ voice, pitch: pitch * (0.95 + this.random() * 0.1), gain, after, pace })
   }
 
   /** What is under a point of the friends' plane. Whatever looks touchable is, and is read a little larger than it is drawn. */
@@ -558,6 +562,17 @@ export class Theatre {
       } else if (flight.given.result === 'taken' && flight.t >= FLIGHT - personality.cue.grab) {
         // The friends who will take one start to meet it before it is there.
         for (const taker of flight.given.takers) if (this.actors[taker].clip !== 'catch') this.act(taker, 'catch')
+      } else if (flight.given.result === 'refused' && !flight.met && flight.t >= FLIGHT - REFUSAL_LEAD) {
+        // The friend that will refuse it turns to look as it arrives: its answer begins well inside half a second of the touch.
+        flight.met = true
+        this.act(flight.friend, 'refuse')
+        const actor = this.actors[flight.friend]
+        // The motions are written for a bunch that hangs to the right of the friend as the child sees it; one that
+        // hangs to its left is refused the other way round, never across the friend beside it.
+        actor.mirrored = this.beside(flight.friend, flight.bunch.count).side < 0
+        // A refusal is at its fullest where colour is new. From the position where bunches arrive it is shorter.
+        if (LADDER.indexOf(this.save.position) >= LADDER.indexOf('bunches-own-colour')) actor.speed = (actor.speed ?? 1) * 1.3
+        this.sound(`${kind}Refuse`, 1, 1, 0, actor.speed ?? 1)
       }
     }
 
@@ -576,7 +591,11 @@ export class Theatre {
           })
           actor.tug = null
         }
-        if (before < land && actor.t >= land) this.sound(`${kind}Land`, 1, 1, actor.landAfter)
+        if (before < land && actor.t >= land) {
+          this.sound(`${kind}Land`, 1, 1, actor.landAfter)
+          // The hippo sits down so hard that the clouds bounce.
+          if (kind === 'hippo') for (const cloud of this.clouds) cloud.speed += 3.5
+        }
       }
       if (actor.t >= personality.lasts[actor.clip]) {
         actor.clip = actor.next
@@ -681,13 +700,7 @@ export class Theatre {
         this.sound(`${kind}Catch`, pitch, k === 0 ? 1 : 0.8, k * gap)
       })
       if (kind === 'frog' && given.takers.length > 1) this.sound('frogSlurp', 1, 1, 0.3)
-    } else if (given.result === 'refused') {
-      this.act(flight.friend, 'refuse')
-      // The motions are written for a bunch that hangs to the right of the friend as the child sees it; one that
-      // hangs to its left is refused the other way round, never across the friend beside it.
-      this.actors[flight.friend].mirrored = this.beside(flight.friend, flight.bunch.count).side < 0
-      this.sound(`${kind}Refuse`)
-    } else {
+    } else if (given.result !== 'refused') {
       const everyoneHolds = given.spare === flight.bunch.count
       if (everyoneHolds && flight.bunch.count === this.troop.size && this.troop.size > 1) {
         // One more for each of a troop that has its balloons: the whole troop is carried off at the same moment,
@@ -724,7 +737,9 @@ export class Theatre {
   /** What a landed bunch does after it lands. True when there is nothing left of it to play. */
   private settle(flight: Flight, cue: { hit: number }): boolean {
     if (flight.given.result !== 'refused') return true
-    if (flight.after < cue.hit) return false
+    // The refusal lands on it at its own moment of the friend's motion, or at once if the friend was set to something else.
+    const refusing = this.actors[flight.friend]
+    if (refusing.clip === 'refuse' && refusing.t < cue.hit) return false
     // The refusal lands on it: it pops, or with the hippo it is blown away going flat.
     const kind = this.troop.kind, colour = KIND_COLOURS[flight.bunch.colour]
     const beside = this.beside(flight.friend, flight.bunch.count)
