@@ -12,19 +12,19 @@ The manifest band is 2 to 4, and its youngest age, 2, governs every choice below
 - **Cue table.** The table in wordless clarity has no row below 3, so its 3 to 4 row is the ceiling and the game cuts further. From its "Avoid" column the game takes: no text, numeral or icon to decode; no spoken instruction; no verdict; one live activity (one vehicle in the bay); and no tool that means nothing when it is touched. All three tools are in the scene from the first frame, and each one changes whatever it touches at once, so none is there before it means something.
 - **The pack's rule for the range** (pack: game-design, ages-2-to-4.md). Every touch is answered and no order of touches is a dead end. The targets a wash needs (the vehicle, three tools, the vehicle that waits, the puddle) are each at least 100 logical pixels across, well apart, and none is in the bottom strip. Everything works with a tap: a tap on a tool takes it in hand, and a tap on the vehicle is one full dab of that tool. A rub is the same dab repeated along the finger's path; it survives a lifted finger, and whatever part of it was done stays done. No pinch, tilt, shake or double tap. One loved action, covering and uncovering, offered again and again. A wash fits in one to three minutes. There are three tools and never more than two vehicles on screen.
 - **Symbols.** The band starts below 6, so the kid side shows no word, letter, numeral or symbol, optional or not, and the game has no `symbols.ts`. No voice gives an instruction; the vehicles speak in engine noises and horns.
-- **What `ctx.childAge` sets.** Only where a first visit starts in the designed order: a child of 2 or 3 starts at `fresh-splashes`, and a child of 4 or older starts at `dried-patches`. `null` starts at `fresh-splashes`. A saved position wins over the age, every place in the order is reached by play at any age, and the age gates nothing.
+- **What `ctx.childAge` sets.** Only where a first visit starts in the designed order: a child of 3 or younger starts at `fresh-splashes`, and a child of 4 or older starts at `dried-patches`. `null` starts at `fresh-splashes`. A saved position wins over the age, every place in the order is reached by play at any age, and the age gates nothing.
 
 ## The toy
 
 **Rubbing a tool over the vehicle.** The finger lands on the vehicle with a tool in hand, and the paint under it changes.
 
-In the empty scene there is one vehicle, caked in mud, on wet concrete, with the sponge in hand. On touch-down, in the same frame:
+In the empty scene there is one vehicle, covered in soft wet mud, on wet concrete, with the sponge in hand. On touch-down, in the same frame:
 
 - the body dips on its springs toward the finger, and the wheels on that side squash;
 - the patch under the finger turns from mud to foam, and the edge of the foam swells out past the finger;
 - a scrub squeak sounds, its pitch set by how fast the finger moves, never twice the same of four variants;
 - bubbles lift off the patch, drift up, and pop one by one with small plips after the finger has gone;
-- brown drips run down from the patch to the floor and spread into a puddle that stays.
+- brown drips run down from the patch to the floor and spread into a puddle that creeps to the drain and is gone after a few seconds of play.
 
 A rub lays a trail of the same change, and the body rocks after the finger like a toy pushed across a table. The hose and the cloth are held the same way and answer in their own material: water sheets, beads and runs off the sills; the cloth squeaks and leaves a glint. With no tool in hand the finger is a poke: the vehicle bounces on its springs and its mud squelches.
 
@@ -39,11 +39,11 @@ The objects are the six things that can be on a patch of the vehicle. The action
 | **Dried mud** (pale, cracked) | A knock: a thud, a crack runs across, crumbs trickle | A dry rasp: crumbs and dust, suds dribble over the top and slide off; the mud stays | It darkens from the finger outward and turns to soft mud, a hiss that becomes a gurgle | A scratch and a puff of dust; the mud stays | Plates of mud crack off on the way out and lie in a row of clods |
 | **Soft mud** (dark, wet) | A squelch and a dent that slowly fills | It lifts into brown foam that stays on the vehicle | It glistens, slumps and drips brown, and clings | It smears onto the clean paint beside it | Splats fly off the wheels; brown tyre tracks |
 | **Foam** (brown from mud, white on clean paint) | A hole pops in it, plip by plip | More foam, taller, and bubbles drift off | It slides off in rafts that sail to the drain; clean wet paint | It is pushed along onto the paint beside it; the cloth wears a foam beard | Blobs of foam peel off behind and a line of bubbles follows |
-| **Wet paint** | A squeaky wet slide, drops scatter | White foam | Water sheets off the sills, drops bounce | It dries and shines, a rising squeak | The vehicle shakes like a dog first; wet tyre lines |
-| **Dull paint** (clean, dry) | The body bounces and the metal rings | White foam | Beads of water; wet paint | It shines, with one glint | A plain toot and off |
+| **Wet paint** | A squeaky wet slide, drops scatter | Thin white foam that slides and runs in streaks, a wet slurp | Water sheets off the sills, drops bounce | It dries and shines, a rising squeak | The vehicle shakes like a dog first; wet tyre lines |
+| **Dull paint** (clean, dry) | The body bounces and the metal rings | Thick white foam that stands in peaks, a dry squeak going soft | Beads of water; wet paint | It shines, with one glint | A plain toot and off |
 | **Shiny paint** | A dull fingerprint | Foam hides the shine | Fat round drops race off; wet paint | A higher squeak and a second glint; still shiny | Lamps flash, a glint runs nose to tail, a proud horn |
 
-The wrong use of each tool works and is funny: the cloth on mud paints with it, the cloth on foam pushes a beard of it about, the sponge on a shiny vehicle buries it in foam, the hose on dried mud makes it worse to look at before it is better. Each vehicle adds its own row of reactions (see the characters), and the puddle adds mud back whenever the child likes.
+The wrong use of each tool works and is funny: the cloth on mud paints with it, the cloth on foam pushes a beard of it about, the sponge on a shiny vehicle buries it in foam, the hose on dried mud makes it worse to look at before it is better. Each vehicle adds its own row of reactions (see the characters), and the puddle makes the vehicle that waits muddier when the child taps it, up to two times.
 
 On day 15 the child washes dried mud in the order that works (wet, soap, rinse, dry) with no wasted strokes, knows each vehicle's like and dislike and sets them off on purpose, and has found the combinations that always do the same thing, such as the sneeze that empties a tipper bed full of foam.
 
@@ -60,7 +60,7 @@ The two ideas are the order of the steps of a wash, and how a material changes w
 
 - **Swap.** No: the content is the mud, the foam, the water and the three tools, and with another subject in their place there is no game left to play.
 - **Attention.** At the moment of decision, which is taking a tool in hand, the child must look at what is on the vehicle now (dried mud, soft mud, foam, wet paint) and think about what that tool will do to it.
-- **Fun.** The skill is used in the rub itself, the most enjoyable moment of play, and play never stops for it.
+- **Fun.** Exploring how a material changes is the rub itself, the most enjoyable moment of play, and choosing the next step is the tap on a tool just before it, so play never stops for either.
 - **Guess.** A child can get a clean vehicle by trying every tool on every patch, and at two that is meant: every touch does something and none is a dead end. What trying everything cannot do is wash without the consequences of a wrong order, which stay on the vehicle to be seen: smears, foam left on, mud gone dark and still there.
 
 ## The error as a consequence
@@ -73,7 +73,7 @@ A wrong attempt is a tool on a patch it cannot take forward. The patch shows wha
 - The cloth on foam: the foam has moved, not gone.
 - The sponge on a rinsed vehicle: foam again, to be rinsed again.
 
-The state stays. Nothing resets, nothing is taken back and no tool is refused, so the child changes one thing, another tool on the same patch, and sees the difference. A vehicle sent off half washed leaves as it is, dropping clods or trailing bubbles, and that exit is as good to watch as a shining one. Nothing buzzes, crosses, sighs or turns a sad face to the child. A vehicle's reactions are about the soap in its eyes or the cloth on its nose, never about how the wash is going.
+The state stays. Nothing resets, nothing is taken back and no tool is refused, so the child changes one thing, another tool on the same patch, and sees the difference. A vehicle sent off half washed leaves as it is, dropping clods or trailing bubbles, and that exit is as good to watch as a shining one. Nothing buzzes, crosses, sighs or turns a sad face to the child. A vehicle's reactions are to what is on it and what touches it: the soap in its eyes, the cloth on its nose, its own paint gone shiny all over. None is turned to the child, and none rates the wash.
 
 ## The designed order, and what is stored
 
@@ -101,17 +101,17 @@ The position moves one step up after a wash that went well, one down after one t
 - `position`: an id from the ladder.
 - `finished`: the template's mark that the cycle on screen is over. In this game the touch that sends one vehicle off also brings the next one in, so it is false in every save.
 - `bay`: the vehicle in the bay. `who` is its id in the roster; `cells` is the coarse grid of its surface, one character a patch, in rows (no body here, dried mud, soft mud, brown foam, white foam, wet, dull, shiny); `came` is how many patches held mud when it rolled in.
-- `next`: the vehicle that waits, as `who` and `cells`, so mud from the puddle and foam that landed on it are kept.
+- `next`: the vehicle that waits, as `who`, `cells` and `dips`, so mud from the puddle and foam that landed on it are kept. `dips` is how many times it has been through the puddle, 0 to 2, so a third tap only splashes after a put-away too; nothing shows it.
 - `seed`: the state of the seeded stream that picks the next vehicle and lays out its mud. It is not a count of anything.
 - `shown`: the ids of the first showings that have played, so each plays once.
 
-Not stored, because each is a view: the tool in hand (on load every tool hangs on the rack, where it came from), drips, bubbles, puddles and tracks on the floor, and a scene in progress, whose outcome is saved when it starts. No clock is read and nothing changes while the game is put away. The largest legal state is under one kilobyte, and a test holds it under half the 64 KB cap.
+Not stored: the tool in hand (on load every tool hangs on the rack, where it came from); drips, bubbles, and the puddles and tracks on the floor, each of which lasts only seconds of attended play and leaves nothing to keep; and a scene in progress, whose outcome is saved when it starts. No clock is read and nothing changes while the game is put away. The largest legal state is under one kilobyte, and a test holds it under half the 64 KB cap.
 
 ## The characters and their fixed tastes
 
 The vehicles are the characters: four die-cast toys with lamp eyes and a bumper mouth. The roster is four so that a child meets each one often. The tools, the mud, the foam and the water are the working objects and stay plain: no faces, no patterns, no motion beyond what the material does.
 
-Each vehicle's want is always visible: at rest it keeps glancing at the tool it likes. Its like and its dislike never change, each belongs to one tool on one part of its body, and each works every time.
+Each vehicle's want is always visible. At rest the tipper keeps glancing at the sponge, the fire engine at the hose and the tractor at the cloth, and the mixer keeps rocking its drum a little way round and back, wanting something on it. Its like and its dislike never change, each is set off the way the table says (this tool or this material, on this part or anywhere), and each works every time.
 
 | Vehicle | Moves like | Likes | Cannot stand |
 | --- | --- | --- | --- |
@@ -129,7 +129,7 @@ Each scene is a list of timed beats on the template's `scene.ts`, filled in from
 - **The drip** (a first showing, once). Cause: the first vehicle that ever rolls in with dried mud. Beats, about four seconds: it brakes with its nose under the hose on its hook; a drop swells at the nozzle and falls on a dried patch; the patch darkens to soft mud and a brown drip runs; the vehicle goes cross-eyed at it and shakes its nose; the mud is still there. Filled in from: which vehicle, and its dried patch nearest the nose. It shows, before the child tries, that water softens dried mud and does not remove it. The mark in `shown` is saved at the start.
 - **The shine** (a consequence). Cause: the dab that leaves every patch of the vehicle shiny. Beats, about five seconds: a glint runs from that patch to the far end; the body rises on its springs; the lamps flash twice; its own horn; its own flourish (the bed tips, the ladder shoots up, the exhaust flap rattles, the drum turns once); it settles. Filled in from: which vehicle, and where the last dab landed. It plays every time the whole vehicle becomes shiny, and never on load.
 - **The puddle** (the child's harder option). Cause: a tap on the puddle. Beats, about three seconds: the vehicle that waits revs, hops in, splashes twice and rolls back out muddier. Filled in from: which vehicle, and how muddy it already is. A third tap only splashes.
-- **The send-off and the roll-in** (the ending, and the next beginning). Cause: a tap on the vehicle that waits. Beats, six to nine seconds: the one that waits honks; the one in the bay pulls back on its springs and goes, with the exit its surface gives it, as the last column of the grid says: clods for dried mud, splats and brown tracks for soft mud, blobs and bubbles for foam, a dog shake and wet lines for wet paint, a plain toot for dull paint, flashing lamps and a proud horn for shiny. The most common state leads and the others add their trails, which stay on the floor. Then the newcomer rolls in, brakes, dips its nose, and its mud wobbles; another vehicle noses in at the door. Filled in from: who leaves and what is on it, who arrives and its mud.
+- **The send-off and the roll-in** (the ending, and the next beginning). Cause: a tap on the vehicle that waits. Beats, six to nine seconds: the one that waits honks; the one in the bay pulls back on its springs and goes, with the exit its surface gives it, as the last column of the grid says: clods for dried mud, splats and brown tracks for soft mud, blobs and bubbles for foam, a dog shake and wet lines for wet paint, a plain toot for dull paint, flashing lamps and a proud horn for shiny. The most common state leads and the others add their trails, which lie on the floor while the newcomer rolls in and then dry away over a few seconds of play. Then the newcomer rolls in, brakes, dips its nose, and its mud wobbles; another vehicle noses in at the door. Filled in from: who leaves and what is on it, who arrives and its mud.
 
 **How a cycle ends and the next starts.** The child ends it. A vehicle in the bay, shining or half washed, stays as long as the child likes, and if the child does nothing, nothing new starts: no automatic next vehicle and no countdown. The next vehicle is visible and waiting at the door, and it comes in on the child's touch on it. That same touch sends the one in the bay off as it is. When a scene's outcome is saved the position has moved, the newcomer is in the bay and another waits. On load no scene replays: the vehicle in the bay stands as it was left, patch for patch, the tools hang on the rack, and the next vehicle waits.
 
@@ -154,7 +154,7 @@ Looked at and not used: `us-ca 5.2` of Science Strand 5.0, on how tools help peo
 
 ### nl
 
-Levels: `peuters` for ages 2 and 3, and for a child who has only just turned four (sub-band: up to the fourth birthday, when a child may start school); `fase-1` for age 4 (sub-band: groep 1). Age mapping: convention, as the lookup prints: the mapping from groep to age is convention, not law. At age 4 the lookup also returns the `einde-po` lane, labelled end-of-primary goals; the game uses no record from it.
+Levels: `peuters` for ages 2 and 3, and for a child who has only just turned four (sub-band: up to the fourth birthday, when a child may start school); `fase-1` for age 4 (sub-band: groep 1). Age mapping: convention, as the lookup prints: the mapping from groep to age is convention, not law. At age 4 the lookup also returns the `einde-po` lane, labelled end-of-primary goals; the game uses no record from it. For the order of the steps of a wash the game names no Dutch record, and nothing stands in its place.
 
 - `edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-verschijnselen-uit-natuurkunde-en-techniek-materialen-stoffen-en-voorwerpen-1` (`nl Materialen, stoffen en voorwerpen / 1`, peuters): curriculum-institute-guidance, confirmed. In the game: the child tries water, soap and a cloth on mud, foam and paint.
   Limits taken: experimenting, with no question to answer and no result to reach, so nothing in the game has to be finished. Left open by Limits: which materials; the game's own choice.
@@ -171,12 +171,12 @@ Levels: `peuters` for ages 2 and 3, and for a child who has only just turned fou
 
 - **The order of the steps.** The California records include a foundation about the next step of a known routine and one about the order of washing hands. No Dutch record named here states an order of steps. On the order the game follows California, and what it is designed from in the Netherlands does not include the order.
 - **Describing.** California's `us-ca 2.3` has the child describe a change; the Dutch record on materials asks only for experimenting. The game follows neither further than exploring, since it cannot hear a child.
-- **Water.** The Dutch record on physical phenomena names the force of water. No California record named here names water at all.
-- **Standing and age.** The California records are foundations published by a state department, for 23 to 36 months and for 3 to 5½ years. The Dutch records are guidance from the curriculum institute, for children before school and for the first school years, and say what is offered, not what a child can do.
+- **Water.** The Dutch record on physical phenomena names the force of water. No California record named here names water at all. For the push of the jet the game follows the Dutch record, and it rests nothing about water on California.
+- **Standing and age.** The California records are foundations published by a state department, for 23 to 36 months and for 3 to 5½ years. The Dutch records are guidance from the curriculum institute, for children before school and for the first school years, and say what is offered, not what a child can do. The claim words each set by its own standing, and the game takes each set's ages from its own lookup; neither is used for the other.
 
 ### The claim
 
-Muddy Truck Wash is designed from four California learning foundations published by a state department (`us-ca 4.1` on memory and `us-ca 1.1` on exploration for infants and toddlers, and `us-ca 2.1` on health habits, taken only as the shape of a wash, and `us-ca 2.3` on physical science for preschool and transitional kindergarten), and from five pieces of guidance from the Dutch curriculum institute SLO (the peuter content cards on materials, on the force of water, and on looking after one's surroundings and handling tools, and the fase 1 card on handling tools with care). All nine records are confirmed. The game is designed from the order of a wash and from exploring how a material changes, and it says nothing about what any child has reached.
+Muddy Truck Wash is designed from four California learning foundations published by a state department (`us-ca 4.1` on memory and `us-ca 1.1` on exploration for infants and toddlers, and `us-ca 2.1` on health habits, taken only as the shape of a wash, and `us-ca 2.3` on physical science for preschool and transitional kindergarten), and from five pieces of guidance from the Dutch curriculum institute SLO (the peuter content cards on materials, on the force of water, and on looking after one's surroundings and handling tools, and the fase 1 card on handling tools with care). All nine records are confirmed. From the California foundations the game takes the order of a wash and exploring how a material changes; from the Dutch guidance it takes experimenting with materials, the push of water, and looking after a thing and handling tools with care, and no order of steps. It says nothing about what any child has reached.
 
 ## The look
 
