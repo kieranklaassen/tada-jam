@@ -360,7 +360,8 @@ export class Game implements Director {
     if (reaction.act) this.play.act(reaction.who, reaction.act, reaction.seconds ?? 0.6, reaction.way ?? 0)
     if (reaction.voice) this.voice(reaction.voice)
     if (reaction.blink) this.play.blink(reaction.who, reaction.blink)
-    if (reaction.rock) this.play.rock(reaction.rock)
+    // Never in a scene: its sand was forecast and saved when it began, and a shake would bite it again.
+    if (reaction.rock && !this.sceneRunning) this.play.shake(reaction.rock)
     if (reaction.mark === 'settle') {
       // Grains thrown by the landing settle on this head, lie there a moment, and are shaken off.
       const pose = this.play.frame().poses[reaction.who], spec = FRIENDS[reaction.who]
@@ -386,7 +387,7 @@ export class Game implements Director {
     else if (event.type === 'lift') this.voice(v.lift(event.id))
     else if (event.type === 'slide') this.voice(v.slide())
     else if (event.type === 'creak') this.voice(v.creak(event.strength))
-    else if (event.type === 'toss') this.react(tossed(event.id, event.speed))
+    else if (event.type === 'toss') this.react(tossed(event.id, event.speed, this.play.asking?.id === event.id))
     else if (event.type === 'level') {
       this.voice(v.levelHum())
       this.heldAt = this.time + HELD_EVERY

@@ -82,8 +82,10 @@ describe('the cells in play', () => {
     // High for once without tipping it, Bo chuckles and the plank shakes under him, as far one way as the other.
     const boHigh = reactionsTo(landingOf(on(['pim', 'mog'], []), putOnEnd(on(['pim', 'mog'], []), 'bo', 'right'), 'bo'))
     expect(boHigh.find((r) => r.act)).toMatchObject({ who: 'bo', act: 'chuckle' })
-    expect(boHigh.filter((r) => r.rock).length).toBe(4)
-    expect(boHigh.reduce((sum, r) => sum + (r.rock ?? 0), 0)).toBeCloseTo(0)
+    expect(boHigh.find((r) => r.act)?.rock).toBeGreaterThan(0)
+    // Lifted by the others he chuckles too, unless he is the one asking, whose chuckle is the ending's.
+    expect(tossed('bo', 4).some((r) => r.act === 'chuckle' && r.rock)).toBe(true)
+    expect(tossed('bo', 4, true).some((r) => r.act === 'chuckle')).toBe(false)
     // High and not tipping it, Mog sits tall, purrs and blinks slowly.
     const perched = reactionsTo(landingOf(on(['bo'], []), putOnEnd(on(['bo'], []), 'mog', 'right'), 'mog'))
     expect(perched.find((r) => r.who === 'mog')).toMatchObject({ act: 'tall' })

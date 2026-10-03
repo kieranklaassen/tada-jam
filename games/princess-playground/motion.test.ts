@@ -46,6 +46,25 @@ describe('the playground in motion', () => {
     expect(rest).toBeGreaterThan(0)
   })
 
+  it('shakes the plank four times for a chuckle, as far one way as the other, and lets it settle where it lay', () => {
+    const world = new Playground(firstRide())
+    world.advance(0)
+    const lay = world.plank.tilt
+    world.shake(0.4)
+    let moved = 0
+    play(world, 1, (w) => { moved = Math.max(moved, Math.abs(w.plank.tilt - lay)) })
+    expect(moved).toBeGreaterThan(0.005)
+    play(world, 2)
+    expect(world.plank.tilt).toBeCloseTo(lay, 2)
+    // A twin forked in the middle of a shake finishes it the same way.
+    world.shake(0.4)
+    play(world, 0.2)
+    const twin = world.fork()
+    play(world, 0.5)
+    play(twin, 0.5)
+    expect(twin.plank.tilt).toBeCloseTo(world.plank.tilt, 6)
+  })
+
   it('shuts a friend\'s eyes for as long as a slow blink lasts', () => {
     const world = new Playground(firstRide())
     world.advance(0)

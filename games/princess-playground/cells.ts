@@ -45,7 +45,7 @@ export type Reaction = {
   mark?: 'ring' | 'trickle' | 'settle'
   /** A slow blink of this many seconds. */
   blink?: number
-  /** A push on the plank, as a chuckle gives it. */
+  /** The plank is shaken this hard, as a chuckle shakes it. */
   rock?: number
 }
 
@@ -120,8 +120,7 @@ export function reactionsTo(l: Landing): Reaction[] {
         if (l.tips) add(0, { voice: v.slam() })
         else {
           // High for once: his slow chuckle, which shakes the plank under him.
-          add(0.1, { voice: v.chuckle(), act: 'chuckle', seconds: 1 })
-          for (const [at, way] of [[0.15, 1], [0.3, -1], [0.45, 1], [0.6, -1]] as const) add(at, { rock: way * CHUCKLE_ROCK })
+          add(0.1, { voice: v.chuckle(), act: 'chuckle', seconds: 1, rock: CHUCKLE_ROCK })
         }
       }
       // On the low end he digs it deeper into the sand.
@@ -133,10 +132,14 @@ export function reactionsTo(l: Landing): Reaction[] {
   return out
 }
 
-/** What a friend makes of being thrown: Pim loves it, Mog hates it, Bo barely notices. */
-export function tossed(id: FriendId, speed: number): Reaction[] {
+/**
+ * What a friend makes of being thrown: Pim loves it, Mog hates it, Bo barely notices, and finds himself high for once:
+ * his chuckle, which shakes the plank. When Bo is the one asking, the chuckle is his delight in the ending instead.
+ */
+export function tossed(id: FriendId, speed: number, asking = false): Reaction[] {
   if (id === 'pim') return [react('pim', 0, { voice: v.squeal(), act: 'spin', seconds: 0.7 })]
   if (id === 'mog') return [react('mog', 0, { voice: v.yowl() })]
+  if (id === 'bo' && !asking) return [react('bo', 0, { voice: v.whoop('bo', speed) }), react('bo', 0.6, { voice: v.chuckle(), act: 'chuckle', seconds: 1, rock: CHUCKLE_ROCK })]
   return [react(id, 0, { voice: v.whoop(id, speed) })]
 }
 

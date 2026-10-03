@@ -21,6 +21,9 @@ export const TOSS = 1.25
 export const TOSS_FLOOR = 6
 /** How long a tap on the plank has its riders off the board, in seconds; they rise a finger's width. */
 export const RIDER_BOB = 0.32
+/** A chuckle's shake of the plank: how many pushes, and the seconds between them. */
+const SHAKES = 4
+const SHAKE_EVERY = 0.18
 /** A finger's width, in tray units. */
 export const FINGER = 0.14
 /** How flat a head is pressed by a friend sitting on it. */
@@ -108,6 +111,10 @@ export class Playground {
   held: FriendId | null = null
   /** The friend who wants to go somewhere, and which way: it stretches and turns its face there for as long as it wants it. */
   asking: { id: FriendId; side: number; up: number } | null = null
+  /** A chuckle shaking the plank: pushes still to come, seconds to the next, and how hard. */
+  private shakes = 0
+  private shakeIn = 0
+  private shakeBy = 0
   time = 0
   private carry = 0
   private wasLevel = false
@@ -311,6 +318,9 @@ export class Playground {
     twin.time = this.time
     twin.carry = this.carry
     twin.wasLevel = this.wasLevel
+    twin.shakes = this.shakes
+    twin.shakeIn = this.shakeIn
+    twin.shakeBy = this.shakeBy
     return twin
   }
 
@@ -325,6 +335,13 @@ export class Playground {
   /** A push on the plank from the game: a rock in the ending scene. Positive turns the right end down. */
   rock(spin: number): void {
     nudge(this.plank, spin)
+  }
+
+  /** Shakes the plank as a chuckle does: four short pushes, one way and the other. */
+  shake(strength: number): void {
+    this.shakes = SHAKES
+    this.shakeIn = 0
+    this.shakeBy = strength
   }
 
   takeEvents(): PlayEvent[] {
@@ -429,6 +446,14 @@ export class Playground {
 
   private step(dt: number): void {
     this.time += dt
+    if (this.shakes > 0) {
+      this.shakeIn -= dt
+      if (this.shakeIn <= 0) {
+        nudge(this.plank, (this.shakes % 2 ? -1 : 1) * this.shakeBy)
+        this.shakes -= 1
+        this.shakeIn = SHAKE_EVERY
+      }
+    }
     const knock = stepPlank(this.plank, this.landedOn('left'), this.landedOn('right'), dt)
     if (knock) this.knocked(knock.end, knock.speed)
     const level = this.isLevel() && Math.abs(this.plank.tilt) < 0.05 && Math.abs(this.plank.spin) < 0.6
