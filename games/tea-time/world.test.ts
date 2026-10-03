@@ -7,7 +7,7 @@ const thing = (id: string, kind: Thing['kind'], over: Partial<Thing> = {}): Thin
 
 function table(): World {
   const world = emptyWorld()
-  world.things.push(thing('pot', 'pot', { x: 3, z: 2 }), thing('saucer-0', 'saucer'), thing('cup-bear', 'cup', { on: 'saucer-0', owner: 'bear', ring: 0.92 }), thing('sponge', 'sponge', { x: 1, z: 2 }), thing('bowl', 'bowl', { x: 5, z: 1 }))
+  world.things.push(thing('pot', 'pot', { x: 3, z: 2 }), thing('saucer-0', 'saucer'), thing('cup-bear', 'cup', { on: 'saucer-0', owner: 'bear', ring: 0.94 }), thing('sponge', 'sponge', { x: 1, z: 2 }), thing('bowl', 'bowl', { x: 5, z: 1 }))
   return world
 }
 
