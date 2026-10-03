@@ -275,7 +275,7 @@ export class InkPage {
         const t = i / 14, px = x + Math.sin(t * 5 - seconds * 1.1) * (2 + t * 7) * u, py = y - t * rise * u
         if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py)
       }
-      ctx.lineWidth = (guest.awake ? 1.6 : 0.9) * u
+      ctx.lineWidth = (guest.awake ? 1.8 : 1.2) * u
       ctx.stroke()
       count++
     }
@@ -306,7 +306,7 @@ export class InkPage {
   private cold(ctx: CanvasRenderingContext2D, x: number, w: number, floorY: number, ceilingY: number, roomH: number, level: number, seconds: number, u: number): number {
     const top = floorY - 34 * u, reach = ceilingY + roomH * Math.min(0.62, 0.22 + 0.2 * level)
     ctx.beginPath()
-    const strokes = 22
+    const strokes = 30
     for (let i = 0; i < strokes; i++) {
       const px = x + (0.08 + 0.84 * fixed(31, i)) * w
       const t = (fixed(32, i) + seconds * (0.1 + fixed(33, i) * 0.06)) % 1
@@ -314,7 +314,7 @@ export class InkPage {
       ctx.moveTo(px, y)
       ctx.lineTo(px, y + len)
     }
-    ctx.lineWidth = 0.9 * u
+    ctx.lineWidth = 1.1 * u
     ctx.stroke()
     // The icicles, hung from the ceiling the cold comes through.
     ctx.beginPath()

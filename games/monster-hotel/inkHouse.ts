@@ -261,26 +261,27 @@ export function paintHouse(pen: Pen, page: PageLayout, house: House, phase: Phas
   pen.line([lobby.x, floorY - 11 * u, lobby.x + lobby.w, floorY - 11 * u], 0.9 * u, true)
   pen.tone([lobby.x, floorY - 11 * u, lobby.x + lobby.w, floorY - 11 * u, lobby.x + lobby.w, floorY, lobby.x, floorY], 1, 0)
   for (let x = lobby.x + 12 * u; x < lobby.x + lobby.w; x += 22 * u) pen.line([x, floorY - 11 * u, x - 6 * u, floorY], 0.6 * u, true)
-  // The board of room keys, one hook for each room, and a lamp on a bracket.
-  local(pen, lobby.x + lobby.w * 0.5, lobby.y + 34 * u, u, false, () => {
-    const hooks = page.rooms.length, across = Math.ceil(hooks / 2), bw = across * 17 + 10
-    pen.rect(-bw / 2, 0, bw, 50, { fill: PAPER, tone: 1, angle: -1.2, w: 1.4 })
-    for (let i = 0; i < hooks; i++) {
-      const x = -bw / 2 + 13.5 + (i % across) * 17, y = 8 + Math.floor(i / across) * 22
-      pen.dot(x, y, 1.2)
-      pen.line([x, y, x + (pen.next() - 0.5), y + 5], 0.8, true)
-      pen.ellipse(x, y + 8, 3, 3, { fill: PAPER, w: 1.1 })
-      pen.line([x, y + 11, x, y + 17, x + 2.5, y + 17], 1.1, true)
-    }
-  })
-  // The ladder up to the loft.
-  const lx = lobby.x + 132 * u
-  pen.tube([lx, floorY - 2 * u, lx + 22 * u, lobby.y - 2 * u], 2.6 * u, PAPER, 1 * u, true)
-  pen.tube([lx + 17 * u, floorY - 2 * u, lx + 39 * u, lobby.y - 2 * u], 2.6 * u, PAPER, 1 * u, true)
+  // The ladder up to the loft, at the porter's end.
+  const lx = lobby.x + 16 * u
+  pen.tube([lx, floorY - 2 * u, lx + 20 * u, lobby.y - 2 * u], 2.6 * u, PAPER, 1 * u, true)
+  pen.tube([lx + 17 * u, floorY - 2 * u, lx + 37 * u, lobby.y - 2 * u], 2.6 * u, PAPER, 1 * u, true)
   for (let k = 1; k < 10; k++) {
-    const t = k / 10, x = lx + 22 * u * t, y = floorY - 2 * u - (floorY - lobby.y) * t
+    const t = k / 10, x = lx + 20 * u * t, y = floorY - 2 * u - (floorY - lobby.y) * t
     pen.line([x, y, x + 17 * u, y], 1.5 * u, true)
   }
+  // A rail of pegs by the door: somebody's bowler, somebody's overcoat, a lantern.
+  local(pen, lobby.x + lobby.w - 150 * u, lobby.y + 40 * u, u, false, () => {
+    pen.rect(-42, 0, 84, 5, { fill: PAPER, tone: 2, angle: 0, w: 1.2 })
+    for (const x of [-30, 0, 30]) pen.line([x, 3, x, 9], 2, true)
+    pen.shape([-41, 15, -39, 6, -30, 2, -21, 6, -19, 15], { fill: PAPER, tone: 4, angle: 0.3, w: 1.4 })
+    pen.shape([-46, 15, -30, 13, -14, 15, -30, 18], { fill: PAPER, tone: 4, w: 1.3 })
+    pen.shape([-9, 12, -3, 8, 3, 8, 9, 12, 13, 52, 5, 50, 0, 54, -5, 50, -13, 52], { fill: PAPER, tone: 3, angle: 1.2, w: 1.4 })
+    pen.line([0, 12, 0, 50], 0.8)
+    pen.line([-3, 8, 0, 14, 3, 8], 0.9)
+    pen.line([26, 12, 30, 8, 34, 12], 1.1)
+    pen.rect(24, 12, 12, 16, { fill: PAPER, tone: 1, angle: 1.2, w: 1.2 })
+    pen.rect(22, 28, 16, 3, { fill: PAPER, tone: 4, w: 1 })
+  })
   // The loft: five pigeonholes, each with shadow under its lid, and the trapdoor the ladder goes up to.
   for (const slot of page.slots) {
     pen.rect(slot.x - 2 * u, slot.y - 2 * u, slot.w + 4 * u, slot.h + 4 * u, { fill: PAPER, w: 1.3 * u })

@@ -210,4 +210,33 @@ Monster Hotel is designed from two content standards adopted by the California S
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Pen-and-ink crosshatch, the first look reserved for this game, on canvas 2D. A hotel drawn like a page from an old book of odd stories: black pen on cream paper, a cut-away front with a monster in every room, and one printed second colour. It is spiked on the game's real scene (the long house on a full night, six guests in rooms, one in the lobby and one on the bench) and that scene is a true state of the rules: `page.test.ts` builds it from them.
+
+- **Black pen only.** Every tone is hatching, never a grey fill: light single hatch, medium, crosshatch and dense crosshatch, as pattern tiles built once from a seeded generator and clipped to shapes. The roof, the foundations, the night sky and the cut edges of walls and floors are dense; room interiors stay light, so a guest reads against its room at a glance.
+- **A trembling line.** No ruler line anywhere. Every outline is a polyline with small seeded offsets, and a moving figure switches between two drawings of itself about six times a second, so its line boils a little and a still thing stays still.
+- **One spot colour, vermilion, flat.** No gradient and no wash. On the plain page it is only on what can be touched: each guest's body or its one signature thing (the tuba, the striped pyjamas, the lizard's head, the cook's apron), the five things in the cupboard, the day-and-night wheel, the coach door.
+- **Stiff, deadpan figures.** Upright, small blank eyes, no smiles. Each guest is its own silhouette with its want in view: the troll behind its tuba, the blob under its pillow, the yeti with its cloud on a string, the bat with its eye mask up and its bag at its feet. Tools look like tools. Nothing is pastel or rounded for cuteness.
+- **Airs are marks.** Noise is jagged zigzags that leave the tuba's bell and cross the walls, thinner once across. Warmth is rising wavy lines, cold is hanging icicle strokes and fine falling ones. They are drawn where the rules say they travel.
+- **No writing.** The clock has hands and no numerals, the dials show flames and icicles, the singer's music is scribble lines, the luggage has no labels.
+
+### Palette
+
+| Role | Colour |
+| --- | --- |
+| Paper | `#f1e9d6` |
+| Ink | `#1d1a17` |
+| Spot (what can be touched) | `#e2472b` |
+
+### The page
+
+The house stands at the left with its roof, the wheel on the ridge and the chimney; the foundations are a band under the rooms, with the boiler under its column. The lobby stands beside the ground floor, the cupboard is a loft over the lobby so that waiting guests never cover the things, and the street with the coach and the bench runs under the lobby. `layout.ts` fits this one drawing into any surface, for all three houses, with every room and every touchable slot at least 48 logical pixels both ways.
+
+### Motion at idle
+
+Everything runs on the attended clock and from a fixed seed. The troll's cheeks and the tuba pump and the zigzags travel outward; each sleeper breathes at its own tempo; snow drifts through the hole in the roof; warmth rises; the wheel sways; the lump behind the coach blind shifts now and then. Nothing flashes or beckons.
+
+### How it is drawn, and the tiers
+
+- The paper and the house are painted once per resize into one cached layer and stamped once a frame. Each figure and thing is a cached sprite. A frame of the spike draws 32 sprites and figures, and that count goes to the grown-up handle.
+- The pixel ratio is capped at 2 and the sprites are made at the surface's density.
+- Tier 0 is the full page. From tier 2 the line stops boiling and the snow is halved; at tier 3 the paper loses its speckle. Every tier is still the same drawing. The tier table in `config.ts` sets only the pixel ratio so far; the three switches are read from the tier number inside `ink.ts` and move into the table with the toy.

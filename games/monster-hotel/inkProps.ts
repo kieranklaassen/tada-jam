@@ -304,9 +304,10 @@ export function drawThing(pen: Pen, kind: InkThingKind, dial: 1 | 2 | 3): void {
     for (let i = 0; i < 14; i++) disc.push(-3 + Math.cos((i / 14) * Math.PI * 2) * 14.5, 8 + Math.sin((i / 14) * Math.PI * 2) * 14.5)
     pen.shape(disc, { fill: SPOT, w: 0 })
     pen.inside(disc, false, () => {
-      pen.shape([-20, -10, 14, -10, 14, 1, 9, 3, 4, 0, -2, 3, -8, 0, -14, 3, -20, 1], { fill: PAPER, w: 1 })
-      const at = dial === 1 ? [0] : dial === 2 ? [-5.5, 5.5] : [-8, 0, 8]
-      at.forEach((x, i) => pen.shape([-3 + x - 3, 1, -3 + x + 3, 1, -3 + x + 0.4, 18 - (i % 2) * 4], { fill: PAPER, w: 1, sharp: true }))
+      // The cap's edge runs uneven and the icicles hang off-centre, so the dial never looks like a written sign.
+      pen.shape([-22, -12, 18, -12, 18, -1, 10, 1, 2, -1.5, -6, 1, -14, -1, -22, 0.5], { fill: PAPER, w: 1.1 })
+      const at = dial === 1 ? [-4] : dial === 2 ? [-7, 4] : [-9, -2, 6]
+      at.forEach((x, i) => pen.shape([-3 + x - 3, 0, -3 + x + 3, 0, -3 + x + 1.2, 18 - (i % 2) * 6 - (dial - 1) * 1.5], { fill: PAPER, w: 1.1, sharp: true }))
     })
     pen.shape(disc, { w: 1.7 })
     return

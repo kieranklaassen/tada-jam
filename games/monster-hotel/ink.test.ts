@@ -107,6 +107,21 @@ describe('the ink page', () => {
     expect(page.built).toBeGreaterThan(built)
   })
 
+  it('draws the other houses too, by day, with the boiler and the snow hole over any column', () => {
+    const page = new InkPage(fakeSurfaces().make)
+    page.resize(900, 700, 1.5, 1)
+    const scenes: InkScene[] = [
+      { ...SPIKE_SCENE, house: { shape: 'square', fixtures: [{ kind: 'boiler', col: 1 }, { kind: 'snow', col: 0 }], twins: [1] }, phase: 'day', guests: SPIKE_SCENE.guests.filter((guest) => typeof guest.place !== 'object' || guest.place.room < 4), airs: [{ kind: 'din', rooms: [3, 2], level: 1 }, { kind: 'warm', rooms: [1, 3], level: 1 }] },
+      { ...SPIKE_SCENE, house: { shape: 'tower', fixtures: [{ kind: 'snow', col: 1 }], twins: [] }, airs: [{ kind: 'cold', rooms: [5, 3], level: 2 }, { kind: 'cold', rooms: [5, 3, 1], level: 1 }, { kind: 'pong', rooms: [0, 1], level: 1 }] },
+    ]
+    for (const scene of scenes) {
+      const { count, log } = frame(page, scene, 1.5)
+      expect(count).toBeGreaterThan(8)
+      expect(count).toBeLessThan(80)
+      expect(log.filter((call) => TEXT.test(call))).toEqual([])
+    }
+  })
+
   it('draws nothing before it has a size', () => {
     const page = new InkPage(fakeSurfaces().make)
     expect(frame(page, SPIKE_SCENE, 1)).toEqual({ log: [], count: 0 })

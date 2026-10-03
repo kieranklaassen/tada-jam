@@ -368,7 +368,7 @@ function fly(pen: Pen, pose: Pose): void {
   pen.shape(tail, { w: 1.8 })
   // The thorax, bristled.
   pen.shape([-20, -44, -24, -64, -14, -78, 14, -78, 24, -64, 20, -44, 0, -38], { fill: PAPER, tone: 3, angle: 1.2, w: 1.8 })
-  // The head: two great eyes and the nose held up. Asleep, the lids are down to a sliver; cross, they slant.
+  // The head: two great eyes and the nose held up. Asleep, the lids are half down; cross, they slant.
   const g = pen.ctx
   g.save()
   g.translate(0, -76)
@@ -381,10 +381,10 @@ function fly(pen: Pen, pose: Pose): void {
   for (const [x, y] of [[-13, -23], [12, -24]] as const) {
     pen.ellipse(x, y, 12, 13, { fill: PAPER, tone: 4, angle: 0.4, w: 1.8 })
     if (!pose.awake || cold) {
-      const tilt = cold ? (x < 0 ? 5 : -5) : 0
-      const lid = [x - 12.5, y + 6 - tilt, x - 12, y - 6, x - 6, y - 13, x + 6, y - 13, x + 12, y - 6, x + 12.5, y + 6 + tilt]
+      const tilt = cold ? (x < 0 ? 4 : -4) : 0
+      const lid = [x - 12.5, y - 1 - tilt, x - 11, y - 8, x - 6, y - 13, x + 6, y - 13, x + 11, y - 8, x + 12.5, y - 1 + tilt]
       pen.shape(lid, { fill: PAPER, w: 1.4, sharp: false })
-      pen.line([x - 12.5, y + 6 - tilt, x + 12.5, y + 6 + tilt], 2.6, true)
+      pen.line([x - 13, y - 1 - tilt, x + 13, y - 1 + tilt], 2.8, true)
     }
   }
   pen.line([-5, -6, 3, -7], 1.5)
