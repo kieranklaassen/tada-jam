@@ -28,15 +28,43 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+Six things the child handles, five things done with each. Every cell is a different sight and sound, and none is refused. "Wrong" uses are marked ✗: each works, changes the hotel truly, and is at least as funny as the right one.
+
+| | set down in a room | given to a guest | fixed to a wall or a floor | tapped | left through a day and a night |
+| --- | --- | --- | --- | --- | --- |
+| **a guest** | moves in: the bag thuds, the bed is tested, and from now on what it gives off starts from here | in a room with a spare bed the two share it; otherwise they swap rooms, passing in the corridor without a glance | ✗ sticks half through the plaster while both neighbours stare, then steps out into the nearer room | the page is drawn again from where it stands (the toy) | awake it does its one thing, asleep it sleeps in its own way; what it gives off reaches the others only at its own hours |
+| **the quilt** | ✗ lies on the bed and stops nothing; whoever sleeps there tucks in | ✗ wraps the guest from head to foot: a wrapped guest makes no noise, which a sleeper next door likes and a musician minds | hangs padded: no noise, warmth or cold crosses that wall or floor | puffs feathers, and the nearest guest sneezes | stays, with the marks of what it stops piling up against it |
+| **the pipe** | ✗ stands in the corner like a hat stand and carries nothing; a guest peers down it | ✗ becomes a trumpet: whatever that guest gives off carries one room further | joins the two rooms: smell, warmth and cold pass through it both ways | toots a puff of whatever is passing through | carries what is being made at that hour and nothing at the other |
+| **the stove** | warms the room by its dial; the warmth rises to the room above, one step weaker with each floor | goes into that guest's room, and the guest takes to it in its own way: one hugs it, one sits on it and sags | ✗ scorches a patch of wallpaper and slides into the nearer room | the dial turns a step: one flame, two, three, then one again | burns the same by day and by night |
+| **the ice box** | chills the room by its dial; the cold sinks to the room below, one step weaker with each floor | goes into that guest's room: one uses it as an armchair, one goes stiff as a plank | ✗ frosts a patch of wall and slides into the nearer room | the dial turns a step: one icicle, two, three, then one again | chills the same by day and by night |
+| **the alarm clock** | ✗ stands by the bed and rings at dawn and at dusk; a sleeper opens one eye, glares and sleeps on | a guest who will change its hours keeps it and swaps its day for its night; one who will not deals with it in its own way and keeps its hours | ✗ hangs as a wall clock and changes nothing | rings, and every sleeper in the house opens one eye | whoever holds it wakes and sleeps the other way round |
+
+Beside the six: the day-and-night wheel on the roof, which the child turns by hand and which turns nothing by itself, and the coach at the kerb.
+
+**How each thing travels** is the hotel's whole rule language, and it never changes:
+
+- Noise goes through every wall, floor and ceiling of the room it is made in, and loses a step each time.
+- Warmth rises through ceilings and cold sinks through floors, each losing a step a floor. Warmth and cold in one room add up.
+- A smell drifts sideways along its own floor and loses a step a room. It does not cross a floor.
+- A quilt on a wall or floor stops noise, warmth and cold there. A pipe lets smell, warmth and cold through there.
+
+**On day 15** the child knows the eight guests' tastes by heart and places from knowledge; has found pairings that turn a nuisance into a treat (the fly beside the cook, the cook humming to the tuba through the wall); pipes a smell or a warmth across the house to the one guest who wants it; lets a day sleeper and a night sleeper share one bed in shifts; has met the guest who is content only when somebody hears her; and builds, on purpose, the hotel in which everyone is as cross as can be. Some pairings always set off a small scene of their own (the yeti and the stove at three flames; the tuba and the singer through one wall). They are never hinted at, counted or listed.
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+- **The idea.** People take the same thing differently because of who they are; a quarrel comes from wants that collide; and it is settled when the worry behind each side's demand is met, which is not always what either side first asked for.
+- **How it appears in the objects.** Two views of one scene, extended to as many views as there are guests. The hotel is one building and one set of facts: this noise goes through this wall. Each guest's page draws those same facts in its own way. The tuba's noise is one set of marks crossing one wall; from the troll's place the marks are a flourish, from the sleeper's place a scribble, from the yeti's place faint pencil. The difference between two guests is therefore something the child sees by changing places, with nothing said.
+- **Demand and worry are two different things in the world.** A guest's demand is a room: in the lobby it stands with its bag and stares at the door it wants, and two guests often stare at the same door. Its worry is what must or must not reach it: cold, quiet while it sleeps, an open nose. The demand is visible on the plain page; the worry is visible only from the guest's own place. An arrangement settles the hotel when every worry is met, whichever doors were asked for.
+- **Why this shape.** A want is drawn as something that physically travels and arrives, so "it bothers me" always has a place and a path, and the child can change one thing on that path. Feelings are read from what a creature does (it turns to the wall the trouble comes through, with a pillow on its head), never from a row of faces to choose from.
+- **Evidence.** The table in `research/learning-games-that-work.md` of the game-design pack gives, for another's perspective, "two viewpoints on one scene" with the mechanic of swapping seats and giving each what that one would want, and names ages 4 to 6 for it. The studies behind it trained children of about five. Using it at 9 to 12, with many viewpoints and with wants that collide, is this game's own extension and has no trial behind it. The pack also says the evidence in this strand is thin and that such a game is rehearsal, with the real learning off screen. The sheet claims no more.
+- **Object, picture, symbol.** The order stops at the picture. A feeling or a point of view has no school symbol, and none is invented: no face icons, no hearts, no meters. The only symbols in the game are the numerals on the two dials, laid beside the flames and icicles they count, and they belong to the stove and the ice box, not to anyone's feelings.
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No. What the child does is look from one guest's place and then another's and arrange the house so that what each minds does not reach it. Put sums or spelling in place of the guests' wants and no game is left.
+- **Attention.** At the moment of setting a guest or a thing down, the child must look at what reaches which room and think about how the guest in that room takes it, which is different from how the guest next door takes it and from how the child would.
+- **Fun.** The skill is used in the two most enjoyable moments: the redraw when the finger lands on a guest, and the hotel's reaction, room by room, to a new arrangement. Play never stops for a question.
+- **Guess.** In the first two places of the order, often yes, and that is meant: few guests, and most arrangements settle. From the third place on a hotel has hundreds to thousands of arrangements and few settle. Trying them blind is far slower than looking, and each wrong one shows where and why. Trying is never refused or punished, so it stays a legitimate way to play.
 
 ## The error as a consequence
 
