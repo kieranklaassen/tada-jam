@@ -1,4 +1,4 @@
-import { Director, PARTS, bitLength, type Bit, type Part, type Personality } from './personality'
+import { Director, PARTS, bitLength, type Bit, type Part, type Personality, type Reaction } from './personality'
 import type { Rng } from './rng'
 
 // The customer as a puppet: each part of its face and body is one number
@@ -8,7 +8,7 @@ import type { Rng } from './rng'
 // thing twice running. Pure numbers; the view turns them into a drawing.
 
 /** The parts that ride on the heavy spring of the body. The rest are quick: eyelids, ears, eyes, nose. */
-const HEAVY: readonly Part[] = ['tail', 'mouthOpen', 'smile', 'brow', 'tilt', 'bob', 'sink']
+const HEAVY: readonly Part[] = ['tail', 'mouthOpen', 'smile', 'brow', 'tilt', 'bob', 'sink', 'lift', 'shift', 'spin']
 
 /** A value on a spring. */
 export type Spring = { x: number; v: number }
@@ -64,9 +64,20 @@ export class Puppet {
   }
 
   /** What it does about something that happened to it: one of its reactions of that name, a different one each time. */
-  react(name: string): void {
+  react(name: Reaction): void {
     const bits = this.personality.reactions[name]
     if (bits && bits.length > 0) this.play(this.director.pick(bits))
+  }
+
+  /** How long its reaction of that name lasts at the longest, for a scene that waits for it. */
+  lasts(name: Reaction): number {
+    return this.personality.reactions[name].reduce((most, bit) => Math.max(most, bitLength(bit)), 0)
+  }
+
+  /** Everything it was doing stops, and every part is at rest: where a scene that was cut short leaves it. */
+  rest(): void {
+    this.playing = []
+    for (const part of PARTS) { this.parts[part].x = this.personality.rest[part] ?? 0; this.parts[part].v = 0 }
   }
 
   /** Something pulls at its hair, that far from where the hair is at rest: the head goes a little after it. Nothing, to let it come back. */

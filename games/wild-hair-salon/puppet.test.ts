@@ -1,41 +1,65 @@
 import { describe, expect, it } from 'vitest'
-import { Director, LION, PARTS, bitLength, type Bit } from './personality'
+import { Director, PARTS, PERSONALITIES, REACTIONS, bitLength, type Bit } from './personality'
 import { Puppet, TICK, ease } from './puppet'
 import { makeRng } from './rng'
+import { CUSTOMERS, TASTES } from './tastes'
 
-const allBits = (): Bit[] => [...LION.idle, ...Object.values(LION.reactions).flat()]
+const LION = PERSONALITIES.lion
+const bitsOf = (who: (typeof CUSTOMERS)[number]): Bit[] => [...PERSONALITIES[who].idle, ...Object.values(PERSONALITIES[who].reactions).flat()]
+const shape = (bit: Bit) => JSON.stringify(bit.moves.map((m) => [m.part, m.to, m.at, m.hold]))
 
-describe('the lion\'s personality', () => {
-  it('has a different name for every bit, and no two bits that move the same parts the same way', () => {
-    const bits = allBits()
-    expect(new Set(bits.map((bit) => bit.id)).size).toBe(bits.length)
-    const shape = (bit: Bit) => JSON.stringify(bit.moves.map((m) => [m.part, m.to, m.at, m.hold]))
-    expect(new Set(bits.map(shape)).size).toBe(bits.length)
+describe('the four personalities', () => {
+  it('give every bit a name of its own and a shape of its own: no two customers share an animation', () => {
+    const all = CUSTOMERS.flatMap(bitsOf)
+    expect(new Set(all.map((bit) => bit.id)).size).toBe(all.length)
+    expect(new Set(all.map(shape)).size).toBe(all.length)
   })
 
-  it('moves only parts a puppet has, for a time a child can follow', () => {
-    for (const bit of allBits()) {
-      expect(bit.moves.length).toBeGreaterThan(0)
-      for (const m of bit.moves) {
-        expect(PARTS).toContain(m.part)
-        expect(m.to >= -1 && m.to <= 1).toBe(true)
-        expect(m.at >= 0 && m.hold > 0).toBe(true)
-      }
-      expect(bitLength(bit)).toBeGreaterThanOrEqual(0.1)
-      expect(bitLength(bit)).toBeLessThanOrEqual(2)
+  it('share no near-copy either: no bit of one is a bit of another with only its timing moved', () => {
+    const loose = (bit: Bit) => JSON.stringify(bit.moves.map((m) => [m.part, Math.sign(m.to)]).sort())
+    for (let a = 0; a < CUSTOMERS.length; a++) for (let b = a + 1; b < CUSTOMERS.length; b++) {
+      const theirs = new Set(bitsOf(CUSTOMERS[b]).map(loose))
+      const copies = bitsOf(CUSTOMERS[a]).filter((bit) => bit.moves.length >= 3 && theirs.has(loose(bit)))
+      expect(copies.map((bit) => bit.id), `${CUSTOMERS[a]} and ${CUSTOMERS[b]}`).toEqual([])
     }
   })
 
-  it('is slow and heavy: the body rides a softer spring than the eyelids and ears', () => {
-    expect(LION.stiffness).toBeLessThan(LION.quick / 3)
-    expect(LION.breath).toBeGreaterThanOrEqual(3)
-    expect(LION.idle.length).toBeGreaterThanOrEqual(8)
-    expect(LION.gap[0]).toBeGreaterThanOrEqual(1)
+  it.each(CUSTOMERS)('the %s has a reaction of its own to everything that can happen to it', (who) => {
+    const p = PERSONALITIES[who]
+    expect(Object.keys(p.reactions).sort()).toEqual([...REACTIONS].sort())
+    for (const name of REACTIONS) expect(p.reactions[name].length, name).toBeGreaterThanOrEqual(1)
+    expect(p.idle.length).toBeGreaterThanOrEqual(8)
+    for (const bit of bitsOf(who)) {
+      expect(bit.id.startsWith(`${who}-`), bit.id).toBe(true)
+      expect(bit.moves.length).toBeGreaterThan(0)
+      for (const move of bit.moves) {
+        expect(PARTS).toContain(move.part)
+        expect(move.to >= -1 && move.to <= 1).toBe(true)
+        expect(move.at >= 0 && move.hold > 0).toBe(true)
+      }
+      expect(bitLength(bit)).toBeGreaterThanOrEqual(0.1)
+      expect(bitLength(bit)).toBeLessThanOrEqual(2.2)
+    }
   })
 
-  it('giggles differently on the nose, an ear, the chin and a cheek', () => {
-    const ids = ['noseTickled', 'earTickled', 'chinTickled', 'cheekTickled'].map((name) => LION.reactions[name][0].id)
-    expect(new Set(ids).size).toBe(4)
+  it('give each its own tempo, weight and gait, as its tastes say', () => {
+    const tempo = (who: (typeof CUSTOMERS)[number]) => { const p = PERSONALITIES[who]; return `${p.breath}/${p.stiffness}/${p.damping}/${p.gait.hop}/${p.gait.steps}` }
+    expect(new Set(CUSTOMERS.map(tempo)).size).toBe(4)
+    for (const who of CUSTOMERS) {
+      const p = PERSONALITIES[who], slow = TASTES[who].tempo === 'slow'
+      // The slow ones breathe slowly, ride softer springs and take fewer steps; the quick ones the other way.
+      expect(p.breath > 3).toBe(slow)
+      expect(p.stiffness < 60).toBe(slow)
+      expect(p.gait.steps < 2).toBe(slow)
+      expect(p.gap[0]).toBeGreaterThan(0.5)
+    }
+  })
+
+  it('give a different giggle on the nose, an ear, the chin and a cheek', () => {
+    for (const who of CUSTOMERS) {
+      const ids = (['noseTickled', 'earTickled', 'chinTickled', 'cheekTickled'] as const).map((name) => PERSONALITIES[who].reactions[name][0].id)
+      expect(new Set(ids).size).toBe(4)
+    }
   })
 })
 
@@ -55,7 +79,7 @@ describe('the director', () => {
 
   it('keeps each list\'s last pick to itself, and gives a list of one its one bit', () => {
     const director = new Director(makeRng(1))
-    const one = LION.reactions.rubbed
+    const one = LION.reactions.rubLoved
     expect(director.pick(one)).toBe(one[0])
     expect(director.pick(one)).toBe(one[0])
     const two = LION.reactions.snipped
@@ -75,13 +99,13 @@ describe('the puppet', () => {
     expect(puppet.breath >= 0 && puppet.breath < 1).toBe(true)
   })
 
-  it('does a thing of its own every few seconds when nobody is touching, never the same twice running, and nothing while it is touched', () => {
-    const idle = new Puppet(LION, makeRng(3))
+  it.each(CUSTOMERS)('the %s does a thing of its own every few seconds when nobody is touching, never the same twice running, and nothing while it is touched', (who) => {
+    const idle = new Puppet(PERSONALITIES[who], makeRng(3))
     for (let i = 0; i < 60 * 40; i++) idle.step(1 / 60, true)
-    expect(idle.started.length).toBeGreaterThanOrEqual(8)
-    expect(idle.started.length).toBeLessThanOrEqual(26)
+    expect(idle.started.length).toBeGreaterThanOrEqual(6)
+    expect(idle.started.length).toBeLessThanOrEqual(40)
     for (let i = 1; i < idle.started.length; i++) expect(idle.started[i]).not.toBe(idle.started[i - 1])
-    const touched = new Puppet(LION, makeRng(3))
+    const touched = new Puppet(PERSONALITIES[who], makeRng(3))
     for (let i = 0; i < 60 * 40; i++) touched.step(1 / 60, false)
     expect(touched.started).toEqual([])
   })
@@ -97,14 +121,17 @@ describe('the puppet', () => {
     expect(Math.abs(puppet.at('blink'))).toBeLessThan(0.02)
   })
 
-  it('reacts with one of its own reactions, and does nothing about a thing it has no reaction to', () => {
+  it('reacts with one of its own reactions, knows how long it lasts, and can be put to rest at once', () => {
     const puppet = new Puppet(LION, makeRng(6))
-    puppet.react('rubbed')
-    expect(puppet.started).toEqual(['purrs-and-melts'])
-    puppet.react('no-such-thing')
-    expect(puppet.started).toHaveLength(1)
+    puppet.react('rubLoved')
+    expect(puppet.started).toEqual(['lion-purrs-and-melts'])
+    expect(puppet.lasts('rubLoved')).toBeCloseTo(0.9)
     for (let i = 0; i < 40; i++) puppet.step(1 / 60, false)
     expect(puppet.at('sink')).toBeGreaterThan(0.2)
+    puppet.rest()
+    expect(puppet.busy).toBe(false)
+    expect(puppet.at('sink')).toBe(0)
+    expect(puppet.at('smile')).toBe(0.25)
   })
 
   it('leans after hair that is pulled, within limits, and comes back with one soft overshoot', () => {

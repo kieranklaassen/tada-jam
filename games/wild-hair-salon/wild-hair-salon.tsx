@@ -15,12 +15,12 @@ import { SaveCadence } from './saveCadence'
 import { voiceOf } from './sound'
 import { SPIKE_SEED, SpikeView, browserSheet } from './spike'
 import { Sprites } from './sprites'
-import { Toy } from './toy'
+import { Play } from './play'
 import { drawFrame } from './view'
 
-// The Mount, showing the toy: one customer under the cape, whose hair is
-// pulled longer and snipped shorter with no goal. Around it, from the
-// template: the saved state, attention, the attended clock, touch, sound from
+// The Mount, showing the game: a customer under the cape whose lock is made
+// as long as its friend's, by pulling it longer and snipping it shorter.
+// Around it, from the template: the saved state, attention, the attended clock, touch, sound from
 // the first touch, the idle ladder, adaptive quality, the grown-up
 // performance handle and the grown-up overlay.
 //
@@ -50,7 +50,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const query = new URLSearchParams(window.location.search)
     // A fixed seed from the address, for the lead's stills; otherwise a new one for the visit.
     const asked = Number(query.get('seed'))
-    const toy = new Toy(query.has('seed') && Number.isFinite(asked) ? asked : Math.floor(Math.random() * 0xffffffff))
+    const play = new Play(query.has('seed') && Number.isFinite(asked) ? asked : Math.floor(Math.random() * 0xffffffff))
     let guidance: Guidance | null = null
     // The grown-up's corner (overlay.ts): a press that lands there is not the game's.
     let cornered = false
@@ -62,7 +62,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     //   cadence.change(performance.now(), true)  a scene's outcome, a cycle judged, the position moved: at once,
     //                                            since a put-away in the next moment must find it saved
     // Going to rest writes whatever the throttle still holds (`cadence.settle`, below).
-    const cadence = new SaveCadence(() => { const saved = toy.save(); if (saved) ctxRef.current.storage.save(saved) })
+    const cadence = new SaveCadence(() => { const saved = play.saved(); if (saved) ctxRef.current.storage.save(saved) })
 
     // The one place the game applies a quality tier: whatever its tiers set besides the pixel ratio, which
     // `resize` applies. It runs once before the first frame and again each time the governor changes tier, ahead
@@ -75,7 +75,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
     // The painted pieces are made for the surface's size and pixel ratio, and made again when either changes.
-    // Before the slot has been read the toy has no game, and the frame is the bare room.
+    // Before the slot has been read there is no game, and the frame is the bare room.
     const spike = query.get('spike') === '1' ? new SpikeView(browserSheet) : null
     let sprites: Sprites | null = null, spritesFor = ''
     const draw = () => {
@@ -88,7 +88,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         sprites = new Sprites(browserSheet, canvas.width, canvas.height, SPIKE_SEED)
         spritesFor = size
       }
-      drawn.drawCalls = drawFrame(g, canvas.width, canvas.height, sprites, { salon: toy.game, puppet: toy.puppet, hair: toy.hair, guidance, time: toy.time })
+      drawn.drawCalls = drawFrame(g, canvas.width, canvas.height, sprites, { play, guidance })
     }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
@@ -109,9 +109,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const observer = new ResizeObserver(resize)
     observer.observe(root)
 
-    // What the toy does with a gesture: the finger's points go to scene units, the toy answers, its notes are
+    // What the game does with a gesture: the finger's points go to scene units, the game answers, its notes are
     // played here, inside the handler, where audio.ts can hold the first one for the unlock, and a change is
-    // handed to storage at the throttle.
+    // handed to storage: a scene's outcome at once, a small change at the throttle.
     const toStage = (p: Point): Point => {
       const f = fit(width, height)
       return f.scale > 0 ? { x: (p.x - f.dx) / f.scale, y: (p.y - f.dy) / f.scale } : p
@@ -124,14 +124,15 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       }
     }
     const sound = () => {
-      const notes = toy.takeNotes()
+      const notes = play.takeNotes()
       if (notes.length > 0) audio.play(voiceOf(notes))
-      if (toy.takeDirty()) cadence.change(performance.now())
+      const save = play.takeSave()
+      if (save) cadence.change(performance.now(), save === 'now')
     }
     const act = (gestures: Gesture[]) => {
       for (const gesture of gestures) {
         if (gesture.type === 'press') cornered = gesture.at.x > width - 72 && gesture.at.y < 72
-        if (!cornered && !spike) toy.gesture(staged(gesture))
+        if (!cornered && !spike) play.gesture(staged(gesture))
       }
       sound()
     }
@@ -173,12 +174,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
-      if (touch.active) ladder.touch(clock.seconds)
+      if (touch.active || play.inScene) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
       guidance = ladder.update(clock.seconds)
-      // The toy plays the step: the puppet, the hair and what is in the air. It does things of its own only
-      // while no finger is working.
-      toy.step(step, !touch.active)
+      // The game plays the step: the scene, the puppets, the hair and what is in the air. The two in the salon do
+      // things of their own only while no finger is working and no scene is playing.
+      play.step(step, !touch.active)
       sound()
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that
@@ -213,7 +214,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
-      toy.open(value, ctxRef.current.childAge)
+      play.open(value, ctxRef.current.childAge)
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.

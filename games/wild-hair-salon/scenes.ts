@@ -1,0 +1,253 @@
+import type { Idea } from './cycle'
+import type { Hair } from './hair'
+import { HEAD } from './layout'
+import { PERSONALITIES } from './personality'
+import { onHead, placesOf, tuftPose, tuftTip, type Actor, type Point } from './poses'
+import type { Puppet } from './puppet'
+import { TAIL_LEN } from './rules'
+import type { Game } from './save'
+import type { Beat } from './scene'
+import type { Showing } from './showing'
+import { DOORWAY, RIBBON_HOME, walk, type Staging } from './staging'
+import { TASTES, type CustomerId } from './tastes'
+
+// The short scenes, as lists of timed beats (scene.ts). Each is filled in
+// from the state of play: who the two are, how long everything is, what the
+// child just did. A scene's outcome is already in the game when its beats are
+// made, so the beats only act it out; a scene that is cut short by a touch
+// lands where the model has everything (`cast.cut` is set while that
+// happens, and a beat that is only a sound or a start of something says
+// nothing then).
+
+/** A sound a scene asks for, by name. The game turns it into notes. */
+export type Cue =
+  | 'door' | 'doorShut' | 'step' | 'hatOff' | 'hairOut' | 'capeOn' | 'capeOff' | 'landed'
+  | 'tooLong' | 'tooShort' | 'asLong' | 'nip' | 'tug' | 'ribbonTaken' | 'ribbonTick' | 'ribbonHome'
+
+export type Cast = {
+  staging: Staging
+  hair: Hair
+  /** The two in the salon, and the pair on its way out. */
+  customer(): Puppet | null
+  friend(): Puppet | null
+  cue(cue: Cue, who?: CustomerId): void
+  /** A touch has ended the scene: beats land where they were going without starting anything. */
+  readonly cut: boolean
+}
+
+const cueAt = (at: number, run: () => void): Beat => ({ at, lasts: 0, play: () => run() })
+const over = (at: number, lasts: number, play: (progress: number) => void): Beat => ({ at, lasts, play })
+
+/** Where a figure's tail hangs when it is held out straight to be measured. */
+export const TAIL_OF_CUSTOMER: Point = { x: 300, y: 474 }
+export function tailOf(actor: Actor): Point {
+  return { x: actor.x + 72, y: actor.y + 98 }
+}
+/** Where the friend stands by the ribbon's peg, and by the customer's tail. */
+const BY_THE_PEG: Actor = { x: 772, y: 330, s: 0.65 }
+const BY_THE_TAIL: Actor = { x: 232, y: 392, s: 0.65 }
+
+/**
+ * Coming in: the door swings, the pair that was done go out past the pair
+ * that waited, who walk in each with its own gait; the rain hats pop off and
+ * the hair springs out; the customer hops into the chair and the cape lands
+ * on it; the friend takes its seat; the customer looks from its lock to the
+ * friend's. `before` is the salon they come into, `after` the salon with them
+ * in it.
+ */
+export function comingIn(cast: Cast, before: Game, after: Game): Beat[] {
+  const { staging, hair } = cast
+  const places = placesOf(after)
+  if (!places.customer || !places.friend || after.chair === null || after.friend === null) return []
+  const to = { customer: places.customer, friend: places.friend }
+  const gait = { customer: PERSONALITIES[after.chair].gait, friend: PERSONALITIES[after.friend].gait }
+  const old = placesOf({ ...before, cape: 'off' })
+  const goers = before.chair !== null && before.friend !== null && old.customer && old.friend
+    ? [{ who: before.chair, part: 'chair' as const, from: old.customer }, { who: before.friend, part: 'friend' as const, from: old.friend }]
+    : []
+  const WALK = 1.6
+  const beats: Beat[] = [
+    cueAt(0, () => {
+      // The ones who waited are in the doorway under their hats; the ones who were done set off.
+      staging.waiting = 0
+      staging.hats = 1
+      staging.cape = 0
+      staging.customer = { ...DOORWAY, x: DOORWAY.x - 22, lift: 0, seen: 0 }
+      staging.friend = { ...DOORWAY, x: DOORWAY.x + 26, lift: 0, seen: 0 }
+      staging.leaving = goers.map((goer) => ({ who: goer.who, part: goer.part, at: { ...goer.from, lift: 0, seen: 1 } }))
+      if (!cast.cut) cast.cue('door')
+    }),
+    over(0, 0.4, (p) => { staging.door = p }),
+    over(0.2, 1.3, (p) => {
+      staging.leaving.forEach((goer, i) => {
+        const from = goers[i]?.from
+        if (!from) return
+        goer.at = walk(from, { ...DOORWAY, s: 0.6 }, p, PERSONALITIES[goer.who].gait, 1.3)
+        goer.at.seen = 1 - Math.max(0, (p - 0.8) / 0.2)
+      })
+      if (p >= 1) staging.leaving = []
+    }),
+    over(0.5, WALK, (p) => {
+      staging.customer = { ...walk({ ...DOORWAY, x: DOORWAY.x - 22 }, to.customer, p, gait.customer, WALK), seen: Math.min(1, p * 6) }
+      staging.friend = { ...walk({ ...DOORWAY, x: DOORWAY.x + 26 }, to.friend, p, gait.friend, WALK), seen: Math.min(1, p * 6) }
+    }),
+    cueAt(0.5 + WALK, () => { if (!cast.cut) { cast.cue('landed', after.chair ?? undefined); cast.customer()?.react('sitsDown'); cast.friend()?.react('sitsDown') } }),
+    cueAt(0.7 + WALK, () => {
+      staging.hats = 0
+      if (cast.cut) return
+      hair.sprungOut()
+      cast.cue('hatOff')
+      cast.cue('hairOut')
+      cast.customer()?.react('hatOff')
+      cast.friend()?.react('hatOff')
+    }),
+    cueAt(1.0 + WALK, () => { if (!cast.cut) cast.cue('capeOn') }),
+    over(1.0 + WALK, 0.45, (p) => { staging.cape = p }),
+    cueAt(1.3 + WALK, () => { if (!cast.cut) cast.cue('doorShut') }),
+    over(1.3 + WALK, 0.35, (p) => { staging.door = 1 - p; staging.waiting = p }),
+    // The one want, always visible: the customer looks from its lock to the friend's, and the friend holds its own out.
+    cueAt(1.7 + WALK, () => { if (!cast.cut) { cast.customer()?.react('wantsItSo'); cast.friend()?.react('wantsItSo') } }),
+    over(1.7 + WALK, Math.max(0.4, cast.customer()?.lasts('wantsItSo') ?? 0.8), () => {}),
+  ]
+  return beats
+}
+
+/**
+ * The cape comes off: it flies up and lands over the chair, the customer hops
+ * down, the friend comes over, they stand cheek to cheek with the two locks
+ * side by side, look down at the free ends, and the customer does what it
+ * does about a lock that is too long, too short or as long, sized by the
+ * piece or the gap; then about its mane, its bow and whatever it wears.
+ */
+export function capeComesOff(cast: Cast, before: Game, after: Game, showing: Showing): Beat[] {
+  const { staging, hair } = cast
+  const from = placesOf(before), to = placesOf(after)
+  if (!to.customer || !to.friend || after.chair === null || after.friend === null) return []
+  const chair = after.chair, friend = after.friend, taste = TASTES[chair]
+  const friendFrom = from.friend ?? to.friend, friendTo = to.friend
+  const far = friendFrom.x !== friendTo.x
+  const customer = cast.customer(), other = cast.friend()
+  const kind = showing.comparison.kind, big = 0.5 + showing.comparison.muddle
+  const beats: Beat[] = [
+    cueAt(0, () => { staging.fx = null; if (!cast.cut) { cast.cue('capeOff'); customer?.react('hopsOver') } }),
+    over(0, 0.5, (p) => { staging.cape = 1 - p }),
+    over(0.3, far ? 1.2 : 0.3, (p) => { staging.friend = far ? walk(friendFrom, friendTo, p, PERSONALITIES[friend].gait, 1.2) : { ...friendTo, lift: 0, seen: 1 } }),
+    cueAt(far ? 1.5 : 0.6, () => { if (!cast.cut) { other?.react('hopsOver'); cast.cue('landed', friend) } }),
+    // Both look down at the two free ends.
+    cueAt(1.7, () => { if (!cast.cut) { customer?.react('floorWatched'); other?.react('floorWatched') } }),
+    cueAt(2.5, () => {
+      staging.fx = { kind, muddle: showing.comparison.muddle }
+      if (cast.cut) return
+      if (kind === 'too-long') { customer?.react('lockTooLong'); hair.kicked('lock', 5 * big); cast.cue('tooLong', chair) }
+      // The friend's longer end tickles the customer's chin.
+      if (kind === 'too-short') { customer?.react('lockTooShort'); other?.react('friendPoked'); hair.kicked('model', -5 * big); cast.cue('tooShort', chair) }
+      if (kind === 'as-long') { customer?.react('lockAsLong'); other?.react('lockAsLong'); hair.plucked('lock', 1); hair.plucked('model', 1); cast.cue('asLong', chair) }
+    }),
+  ]
+  let t = 2.5 + Math.max(customer?.lasts(kind === 'too-long' ? 'lockTooLong' : kind === 'too-short' ? 'lockTooShort' : 'lockAsLong') ?? 1.2, 1.2) + 0.3
+  beats.push(over(2.5, t - 2.5, () => {}))
+  // Then its tastes: its mane, its bow, and whatever it wears.
+  if (showing.mane !== 'plain') {
+    const reaction = showing.mane === 'liked' ? 'maneLiked' as const : 'maneHated' as const
+    const at = t
+    beats.push(cueAt(at, () => { if (!cast.cut) customer?.react(reaction) }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
+    t += (customer?.lasts(reaction) ?? 1) + 0.2
+  }
+  if (showing.bow !== null) {
+    const reaction = taste.bow === 'loves' ? 'bowLoved' as const : 'bowHated' as const
+    const at = t
+    beats.push(cueAt(at, () => { if (!cast.cut) customer?.react(reaction) }), over(at, (customer?.lasts(reaction) ?? 1) + 0.2, () => {}))
+    t += (customer?.lasts(reaction) ?? 1) + 0.2
+  }
+  if (showing.blindfold !== null || showing.worn.chair > 0 || showing.worn.friend > 0) {
+    const at = t
+    beats.push(cueAt(at, () => {
+      if (cast.cut) return
+      if (showing.blindfold === 'chair') customer?.react('blindfolded')
+      else if (showing.worn.chair > 0) customer?.react('wearing')
+      if (showing.blindfold === 'friend') other?.react('blindfolded')
+      else if (showing.worn.friend > 0) other?.react('wearing')
+    }), over(at, 1.1, () => {}))
+    t += 1.1
+  }
+  // They settle, side by side, with the haircut on show.
+  beats.push(cueAt(t, () => { staging.fx = null; staging.cape = 0; staging.friend = { ...friendTo, lift: 0, seen: 1 } }))
+  return beats
+}
+
+/**
+ * A thing shown once, on something that is not the problem in front of the
+ * child. The snip: the customer nips the longest tuft of its own mane to half
+ * its length. The pull: it tugs the shortest tuft longer. The ribbon: the
+ * friend takes it from its peg, pulls it until it is as long as its own
+ * tail, trots over, holds it beside the customer's tail, and hangs it back.
+ * `before` is the game before the showing was marked and `after` the game
+ * after, which already holds everything the showing changes.
+ */
+export function shownOnce(cast: Cast, idea: Idea, before: Game, after: Game): Beat[] {
+  const { staging, hair } = cast
+  const places = placesOf(after)
+  if (!places.customer || !places.friend || after.chair === null || after.friend === null) return []
+  const chair = after.chair, friend = after.friend
+  if (idea === 'ribbon') {
+    const home = places.friend, gait = PERSONALITIES[friend].gait
+    const tail = tailOf(BY_THE_PEG), beside = { x: TAIL_OF_CUSTOMER.x + 30, y: TAIL_OF_CUSTOMER.y }
+    const stand = (a: Actor) => ({ ...a, lift: 0, seen: 1 })
+    return [
+      cueAt(0, () => { staging.ribbon = { x: RIBBON_HOME.x, y: RIBBON_HOME.y, len: 16 }; if (!cast.cut) cast.friend()?.react('showsAMove') }),
+      over(0, 1.0, (p) => { staging.friend = walk(home, BY_THE_PEG, p, gait, 1.0) }),
+      cueAt(1.0, () => { if (!cast.cut) cast.cue('ribbonTaken') }),
+      // It holds the ribbon beside its own tail, and pulls it until it is as long as the tail.
+      over(1.0, 0.5, (p) => { staging.tails = p; staging.ribbon = { x: RIBBON_HOME.x + (tail.x - 30 - RIBBON_HOME.x) * p, y: RIBBON_HOME.y + (tail.y - RIBBON_HOME.y) * p, len: 16 } }),
+      over(1.5, 1.1, (p) => {
+        const len = Math.round(16 + (TAIL_LEN - 16) * p)
+        if (!cast.cut && staging.ribbon && len !== staging.ribbon.len && len % 4 === 0) cast.cue('ribbonTick')
+        staging.ribbon = { x: tail.x - 30, y: tail.y, len }
+      }),
+      cueAt(2.6, () => { if (!cast.cut) cast.friend()?.react('holdsBreath') }),
+      // It trots over and holds it beside the customer's tail.
+      over(2.8, 1.1, (p) => {
+        staging.friend = walk(BY_THE_PEG, BY_THE_TAIL, p, gait, 1.1)
+        staging.ribbon = { x: tail.x - 30 + (beside.x - tail.x + 30) * p, y: tail.y + (beside.y - tail.y) * p - Math.sin(p * Math.PI) * 40, len: TAIL_LEN }
+      }),
+      cueAt(3.9, () => { if (!cast.cut) { cast.customer()?.react('wantsItSo'); cast.cue('landed', friend) } }),
+      over(3.9, 1.0, () => { staging.ribbon = { x: beside.x, y: beside.y, len: TAIL_LEN } }),
+      // And hangs it back on its peg, where it is from then on.
+      over(4.9, 1.0, (p) => {
+        staging.friend = walk(BY_THE_TAIL, BY_THE_PEG, p, gait, 1.0)
+        staging.ribbon = { x: beside.x + (RIBBON_HOME.x - beside.x) * p, y: beside.y + (RIBBON_HOME.y - beside.y) * p - Math.sin(p * Math.PI) * 60, len: TAIL_LEN }
+        staging.tails = 1 - p
+      }),
+      cueAt(5.9, () => { staging.ribbon = null; staging.tails = 0; if (!cast.cut) cast.cue('ribbonHome') }),
+      over(5.9, 1.0, (p) => { staging.friend = p >= 1 ? stand(home) : walk(BY_THE_PEG, home, p, gait, 1.0) }),
+    ]
+  }
+
+  // The tuft the customer showed the move on: the one whose length the showing changed.
+  const tuft = after.mane.findIndex((steps, i) => steps !== before.mane[i])
+  if (tuft < 0) return [over(0, 0.3, () => {})]
+  const was = before.mane[tuft], is = after.mane[tuft]
+  const reach = (steps: number): number => tuftPose(chair, tuft, steps, after.mane.length).reach
+  const share = reach(was) / reach(is)
+  const tip = (): Point => onHead({ x: HEAD.x, y: HEAD.y, s: 1 }, tuftTip(tuftPose(chair, tuft, is, after.mane.length)))
+  const held = hair.tufts[tuft]
+  return [
+    cueAt(0, () => {
+      // The tuft is drawn as long as it was until the paw has done its work.
+      if (held) { held.rest = share; held.stretch.x = share; held.stretch.v = 0 }
+      staging.paw = { kind: idea, tuft, progress: 0 }
+      if (!cast.cut) cast.customer()?.react('showsAMove')
+    }),
+    over(0, 1.5, (p) => {
+      staging.paw = { kind: idea, tuft, progress: p }
+      // A tug draws the tuft out as the paw goes; a nip leaves it until the blades close.
+      if (idea === 'pull' && held) held.rest = share + (1 - share) * Math.max(0, (p - 0.4) / 0.6)
+    }),
+    cueAt(idea === 'pull' ? 0.6 : 1.5, () => { if (!cast.cut) cast.cue(idea === 'snip' ? 'nip' : 'tug', chair) }),
+    cueAt(1.5, () => {
+      if (held) held.rest = 1
+      if (idea === 'snip' && !cast.cut) hair.tuftSnipped(tuft, tip(), '#f0c9a0')
+    }),
+    over(1.5, 0.9, (p) => { staging.paw = p >= 1 ? null : { kind: idea, tuft, progress: 1 } }),
+  ]
+}

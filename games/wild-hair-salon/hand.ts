@@ -1,15 +1,16 @@
 import type { ActionId, Cell, ObjectId } from './grid'
-import { HEAD, STEP } from './layout'
-import { LOCK_ROOT, TUFT_STEP, crossedBy, dropPlace, tuftPose, whatIsAt, type FacePart, type Point } from './poses'
-import { act, type Clipping, type ClippingPlace, type Deed, type Salon, type Target } from './world'
+import { crossedBy, dropPlace, overAFace, stripOf, tuftRoot, whatIsAt, type Button, type FacePart, type Point, type Touched } from './poses'
+import { act, type Clipping, type ClippingPlace, type Deed, type Salon, type Target, type Who } from './world'
 
 // The finger. It turns the gestures of a touch into the actions of the grid,
 // with no tool to pick up first: landing on a thing and dragging pulls it,
 // landing beside things brings the scissors, which snip what they cross, a
-// tap pokes, and rubbing back and forth ruffles. Every press is answered the
-// moment it lands. Pure: it reads no clock of its own (time is passed in, in
-// seconds of play) and draws nothing; what happened comes back as a list for
-// the view and the sound to act out.
+// tap pokes, rubbing back and forth ruffles, and the ribbon is carried by its
+// clip to whatever it is brought to. A few things are only touched to move
+// the game on: the door, the empty seat, the cape's knot and the chair. Every
+// press is answered the moment it lands. Pure: it reads no clock of its own
+// (time is passed in, in seconds of play) and draws nothing; what happened
+// comes back as a list for the game, the view and the sound to act on.
 
 /** Where the blades are, from the finger: above it, so the child sees what they cross. */
 export const BLADES = { x: 0, y: -36 } as const
@@ -24,8 +25,12 @@ export const RUFFLE_EVERY = 0.3
 
 export type Held =
   | { object: 'lock' }
+  | { object: 'model' }
+  | { object: 'ribbon' }
+  /** The ribbon, carried by its clip. */
+  | { object: 'ribbonClip' }
   | { object: 'tuft'; index: number }
-  | { object: 'face'; part: FacePart }
+  | { object: 'face'; who: Who; part: FacePart }
   | { object: 'clipping'; index: number }
 
 export type Happening =
@@ -33,8 +38,12 @@ export type Happening =
   | { kind: 'caught'; held: Held; at: Point }
   /** A press landed beside things: the scissors are in the hand, at once. */
   | { kind: 'scissors'; at: Point }
-  /** A cell of the grid answered. */
-  | { kind: 'cell'; object: ObjectId; action: ActionId; cell: Cell; held: Held | null; at: Point; rings: number | null; piece: Clipping | null; place: ClippingPlace | null }
+  /** A press landed on something that moves the game on: it gives under the finger, at once. */
+  | { kind: 'pressed'; button: Button; at: Point }
+  /** That press ended: the game acts on it. */
+  | { kind: 'button'; button: Button; at: Point }
+  /** A cell of the grid answered. `sprangBack` says the hair was not under the cape and is as long as before. */
+  | { kind: 'cell'; object: ObjectId; action: ActionId; cell: Cell; held: Held | null; at: Point; rings: number | null; piece: Clipping | null; place: ClippingPlace | null; sprangBack: boolean }
   /** The scissors closed on nothing. */
   | { kind: 'airSnip'; at: Point }
   /** The thing in the fingers was let go. */
@@ -47,20 +56,39 @@ type Rub = { lastX: number; lastY: number; dirX: number; dirY: number; runX: num
 type Holding =
   | { mode: 'thing'; held: Held; start: Point; grip: number; before: number; heard: number; dragged: boolean; rub: Rub }
   | { mode: 'scissors'; last: Point; overFace: boolean; cut: boolean }
+  | { mode: 'button'; button: Button }
 
 export type Step = { salon: Salon; happenings: Happening[] }
 
-const targetOf = (held: Held): Target =>
-  held.object === 'tuft' ? { object: 'tuft', index: held.index } : held.object === 'clipping' ? { object: 'clipping', index: held.index } : held.object === 'face' ? { object: 'face', who: 'chair' } : { object: 'lock' }
+const targetOf = (held: Held): Target => {
+  switch (held.object) {
+    case 'tuft': return { object: 'tuft', index: held.index }
+    case 'clipping': return { object: 'clipping', index: held.index }
+    case 'face': return { object: 'face', who: held.who }
+    case 'ribbonClip': return { object: 'ribbon' }
+    default: return { object: held.object }
+  }
+}
+
+const heldOf = (touched: Exclude<Touched, { object: 'button' }>): Held => {
+  switch (touched.object) {
+    case 'tuft': return { object: 'tuft', index: touched.index }
+    case 'clipping': return { object: 'clipping', index: touched.index }
+    case 'face': return { object: 'face', who: touched.who, part: touched.part }
+    default: return { object: touched.object }
+  }
+}
 
 const blades = (p: Point): Point => ({ x: p.x + BLADES.x, y: p.y + BLADES.y })
 
 export class Hand {
   private holding: Holding | null = null
+  /** How far the held hair is drawn out past its own length, in steps: hair that springs back shows it and loses it. */
+  drawnOut = 0
 
   /** What the fingers hold now, for the view: a thing, the scissors, or nothing. */
   get held(): Held | 'scissors' | null {
-    return !this.holding ? null : this.holding.mode === 'scissors' ? 'scissors' : this.holding.held
+    return !this.holding || this.holding.mode === 'button' ? null : this.holding.mode === 'scissors' ? 'scissors' : this.holding.held
   }
 
   /** A ruffle is going on under the finger. */
@@ -68,21 +96,24 @@ export class Hand {
     return this.holding?.mode === 'thing' && this.holding.rub.ruffled
   }
 
-  /** The root a held strip is pulled away from, and how many scene units one step of it is. */
+  /** The root a held strip is pulled away from, how many scene units one step of it is, and its length. */
   private static root(held: Held, salon: Salon): { root: Point; unit: number; length: number } | null {
-    if (held.object === 'lock') return { root: LOCK_ROOT, unit: STEP, length: salon.lock }
-    if (held.object !== 'tuft') return null
-    const steps = salon.mane[held.index] ?? 0, pose = tuftPose(held.index, steps, salon.mane.length)
-    return { root: { x: HEAD.x + pose.base.x, y: HEAD.y + pose.base.y }, unit: TUFT_STEP, length: steps }
+    if (held.object === 'lock' || held.object === 'model' || held.object === 'ribbon') return stripOf(salon, held.object)
+    return held.object === 'tuft' ? tuftRoot(salon, held.index) : null
   }
 
   press(salon: Salon, p: Point, now: number): Step {
+    this.drawnOut = 0
     const touched = whatIsAt(salon, p)
     if (!touched) {
       this.holding = { mode: 'scissors', last: blades(p), overFace: false, cut: false }
       return { salon, happenings: [{ kind: 'scissors', at: p }] }
     }
-    const held: Held = touched.object === 'lock' ? { object: 'lock' } : touched.object === 'tuft' ? { object: 'tuft', index: touched.index } : touched.object === 'face' ? { object: 'face', part: touched.part } : { object: 'clipping', index: touched.index }
+    if (touched.object === 'button') {
+      this.holding = { mode: 'button', button: touched.button }
+      return { salon, happenings: [{ kind: 'pressed', button: touched.button, at: p }] }
+    }
+    const held = heldOf(touched)
     const strip = Hand.root(held, salon)
     this.holding = {
       mode: 'thing', held, start: p, dragged: false, heard: strip?.length ?? 0, before: strip?.length ?? 0,
@@ -94,19 +125,23 @@ export class Hand {
 
   move(salon: Salon, p: Point, now: number): Step {
     const holding = this.holding
-    if (!holding) return { salon, happenings: [] }
+    if (!holding || holding.mode === 'button') return { salon, happenings: [] }
     if (holding.mode === 'scissors') return this.snip(salon, holding, p)
     holding.dragged = true
     const happenings: Happening[] = []
     const { held, rub } = holding
+    // The ribbon in the fingers is carried, however the finger wanders: it is never rubbed.
+    if (held.object === 'ribbonClip') return { salon, happenings }
     const turned = Hand.rubbed(rub, p, now)
 
     if (!rub.ruffled && rub.turns.length >= RUB_TURNS) {
       // It is a ruffle. A strip that grew a little under the first strokes is as long as before again.
       rub.ruffled = true
       rub.lastAnswer = now
-      if (held.object === 'lock') salon = { ...salon, lock: holding.before }
-      if (held.object === 'tuft') { const index = held.index; salon = { ...salon, mane: salon.mane.map((steps, i) => (i === index ? holding.before : steps)) } }
+      this.drawnOut = 0
+      if (held.object === 'lock' && salon.cape === 'on') salon = { ...salon, lock: holding.before }
+      if (held.object === 'ribbon' && salon.ribbon) salon = { ...salon, ribbon: { ...salon.ribbon, len: holding.before } }
+      if (held.object === 'tuft' && salon.cape === 'on') { const index = held.index; salon = { ...salon, mane: salon.mane.map((steps, i) => (i === index ? holding.before : steps)) } }
       return this.answer(salon, held, { action: 'ruffle' }, p, happenings)
     }
     if (rub.ruffled) {
@@ -120,14 +155,18 @@ export class Hand {
     if (strip) {
       const to = holding.before + (Math.hypot(p.x - strip.root.x, p.y - strip.root.y) - holding.grip) / strip.unit
       if (to > strip.length + 0.5) {
+        const before = salon.clippings
         const done = act(salon, targetOf(held), { action: 'pull', to })
         salon = done.salon
-        const length = Hand.root(held, salon)!.length
-        if (done.cell && (length - holding.heard >= PULL_EVERY || holding.heard === holding.before)) {
-          holding.heard = length
-          happenings.push({ kind: 'cell', object: held.object, action: 'pull', cell: done.cell, held, at: p, rings: done.rings, piece: null, place: null })
+        const length = Hand.root(held, salon)?.length ?? strip.length
+        // Hair that springs back is drawn out for as long as it is held, and is no longer for it.
+        this.drawnOut = Math.max(0, Math.min(40, to - length))
+        const first = holding.heard === holding.before
+        if (done.cell && (done.sprangBack ? first : length - holding.heard >= PULL_EVERY || first)) {
+          holding.heard = done.sprangBack ? holding.before + 1 : length
+          happenings.push({ kind: 'cell', object: targetOf(held).object as ObjectId, action: 'pull', cell: done.cell, held, at: p, rings: done.rings, piece: salon.clippings.find((c) => !before.includes(c)) ?? null, place: null, sprangBack: done.sprangBack })
         }
-      }
+      } else this.drawnOut = 0
     }
     return { salon, happenings }
   }
@@ -136,7 +175,9 @@ export class Hand {
   tap(salon: Salon, p: Point): Step {
     const holding = this.holding
     this.holding = null
+    this.drawnOut = 0
     if (!holding) return { salon, happenings: [] }
+    if (holding.mode === 'button') return { salon, happenings: [{ kind: 'button', button: holding.button, at: p }] }
     if (holding.mode === 'scissors') return { salon, happenings: [{ kind: 'airSnip', at: blades(p) }, { kind: 'away' }] }
     return this.answer(salon, holding.held, { action: 'poke' }, p, [])
   }
@@ -145,23 +186,37 @@ export class Hand {
   end(salon: Salon, p: Point): Step {
     const holding = this.holding
     this.holding = null
+    this.drawnOut = 0
     if (!holding) return { salon, happenings: [] }
+    if (holding.mode === 'button') return { salon, happenings: [{ kind: 'button', button: holding.button, at: p }] }
     if (holding.mode === 'scissors') return { salon, happenings: [...(holding.cut ? [] : [{ kind: 'airSnip' as const, at: blades(p) }]), { kind: 'away' }] }
     const { held, rub } = holding
     if (rub.ruffled || !holding.dragged) return { salon, happenings: [{ kind: 'letGo', held, at: p }] }
-    // A cheek that was pulled snaps back; a piece that was carried lies where it is let go.
+    // A cheek that was pulled snaps back; a piece that was carried lies where it is let go; the ribbon hangs beside what it was brought to.
     if (held.object === 'face') return this.answer(salon, held, { action: 'pull' }, p, [])
-    if (held.object === 'clipping') return this.answer(salon, held, { action: 'pull', drop: dropPlace(p) }, p, [])
+    if (held.object === 'clipping') return this.answer(salon, held, { action: 'pull', drop: dropPlace(salon, p) }, p, [])
+    if (held.object === 'ribbonClip') return this.bring(salon, p)
     return { salon, happenings: [{ kind: 'letGo', held, at: p }] }
+  }
+
+  /** The ribbon was let go over something: it goes to that thing, or back to its peg when it was let go over nothing. */
+  private bring(salon: Salon, p: Point): Step {
+    // What is under the finger, as if the ribbon itself were not there.
+    const under = whatIsAt({ ...salon, ribbon: null }, p)
+    const held: Held = !under || under.object === 'button' || under.object === 'ribbon' || under.object === 'ribbonClip' ? { object: 'ribbon' } : heldOf(under)
+    const done = act(salon, targetOf(held), { action: 'ribbon' })
+    if (!done.cell) return { salon, happenings: [{ kind: 'letGo', held: { object: 'ribbonClip' }, at: p }] }
+    return { salon: done.salon, happenings: [{ kind: 'cell', object: targetOf(held).object as ObjectId, action: 'ribbon', cell: done.cell, held, at: p, rings: null, piece: null, place: null, sprangBack: false }] }
   }
 
   private answer(salon: Salon, held: Held, deed: Deed, p: Point, happenings: Happening[]): Step {
     const before = salon.clippings
-    const done = act(salon, targetOf(held), deed)
+    const target = targetOf(held)
+    const done = act(salon, target, deed)
     if (!done.cell) return { salon: done.salon, happenings }
     const place = deed.action === 'pull' && deed.drop ? deed.drop : null
     const piece = done.salon.clippings.find((c) => !before.includes(c)) ?? null
-    happenings.push({ kind: 'cell', object: held.object, action: deed.action, cell: done.cell, held, at: p, rings: done.rings, piece, place })
+    happenings.push({ kind: 'cell', object: target.object as ObjectId, action: deed.action, cell: done.cell, held, at: p, rings: done.rings, piece, place, sprangBack: done.sprangBack })
     return { salon: done.salon, happenings }
   }
 
@@ -172,16 +227,16 @@ export class Hand {
     let cutClipping = false
     for (const crossed of crossedBy(salon, holding.last, to)) {
       if (crossed.object === 'face') {
-        // Once for each time the blades come in over the face.
+        // Once for each time the blades come in over a face.
         if (holding.overFace) continue
         holding.overFace = true
-        const done = act(salon, { object: 'face', who: 'chair' }, { action: 'snip', at: 0 })
-        if (done.cell) happenings.push({ kind: 'cell', object: 'face', action: 'snip', cell: done.cell, held: null, at: crossed.where, rings: null, piece: null, place: null })
+        const done = act(salon, { object: 'face', who: crossed.who }, { action: 'snip', at: 0 })
+        if (done.cell) happenings.push({ kind: 'cell', object: 'face', action: 'snip', cell: done.cell, held: { object: 'face', who: crossed.who, part: 'nose' }, at: crossed.where, rings: null, piece: null, place: null, sprangBack: false })
         continue
       }
       // One piece on the floor for each stroke: cutting one moves the others along the list.
       if (crossed.object === 'clipping' && cutClipping) continue
-      const target: Target = crossed.object === 'lock' ? { object: 'lock' } : crossed.object === 'tuft' ? { object: 'tuft', index: crossed.index } : { object: 'clipping', index: crossed.index }
+      const target: Target = crossed.object === 'tuft' ? { object: 'tuft', index: crossed.index } : crossed.object === 'clipping' ? { object: 'clipping', index: crossed.index } : { object: crossed.object }
       const before = salon.clippings
       const done = act(salon, target, { action: 'snip', at: crossed.object === 'clipping' ? 0 : crossed.at })
       if (!done.cell) continue
@@ -189,11 +244,10 @@ export class Hand {
       holding.cut = true
       salon = done.salon
       const piece = crossed.object === 'clipping' ? null : (salon.clippings.find((c) => !before.includes(c)) ?? null)
-      const held: Held | null = crossed.object === 'lock' ? { object: 'lock' } : crossed.object === 'tuft' ? { object: 'tuft', index: crossed.index } : null
-      happenings.push({ kind: 'cell', object: crossed.object, action: 'snip', cell: done.cell, held, at: crossed.where, rings: done.rings, piece, place: null })
+      const held: Held | null = crossed.object === 'tuft' ? { object: 'tuft', index: crossed.index } : crossed.object === 'clipping' ? null : { object: crossed.object }
+      happenings.push({ kind: 'cell', object: crossed.object, action: 'snip', cell: done.cell, held, at: crossed.where, rings: done.rings, piece, place: null, sprangBack: done.sprangBack })
     }
-    const dx = to.x - HEAD.x, dy = to.y - HEAD.y
-    if ((dx * dx) / (HEAD.rx * HEAD.rx) + (dy * dy) / (HEAD.ry * HEAD.ry) > 1) holding.overFace = false
+    if (!overAFace(salon, to)) holding.overFace = false
     holding.last = to
     return { salon, happenings }
   }

@@ -1,40 +1,35 @@
-import type { Guidance } from './guidance'
-import { handPose, type HandPose } from './guidance'
-import type { Hair } from './hair'
+import { drawFigure, pencil, stamp, strip, type Wears } from './figure'
+import { handPose, type Guidance, type HandPose } from './guidance'
+import type { Strand } from './hair'
 import { BLADES } from './hand'
-import { COLLAR_Y, FLOOR_Y, HEAD, LOCK_X, STEP, STRIP_W, fit } from './layout'
-import { LION } from './paintAnimals'
-import { SPOT_Y, clippingBox, tuftPose, type Point } from './poses'
-import type { Puppet } from './puppet'
-import type { Sprite, Sprites } from './sprites'
-import { GRAPHITE, PAPER, type Ctx } from './wash'
-import type { Salon } from './world'
+import { hintFor, type Hint } from './ladder'
+import { CHAIR, COLLAR_Y, DOOR, FLOOR_Y, HEAD, STEP, STRIP_W, fit } from './layout'
+import { FLUFF, LOOKS, RIBBON, hueOf } from './looks'
+import type { Play } from './play'
+import { SPOT_Y, clippingBox, onHead, placesOf, ribbonShape, tuftPose, tuftTip, type Point } from './poses'
+import { TAIL_LEN } from './rules'
+import { TAIL_OF_CUSTOMER, tailOf } from './scenes'
+import type { Sprites } from './sprites'
+import { WINDOW, type Shown } from './staging'
+import type { CustomerId } from './tastes'
+import { GRAPHITE, type Ctx } from './wash'
+import type { Salon, Who } from './world'
 
-// One frame of the toy. The painted pieces are stamped where the puppet and
-// the hair say they are; the plain pieces (the lock and the clippings) and
-// the face's features are drawn fresh, flat, each frame, which is cheap and
-// lets them change length and expression freely. Returns how many pieces it
+// One frame of the game. The painted pieces are stamped where the staging,
+// the puppets and the hair say they are; the plain pieces (the three strips
+// and the clippings) and the faces' features are drawn fresh, flat, each
+// frame, which is cheap and lets them change length and expression freely.
+// Nothing here decides anything: it only draws. Returns how many pieces it
 // drew, for the grown-up overlay.
 
-const INK = '#3b3136'
-/** How far above the collar the lock comes out of the mane. */
-const ROOT = 44
 const STEEL = '#cfd2dc', STEEL_EDGE = '#8a8fa0', HANDLE = '#ee7c62'
-const HUE: Record<string, { fill: string; edge: string }> = {
-  lion: { fill: LION.lock, edge: LION.lockEdge },
-  poodle: { fill: '#e4588c', edge: '#a8366a' },
-  yak: { fill: '#8a5a3a', edge: '#5d3a22' },
-  rabbit: { fill: '#b9aea6', edge: '#857a72' },
-  ribbon: { fill: '#3fa58f', edge: '#27705f' },
-}
+const PANE = '#fbeeb5', PANE_EDGE = '#e0c66a', DOORWAY = '#5f8f82'
+/** How far above the line its length is taken from a lock comes out of the mane. */
+const ROOT = 44
 
 export type Frame = {
-  salon: Salon | null
-  puppet: Puppet
-  hair: Hair
+  play: Play
   guidance: Guidance | null
-  /** Seconds of play, for the things that breathe. */
-  time: number
 }
 
 const pose: HandPose = { travel: 0, press: 0, opacity: 0 }
@@ -45,96 +40,154 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   g.globalAlpha = 1
   g.globalCompositeOperation = 'source-over'
   g.drawImage(sprites.backdrop.canvas, 0, 0)
-  const { salon, puppet, hair } = frame
-  // Before the slot has been read, and with nobody in the chair, the room is all there is.
-  if (!salon || salon.chair === null) return drawn
-
+  const { play } = frame
+  const game = play.game
+  // Before the slot has been read the room is all there is.
+  if (!game) return drawn
+  const { staging, hair } = play
   const f = fit(width, height)
   g.setTransform(f.scale, 0, 0, f.scale, f.dx, f.dy)
-  const stamp = (sprite: Sprite): void => { g.drawImage(sprite.sheet.canvas, sprite.box.x, sprite.box.y, sprite.box.w, sprite.box.h); drawn++ }
-  const breath = Math.sin(puppet.breath * Math.PI * 2)
-
-  // The tail, behind the cape: a pencil line and its tuft, which swishes.
-  const swish = puppet.at('tail') * 0.55, tailX = 276 + Math.sin(swish) * 26, tailY = FLOOR_Y - 150 - Math.abs(Math.sin(swish)) * 8
-  pencil(g, [{ x: 322, y: FLOOR_Y - 20 }, { x: 268, y: FLOOR_Y - 46 }, { x: 250 + Math.sin(swish) * 10, y: FLOOR_Y - 108 }, { x: tailX, y: tailY }], 1.6)
-  g.save()
-  g.translate(tailX, tailY)
-  g.rotate(0.5 + swish)
-  stamp(sprites.tailTuft)
-  g.restore()
-
-  // The head: everything on it moves with it.
-  const headX = HEAD.x + puppet.lean.x.x + puppet.cheek.x.x * 0.3
-  const headY = HEAD.y + puppet.lean.y.x + puppet.cheek.y.x * 0.3 + puppet.at('sink') * 64 + puppet.at('bob') * 12 + breath * 1.6
-  g.save()
-  g.translate(headX, headY)
-  g.rotate(puppet.at('tilt') * 0.17)
-  const count = salon.mane.length
-  salon.mane.forEach((steps, index) => {
-    const tuft = hair.tufts[index]
-    if (!tuft) return
-    const at = tuftPose(index, steps, count)
-    const painted = sprites.tuft(index, steps, count, hair.holdsTuft === index)
-    const frizz = 1 + tuft.frizz * 0.22
+  const hint = hintFor(game, frame.guidance, play.inScene)
+  const breathe = 0.8 + 0.2 * Math.sin(play.time * 2.4)
+  const glowOn = (name: Hint['glow'][number]): number => (hint.glow.includes(name) ? (frame.guidance?.glow ?? 0) * breathe : 0)
+  const light = (x: number, y: number, w: number, h: number, strength: number): void => {
+    if (strength <= 0) return
     g.save()
-    g.translate(at.base.x, at.base.y)
-    g.rotate(at.angle + tuft.lean.x + tuft.frizz * 0.25 * Math.sin(frame.time * 31 + index * 2.3))
-    // A tuft that is longer or shorter than its sheet is stretched along itself until it is painted again.
-    g.scale(frizz, (at.reach / tuftPose(index, painted.steps, count).reach) * Math.max(0.3, tuft.stretch.x) * frizz)
-    stamp(painted.sprite)
-    g.restore()
-  })
-  stamp(sprites.ruff)
-  for (const side of [-1, 1]) {
-    g.save()
-    g.translate(side * 78, -60)
-    g.scale(side, 1)
-    g.rotate(puppet.at(side < 0 ? 'earL' : 'earR') * 0.42)
-    stamp(sprites.ear)
+    g.globalAlpha = strength
+    g.translate(x, y)
+    g.scale(w / 120, h / 120)
+    drawn += stamp(g, sprites.glow)
     g.restore()
   }
-  // A pulled cheek draws the whole face out like dough.
-  const cx = puppet.cheek.x.x, cy = puppet.cheek.y.x
-  g.save()
-  g.transform(1 + Math.abs(cx) / 230, 0, 0, 1 + Math.abs(cy) / 230 - breath * 0.006, cx * 0.25, cy * 0.25)
-  stamp(sprites.face)
-  drawn += features(g, puppet)
-  for (const piece of salon.clippings) if (piece.on === 'face' && piece.who === 'chair' && !hair.flights.has(piece) && hair.carried?.piece !== piece) drawn += strip(g, 0, SPOT_Y[piece.spot], (piece.len * STEP) / 2, 0, piece.hue)
-  g.restore()
-  g.restore()
 
-  // The cape, over the chin when he ducks; it breathes a little.
-  g.save()
-  g.translate(HEAD.x, COLLAR_Y)
-  g.scale(1 + breath * 0.004, 1 + breath * 0.006)
-  g.translate(-HEAD.x, -COLLAR_Y)
-  stamp(sprites.cape)
-  g.restore()
+  // The door: its pane, who waits behind it under their rain hats, and the doorway when it stands open.
+  light(DOOR.x + DOOR.w / 2, DOOR.y + DOOR.h / 2, DOOR.w * 1.5, DOOR.h * 1.25, glowOn('door'))
+  drawn += door(g, sprites, play, game)
 
-  // While the ghost hand shows a pull, the lock goes with it a little way and comes back: it is shown, not done.
-  const shown = ghostPull(frame, salon)
-  drawn += glow(g, sprites, frame, salon)
-  drawn += lock(g, salon, hair, frame.time, shown)
+  const places = placesOf(game)
+  const shape = ribbonShape(game)
+  const carriedRibbon = hair.carried?.what === 'ribbon'
+  const chair = game.chair, friend = game.friend
+  const customerAt = staging.customer, friendAt = staging.friend
+  const caped = staging.cape
+
+  if (chair && friend && customerAt && friendAt && places.customer && places.friend) {
+    const look = LOOKS[chair]
+    const inChair = customerAt.x === places.customer.x && customerAt.y === places.customer.y
+    // The chair and the light on it, when it is the thing to touch.
+    light(CHAIR.x, 440, 420, 420, glowOn('chair'))
+    // Off the customer, the cape hangs over the chair behind the pair.
+    if (caped < 1 && inChair) {
+      g.save()
+      g.globalAlpha = 1 - caped
+      drawn += stamp(g, sprites.drape)
+      g.restore()
+    }
+    drawn += tail(g, sprites, chair, inChair ? { x: 322, y: FLOOR_Y - 20 } : { x: customerAt.x - 60 * customerAt.s, y: customerAt.y + 250 * customerAt.s }, inChair ? TAIL_OF_CUSTOMER : null, play.customer()?.at('tail') ?? 0, staging.tails, customerAt.s)
+
+    const wearsOf = (who: Who): Wears => ({
+      pieces: game.clippings.filter((c) => c.on === 'face' && c.who === who && !hair.flights.has(c) && hair.carried?.what !== c).map((c) => (c.on === 'face' ? { y: SPOT_Y[c.spot], half: (c.len * STEP) / 2, hue: c.hue } : { y: 0, half: 0, hue: c.hue })),
+      blindfold: !carriedRibbon && staging.ribbon === null && shape?.kind === 'worn' && shape.as === 'blindfold' && game.ribbon?.at === 'face' && game.ribbon.who === who,
+      hat: staging.hats,
+    })
+    const customer = play.customer(), other = play.friend()
+    if (customer) drawn += drawFigure(g, sprites, { who: chair, puppet: customer, at: customerAt, mane: { steps: game.mane, hair }, body: 1 - caped, wears: wearsOf('chair'), time: play.time })
+
+    // The cape, over the chin when the customer ducks; it breathes a little. In the air it rises and fades.
+    if (caped > 0 && inChair) {
+      const breath = Math.sin((customer?.breath ?? 0) * Math.PI * 2)
+      g.save()
+      g.globalAlpha = Math.min(1, caped * 1.4)
+      g.translate(HEAD.x, COLLAR_Y - (1 - caped) * 240)
+      g.rotate((1 - caped) * -0.5)
+      g.scale(1 + breath * 0.004, 1 + breath * 0.006)
+      g.translate(-HEAD.x, -COLLAR_Y)
+      drawn += stamp(g, sprites.cape)
+      g.restore()
+      if (places.knot && caped >= 1) {
+        light(places.knot.x, places.knot.y + 8, 150, 150, glowOn('knot'))
+        const give = play.pressed === 'knot' ? 0.86 : 1
+        g.save()
+        g.translate(places.knot.x, places.knot.y)
+        g.scale(give, give)
+        drawn += stamp(g, sprites.knot)
+        g.restore()
+      }
+    }
+
+    // The friend, in front of the customer's mane where the two meet, with a paw on the top of its own lock.
+    drawn += tail(g, sprites, friend, { x: friendAt.x + 44 * friendAt.s, y: friendAt.y + 300 * friendAt.s }, tailOf(friendAt), other?.at('tail') ?? 0, staging.tails, friendAt.s)
+    if (other) drawn += drawFigure(g, sprites, { who: friend, puppet: other, at: friendAt, mane: null, body: 1, wears: wearsOf('friend'), time: play.time })
+
+    // The three strips. The friend's lock goes with the friend while it is on its way somewhere.
+    if (staging.hats < 0.5 && places.lock && places.model) {
+      const dx = friendAt.x - places.friend.x, dy = friendAt.y - places.friend.y - friendAt.lift
+      const modelRoot = { x: places.model.x + dx, y: places.model.y + dy }
+      const lockLength = game.lock + (hair.holds === 'lock' ? play.hand.drawnOut : 0), modelLength = game.model + (hair.holds === 'model' ? play.hand.drawnOut : 0)
+      const even = Math.min(game.lock, game.model) * STEP
+      light(places.lock.x, places.lock.y + Math.max(60, game.lock * STEP) / 2, 114, Math.max(60, game.lock * STEP) + 70, glowOn('lock'))
+      if (shape && !carriedRibbon && staging.ribbon === null && shape.kind === 'hang' && game.ribbon && game.ribbon.at !== 'peg') {
+        const root = game.ribbon.at === 'model' ? { x: shape.root.x + dx, y: shape.root.y + dy } : shape.root
+        drawn += hanging(g, root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, 0, true)
+      }
+      drawn += hanging(g, places.lock, lockLength * places.lock.unit, hair.strands.lock, play.time, { fill: look.lock, edge: look.lockEdge }, ROOT, staging.fx ? even : 0, false)
+      drawn += hanging(g, modelRoot, modelLength * places.model.unit, hair.strands.model, play.time, { fill: LOOKS[friend].lock, edge: LOOKS[friend].lockEdge }, 0, staging.fx ? even : 0, false)
+      // The friend's paw, holding the top of its lock out where the customer can see it.
+      g.fillStyle = LOOKS[friend].fur
+      g.strokeStyle = LOOKS[friend].furEdge
+      g.lineWidth = 2
+      g.beginPath()
+      g.arc(modelRoot.x, modelRoot.y - 2, 15, 0, Math.PI * 2)
+      g.fill()
+      g.stroke()
+      drawn++
+      // A bow at the end of a tuft.
+      if (shape && !carriedRibbon && staging.ribbon === null && shape.kind === 'worn' && shape.as === 'bow') drawn += bow(g, shape.at.x, shape.at.y, 0)
+    }
+
+    if (staging.paw && customer) drawn += paw(g, chair, staging.paw, game)
+  }
+
+  // The pair that was done, on their way out.
+  staging.leaving.forEach((goer, i) => {
+    const puppet = play.leaving[i]
+    if (puppet) drawn += drawFigure(g, sprites, { who: goer.who, puppet, at: goer.at, mane: null, body: 1, wears: { pieces: [], blindfold: false, hat: 0 }, time: play.time })
+  })
+
+  // The ribbon on its peg, on the floor, or where a showing has it.
+  if (game.ribbon && !carriedRibbon) {
+    if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true)
+    else if (shape?.kind === 'hang' && game.ribbon.at === 'peg') drawn += hanging(g, shape.root, game.ribbon.len * shape.unit, hair.strands.ribbon, play.time, RIBBON, 0, 0, true)
+    else if (shape?.kind === 'lie') {
+      drawn += strip(g, shape.from.x + (game.ribbon.len * shape.unit) / 2, shape.from.y, (game.ribbon.len * shape.unit) / 2, 0, 'ribbon')
+      drawn += clip(g, shape.from.x - 8, shape.from.y, Math.PI / 2)
+    }
+  } else if (staging.ribbon) drawn += hanging(g, staging.ribbon, staging.ribbon.len * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true)
 
   // The pieces that lie still on the floor are drawn together, one path for each colour; a piece in the air is drawn by itself.
   const lying = new Map<string, { x: number; y: number; half: number; turn: number }[]>()
-  salon.clippings.forEach((piece, index) => {
-    if (piece.on !== 'floor' || hair.carried?.piece === piece) return
+  game.clippings.forEach((piece, index) => {
+    if (hair.carried?.what === piece) return
     const flight = hair.flights.get(piece)
     if (flight) { drawn += strip(g, flight.x, flight.y, (piece.len * STEP) / 2, flight.turn, piece.hue); return }
-    const box = clippingBox(piece)
+    if (piece.on !== 'floor') return
+    const box = clippingBox(game, piece)
+    if (!box) return
     const group = lying.get(piece.hue) ?? []
     group.push({ x: box.x, y: box.y, half: box.half, turn: ((index % 5) - 2) * 0.05 })
     lying.set(piece.hue, group)
   })
   for (const [hue, group] of lying) drawn += strips(g, group, hue)
-  for (const [piece, flight] of hair.flights) if (piece.on === 'face') drawn += strip(g, flight.x, flight.y, (piece.len * STEP) / 2, flight.turn, piece.hue)
-  if (hair.carried) drawn += strip(g, hair.carried.at.x, hair.carried.at.y - 18, (hair.carried.piece.len * STEP) / 2, Math.sin(frame.time * 26) * 0.22, hair.carried.piece.hue)
+  if (hair.carried) {
+    const at = hair.carried.at, wriggle = Math.sin(play.time * 26) * 0.22
+    if (hair.carried.what === 'ribbon') drawn += hanging(g, { x: at.x, y: at.y - 6 }, (game.ribbon?.len ?? 20) * STEP, hair.strands.ribbon, play.time, RIBBON, 0, 0, true)
+    else drawn += strip(g, at.x, at.y - 18, (hair.carried.what.len * STEP) / 2, wriggle, hair.carried.what.hue)
+  }
 
   for (const puff of hair.puffs) {
     const fade = 1 - puff.age / puff.life
     g.globalAlpha = Math.max(0, fade) * 0.85
-    g.fillStyle = puff.hue
+    g.fillStyle = puff.hue.startsWith('#') ? puff.hue : puff.hue === 'fluff' ? FLUFF : LOOKS[puff.hue as CustomerId]?.mane ?? FLUFF
     g.beginPath()
     g.arc(puff.x, puff.y, puff.r * (puff.rolls ? fade : 1 + (1 - fade) * 0.6), 0, Math.PI * 2)
     g.fill()
@@ -144,38 +197,156 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
 
   if (hair.scissors.shown > 0) drawn += scissors(g, hair.scissors.at, hair.scissors.open.x, hair.scissors.shown)
   // The ghost hand is drawn last, over what it shows.
-  drawn += ghost(g, frame, salon)
+  drawn += ghost(g, frame, hint, game)
   g.setTransform(1, 0, 0, 1, 0, 0)
   return drawn
 }
 
-/** A pencil line through some points. */
-function pencil(g: Ctx, points: readonly Point[], weight = 1.2, alpha = 0.6): void {
+/** The door's pane, the next pair behind it under their rain hats, and the dark of the doorway as the door swings open. */
+function door(g: Ctx, sprites: Sprites, play: Play, game: Salon): number {
+  const { staging } = play
+  let drawn = 0
+  const w = DOOR.window
+  const nudge = play.pressed === 'door' ? 3 : 0
   g.save()
-  g.strokeStyle = GRAPHITE
-  g.globalAlpha *= alpha
-  g.lineWidth = weight
-  g.lineCap = 'round'
-  g.lineJoin = 'round'
   g.beginPath()
-  g.moveTo(points[0].x, points[0].y)
-  for (let i = 1; i < points.length - 1; i++) g.quadraticCurveTo(points[i].x, points[i].y, (points[i].x + points[i + 1].x) / 2, (points[i].y + points[i + 1].y) / 2)
-  g.lineTo(points[points.length - 1].x, points[points.length - 1].y)
-  g.stroke()
+  g.arc(w.x + nudge, w.y, w.r, 0, Math.PI * 2)
+  g.fillStyle = PANE
+  g.fill()
+  drawn++
+  if (staging.waiting > 0 && play.waiting) {
+    g.clip()
+    game.waiting.forEach((who, i) => {
+      const puppet = play.waiting?.[i]
+      if (!puppet) return
+      const at: Shown = { ...WINDOW[i], x: WINDOW[i].x + nudge, lift: 0, seen: staging.waiting }
+      drawn += drawFigure(g, sprites, { who, puppet, at, mane: null, body: 0, wears: { pieces: [], blindfold: false, hat: 1 }, time: play.time })
+    })
+  }
   g.restore()
+  g.strokeStyle = PANE_EDGE
+  g.lineWidth = 3
+  g.beginPath()
+  g.arc(w.x + nudge, w.y, w.r, 0, Math.PI * 2)
+  g.stroke()
+  drawn++
+  if (staging.door > 0) {
+    // Open, the door shows the dark of the doorway, from its hinge side across.
+    g.fillStyle = DOORWAY
+    g.fillRect(DOOR.x + DOOR.w * (1 - staging.door), DOOR.y + 4, DOOR.w * staging.door, DOOR.h - 6)
+    drawn++
+  }
+  return drawn
 }
 
-/** A flat strip lying about a point: a clipping, or a worn piece. One colour and a darker rim. */
-function strip(g: Ctx, x: number, y: number, half: number, turn: number, hue: string): number {
-  const colour = HUE[hue] ?? HUE.lion, h = STRIP_W / 2
+/**
+ * A strip that hangs from a root: as long as it is, swinging, fanned out
+ * while it is ruffled. `above` draws where a lock comes out of the mane above
+ * the line its length is taken from. `kickFrom` bends the end of it aside
+ * from that far down: the piece of a lock that reaches past its model, when
+ * the cape has come off. `clipped` draws the ribbon's clip at its top.
+ */
+function hanging(g: Ctx, root: Point, length: number, strand: Strand, time: number, colour: { fill: string; edge: string }, above: number, kickFrom: number, clipped: boolean): number {
+  const half = STRIP_W / 2
+  const long = Math.max(6, length * Math.max(0.3, strand.stretch.x))
+  let drawn = 0
+  g.fillStyle = colour.fill
+  g.strokeStyle = colour.edge
+  g.lineWidth = 2
+  if (above > 0) {
+    g.beginPath()
+    g.moveTo(root.x - half * 0.55, root.y - above)
+    g.lineTo(root.x + half * 0.55, root.y - above)
+    g.lineTo(root.x + half, root.y + 1)
+    g.lineTo(root.x - half, root.y + 1)
+    g.closePath()
+    g.fill()
+    g.stroke()
+    drawn += 2
+  }
+  const strands = strand.flutter > 0 ? 3 : 1
+  for (let i = 0; i < strands; i++) {
+    const spread = strands === 1 ? 0 : (i - 1) * 0.3 * strand.flutter + Math.sin(time * 38 + i * 2.1) * 0.07 * strand.flutter
+    const w = strands === 1 ? half : half * 0.62
+    const bend = kickFrom > 0 && long > kickFrom + 8 && strands === 1
+    const first = bend ? kickFrom : long
+    g.save()
+    g.translate(root.x, root.y)
+    g.rotate(-(strand.swing.x + spread))
+    g.fillStyle = colour.fill
+    g.strokeStyle = colour.edge
+    g.lineWidth = 2
+    g.beginPath()
+    g.moveTo(-w, 0)
+    g.lineTo(w, 0)
+    if (bend) {
+      g.lineTo(w, first)
+      g.lineTo(-w, first)
+    } else {
+      g.lineTo(w, first - Math.min(w, first))
+      g.arc(0, first - Math.min(w, first), w, 0, Math.PI)
+    }
+    g.closePath()
+    g.fill()
+    g.stroke()
+    drawn += 2
+    if (bend) {
+      // The piece past the other lock's end: the part things happen to.
+      const rest = long - first
+      g.translate(0, first)
+      g.rotate(-(strand.kick.x * 0.5 + Math.sin(time * 9) * 0.05))
+      g.beginPath()
+      g.moveTo(-w, 0)
+      g.lineTo(w, 0)
+      g.lineTo(w, rest - Math.min(w, rest))
+      g.arc(0, rest - Math.min(w, rest), w, 0, Math.PI)
+      g.closePath()
+      g.fill()
+      g.stroke()
+      drawn += 2
+    }
+    g.restore()
+  }
+  if (clipped) drawn += clip(g, root.x, root.y - 12, 0)
+  return drawn
+}
+
+/** The ribbon's clip: a small wooden peg, the part the ribbon is carried by. */
+function clip(g: Ctx, x: number, y: number, turn: number): number {
   g.save()
   g.translate(x, y)
   g.rotate(turn)
-  g.fillStyle = colour.fill
-  g.strokeStyle = colour.edge
-  g.lineWidth = 2.4
+  g.fillStyle = RIBBON.clip
+  g.strokeStyle = RIBBON.clipEdge
+  g.lineWidth = 2
   g.beginPath()
-  g.rect(-half, -h, half * 2, h * 2)
+  g.rect(-11, -22, 22, 40)
+  g.fill()
+  g.stroke()
+  g.restore()
+  return 2
+}
+
+/** The ribbon tied as a bow: two loops, a knot and two short ends. */
+function bow(g: Ctx, x: number, y: number, turn: number): number {
+  g.save()
+  g.translate(x, y)
+  g.rotate(turn)
+  g.fillStyle = RIBBON.fill
+  g.strokeStyle = RIBBON.edge
+  g.lineWidth = 2.2
+  g.beginPath()
+  for (const side of [-1, 1]) {
+    g.moveTo(0, 0)
+    g.quadraticCurveTo(side * 26, -30, side * 38, -6)
+    g.quadraticCurveTo(side * 30, 16, 0, 0)
+    g.moveTo(side * 3, 4)
+    g.lineTo(side * 18, 30)
+    g.lineTo(side * 6, 32)
+    g.closePath()
+  }
+  g.moveTo(9, 0)
+  g.arc(0, 0, 9, 0, Math.PI * 2)
   g.fill()
   g.stroke()
   g.restore()
@@ -184,7 +355,7 @@ function strip(g: Ctx, x: number, y: number, half: number, turn: number, hue: st
 
 /** Several flat strips of one colour in one path: the pieces that lie on the floor. */
 function strips(g: Ctx, group: readonly { x: number; y: number; half: number; turn: number }[], hue: string): number {
-  const colour = HUE[hue] ?? HUE.lion, h = STRIP_W / 2
+  const colour = hueOf(hue), h = STRIP_W / 2
   g.fillStyle = colour.fill
   g.strokeStyle = colour.edge
   g.lineWidth = 2.4
@@ -203,179 +374,108 @@ function strips(g: Ctx, group: readonly { x: number; y: number; half: number; tu
   return 2
 }
 
-/** The lock: a flat strip from the collar, as long as the model says, swinging from its root. Fanned out while it is ruffled. */
-function lock(g: Ctx, salon: Salon, hair: Hair, time: number, shownPull = 0): number {
-  const colour = HUE[salon.chair ?? 'lion'] ?? HUE.lion
-  const length = Math.max(6, salon.lock * STEP * Math.max(0.3, hair.lockStretch.x)) + shownPull, half = STRIP_W / 2
-  const strands = hair.lockFlutter > 0 ? 3 : 1
-  let drawn = 0
-  // Where the lock comes down out of the mane, above the collar. This part does not swing, and is no part of the
-  // lock's length: the collar is the line its length is taken from.
-  g.fillStyle = colour.fill
-  g.strokeStyle = colour.edge
+/**
+ * A tail: a pencil line from where it leaves the body to its end, which
+ * swishes. Held out to be measured (`out` from 0 to 1) it hangs straight
+ * down from `straight`, as long as the ribbon is made.
+ */
+function tail(g: Ctx, sprites: Sprites, who: CustomerId, from: Point, straight: Point | null, swish: number, out: number, s: number): number {
+  const end = sprites.animal(who).tailEnd
+  const held = straight ? out : 0
+  const sway = swish * 0.55
+  const tipX = from.x + (-46 + Math.sin(sway) * 26) * s, tipY = from.y - (130 + Math.abs(Math.sin(sway)) * 8) * s
+  const long = TAIL_LEN * STEP
+  const x = straight ? tipX + (straight.x - tipX) * held : tipX
+  const y = straight ? tipY + (straight.y + long - tipY) * held : tipY
+  const rootX = straight ? from.x + (straight.x - from.x) * held : from.x, rootY = straight ? from.y + (straight.y - from.y) * held : from.y
+  pencil(g, [{ x: rootX, y: rootY }, { x: rootX + (x - rootX) * 0.5 - 30 * s * (1 - held), y: rootY + (y - rootY) * 0.4 }, { x, y }], 1.6 + held * 4, 0.6 + held * 0.3)
+  g.save()
+  g.translate(x, y)
+  g.rotate((0.5 + sway) * (1 - held) + Math.PI * held)
+  g.scale(s, s)
+  const drawn = stamp(g, end)
+  g.restore()
+  return drawn + 1
+}
+
+/** The customer's paw showing a move on a tuft of its own mane: it goes to the tuft, and nips it or tugs it. */
+function paw(g: Ctx, who: CustomerId, showing: { kind: 'snip' | 'pull'; tuft: number; progress: number }, game: Salon): number {
+  const look = LOOKS[who], head = { x: HEAD.x, y: HEAD.y, s: 1 }
+  const tuftAt = tuftPose(who, showing.tuft, game.mane[showing.tuft] ?? 30, game.mane.length), tip = tuftTip(tuftAt)
+  const mid = onHead(head, { x: tuftAt.base.x + (tip.x - tuftAt.base.x) * 0.7, y: tuftAt.base.y + (tip.y - tuftAt.base.y) * 0.7 })
+  const from = { x: HEAD.x - 150, y: COLLAR_Y + 10 }
+  const reach = Math.min(1, showing.progress / 0.5)
+  const tug = showing.kind === 'pull' ? Math.max(0, (showing.progress - 0.5) / 0.5) * 26 : 0
+  const x = from.x + (mid.x - from.x) * reach + Math.sin(tuftAt.angle) * tug, y = from.y + (mid.y - from.y) * reach - Math.cos(tuftAt.angle) * tug
+  pencil(g, [from, { x: (from.x + x) / 2 - 20, y: (from.y + y) / 2 }, { x, y }], 9, 0.5)
+  g.fillStyle = look.fur
+  g.strokeStyle = look.furEdge
   g.lineWidth = 2
   g.beginPath()
-  g.moveTo(LOCK_X - half * 0.55, COLLAR_Y - ROOT)
-  g.lineTo(LOCK_X + half * 0.55, COLLAR_Y - ROOT)
-  g.lineTo(LOCK_X + half, COLLAR_Y + 1)
-  g.lineTo(LOCK_X - half, COLLAR_Y + 1)
-  g.closePath()
+  g.arc(x, y, 18, 0, Math.PI * 2)
   g.fill()
   g.stroke()
-  drawn += 2
-  for (let i = 0; i < strands; i++) {
-    const spread = strands === 1 ? 0 : (i - 1) * 0.3 * hair.lockFlutter + Math.sin(time * 38 + i * 2.1) * 0.07 * hair.lockFlutter
-    const w = strands === 1 ? half : half * 0.62
-    g.save()
-    g.translate(LOCK_X, COLLAR_Y)
-    g.rotate(-(hair.lockSwing.x + spread))
-    g.fillStyle = colour.fill
-    g.strokeStyle = colour.edge
-    g.lineWidth = 2
-    g.beginPath()
-    g.moveTo(-w, 0)
-    g.lineTo(w, 0)
-    g.lineTo(w, length - Math.min(w, length))
-    g.arc(0, length - Math.min(w, length), w, 0, Math.PI)
-    g.closePath()
-    g.fill()
-    g.stroke()
-    g.strokeStyle = GRAPHITE
-    g.globalAlpha = 0.5
-    g.lineWidth = 1.1
-    g.stroke()
-    g.restore()
-    drawn += 3
-  }
+  let drawn = 3
+  if (showing.kind === 'snip') drawn += scissors(g, { x: x + 16, y: y - BLADES.y - 6 }, showing.progress > 0.92 ? 0 : 1, Math.min(1, reach) * 0.9, 0.6)
   return drawn
 }
 
-/** The face: eyes, brows, nose, mouth and whiskers, in pencil and a few dark dots, where the puppet's parts put them. */
-function features(g: Ctx, puppet: Puppet): number {
-  const blink = Math.max(0, Math.min(1, puppet.at('blink'))), wide = puppet.at('wide'), cross = puppet.at('cross')
-  const lookX = puppet.at('lookX') * 9, lookY = puppet.at('lookY') * 8, brow = puppet.at('brow')
-  for (const side of [-1, 1]) {
-    const ex = side * 40 + lookX - side * cross * 15, ey = -14 + lookY
-    const r = 13 * (1 + wide * 0.3)
-    if (blink > 0.75) pencil(g, [{ x: ex - 15, y: ey }, { x: ex, y: ey + 7 }, { x: ex + 15, y: ey }], 2.4, 0.9)
-    else {
-      g.fillStyle = INK
-      g.beginPath()
-      g.ellipse(ex, ey + blink * 4, r, r * (1 - blink * 0.85), 0, 0, Math.PI * 2)
-      g.fill()
-      g.fillStyle = PAPER
-      g.beginPath()
-      g.arc(ex - 4, ey - 4, 4.2, 0, Math.PI * 2)
-      g.fill()
-    }
-    // Brows: the inner end goes up when he wonders and down when he is cross-eyed with effort.
-    pencil(g, [{ x: side * 40 - 19, y: -44 - brow * 7 + side * 2 - side * brow * 5 }, { x: side * 40, y: -51 - brow * 12 }, { x: side * 40 + 19, y: -44 - brow * 7 - side * 2 + side * brow * 5 }], 2, 0.8)
-  }
-  const nx = puppet.at('nose') * 3.5
-  g.fillStyle = LION.nose
-  g.beginPath()
-  g.moveTo(-15 + nx, 18)
-  g.quadraticCurveTo(nx, 12, 15 + nx, 18)
-  g.quadraticCurveTo(8 + nx, 33, nx, 34)
-  g.quadraticCurveTo(-8 + nx, 33, -15 + nx, 18)
-  g.fill()
-  // The mouth: a curve that smiles or droops, and opens.
-  const smile = puppet.at('smile'), open = Math.max(0, puppet.at('mouthOpen'))
-  pencil(g, [{ x: nx, y: 34 }, { x: 0, y: 44 }], 1.3, 0.7)
-  if (open > 0.08) {
-    g.fillStyle = '#a5483a'
-    g.beginPath()
-    g.ellipse(0, 52 + open * 9, 15 + open * 7, 4 + open * 17, 0, 0, Math.PI * 2)
-    g.fill()
-  }
-  pencil(g, [{ x: -27, y: 47 - smile * 11 }, { x: -11, y: 46 + smile * 6 }, { x: 0, y: 44 }, { x: 11, y: 46 + smile * 6 }, { x: 27, y: 47 - smile * 11 }], 2, 0.85)
-  g.fillStyle = INK
-  g.beginPath()
-  for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
-    const wx = side * (34 + i * 9) + nx * 0.5, wy = 40 + (i % 2) * 6
-    g.moveTo(wx + 1.7, wy)
-    g.arc(wx, wy, 1.7, 0, Math.PI * 2)
-  }
-  g.fill()
-  // Two eyes of two marks each, two brows, the nose, three marks for the mouth and the whiskers.
-  return 11
-}
-
 /** The scissors in the hand: two flat blades that cross above the finger, and two loops, big enough to read as scissors at a glance. */
-function scissors(g: Ctx, at: Point, open: number, shown: number): number {
+function scissors(g: Ctx, at: Point, open: number, shown: number, size = 1): number {
   const angle = 0.12 + Math.max(0, open) * 0.4
   g.save()
   g.globalAlpha = shown
   g.translate(at.x + BLADES.x, at.y + BLADES.y)
+  g.scale(size, size)
   g.rotate(-0.5)
-  for (const side of [-1, 1]) {
-    g.save()
-    g.rotate(side * angle)
-    g.fillStyle = STEEL
-    g.strokeStyle = STEEL_EDGE
-    g.lineWidth = 2.2
-    g.beginPath()
-    g.moveTo(-9, 14)
-    g.lineTo(-1, -84)
-    g.quadraticCurveTo(7, -60, 10, 14)
-    g.closePath()
-    g.fill()
-    g.stroke()
-    g.strokeStyle = HANDLE
-    g.lineWidth = 9
-    g.beginPath()
-    g.ellipse(side * 5, 46, 16, 22, 0, 0, Math.PI * 2)
-    g.stroke()
-    g.restore()
-  }
-  g.fillStyle = STEEL_EDGE
+  const turned = (side: number, x: number, y: number): Point => { const c = Math.cos(side * angle), s = Math.sin(side * angle); return { x: x * c - y * s, y: x * s + y * c } }
+  // Both loops in one stroke, then both blades in one path over them.
+  g.strokeStyle = HANDLE
+  g.lineWidth = 9
   g.beginPath()
-  g.arc(0, 0, 4.5, 0, Math.PI * 2)
+  for (const side of [-1, 1]) { const c = turned(side, side * 5, 46); g.moveTo(c.x + 16, c.y); g.ellipse(c.x, c.y, 16, 22, side * angle, 0, Math.PI * 2) }
+  g.stroke()
+  g.fillStyle = STEEL
+  g.strokeStyle = STEEL_EDGE
+  g.lineWidth = 2.2
+  g.beginPath()
+  for (const side of [-1, 1]) {
+    const a = turned(side, -9, 14), tip = turned(side, -1, -84), bulge = turned(side, 7, -60), b = turned(side, 10, 14)
+    g.moveTo(a.x, a.y)
+    g.lineTo(tip.x, tip.y)
+    g.quadraticCurveTo(bulge.x, bulge.y, b.x, b.y)
+    g.closePath()
+  }
   g.fill()
+  g.stroke()
   g.restore()
-  return 5
-}
-
-/** How far the lock is drawn out by the ghost hand's pull, in scene units: with the hand while it presses, and back. */
-function ghostPull(frame: Frame, salon: Salon): number {
-  const guidance = frame.guidance
-  if (!guidance || guidance.demo === null || guidance.demoIndex % 2 === 1 || salon.lock > 90) return 0
-  handPose(guidance.demo, true, pose)
-  return pose.travel * pose.press * 60
-}
-
-/** The idle ladder's first form, its first step: a breathing glow behind the lock, tight on it, so it marks one thing and does not haze the scene. */
-function glow(g: Ctx, sprites: Sprites, frame: Frame, salon: Salon): number {
-  const strength = frame.guidance?.glow ?? 0
-  if (strength <= 0) return 0
-  const length = Math.max(60, salon.lock * STEP)
-  g.save()
-  g.globalAlpha = strength * (0.8 + 0.2 * Math.sin(frame.time * 2.4))
-  g.translate(LOCK_X, COLLAR_Y + length / 2)
-  g.scale(0.95, (length + 70) / 120)
-  g.drawImage(sprites.glow.sheet.canvas, sprites.glow.box.x, sprites.glow.box.y, sprites.glow.box.w, sprites.glow.box.h)
-  g.restore()
-  return 1
+  return 3
 }
 
 /**
- * Its second step: a ghost hand that shows one move. The toy has no answer
- * to give away, so the hand shows the verb on the lock itself: it pulls it
- * longer, and every other time it comes in from the side with the scissors
- * and crosses it. A lock that is already down to the floor is only ever
- * snipped.
+ * The ghost hand: one move, never a solution. Under the cape it shows the
+ * verb on a tuft of the mane (a snip across it, or a pull out along it), and
+ * after that it taps the cape's knot.
  */
-function ghost(g: Ctx, frame: Frame, salon: Salon): number {
+function ghost(g: Ctx, frame: Frame, hint: Hint, game: Salon): number {
   const guidance = frame.guidance
-  if (!guidance || guidance.demo === null) return 0
-  const length = salon.lock * STEP, snip = guidance.demoIndex % 2 === 1 || salon.lock > 90
+  if (!guidance || guidance.demo === null || !hint.hand || game.chair === null) return 0
+  const places = placesOf(game)
+  if (hint.hand.on === 'knot') {
+    if (!places.knot) return 0
+    handPose(guidance.demo, false, pose)
+    return ghostHand(g, places.knot.x, places.knot.y + 6, pose.press, pose.opacity)
+  }
+  if (!places.customer) return 0
+  const steps = game.mane[hint.hand.tuft] ?? 40
+  const at = tuftPose(game.chair, hint.hand.tuft, steps, game.mane.length), tip = tuftTip(at)
+  const along = (t: number, across = 0): Point => onHead(places.customer!, { x: at.base.x + (tip.x - at.base.x) * t + Math.cos(at.angle) * across, y: at.base.y + (tip.y - at.base.y) * t + Math.sin(at.angle) * across })
   handPose(guidance.demo, true, pose)
-  const from = snip ? { x: LOCK_X + 120, y: COLLAR_Y + length * 0.55 } : { x: LOCK_X, y: COLLAR_Y + Math.max(24, length * 0.7) }
-  // The pulling hand keeps hold of the lock a little above its end, and goes down as far as the lock is drawn out.
-  const to = snip ? { x: LOCK_X - 110, y: COLLAR_Y + length * 0.55 } : { x: LOCK_X, y: COLLAR_Y + Math.max(24, length * 0.7) + 60 }
+  const snip = hint.hand.move === 'snip'
+  const from = snip ? along(0.7, 90) : along(0.75), to = snip ? along(0.7, -90) : along(1.35)
   const x = from.x + (to.x - from.x) * pose.travel, y = from.y + (to.y - from.y) * pose.travel
   let drawn = 0
-  if (snip) drawn += scissors(g, { x, y: y - BLADES.y }, Math.abs(pose.travel - 0.52) < 0.08 ? 0 : 1, pose.opacity * 0.8)
+  if (snip) drawn += scissors(g, { x, y: y - BLADES.y }, Math.abs(pose.travel - 0.5) < 0.08 ? 0 : 1, pose.opacity * 0.8)
   return drawn + ghostHand(g, x, snip ? y - BLADES.y : y, pose.press, pose.opacity)
 }
 

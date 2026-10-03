@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Hair } from './hair'
+import { Hair, MOST_PUFFS, STRANDS } from './hair'
 import { COLLAR_Y, HEAD, LOCK_X } from './layout'
 import { clippingBox, tuftPose } from './poses'
 import { makeRng } from './rng'
@@ -8,63 +8,91 @@ import type { Clipping, Salon } from './world'
 
 const salon = (over: Partial<Salon> = {}): Salon => ({
   chair: 'lion', friend: 'poodle', waiting: ['yak', 'rabbit'], seed: 1, lock: 60, model: 44, seat: 'beside', cape: 'on',
-  mane: Array(TUFTS).fill(50), ribbon: null, clippings: [], shown: { snip: true, pull: true, ribbon: false }, ...over,
+  mane: Array(TUFTS).fill(50), ribbon: { len: 40, at: 'peg' }, clippings: [], shown: { snip: true, pull: true, ribbon: true }, ...over,
 })
 const run = (hair: Hair, seconds: number, s: Salon = salon(), hz = 60, each?: () => void) => { for (let i = 0; i < seconds * hz; i++) { hair.step(1 / hz, s); each?.() } }
 const fresh = () => new Hair(TUFTS, makeRng(1))
+const ROOT = { x: LOCK_X, y: COLLAR_Y }
 
-describe('the lock', () => {
+describe('a strip that hangs', () => {
   it('squashes when it is caught, follows the finger to the side, and swings back when it is let go', () => {
-    const hair = fresh()
-    hair.catchLock({ x: LOCK_X, y: COLLAR_Y + 80 })
-    expect(hair.lockStretch.x).toBeLessThan(1)
+    const hair = fresh(), lock = hair.strands.lock
+    hair.catch('lock', { x: LOCK_X, y: COLLAR_Y + 80 }, ROOT)
+    expect(lock.stretch.x).toBeLessThan(1)
+    expect(hair.holds).toBe('lock')
     hair.follow({ x: LOCK_X + 120, y: COLLAR_Y + 120 })
     run(hair, 0.5)
-    expect(hair.lockSwing.x).toBeGreaterThan(0.6)
+    expect(lock.swing.x).toBeGreaterThan(0.6)
     expect(hair.pull).toEqual({ x: 120, y: 120 })
     hair.letGo()
     expect(hair.pull).toBeNull()
     let crossings = 0, side = 1
-    run(hair, 3, salon(), 60, () => { if (hair.lockSwing.x * side < -0.02) { crossings++; side = -side } })
+    run(hair, 3, salon(), 60, () => { if (lock.swing.x * side < -0.02) { crossings++; side = -side } })
     // It swings across the middle a few times, and no more.
     expect(crossings).toBeGreaterThanOrEqual(2)
     expect(crossings).toBeLessThanOrEqual(7)
     run(hair, 8)
-    expect(Math.abs(hair.lockSwing.x)).toBeLessThan(0.01)
-    expect(hair.lockStretch.x).toBeCloseTo(1, 2)
+    expect(Math.abs(lock.swing.x)).toBeLessThan(0.01)
+    expect(lock.stretch.x).toBeCloseTo(1, 2)
+  })
+
+  it('moves each of the three strips by itself', () => {
+    const hair = fresh()
+    hair.plucked('model', 1)
+    run(hair, 0.2)
+    expect(Math.abs(hair.strands.model.swing.x)).toBeGreaterThan(0.1)
+    expect(hair.strands.lock.swing.x).toBe(0)
+    expect(hair.strands.ribbon.swing.x).toBe(0)
+    expect(STRANDS).toEqual(['lock', 'model', 'ribbon'])
   })
 
   it('swings more slowly the longer it is', () => {
     const period = (lock: number) => {
       const hair = fresh()
-      hair.lockPlucked(1)
+      hair.plucked('lock', 1)
       let t = 0
-      while (hair.lockSwing.x >= 0 && t < 5) { hair.step(1 / 240, salon({ lock })); t += 1 / 240 }
+      while (hair.strands.lock.swing.x >= 0 && t < 5) { hair.step(1 / 240, salon({ lock })); t += 1 / 240 }
       return t
     }
     expect(period(90)).toBeGreaterThan(period(20) * 1.5)
   })
 
-  it('twangs when it is snipped and fans out when it is ruffled, and both die away', () => {
-    const hair = fresh()
-    hair.lockSnipped()
-    expect(hair.lockStretch.x).toBeLessThan(0.8)
+  it('twangs when it is snipped, fans out when it is ruffled, and its end is kicked aside; all of it dies away', () => {
+    const hair = fresh(), lock = hair.strands.lock
+    hair.snipped('lock')
+    expect(lock.stretch.x).toBeLessThan(0.8)
     let highest = 0
-    run(hair, 1, salon(), 60, () => { highest = Math.max(highest, hair.lockStretch.x) })
+    run(hair, 1, salon(), 60, () => { highest = Math.max(highest, lock.stretch.x) })
     expect(highest).toBeGreaterThan(1.02)
-    hair.lockRuffled()
-    expect(hair.lockFlutter).toBe(1)
+    hair.ruffled('lock')
+    hair.kicked('lock', 6)
+    expect(lock.flutter).toBe(1)
+    run(hair, 0.2)
+    expect(lock.kick.x).toBeGreaterThan(0.2)
     run(hair, 10)
-    expect(hair.lockFlutter).toBe(0)
+    expect(lock.flutter).toBe(0)
+    expect(Math.abs(lock.kick.x)).toBeLessThan(0.01)
     expect(hair.settled).toBe(true)
+  })
+
+  it('springs back from as far as it was drawn out: hair that is not the child\'s to keep', () => {
+    const hair = fresh(), model = hair.strands.model
+    hair.catch('model', { x: 600, y: 480 }, { x: 600, y: 392 })
+    hair.letGo(0.5)
+    expect(model.stretch.x).toBeCloseTo(1.5)
+    let lowest = Infinity
+    run(hair, 2, salon(), 60, () => { lowest = Math.min(lowest, model.stretch.x) })
+    expect(lowest).toBeLessThan(1)
+    expect(model.stretch.x).toBeCloseTo(1, 1)
   })
 })
 
 describe('the mane', () => {
   it('leans a held tuft towards the finger and lets it spring back', () => {
-    const hair = fresh(), pose = tuftPose(4, 50)
+    const hair = fresh(), pose = tuftPose('lion', 4, 50)
     const root = { x: HEAD.x + pose.base.x, y: HEAD.y + pose.base.y }
-    hair.catchTuft(4, { x: root.x + 140, y: root.y - 40 })
+    hair.catch(4, { x: root.x + 140, y: root.y - 40 }, root)
+    expect(hair.holds).toBe(4)
     run(hair, 0.5)
     expect(hair.tufts[4].lean.x).toBeGreaterThan(0.5)
     expect(hair.tufts[3].lean.x).toBeLessThan(0.1)
@@ -103,24 +131,45 @@ describe('the mane', () => {
     expect(hair.tufts.every((tuft) => tuft.frizz === 0)).toBe(true)
   })
 
+  it('springs the whole head of hair out from under a hat, and it comes to its own length', () => {
+    const hair = fresh()
+    hair.sprungOut()
+    expect(hair.tufts.every((tuft) => tuft.stretch.x < 0.3)).toBe(true)
+    expect(hair.strands.lock.stretch.x).toBeLessThan(0.3)
+    run(hair, 6)
+    for (const tuft of hair.tufts) expect(tuft.stretch.x).toBeCloseTo(1, 1)
+    expect(hair.strands.lock.stretch.x).toBeCloseTo(1, 1)
+  })
+
+  it('holds a tuft at the length a showing gives it until it is let go', () => {
+    const hair = fresh()
+    hair.tufts[2].rest = 1.6
+    run(hair, 3)
+    expect(hair.tufts[2].stretch.x).toBeCloseTo(1.6, 1)
+    hair.tufts[2].rest = 1
+    run(hair, 3)
+    expect(hair.tufts[2].stretch.x).toBeCloseTo(1, 1)
+  })
+
   it('puffs fluff up from a snipped tuft, a few puffs that float off and are gone', () => {
     const hair = fresh()
-    hair.tuftSnipped(2, { x: 400, y: 200 }, '#ee8232')
+    hair.tuftSnipped(2, { x: 400, y: 200 }, 'lion')
     expect(hair.puffs.length).toBe(5)
+    expect(MOST_PUFFS).toBeLessThanOrEqual(8)
     hair.step(0.2, salon())
     expect(hair.puffs.every((puff) => puff.y < 215)).toBe(true)
     run(hair, 2)
     expect(hair.puffs).toEqual([])
-    for (let i = 0; i < 20; i++) hair.fluff({ x: 1, y: 1 }, '#fff', 5)
-    expect(hair.puffs.length).toBeLessThanOrEqual(12)
+    for (let i = 0; i < 20; i++) hair.fluff({ x: 1, y: 1 }, 'fluff', 5)
+    expect(hair.puffs.length).toBeLessThanOrEqual(MOST_PUFFS)
   })
 })
 
 describe('loose things', () => {
   it('drops a cut piece to where the model has it, with one bounce, and then it lies', () => {
     const piece: Clipping = { len: 20, hue: 'lion', on: 'floor', x: 46 }
-    const hair = fresh(), box = clippingBox(piece)
-    hair.fly(piece, { x: LOCK_X, y: 470 })
+    const hair = fresh(), box = clippingBox(salon(), piece)!
+    hair.fly(salon(), piece, { x: LOCK_X, y: 470 })
     expect(hair.flights.has(piece)).toBe(true)
     let lowest = 0, steps = 0
     while (hair.flights.has(piece) && steps < 600) { hair.step(1 / 120, salon()); const f = hair.flights.get(piece); if (f) lowest = Math.max(lowest, f.y); steps++ }
@@ -130,9 +179,15 @@ describe('loose things', () => {
     expect(lowest).toBeLessThanOrEqual(box.y + 25)
   })
 
+  it('does not fly a piece that nobody is there to wear', () => {
+    const hair = fresh(), piece: Clipping = { len: 9, hue: 'lion', on: 'face', who: 'chair', spot: 'lip' }
+    hair.fly(salon({ chair: null, friend: null }), piece, { x: 1, y: 1 })
+    expect(hair.flights.size).toBe(0)
+  })
+
   it('rolls a rubbed piece away as one fluff ball, towards the chair', () => {
     const hair = fresh()
-    hair.rollAway({ x: 900, y: 700 }, '#ee8232')
+    hair.rollAway({ x: 900, y: 700 }, 'fluff')
     hair.step(0.3, salon())
     expect(hair.puffs[0].rolls).toBe(true)
     expect(hair.puffs[0].x).toBeLessThan(900)
@@ -157,8 +212,24 @@ describe('loose things', () => {
     expect(hair.scissors.shown).toBe(0)
   })
 
+  it('stops everything where it belongs when it is settled: where a scene that is cut short ends', () => {
+    const hair = fresh()
+    hair.catch('lock', { x: 700, y: 500 }, ROOT)
+    hair.sprungOut()
+    hair.maneFrizzed()
+    hair.fluff({ x: 1, y: 1 }, 'fluff', 5)
+    hair.fly(salon(), { len: 20, hue: 'lion', on: 'floor', x: 46 }, { x: 1, y: 1 })
+    hair.carried = { what: 'ribbon', at: { x: 1, y: 1 } }
+    hair.tufts[0].rest = 2
+    hair.settle()
+    expect(hair.settled).toBe(true)
+    expect(hair.holds).toBeNull()
+    expect(hair.carried).toBeNull()
+    expect(hair.tufts[0].rest).toBe(1)
+  })
+
   it('moves the same at any frame rate', () => {
-    const at = (hz: number) => { const hair = fresh(); hair.lockPlucked(1); hair.tuftPoked(3); run(hair, 1, salon(), hz); return [hair.lockSwing.x, hair.tufts[3].stretch.x, hair.tufts[5].lean.x] }
+    const at = (hz: number) => { const hair = fresh(); hair.plucked('lock', 1); hair.tuftPoked(3); run(hair, 1, salon(), hz); return [hair.strands.lock.swing.x, hair.tufts[3].stretch.x, hair.tufts[5].lean.x] }
     const a = at(60), b = at(120), c = at(30)
     for (let i = 0; i < 3; i++) { expect(a[i]).toBeCloseTo(b[i], 2); expect(a[i]).toBeCloseTo(c[i], 2) }
   })

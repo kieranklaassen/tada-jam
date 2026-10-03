@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { ACTIONS, GRID, OBJECTS } from './grid'
 import type { Happening, Held } from './hand'
 import { TUFTS } from './rules'
-import { MOST_NOTES, notesFor, type Note } from './sound'
+import type { Cue } from './scenes'
+import { MOST_NOTES, notesFor, notesForCue, type Note } from './sound'
 import { CELL_VOICES, OTHER_VOICES, RUB_VOICES, VOICE_RANGE, pitchForLength } from './voices'
 import type { Salon } from './world'
 
@@ -12,7 +13,7 @@ const salon = (over: Partial<Salon> = {}): Salon => ({
 })
 const at = { x: 0, y: 0 }
 const cell = (object: (typeof OBJECTS)[number], action: (typeof ACTIONS)[number], extra: Partial<Extract<Happening, { kind: 'cell' }>> = {}): Happening =>
-  ({ kind: 'cell', object, action, cell: GRID[object][action], held: null, at, rings: null, piece: null, place: null, ...extra })
+  ({ kind: 'cell', object, action, cell: GRID[object][action], held: null, at, rings: null, piece: null, place: null, sprangBack: false, ...extra })
 const inRange = (note: Note) => {
   for (const hz of [note.pitch, ...(note.glideTo === undefined ? [] : [note.glideTo])]) expect(hz >= VOICE_RANGE.pitch.min && hz <= VOICE_RANGE.pitch.max, `${hz} Hz`).toBe(true)
   expect(note.peak >= VOICE_RANGE.peak.min && note.peak <= VOICE_RANGE.peak.max).toBe(true)
@@ -22,8 +23,8 @@ const inRange = (note: Note) => {
 }
 
 describe('what things sound like', () => {
-  it('gives every cell the toy holds a sound, short and inside the stated ranges', () => {
-    for (const object of ['lock', 'tuft', 'clipping', 'face'] as const) for (const action of ['pull', 'snip', 'poke', 'ruffle'] as const) {
+  it('gives every cell of the grid a sound, short and inside the stated ranges', () => {
+    for (const object of OBJECTS) for (const action of ACTIONS) {
       for (const rings of [null, 4, 50, 100]) {
         const notes = notesFor(cell(object, action, { rings }), salon(), salon())
         expect(notes.length, `${object}/${action}`).toBeGreaterThanOrEqual(1)
@@ -37,10 +38,10 @@ describe('what things sound like', () => {
     const held = (h: Held) => notesFor({ kind: 'caught', held: h, at }, salon(), salon())
     expect(held({ object: 'lock' })).toEqual([OTHER_VOICES.caught])
     expect(held({ object: 'tuft', index: 2 })).toEqual([OTHER_VOICES.caught])
-    expect(held({ object: 'face', part: 'nose' })[0].pitch).toBeLessThan(OTHER_VOICES.caught.pitch)
+    expect(held({ object: 'face', who: 'chair', part: 'nose' })[0].pitch).toBeLessThan(OTHER_VOICES.caught.pitch)
     expect(held({ object: 'clipping', index: 0 })).toEqual([CELL_VOICES['clipping/pull']])
     expect(notesFor({ kind: 'scissors', at }, salon(), salon())).toEqual([OTHER_VOICES.scissors])
-    for (const notes of [held({ object: 'lock' }), held({ object: 'face', part: 'ear' })]) notes.forEach(inRange)
+    for (const notes of [held({ object: 'lock' }), held({ object: 'face', who: 'chair', part: 'ear' })]) notes.forEach(inRange)
   })
 
   it('sounds a plucked lock lower the longer it is, and the creak of a pull falling as it grows', () => {
@@ -61,7 +62,7 @@ describe('what things sound like', () => {
   })
 
   it('giggles in the lion\'s voice, differently on the nose, an ear, the chin and a cheek', () => {
-    const giggle = (part: 'nose' | 'ear' | 'chin' | 'cheek') => notesFor(cell('face', 'poke', { held: { object: 'face', part } }), salon(), salon())[0].pitch
+    const giggle = (part: 'nose' | 'ear' | 'chin' | 'cheek') => notesFor(cell('face', 'poke', { held: { object: 'face', who: 'chair', part } }), salon(), salon())[0].pitch
     const pitches = [giggle('nose'), giggle('ear'), giggle('chin'), giggle('cheek')]
     expect(new Set(pitches.map((p) => Math.round(p))).size).toBe(4)
     // The lion's voice is low: his giggle sits under the voice it is made from.
@@ -81,9 +82,44 @@ describe('what things sound like', () => {
     expect(notesFor(cell('clipping', 'snip'), salon(), salon({ clippings: [...salon().clippings, ...salon().clippings] }))).toHaveLength(1)
   })
 
+  it('sounds the friend\'s lock and a face in their owner\'s voice, lower for the lion than for the poodle', () => {
+    const hum = (friend: 'lion' | 'poodle') => notesFor(cell('model', 'poke'), salon({ chair: 'yak', friend }), salon({ chair: 'yak', friend }))[0].pitch
+    expect(hum('lion')).toBeLessThan(hum('poodle'))
+    const giggle = (who: 'chair' | 'friend') => notesFor(cell('face', 'poke', { held: { object: 'face', who, part: 'cheek' } }), salon(), salon())[0].pitch
+    expect(giggle('chair')).toBeLessThan(giggle('friend'))
+    const peek = notesFor(cell('face', 'ribbon', { held: { object: 'face', who: 'friend', part: 'cheek' } }), salon(), salon())
+    expect(peek).toHaveLength(2)
+    expect(peek[1].after).toBeGreaterThan(0)
+    peek.forEach(inRange)
+  })
+
+  it('gives every thing that moves the game on a small sound as it gives under the finger, and none of its own when it acts', () => {
+    const pressed = (['door', 'stool', 'bench', 'knot', 'chair'] as const).map((button) => notesFor({ kind: 'pressed', button, at }, salon(), salon()))
+    for (const notes of pressed) { expect(notes).toHaveLength(1); notes.forEach(inRange) }
+    expect(notesFor({ kind: 'button', button: 'door', at }, salon(), salon())).toEqual([])
+  })
+
+  it('gives every cue of a scene its notes, and none of them is a cheer or a buzzer', () => {
+    const cues: Cue[] = ['door', 'doorShut', 'step', 'hatOff', 'hairOut', 'capeOn', 'capeOff', 'landed', 'tooLong', 'tooShort', 'asLong', 'nip', 'tug', 'ribbonTaken', 'ribbonTick', 'ribbonHome']
+    for (const cue of cues) {
+      const notes = notesForCue(cue, 'lion', salon())
+      expect(notes.length, cue).toBeGreaterThanOrEqual(1)
+      expect(notes.length).toBeLessThanOrEqual(2)
+      notes.forEach(inRange)
+    }
+    // The showing sounds the two lengths as they are: two plucks, the same two whichever way it went, and at one
+    // moment when the ends meet. Nothing is louder or longer for a match than for a miss.
+    const s = salon({ lock: 70, model: 44 })
+    const long = notesForCue('tooLong', 'lion', s), short = notesForCue('tooShort', 'lion', { ...s, lock: 20 }), even = notesForCue('asLong', 'lion', { ...s, lock: 44 })
+    for (const notes of [long, short, even]) { expect(notes).toHaveLength(2); expect(notes[0].peak).toBe(notes[1].peak); expect(notes[0].length).toBe(notes[1].length) }
+    expect(long[0].peak).toBe(even[0].peak)
+    expect(even[1].after!).toBeLessThan(long[1].after!)
+    expect(even[0].pitch).toBeCloseTo(even[1].pitch)
+  })
+
   it('lets hair go with a soft drop, and says nothing when the scissors leave', () => {
     expect(notesFor({ kind: 'letGo', held: { object: 'lock' }, at }, salon(), salon())).toEqual([OTHER_VOICES.letGo])
-    expect(notesFor({ kind: 'letGo', held: { object: 'face', part: 'cheek' }, at }, salon(), salon())).toEqual([])
+    expect(notesFor({ kind: 'letGo', held: { object: 'face', who: 'chair', part: 'cheek' }, at }, salon(), salon())).toEqual([])
     expect(notesFor({ kind: 'away' }, salon(), salon())).toEqual([])
     expect(notesFor({ kind: 'airSnip', at }, salon(), salon())).toEqual([OTHER_VOICES.airSnip])
     expect(MOST_NOTES).toBeGreaterThanOrEqual(2)

@@ -27,9 +27,12 @@ export const BESIDE_X = 624
 export const STOOL = { x: 712, seatY: 520 } as const
 export const FRIEND_HEAD = { x: 708, y: 302, rx: 68, ry: 62 } as const
 
-export const BENCH = { x: 880, w: 250, seatY: 560, backY: 470 } as const
-export const DOOR = { x: 62, y: 190, w: 168, h: FLOOR_Y - 190, window: { x: 146, y: 330, r: 60 } } as const
+/** The bench is across the room from the lock, by the left wall; the door is on the right, past the stool. */
+export const BENCH = { x: 30, w: 206, seatY: 560, backY: 470 } as const
+export const DOOR = { x: 962, y: 190, w: 168, h: FLOOR_Y - 190, window: { x: 1046, y: 330, r: 60 } } as const
 export const MIRROR = { x: 520, top: 64, bottom: 470, w: 340 } as const
+/** The peg the ribbon hangs from, on the wall between the stool and the door. */
+export const PEG = { x: 868, y: 196 } as const
 
 /** The cape: narrow at the collar, wide at the hem. */
 export const CAPE = { collarHalf: 124, hemHalf: 232, hemY: FLOOR_Y - 6 } as const
