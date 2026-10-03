@@ -6,6 +6,7 @@ import { GameAudio, tick } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
+import { Look } from './look'
 import { nightCampManifest } from './manifest'
 import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
@@ -59,7 +60,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => {}
+    const look = new Look(), night = new URLSearchParams(window.location.search).get('night') === '1'
+    const draw = () => {
+      const surface = canvas.getContext('2d')
+      if (surface) drawn.drawCalls = look.paint(surface, width, height, dpr, { night })
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.

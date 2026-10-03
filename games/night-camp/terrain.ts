@@ -49,7 +49,7 @@ const HILLS: readonly Bump[] = [
   { x: 0.4, y: -0.04, rx: 0.17, ry: 0.2, amp: 0.62 },
   { x: 0.84, y: 0.1, rx: 0.17, ry: 0.26, amp: 0.92 },
   { x: 0.02, y: 0.58, rx: 0.12, ry: 0.2, amp: 0.5 },
-  { x: 0.99, y: 0.82, rx: 0.2, ry: 0.22, amp: 0.55 },
+  { x: 1.02, y: 0.92, rx: 0.2, ry: 0.2, amp: 0.42 },
   { x: 0.56, y: 0.2, rx: 0.07, ry: 0.1, amp: 0.26 },
   { x: 0.2, y: 0.3, rx: 0.06, ry: 0.08, amp: 0.14 },
 ]
@@ -113,7 +113,7 @@ export function makeTerrain(seed: number): Terrain {
   }))
   // The ends of the course stay put, so the stream always enters and leaves where the scene expects it.
   const bent = COURSE.map((p, i) => (i === 0 || i === COURSE.length - 1 || i === POOL_AT ? { ...p } : { x: p.x + jitter(0.012), y: p.y + jitter(0.012) }))
-  const stream = smoothCourse(bent, 6)
+  const stream = smoothCourse(bent, 12)
   // A coarser copy for the height function, which asks for the distance at every sample.
   const valley = smoothCourse(bent, 2)
   const pool = { x: bent[POOL_AT].x, y: bent[POOL_AT].y, rx: 0.034 * (1 + jitter(0.1)), ry: 0.04 * (1 + jitter(0.1)) }
