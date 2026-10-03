@@ -154,6 +154,20 @@ function breakIt(circuit: Circuit, kind: BreakKind, stream: Stream): { circuit: 
   }
 }
 
+/**
+ * Whether one act of the easy kind makes the gadget run: one lead between any
+ * two pads, or one part swapped for a fresh one from the tray. From `double`
+ * on no job is laid out that such an act mends, so trying every lead or every
+ * swap in turn does not get a child through.
+ */
+export function oneActMends(circuit: Circuit): boolean {
+  const pads = boardFor(circuit).pads.length
+  for (let a = 0; a < pads; a++) for (let b = a + 1; b < pads; b++) {
+    if (handBack({ ...circuit, leads: [...circuit.leads, { a, b }] }).ran) return true
+  }
+  return circuit.parts.some((part, i) => part.kind !== 'switch' && part.kind !== 'odd' && handBack(replace(circuit, i, trayPart(part.kind, part.a, part.b))).ran)
+}
+
 // --- The positions ---------------------------------------------------------------
 
 const PLAIN: readonly GadgetKind[] = ['lamp-plain', 'fan-plain', 'bell-plain']
@@ -184,11 +198,10 @@ export function layOut(position: string, state: number, avoid?: Who): { job: Job
   // Which kinds to break, in order of preference; the first that fit the gadget are used.
   const earlier = met.filter((kind) => kind !== own)
   const shuffled = (kinds: BreakKind[]) => kinds.map((kind) => ({ kind, key: stream.next() })).sort((x, y) => x.key - y.key).map((x) => x.kind)
-  let wanted: BreakKind[], count = 1
-  if (id === 'double' || id === 'ticket') {
-    wanted = shuffled(met)
-    count = id === 'double' || stream.next() < 0.5 ? 2 : 1
-  } else if (own && (earlier.length === 0 || stream.next() < 2 / 3)) wanted = [own, ...shuffled(earlier)]
+  const combines = id === 'double' || id === 'ticket'
+  let wanted: BreakKind[]
+  if (combines) wanted = shuffled(met)
+  else if (own && (earlier.length === 0 || stream.next() < 2 / 3)) wanted = [own, ...shuffled(earlier)]
   else wanted = [...shuffled(earlier), ...(own ? [own] : [])]
   const pool = id === 'gap' ? PLAIN : wanted[0] === 'branch' ? BRANCHED : LADDER.indexOf(id) >= LADDER.indexOf('branch') ? [...SWITCHED, ...BRANCHED] : SWITCHED
   const gadget = stream.pick(pool)
@@ -196,13 +209,26 @@ export function layOut(position: string, state: number, avoid?: Who): { job: Job
   // From the second position on a gadget arrives switched off: its lever is up, and that is no break.
   if (hasSwitch(gadget)) circuit = { ...circuit, parts: circuit.parts.map((p): Part => (p.kind === 'switch' ? { ...p, down: false } : p)) }
   const breaks: Break[] = []
-  for (const kind of wanted) {
-    if (breaks.length >= count) break
-    const broken = breakIt(circuit, kind, stream)
-    // Two breaks can undo each other (a flat cell beside one that pushes the wrong way lights a lamp dimly): such a pair is not used.
-    if (!broken || handBack(broken.circuit).ran) continue
-    circuit = broken.circuit
-    breaks.push(broken.broke)
+  if (combines) {
+    // Two breaks of different kinds, the first pair in the shuffled order that holds. A pair is not used when its
+    // breaks undo each other (a flat cell beside one that pushes the wrong way lights a lamp dimly), or when one
+    // lead or one swap mends both. A flat cell with a dead part always holds, so a pair is always found.
+    search: for (let i = 0; i < wanted.length; i++) for (let j = i + 1; j < wanted.length; j++) {
+      const one = breakIt(circuit, wanted[i], stream)
+      const two = one && breakIt(one.circuit, wanted[j], stream)
+      if (!one || !two || handBack(two.circuit).ran || oneActMends(two.circuit)) continue
+      circuit = two.circuit
+      breaks.push(one.broke, two.broke)
+      break search
+    }
+  } else {
+    for (const kind of wanted) {
+      const broken = breakIt(circuit, kind, stream)
+      if (!broken) continue
+      circuit = broken.circuit
+      breaks.push(broken.broke)
+      break
+    }
   }
   const ticket = id === 'ticket' ? stream.pick(TICKETS) : null
   // A position that brings in a kind of break and laid out an earlier one hands the job that earlier position's idea.

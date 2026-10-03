@@ -3,7 +3,7 @@ import { boardFor, clipLead, clipLeadEnd, partAcross, placePart, removePart, tra
 import { LADDER } from './config'
 import { hasSwitch } from './gadgets'
 import { handBack } from './handback'
-import { draw, kindsMetBy, layOut, meetsTicket, type Break, type BreakKind } from './jobs'
+import { draw, kindsMetBy, layOut, meetsTicket, oneActMends, type Break, type BreakKind } from './jobs'
 import { CUSTOMERS } from './tastes'
 
 // One plain mend for each kind of break, made only with what a finger can do
@@ -105,14 +105,29 @@ describe('the designed order', () => {
 
   it('the first two positions hold one break in plain sight, and the last two hold more', () => {
     for (const j of laid.filter((x) => x.position === 'gap' || x.position === 'switch')) expect(j.breaks.map((b) => b.kind)).toEqual(['gap'])
-    for (const j of laid.filter((x) => x.position === 'double')) {
+    for (const j of laid.filter((x) => x.position === 'double' || x.position === 'ticket')) {
       expect(j.breaks).toHaveLength(2)
       expect(j.breaks[0].kind).not.toBe(j.breaks[1].kind)
     }
+    for (const j of laid.filter((x) => x.position !== 'double' && x.position !== 'ticket')) expect(j.breaks).toHaveLength(1)
     const tickets = laid.filter((x) => x.position === 'ticket')
     for (const j of tickets) expect(j.job.ticket).not.toBeNull()
     for (const j of laid.filter((x) => x.position !== 'ticket')) expect(j.job.ticket).toBeNull()
   })
+
+  it('cannot be got through by trying: from `double` on no single lead and no single swap makes the gadget run', () => {
+    for (const j of laid.filter((x) => x.position === 'double' || x.position === 'ticket')) expect(oneActMends(j.job.circuit), `${j.position} ${j.seed}`).toBe(false)
+    // The check itself sees a mend when there is one: every first-position job is mended by one lead or by none at all.
+    for (const j of laid.filter((x) => x.position === 'gap' && x.breaks[0].kind === 'gap' && x.breaks[0].how === 'crack')) expect(oneActMends(j.job.circuit)).toBe(true)
+  })
+
+  it('a break that cannot be seen is not closed by a lead: a flat cell or a dead part needs the part itself', () => {
+    for (const j of laid.filter((x) => x.breaks.length === 1 && (x.breaks[0].kind === 'flat' || x.breaks[0].kind === 'dead'))) {
+      const pads = boardFor(j.job.circuit).pads.length
+      for (let a = 0; a < pads; a++) for (let b = a + 1; b < pads; b++) expect(handBack(clipLead(j.job.circuit, a, b)).ran).toBe(false)
+      expect(oneActMends(j.job.circuit)).toBe(true)
+    }
+  }, 30_000)
 
   it('varies who comes and what they bring, and never seats the same customer twice at once', () => {
     for (const position of LADDER) {
