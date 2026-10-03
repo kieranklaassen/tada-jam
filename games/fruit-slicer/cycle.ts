@@ -3,7 +3,7 @@ import { ideaOf, layOut, tinParts, type Customer } from './orders'
 import { serveOf, served, type Served } from './serve'
 import { beginCycle, finishCycle, freshState, type CycleOutcome, type GameState } from './state'
 import { isGlider, tasteOf, type Taste } from './tastes'
-import { clearTin, eat, emptyWorld, giveToTin, inTin, landFruit, pieceOf, remove, setOnShelf, tinTotal, type World } from './world'
+import { clearTin, eat, eaten, emptyWorld, giveToTin, inTin, landFruit, pieceOf, remove, setOnShelf, tinTotal, type World } from './world'
 
 // A cycle is one customer: called to the window, served, sent off. This module
 // holds the game as a whole (the place in the designed order, the customers,
@@ -80,20 +80,47 @@ export function sendOff(game: Game): { game: Game; ending: Ending | null } {
 }
 
 /**
- * The customer is fed a piece by hand, bypassing the tin, and eats it as it is. Fed by hand is mixed whatever
- * it was fed, so the position does not move. The piece goes inside the customer; what lay in its tin stays there.
+ * The customer at the window is fed a piece by hand, bypassing the tin, and eats it as it is. Fed by hand is
+ * mixed whatever it was fed, so the position does not move. The piece goes inside the customer; what lay in its
+ * tin stays there. One that has already been served eats the piece too, and nothing more is judged.
  *
- * A whole uncut fruit fed to the pelican is the glider: the pelican leaves with it. The fruit is gone, any
- * piece in its tin is set on the shelf, and the window is empty, with the two still waiting.
+ * A whole uncut fruit fed to the pelican is the glider, every time, served or not: the pelican leaves with it.
+ * The fruit is gone, and so is anything the pelican had already eaten; any piece in its tin is set on the
+ * shelf; and the window is empty, with the two still waiting.
  */
-export function feed(game: Game, id: number): { game: Game; ending: Ending | null } {
+export function feed(game: Game, id: number): { game: Game; ending: Ending | null; ate: boolean } {
   const customer = game.window, piece = pieceOf(game.world, id)
-  if (!customer || game.finished || !piece) return { game, ending: null }
+  if (!customer || !piece) return { game, ending: null, ate: false }
   const result = serveOf(customer, tinParts(customer).map((_, part) => (part === 0 ? [piece] : [])))
-  if (!isGlider(customer, piece)) return end(game, result, 'mixed', [id])
-  let world = remove(game.world, id)
-  for (const left of tinIds(game)) world = setOnShelf(world, left).world
-  return { game: { ...game, window: null, finished: false, world: { ...world, tinOpen: false } }, ending: { result, taste: tasteOf(customer, result), outcome: 'mixed', glider: true } }
+  if (isGlider(customer, piece)) {
+    let world = remove(game.world, id)
+    for (const gone of eaten(world)) world = remove(world, gone.id)
+    for (const left of tinIds(game)) world = setOnShelf(world, left).world
+    return { game: { ...game, window: null, finished: false, world: { ...world, tinOpen: false } }, ending: { result, taste: tasteOf(customer, result), outcome: 'mixed', glider: true }, ate: true }
+  }
+  if (game.finished) return { game: { ...game, world: eat(game.world, [id]) }, ending: null, ate: true }
+  return { ...end(game, result, 'mixed', [id]), ate: true }
+}
+
+/**
+ * A piece is given to one of the two who wait. It is eaten there and then and is gone: nothing is judged, and
+ * the customer goes on waiting with its order. A whole uncut fruit given to a waiting pelican is the glider all
+ * the same: that pelican leaves, and another customer joins the queue in its place, laid out for the position
+ * as it stands.
+ */
+export function treat(game: Game, index: 0 | 1, id: number): { game: Game; glider: boolean } {
+  const customer = game.queue[index], piece = pieceOf(game.world, id)
+  if (!piece) return { game, glider: false }
+  const world = remove(game.world, id)
+  if (!isGlider(customer, piece)) return { game: { ...game, world }, glider: false }
+  const arrival = layOut(game.position, customer.carries === null ? 'known' : 'new', game.seed)
+  const queue: [Customer, Customer] = index === 0 ? [arrival.customer, game.queue[1]] : [game.queue[0], arrival.customer]
+  return { game: { ...game, world, queue, seed: arrival.seed }, glider: true }
+}
+
+/** A piece flung at any customer splats and is licked off: it is gone, and nothing is judged. */
+export function splat(game: Game, id: number): Game {
+  return pieceOf(game.world, id) ? { ...game, world: remove(game.world, id) } : game
 }
 
 export type Given = {

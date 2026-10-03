@@ -19,11 +19,11 @@ export type Does =
   | 'mark' // world.roll
   | 'serve' // cycle.give
   | 'bounce' // world.setOnBoard: the flung piece comes back to the counter
-  | 'feed' // cycle.feed
+  | 'feed' // cycle.feed for the one at the window; cycle.treat for one who waits
   | 'spill' // world.landFruit, once for each kind of fruit
   | 'call' // cycle.call for one who waits; cycle.sendOff for one at the window whose tin holds a misfit
   | 'land' // cycle.crate
-  | 'toDog' // world.remove
+  | 'toDog' // world.remove: eaten, licked off or burped across, and gone (cycle.splat for a customer)
   | 'nothing'
 
 export type Cell = {

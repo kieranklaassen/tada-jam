@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
-import { call, crate, feed, freshGame, give, judge, sendOff, type Game } from './cycle'
+import { call, crate, feed, freshGame, give, judge, sendOff, splat, treat, type Game } from './cycle'
 import { WHOLE, giveOf, shareLength } from './measure'
 import { inRange, tinParts, type Customer } from './orders'
 import { serveOf } from './serve'
@@ -70,7 +70,7 @@ describe('a first visit', () => {
     const id = game.world.pieces[0].id
     expect(give(game, id, 0)).toEqual({ game, given: null })
     expect(sendOff(game)).toEqual({ game, ending: null })
-    expect(feed(game, id)).toEqual({ game, ending: null })
+    expect(feed(game, id)).toEqual({ game, ending: null, ate: false })
   })
 })
 
@@ -202,6 +202,25 @@ describe('a cycle', () => {
     expect(feed(wrong.game, wrong.id)).toMatchObject({ ending: { outcome: 'mixed', result: { kind: 'over' } }, game: { position: start.game.position } })
   })
 
+  it('lets a customer that has been served eat another piece from the hand, with nothing more judged', () => {
+    const served = serve(start.game).game
+    const more = cutFor(served, 300)
+    const fed = feed(more.game, more.id)
+    expect(fed).toMatchObject({ ending: null, ate: true, game: { finished: true, position: served.position } })
+    expect(eaten(fed.game.world).map((piece) => piece.id)).toEqual([...eaten(served.world).map((piece) => piece.id), more.id])
+  })
+
+  it('lets a served pelican leave as the glider too: what it had eaten goes with it, and nothing is left finished', () => {
+    const served = serve(start.game).game
+    expect(eaten(served.world)).toHaveLength(1)
+    const whole = crate(served)
+    const fed = feed(whole.game, whole.id)
+    expect(fed.ending).toMatchObject({ glider: true, outcome: 'mixed' })
+    expect(fed.game).toMatchObject({ window: null, finished: false, position: served.position, world: { tinOpen: false } })
+    expect(eaten(fed.game.world)).toEqual([])
+    expect(fed.game.world.pieces.some((left) => left.id === whole.id)).toBe(false)
+  })
+
   it('lets the pelican leave with a whole fruit: the glider, every time, with the window left empty', () => {
     expect(start.game.window!.who).toBe('pelican')
     const misfit = serve(start.game, -400).game
@@ -256,6 +275,36 @@ describe('the two who wait', () => {
     expect(serve(waiting).game.position).toBe(LADDER[1])
     // The one who joined as the first was served carries the new thing of the place as it now stands.
     expect(waiting.queue[0].carries).toBe(LADDER[1])
+  })
+
+  it('eat a piece given to them there and then: it is gone, nothing is judged, and they go on waiting', () => {
+    const made = cutFor(start.game, 500)
+    const given = treat(made.game, 1, made.id)
+    expect(given.glider).toBe(false)
+    expect(given.game.world.pieces.some((piece) => piece.id === made.id)).toBe(false)
+    expect(given.game).toMatchObject({ queue: made.game.queue, window: made.game.window, position: made.game.position, finished: false, seed: made.game.seed })
+    expect(treat(made.game, 0, 999)).toEqual({ game: made.game, glider: false })
+  })
+
+  it('lose a pelican to the glider when it is given a whole fruit, and another customer joins in its place', () => {
+    expect(start.game.queue[1].who).toBe('pelican')
+    const whole = crate(start.game)
+    const given = treat(whole.game, 1, whole.id)
+    expect(given.glider).toBe(true)
+    expect(given.game.world.pieces.some((piece) => piece.id === whole.id)).toBe(false)
+    expect(given.game.queue[0]).toEqual(whole.game.queue[0])
+    expect(inRange(given.game.queue[1])).toEqual([])
+    expect(given.game.queue[1].carries).toBe(whole.game.queue[1].carries)
+    expect(given.game.seed).not.toBe(whole.game.seed)
+    expect(given.game.window).toEqual(whole.game.window)
+  })
+
+  it('lick off a piece flung at them: it is gone and nothing else changes', () => {
+    const made = cutFor(start.game, 500)
+    const after = splat(made.game, made.id)
+    expect(after.world.pieces.some((piece) => piece.id === made.id)).toBe(false)
+    expect({ ...after, world: made.game.world }).toEqual(made.game)
+    expect(splat(made.game, 999)).toBe(made.game)
   })
 
   it('take the served customer, what it ate and its tin away when one steps up, and the counter keeps the rest', () => {
