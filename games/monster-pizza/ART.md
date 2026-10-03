@@ -254,6 +254,11 @@ Written after the style spike, not part of the sheet.
 - **The pieces a child counts are the exception.** Each kind is one flat colour inside one steady outline, with no wobble, no streaks, no face and no motion at rest: pepper `#e4322b`, mushroom `#b98a5e`, olive `#4d7a2a`, cheese `#ffd21f`, sock `#2f7fe0`, worm `#ff8fb4`. A kind is told by shape and colour together. All six fit the same circle. They lie on the pizza's top, a flat pale `#fff4d6`, and on the card, flat white.
 - **The customers** carry the look: bodies coloured in with wide strokes (Bim teal, Grum purple, Fizz orange, Mops pink, Ooze lime), a paler patch on the front, white eyes with a dark pupil, a dark mouth with two blunt teeth, stick arms with round hands.
 - **The setting:** a yellow counter edge, a round wooden board with a handle, a red brick oven with a dark mouth, tubs in six marker colours, none the colour of the kind inside.
+- **Baked,** the pizza's crust browns and its top goes golden, and each piece takes a browned rim and its kind's own small change (the mushroom a touch smaller, the worm curled shorter). It stays flat, whole and countable.
+
+**Where things stand.** On a stage of 1180 by 820 units, fitted whole into the surface. The customer stands behind a yellow counter, top centre, over the pizza. The card is to its right, over the oven; the doorway is to its left, over the tubs. So the job reads left to right along the table (tubs, pizza, oven) and then up to the customer, and the customer's free hand is on the tubs' side. Nothing that answers a touch is in the top right corner, which the grown-up overlay listens in.
+
+**Reactions.** A puff of flame, a hiccup bubble, strings of cheese, a cloud, wavy lines over a rumbling belly: each is a few marker figures drawn fresh every frame from a fixed seed (`effects.ts`), so it grows and fades without boiling. They are on the customer and in the air round it, never on the pieces. A piece that had no partner on the card sizzles in its turn by growing a little inside a small ring of dashes, and is as it was when the tasting ends.
 
 **Palette.** Marker colours straight from the pack: saturated, unmixed, no pastels and no greys. Dark is the outline only.
 
