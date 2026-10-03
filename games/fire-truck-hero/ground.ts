@@ -41,9 +41,16 @@ export function cellAt(x: number, z: number): number {
   return Math.floor(z) * COLS + Math.floor(x)
 }
 
+/**
+ * Damp sand dries a little between two taps, so a place counts as having had
+ * its gulp when it holds at least this much of it. Three taps a few seconds
+ * apart still make a puddle.
+ */
+export const NEARLY = 0.5
+
 export function levelOf(gulps: number): Level {
-  if (gulps >= MUD_AT) return 'mud'
-  if (gulps >= PUDDLE_AT) return 'puddle'
+  if (gulps > MUD_AT - NEARLY) return 'mud'
+  if (gulps > PUDDLE_AT - NEARLY) return 'puddle'
   return gulps > 0 ? 'damp' : 'dry'
 }
 
@@ -57,7 +64,10 @@ export function pour(ground: Ground, x: number, z: number, gulps: number): Groun
   const cell = cellAt(x, z)
   if (cell < 0 || !(gulps > 0)) return ground
   const next = ground.slice()
-  next[cell] = Math.min(MOST, next[cell] + gulps)
+  const now = Math.min(MOST, next[cell] + gulps)
+  // Water that has had its fill stands: it is counted as the whole fill, and no longer dries.
+  const level = levelOf(now)
+  next[cell] = level === 'mud' ? Math.max(now, MUD_AT) : level === 'puddle' ? Math.max(now, PUDDLE_AT) : now
   return next
 }
 
@@ -67,7 +77,7 @@ export function dry(ground: Ground, seconds: number): Ground {
   const lost = seconds * DRYING_GULPS_PER_S
   let changed = false
   const next = ground.map((gulps) => {
-    if (gulps <= 0 || gulps >= PUDDLE_AT) return gulps
+    if (gulps <= 0 || levelOf(gulps) !== 'damp') return gulps
     changed = true
     return Math.max(0, gulps - lost)
   })

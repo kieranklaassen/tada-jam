@@ -83,7 +83,15 @@ describe('the ground of a yard', () => {
   })
 
   it('names each level by the gulps it takes', () => {
-    expect([0, 0.2, 2.9, 3, 3.9, 4, 5].map(levelOf)).toEqual(['dry', 'damp', 'damp', 'puddle', 'puddle', 'mud', 'mud'])
+    expect([0, 0.2, 2.5, 2.6, 3, 3.5, 3.6, 4, 5].map(levelOf)).toEqual(['dry', 'damp', 'damp', 'puddle', 'puddle', 'puddle', 'mud', 'mud', 'mud'])
+  })
+
+  it('makes a puddle of three taps a few seconds apart, though damp sand dries a little between them', () => {
+    let ground = dryGround()
+    for (let tap = 0; tap < 3; tap++) ground = dry(pour(ground, 5.5, 4.5, 1), 2)
+    expect(levelAt(ground, 5.5, 4.5)).toBe('puddle')
+    // And once it stands it stays.
+    expect(levelAt(dry(ground, 600), 5.5, 4.5)).toBe('puddle')
   })
 })
 
