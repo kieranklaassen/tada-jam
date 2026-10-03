@@ -25,7 +25,7 @@ Fix-it Stall is a repair stall on a market lane. Customers bring a lamp, a fan, 
 - The moment a lead closes a loop through the cell and the lamp, the lamp is lit: no test button and no wait. Copper-coloured beads run round the whole loop, all at one speed, the lamp's glow falls on the mat, and a low hum rises with the current.
 - Take any lead off and everything stops at once, everywhere in the loop.
 - Clip both ends of one lead across the cell alone and the lead glows orange, the cell puffs, and its cutout flag pops up with a pock. A tap on the flag sets it back.
-- Clip a lead onto one pad twice and it makes a useless loop of its own that sags and twangs.
+- Clip both ends of a lead onto one pad and it makes a loop of nothing, which sags and twangs.
 - Every further lead changes what runs: a second path, a short way round, a longer way round.
 
 **Sound and motion.** The clack of a clip is pitched by where it bites (a pad, a leg, the cell's cap). The lead has weight: it swings, overshoots and settles. The hum, the lamp's ring and the beads start in the frame the loop closes. Random clipping always does something: a clack and a swinging lead at the least, a lit lamp or a popped flag at the most.
@@ -34,7 +34,79 @@ Fix-it Stall is a repair stall on a market lane. Customers bring a lamp, a fan, 
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+Seven objects by five actions. Every result is what the solved circuit does, so a result found once stays true. The wrong use is marked **W**.
+
+**Cell** (the source)
+
+| Action | What happens |
+| --- | --- |
+| Clip it into a loop | The loop goes live: beads leave its cap, run all the way round and come back in, and a hum starts. |
+| Turn it round | It tumbles end over end with a thunk and the beads run the other way. A motor in the loop spins backwards; a lamp does not care. |
+| Add a second | Nose to tail: beads faster, lamp brighter, hum higher. Side by side: nothing changes. **W** nose to nose: the two lean on each other like arm-wrestlers, the beads shiver on the spot, and nothing runs. |
+| Lead straight across it | **W** A short: the lead glows orange, the cell puffs warm air, its cutout flag pops up with a pock, and the old hand's whiskers stand out. A tap on the flag sets it back. |
+| Flick it | It hops on the mat with a thud. A flat cell bounces twice with a hollow tock, as a flat cell really does. Never hinted. |
+
+**Lead** (the conductor)
+
+| Action | What happens |
+| --- | --- |
+| Clip it into a loop | Two clacks, the gap is closed, the loop runs. |
+| Turn it round | The clips swap ends with a double clack and a flourish. Nothing changes, and it is played straight. |
+| Add a second | End to end: the same loop by a longer way round, and the lid will bulge. **W** both clips on one pad: a loop of nothing, which sags and twangs. |
+| Lead straight across it | The two leads share the beads, each carrying half, and plait themselves together. |
+| Flick it | It swings and twangs like a slack string, lower the longer it is. |
+
+**Switch** (a gap the child chooses)
+
+| Action | What happens |
+| --- | --- |
+| Clip it into a loop | Lever up, the loop is open and everything stops; lever down, it runs. |
+| Turn it round | It spins on its base with a ratchet and now throws the other way. Nothing else changes. |
+| Add a second | In a row: both must be down. Side by side: either will do, so one lamp is worked from two places. |
+| Lead straight across it | **W** Always on. The lever clicks to no effect, and a customer who wants it off flicks it faster and faster. |
+| Flick it | The lever throws with a clack and the loop opens or closes in that frame. |
+
+**Lamp** (turns the current into light and warmth)
+
+| Action | What happens |
+| --- | --- |
+| Clip it into a loop | The glass rings once and the filament glows by how much runs through it: dull red for little, white for much. |
+| Turn it round | It is unscrewed and screwed back with a squeak. The glow is the same either way. |
+| Add a second | In a row: both dim, and the beads slow everywhere in the loop. Side by side: both at full glow, and the beads leave the cell twice as thick. **W** three cells on one lamp: it flares, goes pik, and the glass turns smoky. It is now a blown lamp, which is a gap, and the tray has more. |
+| Lead straight across it | It goes dark while everything else in the loop runs harder. **W** if it was the only thing in the loop, that is a short and the flag pops. |
+| Flick it | It rings like a glass and the filament quivers. A blown lamp rattles. |
+
+**Motor** (turns the current into motion; a fan blade or a wheel sits on its shaft)
+
+| Action | What happens |
+| --- | --- |
+| Clip it into a loop | It spins with a whirr pitched by its speed. A fan blows the lead ends about, rolls the loose things on the mat and ruffles whoever stands at the window. |
+| Turn it round | **W** It spins the other way: a fan sucks, so scarves and whiskers lean in, and a toy car backs into its owner's foot. |
+| Add a second | In a row: both lazy. Side by side: both at full speed. |
+| Lead straight across it | It coasts down with a falling whirr while the rest of the loop runs harder. |
+| Flick it | The blade freewheels and ticks to a stop. With a lamp in its loop and no cell, the lamp glints while the blade turns: a spun motor is a source. Never hinted. |
+
+**Buzzer** (turns the current into sound)
+
+| Action | What happens |
+| --- | --- |
+| Clip it into a loop | It rasps, higher and harder with more current, its arm blurs, and the dust on the mat jumps round it. |
+| Turn it round | It hops round on its feet with a tinny rattle. The rasp is the same. |
+| Add a second | In a row: both mutter. Side by side: both at full rasp a hair apart in pitch, so they throb against each other. |
+| Lead straight across it | It is cut off in the middle of a rasp with a hiccup. |
+| Flick it | One dull tink of its tin cap. |
+
+**Bench odds** (a spoon, a key, a ball of foil, a pencil, a rubber, a wooden stick, a piece of string)
+
+| Action | What happens |
+| --- | --- |
+| Clip it into a loop | The spoon, the key and the foil pass everything. The pencil passes a little through its graphite, so a lamp glows dull. The rubber, the stick and the string pass nothing. |
+| Turn it round | The same either way, each with its own clatter. |
+| Add a second | In a row: one thing that blocks, anywhere in the loop, stops the whole loop. Side by side: one thing that passes is enough. |
+| Lead straight across it | **W** Whatever it was no longer matters: a rubber with a lead across it "works". |
+| Flick it | Each sounds as its material: the spoon sings, the key jingles, the foil crackles, the pencil tocks, the rubber wobbles without a sound, the stick clacks, the string flops. |
+
+**On day 15** the child reads a board before touching it and fetches the tester only where it is needed; tunes one gadget to one customer (dim for the owl, two cells for the moth); and keeps contraptions of their own running on the stall's sign board, such as a lamp worked from two switches, a fan and a bell on one cell, or a blade spun by hand that makes a lamp glint. None of that is new content: it is the same seven objects, combined (pack: game-design, depth-from-combinations.md; pack: game-design, liveliness-from-causing-and-comedy.md).
 
 ## The representation
 
