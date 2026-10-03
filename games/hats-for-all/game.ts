@@ -9,7 +9,10 @@ import { Scene } from './scene'
 import { changeShow, firstShowing, nextCrewShow, paradeShow, type Show } from './shows'
 import { IN_ARCH, LOOSE_Z, ROW_Z, TILE_Z, holeX, nearestSpot, spotPoint, spotX } from './stage'
 import { ACTS as TASTE_ACTS, moodFor, tasteFor } from './tastes'
-import { babble, bap, creak, fwump, hoot, pip, plop, pok, scuttle, squeak, squeal, voiceLength, whirr, whistle, type Mood } from './voices'
+import {
+  babble, bap, bip, bloopBlip, bomBom, chirrup, clap, creak, donk, dwong, flap, fwump, groan, hiss, hoot, hum, paf, pip, plap, plop, pok, pomf, rumble,
+  scuttle, shoop, squeak, squeal, squelch, thwop, tok, twang, voiceLength, whirr, whistle, zrrp, type Mood,
+} from './voices'
 
 // The game on the toy: the rules, the cycle and the scenes, played on the
 // puppet theatre. No renderer and no DOM. The Mount hands it what the finger
@@ -229,7 +232,10 @@ export class Game {
       const hat = this.topOf(held.hat), object = this.objectOf(held.hat), kind = this.saved.tile[hat]
       this.play.pressHat(held.hat, false)
       this.carrying = { hat, from: this.play.seen(hat), object }
-      this.play.cue(object === 'hat-in-tile' ? 'pok' : object === 'loose-hat' ? 'squeak' : 'pip', object === 'hat-in-tile' ? pok(kind, this.next()) : object === 'loose-hat' ? squeak(this.next()) : pip(kind, this.next()))
+      // Out of the tile it stretches after the finger with a low rubbery groan; off the floor it comes with a sucker "thwop"; off a head with a "pip".
+      if (object === 'hat-in-tile') this.play.cue('groan', groan(this.next()))
+      else if (object === 'loose-hat') this.play.cue('thwop', thwop(this.next()))
+      else this.play.cue('pip', pip(kind, this.next()))
       const pose = this.play.hatPose(hat)
       this.play.holdHat(hat, pose.x, pose.y, pose.z)
     } else if (held?.type === 'creature' && this.inCrew(held.who)) {
@@ -297,7 +303,13 @@ export class Game {
     if (event.type === 'hatMoved') {
       const kind = this.saved.tile[event.hat], hat = event.hat
       const travel: Travel = carried ? (event.to.at === 'loose' ? 'skid' : 'carry') : event.from.at === 'loose' ? 'hop' : 'pop'
-      if (!carried) play.cue(event.from.at === 'tile' ? 'pok' : event.from.at === 'head' ? 'pip' : 'plop', event.from.at === 'tile' ? pok(kind, this.next()) : event.from.at === 'head' ? pip(kind, this.next()) : plop(kind, this.next()))
+      if (!carried && event.from.at === 'tile') play.cue('pok', pok(kind, this.next()))
+      else if (!carried && event.from.at === 'head') play.cue('pip', pip(kind, this.next()))
+      // A tapped loose hat hops onto a bare head with an upward chirrup, or home with a double bounce, "bom-bom".
+      else if (!carried) play.cue(event.to.at === 'head' ? 'chirrup' : 'bom-bom', event.to.at === 'head' ? chirrup(kind, this.next()) : bomBom(kind, this.next()))
+      // The top of a tower: lifted by a tap, the tower shrinks with a "bip"; carried to a bare head, it goes with a smooth "shoop".
+      if (!carried && object === 'tower-top' && event.from.at === 'head') play.cue('bip', bip(this.next()), 0.06)
+      if (carried && object === 'tower-top' && action === 'to-bare-head') play.cue('shoop', shoop(this.next()))
       // A hat lifted off a tower: the creature under it blinks in the light.
       if (event.from.at === 'head' && object === 'tower-top' && !all.some((one) => one.type === 'towerFell' && one.spot === (event.from as { spot: number }).spot)) {
         const under = this.at(event.from.spot)
@@ -310,26 +322,29 @@ export class Game {
         play.moveHat(hat, { at: 'tile' }, travel, () => {
           play.cue('fwump', fwump(kind, this.next()))
           play.dimple(holeX(hat, this.saved.tile.length), TILE_Z)
-          // The hat left under a tower's top spins once as the top goes home.
-          if (object === 'tower-top' && action === 'to-tile') play.cue('squeak', squeak(this.next()), 0.08)
+          // The hat left under a tower's top spins once as the top goes home, with a quick "zrrp".
+          if (object === 'tower-top' && action === 'to-tile') play.cue('zrrp', zrrp(this.next()), 0.08)
         })
       } else if (event.to.at === 'loose') {
         const spot = event.to.spot
         // Carried out of the tile and let go on the floor, it skids to its spot with a long rubbery squeal; a loose hat let go again spins like a coin with a quickening whirr.
         if (carried && object === 'hat-in-tile') play.cue('squeal', squeal(this.next()))
         if (carried && object === 'loose-hat') play.cue('whirr', whirr(this.next()))
+        // Off a head it slides with a hiss of foam on foam; off a tipped tower it rolls with a wobbling rumble.
+        if (carried && object === 'hat-on-head') play.cue('hiss', hiss(this.next()))
+        if (carried && object === 'tower-top') play.cue('rumble', rumble(this.next()))
         play.moveHat(hat, { at: 'loose', spot }, travel, () => {
-          play.cue('plop', plop(kind, this.next()))
-          if (object === 'tower-top') play.cue('plop', plop(kind, this.next()), 0.12)
+          // It lands with a plop; flat off a head, "plap"; and what is left of a tipped tower settles with a low "donk".
+          if (carried && object === 'hat-on-head') play.cue('plap', plap(kind, this.next()))
+          else play.cue('plop', plop(kind, this.next()))
+          if (object === 'tower-top') play.cue('donk', donk(this.next()), 0.12)
           play.cue('scuttle', scuttle(this.next()), 0.3)
           play.everyoneLooks(spotX(spot), LOOSE_Z, 1.6)
         })
       } else {
         const who = this.kindAt(event.to.spot, all)
-        // A hat stretched out of the tile after the finger snaps onto the head it is let go on.
-        if (carried && object === 'hat-in-tile') play.cue('squeak', squeak(this.next()))
         const fell = all.find((one) => one.type === 'towerFell')
-        play.moveHat(hat, { at: 'head', who, level: event.to.level }, travel, fell?.type === 'towerFell' ? () => this.topples(who, fell.hats) : () => this.lands(hat, who, object))
+        play.moveHat(hat, { at: 'head', who, level: event.to.level }, travel, fell?.type === 'towerFell' ? () => this.topples(who, fell.hats) : () => this.lands(hat, who, object, carried))
       }
     } else if (event.type === 'bared') {
       const who = this.at(event.spot)
@@ -362,14 +377,21 @@ export class Game {
   }
 
   /** A hat comes down on a head: the creature gives under it and reacts to exactly this hat, and the others look. */
-  private lands(hat: number, who: string, object: ObjectKind): void {
+  private lands(hat: number, who: string, object: ObjectKind, carried: boolean): void {
     const play = this.play, kind = this.saved.tile[hat], creature = this.saved.crew.find((one) => one.kind === who)
     if (!creature || !play.has(who)) return
-    play.cue('bap', bap(kind, this.next()))
+    const tower = creature.hats.length > 1
+    // How it lands is heard: carried from the tile, a soft "paf" on a bare head and a muffled "pomf" on a hat; from one
+    // head to another, a two-note "bloop-blip" on a bare head and a rubbery squelch on a hat; otherwise a "bap".
+    if (carried && object === 'hat-in-tile') play.cue(tower ? 'pomf' : 'paf', tower ? pomf(kind, this.next()) : paf(kind, this.next()))
+    else if (carried && object === 'hat-on-head') play.cue(tower ? 'squelch' : 'bloop-blip', tower ? squelch(this.next()) : bloopBlip(kind, this.next()))
+    else play.cue('bap', bap(kind, this.next()))
     play.bounce(who, 1 - PERSONALITY[creature.kind].bounce)
-    if (creature.hats.length > 1) {
-      // A second hat: the tower slips over its eyes and it totters, bewildered and never hurt.
-      play.cue(object === 'loose-hat' ? 'creak' : 'bap', object === 'loose-hat' ? creak(this.next()) : bap(kind, this.next()), 0.09)
+    if (tower) {
+      // A second hat: the tower slips over its eyes and it totters, bewildered and never hurt. A loose hat makes the
+      // tower lean with a creak; the top of another tower lands with a second soft thump.
+      if (object === 'loose-hat') play.cue('creak', creak(this.next()), 0.09)
+      else if (object === 'tower-top') play.cue('bap', bap(kind, this.next()), 0.09)
       play.act(who, 'totters-blind')
       this.says(who, 'grump', 0.14)
       // Whoever is left bare looks from the tower to its own head and pats it: it shows where the hat went.
@@ -396,21 +418,21 @@ export class Game {
       play.cue('plop', plop(hat, this.next())); this.says(who, 'ask', 0.3); this.says(other, 'ask', 0.5)
     } else if (bare && action === 'to-hatted-head' && other) {
       play.act(who, 'peeks-up-under'); play.act(other, 'lifts-it-like-a-lid')
-      play.cue('pip', pip(hat, this.next()), 0.2); this.says(who, 'ask', 0.3); this.says(other, 'plain', 0.6)
+      play.cue('hum', hum(play.kindOf(who), this.next()), 0.15); play.speaks(who, 0.6); play.cue('pip', pip(hat, this.next()), 0.45); this.says(other, 'plain', 0.7)
     } else if (bare && action === 'to-tile') {
       play.act(who, 'babbles-into-a-hole'); this.says(who, 'ask', 0.2); play.cue('hoot', hoot(this.next()), 0.6)
     } else if (bare) {
-      play.act(who, 'twangs-back'); play.cue('hoot', hoot(this.next()))
+      play.act(who, 'twangs-back'); play.cue('twang', twang(this.next()))
     } else if (action === 'to-bare-head' && other) {
       play.act(who, 'bows-and-tips-its-hat'); play.act(other, 'claps')
-      this.says(who, 'plain'); play.cue('plop', plop(hat, this.next()), 0.4); play.cue('plop', plop(hat, this.next()), 0.65)
+      this.says(who, 'plain'); play.cue('clap', clap(this.next()), 0.4); play.cue('clap', clap(this.next()), 0.65)
     } else if (action === 'to-hatted-head' && other) {
       play.act(who, 'knocks-hats'); play.act(other, 'knocks-hats')
-      play.cue('bap', bap(hat, this.next()), 0.3); this.says(who, 'plain', 0.4); this.says(other, 'plain', 0.6)
+      play.cue('tok', tok(this.next()), 0.3); this.says(who, 'plain', 0.4); this.says(other, 'plain', 0.6)
     } else if (action === 'to-tile') {
-      play.act(who, 'shakes-its-hat-out'); play.cue('scuttle', scuttle(this.next()), 0.4); this.says(who, 'ask', 0.9)
+      play.act(who, 'shakes-its-hat-out'); play.cue('flap', flap(this.next()), 0.4); this.says(who, 'ask', 0.9)
     } else {
-      play.act(who, 'twangs-holding-its-hat'); play.cue('hoot', hoot(this.next())); this.says(who, 'plain', 0.3)
+      play.act(who, 'twangs-holding-its-hat'); play.cue('dwong', dwong(this.next())); this.says(who, 'plain', 0.3)
     }
   }
 }

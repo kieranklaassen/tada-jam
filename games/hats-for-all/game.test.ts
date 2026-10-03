@@ -455,3 +455,14 @@ describe('a hat on a head', () => {
     }
   })
 })
+
+describe('a loose hat that is tapped', () => {
+  it('hops home with a double bounce, "bom-bom", when no head is bare', () => {
+    const world: World = { crew: [{ kind: 'bop', spot: 2, hats: [0] }], tile: ['cone', 'dome'], loose: [{ hat: 1, spot: 3 }], changes: ['leave'], guest: null, leaver: 2, slips: 0 }
+    const game = new Game(saveOf(world)), heard: { at: number; name: string }[] = []
+    game.press({ type: 'hat', hat: 1 })
+    game.tap()
+    expect(run(game, 1.5, heard)).toEqual(['creak', 'bom-bom', 'fwump'])
+    expect(game.play.seen(1)).toEqual({ at: 'tile' })
+  })
+})

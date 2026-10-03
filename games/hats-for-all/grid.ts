@@ -25,51 +25,54 @@ export type Cell = {
 export const GRID: Record<ObjectKind, Record<Action, Cell>> = {
   'hat-in-tile': {
     tap: { seen: 'pops-out-and-lands-on-the-nearest-bare-head', heard: ['creak', 'pok', 'bap', 'babble'], moves: true },
-    'to-bare-head': { seen: 'stretches-after-the-finger-and-lands-where-let-go', heard: ['creak', 'pok', 'squeak', 'bap', 'babble'], moves: true },
-    'to-hatted-head': { seen: 'lands-on-the-hat-there-and-the-tower-slips-over-the-eyes', heard: ['creak', 'pok', 'squeak', 'bap', 'bap', 'babble-grump'], moves: true },
-    'to-tile': { seen: 'dips-back-into-its-own-hole', heard: ['creak', 'pok', 'fwump'], moves: false },
-    elsewhere: { seen: 'skids-with-a-squeal-to-the-nearest-round-spot-and-scuttles-in-a-small-circle', heard: ['creak', 'pok', 'squeal', 'plop', 'scuttle'], moves: true },
+    'to-bare-head': { seen: 'stretches-after-the-finger-and-lands-where-let-go', heard: ['creak', 'groan', 'paf', 'babble'], moves: true },
+    'to-hatted-head': { seen: 'lands-on-the-hat-there-and-the-tower-slips-over-the-eyes', heard: ['creak', 'groan', 'pomf', 'babble-grump'], moves: true },
+    'to-tile': { seen: 'dips-back-into-its-own-hole', heard: ['creak', 'groan', 'fwump'], moves: false },
+    elsewhere: { seen: 'skids-with-a-squeal-to-the-nearest-round-spot-and-scuttles-in-a-small-circle', heard: ['creak', 'groan', 'squeal', 'plop', 'scuttle'], moves: true },
   },
   'hat-on-head': {
     tap: { seen: 'pops-off-and-is-pressed-home-and-the-creature-pats-its-bare-head', heard: ['creak', 'pip', 'babble-ask', 'fwump'], moves: true },
-    'to-bare-head': { seen: 'hops-from-one-head-to-the-other', heard: ['creak', 'pip', 'babble-ask', 'bap', 'babble'], moves: true },
-    'to-hatted-head': { seen: 'makes-a-tower-there-and-leaves-its-own-head-bare', heard: ['creak', 'pip', 'babble-ask', 'bap', 'bap', 'babble-grump'], moves: true },
+    'to-bare-head': { seen: 'hops-from-one-head-to-the-other', heard: ['creak', 'pip', 'babble-ask', 'bloop-blip', 'babble'], moves: true },
+    'to-hatted-head': { seen: 'makes-a-tower-there-and-leaves-its-own-head-bare', heard: ['creak', 'pip', 'babble-ask', 'squelch', 'babble-grump'], moves: true },
     'to-tile': { seen: 'is-carried-home-and-pushed-in-under-the-finger-and-its-creature-waves', heard: ['creak', 'pip', 'squeak', 'babble', 'fwump'], moves: true },
-    elsewhere: { seen: 'slides-off-loose-and-its-creature-watches-it-go', heard: ['creak', 'pip', 'babble-ask', 'plop', 'scuttle'], moves: true },
+    elsewhere: { seen: 'slides-off-loose-and-its-creature-watches-it-go', heard: ['creak', 'pip', 'hiss', 'babble-ask', 'plap', 'scuttle'], moves: true },
   },
   'loose-hat': {
-    tap: { seen: 'hops-onto-the-nearest-bare-head-or-home-with-a-double-bounce', heard: ['creak', 'plop', 'bap', 'babble-grump'], moves: true },
-    'to-bare-head': { seen: 'is-picked-up-and-the-bare-creature-ducks-under-it', heard: ['creak', 'squeak', 'bap', 'babble'], moves: true },
-    'to-hatted-head': { seen: 'lands-sideways-the-tower-leans-and-the-hat-rights-itself', heard: ['creak', 'squeak', 'bap', 'creak', 'babble-grump'], moves: true },
-    'to-tile': { seen: 'is-pressed-home-with-a-long-creak', heard: ['creak', 'squeak', 'creak', 'fwump'], moves: true },
-    elsewhere: { seen: 'skids-spins-like-a-coin-with-a-whirr-and-scuttles-beside-the-nearest-round-spot', heard: ['creak', 'squeak', 'whirr', 'plop', 'scuttle'], moves: true },
+    tap: { seen: 'hops-onto-the-nearest-bare-head-or-home-with-a-double-bounce', heard: ['creak', 'chirrup', 'bap', 'babble-grump'], moves: true },
+    'to-bare-head': { seen: 'is-picked-up-and-the-bare-creature-ducks-under-it', heard: ['creak', 'thwop', 'bap', 'babble'], moves: true },
+    'to-hatted-head': { seen: 'lands-sideways-the-tower-leans-and-the-hat-rights-itself', heard: ['creak', 'thwop', 'bap', 'creak', 'babble-grump'], moves: true },
+    'to-tile': { seen: 'is-pressed-home-with-a-long-creak', heard: ['creak', 'thwop', 'creak', 'fwump'], moves: true },
+    elsewhere: { seen: 'skids-spins-like-a-coin-with-a-whirr-and-scuttles-beside-the-nearest-round-spot', heard: ['creak', 'thwop', 'whirr', 'plop', 'scuttle'], moves: true },
   },
   'tower-top': {
-    tap: { seen: 'leaves-the-tower-and-goes-home-and-the-tower-shrinks', heard: ['creak', 'pip', 'babble', 'fwump'], moves: true },
-    'to-bare-head': { seen: 'moves-over-and-mends-the-tower-and-the-bare-head-at-once', heard: ['creak', 'pip', 'babble', 'bap', 'babble-grump'], moves: true },
+    tap: { seen: 'leaves-the-tower-and-goes-home-and-the-tower-shrinks', heard: ['creak', 'pip', 'babble', 'bip', 'fwump'], moves: true },
+    'to-bare-head': { seen: 'moves-over-and-mends-the-tower-and-the-bare-head-at-once', heard: ['creak', 'pip', 'shoop', 'babble', 'bap', 'babble-grump'], moves: true },
     // Onto a head with one hat the tower changes heads; onto a head that already has two it makes three, which topple.
     'to-hatted-head': { seen: 'changes-heads-with-a-double-thump-or-makes-a-tower-of-three-that-topples-with-a-falling-whistle', heard: ['creak', 'pip', 'babble', 'bap', 'bap', 'babble-grump'], moves: true },
-    'to-tile': { seen: 'goes-home-while-the-hat-under-it-spins-once', heard: ['creak', 'pip', 'squeak', 'babble', 'fwump', 'squeak'], moves: true },
-    elsewhere: { seen: 'tips-the-tower-and-rolls-off-loose', heard: ['creak', 'pip', 'babble', 'plop', 'plop', 'scuttle'], moves: true },
+    'to-tile': { seen: 'goes-home-while-the-hat-under-it-spins-once', heard: ['creak', 'pip', 'squeak', 'babble', 'fwump', 'zrrp'], moves: true },
+    elsewhere: { seen: 'tips-the-tower-and-rolls-off-loose', heard: ['creak', 'pip', 'rumble', 'babble', 'plop', 'donk', 'scuttle'], moves: true },
   },
   'bare-creature': {
     tap: { seen: 'calls-the-nearest-hat-out-of-the-tile-or-pats-its-head-and-looks-into-the-holes', heard: ['creak', 'babble-ask', 'pok', 'bap', 'babble'], moves: true },
     'to-bare-head': { seen: 'bumps-bellies-and-boings-apart-and-both-pat-their-heads', heard: ['creak', 'squeak', 'plop', 'babble-ask', 'babble-ask'], moves: false },
-    'to-hatted-head': { seen: 'peeks-up-under-the-other-hat-which-lifts-like-a-lid', heard: ['creak', 'squeak', 'pip', 'babble-ask', 'babble'], moves: false },
+    'to-hatted-head': { seen: 'peeks-up-under-the-other-hat-which-lifts-like-a-lid', heard: ['creak', 'squeak', 'hum', 'pip', 'babble'], moves: false },
     'to-tile': { seen: 'leans-over-a-hole-and-babbles-into-it', heard: ['creak', 'squeak', 'babble-ask', 'hoot'], moves: false },
-    elsewhere: { seen: 'stretches-like-pulled-foam-and-twangs-back-to-its-spot', heard: ['creak', 'squeak', 'hoot'], moves: false },
+    elsewhere: { seen: 'stretches-like-pulled-foam-and-twangs-back-to-its-spot', heard: ['creak', 'squeak', 'twang'], moves: false },
   },
   'hatted-creature': {
     tap: { seen: 'does-its-own-trick-with-exactly-this-hat', heard: ['creak', 'babble'], moves: false },
-    'to-bare-head': { seen: 'bows-and-tips-its-hat-and-the-bare-one-claps', heard: ['creak', 'squeak', 'babble', 'plop', 'plop'], moves: false },
-    'to-hatted-head': { seen: 'knocks-hats-together-and-both-wobble', heard: ['creak', 'squeak', 'bap', 'babble', 'babble'], moves: false },
-    'to-tile': { seen: 'tips-its-hat-over-the-tile-and-shakes-it-and-shrugs', heard: ['creak', 'squeak', 'scuttle', 'babble-ask'], moves: false },
-    elsewhere: { seen: 'stretches-and-twangs-back-holding-its-hat-on', heard: ['creak', 'squeak', 'hoot', 'babble'], moves: false },
+    'to-bare-head': { seen: 'bows-and-tips-its-hat-and-the-bare-one-claps', heard: ['creak', 'squeak', 'babble', 'clap', 'clap'], moves: false },
+    'to-hatted-head': { seen: 'knocks-hats-together-and-both-wobble', heard: ['creak', 'squeak', 'tok', 'babble', 'babble'], moves: false },
+    'to-tile': { seen: 'tips-its-hat-over-the-tile-and-shakes-it-and-shrugs', heard: ['creak', 'squeak', 'flap', 'babble-ask'], moves: false },
+    elsewhere: { seen: 'stretches-and-twangs-back-holding-its-hat-on', heard: ['creak', 'squeak', 'dwong', 'babble'], moves: false },
   },
 }
 
 /** The names a cell may use for what is heard: the voices of voices.ts, with the babble's tune where it matters. */
-export const HEARD = ['creak', 'pok', 'pip', 'bap', 'fwump', 'plop', 'squeak', 'squeal', 'whirr', 'whistle', 'scuttle', 'hoot', 'babble', 'babble-ask', 'babble-grump'] as const
+export const HEARD = [
+  'creak', 'pok', 'pip', 'bap', 'fwump', 'plop', 'squeak', 'squeal', 'whirr', 'whistle', 'scuttle', 'hoot', 'babble', 'babble-ask', 'babble-grump',
+  'groan', 'paf', 'pomf', 'bloop-blip', 'squelch', 'hiss', 'plap', 'chirrup', 'bom-bom', 'thwop', 'bip', 'shoop', 'zrrp', 'rumble', 'donk', 'hum', 'twang', 'dwong', 'tok', 'flap', 'clap',
+] as const
 
 /**
  * What a cell does to the world, by the rules. The hat rows move a hat; a

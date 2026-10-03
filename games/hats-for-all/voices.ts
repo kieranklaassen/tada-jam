@@ -119,6 +119,126 @@ export function whistle(count: number): Partial[] {
   return [tone(0, 1700 * v, 380 * v, 0.1, 0.01, 0.5)]
 }
 
+// --- The sounds the cells of the grid name (ART.md, "The object-by-action grid") ---
+
+/** A hat stretched out of the tile after the finger: a low rubbery groan. */
+export function groan(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 150 * v, 108 * v, 0.09, 0.06, 0.34, 'triangle'), noise(0, 320, 240, 3, 0.04, 0.05, 0.3)]
+}
+
+/** A hat carried from the tile lands on a bare head: a soft "paf". */
+export function paf(hat: HatKind, count: number): Partial[] {
+  const p = HAT_PITCH[hat] * vary(count)
+  return [noise(0, 720, 420, 1, 0.11, 0.003, 0.08), tone(0, 285 * p, 205 * p, 0.08, 0.004, 0.09)]
+}
+
+/** A hat lands on the hat already there: a muffled "pomf". */
+export function pomf(hat: HatKind, count: number): Partial[] {
+  const p = HAT_PITCH[hat] * vary(count)
+  return [tone(0, 195 * p, 122 * p, 0.15, 0.006, 0.17), noise(0, 270, 180, 1.5, 0.08, 0.006, 0.12)]
+}
+
+/** A hat hops from one head to another: two notes, "bloop-blip". */
+export function bloopBlip(hat: HatKind, count: number): Partial[] {
+  const p = HAT_PITCH[hat] * vary(count)
+  return [tone(0, 410 * p, 520 * p, 0.12, 0.01, 0.1), tone(0.14, 700 * p, 640 * p, 0.1, 0.004, 0.07)]
+}
+
+/** A hat from a head lands on another hat: a rubbery squelch. */
+export function squelch(count: number): Partial[] {
+  const v = vary(count)
+  return [noise(0, 520 * v, 1450 * v, 5, 0.09, 0.012, 0.13), tone(0, 245 * v, 172 * v, 0.07, 0.01, 0.12)]
+}
+
+/** A hat slides off loose: a hiss of foam on foam. */
+export function hiss(count: number): Partial[] {
+  return [noise(0, 2600 * vary(count), 1900, 1.2, 0.05, 0.03, 0.28)]
+}
+
+/** And lands flat on the floor: "plap". */
+export function plap(hat: HatKind, count: number): Partial[] {
+  const p = HAT_PITCH[hat] * vary(count)
+  return [noise(0, 920, 520, 0.8, 0.12, 0.003, 0.05), tone(0, 232 * p, 182 * p, 0.08, 0.003, 0.06)]
+}
+
+/** A loose hat hops onto a bare head: an upward chirrup. */
+export function chirrup(hat: HatKind, count: number): Partial[] {
+  const p = HAT_PITCH[hat] * vary(count)
+  return [tone(0, 600 * p, 1080 * p, 0.1, 0.004, 0.07), tone(0.08, 820 * p, 1420 * p, 0.09, 0.004, 0.07)]
+}
+
+/** A loose hat hops home with a double bounce: "bom-bom". */
+export function bomBom(hat: HatKind, count: number): Partial[] {
+  const p = HAT_PITCH[hat] * vary(count)
+  return [tone(0, 182 * p, 122 * p, 0.14, 0.004, 0.11), tone(0.17, 170 * p, 116 * p, 0.11, 0.004, 0.1)]
+}
+
+/** A loose hat is picked up off the floor: a sucker "thwop". */
+export function thwop(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 300 * v, 720 * v, 0.12, 0.004, 0.05), noise(0, 1250, 620, 2, 0.07, 0.003, 0.05)]
+}
+
+/** A tower shrinks by one: "bip". */
+export function bip(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 1320 * v, 1330 * v, 0.1, 0.003, 0.05)]
+}
+
+/** A tower's top hat moves over to a bare head: a smooth "shoop". */
+export function shoop(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 480 * v, 920 * v, 0.08, 0.05, 0.2)]
+}
+
+/** The hat left under a tower's top spins once: a quick "zrrp". */
+export function zrrp(count: number): Partial[] {
+  const v = vary(count)
+  return [0, 1, 2, 3, 4].map((tick) => tone(tick * 0.03, (600 + tick * 130) * v, (640 + tick * 130) * v, 0.05, 0.003, 0.025, 'triangle'))
+}
+
+/** A hat rolls off a tipped tower: a wobbling rumble. */
+export function rumble(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 112 * v, 90 * v, 0.1, 0.03, 0.42, 'triangle'), tone(0, 125 * v, 101 * v, 0.06, 0.03, 0.42, 'triangle')]
+}
+
+/** And what is left of the tower settles: a low "donk". */
+export function donk(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 152 * v, 104 * v, 0.16, 0.003, 0.2)]
+}
+
+/** A stretched creature twangs back to its spot. */
+export function twang(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 365 * v, 250 * v, 0.12, 0.003, 0.4, 'triangle'), tone(0, 730 * v, 500 * v, 0.04, 0.003, 0.25)]
+}
+
+/** A stretched creature that holds its hat on springs back lower and longer: "dwong". */
+export function dwong(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 172 * v, 96 * v, 0.14, 0.004, 0.5, 'triangle')]
+}
+
+/** Two hats knocked together: a hollow "tok". */
+export function tok(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 820 * v, 760 * v, 0.13, 0.002, 0.05), noise(0, 1500, 1500, 8, 0.05, 0.002, 0.03)]
+}
+
+/** A hat shaken out over the tile: a floppy "flap-flap". */
+export function flap(count: number): Partial[] {
+  const v = vary(count)
+  return [noise(0, 520 * v, 300 * v, 1, 0.09, 0.006, 0.07), noise(0.15, 480 * v, 280 * v, 1, 0.08, 0.006, 0.07)]
+}
+
+/** A creature claps, once. */
+export function clap(count: number): Partial[] {
+  return [noise(0, 1800 * vary(count), 1200, 1.5, 0.1, 0.002, 0.04)]
+}
+
 /** The arch, tapped. */
 export function hoot(count: number): Partial[] {
   const v = vary(count)
@@ -155,6 +275,12 @@ export function babble(creature: CreatureKind, mood: Mood, count: number): Parti
     pitch *= tune.step
   }
   return partials
+}
+
+/** A creature peeks up under another's hat with a questioning hum: one long note in its own voice that rises at the end. */
+export function hum(creature: CreatureKind, count: number): Partial[] {
+  const voice = VOICE[creature], pitch = voice.pitch * 0.8 * vary(count)
+  return [tone(0, pitch, pitch * 1.04, 0.09, 0.05, 0.22, voice.wave), tone(0.2, pitch * 1.04, pitch * 1.38, 0.09, 0.03, 0.2, voice.wave)]
 }
 
 /** When a voice has died away, in seconds from its start. */
