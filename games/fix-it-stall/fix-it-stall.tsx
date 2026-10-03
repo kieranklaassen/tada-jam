@@ -12,6 +12,7 @@ import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { deserialize, serialize, type GameState } from './state'
+import { Spike } from './spike'
 
 // The Mount, showing a blank surface. Everything a game needs around its
 // renderer is wired and running: the saved state, attention, the attended
@@ -59,7 +60,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => {}
+    // Until the toy replaces it, the surface shows the look spike: the game's real scene, one fixed moment, with
+    // nothing playable behind it (spike.ts).
+    const spike = new Spike(), surface = canvas.getContext('2d')
+    const draw = () => { if (surface) drawn.drawCalls = spike.draw(surface, width, height, dpr, clock.seconds) }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.

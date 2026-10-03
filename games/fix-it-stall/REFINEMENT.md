@@ -5,7 +5,7 @@
 
 - Stage: sheet. First run, from base commit 2a133cc on `feat/learning-games-build`. The sheet is whole and has not been checked.
 - Sheet text to check: the sheet part of `ART.md` (everything above `## The look`) as first pushed whole in the commit "Fix-it Stall sheet: the records, ready for check". Its hash is in the line "Sheet hash" below.
-- Look in use: none yet. First reserved look is Electronics bench; the spike is the next piece of this run.
+- Look in use: Electronics bench, the first reserved look. The spike is in: the Mount shows it at load, one fixed moment, nothing playable (`spike.ts`). Stills taken here in headless Chromium on a software renderer at 1180 by 820, pixel ratio 1 and 2, kept outside the repository. No frame rate measured here: the lead takes it on a real graphics card.
 - Renderer: canvas 2D, as the brief suggests.
 - Sheet hash (`awk '/^## The look/{exit} {print}' games/fix-it-stall/ART.md | sha256sum`): `0585a62e0a40d226105a4869612f164d0fc828f64f6f005618a3d09435be8423`
 - Open: sheet ready for check, round 1
@@ -14,7 +14,10 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 
 ### Template notes
 
-No entry yet. One entry a file copied from the template, written for the lead and for the games that come after: used as copied, or what was changed and why, and what is wrong or missing that any game would need. Mark a fault or a gap **for the template**. A frozen file is never changed here: a fault in one is a request to the lead.
+- `fix-it-stall.tsx` (the Mount): changed in one place. `draw` calls the spike with the canvas's 2D context, the size, the pixel ratio and the attended clock's seconds, and writes the count of sprites and figures into `drawn.drawCalls`. Everything else is as copied.
+- `config.ts`: as copied so far. `LADDER` and `FIRST_VISIT` change with the designed order, which is what the file is for.
+- All other copied files: as copied, untouched.
+- **For the template:** a shadow's blur and offset on a 2D canvas ignore the transform, so a painter that scales its scene has to scale them by hand (`lifted` in `paint.ts`). A canvas game's first helper will hit this.
 
 ### For the owner to decide
 

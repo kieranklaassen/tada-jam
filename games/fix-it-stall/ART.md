@@ -326,4 +326,16 @@ Fix-it Stall is designed from two California content standards adopted by the St
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Not part of the sheet. First notes from the spike; the full art guide is written at the toy stage.
+
+**The look: Electronics bench**, the first row reserved for this game. The spike is the game's real scene, shown at load: the owl's lantern open on the mat with a cracked trace, a lead clipped across the crack, and the lamp lit. Nothing answers a touch yet (`spike.ts`).
+
+- **Seen from the mender's seat, straight down, in daylight.** A grey mat with a stitched border; beyond it the stall's counter, a pale strip with a metal edge; beyond that the sunlit lane, where customers stand and lean over.
+- **The board.** Green solder mask with a darker edge and four mounting holes. Copper traces are a wide stroke with a lighter line down the middle. Every pad is a solder blob: a grey ring, a silver disc, one white glint. A crack is copper stopping short on both sides of a black zigzag.
+- **Parts in their real colours, plain.** A charcoal cell with an orange band, a steel base and a button cap, in a black holder. A lamp as a steel collar round pale glass with a filament. A black switch with a steel lever and a red tip. A steel motor can with a yellow end and a clear teal blade. A black buzzer. No faces and no patterns on any of them.
+- **Leads.** Insulated wire in red, yellow, green and blue, lying in a lazy bow, with a toothed steel clip and a coloured boot at each end. A short lead bows well clear of what it bridges so the crack under it stays in view.
+- **The current.** Pale beads with a copper edge on the metal, where the solved current runs and at its speed.
+- **Light.** One soft shadow under each thing, cast down and to the right. A lit lamp is one additive radial sprite, larger and stronger for more current. No brass, no walnut, no dim room.
+- **The folk carry the life.** The owl in a navy cap leans over the counter with heavy-lidded yellow eyes. The moth waits at the window with its own lamp. The old hand sleeps at the corner of the mat with her ringed tail out and her mug in reach.
+- **Cost.** Everything still is painted once into a layer per size and blitted. A frame draws that layer, two fills for all the beads of a board, one sprite per glow, one figure per blade and the owl's eyes.
+- **Tiers.** So far a tier changes the pixel ratio only (`config.ts`), and the still layer is repainted at the new ratio.
