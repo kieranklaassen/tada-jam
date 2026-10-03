@@ -4,18 +4,20 @@
 ## Status
 
 - Stage: sheet, with the look spike and the rules written while the check runs. The toy is not started: the brief holds it until the canvas pilot has proven the template.
-- Sheet: whole at commit `397b9a1` (sheet part sha256 `f77a0de0faf45cb1d9cff2e2d41d991d526f53f7a768274119c6b1054192434c`, by the command in `docs/build/CLOUD.md`). Not yet checked. The sheet part has not changed since; the look was written below it.
-- Rules: written against the sheet at commit `397b9a1`, at the builder's own risk, as the guide allows a remote builder. A finding under the representation, the mechanic questions, the error, the designed order or the records reopens them.
+- Sheet check, round 1 (checker: B): open, 12 findings, on the text with sha256 `f77a0de0…2434c` at commit `397b9a1`. All 12 replacements are pasted as written; none is disputed.
+- Sheet now: whole at commit `66bcfad`, sheet part sha256 `4bb4d37935e4f57d6a701618fbb66c5a076bb39e7ee26460259976745d533025` (by the command in `docs/build/CLOUD.md`). Not yet checked in this form.
+- Rules: brought into line with the sheet at commit `66bcfad`, still at the builder's own risk until a round passes. What the findings changed in the rules: the grid's sounds (finding 7), the answer of a rider's home (8), what is read from the marks and not stored (10), who is on the tar and what is saved of them (11), and the two wagons at every position (12). Finding 9, one finger drawing at a time, is the template's own input rule and is kept when the toy wires `input.ts`; no rule module changed for it.
 - Look in use: Chalk on asphalt, the first reserved look. Spike: in the Mount, painted once from a fixed seed (`spike.ts`), nothing playable behind it. Stills taken at 1180 by 820, pixel ratios 1 and 2, kept outside the repository. No frame rate: this machine draws in software, and the lead measures.
-- Open: sheet ready for check, round 1
+- Open: sheet ready for check, round 2
 
 **Where the rules are finer than the sheet's words,** for the checker and the lead to rule on. None changes what the sheet claims; each would be one sentence in the sheet if wanted.
 
-1. Where a rider is, is stored in six values where the sheet names three (at the stop, aboard, home): also home from the cycle before, waiting for the cycle to come, and laid out but not yet drawn in (the second rider of a layout for two). `world.ts` says so at the type.
+1. Where a rider is, is stored in six values where the sheet names three (at the stop, aboard, home): also home from the cycle before, waiting for the cycle to come, and waiting as the first rider of a layout for two. The second rider of such a layout is not stored ahead: it is laid out when its cycle begins. `world.ts` says so at the type.
 2. "Right beside the train" is within 480 tar units of it. Such a rider walks over and boards on the first mark of its cycle; a rider farther off is fetched.
 3. A mark that starts within 70 tar units of the train is joined to it, and the hop counts as chalk.
 4. When the tar is too full for a position to lie as designed, the nearest thing is laid out. A test plays 300 cycles at each position and finds the designed layout in more than 85 in 100 at the puddle position and more than 9 in 10 elsewhere.
-5. A rider fetched early joins the cycle in play, and another is laid out to wait at once.
+5. A rider fetched early joins the cycle in play, and another is laid out to wait at once, so someone always waits ahead. A wagon counts as free for the waiting rider only when no rider of the layout in play still needs it. Where a fetch leaves four riders on the tar, the oldest home is rubbed away then, not at the next beginning.
+6. A home with its rider in it is answered by the rider (the grid's rider row); a home whose rider is elsewhere gives the home's own answer.
 
 **Requests to the lead.**
 
@@ -76,7 +78,7 @@ So far there is a still scene and the rules. Lines the toy has to meet are marke
 
 ### The learning claim
 
-As the sheet has it, to be read again on the day of the pull request: Chalk Train is designed from one California learning foundation for preschool and transitional kindergarten (a foundation, not a standard; its statement for the earlier age only; confirmed when read on 2026-10-03), for ages 3 and 4, and from three statements of the Dutch curriculum institute's content cards for peuters and fase 1 (guidance, not law; all confirmed when read on 2026-10-03), for ages 2 to 4. For a two-year-old it is designed from the Dutch guidance alone. The pack ids are in `ART.md` under "The records". It says nothing about what any child can do.
+As the sheet has it after round 1, to be read again on the day of the pull request: Chalk Train is designed from one California learning foundation for preschool and transitional kindergarten (a foundation, not a standard; its statement for the earlier age only; confirmed when read on 2026-10-03), from which it takes only that scribble comes before any letter, for ages 3 and 4; from two statements of the Dutch curriculum institute's content card for peuters (confirmed), for ages 2 and 3 and a child who has only just turned four; and from one statement of its content card for fase 1 (confirmed), for age 4. The Dutch statements are guidance, not law. For a two-year-old it is designed from the two peuter statements alone. The pack ids are in `ART.md` under "The records". It says nothing about what any child can do.
 
 ### Defaults taken for the owner
 
@@ -88,4 +90,5 @@ As the sheet has it, to be read again on the day of the pull request: Chalk Trai
 - A mark's points land on whole tar units, so a new line can pass exactly through a point of an older one. A crossing test with strict inequalities misses that case; count a point that lies on the other path as belonging to one side.
 - A corner drawn at 80 degrees reads as under 70 once the mark is evened to a step, because the sharpest point falls between two points. Test shapes need corners well past the threshold, as a real zigzag has.
 - A rule that counts something inside a `map` must count in a local variable: reading the array being mapped gives the count from before the pass, and two riders boarded a full train. A seeded test of hundreds of random marks found it; the hand-written cases did not.
+- A helper that plays a cycle for a test (go to whoever is first in play) can trap itself where a child would not: it found a rider crowded out of the train by one fetched early, which became a rule (a wagon is kept for the layout in play).
 - Places where things can stand run out fast. Eight places could not hold three riders with their stops and homes; twelve can, and a layout still needs a fallback.

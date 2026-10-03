@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { GRID, THINGS } from './grid'
+import { KINDS } from './marks'
 import { CHARACTERS, FEELS, FELT_CAP, RIDERS, feel, isRiderKind, mostFelt, noFeels, taste } from './tastes'
 
 describe('the riders and their fixed tastes', () => {
@@ -35,6 +37,17 @@ describe('the riders and their fixed tastes', () => {
     const tempos = RIDERS.map((kind) => CHARACTERS[kind].tempo).sort((a, b) => a - b)
     // No two share a tempo, or come near enough to move alike.
     for (let i = 1; i < tempos.length; i++) expect(tempos[i] / tempos[i - 1]).toBeGreaterThan(1.3)
+  })
+
+  it('gives each home its own answer to a touch, unlike any cell of the grid', () => {
+    const sights = RIDERS.map((kind) => CHARACTERS[kind].homeSight), sounds = RIDERS.map((kind) => CHARACTERS[kind].homeSound)
+    expect(new Set(sights).size).toBe(RIDERS.length)
+    expect(new Set(sounds).size).toBe(RIDERS.length)
+    const cells = THINGS.flatMap((thing) => KINDS.map((kind) => GRID[thing][kind]))
+    for (const c of cells) {
+      expect(sights).not.toContain(c.sight)
+      expect(sounds).not.toContain(c.sound)
+    }
   })
 
   it('tallies what a ride does, up to a small cap', () => {

@@ -1,9 +1,9 @@
 import { REACH, answer, landsOn, type Thing } from './grid'
 import { STEP, addMark, nextChalk, readMark, tidy, type MarkKind } from './marks'
-import { nearestOn } from './path'
+import { middle, nearestOn } from './path'
 import { along, routeAlong, routeCalled, routeTo, type Route } from './ride'
 import { finishCycle, type CycleOutcome } from './state'
-import { FEELS, feel, mostFelt, taste, type Feel, type RiderKind, type Taste } from './tastes'
+import { CHARACTERS, FEELS, feel, mostFelt, taste, type Feel, type RiderKind, type Taste } from './tastes'
 import { NONE, SEATS, ensureNext, inPlay, railAt, settleIn, waitsAhead, type Rider, type World } from './world'
 import { PLACES, distance, type Pt } from './yard'
 
@@ -23,6 +23,7 @@ export const BADLY_UP_TO = 0.25
 export type Told =
   | { what: 'began' }
   | { what: 'answer'; thing: Thing; kind: MarkKind; sight: string; sound: string; rider: RiderKind | null }
+  | { what: 'home-answered'; home: RiderKind; sight: string; sound: string }
   | { what: 'route'; route: Route }
   | { what: 'happening'; at: number; name: Feel | 'twang' | 'clack' | 'roundabout' }
   | { what: 'reaction'; at: number; rider: RiderKind; feel: Feel; taste: Taste }
@@ -129,6 +130,15 @@ export function makeMark(before: World, raw: readonly Pt[]): { world: World; tol
   const cell = answer(landed.thing, reading.kind)
   const who = landed.rider >= 0 ? world.riders[stand[landed.rider].index].kind : null
   told.push({ what: 'answer', thing: landed.thing, kind: reading.kind, sight: cell.sight, sound: cell.sound, rider: who })
+
+  // A home is not a thing of the grid: chalk on it lies on the tar under it, and the home answers the touch too.
+  // A home with its rider in it is answered by the rider.
+  const touches = (at: Pt): boolean =>
+    reading.kind === 'line' ? p.some((q) => distance(q, at) <= REACH.rider) : distance(reading.kind === 'tap' ? p[0] : middle(p), at) <= REACH.rider
+  for (const r of world.riders) {
+    if (r.at === 'home' || r.at === 'before' || !touches(PLACES[r.home])) continue
+    told.push({ what: 'home-answered', home: r.kind, sight: CHARACTERS[r.kind].homeSight, sound: CHARACTERS[r.kind].homeSound })
+  }
 
   // Chalk laid on a thing chalks that thing.
   const colour = world.chalk

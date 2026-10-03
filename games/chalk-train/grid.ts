@@ -34,13 +34,13 @@ export const GRID: Record<Thing, Record<MarkKind, Cell>> = {
   engine: {
     tap: cell('smoke-ring', 'poot', false, false),
     line: cell('wheelspin-leap', 'screech', true, true),
-    zigzag: cell('stripes-wriggle', 'giggle-toots', false, false),
+    zigzag: cell('stripes-wriggle', 'wheezy-steam-giggle', false, false),
     loop: cell('lasso-spin', 'kettle-whistle', true, false),
     scribble: cell('dust-cloud-shake', 'cough-puff', false, false),
   },
   rider: {
     tap: cell('own-trick', 'own-call', false, false),
-    line: cell('train-comes', 'bell-hello', true, true),
+    line: cell('train-comes', 'coupling-clunk', true, true),
     zigzag: cell('tickle-bounce', 'own-squeak', false, false),
     loop: cell('hoop-spin', 'own-hum', true, false),
     scribble: cell('dusted-pale', 'own-sneeze', false, false),
@@ -56,14 +56,14 @@ export const GRID: Record<Thing, Record<MarkKind, Cell>> = {
     tap: cell('seed-burst', 'soft-puff', false, false),
     line: cell('stalk-twang', 'twang', true, true),
     zigzag: cell('stalk-rattle', 'tick-tock-twangs', true, true),
-    loop: cell('garden-ring-flower', 'rising-hum', true, true),
+    loop: cell('garden-ring-flower', 'petal-rustle', true, true),
     scribble: cell('seed-tuft-beard', 'muffled-toot', true, true),
   },
   line: {
     tap: cell('called-along-line', 'bell', false, true),
     line: cell('crossing', 'double-clack', true, true),
     zigzag: cell('rumble-strip', 'drumroll', true, true),
-    loop: cell('curl', 'curl-whoop', true, true),
+    loop: cell('curl-whip', 'whip-zip', true, true),
     scribble: cell('knot-squeeze', 'creak-cork', true, true),
   },
 }

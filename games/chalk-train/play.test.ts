@@ -236,6 +236,19 @@ describe('chalk laid on a thing chalks that thing', () => {
     expect(wetStretches(w.marks[0])).toEqual([])
   })
 
+  it('reads chalk on an empty home as chalk on bare tar, and the home answers the touch as well', () => {
+    const w = withRider('frog')
+    const tapped = makeMark(w, [PLACES['mid-4']])
+    expect(told(tapped.told, 'answer')[0]).toMatchObject({ thing: 'tar', kind: 'tap' })
+    expect(told(tapped.told, 'home-answered')).toEqual([{ what: 'home-answered', home: 'frog', sight: 'pond-ripple', sound: 'blip' }])
+    expect(told(tapped.told, 'route').length).toBe(1)
+    // The same answer for every kind of mark.
+    const scribbled = makeMark(w, scribble(PLACES['mid-4']))
+    expect(told(scribbled.told, 'home-answered')[0]).toMatchObject({ sight: 'pond-ripple', sound: 'blip' })
+    // A mark elsewhere does not touch the home.
+    expect(told(makeMark(w, [{ x: 600, y: 200 }]).told, 'home-answered')).toEqual([])
+  })
+
   it('answers a tap on a rider with its trick and nothing else: no chalk stays and no ride starts', () => {
     const w = makeMark(withRider('cat'), [{ x: 900, y: 200 }]).world
     const waiting = w.riders.find((r) => r.at === 'next')!

@@ -15,6 +15,9 @@ export type Taste = 'like' | 'dislike' | 'plain'
 type Character = {
   /** The one thing it visibly wants: its home. */
   home: string
+  /** How its home answers a touch, the same for every kind of mark: a small move and a sound. */
+  homeSight: string
+  homeSound: string
   likes: readonly [Feel, Feel]
   dislikes: readonly [Feel, Feel]
   /** How it moves: its tempo in beats a second, its weight from 0 to 1, and the part of it that is funniest. */
@@ -24,10 +27,10 @@ type Character = {
 }
 
 export const CHARACTERS: Record<RiderKind, Character> = {
-  frog: { home: 'pond', likes: ['corner', 'splash'], dislikes: ['fast', 'scribble'], tempo: 3.2, weight: 0.3, funniest: 'throat-pouch' },
-  chick: { home: 'nest', likes: ['loop', 'fast'], dislikes: ['splash', 'bump'], tempo: 4.5, weight: 0.1, funniest: 'stub-wings' },
-  snail: { home: 'lettuce', likes: ['bump', 'scribble'], dislikes: ['loop', 'fast'], tempo: 0.8, weight: 0.9, funniest: 'eye-stalks' },
-  cat: { home: 'cushion', likes: ['fast', 'scribble'], dislikes: ['corner', 'splash'], tempo: 1.6, weight: 0.55, funniest: 'tail' },
+  frog: { home: 'pond', homeSight: 'pond-ripple', homeSound: 'blip', likes: ['corner', 'splash'], dislikes: ['fast', 'scribble'], tempo: 3.2, weight: 0.3, funniest: 'throat-pouch' },
+  chick: { home: 'nest', homeSight: 'nest-rustle', homeSound: 'straw-rustle', likes: ['loop', 'fast'], dislikes: ['splash', 'bump'], tempo: 4.5, weight: 0.1, funniest: 'stub-wings' },
+  snail: { home: 'lettuce', homeSight: 'leaf-flap', homeSound: 'flap', likes: ['bump', 'scribble'], dislikes: ['loop', 'fast'], tempo: 0.8, weight: 0.9, funniest: 'eye-stalks' },
+  cat: { home: 'cushion', homeSight: 'cushion-puff', homeSound: 'sigh', likes: ['fast', 'scribble'], dislikes: ['corner', 'splash'], tempo: 1.6, weight: 0.55, funniest: 'tail' },
 }
 
 /** What this rider makes of that part of a ride. Always the same answer. */
