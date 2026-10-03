@@ -53,7 +53,7 @@ Five gestures: **lay** (drag from pin to pin), **pluck** (tap), **turn** (tap ag
 
 - A pin is a hinge, so a shape holds only if its parts hold it. Four parts pinned in a square can lean over into a diamond without any part changing length; three parts pinned in a triangle cannot. The child sees the triangle's sturdiness in the object and is never told it.
 - A plank is one stiff piece. Flat, it is shallow in the side view and bends easily; on edge, the same plank is deep and bends far less. That is the profile principle in the form a side view can show.
-- A tube and a stick of one length hold the same pull, and the tube holds much more squeeze before it bows.
+- A tube and a stick of one length differ: the tube holds much more squeeze before it bows, and less pull, since its end pops out of the pin.
 - A mast on one footing falls over; two legs on a wide base stand.
 - Sticks pinned in a curve between two footings push outward on the banks and carry a load by squeeze alone: the arch.
 - The load is a vehicle with a visible number of crates, or a trolley with a visible stack of weights, standing on the deck at a place the child can see.
@@ -88,9 +88,54 @@ A wrong design is run exactly as built, and the world shows where and why.
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**A sheet** is one drawing sheet with one gap, one kit and one vehicle whose job it is to cross: the job vehicle. **A cycle** is one sheet's job, from the touch that unrolls the sheet to the judging.
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+**The order.** Each position lays out a sheet that brings one new thing; the ids name places in the game's own order.
+
+| Id | The one new thing | Gap and kit | Job vehicle |
+| --- | --- | --- | --- |
+| `plank-gap` | A plank, and turning it on edge | Narrow gap; planks | Post van |
+| `rock-prop` | A stick as a prop on a footing | Wider gap with a rock in the river; planks, sticks | Post van |
+| `first-triangle` | The triangle | No rock; planks, sticks | Post van |
+| `jelly-run` | A new vehicle and its tastes | As before, a little wider | Jelly truck |
+| `truss-span` | Triangles in a row; a long squeezed stick bows | Wide gap; planks, sticks | Jelly truck |
+| `tube-post` | The tube | Deep gorge, a rock far below; adds tubes | Jelly truck |
+| `piano-day` | A new vehicle: a heavy load on two close axles | Known kit | Piano mover |
+| `high-thread` | The thread | Cliffs with footings above each bank; adds thread | Piano mover |
+| `tall-bus` | A new vehicle: it needs headroom | Cliffs again | Giraffe bus |
+| `mast-and-stay` | A mast the child builds, on a wide base | No cliffs | Piano mover |
+| `arch-gorge` | The arch | Sloping gorge walls with low footings | Giraffe bus |
+| `barge-below` | A barge passes underneath and wants the channel clear | Rock off-centre | Jelly truck |
+| `thin-kit` | A limit: about half the usual kit | A known gap | Piano mover |
+| `long-haul` | The longest gap | Full kit | Piano mover |
+| `open-yard` | A free place to build | A wide site with rocks and cliffs; the whole kit | Whichever vehicle the child picks |
+
+- **The same position comes back in another form.** Each position has three variants (the gap a cell wider or narrower, the rock or the cliff moved), taken in turn each time the position is laid out.
+- **How the cycle is judged.** Well: the job vehicle crossed after at most three failed runs. Mixed: it crossed after four to seven. Badly: eight failed runs without a crossing. Trolley tests and other vehicles never count. The position moves one step by the template's rule, and at `open-yard` it stays.
+- **A way back in.** After a cycle judged badly the next roll arrives exactly as it does after a crossing, with no mark on anything. The unfinished sheet stays on the rack as built.
+- **A harder option the child picks, and that looks harder.** After the job vehicle has crossed, one other vehicle waits at the near bank with more crates showing, and the child may send it or not. The trolley takes one to six weights. Neither moves the position.
+- **Which sheet a new position lays out.** While the child builds, the only vehicle waiting is this sheet's own. The next sheet is laid out at the moment the cycle is judged, from the position as that judging left it, and waits as a roll at the right edge with its vehicle's nose showing. So a moved position shows on the very next sheet, and never on one already waiting.
+- **Nothing shows the position:** no number on a sheet, no map of sheets, no mark that a sheet is an easier one. The rack shows only sheets the child has had.
+- **The numerals** lie where the first heading says: beside the trolley's stack and beside a vehicle's crates.
+
+**Every field of the saved state.**
+
+| Field | What it holds |
+| --- | --- |
+| `v` | The version. |
+| `position` | The id of the position the next sheet is laid out from. |
+| `finished` | The cycle on the board has been judged. |
+| `sheets` | The rack: the six sheets the child had last, oldest first. Each holds its position id, its variant, the bridge as a list of parts (kind, the two grid points, turned or not), up to two tracings as the same kind of list, the trolley's weights and where it stands, which vehicles have crossed it as it stands, and the part and spot of the pencil ring. When a seventh sheet is unrolled the oldest slides off the end of the rack, in view. |
+| `on` | Which sheet of the rack is on the board. |
+| `next` | The sheet laid out at the last judging and waiting as a roll: position id and variant, or nothing. |
+| `waiting` | Which vehicle stands at the near bank. |
+| `tries` | Failed runs of the job vehicle in this cycle. Never shown. |
+| `laid` | For each position, how many times it has been laid out, which picks the variant. Never shown. |
+| `shown` | The ideas whose one showing has been given. |
+
+- A part in the hand is saved where it came from. A run is a view of the saved bridge and is not saved: after a put-away in the middle of one, the vehicle stands at the near bank and the bridge is as built.
+- A scene's outcome is saved when the scene starts. No clock is read.
+- The largest legal state (six sheets, each with a full bridge and two full tracings) serializes under half the 64 KB cap, and a test says so.
 
 ## The characters and their fixed tastes
 
