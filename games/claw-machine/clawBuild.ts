@@ -23,7 +23,7 @@ export const TOOTH_DROP = 2.6
  */
 export function gripFor(half: number): number {
   const inner = 1 - TOOTH
-  return Math.asin(Math.min(0.95, Math.max(0, (half + 0.06 - inner) / TOOTH_DROP))) / JAW_SWING
+  return Math.asin(Math.min(0.95, Math.max(0, (half + 0.22 - inner) / TOOTH_DROP))) / JAW_SWING
 }
 /** How far a jaw swings, in radians, when the claw is wide open. */
 export const JAW_SWING = 0.75

@@ -78,7 +78,7 @@ export type CrateBody = {
 
 /** What becomes of a toy that is on a gobbler's tongue. */
 export type Plan =
-  | { kind: 'gulp'; chomps: number; ends: 'sort' | 'cycle' | null; chompsDone: number }
+  | { kind: 'gulp'; chomps: number; ends: 'sort' | 'cycle' | null; chompsDone: number; /** The chewing is done and the tongue is taking it down. */ swallowed: boolean }
   | { kind: 'spit'; hold: number; started: boolean; released: boolean; place: number }
 
 /** How far from the middle of a toy the claw can land and still close on it. */
@@ -88,6 +88,8 @@ const LOWEST_RIDE = 9.2
 const TOUCH = JAW_REACH + 0.5
 /** How far above the top of a gobbler's knob the hinge is when the teeth hold the knob by its middle. */
 export const KNOB_HOLD = TOOTH_DROP - 0.6
+/** The sliver of air a crate stands on: two things that touch are never drawn in the same plane. */
+export const AIR = 0.02
 /** How long the claw has to wait above a thing before the thing notices. */
 const WAIT_SECONDS = 0.7
 
@@ -171,7 +173,7 @@ export class Game {
   arrangeCrates(): void {
     this.crates = this.world.crates.map((crate, which) => {
       const laid = layCycle(crate.from, crate.seed), at = crateSpot(which, this.world.crates.length)
-      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, crews: laid.crews, x: at.x, y: SHELF.top, z: at.z, away: 0, tip: 0, carried: false }
+      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, crews: laid.crews, x: at.x, y: SHELF.top + AIR, z: at.z, away: 0, tip: 0, carried: false }
     })
   }
 
@@ -204,7 +206,7 @@ export class Game {
     })
     this.leaving = []
     if (this.world.crates.length === 0) this.crates = []
-    this.crates.forEach((crate) => { const at = crateSpot(crate.which, this.crates.length); crate.x = at.x; crate.y = SHELF.top; crate.z = at.z; crate.away = 0; crate.tip = 0; crate.carried = false })
+    this.crates.forEach((crate) => { const at = crateSpot(crate.which, this.crates.length); crate.x = at.x; crate.y = SHELF.top + AIR; crate.z = at.z; crate.away = 0; crate.tip = 0; crate.carried = false })
     if (this.hoist !== null) { this.hoist = null; this.claw.load = 0; this.claw.grip = 0; this.claw.targetX = this.claw.x; this.claw.targetZ = this.claw.z }
     this.flights.clear(); this.causes.clear()
   }
@@ -299,7 +301,12 @@ export class Game {
     if (target.on === 'place') {
       // The nearest toy in reach is meant, or with a toy in the jaws the place under the finger.
       const place = this.held >= 0 ? target.place : nearestToy(this.tray(), this.aim.x, this.aim.z, REACH)
-      if (place >= 0) { target = { on: 'place', place }; to = placeAt(place) }
+      if (place >= 0) {
+        target = { on: 'place', place }; to = placeAt(place)
+        // The claw comes down over the highest part of the toy, which is what its teeth close beside.
+        const stack = this.tray()[place]
+        if (this.held < 0 && stack.length > 0) to = { x: to.x + holdOf(this.bodies[stack[stack.length - 1]].toy).x, z: to.z }
+      }
     }
     this.pending = target
     claw.targetX = Math.min(RAIL.maxX, Math.max(RAIL.minX, to.x)); claw.targetZ = Math.min(RAIL.maxZ, Math.max(RAIL.minZ, to.z))
@@ -534,6 +541,8 @@ export class Game {
   flights = new Map<Body, Spot>()
   causes = new Map<Body, Deed>()
   private flightEnd(body: Body, toy: number): Spot {
+    const fixed = this.flights.get(body)
+    if (fixed) return fixed
     if (body.landing === 'mouth') { const actor = this.crew[body.slot]; if (actor) return this.mouthOf(actor) }
     if ((body.landing === 'stand' || body.landing === 'belly') && toy >= 0) return this.spotOf(toy)
     return this.flights.get(body) ?? { x: body.x, y: body.y, z: body.z }
@@ -579,7 +588,7 @@ export class Game {
     if (actor.openT >= 0) actor.openT += STEP
     // The tongue is up while a toy is on it or on its way to it.
     let up = 0
-    if (actor.role === 'crew') for (const body of this.bodies) if (body.slot === actor.slot && (body.mode === 'mouth' || (body.mode === 'flying' && body.landing === 'mouth'))) up = 1
+    if (actor.role === 'crew') for (const body of this.bodies) if (body.slot === actor.slot && (body.mode === 'mouth' || (body.mode === 'flying' && body.landing === 'mouth'))) { const plan = this.plans.get(body); if (!(plan && plan.kind === 'gulp' && plan.swallowed)) up = 1 }
     if (actor.snack.mode === 'mouth') up = 1
     actor.tongue += (up - actor.tongue) * Math.min(1, STEP * (up > actor.tongue ? 22 : 14))
     if (actor.slot === this.lifted && actor.role === 'crew' && this.claw.phase !== 'letting-go') {
@@ -598,7 +607,9 @@ export class Game {
     actor.x = walk.from.x + (walk.to.x - walk.from.x) * ease
     actor.z = walk.from.z + (walk.to.z - walk.from.z) * ease
     actor.y = walk.from.y + (walk.to.y - walk.from.y) * (walk.arc > 0 ? u : ease) + walk.arc * 4 * u * (1 - u)
-    actor.scale = walk.scaleFrom + (walk.scaleTo - walk.scaleFrom) * ease
+    // A rider grows to its full size late in its hop, when it is clear of the crate.
+    const grow = Math.min(1, Math.max(0, (u - 0.55) / 0.45))
+    actor.scale = walk.scaleFrom + (walk.scaleTo - walk.scaleFrom) * grow * grow * (3 - 2 * grow)
     if (walk.t < 1) return
     actor.walk = null
     if (walk.gone) { actor.role = 'leaving'; return }

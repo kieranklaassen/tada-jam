@@ -25,7 +25,7 @@ export class GobblerRig {
     this.waiting = look.waiting
     const parts = gobblerParts(look.shape)
     this.group.name = `gobbler-${look.who}`
-    const body = new Mesh(brickGeometry(parts.body, true), plastic)
+    const body = new Mesh(brickGeometry(parts.body), plastic)
     body.name = `gobbler-${look.who}-body`
     this.group.add(body)
     const eye = eyeCentres(look.shape)[0]
@@ -33,13 +33,13 @@ export class GobblerRig {
     this.pupils = new Mesh(brickGeometry(parts.pupils, true), plastic)
     this.pupils.name = `gobbler-${look.who}-pupils`
     this.group.add(this.pupils)
-    this.tongue = new Mesh(brickGeometry(parts.tongue, true), plastic)
+    this.tongue = new Mesh(brickGeometry(parts.tongue), plastic)
     this.tongue.name = `gobbler-${look.who}-tongue`
     this.group.add(this.tongue)
     this.travel = tongueTravel(look.shape)
     // The ones who wait show no belly: they are seen from the eyes up.
-    if (!look.waiting) {
-      const window = new Mesh(brickGeometry(parts.window, true), glass)
+    if (!look.waiting && parts.window.length > 0) {
+      const window = new Mesh(brickGeometry(parts.window), glass)
       window.name = `gobbler-${look.who}-window`
       window.renderOrder = 2
       this.group.add(window)

@@ -8,6 +8,7 @@ import { cabinetBricks, gateBricks } from '../cabinet'
 import { crateMesh } from '../crateBuild'
 import { HINGE_DROP, HINGE_OUT, JAW_SWING, hubBricks, jawBricks } from '../clawBuild'
 import { BACKDROP_HEX, GLOVE } from '../palette'
+import { TIP } from '../layout'
 import { CRATE, GATE, RAIL } from '../places'
 import { fitCamera } from './fit'
 import type { Picture, ToyLook } from '../picture'
@@ -19,8 +20,6 @@ import { brickGeometry, meshGeometry, plasticMaterial } from './plastic'
 
 const MAX_SHADOWS = 24
 const MAX_GLOWS = 12
-/** How far a crate tips to pour its load, in radians. */
-export const TIP = 1.0
 const UP = new Vector3(0, 1, 0)
 
 export class Stage {
@@ -158,7 +157,7 @@ export class Stage {
     if (mesh) return mesh
     const id = `${look.toy.colour}-${look.toy.kind}-${look.toy.size}`
     let geometry = this.toyGeometry.get(id)
-    if (!geometry) this.toyGeometry.set(id, (geometry = brickGeometry(toyBricks(look.toy), true)))
+    if (!geometry) this.toyGeometry.set(id, (geometry = brickGeometry(toyBricks(look.toy))))
     mesh = new Mesh(geometry, this.plastic)
     mesh.name = `toy-${look.key}`
     this.toyMeshes.set(look.key, mesh)

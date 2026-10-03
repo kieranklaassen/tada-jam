@@ -46,12 +46,12 @@ export function slotX(slot: number, crew: number): number {
  * The shelf behind the parapet, where the next ones wait. It lies below the floor of the cabinet, so that a
  * gobbler standing on it shows only its eyes over the parapet, and the back of the cabinet stays low.
  */
-export const SHELF = { x: -17, z: -18, w: 34, d: 7, top: -6 * PLATE } as const
+export const SHELF = { x: -17, z: -21, w: 34, d: 10, top: -6 * PLATE } as const
 /** Where the ones who wait stand, by the middle of each. */
-export const WAIT_Z = -14.5
+export const WAIT_Z = -15.2
 /** The parapet stands a little way behind the crew, so a gobbler has room to reel back from a toy. */
 export const WALL = { z: -11, top: 13 * PLATE } as const
-export const BACK = { z: -19, top: 50 * PLATE } as const
+export const BACK = { z: -22, top: 50 * PLATE } as const
 
 /** The gantry. The bridge itself runs above the frame; the cable hangs from it. */
 export const RAIL = {
@@ -60,7 +60,7 @@ export const RAIL = {
   /** How far the trolley can run. */
   minX: -17,
   maxX: 17,
-  minZ: -15.5,
+  minZ: -16,
   maxZ: 11,
 } as const
 

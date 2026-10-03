@@ -3,7 +3,7 @@ import { airTime, toss, type Body, type Leg } from './bodies'
 import { STEP } from './claw'
 import type { Deed } from './deeds'
 import type { Actor, Game, Plan } from './game'
-import { rimHeight } from './gobblerBuild'
+import { rimHeight, tongueTravel } from './gobblerBuild'
 import { GOBBLER, shapeOf } from './gobblers'
 import type { Spot } from './layout'
 import { WRONG, actSeconds } from './motion'
@@ -20,6 +20,8 @@ const NEW_HERE = ['two-colours', 'three-colours', 'two-kinds', 'two-sizes']
 /** One stop of a flight: a point (or home, where the rules have the toy), how it lands there, and how high the throw to it rises. */
 type Stop = { at?: Spot; landing: Leg['landing']; peak?: number; seconds?: number; scale?: number }
 
+/** How far above the rim a toy lies that rests on a gobbler's teeth. */
+const ON_TEETH = 0.85
 /** How far above the higher end of a throw it rises when nothing is said: a short hop. */
 const HOP = 0.3
 /** The height a throw rises to when it has to pass over the crew at the tray, models and all. */
@@ -36,12 +38,12 @@ function send(game: Game, body: Body, toy: number, stops: Stop[], deed?: Deed): 
     const at = stop.at ?? (stop.landing === 'mouth' ? game.mouthOf(game.crew[body.slot]) : game.spotOf(toy))
     const seconds = stop.seconds ?? airTime(y, at.y, stop.peak ?? Math.max(y, at.y) + HOP)
     y = at.y
-    return { x: at.x, y: at.y, z: at.z, seconds, scale: stop.scale ?? (stop.landing === 'belly' ? MINI : 1), landing: stop.landing }
+    return { x: at.x, y: at.y, z: at.z, seconds, scale: stop.scale ?? (stop.landing === 'belly' ? MINI : 1), landing: stop.landing, fixed: stop.at !== undefined }
   })
   body.legs = legs.slice(1)
   body.hang = 0
   if (deed) game.causes.set(body, deed)
-  if (legs[0].landing === 'again') game.flights.set(body, legs[0])
+  if (legs[0].fixed) game.flights.set(body, legs[0]); else game.flights.delete(body)
   toss(body, legs[0])
 }
 
@@ -115,7 +117,7 @@ export function react(game: Game, deed: Deed): void {
     case 'gulp': {
       const body = game.bodies[deed.toy]
       body.slot = deed.slot
-      game.plans.set(body, { kind: 'gulp', chomps: deed.chomps, ends: deed.ends, chompsDone: 0 })
+      game.plans.set(body, { kind: 'gulp', chomps: deed.chomps, ends: deed.ends, chompsDone: 0, swallowed: false })
       send(game, body, deed.toy, [{ landing: 'mouth', seconds: 0.26 }], deed)
       break
     }
@@ -125,12 +127,16 @@ export function react(game: Game, deed: Deed): void {
       const hold = NEW_HERE.includes(cycle.from) ? 1.1 : 0.4
       game.plans.set(body, { kind: 'spit', hold, started: false, released: false, place: deed.place })
       if (deed.way === 'falls-through') {
-        // Too small for it: straight through its belly and out underneath, and then onto the tray.
-        const under = { x: actor.x, y: STEP_PLACE.top, z: actor.z }
+        // Too small for it: down to the floor of its belly, out between the wide bars in front, and onto the tray.
+        const floor = { x: actor.x, y: actor.y + tongueTravel(shapeOf(actor.id)).floor + 0.25, z: actor.z }
+        const out = { x: actor.x, y: STEP_PLACE.top, z: actor.z + 4.4 }
         game.plans.delete(body)
         actor.wrongT = 0
         game.say({ type: 'wrong', way: 'falls-through' })
-        send(game, body, deed.toy, [{ at: game.mouthOf(actor), landing: 'again', seconds: 0.24 }, { at: under, landing: 'again', seconds: 0.3 }, { landing: 'stand', peak: STEP_PLACE.top + 2.2 }], deed)
+        send(game, body, deed.toy, [{ at: floor, landing: 'again', seconds: 0.34 }, { at: out, landing: 'again', peak: floor.y + 0.9 }, { landing: 'stand', peak: STEP_PLACE.top + 2 + body.height }], deed)
+      } else if (deed.way === 'hat') {
+        // Too big for its mouth: it comes to rest on its teeth.
+        send(game, body, deed.toy, [{ at: { x: actor.x, y: actor.y + rimHeight(shapeOf(actor.id)) + ON_TEETH, z: actor.z }, landing: 'mouth', seconds: 0.24 }], deed)
       } else send(game, body, deed.toy, [{ landing: 'mouth', seconds: 0.26 }], deed)
       break
     }
@@ -231,8 +237,8 @@ export function nextLeg(game: Game, body: Body, toy: number, deed: Deed | undefi
   } else if (deed?.type === 'gate-roll') { if (deed.heavy) game.say({ type: 'scrape' }); else game.say({ type: 'ping', nth: body.legs.length }); game.gateShake = 0.6 }
   else if (deed?.type === 'rim-slide') { if (body.legs.length > 0) game.say({ type: 'bell' }); else game.say(deed.heavy ? { type: 'rim-thud' } : { type: 'zip' }) }
   else if (deed?.type === 'spit' && actor && body.legs.length === 0) game.startAct(actor, 'start')
-  const to = next.landing === 'again' ? next : { ...next, ...game.spotOf(toy) }
-  if (next.landing === 'again') game.flights.set(body, next)
+  const to = next.fixed ? next : { ...next, ...game.spotOf(toy) }
+  if (next.fixed) game.flights.set(body, next); else game.flights.delete(body)
   toss(body, to)
 }
 
@@ -245,7 +251,7 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
   // A toy that will not go in sits on the head; any other lies on the tongue.
   const onHead = plan.kind === 'spit' && way === 'hat'
   // On the head it rests on the teeth, clear of the rim.
-  body.x = at.x; body.z = at.z; body.y = onHead ? actor.y + rimHeight(shapeOf(actor.id)) + 0.85 : at.y
+  body.x = at.x; body.z = at.z; body.y = onHead ? actor.y + rimHeight(shapeOf(actor.id)) + ON_TEETH : at.y
   if (body.chewed === 0) {
     if (plan.kind === 'gulp') game.startAct(actor, 'gulp', plan.chomps)
     else { game.startAct(actor, 'hold'); game.say({ type: 'chomp', heavy: body.heavy, who: actor.id }); game.say({ type: 'hmm', who: actor.id }) }
@@ -255,9 +261,13 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
     const seconds = actSeconds(actor.id, 'gulp', plan.chomps), chewing = seconds * 0.7
     while (plan.chompsDone < plan.chomps && body.chewed >= (chewing * (plan.chompsDone + 0.5)) / plan.chomps) { plan.chompsDone++; game.say({ type: 'chomp', heavy: body.heavy, who: actor.id }) }
     if (body.chewed < chewing) return
-    game.say({ type: 'gulp', heavy: body.heavy, who: actor.id })
+    // The swallow: the tongue takes it down, and it is chewed small on the way. From the floor of the belly it
+    // hops to its place with the others.
+    if (!plan.swallowed) { plan.swallowed = true; game.say({ type: 'gulp', heavy: body.heavy, who: actor.id }) }
+    body.scale = MINI + (1 - MINI) * actor.tongue
+    if (actor.tongue > 0.04) return
     game.plans.delete(body)
-    send(game, body, toy, [{ landing: 'belly', seconds: 0.24 }])
+    send(game, body, toy, [{ landing: 'belly', peak: Math.max(body.y, game.spotOf(toy).y) + 0.5 }])
     if (plan.ends) onEnd(plan.ends)
     return
   }
@@ -266,6 +276,8 @@ export function chew(game: Game, body: Body, toy: number, onEnd: (ends: 'sort' |
   const spec = WRONG[way]
   if (actor.wrongT >= 0 && actor.wrongT < spec.release * spec.seconds) return
   game.plans.delete(body)
-  // Out over its own teeth and eyes and onto the tray: high for the one that shoots straight up.
-  send(game, body, toy, [{ landing: 'stand', peak: body.y + (way === 'straight-up' ? 11 : way === 'cannon' ? 3.6 : 4.4) }])
+  // Straight up clear of its own teeth and eyes first, then over and onto the tray: high for the one that
+  // shoots straight up, flat for the one that fires it.
+  const clear = { x: body.x, y: body.y + 2.7, z: body.z }
+  send(game, body, toy, [{ at: clear, landing: 'again', seconds: 0.12 }, { landing: 'stand', peak: clear.y + (way === 'straight-up' ? 9 : way === 'cannon' ? 0.6 : 1.6) }])
 }

@@ -15,6 +15,10 @@ export type GobblerShape = {
   colour: Rgb
   /** The kind whose white model stands on its back, for a gobbler that goes by kind. */
   model?: Kind
+  /** Half the width of its mouth, where that is narrower than its belly: nothing longer goes in. */
+  throat?: number
+  /** Its belly has wide bars in front and no pane: a small thing put in rolls out between them. */
+  bars?: boolean
 }
 
 export type GobblerParts = {
@@ -35,6 +39,8 @@ export const LEGS = 3
 export const EYE = 2.5
 /** The height of the knob on its head, in plates. */
 const KNOB = 3
+/** Where the bars of a barred belly stand, either side of the middle: the gap between them lets a small toy through and no big one. */
+export const BAR_AT = 2.05
 
 const box = (colour: Rgb, x: number, y: number, z: number, w: number, d: number, h: number, studs = false): Brick => ({ x, y, z, w, d, h, colour, studs })
 const peg = (x: number, y: number, z: number): Brick => ({ x, y, z, w: 0.8, d: 0.8, h: 2, colour: WHITE, round: true, studs: false })
@@ -92,14 +98,19 @@ export function gobblerParts(shape: GobblerShape): GobblerParts {
   if (shape.model) {
     // A bracket on the back of the rim, and the white model of its kind standing on it.
     // It stands out behind the mouth, so a toy coming down into the mouth never meets it.
-    body.push(box(c, -1, rim, -3, 2, 1, 1), box(c, -2.4, rim + 1, -5.4, 4.8, 3.2, 1, true))
-    for (const brick of modelBricks(shape.model)) body.push({ ...brick, y: brick.y + rim + 2, z: brick.z - 3.8 })
+    body.push(box(c, -2, rim, -3, 2, 1, 1), box(c, -3.6, rim + 1, -5.4, 4.8, 3.2, 1, true))
+    for (const brick of modelBricks(shape.model)) body.push({ ...brick, x: brick.x - 1.2, y: brick.y + rim + 2, z: brick.z - 3.8 })
   }
-  const window: Brick[] = [box(WHITE, -half + 1, at + 2, 2.25, shape.width - 2, 0.5, shape.belly - 2)]
+  // A narrow mouth: a shoulder inside the rim on either side.
+  if (shape.throat) for (const side of [-1, 1]) body.push(box(c, side > 0 ? shape.throat : -half + 1, rim - 1, -2, half - 1 - shape.throat, 4, 1))
+  // Wide bars in front in place of a pane, with the widest gap in the middle.
+  if (shape.bars) for (const side of [-1, 1]) body.push(box(c, side * BAR_AT - 0.25, at + 2, 2.2, 0.5, 0.6, shape.belly - 2))
+  const window: Brick[] = shape.bars ? [] : [box(WHITE, -half + 1, at + 2, 2.25, shape.width - 2, 0.5, shape.belly - 2)]
   const [left, right] = eyeCentres(shape)
   const dot = EYE * 0.42
   const pupils: Brick[] = [left, right].map((eye) => ({ x: eye.x - dot / 2, y: -dot / 2 / PLATE, z: -dot / 2, w: dot, d: dot, h: 0, colour: BLACK, ball: true, studs: false }))
   // The tongue lies on the floor of the mouth, a little clear of the walls.
-  const tongue: Brick[] = [box(TONGUE, -half + 1.3, 0, -1.5, shape.width - 2.6, 3.3, 0.5, false)]
+  const reach = shape.throat ? shape.throat - 0.15 : half - 1.3
+  const tongue: Brick[] = [box(TONGUE, -reach, 0, -1.5, reach * 2, 3.3, 0.5, false)]
   return { body, pupils, window, tongue }
 }

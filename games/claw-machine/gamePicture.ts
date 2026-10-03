@@ -1,7 +1,7 @@
 import type { Body } from './bodies'
 import { hubAt } from './claw'
 import type { Actor, Game } from './game'
-import { EYE, rimHeight } from './gobblerBuild'
+import { EYE, knobAt, rimHeight } from './gobblerBuild'
 import { GOBBLER, shapeOf } from './gobblers'
 import type { Guidance } from './guidance'
 import { handPose, type HandPose } from './guidance'
@@ -45,12 +45,30 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
     if (actor.id === 'rocket' && claw.phase === 'rising') out.squash *= 1 + 0.14 * Math.min(1, claw.t * 2)
     if (actor.id === 'little' && near && claw.phase === 'ready') out.dy += 0.6 * Math.abs(Math.sin(game.time * 7))
   }
+  if (actor.liftedT >= 0) {
+    // In the jaws it hangs from its knob: however it stretches, leans or spins, the knob stays between the teeth.
+    const knob = knobAt(shapeOf(actor.id)), wide = 1 / Math.sqrt(Math.max(0.2, out.squash))
+    const at = turned(knob.x * wide, knob.y * out.squash, knob.z * wide, out)
+    out.dx += knob.x - at.x; out.dy += knob.y - at.y; out.dz += knob.z - at.z
+  }
   // A walk is a waddle: it rocks from foot to foot as it goes.
   if (actor.walk && actor.walk.arc === 0) out.leanZ += 0.14 * Math.sin(actor.walk.t * 26)
   return out
 }
 
 const pose: Pose = restPose({} as Pose)
+
+/**
+ * Where a point of a gobbler is once the gobbler leans and turns, measured
+ * from its feet: the stage rolls it to its side, turns it about its upright
+ * and then pitches it forward, in that order.
+ */
+export function turned(x: number, y: number, z: number, of: { leanX: number; leanZ: number; turn: number }): { x: number; y: number; z: number } {
+  const cz = Math.cos(of.leanZ), sz = Math.sin(of.leanZ), cy = Math.cos(of.turn), sy = Math.sin(of.turn), cx = Math.cos(of.leanX), sx = Math.sin(of.leanX)
+  const x1 = x * cz - y * sz, y1 = x * sz + y * cz
+  const x2 = x1 * cy + z * sy, z2 = -x1 * sy + z * cy
+  return { x: x2, y: y1 * cx - z2 * sx, z: y1 * sx + z2 * cx }
+}
 
 /** The cabinet with nothing in it but the claw at rest: what is drawn before the saved state has been read. */
 export function barePicture(): Picture {
@@ -61,10 +79,12 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   const claw = game.claw, hub = hubAt(claw)
   const toys: ToyLook[] = [], gobblers: GobblerLook[] = [], shadows: Shadow[] = [], glows: GlowLook[] = []
   const look = (key: number, body: Body, x = body.x, y = body.y, z = body.z, turn = 0): ToyLook => ({ key, toy: body.toy, x, y, z, squash: body.squash, leanX: body.leanX, leanZ: body.leanZ, scale: body.scale, turn })
-  /** A thing in or on a gobbler rides its pose: it shifts and turns with it and rises as it stretches. */
+  /** A thing in or on a gobbler rides its pose as if fixed to it: it shifts, leans and turns with it and rises as it stretches. */
   const riding = (actor: Actor, body: Body, key: number) => {
-    const rx = body.x - actor.x, rz = body.z - actor.z, cos = Math.cos(pose.turn), sin = Math.sin(pose.turn)
-    toys.push(look(key, body, actor.x + pose.dx * actor.scale + rx * cos + rz * sin, actor.y + pose.dy + (body.y - actor.y) * pose.squash, actor.z + pose.dz * actor.scale - rx * sin + rz * cos, pose.turn))
+    const at = turned(body.x - actor.x, (body.y - actor.y) * pose.squash, body.z - actor.z, pose)
+    const one = look(key, body, actor.x + pose.dx * actor.scale + at.x, actor.y + pose.dy + at.y, actor.z + pose.dz * actor.scale + at.z, pose.turn)
+    one.leanX += pose.leanZ; one.leanZ -= pose.leanX
+    toys.push(one)
   }
 
   // What the gobblers watch: the toy in the jaws, or the claw.

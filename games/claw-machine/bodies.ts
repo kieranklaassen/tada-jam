@@ -53,7 +53,7 @@ export type Body = {
   legs: Leg[]
 }
 
-export type Leg = { x: number; y: number; z: number; seconds: number; scale: number; landing: Landing }
+export type Leg = { x: number; y: number; z: number; seconds: number; scale: number; landing: Landing; /** The point is a fixed one, and not wherever the rules or a tongue have the toy by then. */ fixed?: boolean }
 
 export function newBody(toy: Toy): Body {
   return {

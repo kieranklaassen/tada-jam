@@ -117,3 +117,16 @@ export const HANDLE = 1.2
 export function handleSpot(): Spot {
   return { x: 0, y: ARCH + HANDLE, z: 2.25 }
 }
+
+/** How far a crate tips forward to pour its load, in radians. */
+export const TIP = 1.0
+
+/**
+ * Where a point of a crate is when the crate is tipped: the crate turns about
+ * the front edge of its foot. `y` and `z` are measured from the middle of the
+ * foot; `tip` runs from 0 upright to 1 poured.
+ */
+export function tipped(y: number, z: number, tip: number): { y: number; z: number } {
+  const pivot = CRATE.depth / 2, a = tip * TIP, cos = Math.cos(a), sin = Math.sin(a)
+  return { y: y * cos - (z - pivot) * sin, z: pivot + y * sin + (z - pivot) * cos }
+}

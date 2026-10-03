@@ -81,5 +81,8 @@ export function shapeOf(id: GobblerId): GobblerShape {
     width: gobbler.width, belly: gobbler.belly,
     colour: gobbler.by === 'colour' ? TOY_COLOUR[gobbler.takes as Colour] : WHITE,
     model: gobbler.by === 'kind' ? (gobbler.takes as Kind) : undefined,
+    // The little one has a narrow mouth that no big toy goes into; the big one has wide bars a small toy rolls out between.
+    throat: id === 'little' ? 2.3 : undefined,
+    bars: id === 'big' ? true : undefined,
   }
 }
