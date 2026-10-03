@@ -5,18 +5,19 @@
 
 - Stage: sheet, with the look spike and the rules written while the check runs. The toy is not started: the brief holds it until the canvas pilot has proven the template.
 - Sheet check, round 1 (checker: B): open, 12 findings, on the text with sha256 `f77a0de0…2434c` at commit `397b9a1`. All 12 replacements are pasted as written; none is disputed.
-- Sheet now: whole at commit `66bcfad`, sheet part sha256 `4bb4d37935e4f57d6a701618fbb66c5a076bb39e7ee26460259976745d533025` (by the command in `docs/build/CLOUD.md`). Not yet checked in this form.
-- Rules: brought into line with the sheet at commit `66bcfad`, still at the builder's own risk until a round passes. What the findings changed in the rules: the grid's sounds (finding 7), the answer of a rider's home (8), what is read from the marks and not stored (10), who is on the tar and what is saved of them (11), and the two wagons at every position (12). Finding 9, one finger drawing at a time, is the template's own input rule and is kept when the toy wires `input.ts`; no rule module changed for it.
+- Sheet check, round 2 (checker: D): open, 4 findings and 2 more from the lead, on the text with sha256 `4bb4d379…3025` at commit `66bcfad`. All 6 replacements are pasted as written; none is disputed. One was pasted at a different place than named: the lead's second replacement names the line under the fase 1 statement, but the line it replaces ("no shape of stroke is named") stands under the peuter statement nl / 7, and it was pasted there. The third "Left open by Limits" line, under nl / 3, was not named and is unchanged; that record's Limits itself says it does not say with whom.
+- Sheet now: whole at commit `9c363e8`, sheet part sha256 `6b88fa5920eea88a1d9e66e103581336706b5425e2efde7d46d983dc1d5f1fb4`. Not yet checked in this form.
+- Rules: brought into line with the sheet at commit `9c363e8`, at the builder's own risk until a round passes. Round 2 changed: the stored field `ahead` now says whether a second rider is drawn in (in place of a sixth value of where a rider is), and a waiting rider stays at its stop when both wagons are taken.
 - Look in use: Chalk on asphalt, the first reserved look. Spike: in the Mount, painted once from a fixed seed (`spike.ts`), nothing playable behind it. Stills taken at 1180 by 820, pixel ratios 1 and 2, kept outside the repository. No frame rate: this machine draws in software, and the lead measures.
-- Open: sheet ready for check, round 2
+- Open: sheet ready for check, round 3
 
 **Where the rules are finer than the sheet's words,** for the checker and the lead to rule on. None changes what the sheet claims; each would be one sentence in the sheet if wanted.
 
-1. Where a rider is, is stored in six values where the sheet names three (at the stop, aboard, home): also home from the cycle before, waiting for the cycle to come, and waiting as the first rider of a layout for two. The second rider of such a layout is not stored ahead: it is laid out when its cycle begins. `world.ts` says so at the type.
+1. Where a rider is, is stored in five values where the sheet names three (at the stop, aboard, home): also home from the cycle before, and waiting for the cycle to come. `world.ts` says so at the type.
 2. "Right beside the train" is within 480 tar units of it. Such a rider walks over and boards on the first mark of its cycle; a rider farther off is fetched.
 3. A mark that starts within 70 tar units of the train is joined to it, and the hop counts as chalk.
 4. When the tar is too full for a position to lie as designed, the nearest thing is laid out. A test plays 300 cycles at each position and finds the designed layout in more than 85 in 100 at the puddle position and more than 9 in 10 elsewhere.
-5. A rider fetched early joins the cycle in play, and another is laid out to wait at once, so someone always waits ahead. A wagon counts as free for the waiting rider only when no rider of the layout in play still needs it. Where a fetch leaves four riders on the tar, the oldest home is rubbed away then, not at the next beginning.
+5. A rider fetched early joins the cycle in play, and another is laid out to wait at once, so someone always waits ahead. Where that leaves four riders on the tar, the oldest home is rubbed away then, not at the next beginning. Where four riders are on the tar and none is at home, the one waiting ahead stays at its stop even with a wagon free, since nobody could be laid out to wait in its place.
 6. A home with its rider in it is answered by the rider (the grid's rider row); a home whose rider is elsewhere gives the home's own answer.
 
 **Requests to the lead.**

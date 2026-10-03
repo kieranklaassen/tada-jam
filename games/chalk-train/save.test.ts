@@ -34,7 +34,7 @@ describe('the saved world', () => {
   it('saves no ride in progress: the train is saved where its ride comes to rest', () => {
     const w = makeMark(freshWorld(null, 2), line({ x: 220, y: 460 }, { x: 700, y: 300 })).world
     const saved = serialize(w)
-    expect(Object.keys(saved).sort()).toEqual(['chalk', 'finished', 'marks', 'position', 'riders', 'seed', 'shown', 'train', 'v', 'water'])
+    expect(Object.keys(saved).sort()).toEqual(['ahead', 'chalk', 'finished', 'marks', 'position', 'riders', 'seed', 'shown', 'train', 'v', 'water'])
     expect(Math.abs(saved.train.x - 700)).toBeLessThan(14)
   })
 
@@ -62,6 +62,8 @@ describe('the saved world', () => {
     expect(withBad({ chalk: 2.5 }).chalk).toBe(0)
     expect(withBad({ seed: -4 }).seed).toBe(9)
     expect(withBad({ shown: 'yes' }).shown).toBe(false)
+    expect(withBad({ ahead: 'groep-3' }).ahead).toBe(w.position)
+    expect(withBad({ ahead: 'two-at-once' }).ahead).toBe('two-at-once')
     expect(withBad({ train: { x: 1e9, y: -50, f: 3, s: 9, t: 'pink' } }).train).toEqual({ x: TAR.w, y: 0, face: 1, stripes: -1, tint: -1 })
   })
 
@@ -104,8 +106,8 @@ describe('the saved world', () => {
       const left = MAX_POINTS - marks.reduce((sum, x) => sum + x.p.length, 0)
       marks.push({ c: 4, p: Array.from({ length: Math.min(MAX_MARK_POINTS, left) }, (_, i) => ({ x: TAR.w - (i % 9), y: TAR.h - 100 - (i % 7) })) })
     }
-    const riders: Rider[] = RIDERS.map((kind, i) => ({ kind, stop: PLACE_IDS[i * 2], home: PLACE_IDS[i * 2 + 1], at: i < 2 ? 'train' : i === 2 ? 'pair' : 'before', chalk: 99999, tar: 99999, felt: { fast: 9, corner: 9, loop: 9, splash: 9, bump: 9, scribble: 9 } }))
-    const largest: World = { ...freshWorld(null, 0xffffffff), position: 'round-the-water', seed: 0xffffffff, marks, riders, chalk: 4, water: 4, shown: true, train: { x: TAR.w, y: TAR.h, face: -1, stripes: 4, tint: 4 } }
+    const riders: Rider[] = RIDERS.map((kind, i) => ({ kind, stop: PLACE_IDS[i * 2], home: PLACE_IDS[i * 2 + 1], at: i < 2 ? 'train' : i === 2 ? 'next' : 'before', chalk: 99999, tar: 99999, felt: { fast: 9, corner: 9, loop: 9, splash: 9, bump: 9, scribble: 9 } }))
+    const largest: World = { ...freshWorld(null, 0xffffffff), position: 'round-the-water', ahead: 'round-the-water', seed: 0xffffffff, marks, riders, chalk: 4, water: 4, shown: true, train: { x: TAR.w, y: TAR.h, face: -1, stripes: 4, tint: 4 } }
     const bytes = new TextEncoder().encode(JSON.stringify(serialize(largest))).length
     expect(marks.reduce((sum, x) => sum + x.p.length, 0)).toBe(MAX_POINTS)
     expect(bytes).toBeLessThan(32 * 1024)

@@ -27,12 +27,12 @@ const inPlay = (w: World): Rider => w.riders.find((r) => r.at === 'stop' || r.at
 const withRider = (kind: RiderKind, home: PlaceId = 'mid-4', position = 'long-way'): World => ({
   ...freshWorld(null, 3), position, riders: [{ kind, stop: 'mid-2', home, at: 'stop', chalk: 0, tar: 0, felt: noFeels() }],
 })
-/** Takes whoever is in play home along one straight line. */
+/** Takes everyone in play home along straight lines: whoever is aboard first, then whoever still waits. */
 const takeHome = (w: World): { world: World; told: Told[] } => {
   let world = w
   const all: Told[] = []
   for (let guard = 0; guard < 16 && !world.finished; guard++) {
-    const r = inPlay(world)
+    const r = world.riders.find((x) => x.at === 'train') ?? world.riders.find((x) => x.at === 'stop')!
     const made = makeMark(world, line(trainAt(world), r.at === 'train' ? railAt(r.home) : railAt(r.stop)))
     world = made.world
     all.push(...made.told)
@@ -293,12 +293,27 @@ describe('how a cycle ends and the next one starts', () => {
 
   it('lays a layout for two as two riders: only the first waits ahead, the second is drawn in when that cycle begins', () => {
     const top = makeMark({ ...withRider('frog'), position: 'two-at-once' }, [{ x: 300, y: 462 }]).world
-    expect(top.riders.filter((r) => r.at === 'pair').length).toBe(1)
-    expect(top.riders.filter((r) => r.at === 'next').length).toBe(0)
+    expect(top.riders.filter(waitsAhead).length).toBe(1)
+    expect(top.ahead).toBe('two-at-once')
     const done = takeHome(top).world
     const began = makeMark(done, [{ x: done.train.x + 5, y: done.train.y }]).world
     expect(began.riders.filter((r) => r.at === 'stop' || r.at === 'train').length).toBe(2)
     expect(began.riders.length).toBeLessThanOrEqual(MAX_RIDERS)
+  })
+
+  it('goes by the layout the waiting rider was laid out from, whatever the position has moved to since', () => {
+    // Laid out for one: a position that has since moved to the top brings no second rider for this one.
+    const one = makeMark(withRider('frog', 'mid-4', 'far-rider'), [{ x: 300, y: 462 }]).world
+    expect(one.ahead).toBe('far-rider')
+    const doneOne = { ...takeHome(one).world, position: 'two-at-once' }
+    expect(makeMark(doneOne, [{ x: doneOne.train.x + 5, y: doneOne.train.y }]).world.riders.filter((r) => r.at === 'stop' || r.at === 'train').length).toBe(1)
+    // Laid out for two: a position that has since moved down still brings the second rider.
+    const two = makeMark({ ...withRider('frog'), position: 'two-at-once' }, [{ x: 300, y: 462 }]).world
+    const doneTwo = { ...takeHome(two).world, position: 'far-rider' }
+    expect(makeMark(doneTwo, [{ x: doneTwo.train.x + 5, y: doneTwo.train.y }]).world.riders.filter((r) => r.at === 'stop' || r.at === 'train').length).toBe(2)
+    // An unknown id is read as the position.
+    const lost = { ...takeHome(two).world, ahead: 'groep-3' }
+    expect(makeMark(lost, [{ x: lost.train.x + 5, y: lost.train.y }]).world.riders.filter((r) => r.at === 'stop' || r.at === 'train').length).toBe(2)
   })
 
   it('never holds more than two in play, one waiting and one at home, through a run of layouts for two', () => {
@@ -306,16 +321,28 @@ describe('how a cycle ends and the next one starts', () => {
     for (let cycle = 0; cycle < 12; cycle++) {
       w = takeHome(w).world
       expect(w.finished).toBe(true)
-      // The ending stands with the riders just taken home, and one waiting.
       expect(w.riders.filter(waitsAhead).length).toBe(1)
       w = makeMark(w, [{ x: w.train.x + 5, y: w.train.y }]).world
       expect(w.position).toBe('two-at-once')
       expect(w.riders.filter((r) => r.at === 'stop' || r.at === 'train').length).toBe(2)
       expect(w.riders.filter(waitsAhead).length).toBe(1)
-      expect(w.riders.filter((r) => r.at === 'before').length).toBe(1)
-      expect(w.riders.length).toBe(MAX_RIDERS)
+      expect(w.riders.length).toBeLessThanOrEqual(MAX_RIDERS)
       expect(w.riders.filter((r) => r.at === 'stop' || waitsAhead(r)).length).toBeLessThanOrEqual(3)
     }
+  })
+
+  it('leaves a waiting rider at its stop when both wagons are taken, and takes it the next time a wagon is free', () => {
+    const seat = (kind: RiderKind, stop: PlaceId, home: PlaceId, at: Rider['at']): Rider => ({ kind, stop, home, at, chalk: 0, tar: 0, felt: noFeels() })
+    const full: World = { ...freshWorld(null, 3), position: 'two-at-once', ahead: 'two-at-once', riders: [seat('frog', 'mid-2', 'low-4', 'train'), seat('cat', 'mid-3', 'low-2', 'train'), seat('snail', 'top-3', 'top-1', 'next')] }
+    const came = makeMark(full, line(trainAt(full), railAt('top-3')))
+    expect(told(came.told, 'full')).toEqual([expect.objectContaining({ rider: 'snail' })])
+    expect(came.world.riders.find((r) => r.kind === 'snail')!.at).toBe('next')
+    expect(came.world.riders.filter((r) => r.at === 'train').length).toBe(2)
+    // One rider is taken home, and the train comes back with a wagon free.
+    const freed = makeMark(came.world, line(trainAt(came.world), railAt('low-4'))).world
+    expect(freed.riders.find((r) => r.kind === 'frog')!.at).toBe('home')
+    const back = makeMark(freed, line(trainAt(freed), railAt('top-3')))
+    expect(back.world.riders.find((r) => r.kind === 'snail')!.at).toBe('train')
   })
 })
 

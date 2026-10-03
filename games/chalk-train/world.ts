@@ -1,3 +1,4 @@
+import { LADDER } from './config'
 import { NEAR, layOut, layOutCompanion } from './layouts'
 import { readMark, tidy, type Mark } from './marks'
 import { inside, middle } from './path'
@@ -13,13 +14,11 @@ import { DANDELION, ENGINE_PLACE, ENGINE_START, PLACES, PLACE_IDS, RAIL_DROP, di
 
 /**
  * Where a rider is. The design sheet's three places, at the stop, aboard and
- * home, in a finer grain: `before` is home from the cycle before, `next` is
- * waiting at its stop for the cycle to come, and `pair` is waiting in the same
- * way as the first rider of a layout for two, whose second rider is drawn in
- * at its stop when that cycle begins.
+ * home, in a finer grain: `before` is home from the cycle before, and `next`
+ * is waiting at its stop for the cycle to come.
  */
-export type Where = 'before' | 'stop' | 'train' | 'home' | 'next' | 'pair'
-export const WHERES: readonly Where[] = ['before', 'stop', 'train', 'home', 'next', 'pair']
+export type Where = 'before' | 'stop' | 'train' | 'home' | 'next'
+export const WHERES: readonly Where[] = ['before', 'stop', 'train', 'home', 'next']
 
 export type Rider = {
   kind: RiderKind
@@ -48,6 +47,12 @@ export type World = GameState & {
   /** The puddle's colour, or none. */
   water: number
   riders: Rider[]
+  /**
+   * The ladder id of the layout the rider waiting ahead was laid out from. The
+   * position may have moved since, so this is what says whether a second rider
+   * of that layout is drawn in when its cycle begins.
+   */
+  ahead: string
   /** The first showing has played. */
   shown: boolean
 }
@@ -62,7 +67,7 @@ const UNDER_TRAIN = 150
 const rider = (l: { kind: RiderKind; stop: PlaceId; home: PlaceId }, at: Where): Rider => ({ ...l, at, chalk: 0, tar: 0, felt: noFeels() })
 
 /** Waiting at its stop for the cycle to come. */
-export const waitsAhead = (r: Rider): boolean => r.at === 'next' || r.at === 'pair'
+export const waitsAhead = (r: Rider): boolean => r.at === 'next'
 /** In play: waiting to be taken, or aboard. */
 export const inPlay = (r: Rider): boolean => r.at === 'stop' || r.at === 'train'
 
@@ -97,6 +102,7 @@ export function freshWorld(childAge: number | null, seed: number): World {
     train: { x: ENGINE_START.x, y: ENGINE_START.y, face: 1, stripes: NONE, tint: NONE },
     water: NONE,
     riders,
+    ahead: base.position,
     shown: false,
   }
 }
@@ -106,8 +112,8 @@ const underTrain = (world: World): PlaceId[] => PLACE_IDS.filter((id) => distanc
 
 /**
  * Makes sure someone is waiting for the cycle to come: one rider, laid out
- * from the position as it stands. Where the position is for two, the rider
- * waits as the first of two. Where the tar already holds four, which only a
+ * from the position as it stands, which is kept as `ahead`. Where the position
+ * is for two, only this first rider waits. Where the tar already holds four, which only a
  * rider fetched early can bring about, the oldest home is rubbed away to make
  * room: the home from the cycle before, or else the first reached in this one.
  */
@@ -124,16 +130,17 @@ export function ensureNext(world: World): World {
   const last = [...riders].reverse().find(inPlay)
   const trainThen = last ? railAt(last.home) : { x: world.train.x, y: world.train.y }
   const first = layOut(world.position, rng, trainThen, [...busyPlaces(riders), ...underTrain(world)], riders.map((r) => r.kind))
-  return { ...world, seed: rng.state, riders: [...riders, rider(first, world.position === 'two-at-once' ? 'pair' : 'next')] }
+  return { ...world, seed: rng.state, ahead: world.position, riders: [...riders, rider(first, 'next')] }
 }
 
 /**
- * Whoever waited steps into play. The first of two is joined by its second
- * rider, laid out now and drawn in at its stop, while the tar has room for it
- * and for one more to wait.
+ * Whoever waited steps into play. Where its layout was for two, its second
+ * rider is laid out now and drawn in at its stop, while the tar has room for
+ * it and for one more to wait.
  */
 export function stepIn(world: World): World {
-  const two = world.riders.some((r) => r.at === 'pair')
+  const laidFrom = LADDER.includes(world.ahead) ? world.ahead : world.position
+  const two = laidFrom === 'two-at-once' && world.riders.some(waitsAhead)
   const riders = world.riders.map((r): Rider => (waitsAhead(r) ? { ...r, at: 'stop' } : r))
   if (!two || riders.length > MAX_RIDERS - 2) return { ...world, riders }
   const rng = makeRng(world.seed)

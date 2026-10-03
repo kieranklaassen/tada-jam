@@ -1,3 +1,4 @@
+import { LADDER } from './config'
 import { CHALK_COUNT, MAX_MARK_POINTS, addMark, type Mark } from './marks'
 import { deserialize as readBase, serialize as writeBase, STATE_VERSION } from './state'
 import { FEELS, FELT_CAP, isRiderKind, noFeels, type Felt } from './tastes'
@@ -24,6 +25,7 @@ export type Saved = {
   train: { x: number; y: number; f: number; s: number; t: number }
   water: number
   riders: SavedRider[]
+  ahead: string
   shown: boolean
 }
 
@@ -39,6 +41,7 @@ export function serialize(world: World): Saved {
     train: { x: Math.round(world.train.x), y: Math.round(world.train.y), f: world.train.face, s: world.train.stripes, t: world.train.tint },
     water: world.water,
     riders: world.riders.map((r) => ({ k: r.kind, s: r.stop, h: r.home, a: r.at, c: Math.min(TRIP_CAP, Math.round(r.chalk)), t: Math.min(TRIP_CAP, Math.round(r.tar)), f: FEELS.map((f) => r.felt[f]) })),
+    ahead: world.ahead,
     shown: world.shown,
   }
 }
@@ -93,7 +96,7 @@ function readRiders(value: unknown): Rider[] {
     let at = r.a as Where
     if (at === 'train' && ++aboard > SEATS) at = 'stop'
     // No kind twice, and no place in use by two riders.
-    const waits = at === 'stop' || at === 'next' || at === 'pair'
+    const waits = at === 'stop' || at === 'next'
     const busy = busyPlaces(riders)
     if (riders.some((x) => x.kind === r.k) || busy.includes(r.h) || (waits && busy.includes(r.s))) continue
     riders.push({ kind: r.k, stop: r.s, home: r.h, at, chalk: amount(r.c), tar: amount(r.t), felt: readFelt(r.f) })
@@ -119,6 +122,8 @@ export function deserialize(raw: unknown, childAge: number | null, seed: number)
     train: readTrain(r.train),
     water: colour(r.water),
     riders: readRiders(r.riders),
+    // An unknown id is read as the position.
+    ahead: typeof r.ahead === 'string' && LADDER.includes(r.ahead) ? r.ahead : base.position,
     shown: r.shown === true,
   }
   const someoneInPlay = (w: World) => w.riders.some(inPlay)

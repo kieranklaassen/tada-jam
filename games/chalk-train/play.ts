@@ -4,7 +4,7 @@ import { middle, nearestOn } from './path'
 import { along, routeAlong, routeCalled, routeTo, type Route } from './ride'
 import { finishCycle, type CycleOutcome } from './state'
 import { CHARACTERS, FEELS, feel, mostFelt, taste, type Feel, type RiderKind, type Taste } from './tastes'
-import { NONE, SEATS, ensureNext, inPlay, railAt, settleIn, waitsAhead, type Rider, type World } from './world'
+import { MAX_RIDERS, NONE, SEATS, ensureNext, inPlay, railAt, settleIn, waitsAhead, type Rider, type World } from './world'
 import { PLACES, distance, type Pt } from './yard'
 
 // The one act of the game: a chalk mark is made, and the world answers. The
@@ -28,6 +28,7 @@ export type Told =
   | { what: 'happening'; at: number; name: Feel | 'twang' | 'clack' | 'roundabout' }
   | { what: 'reaction'; at: number; rider: RiderKind; feel: Feel; taste: Taste }
   | { what: 'boarded'; at: number; rider: RiderKind; walked: boolean }
+  | { what: 'full'; at: number; rider: RiderKind }
   | { what: 'home'; at: number; rider: RiderKind; how: Feel | null; taste: Taste }
   | { what: 'stopped'; at: number; why: 'home' | 'end'; shortBy: { rider: RiderKind; gap: number }[] }
   | { what: 'cycle'; outcome: CycleOutcome }
@@ -47,6 +48,7 @@ export function judge(riders: readonly Rider[]): CycleOutcome {
 function rideOut(start: World, route: Route, told: Told[]): World {
   let riders = start.riders, train = start.train, world = start
   let h = 0, before = 0, stoppedAt = route.length, why: 'home' | 'end' = 'end'
+  const turnedAway: RiderKind[] = []
   for (let s = 0; ; s = Math.min(route.length, s + STEP)) {
     const here = along(route, s), step = s - before
     // The stretch just ridden counts for everyone aboard, as chalk or as bare tar.
@@ -63,14 +65,20 @@ function rideOut(start: World, route: Route, told: Told[]): World {
         return { ...r, felt: feel(r.felt, felt) }
       })
     }
-    // Anyone waiting within reach climbs aboard while a wagon is free. The rider for the cycle to come may be
-    // fetched early, but never into a wagon that a rider of the layout in play still needs.
+    // Anyone waiting within reach climbs aboard while a wagon is free, the rider for the cycle to come included.
+    // With both wagons taken the rider stays at its stop, and boards the next time the train comes with one free.
     let fetchedEarly = false, seated = riders.filter((r) => r.at === 'train').length
-    let kept = riders.filter((r) => r.at === 'stop').length
     riders = riders.map((r) => {
       if ((r.at !== 'stop' && !waitsAhead(r)) || distance(here, PLACES[r.stop]) > STOP_SHORT) return r
-      if (seated + (waitsAhead(r) ? kept : 0) >= SEATS) return r
-      if (r.at === 'stop') kept--
+      // The one waiting ahead also stays where nobody could be laid out to wait in its place: four riders, none at home.
+      const noRoom = waitsAhead(r) && riders.length >= MAX_RIDERS && !riders.some((x) => x.at === 'before' || x.at === 'home')
+      if (seated >= SEATS || noRoom) {
+        if (!turnedAway.includes(r.kind)) {
+          turnedAway.push(r.kind)
+          told.push({ what: 'full', at: s, rider: r.kind })
+        }
+        return r
+      }
       seated++
       told.push({ what: 'boarded', at: s, rider: r.kind, walked: false })
       if (waitsAhead(r)) fetchedEarly = true
