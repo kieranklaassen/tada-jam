@@ -4,7 +4,9 @@ import { BALLOON, bunchOffsets, bunchReach, FRIEND_SCALE, friendX, GROUND, groun
 import { KIND_COLOURS, PALETTE, shade } from './palette'
 import { copyPose, REST, restPose, type Pose } from './pose'
 import type { VoiceId } from './voices'
-import { give, pop, type Bunch, type Given, type Troop } from './world'
+import { callNext, popHeld, sendBunch } from './play'
+import type { Save } from './save'
+import type { Bunch, Given, Troop } from './world'
 
 // The theatre plays what the rules decide. A touch is answered here the
 // moment it lands (a squash and a squeak), the rules say at the lift what the
@@ -50,19 +52,20 @@ const MAX_LOOSE = 9
 const MAX_SCRAPS = 21
 
 export class Theatre {
-  troop: Troop
-  readonly sky: Bunch[]
-  readonly waiting: { kind: KindName; size: number }
+  /** The game as it is saved. Every touch that changes it changes it here, whole, before anything is seen to move. */
+  save: Save
+  /** What the save needs since it was last handed to storage: 0 nothing, 1 soon (at the throttle), 2 at once. The Mount reads it and sets it back. */
+  unsaved: 0 | 1 | 2 = 0
   /** Sounds since the last time they were taken. */
   readonly sounds: Sound[] = []
   private time = 0
   private rng: number
-  private readonly places: Place[]
+  private places: Place[] = []
   private readonly flights: Flight[] = []
-  private readonly held: Held[]
+  private held: Held[] = []
   private readonly loose: Loose[] = []
   private readonly scraps: Scrap[] = []
-  private readonly actors: Actor[]
+  private actors: Actor[] = []
   private readonly waitingActor: Actor = { clip: null, t: 0, next: null, tug: null, landAfter: 0 }
   private pressedSlot = -1
   private readonly pose: Pose = restPose()
@@ -70,14 +73,26 @@ export class Theatre {
   private slotsFor = 0
   private slotsAt: { x: number; y: number }[] = []
 
-  constructor(troop: Troop, sky: readonly Bunch[], waiting: { kind: KindName; size: number }, seed = 0x9e3779b9) {
-    this.troop = troop
-    this.sky = [...sky]
-    this.waiting = waiting
+  /** `seed` is for the theatre's own small variations (a pitch, where a scrap flies); it lays out nothing. */
+  constructor(save: Save, seed = 0x9e3779b9) {
+    this.save = save
     this.rng = seed >>> 0 || 1
-    this.places = this.sky.map(() => ({ squash: 0, squashSpeed: 0, pressed: false, push: 0, pushSpeed: 0, away: 0, grow: 1 }))
+    this.setTheStage()
+  }
+
+  get troop(): Troop { return this.save.troop }
+  get sky(): readonly Bunch[] { return this.save.sky }
+  get waiting(): { kind: KindName; size: number } { return this.save.next }
+
+  /** Everything in its place for the troop and the sky of the save, as found: nothing in the air, nobody in the middle of anything. */
+  private setTheStage(): void {
+    const troop = this.save.troop
+    this.places = this.save.sky.map(() => ({ squash: 0, squashSpeed: 0, pressed: false, push: 0, pushSpeed: 0, away: 0, grow: 1 }))
     this.held = troop.held.map((holds, i) => ({ x: friendX(i, troop.size) + 0.7, y: GROUND + HELD_HEIGHT, vx: 0, vy: 0, shown: holds }))
     this.actors = troop.held.map(() => ({ clip: null, t: 0, next: null, tug: null, landAfter: 0 }))
+    this.flights.length = 0
+    this.slotsFor = 0
+    this.pressedSlot = -1
   }
 
   /** The places in the sky for this view, worked out once for each width. */
@@ -165,9 +180,8 @@ export class Theatre {
         this.sound('stringHum', 1, 0.8, 0.05)
       }
     } else if (hit.on === 'waiting') {
-      this.waitingActor.clip = 'wave'
-      this.waitingActor.t = 0
       this.sound(`${this.waiting.kind}Poke`, 1.1, 0.7)
+      this.callNext()
     } else {
       this.sound('boop')
       const slots = this.slots(view)
@@ -184,8 +198,16 @@ export class Theatre {
     place.pressed = false
     if (place.away > 0 || this.flights.length >= MAX_FLIGHTS) return
     const bunch = this.sky[slot]
-    const { troop, given } = give(this.troop, bunch)
-    this.troop = troop
+    // The rules decide here, at the lift, and the save holds the outcome before the bunch has left the sky.
+    const { save, events } = sendBunch(this.save, slot)
+    this.save = save
+    const first = events[0]
+    if (!first) return
+    const serves = events.find((event) => event.type === 'served')
+    this.unsaved = serves ? 2 : Math.max(this.unsaved, 1) as 1 | 2
+    const given: Given = first.type === 'taken' ? { result: 'taken', takers: first.takers, served: serves !== undefined }
+      : first.type === 'gotAway' ? { result: 'gotAway', grabber: first.grabber, spare: first.spare }
+      : { result: 'refused' }
     const at = this.slots(view)[slot]
     // When every friend has one, the nearest friend is the one who grabs a bunch that is too many.
     const everyoneHolds = given.result === 'gotAway' && given.spare === bunch.count
@@ -220,14 +242,30 @@ export class Theatre {
   }
 
   private popHeld(friend: number): void {
-    const { troop, popped } = pop(this.troop, friend)
-    if (!popped) return
-    this.troop = troop
+    const { save, events } = popHeld(this.save, friend)
+    if (events.length === 0) return
+    this.save = save
+    this.unsaved = Math.max(this.unsaved, 1) as 1 | 2
+    const troop = save.troop
     const balloon = this.held[friend]
     balloon.shown = false
     this.burst(balloon.x, balloon.y, KIND_COLOURS[troop.kind])
     this.act(friend, 'popped')
     this.sound(`${troop.kind}Startle`)
+  }
+
+  /** The child touched the troop that waits. Before the troop on screen is served it only waves; after, it steps in. */
+  private callNext(): void {
+    const { save, events } = callNext(this.save)
+    const event = events[0]
+    if (!event || event.type === 'waved') {
+      this.waitingActor.clip = 'wave'
+      this.waitingActor.t = 0
+      return
+    }
+    this.save = save
+    this.unsaved = 2
+    this.setTheStage()
   }
 
   /** A pop: the snap, and scraps of the balloon's colour thrown out. */

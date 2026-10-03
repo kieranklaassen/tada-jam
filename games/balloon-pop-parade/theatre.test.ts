@@ -3,7 +3,7 @@ import { BODIES, type KindName } from './bodies'
 import { PERSONALITIES } from './clips'
 import { applyPose, buildFriend } from './friends'
 import { GROUND, skySlots, viewFor } from './layout'
-import { MOMENTS } from './moments'
+import { MOMENTS, saveOf, type Moment } from './moments'
 import { restPose, type Pose } from './pose'
 import { MAX_BALLOONS, MAX_SHADOWS, MAX_STRINGS } from './scenery'
 import { FLIGHT, handOf, REGROW_AFTER, Theatre, type Painter } from './theatre'
@@ -26,8 +26,13 @@ function recorder() {
   return { frame, painter, clear: () => { frame.balloons.length = 0; frame.strings = 0; frame.shadows = 0 } }
 }
 
+/** A theatre on a made-up moment of a cycle. */
+function staged(moment: Omit<Moment, 'position'>): Theatre {
+  return new Theatre(saveOf({ position: 'bunches-mixed', ...moment }))
+}
+
 function solo(kind: KindName, colours: KindName[]) {
-  return new Theatre({ kind, size: 1, held: [false] }, colours.map((colour) => ({ colour, count: 1 as const })), { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 })
+  return staged({ troop: { kind, size: 1, held: [false] }, sky: colours.map((colour) => ({ colour, count: 1 as const })), waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } })
 }
 
 const play = (theatre: Theatre, seconds: number) => { for (let t = 0; t < seconds; t += 1 / 60) theatre.step(1 / 60) }
@@ -139,7 +144,7 @@ describe('a bunch the child sends', () => {
 
   it('goes one each to a troop it fits, all at once', () => {
     const moment = MOMENTS.bunches
-    const theatre = new Theatre(moment.troop, moment.sky, moment.waiting)
+    const theatre = new Theatre(saveOf(moment))
     tapSlot(theatre, 2)
     expect(theatre.troop.held).toEqual([true, true, true])
     play(theatre, FLIGHT + 0.05)
@@ -152,7 +157,7 @@ describe('a bunch the child sends', () => {
   })
 
   it('carries a whole troop off at the same moment when each of them is given one more, and brings them down one after another', () => {
-    const moment = MOMENTS.bunches, theatre = new Theatre(moment.troop, moment.sky, moment.waiting), { frame, painter, clear } = recorder()
+    const moment = MOMENTS.bunches, theatre = new Theatre(saveOf(moment)), { frame, painter, clear } = recorder()
     tapSlot(theatre, 2)
     play(theatre, 2)
     theatre.sounds.length = 0
@@ -173,7 +178,7 @@ describe('a bunch the child sends', () => {
 
   it('has the nearest friend take one too many in its other hand and be carried off alone', () => {
     const troop = { kind: 'duck' as const, size: 3 as const, held: [true, true, true] }
-    const theatre = new Theatre(troop, [{ colour: 'duck', count: 1 }, { colour: 'frog', count: 1 }, { colour: 'duck', count: 1 }], { kind: 'frog', size: 1 }), { frame, painter } = recorder()
+    const theatre = staged({ troop, sky: [{ colour: 'duck', count: 1 }, { colour: 'frog', count: 1 }, { colour: 'duck', count: 1 }], waiting: { kind: 'frog', size: 1 } }), { frame, painter } = recorder()
     // The place on the right is nearest the duck on the right.
     tapSlot(theatre, 2)
     play(theatre, FLIGHT + 0.6)
@@ -185,7 +190,7 @@ describe('a bunch the child sends', () => {
   })
 
   it('knocks the balloon a friend already holds when that friend refuses another colour', () => {
-    const theatre = new Theatre({ kind: 'crab', size: 1, held: [true] }, [{ colour: 'crab', count: 1 }, { colour: 'duck', count: 1 }], { kind: 'frog', size: 1 }), { frame, painter, clear } = recorder()
+    const theatre = staged({ troop: { kind: 'crab', size: 1, held: [true] }, sky: [{ colour: 'crab', count: 1 }, { colour: 'duck', count: 1 }], waiting: { kind: 'frog', size: 1 } }), { frame, painter, clear } = recorder()
     theatre.paint(painter, VIEW)
     const before = frame.balloons.find((balloon) => balloon.y < 2 && balloon.y > GROUND + 2)!
     tapSlot(theatre, 1)
@@ -200,7 +205,7 @@ describe('a bunch the child sends', () => {
   })
 
   it('is refused by a friend who is still without a balloon when there is one', () => {
-    const moment = MOMENTS.pair, theatre = new Theatre(moment.troop, moment.sky, moment.waiting), { frame, painter } = recorder()
+    const moment = MOMENTS.pair, theatre = new Theatre(saveOf(moment)), { frame, painter } = recorder()
     // The purple balloon hangs nearest the duck that already has one.
     tapSlot(theatre, 1)
     play(theatre, FLIGHT + 0.3)
@@ -227,7 +232,7 @@ describe('a bunch the child sends', () => {
 
 describe('a friend that is poked', () => {
   it('answers in its own voice, and the string of a balloon it holds hums', () => {
-    const theatre = new Theatre({ kind: 'frog', size: 1, held: [true] }, [{ colour: 'frog', count: 1 }], { kind: 'duck', size: 1 })
+    const theatre = staged({ troop: { kind: 'frog', size: 1, held: [true] }, sky: [{ colour: 'frog', count: 1 }], waiting: { kind: 'duck', size: 1 } })
     theatre.press(0, GROUND + 1, VIEW)
     expect(voices(theatre)).toEqual(['frogPoke', 'stringHum'])
     const empty = solo('frog', ['frog'])
@@ -260,7 +265,7 @@ describe('a frame', () => {
   it('never asks for more than the stage holds, however fast a child taps', () => {
     // The counted frame budget: what a frame draws is these three lists and at most six friends.
     for (const name of Object.keys(MOMENTS)) {
-      const moment = MOMENTS[name], theatre = new Theatre(moment.troop, moment.sky, moment.waiting), { frame, painter, clear } = recorder()
+      const moment = MOMENTS[name], theatre = new Theatre(saveOf(moment)), { frame, painter, clear } = recorder()
       let seed = 7
       const random = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648
       let most = { balloons: 0, strings: 0, shadows: 0, friends: 0 }
@@ -286,7 +291,7 @@ describe('a frame', () => {
   })
 
   it('settles: left alone after any play, only the sky, the held balloons and the friends are drawn', () => {
-    const moment = MOMENTS.mixed, theatre = new Theatre(moment.troop, moment.sky, moment.waiting), { frame, painter } = recorder()
+    const moment = MOMENTS.mixed, theatre = new Theatre(saveOf(moment)), { frame, painter } = recorder()
     for (let slot = 0; slot < 4; slot++) { tapSlot(theatre, slot); play(theatre, 0.2) }
     play(theatre, 6)
     theatre.paint(painter, VIEW)

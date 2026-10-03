@@ -8,16 +8,15 @@ import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { toWorld } from './layout'
 import { balloonPopParadeManifest } from './manifest'
-import { momentFor } from './moments'
+import { momentFor, saveOf } from './moments'
 import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
-import { freshSave } from './save'
+import { deserializeSave, freshSave, serializeSave } from './save'
 import { voiceOf } from './sounds'
 import { Stage } from './stage'
 import { Theatre } from './theatre'
-import { deserialize, serialize, type GameState } from './state'
 
 // The Mount, showing a blank surface. Everything a game needs around its
 // renderer is wired and running: the saved state, attention, the attended
@@ -36,15 +35,20 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const root = rootRef.current!, canvas = canvasRef.current!
     const audio = new GameAudio(), touch = new ForgivingTouch(), clock = new AttendedClock(), ladder = new IdleLadder(0)
     const stage = new Stage(canvas)
-    // The toy: one troop and its sky, as a new game lays them out, played by the real rule with nothing to finish.
-    const opening = momentFor(window.location.search) ?? (() => {
-      const save = freshSave(ctxRef.current.childAge)
-      return { troop: save.troop, sky: save.sky, waiting: save.next }
-    })()
-    const theatre = new Theatre(opening.troop, opening.sky, opening.waiting)
+    // The game is built when the slot has been read, not before: until then the surface shows the bare backdrop.
+    let theatre: Theatre | null = null
+    // Grown-ups only: `look=` opens a made-up moment of a cycle, which is never saved, and `seed=` fixes how a new game is laid out.
+    const moment = momentFor(window.location.search)
     const sound = () => {
+      if (!theatre) return
       for (const cue of theatre.sounds) audio.play(voiceOf(cue.voice, cue.pitch, cue.gain, cue.after))
       theatre.sounds.length = 0
+    }
+    // What a touch or a step changed goes to storage: the end of a cycle and a troop stepping in at once, the rest at the throttle.
+    const keep = () => {
+      if (!theatre || theatre.unsaved === 0) return
+      cadence.change(performance.now(), theatre.unsaved === 2)
+      theatre.unsaved = 0
     }
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
@@ -55,7 +59,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    let disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     // The game hands a change to storage where it makes it, at one of two speeds:
@@ -64,7 +68,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     //   cadence.change(performance.now(), true)  a scene's outcome, a cycle judged, the position moved: at once,
     //                                            since a put-away in the next moment must find it saved
     // Going to rest writes whatever the throttle still holds (`cadence.settle`, below).
-    const cadence = new SaveCadence(() => { if (state) ctxRef.current.storage.save(serialize(state)) })
+    const cadence = new SaveCadence(() => { if (theatre && !moment) ctxRef.current.storage.save(serializeSave(theatre.save)) })
 
     // The one place the game applies a quality tier: whatever its tiers set besides the pixel ratio, which
     // `resize` applies. It runs once before the first frame and again each time the governor changes tier, ahead
@@ -82,7 +86,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const draw = () => {
       if (!width) return
       stage.begin(clock.seconds)
-      theatre.paint(stage, stage.view)
+      if (theatre) theatre.paint(stage, stage.view)
       stage.render()
       Object.assign(drawn, stage.drawn)
     }
@@ -109,6 +113,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // A game with short scenes ends the one that is playing first thing in every press, before the press is
     // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
     const act = (gestures: Gesture[]) => {
+      if (!theatre) return
       for (const gesture of gestures) {
         if (gesture.type === 'press') {
           const at = toWorld(gesture.at.x, gesture.at.y, width, height, stage.view)
@@ -116,7 +121,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         } else if (gesture.type === 'tap' || gesture.type === 'dragStart') theatre.release(stage.view)
         else if (gesture.type === 'pressEnd') theatre.cancel()
       }
+      // The sounds are played here, inside the handler, so the first one falls inside the touch that unlocks the audio.
       sound()
+      keep()
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -153,8 +160,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       const step = clock.advance(now)
       const start = performance.now()
       act(touch.advance(now))
-      theatre.step(step)
+      if (theatre) theatre.step(step)
       sound()
+      keep()
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
@@ -194,11 +202,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
-      // A saved position wins; `childAge` only chooses where a first visit starts.
-      state = deserialize(value, ctxRef.current.childAge)
-      // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
-      // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
-      // has no frame coming, and would go on showing the surface as it was before the read.
+      // A saved position wins; `childAge` only chooses where a first visit starts. A new game is laid out from
+      // `seed=` when the address has one, and otherwise from a seed drawn for this child's first visit.
+      const asked = Number(new URLSearchParams(window.location.search).get('seed'))
+      const seed = Number.isFinite(asked) && asked > 0 ? asked >>> 0 : (Math.floor(Math.random() * 0xffffffff) >>> 0) || 1
+      const age = ctxRef.current.childAge
+      const save = moment ? saveOf(moment) : value === null || value === undefined ? freshSave(age, seed) : deserializeSave(value, age)
+      // The theatre sets everything up as it was left: nothing eases in and no scene replays.
+      theatre = new Theatre(save, seed)
+      keep()
+      // Then the load draws the first frame itself: a game that is resting or parked when the slot comes back has no frame coming.
       draw()
     })
     applyTier()
