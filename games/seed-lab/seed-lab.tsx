@@ -6,11 +6,14 @@ import { GameAudio, tick } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
+import { drawPage } from './journal'
+import { layoutOf, type Layout } from './layout'
 import { seedLabManifest } from './manifest'
 import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
+import { spikePage } from './spikePage'
 import { deserialize, serialize, type GameState } from './state'
 
 // The Mount, showing a blank surface. Everything a game needs around its
@@ -59,7 +62,15 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => {}
+    // For now it draws the look spike's fixed page (spikePage.ts), with nothing playable behind it.
+    const pen = canvas.getContext('2d')!, page = spikePage()
+    let laid: Layout | null = null
+    const draw = () => {
+      if (width <= 0 || height <= 0) return
+      if (!laid || laid.w !== width || laid.h !== height) laid = layoutOf(width, height)
+      pen.setTransform(dpr, 0, 0, dpr, 0, 0)
+      drawn.drawCalls = drawPage(pen, page, laid, clock.seconds, governor.tier)
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.

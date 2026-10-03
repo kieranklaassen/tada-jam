@@ -21,7 +21,7 @@ export const REFERENCE = { w: 1180, h: 820 } as const
 export const HANDLE = 48
 
 /** A plant's measures at scale 1: the length of one stem joint, the stalk from the top joint to the flower, the flower's radius, the reach of a leaf from the stem, and the pot and the board it stands on. */
-export const PLANT = { joint: 44, stalk: 14, flower: 26, leaf: 29, potW: 58, potH: 50, board: 12, headroom: 8 } as const
+export const PLANT = { joint: 40, stalk: 38, flower: 26, leaf: 29, potW: 58, potH: 50, board: 12, headroom: 16 } as const
 
 export const POTS_PER_ROW = 6
 export const BORDER_PLACES = 18
@@ -38,7 +38,7 @@ export type PotPlace = {
   soil: number
   /** The bottom of the pot, on the board. */
   foot: number
-  /** The pot's handle. */
+  /** The pot's handle: the pot itself, made up to the smallest handle where the pot is drawn smaller. */
   pot: Rect
   /** The runner bud's handle, beside the base. */
   bud: Circle
@@ -89,7 +89,7 @@ const SLOT_NEEDS = 128
 
 function row(x: number, y: number, slot: number, rowH: number, k: number): { places: PotPlace[]; board: Rect } {
   const potW = Math.max(HANDLE, PLANT.potW * k), potH = Math.max(HANDLE, PLANT.potH * k), bud = Math.max(HANDLE / 2, 22 * k)
-  const board = PLANT.board * k, foot = y + rowH - board - 2
+  const board = PLANT.board * k, foot = y + rowH - board - 2, soil = foot - PLANT.potH * k
   const places: PotPlace[] = []
   for (let i = 0; i < POTS_PER_ROW; i++) {
     const cell = { x: x + i * slot, y, w: slot, h: rowH }
@@ -97,10 +97,10 @@ function row(x: number, y: number, slot: number, rowH: number, k: number): { pla
     places.push({
       cell,
       x: left + potW / 2,
-      soil: foot - potH,
+      soil,
       foot,
       pot: { x: left, y: foot - potH, w: potW, h: potH },
-      bud: { x: left + potW + 2 + bud, y: foot - potH + bud, r: bud },
+      bud: { x: left + potW + 2 + bud, y: Math.min(soil + bud, y + rowH - bud), r: bud },
     })
   }
   return { places, board: { x: x + slot * 0.04, y: foot, w: slot * POTS_PER_ROW - slot * 0.08, h: board } }
@@ -157,7 +157,7 @@ export function layoutOf(width: number, height: number): Layout {
 
   const keptH = top - gap, keptW = Math.min(keptH * 1.5, (rowsW - gap * 3) / KEPT_PLACES)
   const kept: Rect[] = []
-  for (let i = 0; i < KEPT_PLACES; i++) kept.push({ x: rowsX + rowsW - (i + 1) * keptW - i * gap, y: m, w: keptW, h: keptH })
+  for (let i = 0; i < KEPT_PLACES; i++) kept.push({ x: rowsX + rowsW - keptW * 0.5 - (i + 1) * keptW - i * gap, y: m, w: keptW, h: keptH })
 
   return {
     w, h, k, small, wide,

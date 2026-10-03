@@ -119,9 +119,17 @@ export function dot(ctx: Ctx, x: number, y: number, r: number, ink: string = INK
   ctx.fill()
 }
 
+/** A hex colour at an opacity, for a gradient stop. */
+function tint(hex: string, alpha: number): string {
+  const n = parseInt(hex.slice(1), 16)
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`
+}
+
 /** The same outline, pushed about by the hand: a wash never follows the line exactly. */
 function loosen(pts: readonly Pt[], seed: number, by: number): Pt[] {
-  return pts.map(([x, y], i) => [x + by * drift(seed, i / 3), y + by * drift(seed + 3, i / 3)] as const)
+  // The whole wash also sits a little off the drawing, as a brush laid after the pen does.
+  const dx = (hash(seed, 81) - 0.5) * by * 1.3, dy = (hash(seed, 82) - 0.5) * by * 1.3
+  return pts.map(([x, y], i) => [x + dx + by * drift(seed, i / 3), y + dy + by * drift(seed + 3, i / 3)] as const)
 }
 
 export type WashOpts = { seed?: number; alpha?: number; rim?: number; loose?: number }
@@ -133,19 +141,38 @@ export type WashOpts = { seed?: number; alpha?: number; rim?: number; loose?: nu
  */
 export function wash(ctx: Ctx, pts: readonly Pt[], colour: string, o: WashOpts = {}): void {
   const { seed = 1, alpha = 0.5, rim = 0.3, loose = 1 } = o
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (const [x, y] of pts) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y) }
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, reach = Math.hypot(x1 - x0, y1 - y0) / 2 || 1
   ctx.save()
   ctx.globalCompositeOperation = 'multiply'
-  ctx.fillStyle = colour
   ctx.strokeStyle = colour
   const base = ctx.globalAlpha
+  // The first layer is uneven across the shape: the pigment ran to one side as the wash was laid.
+  const run = hash(seed, 91) * Math.PI * 2, settle = ctx.createLinearGradient(cx - Math.cos(run) * reach, cy - Math.sin(run) * reach, cx + Math.cos(run) * reach, cy + Math.sin(run) * reach)
+  settle.addColorStop(0, tint(colour, 0.5))
+  settle.addColorStop(0.55 + 0.25 * hash(seed, 92), tint(colour, 0.78))
+  settle.addColorStop(1, tint(colour, 1))
   for (let layer = 0; layer < 3; layer++) {
-    ctx.globalAlpha = base * alpha * (layer === 0 ? 0.62 : 0.3)
+    ctx.fillStyle = layer === 0 ? settle : colour
+    ctx.globalAlpha = base * alpha * (layer === 0 ? 0.74 : 0.26)
     trace(ctx, loosen(pts, seed + layer * 11, loose * (0.5 + layer * 0.7)), true)
     ctx.fill()
   }
+  trace(ctx, loosen(pts, seed, loose * 0.5), true)
+  ctx.clip()
+  // Two blooms, where a drop of water pushed the pigment into a darker ring.
+  for (let i = 0; i < 2; i++) {
+    const bx = x0 + (x1 - x0) * hash(seed, 93 + i), by = y0 + (y1 - y0) * hash(seed, 95 + i), r = reach * (0.3 + 0.3 * hash(seed, 97 + i))
+    const bloom = ctx.createRadialGradient(bx, by, r * 0.2, bx, by, r)
+    bloom.addColorStop(0, tint(colour, 0))
+    bloom.addColorStop(0.8, tint(colour, 0.22))
+    bloom.addColorStop(1, tint(colour, 0))
+    ctx.fillStyle = bloom
+    ctx.globalAlpha = base * alpha
+    ctx.fillRect(bx - r, by - r, r * 2, r * 2)
+  }
   if (rim > 0) {
-    trace(ctx, loosen(pts, seed, loose * 0.5), true)
-    ctx.clip()
     ctx.globalAlpha = base * rim
     ctx.lineWidth = 2.2 + loose
     ctx.stroke()
@@ -236,10 +263,10 @@ export function paintPaper(ctx: Ctx, width: number, height: number, seed = 20261
   ctx.fillStyle = PAPER
   ctx.fillRect(0, 0, width, height)
   ctx.lineCap = 'round'
-  const fibres = Math.round((width * height) / 520)
+  const fibres = Math.round((width * height) / 800)
   for (let i = 0; i < fibres; i++) {
     const x = hash(seed, i) * width, y = hash(seed + 1, i) * height, a = hash(seed + 2, i) * Math.PI, len = 3 + hash(seed + 3, i) * 9
-    ctx.strokeStyle = hash(seed + 4, i) < 0.5 ? 'rgba(255,252,240,0.5)' : 'rgba(150,120,80,0.09)'
+    ctx.strokeStyle = hash(seed + 4, i) < 0.5 ? 'rgba(255,252,240,0.3)' : 'rgba(150,120,80,0.08)'
     ctx.lineWidth = 0.5 + hash(seed + 5, i) * 0.5
     ctx.beginPath()
     ctx.moveTo(x, y)
@@ -249,12 +276,21 @@ export function paintPaper(ctx: Ctx, width: number, height: number, seed = 20261
   for (let i = 0; i < 16; i++) {
     const x = hash(seed + 6, i) * width, y = hash(seed + 7, i) * height, r = 5 + hash(seed + 8, i) * (i < 3 ? 34 : 12)
     const spot = ctx.createRadialGradient(x, y, 0, x, y, r)
-    spot.addColorStop(0, `rgba(170,120,60,${0.05 + 0.07 * hash(seed + 9, i)})`)
+    spot.addColorStop(0, `rgba(170,120,60,${0.07 + 0.08 * hash(seed + 9, i)})`)
     spot.addColorStop(0.6, 'rgba(170,120,60,0.03)')
     spot.addColorStop(1, 'rgba(170,120,60,0)')
     ctx.fillStyle = spot
     ctx.fillRect(x - r, y - r, r * 2, r * 2)
   }
+  // One old tide line, where something damp once stood on the page.
+  const sx = width * (0.2 + 0.6 * hash(seed, 77)), sy = height * (0.25 + 0.5 * hash(seed, 78)), sr = Math.min(width, height) * 0.16
+  const stain = ctx.createRadialGradient(sx, sy, sr * 0.7, sx, sy, sr)
+  stain.addColorStop(0, 'rgba(160,120,70,0.018)')
+  stain.addColorStop(0.86, 'rgba(160,120,70,0.03)')
+  stain.addColorStop(0.95, 'rgba(150,105,55,0.1)')
+  stain.addColorStop(1, 'rgba(160,120,70,0)')
+  ctx.fillStyle = stain
+  ctx.fillRect(sx - sr, sy - sr, sr * 2, sr * 2)
   const band = Math.min(width, height) * 0.09
   for (const [x0, y0, x1, y1] of [[0, 0, band, 0], [width, 0, width - band, 0], [0, 0, 0, band], [0, height, 0, height - band]]) {
     const tone = ctx.createLinearGradient(x0, y0, x1, y1)
