@@ -3,8 +3,8 @@
 // the sound that answer it. A table of names and nothing more: the view draws
 // the motion and the audio module plays the voice of that name. It lives here,
 // as rules, so that a test can hold three things: no act lands in silence on a
-// still screen, no two cells of the sheet's grid answer alike, and the wrong
-// use of a thing answers as fully as the right one.
+// still screen, no two cells of the sheet's grid answer alike in motion or in
+// sound, and the wrong use of a thing answers as fully as the right one.
 
 import { kindOf, textureOf, type Load } from './stuff'
 
@@ -39,21 +39,21 @@ const row = (...cells: [string, string][]): Record<Act, Cue> =>
 
 export const GRID: Record<What, Record<Act, Cue>> = {
   //                  put                               push                              warm                              bake                              hand
-  'dust':          row(['heap-slumps', 'flour-hiss'],   ['furrows', 'dust-brush'],        ['badger-shrugs', 'small-hm'],    ['toasts-brown', 'smoke-wisp'],   ['white-sneeze', 'sneeze']),
-  'puddle':        row(['puddle-spreads', 'gurgle'],    ['rings', 'plip'],                ['steam-curl', 'faint-hiss'],     ['steam-cloud', 'long-hiss'],     ['splashed-shake', 'splash']),
-  'froth':         row(['blob-plops', 'burp'],          ['slimy-strings', 'bubble-pops'], ['froths-over', 'big-burp'],      ['holey-crisp', 'crisp-crackle'], ['sour-pucker', 'sniff-yelp']),
-  'loose-seeds':   row(['seeds-scatter', 'seed-ticks'], ['seeds-skitter', 'seed-rattle'], ['one-seed-rolls', 'single-tick'], ['seeds-hop', 'seed-crackle'],   ['seed-in-tooth', 'tooth-pick']),
+  'dust':          row(['heap-slumps', 'flour-hiss'],   ['furrows', 'dry-scrape'],        ['grains-slide', 'grain-patter'],    ['toasts-brown', 'dry-rustle'],   ['white-sneeze', 'sneeze']),
+  'puddle':        row(['puddle-spreads', 'gurgle'],    ['rings', 'plip'],                ['steam-curl', 'simmer-tick'],     ['steam-cloud', 'long-hiss'],     ['splashed-shake', 'slosh']),
+  'froth':         row(['blob-plops', 'burp'],          ['slimy-strings', 'bubble-pops'], ['froths-over', 'big-burp'],      ['holey-crisp', 'cooling-ping'], ['sour-pucker', 'drawn-in-squeak']),
+  'loose-seeds':   row(['seeds-scatter', 'seed-ticks'], ['seeds-skitter', 'seed-rattle'], ['one-seed-rolls', 'single-tock'], ['seeds-hop', 'seed-crackle'],   ['seed-in-tooth', 'tongue-click']),
   'batter':        row(['batter-creeps', 'glug'],       ['closes-over', 'slap-ripple'],   ['skin-bubbles', 'slow-blips'],   ['sets-flat', 'sizzle'],          ['drips-off', 'drip-slurp']),
   'streaky':       row(['clod-drops', 'wet-clod'],      ['smears', 'sticky-smack'],       ['goes-shiny', 'soft-tick'],      ['sets-rough', 'dry-crackle'],    ['gooey-clumps', 'smack-pull']),
   'shaggy':        row(['lump-flops', 'dull-flop'],     ['rips-short', 'tear'],           ['sweats', 'low-hum'],            ['cracks-open', 'crack'],         ['gooey-shreds', 'chew-pull']),
-  'smooth':        row(['slaps-jiggles', 'dough-slap'], ['dents-bulges', 'squish'],       ['warm-sheen', 'soft-hum'],       ['turns-gold', 'oven-whoosh'],    ['gooey-strings', 'stretch-snap']),
+  'smooth':        row(['slaps-jiggles', 'dough-slap'], ['dents-bulges', 'squish'],       ['shiny-slump', 'soft-squelch'],       ['turns-gold', 'oven-whoosh'],    ['gooey-strings', 'stretch-twang']),
   'risen':         row(['wobbles-down', 'soft-pat'],    ['air-out', 'long-sigh'],         ['swells-domes', 'bubble-ticks'], ['springs-gold', 'crust-sing'],   ['gooey-balloon', 'squeak-pop']),
   'toasted-dust':  row(['dust-patters', 'dry-patter'],  ['brown-puff', 'puff'],           ['warm-dust', 'tiny-tick'],       ['dust-darkens', 'scorch'],       ['brown-sneeze', 'cough-sneeze']),
   'toasted-seeds': row(['seeds-bounce', 'bright-ticks'], ['seeds-roll', 'rattle-roll'],   ['seeds-sit', 'one-pop'],         ['seeds-blacken', 'pop-crackle'], ['crunch-pick', 'crunch']),
   'pancake':       row(['flaps-down', 'flap'],          ['flops-over', 'floppy-slap'],    ['edges-curl', 'steam-sigh'],     ['crisps-darker', 'crisp-snap'],  ['folds-in-mouth', 'soft-chew']),
-  'crumbly':       row(['lands-shedding', 'crumb-patter'], ['sheds-crumbs', 'crumble'],   ['crumbs-settle', 'dry-tick'],    ['crust-darkens', 'toast-crackle'], ['falls-apart', 'crumble-gasp']),
+  'crumbly':       row(['lands-shedding', 'crumb-rustle'], ['sheds-crumbs', 'crumble'],   ['crumbs-settle', 'dry-tick'],    ['crust-darkens', 'toast-crackle'], ['falls-apart', 'crumble-gasp']),
   'brick':         row(['thunk-jumps', 'thunk'],        ['does-not-give', 'knock'],       ['stays-hard', 'stone-tick'],     ['brick-darkens', 'kiln-ping'],   ['tooth-clonk', 'clonk-ring']),
-  'airy':          row(['soft-bounce', 'bounce-sigh'],  ['squash-springs', 'wheeze'],     ['steam-rises', 'warm-sigh'],     ['loaf-darkens', 'crust-crackle'], ['big-bite', 'chomp']),
+  'airy':          row(['soft-bounce', 'bounce-sigh'],  ['squash-springs', 'wheeze'],     ['air-shimmers', 'crust-tick'],     ['loaf-darkens', 'low-sizzle'], ['big-bite', 'chomp']),
 }
 
 /** The six rows of the grid in the design sheet, each by the thing a child meets first. */
