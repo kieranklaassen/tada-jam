@@ -98,7 +98,9 @@ describe('a bunch the child sends', () => {
     expect(frame.poses.get('friend-0')!.armL).toBeGreaterThan(2)
     play(theatre, FLIGHT + 0.05)
     expect(voices(theatre)).toContain(`${kind}Catch`)
-    play(theatre, 1.5)
+    // The ending plays, and then the friend stands holding its balloon.
+    play(theatre, 9)
+    expect(theatre.playing).toBe(null)
     clear()
     theatre.paint(painter, VIEW)
     const mine = frame.balloons.filter((balloon) => balloon.y < 2 && balloon.y > GROUND + 2)

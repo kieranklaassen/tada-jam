@@ -1,11 +1,13 @@
 import { BODIES, type KindName } from './bodies'
-import { clip, PERSONALITIES, rest, type ClipId } from './clips'
+import { clip, PERSONALITIES, rest, stride, walk, type ClipId } from './clips'
 import { BALLOON, bunchOffsets, bunchReach, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, skySlots, WAITING_SCALE, waitingSpot, type View } from './layout'
 import { KIND_COLOURS, PALETTE, shade } from './palette'
 import { copyPose, REST, restPose, type Pose } from './pose'
 import type { VoiceId } from './voices'
 import { callNext, popHeld, sendBunch } from './play'
-import type { Save } from './save'
+import type { Marched, Save } from './save'
+import { Scene, sceneLength, type Beat } from './scene'
+import { markShown, showingAtStart, type Showing } from './showings'
 import type { Bunch, Given, Troop } from './world'
 
 // The theatre plays what the rules decide. A touch is answered here the
@@ -40,6 +42,15 @@ type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; lif
 /** `tug` is the bunch that carries a friend off, and `landAfter` puts its landing sound a little after its neighbour's when a whole troop comes down. */
 type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null; landAfter: number }
 
+/** A troop that is only passing: one that marches off, or one that crosses to show a new idea. Short-lived, and no part of the save. */
+type Passing = { kind: KindName; size: number; held: boolean[]; actors: Actor[] }
+
+/** How long a troop that passes by takes to cross, in seconds (the sheet: 4 to 6). */
+export const PASS_BY = { shortest: 4, longest: 6 } as const
+
+/** How long an ending may last, in seconds (the sheet: 5 to 7). */
+export const ENDING = { shortest: 5, longest: 7 } as const
+
 /** Seconds a bunch takes from the sky to the friend, and before a new one drifts into its place. */
 export const FLIGHT = 0.5
 export const REGROW_AFTER = 0.45
@@ -72,12 +83,43 @@ export class Theatre {
   private readonly hand = { x: 0, y: 0, z: 0 }
   private slotsFor = 0
   private slotsAt: { x: number; y: number }[] = []
+  /** The short scene that is playing, and which one. */
+  private scene: Scene | null = null
+  private sceneKind: 'ending' | 'arrival' | null = null
+  /** True while a touch is ending a scene: its beats land where they were going without playing their sounds or starting a motion. */
+  private finishing = false
+  /** An ending waits for the catch that causes it to be over. */
+  private endingDue: { at: number; order: number[]; together: boolean } | null = null
+  /** The arrival: the served troop marching off, a troop passing by to show a new idea, the next troop walking in, the one after coming to the edge. */
+  private leaving: Passing | null = null
+  private leaveU = 0
+  private passer: (Passing & { idea: Showing['idea'] }) | null = null
+  private passIn = 0
+  private passOut = 0
+  private passTook = false
+  private walkIn = 1
+  private nextIn = 1
+  private skyIn = true
+  /** The other friends look at a friend whose balloon was popped, until this time. */
+  private lookAt = { friend: -1, until: 0 }
 
   /** `seed` is for the theatre's own small variations (a pitch, where a scrap flies); it lays out nothing. */
   constructor(save: Save, seed = 0x9e3779b9) {
     this.save = save
     this.rng = seed >>> 0 || 1
     this.setTheStage()
+    // A new game that nobody has touched opens with the first showing already crossing. Its mark is in the save before it moves.
+    const untouched = !save.finished && save.slips === 0 && save.parade.length === 0 && save.troop.held.every((holds) => !holds)
+    const showing = untouched ? showingAtStart(save) : null
+    if (showing) {
+      this.save = { ...save, shown: markShown(save.shown, showing.marks) }
+      this.arrive(null, showing)
+    }
+  }
+
+  /** Which short scene is playing, if one is. A scene playing is not idleness. */
+  get playing(): 'ending' | 'arrival' | null {
+    return this.scene?.running ? this.sceneKind : null
   }
 
   get troop(): Troop { return this.save.troop }
@@ -156,6 +198,8 @@ export class Theatre {
 
   /** The finger landed. Everything is answered here, in this frame: a squash and a squeak, a pop, a poke. */
   press(x: number, y: number, view: View): void {
+    // A touch ends a scene, and is then an ordinary touch.
+    this.endScene()
     const hit = this.hit(x, y, view)
     this.pressedSlot = -1
     if (hit.on === 'bunch') {
@@ -213,6 +257,8 @@ export class Theatre {
     const everyoneHolds = given.result === 'gotAway' && given.spare === bunch.count
     const friend = given.result === 'taken' ? given.takers[0] : given.result === 'gotAway' ? (everyoneHolds ? this.nearest(at.x, false) : given.grabber) : this.nearest(at.x, true)
     this.flights.push({ bunch, slot, given, t: 0, fromX: at.x, fromY: at.y, landed: false, after: 0, friend })
+    // The ending follows the catch that causes it: when the last balloon is in a hand and the catch is over.
+    if (serves && serves.type === 'served') this.endingDue = { at: this.time + FLIGHT + PERSONALITIES[this.troop.kind].lasts.catch * 0.7, order: serves.order, together: serves.together }
     // The same bunch drifts back into the same place: the sky stays as it was.
     place.away = REGROW_AFTER
     place.grow = 0
@@ -252,20 +298,136 @@ export class Theatre {
     this.burst(balloon.x, balloon.y, KIND_COLOURS[troop.kind])
     this.act(friend, 'popped')
     this.sound(`${troop.kind}Startle`)
+    this.endingDue = null
+    if (troop.size > 1 && troop.held.filter((holds) => holds).length === troop.size - 1) {
+      // A troop that had all its balloons stops swaying with a squeak of heels, and looks at the empty hand.
+      this.lookAt.friend = friend
+      this.lookAt.until = this.time + 1.4
+      this.sound('heels', 1, 0.8, 0.12)
+    }
   }
 
   /** The child touched the troop that waits. Before the troop on screen is served it only waves; after, it steps in. */
   private callNext(): void {
     const { save, events } = callNext(this.save)
     const event = events[0]
-    if (!event || event.type === 'waved') {
+    if (!event || event.type !== 'steppedIn') {
       this.waitingActor.clip = 'wave'
       this.waitingActor.t = 0
       return
     }
+    // The troop that marches off is drawn from what it was; the save already holds the troop that steps in.
+    const was = this.save.troop
     this.save = save
-    this.unsaved = 2
     this.setTheStage()
+    this.arrive({ kind: was.kind, size: was.size, balloons: event.marched.balloons }, event.showing, was.held)
+  }
+
+  /** Ends the scene that is playing: every beat lands where it was going, at once and in silence. */
+  private endScene(): void {
+    if (!this.scene?.running) return
+    this.finishing = true
+    this.scene.finish()
+    this.finishing = false
+    for (const actor of this.actors) if (actor.clip === 'proud' || actor.clip === 'march') actor.clip = null
+  }
+
+  /** Something a beat starts (a motion, a sound), which a touch that ends the scene does not start. */
+  private cue(start: () => void): Beat['play'] {
+    return () => { if (!this.finishing) start() }
+  }
+
+  /**
+   * The ending of a cycle: each friend's own proud move with its balloon, in the order the balloons were taken;
+   * three steps on the spot together; the balloons bobbing up in a wave; and the troop settling to look up at
+   * them. Its outcome is in the save already: the cycle was judged when the finger lifted.
+   */
+  private endCycle(order: readonly number[], together: boolean): void {
+    const kind = this.troop.kind, p = PERSONALITIES[kind], size = this.troop.size
+    // Those served before the last bunch go first, then the takers of the last bunch in their order.
+    const turns = [...Array.from({ length: size }, (_, i) => i).filter((i) => !order.includes(i)), ...order]
+    const gap = together ? 0.14 : Math.min(0.7, p.lasts.proud * 0.75)
+    const beats: Beat[] = []
+    turns.forEach((friend, k) => beats.push({ at: 0.15 + k * gap, lasts: 0, play: this.cue(() => { this.act(friend, 'proud'); this.sound(`${kind}Poke`, 1.18 + k * 0.05, 0.8) }) }))
+    let at = 0.15 + (size - 1) * gap + p.lasts.proud
+    beats.push({ at, lasts: 0, play: this.cue(() => { for (let i = 0; i < size; i++) this.act(i, 'march') }) })
+    for (let step = 0; step < 3; step++) beats.push({ at: at + (p.lasts.march * (step + 0.5)) / 3, lasts: 0, play: this.cue(() => this.sound(`${kind}Step`, 1, 0.9)) })
+    at += p.lasts.march
+    for (let i = 0; i < size; i++) beats.push({ at: at + i * 0.16, lasts: 0, play: this.cue(() => { this.held[i].vy += 4.6; this.sound('bloop', 1 + i * 0.12, 0.5) }) })
+    at += size * 0.16
+    // The troop settles, each friend looking up at its balloon, for as long as it takes to make the scene whole.
+    beats.push({ at, lasts: Math.max(0.8, ENDING.shortest - at), play: () => {} })
+    // A slow kind in a troop of three would run long: its beats keep their order and come a little closer together.
+    const length = sceneLength(beats), squeeze = Math.min(1, ENDING.longest / length)
+    this.scene = new Scene(beats.map((beat) => ({ ...beat, at: beat.at * squeeze, lasts: beat.lasts * squeeze })))
+    this.sceneKind = 'ending'
+    this.scene.start(this.time, () => {})
+  }
+
+  /**
+   * The arrival: the served troop marches off towards the far hill, a troop passes by when a new idea has come,
+   * the next troop walks in and reaches up, the sky fills, and the troop after it comes to the edge. Everything
+   * it changes in the save was changed before it starts, and is saved at once.
+   */
+  private arrive(marched: Marched | null, showing: Showing | null, held: readonly boolean[] = []): void {
+    const actorsFor = (size: number): Actor[] => Array.from({ length: size }, () => ({ clip: null, t: 0, next: null, tug: null, landAfter: 0 }))
+    const beats: Beat[] = []
+    let at = 0
+    this.walkIn = 0
+    this.nextIn = 0
+    this.skyIn = false
+    this.leaving = null
+    this.passer = null
+    this.endingDue = null
+    if (marched) {
+      this.leaving = { kind: marched.kind, size: marched.size, held: [...held], actors: actorsFor(marched.size) }
+      this.leaveU = 0
+      const lasts = PERSONALITIES[marched.kind].walk * 1.15
+      beats.push({ at: 0, lasts, play: (u) => { this.leaveU = u; if (u >= 1) this.leaving = null } })
+      at = showing ? lasts * 0.75 : 0.45
+    }
+    if (showing) {
+      const p = PERSONALITIES[showing.kind]
+      const passer = { kind: showing.kind, size: showing.size, held: Array.from({ length: showing.size }, () => false), actors: actorsFor(showing.size), idea: showing.idea }
+      this.passer = passer
+      this.passIn = 0
+      this.passOut = 0
+      this.passTook = false
+      // In, a look up at what hangs low for it, the taking, and out: four to six seconds for any kind, the quick
+      // ones looking a little longer and the slow ones wasting none.
+      const turn = showing.idea === 'bunch' ? 0.06 : 0.2, after = 0.25 + (showing.size - 1) * turn, out = p.walk
+      const look = Math.max(0.35, PASS_BY.shortest + 0.2 - (p.walk + p.lasts.catch + after + out))
+      beats.push({ at, lasts: p.walk, play: (u) => { this.passIn = u } })
+      at += p.walk + look
+      // It takes what hangs low for it, in its kind's own way. Ended early, it simply has it.
+      beats.push({ at, lasts: 0, play: () => {
+        this.passTook = true
+        passer.held.fill(true)
+        if (this.finishing) return
+        passer.actors.forEach((actor, k) => {
+          actor.clip = 'catch'
+          actor.t = -k * turn
+          this.sound(`${showing.kind}Catch`, 1 + k * 0.05, k === 0 ? 1 : 0.8, k * turn)
+        })
+      } })
+      at += p.lasts.catch + after
+      beats.push({ at, lasts: out, play: (u) => { this.passOut = u; if (u >= 1) this.passer = null } })
+      at += out * 0.7
+    }
+    const kind = this.troop.kind, walkFor = PERSONALITIES[kind].walk
+    beats.push({ at, lasts: walkFor, play: (u) => { this.walkIn = u } })
+    // The sky fills with the next bunches, one place after another.
+    beats.push({ at: at + walkFor * 0.55, lasts: 0, play: () => {
+      this.skyIn = true
+      this.places.forEach((place, slot) => {
+        place.grow = this.finishing ? 1 : 0
+        place.away = this.finishing ? 0 : 0.001 + slot * 0.09
+      })
+    } })
+    beats.push({ at: at + walkFor, lasts: PERSONALITIES[this.waiting.kind].walk * 0.8, play: (u) => { this.nextIn = u } })
+    this.scene = new Scene(beats)
+    this.sceneKind = 'arrival'
+    this.scene.start(this.time, () => { this.unsaved = 2 })
   }
 
   /** A pop: the snap, and scraps of the balloon's colour thrown out. */
@@ -294,6 +456,28 @@ export class Theatre {
   step(dt: number): void {
     this.time += dt
     const kind = this.troop.kind, personality = PERSONALITIES[kind]
+
+    // The scene that is playing moves on, and whoever is walking in it is heard at each step.
+    const leaveU = this.leaveU, passIn = this.passIn, passOut = this.passOut, walkIn = this.walkIn, nextIn = this.nextIn
+    this.scene?.update(this.time)
+    if (this.leaving) this.footfall(this.leaving.kind, leaveU, this.leaveU, 0.6)
+    if (this.passer) {
+      this.footfall(this.passer.kind, passIn, this.passIn, 0.8)
+      this.footfall(this.passer.kind, passOut, this.passOut, 0.6)
+      for (const actor of this.passer.actors) {
+        if (!actor.clip) continue
+        actor.t += dt
+        if (actor.t >= PERSONALITIES[this.passer.kind].lasts[actor.clip]) actor.clip = null
+      }
+    }
+    this.footfall(kind, walkIn, this.walkIn, 0.8)
+    this.footfall(this.waiting.kind, nextIn, this.nextIn, 0.5)
+    // An ending that is due starts when the catch that caused it is over and nothing is in the air.
+    if (this.endingDue && this.time >= this.endingDue.at && !this.scene?.running && this.flights.length === 0) {
+      const due = this.endingDue
+      this.endingDue = null
+      this.endCycle(due.order, due.together)
+    }
 
     for (const place of this.places) {
       // A pressed bunch is held flat; let go, it springs back past round and settles.
@@ -385,6 +569,13 @@ export class Theatre {
       scrap.y += scrap.vy * dt
       if (scrap.life <= 0) this.scraps.splice(i, 1)
     }
+  }
+
+  /** A step's sound when a walk passes from one step into the next. */
+  private footfall(kind: KindName, before: number, now: number, gain: number): void {
+    if (now <= before || now >= 1) return
+    const steps = PERSONALITIES[kind].steps
+    if (Math.floor(now * steps) !== Math.floor(before * steps) || before === 0) this.sound(`${kind}Step`, 1, gain)
   }
 
   /** How high a friend of this kind is off the ground this far into being carried off. */
@@ -503,7 +694,7 @@ export class Theatre {
     const slots = this.slots(view)
     for (let slot = 0; slot < slots.length; slot++) {
       const place = this.places[slot], bunch = this.sky[slot]
-      if (place.away > 0) continue
+      if (place.away > 0 || !this.skyIn) continue
       const hue = KIND_COLOURS[bunch.colour], line = shade(hue, -0.3)
       // A new bunch drifts down into its place, small at first and a little past its size before it settles.
       const grown = place.grow, size = grown < 1 ? grown * (1 + Math.sin(grown * Math.PI) * 0.18) : 1
@@ -535,13 +726,26 @@ export class Theatre {
       pose.scale = FRIEND_SCALE
       // It stands as one that holds a balloon only once the balloon is in its hand.
       rest(kind, this.held[i].shown, plan.reach, time, i, pose)
+      if (this.walkIn < 1) {
+        // On its way in from the edge, where it waited: nearer, larger, and in its kind's own gait.
+        const from = waitingSpot(i, view), gone = stride(kind, this.walkIn)
+        pose.x = from.x + (spot.x - from.x) * gone
+        pose.z = from.z * (1 - gone)
+        pose.y = groundAt(pose.x, pose.z) + (pose.y - spot.y)
+        pose.scale = FRIEND_SCALE * (WAITING_SCALE + (1 - WAITING_SCALE) * gone)
+        if (this.walkIn <= 0) {
+          pose.armL = pose.armR = 0.2
+          pose.turn = 0.45
+          pose.nod = -0.25
+        } else walk(kind, this.walkIn, 1, pose)
+      }
       if (actor.clip) clip(kind, actor.clip, actor.t, plan.height * FRIEND_SCALE, plan.reach, pose)
       this.watch(i, pose)
       painter.place(name, kind, pose)
-      const lifted = pose.y - spot.y
+      const floor = groundAt(pose.x, pose.z), lifted = pose.y - floor
       // The shadow stays on the hill and shrinks as the friend leaves it.
-      const spread = 1 / (1 + lifted * 0.5)
-      painter.shadow(pose.x, spot.y + 0.02, 0.1, plan.halfWidth * FRIEND_SCALE * 1.05 * spread, 0.55 * spread, shade(colour, -0.35))
+      const spread = (1 / (1 + lifted * 0.5)) * (pose.scale / FRIEND_SCALE)
+      painter.shadow(pose.x, floor + 0.02, pose.z + 0.1, plan.halfWidth * FRIEND_SCALE * 1.05 * spread, 0.55 * spread, shade(colour, -0.35))
       handOf(plan, pose, this.hand)
       const balloon = this.held[i]
       if (balloon.shown) {
@@ -592,25 +796,91 @@ export class Theatre {
     // The troop that waits at the edge: smaller, further back, looking at the balloons.
     const waitingPlan = BODIES[this.waiting.kind]
     for (let i = 0; i < 3; i++) {
-      if (i >= this.waiting.size) {
+      if (i >= this.waiting.size || this.nextIn <= 0) {
         painter.drop(`waiting-${i}`)
         continue
       }
       const spot = waitingSpot(i, view)
       copyPose(pose, REST)
-      pose.x = spot.x
+      // It comes to the edge from beyond it.
+      pose.x = spot.x - (1 - stride(this.waiting.kind, this.nextIn)) * 4.5
       pose.z = spot.z
-      pose.y = groundAt(spot.x, spot.z)
+      pose.y = groundAt(pose.x, spot.z)
       pose.scale = WAITING_SCALE * FRIEND_SCALE
       rest(this.waiting.kind, false, waitingPlan.reach, time, i + 5, pose)
       // They wait with their arms down: reaching is for the troop whose turn it is.
       pose.armL = pose.armR = 0.2
       pose.turn = 0.45
       pose.nod = -0.25
+      if (this.nextIn < 1) walk(this.waiting.kind, this.nextIn, 1, pose)
       if (this.waitingActor.clip) clip(this.waiting.kind, this.waitingActor.clip, Math.max(0, this.waitingActor.t - i * 0.08), waitingPlan.height, waitingPlan.reach, pose)
       painter.place(`waiting-${i}`, this.waiting.kind, pose)
-      painter.shadow(spot.x, groundAt(spot.x, spot.z) + 0.02, spot.z + 0.1, waitingPlan.halfWidth * 0.75, 0.36, PALETTE.shadow)
+      painter.shadow(pose.x, groundAt(pose.x, spot.z) + 0.02, spot.z + 0.1, waitingPlan.halfWidth * 0.75, 0.36, PALETTE.shadow)
     }
+
+    // The troop that marches off with its balloons, towards the far hill.
+    const leaving = this.leaving
+    for (let i = 0; i < 3; i++) {
+      if (!leaving || i >= leaving.size) {
+        painter.drop(`leaving-${i}`)
+        continue
+      }
+      const way = view.width / 2 + 2.6 - friendX(0, leaving.size)
+      this.passing(painter, `leaving-${i}`, leaving, i, friendX(i, leaving.size) + stride(leaving.kind, this.leaveU) * way, this.leaveU, i + 9)
+    }
+
+    // The troop that passes by to show a new idea: in from beyond the edge, a stop under what hangs low for it, and out the other side.
+    const passer = this.passer
+    for (let i = 0; i < 3; i++) {
+      if (!passer || i >= passer.size) {
+        painter.drop(`passer-${i}`)
+        continue
+      }
+      const stop = friendX(i, passer.size), from = -view.width / 2 - 2.2 - (passer.size - 1 - i) * 0.4, to = view.width / 2 + 2.6 + i * 0.4
+      const x = this.passOut > 0 ? stop + (to - stop) * stride(passer.kind, this.passOut) : from + (stop - from) * stride(passer.kind, this.passIn)
+      this.passing(painter, `passer-${i}`, passer, i, x, this.passOut > 0 ? this.passOut : this.passIn, i + 13)
+    }
+    if (passer && !this.passTook) {
+      // What hangs low for it: a balloon over each friend, or one bunch for the whole troop.
+      const hue = KIND_COLOURS[passer.kind], line = shade(hue, -0.3), y = GROUND + HELD_HEIGHT + 0.75 + Math.sin(time * 1.3) * 0.06
+      const drop = Math.min(1, this.passIn * 3), high = (1 - drop) * (1 - drop) * 3
+      if (passer.idea === 'bunch') {
+        const offsets = bunchOffsets(passer.size)
+        for (let k = 0; k < offsets.length; k++) {
+          const lean = -offsets[k].x * 0.42
+          painter.balloon(offsets[k].x, y + 0.5 + offsets[k].y + high, 0.3, 1, 1, lean, hue)
+          painter.string(offsets[k].x + Math.sin(lean) * BALLOON * 1.32, y + 0.5 + offsets[k].y + high - BALLOON * 1.32, 0.3, 0, y + 0.5 + high - BALLOON * 2.5, 0.3, line)
+        }
+      } else {
+        for (let i = 0; i < passer.size; i++) {
+          const x = friendX(i, passer.size) + 0.25
+          painter.balloon(x, y + high, 0.3, 1, 1, 0, hue)
+          painter.string(x, y + high - BALLOON * 1.32, 0.3, x, y + high - BALLOON * 1.32 - 0.5, 0.3, line)
+        }
+      }
+    }
+  }
+
+  /** One friend of a troop that is only passing, at `x`, `u` of the way through its walk. One that holds a balloon carries it along. */
+  private passing(painter: Painter, name: string, troop: Passing, i: number, x: number, u: number, seed: number): void {
+    const pose = this.pose, plan = BODIES[troop.kind], colour = KIND_COLOURS[troop.kind], actor = troop.actors[i]
+    copyPose(pose, REST)
+    pose.x = x
+    pose.y = groundAt(x, 0)
+    pose.scale = FRIEND_SCALE
+    rest(troop.kind, troop.held[i], plan.reach, this.time, seed, pose)
+    walk(troop.kind, u, 1, pose)
+    if (actor.clip && actor.t >= 0) clip(troop.kind, actor.clip, actor.t, plan.height * FRIEND_SCALE, plan.reach, pose)
+    painter.place(name, troop.kind, pose)
+    painter.shadow(pose.x, groundAt(x, 0) + 0.02, 0.1, plan.halfWidth * FRIEND_SCALE * 1.05, 0.55, shade(colour, -0.35))
+    if (!troop.held[i]) return
+    handOf(plan, pose, this.hand)
+    // Its balloon trails a little behind the hand as it goes.
+    const trail = u > 0 && u < 1 ? -0.45 : 0.5
+    const bx = this.hand.x + trail + Math.sin(this.time * 1.4 + seed) * 0.1, by = pose.y + HELD_HEIGHT + Math.sin(this.time * 1.7 + seed * 2) * 0.07
+    const lean = (this.hand.x - bx) * -0.2
+    painter.balloon(bx, by, 0.3, 1, 1, lean, colour)
+    painter.string(bx + Math.sin(lean) * BALLOON * 1.32, by - Math.cos(lean) * BALLOON * 1.32, 0.3, this.hand.x, this.hand.y, this.hand.z, shade(colour, -0.3))
   }
 
   /** The frog meets its balloon with its tongue: out to the balloon as it comes down, and in with it. */

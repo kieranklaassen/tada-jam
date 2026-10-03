@@ -166,7 +166,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
-      if (touch.active) ladder.touch(clock.seconds)
+      if (touch.active || theatre?.playing) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
       ladder.update(clock.seconds)
       // The game steps its rules and its scene here, and hands what they changed to storage (`cadence`, above).
