@@ -242,4 +242,32 @@ Monster Pizza is designed from, in California, three foundations published by a 
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Written after the style spike, not part of the sheet.
+
+**The look: felt-tip marker drawing**, the first of the two rows reserved for this game in the look ledger, in canvas 2D. The whole kitchen looks drawn by a happy five-year-old on white drawing paper.
+
+**How it is made.**
+
+- **Outlines.** Every figure has one bold dark line (`#2b2a33`), 6 to 8 units wide with round ends, through points nudged by a seeded wobble, with a darker dot where the pen came to rest. Each figure's wobble is seeded from its name, so it is its own and never changes between frames.
+- **Fills.** Parallel marker strokes at one angle per figure, drawn with `multiply` so that overlaps darken, each stroke cut where it crosses the outline and then let fall short or run over by a little. A second, sparser pass sits where the hand went back over it. Nothing is shaded and nothing is lit.
+- **Paper.** `#fffdf6`, bare. The wall is paper with one doorway of sky; the worktop is bare paper, so the work lies on a plain ground.
+- **The pieces a child counts are the exception.** Each kind is one flat colour inside one steady outline, with no wobble, no streaks, no face and no motion at rest: pepper `#e4322b`, mushroom `#b98a5e`, olive `#4d7a2a`, cheese `#ffd21f`, sock `#2f7fe0`, worm `#ff8fb4`. A kind is told by shape and colour together. All six fit the same circle. They lie on the pizza's top, a flat pale `#fff4d6`, and on the card, flat white.
+- **The customers** carry the look: bodies coloured in with wide strokes (Bim teal, Grum purple, Fizz orange, Mops pink, Ooze lime), a paler patch on the front, white eyes with a dark pupil, a dark mouth with two blunt teeth, stick arms with round hands.
+- **The setting:** a yellow counter edge, a round wooden board with a handle, a red brick oven with a dark mouth, tubs in six marker colours, none the colour of the kind inside.
+
+**Palette.** Marker colours straight from the pack: saturated, unmixed, no pastels and no greys. Dark is the outline only.
+
+**Motion rules.**
+
+- A drawing does not boil. Life at rest is breathing, blinking, eyes that follow and each customer's own small delights (`motion.ts`), drawn by moving and squashing whole sprites and redrawing a few pen lines.
+- Each customer moves like itself: its own tempo, weight and funniest part, its own variants of every action, never the same variant twice in a row. A test fails on a shared or near-copied action.
+- Things have weight: a tub squashes under the finger, a piece lands with a squash and settles on a spring, the whole pizza jiggles under a landing.
+- A piece at rest never moves by itself.
+
+**The idle cues.** What can be touched gets a ring of short orange marker dashes that breathes: the way a child draws that something shines. It reads on bare paper, where a yellow highlight would not. The ghost hand is a white mitten with one finger out, in the same outline.
+
+**How each tier keeps the look.** The tiers in `config.ts` set the pixel ratio only: 2, 1.5, 1.25, 1. Every figure is drawn once into a sprite at the surface's own density when the surface is sized, so a lower tier is the same drawing with fewer pixels and nothing is left out. A frame is one full-surface stamp (the wall) and a few dozen small ones.
+
+**Kept apart from the nearest looks.** Bad Neighbours is pixels; this has none. Bedtime Forest has a loose ink line over paint; this has no paint and no tone. The stickers have a white border and gloss; this has neither. Thick-line primaries, this game's second row, has a steady line and fills that reach it; here the line wobbles and the fills miss.
+
+**For the registry** (a request to the lead, in the columns of section 3 of the art direction): Monster Pizza | Felt-tip marker drawing (canvas 2D): wobbly bold outlines and streaky marker fills that miss the edges on white drawing paper, five coloured-in monsters at a yellow counter, and plain flat toppings on a pale pizza | `games/monster-pizza/ART.md`.
