@@ -28,7 +28,7 @@ The manifest band is 9 to 12. Its youngest age, 9, governs the design.
 
 It is a pleasure with no goal because it is a zip and a xylophone at once: the hand draws a length and hears it, fast or slow, forwards or back, and a bigger pull makes a bigger chain (pack: game-design, toy-first.md; pack: game-design, touch-answers-bigger-than-the-touch.md). Random pulling always lays a row and never does harm. Someone watching sees within three seconds that the child is laying in wood. It is also the hand of the school skill: the answer to "how much will the night need" is given as a length on a line of equal steps.
 
-The three supplies differ in the hand: logs knock like wood blocks and roll a little, oil flasks clink in a glassy chain, and water cans come out slowly with a slosh that lags behind the finger.
+The three supplies differ in the hand: logs come out piece by piece, knock like wood blocks and roll a little; oil pours out as one amber band with a glassy clink at each flask mark; water comes out as a slow blue band whose slosh lags behind the finger, with a clunk at each can mark.
 
 ## The object-by-action grid, and what is new on day 15
 
@@ -38,7 +38,7 @@ Six objects by five actions. The first three objects are the supplies, which hav
 | --- | --- | --- | --- | --- | --- |
 | **Log** | A row zips out along the rod, wood-block notes rising. | At dusk the ring of stones shuffles and bites it in. At night the fire flares, its circle of light bulges for a beat and the eyes at its edge jump back. | It balances on top; the lantern tips, rolls down the slope, plops into the stream with a hiss and bobs back. | Each uses it their own way: the reader sits on it, the sleeper takes it as a pillow, the cook stirs it in the pot. | It rolls half a turn and rings its own note. |
 | **Oil flask** | The oil pours out along the rod as one amber band, gurgling, with a clink at each flask mark. | A fireball ring: every hat blows back, the cook's eyebrows go sooty, and the flask is back in its pile. | The right use: it glugs in, and the lantern burps a smoke ring. | The camper sniffs it, pulls a face and hands it to the mule, which sneezes. | It wobbles and rings like glass. |
-| **Water can** | Cans come out slowly with a slosh that lags behind the finger. | At dusk a puddle and a frog. At night a hiss and a steam cloud that hides a patch of the map for a moment. | The lantern gargles and blows one bubble that drifts off the sheet. | A splash: the sleeper sits up and shakes like a dog, the reader holds the book overhead as a roof. | It sloshes, and a cup of water hops out and back. |
+| **Water can** | The water comes out as a slow blue band whose slosh lags behind the finger, with a clunk at each can mark. | At dusk a puddle and a frog. At night a hiss and a steam cloud that hides a patch of the map for a moment. | The lantern gargles and blows one bubble that drifts off the sheet. | A splash: the sleeper sits up and shakes like a dog, the reader holds the book overhead as a roof. | It sloshes, and a cup of water hops out and back. |
 | **Lantern** | It is carried across the map with its reach drawn as a pencil circle that follows it, and stands on the pin where it is let go. | It glows red, whistles like a kettle and hops out by itself. | Two lanterns stack and sway, then the top one slides off to the nearest free pin. | It is worn as a hat: the reader reads on, pleased; the sleeper pulls the bag over their head. | The wick clicks between low and high, and the halo shrinks or grows. |
 | **Amount card** | The right use: stamped along the night ruler, each stamp lays the card's pieces under the next span in pencil, with the running total beside them. | A corner curls and smokes; the card shakes itself flat. | It sticks on as a shade and the light goes striped. | The dog takes it, runs a lap of the camp and brings it back damp. | It flips between its single and its doubled side. |
 | **Marshmallow** | A dotted trail of marshmallows is laid across the map, and at night the raccoons follow it exactly, wherever it leads. | It swells to the size of a tent, toasts, and sags. | It melts over the glass and the moths stick to it. | The camper eats it with both cheeks; the sleeper eats it without waking. | The tin's lid pops and one jumps out. |
@@ -76,11 +76,22 @@ Six objects by five actions. The first three objects are the supplies, which hav
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No: what is played is the relation itself between a stock, the amount used in one span and the length of the night, so with another subject in its place there would be nothing left to run.
+- **Attention.** At the moment of decision, which is how far to pull a row or which way to turn a dial, the child looks at the amount card, the length of the ruler and the row on the rod, and thinks about how many of this card fit into this night.
+- **Fun.** The best moment is sliding the night along and watching the plan hold or come apart, and that moment is the skill's own result: the pull that set it up is the toy, and play never stops for a question.
+- **Guess.** At the first two positions a child can get a night through by adding and running again, and each run shows where the supply ran out and how many hours are bare, so even that way teaches the amount for each hour; a plan that only piles everything on gets through but does not go well (see "The designed order"), and from the position where the sled has a bed of limited length it does not fit at all, because adding to one supply pushes out another.
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+The game runs the child's plan as it stands and shows what it does. Nothing gives a verdict: no cross, no buzzer, no sad face turned to the child, no reset and no lost piece (pack: game-design, errors-show-as-consequences.md).
+
+- **Too little of a supply.** Its user goes out at the true moment. *Where:* a pin drops on the night ruler at that moment, the ash under the ruler stops there, and the ruler from the pin to dawn stays bare. *Why:* the rod of that supply is empty, and the ash shows hour by hour where it went. *In the world:* the dark closes over that user's circle, eyes open at its edge, the raccoons come exactly as far as the dark reaches, and each camper who was in the circle does what their fixed taste makes them do.
+- **Too few cups for a round.** The cook pours down the line until the kettle is dry. *Where and why:* the campers at the end of the line hold empty mugs at that hour, and one turns the mug over and a moth flies out.
+- **Too much.** Nothing goes wrong in the night. In the morning the unused part still lies on its rod as a length, and the scout straps exactly that much onto the mule, a tower as tall as the leftover, before the mule will move.
+- **More than the sled holds** (from the position that has a sled). The pull stops being followed: the piece that does not fit slides off the tail of the sled and hops back to its pile. *Where and why:* the bed is visibly full to its tail.
+- **A setting that does not suit.** A fire too small leaves the far tents outside its circle, and those campers drag their bags inside it, on top of each other. A lantern on the wrong pin lights someone who wanted the dark.
+
+The state stays. After any night the camp, the rods and the dials are exactly as the child set them, the ash and the pins lie where they fell, and the child changes one thing and slides the night again. Success is the same kind of consequence: the ash reaches dawn, the circles hold, and everyone wakes the way a good night leaves them. The first time a user goes out at a site the whole camp plays it out as a short scene; after that only the pin, the dark and the campers' own reactions show, so the feedback thins as the child gets surer.
 
 ## The designed order, and what is stored
 
