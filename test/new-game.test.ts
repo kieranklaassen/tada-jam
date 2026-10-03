@@ -20,6 +20,8 @@ import { scanGames } from '../scripts/wordless-check'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const templateDir = join(root, 'templates', 'cartridge')
 const FROZEN = ['attention.ts', 'perf.ts', 'quality.ts', 'saveCadence.ts']
+/** Copied only into a game whose band starts at 6 or above. */
+const SYMBOLS = ['symbols.test.ts', 'symbols.ts']
 const FIRST_LINE = /^(?:\/\/|<!--) template: cartridge\/(\S+) v(\d+)( \(frozen: [^)]+\))?(?: -->)?$/
 
 const firstLine = (path: string): string => readFileSync(path, 'utf8').split('\n', 1)[0]
@@ -92,7 +94,10 @@ describe('new:game', () => {
   it('copies the template into games/<key>/, renames the Mount file, and writes nothing else', () => {
     const temp = tempRoot()
     newGame(ARGS, temp)
-    const expected = tree(templateDir).map((file) => `games/hedgehog-post/${file === 'game.tsx' ? 'hedgehog-post.tsx' : file}`)
+    // The band of this copy starts at 4, so the symbols module stays behind.
+    const expected = tree(templateDir)
+      .filter((file) => !SYMBOLS.includes(file))
+      .map((file) => `games/hedgehog-post/${file === 'game.tsx' ? 'hedgehog-post.tsx' : file}`)
     expect(tree(temp)).toEqual(expected.sort())
   })
 
@@ -155,6 +160,23 @@ describe('new:game', () => {
     expect(scanGames(temp)).toEqual([])
     renameSync(join(gameDir, 'overlay.ts'), join(gameDir, 'readout.ts'))
     expect(scanGames(temp).map((finding) => finding.rule)).toEqual(['plain-exception-misplaced'])
+  })
+
+  it('gives the symbols module and its test only to a game whose band starts at 6 or above', () => {
+    const temp = tempRoot()
+    for (const [key, band, holds] of [['young-one', '2-4', false], ['just-under', '5-9', false], ['just-there', '6-10', true], ['old-one', '9-12', true]] as const) {
+      const gameDir = newGame([key, 'A Game', band, '🎲'], temp)
+      for (const file of SYMBOLS) {
+        expect(existsSync(join(gameDir, file)), `${band} ${file}`).toBe(holds)
+        if (holds) expect(readFileSync(join(gameDir, file), 'utf8'), `${band} ${file}`).toBe(readFileSync(join(templateDir, file), 'utf8'))
+      }
+    }
+    // The copies that hold it pass both scans untouched: every text call in it is behind the numeral exception.
+    expect(scanTree(temp, { built: false })).toEqual([])
+    expect(scanGames(temp)).toEqual([])
+    // The same module in a game whose band starts below 6 is a finding, so it cannot be carried down by hand.
+    writeFileSync(join(temp, 'games', 'young-one', 'symbols.ts'), readFileSync(join(templateDir, 'symbols.ts'), 'utf8'))
+    expect(new Set(scanGames(temp).map((finding) => finding.rule))).toEqual(new Set(['numeral-exception-band']))
   })
 
   it('copies the frozen files byte for byte', () => {

@@ -156,7 +156,7 @@ games/<key>/
 - The Mount already pauses when `ctx.attention.attended` is false or the document is hidden, and watches its own element with a `ResizeObserver` that ignores 0×0. Keep both when the renderer goes in.
 - `input.ts` turns pointer events into gestures. Every `press` is followed by exactly one of `tap`, `dragStart` or `pressEnd`. `pressEnd` says the press is over and was not a tap, as when the browser takes the touch away or the game is parked under the finger. So whatever a game squashes or lights on `press`, it lets go on whichever of the three arrives.
 - The template has no speech and no language pack. Both arrive with the first game that needs them, after a trial on the owner's iPad.
-- `symbols.ts` is not in the template. Only a game whose band starts at 6 or above adds it ("Symbols, and the defaults awaiting the owner").
+- `symbols.ts` and its test are in the template, and the generator copies them only into a game whose band starts at 6 or above ("Symbols, and the defaults awaiting the owner"). It is a free file that came from the first game to need it: it draws whole numbers, fractions with a bar, mixed numbers, decimals and the signs on a canvas 2D surface, takes numbers and never a string, and carries the comment the wordless check asks for on every text call. A three.js game draws with it onto a canvas that it uses as a texture.
 - A helper is never copied from another game any more. If two games need the same new helper, that is a request to the lead for the template.
 
 ### The design sheet

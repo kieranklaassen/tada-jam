@@ -101,7 +101,8 @@ const TEXT_COMPONENTS = new Set(['Text', 'Text3D', 'Html'])
 const TEXT_ATTRIBUTES = new Set(['placeholder', 'title', 'alt', 'value', 'defaultValue', 'label'])
 const FORMAT_FUNCTIONS = new Set(['String', 'Number'])
 const FORMAT_METHODS = new Set(['toString', 'toFixed', 'toPrecision', 'toLocaleString', 'format', 'join'])
-const NUMERALS_FROM_AGE = 6
+/** The youngest age a band may start at for its game to draw numerals and mathematics signs. The generator reads it too. */
+export const NUMERALS_FROM_AGE = 6
 // Grown-up overlay files that are not named `overlay` or `perf`, each with its reason.
 const LISTED_OVERLAY_FILES = new Map([
   ['games/felt-meadow/view/view.ts', 'its frame-rate readout, shown only behind ?fps=1, is drawn inside the view module'],
