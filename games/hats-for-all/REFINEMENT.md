@@ -3,13 +3,10 @@
 
 ## Status
 
-- Stage: toy, with the rules written as pure modules. The game is not built on the toy yet: that waits for the sheet's pass and the owner's answer on the look and the toy.
-- Sheet, round 1: checked by checker B on the text at commit `1469dea` (sheet part sha256 `4036d60f259b42d407b943b8da5a98086111f802bd4314f16a176867cc105fd0`). Outcome: open, 14 findings. All 14 replacements are pasted as the checker wrote them, none disputed, at commit `06c946d` (sheet part sha256 `0db3c2a0d4d45341c6386f07f99d80b60d4fc49c26696366a34dfb5c6644638d`).
-- What was built on the old text is in line with the new, at commit `5ef05f2` and the one that holds this block: a change and the parade wait until the crew has been left alone for two seconds of attended game time (`cycle.ts`); a finished crew answers every touch, parades again when set right, and is judged once (`cycle.ts`, `save.ts`); a bare creature calls a hat from the tile only (`rules.ts`); a loose hat scuttles in a small circle beside its round spot (`toy.ts`); the changed cells of the grid and Wig's act (`grid.ts`, `tastes.ts`); the five round spots are drawn in the mat (`view/build.ts`).
-- Look in use: foam play mats, the first reserved look. The Mount shows the game's real scene in the look at load, the same at every load (three creatures, four hats, the arch, the five round spots), so the lead can take the still at 1180 by 820. Stills were taken on the build machine in software and are not committed. No frame rate was measured: that is the lead's, on a real graphics card.
-- Toy: in. A tap on a hat presses it out of its tile and onto the nearest bare head; a tap on a hat on a head presses it home; the hat with no head scuttles beside a round spot; a creature, the arch and the bare floor each answer a touch. The answer starts when the finger lands. It has no goal, no cycle and no ending.
-- Rules: `rules.ts`, `grid.ts`, `tastes.ts`, `layout.ts` with `LADDER` in `config.ts`, `save.ts` and `cycle.ts`, each with its tests, now written against the sheet at commit `06c946d`, while its second check runs, at the builder's own risk.
-- Open: sheet ready for check, round 2
+- Stage: game, being built on the toy (the game run of `docs/build/runs/game.md`). This block is rewritten at the end of the run.
+- Sheet, round 1: checker B, open, 14 findings, all pasted at commit `06c946d`.
+- Sheet, round 2: checker D, on the text with sheet part sha256 `0db3c2a0d4d45341c6386f07f99d80b60d4fc49c26696366a34dfb5c6644638d`. Outcome: open, 4 findings. All 4 replacements are pasted as the checker wrote them, none disputed, at commit `d9a0c46` (sheet part sha256 `26cdd160de55cad7ff69e3dc309676351c6b290327f1de763efc3b89cdbf2e78`). Brought into line: the three sounds the grid's cells now name (the squeal, the whirr and the falling whistle) are voices of the game and are heard in those cells, by test.
+- Open: sheet ready for check, round 3
 
 **For the next checker, from the builder**
 
