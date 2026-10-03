@@ -4,15 +4,17 @@
 ## Status
 
 - Stage: toy, built and waiting for the owner. This run did the sheet, the look spike, the toy and the rules, and stops here as its brief says. The game is not built on the toy yet.
-- Sheet: whole in `ART.md` as of commit `471110ba06a7fed30ad205695148c3aa1c703e2d`. The hash of its sheet part is `c4c45308cd9412968da6f1ca9791b9a4e04d0403d9b8d9f9b9c1bba70f4e3d4c`, and the sheet part has not been edited since. No check has come back yet.
+- Sheet, round 1: checked by checker B, outcome open with 11 findings. All eleven replacements are pasted as they stand, in commit `0b2db37`. None was disputed.
+- Sheet, as it stands now: commit `283d66702e6c5701c09c9f5d316009e9878f616f`. The hash of its sheet part is `4bd44585782b608ca8b408108484fc3595e4c50cfd1ff9933a9c9373fd073a94`. It holds the eleven pastes and three sentences of the builder's own, listed below, for round 2 to read.
+- A correction: the status block of commit `9a3a3b0` gave a wrong ending for the round 1 hash. The text round 1 checked is the text of commit `471110b`, with the hash the checker's report names.
 - Look in use: the first reserved look, Garden-toy plastic. The spike is clear at age two on a software-rendered still: a few big separate toys, each a hue of its own, on plain pale sand. The second look was not needed and not spiked. The frame rate of the spike is the lead's to take.
 - Renderer: three.js (raw), as the brief suggests. 10 draw calls and about 38,000 triangles in the heaviest moment of the toy; 20 draw calls and about 44,000 triangles in the spike.
 - What the Mount shows: the toy, at `?chrome=0#/play/fire-truck-hero`. The look spike, for the still at 1180 by 820, is at `?chrome=0&spike=1#/play/fire-truck-hero`. Both use fixed seeds.
-- Rules: written as pure modules against the sheet at commit `471110b`, while its check runs, at the builder's own risk: `things.ts`, `grid.ts`, `world.ts`, `tastes.ts`, `yards.ts`, `save.ts`, with `ground.ts` and `layout.ts` under them. They are tested and not wired into the Mount. A finding on the grid, the designed order, the error or the records reopens them.
-- Open: sheet ready for check, round 1
+- Rules: pure modules, tested and not wired into the Mount: `things.ts`, `grid.ts`, `world.ts`, `tastes.ts`, `yards.ts`, `save.ts`, with `ground.ts` and `layout.ts` under them. Written against the sheet at `471110b` and brought into line with the sheet as it stands now. A finding in round 2 on the grid, the designed order, the error or the records reopens them.
+- Open: sheet ready for check, round 2
 - Open: the owner's answer on the look and the toy.
-- Open: three requests to the lead, below.
-- Open: three places where the build went past the sheet's words, below, each with the sentence that should stand in the sheet. They wait for the checker's round so the sheet is edited once.
+- Open: two requests to the lead, below.
+- Open: the truck's want at rest (its nozzle turned to what wants water, a drop at its tip) and the bee at the closed bud are in the sheet and in `tastes.ts` as cues, and are not drawn yet. They belong to the game on the toy.
 - Not done, and not in this run's brief: the game on the toy (the things in the yard answering water, the wants, the scenes, the gate, the saved yard), the audit config `scripts/intersections/games/fire-truck-hero.ts`, the cold playtest proxy, and the perf runs through the shared probe.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The parts below belong to the block.
@@ -21,15 +23,20 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 
 1. **The registry row** for the look, in section 3 of `docs/art-direction.md`, and the ledger row to `claimed` after the merge. Proposed row: Game "Fire Truck Hero"; Style "Garden-toy plastic 3D: fat blow-moulded toys with a mould seam and screw bosses, sun-faded primaries with a satin shine, on a pale sand pit inside a cream picket fence and green hedges, in daylight"; Art guide `games/fire-truck-hero/ART.md`.
 2. **The frame rates.** Every number here was taken on a software renderer. The spike's frame rate at a pixel ratio of 2, and the toy's in WebKit and in throttled Chrome, are the lead's to take on a real graphics card. The game reads the `tier` query, so the shared probe can pin a tier.
-3. **The first check of the sheet**, by someone who did not write it.
 
-### Where the build went past the sheet
+### What changed in the sheet after round 1
 
-Found while building. Each is in the code as the replacement says, and the sheet still has the old sentence.
+**The eleven replacements**, pasted from the checker's report without a change: a sound in every cell of the grid; what dries and what never does, in "The toy" and in the `wet` field; the Guess answer; the cat as a character in the grid; the truck's and the bee's wants that show all the time; the bell held to the size and place rule; the fire and the wetting set apart from `us-ca 2.3`; the Summary and the gloss named as the pack's text; the pack's code for the fase 1 bullet; which jurisdiction the game follows for growing and for filling; and which jurisdiction each part of the claim is taken from.
 
-1. **Puddles and mud do not dry.** In "The toy", after "so the sand is never used up and there is always room for more.", add: "A place that has had its fill stands as a puddle, and with more water is mud, and neither dries while the yard is on screen: what the child brought to its fill stays." Reason: drying a puddle would undo something the child finished, and only time would have done it.
-2. **The gate is in the far fence.** In "The scenes", replace "The gate stands at the right edge with a bell on its post, and over the hedge beside it the next yard shows:" with "The gate stands in the far fence, toward the right, with a bell hanging out over the sand from its post, and over the fence beside it the next yard shows:". Reason: from this camera a gate in the right hedge is seen edge-on and what is beyond it is off the screen; beyond the far fence is in view.
-3. **What is saved of the animals.** In "Every field of the saved state", replace "for the things that move (the cat, the boat, the duck, the snail, the floated logs)" with "for the things that move (the cat and the boat)". Reason: the duck, the snail and the logs are drawn from the state of the thing they belong to, and have no place of their own in the model.
+**One word for the next checker.** Finding 1 has the cat climb onto the truck's roof "with a scrabble of claws on tin". It is pasted as given. In the look the truck is plastic, so "on tin" may want to read "on plastic".
+
+**Three sentences of the builder's own**, added in the commit after the pastes, where the build had gone past the sheet. They were not in round 1 and are for round 2 to check:
+
+1. In "The toy", after the pasted sentences on drying: "On open sand a place that has had its fill stands as a puddle, and with more water is mud, and neither dries while the yard is on screen: what the child brought to its fill stays." Reason: drying a puddle would undo something the child finished, and only time would have done it. `ground.ts` dries damp sand only.
+2. In "The scenes", the gate: "The gate stands in the far fence, toward the right, with a bell hanging out over the sand from its post, and over the fence beside it the next yard shows:" in place of the gate at the right edge. Reason: from this camera a gate in the right hedge is seen edge-on and what is beyond it is off the screen.
+3. In "Every field of the saved state", `things`: "for the things that move (the cat and the boat)" in place of the longer list. Reason: the duck, the snail and the logs are drawn from the state of the thing they belong to and have no place of their own in the model.
+
+**What followed in the code.** `grid.ts` names a sound for every cell that no other cell has, and its test holds all 35 looks and all 35 sounds apart. `tastes.ts` has a rest cue for the truck and the bee. `world.test.ts` holds that the water a thing holds never dries while the open sand does, and that a want once met stays met. Nothing in the designed order, the positions or the saved state changed.
 
 Two smaller points the rules settled where the sheet is silent, to be confirmed with the game: when every spot is taken the soaked cat stays where she is, and a boat carried over the rim stays aground beside the pool. And one rule is wider than its sentence: a yard is judged "mixed" also when the child made a puddle on open sand, since the dry ground is a thing of the grid with a fill.
 
@@ -96,7 +103,7 @@ Also: the toy's rules of touch are tested without a renderer. `toy.test.ts` hold
 
 ### The learning claim
 
-As the sheet has it, and not yet checked by anyone but its writer: Fire Truck Hero is designed from five learning foundations published by California state departments for infants and toddlers and for preschool and transitional kindergarten, which are foundations and not standards, and from five bullets of the content cards of SLO, the Dutch curriculum institute, four for peuters and one for fase 1, which are guidance and not law. All ten records printed `confirmed` in the lookup on 2026-10-03; read them again on the day of the pull request. What the game is designed from them to offer is cause and effect with water, with filling and growing as its two named outcomes. Its fire is a story and rests on no record. The records are named by pack id under "The records" in `ART.md`. Nothing in the game says what a child has reached.
+As the sheet has it after its first check, with round 2 still to come: Fire Truck Hero is designed from five learning foundations published by California state departments for infants and toddlers and for preschool and transitional kindergarten, which are foundations and not standards, and from five bullets of the content cards of SLO, the Dutch curriculum institute, four for peuters and one for fase 1, which are guidance and not law. All ten records printed `confirmed` in the lookup on 2026-10-03; read them again on the day of the pull request. What the game is designed from them to offer is cause and effect with water. Guessing what the water will do and finding out by trying it is taken from the California foundations. Filling and the force of water are taken from the Dutch cards for peuters. Growing is taken from both: in California as watering that helps a plant grow, from age 3, and in the Netherlands as a plant that grows and flowers on the peuter card and as a plant's need for water on the fase 1 card. Its fire is a story and rests on no record. The records are named by pack id under "The records" in `ART.md`. Nothing in the game says what a child has reached.
 
 ### Defaults taken for the owner
 
