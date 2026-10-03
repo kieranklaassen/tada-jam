@@ -4,7 +4,7 @@ import { FRUITS, RAIL, WHOLE, giveOf, type Fruit } from './measure'
 import { inRange, layOut, tinParts, type Customer, type Who } from './orders'
 import { STATE_VERSION, deserialize as readState } from './state'
 import { seedOf } from './stream'
-import { LANES, SHELF, emptyWorld, giveToTin, onLane, setOnBoard, setOnShelf, type Piece, type Place, type World } from './world'
+import { LANES, SHELF, eat, emptyWorld, giveToTin, onLane, setOnBoard, setOnShelf, type Piece, type Place, type World } from './world'
 
 // What goes into ctx.storage for this game, and how it is read back. The
 // template's state.ts keeps the version, the place in the designed order and
@@ -51,7 +51,7 @@ function readCustomer(raw: unknown): Customer | null {
   if (!isRecord(raw) || !WHOS.includes(raw.who as Who) || !FRUITS.includes(raw.fruit as Fruit) || !Array.isArray(raw.shares)) return null
   const shares = raw.shares.map((share) => (isRecord(share) && isCount(share.num) && isCount(share.den) && share.den > 0 ? { num: share.num, den: share.den } : null))
   if (shares.length === 0 || shares.some((share) => share === null)) return null
-  const customer: Customer = { who: raw.who as Who, fruit: raw.fruit as Fruit, shares: shares as Customer['shares'], step: raw.step === true, written: raw.written === true, lined: raw.lined !== false }
+  const customer: Customer = { who: raw.who as Who, fruit: raw.fruit as Fruit, shares: shares as Customer['shares'], carries: typeof raw.carries === 'string' && LADDER.includes(raw.carries) ? raw.carries : null, written: raw.written === true, lined: raw.lined !== false }
   return inRange(customer).length === 0 ? customer : null
 }
 
@@ -60,6 +60,7 @@ function readPlace(raw: unknown): Place | null {
   if (raw.on === 'board' && isCount(raw.lane) && raw.lane < LANES && isCount(raw.x)) return { on: 'board', lane: raw.lane, x: raw.x }
   if (raw.on === 'shelf' && isCount(raw.slot)) return { on: 'shelf', slot: raw.slot }
   if (raw.on === 'tin' && isCount(raw.part) && isCount(raw.turn)) return { on: 'tin', part: raw.part, turn: raw.turn }
+  if (raw.on === 'eaten' && isCount(raw.turn)) return { on: 'eaten', turn: raw.turn }
   return null
 }
 
@@ -77,18 +78,22 @@ export const MOST_PIECES = (LANES + 2) * (RAIL / giveOf('short')) + SHELF
 /**
  * Lays the saved pieces out again, one at a time, each where it was saved if that place is free. A piece
  * saved over another, off the board, or in a tin that is not there goes to the nearest place the rules allow.
+ * A piece saved inside a customer is kept only while a served customer stands at the window: otherwise it
+ * was eaten and is gone.
  */
-function readWorld(raw: Record<string, unknown>, compartments: number): World {
+function readWorld(raw: Record<string, unknown>, compartments: number, served: boolean): World {
   const seen = new Set<number>()
   const pieces = (Array.isArray(raw.pieces) ? raw.pieces : [])
     .map(readPiece)
     .filter((piece): piece is Piece => piece !== null && !seen.has(piece.id) && !!seen.add(piece.id))
     .slice(0, MOST_PIECES)
-  const order = (piece: Piece) => (piece.place.on === 'tin' ? piece.place.part * 1e6 + piece.place.turn : piece.place.on === 'shelf' ? piece.place.slot : piece.place.x)
+  const order = (piece: Piece) => (piece.place.on === 'tin' ? piece.place.part * 1e6 + piece.place.turn : piece.place.on === 'shelf' ? piece.place.slot : piece.place.on === 'eaten' ? piece.place.turn : piece.place.x)
   let world = emptyWorld()
   for (const piece of [...pieces].sort((a, b) => order(a) - order(b))) {
     const place = piece.place
-    if (place.on === 'board') {
+    if (place.on === 'eaten') {
+      if (served) world = eat({ ...world, pieces: [...world.pieces, { ...piece, place: { on: 'shelf', slot: SHELF } }] }, [piece.id])
+    } else if (place.on === 'board') {
       const free = place.x + piece.length <= RAIL && onLane(world, place.lane).every((other) => other.place.on !== 'board' || place.x >= other.place.x + other.length || place.x + piece.length <= other.place.x)
       world = { ...world, pieces: [...world.pieces, free ? piece : { ...piece, place: { on: 'shelf', slot: SHELF } }] }
       if (!free) world = setOnBoard(world, piece.id, place.lane, place.x).world
@@ -102,6 +107,7 @@ function readWorld(raw: Record<string, unknown>, compartments: number): World {
   // Back in the order they were saved in, so a state read and written again is the same record.
   const turn = new Map(pieces.map((piece, index) => [piece.id, index]))
   const kept = [...world.pieces].sort((a, b) => turn.get(a.id)! - turn.get(b.id)!)
+  // A served customer's tin stays as it was left; with nobody served, an open tin holds something or was opened.
   return { pieces: kept, nextId: Math.max(top + 1, isCount(raw.nextId) ? raw.nextId : 1), tinOpen: compartments > 0 && (inTin || raw.tinOpen === true) }
 }
 
@@ -122,7 +128,7 @@ export function deserialize(raw: unknown, childAge: number | null = null): Game 
     seed = laid.seed
     return laid.customer
   }) as [Customer, Customer]
-  const world = readWorld(raw, atWindow ? tinParts(atWindow).length : 0)
+  const world = readWorld(raw, atWindow ? tinParts(atWindow).length : 0, atWindow !== null && state.finished)
   const shown = [...new Set(Array.isArray(raw.shown) ? raw.shown.filter((id): id is string => typeof id === 'string' && LADDER.includes(id)) : [])]
   // With nobody at the window no cycle is on screen, so none can be finished.
   return { ...state, finished: atWindow !== null && state.finished, seed, window: atWindow, queue, world, shown }

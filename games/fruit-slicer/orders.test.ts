@@ -67,9 +67,9 @@ describe('every order laid out', () => {
     for (const customer of crowd('thirds', 'new', 60)) expect(customer.shares.some((share) => [3, 6].includes(share.den)) || [3, 6].includes(twinShare(customer.shares[0]).den)).toBe(true)
     for (const customer of crowd('bare', 'new', 60)) expect(customer.lined).toBe(false)
     for (const customer of crowd('bare', 'known', 60)) expect(customer.lined).toBe(true)
-    for (const id of LADDER) for (const customer of crowd(id, 'new', 20)) expect(customer.step).toBe(true)
-    for (const id of LADDER.slice(1)) for (const customer of crowd(id, 'known', 20)) expect(customer.step).toBe(false)
-    for (const customer of crowd(LADDER[0], 'known', 20)) expect(customer.step).toBe(true)
+    for (const id of LADDER) for (const customer of crowd(id, 'new', 20)) expect(customer.carries).toBe(id)
+    for (const id of LADDER.slice(1)) for (const customer of crowd(id, 'known', 20)) expect(customer.carries).toBeNull()
+    for (const customer of crowd(LADDER[0], 'known', 20)) expect(customer.carries).toBe(LADDER[0])
   })
 
   it('opens on halves alone, of all three fruits, for the pelican', () => {
@@ -111,7 +111,7 @@ describe('what each customer may order', () => {
     expect(all('twins').some(([share]) => share.num === 3 && share.den === 10)).toBe(false)
     expect(twinShare({ num: 1, den: 2 })).toEqual({ num: 1, den: 4 })
     expect(twinShare({ num: 6, den: 8 })).toEqual({ num: 3, den: 8 })
-    const twins: Customer = { who: 'twins', fruit: 'long', shares: [{ num: 1, den: 2 }], step: true, written: false, lined: true }
+    const twins: Customer = { who: 'twins', fruit: 'long', shares: [{ num: 1, den: 2 }], carries: 'shared', written: false, lined: true }
     expect(tinParts(twins)).toEqual([WHOLE.long / 4, WHOLE.long / 4])
   })
 
@@ -120,7 +120,7 @@ describe('what each customer may order', () => {
     expect(pairs.length).toBeGreaterThan(50)
     expect(pairs.some(([a, b]) => a.den === 3 && b.den === 5)).toBe(false)
     expect(pairs.some(([a, b]) => sameSize(a, b))).toBe(true)
-    const cat: Customer = { who: 'cat', fruit: 'middle', shares: [{ num: 2, den: 3 }, { num: 3, den: 4 }], step: true, written: true, lined: true }
+    const cat: Customer = { who: 'cat', fruit: 'middle', shares: [{ num: 2, den: 3 }, { num: 3, den: 4 }], carries: 'bigger', written: true, lined: true }
     expect(wanted(cat)).toEqual({ num: 3, den: 4 })
     expect(signBetween(cat)).toBe('less')
     expect(tinParts(cat)).toEqual([shareLength('middle', { num: 3, den: 4 })])

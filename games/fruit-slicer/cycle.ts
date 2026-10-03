@@ -3,7 +3,7 @@ import { ideaOf, layOut, tinParts, type Customer } from './orders'
 import { serveOf, served, type Served } from './serve'
 import { beginCycle, finishCycle, freshState, type CycleOutcome, type GameState } from './state'
 import { isGlider, tasteOf, type Taste } from './tastes'
-import { clearTin, emptyWorld, giveToTin, landFruit, pieceOf, remove, setOnShelf, tinTotal, type World } from './world'
+import { clearTin, eat, emptyWorld, giveToTin, inTin, landFruit, pieceOf, remove, setOnShelf, tinTotal, type World } from './world'
 
 // A cycle is one customer: called to the window, served, sent off. This module
 // holds the game as a whole (the place in the designed order, the customers,
@@ -38,9 +38,11 @@ export function freshGame(childAge: number | null, seed = FIRST_SEED): Game {
 }
 
 /**
- * How a served order is judged. Never shown, and used only to place the next customer in the designed order.
- * Well: it fits, and every piece was cut before the tin opened, on a fruit the roller had not marked. Mixed:
- * it fits, with help from the open tin or the roller. Badly: it does not fit. A taste never enters into it.
+ * How a tin is judged. Never shown, and used only to place the next customer in the designed order. Well: it
+ * shut on a fit, and every piece in it was cut while no tin stood open, on a fruit the roller had not marked.
+ * Mixed: it shut on a fit, but a piece in it was cut while a tin stood open, or carries roller marks. Badly:
+ * the customer was sent off with a tin that held a misfit. A customer fed by hand is mixed whatever it was
+ * fed (`feed`, below). A taste never enters into it.
  */
 export function judge(result: Served): CycleOutcome {
   if (result.kind !== 'fit') return 'badly'
@@ -49,12 +51,21 @@ export function judge(result: Served): CycleOutcome {
 
 export type Ending = { result: Served; taste: Taste; outcome: CycleOutcome; glider: boolean }
 
-/** Ends the cycle at the window. Only a customer who carried the new thing moves the position. */
-function end(game: Game, result: Served, glider = false): { game: Game; ending: Ending } {
+/**
+ * Ends the cycle at the window, all at once, as the first beat of the serve starts: the cycle is finished, the
+ * position takes the judged step, and the pieces eaten move to inside the customer in the order they are
+ * eaten. Only the customer who carries the new thing of the position as it stands now moves the position; one
+ * laid out for another position, who was still waiting when the position moved, moves nothing.
+ */
+function end(game: Game, result: Served, outcome: CycleOutcome, ate: readonly number[]): { game: Game; ending: Ending } {
   const customer = game.window!
-  const outcome = judge(result)
-  const state = finishCycle(game, customer.step ? outcome : 'mixed')
-  return { game: { ...game, position: state.position, finished: true }, ending: { result, taste: tasteOf(customer, result), outcome, glider } }
+  const state = finishCycle(game, customer.carries === game.position ? outcome : 'mixed')
+  return { game: { ...game, position: state.position, finished: true, world: eat(game.world, ate) }, ending: { result, taste: tasteOf(customer, result), outcome, glider: false } }
+}
+
+/** The ids of what lies in the tin at the window, compartment by compartment, in the order it lies. */
+function tinIds(game: Game): number[] {
+  return tinParts(game.window!).flatMap((_, part) => inTin(game.world, part).map((piece) => piece.id))
 }
 
 /**
@@ -65,15 +76,24 @@ function end(game: Game, result: Served, glider = false): { game: Game; ending: 
 export function sendOff(game: Game): { game: Game; ending: Ending | null } {
   if (!game.window || game.finished) return { game, ending: null }
   const result = served(game.world, game.window)
-  return result.kind === 'empty' ? { game, ending: null } : end(game, result)
+  return result.kind === 'empty' ? { game, ending: null } : end(game, result, judge(result), tinIds(game))
 }
 
-/** The customer is fed a piece by hand, bypassing the tin, and eats it as it is: judged by the same lengths. */
+/**
+ * The customer is fed a piece by hand, bypassing the tin, and eats it as it is. Fed by hand is mixed whatever
+ * it was fed, so the position does not move. The piece goes inside the customer; what lay in its tin stays there.
+ *
+ * A whole uncut fruit fed to the pelican is the glider: the pelican leaves with it. The fruit is gone, any
+ * piece in its tin is set on the shelf, and the window is empty, with the two still waiting.
+ */
 export function feed(game: Game, id: number): { game: Game; ending: Ending | null } {
-  const piece = pieceOf(game.world, id)
-  if (!game.window || game.finished || !piece) return { game, ending: null }
-  const result = serveOf(game.window, tinParts(game.window).map((_, part) => (part === 0 ? [piece] : [])))
-  return end({ ...game, world: remove(game.world, id) }, result, isGlider(game.window, piece))
+  const customer = game.window, piece = pieceOf(game.world, id)
+  if (!customer || game.finished || !piece) return { game, ending: null }
+  const result = serveOf(customer, tinParts(customer).map((_, part) => (part === 0 ? [piece] : [])))
+  if (!isGlider(customer, piece)) return end(game, result, 'mixed', [id])
+  let world = remove(game.world, id)
+  for (const left of tinIds(game)) world = setOnShelf(world, left).world
+  return { game: { ...game, window: null, finished: false, world: { ...world, tinOpen: false } }, ending: { result, taste: tasteOf(customer, result), outcome: 'mixed', glider: true } }
 }
 
 export type Given = {
@@ -112,7 +132,7 @@ export function give(game: Game, id: number, part: number): { game: Game; given:
   const next: Game = { ...game, world, shown: firstShowing ? [...game.shown, firstShowing] : game.shown }
   const result = served(world, customer)
   if (result.kind !== 'fit') return { game: next, given: { opened, firstShowing, strays, slidOff: false, result, ending: null } }
-  const ended = end(next, result)
+  const ended = end(next, result, judge(result), tinIds(next))
   return { game: ended.game, given: { opened, firstShowing, strays, slidOff: false, result, ending: ended.ending } }
 }
 
@@ -130,7 +150,8 @@ export function call(game: Game, index: 0 | 1): { game: Game; did: 'stepped' | '
     const queue: [Customer, Customer] = index === 0 ? [game.window, game.queue[1]] : [game.queue[0], game.window]
     return { game: { ...game, window: called, queue }, did: 'swapped', ending: null }
   }
-  const arrival = layOut(game.position, called.step ? 'new' : 'known', game.seed)
+  // The one who joins takes the place in the queue of the one who stepped up: with the new thing, or without.
+  const arrival = layOut(game.position, called.carries === null ? 'known' : 'new', game.seed)
   const queue: [Customer, Customer] = index === 0 ? [arrival.customer, game.queue[1]] : [game.queue[0], arrival.customer]
   const state = beginCycle(game)
   return { game: { ...game, finished: state.finished, seed: arrival.seed, window: called, queue, world: clearTin(game.world) }, did: 'stepped', ending: null }

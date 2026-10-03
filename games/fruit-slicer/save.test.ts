@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
-import { call, crate, freshGame, give, sendOff, type Game } from './cycle'
+import { call, crate, feed, freshGame, give, sendOff, type Game } from './cycle'
 import { RAIL, giveOf } from './measure'
 import { inRange, tinParts } from './orders'
 import { MOST_PIECES, deserialize, serialize } from './save'
 import { STATE_VERSION } from './state'
-import { LANES, SHELF, cut, onLane, onShelf, setOnBoard, setOnShelf, type Piece } from './world'
+import { LANES, SHELF, cut, eaten, onLane, onShelf, setOnBoard, setOnShelf, type Piece } from './world'
 
 /** What ctx.storage hands back on the next visit. */
 const stored = (game: Game): unknown => JSON.parse(JSON.stringify(serialize(game)))
@@ -55,6 +55,24 @@ describe('found as left', () => {
     expect(back.position).toBe(served.position)
   })
 
+  it('rebuilds the last pose of a serve: what the customer ate is inside it, in order, until the next one steps up', () => {
+    const served = played().find((game) => game.finished && eaten(game.world).length > 0)!
+    const back = reopened(served)
+    expect(eaten(back.world)).toEqual(eaten(served.world))
+    expect(back.world.tinOpen).toBe(true)
+    expect(eaten(reopened(call(back, 0).game).world)).toEqual([])
+  })
+
+  it('opens on an empty window after the glider, with the two waiting and nothing replayed', () => {
+    const start = call(freshGame(null), 0).game
+    const whole = crate(start)
+    const flown = feed(whole.game, whole.id)
+    expect(flown.ending!.glider).toBe(true)
+    const back = reopened(flown.game)
+    expect(back).toEqual(flown.game)
+    expect(back).toMatchObject({ window: null, finished: false, world: { tinOpen: false } })
+  })
+
   it('keeps the saved place whatever age the child now has, and uses the age only for a first visit', () => {
     const game = { ...freshGame(null), position: 'thirds' }
     expect(reopened(game, 9).position).toBe('thirds')
@@ -88,7 +106,7 @@ describe('a record that cannot be trusted', () => {
   })
 
   it('lays out a new customer where a saved one is not an order the rules allow', () => {
-    const bad = [{ who: 'pelican', fruit: 'long', shares: [{ num: 1, den: 7 }], step: true, written: false, lined: true }, 'nobody']
+    const bad = [{ who: 'pelican', fruit: 'long', shares: [{ num: 1, den: 7 }], carries: 'half', written: false, lined: true }, 'nobody']
     const back = deserialize({ ...good, queue: bad })
     for (const customer of back.queue) expect(inRange(customer)).toEqual([])
     expect(deserialize({ ...good, window: { who: 'wolf' } }).window).toBeNull()
@@ -124,6 +142,16 @@ describe('a record that cannot be trusted', () => {
     expect(onShelf(back.world).length).toBeLessThanOrEqual(SHELF)
   })
 
+  it('forgets what was eaten when no served customer stands at the window, and a new thing no position has', () => {
+    const served = stored(played().find((game) => game.finished && eaten(game.world).length > 0)!) as Record<string, unknown>
+    expect(eaten(deserialize(served).world).length).toBeGreaterThan(0)
+    expect(deserialize({ ...served, finished: false }).world.pieces.some((piece) => piece.place.on === 'eaten')).toBe(false)
+    expect(deserialize({ ...served, window: null }).world.pieces.some((piece) => piece.place.on === 'eaten')).toBe(false)
+    const window = served.window as Record<string, unknown>
+    expect(deserialize({ ...served, window: { ...window, carries: 'grade-4' } }).window!.carries).toBeNull()
+    expect(deserialize({ ...served, window: { ...window, carries: 'thirds' } }).window!.carries).toBe('thirds')
+  })
+
   it('puts pieces saved in a tin on the shelf when nobody is at the window', () => {
     const tinned = stored(played().find((game) => game.world.pieces.some((piece) => piece.place.on === 'tin'))!) as Record<string, unknown>
     const back = deserialize({ ...tinned, window: null })
@@ -142,7 +170,7 @@ describe('the size of a save', () => {
     for (let part = 0; part < 2; part++) for (let turn = 0; turn < RAIL / least; turn++) pieces.push({ id: id++, fruit: 'middle', length: least, place: { on: 'tin', part, turn }, blind: false, ruled: 12 })
     for (let slot = 0; slot < SHELF; slot++) pieces.push({ id: id++, fruit: 'middle', length: least, place: { on: 'shelf', slot }, blind: false, ruled: 12 })
     expect(pieces).toHaveLength(MOST_PIECES)
-    const cat = { who: 'cat' as const, fruit: 'middle' as const, shares: [{ num: 11, den: 12 }, { num: 9, den: 10 }], step: false, written: false, lined: false }
+    const cat = { who: 'cat' as const, fruit: 'middle' as const, shares: [{ num: 11, den: 12 }, { num: 9, den: 10 }], carries: 'twelfths', written: false, lined: false }
     const largest: Game = { v: STATE_VERSION, position: 'twelfths', finished: false, seed: 4294967295, window: { ...cat, who: 'twins', shares: [{ num: 12, den: 12 }] }, queue: [cat, cat], world: { pieces, nextId: id, tinOpen: false }, shown: [...LADDER] }
     const size = JSON.stringify(serialize(largest)).length
     expect(size).toBeLessThan(32 * 1024)

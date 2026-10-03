@@ -16,8 +16,11 @@ export type Customer = {
   fruit: Fruit
   /** One share, or two for the cat. Kept as ordered: two quarters stay two quarters. */
   shares: Share[]
-  /** It carried what was new at the position it was laid out for. Only a cycle with such a customer moves the position. */
-  step: boolean
+  /**
+   * The id of the position whose new thing it carries, or none. Only a cycle with the customer who carries the
+   * new thing of the position as it stands when the cycle is judged moves the position.
+   */
+  carries: string | null
   /** The fraction is laid on its ticket and on its open tin. */
   written: boolean
   /** Its ticket shows the part lines. */
@@ -135,7 +138,7 @@ export function layOut(position: string, role: 'new' | 'known', seed: number): {
     who: who.value,
     fruit: fruit.value,
     shares: shares.value.map((share) => ({ ...share })),
-    step: role === 'new' || here === 0,
+    carries: role === 'new' || here === 0 ? LADDER[here] : null,
     written: inPlay(position).written,
     lined: !(position === 'bare' && role === 'new'),
   }

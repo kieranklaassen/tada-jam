@@ -20,6 +20,8 @@ export type Place =
   | { on: 'shelf'; slot: number }
   /** In the tin: which compartment, and its turn in it from the left. */
   | { on: 'tin'; part: number; turn: number }
+  /** Inside the served customer: its turn among the pieces eaten. It stays there until the next customer steps up. */
+  | { on: 'eaten'; turn: number }
 
 export type Piece = {
   id: number
@@ -27,7 +29,7 @@ export type Piece = {
   /** In points. */
   length: number
   place: Place
-  /** Cut before the tin at the window opened, that is, before the truth of this order was shown. */
+  /** Cut while no tin stood open, that is, by eye, with no true length on show to trim against. An uncut fruit counts as such. */
   blind: boolean
   /** The parts the roller pressed into the fruit this piece came from, or 0. */
   ruled: number
@@ -111,7 +113,7 @@ export function landFruit(world: World, fruit: Fruit): { world: World; id: numbe
     ;({ world: next, fell } = shelve(world, swept))
   }
   const id = next.nextId
-  const piece: Piece = { id, fruit, length: WHOLE[fruit], place: { on: 'board', lane, x: 0 }, blind: !next.tinOpen, ruled: 0 }
+  const piece: Piece = { id, fruit, length: WHOLE[fruit], place: { on: 'board', lane, x: 0 }, blind: true, ruled: 0 }
   return { world: { ...next, pieces: [...next.pieces, piece], nextId: id + 1 }, id, swept, fell }
 }
 
@@ -200,10 +202,20 @@ export function roll(world: World, id: number, parts: number): World {
   return { ...world, pieces: world.pieces.map((piece) => (piece.id === id ? { ...piece, ruled: Math.max(0, Math.round(parts)) } : piece)) }
 }
 
+/** The pieces inside the served customer, in the order they were eaten. */
+export const eaten = (world: World): Piece[] =>
+  world.pieces.filter((piece) => piece.place.on === 'eaten').sort((a, b) => (a.place.on === 'eaten' ? a.place.turn : 0) - (b.place.on === 'eaten' ? b.place.turn : 0))
+
+/** The customer eats these pieces, in this order: each moves from where it lay to inside the customer. */
+export function eat(world: World, ids: readonly number[]): World {
+  const from = eaten(world).length
+  return tidy({ ...world, pieces: world.pieces.map((piece) => (ids.includes(piece.id) ? { ...piece, place: { on: 'eaten', turn: from + ids.indexOf(piece.id) } } : piece)) })
+}
+
 /**
- * The next customer steps up. What lay in the tin has gone with the one who was served, the new tin is shut,
- * and everything still on the counter was cut before this tin opened.
+ * The next customer steps up. What the served one ate, and anything left in its tin, has gone with it, and
+ * the new tin is shut. A piece on the counter keeps its mark: one cut while a tin stood open stays so.
  */
 export function clearTin(world: World): World {
-  return tidy({ ...world, tinOpen: false, pieces: world.pieces.filter((piece) => piece.place.on !== 'tin').map((piece) => ({ ...piece, blind: true })) })
+  return tidy({ ...world, tinOpen: false, pieces: world.pieces.filter((piece) => piece.place.on !== 'tin' && piece.place.on !== 'eaten') })
 }

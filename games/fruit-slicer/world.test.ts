@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { RAIL, WHOLE, giveOf, shareLength } from './measure'
 import { draw } from './stream'
-import { LANES, SHELF, clearTin, cut, emptyWorld, giveToTin, inTin, isWhole, landFruit, onLane, onShelf, pieceAt, pieceOf, remove, roll, setOnBoard, setOnShelf, tinTotal, type World } from './world'
+import { LANES, SHELF, clearTin, cut, eat, eaten, emptyWorld, giveToTin, inTin, isWhole, landFruit, onLane, onShelf, pieceAt, pieceOf, remove, roll, setOnBoard, setOnShelf, tinTotal, type World } from './world'
 
 const withFruit = (fruit: 'long' | 'middle' | 'short' = 'long') => landFruit(emptyWorld(), fruit)
 const total = (world: World) => world.pieces.reduce((sum, piece) => sum + piece.length, 0)
@@ -172,7 +172,7 @@ describe('the tin', () => {
     expect(inTin(next, 0).map((piece) => (piece.place.on === 'tin' ? piece.place.turn : -1))).toEqual([0])
   })
 
-  it('marks a piece cut after it opened, and a new tin starts everything blind again', () => {
+  it('marks a piece cut while it stood open, and the mark stays when the next tin is shut', () => {
     const { world, id } = withFruit()
     const first = cut(world, id, 1200)
     if (first.kind !== 'cut') throw new Error('no cut')
@@ -182,11 +182,28 @@ describe('the tin', () => {
     if (second.kind !== 'cut') throw new Error('no cut')
     expect(pieceOf(second.world, second.left)!.blind).toBe(false)
     expect(pieceOf(second.world, second.right)!.blind).toBe(false)
-    expect(landFruit(open, 'short').world.pieces.at(-1)!.blind).toBe(false)
+    // A fruit that has not been cut carries no mark, whenever it landed.
+    expect(landFruit(open, 'short').world.pieces.at(-1)!.blind).toBe(true)
     const cleared = clearTin(second.world)
     expect(cleared.tinOpen).toBe(false)
     expect(cleared.pieces.map((piece) => piece.id).sort()).toEqual([second.left, second.right].sort())
-    expect(cleared.pieces.every((piece) => piece.blind)).toBe(true)
+    expect(cleared.pieces.every((piece) => !piece.blind)).toBe(true)
+    // Cut again with every tin shut, a piece is cut by eye once more.
+    const again = cut(cleared, second.left, 150)
+    if (again.kind !== 'cut') throw new Error('no cut')
+    expect(pieceOf(again.world, again.left)!.blind).toBe(true)
+  })
+
+  it('moves what a customer eats to inside the customer, in order, and takes it away with the customer', () => {
+    const { world, id } = withFruit()
+    const result = cut(world, id, 600)
+    if (result.kind !== 'cut') throw new Error('no cut')
+    const tinned = giveToTin(giveToTin(result.world, result.left, 0), result.right, 0)
+    const ate = eat(tinned, [result.left, result.right])
+    expect(eaten(ate).map((piece) => piece.id)).toEqual([result.left, result.right])
+    expect(inTin(ate, 0)).toEqual([])
+    expect(ate.tinOpen).toBe(true)
+    expect(clearTin(ate).pieces).toEqual([])
   })
 
   it('keeps the roller marks on every piece cut from a marked fruit', () => {

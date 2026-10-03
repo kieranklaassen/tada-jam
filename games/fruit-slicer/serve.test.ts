@@ -4,7 +4,7 @@ import type { Customer } from './orders'
 import { offInParts, ruling, serveOf, served } from './serve'
 import { cut, emptyWorld, giveToTin, landFruit, type Piece } from './world'
 
-const customer = (over: Partial<Customer> = {}): Customer => ({ who: 'pelican', fruit: 'long', shares: [{ num: 3, den: 4 }], step: true, written: true, lined: true, ...over })
+const customer = (over: Partial<Customer> = {}): Customer => ({ who: 'pelican', fruit: 'long', shares: [{ num: 3, den: 4 }], carries: 'written', written: true, lined: true, ...over })
 const piece = (length: number, fruit: Piece['fruit'] = 'long', id = 1): Piece => ({ id, fruit, length, place: { on: 'tin', part: 0, turn: 0 }, blind: true, ruled: 0 })
 const ORDERED = shareLength('long', { num: 3, den: 4 })
 const GIVE = giveOf('long')
