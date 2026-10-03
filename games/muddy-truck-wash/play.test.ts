@@ -147,6 +147,53 @@ describe('tools', () => {
     expect(play.hand).toBe('sponge')
   })
 
+  it('a cloth that goes back to the rack is clean: the mud on it is not kept', () => {
+    const body = silhouette(vehicle(freshWash(null).bay.who))
+    const row = 3, col = [...Array(GRID_W).keys()].find((c) => [0, 1, 2, 3, 4].every((d) => c + d < GRID_W && body[cellAt(c + d, row)] !== '.'))!
+    const start = (): Play => {
+      const surface = body.map((p) => (p === '.' ? '.' : 'd')) as Patch[]
+      surface[cellAt(col, row)] = 's'
+      const play = new Play(washed({ ...freshWash(null), shown: ['drip'] }, surface))
+      play.press({ kind: 'tool', tool: 'cloth' })
+      play.press(on(play, col, row))
+      play.release()
+      return play
+    }
+    // Straight on to the next patch, the muddy cloth smears it.
+    const muddy = start()
+    muddy.press(on(muddy, col + 1, row))
+    expect(muddy.bay.surface[cellAt(col + 1, row)]).toBe('m')
+    // Hung up and taken again, it shines the same patch.
+    const hung = start()
+    run(hung, 2)
+    hung.press({ kind: 'tool', tool: 'cloth' })
+    expect(hung.hand).toBe('finger')
+    run(hung, 2)
+    hung.press({ kind: 'tool', tool: 'cloth' })
+    hung.press(on(hung, col + 3, row))
+    expect(hung.bay.surface[cellAt(col + 3, row)]).toBe('p')
+    // Swapped for another tool and taken again, the same.
+    const swapped = start()
+    swapped.press({ kind: 'tool', tool: 'hose' })
+    swapped.press({ kind: 'tool', tool: 'cloth' })
+    swapped.press(on(swapped, col + 3, row))
+    expect(swapped.bay.surface[cellAt(col + 3, row)]).toBe('p')
+    // And on load: the save holds no mud for the cloth.
+    expect(JSON.stringify(serializeWash(start().state))).not.toContain('carried')
+  })
+
+  it('under the cloth a smear slides and stays: the touch is answered and nothing spreads', () => {
+    const play = new Play(coated('m'))
+    play.press({ kind: 'tool', tool: 'cloth' })
+    play.sounds.length = 0
+    const before = play.bay.surface
+    const [col, row] = bodyPatch(play)
+    play.press(on(play, col, row))
+    play.drag(on(play, col + 1, row), 3)
+    expect(play.sounds.length).toBeGreaterThan(0)
+    expect(play.bay.surface).toBe(before)
+  })
+
   it('a held hose keeps spraying, and a rub that slides off the vehicle lets the body go', () => {
     const play = new Play(coated('d'))
     play.press({ kind: 'tool', tool: 'hose' })
@@ -160,14 +207,59 @@ describe('tools', () => {
   })
 })
 
+describe('the tap', () => {
+  it('is not a tool: touched, it swings on its arm with a clink, gives no water, and comes to rest', () => {
+    for (const tool of ['finger', 'sponge', 'hose', 'cloth'] as const) {
+      const play = new Play(coated('d'))
+      if (tool !== 'finger') play.press({ kind: 'tool', tool })
+      run(play, 0.2)
+      play.sounds.length = 0
+      play.marks.length = 0
+      const drops = play.particles.count
+      play.dirty = false
+      play.press({ kind: 'tap' })
+      expect(play.sounds.length, tool).toBe(1)
+      // The tool in hand is still in hand, no drop has been let go, and nothing a save holds has changed.
+      expect(play.hand).toBe(tool)
+      expect(play.particles.count).toBe(drops)
+      expect(play.dirty).toBe(false)
+      let most = 0
+      for (let i = 0; i < 30; i++) { play.step(FRAME); most = Math.max(most, Math.abs(play.tapAngle)) }
+      expect(most).toBeGreaterThan(0.1)
+      expect(most).toBeLessThan(0.9)
+      run(play, 8)
+      expect(play.tapAngle).toBe(0)
+      expect(play.marks.filter((mark) => Math.abs(mark.x - LAYOUT.tap.x) < 0.3)).toHaveLength(0)
+    }
+  })
+
+  it('tapped again and again it only swings: it never swings round its arm', () => {
+    const play = new Play(coated('d'))
+    let most = 0
+    for (let i = 0; i < 300; i++) {
+      if (i % 6 === 0) play.press({ kind: 'tap' })
+      play.step(FRAME)
+      most = Math.max(most, Math.abs(play.tapAngle))
+    }
+    expect(most).toBeLessThanOrEqual(0.6)
+  })
+})
+
 describe('the send-off and the roll-in', () => {
   it('saves its outcome at once, before a single beat has played', () => {
     const play = new Play(coated('p'))
-    const waiting = play.next.def.id
+    const waiting = play.next.def.id, before = play.state
     play.press({ kind: 'next' })
     expect(play.urgent).toBe(true)
     expect(play.state.bay.who).toBe(waiting)
     expect(play.state.position).toBe(LADDER[1])
+    // Every field the scene changes is in the save from its start: the position as the judged wash moved it, the
+    // newcomer with its cells and what it came with, the next one at the door with no trips through the puddle, and the seed.
+    expect(play.state.bay.cells).toBe(before.next.cells)
+    expect(play.state.bay.came).toBe(tally(play.bay.surface).mud)
+    expect(play.state.next.who).not.toBe(waiting)
+    expect(play.state.next.dips).toBe(0)
+    expect(play.state.seed).not.toBe(before.seed)
     expect(play.sceneRunning).toBe(true)
     // Put away now and opened again: the newcomer is in the bay and nothing replays.
     const again = reload(play)
@@ -285,7 +377,9 @@ describe('the puddle', () => {
     const before = tally(play.next.surface).s
     play.press({ kind: 'puddle' })
     expect(play.urgent).toBe(true)
+    // Saved at the start: the added mud and one more trip.
     expect(tally(reload(play).next.surface).s).toBeGreaterThan(before)
+    expect(reload(play).state.next.dips).toBe(1)
     run(play, 3.2)
     expect(play.sceneRunning).toBe(false)
     expect(encode(play.next.surface)).toBe(play.state.next.cells)
@@ -298,9 +392,10 @@ describe('the puddle', () => {
     play.sounds.length = 0
     play.press({ kind: 'puddle' })
     run(play, 1)
-    // Still answered, with a splash, and nothing more to add.
+    // Still answered, with a splash, and no field changed.
     expect(play.sounds.length).toBeGreaterThan(0)
     expect(play.state).toBe(twice)
+    expect(play.state.next.dips).toBe(2)
     expect(play.dirty).toBe(false)
   })
 })

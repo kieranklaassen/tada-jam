@@ -106,7 +106,9 @@ export class WashView {
     this.stage.fit(width, height)
   }
 
-  update(dt: number, seconds: number, poses: ReadonlyMap<VehicleId, TruckPose>, particles: Particles, hand: Hand, spot: ToolSpot, hint: Hint): void {
+  /** `tap` is how far the tap has swung on its arm, in radians. */
+  update(dt: number, seconds: number, poses: ReadonlyMap<VehicleId, TruckPose>, particles: Particles, hand: Hand, spot: ToolSpot, hint: Hint, tap = 0): void {
+    this.stage.tap.rotation.z = tap
     for (const [id, pose] of poses) this.truck(id).update(dt, pose)
     // The idle glow breathes on the tools that hang on the rack, and they swell a little with it. The vehicles are
     // alive already and take no glow: on a body that size it reads as haze.

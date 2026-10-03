@@ -119,6 +119,15 @@ describe('how a wash is judged', () => {
     expect(judge(coat('tipper', 's'), body)).toBe('badly')
   })
 
+  it('a smeared patch is a patch that holds mud', () => {
+    // Smears alone keep a wash from having gone well, and count as the mud still on it.
+    expect(judge(withMud(Math.floor(body * 0.1) + 1, 'm'), 30)).not.toBe('well')
+    expect(judge(withMud(Math.floor(body * 0.1), 'm'), 30)).toBe('well')
+    expect(judge(coat('tipper', 'm'), body)).toBe('badly')
+    expect(judge(withMud(16, 'm'), 30)).toBe('badly')
+    expect(tally(coat('tipper', 'm')).mud).toBe(body)
+  })
+
   it('is mixed otherwise: foam left on, or half the mud gone', () => {
     expect(judge(coat('tipper', 'b'), 30)).toBe('mixed')
     expect(judge(withMud(15), 30)).toBe('mixed')

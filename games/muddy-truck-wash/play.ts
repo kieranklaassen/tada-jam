@@ -25,6 +25,8 @@ export type Target =
   | { kind: 'truck'; col: number; row: number; x: number; y: number }
   | { kind: 'next' }
   | { kind: 'puddle' }
+  /** The tap on the rack's long arm. It is not a tool. */
+  | { kind: 'tap' }
   /** A point of the bare floor. */
   | { kind: 'floor'; x: number; z: number }
   | { kind: 'none' }
@@ -45,6 +47,8 @@ const PLIP_GAP = 0.07
 const READY: readonly [number, number, number] = [-1.6, 2.95, 1.0]
 /** A vehicle's like or dislike answers at most this often, so a rub sets it off again and again without piling it up. */
 const FEEL_GAP = 1.1
+/** The furthest the tap swings on its arm, in radians. */
+const TAP_SWING = 0.6
 /** Two taps on a tool within this long are one taking, never a taking and a hanging up. */
 const TWICE = 1.2
 /** The nozzle on the rack lets a drop go about this often, in seconds. */
@@ -66,6 +70,9 @@ export class Play {
   /** The vehicle on its way out during a send-off, or null. */
   leaving: Vehicle | null = null
   seconds = 0
+  /** How far the tap has swung on its arm, in radians. The view turns it by this. */
+  tapAngle = 0
+  private tapSpeed = 0
   private readonly motions = new Map<VehicleId, TruckMotion>()
   private scene: Scene | null = null
   private pressing: Extract<Target, { kind: 'truck' }> | null = null
@@ -126,6 +133,7 @@ export class Play {
     if (target.kind === 'tool') return this.take(target.tool)
     if (target.kind === 'next') return this.sendOff()
     if (target.kind === 'puddle') return this.puddle()
+    if (target.kind === 'tap') return this.swingTap()
     if (target.kind === 'floor') return this.onFloor(target.x, target.z)
     if (target.kind !== 'truck') {
       // The wall, or nothing at all: still a knock, so no tap lands in silence.
@@ -173,8 +181,9 @@ export class Play {
         this.say(voices.take[tool](), 0.6)
         return
       }
-      // Later, a tap on the tool in hand hangs it up again.
+      // Later, a tap on the tool in hand hangs it up again. A cloth that goes back to the rack is clean.
       this.hand = 'finger'
+      this.carried = null
       this.say(voices.take.back())
       return
     }
@@ -245,6 +254,13 @@ export class Play {
       this.release()
       this.start(shineScene(this, bay, target.x))
     }
+  }
+
+  /** The tap is not a tool: touched, it swings on its arm with a clink and gives no water. */
+  private swingTap(): void {
+    this.say(voices.clink())
+    // One knock gives it one swing's worth: knocked again and again it does not swing higher and higher.
+    this.tapSpeed = this.tapAngle >= 0 ? 3.2 : -3.2
   }
 
   /** A tool on the bare floor does its own thing there too: the hose wets it, the sponge leaves suds, anything else knocks up a little dust. */
@@ -431,6 +447,17 @@ export class Play {
     if (this.tapIn <= 0) {
       this.tapIn = DRIP_EVERY * (0.7 + this.particles.random() * 0.6)
       if (this.hand !== 'hose') this.particles.emit(KIND.drop, TOOL_HOME.hose[0], TOOL_HOME.hose[1] - 0.56, TOOL_HOME.hose[2], 0, 0, 0, 0.09, 3)
+    }
+    // The tap hangs: a swing dies away by itself.
+    if (this.tapAngle !== 0 || this.tapSpeed !== 0) {
+      this.tapSpeed += (-38 * this.tapAngle - 1.6 * this.tapSpeed) * dt
+      this.tapAngle += this.tapSpeed * dt
+      // It can only swing so far on its arm.
+      if (Math.abs(this.tapAngle) > TAP_SWING) {
+        this.tapAngle = Math.sign(this.tapAngle) * TAP_SWING
+        this.tapSpeed *= -0.3
+      }
+      if (Math.abs(this.tapAngle) < 1e-3 && Math.abs(this.tapSpeed) < 1e-2) this.tapAngle = this.tapSpeed = 0
     }
     for (const who of this.onStage) who.motion.step(dt)
     this.particles.step(dt, (landing) => {

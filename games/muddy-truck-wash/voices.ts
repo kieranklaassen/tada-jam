@@ -211,3 +211,8 @@ export const feel = {
   /** The mixer: a giggle, up and down and up. */
   giggle: (high: number): VoiceSpec => [0, 1, 2, 3, 4].map((i) => note('triangle', high * (i % 2 ? 2.6 : 2.1) + i * 20, 0.06, 0.008, 0.06, { delay: i * 0.085 })),
 } as const
+
+/** The tap knocked on its arm: a small bright clink of metal. */
+export function clink(): VoiceSpec {
+  return [note('triangle', 2140, 0.07, 0.003, 0.16), note('sine', 3210, 0.03, 0.003, 0.1), note('triangle', 1820, 0.03, 0.003, 0.09, { delay: 0.12 })]
+}

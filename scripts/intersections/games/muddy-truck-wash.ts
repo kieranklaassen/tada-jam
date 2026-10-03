@@ -2,7 +2,7 @@ import type { Driver, Frac, GameAudit } from '../types.ts'
 
 // Muddy Truck Wash: the first showing (a drop on Tipper's dried nose), a wash
 // with every tool in a right and a wrong order, each vehicle's like and
-// dislike, the puddle three times, and three send-offs, so every vehicle of
+// dislike, the puddle three times, a knock on the tap, and three send-offs, so every vehicle of
 // the roster stands in the bay, rolls in and drives out. Touches are placed
 // from world points through the audit's own projection.
 
@@ -103,7 +103,19 @@ export default {
     { name: 'send off the third', run: sendOff },
     { name: 'fourth vehicle', run: everyTaste },
     { name: 'send off the fourth, mid-scene touch', run: async (d) => { await d.tap(await world(d, 4.5, 1.3, 0.4)); await d.wait(1500); await d.tap(await side(d, 0.5, 1.4)); await d.wait(2500) } },
-    { name: 'rest', run: async (d) => { await d.wait(3000) } },
+    {
+      name: 'the tap, and rest',
+      run: async (d) => {
+        // The tap is knocked once, then three times quickly: it swings on its arm and comes to rest.
+        const tap = await d.find('^tap$')
+        if (tap) {
+          await d.tap(tap)
+          await d.wait(1200)
+          for (let i = 0; i < 3; i++) { await d.tap(tap); await d.wait(200) }
+        }
+        await d.wait(3000)
+      },
+    },
   ],
   // Drawn things with no body: the copy under the wet floor, flying drops and bubbles, the jet of the hose, the ghost hand.
   ignore: ['^mirror-', 'mirror-', '^fx$', '^jet$', '^ghost-hand$'],
@@ -115,6 +127,7 @@ export default {
     { a: '-(body|part)', b: '-wheels', kind: 'pose', upTo: 0.2, reason: 'The body rides on its springs over its wheels, which sit up in their arches; a press brings it down on them.' },
     { a: 'tool-sponge', b: 'vehicle-', upTo: 0.25, reason: 'The sponge is soft and is pressed flat against the paint, the wheel, the mudguard or the lamp eye it is working on.' },
     { a: 'tool-cloth', b: 'vehicle-', upTo: 0.2, reason: 'The cloth is wiped along the paint and folds over whatever stands proud of it.' },
+    { a: 'rack', b: '^tap', upTo: 0.3, reason: 'The tap hangs by its stem from the ball at the end of the rack\'s long arm, and swings about it.' },
     { a: 'rack', b: 'tool-', upTo: 0.18, reason: 'A tool on the rack hangs on its arm, in its coil or sits in the suds of the bucket.' },
   ],
 } satisfies GameAudit

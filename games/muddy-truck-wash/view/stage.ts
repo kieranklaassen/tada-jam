@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { LAYOUT, bayShape, rackShape, toolShape } from '../props'
+import { LAYOUT, bayShape, rackShape, tapShape, toolShape } from '../props'
 import type { Tool } from '../surface'
 import { enamelMaterial, type EnamelKit } from './enamel'
 import { toGeometry } from './geometry'
@@ -110,6 +110,8 @@ export class Stage {
   readonly scene = new THREE.Scene()
   readonly camera = new THREE.PerspectiveCamera(FOV, 1, 4, 70)
   readonly tools: Record<Tool, THREE.Mesh>
+  /** The tap at the end of the rack's long arm. It swings about the point it hangs from. */
+  readonly tap: THREE.Mesh
   readonly marks = new FloorMarks()
   private readonly owned: { dispose(): void }[] = []
 
@@ -152,6 +154,8 @@ export class Stage {
     this.scene.add(floor, wall)
     add('rack', toGeometry(rackShape()))
     add('bay', toGeometry(bayShape()))
+    this.tap = add('tap', toGeometry(tapShape()))
+    this.tap.position.set(LAYOUT.tap.x, LAYOUT.tap.hang, LAYOUT.tap.z)
     this.tools = { sponge: add('tool-sponge', toGeometry(toolShape('sponge'))), hose: add('tool-hose', toGeometry(toolShape('hose'))), cloth: add('tool-cloth', toGeometry(toolShape('cloth'))) }
     // Each tool has its own material, so each can glow by itself.
     for (const tool of ['sponge', 'hose', 'cloth'] as const) {

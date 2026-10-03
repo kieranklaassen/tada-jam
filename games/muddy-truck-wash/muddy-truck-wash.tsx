@@ -178,7 +178,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         for (const mark of game.marks) view.stage.marks.land(mark)
         game.marks.length = 0
         stage(game, false)
-        view.update(dt, clock.seconds, poses, game.particles, game.hand, game.tool, hintFor(game, guidance, hint))
+        view.update(dt, clock.seconds, poses, game.particles, game.hand, game.tool, hintFor(game, guidance, hint), game.tapAngle)
         save(game)
       }
       // A tier change is applied ahead of the draw: the pixel ratio now, and whatever else the game's tiers set.

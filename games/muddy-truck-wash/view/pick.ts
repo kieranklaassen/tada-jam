@@ -11,6 +11,8 @@ import { GRID_H, GRID_W, cellAt, type Surface, type Tool } from '../surface'
 
 /** A tool answers a touch within this many logical pixels of its middle, so its target is at least 120 across. */
 const TOOL_REACH = 62
+/** The tap answers a touch within this many logical pixels of its body. */
+const TAP_REACH = 52
 /** The puddle answers a touch within this many logical pixels of its middle. */
 const PUDDLE_REACH = 66
 /** The vehicle's side is tried at these depths, nearest first, so a touch on its nose or roof finds a patch too. */
@@ -38,6 +40,8 @@ export class Picker {
       const at = this.project(home[0] + mid[0], home[1] + mid[1], home[2] + mid[2], width, height)
       if (Math.hypot(at.x - px, at.y - py) <= TOOL_REACH) return { kind: 'tool', tool }
     }
+    const tap = this.project(LAYOUT.tap.x, LAYOUT.tap.hang - 0.24, LAYOUT.tap.z, width, height)
+    if (Math.hypot(tap.x - px, tap.y - py) <= TAP_REACH) return { kind: 'tap' }
     this.ndc.set((px / width) * 2 - 1, 1 - (py / height) * 2)
     this.ray.setFromCamera(this.ndc, this.camera)
     const o = this.ray.ray.origin, d = this.ray.ray.direction

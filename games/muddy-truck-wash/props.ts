@@ -18,7 +18,7 @@ export const LAYOUT = {
   /** The rack stands toward the child, clear of the lane the vehicles leave by. */
   rack: { x: -4.45, z: 1.6 },
   /** The tap on the rack's long arm, over the nose of the vehicle in the bay. It lets a drop go only in the first showing. */
-  tap: { x: -1.85, y: 3.92, z: 0.3 },
+  tap: { x: -1.85, y: 3.8, z: 0.3, hang: 4.12 },
   wall: { z: -2.7 },
   /** The wet pad of the bay, in x and z. */
   pad: { x0: -3.2, x1: 3.0, z0: -1.9, z1: 2.0 },
@@ -52,8 +52,7 @@ export function rackShape(): Shape {
   // The long arm from the top of the post out over the lane, and the tap at its end.
   const reach = Math.hypot(LAYOUT.tap.x - x, LAYOUT.tap.z - z), swing = Math.atan2(-(LAYOUT.tap.z - z), LAYOUT.tap.x - x)
   s.round(0.055, reach, PAINT.zinc, { at: [(x + LAYOUT.tap.x) / 2, 4.12, (z + LAYOUT.tap.z) / 2], turn: { axis: 'y', by: swing } }, { axis: 'x', mat: MAT.metal, segs: 10 })
-  s.round(0.1, 0.2, PAINT.red, { at: [LAYOUT.tap.x, 4.06, LAYOUT.tap.z] }, { axis: 'y', segs: 12, bevel: 0.03 })
-  s.round(0.06, 0.12, PAINT.zinc, { at: [LAYOUT.tap.x, 3.94, LAYOUT.tap.z] }, { axis: 'y', mat: MAT.metal, segs: 10, bevel: 0.02 })
+  s.ball(0.075, PAINT.zinc, { at: [LAYOUT.tap.x, LAYOUT.tap.hang, LAYOUT.tap.z] }, { mat: MAT.metal, segs: 10 })
   // The bucket: blue enamel, wider at the rim, with a zinc band.
   s.round(0.4, 0.62, PAINT.blue, { at: [x + 0.66, 0.43, z] }, { axis: 'y', r2: 0.5, segs: 20, bevel: 0.05 })
   s.round(0.52, 0.07, PAINT.zinc, { at: [x + 0.66, 0.74, z] }, { axis: 'y', mat: MAT.metal, segs: 20, bevel: 0.02 })
@@ -89,6 +88,19 @@ export function toolShape(tool: Tool): Shape {
     // A corner hanging lower, so it reads as cloth and not as a board.
     s.box([0.3, 0.3, 0.07], CLOTH, { at: [0.2, -0.82, 0.125], turn: { axis: 'z', by: 0.6 } }, { bevel: 0.03, mat: MAT.soft })
   }
+  return s
+}
+
+/**
+ * The tap, about the point it hangs from at the end of the arm: a thin stem,
+ * a red body and a zinc mouth below it. It is not a tool. It lets a drop go
+ * in the first showing only; touched, it swings and gives no water.
+ */
+export function tapShape(): Shape {
+  const s = new Shape()
+  s.round(0.025, 0.14, PAINT.zinc, { at: [0, -0.1, 0] }, { axis: 'y', mat: MAT.metal, segs: 8, bevel: 0.008 })
+  s.round(0.1, 0.2, PAINT.red, { at: [0, -0.24, 0] }, { axis: 'y', segs: 12, bevel: 0.03 })
+  s.round(0.06, 0.1, PAINT.zinc, { at: [0, -0.37, 0] }, { axis: 'y', mat: MAT.metal, segs: 10, bevel: 0.02 })
   return s
 }
 
