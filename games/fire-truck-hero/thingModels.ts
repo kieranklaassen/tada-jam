@@ -1,8 +1,9 @@
 // The things that stand in a yard, as moulded toys: the pool with its duck,
 // the small fire, the cat, the seed in its pot, and the gate with its bell.
 // Each is built once from moulded parts (mould.ts) and stands at the origin;
-// the stage puts it on its spot. The seven things of the grid stay plain and
-// have no faces. The animals have them (ART.md, "The characters").
+// the stage puts it on its spot. The things of the grid other than the cat stay
+// plain and have no faces. The animals have them, the cat among them (ART.md,
+// "The characters").
 
 import * as THREE from 'three'
 import { GARDEN, THINGS_PAINT as PAINT, TRUCK_PAINT, WATER } from './look'

@@ -4,7 +4,9 @@
 // "The characters and their fixed tastes").
 //
 // A taste is about what happens to a character or near it. No character has a
-// feeling about the child. The seven things of the grid have no tastes.
+// feeling about the child. The six things of the grid other than the cat have
+// no tastes. The cat is in the grid because water meets her too, and she is a
+// character, not a working piece.
 
 export const CHARACTERS = ['truck', 'cat', 'duck', 'snail', 'bee'] as const
 export type Character = (typeof CHARACTERS)[number]
@@ -36,6 +38,8 @@ type Cues = Readonly<Partial<Record<Happening, string>>>
 export type Taste = {
   /** The one thing it wants. */
   readonly want: string
+  /** How the want shows while nothing is happening to it, where the sheet says how: a cue for the view. */
+  readonly atRest?: string
   readonly likes: Cues
   readonly dislikes: Cues
   /** What it does about anything it has no taste for. */
@@ -43,9 +47,13 @@ export type Taste = {
 }
 
 export const TASTES: Readonly<Record<Character, Taste>> = {
-  /** It leans toward what it can squirt, with its roof light turning. It has no dislikes. */
+  /**
+   * It leans toward what it can squirt, with its roof light turning. Its want shows all the time: at rest its
+   * nozzle turns to whatever in the yard wants water, and a drop hangs from its tip. It has no dislikes.
+   */
   truck: {
     want: 'to-squirt',
+    atRest: 'truck-nozzle-seeks-drop-hangs',
     likes: { 'something-to-aim-at': 'truck-leans-in' },
     dislikes: {},
     unmoved: 'truck-settles',
@@ -71,9 +79,10 @@ export const TASTES: Readonly<Record<Character, Taste>> = {
     dislikes: { 'dry-sand': 'snail-pulls-in', heat: 'snail-turns-away' },
     unmoved: 'snail-waits',
   },
-  /** She lands on an open flower. Drops send her zigzagging up until the water stops. */
+  /** Until a flower is open she circles the pot and bumps the closed bud. She lands on an open one. Drops send her zigzagging up until the water stops. */
   bee: {
     want: 'a-flower',
+    atRest: 'bee-circles-pot-bumps-bud',
     likes: { 'flower-open': 'bee-lands' },
     dislikes: { 'drops-on-wings': 'bee-zigzags-up' },
     unmoved: 'bee-circles',

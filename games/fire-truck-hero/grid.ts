@@ -5,7 +5,9 @@
 // audio key on its cues.
 //
 // Every cell is a use that works. The wrong use of a thing is its "too much"
-// cell, and that has a result of its own like any other.
+// cell, and that has a result of its own like any other. Every cell looks
+// different from every other and sounds different from every other: no look
+// and no voice is used twice in the whole grid.
 
 import { ACTIONS, KINDS, type Action, type Kind } from './things'
 
@@ -40,10 +42,10 @@ export const GRID: Readonly<Record<Kind, Readonly<Record<Action, Cell>>>> = {
     gulp: cell('pool-bonk', 'ripple-ring', 'bonk'),
     /** The level has climbed to the rim, and what floats is afloat. */
     fill: cell('pool-full', 'level-at-rim', 'splash-deep'),
-    /** Water runs over the low side of the rim in a dark tongue. */
-    'too-much': cell('pool-runs-over', 'tongue-over-rim', 'pour-over'),
-    /** A row of ripples, and what floats bobs. Dry, it rattles. */
-    sweep: cell('pool-ripples', 'ripple-row', 'drum-rattle'),
+    /** Water runs over the low side of the rim with a gurgle, in a dark tongue. */
+    'too-much': cell('pool-runs-over', 'tongue-over-rim', 'gurgle-over'),
+    /** A row of ripples with a run of light slaps, and what floats bobs. Dry, it rattles like a drum. */
+    sweep: cell('pool-ripples', 'ripple-row', 'light-slaps'),
     /** Flung drops patter rings on the surface. */
     neighbour: cell('pool-patters', 'patter-rings', 'patter'),
   },
@@ -52,12 +54,12 @@ export const GRID: Readonly<Record<Kind, Readonly<Record<Action, Cell>>>> = {
     gulp: cell('seed-shoots', 'shoot-pokes', 'pluck'),
     /** The flower is open. */
     fill: cell('seed-flowers', 'flower-opens', 'pluck-high'),
-    /** Water runs into the saucer, and the flower's cup fills, nods and tips. */
-    'too-much': cell('seed-tips', 'cup-tips', 'trickle'),
-    /** The leaves flutter and shake off drops. */
-    sweep: cell('seed-flutters', 'leaves-flutter', 'rustle'),
-    /** Run-off is soaked up from below and the plant grows one step, slowly. */
-    neighbour: cell('seed-soaks', 'dark-climbs-pot', 'soak'),
+    /** Water dribbles into the saucer with a thin tinkle, and the flower's cup fills, nods and tips with a "bloop". */
+    'too-much': cell('seed-tips', 'cup-tips', 'tinkle-bloop'),
+    /** The leaves flutter with a papery rustle and shake off drops. */
+    sweep: cell('seed-flutters', 'leaves-flutter', 'papery-rustle'),
+    /** Run-off is soaked up from below with a long quiet slurp, and the plant grows one step, slowly. */
+    neighbour: cell('seed-soaks', 'dark-climbs-pot', 'quiet-slurp'),
   },
   patch: {
     /** A dark blot on the sand. */
@@ -66,22 +68,22 @@ export const GRID: Readonly<Record<Kind, Readonly<Record<Action, Cell>>>> = {
     fill: cell('patch-puddle', 'shiny-puddle', 'plip'),
     /** The puddle turns to mud and throws brown blobs. */
     'too-much': cell('patch-mud', 'mud-blobs', 'squelch'),
-    /** A dark line as long as the sweep. */
-    sweep: cell('patch-line', 'dark-line', 'swish'),
-    /** The tongue of run-off creeps along the ground and darkens it. */
-    neighbour: cell('patch-creeps', 'tongue-creeps', 'seep'),
+    /** A dark line as long as the sweep, laid down with a whisper of sand drinking that follows the finger. */
+    sweep: cell('patch-line', 'dark-line', 'sand-whisper'),
+    /** The tongue of run-off creeps along the ground with a faint trickle and darkens it. */
+    neighbour: cell('patch-creeps', 'tongue-creeps', 'faint-trickle'),
   },
   boat: {
     /** It rocks on its keel and is pushed a hand's width. */
     gulp: cell('boat-rocks', 'rocks-on-keel', 'hollow-ring'),
-    /** Full to the brim, it sits low. */
-    fill: cell('boat-brims', 'sits-low', 'slosh'),
+    /** Water gathers in it with a drumming that deepens gulp by gulp, until it is full to the brim and sits low. */
+    fill: cell('boat-brims', 'sits-low', 'drumming-deeper'),
     /** Afloat it sinks, rolls over, empties and pops up. On sand it brims over and rocks. */
     'too-much': cell('boat-sinks', 'rolls-over', 'glug'),
-    /** The stream pushes it along, nose first. */
-    sweep: cell('boat-sails', 'nose-first', 'swoosh'),
-    /** A rising pool lifts it. An overflow carries it over the rim. */
-    neighbour: cell('boat-lifts', 'lifts-off', 'bob'),
+    /** The stream pushes it along with a slap on its side, nose first. On sand it slides with a scrape. */
+    sweep: cell('boat-sails', 'nose-first', 'side-slap'),
+    /** A rising pool lifts it with a wooden knock. An overflow carries it over the rim and leaves it aground with a bump. */
+    neighbour: cell('boat-lifts', 'lifts-off', 'hull-knock'),
   },
   wheel: {
     /** It turns part of the way round and slows. */
@@ -92,17 +94,17 @@ export const GRID: Readonly<Record<Kind, Readonly<Record<Action, Cell>>>> = {
     'too-much': cell('wheel-whistles', 'blur-wide-ring', 'whistle'),
     /** One flick: half a turn. */
     sweep: cell('wheel-flicks', 'half-turn', 'clack'),
-    /** Run-off passing under it turns it slowly from below. */
-    neighbour: cell('wheel-turns-slowly', 'slow-turn', 'tick-slow'),
+    /** Run-off passing under it turns it slowly from below with a slow wooden creak. */
+    neighbour: cell('wheel-turns-slowly', 'slow-turn', 'slow-creak'),
   },
   cat: {
-    /** She leaps straight up on four stiff legs, shakes one paw and glares at the truck. */
-    gulp: cell('cat-leaps', 'stiff-leap', 'yowl'),
-    /** Soaked. She shakes herself and stalks to the driest spot. */
-    fill: cell('cat-soaked', 'shake-and-stalk', 'shake-spray'),
-    /** She climbs onto the truck's roof and washes a paw with her back to the hose. */
-    'too-much': cell('cat-to-roof', 'climbs-roof', 'huff'),
-    /** Ears flat, she ducks under the stream. */
+    /** She leaps straight up on four stiff legs with a squeak, shakes one paw and glares at the truck. */
+    gulp: cell('cat-leaps', 'stiff-leap', 'squeak'),
+    /** Soaked. She shakes herself with a rattle of flying drops and stalks to the driest spot with a low grumble. */
+    fill: cell('cat-soaked', 'shake-and-stalk', 'rattle-and-grumble'),
+    /** She climbs onto the truck's roof with a scrabble of claws and washes a paw with her back to the hose. */
+    'too-much': cell('cat-to-roof', 'climbs-roof', 'claws-scrabble'),
+    /** Ears flat, she ducks under the stream with a hiss. */
     sweep: cell('cat-ducks', 'ears-flat', 'hiss-cat'),
     /** A drop on her nose and she sneezes, or she lifts her paws and moves over. */
     neighbour: cell('cat-sneezes', 'nose-drop', 'sneeze'),

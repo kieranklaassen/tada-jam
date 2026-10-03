@@ -85,3 +85,23 @@ describe('the characters and their fixed tastes', () => {
     for (const word of words) for (const banned of ['child', 'player', 'praise', 'thanks', 'sad-at']) expect(word).not.toContain(banned)
   })
 })
+
+describe('a want that shows all the time', () => {
+  it('has the truck turn its nozzle to what wants water, with a drop at its tip, while it rests', () => {
+    expect(TASTES.truck.atRest).toBe('truck-nozzle-seeks-drop-hangs')
+  })
+
+  it('has the bee circle the pot and bump the closed bud until a flower is open', () => {
+    expect(TASTES.bee.atRest).toBe('bee-circles-pot-bumps-bud')
+    // What she does at rest is not what she does on an open flower.
+    expect(TASTES.bee.atRest).not.toBe(TASTES.bee.likes['flower-open'])
+  })
+
+  it('names no rest cue that is another cue of any character', () => {
+    const others = CHARACTERS.flatMap((character) => [...Object.values(TASTES[character].likes), ...Object.values(TASTES[character].dislikes), TASTES[character].unmoved])
+    for (const character of CHARACTERS) {
+      const cue = TASTES[character].atRest
+      if (cue !== undefined) expect(others).not.toContain(cue)
+    }
+  })
+})

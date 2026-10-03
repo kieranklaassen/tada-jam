@@ -30,6 +30,11 @@ describe('the object-by-action grid', () => {
     }
   })
 
+  it('gives every cell a look of its own and a sound of its own: none is used twice in the whole grid', () => {
+    expect(new Set(CELLS.map((cell) => cell.look)).size).toBe(35)
+    expect(new Set(CELLS.map((cell) => cell.voice)).size).toBe(35)
+  })
+
   it('gives every cell of the whole grid a pair of look and voice of its own', () => {
     expect(new Set(CELLS.map((cell) => `${cell.look} + ${cell.voice}`)).size).toBe(35)
   })

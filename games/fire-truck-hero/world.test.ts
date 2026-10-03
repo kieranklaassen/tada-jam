@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { CELLS, cellOf } from './grid'
-import { COLS, MOST, ROWS, cellAt, dryGround, levelAt, pour } from './ground'
+import { COLS, MOST, ROWS, cellAt, dry, dryGround, levelAt, pour } from './ground'
 import { SPOTS } from './layout'
 import { KINDS, THINGS, type Kind } from './things'
+import { layOut } from './yards'
 import { FLOATS_AT, RUN_OFF_REACH, afloat, driestFreeSpot, gulpOn, gulpOnGround, honk, rest, sweepOver, thingsAt, wantMet, type Spot, type Step, type Thing, type Yard, type YardEvent } from './world'
 
 const at = (kind: Kind, spot: Spot, more: Partial<Thing> = {}): Thing => ({ kind, spot, gulps: 0, ...more })
@@ -228,5 +229,39 @@ describe('any play at all', () => {
       expect(wantsMet).toBeLessThanOrEqual(1)
       expect(yard.met).toBe(wantsMet === 1)
     }
+  })
+})
+
+describe('what dries and what never does', () => {
+  it('keeps the gulps a thing holds while the open sand round it dries', () => {
+    // The dry patch with the snail on it, part-watered, and a mark on open sand beside it.
+    let yard = layOut('one-thing', 3)
+    yard = gulpOn(yard, 0).yard
+    yard = gulpOnGround(yard, 13.5, 8.5).yard
+    expect(levelAt(yard.ground, 13.5, 8.5)).toBe('damp')
+    // A long while of play: only the grid dries.
+    const later = { ...yard, ground: dry(yard.ground, 600) }
+    expect(levelAt(later.ground, 13.5, 8.5)).toBe('dry')
+    expect(later.things[0].gulps).toBe(1)
+    // It waits as it was left: two more gulps meet the want, as if no time had passed.
+    const met = gulpOn(gulpOn(later, 0).yard, 0)
+    expect(met.events.some((event) => event.type === 'want-met')).toBe(true)
+  })
+
+  it('keeps a want met once it is met, however long the yard stays on screen', () => {
+    let yard = layOut('one-thing', 3)
+    for (let gulp = 0; gulp < 3; gulp++) yard = gulpOn(yard, 0).yard
+    expect(yard.met).toBe(true)
+    const later = { ...yard, ground: dry(yard.ground, 3600) }
+    expect(later.met).toBe(true)
+    expect(wantMet(later)).toBe(true)
+  })
+
+  it('keeps the water in every kind of thing, since nothing in the rules takes it out but the wheel coming to rest and the boat that sinks', () => {
+    let yard = layOut('whole-garden', 0)
+    yard.things.forEach((_, index) => { yard = gulpOn(yard, index).yard })
+    const held = yard.things.map((thing) => thing.gulps)
+    const later = { ...yard, ground: dry(yard.ground, 3600) }
+    expect(later.things.map((thing) => thing.gulps)).toEqual(held)
   })
 })

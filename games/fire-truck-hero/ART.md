@@ -23,7 +23,7 @@ The manifest band is 2 to 4, so the game is designed for a two-year-old and noth
 - **A lifted finger loses nothing.** Water already in the air still lands. A stream that is interrupted and taken up again counts as the same watering.
 - **The truck itself** is the one place that takes no water. A touch on it makes it honk, hop on its springs and turn its roof light once.
 
-**In an empty yard.** The yard is pale dry sand. Where water lands the sand turns dark, as wet sand does, and the dark patch has the shape of what the finger did: a blot for a tap, a line for a sweep. The patches dry back to pale over about half a minute of play, edge first, so the sand is never used up and there is always room for more. Only marks on open sand dry: the water a thing holds never dries or drains, the dry patch of a yard included, so a thing part-watered waits as it is and a want once met stays met. Drops bounce off the landing point and leave their own small dots.
+**In an empty yard.** The yard is pale dry sand. Where water lands the sand turns dark, as wet sand does, and the dark patch has the shape of what the finger did: a blot for a tap, a line for a sweep. The patches dry back to pale over about half a minute of play, edge first, so the sand is never used up and there is always room for more. Only marks on open sand dry: the water a thing holds never dries or drains, the dry patch of a yard included, so a thing part-watered waits as it is and a want once met stays met. On open sand a place that has had its fill stands as a puddle, and with more water is mud, and neither dries while the yard is on screen: what the child brought to its fill stays. Drops bounce off the landing point and leave their own small dots.
 
 **The answer starts when the finger lands**, in the same frame: the nozzle snaps round, the truck squashes back, water leaves the nozzle and the hiss of the hose begins. The water itself needs about a quarter of a second to arrive, because it flies.
 
@@ -109,7 +109,7 @@ The position moves one step up after a yard that went well, one step down after 
 - `position`: the id of the place in the order for the next yard to be laid out.
 - `finished`: the want of the yard on screen has been met. Its ending is not played again on load.
 - `yard`: the yard on screen, as the id of its place and the number of its arrangement.
-- `things`: one entry for each thing in the yard, in the order of the arrangement: the gulps of water it holds (0 to its fill, and one step more for "too much") and the spot it is at, for the things that move (the cat, the boat, the duck, the snail, the floated logs).
+- `things`: one entry for each thing in the yard, in the order of the arrangement: the gulps of water it holds (0 to its fill, and one step more for "too much") and the spot it is at, for the things that move (the cat and the boat).
 - `wet`: the open ground as a coarse grid of 16 by 10 cells, each dry, damp, wet or mud. Only this grid dries; the gulps in `things` never do.
 - `next`: the yard that waits beyond the gate, as place id and arrangement number.
 - `turn`: a small number that picks which arrangement comes next for each place. It wraps round and is never shown.
@@ -150,7 +150,7 @@ Every scene is a list of timed beats on the template's `scene.ts`, filled in fro
 
 **Driving on** (about 4 seconds, caused by the third ring of the bell). The gate swings, the truck's light turns, and it rolls through while the yard slides away and the next one slides in with its animal already in the middle of wanting something.
 
-**How a cycle ends, and how the next starts.** A yard ends when the child ends it. After its ending scene the yard stays as it is for as long as the child likes, and everything in it still answers the hose. The gate stands at the right edge with a bell on its post, and over the hedge beside it the next yard shows: a wisp of smoke, a duck's head, a circling bee or a shell on the post. Each gulp on the bell rings it and lifts the latch by a third. The latch drops again after a few seconds without a ring, so a passing sweep rings the bell and opens nothing. The third ring opens the gate. If the child does nothing, nothing starts. The one who waits does not call, hurry or complain. On load no scene plays: the yard is as it was left, with the next one waiting (pack: game-design, endings-and-short-scenes.md).
+**How a cycle ends, and how the next starts.** A yard ends when the child ends it. After its ending scene the yard stays as it is for as long as the child likes, and everything in it still answers the hose. The gate stands in the far fence, toward the right, with a bell hanging out over the sand from its post, and over the fence beside it the next yard shows: a wisp of smoke, a duck's head, a circling bee or a shell on the post. Each gulp on the bell rings it and lifts the latch by a third. The latch drops again after a few seconds without a ring, so a passing sweep rings the bell and opens nothing. The third ring opens the gate. If the child does nothing, nothing starts. The one who waits does not call, hurry or complain. On load no scene plays: the yard is as it was left, with the next one waiting (pack: game-design, endings-and-short-scenes.md).
 
 ## The records
 
@@ -226,7 +226,7 @@ Fire Truck Hero is designed from five learning foundations published by Californ
 
 **Lighting.** One sun from the upper left and a pale sky light with a warm bounce from the sand. No shadow maps: every toy has a soft blob shadow on the sand, drawn as one instanced mesh. No post pass and no tone mapping, so the colours stay as chosen.
 
-**Faces.** The animals and the truck have faces; the seven things of the grid have none. The truck's face is its windscreen: two big whites with pupils that look where the nozzle points, and a cream bumper for a mouth.
+**Faces.** The animals and the truck have faces; the six things of the grid other than the cat have none. The truck's face is its windscreen: two big whites with pupils that look where the nozzle points, and a cream bumper for a mouth.
 
 **Motion rules.**
 
