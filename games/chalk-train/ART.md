@@ -234,4 +234,38 @@ Chalk Train is designed from one California learning foundation for preschool an
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+**Chalk on asphalt**, the first look reserved for this game in the ledger of `docs/art-direction.md`. The spike is in the Mount now: the game's scene painted once from a fixed seed (`spike.ts`, seed 20261003), with nothing playable behind it.
+
+**What a screenshot shows.** A patch of grey tar seen from above in flat daylight, and on it a child's chalk drawing that happens to be alive: a side-on engine with a face, open wagons, riders, their homes, and the child's own line with sleepers across it. The chalk picture has its own up, the top of the screen, which is what lets a line climb, fall and loop.
+
+**Ground** (`tar.ts`). Painted once for a surface size and kept; nothing on it moves.
+
+- Tar `#63676c`, with fine stones as a tile in lighter, darker and one warm grey, and large soft patches of wear that fade to nothing at the rim.
+- Cracks as dark kinked lines with a pale lip on one side, and grass tufts in them.
+- The dandelion: flat toothed leaves, a stalk, and a seed head or a yellow flower.
+- The puddle: two uneven rims of darker wet tar round a flat sheet of pale sky blue.
+- No lamp, no layers, no cast or contact shadow anywhere. Depth comes only from what overlaps what.
+
+**Chalk** (`chalk.ts`). Everything the child or the game draws goes through four calls, so it all reads as one box of chalk.
+
+- A line is a faint wide smear of dust, the body of the stroke, and a brighter pressed core, each a hair off the last.
+- A fill is one back-and-forth hatch inside the shape over a thin wash, with gaps the tar shows through. Fills never reach the outline evenly.
+- Eyes are solid white with the pupil rubbed back to bare tar and one small glint. There is no black chalk: dark is always the ground.
+- All chalk is drawn solid on its own clear layer, and the tar's grain is then knocked out of the whole layer in one pass, so the ground shows through every stroke as specks.
+
+**Palette.** Five chalks for the child's marks, in the fixed order they are handed out: white `#f6f3ea`, yellow `#f8dc74`, pink `#f6a3b9`, blue `#9fd0f5`, mint `#a8e6bf`. Four more sticks for figures only: orange `#f7b27a`, lilac `#c9b4f2`, green `#8fd98a`, red `#f08b84`. The only saturated things that are not chalk are the dandelion and the grass.
+
+**Working objects stay plain.** The child's line is a plain line in one chalk with plain white sleepers, with no face and no motion of its own. The look and the comedy are on the engine, the riders, the homes and the ride.
+
+**Sizes.** Figures stand larger than they are drawn so that a two-year-old can aim at them: the train 1.4 times, a rider 1.5, a home 1.3, a stop 1.15. A rider is about 100 tar units tall, the engine about 210 long.
+
+**Motion rules** (for the toy; nothing moves in the spike).
+
+- Chalk figures move as redrawn chalk: a figure is redrawn in a new pose a few times a second with its outline a little different each time, like a flip book, while its place on the line moves smoothly.
+- The engine is steady and heavy and leads with its funnel and cheeks. Each rider has its own tempo and funniest part (`tastes.ts`), and no two share a motion.
+- Dust is the follow-through of everything: a puff where the finger lands, a trail on bare tar, a cloud from a scribble.
+- No camera shake and no impact pause (a default awaiting the owner).
+
+**Tiers.** So far the tiers of `config.ts` set the pixel ratio only. The toy adds what each tier sheds for this look, never the look itself: loose dust first, then the redraw rate of resting figures. The grain pass stays on every tier, since it is the look.
+
+**Not yet measured.** No frame rate: the spike is one still image, and this machine draws in software. Stills were taken at 1180 by 820 at pixel ratios 1 and 2 and kept outside the repository.

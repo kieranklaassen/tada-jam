@@ -3,26 +3,57 @@
 
 ## Status
 
-- Stage: sheet. The sheet is whole at commit `397b9a1` (sheet part sha256 `f77a0de0…2434c`, by the command in `docs/build/CLOUD.md`). Not yet checked.
-- Look in use: none yet. First reserved look is Chalk on asphalt; the spike is next.
+- Stage: sheet, with the look spike and the rules written while the check runs. The toy is not started: the brief holds it until the canvas pilot has proven the template.
+- Sheet: whole at commit `397b9a1` (sheet part sha256 `f77a0de0faf45cb1d9cff2e2d41d991d526f53f7a768274119c6b1054192434c`, by the command in `docs/build/CLOUD.md`). Not yet checked. The sheet part has not changed since; the look was written below it.
+- Rules: written against the sheet at commit `397b9a1`, at the builder's own risk, as the guide allows a remote builder. A finding under the representation, the mechanic questions, the error, the designed order or the records reopens them.
+- Look in use: Chalk on asphalt, the first reserved look. Spike: in the Mount, painted once from a fixed seed (`spike.ts`), nothing playable behind it. Stills taken at 1180 by 820, pixel ratios 1 and 2, kept outside the repository. No frame rate: this machine draws in software, and the lead measures.
 - Open: sheet ready for check, round 1
 
-The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
+**Where the rules are finer than the sheet's words,** for the checker and the lead to rule on. None changes what the sheet claims; each would be one sentence in the sheet if wanted.
+
+1. Where a rider is, is stored in six values where the sheet names three (at the stop, aboard, home): also home from the cycle before, waiting for the cycle to come, and laid out but not yet drawn in (the second rider of a layout for two). `world.ts` says so at the type.
+2. "Right beside the train" is within 480 tar units of it. Such a rider walks over and boards on the first mark of its cycle; a rider farther off is fetched.
+3. A mark that starts within 70 tar units of the train is joined to it, and the hop counts as chalk.
+4. When the tar is too full for a position to lie as designed, the nearest thing is laid out. A test plays 300 cycles at each position and finds the designed layout in more than 85 in 100 at the puddle position and more than 9 in 10 elsewhere.
+5. A rider fetched early joins the cycle in play, and another is laid out to wait at once.
+
+**Requests to the lead.**
+
+- A row for this look in the claimed-styles registry of `docs/art-direction.md`, at the merge: "Chalk Train | Chalk on asphalt (canvas 2D): dusty pastel chalk lines and scribbled fills on grey tar with cracks, a dandelion and a puddle, in flat daylight, with no shadow | `games/chalk-train/ART.md`".
+- The frame rate of the spike and a still on a real graphics card.
+- Nothing else is blocked. No frozen file needs changing.
+
+**Not built yet** (the toy stage and after): the view of play and the mapping from screen to tar, the voices as plain numbers in one pure module with their range test, the scenes on `scene.ts`, what the idle ladder shows, the motion module with a personality per character, the overlap tests and the frame-budget test for a canvas game, and the Mount reading and writing the world through `save.ts`.
+
+**Machine notes for the next run.** Node 24 through `nvm` under `/opt/nvm`, with its `bin` first on `PATH` in every command. Chromium was already on the machine under `/opt/pw-browsers` and was used through Playwright's `executablePath`, so nothing was installed. `compound find` was not available; the frontmatter and the packs were read instead.
 
 ### Template notes
 
-No entry yet. One entry a file copied from the template, written for the lead and for the games that come after: used as copied, or what was changed and why, and what is wrong or missing that any game would need. Mark a fault or a gap **for the template**. A frozen file is never changed here: a fault in one is a request to the lead.
+- `config.ts`: changed, as it is the module a game tunes. `LADDER` holds the six positions, `FIRST_VISIT` has three rows (ages 2, 3 and 4), and `BACKDROP` is the tar's grey so nothing flashes at load.
+- `chalk-train.tsx` (the Mount): three lines added for the spike (an import, one instance, the body of `draw`). Everything else as copied.
+- `state.ts`: as copied, wrapped by `save.ts` the way its header describes. **For the template:** a wrapper cannot tell from `deserialize`'s result whether the record was readable or a fresh state was returned, so it has to repeat the test on the record and its version to know whether to build its own fresh fields. A small exported `isRecord(raw)` would keep that test in one place.
+- `audio.ts`, `input.ts`, `guidance.ts`, `scene.ts`, `overlay.ts`: as copied, not yet used by this game.
+- `perf.ts`, `quality.ts`, `attention.ts`, `saveCadence.ts`: frozen, untouched.
+- `ART.md`: **for the template:** the outline has no place for a first showing of a new idea (pack: game-design, guided-discovery.md); this sheet put it under the designed order, beside the stored mark that makes it play once.
 
 ### For the owner to decide
 
-Nothing yet. One line for each thing only the owner can settle: the look and the toy at the toy checkpoint, a default the game would like changed, and anything the guide does not rule on.
+- The look, at the toy checkpoint: Chalk on asphalt.
+- The picture has its own up. The tar is seen from above, and the chalk drawing on it is side-on, so a line can climb, fall and loop. This is what makes hills and loops mean something, and it is a taste call.
+- The child does not choose a chalk colour: five pastels come in a fixed order. A palette would be a tool on screen before it means anything to a two-year-old.
+- There is no eraser. The tar holds 14 marks, the oldest grow paler as newer ones are made, and the oldest is rubbed out by the fifteenth.
+- For a two-year-old the game makes no California claim: the pack holds no California record on making marks at that age.
+- No default from the guide's list needed changing.
 
 ## Pass log
 
-No pass yet. One row per pass: what was looked at, the critique written as the child, the one themed fix set, what was reverted, the measured frame rate, and what is still weak.
+One row per pass: what was looked at, the critique written as the child, the one themed fix set, what was reverted, the measured frame rate, and what is still weak. The spike's passes were on a still, in software, so they carry no frame rate.
 
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
+| Spike 1 | First still, 1180 by 820, ratio 1 | The train is tiny and I cannot find its face. The grey has round stains. | Figures enlarged (train 1.4, rider 1.5, home 1.3); tar patches fade at the rim; the rail lifted under the wheels | not measured | The train sits on top of the loop |
+| Spike 2 | Second still | The train is in the way of the loop. Everything has a grey glow round it. | Recomposed with the train heading into the loop; the dust smear round a line made fainter; engine eyes larger; the dandelion moved clear of the smoke | not measured | The frog hides its wagon |
+| Spike 3 | Third still, ratios 1 and 2 | The frog is sitting on nothing. | Wagon in another chalk, rider smaller and higher in it; the puddle's rim softened | not measured | The puddle is flatter and cleaner than the tar round it; the chalk grain is even, with no streaks along a stroke |
 
 ## For the pull request
 
@@ -30,16 +61,31 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### How the game meets the quality bar
 
-Nothing yet. One entry for each line of the quality bar, saying how the game meets it so far. Each frame rate comes with the engine, the throttle, the pixel ratio and the build it was measured on, and with whether a physical iPad was measured.
+So far there is a still scene and the rules. Lines the toy has to meet are marked "not yet".
+
+- **Alive at idle:** not yet. Planned: the engine breathes smoke puffs and its eyes follow the finger; riders look toward their homes.
+- **Motion and sound on every touch:** not yet in the view. In the rules every mark has an answer: the grid holds a sight and a sound for each of its 30 cells, and a test holds that no two share either and that no mark on bare tar is a dead end.
+- **Weight, squash and follow-through:** not yet.
+- **Kid-clear:** few, large, separate figures in pastel chalk on mid-grey tar; the train is about 210 tar units long and a rider about 100 tall. Places for stops and homes are at least 200 units apart and none is in the bottom strip, held by a test.
+- **Wordless clarity for the declared age:** no word, letter, numeral or symbol is drawn; the wordless check passes. Everything essential works with a tap, and a line counts when partly done, both held by tests on the rules.
+- **Wordless guidance:** not yet. The template's ladder is in the Mount; what it shows is the toy's work.
+- **60 fps on a mid-range iPad:** not measured. The spike is one image copied to the surface each frame. Canvas 2D, no post pass, no shadow. No physical iPad has been measured.
+- **Procedural or committed assets only:** everything is drawn at run time from a seed; the egress scan and the built-asset scan pass.
+- **Its own art direction:** chalk on asphalt, written up in `ART.md` under "The look".
+- **Found as left:** the world is always at rest in the model, so nothing is ever saved in the air; a test plays 200 marks and reads every state back exactly; a largest legal state is held under half of the storage cap.
 
 ### The learning claim
 
-Nothing yet. The claim as the sheet has it, with each record's standing and its check state read again on the day of the pull request, in the pack's Summary or the game's own words only. A game with no learning goal says so.
+As the sheet has it, to be read again on the day of the pull request: Chalk Train is designed from one California learning foundation for preschool and transitional kindergarten (a foundation, not a standard; its statement for the earlier age only; confirmed when read on 2026-10-03), for ages 3 and 4, and from three statements of the Dutch curriculum institute's content cards for peuters and fase 1 (guidance, not law; all confirmed when read on 2026-10-03), for ages 2 to 4. For a two-year-old it is designed from the Dutch guidance alone. The pack ids are in `ART.md` under "The records". It says nothing about what any child can do.
 
 ### Defaults taken for the owner
 
-Nothing yet. Each default the game took in the owner's place, from the guide or from its own sheet.
+- Every default in the guide's list, as written. The ones that shape this game: no symbol and no letter of any kind; no camera shake and no impact pause; creature voices invented and synthesized.
+- From the sheet: the chalk colour is not chosen by the child; there is no eraser and the oldest chalk goes first; the chalk picture is side-on on a tar seen from above.
 
 ### What the next builder should know
 
-Nothing yet. What this build taught that the guide and the template do not say.
+- A mark's points land on whole tar units, so a new line can pass exactly through a point of an older one. A crossing test with strict inequalities misses that case; count a point that lies on the other path as belonging to one side.
+- A corner drawn at 80 degrees reads as under 70 once the mark is evened to a step, because the sharpest point falls between two points. Test shapes need corners well past the threshold, as a real zigzag has.
+- A rule that counts something inside a `map` must count in a local variable: reading the array being mapped gives the count from before the pass, and two riders boarded a full train. A seeded test of hundreds of random marks found it; the hand-written cases did not.
+- Places where things can stand run out fast. Eight places could not hold three riders with their stops and homes; twelve can, and a layout still needs a fallback.
