@@ -3,9 +3,9 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
-- Look in use: none yet.
-- Open: the design sheet in `ART.md` and its check.
+- Stage: sheet. The sheet is whole at commit `397b9a1` (sheet part sha256 `f77a0de0…2434c`, by the command in `docs/build/CLOUD.md`). Not yet checked.
+- Look in use: none yet. First reserved look is Chalk on asphalt; the spike is next.
+- Open: sheet ready for check, round 1
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
