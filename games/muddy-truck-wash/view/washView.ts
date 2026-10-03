@@ -3,7 +3,8 @@ import type { VehicleDef, VehicleId } from '../roster'
 import type { Surface } from '../surface'
 import { makeKit, type EnamelKit } from './enamel'
 import { Stage } from './stage'
-import { TruckView, type TruckPose } from './truck'
+import type { TruckPose } from '../pose'
+import { TruckView } from './truck'
 
 // Everything drawn: one renderer on the Mount's canvas, the bay, and a view
 // per vehicle of the roster, of which two are on stage at a time. It shows
