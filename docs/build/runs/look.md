@@ -19,4 +19,4 @@ So the style stays. The look reserved for the game is still its look, and its ro
 7. **Passes, logged.** At least three passes in `REFINEMENT.md`: still, critique, one set of fixes, still again. After the last, the same three stills as in step 1 and the same three lines. Say in the status block where the stills can be made again (the address and the `seed`).
 8. **The budget still holds.** The frame-budget test, the overlap tests or the intersection audit, the draw-call count in the status block, and the four quality tiers. A richer frame that drops frames is not finished.
 9. **The art guide** below `## The look` says what is now in the frame.
-10. **Commits and checks** as `closing.md` has them. Push and stop with the short report: the tip, what the frame holds now that it did not, and what you would still add.
+10. **The reader, commits and checks** as `closing.md` has them in its steps 5 to 7. Push and stop with the short report: the tip, what the frame holds now that it did not, and what you would still add.
