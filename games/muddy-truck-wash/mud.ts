@@ -69,14 +69,37 @@ export function arrive(clean: Surface, position: string, seed: number): Surface 
   return surface
 }
 
-/** One trip through the puddle: more soft mud, from the wheels up. Dried mud it lands on is wetted too. */
+/** Every patch of body in rows 0 to `top` holds mud. */
+function muddyUpTo(surface: Surface, top: number): boolean {
+  for (let r = 0; r <= top; r++) for (let c = 0; c < GRID_W; c++) {
+    const patch = surface[cellAt(c, r)]
+    if (patch !== '.' && patch !== 'c' && patch !== 's') return false
+  }
+  return true
+}
+
+/** How many more trips through the puddle will add mud: 2, 1 or 0. Read from the surface, so nothing counts them. */
+export function dipsLeft(surface: Surface): number {
+  return muddyUpTo(surface, 3) ? 0 : muddyUpTo(surface, 1) ? 1 : 2
+}
+
+/**
+ * One trip through the puddle. The first covers the wheels and sills in soft
+ * mud, the second reaches halfway up, and each throws a few splashes higher.
+ * Dried mud and foam it lands on become soft mud too. A third changes
+ * nothing and returns the same surface.
+ */
 export function puddled(surface: Surface, seed: number): Surface {
+  const left = dipsLeft(surface)
+  if (left === 0) return surface
+  const top = left === 2 ? 1 : 3
   const out = surface.slice()
+  for (let r = 0; r <= top; r++) for (let c = 0; c < GRID_W; c++) if (out[cellAt(c, r)] !== '.') out[cellAt(c, r)] = 's'
   let s = seed
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     let at: [number, number] | null
-    ;[at, s] = pickIn(out, [0, 3], s, ['d', 'w', 'p', 'c', 'f', 'b'])
-    if (at) s = blob(out, at[0], at[1], 7, 's', s, ['d', 'w', 'p', 'c', 'f', 'b'])
+    ;[at, s] = pickIn(out, [top + 1, Math.min(GRID_H - 1, top + 1)], s, ['d', 'w', 'p', 'c', 'f', 'b'])
+    if (at) s = blob(out, at[0], at[1], 2, 's', s, ['d', 'w', 'p', 'c', 'f', 'b'])
   }
   return out
 }

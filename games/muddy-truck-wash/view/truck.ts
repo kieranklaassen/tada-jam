@@ -46,9 +46,11 @@ export class TruckView {
   private readonly matrix = new THREE.Matrix4()
   private readonly scratch = new THREE.Matrix4()
   private readonly aim = new THREE.Vector3()
+  private readonly axis = new THREE.Vector3()
 
   constructor(kit: EnamelKit, readonly def: VehicleDef, reflect: boolean) {
     this.root.name = `vehicle-${def.id}`
+    this.axis.set(...def.partAxis).normalize()
     this.mirror.name = `mirror-${def.id}`
     this.mirror.scale.y = -1
     this.maskA = maskTexture()
@@ -60,8 +62,9 @@ export class TruckView {
     this.owned.push(bodyGeometry, partGeometry, wheelGeometry)
 
     for (const reflected of reflect ? [false, true] : [false]) {
-      const material = (restOffset?: readonly [number, number, number]) => {
-        const m = enamelMaterial(kit, { masks, restOffset, reflected, yardFrom: LAYOUT.yardFrom })
+      const material = (rest?: readonly [number, number, number]) => {
+        const m = enamelMaterial(kit, { masks, reflected, yardFrom: LAYOUT.yardFrom })
+        if (rest) (m.uniforms.uRest.value as THREE.Matrix4).makeTranslation(rest[0], rest[1], rest[2])
         this.owned.push(m)
         return m
       }
@@ -176,7 +179,12 @@ export class TruckView {
     for (const set of this.sets) {
       set.chassis.position.y = pose.lift
       set.chassis.rotation.set(pose.lean, 0, pose.pitch)
-      set.part.rotation.z = pose.part
+      set.part.quaternion.setFromAxisAngle(this.axis, pose.part)
+      // On a drum the mud stays where it is on the side while the metal turns under it.
+      if (def.partSpins) {
+        set.part.updateMatrix()
+        ;((set.part.material as THREE.ShaderMaterial).uniforms.uRest.value as THREE.Matrix4).copy(set.part.matrix)
+      }
       def.wheels.forEach((wheel, i) => {
         const squash = pose.squash[i] ?? 0
         for (const side of [1, -1]) {

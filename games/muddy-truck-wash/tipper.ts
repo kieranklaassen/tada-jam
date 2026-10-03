@@ -26,6 +26,8 @@ export const tipper: VehicleDef = {
     part: { x0: 0.0, x1: 2.45, y0: 1.0, y1: 2.3 },
   },
   partSwing: 0.85,
+  partAxis: [0, 0, -1],
+  partSpins: false,
   // Heavy and slow: soft springs that take their time, a deep breath, and a bed that flaps like a lid.
   moves: { stiffness: 70, damping: 6.5, give: 1.15, breath: 0.32, breathDepth: 0.014, idleRate: 9, idleSize: 0.0025, blink: [2.6, 5.5], partStiffness: 55, partDamping: 4.2, partThrow: 0.055, glance: 0.6 },
   horn: { low: 196, high: 247, hold: 0.34 },

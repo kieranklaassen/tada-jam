@@ -93,6 +93,11 @@ export class TruckMotion {
     this.drag = slide
   }
 
+  /** Sets the funniest part going: a shove to a hinged part, a spin to a drum. */
+  fling(speed: number): void {
+    this.part.speed += speed
+  }
+
   /** A knock: the body kicks away from the point and rings back. */
   kick(x: number, strength: number): void {
     this.lift.speed -= strength * 1.6 * this.who.give
@@ -131,7 +136,8 @@ export class TruckMotion {
     pose.lift = this.lift.value + breath + shake
     pose.pitch = this.pitch.value
     pose.lean = this.lean.value + shake * 0.6
-    pose.part = Math.max(0, this.part.value)
+    // A hinged part rests shut; a drum (no spring of its own) turns freely and coasts.
+    pose.part = who.partStiffness > 0 ? Math.max(0, this.part.value) : this.part.value
     // Tyres carry the body: flatter under the end that is pushed down.
     for (let i = 0; i < this.axles.length; i++) {
       const load = -this.lift.value * 1.4 + this.pitch.value * -this.axles[i] * 0.55 - breath * 1.2

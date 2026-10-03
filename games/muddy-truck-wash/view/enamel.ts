@@ -92,7 +92,7 @@ function finish(texture: THREE.DataTexture, tile: boolean): THREE.DataTexture {
 
 const VERTEX = /* glsl */ `
 attribute vec2 surface;
-uniform vec3 uRestOffset;
+uniform mat4 uRest;
 uniform vec4 uSide;
 varying vec3 vNormal;
 varying vec3 vPaint;
@@ -104,7 +104,7 @@ varying vec3 vWorldNormal;
 void main() {
   vec4 local = vec4(position, 1.0);
   vec3 n = normal;
-  vec3 rest = position + uRestOffset;
+  vec3 rest = (uRest * vec4(position, 1.0)).xyz;
   #ifdef USE_INSTANCING
     local = instanceMatrix * local;
     n = mat3(instanceMatrix) * n;
@@ -248,7 +248,6 @@ export function makeKit(): EnamelKit {
 export type EnamelOptions = {
   /** Surface textures, when the mesh carries the grid of a vehicle. */
   masks?: { a: THREE.Texture; b: THREE.Texture; side: { x0: number; x1: number; y0: number; y1: number } }
-  restOffset?: readonly [number, number, number]
   gloss?: number
   reflected?: boolean
   floor?: readonly [number, number, number]
@@ -274,7 +273,8 @@ export function enamelMaterial(kit: EnamelKit, options: EnamelOptions = {}): THR
       uMirror: { value: 0.7 },
       uYard: { value: options.yardFrom ?? 1e6 },
       uFloor: { value: new THREE.Vector3(...(options.floor ?? [0.13, 0.15, 0.18])) },
-      uRestOffset: { value: new THREE.Vector3(...(options.restOffset ?? [0, 0, 0])) },
+      // Takes a vertex to where it rests on the vehicle's side, for reading the surface grid.
+      uRest: { value: new THREE.Matrix4() },
       uSide: { value: new THREE.Vector4(side.x0, side.y0, side.x1 - side.x0, side.y1 - side.y0) },
     },
   })

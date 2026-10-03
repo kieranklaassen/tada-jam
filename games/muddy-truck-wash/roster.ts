@@ -33,8 +33,11 @@ export type VehicleDef = {
   side: Zone
   /** Parts of the body a taste can belong to. */
   zones: { nose: Zone; eyes: Zone; wheels: Zone; part: Zone }
-  /** The moving part turns about z by up to this much (radians), or spins freely when it is a drum. */
+  /** How far the moving part swings open (radians) about `partAxis`; a positive angle lifts it. */
   partSwing: number
+  partAxis: readonly [number, number, number]
+  /** A drum: it turns freely, and what is on it stays put while the metal turns under it. */
+  partSpins: boolean
   /** How it moves: its weight, its tempo and how its funniest part is thrown about. No two vehicles share these. */
   moves: Personality
   /** Its horn: two pitches in Hz, and how long it holds them. */
