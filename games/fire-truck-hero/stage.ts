@@ -236,6 +236,8 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       ground.setSlide(slid)
       // The hedges run on past both yards: they slide with the ground and wrap round by two bumps.
       hedges.position.z = slid % (2 * HEDGE_STEP)
+      // The yard on screen is always in the scene; after a drive that is the set that was kept out of it.
+      if (here.root.parent === null) scene.add(here.root)
       here.root.visible = true
       here.root.position.z = slid - (driving ? YARD_PITCH : 0)
       // The yard that slides in is at rest; the drive's own channels (the gate) belong to the yard that leaves.
