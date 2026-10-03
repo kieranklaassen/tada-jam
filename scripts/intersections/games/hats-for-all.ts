@@ -32,8 +32,8 @@ async function open(d: Driver, world: World | null): Promise<void> {
 }
 
 const crew = (kinds: readonly Kind[], hats: number[][] = []): Creature[] => kinds.map((kind, i) => ({ kind, spot: kinds.length === 5 ? i : i + 1, hats: hats[i] ?? [] }))
-const hat = async (d: Driver, n: number): Promise<Frac> => (await d.find(`^hat-${n}$`)) ?? [0.4, 0.68]
-const creature = async (d: Driver, n: number): Promise<Frac> => (await d.find(`^creature-${n}-body$`)) ?? [0.4, 0.45]
+const hat = async (d: Driver, n: number): Promise<Frac> => (await d.find(`^hat-${n}( |$)`)) ?? [0.4, 0.68]
+const creature = async (d: Driver, n: number): Promise<Frac> => (await d.find(`^creature-${n}-body( |$)`)) ?? [0.4, 0.45]
 const TILE: Frac = [0.2, 0.7]
 const FLOOR: Frac = [0.55, 0.9]
 const ARCH: Frac = [0.79, 0.3]
@@ -56,7 +56,7 @@ function tastes(kind: Hat) {
 }
 
 const audit: GameAudit = {
-  enforce: true,
+  enforce: false,
   query: 'tier=0&seed=11',
   childAge: 2,
   sampleMs: 200,

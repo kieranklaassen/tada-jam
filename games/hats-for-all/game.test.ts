@@ -417,3 +417,41 @@ describe('nothing passes through anything', () => {
   }, 30000)
 })
 
+
+describe('a tower of three', () => {
+  it('sways, salutes and topples with a falling whistle, every time, and every hat of it goes home', () => {
+    for (let again = 0; again < 2; again++) {
+      const game = new Game(saveOf(everything())), heard: { at: number; name: string }[] = []
+      // Flop already wears two; the hat from the tile is the third.
+      game.press({ type: 'hat', hat: 4 })
+      game.dragStart()
+      game.dragTo(0, 3, 1, 0, 0)
+      game.letGo({ on: 'creature', who: 'flop' })
+      const names = run(game, 3, heard)
+      expect(game.seen).toContain('the-tower-falls')
+      expect(names).toContain('whistle')
+      expect(names.filter((name) => name === 'fwump').length).toBe(3)
+      expect(game.saved.crew.find((creature) => creature.kind === 'flop')!.hats).toEqual([])
+      for (const hat of [1, 2, 4]) expect(game.play.seen(hat)).toEqual({ at: 'tile' })
+      expectStageIsWorld(game)
+    }
+  })
+})
+
+describe('a hat on a head', () => {
+  it('rests on the top of the head and not in it, whatever the creature is doing', () => {
+    for (const kind of ['bop', 'lanky', 'flop', 'wig', 'pip'] as const) for (const hat of ['cone', 'dome', 'brim'] as const) {
+      const game = new Game(saveOf({ crew: [{ kind, spot: 2, hats: [] }], tile: [hat], loose: [], changes: ['leave'], guest: null, leaver: 2, slips: 0 }))
+      tap(game, { type: 'hat', hat: 0 })
+      run(game, 0.9)
+      // Through its act and for a while after, the hat's base is never below the top of the head as it stands that instant, unless it has come forward of the face first.
+      run(game, 1.05, [], () => {
+        const body = game.play.actorPose(kind, {} as never), worn = game.play.hatPose(0)
+        if (game.play.flying(0)) return
+        const forward = worn.z - body.z > 0.9
+        if (!forward) expect(worn.y - body.y, `${kind} under the ${hat}`).toBeGreaterThanOrEqual(BODY[kind].top * body.squash - 1e-6)
+        expect(worn.y).toBeGreaterThan(0.4)
+      })
+    }
+  })
+})

@@ -6,7 +6,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 // look"). This module makes the slabs, the stipple and the two materials. It
 // builds everything once; nothing here runs per frame.
 
-const BEVEL = 0.055
+export const BEVEL = 0.055
 
 /**
  * A slab cut from an outline drawn in x and y, `depth` thick, centred on z, in one flat colour. Its rounded edge

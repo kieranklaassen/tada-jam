@@ -28,7 +28,7 @@ export const GRID: Record<ObjectKind, Record<Action, Cell>> = {
     'to-bare-head': { seen: 'stretches-after-the-finger-and-lands-where-let-go', heard: ['creak', 'pok', 'squeak', 'bap', 'babble'], moves: true },
     'to-hatted-head': { seen: 'lands-on-the-hat-there-and-the-tower-slips-over-the-eyes', heard: ['creak', 'pok', 'squeak', 'bap', 'bap', 'babble-grump'], moves: true },
     'to-tile': { seen: 'dips-back-into-its-own-hole', heard: ['creak', 'pok', 'fwump'], moves: false },
-    elsewhere: { seen: 'skids-to-the-nearest-round-spot-and-scuttles-in-a-small-circle', heard: ['creak', 'pok', 'plop', 'scuttle'], moves: true },
+    elsewhere: { seen: 'skids-with-a-squeal-to-the-nearest-round-spot-and-scuttles-in-a-small-circle', heard: ['creak', 'pok', 'squeal', 'plop', 'scuttle'], moves: true },
   },
   'hat-on-head': {
     tap: { seen: 'pops-off-and-is-pressed-home-and-the-creature-pats-its-bare-head', heard: ['creak', 'pip', 'babble-ask', 'fwump'], moves: true },
@@ -42,13 +42,13 @@ export const GRID: Record<ObjectKind, Record<Action, Cell>> = {
     'to-bare-head': { seen: 'is-picked-up-and-the-bare-creature-ducks-under-it', heard: ['creak', 'squeak', 'bap', 'babble'], moves: true },
     'to-hatted-head': { seen: 'lands-sideways-the-tower-leans-and-the-hat-rights-itself', heard: ['creak', 'squeak', 'bap', 'creak', 'babble-grump'], moves: true },
     'to-tile': { seen: 'is-pressed-home-with-a-long-creak', heard: ['creak', 'squeak', 'creak', 'fwump'], moves: true },
-    elsewhere: { seen: 'skids-spins-like-a-coin-and-scuttles-beside-the-nearest-round-spot', heard: ['creak', 'squeak', 'plop', 'scuttle'], moves: true },
+    elsewhere: { seen: 'skids-spins-like-a-coin-with-a-whirr-and-scuttles-beside-the-nearest-round-spot', heard: ['creak', 'squeak', 'whirr', 'plop', 'scuttle'], moves: true },
   },
   'tower-top': {
     tap: { seen: 'leaves-the-tower-and-goes-home-and-the-tower-shrinks', heard: ['creak', 'pip', 'babble', 'fwump'], moves: true },
     'to-bare-head': { seen: 'moves-over-and-mends-the-tower-and-the-bare-head-at-once', heard: ['creak', 'pip', 'babble', 'bap', 'babble-grump'], moves: true },
     // Onto a head with one hat the tower changes heads; onto a head that already has two it makes three, which topple.
-    'to-hatted-head': { seen: 'changes-heads-or-makes-a-tower-of-three-that-sways-salutes-and-topples', heard: ['creak', 'pip', 'babble', 'bap', 'bap', 'babble-grump'], moves: true },
+    'to-hatted-head': { seen: 'changes-heads-with-a-double-thump-or-makes-a-tower-of-three-that-topples-with-a-falling-whistle', heard: ['creak', 'pip', 'babble', 'bap', 'bap', 'babble-grump'], moves: true },
     'to-tile': { seen: 'goes-home-while-the-hat-under-it-spins-once', heard: ['creak', 'pip', 'squeak', 'babble', 'fwump', 'squeak'], moves: true },
     elsewhere: { seen: 'tips-the-tower-and-rolls-off-loose', heard: ['creak', 'pip', 'babble', 'plop', 'plop', 'scuttle'], moves: true },
   },
@@ -69,7 +69,7 @@ export const GRID: Record<ObjectKind, Record<Action, Cell>> = {
 }
 
 /** The names a cell may use for what is heard: the voices of voices.ts, with the babble's tune where it matters. */
-export const HEARD = ['creak', 'pok', 'pip', 'bap', 'fwump', 'plop', 'squeak', 'scuttle', 'hoot', 'babble', 'babble-ask', 'babble-grump'] as const
+export const HEARD = ['creak', 'pok', 'pip', 'bap', 'fwump', 'plop', 'squeak', 'squeal', 'whirr', 'whistle', 'scuttle', 'hoot', 'babble', 'babble-ask', 'babble-grump'] as const
 
 /**
  * What a cell does to the world, by the rules. The hat rows move a hat; a

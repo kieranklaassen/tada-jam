@@ -95,6 +95,29 @@ export function scuttle(count: number): Partial[] {
   return [noise(0, 2300 * vary(count), 1700, 6, 0.035, 0.002, 0.035)]
 }
 
+/** A hat skids across the foam to a round spot: a long rubbery squeal that sinks as it slows. */
+export function squeal(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 1250 * v, 520 * v, 0.07, 0.02, 0.34, 'triangle'), noise(0, 900, 500, 4, 0.04, 0.01, 0.3)]
+}
+
+/** A hat spins like a coin as it settles: a whirr in beats that come quicker and quicker. */
+export function whirr(count: number): Partial[] {
+  const v = vary(count), beats: Partial[] = []
+  let at = 0
+  for (let beat = 0; beat < 7; beat++) {
+    beats.push(tone(at, (420 + beat * 60) * v, (520 + beat * 60) * v, 0.06, 0.004, 0.05, 'triangle'))
+    at += 0.11 * 0.78 ** beat
+  }
+  return beats
+}
+
+/** A tower of three topples: a whistle that falls. */
+export function whistle(count: number): Partial[] {
+  const v = vary(count)
+  return [tone(0, 1700 * v, 380 * v, 0.1, 0.01, 0.5)]
+}
+
 /** The arch, tapped. */
 export function hoot(count: number): Partial[] {
   const v = vary(count)

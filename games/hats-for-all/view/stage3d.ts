@@ -6,7 +6,7 @@ import { DIMPLE_SECONDS, type ActorPose, type Play } from '../play'
 import { CREATURE_DEPTH, HAND, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
 import { ARCH_X, ARCH_Z, LANE_Z, TILE_Z } from '../stage'
 import { tileWidth } from '../tile'
-import { CREATURE_COLOUR, PALETTE, buildArch, buildMat, buildPieces, buildRoom, buildTile, type Pieces } from './build'
+import { CREATURE_COLOUR, EAR_DEPTH, PALETTE, buildArch, buildMat, buildPieces, buildRoom, buildTile, type Pieces } from './build'
 import { blobTexture, foamMaterials, handTexture, ringTexture } from './foam'
 
 // The foam scene as three.js objects, with no renderer: it is built once,
@@ -76,13 +76,13 @@ export class FoamStage {
     this.tile.visible = false
     for (let i = 0; i < MOST; i++) {
       const hat = add(`hat-${i}`, this.pieces.hats.cone)
-      hat.rotation.order = 'ZXY'
+      hat.rotation.order = 'YZX'
       hat.visible = false
       this.hats.push(hat)
     }
     for (let i = 0; i < BODIES; i++) {
       const body = add(`creature-${i}-body`, this.pieces.bodies.bop)
-      body.rotation.order = 'YZX'
+      body.matrixAutoUpdate = false
       body.userData.jamObject = `creature-${i}`
       body.visible = false
       this.bodies.push(body)
@@ -168,11 +168,11 @@ export class FoamStage {
       if (!play || who === undefined) return
       const kind = play.kindOf(who), pose = play.actorPose(who, this.pose), cut = this.pieces.cuts[kind], wide = 1 / Math.sqrt(pose.squash)
       mesh.geometry = this.pieces.bodies[kind]
-      mesh.position.set(pose.x, pose.y, pose.z)
-      mesh.rotation.set(0, pose.turn, pose.lean)
-      mesh.scale.set(wide, pose.squash, 1)
-      mesh.updateMatrix()
-      this.body.copy(mesh.matrix)
+      // A body leans as foam does, by sliding its top across over planted feet: a shear, set straight into its matrix.
+      this.body.makeShear(0, 0, -Math.tan(pose.lean), 0, 0, 0).scale(this.s.set(wide, pose.squash, 1))
+      this.body.premultiply(this.m.makeRotationY(pose.turn)).setPosition(pose.x, pose.y, pose.z)
+      mesh.matrix.copy(this.body)
+      mesh.matrixWorldNeedsUpdate = true
       const front = CREATURE_DEPTH / 2
       const part = (x: number, y: number, z: number, sx: number, sy: number): THREE.Matrix4 => this.m.compose(this.v.set(x, y, z), this.q.identity(), this.s.set(sx, sy, 1)).premultiply(this.body)
       const pupil = cut.eyeSize * 0.5, wander = cut.eyeSize * 0.42
@@ -202,7 +202,7 @@ export class FoamStage {
         const pose = play.hatPose(hat), flat = 1 - pose.up, give = 1 - pose.squash, glowing = lit({ type: 'hat', hat })
         const stir = glowing ? pulse * (0.5 + 0.5 * Math.sin(play.time * 5 + hat * 1.7)) : 0
         mesh.position.set(pose.x, pose.y - flat * give * SLAB * 0.9 + stir * 0.1, pose.z)
-        mesh.rotation.set(-Math.PI / 2 * flat - pose.flip, pose.turn, pose.tilt + stir * 0.05)
+        mesh.rotation.set(-Math.PI / 2 * flat + pose.flip, pose.turn, pose.tilt + stir * 0.05)
         // Lying in its hole a hat gives downwards; standing it squashes onto what it stands on and spreads.
         mesh.scale.set(1 + pose.up * (1 / Math.sqrt(pose.squash) - 1), 1 - pose.up * give, 1 - flat * give * 0.5)
         if (pose.up > 0.02) shade(pose.x, pose.z, 2 / (1 + pose.y * 0.25), 1.1 / (1 + pose.y * 0.25))
@@ -242,7 +242,8 @@ export class FoamStage {
     ear.visible = true
     ear.userData.jamObject = `creature-${slot}`
     this.q.setFromAxisAngle(this.v.set(0, 0, 1), side * (0.2 + 0.5 * pose.pat + 0.9 * Math.max(0, pose.ears) - 0.15 * Math.max(0, -pose.ears)) - pose.lean * 2.5 + side * (1 - pose.squash) * 1.6)
-    ear.matrix.compose(this.v.set(side * 0.78, top - 0.42, -0.1), this.q, this.s.set(1, 1, 1)).premultiply(this.body)
+    // In front of the body's face and behind its hands.
+    ear.matrix.compose(this.v.set(side * 0.78, top - 0.42, CREATURE_DEPTH / 2 + EAR_DEPTH / 2 + 0.01), this.q, this.s.set(1, 1, 1)).premultiply(this.body)
     ear.matrixWorldNeedsUpdate = true
   }
 

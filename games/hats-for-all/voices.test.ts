@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CREATURE_KINDS, HAT_KINDS } from './kinds'
-import { RANGE, babble, bap, creak, fwump, hoot, pip, plop, pok, scuttle, squeak, voiceLength, type Mood, type Partial } from './voices'
+import { RANGE, babble, bap, creak, fwump, hoot, pip, plop, pok, scuttle, squeak, squeal, voiceLength, whirr, whistle, type Mood, type Partial } from './voices'
 
 const MOODS: Mood[] = ['glad', 'grump', 'ask', 'plain']
 const COUNTS = [0, 1, 2, 3, 4, 5, 11]
@@ -9,7 +9,7 @@ const COUNTS = [0, 1, 2, 3, 4, 5, 11]
 function everyVoice(): [string, Partial[]][] {
   const all: [string, Partial[]][] = []
   for (const count of COUNTS) {
-    all.push([`creak ${count}`, creak(count)], [`squeak ${count}`, squeak(count)], [`scuttle ${count}`, scuttle(count)], [`hoot ${count}`, hoot(count)])
+    all.push([`creak ${count}`, creak(count)], [`squeak ${count}`, squeak(count)], [`scuttle ${count}`, scuttle(count)], [`hoot ${count}`, hoot(count)], [`squeal ${count}`, squeal(count)], [`whirr ${count}`, whirr(count)], [`whistle ${count}`, whistle(count)])
     for (const hat of HAT_KINDS) for (const [name, voice] of [['pok', pok], ['pip', pip], ['bap', bap], ['fwump', fwump], ['plop', plop]] as const) all.push([`${name} ${hat} ${count}`, voice(hat, count)])
     for (const creature of CREATURE_KINDS) for (const mood of MOODS) all.push([`babble ${creature} ${mood} ${count}`, babble(creature, mood, count)])
   }

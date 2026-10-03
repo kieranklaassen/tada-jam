@@ -9,7 +9,7 @@ import { Scene } from './scene'
 import { changeShow, firstShowing, nextCrewShow, paradeShow, type Show } from './shows'
 import { IN_ARCH, LOOSE_Z, ROW_Z, TILE_Z, holeX, nearestSpot, spotPoint, spotX } from './stage'
 import { ACTS as TASTE_ACTS, moodFor, tasteFor } from './tastes'
-import { babble, bap, creak, fwump, hoot, pip, plop, pok, scuttle, squeak, voiceLength, type Mood } from './voices'
+import { babble, bap, creak, fwump, hoot, pip, plop, pok, scuttle, squeak, squeal, voiceLength, whirr, whistle, type Mood } from './voices'
 
 // The game on the toy: the rules, the cycle and the scenes, played on the
 // puppet theatre. No renderer and no DOM. The Mount hands it what the finger
@@ -315,6 +315,9 @@ export class Game {
         })
       } else if (event.to.at === 'loose') {
         const spot = event.to.spot
+        // Carried out of the tile and let go on the floor, it skids to its spot with a long rubbery squeal; a loose hat let go again spins like a coin with a quickening whirr.
+        if (carried && object === 'hat-in-tile') play.cue('squeal', squeal(this.next()))
+        if (carried && object === 'loose-hat') play.cue('whirr', whirr(this.next()))
         play.moveHat(hat, { at: 'loose', spot }, travel, () => {
           play.cue('plop', plop(kind, this.next()))
           if (object === 'tower-top') play.cue('plop', plop(kind, this.next()), 0.12)
@@ -350,7 +353,7 @@ export class Game {
     const play = this.play
     play.cue('bap', bap(this.saved.tile[hats[hats.length - 1]], this.next()))
     play.act(who, 'salutes-and-topples')
-    play.cue('hoot', hoot(this.next()), 0.1)
+    play.cue('whistle', whistle(this.next()), 0.35)
     play.after(0.5, () => hats.forEach((hat) => {
       const kind = this.saved.tile[hat]
       if (play.seen(hat).at === 'head') play.moveHat(hat, { at: 'tile' }, 'pop', () => play.cue('fwump', fwump(kind, this.next())))

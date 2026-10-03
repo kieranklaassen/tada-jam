@@ -1,7 +1,7 @@
 import { playAct, rest, type Mods } from './acts'
 import type { CreatureKind, HatKind } from './kinds'
 import { PERSONALITY, hash, stepSpring, type Spring } from './motion'
-import { BODY, HAND, HAT_HEIGHT, SLAB } from './sizes'
+import { BODY, HAND, HAT_HALF, HAT_HEIGHT, SLAB } from './sizes'
 import { LOOSE_Z, TILE_Z, alongWay, holeX, spotX, wayLength, type Point } from './stage'
 import type { Partial } from './voices'
 
@@ -293,11 +293,14 @@ export class Play {
       if (!flight) return
       flight.t += dt
       const u = Math.min(1, flight.t / flight.lasts), e = ease(u)
-      const bounce = flight.travel === 'hop' ? Math.abs(Math.sin(u * Math.PI * 2)) : Math.sin(u * Math.PI)
-      pose.x = flight.fromX + (pose.x - flight.fromX) * e
-      pose.z = flight.fromZ + (pose.z - flight.fromZ) * e
+      // Two hops never touch down between them; and a hat on its way home is over its hole before it comes down into it.
+      const bounce = flight.travel === 'hop' ? Math.max(Math.abs(Math.sin(u * Math.PI * 2)), 0.45 * Math.sin(u * Math.PI)) : Math.sin(u * Math.PI)
+      const over = h.seen.at === 'tile' ? ease(Math.min(1, u / 0.7)) : e
+      pose.x = flight.fromX + (pose.x - flight.fromX) * over
+      pose.z = flight.fromZ + (pose.z - flight.fromZ) * over
       pose.y = flight.fromY + (pose.y - flight.fromY) * e + bounce * flight.arc
-      pose.up = flight.fromUp + (pose.up - flight.fromUp) * e
+      // It lies down, or stands up, in the high middle of its way and not at either end, where it would sweep through what it leaves or lands on.
+      pose.up = flight.fromUp + (pose.up - flight.fromUp) * ease(Math.max(0, Math.min(1, (u - 0.2) / 0.6)))
       pose.flip = flight.travel === 'pop' ? e * Math.PI * 2 : 0
       pose.turn = flight.travel === 'skid' ? e * Math.PI * 4 : 0
       if (u < 1) return
@@ -364,7 +367,9 @@ export class Play {
     if (seen.at === 'loose') {
       // It scuttles in a small circle beside its round spot, slowly enough for a small finger to land on it.
       const step = this.time * 3.4 + hat, round = this.time * LOOSE_TURN + hat * 2.1
-      out.x = spotX(seen.spot) + LOOSE_CIRCLE * Math.cos(round); out.y = 0.16 * Math.abs(Math.sin(step * Math.PI)); out.z = LOOSE_Z + LOOSE_CIRCLE * Math.sin(round); out.up = 1; out.tilt = 0.14 * Math.sin(step * Math.PI)
+      // It rocks from one base corner to the other as it goes, and is lifted by as much as the low corner dips, so it never sinks into the mat.
+      out.tilt = 0.14 * Math.sin(step * Math.PI)
+      out.x = spotX(seen.spot) + LOOSE_CIRCLE * Math.cos(round); out.y = 0.16 * Math.abs(Math.sin(step * Math.PI)) + Math.abs(Math.sin(out.tilt)) * HAT_HALF[h.kind]; out.z = LOOSE_Z + LOOSE_CIRCLE * Math.sin(round); out.up = 1
       return out
     }
     const actor = this.actors.get(seen.who)
@@ -374,14 +379,18 @@ export class Play {
     const tower = actor.hats > 1, fwd = Math.max(mods.hatFwd, Math.min(1, actor.slip / 0.35))
     const slip = (-(body.top - body.faceY) + 0.15) * Math.max(0, (actor.slip - 0.35) / 0.65)
     let under = 0
-    for (let level = 0; level < seen.level; level++) under += HAT_HEIGHT[this.hatKind(this.hatOn(seen.who, level) ?? hat)] * 0.72
+    for (let level = 0; level < seen.level; level++) under += HAT_HEIGHT[this.hatKind(this.hatOn(seen.who, level) ?? hat)]
+    // A hat that is tipped is lifted by as much as its low corner dips, so it rests on the head by that corner and never in it.
+    const tip = seen.level > 0 ? 0 : mods.hatTilt + (actor.grumpy && !tower ? 0.16 : 0), dip = Math.abs(Math.sin(tip)) * HAT_HALF[h.kind]
     // However far an act and a slipping tower bring a hat down, it stays above the feet.
-    const lean = actor.lean.x + mods.lean, top = Math.max(0.45, body.top * actor.squash.x * mods.squash + slip + mods.hatLift) + under
-    out.x = actor.x + mods.dx - Math.sin(lean) * top
-    out.y = actor.hop.x + mods.dy + Math.cos(lean) * top - 0.06
-    out.z = actor.z + 0.02 * (seen.level + 1) + fwd * HAT_FWD
+    const lean = actor.lean.x + mods.lean, head = body.top * actor.squash.x * mods.squash, top = Math.max(0.45, head + slip + mods.hatLift + dip) + under
+    // A body leans as foam does: its feet stay planted and its top slides across, so the top of its head stays level.
+    const across = -Math.tan(lean) * head
+    out.x = actor.x + mods.dx + across * Math.cos(mods.turn)
+    out.y = actor.hop.x + mods.dy + top
+    out.z = actor.z - across * Math.sin(mods.turn) + 0.02 * (seen.level + 1) + fwd * HAT_FWD
     out.up = 1
-    out.tilt = lean + mods.hatTilt + (actor.grumpy && !tower ? 0.16 : 0)
+    out.tilt = tip
     out.turn = mods.turn
     return out
   }
