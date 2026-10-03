@@ -318,6 +318,9 @@ describe('what is shown once', () => {
     expect(matches(kitchen.toSave().order!.wanted, kitchen.pieces())).toBe(false)
     play(kitchen, 2)
     expect(kitchen.pieces().length).toBe(1)
+    // A child who only watches is not shown the way to the oven: that waits for a piece laid by its own finger.
+    play(kitchen, SHOW_OVEN_AFTER + 20)
+    expect(kitchen.toSave().shown).toEqual(['tap-a-tub'])
   })
 
   it('shows the way to the oven once, to a child who has paused with something on the pizza', () => {

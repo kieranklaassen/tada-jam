@@ -54,6 +54,8 @@ export class Kitchen {
   /** Seconds of game time since the child last touched anything, counted only while no scene plays. */
   private idle = 0
   private held: Held = null
+  /** How many pieces the child has put out or taken off with its own finger since this customer stepped up. */
+  private own = 0
   private grab: { x: number; y: number } | null = null
   private pictured: Pictured[] = []
   /** The pizza looks baked: set when it comes out of the oven, a moment after the save says so. */
@@ -227,6 +229,7 @@ export class Kitchen {
       this.table.flights.length = 0
       this.table.hand = null
       this.bakedLook = false
+      this.own = 0
       this.st.pizzaHidden = false
       this.st.bites = 0
       this.st.pizzaX = PIZZA.x
@@ -313,6 +316,7 @@ export class Kitchen {
       feedHand(this.table, this.mouth())
     } else if (held === 'tub' || held === 'piece') {
       tapHand(this.table)
+      this.own += 1
       this.mark('soon')
     } else if (held === 'customer' && this.pizzaOnBoard && this.state.pizza.baked) this.serve()
     else if (held === 'oven' && this.pizzaOnBoard) this.bake()
@@ -340,7 +344,10 @@ export class Kitchen {
       const hand = this.table.hand, who = this.state.customer
       // Let go over the customer, a piece is fed to it by hand.
       if (hand && who && Math.abs(hand.x - CUSTOMER.x) < CHARACTERS[who].halfWidth && hand.y < COUNTER_Y) feedHand(this.table, this.mouth())
-      else if (this.pizzaOnBoard) dropHand(this.table)
+      else if (this.pizzaOnBoard) {
+        dropHand(this.table)
+        this.own += 1
+      }
       else {
         // No pizza to lay it on: it goes home.
         carry(this.table, -999, -999)
@@ -389,7 +396,8 @@ export class Kitchen {
         this.state = { ...this.state, shown: [...this.state.shown, 'tap-a-tub'] }
         this.promised = { kind, x: spot.x, y: spot.y, turn: 0 }
       })
-    } else if (this.state.shown.includes('tap-a-tub') && !this.state.shown.includes('to-the-oven') && laid > 0 && this.table.flights.length === 0 && this.idle >= SHOW_OVEN_AFTER) {
+    } else if (this.state.shown.includes('tap-a-tub') && !this.state.shown.includes('to-the-oven') && this.own > 0 && laid > 0 && this.table.flights.length === 0 && this.idle >= SHOW_OVEN_AFTER) {
+      // Only once the child has laid a piece with its own finger: the way to the oven is not shown to a child who is still watching.
       this.play(ovenShowing(this.st, this.stagehand), () => {
         this.state = { ...this.state, shown: [...this.state.shown, 'to-the-oven'] }
       })
@@ -446,22 +454,23 @@ export class Kitchen {
       const pose = director.update(this.now, dt, { x: Math.max(-1, Math.min(1, (look.x - eye.x) / 360)), y: Math.max(-1, Math.min(1, (look.y - eye.y) / 260)) }, this.scene !== null)
       add(pose, this.st.act)
       if (this.state.finished && !this.scene) add(pose, { squash: 0.06, part: 0.5, blink: 0.12 })
-      // One hand holds the card up; the other is the scene's to move.
+      // One hand holds the card up, and pats it in a tasting; the other is the scene's to move.
       const walking = this.st.customer !== null
-      pose.handL = !walking && this.st.cardOpen > 0.5 ? { x: CARD.x + CARD.w - 4 - CUSTOMER.x, y: CARD.y + CARD.h * 0.6 - CUSTOMER.y } : null
-      pose.handR = this.st.hand ? { x: this.st.hand.x - CUSTOMER.x, y: this.st.hand.y - CUSTOMER.y } : null
+      const holding = this.st.cardHand ?? { x: CARD.x + 4, y: CARD.y + CARD.h * 0.6 }
+      pose.handR = !walking && this.st.cardOpen > 0.5 ? { x: holding.x - CUSTOMER.x, y: holding.y - CUSTOMER.y } : null
+      pose.handL = this.st.hand ? { x: this.st.hand.x - CUSTOMER.x, y: this.st.hand.y - CUSTOMER.y } : null
     }
     const waiting = this.state.waiting
     if (waiting) {
       for (const which of ['small', 'big'] as const) {
         // The two at the door watch the kitchen. They never hurry anyone.
-        const pose = this.director(waiting[which]).update(this.now, dt, { x: -0.7, y: 0.5 })
+        const pose = this.director(waiting[which]).update(this.now, dt, { x: 0.7, y: 0.5 })
         pose.handL = null
         pose.handR = null
       }
     }
     const leaving = this.st.leaving
-    if (leaving) add(this.director(leaving.who).update(this.now, dt, { x: -1, y: 0 }, true), leaving.act)
+    if (leaving) add(this.director(leaving.who).update(this.now, dt, { x: 1, y: 0 }, true), leaving.act)
   }
 
   // --- The frame --------------------------------------------------------------------

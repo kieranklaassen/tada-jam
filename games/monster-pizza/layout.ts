@@ -50,8 +50,8 @@ export function tubPlace(index: number, count: number): { x: number; y: number }
 
 /** Where the customer at the counter stands: its feet, hidden behind the counter. */
 export const CUSTOMER = { x: 596, y: COUNTER_Y + 24 }
-/** The card the customer holds up, to its left, over the tubs. */
-export const CARD = { x: 84, y: 34, w: 300, h: 214 }
+/** The card the customer holds up, to its right, over the oven. Its other hand is then free for the tubs, on its left. */
+export const CARD = { x: 796, y: 34, w: 300, h: 214 }
 /** Where a pizza is slid to be served: up against the counter, under the customer's mouth. */
 export const SERVE = { x: PIZZA.x, y: PIZZA.y - 70 }
 /** How far a hand can slide the pizza towards the oven: up to the oven's side, and no further. Half of this way counts as done. */
@@ -59,8 +59,8 @@ export const OVEN_WAY = { x: PIZZA.x + 112, y: PIZZA.y }
 /** Where a pizza goes to be baked: the oven's mouth. */
 export const OVEN_MOUTH = { x: 1014, y: 566 }
 export const OVEN = { x: 1014, y: 548, w: 250, h: 270 }
-/** The doorway where the next customers wait, clear of the grown-up corner at the top right. */
-export const DOOR = { x: 936, y: 92, w: 264, h: 214 }
+/** The doorway where the next customers wait, on the left, over the tubs. */
+export const DOOR = { x: 244, y: 92, w: 264, h: 214 }
 /** How far each of the two at the door stands from its middle, and how big they are drawn there: far enough apart that the two widest never touch. */
 export const DOOR_APART = 62
 export const DOOR_SIZE = 0.42

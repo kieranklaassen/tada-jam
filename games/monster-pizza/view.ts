@@ -281,11 +281,11 @@ export class KitchenView {
     const card = show.card
     if (card && card.open > 0.02) {
       g.save()
-      // The roll opens from the hand that holds it, at the card's right edge.
-      g.translate(CARD.x + CARD.w, CARD.y + CARD.h / 2)
+      // The roll opens from the hand that holds it, at the card's near edge.
+      g.translate(CARD.x, CARD.y + CARD.h / 2)
       g.rotate(card.shake * 0.012)
       g.scale(card.open, 1)
-      g.translate(-CARD.w, -CARD.h / 2)
+      g.translate(0, -CARD.h / 2)
       stamp(g, scenery.card)
       this.draws += 1
       card.pictured.forEach((p, i) => {

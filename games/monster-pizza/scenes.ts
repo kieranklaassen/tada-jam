@@ -1,6 +1,6 @@
 import { CHARACTERS, type Customer } from './customers'
 import type { Kind } from './kinds'
-import { CARD, CUSTOMER, OVEN, OVEN_MOUTH, PIZZA, SERVE } from './layout'
+import { CARD, CUSTOMER, OVEN, OVEN_MOUTH, PIZZA, SERVE, STAGE_W } from './layout'
 import type { Delta } from './motion'
 import type { Beat } from './scene'
 import { COUNTER_SPOT, calm, doorSpot, type Staging } from './staging'
@@ -82,7 +82,7 @@ export function steppingUp(st: Staging, who: Customer, from: 'small' | 'big', le
   ]
   if (leaving) {
     beats.push(tween(0, 1, (u) => {
-      st.leaving = u < 1 ? { who: leaving, x: mix(CUSTOMER.x, -260, ease(u)), y: CUSTOMER.y, size: 1, act: walk(leaving, u) } : null
+      st.leaving = u < 1 ? { who: leaving, x: mix(CUSTOMER.x, STAGE_W + 260, ease(u)), y: CUSTOMER.y, size: 1, act: walk(leaving, u) } : null
     }), ...steps(leaving, 0, 1, hand))
   }
   beats.push(
@@ -117,18 +117,18 @@ export function steppingUp(st: Staging, who: Customer, from: 'small' | 'big', le
 
 /** The first showing, once ever: the customer pokes a tub and one piece hops onto the pizza. `poke` is the moment the finger lands. */
 export function firstShowing(st: Staging, tub: { x: number; y: number }, poke: () => void): Beat[] {
-  const rest = { x: CUSTOMER.x + 150, y: CUSTOMER.y - 30 }
+  const rest = { x: CUSTOMER.x - 150, y: CUSTOMER.y - 30 }
   return [
     tween(0, 0.8, (u) => {
       st.hand = { x: mix(rest.x, tub.x + 10, ease(u)), y: mix(rest.y, tub.y - 30, ease(u)) }
-      st.act = { lean: -0.06 * ease(u), mouth: 0.3 * ease(u) }
+      st.act = { lean: -0.05 * ease(u), mouth: 0.3 * ease(u) }
       st.lookAt = tub
     }),
     cue(0.8, poke),
     tween(0.8, 0.25, (u) => { st.hand = { x: tub.x + 10, y: tub.y - 30 + 22 * hump(u) } }),
     tween(1.05, 0.8, (u) => {
       st.hand = { x: mix(tub.x + 10, rest.x, ease(u)), y: mix(tub.y - 30, rest.y, ease(u)) }
-      st.act = { lean: -0.06 * (1 - ease(u)) }
+      st.act = { lean: -0.05 * (1 - ease(u)) }
     }),
     cue(1.9, () => calm(st)),
   ]
@@ -136,8 +136,9 @@ export function firstShowing(st: Staging, tub: { x: number; y: number }, poke: (
 
 /** To the oven, shown once ever: the window lights and the customer nudges the board a hand's width towards the oven and lets it slide back. */
 export function ovenShowing(st: Staging, hand: Stagehand): Beat[] {
-  const rest = { x: CUSTOMER.x + 150, y: CUSTOMER.y - 30 }
-  const edge = { x: PIZZA.x - 40, y: PIZZA.y - PIZZA.r * 0.9 }
+  const rest = { x: CUSTOMER.x - 150, y: CUSTOMER.y - 30 }
+  // The hand takes the board by its near edge, on the side away from the oven, and pushes.
+  const edge = { x: PIZZA.x - PIZZA.r * 0.8, y: PIZZA.y - PIZZA.r * 0.66 }
   return [
     tween(0, 2, (u) => {
       st.ovenGlow = Math.min(ramp(u, 0, 0.2), 1 - ramp(u, 0.8, 1))
@@ -354,7 +355,7 @@ export function tasting(
           st.effect = u < 1 ? { kind: taste.kind, way: 'few', big: taste.big, t: u } : null
           st.patted = u < 1 ? spot.index : -1
           st.pat = hump(u)
-          st.hand = u < 1 ? { x: at.x + 8, y: at.y + 14 - 10 * hump(ramp(u, 0, 0.4)) } : null
+          st.cardHand = u < 1 ? { x: at.x + 8, y: at.y + 14 - 10 * hump(ramp(u, 0, 0.4)) } : null
           st.act = u < 1 ? plus(plus(fewAct(taste.kind, u), mannerAct(who, u)), { part: 0.8 * Math.sin(u * TAU * 4) * (1 - u) }) : {}
           st.lookAt = u < 1 ? tubOf(taste.kind) : null
         }),
@@ -368,7 +369,7 @@ export function tasting(
     }),
     tween(plan.push.at, plan.push.lasts, (u) => {
       st.act = { lean: 0.04 * hump(u) }
-      st.hand = u < 1 ? { x: st.pizzaX + 30, y: st.pizzaY - PIZZA.r * 0.8 } : null
+      st.hand = u < 1 ? { x: st.pizzaX - 40, y: st.pizzaY - PIZZA.r * 0.8 } : null
     }),
     slidePizza(st, plan.push.at, plan.push.lasts, PIZZA, 1),
     cue(plan.seconds, () => calm(st)),

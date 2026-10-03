@@ -116,7 +116,7 @@ describe('the scenes', () => {
         expect(scene.running).toBe(false)
         expect([st.pizzaX, st.pizzaY, st.pizzaSize, st.pizzaHidden, st.puffed]).toEqual([PIZZA.x, PIZZA.y, 1, false, 0])
         expect(st.act).toEqual({})
-        expect([st.hand, st.effect, st.lookAt, st.customer, st.leaving, st.arriving]).toEqual([null, null, null, null, null, null])
+        expect([st.hand, st.cardHand, st.effect, st.lookAt, st.customer, st.leaving, st.arriving]).toEqual([null, null, null, null, null, null, null])
         expect([st.lick, st.sizzling, st.patted, st.ovenGlow, st.cardOpen, st.tubsIn]).toEqual([0, -1, -1, 0, 1, 1])
         expect(st.cardCount).toBeGreaterThanOrEqual(3)
       }

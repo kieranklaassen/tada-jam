@@ -48,8 +48,10 @@ export type Staging = {
   tubsIn: number
   /** What the scene adds to the customer's own motion. */
   act: Delta
-  /** Where the scene has the customer's right hand, in stage units, or null to leave it. */
+  /** Where the scene has the customer's free hand, the one on the tubs' side, in stage units, or null to leave it at rest. */
   hand: { x: number; y: number } | null
+  /** Where the scene has the hand that holds the card, when it pats a drawn piece, or null to leave it holding. */
+  cardHand: { x: number; y: number } | null
   /** The tongue reaching for the pizza: 0 in to 1 on it. */
   lick: number
   effect: Effect | null
@@ -77,7 +79,7 @@ export function restStaging(): Staging {
   return {
     pizzaX: PIZZA.x, pizzaY: PIZZA.y, pizzaSize: 1, pizzaHidden: false, bites: 0, puffed: 0, ovenGlow: 0,
     customer: null, leaving: null, arriving: null, cardOpen: 1, cardCount: 99, tubsIn: 1,
-    act: {}, hand: null, lick: 0, effect: null, sizzling: -1, sizzle: 0, patted: -1, pat: 0, soot: 0, lookAt: null,
+    act: {}, hand: null, cardHand: null, lick: 0, effect: null, sizzling: -1, sizzle: 0, patted: -1, pat: 0, soot: 0, lookAt: null,
   }
 }
 
@@ -85,6 +87,7 @@ export function restStaging(): Staging {
 export function calm(s: Staging): void {
   s.act = {}
   s.hand = null
+  s.cardHand = null
   s.lick = 0
   s.effect = null
   s.sizzling = -1

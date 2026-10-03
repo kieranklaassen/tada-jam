@@ -64,7 +64,7 @@ function measure(kitchen: Kitchen, found: Found): Show {
       // The bowl is a wide, shallow shape: its sprite reaches TUB.r to each side and to the top of the heap.
       if (Math.hypot(show.pizza.x - tub.x, show.pizza.y - tub.y) < r + TUB.r) found.pizzaOnTub += 1
     })
-    if (show.pizza.x - r < CARD.x + CARD.w && show.pizza.y - r < CARD.y + CARD.h) found.pizzaOnCard += 1
+    if (overCard(show.pizza.x, show.pizza.y, r)) found.pizzaOnCard += 1
     if (show.pizza.x + r > OVEN.x - OVEN.w / 2 && Math.abs(show.pizza.y - OVEN.y) < OVEN.h / 2 + r) found.pizzaInWallFrames += 1
   }
   // The pieces are drawn where the model has them: on the pizza as it is drawn, wherever it has been slid.
@@ -79,6 +79,12 @@ function measure(kitchen: Kitchen, found: Found): Show {
     }
   }
   return show
+}
+
+/** Whether a disc touches the card: its nearest point of the card is inside the disc. */
+function overCard(x: number, y: number, r: number): boolean {
+  const nx = Math.max(CARD.x, Math.min(CARD.x + CARD.w, x)), ny = Math.max(CARD.y, Math.min(CARD.y + CARD.h, y))
+  return Math.hypot(x - nx, y - ny) < r
 }
 
 const fresh = (): Found => ({ pieceOnPiece: 0, pieceOffPizza: 0, drawnAstray: 0, pizzaOnTub: 0, pizzaOnCard: 0, pizzaInWallFrames: 0, worstPieceGap: Infinity, frames: 0 })
@@ -114,7 +120,7 @@ describe('where things stand', () => {
         const t = tubs[a]
         expect(Math.hypot(t.x - BOARD.x, t.y - BOARD.y), `tub ${a} of ${count} and the board`).toBeGreaterThanOrEqual(BOARD.r + TUB.r)
         // The heap of pieces stands half a tub above the rim.
-        expect(t.y - TUB.r, `tub ${a} of ${count} and the card`).toBeGreaterThanOrEqual(CARD.y + CARD.h)
+        expect(t.y - TUB.r, `tub ${a} of ${count} and the doorway`).toBeGreaterThanOrEqual(DOOR.y + DOOR.h)
         expect(t.y - TUB.r).toBeGreaterThan(COUNTER_Y + 30)
         expect(t.x + TUB.r).toBeLessThan(OVEN.x - OVEN.w / 2)
         expect(t.x - TUB.r).toBeGreaterThanOrEqual(0)
@@ -129,18 +135,20 @@ describe('where things stand', () => {
     // As far as a hand can slide it towards the oven, and up to the customer.
     expect(OVEN_WAY.x + PIZZA.r).toBeLessThanOrEqual(OVEN.x - OVEN.w / 2)
     for (const at of [OVEN_WAY, SERVE, { x: OVEN_WAY.x, y: SERVE.y }]) {
-      expect(at.x - PIZZA.r).toBeGreaterThan(CARD.x + CARD.w)
-      // The door's frame is past the pizza's edge at the height where the two would meet.
+      expect(overCard(at.x, at.y, PIZZA.r)).toBe(false)
+      // The doorway is past the pizza's edge at the height where the two would meet.
       const reach = Math.sqrt(Math.max(0, PIZZA.r ** 2 - Math.max(0, at.y - (DOOR.y + DOOR.h)) ** 2))
-      expect(at.x + reach).toBeLessThan(DOOR.x - DOOR.w / 2)
+      expect(at.x - reach).toBeGreaterThan(DOOR.x + DOOR.w / 2)
       for (let count = 1; count <= 4; count++) for (let i = 0; i < count; i++) expect(Math.hypot(at.x - tubPlace(i, count).x, at.y - tubPlace(i, count).y)).toBeGreaterThanOrEqual(PIZZA.r + TUB.r)
     }
   })
 
   it('keeps the widest customers clear of the card, of the door, and of each other at the door', () => {
     const widest = Math.max(...CUSTOMERS.map((who) => CHARACTERS[who].halfWidth))
-    expect(CUSTOMER.x - widest).toBeGreaterThan(CARD.x + CARD.w)
-    expect(CUSTOMER.x + widest).toBeLessThan(DOOR.x - DOOR.w / 2)
+    expect(CUSTOMER.x + widest).toBeLessThan(CARD.x)
+    expect(CUSTOMER.x - widest).toBeGreaterThan(DOOR.x + DOOR.w / 2)
+    // The card stands over the oven and clear of it.
+    expect(CARD.y + CARD.h).toBeLessThan(OVEN.y - OVEN.h * 0.7)
     const small = doorSpot('small'), big = doorSpot('big')
     for (const a of CUSTOMERS) for (const b of CUSTOMERS) if (a !== b) expect((CHARACTERS[a].halfWidth + CHARACTERS[b].halfWidth) * DOOR_SIZE, `${a} beside ${b}`).toBeLessThanOrEqual(big.x - small.x)
     // Both stand inside the doorway, and the doorway is clear of the corner the grown-up overlay listens in.
@@ -148,7 +156,8 @@ describe('where things stand', () => {
       expect(small.x - CHARACTERS[who].halfWidth * DOOR_SIZE).toBeGreaterThanOrEqual(DOOR.x - DOOR.w / 2)
       expect(big.x + CHARACTERS[who].halfWidth * DOOR_SIZE).toBeLessThanOrEqual(DOOR.x + DOOR.w / 2)
     }
-    expect(DOOR.x + DOOR.w / 2 < STAGE_W - CORNER || DOOR.y > CORNER).toBe(true)
+    // The card answers a touch, so it stays out of the corner the grown-up overlay listens in.
+    expect(CARD.x + CARD.w < STAGE_W - CORNER || CARD.y > CORNER).toBe(true)
   })
 
   it('draws the pictures on the card clear of each other and of its border, for every order of every place', () => {

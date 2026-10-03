@@ -17,16 +17,16 @@ export function spikeShow(): Show {
   )
   table.nextId = 3
   const grum = restPose()
-  grum.lookX = -0.5
+  grum.lookX = 0.5
   grum.lookY = 0.7
   grum.mouth = 0.34
   grum.tongue = 0.25
-  grum.handL = { x: CARD.x + CARD.w - 6 - CUSTOMER.x, y: CARD.y + CARD.h * 0.62 - CUSTOMER.y }
+  grum.handR = { x: CARD.x + 6 - CUSTOMER.x, y: CARD.y + CARD.h * 0.62 - CUSTOMER.y }
   const bim = restPose()
-  bim.lookX = -0.6
+  bim.lookX = 0.6
   bim.part = 0.5
   const fizz = restPose()
-  fizz.lookX = -0.5
+  fizz.lookX = 0.5
   fizz.lookY = 0.3
   fizz.mouth = 0.2
   return {
