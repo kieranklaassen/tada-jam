@@ -95,8 +95,8 @@ export function waitingAt(position: PositionId, shown: Record<Attribute, boolean
   return { position, finished: true, cycle, shown, crates: [{ from: position, seed }] }
 }
 
-export function newWorld(childAge: number | null): World {
-  return waitingAt(firstPosition(childAge) as PositionId, { colour: false, kind: false, size: false })
+export function newWorld(childAge: number | null, seed = FIRST_SEED): World {
+  return waitingAt(firstPosition(childAge) as PositionId, { colour: false, kind: false, size: false }, seed)
 }
 
 /** The crew at the tray: no one, on a bare tray before the first crate is taken. */

@@ -29,5 +29,10 @@ export const STEEL = hex(0xaab2bc)
 export const STEEL_DARK = hex(0x6c7682)
 export const TONGUE = hex(0xf2718a)
 export const LAMP = hex(0xffe9a8)
+/** The crates the loads come in: a warm brown that is no toy colour. */
+export const CRATE = hex(0xb7793f)
+export const CRATE_DARK = hex(0x9a6130)
+/** The ghost hand: a pale glove. */
+export const GLOVE = hex(0xfbfaf4)
 
 export const BACKDROP_HEX = 0x303a4a

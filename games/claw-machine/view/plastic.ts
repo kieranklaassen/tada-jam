@@ -1,5 +1,5 @@
 import { BufferAttribute, BufferGeometry, ShaderMaterial, Vector3 } from 'three'
-import { buildMesh, type Brick, type Rgb } from '../bricks'
+import { buildMesh, type Brick, type BrickMesh } from '../bricks'
 
 // Moulded plastic: one material for every brick in the world. The colour is
 // in the vertices, so a whole build is one draw. The light is fixed to the
@@ -79,7 +79,11 @@ export function plasticMaterial(seams = true): ShaderMaterial {
 
 /** A build as one geometry. */
 export function brickGeometry(bricks: readonly Brick[], withBottoms = false): BufferGeometry {
-  const mesh = buildMesh(bricks, withBottoms)
+  return meshGeometry(buildMesh(bricks, withBottoms))
+}
+
+/** A mesh made by the pure side, as a geometry. */
+export function meshGeometry(mesh: BrickMesh): BufferGeometry {
   const geometry = new BufferGeometry()
   geometry.setAttribute('position', new BufferAttribute(mesh.position, 3))
   geometry.setAttribute('normal', new BufferAttribute(mesh.normal, 3))
@@ -91,15 +95,3 @@ export function brickGeometry(bricks: readonly Brick[], withBottoms = false): Bu
   return geometry
 }
 
-/** Gives a round part made by three.js what the plastic needs: one colour all over and no seam. */
-export function plain(geometry: BufferGeometry, colour: Rgb): BufferGeometry {
-  const count = geometry.getAttribute('position').count
-  const color = new Float32Array(count * 3), face = new Float32Array(count * 4)
-  for (let i = 0; i < count; i++) {
-    color.set(colour, i * 3)
-    face.set([500, 500, 1000, 1000], i * 4)
-  }
-  geometry.setAttribute('brickColor', new BufferAttribute(color, 3))
-  geometry.setAttribute('face', new BufferAttribute(face, 4))
-  return geometry
-}

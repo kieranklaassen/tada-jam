@@ -19,8 +19,9 @@ export type Body = {
   /**
    * resting: where the rules have it (on the tray or in a belly). held: in
    * the jaws. flying: on its way somewhere. mouth: on a gobbler's tongue.
+   * parked: kept where it is by a scene until its cue comes.
    */
-  mode: 'resting' | 'held' | 'flying' | 'mouth'
+  mode: 'resting' | 'held' | 'flying' | 'mouth' | 'parked'
   x: number
   y: number
   z: number

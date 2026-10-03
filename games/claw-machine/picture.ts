@@ -1,4 +1,5 @@
 import type { GobblerShape } from './gobblerBuild'
+import type { GobblerId } from './gobblers'
 import type { Toy } from './toys'
 
 // A picture of the world for one frame: plain numbers, made by the pure side
@@ -62,10 +63,35 @@ export type ClawLook = {
 
 export type Shadow = { x: number; y: number; z: number; r: number; a: number }
 
+/** A crate on the ledge with its load on its deck and its crews riding, as one thing. */
+export type CrateLook = {
+  /** Changes when what the crate carries changes, so the view builds it again. */
+  key: string
+  which: number
+  toys: readonly Toy[]
+  crews: readonly (readonly GobblerId[])[]
+  x: number
+  /** How far it has sunk behind the parapet, in world units, and how far it is tipped, 0 to 1. */
+  drop: number
+  z: number
+  tip: number
+}
+
+/** A ring of light on something that can be touched now. */
+export type GlowLook = { x: number; y: number; z: number; r: number; a: number }
+
+/** The ghost hand: where its fingertip is, how far it is pressed down and how solid it is. */
+export type HandLook = { x: number; y: number; z: number; press: number; opacity: number }
+
 export type Picture = {
   toys: readonly ToyLook[]
   gobblers: readonly GobblerLook[]
+  crates: readonly CrateLook[]
   claw: ClawLook
   /** Round shadows on whatever is beneath. */
   shadows: readonly Shadow[]
+  glows: readonly GlowLook[]
+  hand: HandLook | null
+  /** The gate of the ledge shaking, 1 to 0. */
+  gate: number
 }

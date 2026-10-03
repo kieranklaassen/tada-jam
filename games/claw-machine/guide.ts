@@ -1,0 +1,51 @@
+import type { Game } from './game'
+import { rimHeight } from './gobblerBuild'
+import { shapeOf } from './gobblers'
+import { deckTop, type Spot } from './layout'
+import { GATE, SHELF } from './places'
+import { trayIsClear } from './world'
+
+// What the idle ladder shows, chosen from the state of play: a glow on what
+// can be touched now, and one move the ghost hand could show. The hand shows
+// a move and never a solution: where a toy can be picked up, that a toy can
+// go to a gobbler (a different one each time it shows), that the ones who
+// wait can be fetched. Nothing here says which gobbler a toy belongs to.
+
+export type Mark = Spot & { r: number }
+
+export type Hint = {
+  /** Where the glow goes: one ring for each thing that can be touched now. */
+  marks: Mark[]
+  /** Where the hand taps this time, or null when there is nothing to show. */
+  tap: Spot | null
+}
+
+export function hintFor(game: Game, showing: number): Hint {
+  const world = game.world, nth = Math.max(0, showing)
+  if (game.scene) return { marks: [], tap: null }
+  // A cycle has ended, or none has begun: the crates wait for the claw.
+  if (world.finished) {
+    const marks = game.crates.map((crate) => ({ x: crate.x, y: SHELF.top + deckTop(crate.which) + 1.2, z: crate.z + 1.2, r: 3.4 }))
+    return { marks, tap: marks.length > 0 ? marks[nth % marks.length] : null }
+  }
+  // A toy is in the jaws: it can go to any gobbler, and the hand shows another one each time.
+  if (game.held >= 0) {
+    const marks = game.crew.map((actor) => ({ x: actor.x, y: actor.y + rimHeight(shapeOf(actor.id)) + 0.3, z: actor.z, r: shapeOf(actor.id).width / 2 - 0.6 }))
+    return { marks, tap: marks.length > 0 ? marks[nth % marks.length] : null }
+  }
+  // Toys stand on the tray: any of them can be picked up.
+  const standing = game.tray().map((stack, place) => ({ stack, place })).filter(({ stack }) => stack.length > 0)
+  if (standing.length > 0) {
+    const marks = standing.map(({ stack, place }) => {
+      const top = game.bodies[stack[stack.length - 1]]
+      return { x: top.x, y: game.stackTop(place) + 0.15, z: top.z, r: top.heavy > 1 ? 3.6 : 2.6 }
+    })
+    return { marks, tap: marks[nth % marks.length] }
+  }
+  // The tray is clear and another crew waits: the gate brings it in.
+  if (trayIsClear(world.cycle) && game.someoneWaits()) {
+    const gate = { x: GATE.x, y: GATE.top + 0.3, z: GATE.z, r: 3 }
+    return { marks: [gate], tap: gate }
+  }
+  return { marks: [], tap: null }
+}

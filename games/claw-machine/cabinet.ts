@@ -1,6 +1,6 @@
 import type { Brick, Rgb } from './bricks'
-import { FLOOR, STEP as STEP_COLOUR, TRAY as TRAY_COLOUR, TRIM, WALL as WALL_COLOUR, WALL_LIGHT } from './palette'
-import { BACK, SHELF, STEP, TRAY, TRAY_DEPTH, TRAY_WIDTH, WALL } from './places'
+import { FLOOR, LAMP, STEEL, STEP as STEP_COLOUR, TRAY as TRAY_COLOUR, TRIM, WALL as WALL_COLOUR, WALL_LIGHT } from './palette'
+import { BACK, BELL, GATE, SHELF, STEP, TRAY, TRAY_DEPTH, TRAY_WIDTH, WALL } from './places'
 import { PLATE } from './bricks'
 
 // The cabinet: everything that never moves, as one build and so one draw.
@@ -50,5 +50,20 @@ export function cabinetBricks(): Brick[] {
   for (const x of [SHELF.x - 2, SHELF.x + SHELF.w]) {
     for (let y = 0; y < plates(BACK.top); y += 6) out.push({ x, y, z: WALL.z - 1, w: 2, d: 2, h: 6, colour: TRIM })
   }
+  // The bell post at either end of the rail: a buffer brick with a bell on it.
+  for (const side of [-1, 1]) {
+    out.push({ x: side * BELL.x - 1, y: 0, z: BELL.z - 1, w: 2, d: 2, h: 8, colour: TRIM })
+    out.push({ x: side * BELL.x - 1, y: 8, z: BELL.z - 1, w: 2, d: 2, h: 3, colour: LAMP, round: true })
+  }
+  // The posts of the gate, on the parapet.
+  for (const side of [-1, 1]) out.push({ x: GATE.x + side * GATE.half - 0.5, y: plates(WALL.top), z: WALL.z, w: 1, d: 1, h: 3, colour: TRIM, round: true })
   return out
+}
+
+/** The bar of the gate: the one part of the cabinet that moves. It is built about the middle of its own top. */
+export function gateBricks(): Brick[] {
+  return [
+    { x: -GATE.half - 0.5, y: -1, z: -0.4, w: GATE.half * 2 + 1, d: 0.8, h: 1, colour: STEEL, studs: false },
+    { x: -0.8, y: -3, z: -0.5, w: 1.6, d: 1, h: 2, colour: TRIM, studs: false },
+  ]
 }
