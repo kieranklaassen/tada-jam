@@ -34,7 +34,7 @@ Six objects by five actions. A tap is the essential action; every drag is an ext
 | --- | --- | --- | --- | --- | --- |
 | **Hat in the tile** | Pops out ("pok"), flips, lands on the nearest bare head. With no bare head it lands on the floor as a loose hat. | Stretches after the finger and lands where it is let go; the creature reacts to that kind of hat. | Lands on top of the hat already there: a tower of two that wobbles and slips over the eyes. | Dips back into its own hole with a short "fwump": nothing changed. | Becomes a loose hat where it lands and starts to scuttle. |
 | **Hat on a head** | Pops off, flies home and presses into its hole; the creature pats its bare head. | Hops from one head to the other; the first creature watches it go, the second reacts to it. | Makes a tower on the second head and leaves the first bare. | Goes home, as a tap does, by the path the finger drew. | Slides off as a loose hat; its creature turns to follow it with its eyes. |
-| **Loose hat on the floor** | Hops home into its hole with a double bounce. | Is picked up and worn: the bare creature ducks under it. | Joins the tower, sideways, and the tower leans. | Is pressed home with a long creak. | Skids, spins like a coin and scuttles on from there. |
+| **Loose hat on the floor** | Hops onto the nearest bare head; with no bare head it hops home into its hole with a double bounce. | Is picked up and worn: the bare creature ducks under it. | Joins the tower, sideways, and the tower leans. | Is pressed home with a long creak. | Skids, spins like a coin and scuttles on from there. |
 | **Top hat of a tower** | Leaves the tower and goes home; the tower shrinks with a "bip". | Moves over to the bare head: the tower and the bare head are both mended in one move. | Builds a tower of three, which sways, salutes and topples: every hat bounces home (a secret that works every time). | Goes home while the hat under it spins once. | Tips the whole tower: the top hat rolls off loose and the rest settles. |
 | **Bare creature** | Calls the nearest hat out of the tile: the hat pops and lands on it. With no hat in the tile it pats its head and looks into the empty holes. | The two bump bellies, boing apart and both pat their heads. | It peeks up under the other one's hat; that one lifts it like a lid. | It leans over a hole and babbles into it; the hole echoes. | Stretches like pulled foam and twangs back to its spot. |
 | **Hatted creature** | Does its own trick with exactly this hat (a like, a grump or a plain pat, by its fixed taste). | Bows and tips its hat at the bare one, who claps. | The two knock hats together with a hollow "tok" and both wobble. | Tips its hat over the tile and shakes it: nothing falls out, it shrugs. | Stretches and twangs back, holding its hat on with both hands. |
@@ -74,17 +74,66 @@ There are three ways to be off, and each shows where and why in the world, costs
 
 The crew sets off only when every head has exactly one hat and no hat is loose. Until then nothing is judged aloud: no buzzer, no cross, no sad face turned to the child, no reset and no lost piece. Being ready is a consequence too: the creatures look at one another's hats and the parade begins.
 
-For a two-year-old the first two positions cannot go wrong by a tap at all, which is the pack's exception for the youngest: a material that does not go together wrongly.
+For a two-year-old the first two positions cannot leave a hat loose or build a tower by a tap, which is the pack's exception for the youngest: a material that does not go together wrongly.
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**A cycle** is one crew. Some creatures walk in bare-headed with one tile of hats; the child gives the hats out; when the crew is as paired as it can be, the cycle's change comes (one more walks in, or one walks out, never more than one at a time); the child sets the pairs right again; and when every head has exactly one hat and no hat is loose, the crew parades. Sets are five or fewer throughout: at most five heads on the mat and five hats in a tile.
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+**The order**, easiest first, one new thing at a time and then combinations (pack: game-design, ordered-challenges-high-success.md). The ids are the ones in `LADDER` in `config.ts`. Each names a place in this game's own order and never a grade, a groep or a level.
+
+| Id | Heads at the start | Hats in the tile | The change | What is new |
+| --- | --- | --- | --- | --- |
+| `two-heads` | 2 | 2 | none | Giving a hat: one each, and it cannot come out uneven. |
+| `three-heads` | 3 | 3 | none | The same with one more head. |
+| `one-leaves` | 3 | 3 | One creature walks out and tosses its hat, which lands loose. | One fewer: a hat with no head, to send home. |
+| `spare-hat` | 2 or 3 | one more than the heads | none | Stopping: a hat stays in the tile when every head has one. |
+| `one-comes` | 2 or 3 | one more than the heads | One more creature walks in, bare. | One more: the spare hat now has a head. |
+| `one-short` | 3 or 4 | one fewer than the heads | One creature walks out and tosses its hat. | A head with no hat that waits in plain view until a hat comes free. |
+| `spares-and-one-leaves` | 3 or 4 | 5 | One walks out. | Known things together: spare hats and one fewer. |
+| `comes-and-goes` | 3 or 4 | one more than the heads | One walks out, and when the pairs are right again one more walks in. | Known things together: one fewer and then one more. |
+
+- **A harder cycle looks harder in the world**: a longer row, a hat with no head, a head with no hat. It comes by this order.
+- **What the child chooses.** The game lays no easier and harder crew side by side, because at this age one next act is offered at a time (the cue table's 3 to 4 row, cut further for a two-year-old). The harder thing a child can always pick is in the hand: a drag puts the hat on the head the child chooses, which opens swapping, towers and dealing by taste, and is more to keep track of than a tap. Nothing asks for it.
+- **How a cycle is judged.** A slip is a move that takes the world further from one each: a hat brought out when no head is bare, a second hat put on a head, a hat taken off a head that then stands bare. A cycle with no slip or one goes well, with two or three it is mixed, and with four or more it goes badly. The game cannot tell a slip from a joke, so a child who builds towers for fun meets the easier crews for longer; nothing shows it either way.
+- **How the position moves** is the template's rule (`state.ts`): one step up after a cycle that goes well, one down after one that goes badly, none after a mixed one, between cycles only. A visit put away before the parade leaves it where it was. Nothing on screen shows the position or that it moved, and no clock is read.
+- **Which crew a new position lays out.** The very next one. Nobody of the next crew is on screen while the child works: the position moves when the parade starts, and the crew that then waits in the arch is laid out after that, from the new position.
+
+**What is stored**, as small plain JSON through `ctx.storage`, saved on every change:
+
+| Field | What it holds |
+| --- | --- |
+| `v` | The version of the shape. |
+| `position` | The id of the place in the order where the next cycle starts. |
+| `finished` | The crew on screen has paraded; its last pose stays and nothing replays on load. |
+| `seed` | The state of the seeded stream that lays out crews, so the crew waiting in the arch is the same one after a put-away. |
+| `crew` | The creatures on the mat in row order, at most five: each one's kind and the hats on its head from the bottom up. |
+| `tile` | The hats of this cycle in hole order, at most five: each one's kind. |
+| `loose` | Which hats lie loose on the floor, and beside which spot. |
+| `changes` | The changes this cycle still holds, at most two, in order: `come` or `leave`. |
+| `guest` | The kind of the creature who will come, when a `come` is still held. |
+| `leaver` | Which creature of the crew will leave, when a `leave` is still held. |
+| `slips` | The slips of this cycle, capped at nine, read only when the cycle is judged. |
+| `shown` | Whether the first showing of giving a hat has been played. |
+
+A hat in the hand is saved where it came from. A scene's outcome is saved when the scene starts: the creature who comes is already in `crew`, the one who leaves is already out, and `finished` is already true when the parade begins, so a put-away in the middle loses nothing and nothing plays again. The largest legal state is five creatures and five hats and stays far under half the storage cap; a test says so. `deserialize` repairs field by field, and a version it does not know gives a fresh state.
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+Five foam creatures, cut from the same mat as the floor. Each has the same one visible want: a hat on its bare head, shown by looking at the hats and patting its head. That want is about the scene and never about the child. Each has one hat it loves, one it cannot stand and one it simply wears, and these never change (pack: game-design, characters-with-opinions.md). There are three kinds of hat: the cone, the dome and the brim.
+
+| Creature | Body and the part that is funniest | Tempo and weight | Loves | Cannot stand | Simply wears |
+| --- | --- | --- | --- | --- | --- |
+| Bop | A ball on two stubs; the whole body bounces | quick, light | the cone: spins on the spot until it sits down dizzy | the brim: it drops to its feet and Bop walks about as a hat with legs, then shoves it back up | the dome |
+| Lanky | A tall post with a long neck; the neck | slow, swaying | the brim: stretches a head taller and struts | the dome: it sits too small, and Lanky goes cross-eyed looking up at it | the cone |
+| Flop | A pear with two long ears; the ears | middling, heavy | the dome: both ears poke out from under it and flap | the cone: the ears droop and it huffs the hat askew over one eye | the brim |
+| Wig | A wide jelly loaf; the belly wobble | slow, very heavy | the dome: pats it and wobbles all over like a struck drum | the cone: it sinks point first into Wig's soft top and has to be popped back up | the brim |
+| Pip | A small bean on big flat feet; the feet | very quick, jittery | the cone: tap-dances a drum roll with its feet | the dome: it covers Pip to the feet and Pip runs in a small circle before it lifts the rim | the brim |
+
+- A hat a creature cannot stand still counts as its one hat and stays on its head: the reaction is a short act that ends with the hat worn, grumpily. A dislike is as good to watch as a like, and never stops the parade.
+- The reaction starts as the hat lands, reads from across a room, and is to exactly that hat on exactly that creature.
+- No creature is ever sad at the child, thanks the child, hurries the child or refers to the child leaving or coming back. A bare creature that has to wait waits calmly.
+- Each creature has its own babble (a pitch range and a rhythm of its own, invented and synthesized), its own walk and its own idle; no two share a motion.
 
 ## The scenes
 
