@@ -137,27 +137,65 @@ Five foam creatures, cut from the same mat as the floor. Each has the same one v
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Every scene is a list of timed beats on game time, built on the template's `scene.ts`, filled in from the state of play, between 4 and 10 seconds long, and it gives way to any touch: the touch jumps the world to the scene's end state, which was saved when the scene began (pack: game-design, endings-and-short-scenes.md). No scene plays before an action, and none plays only sometimes for the same cause.
+
+- **The first showing** (once ever; cause: the very first crew walks in). The first creature of the crew hops to the tile, stamps beside a hat, the hat pops out and lands on its own head, and it turns to look at the others and at the hats left. Filled in from: which creature leads and which hat is nearest. The crew of this one cycle has one creature and one hat more than its position lays out, so what is left for the child is the position as designed. It is a move in the world, with no word, and it never plays again (pack: game-design, guided-discovery.md).
+- **A crew walks in** (cause: the child taps the arch or the creature waiting in it). The tile of hats slides in at the front, and the creatures walk in one by one, each in its own walk, take their spots, look at the hats and pat their heads. Filled in from: the crew and tile laid out for the position.
+- **One comes** (cause: the crew is as paired as it can be, and a `come` is held). One more creature walks in through the arch, takes the free spot at the end of the row, sees the hats on the others, pats its own bare head and looks at the tile. Filled in from: the guest's kind and the hats the others wear.
+- **One leaves** (cause: the same, with a `leave` held). The creature bows, tosses its hat straight up and walks out through the arch; the hat comes down on its empty spot, wobbles and starts to scuttle. If it stood bare it shrugs and walks out. Filled in from: which creature, which hat.
+- **The parade** (the ending; cause: every head has exactly one hat, no hat is loose and no change is held). The creatures look at one another's hats, each shows its own feeling about the hat it wears, in row order, then they fall into line and march once round the mat, each in its own walk, to a marching tune made of their own voices, and come to rest in a row on the far side, facing the arch. Filled in from: who is in the crew after the changes, which hat each wears, and each one's taste for it.
+- **The tower falls** (a secret; cause: a third hat on one head, every time). The tower sways, salutes and topples, and each hat bounces home to its own hole. It is under two seconds, so it is a reaction more than a scene, and it never blocks a touch.
+
+**How a cycle ends.** The parade's last pose stays for as long as the child likes, with the hats on. If the child does nothing, nothing new starts: no next crew by itself and no countdown.
+
+**How the next one starts.** The first creature of the next crew stands waiting in the arch, in plain view, calm, and never hurries the child or sulks. The child taps it or the arch: the finished crew walks out, its tile slides away, and the new crew walks in with its own tile. On load no scene replays: the world is as the last scene left it, with the next crew waiting ("How a cycle restarts" in the guide).
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+Read from the education pack with the lookup on 2026-10-03. Each record is named by its pack id; the codes of the California foundations restart in every strand, so a code is given with its strand.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels, as the lookup prints them: age 2 is `infant-toddler`, the indicator for 23 through 36 months; age 3 is `preschool-tk`, sub-band Early (3 to 4 ½ Years); age 4 is `preschool-tk`, both the Early and the Later statement. Age mapping: official. Gap: none printed.
+
+At `infant-toddler` no record carries pairing one with one or one more and one fewer, so for a two-year-old in California the game rests on no record and names nothing in its place.
+
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-1-0-counting-and-cardinality-1-6` (`us-ca` 1.6, Counting and Cardinality): department-published-foundation, confirmed. In the game's words: the child looks at the heads and the hats and sees whether there are as many of one as of the other, or more of one.
+  Limits taken: two groups only (the heads and the hats); the Early statement, where the groups are plainly equal or plainly unequal and counting is optional. The game makes the difference plain by the pairs themselves: a bare head or a hat with no head. It never asks how many more. Left open by Limits: any number range; five or fewer is the game's own choice.
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-2-0-operations-and-algebraic-thinking-2-1` (`us-ca` 2.1, Operations and Algebraic Thinking): department-published-foundation, confirmed. In the game's words: a creature who comes makes the row bigger and one who goes makes it smaller.
+  Limits taken: from the Early statement, the direction of the change only; from the Later statement, that one thing in or out changes a small group by exactly one. The game changes its row by one creature at a time. Left open by Limits: how small "small" is; five or fewer is the game's own choice.
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-2-0-operations-and-algebraic-thinking-2-4` (`us-ca` 2.4, Operations and Algebraic Thinking): department-published-foundation, confirmed. In the game's words: the child gives the hats out so that every creature ends with the same amount, which here is always one.
+  Limits taken: the Early statement has two receivers and a few things, which is the position `two-heads`; the Later statement allows more receivers, and every row of three or more rests on it. The game takes only the smallest case, one each, and never deals a pile into shares of two or more. Left open by Limits: leftovers are not mentioned, so the spare hat is the game's own content.
+
+Read and not used, because the game speaks no number word: the `infant-toddler` foundation 2.1 of Emergent Mathematical Thinking, and the `preschool-tk` foundation 1.2 of Counting and Cardinality. Both are about number words, and no game depends on speech until the owner has tried it (a default of the guide).
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels, as the lookup prints them: ages 2 and 3 are `peuters`; age 4 is `peuters`, up to the fourth birthday, and `fase-1`, sub-band groep 1. Age mapping: convention. Gap: none printed. At age 4 the lookup also returns the `einde-po` lane, labelled end-of-primary goals; the game uses no record from it.
+
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-3` (`nl` Hoeveelheden / 3, peuter card): curriculum-institute-guidance, confirmed. In the game's words: making pairs of one with one by putting a thing by, on or with each other thing, here a hat on each head.
+  Limits taken: no counting and no number words are asked, and the game asks for none. Left open by Limits: the number of things; five or fewer is the game's own choice.
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-bewerkingen-bewerkingen-1` (`nl` Bewerkingen / 1, peuter card): curriculum-institute-guidance, confirmed. In the game's words: living through one thing or one person being added or taken away, and finding that there is then one more or one fewer.
+  Limits taken: the change is always one at a time, as in the game; no written sums or signs. Left open by Limits: any number range; five or fewer is the game's own choice.
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-4` (`nl` Hoeveelheden / 4, peuter card): curriculum-institute-guidance, confirmed. In the game's words: comparing small amounts by eye or by laying them in matching rows.
+  Limits taken: the small amounts only, compared by eye and by the pairs; counting is not named as a way to compare, and the game asks for none. The record's second case, larger amounts with a big difference, is not in the game. Left open by Limits: what "small" is; five or fewer is the game's own choice.
+- `edu.nl.fase-1.mathematics.objective.inhoudskaart-rekenen-wiskunde-fase-1-getallen-getalbegrip-hoeveelheden-tot-tenminste-20-3` (`nl` Hoeveelheden (tot tenminste 20) / 3, fase 1 card): curriculum-institute-guidance, confirmed. In the game's words: comparing amounts.
+  Limits taken: what a school offers in groep 1 and 2, with no year stated; the card's heading gives a range up to at least 20 with no upper bound, and the game stays at five or fewer inside it, as its own choice. The game takes the comparing only: it does not put amounts in order and has no larger amounts.
+
+Read and not used: the peuter card's Hoeveelheden / 1 (counting small amounts) and the fase 1 card's record on the words that go with adding and taking away, because the game neither counts aloud nor speaks.
+
+Every Dutch record here says what is offered to children, on a peuter card to those of about 2 to 4 before school and on the fase 1 card by a school, and none says what a child must be able to do.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **Pairing one thing with one thing.** The Dutch peuter card states it outright, from age 2. The California foundations named here do not: they carry it as comparing two groups and as dealing out equally, from age 3, and at age 2 not at all. The game follows the Dutch record for the pairing itself and claims for California only the comparing and the equal dealing.
+- **A change of exactly one.** The Dutch peuter card has the change one at a time from age 2. The California foundation has only the direction of the change in its Early statement and the change of exactly one in its Later statement. The game moves one creature at a time for everyone; for a three-year-old in California it is designed only from the direction of the change.
+- **How many.** Neither sets five as a top. The California foundation on dealing has two receivers in its Early statement, and the game's longer rows rest on its Later statement; the Dutch records set no number. Five or fewer comes from the game-design pack's rule for ages 2 to 4 and is the game's own choice in both.
+- **Standing.** The California records are foundations published by a state department. The Dutch records are guidance from the curriculum institute. Neither is a standard or the law, and the two are not equated.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Hats for All is designed from three California preschool and transitional kindergarten learning foundations, which are foundations published by a state department and not standards (comparing two groups, how a group changes when things are put in or taken out, and dealing out so that each receiver gets the same), and from four records of guidance by the Dutch curriculum institute, which is guidance and not law (three from its content card for peuters, on pairing one with one, on one more and one fewer, and on comparing small amounts, and one from its fase 1 card, on comparing amounts). Every record named is `confirmed`. For a two-year-old in California the game rests on no record. Nothing here says what a child has reached.
 
 ## The look
 
