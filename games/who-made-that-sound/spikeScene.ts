@@ -87,15 +87,15 @@ export class SpikeScene {
   /**
    * Cuts one named piece from a sheet of its own. A piece bigger than a small sheet gets one as big as itself,
    * a pixel for each design pixel, painted with a broader brush. A sheet is painted once and kept: a surface
-   * that changes size cuts its pieces again and paints nothing.
+   * that changes size cuts its pieces again and paints nothing. Pieces that name the same sheet (`from`) share it.
    */
-  private paper(name: string, hex: string, outline: readonly Pt[], look: Look): Sprite {
+  private paper(name: string, hex: string, outline: readonly Pt[], look: Look, from = name): Sprite {
     const box = bounds(outline), across = Math.hypot(box.w, box.h), big = across > 280, seed = seedFor(this.seed, name)
-    let sheet = this.sheets.get(name)
+    let sheet = this.sheets.get(from)
     if (!sheet) {
       const side = big ? Math.ceil(across) + 8 : 512
-      sheet = paintSheet(hex, seed, side, side, { drama: look.drama, broad: big ? 2.4 : 1 })
-      this.sheets.set(name, sheet)
+      sheet = paintSheet(hex, seedFor(this.seed, from), side, side, { drama: look.drama, broad: big ? 2.4 : 1 })
+      this.sheets.set(from, sheet)
     }
     return cutPiece(sheet, outline, seed, { scale: this.k, spread: big ? this.k : (this.k * 300) / 512, facet: look.facet, wobble: look.wobble, torn: look.torn })
   }
@@ -143,7 +143,7 @@ export class SpikeScene {
     const weave = bowl.canvas.getContext('2d')!
     weave.globalCompositeOperation = 'source-atop'
     for (let i = 0; i < 7; i++) {
-      const leaf = this.paper(`leaf ${i}`, i % 2 ? '#7fa52e' : '#c3d64f', soften(lathe([[-62, 0, 1], [-30, 10], [0, 12], [30, 10], [62, 0, 1]]), 2), { ...SCISSORS, facet: 9 })
+      const leaf = this.paper(`leaf ${i}`, i % 2 ? '#7fa52e' : '#c3d64f', soften(lathe([[-62, 0, 1], [-30, 10], [0, 12], [30, 10], [62, 0, 1]]), 2), { ...SCISSORS, facet: 9 }, `leaves ${i % 2}`)
       const slant = (i % 2 ? -1 : 1) * (0.5 + rand() * 0.2)
       weave.setTransform(Math.cos(slant) * k, Math.sin(slant) * k, -Math.sin(slant) * k, Math.cos(slant) * k, (-bowl.x - 66 + i * 22) * k, (-bowl.y - 44 + (rand() - 0.5) * 10) * k)
       weave.drawImage(leaf.canvas, leaf.x, leaf.y, leaf.w, leaf.h)

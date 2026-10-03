@@ -86,7 +86,7 @@ export function eggSpots(count: number): Rect[] {
 /** The flat stone left of the row, where the one who asks stands. */
 export const STONE: Rect = { x: 26, y: 622, w: 288, h: 74 }
 /** The one who asks, standing on the stone: room for the widest kind with both wings held out. */
-export const ASKER: Rect = spot(168, 640, 256, 236)
+export const ASKER: Rect = spot(168, 640, 256, 210)
 
 /** The basket right of the row, with the egg that stands in it. */
 export const BASKET: Rect = spot(968, FLOOR + 6, 150, 182)

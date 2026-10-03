@@ -182,7 +182,7 @@ function trace(ctx: CanvasRenderingContext2D, points: readonly Pt[]) {
 export type Cut = {
   /** Pixels for each unit of the outline. */
   scale: number
-  /** Pixels of the sheet's brushwork for each pixel of the piece: over 1 lays a small sheet's streaks broader. */
+  /** How many pixels of the piece one pixel of the sheet covers: over 1 lays the sheet's streaks broader. */
   spread: number
   /** The step and the wobble of the edge, in units (`handEdge`). */
   facet: number

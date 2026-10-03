@@ -15,7 +15,7 @@ export const HUES: Readonly<Record<Kind, string>> = { pip: '#f6b100', tok: '#e63
 export const GROWN: Readonly<Record<Kind, number>> = { pip: 118, tok: 126, hoom: 206, brrl: 250, wheep: 184, dooo: 172 }
 export const LITTLE = 0.55
 /** How wide each kind is for its height, for whoever lays figures out side by side. */
-export const WIDE: Readonly<Record<Kind, number>> = { pip: 1.22, tok: 1.05, hoom: 1.42, brrl: 0.74, wheep: 0.8, dooo: 1 }
+export const WIDE: Readonly<Record<Kind, number>> = { pip: 1.23, tok: 1.05, hoom: 1.38, brrl: 0.78, wheep: 0.82, dooo: 0.85 }
 
 export type Pose = {
   /** 0 with the wings at rest, 1 with them held out. */
@@ -78,9 +78,9 @@ const KITS: Readonly<Record<Kind, Kit>> = {
     part('deep', [[0.04, -0.1, 1], [-0.34, -0.06, 1], [0.04, 0.09, 1]], [-0.22, -0.2], { role: 'tail' }),
     ...both(part('deep', [[-0.05, 0, 1], [0.02, -0.1, 1], [0.17, 0, 1]], [0.13, -0.01], { role: 'foot' })),
     part('body', soften(lathe([[-1.06, 0, 1], [-0.84, 0.08], [-0.62, 0.2], [-0.4, 0.3], [-0.21, 0.34], [-0.08, 0.3], [-0.02, 0.17], [-0.01, 0]]), 2), [0, 0]),
-    ...both(part('deep', [[-0.045, 0, 1], [0.05, -0.01, 1], [0, 0.3, 1]], [0.29, -0.36], { role: 'wing', swing: [-0.75, -2], thin: true })),
+    ...both(part('deep', [[-0.05, 0, 1], [0.055, -0.01, 1], [0, 0.34, 1]], [0.29, -0.36], { role: 'wing', swing: [-0.75, -2], thin: true })),
     ...eyes(0.12, -0.56, 0.098),
-    part('deep', [[0, -0.1, 1], [0.46, 0.03, 1], [0, 0.11, 1]], [0.03, -0.4], { role: 'beak' }),
+    part('deep', [[-0.07, 0, 1], [0.07, -0.1, 1], [0.46, 0.03, 1], [0.07, 0.11, 1]], [0.03, -0.4], { role: 'beak' }),
   ] },
   // Big and wide: a dome broader than it is tall, small eyes far apart, two round ears and paddles for wings.
   hoom: { face: 0.1, parts: [
@@ -127,6 +127,46 @@ const KITS: Readonly<Record<Kind, Kit>> = {
   ] },
 }
 
+/** Where one piece lies: its joint in design pixels from the figure's feet, how far it is turned, mirrored or not, and squashed (a shut eye) or not. */
+export type Joint = { x: number; y: number; turn: number; flip: 1 | -1; squash: number }
+
+/** The pose as cut-out animation has it: every piece of a kind laid on its joint, in drawing order. No piece changes shape. */
+export function arrange(kind: Kind, size: number, pose: Pose): Joint[] {
+  const kit = KITS[kind], joints: Joint[] = []
+  const towards = Math.sign(pose.reach), far = Math.abs(pose.reach), slide = pose.turn * kit.face
+  for (const piece of kit.parts) {
+    const side = piece.side ?? 1, [rest, out] = piece.swing ?? [0, 0]
+    let [ax, ay] = piece.at, angle = 0, flip: 1 | -1 = 1, squash = 1
+    if (piece.role === 'wing') {
+      // Held out to both sides each wing lifts on its own side. Held out towards something, both point that way:
+      // the near one a little up, and the far one, its shoulder come round to the front and lower, a little down,
+      // so that the two open towards the thing like arms.
+      const open = side * (rest + (out - rest) * pose.wings), reaching = towards * out * (side === towards ? 1.12 : 0.84) * pose.wings
+      angle = open + (reaching - open) * far
+      if (towards !== 0 && side !== towards) { ax += towards * far * Math.abs(ax) * 1.82; ay += far * 0.14 }
+    } else if (piece.role === 'ear') angle = side * (rest + (out - rest) * Math.max(0, side * pose.turn))
+    else if (piece.role === 'neck') angle = pose.turn * 0.14
+    else if (piece.role === 'face' || piece.role === 'eye') ax += slide
+    else if (piece.role === 'pupil') ax += slide * 1.5
+    else if (piece.role === 'beak' || piece.role === 'tail') { flip = pose.turn < 0 ? -1 : 1; ax = ax * flip + (piece.role === 'beak' ? slide : 0) }
+    if (piece.role === 'eye' || piece.role === 'pupil') squash = Math.max(0.1, 1 - pose.blink)
+    // Feet stay flat on the ground when the body tips.
+    const on = piece.on === undefined ? { x: 0, y: 0, turn: piece.role === 'foot' ? 0 : pose.lean } : joints[piece.on]
+    const cos = Math.cos(on.turn), sin = Math.sin(on.turn)
+    joints.push({ x: on.x + (ax * cos - ay * sin) * size, y: on.y + (ax * sin + ay * cos) * size, turn: on.turn + angle, flip, squash })
+  }
+  return joints
+}
+
+/** The outline of every piece of a posed figure, in design pixels from its feet: what the figure covers, for a test or a later stage that asks what a finger hit. */
+export function outlines(kind: Kind, size: number, pose: Pose): Pt[][] {
+  const joints = arrange(kind, size, pose)
+  return KITS[kind].parts.map((piece, i) => {
+    const { x, y, turn, flip, squash } = joints[i], cos = Math.cos(turn), sin = Math.sin(turn)
+    return piece.cut.map(([px, py]) => [x + (px * flip * cos - py * squash * sin) * size, y + (px * flip * sin + py * squash * cos) * size] as const)
+  })
+}
+
 /** A sheet is painted this many pixels square and stands for this many design pixels of tissue. */
 const SHEET = { pixels: 512, span: 300 } as const
 const INK: Readonly<Record<'white' | 'dark', string>> = { white: '#fbf6e9', dark: '#2c2432' }
@@ -148,7 +188,7 @@ export class Figures {
   }
 
   private sheet(kind: Kind, tone: Tone, which: number): HTMLCanvasElement {
-    const key = tone === 'white' || tone === 'dark' ? tone : `${kind}/${tone}/${which % 3}`
+    const key = tone === 'white' || tone === 'dark' ? tone : `${kind}/${tone}/${which % 2}`
     let sheet = this.sheets.get(key)
     if (!sheet) {
       const hex = tone === 'white' || tone === 'dark' ? INK[tone] : tone === 'deep' ? shade(HUES[kind], -4, -0.1) : tone === 'light' ? shade(HUES[kind], 6, 0.13) : HUES[kind]
@@ -175,33 +215,12 @@ export class Figures {
 
   /** Lays one of a kind on the surface with its feet at `x`, `y`, `size` design pixels tall. Returns how many pieces it drew. Leaves the context's transform changed. */
   draw(ctx: CanvasRenderingContext2D, kind: Kind, x: number, y: number, size: number, pose: Pose): number {
-    const kit = KITS[kind], pieces = this.pieces(kind, size), unit = size * this.k
-    const placed: [number, number, number][] = []
-    const towards = Math.sign(pose.reach), far = Math.abs(pose.reach), slide = pose.turn * kit.face
-    kit.parts.forEach((piece, i) => {
-      const side = piece.side ?? 1, [rest, out] = piece.swing ?? [0, 0]
-      let [ax, ay] = piece.at, angle = 0, flip = 1, squash = 1
-      if (piece.role === 'wing') {
-        // Held out to both sides each wing lifts on its own side. Held out towards something, both point that way:
-        // the near one a little up, and the far one, its shoulder come round to the front and lower, a little down,
-        // so that the two open towards the thing like arms.
-        const open = side * (rest + (out - rest) * pose.wings), reaching = towards * out * (side === towards ? 1.12 : 0.84) * pose.wings
-        angle = open + (reaching - open) * far
-        if (towards !== 0 && side !== towards) { ax += towards * far * Math.abs(ax) * 1.82; ay += far * 0.14 }
-      } else if (piece.role === 'ear') angle = side * (rest + (out - rest) * Math.max(0, side * pose.turn))
-      else if (piece.role === 'neck') angle = pose.turn * 0.14
-      else if (piece.role === 'face' || piece.role === 'eye') ax += slide
-      else if (piece.role === 'pupil') ax += slide * 1.5
-      else if (piece.role === 'beak' || piece.role === 'tail') { flip = pose.turn < 0 ? -1 : 1; ax = ax * flip + (piece.role === 'beak' ? slide : 0) }
-      if (piece.role === 'eye' || piece.role === 'pupil') squash = Math.max(0.1, 1 - pose.blink)
-      // Feet stay flat on the ground when the body tips.
-      const [px, py, pa] = piece.on === undefined ? [0, 0, piece.role === 'foot' ? 0 : pose.lean] : placed[piece.on]
-      const wx = px + (ax * Math.cos(pa) - ay * Math.sin(pa)) * size, wy = py + (ax * Math.sin(pa) + ay * Math.cos(pa)) * size, turned = pa + angle
-      placed.push([wx, wy, turned])
-      const cos = Math.cos(turned) * unit, sin = Math.sin(turned) * unit, sprite = pieces[i]
-      ctx.setTransform(cos * flip, sin * flip, -sin * squash, cos * squash, (x + wx) * this.k + this.left, (y + wy) * this.k + this.top)
+    const pieces = this.pieces(kind, size), unit = size * this.k
+    arrange(kind, size, pose).forEach((joint, i) => {
+      const cos = Math.cos(joint.turn) * unit, sin = Math.sin(joint.turn) * unit, sprite = pieces[i]
+      ctx.setTransform(cos * joint.flip, sin * joint.flip, -sin * joint.squash, cos * joint.squash, (x + joint.x) * this.k + this.left, (y + joint.y) * this.k + this.top)
       ctx.drawImage(sprite.canvas, sprite.x, sprite.y, sprite.w, sprite.h)
     })
-    return kit.parts.length
+    return pieces.length
   }
 }
