@@ -15,6 +15,8 @@ export type Feast = {
   mouth: number
   /** Off the ground: a hiccup for every seam. */
   hop: number
+  /** The shrug at a lid that will not shut, as the customer is sent off with a misfit: 0 to 1. */
+  shrug: number
   /** The twins' longer piece pulled between them: -1 to 1. And the tin spinning under it, in radians. */
   pull: number
   spin: number
@@ -35,9 +37,10 @@ const bump = (t: number): number => Math.sin(Math.max(0, Math.min(1, t)) * Math.
 /**
  * The body's answer to exactly these pieces. `lengths` are the pieces in the order eaten; `taste` is the
  * customer's fixed taste applied to them, or nothing once the serve is long over; `sticksOut` says the order
- * was too long, so the last piece is eaten sticking out.
+ * was too long, so the last piece is eaten sticking out; `sentOff` says it was sent off with a misfit, so it
+ * shrugs as the lid comes down and will not shut.
  */
-export function feastOf(customer: Customer, lengths: readonly number[], taste: Taste | null, show: Show | null, sticksOut = false): Feast {
+export function feastOf(customer: Customer, lengths: readonly number[], taste: Taste | null, show: Show | null, sticksOut = false, sentOff = false): Feast {
   const whole = WHOLE[customer.fruit]
   const bites = show ? show.bites : lengths.length
   const lumps: Feast['lumps'] = []
@@ -45,10 +48,11 @@ export function feastOf(customer: Customer, lengths: readonly number[], taste: T
     if (bites <= index) return
     lumps.push({ at: Math.min(1, bites - index), size: Math.min(2, length / whole) })
   })
-  const feast: Feast = { lumps, mouth: 0, hop: 0, pull: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 }
+  const feast: Feast = { lumps, mouth: 0, hop: 0, shrug: 0, pull: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 }
   if (!show || show.kind !== 'serve') return feast
   const biting = bites - Math.floor(bites)
   feast.mouth = Math.max(bites < lengths.length ? bump(biting) : 0, sticksOut && show.lift > 0 ? 0.4 : 0)
+  feast.shrug = sentOff ? bump(show.lid) : 0
   if (!taste || show.taste <= 0) return feast
   const t = show.taste, easing = 1 - show.settle
   switch (taste.who) {
@@ -58,7 +62,8 @@ export function feastOf(customer: Customer, lengths: readonly number[], taste: T
       break
     case 'twins':
       feast.pull = taste.pulled === null ? 0 : (taste.pulled === 0 ? 1 : -1) * Math.sin(t * Math.PI * 6) * easing
-      feast.spin = taste.pulled === null ? 0 : t * Math.PI * 3
+      // Two whole turns, so it comes to rest the right way up.
+      feast.spin = taste.pulled === null ? 0 : t * Math.PI * 4
       feast.pleased = taste.liked ? bump(t) : 0
       break
     case 'ants': {
@@ -78,6 +83,16 @@ export function feastOf(customer: Customer, lengths: readonly number[], taste: T
       feast.pleased = taste.liked ? bump(t) : 0
       break
   }
+  return feast
+}
+
+/**
+ * What shows of a served customer on its way out, `away` of the way gone: the pieces it ate, at rest, and the
+ * pelican still hiccuping once for every seam, all the way out.
+ */
+export function leavingFeast(customer: Customer, lengths: readonly number[], away: number): Feast {
+  const feast = feastOf(customer, lengths, null, null)
+  if (customer.who === 'pelican' && lengths.length > 1) feast.hop = 7 * Math.abs(Math.sin(away * Math.PI * Math.min(6, lengths.length - 1)))
   return feast
 }
 

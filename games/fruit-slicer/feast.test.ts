@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { feastOf, wantedCount } from './feast'
+import { feastOf, leavingFeast, wantedCount } from './feast'
 import { shareLength, type Share } from './measure'
 import type { Customer, Who } from './orders'
 import { restShow, servedShow, type Show } from './scenes'
@@ -27,8 +27,23 @@ describe('what went in', () => {
 
   it('is all that stays once the serve is over, and on load: the pieces, at rest, and no taste', () => {
     const loaded = feastOf(pelican, lengths, null, null)
-    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5 }, { at: 1, size: 0.25 }], mouth: 0, hop: 0, pull: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
+    expect(loaded).toEqual({ lumps: [{ at: 1, size: 0.5 }, { at: 1, size: 0.25 }], mouth: 0, hop: 0, shrug: 0, pull: 0, spin: 0, flat: [], cross: 0, gaze: 0, tail: 0, sneeze: -1, pleased: 0 })
     expect(feastOf(pelican, lengths, taste(pelican, lengths), servedShow(2))).toMatchObject({ lumps: loaded.lumps, hop: 0, mouth: 0 })
+  })
+
+  it('shrugs as the lid comes down and will not shut, when it is sent off with a misfit, and at no other time', () => {
+    expect(feastOf(pelican, lengths, null, during({ lid: 0.5, lift: 0 }), false, true).shrug).toBeCloseTo(1)
+    expect(feastOf(pelican, lengths, null, during({ lid: 1 }), false, true).shrug).toBeCloseTo(0)
+    expect(feastOf(pelican, lengths, null, during({ lid: 0.5, lift: 0 })).shrug).toBe(0)
+    expect(feastOf(pelican, lengths, null, null, false, true).shrug).toBe(0)
+  })
+
+  it('on its way out shows what it ate, and the pelican still hiccups for every seam, all the way', () => {
+    const going = leavingFeast(pelican, lengths, 0.5)
+    expect(going.lumps).toEqual(feastOf(pelican, lengths, null, null).lumps)
+    expect(going.hop).toBeGreaterThan(3)
+    expect(leavingFeast(pelican, [len(3, 4)], 0.5).hop).toBe(0)
+    expect(leavingFeast(of('boa', { num: 5, den: 4 }), lengths, 0.5).hop).toBe(0)
   })
 
   it('is eaten sticking out when the order was too long', () => {
@@ -56,6 +71,8 @@ describe('the taste landing', () => {
     const pulled = mid(twins, 2, 0.08)(unfair, [len(3, 8), len(1, 8)])
     expect(pulled.pull).toBeGreaterThan(0.5)
     expect(pulled.spin).toBeGreaterThan(0)
+    // The tin comes to rest the right way up: whole turns.
+    expect(Math.cos(mid(twins, 2, 1)(unfair, [len(3, 8), len(1, 8)]).spin)).toBeCloseTo(1)
   })
 
   it('an ant is flattened under a piece that ends between two ants, and peels itself up', () => {

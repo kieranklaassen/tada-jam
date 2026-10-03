@@ -283,6 +283,12 @@ function boa(ctx: Ctx, dots: Dots, cast: Casting): void {
   ctx.restore()
 }
 
+/** A body's pose with what its feast adds to it: a hiccup lifts it off the ground, and a shrug gathers it up and tips it back. */
+function bodyPose(cast: Casting, member: number): CastPose {
+  const pose = cast.pose(member), feast = cast.feast
+  return feast.hop === 0 && feast.shrug === 0 ? pose : { ...pose, hop: pose.hop + feast.hop, stretch: pose.stretch + 0.14 * feast.shrug, lean: pose.lean - 0.1 * feast.shrug }
+}
+
 /** How wide a customer stands at a scale of 1, for whoever lays out the window and the queue. */
 export const WIDTH: Readonly<Record<Who, number>> = { pelican: 190, twins: 150, ants: 44, cat: 110, boa: 170 }
 
@@ -296,7 +302,7 @@ export function drawCustomer(ctx: Ctx, dots: Dots, cast: Casting, x: number, y: 
     const feast = cast.feast
     for (const member of [0, 1]) {
       const side = member === 0 ? -1 : 1
-      const pose = cast.pose(member)
+      const pose = bodyPose(cast, member)
       stand(ctx, x + side * 46 * s + feast.pull * 10 * s, y, s, pose, () => {
         // They face each other, until they turn to go.
         ctx.scale(pose.turn > 0.5 ? -1 : -side, 1)
@@ -319,7 +325,7 @@ export function drawCustomer(ctx: Ctx, dots: Dots, cast: Casting, x: number, y: 
     const gap = Math.min(44 * s, room / count)
     const k = gap / 44
     for (let member = 0; member < count; member++) {
-      const pose = cast.pose(member)
+      const pose = bodyPose(cast, member)
       const flat = Math.max(pose.flat, cast.feast.flat[member] ?? 0)
       stand(ctx, x + member * gap, y, k, { ...pose, flat: 0 }, () => antBody(ctx, pose, flat), exit)
     }
@@ -332,7 +338,7 @@ export function drawCustomer(ctx: Ctx, dots: Dots, cast: Casting, x: number, y: 
     }
     return
   }
-  const pose = cast.pose(0)
+  const pose = bodyPose(cast, 0)
   stand(ctx, x, y, s, pose, () => {
     if (pose.turn > 0.5) ctx.scale(-1, 1)
     if (cast.who === 'pelican') pelican(ctx, dots, cast)

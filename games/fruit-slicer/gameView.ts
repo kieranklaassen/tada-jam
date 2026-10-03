@@ -1,6 +1,6 @@
 import { poseOf, type Actor } from './cast'
 import { drawCustomer, type Casting } from './castFigures'
-import { feastOf, wantedCount } from './feast'
+import { feastOf, leavingFeast, wantedCount, type Feast } from './feast'
 import { dog } from './figures'
 import { MOUTH, flight, offsetOf, type FxState } from './fx'
 import type { Scenery } from './gameRun'
@@ -222,7 +222,7 @@ function ticket(ctx: Ctx, customer: Customer, x: number, top: number, s: number,
 }
 
 /** The tin on the rail. Shut, it is folded small. Open, it is exactly as long as the order, with its lid standing behind it and the whole fruit ruled into its parts on the strip under it. */
-function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: Customer): number {
+function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: Customer, up = 0, spin = 0): number {
   const { body, lid, ruler } = shape
   if (!shape.open) {
     // Folded, it says nothing of how long the order is: a small box with the creases of its folds.
@@ -246,8 +246,18 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
   const t = tried ? tried.age / tried.life : 0
   const attempt = tried && tried.kind === 'lid' ? (tried.how === 'over' ? 0.55 * Math.abs(Math.sin(t * Math.PI * 3)) * (1 - t) + 0.3 * Math.sin(t * Math.PI) : Math.sin(t * Math.PI)) : 0
   const down = Math.max(closing * bounce, attempt)
+  // In the serve the tin is lifted off its rail, with a hard shadow where it lay; and while the twins pull, it spins about its own length.
+  ctx.save()
+  if (up > 0) {
+    ctx.fillStyle = INK
+    ctx.fillRect(body.x + 5, body.y + 8, body.w, body.h)
+    const turned = Math.cos(spin), middle = body.y + body.h / 2 - up
+    ctx.translate(0, middle)
+    ctx.scale(1, Math.abs(turned) < 0.1 ? (turned < 0 ? -0.1 : 0.1) : turned)
+    ctx.translate(0, -middle - up)
+  }
   inked(ctx, poly([[lid.x, lid.y + lid.h], [lid.x + 12 * (1 - down), lid.y + lid.h * down], [lid.x + lid.w + 12 * (1 - down), lid.y + lid.h * down], [lid.x + lid.w, lid.y + lid.h]]), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
-  if (customer.written && down < 0.5) drawFraction(ctx, share, lid.x + lid.w / 2 + 6, lid.y + lid.h / 2, 17, { fill: INK, edge: WHITE, edgeWidth: 5 })
+  if (customer.written && down < 0.5 && spin === 0) drawFraction(ctx, share, lid.x + lid.w / 2 + 6, lid.y + lid.h / 2, 17, { fill: INK, edge: WHITE, edgeWidth: 5 })
   // Shut, the lid lies over the tin and what is in it is no longer seen.
   inked(ctx, rect(body.x, body.y, body.w, body.h), down >= 0.99 ? '#c9d6e6' : '#eef3f8', 5, down >= 0.99 ? dots.of(ctx, BLUE, 0.3) : undefined)
   // The sprung jaw at the end of each compartment, and the twins' divider between the two.
@@ -265,6 +275,7 @@ function tin(ctx: Ctx, dots: Dots, scenery: Scenery, shape: TinShape, customer: 
     for (let i = 0; i <= 6; i++) ctx.lineTo(part.x + part.w + (i % 2 ? 6 : 0), body.y + 5 + i * ((body.h - 10) / 6))
     ctx.stroke()
   })
+  ctx.restore()
   // The rail: the whole fruit ruled into its equal parts, the ordered ones in the fruit's tint. One row for each share.
   // One row is the strip's own height; the cat's two rows are each a little shorter than that, one under the other.
   const rowH = ruled.rows.length > 1 ? 12 : ruler.h
@@ -356,16 +367,18 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     ctx.beginPath()
     ctx.rect(WALL.x + 3, WALL.y + 3, WALL.w - 6, WALL.h - 6)
     ctx.clip()
-    drawn += customerAt(ctx, dots, departing.customer, departing.actor, { feast: feastOf(departing.customer, departing.lengths, null, null) }, x, WINDOW.y + WINDOW.h - 4, s, 540, exit)
+    drawn += customerAt(ctx, dots, departing.customer, departing.actor, { feast: leavingFeast(departing.customer, departing.lengths, last.away) }, x, WINDOW.y + WINDOW.h - 4, s, 540, exit)
     inked(ctx, rect(WINDOW.x + 168 - last.away * exit, WINDOW.y + WINDOW.h - 34 - last.hop, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
     ctx.restore()
     drawn++
   }
   const gliding = scenery.leaving
   const atWindow = game.window ?? (gliding?.whom === 'window' ? gliding.customer : null)
+  let feasting: Feast | null = null
   if (atWindow) {
     const lengths = scenery.ending ? scenery.ending.result.parts.flatMap((part) => part.pieces.map((piece) => piece.length)) : eaten(game.world).map((piece) => piece.length)
-    const feast = feastOf(atWindow, lengths, scenery.ending?.taste ?? null, scenery.show?.kind === 'showing' ? null : scenery.show, scenery.ending?.result.kind === 'over')
+    const feast = feastOf(atWindow, lengths, scenery.ending?.taste ?? null, scenery.show?.kind === 'showing' ? null : scenery.show, scenery.ending?.result.kind === 'over', scenery.ending?.outcome === 'badly')
+    feasting = feast
     drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show }, windowX(atWindow.who), WINDOW.y + WINDOW.h - 4, 0.92 * SIZE[atWindow.who], 540)
     if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + 262, WINDOW.y + 34, atWindow.shares.length > 1 || atWindow.who === 'boa' ? 0.62 : atWindow.written ? 0.82 : 1)
     // Served, and the serve over: it holds its tin, shut, by its feet.
@@ -373,6 +386,18 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
       inked(ctx, rect(WINDOW.x + 168, WINDOW.y + WINDOW.h - 34, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
       drawn++
     }
+  }
+  // The glider's last beat: one feather drifts down where the pelican stood.
+  if (gliding && scenery.show && scenery.show.kind === 'glider' && scenery.show.feather > 0 && scenery.show.feather < 1) {
+    const f = scenery.show.feather, from = gliding.whom === 'window' ? windowX('pelican') : QUEUE[gliding.whom].x + 56
+    ctx.save()
+    ctx.translate(from + 40 + 26 * Math.sin(f * Math.PI * 3), WALL.y + 50 + (WALL.h - 66) * f)
+    ctx.rotate(0.7 * Math.cos(f * Math.PI * 3))
+    inked(ctx, oval(0, 0, 15, 5), WHITE, 3)
+    ctx.fillStyle = INK
+    ctx.fillRect(-15, -1, 34, 2)
+    ctx.restore()
+    drawn += 2
   }
   game.queue.forEach((customer, index) => {
     const box = QUEUE[index], ants = customer.who === 'ants'
@@ -395,7 +420,9 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   // The tin jolts on its rail when it is poked, struck or skidded on.
   ctx.save()
   ctx.translate(fx.jolt * 5, 0)
-  if (shape && game.window) drawn += tin(ctx, dots, scenery, shape, game.window)
+  // In the serve the tin is lifted off its rail, and what is in it with it.
+  const up = serving ? 26 * scenery.show!.lift : 0
+  if (shape && game.window) drawn += tin(ctx, dots, scenery, shape, game.window, up, serving && feasting ? feasting.spin : 0)
   ctx.restore()
   if (serving && shape) {
     let eatenSoFar = 0
@@ -404,7 +431,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
       for (const piece of part.pieces) {
         const left = 1 - Math.max(0, Math.min(1, scenery.show!.bites - eatenSoFar))
         // Under a lid that has shut flat nothing shows; a lid that bounces on what sticks out leaves it in view.
-        if (left > 0.02 && !(scenery.show!.lid >= 0.99 && scenery.ending!.result.kind !== 'over')) bar(ctx, piece.fruit, { x, y: TIN.bodyY + (TIN.bodyH - TIN.pieceH) / 2, w: piece.length * PX * left, h: TIN.pieceH })
+        if (left > 0.02 && !(scenery.show!.lid >= 0.99 && scenery.ending!.result.kind !== 'over')) bar(ctx, piece.fruit, { x, y: TIN.bodyY + (TIN.bodyH - TIN.pieceH) / 2 - up, w: piece.length * PX * left, h: TIN.pieceH })
         x += piece.length * PX
         eatenSoFar++
         drawn++
