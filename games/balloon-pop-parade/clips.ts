@@ -80,7 +80,8 @@ export function rest(kind: KindName, holds: boolean, reach: number, time: number
   pose.blink = blinkAt(kind, time, seed)
   if (holds) {
     pose.armR = reach
-    pose.armL = 0.2
+    // The crab never lets a claw hang: its free one stays up beside the one that holds the string.
+    pose.armL = kind === 'crab' ? reach : 0.2
     pose.nod = -0.3
     pose.headTurn = -0.14
     pose.tilt = -0.07
@@ -309,26 +310,29 @@ function hippo(id: ClipId, t: number, pose: Pose): void {
 }
 
 function crab(id: ClipId, t: number, pose: Pose, reach: number): void {
+  // Whatever a crab does, its claws stay up, and only one dips at a time: let down, they would stick out sideways
+  // into the friend beside it, and two dipped towards each other would meet.
   if (id === 'catch') {
     // Snip, snip, and a quick shuffle.
     pose.armR = reach - hump(t, 0.02, 0.1) * 0.6 - hump(t, 0.14, 0.22) * 0.5
-    pose.armL = 0.4 + hump(t, 0.25, 0.5) * 1.2
+    pose.armL = reach - hump(t, 0.25, 0.5) * 0.5
     pose.x += Math.sin(t * 30) * 0.1 * hold(t, 0.2, 0.25, 0.4, 0.55)
     pose.puff = 1 + hump(t, 0.05, 0.5) * 0.25
   } else if (id === 'refuse') {
     // The stalks lean to look, a pinch by mistake, and the eyes shoot up.
     pose.wag = hold(t, 0, 0.14, 0.22, 0.3) * 0.5
-    pose.armL = 0.5
-    pose.armR = 1.0 + hump(t, 0.24, 0.36) * 0.9
-    pose.armRForward = hump(t, 0.24, 0.4) * 0.5
+    pose.armL = reach
+    // The claw comes down and forwards onto the balloon, and never out towards the friend beside it.
+    pose.armR = reach - hump(t, 0.24, 0.36) * 0.7
+    pose.armRForward = hump(t, 0.2, 0.4) * 1.1
     pose.puff = 1 + hold(t, 0.33, 0.4, 0.62, 0.82) * 0.95
     pose.squash += -hump(t, 0.33, 0.45) * 0.12 + wobble(t, 0.45, 34, 9) * 0.05
   } else if (id === 'popped') {
     // It hides its eyes behind its claws, then peeks. Quick, like everything it does.
     t *= 1.22
     pose.puff = 1 - hold(t, 0, 0.12, 0.58, 0.7) * 0.75 - hold(t, 0.58, 0.7, 0.85, 1.02) * 0.3
-    pose.armL = pose.armR = 0.6 + hold(t, 0, 0.14, 0.62, 0.95) * 1.7
-    pose.armLForward = pose.armRForward = hold(t, 0, 0.14, 0.62, 0.95) * 0.9
+    pose.armL = pose.armR = reach - 0.25
+    pose.armLForward = pose.armRForward = hold(t, 0, 0.14, 0.62, 0.95) * 1.2
     pose.squash += -hold(t, 0, 0.1, 0.6, 0.9) * 0.12
   } else if (id === 'poke') {
     pose.x += hump(t, 0.04, 0.2) * 0.28 - hump(t, 0.22, 0.4) * 0.2
@@ -354,8 +358,12 @@ function crab(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.lean += Math.cos(step * Math.PI) * 0.07 * hold(t, 0, 0.08, 1.0, 1.1)
     pose.wag = Math.sin(step * Math.PI) * -0.3
   } else {
+    // A wave: one claw clacking, a bob forwards to see who it was, a small step to the side and back.
     pose.armL = reach - Math.abs(Math.sin(t * 20)) * 0.5 * hold(t, 0, 0.08, 0.45, 0.6)
-    pose.armR = 0.5
+    pose.armR = reach
+    pose.bow = hump(t, 0, 0.5) * 0.24
+    pose.squash += -hump(t, 0, 0.3) * 0.1
+    pose.x += hump(t, 0.05, 0.3) * 0.14 - hump(t, 0.3, 0.55) * 0.1
   }
 }
 

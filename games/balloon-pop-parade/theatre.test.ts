@@ -119,7 +119,9 @@ describe('a bunch the child sends', () => {
     theatre.paint(painter, VIEW)
     const mine = frame.balloons.filter((balloon) => balloon.y < 2 && balloon.y > GROUND + 2)
     expect(mine).toHaveLength(1)
-    expect(frame.poses.get('friend-0')!.armL).toBeLessThan(0.6)
+    // It stands as one that has its balloon: its free arm down (the crab's claws stay up), its eyes on the balloon and no longer on the sky.
+    if (kind !== 'crab') expect(frame.poses.get('friend-0')!.armL).toBeLessThan(0.6)
+    expect(frame.poses.get('friend-0')!.headTurn).toBeLessThan(-0.05)
   })
 
   it.each(KINDS)('is refused by a %s of another colour in its own way, and nothing is lost', (kind) => {
