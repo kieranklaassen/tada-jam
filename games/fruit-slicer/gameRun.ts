@@ -174,7 +174,11 @@ export class GameRun {
       const first = trail.find((sample) => sample.t >= lastOne.t - SPEED_WINDOW) ?? lastOne
       const dt = lastOne.t - first.t
       const v = dt > 0.001 ? { x: (lastOne.at.x - first.at.x) / dt, y: (lastOne.at.y - first.at.y) / dt } : { x: 0, y: 0 }
-      const result = held.ids.length === 1 && Math.hypot(v.x, v.y) >= FLING_SPEED ? fling(this.game, held, at, v) : drop(this.game, held, at)
+      // Let go over a thing, the piece is given to that thing, however fast the hand was going: a child who hurries to the
+      // tin has still reached the tin. Only a piece let go at speed over bare wood or the wall is thrown.
+      const over = thingAt(this.game, at, held.ids).thing
+      const bare = over === 'board' || over === 'shelf' || over === 'counter' || over === 'wall' || over === 'nothing'
+      const result = bare && held.ids.length === 1 && Math.hypot(v.x, v.y) >= FLING_SPEED ? fling(this.game, held, at, v) : drop(this.game, held, at)
       this.take(result.game, result.events)
       return
     }

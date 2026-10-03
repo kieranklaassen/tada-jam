@@ -44,7 +44,7 @@ function expectSound(game: Game, where: string): void {
     expect(one.box.x + one.box.w, `${where}: piece ${one.piece.id} runs off its slab`).toBeLessThanOrEqual(slab.x + slab.w + 0.01)
     expect(one.box.y, where).toBeGreaterThanOrEqual(slab.y)
     expect(one.box.y + one.box.h, where).toBeLessThanOrEqual(slab.y + slab.h)
-    for (let b = a + 1; b < boxes.length; b++) expect(overlap(one.box, boxes[b].box), `${where}: pieces ${one.piece.id} and ${boxes[b].piece.id} cross`).toBeLessThan(0.01)
+    for (let b = a + 1; b < boxes.length; b++) expect(overlap(one.box, boxes[b].box), `${where}: pieces ${one.piece.id} (${JSON.stringify(one.piece.place)}) and ${boxes[b].piece.id} (${JSON.stringify(boxes[b].piece.place)}) cross, for ${game.window?.who}`).toBeLessThan(0.01)
   }
   // The customers are always ones the rules could have laid out, and nothing is finished with nobody there.
   for (const customer of [game.window, ...game.queue]) if (customer) expect(inRange(customer), where).toEqual([])
@@ -92,7 +92,7 @@ function monkey(seed: number, touches: number, start: Game = freshGame(null, see
     for (const event of run.happened) seen.add(event.kind === 'setDown' ? `setDown:${event.how}` : event.kind === 'called' ? `called:${event.did}` : event.kind === 'ending' ? `ending:${event.how}${event.ending.glider ? ':glider' : ''}` : event.kind === 'rolled' ? `rolled:${event.on}` : event.kind === 'bounce' ? `bounce:${event.off}` : event.kind)
     run.happened = []
   }
-  // First a short tour of the cells that chance finds least: a piece flung at a whole fruit, and the roller over the crate.
+  // First a short tour of the cells that chance finds least: a piece flung at a whole fruit and at the tin, and the roller over the crate.
   {
     const first = shown(run.game.world, tinAt(run.game)).find(({ piece }) => piece.place.on === 'board')
     if (first) {
@@ -110,6 +110,12 @@ function monkey(seed: number, touches: number, start: Game = freshGame(null, see
     run.press(mid(ROLLER), 2)
     run.move(mid(CRATE), 2.5)
     run.lift()
+    note()
+    // And a piece thrown at the tin of a customer who has just stepped up.
+    run.tap(mid(QUEUE[0]))
+    note()
+    const loose = shown(run.game.world, tinAt(run.game)).find(({ piece }) => piece.place.on === 'board')
+    if (loose) throwAt(mid(loose.box), { x: RAIL_BOX.x + 30, y: RAIL_BOX.y + 60 }, 3)
     note()
     expectSound(run.game, `seed ${seed}, the tour`)
   }

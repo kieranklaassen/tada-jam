@@ -116,12 +116,16 @@ export function boxOf(piece: Piece): Box | null {
 export function shown(world: World, tin: TinShape | null = null): { piece: Piece; box: Box }[] {
   const out: { piece: Piece; box: Box }[] = []
   if (tin) {
+    // Each compartment's pieces lie end to end from its left edge. What sticks out of one compartment pushes what
+    // lies in the next along, so nothing in a tin ever lies over anything else.
+    let end = -Infinity
     tin.parts.forEach((part, index) => {
-      let x = part.x
+      let x = Math.max(part.x, end)
       for (const piece of inTin(world, index)) {
         out.push({ piece, box: { x, y: TIN.bodyY + (TIN.bodyH - TIN.pieceH) / 2, w: piece.length * PX, h: TIN.pieceH } })
         x += piece.length * PX
       }
+      end = x
     })
   }
   for (let lane = LANES - 1; lane >= 0; lane--) for (const piece of onLane(world, lane)) out.push({ piece, box: boxOf(piece)! })

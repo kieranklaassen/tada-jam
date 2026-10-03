@@ -99,13 +99,17 @@ function awning(ctx: Ctx, time: number, flap: number): number {
   return SCALLOPS
 }
 
-function crate(ctx: Ctx, dots: Dots, rock: number): number {
+function crate(ctx: Ctx, dots: Dots, rock: number, ordered: Fruit | null, time: number): number {
   ctx.save()
   ctx.translate(CRATE.x + CRATE.w / 2, CRATE.y + CRATE.h)
   ctx.rotate(rock * 0.05)
   ctx.translate(-CRATE.w / 2, -CRATE.h)
-  // The ends of three fruits show over the top slat: the crate is where fresh fruit comes from.
-  FRUITS.forEach((fruit, i) => bar(ctx, fruit, { x: 14 + i * 40, y: -16 - 4 * i, w: 32, h: 40 + 4 * i }))
+  // The ends of three fruits show over the top slat: the crate is where fresh fruit comes from. The kind that is
+  // on order stands up out of it and bobs: that is the one a tap will bring.
+  FRUITS.forEach((fruit, i) => {
+    const up = fruit === ordered ? 22 + 4 * Math.sin(time * 5) : 0
+    bar(ctx, fruit, { x: 14 + i * 40, y: -12 - up, w: 32, h: 38 + up })
+  })
   inked(ctx, rect(0, 22, CRATE.w, CRATE.h - 22), '#d9a441', 5, dots.of(ctx, RED, 0.3))
   for (let slat = 1; slat < 3; slat++) inked(ctx, rect(0, 22 + (slat * (CRATE.h - 22)) / 3, CRATE.w, 0.01), null, 4)
   ctx.restore()
@@ -362,7 +366,7 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
     drawn += ticket(ctx, customer, box.x + (long ? 8 : 122), box.y + 30, long ? 0.5 : customer.shares.length > 1 ? 0.5 : customer.written ? 0.54 : 0.6, true)
   })
   drawn += awning(ctx, scenery.time, fx.flap)
-  drawn += crate(ctx, dots, fx.rock)
+  drawn += crate(ctx, dots, fx.rock, game.window && !game.finished ? game.window.fruit : null, scenery.time)
   // The tin on the rail. While the serve plays it is still there, shut on what was served, and empties as the
   // customer eats; what it held is read from the ending, since the game has already moved on.
   const serving = scenery.ending !== null && scenery.show !== null && scenery.show.kind !== 'glider' && game.window !== null

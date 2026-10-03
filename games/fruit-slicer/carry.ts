@@ -16,8 +16,8 @@ import { LANES, onLane, pieceOf, remove, roll, rowOf, setRowOnBoard, setOnShelf,
 /** What the finger holds: the pieces of the row, left to right, where each was drawn, and how far the finger is from the first one's corner. */
 export type Held = { ids: number[]; boxes: Box[]; dx: number; dy: number }
 
-/** A piece let go faster than this, in stage units a second, is flung. */
-export const FLING_SPEED = 600
+/** A piece let go faster than this, in stage units a second, over bare wood or the wall, is flung. Let go over a thing, it is given to that thing however fast the hand was going. */
+export const FLING_SPEED = 900
 /** How long a flung piece is in the air: it comes down this many seconds of its speed away, no nearer and no further than these. */
 export const FLIGHT_SECONDS = 0.4
 export const FLIGHT_REACH = [120, 1100] as const

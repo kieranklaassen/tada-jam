@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { RAIL, WHOLE } from './measure'
-import { BOARD, COUNTER, CRATE, DOG, LANE_H, PAGE, PIECE_H, PX, ROW_H, SHELF_BOX, WALL, X0, boxOf, fit, inside, laneTop, rowTop, shown, toStage, under, type Box } from './stage'
+import { BOARD, COUNTER, CRATE, DOG, LANE_H, PAGE, PIECE_H, PX, ROW_H, SHELF_BOX, WALL, X0, boxOf, fit, inside, laneTop, rowTop, shown, tinShape, toStage, under, type Box } from './stage'
 import { LANES, SHELF, cut, emptyWorld, giveToTin, landFruit, setOnShelf } from './world'
 
 const overlap = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
@@ -62,7 +62,24 @@ describe('where a piece is drawn', () => {
     expect(within(left.box, BOARD)).toBe(true)
   })
 
-  it('shows nothing for a piece in a tin, which the toy does not have', () => {
+  it('never lays one piece of a tin over another: what sticks out of the first compartment pushes the second along', () => {
+    const shape = tinShape([600, 600], WHOLE.long)
+    const second = landFruit(made.world, 'long')
+    const more = cut(second.world, second.id, 900)
+    if (more.kind !== 'cut') throw new Error('no cut')
+    // A piece half as long again as its compartment in the first, and a short one in the second.
+    const tinned = giveToTin(giveToTin(more.world, more.left, 0), made.left, 1)
+    const boxes = shown(tinned, shape).filter(({ piece }) => piece.place.on === 'tin')
+    expect(boxes.map(({ piece }) => piece.id)).toEqual([more.left, made.left])
+    expect(boxes[0].box.x).toBe(X0)
+    expect(boxes[1].box.x).toBeCloseTo(X0 + 900 * PX)
+    expect(overlap(boxes[0].box, boxes[1].box)).toBe(false)
+    // With the first compartment not over-full, the second starts at its own left edge.
+    const neat = shown(giveToTin(made.world, made.left, 1), shape).find(({ piece }) => piece.place.on === 'tin')!
+    expect(neat.box.x).toBeCloseTo(X0 + 600 * PX)
+  })
+
+  it('shows a piece in a tin only where there is a tin', () => {
     const tinned = giveToTin(made.world, made.left, 0)
     expect(boxOf(tinned.pieces.find((piece) => piece.id === made.left)!)).toBeNull()
     expect(shown(tinned).map(({ piece }) => piece.id)).toEqual([made.right])

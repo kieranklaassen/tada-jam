@@ -135,6 +135,16 @@ describe('carrying', () => {
     expect(ids(run)).toContain('catch')
   })
 
+  it('gives a piece to the thing it is let go over, however fast the hand was going: a child who hurries to the tin has reached the tin', () => {
+    const { run } = withCut(-400)
+    run.press({ x: X0 + 30, y: NEAR }, 0)
+    run.move({ x: TIN_AT.x, y: TIN_AT.y + 80 }, 0.2)
+    run.move(TIN_AT, 0.22)
+    run.lift()
+    expect(inTin(run.game.world, 0)).toHaveLength(1)
+    expect(ids(run)).toContain('spring')
+  })
+
   it('carries the roller and rolls what it is let go over: parts into a fruit when an order is waiting', () => {
     const run = fresh()
     run.tap(mid(QUEUE[0]))

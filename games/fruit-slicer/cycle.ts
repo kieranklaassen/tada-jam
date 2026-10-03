@@ -147,7 +147,8 @@ export function give(game: Game, id: number, part: number): { game: Game; given:
   const customer = game.window, piece = pieceOf(game.world, id)
   if (!customer || game.finished || !piece) return { game, given: null }
   const compartment = Math.max(0, Math.min(tinParts(customer).length - 1, Math.round(part)))
-  if (tinTotal(game.world, compartment) + piece.length > RAIL) {
+  // The rail is as long as the board: what would run off its end, counting every compartment, slides off onto the shelf.
+  if (tinParts(customer).reduce((sum, _, part) => sum + tinTotal(game.world, part), 0) + piece.length > RAIL) {
     const world = setOnShelf(game.world, id).world
     return { game: { ...game, world }, given: { opened: false, firstShowing: null, strays: [], slidOff: true, result: served(world, customer), ending: null } }
   }
