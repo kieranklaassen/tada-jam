@@ -33,7 +33,11 @@ describe('what the stuff is', () => {
   it('holds no more than the peel can, and a pour too many runs off without changing anything', () => {
     const full = tipAll(null, ...Array<Ingredient>(MOST).fill('flour'), ...Array<Ingredient>(MOST).fill('water'))
     expect(tip(full, 'flour')).toEqual({ load: full, effect: 'flour-over' })
-    expect(tip(full, 'water')).toEqual({ load: full, effect: 'water-over' })
+    const washed = tip(full, 'water')
+    expect(washed.effect).toBe('water-over')
+    expect(washed.load, 'water over a full peel takes a scoop of flour with it').toMatchObject({ flour: MOST - 1, water: MOST })
+    expect(kindOf(raw(washed.load))).toBe('batter')
+    expect(tip(washed.load, 'water')).toEqual({ load: washed.load, effect: 'water-over' })
     const once = tipAll(null, 'bubbly')
     expect(tip(once, 'bubbly')).toEqual({ load: once, effect: 'burp' })
   })

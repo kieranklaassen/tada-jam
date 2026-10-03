@@ -105,12 +105,16 @@ function added(stuff: Stuff, change: Partial<Stuff>): Stuff {
   return { ...stuff, ...change, work: Math.floor(stuff.work / 2), long: false }
 }
 
-/** Tip an ingredient onto the peel. Onto a bread it slides or rolls off and the bread stays as it is. */
+/** Tip an ingredient onto the peel. Onto a bread it slides or rolls off and the bread stays as it is. A pour too many runs off the edge. */
 export function tip(load: Load, what: Ingredient): Done {
   if (load && !load.raw) return { load, effect: 'slides-off' }
   const stuff = load ?? EMPTY
   if (what === 'flour') return stuff.flour >= MOST ? { load, effect: 'flour-over' } : { load: added(stuff, { flour: stuff.flour + 1 }), effect: 'heap' }
-  if (what === 'water') return stuff.water >= MOST ? { load, effect: 'water-over' } : { load: added(stuff, { water: stuff.water + 1 }), effect: 'pour' }
+  if (what === 'water') {
+    if (stuff.water < MOST) return { load: added(stuff, { water: stuff.water + 1 }), effect: 'pour' }
+    // Over the edge. From a full peel the water takes a scoop of flour with it, so what is left is wetter: batter can always be reached.
+    return stuff.flour >= MOST ? { load: added(stuff, { flour: stuff.flour - 1 }), effect: 'water-over' } : { load, effect: 'water-over' }
+  }
   if (what === 'bubbly') return stuff.bubbly ? { load, effect: 'burp' } : { load: added(stuff, { bubbly: true }), effect: 'plop' }
   return { load: { ...stuff, seeds: true }, effect: 'scatter' }
 }
