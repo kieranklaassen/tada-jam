@@ -3,12 +3,12 @@
 
 ## Status
 
-- Stage: gates, being run. The game is built on the toy; the last gates (five enforced audit runs on the final build, the frame CPU of the game, the built-asset checks on the final build) are under way and their results are not in this block yet. This run did steps 5 to 9 of the guide: the cycle, the grid with a motion and a sound for every cell, the scenes, the characters, the idle ladder, the frame-budget test, the intersection audit, the logged passes and the cold playtest proxy.
-- Sheet: the game stands on the sheet as it is at commit `0d7b73aeba9ec80dd26125ab51d74019b8733392`. The hash of its sheet part is `b9246e4ee04de9ec7609a16a144b0a7d4bf0b41daa88105189cb00a2d3c4f19c`. Rounds 1, 2 and 3 are handled (11, 3 and 2 findings by checkers B, D and E; every replacement pasted as it stands, none disputed). Round 4 has not come back. The sheet has two sentences of the builder's own that changed after round 3 read it, listed below.
+- Stage: gates. The game is built on the toy and the gates are run as far as this machine takes them: the four source checks, the build with both built-asset checks, and the intersection audit, enforced and clean. This run did steps 5 to 9 of the guide: the cycle, the grid with a motion and a sound for every cell, the scenes, the characters, the idle ladder, the frame-budget test, the intersection audit, the logged passes and the cold playtest proxy.
+- Sheet: the game stands on the sheet as it is at commit `98411886c92c3cf9a5697034f94e73e3b92785f0`. The hash of its sheet part is `19aadf6a341f31a1b6af176201e0719732b66ab6cd276b90adab37e3a03534f6`. Rounds 1 to 4 are handled (11, 3, 2 and 1 findings by checkers B, D, E and F; every replacement pasted as it stands, none disputed). Round 5 has not come back. Nothing in the sheet part differs from what round 4 read but its one paste.
 - Look in use: the first reserved look, Garden-toy plastic. The owner has been shown the toy and has not answered, so the game is built on at the builder's own risk: everything that is not drawing is outside the view (`game.ts`, `yardMotion.ts`, `scenes.ts` and the rules), and a rejected look costs `stage.ts`, `yardView.ts` and the model files.
 - Renderer: three.js (raw). The fullest yard is 37 draw calls and about 64,000 triangles with a stream running; no shadow maps and no post pass.
 - What the Mount shows: the game, at `?chrome=0#/play/fire-truck-hero`. `seed=<n>` fixes its random stream for stills. `spike=1` shows the fullest yard standing still and taking no touch.
-- Open: sheet ready for check, round 4
+- Open: sheet ready for check, round 5
 - Open: the owner's answer on the look and the toy.
 - Open: two requests to the lead, below.
 - Not run, and why: the shared perf probe (it launches an installed Chrome by channel, which this machine has not got) and any frame rate (no graphics card). The intersection audit was run with this machine's own Chromium, by pointing Playwright's browser folder at it from outside the repository.
@@ -28,16 +28,11 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 1. **The registry row** for the look, in section 3 of `docs/art-direction.md`, and the ledger row to `claimed` after the merge. The text of the row is at the end of `ART.md`.
 2. **The frame rates**, in WebKit and in throttled Chrome and at four times the pixels, on a real graphics card. The game reads the `tier` query. Everything measured here was on a software renderer.
 
-### What changed in the sheet after round 3
+### What changed in the sheet after round 4
 
-**The two replacements of round 3**, pasted from the checker's report without a change, in commit `0d7b73a`: both under "Where the two differ", so that what is said of California at age 2 and of the Dutch peuter card is said of the records the sheet names and of no others. Neither touches the mechanic, the error, the designed order or the saved state, so nothing in the rules was reopened.
+**The one replacement of round 4**, pasted from the checker's report without a change: the cat's fixed taste in "The characters and their fixed tastes" now says of a fire gone out what the fire's ending says, that she looks at the wet logs, then at the truck, and turns her back with her tail up. She does not walk off, and her stored spot does not change. That is what the game already did, so nothing in the rules or the motion changed.
 
-**Two sentences of the builder's own, changed after round 3 read the sheet**, for round 4 to check. Both are in "The scenes":
-
-1. The fire's ending: "A cat who sat by the fire looks at the wet logs, then at the truck, and turns her back with her tail up. The truck settles on its springs, its nozzle droops and its light stops." in place of "Whoever is in the yard comes to look, each in its own way: the cat stalks round the wet ring, the snail sets off toward it, the duck waddles through the puddle. The truck settles on its springs and its light stops." Reason: no arrangement puts the snail or the duck in a yard with the fire, and the cat's part is what her fixed taste already says.
-2. The duck's ending: "paddles along its own side of the pool, one way and back the other" in place of "paddles a lap round whatever else floats there". Reason: a lap round the boat would take the duck through the pool's wall; on its own side it meets nothing.
-
-Round 3 read the gate "straight ahead of the truck" and found that it contradicts nothing.
+Round 4 read the builder's two sentences in "The scenes" (the fire's ending and the duck's) and the gate "straight ahead of the truck". The duck's contradicts nothing; the fire's was the cause of the one finding, now pasted.
 
 **One word still open from round 1.** The cat climbs onto the truck's roof "with a scrabble of claws on tin", as pasted. In the look the truck is plastic. And where she sits is the hose reel at the back of the truck, which is the one place on it clear of the light and the nozzle.
 
@@ -110,11 +105,23 @@ Rerun after the fixes, the lists are: run one, item 5 only; run two, item 2 only
 
 One run each. The game's own work does not depend on the pixel ratio, so the first row, with three times the frames, is the better reading: under the jam's 8 ms at 6x, with little to spare. The two rows at a pixel ratio of 2 hold about a hundred frames each, so their 95th percentile is the fifth-worst frame and mostly measures the host.
 
-Frame CPU for the game itself, in the whole garden, is not taken yet: it follows the audit runs below, in the next commit.
+**Frame CPU of the game**, same method, on the final build: the whole garden with a stream held on the wheel and swept across every thing, and a honk now and then. Tier 0 pinned, viewport pixel ratio 1, renderer ANGLE on SwiftShader, 37 draw calls.
+
+| Throttle | Frames | Median | 95th percentile | Slowest frame |
+| --- | --- | --- | --- | --- |
+| 6x | 302 | 8.1 ms | 15.8 ms | 35 ms |
+| 6x | 308 | 8.3 ms | 14.9 ms | 28 ms |
+| 4x | 294 | 5.4 ms | 10.1 ms | 19 ms |
+
+This is over the jam's 8 ms at 6x, about twice the toy's reading. The toy drew 10 calls and the whole garden draws 37, and on the software renderer under throttle a frame is a tenth of a second long, so every spring takes its full number of short steps: the reading says the game costs more than the toy, and does not say what it costs on a tablet. That is the lead's to measure, and if it is too much the first thing to shed is draw calls: each animal and each thing is three to six mouldings that could be fewer.
+
+One finding of this probe is fixed: before everything was drawn once at the start, the first gulp into the pool, the first steam and the first ripple each cost one frame of 300 to 460 ms at 6x. The slowest frame is now 35 ms.
 
 **The intersection audit.** `scripts/intersections/games/fire-truck-hero.ts` has 15 moments that reach every yard of the order from a saved state: each thing with a gulp, its fill, too much, a sweep and water from a neighbour; each ending; the worm; the cat's walk, her jump to the truck and the honk that sends her off; the marooned cat; the bell, the latch and the drive; a touch in the middle of a drive; and a rest. Water in the air, steam, ripples, shadows, the idle ring and the ghost hand are not audited: they fly through one another or are flat decals. What the audit cannot read is covered by tests on the model: `places.test.ts` (no way round passes through a thing), `layout.test.ts` (the truck's lane crosses no spot), `yardMotion.test.ts` (the snail's goal is clear of everything) and `thingMotion.test.ts` (every pose stays in bounds).
 
-Runs so far: 56 findings on the first run, then 12, 3 and 1 as each set was fixed, and none on the fifth, with 24 allowed. The audit is set to `enforce: true`. The five `--ci` runs on the final build, two of them under CPU load, are under way as this is written; their result follows in the next commit.
+Runs: 56 findings on the first run, then 12, 3 and 1 as each set was fixed, and none on the fifth. Then `--ci` runs with `enforce: true`: of a first five, four were clean and one caught the cat's tail brushing the fire's ring of pebbles as she walked past, by 6 percent. She was given a wider berth, and six more runs were clean, two of them under CPU load. On the final build, three more runs, the third under load: clean every time, with the same 815 samples, 50 pieces, 25 allowed contacts and no open finding. The depth of a contact differs a little from run to run, because each moment starts from a reload and the samples then fall at slightly different moments of the animals' idle moves; that is why a contact near the threshold showed in one run of five, and why the cat now keeps well clear.
+
+One fault the audit could not see: for one build the yard that arrives after a drive was left out of the scene, so nothing stood in it and nothing could meet. The audit was clean. Its count of pieces fell from 50 to 31, and that gave it away.
 
 ## For the pull request
 
@@ -136,7 +143,7 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### The learning claim
 
-As the sheet has it after three rounds of its check, with round 4 still to come: Fire Truck Hero is designed from five learning foundations published by California state departments for infants and toddlers and for preschool and transitional kindergarten, which are foundations and not standards, and from five bullets of the content cards of SLO, the Dutch curriculum institute, four for peuters and one for fase 1, which are guidance and not law. All ten records printed `confirmed` in the lookup on 2026-10-03; read them again on the day of the pull request. What the game is designed from them to offer is cause and effect with water. Guessing what the water will do and finding out by trying it is taken from the California foundations. Filling and the force of water are taken from the Dutch cards for peuters. Growing is taken from both: in California as watering that helps a plant grow, from age 3, and in the Netherlands as a plant that grows and flowers on the peuter card and as a plant's need for water on the fase 1 card. Its fire is a story and rests on no record. The records are named by pack id under "The records" in `ART.md`. Nothing in the game says what a child has reached.
+As the sheet has it after four rounds of its check, with round 5 still to come: Fire Truck Hero is designed from five learning foundations published by California state departments for infants and toddlers and for preschool and transitional kindergarten, which are foundations and not standards, and from five bullets of the content cards of SLO, the Dutch curriculum institute, four for peuters and one for fase 1, which are guidance and not law. All ten records printed `confirmed` in the lookup on 2026-10-03; read them again on the day of the pull request. What the game is designed from them to offer is cause and effect with water. Guessing what the water will do and finding out by trying it is taken from the California foundations. Filling and the force of water are taken from the Dutch cards for peuters. Growing is taken from both: in California as watering that helps a plant grow, from age 3, and in the Netherlands as a plant that grows and flowers on the peuter card and as a plant's need for water on the fase 1 card. Its fire is a story and rests on no record. The records are named by pack id under "The records" in `ART.md`. Nothing in the game says what a child has reached.
 
 ### Defaults taken for the owner
 
