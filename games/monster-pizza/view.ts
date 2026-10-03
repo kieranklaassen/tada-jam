@@ -31,8 +31,8 @@ export type Show = {
   leaving: Standing | null
   /** The card: its drawn pieces, how many of them are there yet, how far it has opened, and which one is being patted. */
   card: { pictured: Pictured[]; count: number; open: number; patted: number; pat: number; shake: number } | null
-  /** The customers at the door, with the roll each holds. */
-  waiting: { who: Customer; big: boolean; pose: Pose }[]
+  /** The customers at the door, with the roll each holds. `up` is how far a newcomer has come up from behind the counter, 0 to 1. */
+  waiting: { who: Customer; big: boolean; pose: Pose; up: number }[]
   /** How far the tubs have slid in, 0 to 1. */
   tubsIn: number
   /** 0 to 1: the idle glow, and the things that have it. */
@@ -212,7 +212,9 @@ export class KitchenView {
     g.rect(-4000, -4000, 8000, 4000 + COUNTER_Y + 14)
     g.clip()
     show.waiting.forEach((w) => {
-      const { x, y, size } = doorSpot(w.big ? 'big' : 'small')
+      const spot = doorSpot(w.big ? 'big' : 'small')
+      const x = spot.x, size = spot.size, y = spot.y + (1 - w.up) * 150
+      if (w.up <= 0) return
       this.draws += drawCustomer(g, w.who, this.bodies.get(w.who)!, x, y, size, w.pose)
       g.save()
       g.translate(x + 30, y - 54 - w.pose.lift * size)

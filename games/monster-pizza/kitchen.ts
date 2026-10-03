@@ -491,7 +491,7 @@ export class Kitchen {
     show.customer = s.customer ? { who: s.customer, pose: this.director(s.customer).pose, x: st.customer?.x ?? CUSTOMER.x, y: st.customer?.y ?? CUSTOMER.y, size: st.customer?.size ?? 1 } : null
     show.leaving = st.leaving ? { who: st.leaving.who, pose: this.director(st.leaving.who).pose, x: st.leaving.x, y: st.leaving.y, size: st.leaving.size } : null
     show.card = s.order ? { pictured: this.pictured, count: st.cardCount, open: st.cardOpen, patted: st.patted, pat: st.pat, shake: this.cardShake.x } : null
-    show.waiting = s.waiting ? (['small', 'big'] as const).filter((which) => !(st.customer && s.customer === s.waiting![which])).map((which) => ({ who: s.waiting![which], big: which === 'big', pose: this.director(s.waiting![which]).pose })) : []
+    show.waiting = s.waiting ? (['small', 'big'] as const).map((which) => ({ who: s.waiting![which], big: which === 'big', pose: this.director(s.waiting![which]).pose, up: st.arriving?.which === which ? st.arriving.up : 1 })) : []
     show.tubsIn = st.tubsIn
     show.ovenShake = this.ovenShake.x
     show.ovenGlow = st.ovenGlow

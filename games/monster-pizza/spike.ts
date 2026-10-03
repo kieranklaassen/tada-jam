@@ -37,8 +37,8 @@ export function spikeShow(): Show {
     leaving: null,
     card: { pictured: layOut([{ kind: 'cheese', count: 3 }], 'rows'), count: 99, open: 1, patted: -1, pat: 0, shake: 0 },
     waiting: [
-      { who: 'bim', big: false, pose: bim },
-      { who: 'fizz', big: true, pose: fizz },
+      { who: 'bim', big: false, pose: bim, up: 1 },
+      { who: 'fizz', big: true, pose: fizz, up: 1 },
     ],
     tubsIn: 1,
     glow: 0,

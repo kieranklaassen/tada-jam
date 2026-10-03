@@ -39,6 +39,8 @@ export type Staging = {
   customer: { x: number; y: number; size: number } | null
   /** The customer who has eaten, on its way out. */
   leaving: Walker | null
+  /** The newcomer at the door comes up from behind the counter once its place is free: which place, and how far up, 0 to 1. */
+  arriving: { which: 'small' | 'big'; up: number } | null
   /** How far the roll has opened into the card, 0 to 1, and how many of its drawn pieces are there yet. */
   cardOpen: number
   cardCount: number
@@ -74,7 +76,7 @@ export const COUNTER_SPOT = { x: CUSTOMER.x, y: CUSTOMER.y, size: 1 }
 export function restStaging(): Staging {
   return {
     pizzaX: PIZZA.x, pizzaY: PIZZA.y, pizzaSize: 1, pizzaHidden: false, bites: 0, puffed: 0, ovenGlow: 0,
-    customer: null, leaving: null, cardOpen: 1, cardCount: 99, tubsIn: 1,
+    customer: null, leaving: null, arriving: null, cardOpen: 1, cardCount: 99, tubsIn: 1,
     act: {}, hand: null, lick: 0, effect: null, sizzling: -1, sizzle: 0, patted: -1, pat: 0, soot: 0, lookAt: null,
   }
 }
@@ -93,4 +95,5 @@ export function calm(s: Staging): void {
   s.lookAt = null
   s.customer = null
   s.leaving = null
+  s.arriving = null
 }

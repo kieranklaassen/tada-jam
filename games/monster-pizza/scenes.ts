@@ -75,7 +75,10 @@ export function steppingUp(st: Staging, who: Customer, from: 'small' | 'big', le
       st.tubsIn = 0
       st.pizzaY = 1040
       st.customer = { ...door }
+      // The newcomer takes the place at the door only when the one called has left it.
+      st.arriving = { which: from, up: 0 }
     }),
+    tween(start + arrive * 0.6, 0.6, (u) => { st.arriving = u < 1 ? { which: from, up: ease(u) } : null }),
   ]
   if (leaving) {
     beats.push(tween(0, 1, (u) => {
