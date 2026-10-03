@@ -87,8 +87,13 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * at a time (pack: game-design, ordered-challenges-high-success.md). The ids
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
+ *
+ * Each id names the one idea its step adds, in the game's own words: a gap in
+ * the loop, a switch, a flat cell, a dead part, the wrong stuff in a gap, a
+ * source backwards, a short, a branch, two breaks at once, an order ticket.
+ * What each lays out is in jobs.ts.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = ['gap', 'switch', 'flat', 'dead', 'stuff', 'backwards', 'short', 'branch', 'double', 'ticket']
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -98,6 +103,7 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'gap' },
+  // The two oldest ages of the band start one step on, where a switch is first told from a break.
+  ...(OLDEST - 1 > YOUNGEST ? [{ fromAge: OLDEST - 1, position: 'switch' }] : []),
 ]
