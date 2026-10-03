@@ -164,3 +164,18 @@ export function inRange(customer: Customer): string[] {
   }
   return wrong
 }
+
+/**
+ * The newest idea a customer carries: the last position of the ladder whose new thing shows in it, whether
+ * that is who it is, the parts of its order, the written fraction or a ticket with no part lines. Its first
+ * showing plays once, the first time a customer carrying it is served.
+ */
+export function ideaOf(customer: Customer): string {
+  let idea = LADDER[0]
+  for (const id of LADDER) {
+    const added = NEW[id]
+    if (!added) continue
+    if (added.who === customer.who || (added.parts && usesParts(customer, added.parts)) || (id === 'written' && customer.written) || (id === 'bare' && !customer.lined)) idea = id
+  }
+  return idea
+}
