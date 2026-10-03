@@ -3,9 +3,10 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
-- Look in use: none yet.
-- Open: the design sheet in `ART.md` and its check.
+- Stage: sheet. Written in full; not yet checked. Sheet commit: `0a96fd5` (sheet part sha256 `362aa271…ce9d4`).
+- Run 1 covers the sheet, the look spike and the rules, and builds no toy (brief). Renderer: canvas 2D with the game's own solver, as the brief suggests.
+- Look in use: none yet. First reserved look, Blueprint and balsa, to be spiked next.
+- Open: sheet ready for check, round 1
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
