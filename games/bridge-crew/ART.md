@@ -173,23 +173,54 @@ Each scene is a list of timed beats filled in from the run just computed. Any to
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+Read through the lookup on 2026-10-03. Subject: science.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels, as the lookup prints them for science at ages 9 to 12: `grade-4` at 9 and 10, `grade-5` at 10 and 11, `grade-6` at 11 and 12, and beside each the `cross-grade` lane, labelled cross-grade: its statements hold for every grade, not for this age in particular. Age mapping: derived. Gaps as printed: at 9, "Grade 3 is not in the pack. A third grader turns nine during the year; grade 4 starts at nine."; at 12, "Grade 7 is not in the pack. A sixth grader turns twelve during the year; a child who starts the school year at twelve is in grade 7."
+
+The game is designed from the `cross-grade` lane and the `grade-6` lane. It names no record of the `grade-4` or `grade-5` lane: neither holds a record on built structures.
+
+- `edu.us-ca.cross-grade.science.objective.3-5-ets1-3` (`us-ca 3-5-ETS1-3`) [cross-grade]: state-board-adopted-standard, confirmed. In the game: the child runs the same load over the model bridge, changes one part, runs it again, and looks at where it gave to find what to improve.
+  Limits taken: a band record for grades 3 to 5, not one grade; the tests are fair tests with the other variables held, aimed at finding what to improve. Left open by Limits: the load, the material and the kind of structure, which are the game's own choice.
+- `edu.us-ca.cross-grade.science.objective.3-5-ets1-2` (`us-ca 3-5-ETS1-2`) [cross-grade]: state-board-adopted-standard, confirmed. In the game: the child keeps two or three designs for one gap as tracings, lays one over another and picks which to build before any run.
+  Limits taken: a band record for grades 3 to 5; the comparison is by how well each design is expected to do, and building and testing are not in this record. Only the choice made before a run rests on it.
+- `edu.us-ca.grade-6.science.objective.ms-ets1-engineering-design-ms-ets1-2` (`us-ca MS-ETS1-2`): state-board-adopted-standard, confirmed. In the game: a tracing laid on the board is run under the same load at the same place as the bridge, so two designs are judged by one fixed procedure.
+  Limits taken: holds for the band of grades 6 to 8, not grade 6 alone; no clarification and no assessment boundary printed.
+- `edu.us-ca.grade-6.science.objective.ms-ets1-engineering-design-ms-ets1-3` (`us-ca MS-ETS1-3`): state-board-adopted-standard, confirmed. In the game: after running two designs the child copies the part that worked from the tracing into the bridge on the board.
+  Limits taken: band of grades 6 to 8; no clarification and no boundary printed.
+- `edu.us-ca.grade-6.science.objective.ms-ets1-engineering-design-ms-ets1-4` (`us-ca MS-ETS1-4`): state-board-adopted-standard, confirmed. In the game: the bridge on the sheet is a model whose runs give the dip, the strain and the place of failure, and the child changes it round after round.
+  Limits taken: band of grades 6 to 8; no clarification and no boundary printed.
+
+Named in the brief and not used: `us-ca 3-5-ETS1-1` (the game sets the gap, the load and the kit, and the child does not state them) and `us-ca 5-PS2-1` (weight pulls everything in the game downward, and the child makes no argument about it).
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels, as the lookup prints them for science: `fase-2` at 9 (sub-band: groep 5 or groep 6; the goals are for the whole band, groep 4 to 6) and at 10 (groep 6); `fase-3` at 10 (groep 7), 11 (groep 7 or groep 8) and 12 (groep 8); and beside each the `einde-po` lane, labelled end-of-primary goals: what a school works towards by the end of groep 8, not what a child of this age should master. Age mapping: convention. Gap as printed at 12: "A child who starts the school year at twelve is usually in secondary school, which is not in the pack."
+
+- `edu.nl.fase-2.science.objective.e358bee9-5fb8-48bc-a017-77e45d5da836` (`nl ojw/nattech/3/01/fase2`): curriculum-institute-guidance, confirmed. In the game: the child finds out by building and loading which shapes keep a crossing stable and sturdy.
+  Limits taken: an offer for the band groep 4 to 6, with no year; the five principles (wide base, triangles, arch, profile, tube) and the four places (cupboard, tower, pyramid, bridge) are examples. Left open by Limits: materials, loads and sizes, which are the game's own choice.
+- `edu.nl.fase-2.science.objective.6a502ec1-5c26-48d6-b4e3-652e082a9c45` (`nl ojw/nattech/3/02/fase2`): curriculum-institute-guidance, confirmed. In the game: the child makes a crossing that uses a profile (the plank on edge) and triangles.
+  Limits taken: an offer with no year; the two principles are examples; this record is about making, and investigating is the record above. Left open: the object, its size and its material.
+- `edu.nl.fase-3.science.objective.319db8b5-fb05-443e-8f7a-a16d2e8f7631` (`nl ojw/nattech/3/01/fase3`): curriculum-institute-guidance, confirmed. In the game: the child designs a crossing for a gap from the kit and makes it.
+  Limits taken: an offer for groep 7 and 8, with no year; the principles are examples. Left open: object, size, material and load.
+- `edu.nl.fase-3.science.objective.b618c7a5-ba69-42d8-a62b-2f49216bca14` (`nl ojw/nattech/3/08/fase3`): curriculum-institute-guidance, confirmed. In the game: the child sets up two designs that differ in one part and runs both under the same load.
+  Limits taken: an offer with no year; the record does not explain "comparative" and does not name the principle, so one change under one load is the game's own reading.
+- `edu.nl.einde-po.science.objective.e652ff27-3b26-4820-8d7b-32e9d38836e1` (`nl 45`) [end-of-primary goals]: legal-core-goal, regime 2006, confirmed. In the game: the child designs a crossing, carries it out and judges it by the run.
+  Limits taken: a 2006 core goal, still in force; three steps named. Left open: the problem, the material, the tools, and how often the steps repeat.
+
+Named in the brief and not used: `nl ojw/nattech/2/04/fase3` (it names four forces and ties none of them to a structure; the game shows the pull of weight and investigates none of the four). Three draft core goals come near, 29 C b, 30 A d and 30 C c, each a draft core goal, not in force; the game rests on none of them.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **What is named.** The `nl` fase 2 and fase 3 records name the content: principles that make a construction stable and sturdy, a bridge among the examples. The `us-ca` records name only the design process and hold no record on structures at these ages. The game follows `nl` for what the kit shows (the triangle, the profile, the arch, the wide base, the tube) and `us-ca` for the loop (test fairly, look at the failure, improve, compare designs).
+- **At 9 and 10.** The `us-ca` records used are the cross-grade band for grades 3 to 5; the `nl` records are the fase 2 offer. Neither is for one year.
+- **At 11 and 12.** `us-ca` moves to the grade 6 lane, whose records hold for grades 6 to 8. `nl` fase 3 names designing as well as making, and the comparing experiment.
+- **Not carried by either.** No record of either jurisdiction ties a force to a structure, and none names tension, compression, a beam, a cable or a prop. Those are in the game's model as its own choice and in no claim.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Bridge Crew is designed from five California State Board-adopted science standards on engineering design (`us-ca 3-5-ETS1-2`, `3-5-ETS1-3`, `MS-ETS1-2`, `MS-ETS1-3`, `MS-ETS1-4`; all confirmed), and from four goals of SLO's curriculum guidance for fase 2 and fase 3 (`nl ojw/nattech/3/01/fase2`, `3/02/fase2`, `3/01/fase3`, `3/08/fase3`; guidance, not law; all confirmed) and the Dutch legal core goal 45 of 2006 (still in force; an end-of-primary goal; confirmed). From the California standards it takes the loop of fair test, failure, improvement and comparison, and it does not teach structures on their authority. From the Dutch records it takes which building principles make a crossing stable and sturdy. It says nothing about what a child has reached.
 
 ## The look
 
