@@ -96,17 +96,105 @@ There is no wrong bread, only a bread this customer does not want. The game runs
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**The order.** Eight positions, one new thing each and then combinations. The ids are those of `LADDER` in `config.ts`; each names a place in the game's own order.
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+| Position id | The one new thing | Who brings it | What comes out onto the table |
+| --- | --- | --- | --- |
+| `dough` | Flour and water, pushed together, make dough, and the oven sets it. How much it was pushed decides whether it holds or crumbles. | The goat (wants it hard) and the sparrows (want it crumbly) | Flour sack, water jug |
+| `shapes` | Pulling worked dough makes it long, and gathering it makes it round again. | The dachshund (long) | Nothing new |
+| `rising` | The bubbly worked in, then the warm nook, makes dough rise; the oven keeps the air in. | The bear (airy) | The bubbly jar |
+| `crust` | A bread that goes back in the oven comes out darker, and then black. | The crow (dark or black) | Nothing new |
+| `seeds` | Seeds pressed onto raw dough stay on through the oven; on a baked crust they roll off. | The hen (seeded) | The seed dish |
+| `batter` | More water than flour gives batter, which runs and bakes flat. | The duck (a pancake) | Nothing new |
+| `pairs` | Nothing new: two customers at the hatch together, and one bread for both. | Any two whose wants can meet in one bread | Nothing new |
+| `trios` | Nothing new: three wants in one bread. | Three customers together, or the mole, who has three wants alone | Nothing new |
+
+- A want is one property of the bread: its crumb, its shape, its crust or its seeds. A single customer has one want, a pair two, and a trio or the mole three. No group has more than three (see the records, where that number comes from a Limits section).
+- A tool comes out when the first customer who needs it steps up, the badger shows its use once, and it stays out for good. The nook, the sill and the oven are part of the room from the start.
+- The same order deepens without new content: the opposite want on the same idea (hard and crumbly, airy and hard), then wants combined, then three at once.
+
+**A harder option looks harder, and the child picks it.** Up to two customers or groups wait in the lane outside the window. Two or three animals standing together with their baskets is plainly more to please than one. The child calls in whichever they like by touching it, and may send the one at the hatch back to the lane the same way at any time, without a reaction from it.
+
+**How the lane is filled.** When a place in the lane is free it is filled by a seeded pick: first from the customers of the current position, otherwise from those of earlier positions, and never an animal that is already at the hatch or in the lane.
+
+**Which customer a new position lays out.** The position moves when a cycle is judged, and those in the lane were laid out before that. So a new position first shows on the customer who joins the lane after the next one is called in: the customer after next.
+
+**How a cycle is judged.** A cycle is one customer or group, from stepping up to leaving with a bread. It is judged only when that customer was laid out from the current position.
+
+- Well: they left with a bread they wanted, and at most one bread was handed back first. The position moves up one.
+- Mixed: two breads were handed back first, or they left happy with something that is not a bread they came for (the hen with loose seeds, the duck with a puddle). The position stays.
+- Badly: three or more breads were handed back first. The position moves down one.
+- A customer sent back to the lane has not finished a cycle, and nothing is judged. Nothing shows the position or that it moved.
+
+**Every field of the saved state.**
+
+| Field | What it holds |
+| --- | --- |
+| `v` | The version of the shape. |
+| `position` | The id of the place in the order where the next cycle is judged. |
+| `finished` | The hatch is empty after an ending, and stays so until the child calls someone in. |
+| `shown` | The ids of the ideas the badger has already shown, so none is shown twice. |
+| `tools` | Whether the bubbly jar is out, and whether the seed dish is out. |
+| `peel` | Where the peel is (board, nook, sill or oven) and what lies on it: nothing, raw stuff, or a bread. |
+| raw stuff | Flour (0 to 3), water (0 to 3), bubbly (yes or no), seeds (yes or no), work (0 to 12), long (yes or no), rise (0 to 100), and how far the bake has got (0 to 100). |
+| a bread | Its crumb, its shape, its crust and whether it has seeds. |
+| `rack` | Four places, each empty or holding a bread the child put there. |
+| `hatch` | Who is at the hatch (one to three animals), the position they were laid out from, and how many breads they have handed back. |
+| `lane` | Up to two waiting customers or groups, each with the same three things. |
+| `seed` | The state of the seeded stream that fills the lane. |
+
+- A thing in the hand is saved where it came from. An ending's outcome is saved when the ending starts.
+- Rising and baking run on attended game time only, are saved as the two numbers above, and stop at full and stay there. No clock is read.
+- The largest legal state is far under half of 64 KB, and a test says so.
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+Every customer looks like the bread it wants, so a child can learn the tastes, guess a new one from the animal, and test it on purpose. A want is shown by the body and by the basket each carries, which the right bread fits. Tastes never change.
+
+| Character | Its want, always visible | Loves | What it does with the bread it does not want most |
+| --- | --- | --- | --- |
+| The goat | Knocks its horns on the hatch post, tock tock | A hard, dense bread: worked, never risen | An airy loaf squashes onto a horn and sits there like a hat |
+| The sparrows | A row on the ledge, pecking at nothing | A crumbly bread: hardly worked, so it falls to crumbs | Beaks go tink on a brick and the whole row bounces off |
+| The dachshund | Stretches, long basket in its teeth | A long bread | A round loaf rolls off the long basket and it chases it round its own tail |
+| The bear | Puffs its cheeks, pats its round belly | An airy bread | A tooth clonks on a brick and rings; the bear looks at the tooth, then knocks on the bread |
+| The crow | Preens one black wing and holds it out | A dark or black crust | Holds a gold loaf against its wing, then turns its back on it |
+| The hen | Chicks pecking round her feet | Seeds on top. Also loose seeds, with nothing under them | The chicks peck a bare crust, find nothing, and all look up at once |
+| The duck | Slaps its flat feet, bill open | A pancake. Also a puddle, to paddle in | A tall loaf slides off its flat bill |
+| The mole | Small, pale, soft, blinking | An airy, round, gold loaf: soft and pale as itself | A black crust leaves it with a sooty nose, and it sneezes soot |
+| The badger (the baker, not a customer) | Its bench and its oven; it stokes, wipes, and tastes | Raw dough, licked off a paw | Coughs a small black cloud at a burnt bread, and eats it anyway |
+
+- A reaction is to the exact thing handed over, starts as the bread arrives, and is as good to watch when it is disgust as when it is delight. No feeling is about the child, and no one thanks, praises, pleads or hurries.
+- In a pair or a trio each animal keeps its own want, and the one whose want is not met is the one who shows it.
+- The badger notices only what is in front of it. Flour tipped while it stokes the oven lands on its back, and it finds out when it turns round.
+- The badger is the one who shows a new idea, knocks on what comes out of the oven, and eats anything it is handed, which is how the rack is cleared.
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Three kinds of scene. Each is a list of timed beats on game time, built on `scene.ts`, and each gives way to any touch at once.
+
+**The showing** (4 to 8 seconds, once for each of the six ideas `dough` to `batter`).
+
+- Cause: the first customer whose want needs an idea not yet shown steps up to the hatch. On a first visit that is the goat, so the badger is already at it when the game opens.
+- Beats: the badger looks at the customer; does the one new act on a small lump of its own at the back of the bench; the lump answers with the change; the badger looks at the child's peel and steps back.
+- Filled in from: which idea it is. It shows the new act only, on the badger's lump, never the bread the customer wants and never on the child's peel.
+- Any touch ends it. It is marked as shown when it starts, so it is never played again.
+
+**The ending** (6 to 9 seconds, and it may hold longer).
+
+- Cause: the child hands over a bread the customer wants.
+- Beats: a sniff; the bite or peck, on exactly this bread with its shape, crumb, crust and seeds; the customer's own delight (the goat cracks it on its horns and crunches, the dachshund gets the long loaf stuck across the lane and turns sideways, the chicks carry the loaf off on their backs); off down the lane; the hatch stands empty.
+- Filled in from: who it is and what the bread is, so it differs with every bread.
+- Any touch skips to the empty hatch. The outcome is saved when the ending starts.
+
+**A secret** (4 to 6 seconds, always from the same combination, never hinted at and never counted).
+
+- Loose seeds handed to the hen: the chicks ride the peel back into the bakery.
+- A puddle handed to the duck: it climbs onto the peel and paddles.
+- Flour tipped onto the badger's back: it turns, white all over, and shakes like a wet dog.
+
+What the oven makes, and a bread handed back, are reactions and not scenes: they last under two seconds, run beside the child's touch and block nothing.
+
+**How a cycle ends and the next starts.** The ending leaves the hatch empty and the bakery as it is, for as long as the child likes. Those in the lane go on with their own routines; none looks at the child, hurries or complains. Nothing starts until the child touches someone in the lane, who then steps up. On load no scene replays: the game opens on the state the last one ended in, with whoever was waiting still waiting. Breads on the rack stay where the child put them, and feeding them to the badger is the calm way to tidy up.
 
 ## The records
 
