@@ -81,17 +81,75 @@ The child changes one thing, the colour or the size of the bunch, and tries agai
 
 ## The designed order, and what is stored
 
-The order of challenges with one new thing at a time, the positions with their stable ids as they stand in `config.ts`, what a cycle that goes well or badly is, and every field of the saved state.
+**Words.** A *troop* is one, two or three friends of one kind who come by together. A *bunch* is one, two or three balloons of one colour tied in one knot; a single balloon is a bunch of one. A *cycle* is one troop served: it ends when every friend of the troop holds a balloon.
 
-Where the next customer already waits on screen while the child works, say which customer a new position lays out: the position moves when a cycle is judged, and the one who waits was laid out before that, so the change shows on the customer after next.
+**One rule at every position.** A bunch the child sends is refused when it is not the troop's colour. Otherwise it is taken, one balloon each, when it holds no more balloons than there are friends without one, and it gets away when it holds more. The rule never changes, so what a child finds out stays true.
+
+**The order**, one new thing at a time and then combinations. The ids are the ones in `LADDER` in `config.ts`; each names a place in this order and nothing else.
+
+| Id | The troop | The sky | What is new |
+| --- | --- | --- | --- |
+| `solo-two-colours` | One friend | Four single balloons in two colours, two of them the friend's | Colour, against one other |
+| `solo-three-colours` | One friend | Five single balloons in three colours, two of them the friend's | A third colour |
+| `pair-singles` | Two friends | Five single balloons in three colours | One for each, given one at a time |
+| `trio-singles` | One, two or three friends | Five single balloons in three colours | Three, and a troop whose size changes |
+| `bunches-own-colour` | One, two or three friends | Three bunches of one, two and three, all in the troop's colour | Bunches: the number alone decides |
+| `bunches-mixed` | One, two or three friends | Four bunches: a single and a larger one in the troop's colour, and two in other colours, one of them as large as the troop | Colour and number together |
+
+A single balloon of the troop's colour is in every sky, so a cycle can always be finished one balloon at a time and nothing dead-ends. Whatever leaves the sky is replaced by the same bunch in the same place: the sky stays as it was for the whole cycle.
+
+**The harder option the child can see and pick.** From `bunches-own-colour` on, a bigger bunch hangs beside the single. It looks like more, it can serve the whole troop in one touch, and it can also get away. The child may always take the single instead.
+
+**How a cycle is judged.** By what the child sent before the troop was served: no bunch refused and none that got away is a cycle that went *well*; one is *mixed*; two or more is one that went *badly*. A balloon the child pops, and anything sent after the troop is served, is play and is not judged. The position moves one step up after a cycle that went well, one step down after one that went badly, and not at all after a mixed one, between cycles only. A visit put away with no finished cycle leaves it where it was. Nothing on screen shows the position or that it moved, and no clock is read.
+
+**Which troop a new position lays out.** While the child serves one troop, the next already waits at the edge, so its kind and size were laid out before the cycle was judged. A new position therefore lays out the sky of the next troop, at the moment that troop steps in, and the size of the troop after next. Every sky above works for a troop of any size, so a troop laid out under one position is always playable under its neighbour.
+
+**What is stored**, every field, as small plain JSON with a version, read defensively field by field:
+
+- `v`: the version of the save.
+- `position`: an id from the order above. An id the game does not know falls back to the first-visit default.
+- `finished`: the troop on screen has been served and its cycle judged. Its ending does not replay, and the next troop comes in on the child's touch.
+- `troop`: the troop on screen: its kind, its size, and for each friend whether it holds a balloon.
+- `sky`: the bunches on offer, in their places: for each its colour and how many balloons.
+- `next`: the troop that waits at the edge: its kind and its size.
+- `slips`: how many bunches were refused or got away in the cycle on screen, kept only up to two and set back to none with each new troop. It is what lets a cycle be judged after a put-away in the middle. It is never shown and never added up over cycles.
+- `parade`: the last four troops served, for the far hill: for each its kind, its size and how many balloons it carried off.
+- `shown`: three marks, one for each first showing that has played (see "The scenes").
+- `rng`: the state of the seeded stream that lays out troops and skies, so the same save always goes on in the same way.
+
+A balloon in flight is not stored: the outcome of a tap is decided and stored when the finger lifts, and the flight is a view of it. A scene's outcome is stored when the scene starts. The largest legal save is a few hundred bytes, and a test holds it under half the 64 KB cap.
+
+(pack: game-design, ordered-challenges-high-success.md; pack: game-design, many-short-visits.md; pack: game-design, the-world-keeps-and-waits.md)
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+Each kind is one colour all over and takes only balloons of that colour: this is the taste that never changes, and it is on the friend's body for the child to see. Each friend wants one balloon and no more, and shows it the same way every time: arms up and eyes on the sky while it has none, arms down and eyes on its balloon once it has one.
+
+| Kind | Colour | Tempo and weight | Funniest part | Likes (its own colour) | Dislikes (any other colour) | Too many |
+| --- | --- | --- | --- | --- | --- | --- |
+| Duck | Yellow | Quick and light, waddles | The tail | Catches in its beak, wags | Swats it away with its tail | Carried up flapping, lands on its bottom |
+| Frog | Green | Still, then a sudden spring | The tongue and the throat | Reels it in with its tongue | Bounces it off its puffed throat | Hangs by its tongue, legs stretched long |
+| Hippo | Violet | Slow and very heavy | The belly | Yawns and lets the string drop in | Sneezes it away, flat and raspberrying | Only its toes lift; it sits down and the clouds bounce |
+| Crab | Coral red | Fast, sideways, stop and go | The eyes on stalks | Snips the string from the air | Pinches it by mistake, eyes shoot up | Spins like a propeller |
+
+- A refusal is as good to watch as a catch, and it is about the balloon: the friend is put out by the colour, startled by the pop, bewildered by the lift-off, and never hurt.
+- No friend has any feeling about the child. None thanks, praises, sulks or hurries, and the troop that waits at the edge only bobs and looks at the balloons.
+- A reaction starts as the balloon arrives, well inside half a second of the tap, and is big enough to read from across a room.
+- No two kinds share a motion: each has its own walk, catch, refusal, lift-off, pop reaction and squeak (step 6 of the guide).
+
+(pack: game-design, characters-with-opinions.md)
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Three short scenes, each a list of timed beats on the template's `scene.ts`, filled in from the state of play. Each one's outcome is stored when it starts, any touch ends it with every beat at its end state, and that touch is then an ordinary touch.
+
+**1. The march on the spot (the ending of a cycle).** *Cause:* the last friend of the troop takes its balloon. *Beats, 5 to 7 seconds:* each friend in turn does its kind's own proud move with its balloon, in the order the balloons were taken; the troop marches three squeaky steps on the spot together; the balloons bob up in a wave from one end to the other; the troop settles, swaying, each friend looking up at its balloon. *Filled in from:* the kind, the size of the troop, and whether the balloons came one at a time (the friends take turns) or as one bunch (they jump together). *After it:* the troop stays as it is for as long as the child likes.
+
+**2. The step-in (how the next cycle starts).** *Cause:* the child taps the troop that waits at the edge, once the troop on screen has been served. *Beats, about 3 seconds:* the served troop marches off towards the far hill with its balloons, where the last four troops go round in a slow parade; the waiting troop walks in in its own gait and reaches up; a new troop comes to the edge; the sky fills with the next bunches. A tap on the waiting troop before the troop on screen is served makes it wave and nothing else.
+
+**3. The pass-by (the first showing of a new idea).** *Cause:* a new idea arrives, three times in all, each shown once and marked in `shown`: handing a balloon to a friend of its colour (a new game), one for each (the first pair), and a bunch for a whole troop (the first bunches). *Beats, 4 to 6 seconds:* a troop of a kind other than the child's crosses the scene, stops under a balloon or a bunch that hangs low for it, takes it in its kind's way, and goes on to the far hill. *Filled in from:* which idea, and the kinds on screen, since the troop that passes is never the kind the child is about to serve, so what is shown is the move and not the answer to the child's own troop. The first one is already crossing when a new game opens, so something is going on from the first frame; the other two play inside the step-in, before the child's troop walks in. (pack: game-design, guided-discovery.md)
+
+**How a cycle ends and restarts.** It ends when the troop is served, with scene 1. Nothing follows by itself: no next round, no countdown, and the troop at the edge never complains or beckons. The child starts the next cycle by tapping the waiting troop. On load no scene replays: a served troop is found standing with its balloons, an unserved one reaching up, the same bunches in the sky, the same troop at the edge and the same parade on the far hill (pack: game-design, endings-and-short-scenes.md; "How a cycle restarts" and "Found as left" in the guide).
 
 ## The records
 
