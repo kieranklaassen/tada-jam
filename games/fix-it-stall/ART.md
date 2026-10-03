@@ -7,7 +7,7 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-Fix-it Stall is a repair stall on a market lane. Customers bring a lamp, a fan, a bell, a toy car or a toy robot that has stopped. The child lays it on the bench mat, opens it, finds why nothing runs, and makes the circuit whole again with cells, crocodile-clip leads, switches, lamps, motors, buzzers and whatever lies on the bench.
+Fix-it Stall is a repair stall on a market lane. Customers bring a lamp, a fan, a bell, a toy car or a toy robot that has stopped. The child lays it on the bench mat, opens it, finds why nothing runs, and makes the circuit whole again with cells, crocodile-clip leads, switches, lamps, motors, buzzers and whatever lies on the bench. A test lamp, which is a lamp with a lead on each leg, lies on the mat as the stall's one tool.
 
 - **Band.** The manifest band is 9 to 12. Its youngest age, 9, governs the design.
 - **Cue-table row.** The row for 7 and up in wordless clarity. Its "Avoid" column binds: no written word or letter, no symbol standing alone that play depends on reading, no timers, points or verdict chrome, no long hint chains. Several things may be live at once as long as each reads at a glance.
@@ -258,23 +258,71 @@ Every scene is a list of timed beats over game time, filled in from the state of
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+Read through the lookup on 2026-10-03. Each jurisdiction stands under its own heading, and nothing below pairs a record of one with a record of the other. Every limit is from that record's Limits; what Limits leaves open is marked as the game's own choice.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels, as the lookup prints them for science: age 9, `grade-4`; age 10, `grade-4` and `grade-5`; age 11, `grade-5` and `grade-6`; age 12, `grade-6`. Age mapping: derived. Beside each age the lookup returns the `cross-grade` lane, labelled cross-grade: its statements hold for every grade, not for this age in particular.
+
+Gaps as printed. At age 9: "Grade 3 is not in the pack. A third grader turns nine during the year; grade 4 starts at nine." At age 12: "Grade 7 is not in the pack. A sixth grader turns twelve during the year; a child who starts the school year at twelve is in grade 7."
+
+The game is designed from `grade-4`, `grade-5` and the `cross-grade` lane. The `grade-6` lane holds no record on electricity, and nothing is named in its place.
+
+- `edu.us-ca.grade-4.science.objective.4-ps3-2` (`us-ca 4-PS3-2`): state-board-adopted-standard, confirmed. Level `grade-4`.
+  The record's Summary: "The student observes in order to give evidence that energy can move from one place to another, carried by electric currents, heat, light or sound."
+  In the game: the beads run from the cell to a lamp, a motor or a buzzer at the far side of the board, and light, warmth, motion or sound appears there and not at the cell.
+  Limits taken: energy is not measured in numbers, so nothing on screen puts a number on it. Four carriers are named, and the game shows all four: the current as beads, light as the glow, heat as a lamp's warmth and a shorted lead's glow, sound as the buzzer.
+- `edu.us-ca.grade-4.science.objective.4-ps3-4` (`us-ca 4-PS3-4`): state-board-adopted-standard, confirmed. Level `grade-4`.
+  The record's Summary, first sentence: "The student applies science ideas to design a device that changes energy from one form into another, tests it, and improves it."
+  In the game: a gadget is a device that turns what a cell stores into light, sound or motion; the child tries it on the mat, changes it, and from the position `ticket` on redesigns it to an order.
+  Limits taken: devices are kept to two kinds, and the gadgets are all of the kind that uses stored energy to make motion, light or sound. The other kind, motion into electricity, appears only as the blade spun by hand. Left open by Limits: the devices and the constraints in the clarification are examples, so the five gadgets are the game's own choice, and of the example constraints the game uses only materials (the parts on the tray). It sets no time and no cost.
+- `edu.us-ca.grade-5.science.objective.5-ps1-3` (`us-ca 5-PS1-3`): state-board-adopted-standard, confirmed. Level `grade-5`.
+  In the game: the bench odds are told apart by one property, whether each lets current through, found by putting it in a loop.
+  Limits taken: density is left out. Left open by Limits: the materials and properties listed are examples, so the seven bench odds and the one property tested are the game's own choice. The game is designed from this record in part: it tests one example property and measures nothing.
+- `edu.us-ca.cross-grade.science.objective.3-5-ets1-3` (`us-ca 3-5-ETS1-3`) [cross-grade]: state-board-adopted-standard, confirmed. Level `cross-grade`.
+  In the game: the circuit stays as the child left it, so one thing is changed at a time and its effect is seen at once; the test lamp moved from piece to piece finds where the loop fails.
+  Limits taken: it holds for the whole band of grades 3 to 5 and not for one grade; it carries no clarification and no assessment boundary; the tests are fair tests whose aim is to find what to improve. The band it belongs to has no record for grade 6.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels, as the lookup prints them for science: age 9, `fase-2` (sub-band groep 5 or groep 6); age 10, `fase-2` (groep 6) and `fase-3` (groep 7); age 11, `fase-3` (groep 7 or groep 8); age 12, `fase-3` (groep 8). Age mapping: convention. Beside each age the lookup returns the `einde-po` lane, labelled end-of-primary goals: what a school works towards by the end of groep 8, not what a child of this age should master.
+
+Gap as printed, at age 12: "A child who starts the school year at twelve is usually in secondary school, which is not in the pack."
+
+The game is designed from `fase-2`, `fase-3` and the `einde-po` lane.
+
+- `edu.nl.fase-2.science.objective.3dbdc70f-49e7-40d3-b9fa-e8644d532c2c` (`nl ojw/nattech/2/06/fase2`): curriculum-institute-guidance, confirmed. Level `fase-2`.
+  In the game's words: getting to know electricity by trying it out, with current that goes round in a closed circuit as the first of its three parts.
+  Limits taken: it says what a school offers in fase 2 and names no school year. Of its three parts the game takes the closed circuit only; static electricity, and use and danger, are not in the game. Left open by Limits: no apparatus, no kind of circuit, no symbol and no unit is named, so the parts on the tray are the game's own choice and the game shows no symbol and no unit for electricity.
+- `edu.nl.fase-2.science.objective.7c777238-cf10-441b-84be-a92eddd2b2ed` (`nl ojw/nattech/1/02/fase2`): curriculum-institute-guidance, confirmed. Level `fase-2`.
+  In the game's words: finding out what materials are like by what can be observed of them, conducting or insulating electricity among the examples.
+  Limits taken: it says what a school offers in fase 2 and names no school year; the properties are examples and it is left open which are offered; a property is to be observable. The game takes the one example on electricity, and it is observable there as a lamp that lights or stays dark.
+- `edu.nl.fase-3.science.objective.9ac342b5-e074-49d9-8c09-f4921771051e` (`nl ojw/nattech/2/06/fase3`): curriculum-institute-guidance, confirmed. Level `fase-3`.
+  In the game's words: investigating electricity, with materials that let current through or do not, and circuits, as the first two of its five parts.
+  Limits taken: it says what a school offers in fase 3 and names no school year. Of its five parts the game takes two; the electromagnet, static electricity, and use and danger are not in the game, and the blade spun by hand is the game's own choice. Left open by Limits: no material, kind of circuit, symbol or unit is named, so the bench odds are the game's own choice and nothing is given a unit.
+- `edu.nl.einde-po.science.objective.c3d8c8c0-0f94-4dec-8ce6-f52fab27158f` (`nl 42`) [end-of-primary goals]: legal-core-goal, regime 2006, confirmed. Level `einde-po`.
+  In the game's words: learning to investigate materials and physical phenomena, with electricity among the examples.
+  Limits taken: a 2006 goal that is still in force; its examples are an open list; it names no steps of an investigation, no instrument, no unit and no number, and states no safety condition. The game takes electricity from the list and uses none of the things the goal does not name.
+- `edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-a-c` (`nl 30 A c`) [end-of-primary goals]: draft-not-yet-in-force, regime 2027-draft, confirmed. Level `einde-po`.
+  In the game's words: saying what each part adds to the working of a thing.
+  Limits taken: a draft goal, not in force; its verb is describing; it names no object, system or part. The game has no words, so the child shows what a part adds by putting it in, taking it out and turning it round; that is the game's own choice and less than describing.
+- `edu.nl.einde-po.science.objective.conceptkerndoelen-2027-onderdeel-f-mens-en-natuur-domein-natuurkundige-en-scheikundige-verschijnselen-en-technische-systemen-kerndoel-30-30-a-e` (`nl 30 A e`) [end-of-primary goals]: draft-not-yet-in-force, regime 2027-draft, confirmed. Level `einde-po`.
+  In the game's words: trying out designing, making and repairing.
+  Limits taken: a draft goal, not in force; three activities and no level of mastery; no product, material, tool or safety condition is named, so the gadgets, the parts and the test lamp are the game's own choice.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **The closed circuit.** The Dutch fase 2 record names current going round in a closed circuit. No California record for grades 4 to 6 names a complete circuit, a switch or what a part does: grade 4 names energy carried by electric current and a designed device, with circuits among the examples of its clarification. The game follows nl for the circuit idea and us-ca for its frame, a device that is tried and improved.
+- **What lets current through.** The Dutch fase 3 record names it as a part of the goal, and the Dutch fase 2 record has it as an example. The California grade 5 record has it as an example property for telling materials apart. The game follows nl here and is designed from the California record only in part.
+- **Finding the break.** California has a cross-grade record on looking at where a model fails, for grades 3 to 5. On the Dutch side only the draft item on repairing is near it, and it is not in force. The game narrows "finding the break" to testing whether the loop is closed and which piece lets current through.
+- **The parts.** A cell, a lead, a switch, a lamp, a motor and a buzzer are named by no record of either jurisdiction and are the game's own choice. What each part adds rests only on the Dutch draft item 30 A c, a draft core goal, not in force. Nothing on the California side carries it.
+- **Danger.** Both Dutch fase records name the danger of electricity. No California record named here does. The game does not claim it for either.
+- **Ages.** The California records are for grade 4, grade 5 and the band of grades 3 to 5, and grade 6 holds nothing on this skill. The Dutch fase records run through groep 8. So for the oldest children the game rests on the Dutch records only.
+- **Neither names** a circuit symbol, a unit, or a kind of circuit. The game shows none and names none.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Fix-it Stall is designed from two California content standards adopted by the State Board of Education for grade 4 (`us-ca 4-PS3-2` and `us-ca 4-PS3-4`), in part from one for grade 5 (`us-ca 5-PS1-3`), and from one cross-grade engineering design standard for grades 3 to 5 (`us-ca 3-5-ETS1-3`); and from three SLO fase goals, which are curriculum-institute guidance and not law (`nl ojw/nattech/2/06/fase2`, `nl ojw/nattech/1/02/fase2` and `nl ojw/nattech/2/06/fase3`), from core goal 42 of 2006, a legal core goal still in force (`nl 42`), and from two items of a draft core goal, not in force (`nl 30 A c` and `nl 30 A e`). Every record named was `confirmed` when it was read on 2026-10-03. For California the game is designed from the two grade 4 standards on energy and a designed device and is not described as teaching circuits. Nothing here says what a child has reached, and the game is not described as raising attainment.
 
 ## The look
 
