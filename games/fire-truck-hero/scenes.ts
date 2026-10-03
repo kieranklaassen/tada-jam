@@ -16,7 +16,7 @@ import type { Kind } from './things'
 /** What a scene can move. Each is 0 before its beat, climbs to 1 during it, and stays at 1. */
 export const CHANNELS = [
   // The fire is out.
-  'steam', 'lookers', 'settle',
+  'steam', 'settle',
   // The duck floats.
   'liftOff', 'lap', 'dunk', 'shake',
   // The flower opens.
@@ -66,9 +66,9 @@ function moment(d: Directions, mark: Mark, at: number, n?: number): Beat {
   return { at, lasts: 0, play: () => d.mark(mark, n) }
 }
 
-/** The ending of a yard whose want was the fire: the hiss falls, the steam drifts off, the logs drip twice, whoever is there comes to look, and the truck settles. */
+/** The ending of a yard whose want was the fire: the hiss falls, the steam drifts off, the logs drip twice, and the truck settles. A cat who sat by the fire is put out by her own motion. */
 function fireOut(d: Directions): Beat[] {
-  return [moment(d, 'hiss-falls', 0), move(d, 'steam', 0, 3.2), moment(d, 'drip', 1.4, 0), moment(d, 'drip', 2.3, 1), move(d, 'lookers', 1.6, 3.4), moment(d, 'steam-fades', 3.0), move(d, 'settle', 4.6, 1.2)]
+  return [moment(d, 'hiss-falls', 0), move(d, 'steam', 0, 3.2), moment(d, 'drip', 1.4, 0), moment(d, 'drip', 2.3, 1), moment(d, 'steam-fades', 3.0), move(d, 'settle', 4.6, 1.2)]
 }
 
 /** The duck floats: it lifts off the floor, paddles a lap, puts its head under with its tail up, and shakes. */

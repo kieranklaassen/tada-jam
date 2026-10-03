@@ -137,8 +137,8 @@ Every scene is a list of timed beats on the template's `scene.ts`, filled in fro
 
 **The want is met** (the ending of a yard, 5 to 9 seconds, caused by the gulp that met it):
 
-- *The fire is out.* The hiss falls, the steam cloud rises and drifts off, the logs drip twice. Whoever is in the yard comes to look, each in its own way: the cat stalks round the wet ring, the snail sets off toward it, the duck waddles through the puddle. The truck settles on its springs and its light stops.
-- *The duck floats.* It lifts off the floor, paddles a lap round whatever else floats there, puts its head under with its tail up, and shakes. The ripples settle.
+- *The fire is out.* The hiss falls, the steam cloud rises and drifts off, the logs drip twice. A cat who sat by the fire looks at the wet logs, then at the truck, and turns her back with her tail up. The truck settles on its springs, its nozzle droops and its light stops.
+- *The duck floats.* It lifts off the floor, paddles along its own side of the pool, one way and back the other, puts its head under with its tail up, and shakes. The ripples settle.
 - *The flower opens*, in the colour of this arrangement, petal by petal. The bee lands and the flower dips. A drop slides off a leaf.
 - *The snail comes out.* Its eyes unroll, and it glides along the dark line the child made, the same shape, to the wettest place.
 
@@ -212,7 +212,7 @@ Fire Truck Hero is designed from five learning foundations published by Californ
 
 **What it is.** A back garden of outdoor toys on a sunny day. Every toy is machine-made: one fat blow-moulded shell with rounded edges, a darker mould seam round its middle, small sunk screw bosses, and sun-faded primary colours with a satin shine. Nothing is hand-made: no thumbprints, no grain, no brush. Next to the claimed looks it is the only one of hard plastic, and it stands outdoors on sand and grass in daylight.
 
-**The scene.** A sand pit seen from the near side and well above, 16 units wide and 10 deep, inside a cream picket fence at the far edge and fat green hedges at the sides, with grass and two lollipop trees beyond. The truck stands at the left, turned a little toward the child so its face shows. The gate hangs in the far fence toward the right, with its bell out over the sand, so what waits beyond it can show over the fence. Nothing a child needs stands in the near strip of sand, which is the bottom of the screen.
+**The scene.** A sand pit seen from the near side and well above, 16 units wide and 10 deep, inside a cream picket fence at the far edge and fat green hedges at the sides, with grass and two lollipop trees beyond. The truck stands at the left, turned a little toward the child so its face shows. The gate hangs in the far fence straight ahead of the truck, so the truck drives on up its own lane and crosses no place where a thing stands. The bell hangs out over the sand from the gate's right post, and what waits in the next yard shows beyond the fence beside it. Nothing a child needs stands in the near strip of sand, which is the bottom of the screen.
 
 **Palette.**
 
@@ -233,6 +233,21 @@ Fire Truck Hero is designed from five learning foundations published by Californ
 - Everything with weight sits on a spring (`springs.ts`) and is stepped on game time in short steps, so a slow device plays the same motion.
 - The truck moves like itself (`truckMotion.ts`): eager, springy and a little heavy. A gulp rocks it back and it swings forward past level before it settles. A honk hops the whole truck, which hangs for a moment, lands once and bounces low. The nozzle is quick and loose and overshoots. The roof light is heavy: it turns once and stops without swinging back. At rest the body bobs like a motor ticking over, and it blinks at uneven gaps.
 - Water is fat: a gulp is one big blob with a few drops round it, stretched along its way, and every landing throws up a small splash.
-- In the spike, each thing idles in its own way: the flames flicker, the cat's head turns slowly, the duck rocks, the flower sways, the bell swings.
+- The six plain things do not fidget: a pool, a pot, a patch, a boat and a wheel stand still until water reaches them, and then each answers each of the five ways water can reach it with a move of its own (`thingMotion.ts`). The flame is the one exception: it flickers.
+- The animals move like themselves and no two share a tempo (`animalMotion.ts`). The cat is slow and heavy until water touches her, and then all at once: straight up on stiff legs, a shaken paw, a glare. The duck is a bath toy: it bobs, wriggles and taps a dry floor with its beak. The bee never stops: she circles, bumps the closed bud, zigzags up from drops. The snail does one thing at a time, very slowly.
+- Nothing eases in on load. Every thing and every animal is in its first frame as it was left.
+- A scene moves channels from 0 to 1 and they stay at 1, so an ending stays as it ended (`scenes.ts`).
+
+**The way on.** On the third ring the gate swings open, the truck's light turns once, the truck turns up its lane and rolls to the gate, and then the yard slides toward the child under it while the next one slides in from beyond the fence. The stage keeps two yards built for this, and they change places after each drive.
+
+**The idle cue.** A blue ring round the thing that wants water, wider than the thing so it is never hidden under it, and after it a blue ghost hand that taps there once. Once the want is met both go to the bell.
 
 **Quality tiers** (`config.ts`). A tier changes drawing only. Tier 0 is the full look at a pixel ratio of 2. Tier 1 lowers the pixel ratio to 1.5. Tier 2 lowers it to 1.25, flattens the ground's grain to plain colours and draws seven in ten of the stream's small drops. Tier 3 is a pixel ratio of 1, matte plastic without the satin highlight, and half the small drops with no splashes. The toys, the colours, the blob shadows and the water's marks on the sand are the same on every tier, and so is how much water lands and where.
+
+## The registry row
+
+For the lead, who writes the registry in section 3 of `docs/art-direction.md`:
+
+| Game | Style | Art guide |
+| --- | --- | --- |
+| Fire Truck Hero | Garden-toy plastic 3D: fat blow-moulded toys with a mould seam and screw bosses, sun-faded primaries with a satin shine, on a pale sand pit inside a cream picket fence and green hedges, in daylight | `games/fire-truck-hero/ART.md` |

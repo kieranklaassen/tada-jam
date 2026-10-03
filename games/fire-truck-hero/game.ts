@@ -459,6 +459,8 @@ export class Game extends Toy {
       const { turn, tilt } = nozzleFor(arcTo(NOZZLE, this.wants))
       this.truck.aim(turn, tilt)
     }
+    // With the fire out it settles: its nozzle comes round to the front and droops.
+    if (this.channels.settle > 0 && !this.hose.holding && now - this.stillSince > AT_REST_AFTER_S) this.truck.aim(0.2, -0.2)
     this.hangingDrop = Math.min(1, Math.max(0, this.hangingDrop + (resting ? seconds / 1.2 : -seconds / 0.15)))
     // It leans toward a flame with its roof light turning.
     this.truck.eager(!this.leaving && this.yard.things.some((thing) => thing.kind === 'fire' && thing.gulps < THINGS.fire.fill))
