@@ -71,9 +71,10 @@ export function grunt(id: GuestId, variant: number, where: number, speed: number
   const voice = GRUNT[id]
   const way = ((Math.floor(variant) % GRUNTS) + GRUNTS) % GRUNTS
   const lift = 0.92 + 0.22 * Math.max(0, Math.min(1, where))
-  const pitch = voice.pitch * lift * [1, 1.122, 0.891][way] * (awake ? 1 : 0.8)
+  // Never below what a tablet's speaker can sound.
+  const pitch = Math.max(46, voice.pitch * lift * [1, 1.122, 0.891][way] * (awake ? 1 : 0.8))
   const length = voice.length * (1.15 - 0.4 * Math.max(0, Math.min(1, speed))) * (awake ? 1 : 1.5)
-  const glide = pitch * (way === 2 ? 2 - voice.glide : voice.glide)
+  const glide = Math.max(42, pitch * (way === 2 ? 2 - voice.glide : voice.glide))
   const notes: Note[] = [tone(0, pitch, length, voice.peak, voice.wave, glide)]
   if (voice.second > 0) notes.push(tone(length * 0.9, pitch * voice.second, length * 0.8, voice.peak * 0.8, voice.wave, pitch * voice.second * voice.glide))
   const breath = voice.breath + (awake ? 0 : 0.04)
@@ -129,7 +130,7 @@ export const putBack: Sound = [hiss(0, 260, 0.05, 0.08, 3), hiss(0.07, 220, 0.05
 
 /** The day-and-night wheel: a ratchet of clicks, then the hour's own sound, low and hollow for the night and bright for the day. */
 export function wheelTurns(to: 'day' | 'night'): Sound {
-  const clicks = [0, 1, 2, 3, 4].map((click) => hiss(click * 0.045, 2100 + click * 140, 0.02, 0.06, 7))
+  const clicks = [0, 1, 2, 3, 4].map((click) => hiss(click * 0.045, 2100 + click * 140, 0.03, 0.06, 7))
   const hour = to === 'night' ? [tone(0.26, 196, 0.5, 0.09, 'sine', 185, 0.03), tone(0.32, 294, 0.42, 0.045, 'sine', 277, 0.03)] : [tone(0.26, 523, 0.22, 0.08, 'triangle'), tone(0.4, 784, 0.3, 0.07, 'triangle')]
   return [...clicks, ...hour]
 }
