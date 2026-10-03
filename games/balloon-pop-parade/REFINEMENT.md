@@ -3,12 +3,14 @@
 
 ## Status
 
-- Stage: toy. The sheet, the look spike, the toy and the rules are pushed. The game is not built on the toy: this run stops here, as its brief says.
-- Sheet: whole in `ART.md` as it stands at commit `c5edd65`, and unchanged since. Hash of the sheet part (everything above `## The look`): `2bdd3321af364369a6dec9009cc63700c8c293dd8712678156a7a37973bdd404`. Not yet checked.
-- Rules: written while the check was still to run, at the builder's own risk, against the sheet at commit `c5edd65`. A finding under the representation, the mechanic questions, the error, the designed order or the records reopens them.
+- Stage: toy. The sheet, the look spike, the toy and the rules are pushed. The game is not built on the toy: the first run stopped there, as its brief says.
+- Sheet check, round 1 (checker: B): **open, 9 findings**, judged on the sheet with hash `2bdd3321af364369a6dec9009cc63700c8c293dd8712678156a7a37973bdd404` (commit `c5edd65`). All nine replacements are pasted as given; none was disputed.
+- Sheet now: as it stands at commit `da72b2c`. Hash of the sheet part (everything above `## The look`): `21be665f52a86c79fbca9099d9d71440bfddf2e557124ac726c98356ce04f1a7`.
+- Rules and toy: brought into line with the new text in the two commits after `da72b2c` (`6de4b5a`, `10f359a`). What changed: the ending is announced each time the last friend takes its balloon, also after a pop, and the cycle is still judged once (`play.ts`); the grid's column for a troop that already has its balloons has its own result in every row (`grid.ts`); and the toy plays those results that need no new scenery (see "Not yet fixed" for the two that do). The rules are still written ahead of a pass, at the builder's own risk.
 - Look in use: inflatable vinyl toys, the first reserved look. It is clear at the youngest age in software-rendered stills at 1180 by 820, so the second look was not spiked. Its frame rate at pixel ratio 2 is the lead's to take.
 - What the Mount shows at load: the toy, on the first moment of a new game (fixed seed), played by the real rule with nothing to finish. `look=pair`, `look=solo`, `look=bunches` or `look=mixed` in the address opens another moment, so each kind and each kind of sky can be seen; `tier=0` pins full quality and `fps=1` shows the grown-up overlay.
-- Open: sheet ready for check, round 1
+- Answers handled: `docs/build/answers/balloon-pop-parade-1.md` on the base branch. Look there for a higher number at every stage boundary and before ending a run.
+- Open: sheet ready for check, round 2
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The parts below belong to the block.
 
@@ -16,7 +18,7 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 
 Requests:
 
-- **The check of the sheet**, round 1, on the text at `c5edd65`.
+- **The check of the sheet**, round 2, on the text at `da72b2c`.
 - **The still and the frame rate** of the look at 1180 by 820, pixel ratio 2, on a real graphics card. The heaviest moment is `look=bunches` (39 draw calls).
 - **Loudness.** Nobody has heard the game. Every voice is in `voices.ts` as numbers; the peaks are at or under 0.5 before the template's master gain of 0.6.
 - **A registry row** for the claimed-styles table in `docs/art-direction.md`, when the look is accepted: `| Balloon Pop Parade | Inflatable vinyl toys 3D: puffy pool-toy animals and plain balloons with welded seams, a broad sheen and a pale rim, in four saturated hues on a pink air-bed hill under a pale open sky | [games/balloon-pop-parade/ART.md](../games/balloon-pop-parade/ART.md) |`
@@ -25,7 +27,7 @@ To know:
 
 - **How the sheet reads the brief.** The brief has one friend who shows two and gets two. The sheet shows the amount by how many friends of one kind come by together (a troop of one, two or three, one balloon each), because whole bodies in a row are the only thing on a friend that a two-year-old can take in as two or three alike. If the amount must sit on a single friend, say so and the representation, the grid and the rules change with it.
 - **Records.** Of the eight records in the brief, two are not named: `us-ca 2.1` of the infant-toddler lane and the peuter card's Hoeveelheden / 1. Both are about number words or counting, and the game has neither. Three are added, read through the lookup on 2026-10-03, all confirmed: `us-ca 1.6` of the preschool mathematics foundations, and the peuter card's Hoeveelheden / 3 and Hoeveelheden / 4.
-- **Where the rules say a little more than the sheet.** (1) A first visit that starts at `pair-singles` opens with the pass-by for "one for each", which also marks "giving" as shown; the sheet names only "giving" for a new game. (2) A troop served again after one of its balloons was popped does not play the ending a second time. (3) At `bunches-own-colour` a troop of three cannot slip on its first send, since every bunch is its colour and none holds more than three. If the checker finds any of these against the sheet, the rule is the thing to change.
+- **One thing the rules' tests showed about the design.** At `bunches-own-colour` a troop of three cannot slip on its first send, since every bunch is its colour and none holds more than three, so that cycle is nearly always judged as one that went well.
 - **Where the cloud page and the guide differ.** The guide says a remote builder's commit messages name no tool; the cloud page gives a fixed last line that names one. The commits on this branch end with the cloud page's line.
 - No pull request is opened from this branch: the lead builds it. Stills and probe output were kept outside the repository, and none is committed.
 - A subagent wrote the eight rule modules from a brief made of the sheet; it ran no git and touched no existing file.
@@ -37,6 +39,8 @@ Not yet fixed, for the game stage:
 - Every kind holds its string in its hand. The duck's beak, the hippo's yawn and the crab's snip are in the motion and not yet in where the string goes; the frog's tongue is drawn.
 - Each action has one variant per kind. A director that picks among two or three without repeats is step 6 of the guide.
 - A cloud and the hill answer a touch only with the soft sound of the air, not yet with the drops and the dimple the sheet's grid promises.
+- Two cells of the grid's last column are not played yet, since both need scenery that answers: the spare balloons of a bunch bigger than the whole troop bumping the cloud so that it sheds its drops (the bunch gets away and the nearest friend is carried off, as before), and the troop stopping its sway to look at the empty hand after a pop. Their sounds are not in `voices.ts` yet.
+- The rules store what the sheet now lists at each scene's start (`play.ts`); the theatre plays none of the three scenes yet.
 - A waiting troop of three stands so close that its members overlap, and at the far left the hill hides the feet of the furthest.
 - On a narrow (portrait) surface the balloons are about 80 logical pixels across: above the jam's floor of 48, under the 100 a two-year-old should have. A test holds both numbers.
 - No audit config yet (`scripts/intersections/games/balloon-pop-parade.ts`). Every mesh is named and every friend's root carries `userData.jamObject`, ready for it. The three batches are instanced and will need `userData.jamInstanceObjects` or an `instances` rule.
@@ -69,6 +73,7 @@ Every still was drawn in software (SwiftShader) on a paused clock at 1180 by 820
 | 1 | The spike, `look=pair`: two ducks, five balloons, three frogs waiting | The balloons read at once and want to be touched. The ducks are small with pin-prick eyes and stick wings, a cloud sits behind the balloons, the waiting frogs are a green heap sunk in the hill, and a third of the screen is empty pink | Bigger heads, eyes about three times the size, chubby wings; friends drawn larger; the hill flattened so nothing sinks in it and lowered so the friends have the middle of the screen; clouds moved below the row of balloons | Not measured | The waiting troop of three overlaps |
 | 2 | All four moments on one sheet | Each kind reads as itself. Two crabs side by side cross claws; a held balloon covers the string of the one above it; the hippo's arms point sideways, so it does not look as if it reaches | Arms swing nearer to straight up for every kind; the crab narrower; the gap between friends, their scale and the waiting troop set so tests hold "side by side without touching"; the sky row raised and its strings shortened; duck and crab hues moved apart after a test found them 37 degrees from each other | Not measured | The far hill is a pale blob with nothing on it yet |
 | 3 | The toy, 46 stills of four scripted walkthroughs (press, flight, catch, refusal, lift-off, pop, poke) with each kind | It answers and it is funny: the crab's eyes shooting up, the frog carried off by its bunch. But a pressed balloon goes flat as a plate, the frog's throat covers its whole face, a refused bunch of three hides the crab it hangs beside, the wrong duck (the one with a balloon) does the refusing, and the hippo's eyes vanish when it looks up | Squash kept within what a pillow does; the throat smaller; a refused bunch hangs further out by its own width; the refusal goes to a friend still without a balloon; the hippo looks up without tipping back; the frog's tongue drawn; caps on what one frame may hold after a test of fast tapping drew 35 balloons into a batch of 28 | Frame CPU: p50 5.6 to 5.9 ms, p95 10 to 16 ms over about 75 frames a run (`look=bunches` and `look=mixed`, 33 to 39 draw calls); p50 4.0 to 4.2 ms with 21 draw calls. The p95 is over the 8 ms the jam aims at; at about four frames a second it is the fourth-worst frame of a run, and it was not chased here | The list under "Not yet fixed" above |
+| 4 | The toy after the sheet's first check, 8 stills: a troop of three hippos each given one more, one more for a served friend, a refusal beside a duck | The whole troop goes up at once with a balloon in each hand and comes down in a row; the nearest friend alone takes a single in its other hand | Each kind's own sound for being carried off and for landing; catches in a run; the other hand takes the bunch when the string hand is full; a refusal knocks a held balloon; a poked friend's string hums | Not measured again | The hippos sit so flat for a moment that their heads sink into their shoulders |
 
 ## For the pull request
 
@@ -92,9 +97,9 @@ So far, at the toy stage. No physical iPad was measured, and no frame rate is gi
 
 As the sheet has it, with every check state read through the lookup on 2026-10-03; to be read again on the day of the pull request.
 
-Balloon Pop Parade is designed from four California learning foundations published by a state department, which are foundations and not standards (`us-ca 2.3` of the infant-toddler foundations, and `us-ca 2.5`, `1.4` and `1.6` of the preschool and transitional kindergarten mathematics foundations), and from five statements of Dutch curriculum-institute guidance, which is guidance and not law (Opereren met vormen en figuren / 1 and Hoeveelheden / 3, 4 and 6 of the peuter card, and Opereren met vormen en figuren / 1 of the fase 1 card); all nine records are confirmed.
+Balloon Pop Parade is designed from four California learning foundations published by a state department, which are foundations and not standards (`us-ca 2.3` of the infant-toddler foundations, and `us-ca 2.5`, `1.4` and `1.6` of the preschool and transitional kindergarten mathematics foundations), and from five statements of Dutch curriculum-institute guidance, which is guidance and not law (Opereren met vormen en figuren / 1 and Hoeveelheden / 3, 4 and 6 of the peuter card, and Opereren met vormen en figuren / 1 of the fase 1 card); all nine records are confirmed. Sorting by one attribute is taken from both jurisdictions at every age of the band. Seeing a small set at a glance and comparing two small sets are taken from the Dutch peuter card and, from age 3, from the California preschool foundations; for age 2 no California record is named for them. Giving one for each is taken from the Dutch peuter card alone; no California record is named for it.
 
-The sheet has not been checked yet.
+The sheet's first check found nine things, all pasted as given, this claim among them; its second round is open.
 
 ### Defaults taken for the owner
 
