@@ -147,11 +147,31 @@ A running night is a view of the saved plan and is not saved: put away in the mi
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+The campers are the feedback: what each does in the night is their reaction to exactly this plan, and it is always about the camp, never about the child (pack: game-design, characters-with-opinions.md). Seen from above, each is told apart by hat and sleeping bag, and each looks up when something happens to them. The tastes never change, so a child can learn them and test them on purpose.
+
+| Who | The one visible want | Likes | Dislikes, and what they then do |
+| --- | --- | --- | --- |
+| **The reader** (head torch, glasses, a book) | Light to read by, all night. | Lantern light best; firelight will do. | The dark: walks, still reading, to the nearest light left, and with none left walks into the stream. |
+| **The sleeper** (bobble hat, an enormous bag) | To sleep through, warm and in the dark. | The fire's warmth. | A lantern shining on the tent: pulls the bag over their head and inches away like a caterpillar. Cold: wakes hugging whatever is warm, a raccoon included. |
+| **The cook** (a pan for a hat) | A big fire and a full kettle. | The fire on its highest setting; a round poured for everyone. | A small fire: fans it with the pan. A dry kettle: holds it upside down and looks inside. A round poured after the fire is out: cold cocoa, and every face that tastes it. |
+| **The scout** (wide brim, the old hand) | To carry nothing back. | A morning with almost nothing left over. | Leftovers: straps all of it on the mule, sighing, in a tower. The scout is also the one who shows a neat way, once, after the child's own try. |
+| **The small one** (a hood with ears, and the dog) | Never to be in the dark. | Any light at all. | The dark: moves, with the dog, into the nearest lit tent, whoever is in it. |
+
+Around them, each with one fixed habit: the **raccoons** come exactly as far as the dark reaches and no further, take what lies in the dark and follow a marshmallow trail wherever it leads; the **moths** circle any lit lantern, more of them on the high wick; the **owl** hoots once as the cursor passes each hour; the **mule** carries what it is given, sits down when it is given too much, and waits at the fold of the map without looking at the child. Nobody is hurt, and whoever a joke is played on is only bewildered.
+
+A wait is never a complaint: no camper and no animal hurries the child, sulks at being left, or remarks on a return.
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Each scene is a list of timed beats on game time, built on the template's `scene.ts`, filled in from the state of play, and gives way to any touch: a touch during a scene ends it at once in its final pose and is then handled as the touch it is (pack: game-design, endings-and-short-scenes.md).
+
+- **Lights out** (a consequence, 4 to 6 seconds). *Cause:* a user runs out for the first time at this site, as the cursor passes that moment. *Beats:* the flame gutters; the pin drops on the ruler; the dark closes over the circle; eyes open at its edge; the campers who were in the circle do what their tastes make them do; the raccoons come as far as the dark. *Filled in from:* which user, at what moment, who was in its reach, and what lies in the dark. The cursor stops gliding while it plays and goes on gliding after it, unless the child has taken hold of it.
+- **Morning** (the ending of a night, 6 to 10 seconds, then it holds). *Cause:* the cursor reaches dawn. *Beats:* the night film slides off the map; each camper wakes the way their own night went; the scout walks the rods and straps what is left over onto the mule; the kettle, the fire and the lanterns are left exactly as they ended. *Filled in from:* the whole night as the plan gave it. It is saved as it starts.
+- **A neat way** (guided discovery, 5 to 8 seconds, once for each idea). *Cause:* the first morning at a position whose new thing the child has now tried their own way, however that night went. *Beats:* the scout picks up the amount card, stamps it along the ruler for the first two spans only, each stamp leaving its pieces and its running total in pencil, then leaves the card lying on the ruler at the next span and steps back. At later positions the move shown is the new one: turning the dial and stamping the second card under the first; pouring one round down the line of mugs; stamping a card that spans two hours; doubling a card; halving one. *Filled in from:* this site's own card and ruler. It shows a move and never the amount this night needs, and the child can then compare it with what they did (pack: game-design, guided-discovery.md).
+- **The picnic** (a secret, 6 seconds, every time). *Cause:* the cursor passes the middle of a night in which no fire and no lantern is lit. *Beats:* the raccoons carry the snack tin into the cold fire ring, sit round it in the campers' places, and one puts on the cook's pan. Nothing hints at it and nothing counts it (pack: game-design, hidden-never-counted.md).
+- **Packing up** (the child's own act, 3 to 4 seconds). *Cause:* the touch on the fold. *Beats:* the tents fold, the kit slides to the edge, the sheet folds over to the next panel and the new site opens out flat.
+
+**How a cycle ends, and how the next starts.** A night ends at dawn in the morning scene, which stays as long as the child likes: nothing new starts by itself, and there is no countdown. From the morning the child may slide the cursor back and try another plan at the same site, as often as they like. The next site waits as the folded edge of the map with the mule standing on it, visible from the first moment of every site, and it comes in only on the child's touch. On load no scene replays: the camp stands at dusk or in its finished morning, with the fold waiting.
 
 ## The records
 
