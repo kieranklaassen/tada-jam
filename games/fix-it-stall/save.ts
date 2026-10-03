@@ -1,5 +1,5 @@
 import { boardOf, isGadgetKind, isSocket, type GadgetKind } from './board'
-import { MAX_LEADS, MAX_PARTS, ODD_KINDS, type Circuit, type Lead, type Part } from './circuit'
+import { MAT, MAX_LEADS, MAX_LOOSE, MAX_PARTS, ODD_KINDS, type Circuit, type Lead, type Loose, type Part } from './circuit'
 import { LADDER } from './config'
 import { layOut, type Job, type Ticket } from './jobs'
 import { firstDaySign } from './sign'
@@ -48,6 +48,7 @@ const isIndex = (raw: unknown, below: number): raw is number => typeof raw === '
 function readPart(raw: unknown, pads: number): Part | null {
   if (!isRecord(raw) || !isIndex(raw.a, pads) || !isIndex(raw.b, pads)) return null
   const { a, b } = raw
+  // The order of the two pads is kept as written: it is the way round the part lies.
   switch (raw.kind) {
     case 'cell': return { kind: 'cell', a, b, flat: raw.flat === true, popped: raw.popped === true }
     case 'switch': return { kind: 'switch', a, b, down: raw.down === true }
@@ -86,9 +87,19 @@ export function readCircuit(raw: unknown, want?: (kind: GadgetKind) => boolean):
     if (!isRecord(item) || !isIndex(item.a, pads) || !(item.b === null || isIndex(item.b, pads))) return null
     leads.push({ a: item.a, b: item.b })
   }
+  // A loose part is read as a part with its place on the mat instead of two pads. One to a place.
+  if (!Array.isArray(raw.loose) || raw.loose.length > MAX_LOOSE) return null
+  const loose: Loose[] = []
+  for (const item of raw.loose) {
+    if (!isRecord(item) || !isIndex(item.at, MAT.cols * MAT.rows) || loose.some((l) => l.at === item.at)) return null
+    const part = readPart({ ...item, a: 0, b: 1 }, pads)
+    if (!part) return null
+    const { a: _a, b: _b, ...body } = part
+    loose.push({ ...body, at: item.at } as Loose)
+  }
   const [p0, p1] = raw.probe as unknown[]
   if (!(p0 === null || isIndex(p0, pads)) || !(p1 === null || isIndex(p1, pads))) return null
-  return { gadget: raw.gadget, cracks: cracks.sort((x, y) => x - y), parts, leads, probe: [p0, p1] }
+  return { gadget: raw.gadget, cracks: cracks.sort((x, y) => x - y), parts, leads, loose, probe: [p0, p1] }
 }
 
 function readTicket(raw: unknown): Ticket | null | undefined {
@@ -142,6 +153,7 @@ const plainCircuit = (c: Circuit): Circuit => ({
   cracks: [...c.cracks],
   parts: c.parts.map((part) => ({ ...part })),
   leads: c.leads.map((lead) => ({ a: lead.a, b: lead.b })),
+  loose: c.loose.map((part) => ({ ...part })),
   probe: [c.probe[0], c.probe[1]],
 })
 const plainJob = (job: Job): Job => ({ who: job.who, from: job.from, circuit: plainCircuit(job.circuit), ticket: job.ticket ? { part: job.ticket.part, count: job.ticket.count } : null, open: job.open, missed: job.missed })

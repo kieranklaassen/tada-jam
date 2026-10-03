@@ -25,6 +25,22 @@ export type Part =
 export type PartKind = Part['kind']
 export const PART_KINDS: readonly PartKind[] = ['cell', 'switch', 'lamp', 'motor', 'buzzer', 'odd']
 
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
+
+/** A part without its pads: what it is, and the state it is in. */
+export type Body = DistributiveOmit<Part, 'a' | 'b'>
+
+/**
+ * A part that lies loose on the mat beside the board, joined to nothing: one
+ * taken off and put down, or one a fan has rolled away. `at` is its place as
+ * a cell of a coarse grid over the mat, counted along the rows. It takes no
+ * part in the circuit until it is seated across two pads.
+ */
+export type Loose = Body & { at: number }
+
+/** The coarse grid over the mat. One loose part to a cell. */
+export const MAT = { cols: 12, rows: 8 } as const
+
 /** A lead with a clip on each end. `b` is null while its second clip lies loose on the mat. */
 export type Lead = { a: number; b: number | null }
 
@@ -34,13 +50,16 @@ export type Circuit = {
   cracks: number[]
   parts: Part[]
   leads: Lead[]
-  /** The test lamp's two clips: a pad each, or null while a clip lies on the mat. */
+  /** The parts that lie loose on the mat. */
+  loose: Loose[]
+  /** The test lamp's two clips: a pad each, or null while a clip lies on the mat. With neither clipped it lies at its own place on the mat. */
   probe: [number | null, number | null]
 }
 
 /** The most a board may carry. A save beyond these is not this game's, and the size test rests on them. */
 export const MAX_PARTS = 24
 export const MAX_LEADS = 16
+export const MAX_LOOSE = 12
 
 /** A fresh part from the tray: a full cell, a switch with its lever up, a whole lamp. */
 export function trayPart(kind: Exclude<PartKind, 'odd'>, a: number, b: number): Part {
@@ -58,7 +77,7 @@ export function benchOdd(what: OddKind, a: number, b: number): Part {
 }
 
 export function emptyCircuit(gadget: GadgetKind): Circuit {
-  return { gadget, cracks: [], parts: [], leads: [], probe: [null, null] }
+  return { gadget, cracks: [], parts: [], leads: [], loose: [], probe: [null, null] }
 }
 
 export function boardFor(circuit: Circuit): Board {
@@ -85,6 +104,36 @@ export function placePart(circuit: Circuit, part: Part): Circuit {
 export function removePart(circuit: Circuit, index: number): Circuit {
   if (!circuit.parts[index]) return circuit
   return { ...circuit, parts: circuit.parts.filter((_, i) => i !== index) }
+}
+
+const bodyOf = (part: Part): Body => {
+  const { a: _a, b: _b, ...body } = part
+  return body as Body
+}
+const freeOnMat = (circuit: Circuit, at: number) => Number.isInteger(at) && at >= 0 && at < MAT.cols * MAT.rows && !circuit.loose.some((l) => l.at === at)
+
+/** Take a part off the board and lay it on the mat, as it is: a blown lamp stays blown. Nothing is laid on a place that is taken. */
+export function layDown(circuit: Circuit, index: number, at: number): Circuit {
+  const part = circuit.parts[index]
+  if (!part || circuit.loose.length >= MAX_LOOSE || !freeOnMat(circuit, at)) return circuit
+  return { ...circuit, parts: circuit.parts.filter((_, i) => i !== index), loose: [...circuit.loose, { ...bodyOf(part), at } as Loose] }
+}
+
+/** Seat a loose part across two pads one unit apart, `a` first: the order is the way round it lies. */
+export function seat(circuit: Circuit, index: number, a: number, b: number): Circuit {
+  const loose = circuit.loose[index]
+  if (!loose || !isSocket(boardFor(circuit), a, b) || partAcross(circuit, a, b) >= 0) return circuit
+  const { at: _at, ...body } = loose
+  return { ...circuit, parts: [...circuit.parts, { ...body, a, b } as Part], loose: circuit.loose.filter((_, i) => i !== index) }
+}
+
+/** Move a loose part to another place on the mat, or put it back in the tray with `null`. */
+export function moveLoose(circuit: Circuit, index: number, at: number | null): Circuit {
+  const loose = circuit.loose[index]
+  if (!loose) return circuit
+  if (at === null) return { ...circuit, loose: circuit.loose.filter((_, i) => i !== index) }
+  if (!freeOnMat(circuit, at)) return circuit
+  return { ...circuit, loose: circuit.loose.map((l, i) => (i === index ? ({ ...l, at } as Loose) : l)) }
 }
 
 /** Turn a part round: its two ends swap pads. */

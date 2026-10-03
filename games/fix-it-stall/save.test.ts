@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { boardOf, GADGET_KINDS, isSocket } from './board'
-import { MAX_LEADS, MAX_PARTS, type Circuit, type Part } from './circuit'
+import { layDown, MAT, MAX_LEADS, MAX_LOOSE, MAX_PARTS, seat, turnPart, type Circuit, type Loose, type Part } from './circuit'
 import { LADDER } from './config'
 import { handBack } from './handback'
 import { deserializeStall, FIRST_STREAM, freshStall, readCircuit, readJob, serializeStall, type Stall } from './save'
@@ -60,7 +60,7 @@ describe('saving and loading', () => {
     const saved = serializeStall({ ...freshStall(null), extra: 1 } as Stall)
     expect(Object.keys(saved).sort()).toEqual(['finished', 'job', 'next', 'onMat', 'position', 'shown', 'sign', 'stream', 'v'])
     expect(Object.keys(saved.job).sort()).toEqual(['circuit', 'from', 'missed', 'open', 'ticket', 'who'])
-    expect(Object.keys(saved.sign).sort()).toEqual(['cracks', 'gadget', 'leads', 'parts', 'probe'])
+    expect(Object.keys(saved.sign).sort()).toEqual(['cracks', 'gadget', 'leads', 'loose', 'parts', 'probe'])
   })
 
   it('holds no date, no duration and no count of visits or mends', () => {
@@ -113,7 +113,8 @@ describe('a damaged or foreign record', () => {
       { ...c, parts: [{ kind: 'lamp', a: 0, b: 0, blown: false }] }, { ...c, parts: [{ kind: 'lamp', a: 0, b: 9999, blown: false }] },
       { ...c, parts: [{ kind: 'kettle', a: 0, b: 1 }] }, { ...c, parts: [...c.parts, c.parts[0]] }, { ...c, parts: [{ kind: 'odd', a: 0, b: 1, what: 'ham' }] },
       { ...c, leads: [{ a: -1, b: 2 }] }, { ...c, leads: [{ a: 1, b: 2.5 }] }, { ...c, leads: new Array(MAX_LEADS + 1).fill({ a: 0, b: 1 }) },
-      { ...c, probe: [0] }, { ...c, probe: [0, 'x'] }, { ...c, parts: new Array(MAX_PARTS + 1).fill(c.parts[0]) },
+      { ...c, probe: [0] }, { ...c, probe: [0, 'x'] }, { ...c, loose: undefined }, { ...c, loose: [{ kind: 'lamp', blown: false, at: -1 }] },
+      { ...c, loose: [{ kind: 'lamp', blown: false, at: 3 }, { kind: 'cell', flat: true, popped: false, at: 3 }] }, { ...c, loose: [{ kind: 'kettle', at: 3 }] }, { ...c, parts: new Array(MAX_PARTS + 1).fill(c.parts[0]) },
     ]
     for (const raw of bad) expect(readCircuit(raw), JSON.stringify(raw).slice(0, 80)).toBeNull()
     expect(readCircuit(c)).toEqual(c)
@@ -127,6 +128,32 @@ describe('a damaged or foreign record', () => {
   })
 })
 
+describe('what stays where it was put', () => {
+  const stall = freshStall(null)
+  const again = (circuit: Circuit) => readCircuit(JSON.parse(JSON.stringify(circuit)))
+
+  it('the way round a part lies', () => {
+    const cell = stall.sign.parts.findIndex((p) => p.kind === 'cell')
+    const turned = turnPart(stall.sign, cell)
+    expect(again(turned)).toEqual(turned)
+    expect(again(turned)!.parts[cell]).toMatchObject({ a: stall.sign.parts[cell].b, b: stall.sign.parts[cell].a })
+  })
+
+  it('a part laid loose on the mat, with what it is and the state it is in', () => {
+    const lamp = stall.sign.parts.findIndex((p) => p.kind === 'lamp' && p.blown)
+    const { a, b } = stall.sign.parts[lamp]
+    const laid = layDown(stall.sign, lamp, 40)
+    expect(laid.loose).toEqual([{ kind: 'lamp', blown: true, at: 40 }])
+    expect(again(laid)).toEqual(laid)
+    // Seated again the other way round, it is the same blown lamp.
+    expect(seat(again(laid)!, 0, b, a).parts.at(-1)).toEqual({ kind: 'lamp', blown: true, a: b, b: a })
+  })
+
+  it('the test lamp, clipped by one clip, by both, or lying on the mat', () => {
+    for (const probe of [[null, null], [3, null], [3, 7]] as [number | null, number | null][]) expect(again({ ...stall.sign, probe })!.probe).toEqual(probe)
+  })
+})
+
 describe('the size of a save', () => {
   /** The fullest circuit a board can hold: every trace cracked, every socket filled up to the cap, every lead out, the longest names. */
   const fullest = (gadget: Circuit['gadget']): Circuit => {
@@ -136,7 +163,8 @@ describe('the size of a save', () => {
     // The sockets with the highest pad numbers, which are the longest to write down.
     const parts = sockets.slice(-MAX_PARTS)
     const last = board.pads.length - 1
-    return { gadget, cracks: board.traces.map((_, i) => i), parts, leads: new Array(MAX_LEADS).fill(null).map(() => ({ a: last, b: last })), probe: [last, last] }
+    const loose: Loose[] = new Array(MAX_LOOSE).fill(null).map((_, i) => ({ kind: 'buzzer', dead: false, at: MAT.cols * MAT.rows - 1 - i }))
+    return { gadget, cracks: board.traces.map((_, i) => i), parts, leads: new Array(MAX_LEADS).fill(null).map(() => ({ a: last, b: last })), loose, probe: [last, last] }
   }
 
   it('the largest legal state is under half of the 64 KB cap', () => {
@@ -147,6 +175,7 @@ describe('the size of a save', () => {
     const read = deserializeStall(JSON.parse(JSON.stringify({ ...largest, next: { ...job, who: 'tortoise' } })))
     expect(read.sign.parts).toHaveLength(MAX_PARTS)
     expect(read.job.circuit.leads).toHaveLength(MAX_LEADS)
+    expect(read.sign.loose).toHaveLength(MAX_LOOSE)
     const bytes = new TextEncoder().encode(JSON.stringify(serializeStall(largest))).length
     expect(bytes).toBeLessThan(32 * 1024)
     expect(bytes).toBeLessThan(8 * 1024)
