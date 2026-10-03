@@ -42,7 +42,7 @@ export const STEPS: Record<PositionId, Step> = {
   short: { brings: ['short'], visitors: ['snail', 'ladybird'], asks: ['height'], counts: [1], podsForWell: 4 },
   // Two traits at once.
   'colour-short': { brings: [], visitors: FOUR, asks: ['colour', 'height'], counts: [1], podsForWell: 6 },
-  // One parent gives a copy.
+  // A runner gives a copy of its one parent.
   runner: { brings: ['runner'], visitors: FOUR, asks: ['colour', 'height'], counts: [2], podsForWell: 6 },
   // A second hidden factor.
   jagged: { brings: ['jagged'], visitors: ['moth', 'ladybird'], asks: ['leaf'], counts: [1], podsForWell: 4 },

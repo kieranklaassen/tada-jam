@@ -10,10 +10,18 @@ import { TRAITS, lookCode, lookOf, pairOf, type Factor, type Look, type Pairs, t
 //
 // Numerals lie in two places and nowhere else, each beside the quantity it
 // stands for, and both are drawn by symbols.ts when that module arrives:
-// beside each group of a sorted brood (`groupsOf`), and beside the plants of
-// a wish that asks for more than one alike (`wishNumeral`). No numeral stands
-// alone and play never depends on reading one: the group is there to be seen
-// and the wish draws its plants that many times.
+// beside the plants of a wish that asks for more than one alike
+// (`wishNumeral`), and beside each group of a sorted brood (`groupsOf`). No
+// numeral stands alone and play never depends on reading one: the wish draws
+// its plants that many times and the group is there to be seen.
+//
+// The second of the two is held. Whether the count beside a sorted group is
+// a numeral on a quantity or a reading on the child's work is the owner's to
+// say, and until he answers the default holds: that count is not drawn
+// (`GROUP_NUMERAL_DRAWN`). The groups themselves are.
+
+/** Whether the count beside a sorted group is drawn. Held at no until the owner answers; a brood is sorted into groups either way. */
+export const GROUP_NUMERAL_DRAWN = false
 
 /** One trait under the loupe: the bead from the plant the pod sat on, and the bead from the plant the dust came from. */
 export type Beads = { trait: Trait; fromOnto: Factor; fromDust: Factor; hidden: boolean }
@@ -45,7 +53,7 @@ export type Group = { look: Look; ids: number[]; numeral: number }
  * A brood sorted into groups of plants that look alike, the largest group
  * first and then in a fixed order of looks, so the same brood always sorts
  * the same way. `numeral` is the count of the group, from one to the size of
- * the brood: the numeral that is laid beside it.
+ * the brood; `groupNumeral` says whether it is laid beside the group.
  */
 export function groupsOf(brood: readonly { id: number; pairs: Pairs; dry: boolean }[]): Group[] {
   const groups = new Map<number, Group>()
@@ -57,6 +65,11 @@ export function groupsOf(brood: readonly { id: number; pairs: Pairs; dry: boolea
     groups.set(code, group)
   }
   return [...groups.entries()].sort(([codeA, a], [codeB, b]) => b.numeral - a.numeral || codeA - codeB).map(([, group]) => group)
+}
+
+/** The numeral laid beside one group of a sorted brood, or none while that count is held for the owner. */
+export function groupNumeral(group: Group): number | null {
+  return GROUP_NUMERAL_DRAWN ? group.numeral : null
 }
 
 /** The numeral laid beside the plants of a wish: how many alike it asks for, or none when it asks for one. */

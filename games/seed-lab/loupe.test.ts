@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { POD_SEEDS, seedsOfPod } from './breed'
-import { beadsOf, cameFrom, groupsOf, wishNumeral } from './loupe'
+import { GROUP_NUMERAL_DRAWN, beadsOf, cameFrom, groupNumeral, groupsOf, wishNumeral } from './loupe'
 import type { Visit } from './order'
 import { PACKETS, lookOf, pack } from './plant'
 
@@ -48,6 +48,13 @@ describe('a brood sorted', () => {
       }
       expect(groups.reduce((sum, group) => sum + group.numeral, 0)).toBe(POD_SEEDS)
     }
+  })
+
+  it('draws no count beside a group while that is held for the owner, and still sorts the brood', () => {
+    expect(GROUP_NUMERAL_DRAWN).toBe(false)
+    const groups = groupsOf(brood(0))
+    expect(groups.length).toBeGreaterThan(0)
+    for (const group of groups) expect(groupNumeral(group)).toBe(null)
   })
 
   it('sorts the same brood the same way, largest group first', () => {
