@@ -2,8 +2,8 @@
 // each test one idea; they are not cartridges and are never ported to Tada.
 // They are built separately and published beside the jam, and this page only
 // reads the catalog file that build writes and links to it. No code is shared:
-// when the file is not there (the dev server, or a build without the demos)
-// the home page simply has no demo section.
+// when the file is not there (the dev server, or a build without the demos),
+// the home page offers a retry and a direct link to the player.
 
 export const DEMO_CATALOG_URL = 'lab/arcade/catalog.json'
 export const DEMO_PLAYER_URL = 'lab/arcade/index.html'
