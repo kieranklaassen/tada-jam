@@ -14,7 +14,7 @@ import { paintSheet, plotFor, px, water, type Plot } from './sheet'
 import { COLS, isFooting, site, type Site, type VehicleId } from './sites'
 import { crossingPlace, drawUp, givePlace, rollPlace } from './stage'
 import { CHIEF, FLIGHT, RING } from './toy'
-import { VEHICLES } from './vehicles'
+import { TAIL, VEHICLES } from './vehicles'
 
 // The toy drawn: the still sheet stamped once from an offscreen canvas, then
 // the water, the tray's piles, the parts where their springs have them, the
@@ -351,12 +351,12 @@ export class View {
     }
     // In a scene: where its beats have it.
     if (show.vehicle && show.kind === 'give') {
-      const place = givePlace(show, at, longOf(show.vehicle))
+      const place = givePlace(show, at, longOf(show.vehicle), TAIL[show.vehicle])
       put(show.vehicle, place.x + 0.06 * place.wiggle, place.y, place.tilt, drivePose(show.vehicle, game.seconds), false)
       if (place.afloat > 0) {
         // Up to its crates in the water: the sheet's blue over what is under the surface, and the rings it makes.
         // Only between the banks: the water is in the gap, and the ground beside it is not painted over.
-        const [wx0, wy0] = at2(Math.max(at.left[0] + 0.05, place.x - longOf(show.vehicle) - 1.2), WATER), [wx1, wy1] = at2(Math.min(at.right[0] - 0.05, place.x + 1.2), WATER - 1.3)
+        const [wx0, wy0] = at2(Math.max(at.left[0] + 0.05, place.x - longOf(show.vehicle) - Math.max(1.2, TAIL[show.vehicle] + 0.4)), WATER), [wx1, wy1] = at2(Math.min(at.right[0] - 0.05, place.x + 1.2), WATER - 1.3)
         pen.fillStyle = INK.sheet
         pen.globalAlpha = 0.82 * place.afloat
         pen.fillRect(wx0, wy0, wx1 - wx0, wy1 - wy0)

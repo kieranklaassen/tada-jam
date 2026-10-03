@@ -23,6 +23,9 @@ export const VEHICLES: Readonly<Record<VehicleId, Vehicle>> = {
   'caterpillar-bus': { id: 'caterpillar-bus', crates: 5, axles: [0, 0.5, 1, 1.5, 2, 2.5] },
 }
 
+/** How far each vehicle's body reaches behind its last axle, in cells, as it is drawn: the piano mover's piano rides on a long deck. */
+export const TAIL: Readonly<Record<VehicleId, number>> = { 'post-van': 0.65, 'jelly-truck': 0.8, 'piano-mover': 2.15, 'giraffe-bus': 0.75, 'caterpillar-bus': 0.5 }
+
 export const trainOf = (vehicle: Vehicle): Train => vehicle.axles.map((behind) => ({ behind, weight: vehicle.crates / vehicle.axles.length }))
 
 /** The test trolley: one axle, one crate for each weight on it, one to six. */

@@ -79,18 +79,32 @@ export function crossingBeats(show: Show, cue: (what: Cue) => void): Beat[] {
 }
 
 const ease = (t: number) => t * t * (3 - 2 * t)
+/** The share of the fall in which the vehicle rolls out over the water before it drops. */
+const ROLL_OUT = 0.6
 
 /** Where a vehicle in a scene is drawn: its front axle in cells, its tilt, how deep it sits in the water, and a wiggle for shaking dry. */
 export type Place = { x: number; y: number; tilt: number; afloat: number; wiggle: number }
 
-/** The vehicle during the give: down into the water, along it to the near bank, up the bank, and still. `long` is the distance from its front axle to its last. */
-export function givePlace(show: Show, at: Site, long: number): Place {
-  const wait = at.left[0] - WAIT.before, shore = at.left[0] + 0.4 + long
-  // It falls where it was, nose first, a little further on than where the road left it, and never into either bank.
-  const dropX = Math.min(Math.max(show.from[0], shore) + 0.3 * show.fall, at.right[0] - 0.9)
-  const afloat = WATER + 0.25, fallY = show.from[1] + (afloat - show.from[1]) * show.fall * show.fall
-  // It floats on the water, and where a rock or a ledge stands out of it, it clambers over: its wheels are never inside one.
-  const over = (x: number) => Math.max(afloat, Math.min(at.left[1], groundAt(at, x)) + 0.02, Math.min(at.left[1], groundAt(at, x - long)) + 0.02)
+/**
+ * The vehicle during the give: off the road and down into the water, along it
+ * to the near bank, up the bank, and still. `long` is the distance from its
+ * front axle to its last, and `tail` how far its body reaches behind that: it
+ * comes down and floats far enough out for its whole length to be clear of the bank.
+ */
+export function givePlace(show: Show, at: Site, long: number, tail = 0): Place {
+  const [near, far] = openWater(at)
+  const wait = at.left[0] - WAIT.before, shore = near + 0.4 + long + tail
+  // It goes on from where the road left it, out to where its whole length is over open water, and never into the far
+  // bank: it rolls out for the first part of the fall, and only then drops, nose first.
+  const lands = Math.min(Math.max(show.from[0], shore) + 0.3, far - 0.9)
+  const dropX = show.from[0] + (lands - show.from[0]) * ease(Math.min(1, show.fall / ROLL_OUT))
+  const afloat = WATER + 0.25, drop = Math.max(0, (show.fall - ROLL_OUT) / (1 - ROLL_OUT)), fallY = show.from[1] + (afloat - show.from[1]) * drop * drop
+  // It floats on the water, and where a bank, a rock or a ledge is under its wheels or its tail, it rides over it: no part of it is ever inside one.
+  const over = (x: number) => {
+    let high = afloat
+    for (let back = 0; back < long + tail + 0.25; back += 0.25) high = Math.max(high, Math.min(at.left[1], groundAt(at, x - Math.min(back, long + tail))) + 0.02)
+    return high
+  }
   if (show.paddle <= 0) return { x: dropX, y: Math.max(fallY, over(dropX)), tilt: show.tilt - 0.35 * show.fall, afloat: show.fall >= 1 ? 1 : 0, wiggle: 0 }
   if (show.climb <= 0) {
     // Afloat on its crates: it bobs, and paddles back toward the near bank.
@@ -103,8 +117,17 @@ export function givePlace(show: Show, at: Site, long: number): Place {
   return {
     x: shore + (wait - shore) * across,
     y: base + (at.left[1] - base) * up + 0.45 * Math.sin(Math.PI * Math.min(1, show.climb * 2)) * (1 - across) + 0.5 * Math.sin(Math.PI * across),
-    tilt: 0.3 * Math.sin(Math.PI * show.climb), afloat: 1 - up, wiggle: show.shake > 0 && show.shake < 1 ? Math.sin(show.shake * 40) * (1 - show.shake) : 0,
+    // Nose up while it rises beside the bank, and level before any of it is over the bank.
+    tilt: 0.3 * Math.sin(Math.PI * Math.min(1, show.climb * 2)), afloat: 1 - up, wiggle: show.shake > 0 && show.shake < 1 ? Math.sin(show.shake * 40) * (1 - show.shake) : 0,
   }
+}
+
+/** The stretch of the gap where the water is open: from where the near bank's foot goes under the surface to where the far bank's comes out of it. A rock that stands out of it in between is ridden over. */
+export function openWater(at: Site): readonly [number, number] {
+  let near = at.left[0], far = at.right[0]
+  while (near < at.right[0] && groundAt(at, near + 0.05) >= WATER) near += 0.25
+  while (far > near && groundAt(at, far - 0.05) >= WATER) far -= 0.25
+  return [near, far]
 }
 
 /** The vehicle during the crossing: where the run left it while it reacts, then on to where it stays: the lay-by on the far bank, or, come home, its place in the line at the near bank. `stays` is that place's x. */

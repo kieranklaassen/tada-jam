@@ -13,7 +13,7 @@ import { groundAt } from './sheet'
 import { isFooting, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, givePlace, idleShow, type Cue, type Show } from './stage'
 import { CHIEF, RING, Toy } from './toy'
-import { TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
+import { TAIL, TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
 import { bargeHorn, chiefTaps, chord, creak, give, gurgle, honk, hornEcho, plop, lay as layVoice, pendulum, pinTick, pluck as pluckVoice, reactVoice, restore, snapTick, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
 
 // The game on the toy: the vehicles at the two banks, a run over the bridge,
@@ -155,7 +155,7 @@ export class Game extends Toy {
     const thread = this.drawn()[dipped.part]
     if (!thread) return null
     const [a, b] = thread.a[0] <= thread.b[0] ? [thread.a, thread.b] : [thread.b, thread.a]
-    const wheel = givePlace(show, this.at, longOf(show.vehicle))
+    const wheel = givePlace(show, this.at, longOf(show.vehicle), TAIL[show.vehicle])
     const x = Math.max(a[0] + 0.1, Math.min(b[0] - 0.1, show.from[0])), level = a[1] + ((b[1] - a[1]) * (x - a[0])) / Math.max(b[0] - a[0], 0.2)
     // It lets go of the wheel in the first third of the paddle and is straight again.
     const held = 1 - Math.min(1, show.paddle * 3)
