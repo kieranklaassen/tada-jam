@@ -3,24 +3,32 @@
 
 ## Status
 
-- Stage: gates, as far as this machine can take them. The game is built on the toy: the rules, the save, the four characters with their tastes, the errors as consequences, the idle ladder and the four short scenes are in and run. The intersection audit is enforced and clean, the cold playtest proxy has been run twice, and `npm run check`, the build and both built-asset checks pass. What no cloud machine can do is open: the frame rate, and the three things that need someone else (the sheet's check, the owner's toy checkpoint, a listener).
-- Sheet: in `ART.md` at commit `2f24260` (sheet part sha256 `64167625dec6f9e1821e04482569c2e21ea02080d10c06c93a0d1e06fec34ad7`, unchanged since; only the look was written below it).
-- Open: sheet ready for check, round 1
-- Everything from "the game on the toy" onward was built while the check runs, at the builder's own risk, against the sheet at `2f24260`: `surface.ts`, `mud.ts`, `silhouette.ts`, `cycle.ts`, `washState.ts`, `tastes.ts`, `reactions.ts`, `scenes.ts`, `guide.ts`, `play.ts`. A finding under the representation, the mechanic questions, the error, the designed order or the records reopens them.
-- Look in use: first reserved choice, enamel toy cars. The Mount shows the real scene at load: with no saved slot it is always the same first visit (Tipper in the bay, the fire engine at the door, a fixed seed), so the lead can take the still at 1180 by 820. With the shell's child age at 4 the first showing plays in the first four seconds; with it at 2 or 3 the scene stands still. Frame rate at DPR 2: not measured here; the lead's to take on a graphics card. At tier 0 the scene is 27 to 30 draw calls and about 35,000 triangles, with no post pass and no shadow map.
-- Open, the gates: no frame rate is measured and no perf probe run (`npm run perf:jam`, WebKit, throttled Chrome, four times the pixels) has been made, since this machine has no graphics card; no physical iPad. Ran green at the last commit: `npx tsc --noEmit`, `npx vitest run games/muddy-truck-wash test/games.test.ts` (21 files, about 2 seconds), `npm run -s wordless:check`, `node scripts/egress-check.ts`, `npm run check` (213 test files, 2201 tests passed, 1 skipped), `npm run build`, `npm run egress:built`, `npm run education:built`, and `npm run check:intersections -- muddy-truck-wash --ci` with `enforce: true` (clean, exit 0).
+- Stage: gates, as far as this machine can take them, after a second run that answered the first check of the sheet. The game is built on the toy and unchanged in look and play but for what the check and the lead's finding asked: the count of puddle trips is saved, the floor's marks are short-lived, and the cloth cannot spread a smear.
+- Sheet, round 1: checker A read the sheet at commit `2f24260` (sha256 `64167625dec6f9e1821e04482569c2e21ea02080d10c06c93a0d1e06fec34ad7`). Outcome: open, 11 findings, each with the sentence to stand there.
+  - All eleven are pasted as given, and nothing else, in commit `7a32f95`.
+  - The five places where the game differed from the sheet are written into it in commit `f15246e`.
+  - What the cloth does with mud it has itself laid down is said in it in commit `5eea7eb`.
+- Sheet now: `ART.md` at commit `5eea7eb`, sheet part sha256 `46a0247f26caa29d207314cdc9d60b84a85d939e929734bde35690da7a9db571` (`awk '/^## The look/{exit} {print}' games/muddy-truck-wash/ART.md | sha256sum`).
+- Open: sheet ready for check, round 2
+- Rules brought into line with the findings that change them:
+  - Finding 8: `next.dips` (0 to 2) is saved with the vehicle that waits, read defensively, and back at none for each new vehicle at the door (commit `2625c34`).
+  - Finding 3: the floor's marks creep to the drain and dry within seconds of attended play; `floor.ts` is the rule and `floor.test.ts` holds that nothing is left (commit `95de18b`).
+  - Finding 5: no rule changed. The puddle already muddied only the vehicle that waits, twice at most.
+- The lead's finding from play, the cloth: reproduced in `cloth.test.ts` before anything was changed. The lead's wash (sponge twice, hose twice, cloth twice over the whole tipper, in rows) turned all 56 patches brown from 9 of soft mud, and one soft patch on a shining vehicle became 42 brown patches in one pass. Cause: a finger dabs a patch more than once as it crosses it, and the second dab picked up the mud the first had laid, so the limit of three patches never ran out. Now a smear is a patch of its own kind (`m`, in the saved grid) that the cloth picks nothing up from, and foam is moved, not copied. The same wash ends with 26 brown patches of 56, and the single patch with 4 however often the cloth passes (commit `5eea7eb`).
+- Everything from "the game on the toy" onward was built before the sheet passed, at the builder's own risk. A finding in round 2 under the representation, the mechanic questions, the error, the designed order or the records reopens the rules.
+- Look in use: first reserved choice, enamel toy cars. Not refined in this run: the owner has the build and has not yet answered on the look and the toy.
+- Frame rate, from the lead on a graphics card (an Apple M4, 1180 by 820 at a pixel ratio of 2, the build of `ea5e4ad`, a first reading taken while other work ran): Chrome with the CPU throttled six times and the top tier pinned, 60 frames a second, 59 in the worst second, 1.7 ms of the game's own time at the 95th percentile, 27 to 30 draw calls; WebKit with the top tier pinned, 60 and 60, 1.0 ms; Chrome unthrottled with the governor free, it stays on the top tier. The reading for the pull request is the lead's to take later. No physical iPad yet.
+- Open, the gates: nobody has listened to the game. Ran green at the last commit: `npx tsc --noEmit`, `npx vitest run games/muddy-truck-wash test/games.test.ts` (24 files, 416 tests), `npm run -s wordless:check`, `node scripts/egress-check.ts`, `npm run build`, `npm run egress:built`, `npm run education:built`, and `npm run check:intersections -- muddy-truck-wash --ci` with `enforce: true` (clean, exit 0: 0 open, 34 allowed, 2 hidden, 519 samples, 41 pieces, as before this run).
 - Requests to the lead:
   1. A row in the claimed-styles registry of `docs/art-direction.md` once the owner has seen the look: "Muddy Truck Wash | Enamel toy cars 3D: die-cast vehicles in hard gloss enamel chipped to zinc, lamp eyes, on dark wet concrete in a teal tiled wash bay | `games/muddy-truck-wash/ART.md`".
-  2. The frame rate of the look at DPR 2 on a graphics card, and the loudness of the voices on a real machine (`voices.ts` holds every one as numbers; `voices.test.ts` holds the ranges).
-  3. The template points under "Template notes" marked **for the template**.
+  2. The loudness of the voices on a real machine (`voices.ts` holds every one as numbers; `voices.test.ts` holds the ranges).
+  3. The template points under "Template notes" marked **for the template**. The game stays on the first version of the template, as told, and merged nothing.
 - Findings not fixed: see "Still weak" under the pass log.
-- Where the game differs from the sheet as written. The sheet is not edited while its check runs, so these stand here until the check's report comes back, and then go into the sheet as part of the next round:
-  1. **The first showing.** The sheet has the vehicle brake with its nose under the hose on its hook and a drop fall from the nozzle. In the game the drop falls from a tap on the rack's long arm, which hangs over the vehicle's nose, and the vehicle only shuffles under it. With the drop falling from the hose the nose was hidden behind the rack at the moment that matters. The sheet also says the showing is for the first vehicle that ever rolls in with dried mud; on a first visit that starts on dried mud (a child of 4 or older) it plays for the vehicle already in the bay, in the first seconds.
-  2. **The cloth on soft mud and on foam.** The sheet says it smears onto the clean paint beside it. In the game the cloth carries what it picked up along the rub: the next three clean patches under the finger get it, and then the cloth is clean. Smearing all around, as first built, turned a whole vehicle brown in one rub.
-  3. **The seed.** The sheet says it picks the next vehicle and lays out its mud. It only lays out the mud: the roster comes in its own order, so every vehicle is back within four washes.
-  4. **Small things in the grid.** A bare finger on foam pops bubbles and leaves no hole. A wet vehicle sent off leaves drops, not tyre lines. The fire engine has no wipers.
-  5. **Which vehicle a new position lays out.** The position moves when a wash is judged, and the vehicle that then appears at the door is laid out for the new position; the one rolling in was already standing there with its mud. The sheet does not say which, and this is the one-cycle lag in the template notes.
-- Where this run differs from the cloud page: `npx playwright install` was not run. The machine came with a Chromium (revision 1194) and an instruction not to download another; the repository's Playwright asks for revision 1243. Stills were taken with the installed browser by its path, and the audit was run by pointing `PLAYWRIGHT_BROWSERS_PATH` at a folder outside the repository that links revision 1243's file names to the installed one. Nothing in the repository was changed for this.
+- Where the game still differs from the sheet. Three of the pasted replacements describe more than the game does, and this run was told not to refine the game, so they wait for the next run:
+  1. **Finding 4.** The sheet now gives the sponge on wet paint thin foam that runs, with a wet slurp, and on dull paint thick foam in peaks, with a dry squeak. The game lays the same foam with the same sound on both; `reactions.test.ts` says so in a comment and lets the two cells answer alike.
+  2. **Finding 9.** The sheet has the mixer rock its drum a little way round and back at rest. In the game the mixer glances back at its drum and the drum stands still.
+  3. **The grid's last column.** A wet vehicle sent off leaves a trail of drops that wets the floor along its way, not two tyre lines.
+- Where this run differs from the cloud page: `npx playwright install` was not run, in either run. The machine came with a Chromium (revision 1194) and an instruction not to download another; the repository's Playwright asks for revision 1243. The audit was run by pointing `PLAYWRIGHT_BROWSERS_PATH` at a folder outside the repository that links revision 1243's file names to the installed one. Nothing in the repository was changed for this.
 - Machine: Node 24 installed with nvm (the machine came with 22).
 
 ### Template notes
@@ -62,7 +70,7 @@ The stages in order are sheet, toy, game, gates. Someone with no session to read
 
 - The look, at the toy checkpoint: enamel toy cars as spiked.
 - The toy: whether rubbing a tool over the vehicle is a pleasure with nothing to achieve.
-- Whether the first showing may play at load on a first visit that starts on dried mud (age 4 and up). It is a first showing, not a replay, and it is marked when it starts; the guide says no scene replays on load and does not name this case.
+- Whether the first showing may play at load on a first visit that starts on dried mud (age 4 and up). It is a first showing, not a replay, and it is marked when it starts; the guide says no scene replays on load and does not name this case. The sheet now says it does.
 - Nothing else beyond the defaults in the guide, which the sheet and the game work under as written: no symbol, no letter, no word, no camera shake, no impact pause, no speech.
 
 ## Pass log
@@ -77,6 +85,7 @@ Every still on this machine is software GL (SwiftShader) at 1180 by 820, taken o
 | 4, the scenes | The puddle, the send-off and the first showing, frame by frame | "The truck hides behind the hose when the drop falls. Its eyes are covered in mud. The red truck drives through the bucket." | Eyes are a material nothing covers; the rack stands toward the child, clear of the lane; a tap on the rack's long arm hangs over the nose, so the showing plays in the open; a dried patch on the nose at `dried-patches`, open to the sky | not measured | the first drop was small |
 | 5, the idle ladder | The glow at 4.4 s and the hand at 6 s and 16 s | "Everything went foggy. The hand points at the towel but the truck is muddy." | The hand shows the tool a wash takes up next, not the one with the most patches; the glow is on edges only | not measured | the glow still hazed the vehicles (fixed in pass 7) |
 | 6, the intersection audit | Seven runs of the audit over 13 moments, 519 samples, 41 pieces | Not a child's critique: what passes through what. First run 44 open findings | Fixed as real: flush faces in Tipper's bed, on the tractor's mudguards, on the ladder and the door post; rear axles so close their tyres overlapped; a cloth and a sponge that dipped into the floor at a wheel; a tool left in the lane as the next vehicle drove in; a tool that crossed through the body between two far spots; the nozzle hanging through its coil. Allowed as meant, each with a reason and a cap: eyelids, pupils, the hinged bed, the body on its springs, a sponge or cloth pressed on paint, a tool on the rack | not measured | see "The audit" below |
+| 8, the lead's cloth finding (second run) | The lead's scripted wash, as a test on the model: `cloth.test.ts` | "I wiped it and it went all brown again." 56 of 56 patches brown from 9; one soft patch became 42 | A smear is its own patch that the cloth picks nothing up from; a muddy cloth is clean three patches on whatever they hold; foam moves with the cloth and is never copied | 60 fps in Chrome at six times throttle and in WebKit, the lead's first reading of the build before this fix | the same wash still leaves 26 of 56 patches brown: every soft patch the child did not soap smears three |
 | 7, the cold playtest proxy | The production build, cold, with the shell's default age: 10 s hands off, then a newcomer's minute, 44 stills | Six unclear moments, listed under "The cold playtest proxy" below | A cloth's smear is a short streak; Tipper's bed bounces; the glow is on the tools only and they swell with it; the hand reaches in from the open floor; a poke on paint throws dust; the first drop is bigger and the look at it longer | not measured | see the after list below |
 
 ### The audit
@@ -112,15 +121,14 @@ Run on the production build, served by `vite preview`, with a fresh slot and the
 
 ### Still weak
 
-- No frame rate, no WebKit run and no perf probe: this machine has no graphics card. The budgets are written (about 12 ms a frame, never under 45 fps, under 80 draw calls, pixel ratio 2 at most, no post pass); what is counted here is 27 to 30 draw calls and about 35,000 triangles at tier 0.
-- The renderer asks for antialiasing. At pixel ratio 2 on an iPad that may cost more than it gives; if the lead's number is low, turning it off at tier 0 is the first thing to try (it is fixed at context creation, so it cannot be a tier).
+- No frame rate from this machine, which has no graphics card. The lead's first reading on an Apple M4 holds 60 frames a second in WebKit and in Chrome at six times CPU throttle; a physical iPad has not been measured, and the fill test at four times the pixels has not been reported.
+- The renderer asks for antialiasing. At pixel ratio 2 on an iPad that may cost more than it gives; if an iPad's number is low, turning it off is the first thing to try (it is fixed at context creation, so it cannot be a tier).
+- The second run changed how the floor's marks behave (they creep to the drain and dry) and nobody has looked at it: no still was taken, since the run was told not to refine the look. The rule is tested; how it reads on screen is for the next look at the game.
+- Three places where the sheet now says more than the game does are listed in the status block.
 - Nobody has heard a sound. Every voice is inside its stated range; whether a scrub sounds like a scrub is for the first listener.
 - The hose in hand is a nozzle with no hose behind it.
-- A bare finger on foam pops bubbles but leaves no hole in the foam, which the sheet's grid describes.
-- The fire engine has no wipers to flap at soap in its eyes; it squeezes its eyes shut and blows bubbles.
 - The ghost hand is a plain mitten.
 - The tool in hand hovers where it was last used; after a send-off it waits above the bay.
-- The floor keeps every mark of a visit and is never cleaned: after many washes the pad's front is all foam.
 - Layout was only looked at in landscape at 1180 by 820. The camera backs off to keep the whole bay in view at any shape; a portrait surface has not been judged.
 
 ## For the pull request
@@ -133,11 +141,11 @@ Run on the production build, served by `vite preview`, with a fresh slot and the
 - **Kid-clear.** One vehicle in the bay, one at the door, three tools, on a dark floor against a dark tiled wall; the vehicles carry all the colour.
 - **Wordless clarity for the declared age.** No word, letter, numeral or symbol; no voice. One vehicle wants one thing. Each tool changes what it touches at once. Tool targets are 124 logical pixels across, the puddle's 132, none in the bottom strip.
 - **Wordless guidance.** The template's ladder: the tools on the rack glow and swell, then a ghost hand shows one move (the tool a wash takes up next, one short rub, or a touch on the vehicle at the door), backs off, and stops. Any touch clears it.
-- **60 fps on a mid-range iPad.** Not measured on this machine. Built for it: pixel ratio capped at 2, 27 to 30 draw calls, no shadow map, no post pass, geometry built once at mount, one shader for every solid thing, the loop paused when unattended. Four tiers shed the pixel ratio, the copy under the floor and the number of flying things drawn.
+- **60 fps on a mid-range iPad.** Not measured on this machine; the lead's first reading on an Apple M4 at a pixel ratio of 2 is 60 frames a second in WebKit and in Chrome at six times CPU throttle, top tier pinned. No iPad yet. Built for it: pixel ratio capped at 2, 27 to 30 draw calls, no shadow map, no post pass, geometry built once at mount, one shader for every solid thing, the loop paused when unattended. Four tiers shed the pixel ratio, the copy under the floor and the number of flying things drawn.
 - **Procedural or committed assets only.** Everything is built in code: shapes, the matcap, the noise, the sounds. No file is fetched.
 - **Its own art direction.** Enamel toy cars, as `ART.md` describes below the sheet.
 
-Frame rates for the pull request: none from this machine. Engine, throttle, pixel ratio and build are the lead's to state. No physical iPad was measured.
+Frame rates for the pull request: none from this machine. The lead's first reading is in the status block; the reading for the pull request, with engine, throttle, pixel ratio and build, is the lead's to take and state. No physical iPad was measured.
 
 ### The learning claim, as the sheet has it
 
@@ -156,4 +164,5 @@ Every default under "Symbols, and the defaults awaiting the owner" in the guide 
 - The audit is the best reviewer of geometry there is. Its first run found faces lying in one plane, overlapping tyres and tools dipping into the floor that no still had shown. Run it as soon as there is a scene, with `userData.jamObject` on each character's root and `userData.jamInstanceObjects` on its instanced parts.
 - A finding that comes and goes between runs is a thing in motion caught at different moments, not noise: here it was a tool crossing through the body between two taps.
 - Play the game headless in a test before anything else can play it. A test that tapped at random for 400 taps found a fault in the save that no walkthrough would have.
+- A limit counted in patches has to count patches, not dabs. A finger dabs a patch more than once as it crosses it, and a test that stepped a whole patch at a time passed while the game turned a vehicle brown. Test a rub at the spacing the input samples it at, and on the scripted wash the lead plays.
 - The cold playtest proxy found the worst fault of the build (a cloth that turned the whole vehicle brown) in its first minute. Run it before the audit, not after.
