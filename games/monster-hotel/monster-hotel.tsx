@@ -5,6 +5,8 @@ import { AttendedClock, Attention } from './attention'
 import { GameAudio, tick } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
+import { InkPage } from './ink'
+import { SPIKE_SCENE } from './inkScene'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { monsterHotelManifest } from './manifest'
 import { Overlay } from './overlay'
@@ -39,6 +41,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    // The look spike: the ink page and the 2D surface it draws its one fixed scene on. Nothing is playable behind it yet.
+    const page = new InkPage(), surface = canvas.getContext('2d')
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     // The game hands a change to storage where it makes it, at one of two speeds:
@@ -54,12 +58,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // of `resize`, since `resize` does nothing when the size and the pixel ratio stay as they were (on a display
     // of ratio 1 they always do). The blank surface has nothing to switch: it marks the tier it was given on its
     // canvas, where a still or a probe can read which tier is applied.
-    const applyTier = () => { canvas.dataset.tier = String(governor.tier) }
+    const applyTier = () => { canvas.dataset.tier = String(governor.tier); page.resize(width, height, dpr, governor.tier) }
 
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => {}
+    const draw = () => { if (surface) drawn.drawCalls = page.draw(surface, SPIKE_SCENE, clock.seconds) }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
@@ -73,6 +77,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // Sizing the backing store wipes the surface, so it is redrawn at once: a resize lands after the frame's
       // own draw, or while the game rests and no frame is coming, and either would leave the surface blank.
       canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
+      page.resize(width, height, dpr, governor.tier)
       draw()
       return true
     }
