@@ -98,12 +98,12 @@ A length is a **plain straight strip that hangs from a level line**. Two strips 
 - `v`: the version of the shape.
 - `position`: the id of the place in the order where the next customer is laid out.
 - `finished`: the cape has come off in this cycle, so the cycle is judged and nothing judges it twice.
-- `chair` and `friend`: who is in the chair and who is the model.
+- `chair` and `friend`: who is in the chair and who is the model, or nobody for both on a first visit, before the first pair has come in.
 - `waiting`: the pair at the door, as two ids.
 - `seed`: a whole number that the next layout and the next pair are drawn from. No clock and no other source of chance is read.
 - `lock` and `model`: the two lengths, in whole steps.
 - `seat`: `beside` or `across`, where the friend is now.
-- `cape`: `on` or `off`. With `off` the pair stand together as the scene left them.
+- `cape`: `on` or `off`. With `off` the pair stand together as the scene left them; it is also `off` while nobody is in the chair.
 - `mane`: the lengths of the nine tufts of the customer's mane.
 - `ribbon`: nothing until the ribbon has first been shown, then its length and where it is: on its peg, beside the lock, beside the model, tied on one of the nine tufts of the mane with the number of that tuft, round the customer's or the friend's face with whose face it is, or on the floor with its place along the floor.
 - `clippings`: up to twelve pieces of hair or ribbon, each with a length, a colour, and where it lies: a place along the floor, or stuck on the customer's or the friend's face with whose face it is and the spot on that face. A thirteenth piece turns the oldest one on the floor into fluff that blows away.
@@ -139,11 +139,11 @@ Each scene is a list of timed beats filled in from the state of play, on the tem
 - **Coming in** (4 to 6 seconds). Cause: the child touches the door where the next pair waits. Beats: the door swings, the pair walk in, each with its own gait; the rain hats pop off and the hair springs out; the customer hops into the chair and the cape lands on it; the friend takes its seat; the customer looks from its lock to the friend's and pats its own. Filled in from who the two are, the nine tuft lengths, the two lock lengths and the friend's seat.
 - **The cape comes off** (6 to 10 seconds; the ending). Cause: the child pulls the cape off by its knot. Beats: the cape flies; the customer hops down and goes to the friend; they stand cheek to cheek with the two locks side by side and their top ends level; both look down at the free ends; the customer does its own too long, too short or as-long reaction, sized by the piece or the gap; then it answers to its mane, its bow and whatever is stuck on its face, by its tastes; the pair settle by the door. Filled in from the two lengths, the mane, the ribbon, the clippings on faces and who the two are, so it stars exactly the haircut the child gave.
 - **A thing shown once** (3 to 8 seconds each; the three marks in `shown`). Each is a move in the salon, done once by a character on something that is not the problem in front of the child, and never again unasked (pack: game-design, guided-discovery.md).
-  - *The snip*, in the first cycle ever: the customer pokes a paw out of the cape and nips one tuft of its own mane; the piece falls.
-  - *The pull*, the first time a lock starts shorter than its model: the customer tugs one tuft of its own mane longer, and it stays.
+  - *The snip*, in the first cycle ever: the customer pokes a paw out of the cape and nips the longest tuft of its own mane to half its length; it becomes a pom and fluff floats up, as in the grid, so `mane` changes and `clippings` does not.
+  - *The pull*, the first time a lock starts shorter than its model: the customer tugs the shortest tuft of its own mane longer, and it stays, so `mane` changes.
   - *The ribbon*, the first time the friend sits across the room: the friend takes the ribbon from its peg, holds it beside its own tail, pulls it until it is as long as the tail, trots over, holds it beside the customer's tail, and hangs it back on the peg. From then on the ribbon is in the salon.
 
-**How a cycle ends.** The child ends it, by pulling the cape off. The pair then stand together by the door for as long as the child likes, breathing and blinking, with the haircut on show. A touch on the chair brings the customer back under the cape for more.
+**How a cycle ends.** The child ends it, by pulling the cape off. The pair then stand together by the door for as long as the child likes, breathing and blinking, with the haircut on show. A touch on the chair brings the customer back under the cape for more. While the pair stand there the customer's hair is like the friend's: pulled or snipped, it springs back, since only hair under the cape stays as it is cut. And while a customer is under the cape the door stays shut: touched, the pair behind it duck and peek and nobody comes in, so a stray touch never sweeps a haircut away.
 
 **How the next one starts.** The next pair is visible at the door the whole time, under their rain hats. They come in when the child touches the door, and the pair that was done go out past them. The pair that go out wear out of the door whatever is stuck on their faces, and those pieces leave `clippings`; a ribbon that hung beside a lock, in the mane or round a face is back on its peg at the length it has; pieces and a ribbon on the floor stay where they lie. If the child does nothing, nothing starts: no next round begins by itself and nothing counts down. The ones who wait look about and rock on their heels; they never knock, wave the child over or look at a clock.
 
