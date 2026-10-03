@@ -1,13 +1,19 @@
-import { chief, chiefModel } from './figures'
+import { poke, reactPose, waitPose, drivePose, type VehiclePose } from './acts'
+import { showsStrain, strainLook } from './consequence'
+import { chief, chiefModel, roll } from './figures'
+import { vehicle } from './fleet'
+import type { Game } from './game'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { key, length, samePoint, type Kind, type Part, type Point } from './kit'
-import { TRAY, bays } from './layout'
+import { ROLL, TRAY, bays, parkAt, rackAt, waitAt } from './layout'
 import { INK, THICK, pin, stream, string, wood, woodShadow, type Pen, type Wood } from './look'
 import { stringSway } from './motion'
-import { ends } from './pose'
+import { WATER, ends } from './pose'
 import { paintSheet, plotFor, px, water, type Plot } from './sheet'
-import { isFooting, type Site } from './sites'
-import { CHIEF, FLIGHT, RING, type Toy } from './toy'
+import { COLS, isFooting, site, type Site, type VehicleId } from './sites'
+import { crossingPlace, drawUp, givePlace, rollPlace } from './stage'
+import { CHIEF, FLIGHT, RING } from './toy'
+import { VEHICLES } from './vehicles'
 
 // The toy drawn: the still sheet stamped once from an offscreen canvas, then
 // the water, the tray's piles, the parts where their springs have them, the
@@ -102,7 +108,7 @@ export class View {
   }
 
   /** Draws the toy and returns how many things it drew, which a canvas game reports as its draw calls. */
-  draw(pen: Pen, toy: Toy, guidance: Guidance | null): number {
+  draw(pen: Pen, toy: Game, guidance: Guidance | null): number {
     const { plot } = this, { cell } = plot, at = toy.at, footing = isFooting(at)
     const at2 = (p: readonly [number, number]) => px(plot, p[0], p[1])
     let drawn = 1
@@ -138,6 +144,7 @@ export class View {
 
     // The parts where their springs have them. String lies under wood, wood under pins.
     const hand = toy.hand
+    const sheet = toy.save.sheets[toy.save.on], jobCrossed = sheet.crossed.includes(at.job)
     const pose = toy.bridge.map((part, index) => {
       const now = hand?.what === 'part' && hand.carried && hand.index === index ? toy.carriedEnds(hand) : ends(toy.moving[index], length(part))
       const dx = now.b[0] - now.a[0], dy = now.b[1] - now.a[1], long = Math.hypot(dx, dy) || 1
@@ -163,7 +170,11 @@ export class View {
       // A plank turning swells or shrinks to its new depth; a stick spinning flickers thin and thick.
       const was = part.turned ? THICK.plank / THICK['plank-edge'] : THICK['plank-edge'] / THICK.plank
       const deep = part.kind === 'plank' ? 1 + (was - 1) * p.turning ** 2 : part.kind === 'stick' ? 1 - 0.5 * p.turning * Math.abs(Math.sin(2 * Math.PI * 4 * p.turned)) : 1
-      this.part(pen, woodOf(part), length(part), p.a, p.b, carried ? 3 : 1 + landing, deep)
+      // Under a load a pulled part draws thin and a squeezed one bulges, by the share of its strength in use.
+      const drive = toy.drive
+      let strained = 1
+      if (drive && showsStrain(drive.heard[index] ?? 0, jobCrossed)) { const look = strainLook(drive.strain[index] ?? 'rest', drive.heard[index] ?? 0); strained = 1 - 0.35 * look.thin + 0.5 * look.bulge }
+      this.part(pen, woodOf(part), length(part), p.a, p.b, carried ? 3 : 1 + landing, deep * strained)
       drawn++
     })
 
@@ -216,6 +227,8 @@ export class View {
       drawn++
     }
 
+    drawn += this.cast(pen, toy, guidance)
+
     // The crew chief and the small model it is fiddling with, on the near bank.
     const [cx, cy] = at2([CHIEF.x, CHIEF.y])
     // The ledge it stands on: one ruled line in the margin.
@@ -229,6 +242,125 @@ export class View {
     drawn += 2
 
     if (guidance && guidance.demo !== null) { this.ghost(pen, toy, guidance); drawn++ }
+    return drawn
+  }
+
+  /**
+   * The cast of the game on the sheet: the pencil ring, the hats left on
+   * parts, the vehicles at both banks, on a run and in a scene, the next
+   * sheet's roll and the rack. Returns how many things it drew.
+   */
+  private cast(pen: Pen, game: Game, guidance: Guidance | null): number {
+    const { plot } = this, { cell } = plot, at = game.at, show = game.show, sheet = game.save.sheets[game.save.on]
+    const at2 = (x: number, y: number) => px(plot, x, y)
+    const glow = guidance ? guidance.glow * (0.6 + 0.4 * Math.sin(game.seconds * 3)) : 0
+    let drawn = 0
+    // The pale pencil ring round the spot where a part gave: it fades as the job vehicle crosses.
+    const ring = game.gave ?? sheet.ring
+    if (ring) { this.ring(pen, at2(ring.spot[0], ring.spot[1]), 0.34, 0.6 * (show.kind === 'crossing' ? 1 - show.fade : 1)); drawn++ }
+    // A splinter where the part is giving, for as long as the bridge lies broken.
+    if (game.gave) {
+      const [sx, sy] = at2(game.gave.spot[0], game.gave.spot[1])
+      pen.strokeStyle = INK.line
+      pen.lineWidth = Math.max(1, cell * 0.04)
+      pen.globalAlpha = 1 - show.restore
+      pen.beginPath()
+      for (let i = 0; i < 6; i++) { const a = i * 1.05 + 0.3, r0 = cell * 0.12, r1 = cell * (0.3 + 0.25 * show.snap * (i % 2 ? 1 : 0.6)); pen.moveTo(sx + Math.cos(a) * r0, sy + Math.sin(a) * r0); pen.lineTo(sx + Math.cos(a) * r1, sy + Math.sin(a) * r1) }
+      pen.stroke()
+      pen.globalAlpha = 1
+      drawn++
+    }
+    // A hat left hanging on a part, where the bus's passengers lost it.
+    const drawnEnds = game.drawn()
+    for (const index of sheet.hats) {
+      const where = drawnEnds[index]
+      if (!where) continue
+      const [hx, hy] = at2((where.a[0] + where.b[0]) / 2, (where.a[1] + where.b[1]) / 2)
+      pen.fillStyle = INK.paper
+      pen.beginPath(); pen.moveTo(hx - cell * 0.2, hy - cell * 0.02); pen.lineTo(hx + cell * 0.2, hy - cell * 0.02); pen.lineTo(hx, hy - cell * 0.36); pen.closePath(); pen.fill()
+      drawn++
+    }
+
+    const longOf = (id: VehicleId) => Math.max(...VEHICLES[id].axles)
+    const hatsOn = 3 - Math.min(3, sheet.hats.length)
+    const put = (id: VehicleId, x: number, y: number, tilt: number, pose: VehiclePose, flip: boolean) => {
+      const [sx, sy] = at2(x, y)
+      pen.save()
+      pen.translate(sx, sy)
+      if (flip) pen.scale(-1, 1)
+      pen.rotate(-tilt)
+      vehicle(pen, id, cell, pose, game.seconds, stream(21), flip, hatsOn)
+      pen.restore()
+      drawn++
+    }
+    const busy = game.drive?.vehicle ?? show.vehicle
+    const restingPose = (id: VehicleId, front: boolean) => poke(id, game.poked.get(id) ?? 9, waitPose(id, game.seconds, front))
+    // Waiting at the near bank, the front of the line by the gap; one that has just arrived draws up from off the sheet.
+    game.waiting.forEach((id, place) => {
+      if (id === busy) return
+      const arriving = show.kind === 'crossing' && !show.homeward && id === at.extra && show.arrive < 1
+      const pose = restingPose(id, place === 0 && !game.playing)
+      put(id, (arriving ? drawUp(show.arrive, at, place) : waitAt(at, place)) + pose.creep, at.left[1], 0, pose, false)
+      if (glow > 0.01 && place === 0 && game.ready) this.ring(pen, at2(waitAt(at, 0) - longOf(id) / 2, at.left[1] + 0.9), 1.05, glow * 0.7)
+    })
+    // Parked in the lay-by on the far bank.
+    game.across.forEach((id, place) => { if (id !== busy) put(id, parkAt(at, longOf(id), place), at.right[1], 0, restingPose(id, false), false) })
+    // On a run: seated on the road as it lies under it now.
+    const seat = game.seatNow()
+    if (game.drive && seat) {
+      const flip = game.drive.homeward
+      put(game.drive.vehicle, seat.x, seat.y, flip ? -seat.tilt : seat.tilt, drivePose(game.drive.vehicle, game.drive.seconds), flip)
+    }
+    // In a scene: where its beats have it.
+    if (show.vehicle && show.kind === 'give') {
+      const place = givePlace(show, at, longOf(show.vehicle))
+      put(show.vehicle, place.x + 0.06 * place.wiggle, place.y, place.tilt, drivePose(show.vehicle, game.seconds), false)
+      if (place.afloat > 0) {
+        // Up to its crates in the water: the sheet's blue over what is under the surface, and the rings it makes.
+        const [wx0, wy0] = at2(place.x - longOf(show.vehicle) - 1.2, WATER), [wx1, wy1] = at2(place.x + 1.2, WATER - 1.3)
+        pen.fillStyle = INK.sheet
+        pen.globalAlpha = 0.82 * place.afloat
+        pen.fillRect(wx0, wy0, wx1 - wx0, wy1 - wy0)
+        pen.globalAlpha = place.afloat
+        pen.strokeStyle = INK.line
+        pen.lineWidth = Math.max(1, cell * 0.035)
+        pen.beginPath()
+        for (const side of [-1, 1]) { const rx = at2(place.x - longOf(show.vehicle) / 2 + side * (longOf(show.vehicle) / 2 + 0.8 + 0.5 * show.paddle), WATER); pen.moveTo(rx[0] - cell * 0.25, rx[1]); pen.lineTo(rx[0] + cell * 0.25, rx[1]) }
+        pen.stroke()
+        pen.globalAlpha = 1
+      }
+    }
+    if (show.vehicle && show.kind === 'crossing' && show.reaction) {
+      const id = show.vehicle, long = longOf(id)
+      const stays = show.homeward ? waitAt(at, Math.max(0, game.waiting.indexOf(id))) : parkAt(at, long, Math.max(0, game.across.indexOf(id)))
+      const place = crossingPlace(show, at, stays)
+      // Homeward it faces the near bank until it is in its place, and then turns to the gap again.
+      put(id, place.x, place.y, 0, reactPose(id, show.reaction, show.react), show.homeward && show.park < 1)
+    }
+
+    // The next sheet, rolled up at the right edge, with the nose of its vehicle showing; and the sheets the child has had, on the rack.
+    if (game.save.next && game.save.on === game.save.sheets.length - 1) {
+      const rx = show.kind === 'crossing' && !show.homeward ? rollPlace(show.arrive, COLS) : ROLL.x
+      const next = site(game.save.next.site, game.save.next.variant)
+      pen.save()
+      const [nx, ny] = at2(rx - 0.25, at.right[1])
+      pen.beginPath(); pen.rect(nx - cell * 2, ny - cell * 3, cell * 2, cell * 3.2); pen.clip()
+      pen.translate(nx + cell * 0.55, ny)
+      // Its crates are not yet a load the child is asked for, so no numeral names them here.
+      vehicle(pen, next.job, cell * 0.7, waitPose(next.job, game.seconds, false), game.seconds, stream(22), false, 3, false)
+      pen.restore()
+      const [x, y] = at2(rx, at.right[1])
+      roll(pen, x, y, cell * ROLL.tall, cell)
+      if (glow > 0.01) this.ring(pen, [x, y - cell * 1.5], 0.9, glow * 0.7)
+      drawn += 2
+    }
+    const count = game.save.sheets.length
+    if (count > 1) for (let index = 0; index < count; index++) {
+      const [x, y] = at2(...rackAt(index, count))
+      roll(pen, x, y + cell * 0.7, cell * 1.3, cell * 0.6)
+      if (index === game.save.on) this.brackets(pen, [x - cell * 0.42, y - cell * 0.75], [x + cell * 0.42, y + cell * 0.8], 0.9)
+      drawn++
+    }
     return drawn
   }
 
@@ -257,12 +389,17 @@ export class View {
   }
 
   /** The ghost hand: one move a child could make now, shown and never told. It lays a part on the far bank, or it picks another pile. */
-  private ghost(pen: Pen, toy: Toy, guidance: Guidance): void {
+  private ghost(pen: Pen, toy: Game, guidance: Guidance): void {
     const { cell } = this.plot, at = toy.at, piles = bays(at)
-    const picking = guidance.demoIndex % 2 === 1 && piles.length > 1
-    const pose = handPose(guidance.demo ?? 0, !picking, this.hand)
+    // With a road from lip to lip the next thing a child would want is to send the vehicle; with a roll waiting, to unroll it.
+    const sending = toy.ready && toy.waiting.length > 0 && guidance.demoIndex % 2 === 0
+    const unrolling = !sending && toy.save.next !== null && toy.ready
+    const picking = !sending && !unrolling && guidance.demoIndex % 2 === 1 && piles.length > 1
+    const pose = handPose(guidance.demo ?? 0, !picking && !sending && !unrolling, this.hand)
     let tip: [number, number]
-    if (picking) {
+    if (sending) tip = px(this.plot, waitAt(at, 0) - 0.4, at.left[1] + 0.9)
+    else if (unrolling) tip = px(this.plot, ROLL.x - 0.2, at.right[1] + 1.4)
+    else if (picking) {
       const other = piles[(piles.findIndex((bay) => bay.kind === toy.selected) + 1) % piles.length]
       tip = px(this.plot, (other.x0 + other.x1) / 2, TRAY.top - TRAY.tall / 2)
     } else {

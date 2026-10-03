@@ -85,12 +85,12 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
 // --- The toy ----------------------------------------------------------------
 
 /**
- * The sheet a first visit opens on while the game is a toy: the free yard,
- * the one place with the whole kit and nothing to cross. The game stage sets
- * this to null, and a first visit then opens on the sheet its position lays
- * out. A saved visit is found as it was left either way.
+ * The sheet a first visit opens on, when it is not the one its position lays
+ * out. The toy stage opened on the free yard, the one place with the whole
+ * kit; the game opens where the designed order starts, so this is null. A
+ * saved visit is found as it was left either way.
  */
-export const TOY_SHEET: string | null = 'open-yard'
+export const TOY_SHEET: string | null = null
 
 // --- The designed order (state.ts) -----------------------------------------
 

@@ -1,5 +1,5 @@
 import { WATER } from './pose'
-import { PARK, WAIT } from './ride'
+import { WAIT } from './ride'
 import type { Beat } from './scene'
 import type { Site, VehicleId } from './sites'
 import type { Reaction } from './vehicles'
@@ -13,6 +13,8 @@ import type { Reaction } from './vehicles'
 export type Show = {
   kind: 'give' | 'crossing' | null
   vehicle: VehicleId | null
+  /** The run was the way home: the vehicle ends at the near bank. */
+  homeward: boolean
   /** Where the vehicle's front axle was when the scene began, in cells, and how its body was tilted. */
   from: readonly [number, number]
   tilt: number
@@ -33,7 +35,7 @@ export type Show = {
   reaction: Reaction | null
 }
 
-export const idleShow = (): Show => ({ kind: null, vehicle: null, from: [0, 0], tilt: 0, snap: 0, fall: 0, paddle: 0, climb: 0, shake: 0, restore: 0, spring: 0, react: 0, park: 0, fade: 0, arrive: 0, reaction: null })
+export const idleShow = (): Show => ({ kind: null, vehicle: null, homeward: false, from: [0, 0], tilt: 0, snap: 0, fall: 0, paddle: 0, climb: 0, shake: 0, restore: 0, spring: 0, react: 0, park: 0, fade: 0, arrive: 0, reaction: null })
 
 /** A cue for a sound, played once when its beat begins: the game queues the voice. */
 export type Cue = 'splash' | 'ring' | 'react' | 'arrive' | 'restore'
@@ -86,7 +88,7 @@ export function givePlace(show: Show, at: Site, long: number): Place {
   // It falls where it was, nose first, a little further on than where the road left it.
   const dropX = Math.max(show.from[0], shore) + 0.3 * show.fall
   const fallY = show.from[1] + (WATER + 0.25 - show.from[1]) * show.fall * show.fall
-  if (show.paddle <= 0) return { x: dropX, y: fallY, tilt: show.tilt - 0.6 * show.fall * (1 - show.fall) * 4 * 0.25 - 0.25 * show.fall, afloat: show.fall >= 1 ? 1 : 0, wiggle: 0 }
+  if (show.paddle <= 0) return { x: dropX, y: fallY, tilt: show.tilt - 0.35 * show.fall, afloat: show.fall >= 1 ? 1 : 0, wiggle: 0 }
   if (show.climb <= 0) {
     // Afloat on its crates: it bobs, and paddles back toward the near bank.
     const x = dropX + (shore - dropX) * ease(show.paddle)
@@ -97,10 +99,9 @@ export function givePlace(show: Show, at: Site, long: number): Place {
   return { x: shore + (wait - shore) * up, y: WATER + 0.25 + (at.left[1] - WATER - 0.25) * up + 0.9 * Math.sin(Math.PI * show.climb), tilt: 0.5 * Math.sin(Math.PI * show.climb), afloat: 1 - up, wiggle: show.shake > 0 && show.shake < 1 ? Math.sin(show.shake * 40) * (1 - show.shake) : 0 }
 }
 
-/** The vehicle during the crossing: at the far lip while it reacts, then on to the lay-by. `long` as above. */
-export function crossingPlace(show: Show, at: Site, long: number): Place {
-  const parked = at.right[0] + PARK + long
-  return { x: show.from[0] + (parked - show.from[0]) * ease(show.park), y: at.right[1], tilt: 0, afloat: 0, wiggle: 0 }
+/** The vehicle during the crossing: where the run left it while it reacts, then on to where it stays: the lay-by on the far bank, or, come home, its place in the line at the near bank. `stays` is that place's x. */
+export function crossingPlace(show: Show, at: Site, stays: number): Place {
+  return { x: show.from[0] + (stays - show.from[0]) * ease(show.park), y: show.homeward ? at.left[1] : at.right[1], tilt: 0, afloat: 0, wiggle: 0 }
 }
 
 /** Where the next roll stands as it slides in from the right edge: its x in cells, for a sheet `cols` wide. */

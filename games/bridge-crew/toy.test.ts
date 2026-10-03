@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { TOY_SHEET } from './config'
 import { length, type Part } from './kit'
 import { TRAY, bayAt, bays, gridPointAt, touched } from './layout'
 import { stream } from './look'
@@ -9,7 +8,9 @@ import { site } from './sites'
 import { FLIGHT, HOLD, RING, Toy, closedTriangle } from './toy'
 
 const part = (kind: Part['kind'], ax: number, ay: number, bx: number, by: number, turned = false): Part => ({ kind, a: [ax, ay], b: [bx, by], turned })
-const fresh = () => new Toy(freshSave(null, TOY_SHEET), stream(5))
+/** The toy alone, on the free yard, where the whole kit is. */
+const YARD = 'open-yard'
+const fresh = () => new Toy(freshSave(null, YARD), stream(5))
 /** A whole drag from one grid point to another, as the Mount would feed it. */
 const drag = (toy: Toy, from: [number, number], to: [number, number]) => { toy.press(...from); toy.dragStart(); toy.dragMove(...to); toy.dragEnd() }
 const settle = (toy: Toy, seconds = 4) => { for (let i = 0; i < seconds * 60; i++) toy.step(1 / 60) }
@@ -224,7 +225,7 @@ describe('the toy', () => {
     // Put away mid-swing, with a finger on a pin.
     toy.step(0.1); toy.press(12, 9)
     const stored = JSON.parse(JSON.stringify(serialize(toy.save)))
-    const again = new Toy(deserialize(stored, null, TOY_SHEET), stream(99))
+    const again = new Toy(deserialize(stored, null, YARD), stream(99))
     expect(again.bridge).toEqual(toy.bridge)
     expect(again.busy).toBe(false)
     expect(again.takeVoices()).toEqual([])

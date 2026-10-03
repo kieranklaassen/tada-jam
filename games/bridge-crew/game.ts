@@ -3,7 +3,8 @@ import { length } from './kit'
 import { onRoll, onVehicle, parkAt, rackSlot, waitAt } from './layout'
 import { DRAWN_DIP, atRest, rests } from './pose'
 import { between, creaks, ended, frontAt, seat, stepAt, type Seat } from './ride'
-import { run, type Run, type Train } from './run'
+import type { Strain } from './frame'
+import { roadOf, run, type Run, type Train } from './run'
 import { crossed, failedRun, onNewest, parked, sentHome, standing, toFront, turnTo, unroll, type Save } from './save'
 import { Scene } from './scene'
 import { groundAt } from './sheet'
@@ -25,8 +26,9 @@ export type Drive = {
   train: Train
   homeward: boolean
   seconds: number
-  /** Each part's strain when it was last listened to, for the creaks. */
+  /** Each part's strain when it was last listened to, for the creaks, and how it is strained now. */
   heard: number[]
+  strain: Strain[]
 }
 
 const longOf = (id: VehicleId): number => Math.max(...VEHICLES[id].axles)
@@ -38,6 +40,8 @@ export class Game extends Toy {
   gave: { part: number; spot: readonly [number, number] } | null = null
   /** Seconds since each vehicle was last touched: its answer to a poke is drawn from it. */
   poked = new Map<VehicleId, number>()
+  /** The roadway reaches from lip to lip: a vehicle sent now has a road to try. */
+  ready = false
   private scene: Scene | null = null
   private urgent = false
   private sceneClock = 0
@@ -46,6 +50,8 @@ export class Game extends Toy {
 
   constructor(save: Save, random: () => number) {
     super(save, random)
+    // The fields above are set after the toy has built itself, so what the model found is read again here.
+    this.ready = roadOf(this.at, this.frame).complete
   }
 
   /** The vehicles at the near bank, the front of the line first, and those parked on the far bank. */
@@ -68,6 +74,11 @@ export class Game extends Toy {
     if (!drive) return null
     const x = frontAt(this.at, drive.seconds, drive.homeward)
     return seat(this.at, drive.run, between(drive.run, stepAt(this.at, drive.run, x, drive.homeward)), drive.train, x, DRAWN_DIP, drive.homeward)
+  }
+
+  protected override model(): void {
+    super.model()
+    this.ready = roadOf(this.at, this.frame).complete
   }
 
   // --- Gestures ------------------------------------------------------------------
@@ -120,6 +131,7 @@ export class Game extends Toy {
       this.rest = rests(this.bridge, drive.run.frame, answer, isFooting(this.at), (gx) => groundAt(this.at, gx))
       for (const due of creaks(drive.heard, answer.use)) this.voices.push(creak(due.use))
       drive.heard = answer.use
+      drive.strain = answer.strain
       if (ended(this.at, drive.run, x, drive.homeward)) this.finishDrive(drive)
     }
     if (this.scene) {
@@ -143,7 +155,7 @@ export class Game extends Toy {
   private send(id: VehicleId, homeward: boolean): void {
     const train = trainOf(VEHICLES[id])
     const result = run(this.at, this.bridge, train, homeward)
-    this.drive = { vehicle: id, run: result, train, homeward, seconds: 0, heard: Array.from(result.steps[0].use) }
+    this.drive = { vehicle: id, run: result, train, homeward, seconds: 0, heard: Array.from(result.steps[0].use), strain: result.steps[0].strain }
     this.voices.push(honk(id))
   }
 
@@ -151,7 +163,7 @@ export class Game extends Toy {
   private finishDrive(drive: Drive): void {
     const where = this.seatNow()!
     this.drive = null
-    const show = (this.show = { ...idleShow(), vehicle: drive.vehicle, from: [where.x, where.y], tilt: where.tilt })
+    const show = (this.show = { ...idleShow(), vehicle: drive.vehicle, homeward: drive.homeward, from: [where.x, where.y], tilt: where.tilt })
     const cue = (what: Cue) => this.cue(what, drive)
     if (drive.run.ending.kind === 'crossed') {
       show.kind = 'crossing'

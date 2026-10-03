@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { TOY_SHEET } from './config'
 import { IdleLadder } from './guidance'
 import { stream, type Pen } from './look'
 import { freshSave } from './save'
-import { Toy } from './toy'
+import { Game } from './game'
 import { View, demoMove } from './view'
 import { canPin, isFooting } from './sites'
 
@@ -13,6 +12,7 @@ function recording() {
   const pen = new Proxy({} as Record<string, unknown>, {
     get: (store, name: string) => {
       if (name === 'createRadialGradient') return () => ({ addColorStop: () => {} })
+      if (name === 'measureText') return (text: string) => ({ width: 10 * text.length })
       if (name in store) return store[name]
       return (...args: unknown[]) => { calls.push({ name, args }) }
     },
@@ -23,7 +23,7 @@ function recording() {
 }
 
 const built = () => {
-  const toy = new Toy(freshSave(null, TOY_SHEET), stream(5))
+  const toy = new Game(freshSave(null, 'open-yard'), stream(5))
   const drag = (kind: number, a: [number, number], b: [number, number]) => { toy.press(5 + (14 * (kind + 0.5)) / 4, -2.3); toy.tap(); toy.press(...a); toy.dragStart(); toy.dragMove(...b); toy.dragEnd() }
   drag(0, [6, 6], [10, 6]); drag(2, [10, 3], [10, 6]); drag(3, [19, 11], [14, 6]); drag(1, [14, 6], [14, 4]); drag(1, [20, 6], [22, 8])
   return toy
@@ -45,7 +45,10 @@ describe('the toy drawn', () => {
     toy.press(21, 9); toy.dragStart(); toy.dragMove(22.3, 10.2); frame(1.4); toy.dragEnd()
     // Idle long enough for the glow and both kinds of demonstration.
     for (const seconds of [4, 6, 7, 19, 21]) { toy.step(0.1); frame(seconds) }
-    expect(calls.some((call) => /Text/.test(call.name))).toBe(false)
+    // The only text it ever draws is a whole number, through the symbols module: the count beside a vehicle's crates.
+    const texts = calls.filter((call) => /Text/.test(call.name))
+    expect(texts.length).toBeGreaterThan(0)
+    for (const call of texts) expect(String(call.args[0])).toMatch(/^[0-9]+$/)
   })
 
   it('stamps the still sheet once a frame and paints it once for a size', () => {
@@ -69,7 +72,7 @@ describe('the toy drawn', () => {
   })
 
   it('keeps a frame inside its budget: one full-surface stamp, and a bounded count of calls for the fullest bridge', () => {
-    const toy = new Toy(freshSave(null, TOY_SHEET), stream(5))
+    const toy = new Game(freshSave(null, 'open-yard'), stream(5))
     // Every part of the yard's kit laid, wherever it will go.
     const lay = (kind: number, a: [number, number], b: [number, number]) => { toy.press(5 + (14 * (kind + 0.5)) / 4, -2.3); toy.tap(); toy.press(...a); toy.dragStart(); toy.dragMove(...b); toy.dragEnd() }
     for (let i = 0; i < 5; i++) lay(0, [6 + 2 * i, 8], [8 + 2 * i, 8])

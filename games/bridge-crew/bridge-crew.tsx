@@ -15,10 +15,10 @@ import { deserialize, serialize } from './save'
 import { SaveCadence } from './saveCadence'
 import { seedFrom, voiceOf } from './sound'
 import { drawSpike } from './spike'
-import { Toy } from './toy'
+import { Game } from './game'
 import { View } from './view'
 
-// The Mount, showing the toy (toy.ts, view.ts). Around it everything is the
+// The Mount, showing the game (game.ts on toy.ts, drawn by view.ts). Around it everything is the
 // template's: the saved state, attention, the attended clock, touch, sound
 // from the first touch, the idle ladder, adaptive quality, the grown-up
 // performance handle and the grown-up overlay.
@@ -45,7 +45,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
-    let toy: Toy | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    let toy: Game | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     const seed = seedFrom(window.location.search, () => Math.random() * 2 ** 32)
     const spike = new URLSearchParams(window.location.search).get('spike') === '1'
     // The sheet is drawn from one fixed seed, so it is the same sheet on every visit; the visit's own seed moves the chief.
@@ -114,7 +114,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const afterToy = () => {
       if (!toy) return
       for (const voice of toy.takeVoices()) audio.play(voiceOf(voice))
-      if (toy.takeChange()) cadence.change(performance.now())
+      // The outcome of a scene or a cycle is saved at once; a change to the bridge at the throttle.
+      const urgent = toy.takeUrgent()
+      if (toy.takeChange() || urgent) cadence.change(performance.now(), urgent)
     }
     const act = (gestures: Gesture[]) => {
       if (!toy || spike) return
@@ -170,7 +172,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
-      if (touch.active) ladder.touch(clock.seconds)
+      if (touch.active || toy?.playing) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
       guidance = ladder.update(clock.seconds)
       if (toy) { toy.step(step); afterToy() }
@@ -208,7 +210,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
-      toy = new Toy(deserialize(value, ctxRef.current.childAge, TOY_SHEET), stream(seed))
+      toy = new Game(deserialize(value, ctxRef.current.childAge, TOY_SHEET), stream(seed))
       // The game sets itself up from the state here, as it was left: nothing eases in and no scene replays.
       // Then the load draws the first frame itself. A game that is resting or parked when the slot comes back
       // has no frame coming, and would go on showing the surface as it was before the read.
