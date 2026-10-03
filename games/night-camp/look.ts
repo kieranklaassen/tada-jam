@@ -325,9 +325,10 @@ export class Look {
       if (!inside(0, 0) || !inside(8 * u, 0) || !inside(-8 * u, 0) || !inside(0, 8 * u) || !inside(0, -8 * u)) continue
       if (inBlob(wider, x, y) || nearStream(x, y) || inBlob({ ...pool, rx: pool.rx * 1.3, ry: pool.ry * 1.3 }, x, y)) continue
       if (kind < 0.68) {
-        // A broadleaf: an open ring with a short ground tick.
-        ctx.beginPath(); ctx.arc(x, y, 4.3 * u, 0.55, TAU * 0.97); ctx.stroke()
-        ctx.beginPath(); ctx.moveTo(x + 2.5 * u, y + 4.6 * u); ctx.lineTo(x + 7.5 * u, y + 4.6 * u); ctx.stroke()
+        // A broadleaf: a small solid crown of three lobes on a ground tick. Never an open ring with a tail:
+        // that reads as a letter, and the kid side shows none.
+        for (const [lx, ly, r] of [[-2.4, 0.6, 2.9], [2.4, 0.6, 2.9], [0, -2.2, 3.2]]) { ctx.beginPath(); ctx.arc(x + lx * u, y + ly * u, r * u, 0, TAU); ctx.fill() }
+        ctx.beginPath(); ctx.moveTo(x - 1 * u, y + 5 * u); ctx.lineTo(x + 6.5 * u, y + 5 * u); ctx.stroke()
       } else {
         // A conifer: a small solid spire on a ground tick.
         poly(ctx, [x, y - 6.5 * u, x + 3.8 * u, y + 3.5 * u, x - 3.8 * u, y + 3.5 * u]); ctx.fill()
