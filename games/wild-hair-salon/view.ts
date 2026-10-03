@@ -77,8 +77,6 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   if (chair && friend && customerAt && friendAt && places.customer && places.friend) {
     const look = LOOKS[chair]
     const inChair = customerAt.x === places.customer.x && customerAt.y === places.customer.y
-    // The chair and the light on it, when it is the thing to touch.
-    light(CHAIR.x, 440, 420, 420, glowOn('chair'))
     // Off the customer, the cape hangs over the chair behind the pair.
     if (caped < 1 && inChair) {
       g.save()
@@ -86,6 +84,8 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
       drawn += stamp(g, sprites.drape)
       g.restore()
     }
+    // The light on the chair, when it is the thing to touch: on the cape that hangs over it, behind the pair.
+    light(CHAIR.x, 470, 440, 400, glowOn('chair'))
     drawn += tail(g, sprites, chair, inChair ? { x: 322, y: FLOOR_Y - 20 } : { x: customerAt.x - 60 * customerAt.s, y: customerAt.y + 250 * customerAt.s }, inChair ? TAIL_OF_CUSTOMER : null, play.customer()?.at('tail') ?? 0, staging.tails, customerAt.s)
 
     const wearsOf = (who: Who): Wears => ({
@@ -166,7 +166,18 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
     g.globalAlpha = goer.at.seen
     g.translate(goer.at.x, goer.at.y - goer.at.lift)
     g.scale(size, size)
-    drawn += hanging(g, { x: home.x - goer.from.x, y: home.y - goer.from.y }, goer.lock * STEP, WALKING, play.time, { fill: LOOKS[goer.who].lock, edge: LOOKS[goer.who].lockEdge }, goer.part === 'chair' ? ROOT : 0, 0, false)
+    drawn += hanging(g, { x: home.x - goer.from.x, y: home.y - goer.from.y }, goer.lock * STEP, WALKING, play.time, { fill: LOOKS[goer.who].lock, edge: LOOKS[goer.who].lockEdge }, 0, 0, false)
+    if (goer.part === 'friend') {
+      // The friend still has the top of its lock in its paw.
+      g.fillStyle = LOOKS[goer.who].fur
+      g.strokeStyle = LOOKS[goer.who].furEdge
+      g.lineWidth = 2
+      g.beginPath()
+      g.arc(home.x - goer.from.x, home.y - goer.from.y - 2, 15, 0, Math.PI * 2)
+      g.fill()
+      g.stroke()
+      drawn += 2
+    }
     g.restore()
   })
 

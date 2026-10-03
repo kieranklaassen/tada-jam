@@ -277,7 +277,11 @@ export class Play implements Cast {
     const { hair } = this
     const chair = this.puppets.chair, friend = this.puppets.friend
     switch (h.kind) {
-      case 'scissors': hair.scissorsIn(h.at); return
+      case 'scissors':
+        hair.scissorsIn(h.at)
+        // In an empty salon there is nothing to cut: the pair at the door bob up at the window, wanting in.
+        if (before.chair === null) for (const puppet of this.waiting ?? []) if (!puppet.busy) puppet.react('wantsIn')
+        return
       case 'airSnip': hair.scissorsClose(); return
       case 'away': hair.scissorsOut(); return
       case 'caught': this.caught(h.held, h.at, before); return

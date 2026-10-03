@@ -32,7 +32,7 @@ export const REACTIONS = [
   // When the cape comes off.
   'lockTooLong', 'lockTooShort', 'lockAsLong', 'maneLiked', 'maneHated',
   // Coming, going and waiting.
-  'hatOff', 'sitsDown', 'wantsItSo', 'ducksAndPeeks', 'hopsOver', 'showsAMove',
+  'hatOff', 'sitsDown', 'wantsItSo', 'ducksAndPeeks', 'wantsIn', 'hopsOver', 'showsAMove',
 ] as const
 export type Reaction = (typeof REACTIONS)[number]
 
@@ -112,6 +112,7 @@ const LION: Personality = {
     hatOff: [bit('lion-shakes-his-mane-free', m('tilt', 0.7, 0, 0.2), m('tilt', -0.7, 0.24, 0.2), m('blink', 1, 0, 0.3))],
     sitsDown: [bit('lion-settles-with-a-thump', m('bob', 0.9, 0, 0.2), m('tail', -1, 0.1, 0.3), m('blink', 1, 0.1, 0.25))],
     wantsItSo: [bit('lion-looks-from-his-lock-to-the-other', m('lookX', 0.5, 0, 0.6), m('lookY', 1, 0, 0.6), m('lookX', 1, 0.7, 0.6), m('lookY', 0.8, 0.7, 0.6), m('brow', -0.5, 0, 1.3))],
+    wantsIn: [bit('lion-leans-to-the-glass-with-a-rumble', m('tilt', 0.4, 0, 0.5), m('wide', 1, 0, 0.5), m('mouthOpen', 0.5, 0.2, 0.3), m('tail', 1, 0, 0.4))],
     ducksAndPeeks: [bit('lion-hat-down-one-eye-up', m('sink', 0.8, 0, 0.5), m('blink', 1, 0, 0.3), m('lookY', -0.7, 0.4, 0.4))],
     hopsOver: [bit('lion-lands-heavily', m('bob', 1, 0, 0.18), m('tail', 1, 0.05, 0.3))],
     showsAMove: [bit('lion-watches-his-own-paw', m('lookY', -0.9, 0, 1.2), m('cross', 0.4, 0, 1.2), m('brow', 0.5, 0, 1.2), m('smile', 0.8, 0.9, 0.5))],
@@ -175,6 +176,7 @@ const POODLE: Personality = {
     hatOff: [bit('poodle-fluffs-her-poms', m('lift', 0.3, 0, 0.1), m('tilt', 0.4, 0.05, 0.1), m('tilt', -0.4, 0.17, 0.1))],
     sitsDown: [bit('poodle-perches-and-arranges-herself', m('lift', 0.3, 0, 0.1), m('tail', 1, 0.12, 0.08), m('tail', -1, 0.22, 0.08), m('smile', 1, 0.1, 0.3))],
     wantsItSo: [bit('poodle-points-her-nose-at-each-in-turn', m('tilt', -0.3, 0, 0.3), m('lookX', 0.4, 0, 0.3), m('tilt', 0.3, 0.35, 0.3), m('lookX', 1, 0.35, 0.3), m('lookY', 0.9, 0, 0.65), m('brow', 1, 0, 0.65))],
+    wantsIn: [bit('poodle-bounces-on-her-toes', m('lift', 0.6, 0, 0.12), m('lift', 0.6, 0.2, 0.12), m('lift', 0.6, 0.4, 0.12), m('smile', 1, 0, 0.6))],
     ducksAndPeeks: [bit('poodle-pops-down-and-up-twice', m('sink', 0.7, 0, 0.14), m('sink', 0.7, 0.3, 0.14), m('wide', 0.8, 0.14, 0.16))],
     hopsOver: [bit('poodle-lands-on-tiptoe', m('lift', 0.4, 0, 0.1), m('tail', 1, 0, 0.08))],
     showsAMove: [bit('poodle-shows-it-off-with-a-flourish', m('tilt', 0.4, 0, 0.4), m('lookY', -0.8, 0, 0.9), m('lift', 0.3, 0.9, 0.12), m('smile', 1, 0.8, 0.4))],
@@ -238,6 +240,7 @@ const YAK: Personality = {
     hatOff: [bit('yak-lets-it-all-fall-down', m('sink', 0.2, 0, 0.5), m('blink', 1, 0, 0.5))],
     sitsDown: [bit('yak-lowers-himself-with-a-snort', m('sink', 0.4, 0, 0.5), m('nose', 1, 0.3, 0.3))],
     wantsItSo: [bit('yak-turns-his-whole-head-from-one-to-the-other', m('tilt', -0.3, 0, 0.9), m('lookY', 1, 0, 2), m('tilt', 0.5, 1, 0.9), m('nose', 0.7, 1.2, 0.4))],
+    wantsIn: [bit('yak-fogs-the-glass', m('nose', 1, 0, 0.5), m('bob', 0.6, 0, 0.6), m('mouthOpen', 0.4, 0.2, 0.4))],
     ducksAndPeeks: [bit('yak-sinks-below-the-glass-nose-last', m('sink', 1, 0, 1), m('nose', 1, 0.5, 0.4))],
     hopsOver: [bit('yak-arrives-and-the-floor-knows', m('bob', 0.7, 0, 0.3), m('nose', 1, 0.1, 0.3), m('sink', 0.2, 0.3, 0.3))],
     showsAMove: [bit('yak-does-it-very-slowly-so-you-see', m('lookY', -1, 0, 1.6), m('tilt', 0.3, 0, 1.6), m('nose', 0.6, 1.2, 0.4))],
@@ -301,6 +304,7 @@ const RABBIT: Personality = {
     hatOff: [bit('rabbit-ears-spring-out', m('earL', 1, 0, 0.12), m('earR', 1, 0.04, 0.12), m('lift', 0.3, 0, 0.1))],
     sitsDown: [bit('rabbit-lands-and-is-already-looking-round', m('bob', 0.4, 0, 0.06), m('lookX', -1, 0.08, 0.1), m('lookX', 1, 0.2, 0.1))],
     wantsItSo: [bit('rabbit-points-an-ear-at-each', m('earR', -0.8, 0, 0.2), m('lookX', 0.5, 0, 0.2), m('lookY', 1, 0, 0.45), m('earR', 1, 0.25, 0.2), m('lookX', 1, 0.25, 0.2), m('nose', 1, 0.3, 0.05))],
+    wantsIn: [bit('rabbit-ears-up-and-one-waves', m('earL', 1, 0, 0.2), m('earR', 1, 0.1, 0.5), m('earL', -1, 0.3, 0.15), m('earL', 1, 0.45, 0.15), m('wide', 0.8, 0, 0.5))],
     ducksAndPeeks: [bit('rabbit-gone-but-for-the-ears', m('sink', 1, 0, 0.5), m('earL', 1, 0, 0.5), m('earR', 1, 0, 0.5))],
     hopsOver: [bit('rabbit-two-bounces-and-there', m('lift', 0.5, 0, 0.06), m('lift', 0.3, 0.12, 0.06), m('earL', -0.6, 0, 0.18))],
     showsAMove: [bit('rabbit-does-it-in-a-blink-then-again', m('lookY', -1, 0, 0.5), m('earL', 1, 0.5, 0.1), m('earR', 1, 0.5, 0.1), m('smile', 1, 0.5, 0.3))],

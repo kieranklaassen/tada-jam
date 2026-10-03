@@ -56,6 +56,18 @@ describe('before the slot has been read', () => {
   })
 })
 
+describe('an empty salon', () => {
+  it('answers a touch anywhere but the door with the pair at the window, who bob up wanting in', () => {
+    const play = opened()
+    play.gesture({ type: 'press', at: { x: 520, y: 440 } })
+    for (const puppet of play.waiting!) expect(puppet.busy).toBe(true)
+    play.gesture({ type: 'tap', at: { x: 520, y: 440 } })
+    // Nothing else changed: nobody came in and nothing is saved.
+    expect(play.game).toEqual(freshGame(null))
+    expect(play.inScene).toBe(false)
+  })
+})
+
 describe('a poke', () => {
   it('holds nothing afterwards: the hair it touched wobbles free and comes to rest', () => {
     for (const at of [onLock(10), onModel(10), { x: HEAD.x, y: HEAD.y - HEAD.ry - 40 }]) {
