@@ -212,7 +212,7 @@ void main() {
   col = mix(col, vec3(0.94, 0.98, 1.0), bead * smoothstep(0.9, 0.97, drops.b) * 0.9);
   // A wet sheen: thin runs of light down the panel.
   float run = wet * (1.0 - shine) * smoothstep(0.75, 0.9, texture2D(uNoise, vec2(vRest.x * 0.9, vRest.y * 0.06)).g) * smoothstep(0.3, 0.8, n.z);
-  col = mix(col, vec3(0.9, 0.96, 1.0), run * 0.28);
+  col = mix(col, vec3(0.9, 0.96, 1.0), run * 0.18);
 
   // Mud: pale and cracked when dry, dark and glistening when soft.
   float crack = 1.0 - smoothstep(0.03, 0.12, noise.a);

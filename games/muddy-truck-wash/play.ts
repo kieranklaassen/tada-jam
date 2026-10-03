@@ -7,7 +7,7 @@ import type { VehicleDef, VehicleId } from './roster'
 import { Scene } from './scene'
 import { dripScene, openDriedPatch, puddleScene, sendOffScene, shineScene } from './scenes'
 import { reliefAt, silhouette } from './silhouette'
-import { drumJammed, foamHat, launchFoam, tasteFor, type Taste } from './tastes'
+import { WANTS, drumJammed, foamHat, launchFoam, tasteFor, type Taste } from './tastes'
 import { GRID_W, allShiny, dab, decode, type Hand, type Surface, type Tool } from './surface'
 import * as voices from './voices'
 import type { VoiceSpec } from './voices'
@@ -106,6 +106,8 @@ export class Play {
     }
     motion.homeX = at.x
     motion.homeZ = at.z
+    // Its want is always visible: left to itself it keeps glancing at what it likes.
+    motion.want = WANTS[who]
     return { def, surface: decode(cells) ?? silhouette(def), motion }
   }
 

@@ -52,6 +52,8 @@ export class TruckMotion {
   cross = 0
   /** Where the eyes are asked to look, or null to wander. */
   lookAt: { side: number; up: number } | null = null
+  /** What it wants: where the thing it likes is. Left to itself it glances there every other look. */
+  want: { side: number; up: number } | null = null
   /** Asked angle of the funniest part, on top of what the bounce throws it to. */
   partTarget = 0
   /** Height added to the body and the wheels alike: the whole vehicle off the floor, as in a hop. */
@@ -70,6 +72,7 @@ export class TruckMotion {
   private blinking = 0
   private glanceIn = 1
   private wander = { side: 0.75, up: 0.1 }
+  private glances = 0
   private seconds = 0
   private lastX: number | null = null
   private wheelSpeed = 0
@@ -173,7 +176,9 @@ export class TruckMotion {
     this.glanceIn -= dt
     if (this.glanceIn <= 0) {
       this.glanceIn = (0.6 + this.random() * 1.4) / who.glance
-      this.wander = { side: 0.35 + this.random() * 0.75, up: -0.12 + this.random() * 0.4 }
+      this.glances += 1
+      const roam = { side: 0.35 + this.random() * 0.75, up: -0.12 + this.random() * 0.4 }
+      this.wander = this.want && this.glances % 2 === 0 ? this.want : roam
     }
     const look = this.lookAt ?? this.wander
     this.gazeSide.step(dt, look.side, 90 * who.glance, 14 * Math.sqrt(who.glance))

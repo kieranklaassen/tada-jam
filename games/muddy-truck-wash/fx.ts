@@ -90,10 +90,11 @@ export class Particles {
       this.x[i] += this.vx[i] * dt; this.y[i] += this.vy[i] * dt; this.z[i] += this.vz[i] * dt
       if (!dead && this.y[i] <= 0.02 && this.vy[i] < 0 && kind !== KIND.bubble && kind !== KIND.glint && kind !== KIND.dust) {
         if (kind === KIND.crumb && this.phase[i] < 2) {
-          // A crumb bounces once and lies where it stops.
+          // A crumb bounces once and lies where it stops. Its first landing is heard and leaves its mark.
           this.y[i] = 0.02
           this.vy[i] *= -0.3; this.vx[i] *= 0.5; this.vz[i] *= 0.5
           this.phase[i] += 2
+          landed?.({ kind, x: this.x[i], y: 0, z: this.z[i], size: this.size[i] })
         } else if (kind === KIND.crumb) {
           this.y[i] = 0.02
           this.vx[i] = this.vy[i] = this.vz[i] = 0

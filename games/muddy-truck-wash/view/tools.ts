@@ -10,10 +10,12 @@ import { toGeometry } from './geometry'
 // has no life of its own.
 
 /** Where a tool sits from the point it works on, and how fast it gets there. */
-const IN_HAND: Readonly<Record<Tool, readonly [number, number, number]>> = { sponge: [0, 0, 0.21], cloth: [0, 0.44, 0.06], hose: [0.7, 0.62, 0.95] }
+const IN_HAND: Readonly<Record<Tool, readonly [number, number, number]>> = { sponge: [0, 0, 0.21], cloth: [0, 0.44, 0.19], hose: [0.7, 0.62, 0.95] }
 /** The lowest a tool's own origin goes, so none of it dips into the floor when a wheel is washed. */
 const FLOOR: Readonly<Record<Tool, number>> = { sponge: 0.34, cloth: 1.08, hose: 0.9 }
 const DOWN = new THREE.Vector3(0, -1, 0)
+/** A depth clear of every vehicle's proudest part: a tool in hand crosses from one spot to another out here, never through the body. */
+const CLEAR = 1.42
 const TOOLS: readonly Tool[] = ['sponge', 'hose', 'cloth']
 
 export class ToolsView {
@@ -51,6 +53,14 @@ export class ToolsView {
         const off = Math.hypot(mesh.position.x - home[0], mesh.position.y - home[1])
         if (held && off < 0.6 && mesh.position.z < home[2] + 0.6) this.want.set(mesh.position.x, mesh.position.y, home[2] + 0.9)
         else if (!held && off > 0.1) this.want.z = home[2] + 0.9
+      }
+      if (held && tool !== 'hose') {
+        // From one spot to a far one the tool first comes off the paint, crosses clear of the body, and goes down onto the new spot.
+        const across = Math.hypot(this.want.x - mesh.position.x, this.want.y - mesh.position.y)
+        if (across > 0.4 && this.want.z < CLEAR + off[2]) {
+          if (mesh.position.z < CLEAR + off[2] - 0.1) this.want.set(mesh.position.x, mesh.position.y, CLEAR + off[2] + 0.05)
+          else this.want.z = CLEAR + off[2]
+        }
       }
       // Quick to the finger, slower back to the rack.
       mesh.position.lerp(this.want, 1 - Math.exp(-dt * (held && spot.working ? 26 : 9)))

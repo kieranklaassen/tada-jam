@@ -42,6 +42,19 @@ export const TASTES: Readonly<Record<VehicleId, readonly [Taste, Taste]>> = {
   ],
 }
 
+/**
+ * Where each vehicle's eyes go when it glances at what it likes: sideways
+ * toward the child and up, as the eyes take them. The tools hang on the rack
+ * ahead of it (the cloth high, the hose in the middle, the sponge low); the
+ * mixer looks back at its own drum.
+ */
+export const WANTS: Readonly<Record<VehicleId, { side: number; up: number }>> = {
+  tipper: { side: 0.55, up: -0.2 },
+  'fire-engine': { side: 0.55, up: 0.3 },
+  tractor: { side: 0.55, up: 0.65 },
+  mixer: { side: 1.45, up: 0.3 },
+}
+
 const inside = (zone: Zone, x: number, y: number): boolean => x >= zone.x0 && x <= zone.x1 && y >= zone.y0 && y <= zone.y1
 
 /**
