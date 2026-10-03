@@ -4,13 +4,15 @@
 ## Status
 
 - Stage: gates. Run 4 built the game on the toy.
-- Sheet the game stands on: round 3, as pasted. Commit `0a76b32`; sheet part sha256 `6a615151bd7154460516548adc0222ee00a6c886e70706020c484369c21522d1`.
-- Sheet check, round 3 (checker: E): open, 4 findings, read against sha256 `c6a42b6e…3e5e`. All four replacements are pasted as written at `0a76b32`. No finding was refused. All four are text only; the rules already held `shown` as the row now says.
-- **For the next checker: one row of the sheet is my own and no round has read it.** Under "Every field of the saved state" I added the row `across` (commit `bac5c46`, before round 3 was pasted): the vehicles parked on the far bank of the newest sheet. Without it a vehicle that had crossed had no stored place once the bridge was changed. The same commit made the other vehicle draw up at the job vehicle's first crossing however the cycle was judged; the sheet's wording ("after the job vehicle has crossed") already covers that.
+- Sheet the game stands on: round 4, as pasted. Commit `55b19cb`; sheet part sha256 `2ec1e59ab4516efa6b02745fc8117d801e0efede06b7be2c900c97a365f2ca42`.
+- Sheet check, round 4 (checker: F): open, 2 findings, read against sha256 `6a615151…22d1`. Both replacements are pasted as written at `55b19cb`. No finding was refused. Round 4 read the row `across` that I had added myself, and both findings bring its neighbours into line with it.
+- From the lead, pasted in the same commit: under "The band and its age rule" the sentence on the numerals now says that both are drawn through the game's own `symbols.ts` and nowhere else. The game does draw both (the count beside a vehicle's crates in `fleet.ts`, the count beside the trolley's weights in `props.ts`), and no other file draws text.
+- Rules after round 4: nothing to change. The rules already kept a vehicle on one bank only, let either vehicle be sent home, and kept the newest sheet's parked vehicles while it lies on the rack; a new test in `save.test.ts` holds all three.
+- Earlier rounds: round 1 (B, 14 findings) pasted at `b7c2270`; round 2 (D, 5) at `4f2a5d5`; round 3 (E, 4) at `0a76b32`. No finding of any round was refused.
 - Look in use: first reserved choice, Blueprint and balsa. Built on at the builder's own risk: the owner has seen the toy and has not answered.
 - Renderer: canvas 2D with the game's own solver (`frame.ts`). matter.js is not used.
 - The guide, the cloud page, the game page and the pilot notes did not differ on anything this run met.
-- Open: sheet ready for check, round 4
+- Open: sheet ready for check, round 5
 
 **What the lead should try first.** Open `?chrome=0&seed=7#/play/bridge-crew` with a fresh slot.
 
@@ -95,7 +97,7 @@ As the game stands at the end of run 4.
 
 ### The learning claim
 
-As the sheet has it at `0a76b32`, read through the lookup on 2026-10-03: designed from five California State Board-adopted science standards on engineering design (`us-ca 3-5-ETS1-2`, `us-ca 3-5-ETS1-3`, `us-ca MS-ETS1-2`, `us-ca MS-ETS1-3`, `us-ca MS-ETS1-4`; all confirmed), and from four goals of SLO's curriculum guidance for fase 2 and fase 3 (`nl ojw/nattech/3/01/fase2`, `nl ojw/nattech/3/02/fase2`, `nl ojw/nattech/3/01/fase3`, `nl ojw/nattech/3/08/fase3`; guidance, not law; all confirmed) and the Dutch legal core goal 45 of 2006 (`nl 45`; still in force; an end-of-primary goal; confirmed). From the California standards it takes the loop of fair test, failure, improvement and comparison, and it does not teach structures on their authority. The plank on edge standing for the profile is the game's own reading, beyond the Dutch records. The check states are to be read again on the day of the pull request. No attainment claim.
+As the sheet has it at `55b19cb`, read through the lookup on 2026-10-03: designed from five California State Board-adopted science standards on engineering design (`us-ca 3-5-ETS1-2`, `us-ca 3-5-ETS1-3`, `us-ca MS-ETS1-2`, `us-ca MS-ETS1-3`, `us-ca MS-ETS1-4`; all confirmed), and from four goals of SLO's curriculum guidance for fase 2 and fase 3 (`nl ojw/nattech/3/01/fase2`, `nl ojw/nattech/3/02/fase2`, `nl ojw/nattech/3/01/fase3`, `nl ojw/nattech/3/08/fase3`; guidance, not law; all confirmed) and the Dutch legal core goal 45 of 2006 (`nl 45`; still in force; an end-of-primary goal; confirmed). From the California standards it takes the loop of fair test, failure, improvement and comparison, and it does not teach structures on their authority. The plank on edge standing for the profile is the game's own reading, beyond the Dutch records. The check states are to be read again on the day of the pull request. No attainment claim.
 
 ### Defaults taken for the owner
 

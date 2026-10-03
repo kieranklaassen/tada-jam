@@ -189,6 +189,27 @@ describe('the saved state', () => {
     expect(crossed(state, 'post-van')).toMatchObject({ waiting: [], across: ['jelly-truck', 'post-van'], position: 'rock-prop' })
   })
 
+  it('a vehicle is never on both banks: each of the two leaves the near bank when it crosses and is back when it is sent home', () => {
+    const banks = (state: Save) => { for (const id of state.waiting) expect(state.across).not.toContain(id); return [state.waiting, state.across] }
+    let state = crossed(edit(freshSave(null), bridge), 'post-van')
+    expect(banks(state)).toEqual([['jelly-truck'], ['post-van']])
+    state = crossed(state, 'jelly-truck')
+    expect(banks(state)).toEqual([[], ['post-van', 'jelly-truck']])
+    state = sentHome(state, 'jelly-truck')
+    expect(banks(state)).toEqual([['jelly-truck'], ['post-van']])
+    state = sentHome(state, 'post-van')
+    expect(banks(state)).toEqual([['jelly-truck', 'post-van'], []])
+    // The newest sheet is not rebuilt from its entry: on the rack, with its bridge changed since, it keeps its parked vehicle.
+    state = unroll(crossed(state, 'post-van'))
+    const newest = crossed(edit(state, CROSSINGS['rock-prop']), 'post-van')
+    const away = turnTo(edit(newest, CROSSINGS['rock-prop'].slice(0, 2)), 0)
+    expect(away.across).toEqual(['post-van'])
+    const back = turnTo(away, 1)
+    expect(parked(back)).toEqual(['post-van'])
+    expect(standing(back)).toEqual(['jelly-truck'])
+    expect(back.tries).toBe(newest.tries)
+  })
+
   it('a hat stays on its part until it is plucked off or the part is taken off', () => {
     const stays = CROSSINGS['high-thread']
     let state = { ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'tall-bus' }] }
