@@ -88,7 +88,9 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = ['meadow', 'birchwood', 'ford', 'quarry', 'ridge', 'tarn', 'saddle', 'summit']
+// Each id names a kind of place on a map sheet and nothing else. What each
+// position adds, and the sites laid out at it, are in world.ts.
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -98,6 +100,7 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'meadow' },
+  // From 11 a first visit skips the single fixed amount and starts where the amount is chosen.
+  { fromAge: Math.min(OLDEST, 11), position: 'birchwood' },
 ]
