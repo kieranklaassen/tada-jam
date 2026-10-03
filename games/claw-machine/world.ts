@@ -45,13 +45,29 @@ export type World = {
   shown: Record<Attribute, boolean>
   /** When the cycle has ended: the crate for the stored position and, unless that is the top, a taller one for the step above. */
   crates: Crate[]
-  /** What the next layout draws from. It only ever moves forward. */
-  seed: number
 }
 
 /** The next seed after this one: a fixed walk, so no clock and no chance is read. */
 export function seedAfter(seed: number): number {
   return (Math.imul(seed >>> 0, 1664525) + 1013904223) >>> 0
+}
+
+/**
+ * A number drawn from a finished cycle: its toys, where each ended and in
+ * what order, and how it went. The next layouts are seeded from it, so what
+ * comes next follows from what the child did and from nothing else, and
+ * nothing more has to be stored to find it again.
+ */
+export function cycleNumber(cycle: Cycle): number {
+  let h = 2166136261
+  const mix = (n: number) => { h = Math.imul(h ^ (n & 0xffff), 16777619) >>> 0 }
+  cycle.toys.forEach((toy, i) => {
+    const where = cycle.where[i]
+    mix(toy.colour.length * 31 + toy.kind.length * 7 + toy.size.length)
+    mix(where.at === 'tray' ? where.place * 4 + where.level : 64 + where.slot * 16 + where.nth)
+  })
+  mix(cycle.misses); mix(cycle.sort); mix(cycle.from.length)
+  return h
 }
 
 export function startCycle(from: PositionId, seed: number, harder: boolean): Cycle {
@@ -67,7 +83,7 @@ export function startCycle(from: PositionId, seed: number, harder: boolean): Cyc
 
 export function newWorld(childAge: number | null, seed = 1): World {
   const position = firstPosition(childAge) as PositionId
-  return { position, finished: false, cycle: startCycle(position, seed, false), shown: { colour: false, kind: false, size: false }, crates: [], seed: seedAfter(seed) }
+  return { position, finished: false, cycle: startCycle(position, seed, false), shown: { colour: false, kind: false, size: false }, crates: [] }
 }
 
 /** The crew at the tray. */
@@ -132,11 +148,15 @@ export function endCycle(world: World): CycleOutcome {
   const moved = finishCycle({ v: STATE_VERSION, position: world.position, finished: false }, counted)
   world.position = moved.position as PositionId
   world.finished = true
-  const first = world.seed, second = seedAfter(first)
-  world.seed = seedAfter(second)
-  const up = nextUp(world.position)
-  world.crates = up ? [{ from: world.position, seed: first }, { from: up, seed: second }] : [{ from: world.position, seed: first }]
+  world.crates = cratesFor(world.position, world.cycle)
   return outcome
+}
+
+/** The crates that wait after a cycle: one for the stored position and, unless that is the top, a taller one for the step above. */
+export function cratesFor(position: PositionId, ended: Cycle): Crate[] {
+  const first = seedAfter(cycleNumber(ended)), second = seedAfter(first)
+  const up = nextUp(position)
+  return up ? [{ from: position, seed: first }, { from: up, seed: second }] : [{ from: position, seed: first }]
 }
 
 /** The child put the claw on a crate: its load comes in and its first crew lines up. Returns false when there is no such crate. */

@@ -1,10 +1,10 @@
 import { MINI, bellyLayout } from './belly'
 import { PLATE } from './bricks'
 import { EYE, LEGS, rimHeight, type GobblerShape } from './gobblerBuild'
-import { TOY_COLOUR, WHITE } from './palette'
+import { shapeOf, snackOf, type GobblerId } from './gobblers'
 import type { GobblerLook, ToyLook } from './picture'
 import { SHELF, SLOT_Z, STEP, WAIT_Z, slotX } from './places'
-import { COLOURS, KINDS, type Toy } from './toys'
+import type { Toy } from './toys'
 
 // The gobblers as they stand before the game is built on the toy: a crew of
 // three at the tray with their snacks in their bellies, and the next crew
@@ -13,15 +13,15 @@ import { COLOURS, KINDS, type Toy } from './toys'
 
 type Standing = { id: string; shape: GobblerShape; x: number; y: number; z: number; waiting: boolean; snack?: Toy; pace: number; phase: number; blinkEvery: number }
 
+const CREW: readonly GobblerId[] = ['red', 'blue', 'yellow'], WAITING: readonly GobblerId[] = ['duck', 'car', 'rocket']
+
 const CAST: Standing[] = [
-  ...COLOURS.map((colour, i): Standing => ({
-    id: `crew-${colour}`, shape: { width: 10, belly: 12, colour: TOY_COLOUR[colour] },
-    x: slotX(i, 3), y: STEP.top, z: SLOT_Z, waiting: false, snack: { colour, kind: 'duck', size: 'small' },
+  ...CREW.map((id, i): Standing => ({
+    id: `crew-${id}`, shape: shapeOf(id), x: slotX(i, 3), y: STEP.top, z: SLOT_Z, waiting: false, snack: snackOf(id),
     pace: [1.7, 1.25, 2.1][i], phase: [0.4, 2.9, 4.6][i], blinkEvery: [3.7, 5.3, 4.4][i],
   })),
-  ...KINDS.map((kind, i): Standing => ({
-    id: `waiting-${kind}`, shape: { width: 10, belly: 12, colour: WHITE, model: kind },
-    x: slotX(i, 3), y: SHELF.top, z: WAIT_Z, waiting: true,
+  ...WAITING.map((id, i): Standing => ({
+    id: `waiting-${id}`, shape: shapeOf(id), x: slotX(i, 3), y: SHELF.top, z: WAIT_Z, waiting: true,
     pace: [1.4, 1.9, 1.1][i], phase: [1.3, 3.3, 5.2][i], blinkEvery: [4.9, 3.9, 6.1][i],
   })),
 ]
