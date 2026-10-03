@@ -901,7 +901,7 @@ export class Theatre {
         clip(kind, actor.clip, actor.t, plan.height * FRIEND_SCALE, plan.reach, pose)
         if (flip) mirror(pose)
         // Whatever it does, the hand that holds a string stays up: the balloon is on the end of it.
-        if (this.held[i].shown && actor.clip !== 'liftOff') pose.armR = Math.max(pose.armR, plan.reach - 0.45)
+        if (this.held[i].shown && (actor.clip !== 'liftOff' || kind === 'frog')) pose.armR = Math.max(pose.armR, plan.reach - 0.45)
       }
       this.watch(i, pose)
       this.ride(pose, i)
@@ -937,10 +937,17 @@ export class Theatre {
       if (actor.clip === 'liftOff' && actor.tug) {
         // The bunch that is carrying it off, straining upwards on strings from its hand.
         const hue = KIND_COLOURS[actor.tug.colour], line = shade(hue, -0.3)
-        // A friend that already holds a balloon takes the bunch in its other hand: a balloon in each.
-        const other = balloon.shown
-        if (other) handOf(plan, pose, this.hand, true)
-        const topX = pose.x + (other ? -0.75 : -0.2) + Math.sin(time * 9) * 0.05, topY = pose.y + HELD_HEIGHT + 0.5
+        // A friend that already holds a balloon takes the bunch in its other hand: a balloon in each. The frog takes
+        // it with its tongue and hangs from that, mouth up, the strings gathered at the tongue's tip.
+        const other = balloon.shown, byTongue = kind === 'frog'
+        if (byTongue) {
+          const mouthX = pose.x, mouthY = pose.y + (plan.neck[1] + plan.mouth[1]) * pose.scale * pose.squash, mouthZ = pose.z + (plan.neck[2] + plan.mouth[2]) * pose.scale
+          this.hand.x = pose.x - 0.1 + Math.sin(time * 9) * 0.04
+          this.hand.y = pose.y + HELD_HEIGHT - 1.25
+          this.hand.z = 0.3
+          painter.string(mouthX, mouthY, mouthZ, this.hand.x, this.hand.y, this.hand.z, shade(colour, 0.34), 0.07)
+        } else if (other) handOf(plan, pose, this.hand, true)
+        const topX = pose.x + (byTongue ? -0.1 : other ? -0.75 : -0.2) + Math.sin(time * 9) * 0.05, topY = pose.y + HELD_HEIGHT + 0.5
         for (const offset of bunchOffsets(actor.tug.count)) {
           painter.balloon(topX + offset.x, topY + offset.y, 0.25, 0.96, 1.08, -offset.x * 0.3, hue)
           painter.string(topX + offset.x, topY + offset.y - BALLOON * 1.4, 0.25, this.hand.x, this.hand.y, this.hand.z, line)
@@ -1073,7 +1080,9 @@ export class Theatre {
       if (flight.landed || flight.given.result !== 'taken') continue
       const k = flight.given.takers.indexOf(friend)
       if (k < 0) continue
-      const at = this.along(flight), offset = bunchOffsets(flight.bunch.count)[k]
+      // When two or three frogs take from one bunch, each goes for the balloon on the far side of it, so the tongues cross in the air.
+      const takers = flight.given.takers.length
+      const at = this.along(flight), offset = bunchOffsets(flight.bunch.count)[takers > 1 ? takers - 1 - k : k]
       const plan = BODIES.frog
       const mouthX = pose.x, mouthY = pose.y + (plan.neck[1] + plan.mouth[1]) * pose.scale * pose.squash, mouthZ = (plan.neck[2] + plan.mouth[2]) * pose.scale
       const tipX = at.x + offset.x, tipY = at.y + offset.y - BALLOON * 1.25

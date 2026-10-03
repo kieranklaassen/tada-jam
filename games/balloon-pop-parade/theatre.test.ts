@@ -287,6 +287,46 @@ describe('a friend that is poked', () => {
   })
 })
 
+describe('the frog\'s tongue', () => {
+  /** A painter that keeps the thick strings of one frame: the tongues. */
+  function tongues() {
+    const drawn: { x0: number; y0: number; x1: number; y1: number }[] = []
+    const painter: Painter = {
+      place: () => {}, drop: () => {}, balloon: () => {}, shadow: () => {}, marcher: () => {}, hand: () => {}, cloud: () => {},
+      string: (x0, y0, _z0, x1, y1, _z1, _colour, thick) => { if ((thick ?? 0) > 0.05) drawn.push({ x0, y0, x1, y1 }) },
+    }
+    return { drawn, painter }
+  }
+
+  it('crosses its neighbour\'s in the air when two frogs take from one bunch', () => {
+    const theatre = staged({ troop: { kind: 'frog', size: 2, held: [false, false] }, sky: [{ colour: 'frog', count: 1 }, { colour: 'frog', count: 2 }], waiting: { kind: 'duck', size: 1 } }), { drawn, painter } = tongues()
+    tapSlot(theatre, 1)
+    play(theatre, FLIGHT - 0.12)
+    theatre.paint(painter, VIEW)
+    expect(drawn).toHaveLength(2)
+    const [left, right] = drawn[0].x0 < drawn[1].x0 ? drawn : [drawn[1], drawn[0]]
+    // The frog on the left reaches the balloon on the right, and the other way round.
+    expect(left.x1).toBeGreaterThan(right.x1)
+  })
+
+  it('is what a frog hangs by when it is carried off, its arms dangling', () => {
+    const theatre = solo('frog', ['frog', 'frog']), drawnBy = tongues(), { frame, painter } = recorder()
+    tapSlot(theatre, 0)
+    play(theatre, 7)
+    tapSlot(theatre, 1)
+    play(theatre, FLIGHT + 0.7)
+    theatre.paint(drawnBy.painter, VIEW)
+    theatre.paint(painter, VIEW)
+    const pose = frame.poses.get('friend-0')!
+    expect(pose.y - GROUND, 'in the air').toBeGreaterThan(0.5)
+    expect(drawnBy.drawn, 'one tongue, from its mouth up to the bunch').toHaveLength(1)
+    expect(drawnBy.drawn[0].y1).toBeGreaterThan(drawnBy.drawn[0].y0 + 0.3)
+    expect(pose.armL, 'the free arm hangs').toBeLessThan(1.2)
+    // The hand that holds its own balloon stays up.
+    expect(pose.armR).toBeGreaterThan(2)
+  })
+})
+
 describe('the director', () => {
   it.each(KINDS)('never has a %s take a poke the same way twice running', (kind) => {
     const theatre = solo(kind, [kind, kind === 'duck' ? 'frog' : 'duck']), { frame, painter } = recorder()

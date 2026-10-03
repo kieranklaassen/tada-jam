@@ -436,7 +436,10 @@ function liftOff(kind: KindName, t: number, height: number, reach: number, pose:
     pose.bow = down ? hold(t, land, land + 0.06, land + 0.3, land + 0.55) * -0.32 : up * 0.1
     pose.wag = wobble(t, land, 40, 5) * 0.7
   } else if (kind === 'frog') {
-    // Stretched long, then two bounces.
+    // It hangs on by its tongue, stretched long, its arms dangling and paddling; then two bounces.
+    const hangs = hold(t, 0.08, 0.2, letGo, land)
+    pose.armL = reach - hangs * (reach - 0.5 - Math.sin(t * 13) * 0.25)
+    pose.armR = reach - hangs * (reach - 0.5 + Math.sin(t * 13) * 0.25)
     pose.squash += up * 0.34 - hump(t, land, land + 0.14) * 0.26 - hump(t, land + 0.32, land + 0.44) * 0.14
     pose.y += hump(t, land + 0.12, land + 0.34) * 0.26
     pose.puff = 1 + up * 0.5
