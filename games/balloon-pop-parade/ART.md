@@ -231,6 +231,7 @@ Daylight from up, left and in front, fixed in view space, so every form is lit t
 - A director keeps it from repeating: a poke is never taken the same way twice running, and a motion a touch starts never runs at quite the same speed twice.
 - A friend without a balloon reaches up with both arms; one with a balloon holds its string and looks at it. The troop that waits keeps its arms down. The crab is the one exception: its claws stay up whatever it does, and only one dips at a time, since a claw let down would stick out into the friend beside it.
 - An arm comes round to the front as it is raised or let down, and a hand that holds a string stays up whatever else the friend does. A refusal goes to the side the bunch hangs on. All three are there so that no friend ever reaches into the one beside it.
+- A bunch with one for each is taken at once by ducks and by frogs, whose tongues cross in the air on the way, and one after another by hippos, who yawn in a row, and crabs, who snip in a row. A frog that is carried off hangs from the bunch by its tongue.
 - A troop that walks keeps its places: nobody passes anybody, and each turns the way it goes only as far as it can between its neighbours (the duck a long way, the frog and the hippo a little, the crab not at all).
 - The balloons bob and the strings sway at rest; they do no more than that, since they are the working pieces.
 
