@@ -164,7 +164,7 @@ export function paintSheet(hex: string, seed: number, width: number, height: num
   const strokes = Math.round(reach / (broad * 3))
   for (let i = 0; i < strokes; i++) {
     // One stroke in seven carries a little of the next hue along, as a brush not quite washed does.
-    const turn = rand() < 0.14 ? (rand() < 0.5 ? -26 : 26) : (rand() - 0.5) * 16, thick = broad * (10 + rand() * 30)
+    const turn = rand() < 0.14 ? (rand() < 0.5 ? -20 : 20) : (rand() - 0.5) * 14, thick = broad * (10 + rand() * 30)
     pass(thick, shade(hex, turn * drama, (rand() - 0.5) * 0.24 * drama), 0.35 + rand() * 0.4, -reach, reach, Math.round(thick / (broad * 4)))
   }
   // Where the paint ran thin the page shows through, in long pale streaks.

@@ -48,14 +48,14 @@ export function blink(seconds: number, every: number, start = 0): number {
 
 /** One plain egg. Every hide is cut from this one outline and this one sheet, so two hides look alike to the last streak. */
 const EGG_CUT = soften(lathe([[-148, 0], [-145, 17], [-130, 32], [-102, 45], [-68, 54], [-40, 55], [-17, 47], [-3, 27], [0, 0]]), 2)
-/** The crack in an egg that has been heard: a dark tear from side to side, toothed, and widest in the middle where two eyes look out. */
-const CRACK_AT = -100
-const CRACK_CUT: Pt[] = (() => {
-  const stops = [-62, -46, -31, -16, 0, 16, 31, 46, 62], half = (x: number) => 4 + 15 * Math.cos((x / 62) * (Math.PI / 2)) ** 2
-  const top = stops.map((x, i) => [x, CRACK_AT - half(x) - (i % 2 ? 8 : 0), 1] as const)
-  const bottom = stops.map((x, i) => [x, CRACK_AT + half(x) + (i % 2 ? 0 : 8), 1] as const).reverse()
-  return [...top, ...bottom]
-})()
+/**
+ * The crack in an egg that has been heard: teeth right across the shell at this height, and the top lifted on
+ * a hinge at the right like a lid, so that the dark inside opens towards the calling stone.
+ */
+const CRACK = { at: -90, hinge: 56, lift: 19, tip: 0.17, room: 42 } as const
+const TEETH = Array.from({ length: 11 }, (_, i) => [-70 + i * 14, CRACK.at + (i % 2 ? -8 : 8)] as const)
+/** Where the two eyes are in the dark, from the egg's foot. */
+const PEEK: readonly (readonly [number, number])[] = [[-23, -107], [10, -104]]
 /** The calling stone, in shares of its rectangle. */
 const SLAB_CUT: readonly Pt[] = [[0.1, 0.04], [0.52, 0], [0.9, 0.06], [1, 0.5], [0.94, 0.96], [0.5, 1], [0.05, 0.94], [0, 0.46]]
 const BOWL_CUT = soften([[-75, -86, 1], [75, -86, 1], [68, -44], [46, -10], [20, 0], [-20, 0], [-46, -10], [-68, -44]], 2)
@@ -69,6 +69,7 @@ export class SpikeScene {
   private figures: Figures
   private layer = document.createElement('canvas')
   private props: Props | null = null
+  private sheets = new Map<string, HTMLCanvasElement>()
   private sized = ''
   private kinds: boolean
   private k = 1
@@ -83,12 +84,20 @@ export class SpikeScene {
     this.kinds = wantsKinds(search)
   }
 
-  /** Paints a sheet for one named piece and cuts the piece from it. A piece bigger than a sheet gets a sheet of its own, painted with a broader brush. */
+  /**
+   * Cuts one named piece from a sheet of its own. A piece bigger than a small sheet gets one as big as itself,
+   * a pixel for each design pixel, painted with a broader brush. A sheet is painted once and kept: a surface
+   * that changes size cuts its pieces again and paints nothing.
+   */
   private paper(name: string, hex: string, outline: readonly Pt[], look: Look): Sprite {
     const box = bounds(outline), across = Math.hypot(box.w, box.h), big = across > 280, seed = seedFor(this.seed, name)
-    const side = big ? Math.ceil((across * this.k) / 2) + 8 : 512
-    const sheet = paintSheet(hex, seed, side, side, { drama: look.drama, broad: big ? this.k * 1.2 : 1 })
-    return cutPiece(sheet, outline, seed, { scale: this.k, spread: big ? 2 : (this.k * 300) / 512, facet: look.facet, wobble: look.wobble, torn: look.torn })
+    let sheet = this.sheets.get(name)
+    if (!sheet) {
+      const side = big ? Math.ceil(across) + 8 : 512
+      sheet = paintSheet(hex, seed, side, side, { drama: look.drama, broad: big ? 2.4 : 1 })
+      this.sheets.set(name, sheet)
+    }
+    return cutPiece(sheet, outline, seed, { scale: this.k, spread: big ? this.k : (this.k * 300) / 512, facet: look.facet, wobble: look.wobble, torn: look.torn })
   }
 
   /** Everything that is painted once for a surface of this size: the layer that does not move, and the props. */
@@ -115,7 +124,7 @@ export class SpikeScene {
     page.globalAlpha = 1
     page.setTransform(k, 0, 0, k, this.left, this.top)
     const put = (sprite: Sprite) => page.drawImage(sprite.canvas, sprite.x, sprite.y, sprite.w, sprite.h)
-    if (!this.kinds) put(this.paper('hill', PAPER.hill, soften(SKYLINE, 2), { drama: 1, facet: 5, wobble: 2.4, torn: 5 }))
+    if (!this.kinds) put(this.paper('hill', PAPER.hill, soften(SKYLINE, 2), { drama: 0.85, facet: 5, wobble: 2.4, torn: 5 }))
     // The ground is torn straight across by hand: its long edges wander a little and it runs off the page at both ends.
     const ends = [view.x - 40, view.x + view.w + 40], stops = Math.ceil(view.w / 130)
     const edge = (at: number, back: boolean) => Array.from({ length: stops + 1 }, (_, i) => {
@@ -139,22 +148,42 @@ export class SpikeScene {
       weave.setTransform(Math.cos(slant) * k, Math.sin(slant) * k, -Math.sin(slant) * k, Math.cos(slant) * k, (-bowl.x - 66 + i * 22) * k, (-bowl.y - 44 + (rand() - 0.5) * 10) * k)
       weave.drawImage(leaf.canvas, leaf.x, leaf.y, leaf.w, leaf.h)
     }
-    // A heard egg is the same egg with the dark of its crack laid on and trimmed to the shell.
-    const egg = this.paper('egg', PAPER.egg, EGG_CUT, { ...SCISSORS, drama: 0.35 }), crack = this.paper('crack', PAPER.crack, CRACK_CUT, { drama: 0.4, facet: 7, wobble: 1.2 })
-    const heard = { ...egg, canvas: document.createElement('canvas') }
-    heard.canvas.width = egg.canvas.width; heard.canvas.height = egg.canvas.height
-    const shell = heard.canvas.getContext('2d')!
-    shell.drawImage(egg.canvas, 0, 0)
-    shell.globalCompositeOperation = 'source-atop'
-    shell.setTransform(k, 0, 0, k, -egg.x * k, -egg.y * k)
-    shell.drawImage(crack.canvas, crack.x, crack.y, crack.w, crack.h)
+    const egg = this.paper('egg', PAPER.egg, EGG_CUT, { ...SCISSORS, drama: 0.35 })
     this.props = {
-      egg, heard,
-      white: this.paper('white', PAPER.white, soften(oval(11.5, 12), 2), { drama: 0.4, facet: 5, wobble: 0.8 }),
-      pupil: this.paper('pupil', PAPER.crack, soften(oval(5.8, 6.2), 2), { drama: 0.4, facet: 4, wobble: 0.5 }),
+      egg, heard: this.cracked(egg),
+      white: this.paper('white', PAPER.white, soften(oval(12, 12.5), 2), { drama: 0.4, facet: 5, wobble: 0.8 }),
+      pupil: this.paper('pupil', PAPER.crack, soften(oval(6, 6.4), 2), { drama: 0.4, facet: 4, wobble: 0.5 }),
       rim: this.paper('rim', '#6f9327', soften(oval(72, 13, 0, -84), 2), SCISSORS),
       bowl,
     }
+  }
+
+  /** A heard egg: the same egg in two pieces, torn along the teeth, with the dark of its inside between them. */
+  private cracked(egg: Sprite): Sprite {
+    const k = this.k, canvas = document.createElement('canvas')
+    canvas.width = egg.canvas.width; canvas.height = egg.canvas.height + Math.round(CRACK.room * k)
+    const ctx = canvas.getContext('2d')!
+    const half = (top: boolean, lifted: boolean) => {
+      ctx.save()
+      ctx.setTransform(k, 0, 0, k, -egg.x * k, canvas.height - (egg.y + egg.h) * k)
+      if (lifted) { ctx.translate(CRACK.hinge, CRACK.at - CRACK.lift); ctx.rotate(CRACK.tip); ctx.translate(-CRACK.hinge, -CRACK.at) }
+      ctx.beginPath()
+      // The dark reaches a little under the lower shell, so no pale seam shows along the teeth.
+      TEETH.forEach(([x, y], i) => (i ? ctx.lineTo(x, y + (top && !lifted ? 3 : 0)) : ctx.moveTo(x, y)))
+      ctx.lineTo(80, top ? -400 : 40)
+      ctx.lineTo(-80, top ? -400 : 40)
+      ctx.clip()
+      ctx.drawImage(egg.canvas, egg.x, egg.y, egg.w, egg.h)
+      ctx.restore()
+    }
+    half(true, false)
+    ctx.globalCompositeOperation = 'source-in'
+    ctx.fillStyle = PAPER.crack
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.globalCompositeOperation = 'source-over'
+    half(false, false)
+    half(true, true)
+    return { canvas, x: egg.x, y: egg.y + egg.h - canvas.height / k, w: egg.w, h: canvas.height / k }
   }
 
   private put(sprite: Sprite, x: number, y: number, squash = 1) {
@@ -199,7 +228,7 @@ export class SpikeScene {
         this.put(i === 1 ? props.heard : props.egg, x, FLOOR)
         if (i !== 1) return
         const open = 1 - blink(seconds, 3.3, 0.9) * 0.9
-        for (const side of [-1, 1]) { this.put(props.white, x + side * 16, FLOOR + CRACK_AT, open); this.put(props.pupil, x + side * 16 - 3, FLOOR + CRACK_AT + 1, open) }
+        for (const [ex, ey] of PEEK) { this.put(props.white, x + ex, FLOOR + ey, open); this.put(props.pupil, x + ex - 3, FLOOR + ey + 1, open) }
       })
       const basket = BASKET.x + BASKET.w / 2, floor = BASKET.y + BASKET.h
       this.put(props.rim, basket, floor)

@@ -75,12 +75,12 @@ const KITS: Readonly<Record<Kind, Kit>> = {
   ] },
   // Tiny and pointed: a drop with a spike for a top, a long sharp beak, and corners wherever pip has curves.
   tok: { face: 0.07, parts: [
-    part('deep', [[0.04, -0.1, 1], [-0.36, -0.03, 1], [0.04, 0.09, 1]], [-0.22, -0.2], { role: 'tail' }),
+    part('deep', [[0.04, -0.1, 1], [-0.34, -0.06, 1], [0.04, 0.09, 1]], [-0.22, -0.2], { role: 'tail' }),
     ...both(part('deep', [[-0.05, 0, 1], [0.02, -0.1, 1], [0.17, 0, 1]], [0.13, -0.01], { role: 'foot' })),
-    part('body', soften(lathe([[-1.04, 0, 1], [-0.82, 0.08], [-0.6, 0.2], [-0.36, 0.31], [-0.16, 0.34], [-0.05, 0.27], [-0.03, 0]]), 2), [0, 0]),
-    ...both(part('deep', [[-0.06, -0.02, 1], [0.07, -0.02, 1], [0.01, 0.27, 1]], [0.26, -0.45], { role: 'wing', swing: [-0.22, -1.9], thin: true })),
-    ...eyes(0.125, -0.52, 0.098),
-    part('deep', [[0, -0.075, 1], [0.4, 0.03, 1], [0, 0.08, 1]], [0.1, -0.38], { role: 'beak' }),
+    part('body', soften(lathe([[-1.06, 0, 1], [-0.84, 0.08], [-0.62, 0.2], [-0.4, 0.3], [-0.21, 0.34], [-0.08, 0.3], [-0.02, 0.17], [-0.01, 0]]), 2), [0, 0]),
+    ...both(part('deep', [[-0.045, 0, 1], [0.05, -0.01, 1], [0, 0.3, 1]], [0.29, -0.36], { role: 'wing', swing: [-0.75, -2], thin: true })),
+    ...eyes(0.12, -0.56, 0.098),
+    part('deep', [[0, -0.1, 1], [0.46, 0.03, 1], [0, 0.11, 1]], [0.03, -0.4], { role: 'beak' }),
   ] },
   // Big and wide: a dome broader than it is tall, small eyes far apart, two round ears and paddles for wings.
   hoom: { face: 0.1, parts: [
@@ -185,9 +185,9 @@ export class Figures {
         // Held out to both sides each wing lifts on its own side. Held out towards something, both point that way:
         // the near one a little up, and the far one, its shoulder come round to the front and lower, a little down,
         // so that the two open towards the thing like arms.
-        const open = side * (rest + (out - rest) * pose.wings), reaching = towards * out * (side === towards ? 1.08 : 0.62) * pose.wings
+        const open = side * (rest + (out - rest) * pose.wings), reaching = towards * out * (side === towards ? 1.12 : 0.84) * pose.wings
         angle = open + (reaching - open) * far
-        if (towards !== 0 && side !== towards) { ax += towards * far * Math.abs(ax) * 1.82; ay += far * 0.2 }
+        if (towards !== 0 && side !== towards) { ax += towards * far * Math.abs(ax) * 1.82; ay += far * 0.14 }
       } else if (piece.role === 'ear') angle = side * (rest + (out - rest) * Math.max(0, side * pose.turn))
       else if (piece.role === 'neck') angle = pose.turn * 0.14
       else if (piece.role === 'face' || piece.role === 'eye') ax += slide
