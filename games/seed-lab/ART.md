@@ -7,11 +7,28 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.
+Seed Lab in one paragraph: a naturalist's journal page on which plants grow. The child carries pollen dust from one flower to another with a fingertip, a pod swells and bursts, and six young race up beside their parents, each taking after both and no two broods alike. Visitors with fixed tastes wait at the edge of the page for a plant they would like, and the child steers towards it over a few generations, or just breeds what pleases them. The verb is the idea itself: choose what the young come from, and see what was passed on.
+
+- **Band.** The manifest band is 9 to 12. Nine governs the design.
+- **Cue-table row.** The row for 7 and up in the wordless-clarity table. Its Avoid column binds the game: no written word or letter, no symbol standing alone that play depends on reading, no timer, points or verdict chrome, no long hint chain. Several things may be live at once as long as each reads at a glance, and light pictures may carry a real choice (the visitor's wish is a small pencil sketch of a plant).
+- **Pack rule for the range** (pack: game-design, ages-9-to-12.md). The model of inheritance is one small, consistent rule that never bends. Any plant that meets a wish stands, by whatever route it was bred. A cross that goes wrong is large, funny and free. Help is fetched by the child (the loupe). Nothing is babyish: the plants have no faces, the tools look like tools, the humour is dry. No competition and no stored best.
+- **Symbol rule.** The band starts at 9, so numerals may be drawn, in `symbols.ts` only, each beside the quantity it stands for. The game uses numerals in two places and no other mathematics sign: beside a wish that asks for more than one plant, and beside each group of like young when a brood is sorted ("The representation" says where each lies). No numeral stands alone, play never depends on reading one, and no letter or written word appears anywhere. This run draws none.
+- **`ctx.childAge`.** It sets one default, the place in the designed order where a first visit starts: a child of 11 or older starts at the second step, every other age and no age at the first. A saved position wins over it. It gates nothing: every packet, tool and visitor is reached by play from either start, and the top and bottom are open-ended (older than 12 starts as 11, younger than 9 as 9).
+- **`null`.** Starts at the first step.
 
 ## The toy
 
-The one action the finger performs most, what it does in an empty scene with its sound and motion, and why repeating it is a pleasure with no goal.
+**The dab.** The finger lands on a flower and lifts its pollen; the finger carries the dust to another flower and lets go. That is the whole action, and it is the one the finger performs most.
+
+In an empty scene (a bare page with two plants in bloom and a row of six empty pots):
+
+- **When the finger lands**, in that frame: the flower dips under the finger, the stem bends like a spring, a puff of gold dust lifts off the anthers and a soft pluck sounds, pitched by how tall the plant is. A trail of dust then follows the finger, shedding specks that fall and fade.
+- **When the dust reaches another flower**: that flower nods, a pod swells behind it with a rising creak, holds for a breath, and bursts with a pop. Six seeds arc out, each on its own path with its own tick, land in the pots one after another, and each plant draws itself upward in under two seconds: the pen line races up the stem, leaves unroll, the bud opens and the wash blooms into it. Each young plucks its own note as it opens, so a brood plays a short phrase that is different every time.
+- **The chain is bigger than the touch**: one dab gives a puff, a swell, a pop, six flights and six plants, and it never blocks the next touch. A second dab while the first brood is still growing works.
+- **The simplest use always works.** Any flower dabbed onto any flower gives a brood, the flower's own dust on itself included. Dust let go over bare paper drifts down and is blown off by the beetle's sneeze. There is no wrong flower and no refusal.
+- **A watcher can tell in three seconds**: the child is carrying dust between flowers and getting young plants.
+
+Why it is a pleasure with no goal: every dab is a small unpacking. The brood resembles the two plants the child chose and is never quite what was expected, the growing is fast and physical, and the page fills with plants of the child's own making. Nothing is counted and nothing is asked. The toy is judged alone, on that page, before a visitor or a wish exists.
 
 ## The object-by-action grid, and what is new on day 15
 
