@@ -56,16 +56,16 @@ export function potGeometry(segments: number): { body: THREE.BufferGeometry; lid
 
 /** A porcelain spoon lying flat: a shallow bowl and a handle with a gilt tip. Its bowl is at the origin and the handle runs along +z. */
 export function spoonGeometry(): THREE.BufferGeometry {
-  const bowl = plain(new THREE.SphereGeometry(0.2, 12, 8, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5))
-  bowl.scale(1, 0.45, 1.3)
-  bowl.translate(0, 0.09, 0)
-  const handle = plain(new THREE.BoxGeometry(0.11, 0.035, 0.7))
-  handle.translate(0, 0.085, 0.56)
-  const stripe = plain(new THREE.BoxGeometry(0.115, 0.037, 0.09), INK)
-  stripe.translate(0, 0.086, 0.5)
-  const tip = plain(new THREE.SphereGeometry(0.075, 8, 6), GOLD)
-  tip.scale(1, 0.4, 1)
-  tip.translate(0, 0.085, 0.93)
+  // The bowl of the spoon is a shallow dish turned on the lathe and drawn out long: seen from above, its hollow shows.
+  const bowl = plain(new THREE.LatheGeometry([[0.001, 0.035], [0.11, 0.04], [0.19, 0.085], [0.215, 0.12], [0.2, 0.125], [0.15, 0.085], [0.001, 0.07]].map(([r, y]) => new THREE.Vector2(r, y)), 14))
+  bowl.scale(1, 1, 1.35)
+  const handle = plain(new THREE.BoxGeometry(0.12, 0.045, 0.74))
+  handle.translate(0, 0.1, 0.6)
+  const stripe = plain(new THREE.BoxGeometry(0.125, 0.048, 0.1), INK)
+  stripe.translate(0, 0.101, 0.56)
+  const tip = plain(new THREE.SphereGeometry(0.09, 8, 6), GOLD)
+  tip.scale(1, 0.45, 1)
+  tip.translate(0, 0.1, 0.99)
   return merged([bowl, handle, stripe, tip])
 }
 

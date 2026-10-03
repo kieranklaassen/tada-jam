@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
-import { GameAudio, tick } from './audio'
+import { GameAudio } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
@@ -12,12 +12,17 @@ import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { deserialize, serialize, type GameState } from './state'
+import { TableView } from './tableView'
+import { lookTable, toyTable } from './tableau'
+import { Toy } from './toy'
 
-// The Mount, showing a blank surface. Everything a game needs around its
-// renderer is wired and running: the saved state, attention, the attended
-// clock, touch, sound from the first touch, the idle ladder, adaptive quality,
-// the grown-up performance handle and the grown-up overlay. The renderer, the
-// rules and the sounds go in where the comments say.
+// The Mount, showing the toy: a pot that pours for as long as it is held, on a
+// plain cloth with one cup. Everything around the renderer is the template's:
+// the saved state, attention, the attended clock, touch, sound from the first
+// touch, the idle ladder, adaptive quality, the grown-up performance handle
+// and the grown-up overlay. `look=1` in the address opens the game's real
+// scene instead (three guests at a laid table), for judging the look; like
+// `tier` and `fps` it is for grown-ups and changes nothing that is saved.
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -39,6 +44,9 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const drawn = { drawCalls: 0, triangles: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
+    // The table and the toy on it. The pieces are built once, here; a tier changes only how finely they are drawn.
+    const view = new TableView(canvas, document, governor.tier)
+    const toy = new Toy(view, (voice) => audio.play(voice), new URLSearchParams(window.location.search).get('look') === '1' ? lookTable() : toyTable())
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     // The game hands a change to storage where it makes it, at one of two speeds:
@@ -56,10 +64,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // canvas, where a still or a probe can read which tier is applied.
     const applyTier = () => { canvas.dataset.tier = String(governor.tier) }
 
-    // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
+    // The one place the game draws its frame. The loop calls it on every frame with the seconds that frame plays,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
-    // load calls it once the slot has been read.
-    const draw = () => {}
+    // load calls it once the slot has been read; those two draw the table as it stands and play no time.
+    const draw = (seconds = 0) => {
+      const counts = toy.draw(seconds)
+      drawn.drawCalls = counts.drawCalls
+      drawn.triangles = counts.triangles
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
@@ -72,18 +84,17 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       width = w; height = h; dpr = ratio
       // Sizing the backing store wipes the surface, so it is redrawn at once: a resize lands after the frame's
       // own draw, or while the game rests and no frame is coming, and either would leave the surface blank.
-      canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
+      view.resize(w, h, ratio)
       draw()
       return true
     }
     const observer = new ResizeObserver(resize)
     observer.observe(root)
 
-    // What the game does with a gesture. The blank surface only answers a touch with a sound.
-    // A game with short scenes ends the one that is playing first thing in every press, before the press is
-    // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
+    // What the game does with a gesture: the toy answers it. The toy keeps nothing yet, so nothing is handed to
+    // storage here; the game built on it saves the table through `cadence`, above.
     const act = (gestures: Gesture[]) => {
-      for (const gesture of gestures) if (gesture.type === 'press') audio.play(tick)
+      for (const gesture of gestures) toy.gesture(gesture)
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -117,23 +128,24 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       if (!attention.awake || disposed) return
       // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
-      clock.advance(now)
+      const seconds = clock.advance(now)
       const start = performance.now()
       act(touch.advance(now))
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
-      if (touch.active) ladder.touch(clock.seconds)
+      if (touch.active || toy.busy) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
       ladder.update(clock.seconds)
-      // The game steps its rules and its scene here, and hands what they changed to storage (`cadence`, above).
+      // The toy plays the frame's seconds: the pot, the tea and their sounds.
+      toy.step(seconds)
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that
       // frame's work.
       const stepped = clock.intervalMs > 0 && governor.sample(clock.intervalMs, lastWork)
       if (stepped) applyTier()
       const sized = stepped && resize()
-      if (!sized) draw()
+      if (!sized) draw(seconds)
       lastWork = performance.now() - start
       work.push(lastWork)
       overlay.frame(now, clock.intervalMs, lastWork, governor.tier, drawn.drawCalls, drawn.triangles)
@@ -185,6 +197,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       uninstallPerf()
       overlay.dispose()
       audio.dispose()
+      view.dispose()
     }
   }, [])
 

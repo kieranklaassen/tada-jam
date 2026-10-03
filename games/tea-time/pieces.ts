@@ -105,8 +105,10 @@ export function turn(points: readonly ProfilePoint[], segments: number, paint: P
       const at = i * count + j
       const color = paint.color?.(j) ?? WHITE
       color.toArray(colors, at * 3)
-      if (region && j >= region.from && j <= region.to) {
-        const [u, v] = uvOf(region.area, i / segments, (points[j].y - low) / Math.max(1e-6, high - low))
+      if (region) {
+        // Every row of a painted form stays inside its region, the rows beyond the painted stretch at its bare top or
+        // bottom edge: a face that ran from the region to the plain patch would drag every painting between them across it.
+        const [u, v] = uvOf(region.area, i / segments, Math.min(1, Math.max(0, (points[j].y - low) / Math.max(1e-6, high - low))))
         uv.setXY(at, u, v)
       } else uv.setXY(at, PLAIN[0], PLAIN[1])
     }
