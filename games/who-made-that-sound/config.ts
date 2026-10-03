@@ -88,7 +88,7 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = ['two-eggs', 'three-eggs', 'near-voice', 'leaf-piles', 'near-in-leaves', 'who-is-inside', 'two-alike']
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -98,6 +98,6 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'two-eggs' },
+  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'three-eggs' }] : []),
 ]
