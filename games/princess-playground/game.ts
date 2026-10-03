@@ -1,5 +1,6 @@
 import { inCompany, placeOf, standsAt, weightOn, type Arrangement } from './arrangement'
 import { landingOf, reactionsTo, tossed, type Landing, type Reaction } from './cells'
+import { forecast, type SandOp } from './forecast'
 import { Grains } from './grains'
 import type { Guidance } from './guidance'
 import { bite as biteMark, biteDepth, furrow, rake as rakeMarks, rakeIsOut, ring as ringMark, stamp } from './marks'
@@ -8,7 +9,7 @@ import type { Frame } from './pose'
 import { layout, rideOf, type Kind, type Ride } from './rides'
 import { afterMove, beginRide, endRide, markShown, rideIsOver, save, type Saved, type World } from './save'
 import { Scene, type Beat } from './scene'
-import { endingBeats, showingBeats } from './scenes'
+import { endingBeats, showingBeats, type Director } from './scenes'
 import { moodOf } from './tastes'
 import * as v from './voices'
 import type { Part } from './voices'
@@ -43,7 +44,7 @@ export const SNORES = 4
 /** Seconds the rake takes to cross the tray. */
 export const RAKE_SECONDS = 1.2
 
-export class Game {
+export class Game implements Director {
   world: World
   readonly play: Playground
   readonly grains: Grains
@@ -72,6 +73,8 @@ export class Game {
   private snoreAt = 0
   private company: boolean
   private lastDemo = -1
+  /** What the scene that is playing does to the sand, as it was read before the scene began and saved with its outcome. */
+  private sceneSand: SandOp[] = []
 
   constructor(world: World, seed: number, grains: Grains = new Grains(seed + 17)) {
     this.world = world
@@ -81,6 +84,11 @@ export class Game {
     this.pendingShowing = this.wantsShowing() ? world.kind : null
     this.moods()
     this.frame = this.play.frame()
+  }
+
+  /** Where everyone is when the scene that is playing is over: the saved world's arrangement. */
+  get ends(): Arrangement {
+    return this.world.arrangement
   }
 
   get ride(): Ride {
@@ -248,23 +256,31 @@ export class Game {
     if (place.at !== 'end') return
     const lifters = [...before[otherEnd(place.end)]]
     this.world = endRide(this.world)
-    this.wantSave('now')
     this.play.look(ride.asker, 0, 0)
-    this.run('ending', endingBeats(this, ride.asker, lifters))
+    this.run('ending', (director) => endingBeats(director, ride.asker, lifters))
   }
 
   /** A showing: once ever for each kind. That it has played, and the world as it stands at its end, are saved before the first beat. */
   private startShowing(kind: Kind): void {
     this.pendingShowing = null
     this.world = markShown(this.world, kind)
-    this.wantSave('now')
-    this.run('showing', showingBeats(this, this.ride))
+    const ride = this.ride
+    this.run('showing', (director) => showingBeats(director, ride))
   }
 
-  private run(kind: 'ending' | 'showing', beats: Beat[]): void {
+  /**
+   * Starts a scene. Its outcome is already in the world but for the sand: the
+   * scene is first played on a silent twin, and every bite and hollow it will
+   * make goes into the marks now. Then all of it is saved at once, before the
+   * first beat.
+   */
+  private run(kind: 'ending' | 'showing', build: (director: Director) => Beat[]): void {
+    this.sceneSand = forecast(this.play, this.world.arrangement, build)
+    for (const op of this.sceneSand) this.mark(op)
+    this.wantSave('now')
     this.cut = false
     this.sceneKind = kind
-    this.scene = new Scene(beats)
+    this.scene = new Scene(build(this))
     this.scene.start(this.time, () => {})
   }
 
@@ -277,6 +293,9 @@ export class Game {
     this.scene = null
     this.sceneKind = null
     this.cut = false
+    // The sand ends as it was saved: whatever of the scene's bites and hollows has not been drawn is drawn now.
+    for (const op of this.sceneSand) this.draw(op)
+    this.sceneSand = []
     if (touched) {
       this.later = []
       this.landings = {}
@@ -314,6 +333,18 @@ export class Game {
 
   // --- What happened, into sound and sand ---------------------------------------
 
+  /** One thing done to the sand, into the saved grid. A mark never gets shallower, so doing it twice changes nothing. */
+  private mark(op: SandOp): void {
+    if (op.type === 'bite') biteMark(this.world.marks, op.x, biteDepth(op.weight))
+    else stamp(this.world.marks, op.x, op.z, FRIENDS[op.id].radius * 0.8, 2 + FRIENDS[op.id].weight)
+  }
+
+  /** The same thing, for the eye. */
+  private draw(op: SandOp): void {
+    if (op.type === 'bite') this.cues.push({ type: 'bite', x: op.x, strength: Math.min(1, op.speed / 3) })
+    else this.cues.push({ type: 'dimple', x: op.x, z: op.z, radius: FRIENDS[op.id].radius * 0.8, depth: Math.min(1, 0.35 + 0.16 * FRIENDS[op.id].weight) })
+  }
+
   private apply(reaction: Reaction): void {
     if (reaction.act) this.play.act(reaction.who, reaction.act, reaction.seconds ?? 0.6, reaction.way ?? 0)
     if (reaction.voice) this.voice(reaction.voice)
@@ -342,9 +373,9 @@ export class Game {
       const spec = FRIENDS[event.id], hard = event.speed / 9
       this.voice(v.thump(spec.weight, event.on, hard))
       if (event.on === 'sand') {
-        const depth = Math.min(1, 0.35 + 0.16 * spec.weight)
-        stamp(marks, event.x, event.z, spec.radius * 0.8, 2 + spec.weight)
-        this.cues.push({ type: 'dimple', x: event.x, z: event.z, radius: spec.radius * 0.8, depth })
+        const op: SandOp = { type: 'hollow', x: event.x, z: event.z, id: event.id }
+        this.mark(op)
+        this.draw(op)
         this.grains.burst(event.x, event.z, 0.25 + 0.15 * spec.weight, 4 + spec.weight * 3)
         this.wantSave('soon')
       }
@@ -357,8 +388,9 @@ export class Game {
       const weight = weightOn(this.play.arrangement, event.end), power = Math.min(1, event.speed / 3)
       this.voice(v.knock(event.speed))
       this.voice(v.crunch(weight))
-      biteMark(marks, event.x, biteDepth(weight))
-      this.cues.push({ type: 'bite', x: event.x, strength: power })
+      const op: SandOp = { type: 'bite', x: event.x, weight, speed: event.speed }
+      this.mark(op)
+      this.draw(op)
       // A ring of sand flies from under the end that came down, and the end that lifted lets grains slide back.
       this.grains.burst(event.x, PLANK.z, 0.35 + 0.65 * power, Math.round(8 + 22 * power), PLANK.halfWidth * 2)
       if (power > 0.45) {

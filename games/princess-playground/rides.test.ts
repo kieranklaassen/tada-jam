@@ -142,7 +142,35 @@ describe('each ride as it opens', () => {
     }
   })
 
-  it('at middle-asks and big-asks the plank first shows too light or level: no first tap on the smallest lifts', () => {
+  it('at middle-asks and big-asks tapping the far-side friends one after another resolves it by the second tap at the latest', () => {
+    for (const kind of ['middle-asks', 'big-asks'] as Kind[]) {
+      const ride = rideOf(kind, 0), others = FRIEND_IDS.filter((id) => id !== ride.asker), start = layout(ride)
+      for (const first of others) for (const second of others) {
+        if (first === second) continue
+        const one = tap(start, first)
+        expect(wantMet(ride, one) || wantMet(ride, tap(one, second)), `${kind} ${first} ${second}`).toBe(true)
+      }
+    }
+  })
+
+  it('the first tap shows too light or level, except Bo at middle-asks, who lifts Mog at once', () => {
+    const ride = rideOf('middle-asks', 0), start = layout(ride)
+    expect(consequence(ride, start, tap(start, 'pim')).what).toBe('too-light')
+    expect(consequence(ride, start, tap(start, 'dot')).what).toBe('level')
+    expect(consequence(ride, start, tap(start, 'bo')).what).toBe('there')
+    const bigRide = rideOf('big-asks', 0), open = layout(bigRide)
+    for (const id of ['pim', 'mog', 'dot'] as const) expect(consequence(bigRide, open, tap(open, id)).what).toBe('too-light')
+  })
+
+  it('at near-side, while Bo sits on Pim she cannot go up: Mog and Dot together on the far end only float the plank level', () => {
+    const near = rideOf('near-side', 0)
+    const both = tap(tap(tap(layout(near), 'bo'), 'mog'), 'dot')
+    expect(lean(both)).toBe(0)
+    expect(wantMet(near, both)).toBe(false)
+    expect(wantMet(near, tap(both, 'bo'))).toBe(true)
+  })
+
+  it('at middle-asks and big-asks no first tap on the smallest lifts', () => {
     const middle = rideOf('middle-asks', 0)
     expect(wantMet(middle, tap(layout(middle), 'pim'))).toBe(false)
     expect(lean(tap(layout(middle), 'dot'))).toBe(0)

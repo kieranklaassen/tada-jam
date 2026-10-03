@@ -1,10 +1,10 @@
-import { putInSand, standsAt } from './arrangement'
-import { delight } from './cells'
-import type { Game } from './game'
+import { putInSand, standsAt, type Arrangement } from './arrangement'
+import { delight, type Reaction } from './cells'
+import type { Playground } from './motion'
 import { NESTLE } from './rest'
 import { askerEnd, type Ride } from './rides'
 import type { Beat } from './scene'
-import { chirp, crow } from './voices'
+import { chirp, crow, type Part } from './voices'
 import { FRIENDS, PLANK, SAND, homeOn, otherEnd, seatX, type FriendId } from './world'
 
 // The short scenes, as lists of timed beats for scene.ts: the ending of a
@@ -14,6 +14,23 @@ import { FRIENDS, PLANK, SAND, homeOn, otherEnd, seatX, type FriendId } from './
 // ends a scene with every beat at its end: a beat that is cut does nothing,
 // and the game then stands everyone where the saved world has them.
 
+/**
+ * What a scene needs of whoever plays it. The game is one such; so is the
+ * silent twin that plays a scene ahead of time, to learn what it will do to
+ * the sand before the scene starts.
+ */
+export type Director = {
+  play: Playground
+  /** A touch ended the scene: its beats do nothing more. */
+  cut: boolean
+  /** The saved world's arrangement: where everyone is when the scene is over. */
+  ends: Arrangement
+  react(reactions: readonly Reaction[]): void
+  voice(parts: readonly Part[]): void
+  nextSaid(): number
+  expectLanding(before: Arrangement, id: FriendId): void
+}
+
 /** How hard the plank is pushed for each of the three rocks of an ending, radians a second. */
 export const ROCK = 1.6
 /** When the three rocks fall, in seconds from the start of the ending. */
@@ -22,7 +39,7 @@ export const ROCKS_AT = [1.8, 2.6, 3.4] as const
 export const NEXT_AT = 4.8
 
 /** Something that happens once at `at`, unless a touch has ended the scene. */
-function once(game: Game, at: number, what: () => void): Beat {
+function once(game: Director, at: number, what: () => void): Beat {
   return { at, lasts: 0, play: () => { if (!game.cut) what() } }
 }
 
@@ -37,7 +54,7 @@ function until(at: number): Beat {
  * of the plank whose reach comes from the weights as they stand, and then the
  * friend who asks next leaving for the waiting place.
  */
-export function endingBeats(game: Game, asker: FriendId, lifters: readonly FriendId[]): Beat[] {
+export function endingBeats(game: Director, asker: FriendId, lifters: readonly FriendId[]): Beat[] {
   const beats: Beat[] = [once(game, 0, () => game.react(delight(asker)))]
   lifters.forEach((id, index) => {
     beats.push(once(game, 0.8 + index * 0.22, () => {
@@ -53,12 +70,12 @@ export function endingBeats(game: Game, asker: FriendId, lifters: readonly Frien
     }))
   }
   // This beat lands whether or not the scene is cut: the next asker goes to wait, and the plank answers its leaving.
-  beats.push({ at: NEXT_AT, lasts: 0, play: () => game.play.relayout(game.world.arrangement) })
+  beats.push({ at: NEXT_AT, lasts: 0, play: () => game.play.relayout(game.ends) })
   return beats
 }
 
 /** The one showing of a kind of ride: a friend does the new thing once, with no word, and never the answer to this ride. */
-export function showingBeats(game: Game, ride: Ride): Beat[] {
+export function showingBeats(game: Director, ride: Ride): Beat[] {
   const play = game.play, near = askerEnd(ride), far = otherEnd(near), side = near === 'left' ? -1 : 1
   switch (ride.kind) {
     case 'little-asks':
@@ -119,7 +136,7 @@ export function showingBeats(game: Game, ride: Ride): Beat[] {
     case 'high-asks':
       // Bo hops on and the plank tosses Pim up to where she sits.
       return [
-        once(game, 0, () => play.settleTo(putInSand(game.world.arrangement, 'bo', homeOn('bo', far)))),
+        once(game, 0, () => play.settleTo(putInSand(game.ends, 'bo', homeOn('bo', far)))),
         once(game, 0.5, () => {
           const before = play.arrangement
           play.tapFriend('bo')

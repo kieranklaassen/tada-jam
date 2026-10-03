@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { isSound, placeOf, standsAt } from './arrangement'
 import { ASK_AT, Game, SNORES, type Cue } from './game'
 import type { Guidance } from './guidance'
-import { RAKED, rakeIsOut } from './marks'
+import { RAKED, marksToText, rakeIsOut } from './marks'
 import { seeded } from './motion'
 import { KINDS, layout, rideOf, wantMet, type Kind } from './rides'
 import { freshWorld, load, save, type Saved, type World } from './save'
@@ -157,6 +157,29 @@ describe('the showings, one for each kind of ride', () => {
     }
   })
 
+  it('each saves the sand as it lies at its end: played through or cut at any instant, the marks are the ones saved at the start', () => {
+    for (const kind of KINDS) {
+      for (const cutAt of [null, 0.02, 0.7, 1.6]) {
+        const game = new Game(opening(kind, 0), 1)
+        const { saves } = run(game, 0.05)
+        const atStart = saves[0].saved.marks
+        if (cutAt === null) run(game, 12)
+        else {
+          run(game, cutAt)
+          game.press({ kind: 'none' })
+          run(game, 8)
+        }
+        expect(marksToText(game.world.marks), `${kind} cut ${cutAt}`).toBe(atStart)
+      }
+    }
+    // And the two showings that thump an end into the sand do leave their bite.
+    for (const kind of ['little-asks', 'high-asks'] as Kind[]) {
+      const game = new Game(opening(kind, 0), 1)
+      const { saves } = run(game, 0.05)
+      expect(saves[0].saved.marks, kind).toMatch(/[2-9]/)
+    }
+  })
+
   it('none is the answer to its ride: the asker is no nearer where it wants to be when the showing is over', () => {
     for (const kind of KINDS) {
       const game = new Game(opening(kind, 0), 1)
@@ -186,6 +209,11 @@ describe('the ride, the ending of every cycle', () => {
     expect(started!.sand.mog).toBeUndefined()
     // On screen Mog still sits where the child put him: he leaves in the last beat.
     expect(game.play.arrangement.right).toEqual(['mog'])
+    // And the sand as it lies at the scene's end, with every bite the rocking plank and the leaving friend make.
+    const before = marksToText(game.world.marks)
+    run(game, NEXT_AT + 8)
+    expect(marksToText(game.world.marks)).toBe(started!.marks)
+    expect(before).toBe(started!.marks)
   })
 
   it('plays its beats and ends with the next asker at the waiting place and everything else as the child left it', () => {
@@ -197,6 +225,19 @@ describe('the ride, the ending of every cycle', () => {
     expect(game.play.arrangement.left).toEqual(['pim'])
     const mog = game.play.bodies.mog
     expect([mog.x, mog.y, mog.z]).toEqual([WAITING_PLACE.x, 0, WAITING_PLACE.z])
+  })
+
+  it('cut at any instant, the sand ends as it was saved when the ending began', () => {
+    for (const after of [0.02, 1.0, 2.0, 3.0, NEXT_AT - 0.05]) {
+      const game = lifting()
+      const atStart = marksToText(game.world.marks)
+      run(game, after)
+      game.press({ kind: 'none' })
+      const { cues } = run(game, 8)
+      expect(marksToText(game.world.marks), `cut ${after} s in`).toBe(atStart)
+      // What had not been drawn of it is drawn when the touch lands.
+      if (after < 1) expect(cues.some((cue) => cue.type === 'bite' || cue.type === 'dimple')).toBe(true)
+    }
   })
 
   it('any touch ends it at once with every beat at its end, and is then an ordinary touch', () => {

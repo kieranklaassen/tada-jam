@@ -272,6 +272,22 @@ export class Playground {
     this.wasLevel = this.isLevel()
   }
 
+  /** A second playground in exactly this one's state, to be played ahead of it: what a scene will do to the sand is read from the twin before the scene starts. */
+  fork(): Playground {
+    const twin = new Playground(this.arrangement, 1)
+    twin.plank.tilt = this.plank.tilt
+    twin.plank.spin = this.plank.spin
+    for (const id of FRIEND_IDS) {
+      const from = this.bodies[id]
+      Object.assign(twin.bodies[id], from, { away: from.away ? { ...from.away } : null })
+    }
+    twin.held = null
+    twin.time = this.time
+    twin.carry = this.carry
+    twin.wasLevel = this.wasLevel
+    return twin
+  }
+
   /** The plank has come to lie where the weights on it leave it, or nearly, and is no longer swinging hard. */
   get plankArrived(): boolean {
     // Everyone the arrangement has on the plank must have landed on it, or the plank has not yet been asked.
