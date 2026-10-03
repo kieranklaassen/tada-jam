@@ -201,6 +201,40 @@ export const knock = (kind: Kind, long: number, speed: number): VoiceSpec => kep
 /** A pile in the tray picked: the parts of that kind stir. */
 export const pick = (kind: Kind): VoiceSpec => kept([{ wave: kind === 'tube' ? 'sine' : kind === 'thread' ? 'noise' : 'triangle', pitch: BASE[kind] * 1.5, peak: 0.07, attack: 0.003, length: 0.07 }, { wave: 'triangle', pitch: BASE[kind] * 2, peak: 0.04, attack: 0.002, length: 0.05, after: 0.06 }])
 
+/** Each vehicle's own horn, toot or bell: what it answers a touch with, and what it sets off with. */
+export function honk(id: string): VoiceSpec {
+  switch (id) {
+    // A bicycle bell, twice.
+    case 'post-van': return [{ wave: 'sine', pitch: 1760, peak: 0.09, attack: 0.002, length: 0.14 }, { wave: 'sine', pitch: 1760, peak: 0.08, attack: 0.002, length: 0.2, after: 0.13 }]
+    // A wobbling two-tone toot.
+    case 'jelly-truck': return [{ wave: 'triangle', pitch: 392, slideTo: 440, peak: 0.1, attack: 0.02, length: 0.22 }, { wave: 'triangle', pitch: 330, slideTo: 300, peak: 0.08, attack: 0.02, length: 0.2, after: 0.16 }]
+    // Two low piano notes, a fifth apart.
+    case 'piano-mover': return [{ wave: 'triangle', pitch: 131, peak: 0.13, attack: 0.004, length: 0.5 }, { wave: 'triangle', pitch: 196, peak: 0.1, attack: 0.004, length: 0.5, after: 0.09 }]
+    // A long rising hoot.
+    case 'giraffe-bus': return [{ wave: 'sine', pitch: 294, slideTo: 587, peak: 0.1, attack: 0.05, length: 0.45 }]
+    // A quick patter of little feet: six ticks.
+    case 'caterpillar-bus': return [0, 1, 2, 3, 4, 5].map((i) => ({ wave: 'triangle' as const, pitch: 900 + 60 * i, peak: 0.05, attack: 0.002, length: 0.04, after: 0.05 * i }))
+    default: return [{ wave: 'triangle', pitch: 440, peak: 0.08, attack: 0.01, length: 0.15 }]
+  }
+}
+
+/**
+ * How a vehicle sounds about the ride, in its own voice: a like, a dislike or
+ * neither. It is the cargo and the driver that sound, never a verdict.
+ */
+export function reactVoice(id: string, mood: 'like' | 'dislike' | 'plain'): VoiceSpec {
+  const base = honk(id)[0].pitch
+  if (mood === 'like') return kept([0, 4, 7, 12].map((semis, i) => ({ wave: 'triangle' as const, pitch: base * 2 ** (semis / 12), peak: 0.07, attack: 0.01, length: 0.22, after: 0.14 * i })))
+  if (mood === 'dislike') return kept([{ wave: 'triangle', pitch: base * 1.5, slideTo: base * 0.7, peak: 0.1, attack: 0.01, length: 0.35 }, { wave: 'noise', pitch: 900, peak: 0.06, attack: 0.005, length: 0.12, after: 0.3 }, { wave: 'triangle', pitch: base * 0.6, peak: 0.07, attack: 0.01, length: 0.18, after: 0.45 }])
+  return kept([{ wave: 'triangle', pitch: base, peak: 0.06, attack: 0.02, length: 0.3 }])
+}
+
+/** The bridge goes back as it was built: a soft run of knocks upward. */
+export const restore: VoiceSpec = [0, 1, 2].map((i) => ({ wave: 'triangle' as const, pitch: 300 + 90 * i, peak: 0.06, attack: 0.004, length: 0.09, after: 0.08 * i }))
+
+/** Paper: a roll touched (0) and a sheet unrolled or a roll sliding in (1). */
+export const unrollVoice = (how: 0 | 1): VoiceSpec => (how === 0 ? [{ wave: 'noise', pitch: 2200, peak: 0.05, attack: 0.004, length: 0.06 }] : [{ wave: 'noise', pitch: 1200, slideTo: 2600, peak: 0.07, attack: 0.05, length: 0.4 }, { wave: 'noise', pitch: 600, peak: 0.05, attack: 0.004, length: 0.07, after: 0.42 }])
+
 /** Turns a voice into calls on the two builders of audio.ts. `at` is the audio clock's time now. */
 export function play(voice: VoiceSpec, at: number, tone: (at: number, pitch: number, wave: OscillatorType, peak: number, attack: number, length: number, slideTo?: number) => void, noise: (at: number, pitch: number, q: number, peak: number, attack: number, length: number, slideTo?: number) => void): void {
   for (const sound of voice) {

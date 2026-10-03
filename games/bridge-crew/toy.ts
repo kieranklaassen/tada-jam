@@ -29,6 +29,10 @@ export type Hand =
   | { what: 'part'; index: number; carried: boolean; from: readonly [number, number]; finger: readonly [number, number] }
   | { what: 'bay'; kind: Kind }
   | { what: 'chief' }
+  /** The game's own (game.ts): a vehicle at either bank, the next sheet's roll, a sheet on the rack. */
+  | { what: 'vehicle'; id: string; across: boolean }
+  | { what: 'roll' }
+  | { what: 'rack'; index: number }
 
 /** How long a plucked part goes on ringing, in seconds: a second tap inside it turns the part. */
 export const RING = 0.8
@@ -302,10 +306,14 @@ export class Toy {
   }
 
   protected model(): void {
-    const footing = isFooting(this.at)
-    this.frame = settle(this.bridge, footing)
-    this.answer = solve(this.frame)
-    this.rest = rests(this.bridge, this.frame, this.answer, footing, (x) => groundAt(this.at, x))
+    const { frame, answer, rest } = this.modelOf(this.bridge)
+    this.frame = frame; this.answer = answer; this.rest = rest
+  }
+
+  /** The frame model on a bridge on this sheet, at rest under its own weight, and where each of its parts comes to rest. */
+  protected modelOf(bridge: readonly Part[]): { frame: Frame; answer: Answer; rest: Rest[] } {
+    const footing = isFooting(this.at), frame = settle(bridge, footing), answer = solve(frame)
+    return { frame, answer, rest: rests(bridge, frame, answer, footing, (x) => groundAt(this.at, x)) }
   }
 
   /** Drops what the toy keeps beside each part, for parts that have left the bridge. */
