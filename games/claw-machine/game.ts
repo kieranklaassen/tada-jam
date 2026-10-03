@@ -178,7 +178,7 @@ export class Game {
   /** Where a gobbler's snack lies: first in its belly. */
   snackSpot(actor: Actor): Spot {
     const spot = bellySpots(actor.id, this.world.cycle.toys[0] ?? actor.snack.toy, [])[0] ?? { x: 0, y: 2, z: 0 }
-    return { x: actor.x + spot.x * actor.scale, y: actor.y + spot.y * actor.scale, z: actor.z + spot.z * actor.scale }
+    return { x: actor.x + spot.x * actor.scale, y: actor.y + (spot.y + AIR) * actor.scale, z: actor.z + spot.z * actor.scale }
   }
 
   /** Puts every body and every gobbler where the rules have it, at rest: the end state of any scene. */
@@ -227,11 +227,13 @@ export class Game {
   /** Where the rules have a toy: on its place on the tray, or in its place in a belly. */
   spotOf(toy: number): Spot & { scale: number } {
     const where = this.world.cycle.where[toy]
-    if (where.at === 'tray') { const at = placeAt(where.place); return { x: at.x, y: this.stackTop(where.place, toy), z: at.z, scale: 1 } }
+    // A toy stands a hair above what it stands on and a hair off the lines of the grid, the more the higher
+    // it is in a stack: two things that touch never lie in one plane.
+    if (where.at === 'tray') { const at = placeAt(where.place), off = where.level + 1; return { x: at.x + 0.013 * off, y: this.stackTop(where.place, toy) + AIR * off, z: at.z + 0.009 * off, scale: 1 } }
     const actor = this.crew[where.slot]
     const group = bellyOf(this.world.cycle, where.slot).map((one) => this.world.cycle.toys[one])
     const spot = bellySpots(actor.id, this.world.cycle.toys[0], group)[where.nth + 1] ?? { x: 0, y: 2, z: 0 }
-    return { x: actor.x + spot.x, y: actor.y + spot.y, z: actor.z + spot.z, scale: MINI }
+    return { x: actor.x + spot.x, y: actor.y + spot.y + AIR, z: actor.z + spot.z, scale: MINI }
   }
 
   private place(body: Body, toy: number): void {

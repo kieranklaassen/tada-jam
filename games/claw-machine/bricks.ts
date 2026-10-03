@@ -13,6 +13,8 @@ export const STUD_HEIGHT = 0.18
 export const STUD_SIDES = 8
 /** Sides of a round brick. */
 export const ROUND_SIDES = 14
+/** How much wider the cap of a cylinder is than its side. */
+const LIP = 1.03
 
 export type Rgb = readonly [number, number, number]
 
@@ -86,12 +88,18 @@ class Builder {
     if (bottom) this.quad([x0, y0, z0], [w, 0, 0], [0, 0, d], c)
   }
 
-  /** A cylinder between two caps, along y or along z. Its side shades smoothly and carries no seam. */
+  /**
+   * A cylinder between two caps, along y or along z. Its side shades smoothly
+   * and carries no seam. Each cap is a hair wider than the side it closes,
+   * like the lip of a moulded part: the rim then belongs to the cap alone, so
+   * a point straight above or below the rim is plainly outside the cylinder,
+   * and never a coin's toss between its side and its end.
+   */
   cylinder(cx: number, cy: number, cz: number, radius: number, length: number, axis: 'y' | 'z', sides: number, c: Rgb, farCap: boolean): void {
-    const at = (angle: number, along: number): [number, number, number, number, number, number] => {
+    const at = (angle: number, along: number, lip = 1): [number, number, number, number, number, number] => {
       const p = Math.cos(angle), q = Math.sin(angle)
       // Along y the circle lies in x and z; along z it lies in x and y.
-      return axis === 'y' ? [cx + p * radius, cy + along, cz + q * radius, p, 0, q] : [cx + p * radius, cy + q * radius, cz + along, p, q, 0]
+      return axis === 'y' ? [cx + p * radius * lip, cy + along, cz + q * radius * lip, p, 0, q] : [cx + p * radius * lip, cy + q * radius * lip, cz + along, p, q, 0]
     }
     const first = this.position.length / 3
     for (let i = 0; i < sides; i++) {
@@ -110,7 +118,7 @@ class Builder {
       const n: [number, number, number] = axis === 'y' ? [0, sign, 0] : [0, 0, sign]
       const start = this.position.length / 3
       for (let i = 0; i < sides; i++) {
-        const p = at((i / sides) * Math.PI * 2, along)
+        const p = at((i / sides) * Math.PI * 2, along, LIP)
         this.vertex(p[0], p[1], p[2], n[0], n[1], n[2], c, ...NO_SEAM)
       }
       for (let i = 1; i < sides - 1; i++) {
@@ -154,11 +162,11 @@ function covered(bricks: readonly Brick[], brick: Brick, sx: number, sz: number)
 
 /**
  * One mesh for a whole build. A build that never comes apart is one draw.
- * Every brick and every stud is built closed, underside and all: a closed
- * solid has an inside, so the intersection audit can tell what is in it from
- * what only stands on it.
+ * Undersides are left out unless asked for: nothing in the cabinet is ever
+ * seen from below, and a face hidden between two bricks is only a place for
+ * two faces to lie in one plane.
  */
-export function buildMesh(bricks: readonly Brick[], withBottoms = true): BrickMesh {
+export function buildMesh(bricks: readonly Brick[], withBottoms = false): BrickMesh {
   const b = new Builder()
   for (const brick of bricks) {
     const y0 = brick.y * PLATE, y1 = (brick.y + brick.h) * PLATE
@@ -182,7 +190,7 @@ export function buildMesh(bricks: readonly Brick[], withBottoms = true): BrickMe
     else for (let ix = 0; ix + 1 <= brick.w + 1e-6; ix++) for (let iz = 0; iz + 1 <= brick.d + 1e-6; iz++) cells.push([brick.x + ix, brick.z + iz])
     for (const [sx, sz] of cells) {
       if (covered(bricks, brick, sx, sz)) continue
-      b.cylinder(sx + 0.5, y1, sz + 0.5, STUD_RADIUS, STUD_HEIGHT, 'y', STUD_SIDES, brick.colour, true)
+      b.cylinder(sx + 0.5, y1, sz + 0.5, STUD_RADIUS, STUD_HEIGHT, 'y', STUD_SIDES, brick.colour, false)
       b.studs++
     }
   }

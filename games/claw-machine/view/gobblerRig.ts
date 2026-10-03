@@ -23,17 +23,19 @@ export class GobblerRig {
     this.waiting = look.waiting
     const parts = gobblerParts(look.shape)
     this.group.name = `gobbler-${look.who}`
+    // It stands on studs, so it is built with its undersides: a stud under a foot is then a fifth of a stud
+    // into the foot, and not somewhere inside a hollow shell.
     const body = new Mesh(brickGeometry(parts.body, true), plastic)
     body.name = `gobbler-${look.who}-body`
     this.group.add(body)
     const eye = eyeCentres(look.shape)[0]
     this.eyeY = eye.y; this.eyeZ = eye.z
-    this.pupils = new Mesh(brickGeometry(parts.pupils, true), plastic)
+    this.pupils = new Mesh(brickGeometry(parts.pupils), plastic)
     this.pupils.name = `gobbler-${look.who}-pupils`
     this.group.add(this.pupils)
     // The ones who wait show no belly: they are seen from the eyes up.
     if (!look.waiting) {
-      const window = new Mesh(brickGeometry(parts.window, true), glass)
+      const window = new Mesh(brickGeometry(parts.window), glass)
       window.name = `gobbler-${look.who}-window`
       window.renderOrder = 2
       this.group.add(window)

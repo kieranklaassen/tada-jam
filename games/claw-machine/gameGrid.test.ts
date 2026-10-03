@@ -73,7 +73,8 @@ describe('the grid, played', () => {
     game.advance(3)
     expect(types(game.takeEvents())).toContain('thud')
     expect(game.lifted).toBe(-1)
-    expect([actor.x, actor.y, actor.z]).toEqual([home.x, home.y, home.z])
+    expect([actor.x, actor.z]).toEqual([home.x, home.z])
+    expect(actor.y).toBeCloseTo(home.y, 9)
     expect(game.claw.load).toBe(0)
   })
 

@@ -59,9 +59,12 @@ describe('the game', () => {
     for (const heard of ['catch', 'chomp', 'hmm', 'wrong', 'click']) expect(types(events), heard).toContain(heard)
     const where = game.world.cycle.where[0]
     expect(where.at).toBe('tray')
-    const at = placeAt((where as { place: number }).place), body = game.bodies[0]
+    const at = game.spotOf(0), body = game.bodies[0]
     expect(body.mode).toBe('resting')
     expect([body.x, body.z, body.scale]).toEqual([at.x, at.z, 1])
+    // On its place, a hair off the lines of the grid.
+    const middle = placeAt((where as { place: number }).place)
+    expect(Math.hypot(body.x - middle.x, body.z - middle.z)).toBeLessThan(0.05)
     expect(game.world.cycle.misses).toBe(1)
   })
 

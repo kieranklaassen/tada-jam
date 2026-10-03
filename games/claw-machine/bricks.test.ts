@@ -46,14 +46,14 @@ describe('brick geometry', () => {
   })
 
   it('keeps every array in step', () => {
-    const mesh = buildMesh([{ x: 0, y: 0, z: 0, w: 1, d: 1, h: 1, colour: RED }], false)
+    const mesh = buildMesh([{ x: 0, y: 0, z: 0, w: 1, d: 1, h: 1, colour: RED }])
     const vertices = mesh.position.length / 3
     expect(mesh.normal.length).toBe(vertices * 3)
     expect(mesh.color.length).toBe(vertices * 3)
     expect(mesh.face.length).toBe(vertices * 4)
     expect(Math.max(...mesh.index)).toBe(vertices - 1)
-    // Five faces of a box without its bottom, and one stud: a side ring and two caps.
-    expect(vertices).toBe(5 * 4 + STUD_SIDES * 4)
+    // Five faces of a box without its bottom, and one stud: a side ring and a cap.
+    expect(vertices).toBe(5 * 4 + STUD_SIDES * 3)
   })
 
   it('measures a build and centres it on its footprint', () => {

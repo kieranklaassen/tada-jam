@@ -19,12 +19,13 @@ export type Spot = { x: number; y: number; z: number }
 
 /** Where a gobbler of the crew at the tray stands. */
 export function crewSpot(slot: number, crew: number): Spot {
-  return { x: slotX(slot, crew), y: STEP.top, z: SLOT_Z }
+  // A hair above the step: a gobbler stands on its studs and is never in one plane with it.
+  return { x: slotX(slot, crew), y: STEP.top + 0.02, z: SLOT_Z }
 }
 
 /** Where one of those who wait on the ledge stands: behind the parapet, seen from the eyes up. */
 export function waitingSpot(slot: number, crew: number): Spot {
-  return { x: slotX(slot, crew), y: SHELF.top, z: WAIT_Z }
+  return { x: slotX(slot, crew), y: SHELF.top + 0.02, z: WAIT_Z }
 }
 
 /** The top of a gobbler's head above its feet: its eyes, or the model on its back. */

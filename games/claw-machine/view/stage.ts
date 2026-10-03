@@ -88,7 +88,7 @@ export class Stage {
     this.glows.count = 0
     this.scene.add(this.glows)
 
-    this.gate = new Mesh(brickGeometry(gateBricks(), true), this.plastic)
+    this.gate = new Mesh(brickGeometry(gateBricks()), this.plastic)
     this.gate.name = 'gate'
     this.gate.position.set(GATE.x, GATE.top, GATE.z)
     this.scene.add(this.gate)
@@ -101,7 +101,7 @@ export class Stage {
       { x: -0.5, y: 0, z: -0.5, w: 1, d: 1, h: 6, colour: GLOVE, round: true, studs: false },
       { x: -1.5, y: 6, z: -0.7, w: 3.2, d: 1.4, h: 6, colour: GLOVE, studs: false },
       { x: 1.2, y: 4, z: -0.45, w: 0.9, d: 0.9, h: 3, colour: GLOVE, round: true, studs: false },
-    ], true), this.ghost)
+    ]), this.ghost)
     this.hand.name = 'ghost-hand'
     this.hand.renderOrder = 4
     this.hand.visible = false
@@ -114,11 +114,11 @@ export class Stage {
     this.cable.name = 'cable'
     this.scene.add(this.cable)
 
-    const hub = new Mesh(brickGeometry(hubBricks(), true), this.plastic)
+    const hub = new Mesh(brickGeometry(hubBricks()), this.plastic)
     hub.name = 'claw-hub'
     this.clawGroup.add(hub)
     for (const side of [-1, 1] as const) {
-      const jaw = new Mesh(brickGeometry(jawBricks(side), true), this.plastic)
+      const jaw = new Mesh(brickGeometry(jawBricks(side)), this.plastic)
       jaw.name = side < 0 ? 'claw-jaw-left' : 'claw-jaw-right'
       jaw.position.set(side * HINGE_OUT, -HINGE_DROP, 0)
       this.jaws.push(jaw)
