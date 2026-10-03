@@ -480,6 +480,7 @@ export class Kitchen {
     return {
       finished: s.finished,
       baked: s.pizza.baked,
+      own: this.own > 0,
       tubs: this.table.tubs.map((_, i) => tubAt(this.table, i)),
       pieces: this.pizzaOnBoard ? this.table.pieces.map((p) => onPizza(p.x, p.y)) : [],
       door: s.waiting ? [doorSpot('small'), doorSpot('big')] : [],

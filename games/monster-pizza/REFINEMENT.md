@@ -87,7 +87,7 @@ Unclear moments, as a newcomer:
 4. Nothing says the card and the tub hold the same thing except that they are the same shape and colour. (Kept: that is the idea.)
 5. After a tasting the pizza is back on the board looking as it did. What changed is only in the child's memory of the scene.
 
-**Run 2, after pass 4. Hands off for 13 s, then a first cycle played.** Moments 1 and 2 are gone: the near arm reaches the tub without crossing the pizza, and with hands off the oven is never shown; only the tub glows and the hand taps it. No new moment appeared in the stills. Moments 3 and 5 stand, and are under "Still weak". The first cycle played through: two taps, a slide to the oven, a slide up to the customer, three bites, and the next customer came in on a touch.
+**Run 2, after pass 4. Hands off for 13 s, then a first cycle played.** Moment 1 is gone: the near arm reaches the tub without crossing the pizza. Moment 2 is gone in part: the oven no longer lights and nothing nudges the pizza, but from 5 s the oven had the ring of dashes beside the tub, with only the shown piece on the pizza. That was a sixth moment, and it was fixed after this run: until the child has laid a piece itself, only the tubs have the ring and the hand only taps a tub (`hint.ts`, held by a test; not shot again). Moments 3 and 5 stand, and are under "Still weak". The first cycle played through: two taps, a slide to the oven, a slide up to the customer, three bites, and the next customer came in on a touch with an order of its own.
 
 ### Still weak
 

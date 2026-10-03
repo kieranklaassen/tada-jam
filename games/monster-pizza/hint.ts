@@ -12,6 +12,8 @@ export type Scene = {
   /** The customer at the counter has eaten, and the next ones wait at the door. */
   finished: boolean
   baked: boolean
+  /** The child has laid or moved a piece with its own finger since this customer stepped up. Until then the way onward is not pointed at. */
+  own: boolean
   /** Where each tub stands. */
   tubs: Spot[]
   /** Where each piece on the pizza lies, in stage units. */
@@ -32,8 +34,8 @@ const CUSTOMER_GLOW: Glow = { x: CUSTOMER.x, y: CUSTOMER.y - 150, r: 170 }
 export function glows(scene: Scene): Glow[] {
   if (scene.finished) return scene.door.map((d) => ({ x: d.x, y: d.y - 50, r: 58 }))
   const tubs = scene.tubs.map((t) => ({ x: t.x, y: t.y + TUB.r * 0.2, r: TUB.r + 24 }))
-  if (scene.pieces.length === 0 && !scene.baked) return tubs
-  return scene.baked ? [...tubs, CUSTOMER_GLOW] : [...tubs, OVEN_GLOW]
+  if (scene.baked) return [...tubs, CUSTOMER_GLOW]
+  return scene.pieces.length > 0 && scene.own ? [...tubs, OVEN_GLOW] : tubs
 }
 
 /**
@@ -47,7 +49,7 @@ export function chooseHint(scene: Scene, turn: number): Hint | null {
   const tub = scene.tubs.length > 0 ? scene.tubs[Math.floor(turn / 2) % scene.tubs.length] : null
   const piece = scene.pieces.length > 0 ? scene.pieces[turn % scene.pieces.length] : null
   const onward: Hint = scene.baked ? { move: 'drag', from: PIZZA, to: SERVE } : { move: 'drag', from: PIZZA, to: OVEN_WAY }
-  if (scene.pieces.length === 0 && !scene.baked) {
+  if (!scene.baked && (scene.pieces.length === 0 || !scene.own)) {
     if (tub) moves.push({ move: 'tap', at: tub })
   } else {
     // With something on the pizza there are three moves: one more on, the pizza onward, and one off.

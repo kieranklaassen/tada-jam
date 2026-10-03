@@ -172,7 +172,7 @@ describe('the scenes', () => {
 })
 
 describe('hints', () => {
-  const scene = (over: Partial<HintScene> = {}): HintScene => ({ finished: false, baked: false, tubs: [{ x: 250, y: 468 }, { x: 250, y: 658 }], pieces: [], door: [{ x: 886, y: 334 }, { x: 986, y: 334 }], ...over })
+  const scene = (over: Partial<HintScene> = {}): HintScene => ({ finished: false, baked: false, own: true, tubs: [{ x: 250, y: 468 }, { x: 250, y: 658 }], pieces: [], door: [{ x: 886, y: 334 }, { x: 986, y: 334 }], ...over })
 
   it('show a tap on a tub when the pizza is bare, every tub in its turn', () => {
     const taps = [0, 1, 2, 3].map((turn) => chooseHint(scene(), turn))
@@ -190,6 +190,10 @@ describe('hints', () => {
     // Baked, the way onward is to the customer.
     expect(chooseHint({ ...s, baked: true }, 1)).toEqual({ move: 'drag', from: PIZZA, to: SERVE })
     expect(glows(s).length).toBe(3)
+    // Until the child has laid a piece itself, only the tubs are pointed at: the piece a customer showed does not count.
+    const watching = { ...s, own: false }
+    expect(glows(watching).length).toBe(2)
+    for (const turn of [0, 1, 2, 3]) expect(chooseHint(watching, turn)?.move).toBe('tap')
   })
 
   it('show the door when the customer has eaten', () => {
