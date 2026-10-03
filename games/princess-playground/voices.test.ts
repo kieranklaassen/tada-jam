@@ -16,7 +16,7 @@ function everyVoice(): { name: string; voice: Part[] }[] {
   for (const strength of [0, 0.6, 1, 2]) all.push({ name: `creak ${strength}`, voice: creak(strength) })
   all.push({ name: 'level', voice: levelHum() }, { name: 'slide', voice: slide() }, { name: 'poke', voice: poke() })
   // The cells' own sounds: every voice that takes no argument, then the ones that take one.
-  const plain = ['tick', 'trill', 'clack', 'crow', 'raspberry', 'rattle', 'purr', 'knead', 'scrunch', 'yowl', 'ringOver', 'longNote', 'duet', 'softNote', 'scratch', 'snore', 'slam', 'wheeze', 'sigh', 'chuckle', 'squeal', 'clonk', 'twang', 'trickle', 'whisper', 'patter', 'comb'] as const
+  const plain = ['tick', 'trill', 'clack', 'crow', 'raspberry', 'rattle', 'purr', 'knead', 'scrunch', 'spit', 'yowl', 'ringOver', 'longNote', 'duet', 'softNote', 'scratch', 'snore', 'slam', 'wheeze', 'sigh', 'chuckle', 'squeal', 'clonk', 'twang', 'trickle', 'whisper', 'patter', 'comb'] as const
   for (const name of plain) all.push({ name, voice: voices[name]() })
   for (const alone of [true, false]) all.push({ name: `hum ${alone}`, voice: voices.hum(alone) })
   for (const weight of [0, 2, 4, 9, 30]) all.push({ name: `crunch ${weight}`, voice: voices.crunch(weight) })

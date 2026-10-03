@@ -19,6 +19,10 @@ export const HOLD_HEIGHT = 2.6
 export const TOSS = 1.25
 /** A throw slower than this is a bob, not a toss: the friend stays seated. */
 export const TOSS_FLOOR = 6
+/** How long a tap on the plank has its riders off the board, in seconds; they rise a finger's width. */
+export const RIDER_BOB = 0.32
+/** A finger's width, in tray units. */
+export const FINGER = 0.14
 /** How flat a head is pressed by a friend sitting on it. */
 export const PRESSED = 0.93
 /** How hard a landing turns the plank, per unit of weight. */
@@ -40,7 +44,7 @@ export type PlayEvent =
 type Mode = 'rest' | 'hop' | 'air' | 'held'
 
 /** A small thing a friend does with its body where it sits or stands. Each lasts a moment and changes no place. */
-export type Act = 'spin' | 'stamp' | 'kick' | 'tall' | 'knead' | 'sway' | 'sink' | 'duck' | 'lean' | 'chuckle' | 'bounce' | 'look' | 'slip' | 'shake'
+export type Act = 'spin' | 'stamp' | 'kick' | 'tall' | 'knead' | 'sway' | 'sink' | 'duck' | 'lean' | 'chuckle' | 'bounce' | 'look' | 'slip' | 'shake' | 'puff' | 'toss'
 
 export type Mood = 'glad' | 'put-out' | 'plain'
 
@@ -196,7 +200,13 @@ export class Playground {
     const side = along >= 0 ? 1 : -1
     nudge(this.plank, side * 1.7)
     this.events.push({ type: 'creak', strength: 0.6 })
-    for (const id of FRIEND_IDS) if (this.bodies[id].landed && this.bodies[id].mode === 'rest') this.bodies[id].squashV += 2.2
+    // Its riders are tossed a finger's width and come down again.
+    for (const id of FRIEND_IDS) {
+      const body = this.bodies[id]
+      if (!body.landed || body.mode !== 'rest') continue
+      body.squashV += 2.2
+      if (placeOf(this.arrangement, id).at === 'end') this.act(id, 'toss', RIDER_BOB)
+    }
   }
 
   pokeSand(x: number, z: number): void {
@@ -214,6 +224,11 @@ export class Playground {
     body.actT = 0
     body.actFor = seconds
     body.actWay = way
+  }
+
+  /** A slow blink: the eyes shut for `seconds`. */
+  blink(id: FriendId, seconds: number): void {
+    this.bodies[id].blinkT = seconds
   }
 
   setMood(id: FriendId, mood: Mood): void {
@@ -662,6 +677,10 @@ export class Playground {
       case 'look': pose.nod += 0.2 * bell; break
       // The crown slips over one eye, stays a moment, and is shaken straight.
       case 'slip': pose.follow = t < 0.55 ? 0.3 * Math.min(1, t * 6) : 0.3 * Math.cos((t - 0.55) * 28) * (1 - t) * 2.2; pose.lean += t < 0.55 ? 0 : 0.1 * Math.sin((t - 0.55) * 28) * (1 - t) * 2.2; break
+      // Cheeks out: the body bulges sideways for a moment.
+      case 'puff': pose.squash *= 1 - 0.14 * bell; break
+      // Tossed a finger's width by a tap on the plank, and down again.
+      case 'toss': pose.y += FINGER * bell; break
       // Grains shaken off a head: a quick shiver.
       case 'shake': pose.lean += 0.12 * Math.sin(t * Math.PI * 10) * fade; break
     }

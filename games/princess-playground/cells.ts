@@ -42,7 +42,11 @@ export type Reaction = {
   way?: number
   voice?: readonly Part[]
   /** A mark to leave in the sand at the friend's feet, or sand to let run off the low end of the board. */
-  mark?: 'ring' | 'trickle'
+  mark?: 'ring' | 'trickle' | 'settle'
+  /** A slow blink of this many seconds. */
+  blink?: number
+  /** A push on the plank, as a chuckle gives it. */
+  rock?: number
 }
 
 /** Where a friend was put, read from the arrangement before and after the child's move. */
@@ -60,14 +64,19 @@ export function landingOf(before: Arrangement, after: Arrangement, id: FriendId)
   return { id, deed, end: place.end, tips: now === side && without !== side, levels: now === 0, below, alone: after.left.length + after.right.length === 1, company, weightThere, others }
 }
 
+/** How hard each beat of Bo's chuckle pushes the plank. */
+export const CHUCKLE_ROCK = 0.4
+
 const react = (who: FriendId, after: number, rest: Omit<Reaction, 'who' | 'after'>): Reaction => ({ who, after, ...rest })
 
 /** What a friend makes of being landed on: each in its own way. */
 function underneath(below: FriendId, by: FriendId): Reaction[] {
   // Under Bo everyone is squashed flat with a wheeze; the body's own squash is the motion model's.
   if (by === 'bo') return [react(below, 0.05, { voice: v.wheeze() })]
-  if (below === 'pim') return [react('pim', 0.35, { voice: v.raspberry(), act: 'stamp', seconds: 0.5 })]
-  if (below === 'mog') return [react('mog', 0.2, { voice: v.scrunch(), act: 'duck', seconds: 0.5 })]
+  // Pim underneath: cheeks out and a raspberry.
+  if (below === 'pim') return [react('pim', 0.35, { voice: v.raspberry(), act: 'puff', seconds: 0.6 })]
+  // Mog underneath: he ducks, ears flat, and hisses.
+  if (below === 'mog') return [react('mog', 0.2, { voice: v.spit(), act: 'duck', seconds: 0.5 })]
   if (below === 'bo') return [react('bo', 0.3, { act: 'tall', seconds: 0.9 })]
   return [react('dot', 0.3, { act: 'sway', seconds: 1.2, way: 1 })]
 }
@@ -88,8 +97,11 @@ export function reactionsTo(l: Landing): Reaction[] {
     case 'mog':
       if (l.deed === 'low-end') add(0.15, { act: 'spin', seconds: 0.8 })
       else if (l.deed === 'high-end') {
-        if (!l.tips) add(0.3, { voice: v.purr(), act: 'tall', seconds: 1.2 })
-      } else if (l.deed === 'on-a-friend') add(0.1, { voice: v.knead(), act: 'knead', seconds: 0.7 })
+        if (!l.tips) add(0.3, { voice: v.purr(), act: 'tall', seconds: 1.2, blink: 0.7 })
+      } else if (l.deed === 'on-a-friend') {
+        // On top of a stack he kneads with his eyes shut: his slow blink.
+        add(0.1, { voice: v.knead(), act: 'knead', seconds: 0.7, blink: 0.7 })
+      }
       else add(0.1, { voice: v.scrunch(), act: 'spin', seconds: 0.7 })
       break
     case 'dot':
@@ -104,7 +116,14 @@ export function reactionsTo(l: Landing): Reaction[] {
       else add(0.5, { voice: v.scratch(), act: 'spin', seconds: 1.1, mark: 'ring' })
       break
     case 'bo':
-      if (l.deed === 'high-end') add(0, l.tips ? { voice: v.slam() } : { voice: v.chirp('bo', 1), act: 'look', seconds: 1.2 })
+      if (l.deed === 'high-end') {
+        if (l.tips) add(0, { voice: v.slam() })
+        else {
+          // High for once: his slow chuckle, which shakes the plank under him.
+          add(0.1, { voice: v.chuckle(), act: 'chuckle', seconds: 1 })
+          for (const [at, way] of [[0.15, 1], [0.3, -1], [0.45, 1], [0.6, -1]] as const) add(at, { rock: way * CHUCKLE_ROCK })
+        }
+      }
       // On the low end he digs it deeper into the sand.
       else if (l.deed === 'low-end') add(0.05, { voice: v.crunch(l.weightThere), act: 'sink', seconds: 0.9 })
       else if (l.deed === 'in-the-sand') add(0.2, { voice: v.sigh(), act: 'sink', seconds: 1.1 })
@@ -124,7 +143,7 @@ export function tossed(id: FriendId, speed: number): Reaction[] {
 /** The asker has been carried where it wanted: its own delight. */
 export function delight(id: FriendId): Reaction[] {
   if (id === 'pim') return [react('pim', 0, { voice: v.squeal(), act: 'spin', seconds: 0.7 })]
-  if (id === 'mog') return [react('mog', 0, { voice: v.purr(), act: 'tall', seconds: 1.2 })]
+  if (id === 'mog') return [react('mog', 0, { voice: v.purr(), act: 'tall', seconds: 1.2, blink: 0.7 })]
   if (id === 'bo') return [react('bo', 0, { voice: v.chuckle(), act: 'chuckle', seconds: 1 })]
   return [react('dot', 0, { voice: v.hum(false), act: 'spin', seconds: 0.8 })]
 }

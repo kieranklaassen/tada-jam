@@ -40,7 +40,7 @@ export const CELLS: Readonly<Record<Thing, Readonly<Record<Deed, Cell>>>> = {
     'in-the-sand': { seen: 'stays warm beside a friend, or pales and draws one ring with its foot', heard: 'a light tap, then one soft note or a faint slow scratch' },
   },
   bo: {
-    tap: { seen: 'rocks twice, thuds on or off', heard: 'a rumble' },
+    tap: { seen: 'from the sand rocks twice and thuds onto his end; from the plank thuds off at once', heard: 'a rumble' },
     'low-end': { seen: 'end digs a crater, a ring of sand flies; alone on the plank he dozes', heard: 'the deepest thump; alone, a snore' },
     'high-end': { seen: 'the slam: plank whips over, everyone opposite is flung, Pim highest', heard: 'a crack with a low boom under it' },
     'on-a-friend': { seen: 'the one below is squashed flat and pops back; the stack sways', heard: 'a wheeze' },

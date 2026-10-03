@@ -171,6 +171,11 @@ export function scrunch(): Part[] {
   return [hiss(1100, 1.2, 0.08, 0.03, 0.26, 700)]
 }
 
+/** Mog landed on: a short sharp hiss. */
+export function spit(): Part[] {
+  return [hiss(2800, 1.6, 0.1, 0.004, 0.3, 1900)]
+}
+
 /** Mog thrown: a yowl that falls. It replaces the whoop for him where the game wants it longer. */
 export function yowl(): Part[] {
   return [tone(900, 0.13, 0.03, 0.5, 420, 'sawtooth')]

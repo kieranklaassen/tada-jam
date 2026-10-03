@@ -359,6 +359,13 @@ export class Game implements Director {
   private apply(reaction: Reaction): void {
     if (reaction.act) this.play.act(reaction.who, reaction.act, reaction.seconds ?? 0.6, reaction.way ?? 0)
     if (reaction.voice) this.voice(reaction.voice)
+    if (reaction.blink) this.play.blink(reaction.who, reaction.blink)
+    if (reaction.rock) this.play.rock(reaction.rock)
+    if (reaction.mark === 'settle') {
+      // Grains thrown by the landing settle on this head, lie there a moment, and are shaken off.
+      const pose = this.play.frame().poses[reaction.who], spec = FRIENDS[reaction.who]
+      this.grains.settle(pose.x, pose.y + spec.halfHeight * 2 * pose.squash, pose.z, spec.radius * 0.45, 9, 0.4)
+    }
     if (reaction.mark === 'trickle') {
       // Sand thrown onto the board runs off whichever end is low now, in a thin stream.
       const way = Math.sign(this.play.plank.tilt)
@@ -430,7 +437,8 @@ export class Game implements Director {
         // Thrown grains settle on the heads of whoever rides.
         const riders = this.play.arrangement[event.end]
         if (riders.length) {
-          this.react([{ who: 'pim', after: 0.35, voice: v.patter() }])
+          // They settle on the head that is uppermost there, with a light patter.
+          this.react([{ who: riders[riders.length - 1], after: 0.35, voice: v.patter(), mark: 'settle' }])
           // And are shaken off.
           this.react(riders.map((id, index) => ({ who: id, after: 0.55 + index * 0.08, act: 'shake' as const, seconds: 0.45 })))
         }

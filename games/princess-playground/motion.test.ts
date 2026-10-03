@@ -26,6 +26,49 @@ function peakOf(world: Playground, id: FriendId, seconds: number): number {
 }
 
 describe('the playground in motion', () => {
+  it('tosses its riders a finger\'s width when the plank is tapped, never into the board, and leaves those in the sand where they are', () => {
+    const world = new Playground(firstRide())
+    world.advance(0)
+    const rest = world.frame().poses.pim.y, bo = world.frame().poses.bo.y
+    world.tapPlank(-2)
+    let peak = -Infinity, lowest = Infinity, boPeak = -Infinity
+    // The plank bobs under her too, so her lift is read against the seat she rides.
+    play(world, 0.5, (w) => {
+      const lift = w.frame().poses.pim.y - w.bodies.pim.y
+      peak = Math.max(peak, lift)
+      lowest = Math.min(lowest, lift)
+      boPeak = Math.max(boPeak, w.frame().poses.bo.y)
+    })
+    expect(peak).toBeGreaterThan(0.1)
+    expect(peak).toBeLessThan(0.2)
+    expect(lowest).toBeGreaterThan(-0.03)
+    expect(boPeak).toBeCloseTo(bo, 1)
+    expect(rest).toBeGreaterThan(0)
+  })
+
+  it('shuts a friend\'s eyes for as long as a slow blink lasts', () => {
+    const world = new Playground(firstRide())
+    world.advance(0)
+    world.blink('mog', 0.7)
+    play(world, 0.5)
+    expect(world.frame().poses.mog.lids).toBe(1)
+    play(world, 0.4)
+    expect(world.frame().poses.mog.lids).toBeLessThan(1)
+  })
+
+  it('puffs a friend out sideways, and leaves it as it was', () => {
+    const world = new Playground(firstRide())
+    world.advance(0)
+    play(world, 1)
+    const before = world.frame().poses.pim.squash
+    world.act('pim', 'puff', 0.6)
+    let flattest = before
+    play(world, 0.6, (w) => { flattest = Math.min(flattest, w.frame().poses.pim.squash) })
+    expect(flattest).toBeLessThan(before - 0.08)
+    play(world, 0.5)
+    expect(world.frame().poses.pim.squash).toBeCloseTo(before, 1)
+  })
+
   it('starts at rest, as the arrangement has it, and a first frame plays no time', () => {
     const world = new Playground(firstRide())
     world.advance(0)

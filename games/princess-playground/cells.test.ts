@@ -73,8 +73,21 @@ describe('the cells in play', () => {
     const boOnPim = reactionsTo(landingOf(on(['pim'], []), putOnEnd(on(['pim'], []), 'bo', 'left'), 'bo'))
     expect(boOnPim.some((r) => r.who === 'pim' && r.voice)).toBe(true)
     const mogOnPim = reactionsTo(landingOf(on(['pim'], []), putOnEnd(on(['pim'], []), 'mog', 'left'), 'mog'))
-    expect(mogOnPim.find((r) => r.who === 'pim')).toMatchObject({ act: 'stamp' })
+    expect(mogOnPim.find((r) => r.who === 'pim')).toMatchObject({ act: 'puff' })
     expect(mogOnPim.find((r) => r.who === 'mog')).toMatchObject({ act: 'knead' })
+    // Landed on, Mog ducks and hisses; on top of a stack he blinks slowly once he has sat.
+    const pimOnMog = reactionsTo(landingOf(on(['mog'], []), putOnEnd(on(['mog'], []), 'pim', 'left'), 'pim'))
+    expect(pimOnMog.find((r) => r.who === 'mog')).toMatchObject({ act: 'duck' })
+    expect(mogOnPim.some((r) => r.who === 'mog' && (r.blink ?? 0) > 0.5)).toBe(true)
+    // High for once without tipping it, Bo chuckles and the plank shakes under him, as far one way as the other.
+    const boHigh = reactionsTo(landingOf(on(['pim', 'mog'], []), putOnEnd(on(['pim', 'mog'], []), 'bo', 'right'), 'bo'))
+    expect(boHigh.find((r) => r.act)).toMatchObject({ who: 'bo', act: 'chuckle' })
+    expect(boHigh.filter((r) => r.rock).length).toBe(4)
+    expect(boHigh.reduce((sum, r) => sum + (r.rock ?? 0), 0)).toBeCloseTo(0)
+    // High and not tipping it, Mog sits tall, purrs and blinks slowly.
+    const perched = reactionsTo(landingOf(on(['bo'], []), putOnEnd(on(['bo'], []), 'mog', 'right'), 'mog'))
+    expect(perched.find((r) => r.who === 'mog')).toMatchObject({ act: 'tall' })
+    expect(perched.find((r) => r.who === 'mog')?.blink).toBeGreaterThan(0.5)
   })
 
   it('Dot in the sand hums beside a friend, and alone draws its one ring', () => {
@@ -111,7 +124,7 @@ describe('the cells in play', () => {
       expect(r.after).toBeGreaterThanOrEqual(0)
       expect(r.after).toBeLessThanOrEqual(0.6)
       if (r.act) expect(r.seconds ?? 0.6).toBeLessThanOrEqual(1.6)
-      expect(r.act !== undefined || r.voice !== undefined).toBe(true)
+      expect(r.act !== undefined || r.voice !== undefined || r.rock !== undefined).toBe(true)
     }
   })
 })
