@@ -43,19 +43,62 @@ Chalk Train: the child draws on a patch of tar with a finger, and a small chalk 
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+The child has one tool, chalk, and five kinds of mark. A mark's kind is read from its shape after it is made; the child never picks one from a menu. The grid is what each kind of mark does to each of the six things it can land on. Two rules fill it, and they never change: **the form of the mark is the form of the ride**, and **chalk laid on a thing chalks that thing**.
+
+The kinds of mark: a **tap** (a dot), a **line** (straight or bending, flat or sloping), a **zigzag** (sharp corners back and forth), a **loop** (the line crosses itself going round), and a **scribble** (a lot of chalk in a small place).
+
+| Lands on | Tap | Line | Zigzag | Loop | Scribble |
+| --- | --- | --- | --- | --- | --- |
+| **Bare tar** | A dot with a dust puff and a dry tick. The engine trundles over, bumping, and sits on it with a hoot. | A rail with sleepers. The engine gathers speed, smoke streaming, long whistle; it leans on bends and chuffs up slopes. | A clack at every corner. The wagons bunch and spring apart, and the engine hiccups a toot at each point. | Loop the loop. The engine rides upside down, its funnel cap drops and lands back on, and the whistle swoops up and down. | A chalk thicket. The engine burrows in, spins about, bursts out white with dust and sneezes. |
+| **The engine** | A smoke ring, crossed eyes and a small poot. | Pulled away: it leaps onto the line with spinning wheels and a screech, front wheels lifting. | Striped in that chalk. It wriggles and giggles in stuttering toots, and keeps the stripes until it next meets water. | Lassoed. It spins once on the spot with a kettle whistle and spiral eyes. | Lost in a dust cloud. It shakes like a wet dog, dust flies, and it coughs one grey puff. |
+| **A rider** | Its own trick: the frog hop-croaks, the chick flaps and trills, the snail pops in and out of its shell, the cat stretches and chirps. | The train comes to it. A waiting rider climbs aboard in its own way; a rider at home leans out and greets the train. | Tickled. It is bounced along the corners as on stepping stones, squeaking in its own voice. | A chalk hoop. The rider spins it round its middle three times, humming, then lets it drop, and the ring stays on the tar. | Dusted pale. It sneezes its own sneeze and shakes itself clean. |
+| **The puddle** | A plop, spreading rings and one drop that jumps. | The chalk goes dark and smeary where it is wet. The train drives through with a bow wave and a hiss and leaves wet wheel prints that dry. | A skipping splash at each crossing of the water, like a skimmed stone: plip, plip, plip. | A dry road round the water. The train circles it leaning in, its reflection rides upside down in the puddle, and the whistle echoes. | The chalk melts in. The water swirls into that pastel with a glug, and a train that next goes through comes out tinted and leaves coloured prints. |
+| **The dandelion in the crack** | The seed head bursts with a soft puff and the seeds drift off. A new head grows back while the child watches. | The train brushes past. The stalk bends flat and twangs back. | The stalk is batted left and right at every pass, a tick-tock of twangs. | A chalk garden ring. Inside it the dandelion opens into a yellow flower and stays open as long as the ring is there. | A furry white tuft of stuck seeds. A train riding through comes out with a seed beard and blows it off with a toot. |
+| **A chalk line already there** | Calls the train: it rides the line to that spot at speed and rings its bell. | A crossing. The train goes straight over it with a double clack. | A rumble strip of hatches. The train drums over it and its wagons chatter. | A curl in the line. The train takes the curl as a small loop and carries on. | A knot. The train squeezes through slowly with a creak and pops out with a cork sound. |
+
+Every cell differs in what is seen and in what is heard, and the rules module holds the grid as data with a test that no two cells share a sight or a sound.
+
+**The wrong uses** are the four middle rows. Chalk is for making track, and it can also be drawn on the train, on a rider, in the water and on the weed. Each of those works every time, harms nothing, and is at least as funny as a rail. The rider or the engine that gets chalked is startled or tickled, never hurt, and shakes it off.
+
+**Three secrets**, never hinted and true every time: a line whose two ends meet makes a roundabout that the train circles three times, ending dizzy; a puddle scribbled with chalk tints the train; a ring round the dandelion opens the flower.
+
+**On day 15** the child draws for the one who is riding: a loop because the chick is aboard, corners for the frog, straight through the water for the frog and round it for the cat. The child strings several kinds of mark into one long ride, makes the three secrets on purpose to show someone, and draws lines that are longer and surer than on day 1. For a two-year-old day 15 may look almost like day 1, with the child faster, surer and trying one new kind of mark (pack: game-design, depth-from-combinations.md, its exception).
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+**The idea.** Before a child writes, the child makes marks: dots, lines, wiggles, rounds and scribbles, made for their own sake and then made to tell someone something. The records below carry this as exploring writing through drawing and scribbling, and as finding out that a mark can tell something.
+
+**How it appears in the objects.** The mark is the working object, and it is the child's own. Nothing stands in for it.
+
+- The mark is laid where the finger went and stays as it was made. The game does not straighten it, tidy it or swap it for a neat shape, because the child must be able to see their own gesture on the tar.
+- What the mark tells is visible in the mark. The train goes where the line goes and rides as the line is shaped: it turns over where the line loops, clacks where the line has a corner, slows where the line climbs. A child can look at the line and see why the ride went as it did.
+- The mark tells someone: the engine and the rider act on it. That is the second half of the idea, a mark used to tell.
+- Working objects stay plain (pack: game-design, working-objects-stay-plain.md). The chalk line is a plain dusty line with plain sleepers, on plain grey tar of a contrasting tone. It has no face, no pattern and no idle motion. The look and the comedy are on the engine, the riders, the homes and the ride.
+
+**Done with a finger.** The finger is the chalk. No tool is held, so nothing here is about holding or controlling a tool, and the game does not practise that.
+
+**Evidence.** This is early-years practice without a trial behind it: the research tables of the game-design pack hold no row for mark-making, and no study is cited here for it. The sheet says so and claims no effect.
+
+**Where object, picture and symbol stop.** The band starts below 6, so there is no symbol stage (pack: game-design, fade-to-school-symbols.md, its exception). The order stops at the child's own mark and the picture it makes. No letter is shown, traced, hinted or read at any point, and no mark is ever judged for looking like one.
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No: the marks are both the content and the control, so if the mark-making were replaced with another subject there would be no way left to play.
+- **Attention.** At the moment of decision the child looks at the line coming out under the finger: where it is going, what shape it is taking, and where it stops; there is nothing to aim at and nothing to time.
+- **Fun.** The skill is the most enjoyable moment itself: the ride is the child's own mark played back by the train, and play never stops for anything else.
+- **Guess.** Yes for moving the train, on purpose: at two every mark must work, so a random tap or scribble always brings the train, and no mark is wrong; what random marks do not give is a chosen ride, since a loop for the chick has to be drawn as a loop.
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+No mark is wrong, so nothing here is an error in the sense of a wrong answer. What can happen is that a mark does less than the child meant. Each case shows as a consequence in the world, by the one rule of the toy.
+
+- **The line stops short.** The train rides to the open end, brakes, and peers over it. The rider leans out toward its home. The bare tar between the end of the chalk and the home is the gap, in plain view. The child adds a mark; the line already there stays.
+- **There is a gap between two marks.** The train leaves the chalk, trundles across the gap slowly and bumpily with its wagons rattling, and picks up speed again on the next chalk. The bump happens exactly where the gap is, and the wheels leave a faint dusty trail across it, so the place stays marked.
+- **The line goes somewhere else.** The train goes there too, and waits. Any new mark, anywhere, brings it on.
+- **Only taps.** The train trundles from dot to dot. The rider gets home, shaken about by the bumps. Slow and bumpy is the consequence of no line; it is still a ride, and the snail likes it.
+- **A form the rider dislikes.** The rider reacts to the thing: the cat's fur stands on end over the corners, the snail hides from the loop. The reaction is to the ride and is as good to watch as a liked one. The ride still counts and the rider still gets home.
+
+In every case the state stays: no mark is removed, nothing resets, no rider is lost, and nothing gives a verdict. There is no buzzer, cross, sad face turned to the child, or cheer. Getting home is also only a consequence: the rider gets out and does what it came for.
 
 ## The designed order, and what is stored
 
