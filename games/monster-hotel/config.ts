@@ -88,7 +88,28 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = [
+  // Four rooms, two or three guests: noise, and who sleeps when.
+  'two-guests',
+  // Warmth that rises and cold that sinks: the boiler, the snow hole, the lizard and the yeti.
+  'heat-and-snow',
+  // The first thing to place.
+  'quilt',
+  // The long house, and a smell along a corridor.
+  'corridor',
+  // Warmth and cold of the child's own making, with the dials.
+  'stove-and-ice',
+  // Guests who will change their hours and guests who will not.
+  'alarm-clock',
+  // The tower, and the pipe.
+  'tower-and-pipe',
+  // More guests than rooms.
+  'twin-rooms',
+  // The singer, who must be heard.
+  'listener',
+  // Everything at once.
+  'full-house',
+]
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -98,6 +119,29 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'two-guests' },
+  ...(OLDEST >= 11 ? [{ fromAge: 11, position: 'heat-and-snow' }] : []),
 ]
+
+// --- The game's own numbers --------------------------------------------------
+
+/**
+ * A cycle goes well when the house is settled within this many set-downs for
+ * each guest in it. Only set-downs that change who or what is where count;
+ * looking from a guest's place, tapping and turning the wheel are free.
+ */
+export const SET_DOWNS_PER_GUEST = 3
+
+/** The count of set-downs is kept only to judge a cycle, and stops here. */
+export const MOST_MOVES = 999
+
+/** The count of coach-loads only rotates the casts of a place, and wraps here. */
+export const ROUNDS = 10000
+
+/**
+ * Up to and including this place the plain page draws a minded air the whole
+ * way from the one who makes it. After it the plain page draws the last
+ * crossing only, and the whole path is seen from the cross guest's own place:
+ * feedback is fullest while the game is new and thins afterwards.
+ */
+export const WHOLE_PATHS_UNTIL = 'quilt'
