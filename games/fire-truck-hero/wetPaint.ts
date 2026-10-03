@@ -21,7 +21,7 @@ export const HEIGHT = ROWS * CELLS_PER_UNIT
 /** One gulp darkens the middle of its blot by this much; two on one place reach full dark. */
 export const DAMP_PER_GULP = 128
 /** How wide the blot of one gulp is, in yard units. */
-export const BLOT_RADIUS = 0.62
+export const BLOT_RADIUS = 0.85
 
 const DAMP = 0, PUDDLE = 1, MUD = 2
 
@@ -41,12 +41,12 @@ export class WetPaint {
   }
 
   /** A place has had its fill: the water stands there. */
-  puddle(x: number, z: number, radius = 0.7): void {
+  puddle(x: number, z: number, radius = 0.95): void {
     this.stamp(PUDDLE, x, z, radius, 255)
   }
 
   /** A puddle that got more water is mud. */
-  mud(x: number, z: number, radius = 0.75): void {
+  mud(x: number, z: number, radius = 1.05): void {
     this.stamp(MUD, x, z, radius, 255)
   }
 

@@ -8,6 +8,7 @@
 import * as THREE from 'three'
 import { TRUCK_PAINT as PAINT } from './look'
 import { at, ball, boss, box, lathe, mould, rod, seam, type Part } from './mould'
+import type { TruckPose } from './truckMotion'
 
 /** Where the nozzle pivots, measured from the truck's middle on the ground. layout.ts places the water's start here. */
 export const NOZZLE_PIVOT = { x: 0.92, y: 2.5 } as const
@@ -145,4 +146,24 @@ export function buildTruck(plastic: THREE.Material): TruckModel {
   nozzle.add(barrel)
 
   return { root, body, pupils, light, turret, nozzle, wheels: wheelMesh }
+}
+
+/**
+ * Puts the truck into a pose (truckMotion.ts). `faces` is how far the whole
+ * truck is turned about the upright, so the nozzle can point at a place in
+ * the yard and not at a place on the truck.
+ */
+export function poseTruck(model: TruckModel, pose: TruckPose, faces: number): void {
+  model.body.rotation.z = pose.rock
+  model.body.position.y = ROCK_HEIGHT + pose.lift
+  // Squashed it is wider, stretched it is thinner: it keeps its bulk.
+  const wide = 1 / Math.sqrt(pose.squash)
+  model.body.scale.set(wide, pose.squash, wide)
+  // The pose turns toward +z, and three.js turns the other way about the upright.
+  model.turret.rotation.y = -pose.turn - faces
+  model.nozzle.rotation.z = pose.tilt - pose.rock
+  model.light.rotation.y = pose.light
+  model.pupils.position.z = pose.lookSide * 0.09
+  model.pupils.position.y = EYES.y - ROCK_HEIGHT + pose.lookUp * 0.07
+  model.pupils.scale.y = Math.max(0.12, pose.eyesOpen)
 }

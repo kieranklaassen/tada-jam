@@ -57,13 +57,16 @@ void main() {
   vec3 w = texture2D(wet, vYard / yard).rgb;
   float inYard = step(0.0, vYard.x) * step(vYard.x, yard.x) * step(0.0, vYard.y) * step(vYard.y, yard.y);
   w *= inYard;
-  float damp = smoothstep(0.02, 0.5, w.r);
+  float damp = smoothstep(0.0, 0.34, w.r);
   sand = mix(sand, sandDamp * (0.92 + 0.12 * speck), damp);
-  sand = mix(sand, sandMud * (0.9 + 0.2 * speck), smoothstep(0.3, 0.6, w.b));
+  // Mud is dark and lumpy, with a wet shine on its lumps.
+  float lumps = detail > 0.5 ? grain(vYard * 6.5) : 0.5;
+  sand = mix(sand, sandMud * (0.8 + 0.5 * lumps) + smoothstep(0.72, 0.9, lumps) * 0.16, smoothstep(0.3, 0.6, w.b));
   // Standing water: a blue sheet with a pale rim where it meets the sand.
-  float pool = smoothstep(0.4, 0.62, w.g) * (1.0 - smoothstep(0.3, 0.6, w.b) * 0.65);
+  float muddy = smoothstep(0.3, 0.6, w.b);
+  float pool = smoothstep(0.4, 0.62, w.g) * (1.0 - muddy);
   float rim = smoothstep(0.4, 0.5, w.g) - smoothstep(0.5, 0.66, w.g);
-  sand = mix(sand, puddle, pool * 0.82) + rim * 0.1;
+  sand = mix(sand, puddle, pool * 0.82) + rim * (1.0 - muddy) * 0.1;
 
   float blades = detail > 0.5 ? grain(vYard * vec2(14.0, 5.0)) : 0.5;
   float patches = grain(vYard * 0.35);

@@ -7,8 +7,8 @@
 export const SAND = {
   dry: 0xeedcb2,
   speck: 0xdcc594,
-  damp: 0xa98658,
-  mud: 0x7b5a3c,
+  damp: 0xb18f61,
+  mud: 0x6f4f35,
   puddle: 0x8ccfe6,
 } as const
 
@@ -63,6 +63,13 @@ export const THINGS_PAINT = {
 export const WATER = {
   body: 0x74c9f2,
   light: 0xe8f8ff,
+} as const
+
+/** What an idle child is shown: a ring and a ghost hand, in a blue that neither the sand nor the grass has. */
+export const GUIDE_PAINT = {
+  ring: 0x3f8fd8,
+  hand: 0x4a8fe0,
+  cuff: 0xfaf1dc,
 } as const
 
 /** How much darker a seam is than the moulding it runs round. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GARDEN, SAND, SEAM_DARKEN, THINGS_PAINT, TRUCK_PAINT, WATER, contrast, darker, hueGap, hueOf, lightnessOf, rgbOf } from './look'
+import { GARDEN, GUIDE_PAINT, SAND, SEAM_DARKEN, THINGS_PAINT, TRUCK_PAINT, WATER, contrast, darker, hueGap, hueOf, lightnessOf, rgbOf } from './look'
 
 describe('the colours of the look', () => {
   it('keeps the sand pale and plain, so working things stand out on it', () => {
@@ -33,6 +33,14 @@ describe('the colours of the look', () => {
     expect(hueOf(WATER.body)).toBeLessThan(220)
     expect(contrast(WATER.body, SAND.damp)).toBeGreaterThan(1.5)
     expect(lightnessOf(WATER.light)).toBeGreaterThan(0.85)
+  })
+
+  it('shows the idle cue on every surface of the yard: dry sand, wet sand and grass', () => {
+    for (const cue of [GUIDE_PAINT.ring, GUIDE_PAINT.hand]) {
+      expect(contrast(cue, SAND.dry)).toBeGreaterThan(2)
+      expect(hueGap(cue, SAND.damp)).toBeGreaterThan(90)
+      expect(hueGap(cue, GARDEN.grass)).toBeGreaterThan(90)
+    }
   })
 
   it('keeps the grass apart from the sand by hue', () => {

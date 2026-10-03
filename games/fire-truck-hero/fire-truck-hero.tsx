@@ -2,26 +2,30 @@
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
-import { GameAudio, tick } from './audio'
-import { BACKDROP } from './config'
-import { IdleLadder } from './guidance'
+import { GameAudio } from './audio'
+import { BACKDROP, TIERS } from './config'
+import { IdleLadder, handPose, type HandPose } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { fireTruckHeroManifest } from './manifest'
 import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
+import { sound } from './sound'
 import { createStage } from './stage'
 import { deserialize, serialize, type GameState } from './state'
-import { WetPaint } from './wetPaint'
+import { Toy } from './toy'
 
 // The Mount. Everything a game needs around its renderer is wired and
 // running: the saved state, attention, the attended clock, touch, sound from
 // the first touch, the idle ladder, adaptive quality, the grown-up performance
-// handle and the grown-up overlay. The renderer is the stage (stage.ts). For
-// now the Mount shows the look spike: the fullest yard, standing still but
-// alive, in the look (ART.md, "The look"). The rules and the sounds go in
-// where the comments say.
+// handle and the grown-up overlay. The renderer is the stage (stage.ts).
+//
+// It shows the toy (toy.ts): the hose in an empty yard, with its sound and
+// motion and no goal. `spike=1` in the address shows the look spike instead:
+// the fullest yard the look has to carry, standing still but alive, for a
+// still. The rules (world.ts and the modules round it) are not wired in yet:
+// the game is built on the toy once the owner has seen it.
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -41,9 +45,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // What the last draw put on the surface, for the grown-up handle and the overlay. A canvas 2D game counts the
     // sprites and figures it drew as drawCalls; a three.js game copies the renderer's own counts.
     const drawn = { drawCalls: 0, triangles: 0 }
-    // The picture of the wet sand, and the yard as three.js draws it. Both are made once.
-    const paint = new WetPaint()
-    const stage = createStage(canvas, paint, true)
+    // The toy and the yard as three.js draws it. Both are made once.
+    const spike = new URLSearchParams(window.location.search).get('spike') === '1'
+    const toy = new Toy((voice) => sound(audio, voice))
+    const paint = toy.paint
+    const stage = createStage(canvas, paint, spike)
+    const hand: HandPose = { travel: 0, press: 0, opacity: 0 }
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...drawn }))
     let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
@@ -63,6 +70,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // canvas, where a still or a probe can read which tier is applied.
     const applyTier = () => {
       stage.applyTier(governor.tier)
+      toy.dropsShare = TIERS[governor.tier].drops
       canvas.dataset.tier = String(governor.tier)
     }
 
@@ -93,11 +101,19 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const observer = new ResizeObserver(resize)
     observer.observe(root)
 
-    // What the game does with a gesture. The blank surface only answers a touch with a sound.
-    // A game with short scenes ends the one that is playing first thing in every press, before the press is
-    // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
+    // What the game does with a gesture: every touch is the hose. A press sends the first gulp in the frame the
+    // finger lands, a held or moving finger is a stream that follows it, and a lift loses nothing. A finger that
+    // comes back to a drag it had let go takes the stream up again. The spike stands still and takes no touch.
     const act = (gestures: Gesture[]) => {
-      for (const gesture of gestures) if (gesture.type === 'press') audio.play(tick)
+      if (spike) return
+      for (const gesture of gestures) {
+        if (gesture.type === 'press') toy.press(stage.under(gesture.at.x, gesture.at.y), clock.seconds)
+        else if (gesture.type === 'dragMove') {
+          const under = stage.under(gesture.at.x, gesture.at.y)
+          if (toy.hose.holding) toy.move(under.point)
+          else if (!under.truck) toy.press(under, clock.seconds)
+        } else if (gesture.type !== 'dragStart') toy.lift()
+      }
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -138,9 +154,12 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
       if (touch.active) ladder.touch(clock.seconds)
-      // What to show an idle child: a glow on what can be touched, then one move.
-      ladder.update(clock.seconds)
+      // What to show an idle child: a glow where a touch could go, then one move, a single tap of the ghost hand.
+      const guidance = ladder.update(clock.seconds)
+      stage.guide(spike ? 0 : guidance.glow, spike || guidance.demo === null ? null : handPose(guidance.demo, false, hand), clock.seconds)
       // The game steps its rules and its scene here, and hands what they changed to storage (`cadence`, above).
+      toy.step(step, clock.seconds)
+      stage.show(toy.truck.pose, toy.drops)
       stage.idle(step, clock.seconds)
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that
@@ -168,6 +187,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       clock.rest()
       act(touch.clear())
+      // Water in the air lands at once and silently, so nothing is lost and nothing hangs there.
+      toy.rest()
       cadence.settle(performance.now())
     })
     attendRef.current = (attended) => attention.set(attended)

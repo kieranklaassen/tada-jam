@@ -14,13 +14,21 @@ import type { Ground2 } from './jet'
 import { BELL, SPOTS, TRUCK, TRUCK_REACH, type Place } from './layout'
 import { WATER } from './look'
 import { GATE_HALF, POOL, SCALE, buildCat, buildDuck, buildFire, buildGate, buildPool, buildPot } from './thingModels'
-import { buildTruck, type TruckModel } from './truckModel'
+import { buildTruck, poseTruck, type TruckModel } from './truckModel'
+import type { TruckPose } from './truckMotion'
+import { buildWaterView } from './waterView'
+import { buildGuideView } from './guideView'
+import type { Drops } from './drops'
+import type { HandPose } from './guidance'
 import type { WetPaint } from './wetPaint'
 
 /** The truck stands turned a little toward the child, so its face shows. */
 export const TRUCK_TURN = -0.25
 /** The truck is the biggest toy in the yard. layout.ts places the nozzle for this size and turn. */
 export const TRUCK_SCALE = 1.25
+
+/** Where an idle child is shown a touch: open sand in front of the truck, clear of every spot. */
+export const GUIDE_AT: Place = { x: 7.4, z: 4.6 }
 
 /** What the camera looks at, and from where: over the near edge of the yard, well above it. */
 const LOOK_AT = new THREE.Vector3(COLS / 2, 0.5, ROWS / 2 - 0.6)
@@ -53,6 +61,10 @@ export type Stage = {
   applyTier: (tier: number) => void
   /** Moves what moves by itself, by `seconds` of game time. */
   idle: (seconds: number, now: number) => void
+  /** Shows the truck in a pose, and the drops in the air. */
+  show: (pose: TruckPose, drops: Drops) => void
+  /** Shows an idle child where a touch could go: a glow, and the ghost hand when a demonstration plays. */
+  guide: (glow: number, hand: HandPose | null, now: number) => void
   draw: (paint: WetPaint) => void
   under: (x: number, y: number) => Under
   /** A blob shadow for something that stands at a place; returns a handle to move or resize it. */
@@ -132,7 +144,13 @@ export function createStage(canvas: HTMLCanvasElement, paint: WetPaint, spike: b
   truck.root.rotation.y = TRUCK_TURN
   truck.root.scale.setScalar(TRUCK_SCALE)
   scene.add(truck.root)
-  shadow(TRUCK, 2.6)
+  const truckShadow = shadow(TRUCK, 2.6)
+
+  const drops = buildWaterView(water)
+  scene.add(drops.mesh)
+  // The ghost hand taps the open sand in front of the truck: the simplest use, which always works.
+  const guide = buildGuideView(GUIDE_AT)
+  scene.add(guide.root)
 
   const gate = spike ? buildGate(plastic) : null
   // The bell hangs from the gate's left post, so the gate's middle is that far to the right of the bell.
@@ -250,6 +268,13 @@ export function createStage(canvas: HTMLCanvasElement, paint: WetPaint, spike: b
     idle: (_seconds, now) => {
       for (const move of alive) move(now)
     },
+    show: (pose, inAir) => {
+      poseTruck(truck, pose, TRUCK_TURN)
+      // The shadow shrinks as the truck leaves the ground.
+      truckShadow(TRUCK, 2.6 * (1 - Math.min(0.4, pose.lift * 0.9)))
+      drops.show(inAir)
+    },
+    guide: (glow, hand, now) => guide.show(glow, hand, now),
     draw: (picture) => {
       ground.refresh(picture)
       renderer.render(scene, camera)
@@ -272,6 +297,8 @@ export function createStage(canvas: HTMLCanvasElement, paint: WetPaint, spike: b
         if (mesh.isMesh) mesh.geometry.dispose()
       })
       ground.dispose()
+      drops.dispose()
+      guide.dispose()
       blob.dispose()
       for (const material of everything) material.dispose()
       renderer.dispose()
