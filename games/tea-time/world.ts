@@ -29,6 +29,8 @@ export type Thing = {
   z: number
   /** The thing it stands on or in: a cup on a saucer, a spoon in a cup, a saucer on the stack. */
   on: string | null
+  /** The guest who holds it in the air, cup in paw, because its place has no saucer yet; its spot is then that guest's place. */
+  heldBy: GuestId | null
   /** Cupfuls of tea in it. */
   tea: number
 }

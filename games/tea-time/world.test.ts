@@ -3,7 +3,7 @@ import { CUP_HOLDS, dishOf } from './forms'
 import { CLOTH } from './layout'
 import { CELL_HOLDS, PUDDLE_COLS, PUDDLE_ROWS, cellAt, cellSpot, dab, emptyWorld, holds, pourInto, puddleNear, puddled, spill, teaOut, tip, wipe, type Thing, type World } from './world'
 
-const thing = (id: string, kind: Thing['kind'], over: Partial<Thing> = {}): Thing => ({ id, kind, size: 'house', ring: null, owner: null, x: 0, z: 0, on: null, tea: 0, ...over })
+const thing = (id: string, kind: Thing['kind'], over: Partial<Thing> = {}): Thing => ({ id, kind, size: 'house', ring: null, owner: null, x: 0, z: 0, on: null, heldBy: null, tea: 0, ...over })
 
 function table(): World {
   const world = emptyWorld()
