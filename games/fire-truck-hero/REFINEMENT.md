@@ -3,10 +3,10 @@
 
 ## Status
 
-- Stage: sheet, being written. The first two headings are in `ART.md`; the others still hold the template's outline.
+- Stage: sheet. The design sheet is whole in `ART.md` as of commit `471110ba06a7fed30ad205695148c3aa1c703e2d`. The hash of its sheet part is `c4c45308cd9412968da6f1ca9791b9a4e04d0403d9b8d9f9b9c1bba754b3cdb2`.
 - Look in use: none yet. The first reserved look is Garden-toy plastic, the second Cardboard craft.
 - Renderer: three.js, as the brief suggests.
-- Open: the rest of the design sheet in `ART.md`, then its check.
+- Open: sheet ready for check, round 1
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
