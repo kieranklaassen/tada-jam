@@ -53,8 +53,8 @@ describe('where a piece is drawn', () => {
   it('starts every length from the same left edge, at the same scale, on the board and on the shelf', () => {
     const [left, right] = shown(made.world)
     expect(left.box).toMatchObject({ x: X0, w: 600 * PX, h: PIECE_H.board })
-    expect(right.box.x).toBeCloseTo(X0 + 600 * PX)
-    expect(left.box.x + left.box.w).toBeCloseTo(right.box.x)
+    // The right part has hopped a little way off the left one.
+    expect(right.box.x - (left.box.x + left.box.w)).toBeCloseTo(25 * PX)
     const shelved = setOnShelf(made.world, made.right).world
     const onShelf = shown(shelved).find(({ piece }) => piece.id === made.right)!
     expect(onShelf.box).toMatchObject({ x: X0, w: 1800 * PX, h: PIECE_H.shelf })

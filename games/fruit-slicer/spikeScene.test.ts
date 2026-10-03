@@ -33,7 +33,7 @@ describe('the scene the look spike shows', () => {
   it('leaves the rest of the fruit where it was cut, and leftovers on the far lane and the shelf', () => {
     const near = onLane(scene.world, 0)
     expect(near).toHaveLength(1)
-    expect(near[0]).toMatchObject({ fruit: 'long', place: { on: 'board', lane: 0, x: scene.cutAt } })
+    expect(near[0]).toMatchObject({ fruit: 'long', place: { on: 'board', lane: 0, x: scene.cutAt + giveOf('long') / 4 } })
     expect(onLane(scene.world, 1).map((piece) => piece.fruit)).toEqual(['middle'])
     expect(onShelf(scene.world)).toHaveLength(2)
   })

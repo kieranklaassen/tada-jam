@@ -69,7 +69,11 @@ function readPiece(raw: unknown): Piece | null {
   if (!isRecord(raw) || !isCount(raw.id) || raw.id < 1 || !FRUITS.includes(raw.fruit as Fruit) || !isCount(raw.length)) return null
   const fruit = raw.fruit as Fruit, place = readPlace(raw.place)
   if (!place || raw.length < giveOf(fruit) || raw.length > WHOLE[fruit]) return null
-  return { id: raw.id, fruit, length: raw.length, place, blind: raw.blind === true, ruled: isCount(raw.ruled) ? raw.ruled : 0 }
+  // Marks that cannot be read are no marks, but a piece that had some still counts as cut with help: one part as long as the piece.
+  const isLength = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0
+  const ruled = isLength(raw.ruled) ? raw.ruled : raw.ruled === undefined ? 0 : raw.length
+  const mark = isLength(raw.mark) && raw.mark < ruled ? raw.mark : 0
+  return { id: raw.id, fruit, length: raw.length, place, blind: raw.blind === true, ruled, mark }
 }
 
 /** The most pieces the rules can leave in the world: two full lanes, a full shelf and two full compartments of the shortest pieces. */

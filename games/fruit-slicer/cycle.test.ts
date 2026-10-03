@@ -45,7 +45,7 @@ function serve(game: Game, off = 0) {
 }
 
 const pelican: Customer = { who: 'pelican', fruit: 'long', shares: [{ num: 1, den: 2 }], carries: 'half', written: false, lined: true }
-const piece = (length: number, over: Partial<Piece> = {}): Piece => ({ id: 1, fruit: 'long', length, place: { on: 'tin', part: 0, turn: 0 }, blind: true, ruled: 0, ...over })
+const piece = (length: number, over: Partial<Piece> = {}): Piece => ({ id: 1, fruit: 'long', length, place: { on: 'tin', part: 0, turn: 0 }, blind: true, ruled: 0, mark: 0, ...over })
 
 describe('a first visit', () => {
   const game = freshGame(null)

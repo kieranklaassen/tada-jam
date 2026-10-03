@@ -6,7 +6,7 @@ import { dogTaste, isGlider, tasteOf } from './tastes'
 import type { Piece } from './world'
 
 let nextId = 1
-const piece = (length: number, fruit: Piece['fruit'] = 'long'): Piece => ({ id: nextId++, fruit, length, place: { on: 'tin', part: 0, turn: 0 }, blind: true, ruled: 0 })
+const piece = (length: number, fruit: Piece['fruit'] = 'long'): Piece => ({ id: nextId++, fruit, length, place: { on: 'tin', part: 0, turn: 0 }, blind: true, ruled: 0, mark: 0 })
 const of = (who: Who, ...shares: Share[]): Customer => ({ who, fruit: 'long', shares, carries: 'written', written: true, lined: true })
 const len = (num: number, den: number) => shareLength('long', { num, den })
 const taste = (customer: Customer, ...lists: number[][]) => tasteOf(customer, serveOf(customer, lists.map((list) => list.map((length) => piece(length)))))

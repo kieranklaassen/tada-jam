@@ -114,7 +114,7 @@ describe('a record that cannot be trusted', () => {
   })
 
   it('drops what no cut could have made, and never opens with one piece lying over another', () => {
-    const a: Piece = { id: 1, fruit: 'long', length: 1200, place: { on: 'board', lane: 0, x: 0 }, blind: true, ruled: 0 }
+    const a: Piece = { id: 1, fruit: 'long', length: 1200, place: { on: 'board', lane: 0, x: 0 }, blind: true, ruled: 0, mark: 0 }
     const pieces = [
       a,
       { ...a, id: 2, place: { on: 'board', lane: 0, x: 600 } },
@@ -138,7 +138,8 @@ describe('a record that cannot be trusted', () => {
         expect(end).toBeLessThanOrEqual(RAIL)
       }
     }
-    expect(back.world.pieces.find((piece) => piece.id === 8)).toMatchObject({ place: { on: 'shelf' }, blind: false, ruled: 0 })
+    // Marks that cannot be read still count as help: the piece is not taken for one cut by eye.
+    expect(back.world.pieces.find((piece) => piece.id === 8)).toMatchObject({ place: { on: 'shelf' }, blind: false, ruled: 1200, mark: 0 })
     expect(onShelf(back.world).length).toBeLessThanOrEqual(SHELF)
   })
 
@@ -166,9 +167,9 @@ describe('the size of a save', () => {
     const least = giveOf('short')
     const pieces: Piece[] = []
     let id = 100000
-    for (let lane = 0; lane < LANES; lane++) for (let x = 0; x + least <= RAIL; x += least) pieces.push({ id: id++, fruit: 'middle', length: least, place: { on: 'board', lane, x }, blind: false, ruled: 12 })
-    for (let part = 0; part < 2; part++) for (let turn = 0; turn < RAIL / least; turn++) pieces.push({ id: id++, fruit: 'middle', length: least, place: { on: 'tin', part, turn }, blind: false, ruled: 12 })
-    for (let slot = 0; slot < SHELF; slot++) pieces.push({ id: id++, fruit: 'middle', length: least, place: { on: 'shelf', slot }, blind: false, ruled: 12 })
+    for (let lane = 0; lane < LANES; lane++) for (let x = 0; x + least <= RAIL; x += least) pieces.push({ id: id++, fruit: 'middle', length: least, place: { on: 'board', lane, x }, blind: false, ruled: 12, mark: 0 })
+    for (let part = 0; part < 2; part++) for (let turn = 0; turn < RAIL / least; turn++) pieces.push({ id: id++, fruit: 'middle', length: least, place: { on: 'tin', part, turn }, blind: false, ruled: 12, mark: 0 })
+    for (let slot = 0; slot < SHELF; slot++) pieces.push({ id: id++, fruit: 'middle', length: least, place: { on: 'shelf', slot }, blind: false, ruled: 12, mark: 0 })
     expect(pieces).toHaveLength(MOST_PIECES)
     const cat = { who: 'cat' as const, fruit: 'middle' as const, shares: [{ num: 11, den: 12 }, { num: 9, den: 10 }], carries: 'twelfths', written: false, lined: false }
     const largest: Game = { v: STATE_VERSION, position: 'twelfths', finished: false, seed: 4294967295, window: { ...cat, who: 'twins', shares: [{ num: 12, den: 12 }] }, queue: [cat, cat], world: { pieces, nextId: id, tinOpen: false }, shown: [...LADDER] }

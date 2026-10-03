@@ -100,7 +100,7 @@ describe('the other things a touch sets off', () => {
   it('a curl of peel and a dropped piece fly to the dog along an arc that ends at its mouth', () => {
     const curl = spawn(newFx(1), { kind: 'curl', id: 1, fruit: 'long', length: 2400, x: 300, y: 412, voice: 'curl' })
     expect(curl.fx.map((one) => one.kind)).toEqual(['curl'])
-    const fell = spawn(newFx(1), { kind: 'fell', piece: { id: 3, fruit: 'short', length: 300, place: { on: 'shelf', slot: 0 }, blind: true, ruled: 0 }, from: { x: 96, y: 496, w: 90, h: 44 }, voice: 'munch' })
+    const fell = spawn(newFx(1), { kind: 'fell', piece: { id: 3, fruit: 'short', length: 300, place: { on: 'shelf', slot: 0 }, blind: true, ruled: 0, mark: 0 }, from: { x: 96, y: 496, w: 90, h: 44 }, voice: 'munch' })
     expect(fell.fx.map((one) => one.kind)).toEqual(['fly'])
     expect(flight(300, 412, 0)).toEqual({ x: 300, y: 412 })
     expect(flight(300, 412, 1).x).toBeCloseTo(MOUTH.x)

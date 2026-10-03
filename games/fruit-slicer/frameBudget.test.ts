@@ -61,7 +61,7 @@ describe('the work of a frame', () => {
 
   it('in the heaviest moment stays inside the budget: both lanes and the shelf full of pieces, every effect of a long stroke alive, the blade down, the glow and the hand showing', () => {
     const { game, fx } = busy()
-    expect(game.world.pieces.length).toBeGreaterThan(40)
+    expect(game.world.pieces.length).toBeGreaterThanOrEqual(36)
     expect(fx.fx.length).toBeGreaterThan(40)
     const c = counter()
     const guide = guideOf(game.world)

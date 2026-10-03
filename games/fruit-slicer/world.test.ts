@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { RAIL, WHOLE, giveOf, shareLength } from './measure'
 import { draw } from './stream'
-import { LANES, SHELF, clearTin, cut, eat, eaten, emptyWorld, giveToTin, inTin, isWhole, landFruit, onLane, onShelf, pieceAt, pieceOf, remove, roll, setOnBoard, setOnShelf, tinTotal, type World } from './world'
+import { HOP_PARTS, LANES, SHELF, clearTin, cut, eat, eaten, emptyWorld, giveToTin, marksOf, rowOf, setRowOnBoard, inTin, isWhole, landFruit, onLane, onShelf, pieceAt, pieceOf, remove, roll, setOnBoard, setOnShelf, tinTotal, type World } from './world'
 
 const withFruit = (fruit: 'long' | 'middle' | 'short' = 'long') => landFruit(emptyWorld(), fruit)
 const total = (world: World) => world.pieces.reduce((sum, piece) => sum + piece.length, 0)
@@ -24,7 +24,7 @@ function expectBoardSound(world: World) {
 describe('a fresh fruit', () => {
   it('lands whole at the left end of the first empty lane', () => {
     const { world, id } = withFruit('middle')
-    expect(pieceOf(world, id)).toMatchObject({ fruit: 'middle', length: WHOLE.middle, place: { on: 'board', lane: 0, x: 0 }, blind: true, ruled: 0 })
+    expect(pieceOf(world, id)).toMatchObject({ fruit: 'middle', length: WHOLE.middle, place: { on: 'board', lane: 0, x: 0 }, blind: true, ruled: 0, mark: 0 })
     expect(isWhole(pieceOf(world, id)!)).toBe(true)
     const second = landFruit(world, 'short')
     expect(pieceOf(second.world, second.id)!.place).toEqual({ on: 'board', lane: 1, x: 0 })
@@ -43,13 +43,13 @@ describe('a fresh fruit', () => {
 })
 
 describe('a cut', () => {
-  it('makes two pieces that lie where the fruit lay and add up to it', () => {
+  it('makes two pieces that add up to the fruit: the left one stays, and the right one hops a little way off it', () => {
     const { world, id } = withFruit()
     const result = cut(world, id, 1800)
     expect(result.kind).toBe('cut')
     if (result.kind !== 'cut') return
     expect(pieceOf(result.world, result.left)).toMatchObject({ length: 1800, place: { on: 'board', lane: 0, x: 0 } })
-    expect(pieceOf(result.world, result.right)).toMatchObject({ length: 600, place: { on: 'board', lane: 0, x: 1800 } })
+    expect(pieceOf(result.world, result.right)).toMatchObject({ length: 600, place: { on: 'board', lane: 0, x: 1800 + giveOf('long') / HOP_PARTS } })
     expect(total(result.world)).toBe(WHOLE.long)
     expectBoardSound(result.world)
   })
@@ -98,6 +98,74 @@ describe('a cut', () => {
     expect(pieceOf(result.world, result.left)!.place).toEqual({ on: 'tin', part: 0, turn: 0 })
     expect(pieceOf(result.world, result.right)!.place).toEqual({ on: 'shelf', slot: 0 })
     expect(pieceOf(result.world, result.right)!.blind).toBe(false)
+  })
+})
+
+describe('the hop of a cut', () => {
+  it('leaves the two parts apart, so a cut is told from two pieces set end to end', () => {
+    const { world, id } = withFruit()
+    const result = cut(world, id, 1200)
+    if (result.kind !== 'cut') throw new Error('no cut')
+    expect(rowOf(result.world, result.left, 'right')).toEqual([result.left])
+    expect(rowOf(result.world, result.right, 'left')).toEqual([result.right])
+    expectBoardSound(result.world)
+  })
+
+  it('is as wide as there is room for, and nothing where a neighbour lies against the piece', () => {
+    let world = withFruit('short').world
+    const fruit = world.pieces[0]
+    // A second fruit set hard against the end of the first, then the first is cut: its right part has nowhere to hop.
+    const other = landFruit(world, 'short')
+    world = setOnBoard(other.world, other.id, 0, fruit.length).world
+    const result = cut(world, fruit.id, 700)
+    if (result.kind !== 'cut') throw new Error('no cut')
+    expect(pieceOf(result.world, result.right)!.place).toEqual({ on: 'board', lane: 0, x: 700 })
+    expectBoardSound(result.world)
+  })
+})
+
+describe('a row', () => {
+  /** Three pieces of a long fruit set end to end on the far lane, in order. */
+  function three() {
+    let world = withFruit().world
+    const first = cut(world, world.pieces[0].id, 600)
+    if (first.kind !== 'cut') throw new Error('no cut')
+    const second = cut(first.world, first.right, 600)
+    if (second.kind !== 'cut') throw new Error('no cut')
+    const ids = [first.left, first.right, second.right]
+    world = setOnBoard(second.world, ids[0], 1, 0).world
+    world = setOnBoard(world, ids[1], 1, 600).world
+    world = setOnBoard(world, ids[2], 1, 1210).world
+    return { world, ids }
+  }
+
+  it('is the pieces that lie exactly end to end, taken from the side the piece is held by', () => {
+    const { world, ids } = three()
+    expect(rowOf(world, ids[0], 'right')).toEqual(ids)
+    expect(rowOf(world, ids[0], 'left')).toEqual([ids[0]])
+    expect(rowOf(world, ids[1], 'left')).toEqual([ids[0], ids[1]])
+    expect(rowOf(world, ids[1], 'right')).toEqual([ids[1], ids[2]])
+    expect(rowOf(world, ids[2], 'right')).toEqual([ids[2]])
+    expect(rowOf(world, 999, 'left')).toEqual([])
+    expect(rowOf(setOnShelf(world, ids[1]).world, ids[1], 'left')).toEqual([ids[1]])
+  })
+
+  it('travels as one: set down again, its pieces still lie end to end in the same order and nothing overlaps', () => {
+    const { world, ids } = three()
+    const moved = setRowOnBoard(world, ids, 0, 400).world
+    const lane = onLane(moved, 0)
+    expect(lane.map((piece) => piece.id)).toEqual(ids)
+    expect(lane.map((piece) => (piece.place.on === 'board' ? piece.place.x : -1))).toEqual([400, 1000, 1600])
+    expect(rowOf(moved, ids[0], 'right')).toEqual(ids)
+    expectBoardSound(moved)
+  })
+
+  it('goes to the shelf, piece by piece, when no lane has room for all of it', () => {
+    const { world, ids } = three()
+    const a = landFruit(world, 'long')
+    const crowded = setRowOnBoard(setOnBoard(a.world, a.id, 0, 400).world, ids, 0, 0)
+    expectBoardSound(crowded.world)
+    expect(crowded.world.pieces.filter((piece) => ids.includes(piece.id)).every((piece) => piece.place.on === 'shelf' || piece.place.on === 'board')).toBe(true)
   })
 })
 
@@ -208,9 +276,19 @@ describe('the tin', () => {
 
   it('keeps the roller marks on every piece cut from a marked fruit', () => {
     const { world, id } = withFruit()
-    const result = cut(roll(world, id, 4), id, 600)
+    const marked = roll(world, id, 4)
+    expect(marksOf(pieceOf(marked, id)!)).toEqual([600, 1200, 1800])
+    const result = cut(marked, id, 900)
     if (result.kind !== 'cut') throw new Error('no cut')
-    expect(result.world.pieces.map((piece) => piece.ruled)).toEqual([4, 4])
+    expect(result.world.pieces.map((piece) => piece.ruled)).toEqual([600, 600])
+    // The marks stay where they were pressed: one on the left part, and two on the right part, measured from its own left end.
+    expect(marksOf(pieceOf(result.world, result.left)!)).toEqual([600])
+    expect(marksOf(pieceOf(result.world, result.right)!)).toEqual([300, 900])
+    // On a piece, the roller presses the parts of the piece itself, as if it were a whole.
+    const again = roll(result.world, result.left, 3)
+    expect(marksOf(pieceOf(again, result.left)!)).toEqual([300, 600])
+    expect(roll(marked, id, 1)).toBe(marked)
+    expect(marksOf(pieceOf(world, id)!)).toEqual([])
   })
 
   it('lets a piece leave the counter for good', () => {
