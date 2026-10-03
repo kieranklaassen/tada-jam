@@ -154,23 +154,55 @@ Every scene is a list of timed beats on the template's `scene.ts`, filled in fro
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+Read through the lookup on 2026-10-03. Each record below printed the standing and the check state given beside it on that day. What a record asks is given in the game's own words.
+
+The school skill these records carry is narrower than "what water does to different things". It is cause and effect with water: a child gives water to a thing, can guess what will happen, and sees what does, with filling and growing as the two outcomes the records name. Putting out a fire is the game's story. No record in either jurisdiction names fire or burning, wetting, or washing something away, and the game claims no school skill for them.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels: `infant-toddler` at age 2, sub-band the indicator for 23 through 36 months; `preschool-tk` at age 3, sub-band Early (3 to 4 ½ Years); `preschool-tk` at age 4, sub-bands Early and Later (4 to 5 ½ Years), where both statements of a foundation apply. Age mapping: official, as the lookup prints.
+Gap: none printed.
+
+- `edu.us-ca.infant-toddler.science.objective.cognitive-development-strand-1-0-exploration-1-1` (`us-ca 1.1`, Infant–Toddler Foundations, Cognitive Development, Strand 1.0): department-published-foundation, confirmed. A toddler makes easy guesses about what an action will bring about and thinks back over why something happened.
+  Limits taken: the guesses are simple, and none has to be right. It describes what children typically show, not a requirement on a child. Left open by Limits: what the guesses are about, and any material or event. Water and the seven things are the game's own choice.
+- `edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-5` (`us-ca 1.5`, Preschool/Transitional Kindergarten Foundations, Science, Strand 1.0): department-published-foundation, confirmed. A child says what they think will happen, gives an easy reason, and finds out by trying it.
+  Limits taken: at the earlier age the guess and the reason are simple and the check is by doing it for real. Talking about why it came out as it did is only beginning at the later age, and the game asks for none. Adult support is stated for the check at the earlier age and for planning it at the later age, not for the guess. Left open by Limits: the topic. Beyond the record, as the game's own choice: the yard makes the check one tap, so a child can make it alone, and the game neither hears nor asks for what the child says.
+- `edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-3` (`us-ca 2.3`, the same foundations, Science, Strand 2.0): department-published-foundation, confirmed. A child explores how things and materials change and says what changed.
+  Limits taken: explore and describe at the earlier age, with explaining only at the later age. The kinds of change it lists are examples. The game takes exploring: dry sand that turns dark and then to mud, a flame that turns to steam and wet logs. Saying what changed is left to the child and whoever sits beside them.
+- `edu.us-ca.preschool-tk.science.objective.science-strand-3-0-life-science-3-7` (`us-ca 3.7`, the same foundations, Science, Strand 3.0): department-published-foundation, confirmed. A child knows plants and animals have to be looked after and is starting to see that food and water help living things grow and stay alive.
+  Limits taken: at the earlier age feeding and watering are the two things named and the understanding is still forming. The wider set of needs belongs to the later age and is not in the game. The game takes watering a plant only: it feeds nothing.
+- `edu.us-ca.preschool-tk.science.objective.science-strand-4-0-earth-and-space-science-4-1` (`us-ca 4.1`, the same foundations, Science, Strand 4.0): department-published-foundation, confirmed. A child explores earth materials and says what they are like.
+  Limits taken: water, sand and soil are among the examples named at the earlier age. Describing a material is asked at both ages and comparing materials only at the later age. The record asks nothing about what water does to another material, so the game rests on it only for water and sand as materials to explore.
+
+No record is named here for filling a container. The game names nothing in its place.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels: `peuters` at ages 2 and 3; at age 4 `peuters`, sub-band up to the fourth birthday, and `fase-1`, sub-band groep 1. Age mapping: convention.
+Lane label: at age 4 the lookup also returns the `einde-po` lane, labelled end-of-primary goals. The game uses no record from it.
+Gap: none printed.
+
+- `edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-verschijnselen-uit-natuurkunde-en-techniek-natuurkundige-verschijnselen-2` (`nl Natuurkundige verschijnselen / 2`, content card Oriëntatie op jezelf en de wereld, peuters): curriculum-institute-guidance, confirmed. Discovering and wondering about light, sound, warmth, force and a lamp, where the force named is that of water and of magnets.
+  Limits taken: discovering and wondering only, with no explaining and no measuring. Of water it names only its force: in the game the stream pushes the boat and turns the wheel. It describes what is offered to children, not what a child must be able to do. It states no safety condition for warmth, and the game's fire is the game's own choice.
+- `edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-verschijnselen-uit-natuurkunde-en-techniek-materialen-stoffen-en-voorwerpen-1` (`nl Materialen, stoffen en voorwerpen / 1`, the same card): curriculum-institute-guidance, confirmed. Experimenting with safe materials, substances and objects.
+  Limits taken: no question to answer and no result to reach. Left open by Limits: which materials are safe. Water, sand, a plastic pool and a toy boat are the game's own choice.
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meten-inhoud-2` (`nl Inhoud / 2`, content card Rekenen-wiskunde, peuters; a mathematics record): curriculum-institute-guidance, confirmed. Gaining experience with how much things hold by filling, pouring from one into another and emptying.
+  Limits taken: the three actions, with no measures and no counting of scoops. The game takes filling (the pool, the boat), pouring over (the pool's overflow into what stands below it) and emptying (the boat that rolls over). It shows no count and no measure.
+- `edu.nl.peuters.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-peuters-planten-dieren-en-de-mens-groeien-bloeien-en-voortplanten-1` (`nl Groeien, bloeien en voortplanten / 1`, content card Oriëntatie op jezelf en de wereld, peuters): curriculum-institute-guidance, confirmed. Experiencing that plants grow and flower.
+  Limits taken: experiencing only, with no words, no explanation and no names of plant parts. It names growing and flowering only. What a plant needs in order to grow is not in this record, so for a child at this level the game rests on it for the seed that grows and flowers, and not for the watering.
+- `edu.nl.fase-1.science.objective.inhoudskaart-orientatie-op-jezelf-en-de-wereld-fase-1-planten-dieren-en-de-mens-groeien-bloeien-en-voortplanten-1` (`nl Groeien, bloeien en voortplanten / 1`, content card Oriëntatie op jezelf en de wereld, fase 1; the same printed code as the record above, on another card): curriculum-institute-guidance, confirmed. Realising that plants, animals and people need water, food and a place in order to live.
+  Limits taken: a realisation, not an explanation. Of the three needs it names the game takes water, and of the three kinds of living thing it takes a plant. It says what a school offers in groep 1 and 2 and not in which year.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **At age 2.** California has one record, on cause and effect, which names no material. The Dutch cards for peuters name the force of water and the filling of containers. The game follows the California record's breadth for its verb (do a thing, see what follows) and takes water's force and filling from the Dutch cards. It does not present either as the other.
+- **Watering and growing.** California's foundation has watering help a plant grow from age 3, as an understanding still forming. For Dutch two- and three-year-olds the card has plants growing and flowering and says nothing of what they need; the need for water is on the fase 1 card, for a child of 4 in groep 1. The seed yard is the same for every child. The game's claim for a Dutch child at the `peuters` level is the growing and flowering only.
+- **Saying it.** The California foundations for ages 3 and 4 include the child saying what they expect or describing what changed. The Dutch cards for peuters ask for discovering, wondering, experimenting and gaining experience. The game hears no speech and asks for none, so at this point it follows the Dutch verbs, and the saying in the California foundations is left to the child and a grown-up beside them.
+- **Filling** is a Dutch mathematics record here. No California record is named for it.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Fire Truck Hero is designed from five learning foundations published by California state departments for infants and toddlers and for preschool and transitional kindergarten, which are foundations and not standards, and from five bullets of the content cards of SLO, the Dutch curriculum institute, four for peuters and one for fase 1, which are guidance and not law. All ten records were confirmed when read on 2026-10-03. What the game is designed from them to offer is cause and effect with water, with filling and growing as its two named outcomes. Its fire is a story and rests on no record.
 
 ## The look
 
