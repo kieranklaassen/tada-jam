@@ -8,8 +8,8 @@ import { vinylMaterial, type VinylUniforms } from './vinyl'
 // batches everything small is drawn from: balloons, strings and blob shadows.
 // Each batch is one draw however many are in it.
 
-/** The most balloons on screen: five bunches of three would never be laid, but four of three with three held and a few in flight are. */
-export const MAX_BALLOONS = 28
+/** The most balloons in one frame: the sky (up to twelve), three held, four bunches in flight, those that got away, and the scraps of a few pops, which are drawn as small balloons. */
+export const MAX_BALLOONS = 64
 export const MAX_STRINGS = 64
 export const MAX_SHADOWS = 10
 

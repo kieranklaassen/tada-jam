@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react'
 import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
-import { GameAudio, tick } from './audio'
+import { GameAudio } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
@@ -11,8 +11,12 @@ import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
-import { drawSpike } from './spike'
+import { freshSave } from './save'
+import { momentFor } from './moments'
+import { voiceOf } from './sounds'
 import { Stage } from './stage'
+import { Theatre } from './theatre'
+import { toWorld } from './layout'
 import { deserialize, serialize, type GameState } from './state'
 
 // The Mount, showing a blank surface. Everything a game needs around its
@@ -32,6 +36,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const root = rootRef.current!, canvas = canvasRef.current!
     const audio = new GameAudio(), touch = new ForgivingTouch(), clock = new AttendedClock(), ladder = new IdleLadder(0)
     const stage = new Stage(canvas)
+    // The toy: one troop and its sky, as a new game lays them out, played by the real rule with nothing to finish.
+    const opening = momentFor(window.location.search) ?? (() => {
+      const save = freshSave(ctxRef.current.childAge)
+      return { troop: save.troop, sky: save.sky, waiting: save.next }
+    })()
+    const theatre = new Theatre(opening.troop, opening.sky, opening.waiting)
+    const sound = () => {
+      for (const cue of theatre.sounds) audio.play(voiceOf(cue.voice, cue.pitch, cue.gain))
+      theatre.sounds.length = 0
+    }
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
@@ -68,7 +82,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const draw = () => {
       if (!width) return
       stage.begin(clock.seconds)
-      drawSpike(stage, clock.seconds, window.location.search)
+      theatre.paint(stage, stage.view)
       stage.render()
       Object.assign(drawn, stage.drawn)
     }
@@ -95,7 +109,14 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // A game with short scenes ends the one that is playing first thing in every press, before the press is
     // answered (`finish` in scene.ts). A gesture that changes the state hands it to storage here (`cadence`, above).
     const act = (gestures: Gesture[]) => {
-      for (const gesture of gestures) if (gesture.type === 'press') audio.play(tick)
+      for (const gesture of gestures) {
+        if (gesture.type === 'press') {
+          const at = toWorld(gesture.at.x, gesture.at.y, width, height, stage.view)
+          theatre.press(at.x, at.y, stage.view)
+        } else if (gesture.type === 'tap' || gesture.type === 'dragStart') theatre.release(stage.view)
+        else if (gesture.type === 'pressEnd') theatre.cancel()
+      }
+      sound()
     }
     const at = (event: PointerEvent): Point => {
       const box = root.getBoundingClientRect()
@@ -129,9 +150,11 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       frame = 0
       if (!attention.awake || disposed) return
       // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
-      clock.advance(now)
+      const step = clock.advance(now)
       const start = performance.now()
       act(touch.advance(now))
+      theatre.step(step)
+      sound()
       // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
       // A scene that is playing is not idleness either. A game with short scenes makes the same call for as long
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.

@@ -98,7 +98,8 @@ export function rest(kind: KindName, holds: boolean, reach: number, time: number
     pose.puff = 1 + (0.5 + 0.5 * Math.sin(t * 1.5)) * 0.22
     if (!holds) { pose.armL += Math.sin(t * 1.1) * 0.05; pose.armR += Math.sin(t * 1.1 + 2) * 0.05 }
   } else if (kind === 'hippo') {
-    // Slow and heavy: a sway from foot to foot, the belly breathing.
+    // Slow and heavy: a sway from foot to foot, the belly breathing. Its eyes are on top of its head, so it looks up without tipping back far.
+    pose.nod *= 0.4
     pose.lean = Math.sin(t * 0.9) * 0.035
     pose.puff = 1 + breath * 0.05
     pose.tilt += Math.sin(t * 0.45) * 0.05
@@ -185,7 +186,7 @@ function frog(id: ClipId, t: number, pose: Pose): void {
     // A look, the throat blown up like a ball, and the balloon bounced off it.
     pose.headTurn = hold(t, 0, 0.2, 0.3, 0.42) * 0.4
     pose.armL = pose.armR = 0.5 + hump(t, 0.3, 0.7) * 0.5
-    pose.puff = 1 + hold(t, 0.28, 0.5, 0.56, 0.74) * 1.5 + wobble(t, 0.54, 30, 6) * 0.3
+    pose.puff = 1 + hold(t, 0.28, 0.5, 0.56, 0.74) * 0.95 + wobble(t, 0.54, 30, 6) * 0.2
     pose.bow = hump(t, 0.4, 0.66) * -0.2
     pose.squash += hump(t, 0.3, 0.52) * 0.08
     pose.nod = -0.5
@@ -211,7 +212,7 @@ function frog(id: ClipId, t: number, pose: Pose): void {
 function hippo(id: ClipId, t: number, pose: Pose): void {
   if (id === 'catch') {
     // A wide slow yawn, the string dropping in, and the head coming down on it.
-    pose.nod = -0.42 - hold(t, 0, 0.42, 0.55, 0.95) * 0.5
+    pose.nod = -0.17 - hold(t, 0, 0.42, 0.55, 0.95) * 0.6
     pose.squash += hump(t, 0, 0.5) * 0.06 - hump(t, 0.5, 0.75) * 0.08 + wobble(t, 0.75, 12, 4) * 0.04
     pose.puff = 1 + wobble(t, 0.5, 13, 3.5) * 0.14
     pose.armL = 0.25

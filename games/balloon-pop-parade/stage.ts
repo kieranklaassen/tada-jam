@@ -86,8 +86,13 @@ export class Stage {
     this.friends.delete(name)
   }
 
-  pose(rig: FriendRig, pose: Pose): void {
-    applyPose(rig, pose)
+  /** Poses the friend of that name, building it if this is the first frame it is on. */
+  place(name: string, kind: KindName, pose: Pose): void {
+    applyPose(this.friend(name, kind), pose)
+  }
+
+  drop(name: string): void {
+    this.dropFriend(name)
   }
 
   /** Starts a frame's lists. */
@@ -108,14 +113,14 @@ export class Stage {
     this.balloons += 1
   }
 
-  /** One straight piece of string. */
-  string(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, colour: string): void {
+  /** One straight piece of string, `thick` in radius. */
+  string(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, colour: string, thick = 0.022): void {
     if (this.strings >= MAX_STRINGS) return
     this.along.set(x1 - x0, y1 - y0, z1 - z0)
     const length = this.along.length()
     if (length < 1e-4) return
     this.quaternion.setFromUnitVectors(UP, this.along.divideScalar(length))
-    this.matrix.compose(this.position.set(x0, y0, z0), this.quaternion, this.scale.set(0.022, length, 0.022))
+    this.matrix.compose(this.position.set(x0, y0, z0), this.quaternion, this.scale.set(thick, length, thick))
     this.scenery.strings.setMatrixAt(this.strings, this.matrix)
     this.scenery.strings.setColorAt(this.strings, this.colourOf(colour))
     this.strings += 1
