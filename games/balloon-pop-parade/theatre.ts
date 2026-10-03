@@ -2,7 +2,7 @@ import { BODIES, type KindName } from './bodies'
 import { clip, PERSONALITIES, rest, type ClipId } from './clips'
 import { BALLOON, bunchOffsets, bunchReach, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, skySlots, WAITING_SCALE, waitingSpot, type View } from './layout'
 import { KIND_COLOURS, PALETTE, shade } from './palette'
-import { restPose, type Pose } from './pose'
+import { copyPose, REST, restPose, type Pose } from './pose'
 import type { VoiceId } from './voices'
 import { give, pop, type Bunch, type Given, type Troop } from './world'
 
@@ -65,6 +65,8 @@ export class Theatre {
   private pressedSlot = -1
   private readonly pose: Pose = restPose()
   private readonly hand = { x: 0, y: 0, z: 0 }
+  private slotsFor = 0
+  private slotsAt: { x: number; y: number }[] = []
 
   constructor(troop: Troop, sky: readonly Bunch[], waiting: { kind: KindName; size: number }, seed = 0x9e3779b9) {
     this.troop = troop
@@ -74,6 +76,15 @@ export class Theatre {
     this.places = this.sky.map(() => ({ squash: 0, squashSpeed: 0, pressed: false, push: 0, pushSpeed: 0, away: 0, grow: 1 }))
     this.held = troop.held.map((holds, i) => ({ x: friendX(i, troop.size) + 0.7, y: GROUND + HELD_HEIGHT, vx: 0, vy: 0, shown: holds }))
     this.actors = troop.held.map(() => ({ clip: null, t: 0, next: null, tug: null }))
+  }
+
+  /** The places in the sky for this view, worked out once for each width. */
+  private slots(view: View): { x: number; y: number }[] {
+    if (this.slotsFor !== view.width) {
+      this.slotsAt = skySlots(this.sky.length, view)
+      this.slotsFor = view.width
+    }
+    return this.slotsAt
   }
 
   /** The friend's feet. */
@@ -100,7 +111,7 @@ export class Theatre {
       const balloon = this.held[i]
       if (balloon.shown && Math.hypot(x - balloon.x, (y - balloon.y) / 1.12) < BALLOON * 1.2) return { on: 'held', friend: i }
     }
-    const slots = skySlots(this.sky.length, view)
+    const slots = this.slots(view)
     for (let slot = 0; slot < slots.length; slot++) {
       if (this.places[slot].away > 0) continue
       const reach = bunchReach(this.sky[slot].count)
@@ -150,7 +161,7 @@ export class Theatre {
       this.sound(`${this.waiting.kind}Poke`, 1.1, 0.7)
     } else {
       this.sound('boop')
-      const slots = skySlots(this.sky.length, view)
+      const slots = this.slots(view)
       for (let slot = 0; slot < slots.length; slot++) this.places[slot].pushSpeed += Math.sign(slots[slot].x - x || 1) * 1.6 / (1 + Math.abs(slots[slot].x - x))
     }
   }
@@ -166,7 +177,7 @@ export class Theatre {
     const bunch = this.sky[slot]
     const { troop, given } = give(this.troop, bunch)
     this.troop = troop
-    const at = skySlots(this.sky.length, view)[slot]
+    const at = this.slots(view)[slot]
     // A bunch of another colour goes to a friend who is still without one, if there is one: it is the one looking for a balloon.
     const friend = given.result === 'taken' ? given.takers[0] : given.result === 'gotAway' ? given.grabber : this.refuser(at.x)
     this.flights.push({ bunch, slot, given, t: 0, fromX: at.x, fromY: at.y, landed: false, after: 0, friend })
@@ -331,7 +342,7 @@ export class Theatre {
   /** How high a friend of this kind is off the ground this far into being carried off. */
   private lift(kind: KindName, t: number): number {
     const pose = this.pose
-    Object.assign(pose, restPose())
+    copyPose(pose, REST)
     clip(kind, 'liftOff', t, BODIES[kind].height * FRIEND_SCALE, BODIES[kind].reach, pose)
     return pose.y
   }
@@ -414,7 +425,7 @@ export class Theatre {
     const pose = this.pose, time = this.time
 
     // The bunches in their places.
-    const slots = skySlots(this.sky.length, view)
+    const slots = this.slots(view)
     for (let slot = 0; slot < slots.length; slot++) {
       const place = this.places[slot], bunch = this.sky[slot]
       if (place.away > 0) continue
@@ -443,7 +454,7 @@ export class Theatre {
     // The troop.
     for (let i = 0; i < this.troop.size; i++) {
       const actor = this.actors[i], spot = this.spot(i), name = `friend-${i}`
-      Object.assign(pose, restPose())
+      copyPose(pose, REST)
       pose.x = spot.x
       pose.y = spot.y
       pose.scale = FRIEND_SCALE
@@ -463,6 +474,7 @@ export class Theatre {
         painter.balloon(balloon.x, balloon.y, 0.3, 1, 1, lean, colour)
         painter.string(balloon.x + Math.sin(lean) * BALLOON * 1.32, balloon.y - Math.cos(lean) * BALLOON * 1.32, 0.3, this.hand.x, this.hand.y, this.hand.z, cord)
       }
+      if (kind === 'frog' && actor.clip === 'catch') this.tongue(i, actor.t, pose, painter, shade(colour, 0.34))
       if (actor.clip === 'liftOff' && actor.tug) {
         // The bunch that is carrying it off, straining upwards on strings from its hand.
         const hue = KIND_COLOURS[actor.tug.colour], line = shade(hue, -0.3)
@@ -478,10 +490,7 @@ export class Theatre {
     // Bunches on their way down, and those that hang beside a friend for the beat before it refuses them.
     for (const flight of this.flights) {
       const hue = KIND_COLOURS[flight.bunch.colour], to = this.target(flight)
-      const u = Math.min(1, flight.t / FLIGHT), eased = u * u * (3 - 2 * u)
-      // Up a little as it lets go of the sky, then down in a swoop.
-      const x = flight.fromX + (to.x - flight.fromX) * eased
-      const y = flight.fromY + (to.y - flight.fromY) * eased + Math.sin(u * Math.PI) * 0.5 * (1 - u)
+      const { x, y, u } = this.along(flight)
       const speed = Math.sin(u * Math.PI)
       const lean = Math.atan2(to.x - flight.fromX, flight.fromY - to.y) * 0.5 * speed
       const settle = flight.landed ? Math.sin(flight.after * 30) * Math.exp(-flight.after * 9) * 0.12 : 0
@@ -510,7 +519,7 @@ export class Theatre {
         continue
       }
       const spot = waitingSpot(i, view)
-      Object.assign(pose, restPose())
+      copyPose(pose, REST)
       pose.x = spot.x
       pose.z = spot.z
       pose.y = groundAt(spot.x, spot.z)
@@ -524,6 +533,28 @@ export class Theatre {
       painter.place(`waiting-${i}`, this.waiting.kind, pose)
       painter.shadow(spot.x, groundAt(spot.x, spot.z) + 0.02, spot.z + 0.1, waitingPlan.halfWidth * 0.75, 0.36, PALETTE.shadow)
     }
+  }
+
+  /** The frog meets its balloon with its tongue: out to the balloon as it comes down, and in with it. */
+  private tongue(friend: number, t: number, pose: Pose, painter: Painter, colour: string): void {
+    const out = Math.min(1, Math.max(0, (t - 0.1) / 0.1))
+    if (out <= 0) return
+    for (const flight of this.flights) {
+      if (flight.landed || flight.given.result !== 'taken') continue
+      const k = flight.given.takers.indexOf(friend)
+      if (k < 0) continue
+      const at = this.along(flight), offset = bunchOffsets(flight.bunch.count)[k]
+      const plan = BODIES.frog
+      const mouthX = pose.x, mouthY = pose.y + (plan.neck[1] + 0.16) * pose.scale * pose.squash, mouthZ = 0.7 * pose.scale
+      const tipX = at.x + offset.x, tipY = at.y + offset.y - BALLOON * 1.25
+      painter.string(mouthX, mouthY, mouthZ, mouthX + (tipX - mouthX) * out, mouthY + (tipY - mouthY) * out, mouthZ + (0.35 - mouthZ) * out, colour, 0.07)
+    }
+  }
+
+  /** Where a flight is now: up a little as it lets go of the sky, then down in a swoop. */
+  private along(flight: Flight): { x: number; y: number; u: number } {
+    const to = this.target(flight), u = Math.min(1, flight.t / FLIGHT), eased = u * u * (3 - 2 * u)
+    return { x: flight.fromX + (to.x - flight.fromX) * eased, y: flight.fromY + (to.y - flight.fromY) * eased + Math.sin(u * Math.PI) * 0.5 * (1 - u), u }
   }
 
   /** A friend at rest follows with its head whatever is coming down to it. */
@@ -546,21 +577,20 @@ export class Theatre {
  */
 export function handOf(plan: { hand: readonly [number, number, number]; shoulder: readonly [number, number, number] }, pose: Pose, out: { x: number; y: number; z: number }): { x: number; y: number; z: number } {
   // The right arm is the left one mirrored: it swings out to the right by `armR`, then forwards.
-  let x = -plan.hand[0], y = plan.hand[1], z = plan.hand[2]
-  let c = Math.cos(pose.armR), s = Math.sin(pose.armR)
-  ;[x, y] = [x * c - y * s, x * s + y * c]
+  let x = -plan.hand[0], y = plan.hand[1], z = plan.hand[2], c = Math.cos(pose.armR), s = Math.sin(pose.armR), t = 0
+  t = x * c - y * s; y = x * s + y * c; x = t
   c = Math.cos(-pose.armRForward); s = Math.sin(-pose.armRForward)
-  ;[y, z] = [y * c - z * s, y * s + z * c]
+  t = y * c - z * s; z = y * s + z * c; y = t
   const wide = 1 / Math.sqrt(Math.max(0.2, pose.squash))
   x = (x - plan.shoulder[0]) * wide
   y = (y + plan.shoulder[1]) * pose.squash
   z = (z + plan.shoulder[2]) * wide
   c = Math.cos(pose.lean); s = Math.sin(pose.lean)
-  ;[x, y] = [x * c - y * s, x * s + y * c]
+  t = x * c - y * s; y = x * s + y * c; x = t
   c = Math.cos(pose.turn); s = Math.sin(pose.turn)
-  ;[x, z] = [x * c + z * s, -x * s + z * c]
+  t = x * c + z * s; z = -x * s + z * c; x = t
   c = Math.cos(pose.bow); s = Math.sin(pose.bow)
-  ;[y, z] = [y * c - z * s, y * s + z * c]
+  t = y * c - z * s; z = y * s + z * c; y = t
   out.x = pose.x + x * pose.scale
   out.y = pose.y + y * pose.scale
   out.z = pose.z + z * pose.scale

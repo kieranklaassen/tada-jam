@@ -200,4 +200,49 @@ Balloon Pop Parade is designed from four California learning foundations publish
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+**Inflatable vinyl toys**, the first look reserved for the game in the ledger of `docs/art-direction.md`. Everything on screen is a pool toy in daylight: puffy pillow forms with welded seams and a valve, a broad soft sheen, and a pale rim where the skin turns away, in pool-toy colours against an open sky. Nothing is hard-edged, matte, dim or lit by a lamp.
+
+### Palette (`palette.ts`)
+
+- **The four hues.** Duck `#ffcc1f`, frog `#1fc48d`, hippo `#8b5cf6`, crab `#ee3345`. A friend is that hue all over and its balloons are exactly that hue. A beak, a belly, a claw tip and a foot are the same hue a step darker or lighter, the eyes are printed in ink (`#22203a`) with a white shine, and the valve is white. Tests hold the hues more than 45 degrees apart round the wheel, hold every one away from the sky's hue and darker than the sky, and hold the frog and the crab apart in lightness for a child who mixes red and green.
+- **The sky** runs from `#aee4f4` at the top to `#effbff` at the horizon. It is the plain surface the working pieces sit on: paler than any balloon and no balloon's hue.
+- **The hill** the friends stand on is a pink air bed (`#ffd3df`) with welded ribs across it, and the far hill is a paler haze (`#f6e6f1`). The friends stand on the hill's top with the sky behind them, so the hill is under their feet and never behind their bodies.
+- **Clouds** are white pillows, kept below the row of balloons so nothing stands behind a balloon but sky.
+
+### Materials (`vinyl.ts`)
+
+One material for everything but the sky, the strings and the shadows. It reads no three.js light and is not see-through. Each fragment gets a soft wrapped shade that stays in the toy's own hue, a broad pale sheen with a small bright core, a lighter rim that reads as light through the edge, and welded seams drawn from the form's own UVs as a dark groove with a pale lip. The vertex shader breathes the skin a little along its normal. The base colour is in the vertices, times the instance colour for balloons. No texture, no light, no shadow map and no post pass.
+
+- **Forms** (`shapes.ts`, `bodies.ts`). Every form is a pillow: a sphere pulled into an ellipsoid. A friend is about a dozen pillows merged into six meshes, one per part that moves by itself (trunk, head, eyes, two arms, and its funniest part), which makes six draws a friend.
+- **Balloons** are the working pieces and stay plain: one shape, one size, one colour, a knot, no seam, no face. All of them, in the sky, in a hand, in flight and as the scraps of a pop, are one instanced draw. Strings are a second, in a darker shade of their balloon, and blob shadows a third, each a soft disc tinted with the colour of the toy above it.
+
+### Lighting
+
+Daylight from up, left and in front, fixed in view space, so every form is lit the same way wherever it turns. Shadows on the forms are their own hue made darker and a little bluer, never grey. The only cast shadow is the blob under each friend, which shrinks as the friend leaves the ground.
+
+### Motion (`clips.ts`, `theatre.ts`)
+
+- Everything is air under vinyl: a touch squashes it, letting go springs it back past round, and it wobbles before it settles. Nothing stops dead.
+- A balloon squashes flat under the finger the moment the finger lands, swoops down when the finger lifts, and a new one drifts into its place small and grows.
+- Each kind has its own tempo, weight and funniest part, and no two share a motion: the duck is quick and light and its tail never stops; the frog is still and then sudden, with a throat that swells; the hippo is slow and heavy, with a belly that wobbles after everything; the crab goes sideways in stops and starts, with eyes on stalks. Tests fail when two kinds' motions come too close.
+- A friend without a balloon reaches up with both arms; one with a balloon holds its string and looks at it. The troop that waits keeps its arms down.
+- The balloons bob and the strings sway at rest; they do no more than that, since they are the working pieces.
+
+### Sound (`voices.ts`, `sounds.ts`)
+
+Every sound is synthesized: rubber, air and vinyl. Each is a few partials kept as plain numbers, with a test that holds every pitch between 55 and 5200 Hz, every peak at or under 0.5 before the master gain, every attack at 2 ms or more and every voice under 1.3 seconds. The kinds are pitched apart, the hippo lowest and the crab highest. Nothing sounds for right or wrong.
+
+### How each tier keeps the look (`config.ts`)
+
+| Tier | Pixel ratio | Sheen core | Breathing skin | Clouds |
+| --- | --- | --- | --- | --- |
+| 0 | 2 | on | on | on |
+| 1 | 1.5 | on | on | on |
+| 2 | 1.25 | off | on | on |
+| 3 | 1 | off | off | off |
+
+A tier changes drawing only. The broad sheen, the pale rim, the seams and every form stay at every tier, so the lowest tier is the same toys with a softer highlight under an empty sky. No tier change compiles anything: the sheen and the breathing are uniforms.
+
+### Budget
+
+At 1180 by 820 the heaviest moment laid out so far (three friends in the middle, three waiting, twelve balloons) is 39 draw calls and about 51,000 triangles, against the bar of about 80 draw calls. No shadow map, no post pass, pixel ratio capped at 2. Frame rates are the lead's to take on a real graphics card; none is claimed here.

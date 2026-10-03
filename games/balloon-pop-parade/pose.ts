@@ -43,7 +43,15 @@ export function restPose(): Pose {
   }
 }
 
+/** A pose at rest that nobody writes to: `copyPose(pose, REST)` starts a pose again without making an object. */
+export const REST: Readonly<Pose> = Object.freeze(restPose())
+
 /** Copies `from` into `into` without making an object, for the frame loop. */
-export function copyPose(into: Pose, from: Pose): Pose {
-  return Object.assign(into, from)
+export function copyPose(into: Pose, from: Readonly<Pose>): Pose {
+  into.x = from.x; into.y = from.y; into.z = from.z; into.scale = from.scale
+  into.turn = from.turn; into.lean = from.lean; into.bow = from.bow; into.squash = from.squash
+  into.nod = from.nod; into.headTurn = from.headTurn; into.tilt = from.tilt
+  into.armL = from.armL; into.armR = from.armR; into.armLForward = from.armLForward; into.armRForward = from.armRForward
+  into.wag = from.wag; into.flick = from.flick; into.puff = from.puff; into.blink = from.blink; into.glow = from.glow
+  return into
 }

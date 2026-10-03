@@ -74,18 +74,23 @@ export function skySlots(slots: number, view: View): { x: number; y: number }[] 
  * Where each balloon of a bunch sits round the middle of its place, always the same arrangement: one; two side
  * by side; three as a triangle with one on top.
  */
-export function bunchOffsets(count: number): { x: number; y: number }[] {
-  const r = BALLOON
-  if (count <= 1) return [{ x: 0, y: 0 }]
-  if (count === 2) return [{ x: -r * 0.86, y: 0 }, { x: r * 0.86, y: 0 }]
-  return [{ x: -r * 0.86, y: -r * 0.42 }, { x: r * 0.86, y: -r * 0.42 }, { x: 0, y: r * 1.02 }]
+export function bunchOffsets(count: number): readonly { x: number; y: number }[] {
+  return OFFSETS[count <= 1 ? 0 : count === 2 ? 1 : 2]
 }
+
+// Made once: the frame loop asks for these many times a frame.
+const OFFSETS: readonly (readonly { x: number; y: number }[])[] = [
+  [{ x: 0, y: 0 }],
+  [{ x: -BALLOON * 0.86, y: 0 }, { x: BALLOON * 0.86, y: 0 }],
+  [{ x: -BALLOON * 0.86, y: -BALLOON * 0.42 }, { x: BALLOON * 0.86, y: -BALLOON * 0.42 }, { x: 0, y: BALLOON * 1.02 }],
+]
 
 /** The half-size of a bunch as a touch target, in world units. */
 export function bunchReach(count: number): { x: number; y: number } {
-  const offsets = bunchOffsets(count)
-  return { x: Math.max(...offsets.map((o) => Math.abs(o.x))) + BALLOON, y: Math.max(...offsets.map((o) => Math.abs(o.y))) + BALLOON * 1.12 }
+  return REACH[count <= 1 ? 0 : count === 2 ? 1 : 2]
 }
+
+const REACH = OFFSETS.map((offsets) => ({ x: Math.max(...offsets.map((o) => Math.abs(o.x))) + BALLOON, y: Math.max(...offsets.map((o) => Math.abs(o.y))) + BALLOON * 1.12 }))
 
 /** A point of the surface, in logical pixels from its top left, as a point of the plane z = 0. */
 export function toWorld(xPx: number, yPx: number, widthPx: number, heightPx: number, view: View): { x: number; y: number } {

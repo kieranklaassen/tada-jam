@@ -6,17 +6,17 @@ import { GameAudio } from './audio'
 import { BACKDROP } from './config'
 import { IdleLadder } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
+import { toWorld } from './layout'
 import { balloonPopParadeManifest } from './manifest'
+import { momentFor } from './moments'
 import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { freshSave } from './save'
-import { momentFor } from './moments'
 import { voiceOf } from './sounds'
 import { Stage } from './stage'
 import { Theatre } from './theatre'
-import { toWorld } from './layout'
 import { deserialize, serialize, type GameState } from './state'
 
 // The Mount, showing a blank surface. Everything a game needs around its
@@ -203,6 +203,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     })
     applyTier()
     resize()
+    // Every program is compiled now, so the first pop does not wait for one.
+    stage.warm()
     attention.set(ctxRef.current.attention.attended)
 
     return () => {
