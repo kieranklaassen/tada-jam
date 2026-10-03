@@ -111,11 +111,11 @@ In every case the state stays: no mark is removed by a miss (the oldest chalk on
 3. `up-and-down`: the home is higher or lower than the stop. New: slope.
 4. `round-the-water`: the puddle lies between the stop and the home. New: the puddle, to go through or round.
 5. `far-rider`: the rider waits away from the train. New: fetching, a second leg.
-6. `two-at-once`: two riders wait at two stops, each with its own home, and both wagons are needed. A combination of everything before, in any order the child likes.
+6. `two-at-once`: two riders wait at two stops, each with its own home, and there is a wagon for each. A combination of everything before, in any order the child likes.
 
 The puddle and the dandelion are part of the tar from the first visit and can be drawn on at every position; a layout only decides whether the puddle lies on the way.
 
-**The harder option the child can see and pick.** From the first cycle on, the next rider is drawn in at its stop when the child's first mark begins the cycle, so while the child works the next rider is already waiting on the tar. The train has two wagons at every position, so while a wagon is free the child may fetch the waiting rider before taking the current rider home and carry both at once. It is farther away, so it looks like more, and it is never asked for.
+**The harder option the child can see and pick.** From the first cycle on, the next rider is drawn in at its stop when the child's first mark begins the cycle, so while the child works the next rider is already waiting on the tar. The train has two wagons at every position, so while a wagon is free the child may fetch the waiting rider before taking the current rider home and carry both at once. It is farther away, so it looks like more, and it is never asked for. With both wagons taken the train still comes to a waiting rider and stops with its coupling clunk; the rider peers into the full wagons, stays at its stop, and climbs aboard the next time the train comes with a wagon free.
 
 **How a cycle is judged.** The game's own call: by how much of the riders' way from stop to home was ridden on chalk, by distance.
 
@@ -139,6 +139,7 @@ No clock is read. The position moves when the ending starts, never inside a cycl
 - `train`: where the train stands and which way it faces, with its stripes and its tint from the puddle, each a chalk colour or none. A ride in progress is not stored: the train is saved where that ride comes to rest.
 - `water`: the puddle's colour, a chalk colour or none.
 - `riders`: at most four, each with its kind, its stop, its home, where it is (at the stop, aboard, or home), how far its trip has gone on chalk and on bare tar, and what the ride has done to it so far (small capped tallies of fast runs, corners, loops, splashes, bumps and scribbles), from which the ending is built.
+- `ahead`: the ladder id of the layout the rider waiting ahead was laid out from; an unknown id is read as `position`. `position` may have moved since that rider was drawn in, so this field is what says, after a load as well, whether a second rider of that layout is drawn in when its cycle begins.
 - `chalk`: the colour the next mark takes, the next of five pastels in a fixed order.
 - `shown`: the first showing has played.
 
@@ -196,7 +197,7 @@ Gap: none printed. No lane label applies.
 
 - `edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-4-0-writing-4-4` (us-ca code 4.4 under Strand 4.0, Writing, of Language and Literacy Development; the code alone matches three records): department-published-foundation, confirmed. The game is designed from its statement for the earlier age only, which the record's Summary gives as: "At the earlier age (3 to 4½ years) the child's writing is scribble that looks like letters or characters and can be told apart from their drawings."
   Limits taken: the earlier statement asks for no real letters, so the game shows, asks for and reads none. The statement for the later age, a few recognisable letters used to mean something, is not used. Matching letters to sounds and the child's own name belong to neighbouring foundations and are not in the game.
-  Left open by Limits: no shape of stroke, no tool and no surface is named. The five kinds of mark, the finger and the glass are the game's own choices.
+  Not in Limits: a shape of stroke, a tool and a surface. The five kinds of mark, the finger and the glass are the game's own choices.
   Short of the record: the game offers scribbling and does not look at whether a child's scribble resembles writing or differs from their drawing. It carries the making of the marks and nothing more.
   No California record is named for two parts of the skill: drawing as a way of exploring writing, and a mark that tells someone something. Those parts are taken from the Dutch records alone, and nothing is named in their place here.
 
@@ -213,7 +214,7 @@ Gap: none printed. None of the records below is a core goal, so none has a regim
 
 - `edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-7` (nl Oriëntatie op geschreven taal / 7): curriculum-institute-guidance, confirmed. In the game's words: exploring writing, mainly through drawing, scribbling, shapes that look like letters, and strings of letters or signs.
   Limits taken: it describes what is offered to children of about 2 to 4, not what a child must be able to do; the word is exploring; right spelling and how a pencil is held are not mentioned. The game takes drawing and scribbling from it and leaves out the letter-like shapes and the strings of letters or signs.
-  Left open by Limits: no shape of stroke is named. The five kinds of mark are the game's own choice.
+  Not in Limits: a shape of stroke. The five kinds of mark are the game's own choice.
 - `edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-3` (nl Oriëntatie op geschreven taal / 3): curriculum-institute-guidance, confirmed. In the game's words: experiencing that drawing and written marks can be used to tell someone something.
   Limits taken: the word is experiencing; it names drawing and marks and asks for no letters.
   Left open by Limits: it does not say with whom. That the mark tells the engine and the riders where and how to go is the game's own choice.
@@ -231,7 +232,7 @@ Read and not used: the peuter mathematics record on making things with and on pa
 
 ### The claim
 
-Chalk Train is designed from one California learning foundation for preschool and transitional kindergarten, a foundation published by the state department of education and not a standard (us-ca 4.4 under Strand 4.0, Writing, of Language and Literacy Development, its statement for the earlier age only; confirmed), from which it takes only that scribble comes before any letter, for ages 3 and 4; from two statements of the Dutch curriculum institute's content card for peuters (nl Oriëntatie op geschreven taal / 7 and / 3, both under Aanvankelijk schrijven of the peuter card; both confirmed), from which it takes exploring writing through drawing and scribbling, and experiencing that a mark can tell someone something, for ages 2 and 3 and for a child who has only just turned four; and from one statement of its content card for fase 1 (nl Voorbereidend schrijven / 4; confirmed), from which it takes writing with the child's own drawings and scribbles, for age 4. The Dutch statements are guidance and not law. For a two-year-old it is designed from the two peuter statements alone. The marks are made with a finger and no tool, no kind of stroke is named by any of these records, and the game shows no letter. It says nothing about what any child can do.
+Chalk Train is designed from one California learning foundation for preschool and transitional kindergarten, a foundation published by the state department of education and not a standard (us-ca 4.4 under Strand 4.0, Writing, of Language and Literacy Development, its statement for the earlier age only; confirmed), from which it takes only that scribble comes before any letter, for ages 3 and 4; from two statements of the Dutch curriculum institute's content card for peuters (nl Oriëntatie op geschreven taal / 7 and / 3, both under Aanvankelijk schrijven of the peuter card; both confirmed), from which it takes exploring writing through drawing and scribbling, and experiencing that a mark can tell someone something, for ages 2 and 3 and for a child who has only just turned four; and from one statement of its content card for fase 1 (nl Voorbereidend schrijven / 4; confirmed), from which it takes writing with the child's own drawings and scribbles, for age 4. The Dutch statements are guidance and not law. In the game the one a mark tells is a character, the engine or a rider, and not a person; the statement does not say with whom. For a two-year-old it is designed from the two peuter statements alone. The marks are made with a finger and no tool, no kind of stroke is named by any of these records, and the game shows no letter. It says nothing about what any child can do.
 
 ## The look
 
