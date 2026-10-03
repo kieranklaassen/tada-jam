@@ -3,13 +3,14 @@
 
 ## Status
 
-- Stage: gates. The game is built on the toy and the gates were run as far as the build machine takes them (below). The lead reports that it passes the gates on the lead's machine as well and that its intersection audit is clean there. It stands on the sheet that passed.
+- Stage: gates. The game is built on the toy and the gates were run as far as the build machine takes them (below). The lead reports that it passes the gates on the lead's machine as well and that its intersection audit is clean there. It stands on the sheet that passed round 4, with ten details pasted since so that the sheet says what the game does; round 5 reads only those.
 - Sheet, round 1: checker B, 14 findings, all pasted at commit `06c946d`.
 - Sheet, round 2: checker D, 4 findings, all pasted at commit `d9a0c46`.
 - Sheet, round 3: checker E, on the text with sheet part sha256 `26cdd160de55cad7ff69e3dc309676351c6b290327f1de763efc3b89cdbf2e78`. Outcome: 2 findings. Both replacements are pasted as the checker wrote them, none disputed, at commit `8f106a2` (sheet part sha256 `3c3a46542314229cc47bae57cd57ac510e4a7cbc345796262c7f43d843317e3b`). Brought into line at commit `90798d1`: every sound the grid's cells now name is a voice of the game (twenty-one new ones in `voices.ts`, held to the stated ranges), and each of the thirty cells is played through the game in a test and heard as the sheet has it.
-- Sheet, round 4: checker F. Outcome: **passed**, no findings. The text it judged has sheet part sha256 `3c3a46542314229cc47bae57cd57ac510e4a7cbc345796262c7f43d843317e3b` and is held by commit `8f106a2`. The sheet part has not been touched since, and keeps that hash.
+- Sheet, round 4: checker F. Outcome: **passed**, no findings. The text it judged has sheet part sha256 `3c3a46542314229cc47bae57cd57ac510e4a7cbc345796262c7f43d843317e3b` and is held by commit `8f106a2`. 
+- Sheet, after the pass: ten sentences of detail were changed in eight lines, each to say what the built game does, at commit `d3ab9e7` (sheet part sha256 `0eb1ff4c7122d2c662c9297de9dba822b3bb252784e19b64955d175e3daf1d4b`). They are listed below, old and new. None changes the mechanic, the error, the designed order, the records or the claim; one is a row of the table of saved fields, which now names a field the save has held since it was written.
 - Look in use: foam play mats, the first reserved look. The owner had been shown the toy and had not answered when the game was built on it; that was done at the builder's risk. Everything that is not drawing is outside `view/`, so another look replaces only that folder.
-- Open: nothing of the sheet. What is left is under "Requests to the lead", "For the lead" and "For the owner to decide".
+- Open: sheet ready for check, round 5
 
 **What the lead should try first**
 
@@ -25,12 +26,13 @@
 - Ran and passed: `npx tsc --noEmit`; `npx vitest run games/hats-for-all test/games.test.ts` (347 tests, about 6 seconds); `npx vitest run`, the whole repository (2176 passed, 1 skipped); `npm run -s wordless:check`; `node scripts/egress-check.ts`; `npm run build`; `npm run egress:built`; `npm run education:built`.
 - The intersection audit, `npm run check:intersections -- hats-for-all --ci`: `enforce: true`, eleven moments from saved worlds, 1203 samples, 32 pieces. Passes: 46 findings, then 13, then 1, then none. Five enforced runs in a row came back clean with the same samples, pieces and findings each time (0 open, 0 allowed, 2 under the pixel floor), the first of them while stills were being taken on the same machine, and a sixth with a replay of the second pass's thirteen findings. No contact is allowed: every finding was fixed at its root. A seventh run, on the final build, was clean as well.
 - The audit ran with the Chromium already on the machine (141), reached through a private browsers folder outside the repository, because Playwright's own build could not be downloaded here. CI uses Playwright's own.
-- Not run: any frame rate (the machine draws in software); any listening (it has no sound); `compound audit` (no file under `docs/solutions/` was touched).
+- Not run on the build machine: any frame rate (it draws in software); any listening (it has no sound); `compound audit` (no file under `docs/solutions/` was touched).
+- Frame rates, as the lead measured and reported them: 60 a second in Chrome at six times CPU throttle; 59.6 at twenty times throttle and four times the pixels; 59.9 in WebKit; 18 draw calls. The build, the pixel ratio and whether a physical iPad was measured are the lead's to state.
 
 **What is still weak**
 
 - Nobody has heard the game. Thirty-three voices and twenty tunes of babble are numbers held to ranges; whether "pomf" sounds muffled and "plap" flat is for ears.
-- Nobody has seen it move at speed. The stills say layout, colour and that nothing passes through anything; the weight of a landing and the comedy of the acts are untested by eye.
+- The builder has not seen it move at speed. The stills say layout, colour and that nothing passes through anything; the weight of a landing and the comedy of the acts are for the lead's and the owner's eyes.
 - The same kind of creature can be in two crews running: it walks off to the left and a moment later walks in from the right.
 - The idle rings round neighbouring hats in the tile touch at their sides.
 - The two free round spots at the ends of the row may read as places to put something.
@@ -39,21 +41,45 @@
 
 **Requests to the lead**
 
-- Frame rates on a real graphics card at a pixel ratio of 2. Counted on the build machine in the busiest stretch: 20 draw calls at the most, about 39,000 triangles, no shadow map, no post pass.
+- The check of the sheet, round 5, on the ten sentences listed above.
 - A listen to the sounds on a real machine.
 - The registry row in section 3 of `docs/art-direction.md`: its text is at the end of `ART.md`.
 - `scripts/jam-intersections.mjs` (the file, the change, the reason): its cache of prepared pieces is keyed by the geometry's uuid, and the audit seeds `Math.random`, so after a reload a new geometry gets the uuid an older one had and the old triangles are used. A game that cuts a mesh from its saved state is then checked against the wrong mesh (here the hat tile: three false z-fights). Worked around in the game by naming each cut of the tile; the audit would be safer keyed by the positions it was sent.
 
-**For the lead**
+**The sentences changed after the pass, for round 5**
 
-Sentences of the sheet part that the built game has made untrue or says more exactly. The sheet part has passed with its hash and is not edited here; each line gives the sentence that should stand there. None changes a rule, a record, a limit or the claim.
+Line numbers are lines of `ART.md` as it stands at commit `d3ab9e7`. Everything else above `## The look` is as round 4 passed it.
 
-- The table of saved fields, the row for `crew`. The save also holds each creature's round spot, since a creature keeps its spot when another walks out. Should stand: "| `crew` | The creatures on the mat in row order, at most five: each one's kind, the round spot it stands on, and the hats on its head from the bottom up, each hat named by its hole in `tile`. |"
-- "The error as a consequence", one hat too many, and the fifth cell of the grid's first row: "skids to the nearest round spot". Two loose hats never rest beside one spot. Should stand: "skids to the nearest round spot that has no loose hat beside it".
-- "The scenes", the first showing: "(once ever; cause: the very first crew walks in)". Nothing walks in before a touch: the first crew already stands on its spots. Should stand: "(once ever; cause: the game is opened for the first time, with the first crew standing on its spots)".
-- "The scenes", one leaves: "the hat comes down on its empty spot". Should stand: "the hat comes down beside its empty spot".
-- "The scenes", the parade: "march once round the mat" and "come to rest in a row on the far side, facing the arch". Should stand: "march once round the row of round spots" and "come to rest on their own round spots, looking towards the arch".
-- "How the next one starts": "The first creature of the next crew stands waiting in the arch" and "the finished crew walks out". Should stand: "A creature of the next crew stands waiting in the arch, one whose kind is not on the mat with the finished crew where there is one" and "the finished crew walks off to the left".
+- The grid, hat in the tile, let go anywhere else (line 35).
+  Old: "it skids to the nearest round spot with a long rubbery squeal"
+  New: "it skids to the nearest round spot that has no loose hat beside it with a long rubbery squeal"
+- The grid, loose hat on the floor, let go anywhere else (line 37).
+  Old: "scuttles on beside the round spot nearest to where it stops"
+  New: "scuttles on beside the round spot nearest to where it stops that has no loose hat beside it"
+- The error as a consequence, one hat too many (line 71).
+  Old: "skids to the nearest round spot and scuttles"
+  New: "skids to the nearest round spot that has no loose hat beside it and scuttles"
+- What is stored, the row for `crew` (line 110).
+  Old: "| `crew` | The creatures on the mat in row order, at most five: each one's kind and the hats on its head from the bottom up, each hat named by its hole in `tile`. |"
+  New: "| `crew` | The creatures on the mat in row order, at most five: each one's kind, the round spot it stands on, and the hats on its head from the bottom up, each hat named by its hole in `tile`. |"
+- The scenes, the first showing (line 142).
+  Old: "(once ever; cause: the very first crew walks in)"
+  New: "(once ever; cause: the game is opened for the first time, with the first crew standing on its spots)"
+- The scenes, one leaves (line 145).
+  Old: "the hat comes down on its empty spot"
+  New: "the hat comes down beside its empty spot"
+- The scenes, the parade (line 146).
+  Old: "march once round the mat"
+  New: "march once round the row of round spots"
+- The scenes, the parade (line 146).
+  Old: "come to rest in a row on the far side, facing the arch"
+  New: "come to rest on their own round spots, looking towards the arch"
+- How the next one starts (line 151).
+  Old: "The first creature of the next crew stands waiting in the arch"
+  New: "A creature of the next crew stands waiting in the arch, one whose kind is not on the mat with the finished crew where there is one"
+- How the next one starts (line 151).
+  Old: "the finished crew walks out"
+  New: "the finished crew walks off to the left"
 
 **Findings not yet fixed**
 
@@ -104,7 +130,7 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### How the game meets the quality bar
 
-The builder measured no frame rate, on any machine, and no physical iPad: its machine draws in software. Frame rates are the lead's, on a real graphics card.
+The builder's machine draws in software and measured no frame rate. The lead measured on a real graphics card and reported: 60 a second in Chrome at six times CPU throttle, 59.6 at twenty times throttle and four times the pixels, 59.9 in WebKit, 18 draw calls. The build, the pixel ratio and whether a physical iPad was measured are the lead's to state.
 
 - **Alive at idle.** Each creature breathes at its own tempo, sways, blinks at moments of its own, looks at the hats while bare and up at its hat when it has one, and a bare one pats its head now and then. A loose hat scuttles in a small circle. All of it runs on the attended clock and stops when the game rests.
 - **Motion and sound on every touch.** A hat, a creature, the arch and the bare floor each answer when the finger lands, and each of the grid's thirty cells has its own motion and its own sequence of sounds, by test (`game.test.ts`). Sound is synthesized from numbers in `voices.ts`.
@@ -112,14 +138,14 @@ The builder measured no frame rate, on any machine, and no physical iPad: its ma
 - **Kid-clear.** At most five creatures and five hats, each with its own outline and colour, on a floor of a hue no piece uses; the hats lie on the lightest, plainest surface; the hats themselves stay plain.
 - **Wordless clarity for the declared age.** No word, letter, numeral or symbol on the kid side; `npm run wordless:check` passes. Everything essential is a tap; a drag is an extra, and a smeared tap still counts as a tap. One want in every scene: bare heads look at the hats and pat themselves; after the parade one creature waits in the arch.
 - **Wordless guidance.** The idle ladder is whole: a thin ring round each thing that can be touched now, then the ghost hand presses one of them once (`guide.ts`), and it shows nothing while there is nothing to do but wait. A cold playtest proxy was run three times on the production build.
-- **60 fps on a mid-range iPad.** Not measured. Built for it: pixel ratio capped at 2, 20 draw calls at the most and about 39,000 triangles in the busiest stretch by a counted test (`frameBudget.test.ts`), no shadow map, no post pass, geometry built once, the loop paused when unattended, four tiers, the grown-up overlay.
+- **60 fps on a mid-range iPad.** Measured by the lead (above). Built for it: pixel ratio capped at 2, 20 draw calls at the most and about 39,000 triangles in the busiest stretch by a counted test (`frameBudget.test.ts`), no shadow map, no post pass, geometry built once, the loop paused when unattended, four tiers, the grown-up overlay.
 - **Nothing passes through anything.** The intersection audit is enforced with no allowance, on eleven moments that start from saved worlds and reach every creature under every hat, towers, loose hats, a carried hat, pulled creatures, each scene and a touch in the middle of each. Model tests hold what it cannot see between samples: no walker meets a stander, the tile, the arch or a loose hat in any scene of any position.
 - **Procedural or committed assets only.** Everything is built in code: no texture file, no font, no clip.
 - **Its own art direction.** Foam play mats; the art guide is the part of `ART.md` under "The look".
 
 ### The learning claim
 
-As the sheet has it, which passed round 4 of its check (checker F, sheet part sha256 `3c3a4654…317e3b`): Hats for All is designed from three California preschool and transitional kindergarten learning foundations, which are foundations published by a state department and not standards (two of them in part), and from four records of guidance by the Dutch curriculum institute, which is guidance and not law (two of them in part). The pairing of one with one is taken from the Dutch record alone. Every record named was `confirmed` when each of the four checkers read the lookup on 2026-10-03; the states are to be read again on the day of the pull request. For a two-year-old in California the game rests on no record. Nothing here says what a child has reached. The records are named by pack id in `ART.md`, "The records", with what is taken and not taken of each.
+As the sheet has it, which passed round 4 of its check (checker F, sheet part sha256 `3c3a4654…317e3b`) and whose records part and claim are unchanged since: Hats for All is designed from three California preschool and transitional kindergarten learning foundations, which are foundations published by a state department and not standards (two of them in part), and from four records of guidance by the Dutch curriculum institute, which is guidance and not law (two of them in part). The pairing of one with one is taken from the Dutch record alone. Every record named was `confirmed` when each of the four checkers read the lookup on 2026-10-03; the states are to be read again on the day of the pull request. For a two-year-old in California the game rests on no record. Nothing here says what a child has reached. The records are named by pack id in `ART.md`, "The records", with what is taken and not taken of each.
 
 ### Defaults taken for the owner
 
