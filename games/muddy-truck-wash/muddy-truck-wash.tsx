@@ -42,6 +42,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const work = new PerfRing()
     // A canvas 2D game reports the sprites and figures it drew as drawCalls; a three.js game reports the renderer's own counts.
     const view = new WashView(canvas, [tipper, fireEngine])
+    view.setTier(governor.settings)
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, ...view.counts }))
     // The toy: one muddy vehicle in the bay with a fixed seed, the three tools, and another vehicle at the door.
     const play = new Play({ def: tipper, surface: arrive(silhouette(tipper), 'dried-patches', 20261003), motion: new TruckMotion(tipper.moves, tipper.wheels.map((wheel) => wheel.x), 11) })
@@ -73,7 +74,6 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       width = w; height = h; dpr = ratio
       // Sizing the backing store wipes the surface, so it is redrawn at once: a resize lands after the frame's
       // own draw, or while the game rests and no frame is coming, and either would leave the surface blank.
-      view.setTier(governor.settings)
       view.resize(w, h, ratio)
       draw()
       return true
@@ -160,7 +160,10 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       view.update(dt, clock.seconds, poses, play.particles, play.hand, play.tool)
       // A tier change is applied ahead of the draw: the pixel ratio now, and whatever else the game's tiers set.
       // The interval just measured belongs to the frame before, so it is judged with that frame's work.
-      const sized = clock.intervalMs > 0 && governor.sample(clock.intervalMs, lastWork) && resize()
+      const stepped = clock.intervalMs > 0 && governor.sample(clock.intervalMs, lastWork)
+      // A tier sets more than the pixel ratio, and on a display of ratio 1 the ratio never changes: apply the rest here.
+      if (stepped) view.setTier(governor.settings)
+      const sized = stepped && resize()
       if (!sized) draw()
       lastWork = performance.now() - start
       work.push(lastWork)

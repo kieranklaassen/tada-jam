@@ -180,4 +180,59 @@ Muddy Truck Wash is designed from four California learning foundations published
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+**Enamel toy cars**, the first look reserved for the game in the ledger of `docs/art-direction.md`. Spiked on the game's real scene before any play; the frame rate at DPR 2 is the lead's to take on a graphics card.
+
+**What a screenshot shows.** Die-cast toy vehicles in hard gloss enamel, chipped to bare zinc on their edges, with black rubber tyres and lamp eyes, standing on dark wet concrete in a tiled wash bay. No wood, no grain, no pale playroom: the floor is nearly black and gives back a faded copy of whatever stands on it.
+
+**Palette.** The vehicles carry the colour and the room stays dark and cool, so figure and ground never meet.
+
+| Thing | Colour |
+| --- | --- |
+| Tipper | enamel yellow `#f5b301`, bed orange `#f06a0c` |
+| Fire engine | enamel red `#d61f2c`, trim cream `#f7ecd2` |
+| Tractor | enamel green `#23a04a` |
+| Mixer | enamel blue `#1668d8` |
+| Chassis, grilles | charcoal `#2b2d33` |
+| Bare metal: bumpers, chips, brackets | zinc `#c4c8cc` |
+| Tyres | rubber black `#16171a` |
+| Lamp eyes | warm white `#fff6dc`, pupils near black |
+| Floor | wet slate, about `#1e232a`, darker on the pad; pad outline worn yellow |
+| Wall | glazed teal tiles, about `#294d54`, dark joints |
+| Yard | packed dirt `#785938`, hedge green beyond |
+| Dried mud | pale tan, cracked |
+| Soft mud | dark wet brown |
+| Foam | white with blue shade; browned where it lifted mud |
+| Sponge, hose, cloth | plain yellow, green with a red nozzle, cream with two red stripes |
+
+**Materials.** One shader, `view/enamel.ts`, draws every solid thing, with a material class per vertex: enamel, rubber, bare metal, lamp glass, soft (sponge, cloth, suds).
+
+- Enamel is lit from a small procedural matcap: soft light from the upper left, one small sharp glint, a softbox, and a horizon of pale sky over dark floor. Upward faces also give back a long light low on the far wall, which slides across them when the body rocks.
+- Chips are bare zinc where noise crosses a threshold on the chamfers only. A flat panel never chips.
+- What the wash leaves is read from the vehicle's coarse grid, written into two 12 by 7 textures and blended with noise so patches have blobby edges: dried mud pale and cracked, soft mud dark and glistening, foam in bubble cells, water as darker paint with beads and thin runs, dull paint under a film of dust, polished paint deeper with two crisp streaks of light across each panel.
+- So the mirror gloss the look is named for is what the child makes: a vehicle rolls in dusty and muddy, and the hard shine appears under the cloth.
+- The floor and the wall are one flat shader each (`view/stage.ts`): speckled slate with a darker wet pad and two streaks of light lying in it, and big glazed tiles. The floor also shows what has landed on it (water, mud, foam) from one small texture.
+
+**Lighting.** None is computed. There are no lights, no shadow maps and no post pass: light is in the matcap, in the wall light the upward faces give back, and in the copy under the floor.
+
+**Shapes.** Everything is built from four die-cast shapes (`shapes.ts`): chamfered boxes, turned cylinders and cones, domes, and rings. Edges are hard with a small chamfer, panels are flat, and nothing is soft except the sponge, the cloth and the suds. One merged body per vehicle, its one moving part, instanced wheels, two pupils and two lids.
+
+**Working objects stay plain.** The sponge, the hose and the cloth have no face, no pattern beyond the cloth's two stripes, and no motion of their own: they hang, follow the finger, and do their work. The mud, foam and water show one thing each. The look and the comedy are on the vehicles, the bay and the floor.
+
+**Motion rules.**
+
+- A vehicle is heavy metal on springs: it dips under the finger, leans away from a push, and rings back. Its tyres flatten under whichever end is pressed.
+- Each vehicle has its own weight, tempo and funniest part (`moves` in its file): no two share spring numbers, breath, blink or the way the part is thrown.
+- Eyes follow the finger while it works, wander by themselves at rest, and blink on their own clock.
+- Nothing eases in without weight: things that fly are thrown, fall under gravity, and land where they stop.
+- No camera shake and no impact pause (a default awaiting the owner). The size of an answer comes from the chain it sets off.
+
+**How each tier keeps the look** (`TIERS` in `config.ts`; tier 0 is full).
+
+| Tier | Pixel ratio | Copy under the floor | Flying things drawn |
+| --- | --- | --- | --- |
+| 0 | 2 | yes | 260 |
+| 1 | 1.5 | yes | 200 |
+| 2 | 1.25 | no | 130 |
+| 3 | 1 | no | 80 |
+
+A tier changes drawing only. Without the copy the pad is still dark, wet and streaked, and the vehicles are unchanged, so the lowest tier still looks like the game.
