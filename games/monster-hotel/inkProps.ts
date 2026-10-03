@@ -240,11 +240,6 @@ function flame(pen: Pen, x: number, y: number, s: number): void {
   pen.line([x, y + 2 * s, x + 0.4 * s, y - 1 * s], 0.7)
 }
 
-/** An icicle, for the ice box's dial. */
-function icicle(pen: Pen, x: number, y: number, s: number): void {
-  pen.shape([x - 2.2 * s, y - 5 * s, x + 2.2 * s, y - 5 * s, x + 0.4 * s, y + 6 * s], { fill: PAPER, w: 1, sharp: true })
-}
-
 /** One of the five things, in a box about 60 across with the origin at its middle. The dial shows flames or icicles, never a numeral. */
 export function drawThing(pen: Pen, kind: InkThingKind, dial: 1 | 2 | 3): void {
   if (kind === 'quilt') {
@@ -304,11 +299,16 @@ export function drawThing(pen: Pen, kind: InkThingKind, dial: 1 | 2 | 3): void {
     for (const [x, len] of [[-21, 7], [-14, 4], [10, 5], [16, 8]] as const) pen.shape([x - 2, -10, x + 2, -10, x + 0.3, -10 + len], { fill: PAPER, w: 0.9, sharp: true })
     pen.line([-26, 27, -26, 30], 2, true)
     pen.line([20, 27, 20, 30], 2, true)
-    // The dial: icicles hanging from a ledge, as many as the step it is set to.
-    pen.ellipse(-3, 8, 14.5, 14.5, { fill: SPOT, w: 1.7 })
-    pen.rect(-13, -1, 20, 3.4, { fill: PAPER, w: 1 })
-    const at = dial === 1 ? [0] : dial === 2 ? [-5, 5] : [-7, 0, 7]
-    at.forEach((x, i) => icicle(pen, -3 + x, 7.4, 1.25 - (i % 2) * 0.3))
+    // The dial: a cap of ice with icicles hanging from it, as many as the step it is set to.
+    const disc: number[] = []
+    for (let i = 0; i < 14; i++) disc.push(-3 + Math.cos((i / 14) * Math.PI * 2) * 14.5, 8 + Math.sin((i / 14) * Math.PI * 2) * 14.5)
+    pen.shape(disc, { fill: SPOT, w: 0 })
+    pen.inside(disc, false, () => {
+      pen.shape([-20, -10, 14, -10, 14, 1, 9, 3, 4, 0, -2, 3, -8, 0, -14, 3, -20, 1], { fill: PAPER, w: 1 })
+      const at = dial === 1 ? [0] : dial === 2 ? [-5.5, 5.5] : [-8, 0, 8]
+      at.forEach((x, i) => pen.shape([-3 + x - 3, 1, -3 + x + 3, 1, -3 + x + 0.4, 18 - (i % 2) * 4], { fill: PAPER, w: 1, sharp: true }))
+    })
+    pen.shape(disc, { w: 1.7 })
     return
   }
   // The alarm clock: two bells and a hammer, two hands, and no numerals on its face.
@@ -347,14 +347,14 @@ export function drawWheel(pen: Pen): void {
   // The night half: hatched close, with the moon and three stars left bare.
   const half = [-27, 0, -25, -10, -19, -19, -10, -25, 0, -27, 10, -25, 19, -19, 25, -10, 27, 0]
   pen.tone(half, 4, -0.4, false)
-  pen.shape([-4, -20, 4, -15, 6, -9, 3, -4, -3, -3, 0, -8, 0, -13], { fill: PAPER, w: 1.2 })
-  for (const [x, y] of [[-15, -9], [13, -16], [16, -6]] as const) pen.ellipse(x, y, 1.6, 1.6, { fill: PAPER, w: 0 })
+  pen.shape([-7, -23, 3, -19, 8, -12, 6, -5, -2, -2, 1, -7, 0, -14], { fill: PAPER, w: 1.2 })
+  for (const [x, y] of [[-17, -8], [15, -16], [18, -6]] as const) pen.ellipse(x, y, 1.8, 1.8, { fill: PAPER, w: 0 })
   pen.line([-27, 0, 27, 0], 1.6, true)
   // The day half: the sun in the spot colour, with its rays in ink.
-  pen.shape([-9, 1, -8, 6, -4, 10, 0, 11, 4, 10, 8, 6, 9, 1], { fill: SPOT, w: 1.4 })
+  pen.shape([-12, 1, -10.5, 7, -6, 12, 0, 13.5, 6, 12, 10.5, 7, 12, 1], { fill: SPOT, w: 1.4 })
   for (let i = 0; i < 7; i++) {
     const a = 0.22 + (i / 6) * (Math.PI - 0.44)
-    pen.line([Math.cos(a) * 12.5, 1 + Math.sin(a) * 12.5, Math.cos(a) * (i % 2 ? 17 : 21), 1 + Math.sin(a) * (i % 2 ? 17 : 21)], 1.1, true)
+    pen.line([Math.cos(a) * 15.5, 1 + Math.sin(a) * 15.5, Math.cos(a) * (i % 2 ? 19 : 23), 1 + Math.sin(a) * (i % 2 ? 19 : 23)], 1.1, true)
   }
   pen.ellipse(0, 0, 3.4, 3.4, { fill: PAPER, w: 1.4 })
   pen.dot(0, 0, 1.1)

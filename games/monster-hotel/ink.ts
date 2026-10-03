@@ -59,9 +59,8 @@ export class InkPage {
   /** The size of the surface in logical pixels, its pixel ratio and the quality tier. Nothing is rebuilt unless one of them changed. */
   resize(width: number, height: number, dpr: number, tier: number): void {
     if (width === this.width && height === this.height && dpr === this.dpr && tier === this.tier) return
-    // The tiles are ruled in device pixels, so they stand until the pixel ratio changes.
-    if (dpr !== this.dpr) this.hatch = null
     this.width = width; this.height = height; this.dpr = dpr; this.tier = tier
+    this.hatch = null
     this.ground = null
     this.page = null
     this.sprites.clear()
@@ -205,8 +204,10 @@ export class InkPage {
     return surface
   }
 
+  /** The hatch tiles, ruled for this page: a little finer where the drawing is small, so tone stays tone. */
   private tiles(): HatchTiles {
-    if (!this.hatch) this.hatch = buildHatch(this.make, this.dpr, 9001)
+    const scale = this.page ? Math.max(0.62, Math.min(1.25, this.page.scale)) : 1
+    if (!this.hatch) this.hatch = buildHatch(this.make, this.dpr * scale, 9001)
     return this.hatch
   }
 

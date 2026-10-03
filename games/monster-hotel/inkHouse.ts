@@ -118,14 +118,14 @@ export function paintHouse(pen: Pen, page: PageLayout, house: House, phase: Phas
   pen.inside(corners(plate), true, () => {
     if (night) {
       // Three depths of night: ruled once to the horizon, crossed over most of the sky, ruled again at the top.
-      const horizon = page.lobby.y
+      const horizon = page.canopy.y
       pen.tone(corners(plate), 2, -0.35)
       pen.tone([plate.x, plate.y, right, plate.y, right, plate.y + (horizon - plate.y) * 0.9, plate.x, plate.y + (horizon - plate.y) * 0.72], 2, 0.85)
       pen.tone([plate.x, plate.y, right, plate.y, right, plate.y + (horizon - plate.y) * 0.5, plate.x, plate.y + (horizon - plate.y) * 0.3], 1, -1.2)
       // Stars are left as bare paper.
       const rng = mulberry32(5099)
       for (let i = 0; i < 26; i++) {
-        const x = plate.x + rng() * plate.w, y = plate.y + rng() * (horizon - plate.y) * 0.8, r = (1.6 + rng() * 2) * u
+        const x = plate.x + rng() * plate.w, y = plate.y + rng() * (horizon - plate.y) * 0.85, r = (1.6 + rng() * 2) * u
         g.fillStyle = PAPER
         g.beginPath()
         g.moveTo(x, y - r * 1.7); g.lineTo(x + r * 0.55, y - r * 0.4); g.lineTo(x + r * 1.5, y); g.lineTo(x + r * 0.55, y + r * 0.4)
@@ -147,7 +147,7 @@ export function paintHouse(pen: Pen, page: PageLayout, house: House, phase: Phas
       const forks = depth > 3 ? 2 : tree() < 0.7 ? 2 : 3
       for (let i = 0; i < forks; i++) branch(ex, ey, angle + (i - (forks - 1) / 2) * (0.75 + tree() * 0.3) + (tree() - 0.5) * 0.3, length * (0.62 + tree() * 0.16), Math.max(0.7 * u, weight * 0.62), depth - 1)
     }
-    branch(page.lobby.x + page.lobby.w * 0.66, page.canopy.y + page.canopy.h, -Math.PI / 2 - 0.08, Math.min(96 * u, (page.lobby.y - plate.y) * 0.3), 7 * u, 5)
+    branch(page.lobby.x + page.lobby.w * 0.64, page.canopy.y + page.canopy.h, -Math.PI / 2 - 0.08, Math.min(92 * u, (page.canopy.y - plate.y) * 0.36), 7 * u, 5)
 
     // The earth under everything, and the street's back wall under the lobby.
     pen.rect(plate.x - 4, ground, page.house.x + page.house.w - plate.x + 4, bottom - ground + 4, { fill: PAPER, tone: 4, angle: -0.6, w: 0 })
@@ -246,13 +246,13 @@ export function paintHouse(pen: Pen, page: PageLayout, house: House, phase: Phas
     pen.box(bay.x, bay.y, bay.w, bay.h, 1.5 * u, 2.5 * u)
   }
 
-  // The lobby: a lean-to with a glass roof, the cupboard on its wall and the front door at its far end.
-  const lobby = page.lobby, canopy = page.canopy, floorY = lobby.y + lobby.h
-  pen.rect(lobby.x, floorY, lobby.w + 4 * u, page.kerb.y - floorY, { fill: PAPER, tone: 4, angle: -0.8, w: 1.5 * u })
-  pen.rect(lobby.x + lobby.w, lobby.y, 4 * u, lobby.h, { fill: PAPER, tone: 4, w: 1.2 * u })
+  // The lobby: a lean-to against the house, with the cupboard as a loft over it under a glass roof.
+  const lobby = page.lobby, canopy = page.canopy, floorY = lobby.y + lobby.h, cb = page.cupboard
+  pen.rect(lobby.x, cb.y, lobby.w + 4 * u, page.kerb.y - cb.y, { fill: PAPER, tone: 4, angle: -0.8, w: 1.5 * u })
   pen.rect(lobby.x, lobby.y, lobby.w, lobby.h, { fill: PAPER, w: 0 })
   pen.tone([lobby.x, lobby.y, lobby.x + lobby.w, lobby.y, lobby.x + lobby.w, lobby.y + 7 * u, lobby.x, lobby.y + 12 * u], 2, -0.5)
   pen.tone([lobby.x, lobby.y, lobby.x + 10 * u, lobby.y, lobby.x + 5 * u, floorY, lobby.x, floorY], 2, -1)
+  pen.tone([lobby.x + lobby.w - 10 * u, lobby.y, lobby.x + lobby.w, lobby.y, lobby.x + lobby.w, floorY, lobby.x + lobby.w - 5 * u, floorY], 1, -1.1)
   // A dado, as in the rooms.
   pen.line([lobby.x, floorY - 60 * u, lobby.x + lobby.w, floorY - 60 * u], 0.9 * u, true)
   pen.line([lobby.x, floorY - 56 * u, lobby.x + lobby.w, floorY - 56 * u], 0.6 * u, true)
@@ -261,18 +261,36 @@ export function paintHouse(pen: Pen, page: PageLayout, house: House, phase: Phas
   pen.line([lobby.x, floorY - 11 * u, lobby.x + lobby.w, floorY - 11 * u], 0.9 * u, true)
   pen.tone([lobby.x, floorY - 11 * u, lobby.x + lobby.w, floorY - 11 * u, lobby.x + lobby.w, floorY, lobby.x, floorY], 1, 0)
   for (let x = lobby.x + 12 * u; x < lobby.x + lobby.w; x += 22 * u) pen.line([x, floorY - 11 * u, x - 6 * u, floorY], 0.6 * u, true)
+  // The board of room keys, one hook for each room, and a lamp on a bracket.
+  local(pen, lobby.x + lobby.w * 0.5, lobby.y + 34 * u, u, false, () => {
+    const hooks = page.rooms.length, across = Math.ceil(hooks / 2), bw = across * 17 + 10
+    pen.rect(-bw / 2, 0, bw, 50, { fill: PAPER, tone: 1, angle: -1.2, w: 1.4 })
+    for (let i = 0; i < hooks; i++) {
+      const x = -bw / 2 + 13.5 + (i % across) * 17, y = 8 + Math.floor(i / across) * 22
+      pen.dot(x, y, 1.2)
+      pen.line([x, y, x + (pen.next() - 0.5), y + 5], 0.8, true)
+      pen.ellipse(x, y + 8, 3, 3, { fill: PAPER, w: 1.1 })
+      pen.line([x, y + 11, x, y + 17, x + 2.5, y + 17], 1.1, true)
+    }
+  })
+  // The ladder up to the loft.
+  const lx = lobby.x + 132 * u
+  pen.tube([lx, floorY - 2 * u, lx + 22 * u, lobby.y - 2 * u], 2.6 * u, PAPER, 1 * u, true)
+  pen.tube([lx + 17 * u, floorY - 2 * u, lx + 39 * u, lobby.y - 2 * u], 2.6 * u, PAPER, 1 * u, true)
+  for (let k = 1; k < 10; k++) {
+    const t = k / 10, x = lx + 22 * u * t, y = floorY - 2 * u - (floorY - lobby.y) * t
+    pen.line([x, y, x + 17 * u, y], 1.5 * u, true)
+  }
+  // The loft: five pigeonholes, each with shadow under its lid, and the trapdoor the ladder goes up to.
+  for (const slot of page.slots) {
+    pen.rect(slot.x - 2 * u, slot.y - 2 * u, slot.w + 4 * u, slot.h + 4 * u, { fill: PAPER, w: 1.3 * u })
+    pen.tone([slot.x - 2 * u, slot.y - 2 * u, slot.x + slot.w + 2 * u, slot.y - 2 * u, slot.x + slot.w + 2 * u, slot.y + 6 * u, slot.x - 2 * u, slot.y + 12 * u], 2, -0.5)
+    pen.tone([slot.x - 2 * u, slot.y - 2 * u, slot.x + 6 * u, slot.y - 2 * u, slot.x + 3 * u, slot.y + slot.h + 2 * u, slot.x - 2 * u, slot.y + slot.h + 2 * u], 1, -1)
+  }
+  pen.rect(lobby.x - 2 * u, cb.y + cb.h - 1 * u, lobby.w + 8 * u, 4 * u, { fill: PAPER, w: 1.2 * u })
   const glass = [canopy.x, canopy.y + canopy.h, canopy.x, canopy.y, canopy.x + canopy.w, canopy.y + canopy.h * 0.55, canopy.x + canopy.w, canopy.y + canopy.h]
   pen.shape(glass, { fill: PAPER, tone: 1, angle: -1.2, w: 1.5 * u, sharp: true })
   for (let x = canopy.x + 26 * u; x < canopy.x + canopy.w; x += 26 * u) pen.line([x, canopy.y + ((x - canopy.x) / canopy.w) * canopy.h * 0.55, x, canopy.y + canopy.h], 0.9 * u, true)
-  // The cupboard: five pigeonholes with their doors folded back.
-  const cb = page.cupboard
-  pen.rect(cb.x - 3 * u, cb.y - 3 * u, cb.w + 6 * u, cb.h + 6 * u, { fill: PAPER, tone: 3, angle: -1.2, w: 1.5 * u })
-  for (const slot of page.slots) {
-    pen.rect(slot.x, slot.y, slot.w, slot.h, { fill: PAPER, w: 1.1 * u })
-    pen.tone([slot.x, slot.y, slot.x + slot.w, slot.y, slot.x + slot.w, slot.y + 7 * u, slot.x, slot.y + 12 * u], 2, -0.5)
-    pen.tone([slot.x, slot.y, slot.x + 7 * u, slot.y, slot.x + 4 * u, slot.y + slot.h, slot.x, slot.y + slot.h], 1, -1)
-  }
-  pen.rect(cb.x - 5 * u, cb.y + cb.h + 3 * u, cb.w + 10 * u, 4 * u, { fill: PAPER, w: 1.2 * u })
   // The front door, glazed, with the night behind it.
   const fd = page.frontDoor
   pen.rect(fd.x - 4 * u, fd.y - 4 * u, fd.w + 8 * u, fd.h + 4 * u, { fill: PAPER, w: 1.4 * u })
@@ -281,7 +299,7 @@ export function paintHouse(pen: Pen, page: PageLayout, house: House, phase: Phas
   pen.line([fd.x + fd.w / 2, fd.y + 8 * u, fd.x + fd.w / 2, fd.y + 8 * u + fd.h * 0.52], 0.9 * u, true)
   pen.rect(fd.x + 6 * u, fd.y + fd.h * 0.52 + 16 * u, fd.w - 12 * u, fd.h * 0.48 - 24 * u, { tone: 2, w: 0.9 * u })
   pen.ellipse(fd.x + 9 * u, fd.y + fd.h * 0.56 + 6 * u, 2.6 * u, 2.6 * u, { fill: PAPER, w: 1.1 * u })
-  local(pen, fd.x - 26 * u, floorY, u, false, () => drawPalm(pen))
+  local(pen, fd.x - 24 * u, floorY, u, false, () => drawPalm(pen))
 
   // The street: the bench and its mountain of luggage, and the coach at the kerb.
   const lg = page.luggage, bn = page.bench, co = page.coach

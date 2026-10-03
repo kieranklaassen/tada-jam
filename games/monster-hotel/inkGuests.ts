@@ -161,7 +161,9 @@ function bat(pen: Pen, pose: Pose): void {
   // The mask on its forehead, strap and all.
   pen.line([-17, -18, -11, -24], 1.4)
   pen.line([17, -18, 11, -24], 1.4)
-  pen.shape([-14, -23, -10, -31, -3, -31, 0, -27, 3, -31, 10, -31, 14, -23, 9, -18, 3, -19, 0, -22, -3, -19, -9, -18], { fill: SPOT, w: 1.6 })
+  pen.shape([-15, -22, -14, -29, -8, -32, 0, -31, 8, -32, 14, -29, 15, -22, 9, -18, 3, -19, 0, -21, -3, -19, -9, -18], { fill: SPOT, w: 1.6 })
+  pen.line([-10, -26, -7, -24, -4, -26], 1)
+  pen.line([4, -26, 7, -24, 10, -26], 1)
   pen.ellipse(-2, -7, 6.5, 5, { fill: PAPER, w: 1.3 })
   pen.dot(-4, -9.5, 1.5)
   pen.shape([-5, -3, -4, 1, -3, -3], { fill: PAPER, w: 0.8, sharp: true })

@@ -4,9 +4,9 @@
 // The page is a framed plate. On it, from the left: the hotel as a cut-away
 // front (the roof with the wheel on its ridge, the rooms, and under them a
 // band of foundations in which the boiler stands under its column), then, at
-// the height of the ground floor, the lobby with the cupboard on its wall and
-// the front door at its far end, and under the lobby the street, where the
-// coach and the bench wait. The drawing is laid out in its own units, scaled
+// the height of the ground floor, the lobby with the front door at its far
+// end, the cupboard in a loft over it, and under the lobby the street, where
+// the coach and the bench wait. The drawing is laid out in its own units, scaled
 // to fit the surface with its aspect kept, and centred.
 
 import { SHAPES, edgesOf, type ShapeId } from './hotel'
@@ -53,9 +53,9 @@ export type PageLayout = {
   /** The band of foundations under the rooms, and the bay of it under each column, where a boiler stands. */
   cellar: Rect
   cellarBays: Rect[]
-  /** The lobby: its inside, level with the ground floor. */
+  /** The lobby: its inside, level with the ground floor. The cupboard is the loft on top of it. */
   lobby: Rect
-  /** The lean-to roof over the lobby. */
+  /** The lean-to roof over the cupboard. */
   canopy: Rect
   frontDoor: Rect
   cupboard: Rect
@@ -153,21 +153,18 @@ export function layoutPage(width: number, height: number, shape: ShapeId): PageL
   // The lobby is level with the ground floor, and the street lies under it, at the height of the cellar.
   const lobbyX = houseX + houseW, lobbyY = roomY(0), lobbyW = lobbyOuter - 4, floorY = lobbyY + U.roomH
   const lobby = at(lobbyX, lobbyY, lobbyW, U.roomH)
-  // What can be touched keeps a finger's width however small the page is drawn, so the cupboard is laid out on the page itself.
-  // On a surface too small for five fingers in a row the slots take what there is.
-  const gap = 4 * s
-  const slot = Math.min(Math.max(TOUCH + 2, U.slot * s), (lobby.w - 20 * s - 6 * gap) / 5, lobby.h - 18 * s - 2 * gap)
-  const cupboardW = 5 * slot + 6 * gap, cupboardH = slot + 2 * gap
-  const cupboard = rect(lobby.x + 10 * s, lobby.y + 9 * s, cupboardW, cupboardH)
+  // The cupboard is a loft over the lobby, so that guests waiting below never stand in front of the things.
+  // What can be touched keeps a finger's width however small the page is drawn, so its slots are laid out on
+  // the page itself; on a surface too small for five fingers in a row they take what there is.
+  const pad = 6 * s, pitch = lobby.w / 5
+  const slot = Math.min(Math.max(TOUCH + 2, U.slot * s), pitch - 2 * s)
+  const cupboard = rect(lobby.x, lobby.y - U.slab * s - slot - 2 * pad, lobby.w, slot + 2 * pad)
   const slots: Rect[] = []
-  for (let i = 0; i < 5; i++) slots.push(rect(cupboard.x + gap + i * (slot + gap), cupboard.y + gap, slot, slot))
-  // The front door stands at the far end, clear of the cupboard: beside it where there is room, under it where there is not.
-  const doorX = ox + (lobbyX + lobbyW - 62) * s, doorFoot = oy + floorY * s
-  const doorTop = cupboard.x + cupboard.w + 4 * s > doorX ? Math.max(doorFoot - 122 * s, cupboard.y + cupboard.h + 3 * s) : doorFoot - 122 * s
-  const frontDoor = rect(doorX, doorTop, 52 * s, doorFoot - doorTop)
+  for (let i = 0; i < 5; i++) slots.push(rect(lobby.x + pitch * (i + 0.5) - slot / 2, cupboard.y + pad, slot, slot))
+  const frontDoor = at(lobbyX + lobbyW - 62, floorY - 124, 52, 124)
   const porter = at(lobbyX + 8, floorY - 104, 116, 104)
   const lobbySpots: { x: number; y: number }[] = []
-  const firstSpot = lobbyX + 168, lastSpot = lobbyX + lobbyW - 96
+  const firstSpot = lobbyX + 176, lastSpot = lobbyX + lobbyW - 122
   for (let i = 0; i < 4; i++) lobbySpots.push({ x: ox + (firstSpot + (i * (lastSpot - firstSpot)) / 3) * s, y: oy + (floorY - 3) * s })
 
   const streetY = floorY + U.slab, groundY = cellarY + U.cellar - 6
@@ -195,7 +192,7 @@ export function layoutPage(width: number, height: number, shape: ShapeId): PageL
     cellar: at(houseX, cellarY, houseW, U.cellar),
     cellarBays,
     lobby,
-    canopy: at(lobbyX, lobbyY - U.canopy, lobbyW + 4, U.canopy),
+    canopy: rect(lobby.x, cupboard.y - U.canopy * s, lobby.w + 4 * s, U.canopy * s),
     frontDoor, cupboard, slots, porter, lobbySpots,
     kerb, steps, coach, coachDoor, bench, benchGuest, luggage,
     guest: U.guest * s,

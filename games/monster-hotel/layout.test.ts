@@ -84,7 +84,12 @@ describe('the page layout', () => {
       expect(overlap(page.kerb, page.lobby)).toBe(false)
       expect(overlap(page.kerb, page.cellar)).toBe(false)
       page.slots.forEach((a, i) => page.slots.forEach((b, j) => { if (i < j) expect(overlap(a, b)).toBe(false) }))
-      for (const slot of page.slots) expect(inside(slot, page.lobby)).toBe(true)
+      for (const slot of page.slots) expect(inside(slot, page.cupboard)).toBe(true)
+      // Nobody waiting in the lobby stands in front of the things: the cupboard is over it.
+      expect(overlap(page.cupboard, page.lobby)).toBe(false)
+      expect(overlap(page.cupboard, page.house)).toBe(false)
+      expect(page.cupboard.y + page.cupboard.h).toBeLessThanOrEqual(page.lobby.y)
+      expect(overlap(page.canopy, page.cupboard)).toBe(false)
       expect(overlap(page.coach, page.benchGuest)).toBe(false)
       expect(overlap(page.cupboard, page.frontDoor)).toBe(false)
     }
