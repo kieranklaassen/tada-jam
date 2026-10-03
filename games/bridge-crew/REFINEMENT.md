@@ -3,17 +3,19 @@
 
 ## Status
 
-- Stage: sheet, with the look spike and the rules of run 1 on top of it, as the brief asked. No toy and no game yet. Run 1 ended here, as the brief says.
-- Sheet: written in full, not yet checked. It stands at commit `1c88806`; sheet part sha256 `2d06cb50dbc9d4d94335dec066c15fb43b4fa56f933b9eb1ba18c48069caff19`. It was first pushed whole at `0a96fd5` (sha256 `362aa271…ce9d4`); two sentences were changed since, both to match what the model does: the arch under "The representation" and the cell Pin by Take off in the grid.
-- Rules: written against the sheet at `0a96fd5` before its check, at this builder's own risk (guide, step 3), and they agree with the sheet at `1c88806`. A finding under the representation, the mechanic questions, the error, the designed order or the records reopens them.
-- Look in use: first reserved choice, Blueprint and balsa. The Mount shows the spike at load from a fixed seed with nothing playable behind it (`spike.ts`). Stills were taken here on the software renderer only (layout, silhouettes, colour). The frame rate is the lead's to take.
-- Renderer: canvas 2D with the game's own solver (`frame.ts`), as the brief suggests. matter.js is not used.
-- The guide and the cloud page did not differ on anything this run met.
-- Open: sheet ready for check, round 1
+- Stage: sheet, with the look spike and the rules of run 1 on top of it. No toy and no game yet. Run 2 did one thing: it took in the first check of the sheet.
+- Sheet check, round 1 (checker: B): open, 14 findings, read against the sheet with sha256 `362aa271…ce9d4` (commit `0a96fd5`). All fourteen replacements are pasted as written, at commit `b7c2270`. No finding was refused.
+- Sheet now: commit `b7c2270`; sheet part sha256 `1f16834cfe9dda1ce186d942147b549720540d94a2e081d8c3f196c678c740a9`.
+- For the next checker: one sentence of the sheet differs from both the text round 1 read and its replacements, and no finding covers it. Under "The representation" the arch now reads that sticks pinned in a curve carry by squeeze and that a curve of three or more keeps its shape only when posts tie it to the deck. I changed it at `1c88806`, after `0a96fd5`, because the model finds a bare arch of three pinned sticks not held (a test says so). My other change at `1c88806`, to the cell Pin by Take off, is gone: the checker's row stands there.
+- Rules: brought into line with the pasted text at `86e1e7a` and `c35bf5c` (findings 2, 4, 5, 6, 7, 8, 10 and 11 touched rules; 1, 3, 9, 12, 13 and 14 are text only). What changed: a voice for each of the thirty cells; a part can hang loose at one end and a pin put back holds it again; one ring at most; runs on a sheet taken back from the rack never count; the near bank holds a list of vehicles; hats are saved with the sheet; the trolley stands, rides under the plank or hangs from a pin; an idea not yet shown is shown at the end of the crossing.
+- Look in use: first reserved choice, Blueprint and balsa. The Mount shows the spike at load from a fixed seed with nothing playable behind it (`spike.ts`). Stills were taken here on the software renderer only. The frame rate is the lead's to take.
+- Renderer: canvas 2D with the game's own solver (`frame.ts`). matter.js is not used.
+- The guide and the cloud page did not differ on anything these runs met.
+- Open: sheet ready for check, round 2
 
 What is open besides the check:
 
-- **Waiting for the lead:** the checker's report; the template commit from the canvas pilot; the commit that holds `symbols.ts` to start from; the frame rate of the spike; a registry row for the look when it is accepted (a request, not made here).
+- **Waiting for the lead:** the round 2 check; the template commit from the canvas pilot; the commit that holds `symbols.ts` to start from; the frame rate of the spike; a registry row for the look when it is accepted (a request, not made here).
 - **Not built, by the brief:** the toy, the Mount's real drawing and touch, the scenes as beat lists on `scene.ts`, what the idle ladder shows, the secrets, every numeral.
 - **Findings not fixed:**
   - Only the first variant of each position has a bridge in the tests that crosses it (`bridges.fixture.ts`). Variants two and three are laid out and checked for shape, not yet for a crossing.
@@ -70,7 +72,7 @@ So far there is a still scene and the rules. Each line says what exists.
 
 ### The learning claim
 
-As the sheet has it at `1c88806`, read through the lookup on 2026-10-03: designed from five California State Board-adopted science standards on engineering design (`us-ca 3-5-ETS1-2`, `3-5-ETS1-3`, `MS-ETS1-2`, `MS-ETS1-3`, `MS-ETS1-4`; all confirmed) and from four goals of SLO's curriculum guidance (`nl ojw/nattech/3/01/fase2`, `3/02/fase2`, `3/01/fase3`, `3/08/fase3`; guidance, not law; all confirmed) and the Dutch legal core goal 45 of 2006 (still in force; an end-of-primary goal; confirmed). The check states are to be read again on the day of the pull request. No attainment claim.
+As the sheet has it at `b7c2270`, read through the lookup on 2026-10-03: designed from five California State Board-adopted science standards on engineering design (`us-ca 3-5-ETS1-2`, `us-ca 3-5-ETS1-3`, `us-ca MS-ETS1-2`, `us-ca MS-ETS1-3`, `us-ca MS-ETS1-4`; all confirmed), and from four goals of SLO's curriculum guidance for fase 2 and fase 3 (`nl ojw/nattech/3/01/fase2`, `nl ojw/nattech/3/02/fase2`, `nl ojw/nattech/3/01/fase3`, `nl ojw/nattech/3/08/fase3`; guidance, not law; all confirmed) and the Dutch legal core goal 45 of 2006 (`nl 45`; still in force; an end-of-primary goal; confirmed). From the California standards it takes the loop of fair test, failure, improvement and comparison, and it does not teach structures on their authority. The plank on edge standing for the profile is the game's own reading, beyond the Dutch records. The check states are to be read again on the day of the pull request. No attainment claim.
 
 ### Defaults taken for the owner
 
@@ -87,3 +89,4 @@ As the sheet has it at `1c88806`, read through the lookup on 2026-10-03: designe
 - "Is the shape held?" is the hard part. Solve with a tiny stiffness added everywhere and a small fixed nudge both ways: whatever moves by cells and not by hundredths is not held. Leave those parts out and solve again.
 - The model corrected the builder more than once: a post above a hinge with threads down to the banks cannot hold it (the threads would have to push); a beam balanced on one prop lifts its far end, so a thread there goes slack. Write the fixture bridges before trusting a design in the sheet.
 - Keep one bridge per position in a fixture and cross it in a test. It caught kits that could not span their own gap.
+- The check asked for a stored thing behind every "stays" in the sheet (a hat, a loose end, a parked vehicle). Write the saved-state table last and walk every such word against it before asking for the check.
