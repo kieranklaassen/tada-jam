@@ -39,14 +39,14 @@ Whatever is being made lies on the peel, a flat wooden shovel that is also the k
 
 | | Put it on the peel | Push it with the finger | Carry it to the warm nook | Carry it into the oven | Hand it over at the hatch |
 | --- | --- | --- | --- | --- | --- |
-| **Flour** | A heap slumps out with a soft hiss and a white puff; the badger sneezes. | Furrows in the dust, and a cloud at each quick stroke. | Nothing changes: warm dust. The badger peers at it and shrugs. | Comes out toasted brown with a wisp of smoke, and is still dust. | The customer sneezes a white cloud and comes out of it white all over. |
-| **Water** | A puddle spreads to the rim with a gurgle and drips off the edge. | Splashes and rings, each with a plip. | A thin curl of steam. Still water. | A long hiss, a cloud of steam out of the door, and the peel comes back dry. | The customer is splashed and shakes itself dry. The duck gets in and paddles. |
-| **The bubbly jar** | A blob plops out and burps. | Slimy strings follow the finger and bubbles pop. | Froths up, swells over the rim and burps louder. | Bakes into a thin crisp disc full of holes. | The customer sniffs, and its whole face puckers at the sour. |
-| **Seeds** | They scatter, bounce and roll, ticking. | They skitter away from the finger. | Nothing changes. One seed rolls over. | They toast, crackle and hop on the peel. | The hen's chicks swarm the peel and peck it clean. Anyone else gets a seed stuck in a tooth. |
-| **Dough** | Flour and water under the finger turn from streaky to shaggy to smooth; dropped back on the peel it slaps, squashes and jiggles. | Dents, bulges, folds and stretches (the toy). A push on risen dough knocks the air out with a long sigh. | With the bubbly in it, it swells, domes and wobbles, with small ticking bubbles. Without, it only goes warm and shiny. | Turns gold. What it has become shows when it comes out: crumbly, a brick, or airy. | Raw dough goes gooey: strings stretch from the customer's teeth to the hatch and snap back. The badger loves it. |
-| **A baked bread** | An airy loaf lands with a soft bounce and a sigh; a brick lands with a thunk that makes the peel jump and all the flour hop. | An airy loaf squashes with a wheeze and springs back, crackling; a brick does not give, and the badger knocks on it; a crumbly loaf sheds crumbs. | A curl of steam. It stays warm and stays what it is. | Gold goes dark, and dark goes black with a puff of smoke the badger fans away. | The customer's own reaction to exactly this bread: its shape, its crumb, its crust and its seeds. |
+| **Flour** | A heap slumps out with a soft hiss and a white puff; the badger sneezes. | Furrows part in the dust with a dry scrape, and a cloud puffs up at each quick stroke. | Stays dust: a few grains slide with a faint patter, and the badger peers at it and shrugs. | Comes out toasted brown behind a wisp of smoke, settles with a dry rustle, and is still dust. | The customer sneezes a white cloud and comes out of it white all over. |
+| **Water** | A puddle spreads to the rim with a gurgle and drips off the edge. | Splashes and rings, each with a plip. | A thin curl of steam rises with a faint simmering tick. Still water. | A long hiss, a cloud of steam out of the door, and the peel comes back dry. | The customer is splashed with a slosh and shakes itself dry. The duck gets in and paddles. |
+| **The bubbly jar** | A blob plops out and burps. | Slimy strings follow the finger and bubbles pop. | Froths up, swells over the rim and burps louder. | Bakes into a thin crisp disc full of holes, which pings as it cools. | The customer sniffs, and its whole face puckers at the sour with a drawn-in squeak. |
+| **Seeds** | They scatter, bounce and roll, ticking. | They skitter away from the finger with a quick rattle. | They stay as they are. One seed rolls over with a single tock. | They toast, crackle and hop on the peel. | The hen's chicks swarm the peel and peck it clean with a patter of beaks. Anyone else gets a seed stuck in a tooth and works at it with a click of the tongue. |
+| **Dough** | Flour and water under the finger turn from streaky to shaggy to smooth; dropped back on the peel it slaps, squashes and jiggles. | Dents, bulges, folds and stretches (the toy). A push on risen dough knocks the air out with a long sigh. | With the bubbly in it, it swells, domes and wobbles, with small ticking bubbles. Without, it only goes warm and shiny and slumps a little with a soft squelch. | Turns gold, and the door opens on it with a warm whoosh. What it has become shows and sounds as the peel sets down: a crumbly loaf rustles, a brick clunks, an airy loaf crackles. | Raw dough goes gooey: strings stretch from the customer's teeth to the hatch and snap back with a twang. The badger loves it. |
+| **A baked bread** | An airy loaf lands with a soft bounce and a sigh; a brick lands with a thunk that makes the peel jump and all the flour hop. | An airy loaf squashes with a wheeze and springs back, crackling; a brick does not give, and the badger knocks on it; a crumbly loaf sheds crumbs. | Its crust ticks once as it warms and the air above it shimmers. It stays what it is. | Gold goes dark with a low sizzle, and dark goes black with a pop and a puff of smoke the badger fans away. | The customer's own reaction to exactly this bread: its shape, its crumb, its crust and its seeds, with that customer's own sound. |
 
-More water than flour gives batter, which runs, cannot be shaped, and bakes into a flat pancake. A pour too many runs off the peel: flour lands on the badger, who turns white and shakes it off, and water lands on its feet, and it hops.
+More water than flour gives batter, which runs, cannot be shaped, and bakes into a flat pancake. A pour too many runs off the peel: flour lands on the badger, who turns white and shakes it off, and water lands on its feet, and it hops. Water over a full peel takes a scoop of flour with it, so what is left is wetter.
 
 **New on day 15.** The child bakes on purpose. They know that kneading is what stops a loaf crumbling, that the bubbly and the warm nook together make it rise and neither does alone, and that the oven cannot be undone. They know who wants which bread, make a long dark seeded loaf for two customers at once, and hand the bear a brick only to see what its tooth does.
 
@@ -113,9 +113,9 @@ There is no wrong bread, only a bread this customer does not want. The game runs
 - A tool comes out when the first customer who needs it steps up, the badger shows its use once, and it stays out for good. The nook, the sill and the oven are part of the room from the start.
 - The same order deepens without new content: the opposite want on the same idea (hard and crumbly, airy and hard), then wants combined, then three at once.
 
-**A harder option looks harder, and the child picks it.** Up to two customers or groups wait in the lane outside the window. Two or three animals standing together with their baskets is plainly more to please than one. The child calls in whichever they like by touching it, and may send the one at the hatch back to the lane the same way at any time, without a reaction from it.
+**A harder option looks harder, and the child picks it.** Two customers or groups at most are laid out to wait in the lane outside the window, and one sent back from the hatch waits there with them. Two or three animals standing together with their baskets is plainly more to please than one. The child calls in whichever they like by touching it, and may send the one at the hatch back to the lane the same way at any time, without a reaction from it.
 
-**How the lane is filled.** When a place in the lane is free it is filled by a seeded pick: first from the customers of the current position, otherwise from those of earlier positions, and never an animal that is already at the hatch or in the lane.
+**How the lane is filled.** Whenever fewer than two wait in the lane, a place is filled by a seeded pick: first from the customers of the current position, otherwise from those of earlier positions, and never an animal that is already at the hatch or in the lane. A customer sent back from the hatch rejoins the lane as it is, with the position it was laid out from and its count of breads handed back, so the lane holds three at most, and no pick is made until fewer than two wait again.
 
 **Which customer a new position lays out.** The position moves when a cycle is judged, and those in the lane were laid out before that. So a new position first shows on the customer who joins the lane after the next one is called in: the customer after next.
 
@@ -139,11 +139,12 @@ There is no wrong bread, only a bread this customer does not want. The game runs
 | raw stuff | Flour (0 to 3), water (0 to 3), bubbly (yes or no), seeds (yes or no), work (0 to 12), long (yes or no), rise (0 to 100), and how far the bake has got (0 to 100). |
 | a bread | Its crumb, its shape, its crust and whether it has seeds. |
 | `rack` | Four places, each empty or holding a bread the child put there. |
-| `hatch` | Who is at the hatch (one to three animals), the position they were laid out from, and how many breads they have handed back. |
-| `lane` | Up to two waiting customers or groups, each with the same three things. |
+| `hatch` | Who is at the hatch (nobody, or one to three animals), the position they were laid out from, and how many breads they have handed back. |
+| `lane` | Up to three waiting customers or groups (two laid out by the pick, and one more after a customer is sent back from the hatch), each with the same three things. |
 | `seed` | The state of the seeded stream that fills the lane. |
 
 - A thing in the hand is saved where it came from. An ending's outcome is saved when the ending starts.
+- What the finger leaves on the surface is short-lived and is not saved: the dents, folds and pats of a lump settle out within about a second of the finger lifting, and loose dust and the furrows in it fade over a few seconds of game time. On load the stuff is drawn from its fields alone: dust, a puddle, batter, or a round or long lump at its work, its rise and its bake. Flour or water on the badger or a customer, strings of raw dough, soot on a nose and a loaf on the goat's horn last under two seconds, never change the bread, and are never saved.
 - Rising and baking run on attended game time only, are saved as the two numbers above, and stop at full and stay there. No clock is read.
 - The largest legal state is far under half of 64 KB, and a test says so.
 
@@ -160,7 +161,7 @@ Every customer looks like the bread it wants, so a child can learn the tastes, g
 | The crow | Preens one black wing and holds it out | A dark or black crust | Holds a gold loaf against its wing, then turns its back on it |
 | The hen | Chicks pecking round her feet | Seeds on top. Also loose seeds, with nothing under them | The chicks peck a bare crust, find nothing, and all look up at once |
 | The duck | Slaps its flat feet, bill open | A pancake. Also a puddle, to paddle in | A tall loaf slides off its flat bill |
-| The mole | Small, pale, soft, blinking | An airy, round, gold loaf: soft and pale as itself | A black crust leaves it with a sooty nose, and it sneezes soot |
+| The mole | Small, pale and soft, hugging a round basket lined with pale down and pressing its cheek into it | An airy, round, gold loaf: soft and pale as itself | A black crust leaves it with a sooty nose, and it sneezes soot |
 | The badger (the baker, not a customer) | Its bench and its oven; it stokes, wipes, and tastes | Raw dough, licked off a paw | Coughs a small black cloud at a burnt bread, and eats it anyway |
 
 - A reaction is to the exact thing handed over, starts as the bread arrives, and is as good to watch when it is disgust as when it is delight. No feeling is about the child, and no one thanks, praises, pleads or hurries.
@@ -174,7 +175,7 @@ Three kinds of scene. Each is a list of timed beats on game time, built on `scen
 
 **The showing** (4 to 8 seconds, once for each of the six ideas `dough` to `batter`).
 
-- Cause: the first customer whose want needs an idea not yet shown steps up to the hatch. On a first visit that is the goat, so the badger is already at it when the game opens.
+- Cause: the first customer whose want needs an idea not yet shown steps up to the hatch. On a first visit a customer is already at the hatch when the game opens and the badger is already at the showing: the goat for a visit that starts at `dough`, the dachshund for one that starts at `shapes`. Where a want needs two ideas not yet shown, as the dachshund's does on a first visit at `shapes`, the two showings play one after the other in the designed order, each on the badger's own lump, and any touch ends the one that is playing.
 - Beats: the badger looks at the customer; does the one new act on a small lump of its own at the back of the bench; the lump answers with the change; the badger looks at the child's peel and steps back.
 - Filled in from: which idea it is. It shows the new act only, on the badger's lump, never the bread the customer wants and never on the child's peel.
 - Any touch ends it. It is marked as shown when it starts, so it is never played again.
@@ -186,10 +187,10 @@ Three kinds of scene. Each is a list of timed beats on game time, built on `scen
 - Filled in from: who it is and what the bread is, so it differs with every bread.
 - Any touch skips to the empty hatch. The outcome is saved when the ending starts.
 
-**A secret** (4 to 6 seconds, always from the same combination, never hinted at and never counted).
+**A secret** (4 to 6 seconds, always from the same combination, never hinted at and never counted). The hen's and the duck's end as an ending does: the customer goes off down the lane, the peel is back on the board empty, the hatch stands empty, and that outcome is saved when the secret starts. The badger's leaves nothing behind.
 
-- Loose seeds handed to the hen: the chicks ride the peel back into the bakery.
-- A puddle handed to the duck: it climbs onto the peel and paddles.
+- Loose seeds handed to the hen: the chicks ride the peel back into the bakery, peck it clean, and hop out again after her.
+- A puddle handed to the duck: it climbs onto the peel, paddles, and waddles off down the lane shaking its tail.
 - Flour tipped onto the badger's back: it turns, white all over, and shakes like a wet dog.
 
 What the oven makes, and a bread handed back, are reactions and not scenes: they last under two seconds, run beside the child's touch and block nothing.
@@ -200,25 +201,27 @@ What the oven makes, and a bread handed back, are reactions and not scenes: they
 
 One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
 
-Standings and check states are as the lookup printed them on 2026-10-03. The descriptions are the game's own words.
+Standings and check states are as the lookup printed them on 2026-10-03. The descriptions of the California records are the game's own words or the record's Summary, which is the pack's text. Those of the Dutch records follow the pack's English gloss, which is not an official translation.
 
 ### us-ca
 
-Level: `preschool-tk`. Age mapping: official, as the lookup prints. Sub-bands as printed: at age 4 the earlier range (3 to 4½ years) and the later range (4 to 5½ years) both apply; at age 5 the later range, which runs to five and a half.
-Gap: none printed. At ages 5 and 6 the lookup also returns `kindergarten`, at age 6 `grade-1`, and beside them the `cross-grade` lane, labelled cross-grade. The game is designed from no record of those three lanes.
+Level: `preschool-tk`, which the lookup returns at ages 4 and 5 and not at age 6. Age mapping: official, as the lookup prints. Sub-bands as printed: at age 4 the earlier range (3 to 4½ years) and the later range (4 to 5½ years) both apply; at age 5 the later range, which runs to five and a half.
+Gap: none printed. At age 5 the lookup also returns `kindergarten`; at age 6 it returns `kindergarten` and `grade-1` and no `preschool-tk`; at both ages it returns the `cross-grade` lane beside them, labelled cross-grade. The game is designed from no record of those three lanes.
 
 No record in this jurisdiction at kindergarten, grade 1 or cross-grade carries the game's idea, so for a child past five and a half the game names no California record and nothing in its place.
+
+No California record is named for putting events in an order of time, for food being processed and prepared, or for heat as a thing to discover: those parts are taken from the Dutch records alone, and nothing California is named in their place.
 
 A foundation's code restarts in every domain, so each record is cited by pack id.
 
 - `edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-3` (code 2.3, Science, Strand 2.0): department-published-foundation, confirmed. What the game takes: a child explores with the senses how materials change. In the game the child does something to the stuff and sees and hears that it has changed.
-  Limits taken: the kinds of change in the record are examples: colour, shape, texture and temperature at both ages, with form added at the later age. The game shows colour (cream to gold to black), shape (round, long, risen), texture (dusty, shaggy, smooth, crumbly) and form (dust and water become dough). Temperature cannot be felt on a screen and shows only as steam. The record does not ask for a scientific explanation, and the game gives none. Left open by Limits: which materials and which acts; flour, water, the bubbly and seeds, and pushing, warming and baking, are the game's own choice. Describing and explaining are in the record and not in the game, which is wordless and cannot hear: they are left to the child and whoever sits beside them.
+  Limits taken: the kinds of change in the record are examples: colour, shape, texture and temperature at both ages, with form added at the later age. The game shows colour (cream to gold to black), shape (round, long, risen), texture (dusty, shaggy, smooth, crumbly) and form (dust and water become dough). Temperature cannot be felt on a screen and shows only as steam. The record does not ask for a scientific explanation, and the game gives none. Not in Limits: any material or act. Flour, water, the bubbly and seeds, and pushing, warming and baking, are the game's own choice. Describing and explaining are in the record and not in the game, which is wordless and cannot hear: they are left to the child and whoever sits beside them.
 - `edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-1` (code 2.1, Science, Strand 2.0): department-published-foundation, confirmed. What the game takes: a child explores materials and what they are like. In the game dust, water, dough and bread each look, sound and answer the finger in their own way.
   Limits taken: the properties in the record are examples and not a checklist; it asks for describing, not for explaining why materials differ; it sets no number of materials. The record groups materials as solid or not solid at the earlier age and as solid, liquid or gas at the later age: the game shows a powder, a liquid and solids, names none of them and asks for no sorting. Left open by Limits: the number of materials; four is the game's own choice. Describing is again left to the child.
 - `edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-5` (code 1.5, Science, Strand 1.0): department-published-foundation, confirmed. What the game takes: finding out what will happen by trying it. In the game every act can be tried, and its true result shows at once.
   Limits taken: adult support is stated for the checking at the earlier age and for planning the check at the later age; talking about why a prediction held is only beginning at the later age; no topic is named. The game gives the trying and the result. It does not ask for a prediction or a reason and cannot hear one: saying what will happen is left to the child and whoever sits beside them. Left open by Limits: the topic; bread is the game's own choice.
 - `edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-1` (code 2.1, Approaches to Learning, Strand 2.0): department-published-foundation, confirmed. What the game takes: keeping a few pieces of information in mind and acting on them through a task of several steps. In the game those pieces are what the customer wants, held from the first pour to the hatch.
-  Limits taken: about one or two pieces at the earlier age and about two or three at the later age, as ranges and not examples; adult support is part of both statements. So a single customer has one want, a pair two, a trio or the mole three, and no group has more. The customer stays at the hatch showing its want the whole time, which stands where the record has an adult's support. Left open by Limits: the number of steps and the length of time; up to four acts in one bread, at the child's own pace, is the game's own choice.
+  Limits taken: about one or two pieces at the earlier age and about two or three at the later age, as ranges and not examples; adult support is part of both statements. So a single customer has one want, a pair two, a trio or the mole three, and no group has more. The customer stays at the hatch showing its want the whole time: that is the game's own stand-in for the adult support the record states, and the record names no such cue. Limits gives no length of time beyond short at the earlier age and longer at the later age, and no number of steps; up to four acts in one bread, at the child's own pace, is the game's own choice.
 
 ### nl
 
@@ -226,6 +229,8 @@ Level: `fase-1`. Age mapping: convention, as the lookup prints. Sub-bands as pri
 Gap: none printed. At age 4 the lookup also returns `peuters`, for a child who has only just turned four, and at every age the `einde-po` lane, labelled end-of-primary goals. The game is designed from no record of either.
 
 None of these four is a core goal, so none has a regime. Each describes what a school can offer in fase 1, not what a child must be able to do.
+
+No Dutch record is named for a material changing when something is done to it, or for keeping pieces of information in mind through a task of several steps: those parts are taken from the California foundations alone, and nothing Dutch is named in their place.
 
 - `edu.nl.fase-1.science.objective.13f0a068-94bf-4ccf-9e14-a72369056a80` (`nl ojw/pdm/3/02/fase1`): curriculum-institute-guidance, confirmed. What the game takes: realising that food usually has to be processed and prepared before it is eaten. In the game bread is made from flour and water in front of the child, by the child.
   Limits taken: the statement says "usually", so it leaves room for food eaten as it is, and the game does not say all food is made. Left open by Limits: the food, the kind of preparing and the place; bread, baking and a bakery are the game's own choice.
@@ -240,16 +245,16 @@ Not used: `edu.nl.fase-1.science.objective.f68683c7-1b22-45af-a553-8b704ef5a296`
 
 ### Where the two differ
 
-- **Standing.** The California records are foundations published by a state department. The Dutch records are guidance from the curriculum institute. Neither is a standard or the law, and each is named in its own words.
-- **Age.** The California foundations named here reach to five and a half, and nothing is named for an older child. The Dutch guidance covers the whole band. For a six-year-old the game rests on the Dutch records alone.
+- **Standing.** The California records are foundations published by a state department. The Dutch records are guidance from the curriculum institute. Neither is a standard or the law. Here the game follows neither over the other: each is named in its own words, in the claim and wherever it is cited.
+- **Age.** The California foundations named here reach to five and a half, and nothing California is named for an older child. The Dutch guidance covers the whole band. For a child older than five and a half the game follows the Dutch records alone.
 - **Change.** The California foundation coded 2.3 is about materials changing. The Dutch statement on materials does not say whether changes are meant. The game follows the California foundation in showing changes, and for the Netherlands that part is the game's own choice.
 - **Order.** California has a foundation on holding information in mind through several steps, with stated amounts. The Netherlands has a mathematics goal on ordering events in time, with no amounts. They are different things. The cap of three wants comes from the California record's Limits; the child deciding the order of acts is what the Dutch goal carries.
 - **Food and heat.** The Netherlands has a statement that food is prepared and one that names heat as something to wonder about. The California records named here say nothing of food, and name temperature only as an example of a change. The bakery and its three temperatures follow the Dutch records.
-- **Talk.** The California foundations ask a child to describe, predict or explain. The game is wordless on the kid side and follows them only as far as exploring, trying and seeing.
+- **Talk.** The California foundations ask a child to describe, predict or explain. The Dutch statements named here ask for exploring, discovering, wondering and realising, and none asks for talk. The game is wordless on the kid side, so here it follows the Dutch verbs, and it follows the California foundations only as far as exploring, trying and seeing.
 
 ### The claim
 
-Bread Day is designed from four of California's preschool and transitional kindergarten learning foundations (foundations published by a state department, not standards; each confirmed), which reach to age five and a half, and from four fase 1 goals of the Dutch curriculum institute (guidance, not law; each confirmed). What it takes from them is this and no more: a child does something to a material and sees that it then looks and answers the hand differently; tries an act and finds out what it does; keeps up to three wants in mind through a task of several steps; and decides the order of those steps by doing them. That dough rises, and why, is in no record of either jurisdiction, and neither are mixing and baking as such: the game shows them as changes a child can see. For a child older than five and a half the game is designed from the Dutch guidance alone.
+Bread Day is designed from four of California's preschool and transitional kindergarten learning foundations (foundations published by a state department, not standards; each confirmed), which reach to age five and a half, and from four fase 1 goals of the Dutch curriculum institute (guidance, not law; each confirmed). What it takes from them is this and no more. From both, each in its own records: exploring what materials are like, and finding out what an act does by trying it. From the California foundations alone: seeing that a material has changed after something is done to it, and keeping up to three wants in mind through a task of several steps while the customer goes on showing them. From the Dutch guidance alone: that food is usually prepared before it is eaten, heat as something to discover and wonder about, and putting acts in an order of time by doing them. That dough rises, and why, is in no record of either jurisdiction, and neither are mixing and baking as such: the game shows them as changes a child can see. For a child older than five and a half the game is designed from the Dutch guidance alone, and the parts taken from California alone are then the game's own choice.
 
 ## The look
 
