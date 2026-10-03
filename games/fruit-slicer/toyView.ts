@@ -50,8 +50,16 @@ export function paintPlate(ctx: Ctx, screens: Dots): number {
   ctx.fillStyle = BOARD_EDGE
   ctx.fillRect(BOARD.x + 3, laneTop(0) - 9, BOARD.w - 6, 3)
   for (let slot = 1; slot < SHELF; slot++) ctx.fillRect(SHELF_BOX.x + 3, rowTop(slot) - 1.5, SHELF_BOX.w - 6, 3)
-  inked(ctx, slab(DOG.x + 4, DOG.y + 56, DOG.w - 8, DOG.h - 50, 14), INK, 5)
-  return 9 + SHELF
+  // The dog's way up from under the counter: a dark arch with a pale sill, which the dog looks out of.
+  inked(ctx, (c) => {
+    c.moveTo(DOG.x + 6, DOG.y + DOG.h + 6)
+    c.lineTo(DOG.x + 6, DOG.y + 84)
+    c.arc(DOG.x + DOG.w / 2, DOG.y + 84, DOG.w / 2 - 6, Math.PI, 0)
+    c.lineTo(DOG.x + DOG.w - 6, DOG.y + DOG.h + 6)
+    c.closePath()
+  }, INK, 5)
+  inked(ctx, slab(DOG.x - 6, DOG.y + DOG.h, DOG.w + 12, 14, 5), WHITE, 4)
+  return 10 + SHELF
 }
 
 /** A fruit or a piece: a flat colour, square ends and a thin darker line. A squash lowers it onto its own base; its length never changes. */
@@ -104,7 +112,7 @@ function effects(ctx: Ctx, fx: FxState, wall: boolean): number {
       case 'spatter': {
         // It dries in its last two seconds: smaller, then gone.
         const dry = Math.min(1, (one.life - one.age) / 2)
-        burst(ctx, one.x, one.y, one.r * 0.55 * dry, one.r * 1.5 * dry, 8, one.seed, FLESH[one.fruit], 3)
+        burst(ctx, one.x, one.y, one.r * 0.95 * dry, one.r * 1.5 * dry, 6, one.seed, FLESH[one.fruit], 3)
         break
       }
       case 'burst': {

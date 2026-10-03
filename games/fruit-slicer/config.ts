@@ -6,7 +6,7 @@ import { fruitSlicerManifest } from './manifest'
 // template and a template fix can be copied over them.
 
 /** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+export const BACKDROP = '#f2e8d2'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 

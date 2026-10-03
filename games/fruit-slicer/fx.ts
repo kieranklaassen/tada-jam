@@ -66,13 +66,15 @@ export function spawn(state: FxState, event: ToyEvent): FxState {
   switch (event.kind) {
     case 'cut': {
       const big = Math.min(1, event.length / 2400)
-      next.fx.push({ kind: 'burst', x: event.x, y: event.y, size: 22 + 26 * big, fruit: event.fruit, seed: random() * 1000, age: 0, life: 0.28 })
-      next.fx.push({ kind: 'lines', x: event.x, y: event.y, angle: Math.PI / 2, reach: 70 + 50 * big, age: 0, life: 0.22 })
+      // The burst pops above the piece, clear of the cut itself, which is the thing to be read.
+      next.fx.push({ kind: 'burst', x: event.x, y: event.y - event.h / 2 - 14, size: 16 + 18 * big, fruit: event.fruit, seed: random() * 1000, age: 0, life: 0.28 })
+      next.fx.push({ kind: 'lines', x: event.x, y: event.y - event.h / 2 - 4, angle: Math.PI / 2, reach: 60 + 40 * big, age: 0, life: 0.22 })
       const drops = 4 + Math.round(3 * big)
       for (let i = 0; i < drops; i++) {
         // Most drops go up and on to the wall; a few fall short onto the counter.
         const wall = i % 3 !== 2
-        const vx = (random() - 0.5) * 520
+        // Drops for the wall fan out wide, so the wall is spattered and not blotted in one place.
+        const vx = (random() - 0.5) * (wall ? 1300 : 420)
         const vy = wall ? -(820 + random() * 520) : -(220 + random() * 260)
         next.fx.push({ kind: 'drop', x: event.x, y: event.y - event.h / 2, vx, vy, r: 4 + random() * 5, fruit: event.fruit, wall, age: 0, life: wall ? 0.5 : 0.55 })
       }

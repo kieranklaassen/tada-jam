@@ -113,10 +113,11 @@ function readWorld(raw: Record<string, unknown>, compartments: number, served: b
 
 /**
  * Reads a saved record. Anything that is not this game's record, or was written by a newer version, gives a
- * first visit. Inside a record each field is repaired by itself, and a saved place wins over the child's age.
+ * first visit, whose stream starts from `firstSeed`. Inside a record each field is repaired by itself, and a
+ * saved place wins over the child's age.
  */
-export function deserialize(raw: unknown, childAge: number | null = null): Game {
-  if (!isRecord(raw) || raw.v !== STATE_VERSION) return freshGame(childAge)
+export function deserialize(raw: unknown, childAge: number | null = null, firstSeed = FIRST_SEED): Game {
+  if (!isRecord(raw) || raw.v !== STATE_VERSION) return freshGame(childAge, firstSeed)
   const state = readState(raw, childAge)
   let seed = typeof raw.seed === 'number' ? seedOf(raw.seed) : FIRST_SEED
   const atWindow = readCustomer(raw.window)
