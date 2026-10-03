@@ -22,6 +22,8 @@ export const LAYOUT = {
   wall: { z: -2.7 },
   /** The wet pad of the bay, in x and z. */
   pad: { x0: -3.2, x1: 3.0, z0: -1.9, z1: 2.0 },
+  /** The drain at the front of the pad. */
+  drain: { x: 0.2, z: 1.62 },
   /** Where the yard's dirt begins. */
   yardFrom: 3.3,
 } as const
@@ -102,7 +104,8 @@ export function bayShape(): Shape {
   s.box([0.36, 5.2, 0.36], PAINT.yellow, { at: [post, 2.6, wall + 0.2] }, { bevel: 0.05 })
   for (const y of [0.5, 1.5, 2.5, 3.5, 4.5]) s.box([0.46, 0.4, 0.46], PAINT.charcoal, { at: [post, y, wall + 0.2] }, { bevel: 0.05 })
   // A drain grate at the front of the pad.
-  s.box([1.1, 0.04, 0.5], PAINT.charcoal, { at: [0.2, 0.02, 1.62] }, { bevel: 0.015 })
-  for (let i = -3; i <= 3; i++) s.box([0.07, 0.1, 0.42], PAINT.zinc, { at: [0.2 + i * 0.15, 0.05, 1.62] }, { bevel: 0.01, mat: MAT.metal })
+  const drain = LAYOUT.drain
+  s.box([1.1, 0.04, 0.5], PAINT.charcoal, { at: [drain.x, 0.02, drain.z] }, { bevel: 0.015 })
+  for (let i = -3; i <= 3; i++) s.box([0.07, 0.1, 0.42], PAINT.zinc, { at: [drain.x + i * 0.15, 0.05, drain.z] }, { bevel: 0.01, mat: MAT.metal })
   return s
 }

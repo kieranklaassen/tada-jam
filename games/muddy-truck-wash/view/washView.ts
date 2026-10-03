@@ -119,6 +119,8 @@ export class WashView {
       ;(this.hand.material as THREE.ShaderMaterial).uniforms.uAlpha.value = hint.hand.opacity * 0.9
     }
     this.fx.update(particles, this.particleLimit)
+    // What lies on the floor creeps to the drain and dries, on attended time.
+    this.stage.marks.step(dt)
     this.toolsView.update(dt, seconds, hand, spot, hint.tools, glow)
   }
 
