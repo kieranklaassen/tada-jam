@@ -32,11 +32,46 @@ The manifest band is 4 to 7, and its youngest age, four, governs the design.
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+Six kinds of topping by five things a child can do with them. Every cell looks and sounds different, and the last three columns are also played in each monster's own manner ("The characters and their fixed tastes"), so a cell is never the same twice across customers.
+
+| Kind | Tapped onto the pizza | Baked | Served with too many | Served with too few | Fed to a monster by hand |
+| --- | --- | --- | --- | --- | --- |
+| Pepper | A snappy tick as it lands; it skids a little and stops | Blisters with a hiss | One puff of flame for each extra pepper | The monster fans its open mouth at the pepper tub, one rumble for each missing | It gulps, its cheeks glow and one spark pops out of an ear |
+| Mushroom | A soft thud; the cap bobs once | Shrinks a touch with a squeak | One hiccup for each extra, each with a hop | It sniffs the board like a pig after truffles, one rumble for each missing | It chews slowly and a tiny mushroom pops up on its head, then drops off |
+| Olive | A hollow pop; it rolls a finger-width and stops | Glistens and one goes "tok" | One eye rolls right round for each extra | It peers through an olive-sized ring of its fingers at the tub, one rumble each | It swallows it whole and the lump travels visibly down to its belly |
+| Cheese | A wet slap; it sticks where it lands | Softens its corners with a low bubbling | One cheese string for each extra stretches from mouth to pizza and twangs back | It plucks an imaginary string and looks at the cheese tub, one rumble each | It pulls the piece out into a long string and plays it like a harp |
+| Sock | A flump and a small puff | Steams with a whistle | One stink cloud for each extra; it pinches its nose | It lifts one bare foot and wiggles its toes at the sock tub, one rumble each | It pulls the sock onto an ear, a horn or its nose and wears it |
+| Worm | A springy boing; it wriggles once and lies still | Curls up with a zip | One wriggle for each extra runs down its body and it giggles | It makes its tongue wriggle like a worm towards the tub, one rumble each | It slurps it like spaghetti and the tail flicks its nose |
+
+**The wrong use of each object works and is funny.**
+
+- A piece let go off the pizza bounces and rolls home. A piece fed straight to a monster is the last column.
+- A raw pizza served is tasted: the dough sticks to the monster's tongue, stretches like gum and snaps back, and the monster looks at the oven.
+- A base baked with nothing on it puffs up like a pillow and sinks with a wheeze. A baked pizza baked again makes the oven hiccup and hand it straight back with a puff.
+- A kind the customer cannot stand, put on its pizza, gets that customer's own reaction to it, every time.
+- More than three too many of one kind is one big version: a long roaring flame that leaves a sooty, blinking face, a storm of hiccups, a cloud that hides the monster. The victim is bewildered and never hurt.
+
+**On day 15** the child knows each monster's tastes and plays them on purpose (a pepper for the one who cannot stand heat, a sock for the one who loves them), counts out bigger orders by picking the customer with the bigger card, lays the pieces out as faces and patterns of their own, and has found reactions that only one monster gives to one kind. None of that needs new content: it is six kinds by five actions by five customers (pack: game-design, depth-from-combinations.md; pack: game-design, liveliness-from-causing-and-comedy.md).
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+**The idea.** A number is how many things are in a set, and two sets hold as many as each other when their things pair off one to one with none left over.
+
+**How it appears.** Two sets of the same things lie side by side: the pictured set on the customer's card and the set the child makes on the pizza.
+
+- **One object for every action.** One tap puts out one piece. Nothing puts out two at once and nothing puts out part of one, so the count of taps is the count of pieces, and each landing sounds one step higher than the last.
+- **The picture is of the objects.** The card shows one drawn piece for every piece wanted, in the same shape and colour as the pieces in the tub. It is a picture of the set, never a sign for its size.
+- **The pictured set is laid out to be seen.** Up to five pieces stand in one row. Six to ten stand as a full row of five with the rest in a row beneath, so that seven is seen as five and two. Only the last place in the designed order scatters the picture.
+- **The made set is scattered**, as toppings are, and stays at ten or fewer for any order.
+- **The check is the pairing.** When a pizza is served, the difference between the two sets is acted out one piece at a time ("The error as a consequence"), so the child sees which pieces had no partner.
+
+**Chosen before the game.** The mechanic, the customers and the comedy were built around these two sets. In the table of the game-design pack's research (school skill, representation, mechanic), this is the row for one-to-one counting, one object per action, and the row for patterns seen at a glance, fixed row patterns.
+
+**What stands behind it.** The trial cited for the one-to-one row is of a straight number board, which is a different shape from a set on a plate. So one object per action as used here is school practice without a trial of its own behind it. The row patterns rest on a secondary summary of research on seeing small amounts at a glance. The pack's default is a spoken number word on each object; the game uses a rising note in its place, because no game depends on speech until it has been tried on the owner's iPad.
+
+**Working objects stay plain** (pack: game-design, working-objects-stay-plain.md). Every piece is one flat colour inside one bold outline, told from the others by shape and colour together, all of one size, with no face, no pattern and no motion at rest. The pieces lie on a pale, plain pizza top of a contrasting hue. The look and the comedy go on the customers, the kitchen and the reactions.
+
+**Where the order of object, picture and symbol stops.** At the picture. The band starts below 6, so there is no symbol stage: no numeral ever labels a set (pack: game-design, fade-to-school-symbols.md).
 
 ## The four mechanic questions
 
