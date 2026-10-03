@@ -192,4 +192,25 @@ Wild Hair Salon is designed from comparing two lengths directly. In California i
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Not part of the sheet. Written from the spike of the first reserved look, **wet watercolour**; the still and the frame rate on a real graphics card are the lead's to take, and the owner sees the look at the toy checkpoint.
+
+**The look in one line.** A salon painted in transparent watercolour on cream paper: loose washes that pool dark at their rims and bloom where a second colour was dropped in wet, white paper left around every figure, and a soft pencil line over it all. No tone bands, no ink line, no cast light.
+
+**What carries the look, and what stays plain.**
+
+- *The setting and the characters* are washes: the wall is one big wet wash that stops short of the paper's edge, the floor a warm one, and the mirror, door, bench, chair, faces, poms and mane are each one wash with a pooled rim, one or two blooms and paper grain showing through.
+- *The pieces the child works with* are plain: the cape is one flat cool blue with no bloom and no grain, and the lock, the model, the ribbon and every clipping are flat strips of one strong colour each, straight-sided, of one width, with a pencil line and a slightly darker rim so they read as things to take hold of. The cape's knot is flat and darker for the same reason.
+
+**Palette.** Paper `#fbf7ee`, pencil `#4b4a57`. Wall mint `#cfe6d6` with sky-blue blooms, floor sand `#f0d6a4`, door sea green `#8fc1b2`, wood `#d3a373`, chair coral `#ee7c62`, mirror ochre frame and pale violet glass, rain hats yellow `#f4c531`. The cape is `#aed8ec`, the one large cool flat area, so that every customer's lock, which is warm or strong, stands off it: the lion's lock orange `#e96a2a`, the poodle's rose `#e4588c`. The yak's and the rabbit's are still to be chosen against the same cape.
+
+**Materials.** Everything is paint on paper. A wash is built once from four parts (`wash.ts`): a body with a slightly soft edge, a ring where the pigment pooled, blooms, and grain cut out of it; it is laid on the paper with `multiply`. Before a figure is painted its place is put back to bare paper, as a painter reserves a white, so figures are never muddied by the wall behind them and keep a thin white halo.
+
+**Lighting.** None. There are no shadows, no highlights but a dot of paper in each eye, and no shading that follows a light.
+
+**Motion rules** (for the toy; nothing moves in the spike). A wash never re-blurs or re-blooms while it moves: each piece is painted once into a sprite and moved whole, at its joints, like a paper cut-out. A strip changes length by being drawn again as a flat shape, which needs no wash. Wet things move softly and overshoot a little; the pencil line does not boil.
+
+**How it is built cheaply.** Softness comes from drawing a shape small and scaling it back up, never from a blur per frame and never from the context's `filter`. Every wash is built on the same six scratch sheets. In the spike the whole salon is painted once for each surface size (145 washes and lines) and a frame is one copy of that sheet. On this machine, which draws in software, the one-off painting took about 0.4 s at 2360 by 1640 and 0.13 s at 1180 by 820 in Chromium; that is not a frame rate and says nothing about an iPad.
+
+**Tiers.** `config.ts` still holds the template's four tiers, which lower the pixel ratio only (2, 1.5, 1.25, 1). The salon is painted at the pixel ratio the tier gives, so the lowest tier is the same painting with softer pencil. What else a tier sheds is decided with the toy, when there is motion to measure.
+
+**The registry row** is a request to the lead: Wild Hair Salon, "Wet watercolour: transparent washes with pooled rims and blooms on cream paper, a pencil line, white paper left round every figure; a flat cool-blue cape with flat strips of strong colour as the working pieces", linking this file.
