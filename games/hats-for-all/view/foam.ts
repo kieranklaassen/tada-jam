@@ -15,7 +15,8 @@ const BEVEL = 0.055
  */
 export function slab(shape: THREE.Shape, depth: number, colour: THREE.ColorRepresentation, curveSegments = 10, inset = true): THREE.BufferGeometry {
   const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: depth - 2 * BEVEL, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL, bevelOffset: inset ? -BEVEL : 0, bevelSegments: 2, curveSegments,
+    // The floor's edges are far from the eye and many: one step of bevel is enough there.
+    depth: depth - 2 * BEVEL, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL, bevelOffset: inset ? -BEVEL : 0, bevelSegments: inset ? 2 : 1, curveSegments,
   })
   geometry.translate(0, 0, -depth / 2 + BEVEL)
   return paint(geometry, colour)
