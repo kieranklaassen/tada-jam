@@ -12,7 +12,7 @@ export type Share = { num: number; den: number }
 export type Fruit = 'long' | 'middle' | 'short'
 export const FRUITS: readonly Fruit[] = ['long', 'middle', 'short']
 
-/** The whole length of each fruit, in points. Each divides by 2, 3, 4, 5, 6, 8, 10 and 12, and by twice each of them. */
+/** The whole length of each fruit, in points. Each divides by every part in play (`PARTS`, below), and by twice each of them. */
 export const WHOLE: Readonly<Record<Fruit, number>> = { long: 2400, middle: 1920, short: 1440 }
 
 /** The length of the board, of the rail the tin lies on and of the longest order: twice the short fruit. */
