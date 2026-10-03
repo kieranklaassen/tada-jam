@@ -220,11 +220,15 @@ function features(g: Ctx, puppet: Puppet, look: Look, small: boolean): number {
     g.beginPath()
     for (const side of [-1, 1]) { const e = eye(side); g.moveTo(e.x + r, e.y + blink * 4); g.ellipse(e.x, e.y + blink * 4, r, r * (1 - blink * 0.85), 0, 0, Math.PI * 2) }
     g.fill()
-    g.fillStyle = PAPER
-    g.beginPath()
-    for (const side of [-1, 1]) { const e = eye(side); g.moveTo(e.x - 4 + size * 0.32, e.y - 4); g.arc(e.x - 4, e.y - 4, size * 0.32, 0, Math.PI * 2) }
-    g.fill()
-    drawn += 2
+    drawn++
+    // The dot of paper in each eye; a figure seen small behind the door's pane does without.
+    if (!small) {
+      g.fillStyle = PAPER
+      g.beginPath()
+      for (const side of [-1, 1]) { const e = eye(side); g.moveTo(e.x - 4 + size * 0.32, e.y - 4); g.arc(e.x - 4, e.y - 4, size * 0.32, 0, Math.PI * 2) }
+      g.fill()
+      drawn++
+    }
   } else for (const side of [-1, 1]) { const e = eye(side); pencilled.push([{ x: e.x - 15, y: e.y }, { x: e.x, y: e.y + 7 }, { x: e.x + 15, y: e.y }]) }
   if (small) { lines(g, pencilled, 2.4, 0.9); return drawn + (shut ? 1 : 0) }
   // Brows: the inner end goes up when it wonders and down when it is cross.

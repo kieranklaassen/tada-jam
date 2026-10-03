@@ -44,8 +44,10 @@ type Strip = { root: P; tip: P; half: number }
 /** The hanging strips of one colour that were drawn from a root: one, or its three strands while it is ruffled. */
 function hanging(kept: Recording, fill: string, root: P): Strip[] {
   return kept.shapes
-    .filter((shape) => shape.kind === 'fill' && shape.style === fill && shape.points.length > 3 && Math.hypot(mid(shape.points[0], shape.points[1]).x - root.x, mid(shape.points[0], shape.points[1]).y - root.y) < 2)
-    .map((shape) => ({ root, tip: farthest(root, shape.points), half: Math.hypot(shape.points[1].x - shape.points[0].x, shape.points[1].y - shape.points[0].y) / 2 }))
+    .filter((shape) => shape.kind === 'fill' && shape.style === fill)
+    .flatMap((shape) => shape.parts)
+    .filter((points) => points.length > 3 && Math.hypot(mid(points[0], points[1]).x - root.x, mid(points[0], points[1]).y - root.y) < 2)
+    .map((points) => ({ root, tip: farthest(root, points), half: Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y) / 2 }))
 }
 
 /** How far into each other two faces are, in head widths: nothing or less when they are clear of each other. */

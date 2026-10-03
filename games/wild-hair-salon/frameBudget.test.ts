@@ -20,8 +20,10 @@ const DRAWS = 80
 /** Fresh paintings a frame may make once the first frame is done. */
 const PAINTED = 2
 
+const reached = new Set<string>()
+
 describe('the frame budget', () => {
-  it.each([7, 20261003])('holds on every frame of two customers seen through (seed %i)', (seed) => {
+  it.each([7, 20261003, 3, 11])('holds on every frame of two customers seen through (seed %i)', (seed) => {
     const sprites = new Sprites(blankSheets, W, H, 1)
     const kept: Recording = { shapes: [], stamps: [], texts: 0 }
     const surface = recordingSheet(W, H, kept)
@@ -41,8 +43,9 @@ describe('the frame budget', () => {
       first = false
       if (doing === 'seated') repaintsAtRest = sprites.repaints
     })
-    // The heavy moments happened: every kind of move, both seats, the cape off, a scene cut short, three pairs let in.
-    for (const move of ['lock snipped', 'model pulled', 'ribbon snipped', 'tuft snipped', 'mane ruffled', 'ribbon to a face', 'piece to a face', 'friend sent across', 'friend sent back', 'cape off', 'scene cut by a touch', 'cape on']) expect(done.did).toContain(move)
+    // The heavy moments happened: the moves every seed makes, and three pairs let in. What a seed may miss is checked across them below.
+    for (const move of ['lock snipped', 'model pulled', 'tuft snipped', 'mane ruffled', 'cape on']) expect(done.did).toContain(move)
+    for (const move of done.did) reached.add(move)
     expect(done.did.filter((move) => move === 'door')).toHaveLength(3)
     expect(done.frames).toBeGreaterThan(60 * 60)
     expect(done.play.game!.clippings.length).toBeGreaterThan(0)
@@ -55,5 +58,9 @@ describe('the frame budget', () => {
     // Three customers' manes and a few cuts: a tuft is painted when it is dealt and when it is cut, not as it moves.
     expect(repaintsAtRest).toBeLessThanOrEqual(3 * 9 + 24)
     expect(kept.texts).toBe(0)
+  })
+
+  it('was held, between the seeds, through the ribbon in every place, both seats, a piece on a face and a scene cut short', () => {
+    for (const move of ['ribbon snipped', 'ribbon to the lock', 'ribbon to a face', 'ribbon to the floor', 'piece to a face', 'friend sent across', 'friend sent back', 'cape off', 'scene cut by a touch']) expect(reached).toContain(move)
   })
 })

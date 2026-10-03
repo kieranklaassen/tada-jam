@@ -292,20 +292,17 @@ function door(g: Ctx, sprites: Sprites, play: Play, game: Salon): number {
 function hanging(g: Ctx, root: Point, length: number, strand: Strand, time: number, colour: { fill: string; edge: string }, above: number, kickFrom: number, clipped: boolean): number {
   const half = STRIP_W / 2
   const long = Math.max(6, length * Math.max(0.3, strand.stretch.x))
-  let drawn = 0
   g.fillStyle = colour.fill
   g.strokeStyle = colour.edge
   g.lineWidth = 2
+  // The whole strip is one path, filled once and lined once: where it comes out of the mane, each strand, and the piece past a bend.
+  g.beginPath()
   if (above > 0) {
-    g.beginPath()
     g.moveTo(root.x - half * 0.55, root.y - above)
     g.lineTo(root.x + half * 0.55, root.y - above)
     g.lineTo(root.x + half, root.y + 1)
     g.lineTo(root.x - half, root.y + 1)
     g.closePath()
-    g.fill()
-    g.stroke()
-    drawn += 2
   }
   const strands = strand.flutter > 0 ? 3 : 1
   for (let i = 0; i < strands; i++) {
@@ -316,10 +313,6 @@ function hanging(g: Ctx, root: Point, length: number, strand: Strand, time: numb
     g.save()
     g.translate(root.x, root.y)
     g.rotate(-(strand.swing.x + spread))
-    g.fillStyle = colour.fill
-    g.strokeStyle = colour.edge
-    g.lineWidth = 2
-    g.beginPath()
     g.moveTo(-w, 0)
     g.lineTo(w, 0)
     if (bend) {
@@ -330,26 +323,22 @@ function hanging(g: Ctx, root: Point, length: number, strand: Strand, time: numb
       g.arc(0, first - Math.min(w, first), w, 0, Math.PI)
     }
     g.closePath()
-    g.fill()
-    g.stroke()
-    drawn += 2
     if (bend) {
       // The piece past the other lock's end: the part things happen to.
       const rest = long - first
       g.translate(0, first)
       g.rotate(-(strand.kick.x + Math.sin(time * 9) * 0.05))
-      g.beginPath()
       g.moveTo(-w, 0)
       g.lineTo(w, 0)
       g.lineTo(w, rest - Math.min(w, rest))
       g.arc(0, rest - Math.min(w, rest), w, 0, Math.PI)
       g.closePath()
-      g.fill()
-      g.stroke()
-      drawn += 2
     }
     g.restore()
   }
+  g.fill()
+  g.stroke()
+  let drawn = 2
   if (clipped) drawn += clip(g, root.x, root.y - 12, 0)
   return drawn
 }
