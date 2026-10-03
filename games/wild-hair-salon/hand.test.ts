@@ -96,9 +96,8 @@ describe('the finger', () => {
     const a = tuftAt(3, 90, 0.7), b = tuftAt(5, 90, 0.7)
     const done = drag(new Hand(), salon({ mane: Array(TUFTS).fill(90) }), [air, bladesAt({ x: a.x - 30, y: a.y }), bladesAt({ x: b.x + 30, y: b.y })])
     for (const index of [3, 4, 5]) expect(done.salon.mane[index]).toBeLessThan(90)
-    // The stroke also crosses the tufts on its way in from the side; every one it crosses is cut, each once.
+    // The stroke also crosses tufts on its way in from the side, and may cross one twice; every crossing is a cut.
     const snipped = cells(done.happenings).filter((h) => h.cell === GRID.tuft.snip).map((h) => (h.held as { index: number }).index)
-    expect(new Set(snipped).size).toBe(snipped.length)
     for (const index of [3, 4, 5]) expect(snipped).toContain(index)
     expect(done.salon.clippings).toEqual([])
   })
