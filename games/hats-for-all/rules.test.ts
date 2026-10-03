@@ -119,13 +119,14 @@ describe('a tapped creature', () => {
     expect(placeOf(after, 1)).toEqual({ at: 'head', spot: 4, level: 0 })
   })
 
-  it('calls a loose hat when the tile is empty', () => {
+  it('leaves a loose hat where it is when the tile is empty: the hat waits for its own tap', () => {
     let w = world([1, 2], 1)
     w = dropHat(w, 0, { on: 'floor', spot: 4 }).world
-    expect(placeOf(tapCreature(w, 1).world, 0)).toEqual({ at: 'head', spot: 1, level: 0 })
+    expect(tapCreature(w, 1)).toEqual({ world: w, happened: [{ type: 'noHat', spot: 1 }] })
+    expect(placeOf(tapHat(w, 0).world, 0)).toEqual({ at: 'head', spot: 2, level: 0 })
   })
 
-  it('pats its head when no hat is free, and nothing changes', () => {
+  it('pats its head when no hat is in the tile, and nothing changes', () => {
     const w = tapHat(world([1, 2], 1), 0).world
     const bare = bareSpots(w)[0]
     const { world: after, happened } = tapCreature(w, bare)

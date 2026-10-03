@@ -1,7 +1,7 @@
 import { LADDER } from './config'
 import { MOST, isCreatureKind, isHatKind, type CreatureKind, type HatKind } from './kinds'
 import { FIRST_SEED, layCrew, layFirstCrew } from './layout'
-import { MOST_SLIPS, ready, type Change, type Creature, type Loose, type World } from './rules'
+import { MOST_SLIPS, type Change, type Creature, type Loose, type World } from './rules'
 import { STATE_VERSION, deserialize as readPosition, freshState, type GameState } from './state'
 
 // Everything Hats for All saves (ART.md, "What is stored"): the template's
@@ -79,7 +79,8 @@ export function deserialize(raw: unknown, childAge: number | null = null, ladder
     return { ...base, finished: false, ...laid.world, seed: laid.seed, shown: true }
   }
   // The changes: at most two, each one a coming or a going, and each needs someone to come or to go.
-  let changes: Change[] = Array.isArray(record.changes) ? (record.changes as unknown[]).filter((change): change is Change => change === 'come' || change === 'leave').slice(0, 2) : []
+  // A finished cycle holds none: its crew stays as it is, and the child may still move its hats about.
+  let changes: Change[] = base.finished ? [] : Array.isArray(record.changes) ? (record.changes as unknown[]).filter((change): change is Change => change === 'come' || change === 'leave').slice(0, 2) : []
   const present = kept.crew.map((creature) => creature.kind)
   const guest: CreatureKind | null = isCreatureKind(record.guest) && !present.includes(record.guest) ? record.guest : null
   if (!guest || kept.crew.length >= MOST) changes = changes.filter((change) => change !== 'come')
@@ -87,8 +88,7 @@ export function deserialize(raw: unknown, childAge: number | null = null, ladder
   const leaves = changes.includes('leave')
   const leaver = !leaves ? null : isIndex(record.leaver, MOST) && kept.crew.some((creature) => creature.spot === record.leaver) ? record.leaver : kept.crew[kept.crew.length - 1].spot
   const world: World = { ...kept, changes, guest: changes.includes('come') ? guest : null, leaver, slips: isIndex(record.slips, MOST_SLIPS + 1) ? record.slips : 0 }
-  // A finished cycle is one whose crew is ready. A record that says finished over a crew that is not carries the cycle on.
-  return { ...base, finished: base.finished && ready(world), ...world, seed, shown }
+  return { ...base, ...world, seed, shown }
 }
 
 /** Exactly the saved fields, as plain JSON, and nothing else that may ride on the object. */

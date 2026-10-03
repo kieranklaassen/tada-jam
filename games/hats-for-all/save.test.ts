@@ -107,7 +107,7 @@ describe('the saved state', () => {
     ['a guest of no kind', { guest: 5 }, (read: Saved) => expect([read.changes, read.guest]).toEqual([['leave'], null])],
     ['a leaver who is not on the mat', { leaver: 4 }, (read: Saved) => expect(read.leaver).toBe(3)],
     ['a leaver that is not a spot', { leaver: 'bop' }, (read: Saved) => expect(read.leaver).toBe(3)],
-    ['a finished mark over a crew that is not ready', { finished: true }, (read: Saved) => expect(read.finished).toBe(false)],
+    ['a finished mark over changes still held', { finished: true }, (read: Saved) => expect([read.finished, read.changes, read.guest, read.leaver]).toEqual([true, [], null, null])],
     ['a damaged mark of the first showing', { shown: 'no' }, (read: Saved) => expect(read.shown).toBe(true)],
   ])('repairs %s and keeps the rest', (_, damage, check) => {
     const whole = largest(), read = deserialize({ ...serialize(whole), ...damage })

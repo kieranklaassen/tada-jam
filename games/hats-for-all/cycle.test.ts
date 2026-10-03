@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
-import { beginNext, finishIfReady, markShown, waitingCrew, withWorld } from './cycle'
+import { LEFT_ALONE_S, beginNext, due, finishIfReady, freshPace, markShown, startParade, touched, waited, waitingCrew, withWorld, type Pace } from './cycle'
+import { layCrew } from './layout'
 import { applyChange, bareSpots, changeDue, hatsInTile, ready, tapCreature, tapHat, type World } from './rules'
 import { deserialize, freshSave, serialize, worldOf, type Saved } from './save'
 
@@ -132,5 +133,125 @@ describe('found as left', () => {
     expect(markShown(shown)).toBe(shown)
     // No later crew has a leader who shows it again.
     expect(beginNext(playCycle(shown)).crew.every((creature) => creature.hats.length === 0)).toBe(true)
+  })
+})
+
+/** A little over the wait, so a sum of sixtieths of a second is surely past it. */
+const ALONE = LEFT_ALONE_S + 0.1
+
+/** A child at the glass: taps come `gap` seconds apart, and the game plays whatever falls due in between, frame by frame. */
+function play(start: Saved, taps: ((world: World) => World | null)[], gap: number, after = 0): { saved: Saved; pace: Pace; parades: number } {
+  let saved = start, pace = freshPace(start), parades = 0
+  const wait = (seconds: number): void => {
+    for (let frame = 0; frame < Math.round(seconds * 60); frame++) {
+      pace = waited(pace, 1 / 60)
+      const now = due(saved, pace)
+      if (now === 'change') { saved = withWorld(saved, applyChange(worldOf(saved)).world); pace = touched(pace, saved) }
+      if (now === 'parade') { ({ saved, pace } = startParade(saved, pace)); parades++ }
+    }
+  }
+  for (const tap of taps) {
+    const world = tap(worldOf(saved))
+    if (world) { saved = withWorld(saved, world); pace = touched(pace, saved) }
+    wait(gap)
+  }
+  wait(after)
+  return { saved, pace, parades }
+}
+
+const at = (position: string): Saved => beginNext({ ...playCycle(freshSave(null)), position })
+const everyHat = (saved: Saved) => saved.tile.map((_, hat) => (world: World) => tapHat(world, hat).world)
+
+describe('left alone', () => {
+  it('is what the parade waits for: nothing starts the instant the last head is hatted', () => {
+    const start = at('three-heads')
+    const quick = play(start, everyHat(start), 0.5)
+    expect(ready(worldOf(quick.saved))).toBe(true)
+    expect(quick.parades).toBe(0)
+    expect(quick.saved.finished).toBe(false)
+    const waitedFor = play(start, everyHat(start), 0.5, ALONE)
+    expect(waitedFor.parades).toBe(1)
+    expect(waitedFor.saved.finished).toBe(true)
+  })
+
+  it('means a child who taps every hat cannot finish once a hat is spare, however long they wait after', () => {
+    for (const position of ['spare-hat', 'one-comes', 'spares-and-one-leaves', 'comes-and-goes']) for (let n = 0; n < 12; n++) {
+      const start = { ...at(position), ...layCrew(position, 77 + n * 131).world }
+      const after = play(start, everyHat(start), 1, 10)
+      expect(after.parades, position).toBe(0)
+      expect(after.saved.finished, position).toBe(false)
+      expect(after.saved.loose.length, position).toBeGreaterThan(0)
+    }
+  })
+
+  it('lets the same child finish where there are as many hats as heads', () => {
+    for (const position of ['two-heads', 'three-heads']) {
+      const start = at(position)
+      expect(play(start, everyHat(start), 1, ALONE).saved.finished).toBe(true)
+    }
+  })
+
+  it('at one-leaves needs one tap more, on the tossed hat, and nothing else', () => {
+    const start = at('one-leaves')
+    const tossed = play(start, everyHat(start), 1, ALONE)
+    expect(tossed.saved.crew.length).toBe(2)
+    expect(tossed.saved.loose.length).toBe(1)
+    expect(tossed.parades).toBe(0)
+    const home = play(tossed.saved, [(world) => tapHat(world, world.loose[0].hat).world], 0, ALONE)
+    expect(home.parades).toBe(1)
+    expect(home.saved.finished).toBe(true)
+  })
+
+  it('holds the cycle\'s change back too, until the crew has been left alone', () => {
+    const start = at('one-comes')
+    const careful = (world: World) => carefulTap(world)
+    const busy = play(start, [careful, careful, careful], 0.5)
+    expect(busy.saved.changes).toEqual(['come'])
+    const calm = play(start, [careful, careful, careful], 0.5, ALONE)
+    expect(calm.saved.changes).toEqual([])
+    expect(calm.saved.crew.length).toBe(start.crew.length + 1)
+    expect(calm.parades).toBe(0)
+  })
+})
+
+describe('a finished crew', () => {
+  it('still answers every touch, parades again each time its pairs are set right, and is judged once', () => {
+    const start = at('three-heads')
+    const first = play(start, everyHat(start), 0.5, ALONE)
+    expect(first.saved.position).toBe('one-leaves')
+    // The child takes a hat off the finished crew and gives it back.
+    const off = (world: World) => tapHat(world, world.crew[0].hats[0]).world
+    const unsettled = play(first.saved, [off], 0, 5)
+    expect(unsettled.saved.finished).toBe(true)
+    expect(unsettled.parades).toBe(0)
+    expect(bareSpots(worldOf(unsettled.saved)).length).toBe(1)
+    const again = play(unsettled.saved, [(world) => carefulTap(world)], 0, ALONE)
+    expect(again.parades).toBe(1)
+    expect(again.saved.position).toBe('one-leaves')
+    expect(again.saved.finished).toBe(true)
+    // And once more, every time.
+    const third = play(again.saved, [off, (world) => carefulTap(world)], 0.5, ALONE)
+    expect(third.parades).toBe(1)
+    expect(third.saved.position).toBe('one-leaves')
+  })
+
+  it('does not parade again on load, and is found unsettled if it was left unsettled', () => {
+    const start = at('two-heads')
+    const finished = play(start, everyHat(start), 0.5, ALONE).saved
+    expect(play(putAway(finished), [], 0, 10).parades).toBe(0)
+    const off = withWorld(finished, tapHat(worldOf(finished), finished.crew[0].hats[0]).world)
+    const back = putAway(off)
+    expect(back).toEqual(off)
+    expect(back.finished).toBe(true)
+    expect(bareSpots(worldOf(back)).length).toBe(1)
+    // The waiting crew comes in on the child's touch whatever state the finished crew is in.
+    expect(beginNext(back).finished).toBe(false)
+  })
+
+  it('found mid-wait after a put-away has its first parade then, since it never had one', () => {
+    const start = at('two-heads')
+    const hatted = play(start, everyHat(start), 0.5).saved
+    expect(hatted.finished).toBe(false)
+    expect(play(putAway(hatted), [], 0, ALONE).parades).toBe(1)
   })
 })

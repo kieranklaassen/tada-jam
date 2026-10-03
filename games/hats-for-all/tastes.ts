@@ -30,7 +30,7 @@ export const ACTS: Record<CreatureKind, Record<HatKind, string>> = {
   bop: { cone: 'spins-until-dizzy', brim: 'walks-as-a-hat-with-legs', dome: 'bounces-twice' },
   lanky: { brim: 'stretches-and-struts', dome: 'goes-cross-eyed', cone: 'nods-slowly' },
   flop: { dome: 'flaps-ears-out', cone: 'huffs-it-askew', brim: 'tucks-ears-under' },
-  wig: { dome: 'drums-its-belly', cone: 'pops-it-back-up', brim: 'wobbles-once' },
+  wig: { dome: 'drums-its-belly', cone: 'pops-it-back-up-with-a-belly-bounce', brim: 'wobbles-once' },
   pip: { cone: 'tap-dances', dome: 'runs-a-circle-under-it', brim: 'peeks-from-under' },
 }
 

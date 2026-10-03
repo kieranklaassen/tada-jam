@@ -1,13 +1,66 @@
 import { LADDER } from './config'
 import { layCrew } from './layout'
-import { judge, ready, type World } from './rules'
+import { changeDue, judge, ready, type World } from './rules'
 import { worldOf, type Saved } from './save'
 import { beginCycle, finishCycle } from './state'
 
 // How a cycle ends and the next begins, as changes to the save (ART.md, "The
 // scenes": how a cycle ends, how the next one starts). No renderer and no
 // DOM. The position moves here and nowhere else: once, when the crew is ready
-// and the parade starts, by the template's rule in state.ts.
+// and its first parade starts, by the template's rule in state.ts.
+//
+// Nothing comes the instant the pairs are right. The cycle's change and the
+// parade wait until the crew has been left alone: no touch on a hat or a
+// creature for two seconds of attended game time, while the last reactions
+// play out. It is the game waiting for the child; it shows nothing and
+// hurries nobody. So a child who taps every hat has the spare one out before
+// the crew could set off, and only a child who stops sees the parade.
+
+/** How long the crew must be left alone before a change comes or the parade starts, in seconds of attended game time. */
+export const LEFT_ALONE_S = 2
+
+/**
+ * What the game keeps while it runs and never saves: how long the crew has
+ * been left alone, and whether it has paraded for the pairs as they stand.
+ */
+export type Pace = { quiet: number; paraded: boolean }
+
+/** The pace on load: nothing replays, so a finished crew that is still ready has had its parade. */
+export function freshPace(saved: Saved): Pace {
+  return { quiet: 0, paraded: saved.finished && ready(worldOf(saved)) }
+}
+
+/** The child touched a hat or a creature: the wait starts again, and a crew whose pairs are no longer right may parade again once they are. */
+export function touched(pace: Pace, saved: Saved): Pace {
+  return { quiet: 0, paraded: pace.paraded && ready(worldOf(saved)) }
+}
+
+/** `dt` seconds of attended game time went by with no touch on a hat or a creature. */
+export function waited(pace: Pace, dt: number): Pace {
+  return { ...pace, quiet: pace.quiet + dt }
+}
+
+/**
+ * What is due now: the cycle's next change, the parade, or nothing. Both wait
+ * for the crew to be left alone. A finished crew that the child unsettles and
+ * sets right again parades again, every time.
+ */
+export function due(saved: Saved, pace: Pace): 'change' | 'parade' | null {
+  if (pace.quiet < LEFT_ALONE_S) return null
+  const world = worldOf(saved)
+  if (changeDue(world)) return 'change'
+  return ready(world) && !pace.paraded ? 'parade' : null
+}
+
+/**
+ * The parade starts. The first parade of a cycle judges and finishes it; a
+ * later one, after the child unsettled the finished crew and set it right
+ * again, plays and moves nothing.
+ */
+export function startParade(saved: Saved, pace: Pace, ladder: readonly string[] = LADDER): { saved: Saved; pace: Pace } {
+  if (!ready(worldOf(saved))) return { saved, pace }
+  return { saved: finishIfReady(saved, ladder), pace: { ...pace, paraded: true } }
+}
 
 /** A move or a change happened: the save holds the new world. */
 export function withWorld(saved: Saved, world: World): Saved {

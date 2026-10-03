@@ -52,6 +52,9 @@ type HatAnim = { pose: HatPose; press: Spring; pressed: boolean; flight: Flight 
 type CreatureAnim = { kind: CreatureKind; spot: number; squash: Spring; lean: Spring; hop: Spring; pressed: boolean; gazeX: number; gazeY: number; lookX: number; lookY: number; lookFor: number; pat: number; mouth: number; phase: number }
 
 const LOOSE_Z = ROW_Z + 1.9
+/** A loose hat's circle beside its round spot: how wide, and how fast it goes round, in radians a second. */
+export const LOOSE_CIRCLE = 0.45
+export const LOOSE_TURN = 1.1
 const ease = (t: number): number => t * t * (3 - 2 * t)
 
 export class Toy {
@@ -249,8 +252,9 @@ export class Toy {
       return
     }
     if (place.at === 'loose') {
-      const step = this.time * 3.4 + hat
-      out.x = spotX(place.spot) + 0.8 * Math.sin(this.time * 0.9 + hat * 2.1); out.y = 0.16 * Math.abs(Math.sin(step * Math.PI)); out.z = LOOSE_Z; out.up = 1; out.tilt = 0.14 * Math.sin(step * Math.PI)
+      // It scuttles in a small circle beside its round spot, slowly enough for a small finger to land on it.
+      const step = this.time * 3.4 + hat, round = this.time * LOOSE_TURN + hat * 2.1
+      out.x = spotX(place.spot) + LOOSE_CIRCLE * Math.cos(round); out.y = 0.16 * Math.abs(Math.sin(step * Math.PI)); out.z = LOOSE_Z + LOOSE_CIRCLE * 0.6 * Math.sin(round); out.up = 1; out.tilt = 0.14 * Math.sin(step * Math.PI)
       return
     }
     const creature = this.creature(place.spot)!, wearer = creatureAt(this.world, place.spot)!

@@ -55,7 +55,7 @@ export type Happened =
   | { type: 'bared'; spot: number }
   /** The third hat on one head: the tower falls and every hat of it goes home. */
   | { type: 'towerFell'; spot: number; hats: number[] }
-  /** A bare creature was tapped and no hat is free: it pats its head and looks into the holes. */
+  /** A bare creature was tapped and no hat is in the tile: it pats its head and looks into the holes. */
   | { type: 'noHat'; spot: number }
   /** A hatted creature was tapped: it does its own trick with this hat. */
   | { type: 'trick'; spot: number; hat: number }
@@ -104,7 +104,7 @@ export function off(world: World): number {
   return world.crew.filter((creature) => creature.hats.length !== 1).length + world.loose.length
 }
 
-/** As paired as it can be: no tower, no loose hat, and either no head is bare or no hat is left to give. */
+/** As paired as it can be: no tower, no loose hat, and either every head has exactly one hat or every hat is on a head. */
 export function settled(world: World): boolean {
   if (world.loose.length > 0 || world.crew.some((creature) => creature.hats.length > 1)) return false
   return bareSpots(world).length === 0 || hatsInTile(world).length === 0
@@ -188,16 +188,16 @@ export function tapHat(before: World, hat: number): Outcome {
 }
 
 /**
- * The child taps a creature. A bare one calls the nearest hat that is free,
- * from the tile first and from the floor after that. A hatted one does its
- * trick with the hat it wears.
+ * The child taps a creature. A bare one calls the nearest hat out of the
+ * tile; with no hat in the tile it pats its head and looks into the empty
+ * holes, and a loose hat waits for its own tap. A hatted one does its trick
+ * with the hat it wears.
  */
 export function tapCreature(before: World, spot: number): Outcome {
   const creature = creatureAt(before, spot)
   if (!creature) return { world: before, happened: [] }
   if (creature.hats.length > 0) return { world: before, happened: [{ type: 'trick', spot, hat: creature.hats[creature.hats.length - 1] }] }
-  const near = (hats: number[]) => hats.reduce<number | null>((best, hat) => (best === null || Math.abs(hatX(before, hat) - spotX(spot)) < Math.abs(hatX(before, best) - spotX(spot)) ? hat : best), null)
-  const hat = near(hatsInTile(before)) ?? near(before.loose.map((entry) => entry.hat))
+  const hat = hatsInTile(before).reduce<number | null>((best, one) => (best === null || Math.abs(hatX(before, one) - spotX(spot)) < Math.abs(hatX(before, best) - spotX(spot)) ? one : best), null)
   if (hat === null) return { world: before, happened: [{ type: 'noHat', spot }] }
   const world = copy(before), happened: Happened[] = []
   move(world, hat, { on: 'head', spot }, happened)

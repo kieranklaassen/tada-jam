@@ -61,9 +61,14 @@ describe('the grid', () => {
     // A second hat on a head, a hat on the floor and a third hat on a tower all change the world.
     for (const [object, action] of [['hat-in-tile', 'to-hatted-head'], ['hat-in-tile', 'elsewhere'], ['tower-top', 'to-hatted-head'], ['hat-on-head', 'elsewhere']] as [ObjectKind, Action][]) expect(GRID[object][action].moves).toBe(true)
     const world = everything()
-    // The tower of three falls, every time, and its hats go home.
-    const fell = act(world, 'tower-top', 'to-hatted-head', { hat: 4, to: { on: 'head', spot: 2 } })
-    expect(fell.happened.some((event) => event.type === 'towerFell')).toBe(true)
+    // The top of a tower moved onto a head with one hat: the tower changes heads, and nothing falls.
+    const changed = act(world, 'tower-top', 'to-hatted-head', { hat: 2, to: { on: 'head', spot: 1 } })
+    expect(changed.world.crew.map((creature) => creature.hats)).toEqual([[], [0, 2], [1]])
+    expect(changed.happened.some((event) => event.type === 'towerFell')).toBe(false)
+    // Onto a head that already has two: the tower of three falls, every time, and every hat of it goes home.
+    const fell = act(changed.world, 'tower-top', 'to-hatted-head', { hat: 1, to: { on: 'head', spot: 1 } })
+    expect(fell.happened).toContainEqual({ type: 'towerFell', spot: 1, hats: [0, 2, 1] })
+    expect(fell.world.crew.every((creature) => creature.hats.length === 0)).toBe(true)
     expect(tapHat(fell.world, 1).happened.length).toBeGreaterThan(0)
   })
 })
