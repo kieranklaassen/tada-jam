@@ -384,7 +384,7 @@ export class Look {
     for (let col = 0; col < 4; col++) for (let row = 0; row < 2; row++) if ((col + row) % 2 === 1) ctx.fillRect((col * w) / 4, (row * h) / 2, w / 4, h / 2)
     const crease = (x1: number, y1: number, x2: number, y2: number, dx: number, dy: number) => {
       line(ctx, x1, y1, x2, y2, 'rgba(96, 74, 46, 0.22)', 1.1 * u)
-      line(ctx, x1 + dx, y1 + dy, x2 + dx, y2 + dy, 'rgba(255, 255, 255, 0.6)', 1.3 * u)
+      line(ctx, x1 + dx, y1 + dy, x2 + dx, y2 + dy, 'rgba(255, 255, 255, 0.5)', 1.2 * u)
     }
     for (let col = 1; col < 4; col++) crease((col * w) / 4, 0, (col * w) / 4, h, 1.3 * u, 0)
     crease(0, h / 2, w, h / 2, 0, 1.3 * u)
