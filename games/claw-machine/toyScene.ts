@@ -36,6 +36,7 @@ export function joltOf(events: readonly ToyEvent[]): number {
 /** The picture of the toy at `time` seconds, with `jolt` running from 1 to 0 after something startling. */
 export function toyPicture(box: Toybox, time: number, jolt: number): Picture {
   const claw = box.claw, hub = hubAt(claw)
+  const resting = claw.phase === 'ready' && !claw.following && !claw.dropOnArrival
   const toys: ToyLook[] = [], shadows: Shadow[] = []
   for (const piece of box.pieces) {
     toys.push({ key: piece.key, toy: piece.toy, x: piece.x, y: piece.y, z: piece.z, squash: piece.squash, leanX: piece.leanX, leanZ: piece.leanZ, scale: 1 })
@@ -52,7 +53,12 @@ export function toyPicture(box: Toybox, time: number, jolt: number): Picture {
   return {
     toys: toys.concat(scenery.snacks),
     gobblers: scenery.gobblers,
-    claw: { x: claw.x, z: claw.z, length: claw.length, swingX: claw.swingX, swingZ: claw.swingZ, open: claw.open, squash: claw.squash },
+    // Left alone, the claw is never quite still: the cable sways a hair and the jaws work a little.
+    claw: {
+      x: claw.x, z: claw.z, length: claw.length,
+      swingX: claw.swingX + (resting ? 0.012 * Math.sin(time * 1.3) : 0), swingZ: claw.swingZ + (resting ? 0.008 * Math.sin(time * 0.9 + 1) : 0),
+      open: claw.open + (resting && !box.held ? 0.06 * Math.sin(time * 1.1) : 0), squash: claw.squash,
+    },
     shadows,
   }
 }
