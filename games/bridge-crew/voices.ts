@@ -229,6 +229,9 @@ export function reactVoice(id: string, mood: 'like' | 'dislike' | 'plain'): Voic
   return kept([{ wave: 'triangle', pitch: base, peak: 0.06, attack: 0.02, length: 0.3 }])
 }
 
+/** The barge under the bridge: a long low toot for open water, and a scrape and a plop for a prop in its way. */
+export const bargeHorn = (clear: boolean): VoiceSpec => (clear ? [{ wave: 'sine', pitch: 147, peak: 0.12, attack: 0.08, length: 0.7 }, { wave: 'sine', pitch: 220, peak: 0.06, attack: 0.08, length: 0.6, after: 0.1 }] : [{ wave: 'noise', pitch: 400, slideTo: 250, peak: 0.1, attack: 0.05, length: 0.6 }, { wave: 'sine', pitch: 480, slideTo: 150, peak: 0.1, attack: 0.004, length: 0.13, after: 0.5 }])
+
 /** The bridge goes back as it was built: a soft run of knocks upward. */
 export const restore: VoiceSpec = [0, 1, 2].map((i) => ({ wave: 'triangle' as const, pitch: 300 + 90 * i, peak: 0.06, attack: 0.004, length: 0.09, after: 0.08 * i }))
 

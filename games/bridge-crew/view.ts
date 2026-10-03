@@ -1,11 +1,12 @@
 import { poke, reactPose, waitPose, drivePose, type VehiclePose } from './acts'
 import { showsStrain, strainLook } from './consequence'
 import { chief, chiefModel, roll } from './figures'
+import { barge, compareModels, ideaModel, lineDrawing, spareWeights, tracingSheet, trolley } from './props'
 import { vehicle } from './fleet'
 import type { Game } from './game'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { key, length, samePoint, type Kind, type Part, type Point } from './kit'
-import { ROLL, TRAY, bays, parkAt, rackAt, waitAt } from './layout'
+import { ROLL, TRAY, bays, parkAt, rackAt, tools, waitAt } from './layout'
 import { INK, THICK, pin, stream, string, wood, woodShadow, type Pen, type Wood } from './look'
 import { stringSway } from './motion'
 import { WATER, ends } from './pose'
@@ -237,8 +238,15 @@ export class View {
     pen.lineWidth = Math.max(1.5, cell * 0.05)
     pen.beginPath(); pen.moveTo(cx - cell * 0.7, cy); pen.lineTo(cx + cell * 2.6, cy); pen.stroke()
     pen.globalAlpha = 1
-    chief(pen, cx, cy, cell * 1.1, toy.chief.pose, stream(11))
-    chiefModel(pen, cx + cell * 1.2, cy, cell * 1.1, stream(12))
+    chief(pen, cx, cy, cell * 1.1, toy.chief.pose, stream(11), toy.chiefHat)
+    // The model in front of it: the way that fails and then the idea while it shows the neat way; two models side by
+    // side while it shows the one change; the idea's model once shown; and its own small triangle otherwise.
+    const showing = toy.showing, t = toy.chief.progress
+    const span = (a: number, b: number) => Math.max(0, Math.min(1, (t - a) / (b - a)))
+    if (showing && 'idea' in showing && toy.chief.act === 'shows') ideaModel(pen, showing.idea, cx + cell * 1.25, cy, cell * 1.1, t >= 0.5, span(0.34, 0.46), stream(12))
+    else if (showing && 'differences' in showing) compareModels(pen, showing.differences, cx + cell * 1.2, cy, cell, t >= 0.5, t < 0.5 ? span(0.2, 0.34) : span(0.62, 0.76), stream(12))
+    else if (toy.marginModel) ideaModel(pen, toy.marginModel, cx + cell * 1.25, cy, cell * 1.1, true, 0, stream(12))
+    else chiefModel(pen, cx + cell * 1.2, cy, cell * 1.1, stream(12))
     drawn += 2
 
     if (guidance && guidance.demo !== null) { this.ghost(pen, toy, guidance); drawn++ }
@@ -278,6 +286,18 @@ export class View {
       const [hx, hy] = at2((where.a[0] + where.b[0]) / 2, (where.a[1] + where.b[1]) / 2)
       pen.fillStyle = INK.paper
       pen.beginPath(); pen.moveTo(hx - cell * 0.2, hy - cell * 0.02); pen.lineTo(hx + cell * 0.2, hy - cell * 0.02); pen.lineTo(hx, hy - cell * 0.36); pen.closePath(); pen.fill()
+      drawn++
+    }
+
+    drawn += this.tools(pen, game, glow)
+    // A tracing laid on the board: the traced design as a white line drawing, lying as it would under the same load.
+    if (game.laidTracing !== null && sheet.tracings[game.laidTracing]) { lineDrawing(pen, sheet.tracings[game.laidTracing], game.tracingRest, at2, cell, INK.line, 0.8); drawn++ }
+    // The barge, on a sheet where one passes: moored by the near bank, nosing forward and back, and under the bridge and back while a crossing is shown.
+    if (at.channel) {
+      const passing = show.kind === 'crossing' && game.bargeTook ? Math.sin(Math.PI * show.react) : 0, took = game.bargeTook
+      const bx = at.left[0] + 2 + 0.2 * Math.sin(game.seconds * 0.9) + passing * (at.channel[1] - at.left[0] - 1.5)
+      const scrape = took && took.mood === 'dislike' ? passing : 0
+      barge(pen, ...at2(bx, WATER), cell, 0.05 * Math.sin(game.seconds * 1.7), scrape, took && took.mood === 'dislike' ? Math.min(1, show.react * 2) * (1 - show.arrive) : 0, took ? (took.mood === 'like' ? passing : -passing) : 0)
       drawn++
     }
 
@@ -362,6 +382,55 @@ export class View {
       drawn++
     }
     return drawn
+  }
+
+  /** The two tools beside the tray, and the trolley where it is: in its compartment, in the hand, on the bridge, or falling from it. */
+  private tools(pen: Pen, game: Game, glow: number): number {
+    const { plot } = this, { cell } = plot, at = game.at, sheet = game.save.sheets[game.save.on], hand = game.hand
+    const at2 = (x: number, y: number) => px(plot, x, y)
+    const boxes = tools(at), top = TRAY.top, low = TRAY.top - TRAY.tall
+    // The box: plain ruled lines, the same every frame.
+    pen.strokeStyle = INK.line
+    pen.lineWidth = Math.max(1, cell * 0.035)
+    pen.globalAlpha = 0.85
+    const [x0, y0] = at2(boxes[0].x0, top), [x1, y1] = at2(boxes[1].x1, low), [xm] = at2(boxes[0].x1, 0)
+    pen.strokeRect(x0, y0, x1 - x0, y1 - y0)
+    pen.beginPath(); pen.moveTo(xm, y0 + cell * 0.2); pen.lineTo(xm, y1 - cell * 0.2); pen.stroke()
+    pen.globalAlpha = 1
+    if (glow > 0.01) for (const box of boxes) this.brackets(pen, at2(box.x0 + 0.1, top - 0.1), at2(box.x1 - 0.1, low + 0.1), glow * 0.9)
+
+    // The trolley's compartment: the trolley with its stack while it is at home, and the weights not on it.
+    const cart = game.trolley, carried = hand?.what === 'trolley' && hand.carried ? hand.finger : null
+    const home = at2((boxes[0].x0 + boxes[0].x1) / 2 - 0.25, low + 0.55)
+    spareWeights(pen, ...at2(boxes[0].x0 + 0.45, low + 1.75), cell, 6 - cart.weights)
+    if (carried) trolley(pen, ...at2(carried[0], carried[1] - 0.2), cell, cart.weights, 'tray', 0, stream(31))
+    else if (!cart.at && !game.trolleyFell) trolley(pen, home[0], home[1], cell, cart.weights, 'tray', 0, stream(31))
+    // On the bridge: trundling from where it was set down to where it rests, riding under the plank, or swinging from a pin.
+    const place = game.trolleyPlace()
+    if (place && cart.at && !carried) {
+      const rolled = game.trolleyRolled, e = rolled ? Math.min(1, rolled.since / 0.6) : 1
+      const x = rolled ? rolled.from + (place[0] - rolled.from) * e * e * (3 - 2 * e) : place[0]
+      const how = 'pin' in cart.at ? 'pin' : cart.at.under ? 'under' : 'deck'
+      const rung = game.trolleyRung < RING ? 0.04 * Math.sin(game.trolleyRung * 60) * (1 - game.trolleyRung / RING) : 0
+      trolley(pen, ...at2(x + rung, place[1] + (how === 'deck' ? 0.11 : 0)), cell, cart.weights, how, 0.3 * Math.sin(game.seconds * 2.6), stream(31))
+    }
+    // A part gave under it: it drops into the water where it was, and is back in its compartment.
+    if (game.trolleyFell) {
+      const f = Math.min(1, game.trolleyFell.since / 0.5), from = game.trolleyFell.from
+      if (f < 1) trolley(pen, ...at2(from[0], from[1] + (WATER - from[1]) * f * f), cell, cart.weights, 'tray', 0, stream(31))
+      else this.ring(pen, at2(from[0], WATER), 0.3 + 0.8 * (game.trolleyFell.since - 0.5), Math.max(0, 1 - (game.trolleyFell.since - 0.5) / 0.6))
+    }
+
+    // The tracing paper: the pad at the bottom, and the two tracings kept above it. The one laid on the board is marked.
+    const paper = boxes[1], half = (paper.x1 - paper.x0) / 2
+    const [px0, py0] = at2(paper.x0 + 0.25, low + 0.85)
+    tracingSheet(pen, px0, py0, (half * 2 - 0.5) * cell, cell * 0.6, cell, null)
+    for (const slot of [0, 1] as const) {
+      const [sx, sy] = at2(paper.x0 + slot * half + 0.15, top - 0.15)
+      tracingSheet(pen, sx, sy, (half - 0.3) * cell, cell * 0.95, cell, sheet.tracings[slot] ?? null)
+      if (game.laidTracing === slot) this.brackets(pen, [sx - cell * 0.05, sy - cell * 0.05], [sx + (half - 0.3) * cell + cell * 0.05, sy + cell], 0.95)
+    }
+    return 4
   }
 
   /** A thin white ring: the draughtsman's circle round a point. */

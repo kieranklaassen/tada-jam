@@ -12,8 +12,8 @@ import { groundAt } from './sheet'
 import { isFooting, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, idleShow, type Cue, type Show } from './stage'
 import { RING, Toy } from './toy'
-import { TASTE, VEHICLES, reaction, trainOf } from './vehicles'
-import { chord, creak, give, honk, lay as layVoice, pendulum, pinTick, reactVoice, restore, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
+import { TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
+import { bargeHorn, chord, creak, give, honk, lay as layVoice, pendulum, pinTick, reactVoice, restore, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
 
 // The game on the toy: the vehicles at the two banks, a run over the bridge,
 // the two scenes a run ends in, and the sheets (the roll and the rack). Pure,
@@ -53,6 +53,8 @@ export class Game extends Toy {
   trolleyFell: { from: readonly [number, number]; since: number } | null = null
   /** The showing the chief is giving: the neat way of an idea, or the one change with the two differences that fill its models. */
   showing: { idea: Idea } | { differences: Difference[] } | null = null
+  /** How the barge took the last crossing, on a sheet where one passes underneath: what it does during that crossing's scene. */
+  bargeTook: Reaction | null = null
   /** A hat the chief has plucked off a part and wears until the next sheet is unrolled. Short-lived: not saved. */
   chiefHat = false
   private owed: Idea | null = null
@@ -375,6 +377,7 @@ export class Game extends Toy {
     if (drive.run.ending.kind === 'crossed') {
       show.kind = 'crossing'
       show.reaction = reaction(drive.vehicle, drive.run.ride)
+      this.bargeTook = this.at.channel ? bargeReaction(drive.run.ride) : null
       // Homeward, the vehicle is back at the near bank and nothing is judged; outward, it has crossed.
       this.save = drive.homeward ? sentHome(this.save, drive.vehicle) : crossed(this.save, drive.vehicle, drive.vehicle === 'giraffe-bus' ? drive.run.ride.low[TASTE.bus.headroom - 1] : [])
       this.scene = new Scene(crossingBeats(show, cue))
@@ -409,7 +412,7 @@ export class Game extends Toy {
       this.voices.push(chord(this.bridge.map((part) => layVoice(part.kind, length(part))[0].pitch)))
       this.bridge.forEach((_, index) => { this.rung[index] = 0.2 })
     }
-    if (what === 'react' && this.show.reaction) this.voices.push(reactVoice(drive.vehicle, this.show.reaction.mood))
+    if (what === 'react' && this.show.reaction) this.voices.push(reactVoice(drive.vehicle, this.show.reaction.mood), ...(this.bargeTook ? [bargeHorn(this.bargeTook.mood === 'like')] : []))
     if (what === 'arrive') this.voices.push(unrollVoice(1))
     if (what === 'restore') this.voices.push(restore)
   }

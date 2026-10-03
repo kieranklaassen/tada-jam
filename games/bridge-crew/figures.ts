@@ -93,7 +93,7 @@ export function postVan(pen: Pen, x: number, y: number, cell: number, random: ()
  * pencil behind its ear. It stands with its feet at (x, y), facing the gap,
  * and is drawn from a pose (motion.ts): the view never decides how it moves.
  */
-export function chief(pen: Pen, x: number, y: number, cell: number, pose: ChiefPose, random: () => number) {
+export function chief(pen: Pen, x: number, y: number, cell: number, pose: ChiefPose, random: () => number, hat = false) {
   const tall = cell * 2.5
   x -= pose.hopX * cell; y -= pose.hopY * cell
   const sway = pose.lean * cell * 0.09, bodyX = x - cell * 0.05 + sway, bodyY = y - tall * 0.52 - pose.bob * cell
@@ -149,6 +149,8 @@ export function chief(pen: Pen, x: number, y: number, cell: number, pose: ChiefP
   pen.beginPath(); pen.moveTo(-cell * 0.3, -cell * 0.22); pen.lineTo(cell * 0.12, -cell * 0.12); pen.stroke()
   pen.strokeStyle = INK.steelDark
   pen.beginPath(); pen.moveTo(cell * 0.12, -cell * 0.12); pen.lineTo(cell * 0.17, -cell * 0.108); pen.stroke()
+  // A hat it plucked off a part of the bridge: a paper cone, worn until the next sheet.
+  if (hat) cutOut(pen, cell, INK.paper, () => { pen.moveTo(-cell * 0.2, -cell * 0.1); pen.lineTo(cell * 0.2, -cell * 0.16); pen.lineTo(-cell * 0.04, -cell * 0.5); pen.closePath() })
   pen.restore()
 }
 

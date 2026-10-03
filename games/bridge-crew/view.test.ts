@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { IdleLadder } from './guidance'
 import { stream, type Pen } from './look'
-import { freshSave } from './save'
+import { CROSSINGS } from './bridges.fixture'
+import { tools, waitAt } from './layout'
+import { edit, freshSave } from './save'
 import { Game } from './game'
 import { View, demoMove } from './view'
 import { canPin, isFooting } from './sites'
@@ -93,6 +95,44 @@ describe('the toy drawn', () => {
     expect(drawn).toBeLessThan(160)
     // Counted calls on the canvas, not time: the same on any machine.
     expect(calls.length).toBeLessThan(4000)
+  })
+
+  it('draws every state of the game with real numbers: a run, the give, the crossing, the trolley, a tracing, both showings, the barge', () => {
+    const { pen, calls, canvas } = recording()
+    const view = new View(1, canvas)
+    view.size(1180, 820, 2, true)
+    const ladder = new IdleLadder(0)
+    let clock = 0
+    const play = (game: Game, seconds: number) => {
+      for (let i = 0; i < seconds * 30; i++) {
+        game.step(1 / 30); clock += 1 / 30
+        calls.length = 0
+        view.draw(pen, game, ladder.update(clock))
+        for (const n of numbers(calls)) if (!Number.isFinite(n)) throw new Error(`a number that is not real at ${clock.toFixed(2)} s`)
+      }
+    }
+    const tapAt = (game: Game, x: number, y: number) => { game.press(x, y); game.tap() }
+    const drag = (game: Game, a: [number, number], b: [number, number]) => { game.press(...a); game.dragStart(); game.dragMove(...b); game.dragEnd() }
+    const game = new Game(freshSave(null), stream(5))
+    drag(game, [10, 6], [14, 6])
+    tapAt(game, 8.8, 7); play(game, 8)
+    tapAt(game, 8.8, 7); play(game, 16)
+    expect(game.save.shown).toEqual(['profile'])
+    tapAt(game, 12.5, 6.1); tapAt(game, 12.5, 6.1)
+    const cart = tools(game.at)[0], paper = tools(game.at)[1]
+    game.press((cart.x0 + cart.x1) / 2, -2.3); game.dragStart(); game.dragMove(11, 8); play(game, 0.2); game.dragMove(11, 6.2); game.dragEnd(); play(game, 1.5)
+    expect(game.trolley.at).not.toBeNull()
+    tapAt(game, (paper.x0 + paper.x1) / 2, -3.1); tapAt(game, paper.x0 + 0.4, -1.6); play(game, 0.5)
+    expect(game.laidTracing).toBe(0)
+    for (let i = 0; i < 5; i++) tapAt(game, (cart.x0 + cart.x1) / 2, -2.3)
+    play(game, 1)
+    tapAt(game, 8.8, 7); play(game, 14)
+    expect(game.save.finished).toBe(true)
+    // A sheet where the barge passes, crossed with a prop in its channel.
+    const river = new Game({ ...edit({ ...freshSave(null), sheets: [{ ...freshSave(null).sheets[0], site: 'barge-below' }] }, [...CROSSINGS['barge-below'], { kind: 'tube', a: [14, 1], b: [14, 6], turned: false }]) }, stream(6))
+    tapAt(river, waitAt(river.at, 0) - 0.4, 7); play(river, 16)
+    expect(river.bargeTook).toMatchObject({ mood: 'dislike' })
+    expect(river.show.kind).toBeNull()
   })
 
   it('maps a touch back to the grid it draws on, at any size', () => {
