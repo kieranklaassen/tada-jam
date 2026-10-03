@@ -3,7 +3,7 @@
 
 ## Status
 
-- Stage: sheet. First run, cut from base commit 2a133cc. The design sheet is whole in `ART.md` at commit 1f86ca4; the sha256 of its sheet part (everything above `## The look`) is `eeb23ffe45010fae7ded15546c519005a4e67e7a963a32362302b3e30d5ded19`.
+- Stage: sheet. First run, cut from base commit 2a133cc. The design sheet is whole in `ART.md` at commit aca7545; the sha256 of its sheet part (everything above `## The look`) is `8970639df47bb1e583488fb5883598fda91dde597fd3285b33e42a2b12ae81aa`.
 - Look in use: none yet. Reserved: blue-and-white glazed pottery, the first and only row; its spike comes next.
 - Open: sheet ready for check, round 1
 
