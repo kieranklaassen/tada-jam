@@ -3,12 +3,14 @@
 
 ## Status
 
-- Stage: sheet, waiting for its check. The rules are written as pure modules with tests, at the builder's own risk, against the sheet at commit `e24e096051c073276cc2920f61540190af7ec486`. No toy yet: it waits for the template version the canvas pilot proves.
+- Stage: sheet, waiting for its second check. The rules are written as pure modules with tests, at the builder's own risk, and stand on the sheet at commit `b0bcc0a42cf827c8e47177b1159725850c0e05a8`. No toy yet: it waits for the template version the canvas pilot proves.
 - Look in use: first reserved look, glossy die-cut stickers. The spike is being built; this line is replaced when it is in.
-- Open: sheet ready for check, round 1. The whole sheet is at commit `e24e096051c073276cc2920f61540190af7ec486`; the hash of its sheet part is `0659dc7f45ee29208c1d79cf31059c38e93c2e68155b656e5d1e3e359aa2e3b2`. The sheet part has not been edited since.
-- Open: one rule is in the model and not yet in the sheet, to be added with the round-1 fixes: when the child touches the one who waits while the animal on the table still has a need, the two change places, the animal keeps its need, its step and its count, and nothing is judged (`comeIn` in `clinic.ts`). The sheet's "Coming in" describes only a well animal leaving.
+- Sheet check, round 1 (checker: B): open, 16 findings, on the sheet part with hash `0659dc7f45ee29208c1d79cf31059c38e93c2e68155b656e5d1e3e359aa2e3b2` (commit `e24e096051c073276cc2920f61540190af7ec486`). All sixteen replacements are pasted as written, none refused, and nothing else in the sheet part was changed. The rules and their tests were brought into line in the commit after it.
+- Open: sheet ready for check, round 2. The sheet as it now stands is at commit `b0bcc0a42cf827c8e47177b1159725850c0e05a8`; the hash of its sheet part is `55977cef6da87dafa04f895ade0ae94c2187597008f67cba6a9334e18b475b1e`.
+- For the next checker, one reading the rules took where two pasted sentences meet: the carrier "is laid out ... whenever a patient comes in and no carrier stands there" (the designed order) and is "none when it was touched; laid out again as 'A harder option the child picks' says" (scene 4). The model leaves the carrier's place empty when its patient comes in, and lays the next one out when a patient next comes in from the door. If it should be filled at once, `comeIn` in `clinic.ts` is the one place.
 - Open: the voices as plain numbers, the scenes as beat lists and the motion personalities are not written. They belong to the toy and the game, which this run does not cover.
 - Requests to the lead: a registry row for the look in `docs/art-direction.md` once the owner has seen it. No frozen file needs a change.
+- Answers handled: `docs/build/answers/boo-boo-vet-1.md`.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
@@ -27,8 +29,7 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 - **The look.** Glossy die-cut stickers, to be seen at the toy checkpoint.
 - **The claim rests on people records.** Every feelings record in the pack is about people, and no record says a need can be read in an animal. The sheet says so in its claim. Whether a game may be called "designed from" those records when its patients are animals is the checker's first question and, after that, his.
 - **Speech.** The game would be better with a spoken feeling word that belongs to the animal and sounds when it is touched. The default says no game depends on on-device speech before the trial on his iPad, so the game has none and its animals have invented voices. If the trial goes well, this game is a place to use it.
-- **Sending an animal back.** The guide does not say what happens when a child touches the one who waits while the patient on the table still has a need. The model lets the two change places, with nothing lost and nothing judged, so that no touch is refused. The other reading is that the one who waits only reacts where it sits until the patient is well.
-- **The carrier.** The harder option the child can pick is a shut carrier beside the door, with a patient laid out one position further on. It appears only once all five things are known. It adds a second thing to touch at the door for the oldest children; if that is one thing too many, the game works without it.
+- **The carrier.** The harder option the child can pick is a shut carrier beside the door, with a patient laid out one position further on. It stands there from the fifth position to the one before the last. It adds a second thing to touch at the door for the oldest children; if that is one thing too many, the game works without it.
 
 ## Pass log
 
@@ -59,11 +60,11 @@ So far the game is a design sheet, a look spike and its rules. No line of the ba
 
 ### The learning claim
 
-As the sheet has it (`ART.md`, "The claim"), read through the lookup on 2026-10-03, every record `confirmed` that day. To be read again on the day of the pull request.
+As the sheet has it after its first check (`ART.md`, "The claim"), read through the lookup on 2026-10-03, every record `confirmed` that day. To be read again on the day of the pull request.
 
-Boo-Boo Vet is designed from three California preschool and transitional kindergarten learning foundations (`us-ca 1.3` and `us-ca 1.8` of Social and Emotional Development, and `us-ca 3.7` of Science), which are foundations published by the state's Department of Education and not standards; from two California content standards adopted by the State Board of Education (`us-ca K-LS1-1` and `us-ca K.7.2.M`); and from one statement of California's Transformative Social and Emotional Learning competencies (`us-ca 3.B.1`, cross-grade), which is voluntary guidance. It is also designed from six statements of the Dutch curriculum institute SLO, three bullets of its content cards for peuters, two bullets of its content cards for fase 1, and one of its goals per fase (`nl ojw/pdm/4/05/fase1`), all of which are guidance, not law.
+Boo-Boo Vet is designed from three California preschool and transitional kindergarten learning foundations (`us-ca 1.3` and `us-ca 1.8` of Social and Emotional Development, and `us-ca 3.7` of Science), which are foundations published by the state's Department of Education and not standards; from two California content standards adopted by the State Board of Education (`us-ca K-LS1-1` and `us-ca K.7.2.M`); and from one statement of California's Transformative Social and Emotional Learning competencies (`us-ca 3.B.1`, cross-grade), which is voluntary guidance. It is also designed from six statements of the Dutch curriculum institute SLO, three bullets of its content cards for peuters, two bullets of its content cards for fase 1, and one of its goals per fase (`nl ojw/pdm/4/05/fase1`), all of which are guidance, not law, and say what can be offered, not what a child must know. All twelve records are confirmed in the pack.
 
-What these records carry: reading simple feelings in someone else from outward signs, answering another's need with one caring act, treating animals with care, and that an animal needs water. That an animal's need can be read from how it moves, and four of the game's five pairs of sign and care, are the game's own design and rest on no record. Nothing is said about what any child has learned or can do.
+What the `us-ca` records carry, and all the game is designed from in them: recognising how simple feelings show in another person (`us-ca 1.3`; `us-ca 3.B.1` for the cues of face and body, its naming of the feeling not being in the game); concern for what someone in distress needs and, at the later age only, comforting and helping (`us-ca 1.8`); kind ways of showing another that one cares (`us-ca K.7.2.M`, whose telling is not in the game); and that animals have to be looked after and that water helps them stay alive (`us-ca 3.7`; `us-ca K-LS1-1`, whose describing is not in the game). What the `nl` records carry, and all the game is designed from in them: reading the outward signs of simple feelings in someone else, one basic reaction to another's need, treating animals with care, and that animals need water. Under both headings the feelings records are about people, and none names a state of the body such as a sore paw, cold, an itch or thirst. That a need can be read in an animal from how it moves, the five signs, and the pairing of each sign with its care are the game's own design and rest on no record; of the five cares, only water is named by a record. The game makes no statement about what any child has learned or can do.
 
 Two records were added to the ten the brief named, both for the one pair that a record carries (the one that droops and the bowl of water): `us-ca K-LS1-1` and `nl Groeien, bloeien en voortplanten / 1`. None was dropped. `us-ca 1.1.5.P` is named in the sheet as not used.
 
@@ -80,6 +81,7 @@ From the guide's list, all taken as written:
 
 From the game's own sheet:
 
+- While a need on the table is unmet, a touch on the one who waits or on the carrier brings nobody in: it is answered where the animal stands. This is the checker's reading in round 1, and the rules follow it.
 - A cycle counts as gone well only when no care failed to fit and the patient carried what is new at the stored position; two or more that did not fit is gone badly.
 - Six animals, five needs, five care things, and the tastes in `cast.ts`.
 - The first visit starts at `bowl` for age 3 or no age, `blanket` for 4, `plaster` for 5 and older.
@@ -92,3 +94,5 @@ From the game's own sheet:
 - A position can only be left by a cycle that played what is new at it. Without that rule a child who is good at the first need climbs four steps without ever meeting the second.
 - The wrapper pattern of `state.ts` works, with the caution under Template notes about what `finishCycle` returns.
 - While another worker writes files in the same folder, commit by file name, never by folder.
+- The first check found sixteen things, and eleven of them were places where two sentences of the sheet disagreed with each other or with a stored field: a count of cells, a thing that "lies where it was dropped" against a save that holds a few named spots, a scene filled from a list the save did not hold. Read the sheet once more for nothing but that before asking for the check: for every thing a sentence leaves in the world, name the field that holds it or say it is short-lived.
+- The answer to a check comes as a file on the base branch. Pasting it by script, with an assertion on the first words of each line it replaces, took one pass and left nothing to compare by eye.
