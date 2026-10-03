@@ -58,12 +58,13 @@ export class FireMotion {
   private flat = spring(0)
   private lean = spring(0)
   private spit = new Gesture()
-  private afloat = false
+  private drift = spring(0)
+  private adrift = 0
   private time = 0
 
   settle(gulps: number): void {
     this.flame.value = this.flame.target = FLAME_FOR_GULPS[Math.min(4, gulps)]
-    this.afloat = gulps > THINGS.fire.fill
+    this.drift.value = this.drift.target = gulps > THINGS.fire.fill ? 1 : 0
   }
 
   answer(action: Action, gulps: number, strength = 1): void {
@@ -72,7 +73,7 @@ export class FireMotion {
     if (action === 'gulp' || action === 'fill') kick(this.flat, 9 * strength)
     else if (action === 'sweep') kick(this.lean, 7 * strength)
     else if (action === 'neighbour') this.spit.start()
-    else this.afloat = true
+    else this.drift.target = 1
   }
 
   step(seconds: number): typeof this.pose {
@@ -81,6 +82,7 @@ export class FireMotion {
     stepSpring(this.flame, HEAVY, seconds)
     stepSpring(this.flat, SNAPPY, seconds)
     stepSpring(this.lean, SOFT, seconds)
+    stepSpring(this.drift, { stiffness: 5, damping: 4.4 }, seconds)
     const pose = this.pose
     pose.flame = Math.max(0, this.flame.value)
     pose.flat = Math.max(0, Math.min(0.8, this.flat.value))
@@ -89,11 +91,13 @@ export class FireMotion {
     pose.spit = hump(this.spit.through(0.5))
     pose.wet = this.flame.target === 0
     // Wet logs float off on their own puddle: a slow drift round the ring, bobbing.
-    const drift = this.afloat ? 1 : 0
-    pose.logsX = Math.cos(this.time * 0.6) * 0.16 * drift
-    pose.logsZ = Math.sin(this.time * 0.6) * 0.16 * drift
-    pose.logsY = (0.03 + Math.sin(this.time * 2.1) * 0.02) * drift
-    pose.logsTurn = Math.sin(this.time * 0.4) * 0.5 * drift
+    // They lift off gently and then go round: the drift is counted only while they float.
+    const drift = Math.max(0, Math.min(1, this.drift.value))
+    this.adrift += seconds * drift
+    pose.logsX = Math.sin(this.adrift * 0.6) * 0.16 * drift
+    pose.logsZ = Math.sin(this.adrift * 0.37) * 0.16 * drift
+    pose.logsY = (0.03 + Math.sin(this.adrift * 2.1) * 0.02) * drift
+    pose.logsTurn = Math.sin(this.adrift * 0.4) * 0.5 * drift
     return pose
   }
 }
@@ -280,10 +284,13 @@ export class BoatMotion {
   /** `away` is the way the water pushes: from the truck to the boat, as a unit step. */
   answer(action: Action, gulps: number, afloat: boolean, away: { x: number; z: number }, strength = 1): void {
     this.water.target = Math.min(1, gulps / THINGS.boat.fill)
-    if (action === 'gulp' || action === 'fill') {
+    if (action === 'gulp') {
       kick(this.rock, 4 * strength)
       // The force of the water pushes it a hand's width, and no further than its place allows.
       if (!afloat) this.push(away, 0.22)
+    } else if (action === 'fill') {
+      // Full to the brim: it does not rock or slide any more, it sits down low with a slow heave.
+      kick(this.bob, -7)
     } else if (action === 'too-much') {
       if (afloat) this.sink.start()
       else this.brim.start()
@@ -335,6 +342,12 @@ export class BoatMotion {
 
 // --- The wheel ---------------------------------------------------------------
 
+/** How quickly the wheel slows when let go: its speed falls by this share a second. A push of `speed` turns it `speed / FRICTION` before it stops. */
+export const FRICTION = 1.15
+/** How far one gulp turns it, and how far one flick of a sweep: a third of a turn and half a turn, in radians. */
+export const GULP_TURN = (Math.PI * 2) / 3
+export const HALF_TURN = Math.PI
+
 /** How fast the wheel turns, in radians a second, when it spins steadily and when it spins to a blur. */
 export const SPIN = 7
 export const BLUR = 17
@@ -353,10 +366,10 @@ export class WheelMotion {
   answer(action: Action, gulps: number, strength = 1): void {
     const { fill } = THINGS.wheel
     // A gulp is a part-turn that ticks and slows. A held stream spins it, and more spins it to a blur.
-    if (action === 'gulp') this.speed += 4.2 * strength
+    if (action === 'gulp') this.speed += GULP_TURN * FRICTION * strength
     else if (action === 'fill') this.drive = SPIN
     else if (action === 'too-much') this.drive = BLUR
-    else if (action === 'sweep') this.speed += 6.5
+    else if (action === 'sweep') this.speed = Math.max(this.speed, HALF_TURN * FRICTION)
     else this.speed = Math.max(this.speed, 1.1)
     if (gulps < fill && action !== 'fill' && action !== 'too-much') this.drive = 0
   }
@@ -370,7 +383,7 @@ export class WheelMotion {
     this.time += seconds
     // Driven, it comes up to speed; let go, it slows by its own friction.
     if (this.drive > this.speed) this.speed += (this.drive - this.speed) * Math.min(1, seconds * 3.5)
-    else this.speed *= Math.exp(-seconds * 1.15)
+    else this.speed *= Math.exp(-seconds * FRICTION)
     if (this.speed < 0.02) this.speed = 0
     const pose = this.pose
     pose.angle = (pose.angle + this.speed * seconds) % (Math.PI * 2)

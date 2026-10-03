@@ -132,6 +132,7 @@ export class YardMotion {
   private bellSwing = spring(0)
   private latch = spring(0)
   private steamOwed = 0
+  private fireOut = false
 
   constructor(yard: Yard, seed = 1) {
     this.steam = new Steam(seed * 2654435761)
@@ -147,9 +148,18 @@ export class YardMotion {
     this.patch.settle(gulps('patch'))
     this.boat.settle(gulps('boat'))
     this.wheel.settle()
-    if (this.has.cat >= 0) this.cat.settle(placeOf(yard, this.has.cat), CAT_FACES, yard.things[this.has.cat].spot === 'roof')
-    if (this.has.patch >= 0) this.snail.settle({ x: 0.34, z: 0.22 }, this.snailGoal(yard))
+    const lit = this.has.fire >= 0 && gulps('fire') < THINGS.fire.fill
+    this.fireOut = this.has.fire >= 0 && !lit
+    if (this.has.cat >= 0) {
+      const cat = yard.things[this.has.cat]
+      const inBoat = cat.in !== undefined && yard.things[cat.in]?.kind === 'boat'
+      const marooned = inBoat && afloat(yard, cat.in!)
+      this.cat.settle(placeOf(yard, this.has.cat), cat.spot === 'roof' ? Math.PI : CAT_FACES, cat.spot === 'roof', { warm: lit, marooned, napping: inBoat && !marooned })
+    }
+    if (this.has.patch >= 0) this.snail.settle({ x: 0.34, z: 0.22 }, this.snailGoal(yard), lit ? 0 : SnailMotion.feelersFor(gulps('patch'), channels.snailOut))
     this.latch.value = this.latch.target = 0
+    this.latch.velocity = 0
+    this.bellSwing.value = this.bellSwing.velocity = 0
     this.ownChannels = { ...channels }
   }
 
@@ -163,7 +173,11 @@ export class YardMotion {
       if (action === 'gulp') this.steam.puff(at, 0.9, 2, 0.5 * strength)
       else if (action === 'fill') this.steam.puff(at, 0.7, 9, 1.05)
       else if (action === 'neighbour') this.steam.puff(at, 0.8, 2, 0.28)
-      if (thing.gulps >= THINGS.fire.fill && action !== 'sweep') this.cat.fireOut()
+      // The moment it goes out, and only then, the cat who sat by it is put out too.
+      if (thing.gulps >= THINGS.fire.fill && !this.fireOut) {
+        this.fireOut = true
+        this.cat.fireOut()
+      }
     } else if (thing.kind === 'pool') {
       this.pool.answer(action, thing.gulps, strength)
       this.duck.answer(action, strength)

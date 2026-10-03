@@ -14,7 +14,10 @@ import { Gesture, hump } from './thingMotion'
 import type { Action } from './things'
 
 /** How often each animal's idle move comes round, in beats a second. No two are near each other. */
-export const TEMPO = { cat: 0.42, duck: 1.7, bee: 0.37, snail: 0.16 } as const
+export const TEMPO = { cat: 0.28, duck: 1.7, bee: 0.5, snail: 0.16 } as const
+
+/** How often the duck taps a dry pool floor, in seconds. */
+export const DUCK_TAPS_EVERY_S = 3.1
 
 const smooth = (t: number) => {
   const x = Math.min(1, Math.max(0, t))
@@ -86,10 +89,13 @@ export class CatMotion {
   private inAir = false
 
   /** Puts her where she is, as she was left. `faces` is the way she looks when nothing has her attention. */
-  settle(at: Place, faces: number, onRoof: boolean): void {
+  settle(at: Place, faces: number, onRoof: boolean, as: { warm: boolean; marooned: boolean; napping: boolean } = { warm: false, marooned: false, napping: false }): void {
     this.home = { ...at }
     this.facing = faces
     this.onRoof = onRoof
+    // She is found as she was: eyes shut by a fire or asleep in the boat, bolt upright if she is afloat.
+    this.upright.value = this.upright.target = as.marooned ? 1 : 0
+    this.eyes.value = this.eyes.target = (as.warm || as.napping) && !as.marooned ? 1 : 0
   }
 
   answer(action: Action, strength = 1): void {
@@ -187,7 +193,7 @@ export class DuckMotion {
   private readonly tap = new Gesture()
   private readonly ride = new Gesture()
   private time = 0
-  private sinceTap = 1.2
+  private sinceTap = DUCK_TAPS_EVERY_S - 1.2
 
   /** Water on the pool is water on the duck, which it likes: it wriggles. Too much and it rides out over the rim. */
   answer(action: Action, strength = 1): void {
@@ -208,7 +214,7 @@ export class DuckMotion {
     this.tapped = false
     // On a dry floor it taps the floor with its beak, which it dislikes, every couple of seconds.
     this.sinceTap += seconds
-    if (!afloat && floats <= 0.001 && this.sinceTap > 2.4 && !this.ride.playing(RIDE_S)) {
+    if (!afloat && floats <= 0.001 && this.sinceTap > DUCK_TAPS_EVERY_S && !this.ride.playing(RIDE_S)) {
       this.sinceTap = 0
       this.tap.start()
       this.tapped = true
@@ -300,16 +306,23 @@ export class SnailMotion {
   private time = 0
 
   /** Where it sits on the patch and where it glides to when it comes out, both measured from the middle of the patch. */
-  settle(from: Place, to: Place): void {
+  settle(from: Place, to: Place, feelers = 0): void {
     this.from = { ...from }
     this.to = { ...to }
+    // It is found as it was: its feelers as far out as its patch is wet.
+    this.feelers.value = this.feelers.target = feelers
+  }
+
+  /** How far out its feelers are for the water its patch holds, with no fire near. */
+  static feelersFor(gulps: number, out: number): number {
+    return Math.max(out, Math.min(0.7, gulps * 0.3))
   }
 
   /** `gulps` is the water its patch holds; `heat` is true while a fire burns near, which it dislikes. */
   step(seconds: number, gulps: number, heat: boolean, channels: Channels): typeof this.pose {
     this.time += seconds
     // Its feelers come out a little further with each gulp, and go in from the heat of a fire.
-    this.feelers.target = heat ? 0 : Math.max(channels.snailOut, Math.min(0.7, gulps * 0.3))
+    this.feelers.target = heat ? 0 : SnailMotion.feelersFor(gulps, channels.snailOut)
     stepSpring(this.feelers, { stiffness: 14, damping: 6.5 }, seconds)
     const pose = this.pose
     const far = channels.glide
