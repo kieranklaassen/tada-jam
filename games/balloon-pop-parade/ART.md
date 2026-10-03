@@ -153,23 +153,50 @@ Three short scenes, each a list of timed beats on the template's `scene.ts`, fil
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+Read from the education pack with its lookup on 2026-10-03. What each record asks is given in the pack's Summary or in the game's own words.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels, as the lookup prints them: age 2 is `infant-toddler`, sub-band the indicator for 23 through 36 months; age 3 is `preschool-tk`, sub-band Early (3 to 4 ½ Years); age 4 is `preschool-tk`, Early and Later, where both statements of a foundation apply. Age mapping: official. Gap: none printed.
+
+- `edu.us-ca.infant-toddler.mathematics.objective.cognitive-development-strand-2-0-emergent-mathematical-thinking-2-3` (`us-ca 2.3`, Infant–Toddler Learning and Development Foundations, Cognitive Development, Strand 2.0): department-published-foundation, confirmed. From the pack's Summary: by 23 to 36 months, children put objects into at least two groups according to how they are alike or different in a single attribute, with function, shape, size and colour given as examples.
+  Limits taken: one attribute at a time; two or more groups, with no upper number; it describes what children typically show, not a requirement on a child. Left open by Limits: which attribute (colour is an example, and is the game's choice); naming the groups happens only sometimes, so the game asks for no colour word.
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-2-0-operations-and-algebraic-thinking-2-5` (`us-ca 2.5`, Preschool/Transitional Kindergarten Learning Foundations: Mathematics, Strand 2.0): department-published-foundation, confirmed. From the pack's Summary: at the earlier age, a child notices how objects are alike and how they differ in their attributes, and sorts them into at least two groups using a single attribute.
+  Limits taken: the earlier statement, one attribute and two or more groups, at every position. Left open by Limits: no attribute is named, so colour is the game's choice. Not used: the later statement's more than one attribute.
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-1-0-counting-and-cardinality-1-4` (`us-ca 1.4`, the same foundations, Strand 1.0): department-published-foundation, confirmed. From the pack's Summary: a child tells how many things are in a little group just by looking, with no counting; at the earlier age the group is described as small, with one to four things given as an example of small.
+  Limits taken: a small group, seen without counting. The game's sets are one to three, inside the example the earlier statement gives; stopping at three is the game's own choice. Left open by Limits: how the things are arranged (the fixed arrangement of a bunch is the game's choice). Short of the record: the record is about telling how many, and the game has no number word, so the child shows it only by which bunch they pick.
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-1-0-counting-and-cardinality-1-6` (`us-ca 1.6`, the same foundations, Strand 1.0): department-published-foundation, confirmed. From the pack's Summary: a child looks at two sets of things and tells how they compare in number; at the earlier age the two sets are plainly equal or plainly unequal, and the child may count or not.
+  Limits taken: two groups only (the friends without a balloon, and the balloons in one bunch); counting is optional. Left open by Limits: no number range, so one to three is the game's choice; whether two sets of at most three that differ by one are plainly unequal is not settled there, and treating them so is the game's choice. Short of the record: the game asks for no word such as "same" or "more".
+
+Amounts at age 2: the game names no record. The infant-toddler lane's record on number (`us-ca 2.1` of the same strand) is about number words and the count list, and the game has neither, so nothing is named in its place. At age 2 the game rests on `us-ca 2.3` alone.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels, as the lookup prints them: ages 2 and 3 are `peuters`; age 4 is `peuters`, up to the fourth birthday, and `fase-1`, sub-band groep 1. Age mapping: convention. At age 4 the lookup also returns the `einde-po` lane, labelled end-of-primary goals; the game uses no record from it. Gap: none printed.
+
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-opereren-met-vormen-en-figuren-1` (`nl` Opereren met vormen en figuren / 1, peuter card): curriculum-institute-guidance, confirmed. In the game's words: finding out what things are like, colour being one of the examples, and sorting them by one property.
+  Limits taken: an offer to children of about 2 to 4, not what a child must be able to do; one property, and two at once is not mentioned. Left open by Limits: no number of objects or groups; the properties in brackets are examples, so colour is the game's choice.
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-6` (`nl` Hoeveelheden / 6, peuter card): curriculum-institute-guidance, confirmed. In the game's words: knowing a small group of two or three for what it is without counting.
+  Limits taken: groups of 2 or 3 and no larger; without counting; an offer, not a requirement. Left open by Limits: the arrangement (the game's choice). Beyond the record: a set of one is not in it and is the game's own choice.
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-3` (`nl` Hoeveelheden / 3, peuter card): curriculum-institute-guidance, confirmed. In the game's words: making one-to-one pairs by putting or tying one thing with each other thing.
+  Limits taken: pairing by coupling, laying together or connecting (in the game a string connects one balloon to one friend); no counting and no number word is asked; an offer, not a requirement. Left open by Limits: no number of objects, so up to three is the game's choice.
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-getallen-getalbegrip-hoeveelheden-4` (`nl` Hoeveelheden / 4, peuter card): curriculum-institute-guidance, confirmed. In the game's words: comparing small amounts by eye.
+  Limits taken: small amounts compared by eye; counting is not named as a way to compare; an offer, not a requirement. Left open by Limits: no number for "small", so one to three is the game's choice. Not used: larger amounts with a large difference, and making equal rows.
+- `edu.nl.fase-1.mathematics.objective.inhoudskaart-rekenen-wiskunde-fase-1-meten-meetkunde-meetkunde-opereren-met-vormen-en-figuren-1` (`nl` Opereren met vormen en figuren / 1, fase 1 card): curriculum-institute-guidance, confirmed. In the game's words: sorting things by one attribute or by more than one.
+  Limits taken: what a school offers in fase 1, with no year stated, not what a child must be able to do; the game takes one attribute only. Left open by Limits: no attribute is named, so colour is the game's choice. Not used: more than one attribute.
+
+Not named: the peuter card's statement on counting small amounts (Hoeveelheden / 1). The game has no number words and never asks for a count, so its verb does not rest on that record.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **A small group at a glance.** The California foundation (`us-ca 1.4`) is for ages 3 to 4 and gives one to four as its example of small; the Dutch statement (`nl` Hoeveelheden / 6) is an offer for about 2 to 4 and names 2 or 3 only. The game's sets are one to three: at the top it follows the Dutch statement, and its set of one is inside the California example and outside the Dutch statement.
+- **Amounts at age 2.** California's lane for age 2 has no record the game's handling of amounts rests on; the Dutch peuter card describes an offer that starts at about 2. The game follows the narrower one: where a first visit starts for a two-year-old the troop is one friend, only colour decides, and at no position is an amount something a child has to get right before a cycle can be finished.
+- **More than one attribute.** The California later statement (`us-ca 2.5`, 4 to 5½ years) and the Dutch fase 1 statement allow more than one attribute; the California earlier statement, `us-ca 2.3` and the Dutch peuter statement name one. The game sorts by one attribute at every position. At `bunches-mixed` the colour and the number must both be right; the number is asked of the set and is not a second sorting attribute, and that combination is the game's own design, which no record is named for.
+- **Standing.** The California records are foundations published by a state department; the Dutch records are guidance from the curriculum institute. Neither is a standard or the law, and the claim names each as what it is.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Balloon Pop Parade is designed from four California learning foundations published by a state department, which are foundations and not standards (`us-ca 2.3` of the infant-toddler foundations, and `us-ca 2.5`, `1.4` and `1.6` of the preschool and transitional kindergarten mathematics foundations), and from five statements of Dutch curriculum-institute guidance, which is guidance and not law (Opereren met vormen en figuren / 1 and Hoeveelheden / 3, 4 and 6 of the peuter card, and Opereren met vormen en figuren / 1 of the fase 1 card); all nine records are confirmed.
 
 ## The look
 
