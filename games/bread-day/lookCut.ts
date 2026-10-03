@@ -188,8 +188,8 @@ export function carve(p: Print, plates: readonly (Colour | 'key')[], line: reado
  * a dark ground the way a print does, without an outline of even width.
  */
 export function halo(p: Print, pts: readonly Pt[], w: number, strays = 0.1): void {
-  const drift = wave(p.rnd, pts.length, 6), n = pts.length, rim = offset(pts, () => w * 0.6)
-  bare(p, offset(pts, (i) => w * (0.6 + 0.4 * drift[i])))
+  const drift = wave(p.rnd, pts.length, 13), fine = wave(p.rnd, pts.length, 4), n = pts.length, rim = offset(pts, () => w * 0.6)
+  bare(p, offset(pts, (i) => w * (0.62 + 0.38 * drift[i] + 0.14 * fine[i])))
   for (let i = 0; i < n; i += 3) {
     if (p.rnd() > strays) continue
     const a = pts[i], b = pts[(i + 3) % n], along = Math.atan2(b[1] - a[1], b[0] - a[0]) + (p.rnd() < 0.5 ? Math.PI : 0)

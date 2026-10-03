@@ -15,7 +15,11 @@ import { paintRoom } from './lookRoom'
 const FLICKER = [0, 1, 2, 1, 0, 2, 1, 0, 2, 0, 1, 2, 2, 1]
 
 export type Look = {
-  /** Reprints every piece for a surface of this size and pixel ratio. Does nothing when neither changed. */
+  /**
+   * Sizes the look for a surface. The pieces are reprinted when the surface changes size or the pixel ratio rises
+   * above what they were printed at; a lower ratio (a cheaper quality tier) only scales the same prints down, so a
+   * tier change costs no printing. Does nothing when neither changed.
+   */
   resize(width: number, height: number, dpr: number): void
   /** Lays one frame at `seconds` of attended time and returns how many sprites it drew. Time 0 is the canonical still. */
   draw(g: CanvasRenderingContext2D, seconds: number): number
@@ -29,11 +33,12 @@ type Pieces = {
 }
 
 export function createLook(): Look {
-  let width = 0, height = 0, ratio = 0
+  /** `ratio` is the surface's pixel ratio now; `printed` is the ratio the pieces were printed at. */
+  let width = 0, height = 0, ratio = 0, printed = 0
   let plan: Layout | null = null, pieces: Pieces | null = null
 
   const print = (): Pieces => {
-    const at = plan!, press = new Press(at.scale * ratio, ratio, Math.ceil(width * ratio) + 2, Math.ceil(height * ratio) + 2)
+    const at = plan!, press = new Press(at.scale * printed, printed, Math.ceil(width * printed) + 2, Math.ceil(height * printed) + 2)
     const piece = (spot: Spot, seed: number, paint: Parameters<Press['print']>[3]) => press.print(SPOTS[spot][2], SPOTS[spot][3], seed, paint)
     const made = {
       room: press.print(width / at.scale, height / at.scale, 1, (p) => paintRoom(p, at.view), -at.ox / at.scale, -at.oy / at.scale, true),
@@ -57,7 +62,10 @@ export function createLook(): Look {
 
     resize(w, h, dpr) {
       if (w <= 0 || h <= 0 || dpr <= 0 || (w === width && h === height && dpr === ratio)) return
+      const reprint = w !== width || h !== height || dpr > printed
       width = w; height = h; ratio = dpr
+      if (!reprint) return
+      printed = dpr
       plan = layout(w, h)
       pieces = print()
     },
@@ -70,8 +78,9 @@ export function createLook(): Look {
       g.setTransform(ratio, 0, 0, ratio, 0, 0)
       g.globalCompositeOperation = 'source-over'
       g.drawImage(made.room.canvas, 0, 0, made.room.w, made.room.h); count++
-      put(made.goat, at.boxes.goat)
+      // The sparrows are out in the lane, so the goat at the hatch stands in front of them.
       made.sparrows.forEach((sparrow, i) => put(sparrow, at.sparrows[i]))
+      put(made.goat, at.boxes.goat)
       put(made.loaf, at.rack[0])
       put(made.fire[FLICKER[Math.floor(seconds * 8) % FLICKER.length]], at.boxes.fire)
       // A blink now and then, and never at time 0.

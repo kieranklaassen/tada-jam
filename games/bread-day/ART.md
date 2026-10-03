@@ -253,4 +253,31 @@ Bread Day is designed from four of California's preschool and transitional kinde
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Written after the style spike, not part of the sheet. Look in use: **Linocut print**, the first row reserved for the game in the ledger of `docs/art-direction.md`. The spike is the game's real scene, drawn by the Mount at load with a fixed seed. Its still was taken on a software renderer, so it says nothing about frame rate: that is the lead's to measure.
+
+**What a screenshot shows.** A badger's bakery before dawn, printed in ink on one sheet of cream paper: a dark key block with white gouge marks carries the whole picture, over flat night blue, gold and one red. It is printed, not cut and layered: no cast shadows, no lamp, no gradients, and no outline of even width.
+
+**Palette.** Paper `#f2e7d0`, night blue `#23467a`, gold `#e3a32e`, red `#c9432f`, key block `#15161d`.
+
+- Paper is the lightest value and belongs to the working object: raw dough is bare paper with one dark contour.
+- Gold is kept for what the oven has made and for fire: a baked crust, the flames, the glow in the mortar, the moon.
+- Red is small: the heart of the fire, cheeks, a collar, a hat band, the stripes of the flour sack.
+- Night blue is the wall, the lane outside and the peel.
+
+**Materials, as a print.**
+
+- Each piece is printed once into a cached sprite: flat inks on their own plates, then the key block, cut with gouge stamps (`destination-out`).
+- Every plate is worn by a noise mask, so paper speckles through the ink.
+- The colour plates sit one to three units out of register with the key block.
+- The wall is the key block cleared in rows of broad strokes, which leaves dark nibs: the chatter of a cleared area.
+- A coat is gouge marks along the lie of the fur. A figure has a cleared rim of uneven width, and its contour is heavier low and to the right.
+
+**Lighting.** None. A print has no light source: warmth is gold ink under the key block near the oven, and cold is blue with frost marks at the sill.
+
+**Working objects stay plain.** The dough and the baked bread carry no gouge texture, no face and no pattern, and lie on the plain blue peel. The carving goes on the badger, the customers, the oven and the room.
+
+**Motion rules.** A print moves as cut-out pieces of itself: whole sprites slide, squash and swap, and nothing blurs or fades. At idle the fire flickers between three printed states, the badger blinks, and the dough breathes by about one part in a hundred. Each character will get its own tempo and weight at the toy and game stages.
+
+**Tiers.** The pieces are printed once per size and pixel ratio, and a frame only lays them down (twelve draws in the spike). A cheaper tier lowers the pixel ratio and scales the same prints, so the lowest tier is the same picture, softer. Printing is the cost: about 0.65 seconds at 1180 by 820 and pixel ratio 2 on the build machine's software renderer, as one hitch on a resize.
+
+**Still weak in the spike.** The sparrows are small. The cleared rims make the sack and the jug read slightly like stickers. The warm nook reads as a framed niche more than a ledge. The window, the rack and the oven are tight along the top edge. Paper grain shows faintly on the dough.

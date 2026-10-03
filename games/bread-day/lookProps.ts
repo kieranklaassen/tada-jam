@@ -12,7 +12,7 @@ export function paintPeel(p: Print): void {
   const { rnd } = p, { x, y, turn } = BLADE
   const outline = curve([[-190, 0], [-184, -70], [-150, -96], [0, -98], [150, -96], [182, -70], [190, -28], [215, -21], [300, -19], [418, -17], [432, 0], [418, 17], [300, 19], [215, 21], [190, 28], [182, 70], [150, 96], [0, 98], [-150, 96], [-184, 70]], true, 6)
   const board = rough(turned(moved(outline, x, y), turn, x, y), rnd, 1.1, 5)
-  halo(p, board, 6, 0.07)
+  halo(p, board, 6.5, 0.12)
   fill(p.base, board)
   fill(p.blue, board)
   // Its weight: the block left standing along the low side only.
@@ -39,24 +39,27 @@ export function paintDough(p: Print): void {
   draw(p, curve([[152, 134], [178, 124], [192, 102]], false), 3.8, 0.05)
 }
 
-/** The flour sack: slumped, open at the top, a heap of flour standing in its mouth. */
+/** The flour sack: slumped on its two corners, its top rolled down, a heap of flour standing in its mouth. */
 export function paintSack(p: Print): void {
   const { rnd } = p
-  const body = rough(curve([[26, 236], [14, 198], [18, 148], [30, 104], [44, 78], [62, 66], [104, 60], [132, 70], [150, 96], [162, 142], [166, 194], [158, 236], [94, 242]]), rnd, 1.3, 5)
-  const lip = oval(88, 70, 50, 19, -0.1, 4), heap = rough(curve([[50, 72], [58, 44], [82, 26], [108, 38], [124, 68], [88, 80]]), rnd, 0.9, 4)
-  halo(p, body, 6, 0.08); halo(p, lip, 5, 0); halo(p, heap, 5, 0)
+  const body = rough(curve([[10, 240], [10, 240], [18, 200], [14, 152], [24, 118], [36, 102], [90, 96], [146, 98], [158, 116], [168, 152], [164, 200], [174, 240], [174, 240], [92, 234]]), rnd, 1.3, 5)
+  const heap = rough(curve([[38, 106], [52, 72], [86, 52], [120, 68], [142, 104], [90, 118]]), rnd, 0.9, 4)
+  const roll = curve([[24, 104], [56, 121], [96, 126], [130, 120], [158, 100]], false)
+  const cuff = ribbon(roll, () => 18)
+  halo(p, body, 6, 0.08); halo(p, heap, 5, 0); halo(p, cuff, 5, 0)
   shape(p, body, null, 2.5, 8)
   within(p.red, body, () => {
-    fill(p.red, ribbon(curve([[8, 158], [60, 172], [120, 170], [172, 154]], false), () => 14))
-    fill(p.red, ribbon(curve([[8, 180], [60, 194], [120, 192], [172, 176]], false), () => 5))
+    fill(p.red, ribbon(curve([[4, 182], [60, 197], [120, 196], [178, 180]], false), () => 14))
+    fill(p.red, ribbon(curve([[4, 205], [60, 219], [120, 218], [178, 203]], false), () => 5))
   })
-  shape(p, lip, null, 2, 5)
-  fill(p.key, oval(88, 71, 41, 11.5, -0.1, 4))
+  fill(p.key, oval(90, 103, 58, 13, -0.03, 4))
   shape(p, heap, null, 1.6, 3.5)
-  for (const fold of [[[40, 100], [35, 128], [41, 150]], [[134, 96], [146, 124], [143, 146]], [[30, 210], [58, 222], [94, 218]], [[112, 228], [138, 220], [154, 204]], [[84, 92], [80, 118], [86, 138]]] as Pt[][]) draw(p, curve(fold, false), 3, 0.05)
+  shape(p, cuff, null, 2, 5)
+  // The twist of the rolled cloth, and the gathers that hang from it.
+  for (let i = 3; i < roll.length - 3; i += 4) draw(p, [[roll[i][0] - 3, roll[i][1] - 7], [roll[i][0] + 4, roll[i][1] + 7]], 2, 0.3)
+  for (const fold of [[[46, 132], [41, 150], [45, 166]], [[82, 139], [80, 156], [85, 170]], [[118, 136], [124, 152], [121, 166]], [[146, 124], [154, 142], [152, 158]], [[26, 222], [40, 228], [58, 224]], [[122, 228], [144, 226], [158, 216]]] as Pt[][]) draw(p, curve(fold, false), 3, 0.05)
   // The side turned from the room, hatched.
-  within(p.key, body, () => { for (let y = 106; y < 150; y += 9) fill(p.key, gouge(164, y, 2.5, 20 + rnd() * 8, 3.4)) })
-  for (let i = 0; i < 9; i++) bare(p, oval(160 + rnd() * 16, 236 + rnd() * 10, 1 + rnd() * 2.2, 1 + rnd() * 1.4, 0, 2))
+  within(p.key, body, () => { for (let y = 128; y < 172; y += 9) fill(p.key, gouge(170, y, 2.5, 18 + rnd() * 8, 3.4)) })
 }
 
 /** The water jug: a pale pot with a blue glazed belly, a handle and water up to its lip. */
@@ -79,10 +82,10 @@ export function paintJug(p: Print): void {
 
 /** A baked loaf: the one gold thing on the wall, scored three times. */
 export function paintLoaf(p: Print): void {
-  const loaf = rough(curve([[8, 51], [10, 31], [24, 15], [40, 10], [56, 15], [68, 31], [70, 51], [40, 56]]), p.rnd, 0.7, 4)
+  const loaf = rough(curve([[7, 46], [9, 28], [21, 14], [35, 9], [49, 14], [61, 28], [63, 46], [35, 51]]), p.rnd, 0.7, 4)
   halo(p, loaf, 4, 0)
   shape(p, loaf, 'gold', 2.5, 6.5)
-  for (const [x, y] of [[20, 27], [34, 21], [48, 22]]) cut(p.gold, gouge(x, y, 1, 15, 4.6, 1))
+  for (const [x, y] of [[17, 25], [30, 19], [43, 20]]) cut(p.gold, gouge(x, y, 1, 14, 4.4, 1))
 }
 
 /** One tongue of flame as a closed outline that comes to a point. */
@@ -118,21 +121,20 @@ export function paintFire(p: Print, frame: number): void {
   }
 }
 
-/** A sparrow on the fence: a pale round bird with a dark cap, bib and wing. `peck` bends it over. */
+/** A sparrow on the fence: a pale round bird with a dark cap, wing and tail. `peck` bends it over. */
 export function paintSparrow(p: Print, peck: boolean): void {
-  posed(p, 23, 30, peck ? 0.55 : 0, 1, () => {
-    const body = rough(curve([[8, 24], [13, 13], [25, 8], [35, 11], [39, 20], [35, 30], [23, 34], [12, 31]], true, 3), p.rnd, 0.5, 4)
-    const tail: Pt[] = [[11, 25], [1, 32], [3, 36], [14, 31]], beak: Pt[] = [[37.5, 14.5], [45, 18], [37.5, 21]]
-    halo(p, body, 3, 0); bare(p, offset(tail, () => 2.2)); bare(p, offset(beak, () => 2))
+  posed(p, 26, 34, peck ? 0.5 : 0, 1, () => {
+    const body = rough(curve([[10, 30], [14, 16], [26, 9], [38, 11], [44, 20], [41, 32], [30, 39], [17, 38]], true, 3), p.rnd, 0.5, 4)
+    const tail: Pt[] = [[14, 29], [2, 36], [4, 41], [18, 36]], beak: Pt[] = [[42.5, 15.5], [51, 20], [42.5, 24]]
+    halo(p, body, 3.5, 0); bare(p, offset(tail, () => 2.5)); bare(p, offset(beak, () => 2.2))
     fill(p.key, tail); fill(p.key, beak)
-    shape(p, body, null, 1.5, 3.5)
-    fill(p.key, curve([[23, 9], [31, 8], [37, 12], [34, 15], [27, 13]], true, 3))
-    fill(p.key, curve([[34, 21], [38, 22], [35, 27], [31, 25]], true, 3))
-    const wing = curve([[12, 19], [23, 16], [29, 23], [20, 29]], true, 3)
+    shape(p, body, null, 1.6, 3.6)
+    fill(p.key, curve([[25, 10], [35, 9], [42, 15], [33, 15]], true, 3))
+    const wing = curve([[13, 24], [26, 20], [33, 28], [23, 35]], true, 3)
     fill(p.key, wing)
-    within(p.key, wing, () => { cut(p.key, gouge(15, 20, 0.5, 11, 2.2)); cut(p.key, gouge(15, 24, 0.4, 9, 2)) })
-    fill(p.key, oval(33, 17.5, 1.7, 1.7, 0, 1.5))
+    within(p.key, wing, () => cut(p.key, gouge(16, 26, 0.3, 13, 2.6)))
+    fill(p.key, oval(37, 19.5, 2.2, 2.2, 0, 1.5))
   })
-  draw(p, [[21, 33], [20.5, 37], [20, 41]], 1.8, 0.6)
-  draw(p, [[27, 33], [27.5, 37], [28, 41]], 1.8, 0.6)
+  draw(p, [[24, 38], [23.5, 42], [23, 47]], 2, 0.6)
+  draw(p, [[31, 38], [31.5, 42], [32, 47]], 2, 0.6)
 }

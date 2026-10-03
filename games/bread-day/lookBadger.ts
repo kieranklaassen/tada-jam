@@ -35,8 +35,6 @@ function body(p: Print): void {
     const x = paw[0][0] < MID ? 40 : 226
     for (let i = 0; i < 4; i++) cut(p.key, gouge(x + i * 8.5, 322, -1.5 + (i - 1.5) * 0.12, 13, 3.4))
   }
-  shape(p, rough(curve([[116, 174], [MID, 184], [174, 174], [163, 202], [MID, 214], [127, 202]]), rnd, 0.8, 4), 'red', 2, 4.5)
-  draw(p, curve([[134, 186], [MID, 198], [156, 186]], false), 2.2, 0.1)
 }
 
 function head(p: Print, blink: boolean): void {
@@ -46,30 +44,31 @@ function head(p: Print, blink: boolean): void {
   const band = rough(curve([...corner(90, 58), [MID, 45], ...corner(200, 58), ...corner(198, 76), [MID, 63], ...corner(92, 76)]), rnd, 0.8, 4)
   const ears = [oval(80, 70, 18, 17, 0, 4), oval(210, 70, 18, 17, 0, 4)]
   const tongue = rough(curve([[147, 180], [158, 180], [160, 191], [153, 197], [147, 190]], true, 3), rnd, 0.4, 3)
-  halo(p, skull, 6, 0.05); halo(p, puff, 6, 0.08); halo(p, tongue, 3, 0)
+  halo(p, skull, 6, 0.05); halo(p, puff, 6, 0.08); halo(p, tongue, 4, 0)
   for (const ear of ears) halo(p, ear, 5, 0)
   for (const ear of ears) { shape(p, ear, null, 3, 5); fill(p.key, oval(ear[0][0] - 18, 71, 9.5, 8.5, 0, 3)) }
   shape(p, skull, null, 2.6, 6.5)
   // The stripes: from beside the nose, widening through each eye, up to the ear.
   const stripe = curve([[137, 168], [122, 146], [100, 116], [84, 92], [84, 72], [104, 62], [120, 84], [130, 112], [138, 140], [142, 166]])
   for (const side of [rough(stripe, rnd, 0.9, 5), rough(mirrored(stripe, MID), rnd, 0.9, 5)]) within(p.key, skull, () => fill(p.key, side))
-  for (const x of [110, 180]) {
-    if (blink) { carve(p, ['key'], curve([[x - 10, 107], [x, 113], [x + 10, 107]], false), 3.4, 0.2); continue }
-    cut(p.key, oval(x, 108, 10.5, 9, 0, 3))
-    fill(p.key, oval(x - 1.5, 111.5, 5.2, 5.4, 0, 2))
-    cut(p.key, oval(x - 3.5, 109.5, 1.5, 1.5, 0, 1.5))
-  }
   for (const x of [91, 199]) fill(p.red, oval(x, 134, 8.5, 7.5, 0, 3))
   shape(p, tongue, 'red', 1.5, 2.6)
   fill(p.key, rough(curve([[127, 157], [MID, 152], [163, 157], [158, 172], [MID, 178], [132, 172]], true, 3), rnd, 0.6, 4))
   cut(p.key, gouge(136, 160, 0.1, 9, 2.6))
   draw(p, curve([[131, 178], [138, 184], [MID, 178], [152, 184], [159, 178]], false, 3), 2.6, 0.2)
   for (let i = 0; i < 4; i++) fill(p.key, gouge(138 + rnd() * 12, 80 + i * 14 + rnd() * 5, 1.5, 6 + rnd() * 5, 1.7))
-  // The cap: a soft crown gathered into a band.
+  // The cap: a soft crown gathered into a red band.
   shape(p, puff, null, 2.6, 6.5)
   for (const pleat of [[[112, 50], [104, 26], [112, 2]], [[MID, 46], [146, 18], [142, -6]], [[180, 50], [190, 26], [184, 4]]] as Pt[][]) draw(p, curve(pleat, false), 3, 0)
   for (let i = 0; i < 6; i++) fill(p.key, gouge(92 + rnd() * 100, -2 + rnd() * 34, 0.2, 6 + rnd() * 6, 1.7))
-  shape(p, band, null, 2, 4.5)
+  shape(p, band, 'red', 2, 4.5)
+  // The eyes go in last, so the open-eyed and the shut-eyed printings differ in nothing else.
+  for (const x of [110, 180]) {
+    if (blink) { carve(p, ['key'], curve([[x - 10, 107], [x, 113], [x + 10, 107]], false), 3.4, 0.2); continue }
+    cut(p.key, oval(x, 108, 11.5, 10.5, 0, 3))
+    fill(p.key, oval(x - 2, 112.5, 6.2, 6.2, 0, 2))
+    cut(p.key, oval(x - 4, 110, 1.7, 1.7, 0, 1.5))
+  }
 }
 
 /** The badger in its box. `blink` prints the same badger with its eyes shut. */

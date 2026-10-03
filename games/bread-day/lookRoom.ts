@@ -12,8 +12,8 @@ const [MX, MY, MW] = SPOTS.mouth
 /** The oven's left face, its shoulder, and the chimney that runs up off the block. */
 const OVEN = { x: 862, top: 112, flue0: 938, flue1: 1086 }
 const ARCH = { cx: MX + MW / 2, half: MW / 2, spring: MY + MW / 2 }
-const RACK = { x: SPOTS.loaf[0] + 6, y: SPOTS.loaf[1] + 56, w: RACK_STEP * 4 }
-const WINDOW = { x: 410, y: 70, w: 140, h: 134 }
+const RACK = { x: SPOTS.loaf[0] + 3, y: SPOTS.loaf[1] + 51, w: RACK_STEP * 4 }
+const WINDOW = { x: 430, y: 70, w: 114, h: 134 }
 
 const inOven = (x: number, y: number) => x > OVEN.x - 4 && (y > OVEN.top - 4 || (x > OVEN.flue0 - 4 && x < OVEN.flue1 + 4))
 
@@ -22,7 +22,7 @@ function standing(x: number, y: number, v: View): boolean {
   if (inOven(x, y) || y < v.y0 + 30 || x < v.x0 + 12 || x > v.x1 - 12) return true
   if (x > OVEN.x - 18 && y > OVEN.top + 20) return true
   if (y > RACK.y + 12 && y < RACK.y + 38 && x > RACK.x - 8 && x < RACK.x + RACK.w + 8) return true
-  return y > 240 && y < 272 && x > 372 && x < 588
+  return y > 240 && y < 272 && x > SPOTS.sill[0] - 4 && x < SPOTS.sill[0] + SPOTS.sill[2] + 4
 }
 
 /** The wall: the key block cleared in rows of broad strokes, so night blue shows and small dark nibs stay between them. */
@@ -34,7 +34,9 @@ function wall(p: Print, v: View): void {
       const want = 70 + rnd() * 150
       let reach = 0
       while (reach < want && !standing(x + reach + 10, y, v)) reach += 10
-      if (reach >= 30 && !standing(x, y, v)) cut(p.key, gouge(x, y + (rnd() - 0.5) * 3, (rnd() - 0.5) * 0.05, reach, 20 + rnd() * 7, (rnd() - 0.5) * 5, 0.3))
+      // The carver worked from both sides, so round starts and pointed ends fall on either edge.
+      const back = rnd() < 0.5
+      if (reach >= 30 && !standing(x, y, v)) cut(p.key, gouge(back ? x + reach : x, y + (rnd() - 0.5) * 3, (back ? Math.PI : 0) + (rnd() - 0.5) * 0.05, reach, 20 + rnd() * 7, (rnd() - 0.5) * 5, 0.3))
       x += Math.max(24, reach * (0.9 + rnd() * 0.07))
     }
   }
@@ -43,6 +45,15 @@ function wall(p: Print, v: View): void {
 /** The bench: the block left dark, a few long grain lines, and its back edge carved through to paper. */
 function bench(p: Print, v: View): void {
   const { rnd } = p
+  // The fire's glow on the bench: gold lies under the block in front of the oven mouth, so the grain carved there shows warm.
+  const glow = oval(ARCH.cx - 10, BENCH + 6, 190, 74)
+  const top = slab(v.x0, BENCH + 3, v.x1 - v.x0, 90, 40)
+  within(p.blue, top, () => cut(p.blue, glow))
+  within(p.gold, top, () => fill(p.gold, glow))
+  for (let i = 0; i < 9; i++) {
+    const x = ARCH.cx - 150 + rnd() * 230, y = BENCH + 12 + rnd() * 52
+    carve(p, ['key'], stroke(rnd, x, y, x + 30 + rnd() * 70, y + (rnd() - 0.5) * 3, 1.5), 2 + rnd() * 1.6, 0.1)
+  }
   for (let y = BENCH + 26; y < v.y1 - 10; y += 22 + rnd() * 20) {
     for (let x = v.x0 + rnd() * 160; x < v.x1 - 80; x += 60 + rnd() * 260) {
       const length = Math.min(120 + rnd() * 240, v.x1 - 14 - x)
@@ -72,7 +83,7 @@ function sky(p: Print, x: number, y: number, w: number, h: number, count: number
   }
 }
 
-/** The hatch: a timber frame, the lane beyond it with roofs, a fence and stars, the ledge, and the shut lower half of the door. */
+/** The hatch: a timber frame, the lane beyond it with roofs, a fence and stars, and the ledge the customers lean on. */
 function hatch(p: Print): void {
   const { rnd } = p, post = 17, ledge = HY + HH
   shape(p, rough(slab(HX - post, HY - post, HW + post * 2, HH + post, 12), rnd, 1.4), null, 2, 5)
@@ -84,11 +95,10 @@ function hatch(p: Print): void {
   for (const [ax, ay, bx, by] of [[60, 349, 91, 322], [94, 322, 126, 348], [186, 352, 215, 327], [218, 328, 250, 355]]) carve(p, ['key', 'blue'], stroke(rnd, ax, ay, bx, by, 1), 2.6)
   for (const [x, y] of [[84, 362], [226, 374]]) { const pane = rough(slab(x, y, 11, 13, 5), rnd, 0.6); cut(p.key, pane); cut(p.blue, pane); fill(p.gold, pane) }
   // The fence the sparrows wait on: a rail and its pales, bare paper against the dark roofs.
-  bare(p, ribbon(stroke(rnd, HX, 398, HX + 190, 402, 1.5), () => 7))
-  for (let x = HX + 8; x < HX + 180; x += 23) bare(p, rough(slab(x, 404, 9, ledge - 404, 8), rnd, 0.8))
+  bare(p, ribbon(stroke(rnd, HX, 399, HX + 170, 402, 1.5), () => 7))
+  for (let x = HX + 12; x < HX + 160; x += 30) bare(p, rough(slab(x, 404, 7, ledge - 404, 8), rnd, 0.8))
   shape(p, rough(slab(HX - post - 8, ledge, HW + post * 2 + 16, 22, 12), rnd, 1.2), null, 2, 6)
   for (let i = 0; i < 9; i++) { const x = HX + rnd() * HW, y = ledge + 6 + rnd() * 10; draw(p, stroke(rnd, x, y, x + 14 + rnd() * 30, y + 1, 1), 1.6, 0.1) }
-  for (let x = HX + 44; x < HX + HW; x += 46) carve(p, ['key'], stroke(rnd, x, ledge + 26, x + (rnd() - 0.5) * 3, BENCH - 6, 1.5), 2.4, 0.15)
   for (let i = 0; i < 12; i++) {
     const side = i % 2 ? HX - post + 5 + rnd() * 6 : HX + HW + 5 + rnd() * 6, y = HY + rnd() * (HH - 40)
     draw(p, stroke(rnd, side, y, side + (rnd() - 0.5) * 2, y + 14 + rnd() * 26, 1), 1.6, 0.1)
@@ -97,16 +107,16 @@ function hatch(p: Print): void {
 
 /** The window, set deep in the wall: moon, stars and frost in the panes, and icicles off the cold sill. */
 function window(p: Print): void {
-  const { rnd } = p, { x, y, w, h } = WINDOW, deep = 22
+  const { rnd } = p, { x, y, w, h } = WINDOW, deep = 20
   shape(p, rough(slab(x - deep, y - deep, w + deep * 2, h + deep + 6, 12), rnd, 1.3), null, 2, 5)
   // The thickness of the wall: hatching on the two faces turned away from the room.
   for (let ty = y - deep + 8; ty < y + h; ty += 9) draw(p, [[x - deep + 4, ty + 7], [x - 3, ty - 2]], 2 + rnd() * 1.2, 0.2)
   for (let tx = x + 4; tx < x + w + deep - 8; tx += 10) draw(p, [[tx - 5, y - 3], [tx + 6, y - deep + 4]], 2 + rnd() * 1.2, 0.2)
   shape(p, rough(slab(x, y, w, h, 12), rnd, 1.1), 'blue', 3, 3)
   sky(p, x, y, w, h * 0.6, 6)
-  const moon = oval(x + 104, y + 36, 18, 18, 0, 4), bite = oval(x + 96, y + 30, 15, 15, 0, 4)
+  const moon = oval(x + 84, y + 34, 17, 17, 0, 4), bite = oval(x + 76, y + 28, 14, 14, 0, 4)
   cut(p.blue, moon); fill(p.gold, moon); fill(p.blue, bite); cut(p.gold, bite)
-  star(p, x + 28, y + 30, 5.5); star(p, x + 50, y + 88, 4.5); star(p, x + 118, y + 96, 5)
+  star(p, x + 26, y + 28, 5.5); star(p, x + 38, y + 92, 4.5); star(p, x + 92, y + 98, 5)
   // Frost creeping up from the corners of the lower panes.
   for (const corner of [x + 3, x + w / 2 + 4]) {
     for (let i = 0; i < 7; i++) cut(p.blue, gouge(corner + rnd() * 5, y + h - 3, -1.5 + i * 0.22 + rnd() * 0.1, 13 + rnd() * 17, 3.2))
@@ -131,11 +141,11 @@ function rack(p: Print): void {
   bare(p, ribbon(stroke(rnd, x - 2, y - 40, x + w + 2, y - 40, 1), () => 5.5))
   for (let i = 0; i <= 4; i++) {
     const px = x + i * RACK_STEP
-    bare(p, rough(slab(px - 3.5, y - 46, 7, 47, 8), rnd, 0.7))
-    bare(p, oval(px, y - 48, 5.5, 5, 0, 3))
+    bare(p, rough(slab(px - 2.5, y - 46, 5, 47, 8), rnd, 0.6))
+    bare(p, oval(px, y - 48, 4.5, 4.2, 0, 3))
   }
   for (const bx of [x + 30, x + w - 54]) shape(p, rough([[bx, y + 12], [bx + 26, y + 12], [bx + 5, y + 36], [bx, y + 34]], rnd, 0.6, 2), null, 1.5, 3.5)
-  shape(p, rough(slab(x - 14, y, w + 28, 15, 11), rnd, 1.1), null, 2, 6)
+  shape(p, rough(slab(x - 8, y, w + 14, 15, 11), rnd, 1.1), null, 2, 6)
   for (let i = 0; i < 5; i++) { const sx = x + rnd() * (w - 40); draw(p, stroke(rnd, sx, y + 6, sx + 16 + rnd() * 24, y + 7, 1), 1.5, 0.1) }
 }
 
@@ -184,8 +194,9 @@ function oven(p: Print, v: View): void {
     for (const side of [-1, 1]) carve(p, ['key'], [[ARCH.cx + side * (ARCH.half + 7), y], [ARCH.cx + side * (ARCH.half + 26), y + (rnd() - 0.5) * 2]], 3.2, 0.5)
   }
   // The warm nook: a dark recess with a pale ledge, and heat rising in carved waves.
-  cut(p.key, rough(slab(NX - 5, NY - 5, NW + 10, NH + 8, 10), rnd, 1.2))
-  fill(p.key, rough(slab(NX, NY, NW, NH + 4, 10), rnd, 1))
+  const niche = (grow: number): Pt[] => slab(NX - grow, NY - grow, NW + grow * 2, NH + grow + 4, 10).map(([x, y]): Pt => [x, y < NY ? y - 13 * Math.sin((Math.PI * (x - NX + grow)) / (NW + grow * 2)) : y])
+  cut(p.key, rough(niche(5), rnd, 1.2))
+  fill(p.key, rough(niche(0), rnd, 1))
   for (const [hx, lift, phase] of [[NX + 44, 88, 0], [NX + 96, 100, 2], [NX + 148, 84, 4]]) {
     const line: Pt[] = []
     for (let i = 0; i <= 14; i++) { const t = i / 14; line.push([hx + Math.sin(t * 8.5 + phase) * 9, NY + NH - 8 - t * lift]) }
@@ -199,6 +210,8 @@ export function paintRoom(p: Print, v: View): void {
   fill(p.blue, block)
   fill(p.key, block)
   wall(p, v)
+  // Chatter: stray nicks in the dark band the carver left along the top.
+  for (let x = v.x0 + 30; x < OVEN.x - 40; x += 40 + p.rnd() * 90) cut(p.key, gouge(x, v.y0 + 9 + p.rnd() * 14, (p.rnd() - 0.5) * 0.5, 8 + p.rnd() * 14, 2.6))
   bench(p, v)
   hatch(p)
   window(p)
@@ -207,4 +220,10 @@ export function paintRoom(p: Print, v: View): void {
   // The block's own edge, trimmed last, so nothing carved or inked runs past it.
   const trim = (g: CanvasRenderingContext2D) => { g.globalCompositeOperation = 'destination-in'; fill(g, block); g.globalCompositeOperation = 'source-over' }
   trim(p.blue); trim(p.gold); trim(p.red); trim(p.key)
+  // A few specks of ink the block left in the margin.
+  for (let i = 0; i < 12; i++) {
+    const along = p.rnd(), out = 3 + p.rnd() * 9, r = 0.6 + p.rnd() * 1.1
+    const [x, y] = i % 2 ? [v.x0 + along * (v.x1 - v.x0), i % 4 === 1 ? v.y0 - out : v.y1 + out] : [i % 4 ? v.x1 + out : v.x0 - out, v.y0 + along * (v.y1 - v.y0)]
+    fill(p.key, oval(x, y, r, r * 0.7, along * 3, 1.5))
+  }
 }

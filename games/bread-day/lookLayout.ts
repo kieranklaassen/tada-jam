@@ -20,22 +20,22 @@ export const SPOTS = {
   peel: [396, 516, 660, 286],
   sack: [52, 476, 180, 252],
   jug: [234, 500, 146, 216],
-  badger: [510, 200, 274, 334],
-  goat: [118, 170, 300, 292],
+  badger: [524, 200, 274, 334],
+  goat: [146, 170, 300, 292],
   fire: [902, 314, 216, 208],
-  loaf: [582, 110, 78, 62],
-  sparrow: [56, 356, 46, 42],
+  loaf: [595, 100, 70, 56],
+  sparrow: [56, 352, 52, 48],
   // Places the peel is carried to, and the opening the customers stand in.
   nook: [916, 172, 188, 108],
-  sill: [376, 150, 208, 76],
+  sill: [400, 150, 174, 76],
   mouth: [905, 315, 210, 205],
   hatch: [56, 170, 316, 276],
 } as const satisfies Record<string, readonly [number, number, number, number]>
 
 export type Spot = keyof typeof SPOTS
 /** How far apart the rack's four places and the sparrows on the fence sit, in reference units. */
-export const RACK_STEP = 66
-export const SPARROW_STEP = 39
+export const RACK_STEP = 64
+export const SPARROW_STEP = 45
 
 export type Layout = {
   /** Logical pixels per reference unit, and where the reference sheet's corner lands. */

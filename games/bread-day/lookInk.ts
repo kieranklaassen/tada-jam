@@ -6,7 +6,7 @@ import { mulberry32, type Ctx, type Print, type Rnd } from './lookCut'
 // down a little off the key block. Nothing here runs per frame.
 
 /** Cream paper, three flat inks and the dark key block: the whole palette. */
-export const INK = { paper: '#f2e7d0', blue: '#21416a', gold: '#e3a32e', red: '#c9432f', key: '#15161d' } as const
+export const INK = { paper: '#f2e7d0', blue: '#23467a', gold: '#e3a32e', red: '#c9432f', key: '#15161d' } as const
 
 /** A printed piece, ready to composite: its canvas and its size in logical pixels. */
 export type Sprite = { canvas: HTMLCanvasElement; w: number; h: number }
@@ -14,7 +14,7 @@ export type Sprite = { canvas: HTMLCanvasElement; w: number; h: number }
 type Plate = 'gold' | 'red' | 'blue' | 'key'
 // Printing order, and how far each plate sits off the key block in reference units:
 // the sheet went through the press once per ink, and never landed twice in the same place.
-const PRESS: readonly (readonly [Plate, number, number])[] = [['gold', -1.8, 1.5], ['red', 1.6, 2.1], ['blue', 2.4, -1.6], ['key', 0, 0]]
+const PRESS: readonly (readonly [Plate, number, number])[] = [['gold', 0.6, 0.5], ['red', -1.3, 1.8], ['blue', 2.7, -1.9], ['key', 0, 0]]
 /** Reference units one noise tile covers before it repeats. */
 const SPAN = 240
 
@@ -65,9 +65,9 @@ export class Press {
   /** `k` is device pixels per reference unit; the plates are as large as the largest printing, in device pixels. */
   constructor(private readonly k: number, private readonly dpr: number, width: number, height: number) {
     this.plates = { gold: blank(width, height), red: blank(width, height), blue: blank(width, height), key: blank(width, height) }
-    this.thin = tile(k, 11, [0, 0, 0], (grit, blotch, patch) => step(0.69 - 0.1 * patch, grit * 0.62 + blotch * 0.38))
-    this.salt = tile(k, 23, [0, 0, 0], (grit, blotch, patch) => step(0.73 - 0.08 * patch, grit * 0.7 + blotch * 0.3))
-    this.grain = tile(k, 37, [150, 120, 78], (grit, blotch) => 0.22 * step(0.6, grit * 0.75 + blotch * 0.25))
+    this.thin = tile(k, 11, [0, 0, 0], (grit, blotch, patch) => step(0.79 - 0.17 * patch, grit * 0.55 + blotch * 0.45))
+    this.salt = tile(k, 23, [0, 0, 0], (grit, blotch, patch) => step(0.84 - 0.15 * patch, grit * 0.6 + blotch * 0.4))
+    this.grain = tile(k, 37, [150, 120, 78], (grit, blotch) => 0.1 * step(0.66, grit * 0.6 + blotch * 0.4))
   }
 
   /**
@@ -88,15 +88,21 @@ export class Press {
       if (!g) return sprite
       g.setTransform(1, 0, 0, 1, 0, 0)
       g.globalCompositeOperation = 'source-over'
-      g.clearRect(0, 0, g.canvas.width, g.canvas.height)
+      // Only this piece's corner of the plate is wiped and inked, so a small piece costs a small wipe.
+      g.clearRect(0, 0, width, height)
+      g.save()
+      g.beginPath(); g.rect(0, 0, width, height); g.clip()
       g.fillStyle = INK[name]
       g.setTransform(k, 0, 0, k, -ox * k, -oy * k)
       print[name] = g
     }
     paint(print)
-    // A tile laid from a different corner each time, so no two plates wear in the same places.
+    for (const [name] of PRESS) print[name].restore()
+    // A tile laid from a different corner each time, so no two plates wear in the same places. The corners come
+    // from a stream of their own: two printings of one seed wear alike however much of the stream `paint` used.
+    const corner = mulberry32(seed ^ 0x9e3779b9)
     const lay = (g: Ctx, mask: HTMLCanvasElement, operation: GlobalCompositeOperation) => {
-      const sx = Math.floor(rnd() * mask.width), sy = Math.floor(rnd() * mask.height), pattern = g.createPattern(mask, 'repeat')
+      const sx = Math.floor(corner() * mask.width), sy = Math.floor(corner() * mask.height), pattern = g.createPattern(mask, 'repeat')
       if (!pattern) return
       g.setTransform(1, 0, 0, 1, -sx, -sy)
       g.globalCompositeOperation = operation
