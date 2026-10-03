@@ -25,8 +25,8 @@ export type Partial = {
 }
 
 export type VoiceId =
-  | 'squeak' | 'letGo' | 'whistle' | 'pop' | 'raspberry' | 'thud' | 'bloop' | 'boop' | 'liftOff'
-  | `${KindName}Catch` | `${KindName}Refuse` | `${KindName}Poke` | `${KindName}Startle`
+  | 'squeak' | 'letGo' | 'whistle' | 'pop' | 'raspberry' | 'bloop' | 'boop' | 'squeal' | 'bonk' | 'stringHum' | 'frogSlurp'
+  | `${KindName}Catch` | `${KindName}Refuse` | `${KindName}Poke` | `${KindName}Startle` | `${KindName}LiftOff` | `${KindName}Land`
 
 /** The ranges every partial stays inside, and the longest a voice may last. */
 export const LIMITS = { lowest: 55, highest: 5200, loudest: 0.5, shortestAttack: 0.002, longest: 1.3 } as const
@@ -45,38 +45,57 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
   pop: [hiss(0, 2200, 900, 0.7, 0.42, 0.002, 0.07), tone('sine', 0, 210, 80, 0.3, 0.003, 0.12), tone('square', 0, 1400, 500, 0.06, 0.002, 0.03)],
   // A balloon going flat as it flies off: a run of short low blats that slow down.
   raspberry: [0, 0.07, 0.15, 0.24, 0.35, 0.48, 0.63].map((at, i) => tone('sawtooth', at, 150 - i * 9, 110 - i * 8, 0.16 - i * 0.012, 0.004, 0.05 + i * 0.008)),
-  // A heavy toy sits down.
-  thud: [tone('sine', 0, 130, 62, 0.42, 0.004, 0.22), hiss(0, 320, 180, 1.2, 0.16, 0.003, 0.1)],
   // A new balloon drifts into its place.
   bloop: [tone('sine', 0, 420, 760, 0.1, 0.01, 0.12)],
   // A touch on nothing in particular: the air answers softly.
   boop: [tone('sine', 0, 540, 470, 0.09, 0.006, 0.12)],
-  // Carried off its feet: a slide up that wobbles.
-  liftOff: [tone('sine', 0, 330, 990, 0.14, 0.04, 0.6), tone('triangle', 0.05, 336, 1010, 0.07, 0.04, 0.55)],
+  // Two balloons in two hands rub together: a long rubbery squeal.
+  squeal: [tone('sine', 0, 820, 1260, 0.14, 0.05, 0.5), hiss(0, 2400, 3000, 10, 0.08, 0.04, 0.45)],
+  // A balloon swings round on its string and bumps a head: hollow.
+  bonk: [tone('sine', 0, 320, 240, 0.3, 0.003, 0.12), tone('triangle', 0, 640, 480, 0.06, 0.003, 0.05)],
+  // A string plucked like a rubber band.
+  stringHum: [tone('triangle', 0, 190, 150, 0.2, 0.003, 0.36)],
+  // The tongues go home.
+  frogSlurp: [hiss(0, 700, 1900, 4, 0.14, 0.03, 0.16)],
 
   // The duck: high, quick and nasal.
   duckCatch: [tone('square', 0, 760, 1180, 0.1, 0.006, 0.09), tone('sine', 0.08, 1180, 1500, 0.14, 0.006, 0.14)],
-  duckRefuse: [tone('square', 0, 900, 620, 0.11, 0.005, 0.08), tone('square', 0.11, 820, 560, 0.11, 0.005, 0.1), hiss(0.2, 1800, 900, 1.5, 0.2, 0.003, 0.06)],
+  duckRefuse: [tone('square', 0, 900, 620, 0.11, 0.005, 0.08), tone('square', 0.11, 820, 560, 0.11, 0.005, 0.1), hiss(0.54, 1800, 900, 1.5, 0.22, 0.003, 0.06)],
   duckPoke: [tone('square', 0, 1250, 1700, 0.1, 0.004, 0.07), tone('sine', 0, 1250, 1700, 0.1, 0.004, 0.09)],
   duckStartle: [tone('square', 0, 1500, 900, 0.12, 0.004, 0.16)],
+  // Carried off: a flurry of wing-flaps. Down again: a soft bump.
+  duckLiftOff: [0, 0.1, 0.2, 0.31, 0.43, 0.56, 0.7, 0.85].map((at) => hiss(at, 620, 900, 1.6, 0.15, 0.008, 0.05)),
+  duckLand: [tone('sine', 0, 190, 110, 0.26, 0.004, 0.13), hiss(0, 500, 300, 1.5, 0.08, 0.003, 0.06)],
 
   // The frog: a wet twang and a low double note.
   frogCatch: [tone('triangle', 0, 240, 620, 0.2, 0.005, 0.08), tone('sine', 0.07, 620, 310, 0.18, 0.006, 0.2), hiss(0, 1200, 2400, 3, 0.07, 0.004, 0.06)],
   frogRefuse: [tone('sine', 0, 180, 420, 0.24, 0.01, 0.16), tone('sine', 0.17, 420, 200, 0.2, 0.006, 0.2)],
   frogPoke: [tone('triangle', 0, 520, 700, 0.14, 0.005, 0.07), tone('triangle', 0.1, 600, 820, 0.14, 0.005, 0.09)],
   frogStartle: [tone('sawtooth', 0, 300, 140, 0.13, 0.006, 0.26)],
+  // Carried off: a rising slide-whistle. Down again: two boings.
+  frogLiftOff: [tone('sine', 0, 420, 1500, 0.15, 0.05, 0.85)],
+  frogLand: [tone('sine', 0, 200, 430, 0.24, 0.006, 0.14), tone('sine', 0.3, 230, 400, 0.16, 0.006, 0.12)],
 
   // The hippo: low, slow and honking.
   hippoCatch: [tone('sawtooth', 0, 150, 190, 0.12, 0.03, 0.3), tone('sine', 0, 150, 190, 0.22, 0.03, 0.34)],
   hippoRefuse: [hiss(0, 700, 1000, 2, 0.08, 0.16, 0.1), hiss(0.26, 1500, 500, 0.8, 0.4, 0.004, 0.2), tone('sine', 0.26, 190, 90, 0.24, 0.006, 0.2)],
   hippoPoke: [tone('sine', 0, 260, 200, 0.2, 0.02, 0.34), tone('triangle', 0, 520, 400, 0.06, 0.02, 0.3)],
-  hippoStartle: [tone('sine', 0.3, 170, 240, 0.2, 0.05, 0.3)],
+  // It does not notice for a beat: a long low hum that rises at the end.
+  hippoStartle: [tone('sine', 0.42, 150, 160, 0.18, 0.08, 0.3), tone('sine', 0.72, 160, 250, 0.18, 0.05, 0.28)],
+  // The string strains with a rising creak; then it sits down, hard: a deep thud.
+  hippoLiftOff: [tone('sawtooth', 0, 85, 170, 0.09, 0.2, 0.75), hiss(0.1, 420, 980, 12, 0.1, 0.2, 0.6)],
+  hippoLand: [tone('sine', 0, 105, 58, 0.45, 0.004, 0.3), hiss(0, 300, 160, 1.2, 0.18, 0.003, 0.12)],
 
   // The crab: clicks and snips.
   crabCatch: [hiss(0, 3600, 3000, 6, 0.26, 0.002, 0.03), hiss(0.09, 4200, 3400, 6, 0.26, 0.002, 0.03), tone('sine', 0.12, 1500, 1900, 0.1, 0.004, 0.1)],
-  crabRefuse: [hiss(0, 3800, 2600, 5, 0.3, 0.002, 0.035), tone('square', 0.02, 2100, 1500, 0.07, 0.002, 0.04)],
+  // A snip as it pinches, and a ping as its eyes shoot up.
+  crabRefuse: [hiss(0.3, 3800, 2600, 5, 0.3, 0.002, 0.035), tone('square', 0.32, 2100, 1500, 0.07, 0.002, 0.04), tone('sine', 0.4, 2300, 3300, 0.12, 0.004, 0.14)],
   crabPoke: [hiss(0, 3300, 3000, 7, 0.22, 0.002, 0.025), hiss(0.08, 3900, 3400, 7, 0.22, 0.002, 0.025)],
-  crabStartle: [tone('sine', 0, 1300, 2300, 0.13, 0.004, 0.14)],
+  // A scuttle of feet, then one small blip as it peeks.
+  crabStartle: [...[0, 0.05, 0.1, 0.16, 0.22].map((at) => hiss(at, 3000, 2600, 8, 0.14, 0.002, 0.02)), tone('sine', 0.52, 1500, 1900, 0.1, 0.004, 0.08)],
+  // Carried off: a whirr that climbs. Down again: a clatter of legs.
+  crabLiftOff: [tone('sawtooth', 0, 120, 520, 0.08, 0.06, 0.85), hiss(0, 900, 2700, 4, 0.07, 0.06, 0.85)],
+  crabLand: [0, 0.05, 0.11, 0.18, 0.27].map((at, i) => hiss(at, 2600 - i * 200, 2200 - i * 200, 6, 0.2 - i * 0.02, 0.002, 0.03)),
 }
 
 /** How long a voice lasts, start to silence. */

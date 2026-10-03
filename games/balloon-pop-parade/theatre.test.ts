@@ -133,7 +133,7 @@ describe('a bunch the child sends', () => {
     theatre.paint(painter, VIEW)
     expect(frame.poses.get('friend-0')!.y - GROUND, 'down again').toBeLessThan(0.1)
     expect(theatre.troop.held).toEqual([true])
-    expect(voices(theatre)).toEqual(expect.arrayContaining(['liftOff', 'thud', 'pop']))
+    expect(voices(theatre)).toEqual(expect.arrayContaining([`${kind}LiftOff`, `${kind}Land`, 'pop', 'squeal']))
     expect(frame.balloons, 'two in the sky and the one it holds').toHaveLength(3)
   })
 
@@ -143,7 +143,60 @@ describe('a bunch the child sends', () => {
     tapSlot(theatre, 2)
     expect(theatre.troop.held).toEqual([true, true, true])
     play(theatre, FLIGHT + 0.05)
-    expect(voices(theatre).filter((voice) => voice === 'hippoCatch')).toHaveLength(3)
+    // The hippos' honks come one after another, stepping down.
+    const honks = theatre.sounds.filter((sound) => sound.voice === 'hippoCatch')
+    expect(honks).toHaveLength(3)
+    expect(honks[0].after).toBeLessThan(honks[1].after)
+    expect(honks[1].after).toBeLessThan(honks[2].after)
+    expect(honks[0].pitch).toBeGreaterThan(honks[2].pitch * 1.1)
+  })
+
+  it('carries a whole troop off at the same moment when each of them is given one more, and brings them down one after another', () => {
+    const moment = MOMENTS.bunches, theatre = new Theatre(moment.troop, moment.sky, moment.waiting), { frame, painter, clear } = recorder()
+    tapSlot(theatre, 2)
+    play(theatre, 2)
+    theatre.sounds.length = 0
+    tapSlot(theatre, 2)
+    play(theatre, FLIGHT + PERSONALITIES.hippo.cue.letGo - 0.1)
+    theatre.paint(painter, VIEW)
+    for (const name of ['friend-0', 'friend-1', 'friend-2']) expect(frame.poses.get(name)!.y - GROUND, name).toBeGreaterThan(0.1)
+    play(theatre, 3)
+    const lifts = theatre.sounds.filter((sound) => sound.voice === 'hippoLiftOff'), lands = theatre.sounds.filter((sound) => sound.voice === 'hippoLand')
+    expect(lifts.map((sound) => sound.after)).toEqual([0, 0, 0])
+    expect(lifts[2].pitch).toBeGreaterThan(lifts[0].pitch * 1.1)
+    expect(lands.map((sound) => sound.after)).toEqual([0, 0.11, 0.22])
+    clear()
+    theatre.paint(painter, VIEW)
+    expect(theatre.troop.held).toEqual([true, true, true])
+    expect(frame.balloons, 'the sky of six and one each').toHaveLength(9)
+  })
+
+  it('has the nearest friend take one too many in its other hand and be carried off alone', () => {
+    const troop = { kind: 'duck' as const, size: 3 as const, held: [true, true, true] }
+    const theatre = new Theatre(troop, [{ colour: 'duck', count: 1 }, { colour: 'frog', count: 1 }, { colour: 'duck', count: 1 }], { kind: 'frog', size: 1 }), { frame, painter } = recorder()
+    // The place on the right is nearest the duck on the right.
+    tapSlot(theatre, 2)
+    play(theatre, FLIGHT + 0.6)
+    theatre.paint(painter, VIEW)
+    expect(frame.poses.get('friend-2')!.y - GROUND).toBeGreaterThan(0.3)
+    expect(frame.poses.get('friend-0')!.y - GROUND).toBeLessThan(0.1)
+    expect(frame.poses.get('friend-1')!.y - GROUND).toBeLessThan(0.1)
+    expect(voices(theatre)).toContain('squeal')
+  })
+
+  it('knocks the balloon a friend already holds when that friend refuses another colour', () => {
+    const theatre = new Theatre({ kind: 'crab', size: 1, held: [true] }, [{ colour: 'crab', count: 1 }, { colour: 'duck', count: 1 }], { kind: 'frog', size: 1 }), { frame, painter, clear } = recorder()
+    theatre.paint(painter, VIEW)
+    const before = frame.balloons.find((balloon) => balloon.y < 2 && balloon.y > GROUND + 2)!
+    tapSlot(theatre, 1)
+    play(theatre, FLIGHT + PERSONALITIES.crab.cue.hit + 0.12)
+    expect(voices(theatre)).toContain('bonk')
+    clear()
+    theatre.paint(painter, VIEW)
+    const after = frame.balloons.find((balloon) => balloon.colour === before.colour && balloon.y < 2.2 && balloon.y > GROUND + 1)!
+    expect(Math.hypot(after.x - before.x, after.y - before.y)).toBeGreaterThan(0.3)
+    play(theatre, 3)
+    expect(theatre.troop.held).toEqual([true])
   })
 
   it('is refused by a friend who is still without a balloon when there is one', () => {
@@ -169,6 +222,17 @@ describe('a bunch the child sends', () => {
     expect(frame.balloons.filter((balloon) => balloon.y > 2.4)).toHaveLength(3)
     expect(theatre.sky).toHaveLength(3)
     expect(voices(theatre)).toContain('bloop')
+  })
+})
+
+describe('a friend that is poked', () => {
+  it('answers in its own voice, and the string of a balloon it holds hums', () => {
+    const theatre = new Theatre({ kind: 'frog', size: 1, held: [true] }, [{ colour: 'frog', count: 1 }], { kind: 'duck', size: 1 })
+    theatre.press(0, GROUND + 1, VIEW)
+    expect(voices(theatre)).toEqual(['frogPoke', 'stringHum'])
+    const empty = solo('frog', ['frog'])
+    empty.press(0, GROUND + 1, VIEW)
+    expect(voices(empty)).toEqual(['frogPoke'])
   })
 })
 
@@ -254,6 +318,15 @@ describe('the hand that holds the string', () => {
       expect(out.x, kind).toBeCloseTo(world.x, 4)
       expect(out.y, kind).toBeCloseTo(world.y, 4)
       expect(out.z, kind).toBeCloseTo(world.z, 4)
+      // And the other hand, which takes a bunch when the string hand is full.
+      const other: Pose = { ...pose, armL: 2.4, armLForward: 0.3 }
+      applyPose(rig, other)
+      rig.root.updateWorldMatrix(true, true)
+      rig.armL.localToWorld(world.set(BODIES[kind].hand[0], BODIES[kind].hand[1], BODIES[kind].hand[2]))
+      handOf(BODIES[kind], other, out, true)
+      expect(out.x, `${kind} left`).toBeCloseTo(world.x, 4)
+      expect(out.y, `${kind} left`).toBeCloseTo(world.y, 4)
+      expect(out.z, `${kind} left`).toBeCloseTo(world.z, 4)
       rig.material.dispose()
     }
   })

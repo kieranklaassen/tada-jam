@@ -43,7 +43,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     })()
     const theatre = new Theatre(opening.troop, opening.sky, opening.waiting)
     const sound = () => {
-      for (const cue of theatre.sounds) audio.play(voiceOf(cue.voice, cue.pitch, cue.gain))
+      for (const cue of theatre.sounds) audio.play(voiceOf(cue.voice, cue.pitch, cue.gain, cue.after))
       theatre.sounds.length = 0
     }
     const pinned = tierOverride(window.location.search)

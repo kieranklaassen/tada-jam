@@ -24,7 +24,8 @@ export type Painter = {
   shadow(x: number, y: number, z: number, wide: number, deep: number, colour: string): void
 }
 
-export type Sound = { voice: VoiceId; pitch: number; gain: number }
+/** A sound to play: `after` is seconds from now, for a run of catches or one landing after another. */
+export type Sound = { voice: VoiceId; pitch: number; gain: number; after: number }
 
 /** What a point of the surface is on. */
 export type Hit = { on: 'held'; friend: number } | { on: 'bunch'; slot: number } | { on: 'friend'; friend: number } | { on: 'waiting' } | { on: 'air' }
@@ -34,7 +35,8 @@ type Flight = { bunch: Bunch; slot: number; given: Given; t: number; fromX: numb
 type Held = { x: number; y: number; vx: number; vy: number; shown: boolean }
 type Loose = { x: number; y: number; vx: number; vy: number; colour: string; flat: boolean; t: number; popAt: number }
 type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; life: number }
-type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null }
+/** `tug` is the bunch that carries a friend off, and `landAfter` puts its landing sound a little after its neighbour's when a whole troop comes down. */
+type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null; landAfter: number }
 
 /** Seconds a bunch takes from the sky to the friend, and before a new one drifts into its place. */
 export const FLIGHT = 0.5
@@ -61,7 +63,7 @@ export class Theatre {
   private readonly loose: Loose[] = []
   private readonly scraps: Scrap[] = []
   private readonly actors: Actor[]
-  private readonly waitingActor: Actor = { clip: null, t: 0, next: null, tug: null }
+  private readonly waitingActor: Actor = { clip: null, t: 0, next: null, tug: null, landAfter: 0 }
   private pressedSlot = -1
   private readonly pose: Pose = restPose()
   private readonly hand = { x: 0, y: 0, z: 0 }
@@ -75,7 +77,7 @@ export class Theatre {
     this.rng = seed >>> 0 || 1
     this.places = this.sky.map(() => ({ squash: 0, squashSpeed: 0, pressed: false, push: 0, pushSpeed: 0, away: 0, grow: 1 }))
     this.held = troop.held.map((holds, i) => ({ x: friendX(i, troop.size) + 0.7, y: GROUND + HELD_HEIGHT, vx: 0, vy: 0, shown: holds }))
-    this.actors = troop.held.map(() => ({ clip: null, t: 0, next: null, tug: null }))
+    this.actors = troop.held.map(() => ({ clip: null, t: 0, next: null, tug: null, landAfter: 0 }))
   }
 
   /** The places in the sky for this view, worked out once for each width. */
@@ -100,9 +102,9 @@ export class Theatre {
     return this.rng / 2 ** 32
   }
 
-  private sound(voice: VoiceId, pitch = 1, gain = 1): void {
+  private sound(voice: VoiceId, pitch = 1, gain = 1, after = 0): void {
     // Never quite the same twice: a few per cent either way.
-    this.sounds.push({ voice, pitch: pitch * (0.95 + this.random() * 0.1), gain })
+    this.sounds.push({ voice, pitch: pitch * (0.95 + this.random() * 0.1), gain, after })
   }
 
   /** What is under a point of the friends' plane. Whatever looks touchable is, and is read a little larger than it is drawn. */
@@ -155,6 +157,13 @@ export class Theatre {
     } else if (hit.on === 'friend') {
       this.act(hit.friend, 'poke')
       this.sound(`${this.troop.kind}Poke`)
+      const balloon = this.held[hit.friend]
+      if (balloon.shown) {
+        // The balloon it holds bobs along on its string, which hums like a plucked rubber band.
+        balloon.vy += 2.6
+        balloon.vx += 1.2
+        this.sound('stringHum', 1, 0.8, 0.05)
+      }
     } else if (hit.on === 'waiting') {
       this.waitingActor.clip = 'wave'
       this.waitingActor.t = 0
@@ -178,8 +187,9 @@ export class Theatre {
     const { troop, given } = give(this.troop, bunch)
     this.troop = troop
     const at = this.slots(view)[slot]
-    // A bunch of another colour goes to a friend who is still without one, if there is one: it is the one looking for a balloon.
-    const friend = given.result === 'taken' ? given.takers[0] : given.result === 'gotAway' ? given.grabber : this.refuser(at.x)
+    // When every friend has one, the nearest friend is the one who grabs a bunch that is too many.
+    const everyoneHolds = given.result === 'gotAway' && given.spare === bunch.count
+    const friend = given.result === 'taken' ? given.takers[0] : given.result === 'gotAway' ? (everyoneHolds ? this.nearest(at.x, false) : given.grabber) : this.nearest(at.x, true)
     this.flights.push({ bunch, slot, given, t: 0, fromX: at.x, fromY: at.y, landed: false, after: 0, friend })
     // The same bunch drifts back into the same place: the sky stays as it was.
     place.away = REGROW_AFTER
@@ -196,12 +206,12 @@ export class Theatre {
     this.pressedSlot = -1
   }
 
-  /** Who refuses a bunch that comes down from `x`: the nearest friend without a balloon, or the nearest of all when everyone has one. */
-  private refuser(x: number): number {
+  /** The friend nearest to `x`. With `wanting`, the nearest of those still without a balloon when there is one: it is the one looking for a balloon. */
+  private nearest(x: number, wanting: boolean): number {
     let best = -1
-    for (const wanting of [true, false]) {
+    for (const only of wanting ? [true, false] : [false]) {
       for (let i = 0; i < this.troop.size; i++) {
-        if (wanting && this.troop.held[i]) continue
+        if (only && this.troop.held[i]) continue
         if (best < 0 || Math.abs(this.spot(i).x - x) < Math.abs(this.spot(best).x - x)) best = i
       }
       if (best >= 0) break
@@ -288,7 +298,7 @@ export class Theatre {
           })
           actor.tug = null
         }
-        if (before < land && actor.t >= land) this.sound('thud', kind === 'hippo' ? 0.8 : 1.25, kind === 'hippo' ? 1 : 0.7)
+        if (before < land && actor.t >= land) this.sound(`${kind}Land`, 1, 1, actor.landAfter)
       }
       if (actor.t >= personality.lasts[actor.clip]) {
         actor.clip = actor.next
@@ -360,26 +370,45 @@ export class Theatre {
         balloon.vx = 2.2
         balloon.vy = 3.4
         balloon.shown = true
-        this.sound(`${kind}Catch`, 1 + k * 0.06, k === 0 ? 1 : 0.7)
+        // A bunch with one for each: the ducks' boings in a run, the frogs' twangs on top of one another, the hippos'
+        // honks stepping down one after another, the crabs' clicks in a quick run.
+        const gap = kind === 'hippo' ? 0.17 : kind === 'duck' ? 0.1 : kind === 'crab' ? 0.06 : 0.03
+        const pitch = kind === 'hippo' ? 1 - k * 0.11 : kind === 'duck' ? 1 + k * 0.06 : 1
+        this.sound(`${kind}Catch`, pitch, k === 0 ? 1 : 0.8, k * gap)
       })
+      if (kind === 'frog' && given.takers.length > 1) this.sound('frogSlurp', 1, 1, 0.3)
     } else if (given.result === 'refused') {
       this.act(flight.friend, 'refuse')
       this.sound(`${kind}Refuse`)
     } else {
-      const actor = this.actors[flight.friend]
-      if (actor.clip !== 'liftOff') {
-        actor.clip = 'liftOff'
-        actor.t = 0
-        actor.next = null
-        actor.tug = flight.bunch
-        this.sound('liftOff', kind === 'hippo' ? 0.6 : kind === 'frog' ? 0.85 : 1.1)
+      const everyoneHolds = given.spare === flight.bunch.count
+      if (everyoneHolds && flight.bunch.count === this.troop.size && this.troop.size > 1) {
+        // One more for each of a troop that has its balloons: the whole troop is carried off at the same moment,
+        // their squeaks climbing a scale together, and they come down one after another.
+        for (let i = 0; i < this.troop.size; i++) this.carryOff(i, { colour: flight.bunch.colour, count: 1 }, 1 + i * 0.12, i * 0.11)
       } else {
-        // Already in the air with one bunch: this one just gets away.
-        bunchOffsets(flight.bunch.count).forEach((offset, k) => {
-          const spot = this.spot(flight.friend)
-          this.loose.push({ x: spot.x + offset.x, y: spot.y + HELD_HEIGHT + offset.y, vx: (this.random() - 0.5) * 4, vy: 5, colour: KIND_COLOURS[flight.bunch.colour], flat: false, t: 0, popAt: 0.3 + k * 0.09 })
-        })
+        this.carryOff(flight.friend, flight.bunch, 1, 0)
+        // A balloon in each hand: the two rub together.
+        if (everyoneHolds && flight.bunch.count === 1) this.sound('squeal', 1, 0.9, 0.15)
       }
+    }
+  }
+
+  /** A friend grabs more than it should have and is carried off. One already in the air just loses the new bunch. */
+  private carryOff(friend: number, bunch: Bunch, pitch: number, landAfter: number): void {
+    const actor = this.actors[friend], kind = this.troop.kind
+    if (actor.clip !== 'liftOff') {
+      actor.clip = 'liftOff'
+      actor.t = 0
+      actor.next = null
+      actor.tug = bunch
+      actor.landAfter = landAfter
+      this.sound(`${kind}LiftOff`, pitch)
+      return
+    }
+    const spot = this.spot(friend), offsets = bunchOffsets(bunch.count)
+    for (let k = 0; k < offsets.length; k++) {
+      this.loose.push({ x: spot.x + offsets[k].x, y: spot.y + HELD_HEIGHT + offsets[k].y, vx: (this.random() - 0.5) * 4, vy: 5, colour: KIND_COLOURS[bunch.colour], flat: false, t: 0, popAt: 0.3 + k * 0.09 })
     }
   }
 
@@ -396,6 +425,14 @@ export class Theatre {
       else this.burst(x, y, colour)
     })
     if (kind === 'hippo') this.sound('raspberry')
+    const mine = this.held[flight.friend]
+    if (mine.shown) {
+      // The refusal knocks the balloon it already holds, which swings round on its string and bumps it on the head.
+      const spot = this.spot(flight.friend)
+      mine.vx += (spot.x - mine.x) * 9 - beside.side * 3
+      mine.vy -= 7
+      this.sound('bonk', 1, 1, 0.2)
+    }
     return true
   }
 
@@ -478,7 +515,10 @@ export class Theatre {
       if (actor.clip === 'liftOff' && actor.tug) {
         // The bunch that is carrying it off, straining upwards on strings from its hand.
         const hue = KIND_COLOURS[actor.tug.colour], line = shade(hue, -0.3)
-        const topX = pose.x - 0.2 + Math.sin(time * 9) * 0.05, topY = pose.y + HELD_HEIGHT + 0.5
+        // A friend that already holds a balloon takes the bunch in its other hand: a balloon in each.
+        const other = balloon.shown
+        if (other) handOf(plan, pose, this.hand, true)
+        const topX = pose.x + (other ? -0.75 : -0.2) + Math.sin(time * 9) * 0.05, topY = pose.y + HELD_HEIGHT + 0.5
         for (const offset of bunchOffsets(actor.tug.count)) {
           painter.balloon(topX + offset.x, topY + offset.y, 0.25, 0.96, 1.08, -offset.x * 0.3, hue)
           painter.string(topX + offset.x, topY + offset.y - BALLOON * 1.4, 0.25, this.hand.x, this.hand.y, this.hand.z, line)
@@ -571,18 +611,19 @@ export class Theatre {
 }
 
 /**
- * Where a posed friend's string hand is, in world units: the same sum the meshes make (the arm's swing about the
+ * Where a posed friend's string hand is (or its other hand, with `left`), in world units: the same sum the meshes make (the arm's swing about the
  * shoulder, the squash, then the whole toy's turn, lean and bow about its feet), done in numbers so the theatre
  * needs no renderer. A test holds it against the meshes.
  */
-export function handOf(plan: { hand: readonly [number, number, number]; shoulder: readonly [number, number, number] }, pose: Pose, out: { x: number; y: number; z: number }): { x: number; y: number; z: number } {
-  // The right arm is the left one mirrored: it swings out to the right by `armR`, then forwards.
-  let x = -plan.hand[0], y = plan.hand[1], z = plan.hand[2], c = Math.cos(pose.armR), s = Math.sin(pose.armR), t = 0
+export function handOf(plan: { hand: readonly [number, number, number]; shoulder: readonly [number, number, number] }, pose: Pose, out: { x: number; y: number; z: number }, left = false): { x: number; y: number; z: number } {
+  // The right arm is the left one mirrored: each swings out to its own side, then forwards.
+  const side = left ? -1 : 1, swing = left ? -pose.armL : pose.armR, forward = left ? pose.armLForward : pose.armRForward
+  let x = -side * plan.hand[0], y = plan.hand[1], z = plan.hand[2], c = Math.cos(swing), s = Math.sin(swing), t = 0
   t = x * c - y * s; y = x * s + y * c; x = t
-  c = Math.cos(-pose.armRForward); s = Math.sin(-pose.armRForward)
+  c = Math.cos(-forward); s = Math.sin(-forward)
   t = y * c - z * s; z = y * s + z * c; y = t
   const wide = 1 / Math.sqrt(Math.max(0.2, pose.squash))
-  x = (x - plan.shoulder[0]) * wide
+  x = (x - side * plan.shoulder[0]) * wide
   y = (y + plan.shoulder[1]) * pose.squash
   z = (z + plan.shoulder[2]) * wide
   c = Math.cos(pose.lean); s = Math.sin(pose.lean)
