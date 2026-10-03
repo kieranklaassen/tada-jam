@@ -18,7 +18,8 @@ function eye(x: number, y: number, z: number, size = 0.05): Part {
   return at(ball(size, TRUCK_PAINT.pupil, [1, 1, 1], 8), x, y, z)
 }
 
-export const BOAT = { length: 1.5, floor: 0.1, brim: 0.4 } as const
+/** The boat's floor is thick, so water outside it, up to where it floats, never shows inside it. */
+export const BOAT = { length: 1.5, floor: 0.27, brim: 0.42 } as const
 
 export type BoatModel = { root: THREE.Group; hull: THREE.Mesh; inside: THREE.Mesh }
 
@@ -27,7 +28,7 @@ export function buildBoat(plastic: THREE.Material, water: THREE.Material): BoatM
   const root = new THREE.Group()
   root.name = 'boat'
   // A bowl turned on a lathe and drawn out lengthways into a hull.
-  const bowl = lathe([[0, 0], [0.28, 0.02], [0.44, 0.16], [0.5, BOAT.brim], [0.44, BOAT.brim + 0.02], [0.4, BOAT.brim - 0.04], [0.36, 0.2], [0.24, BOAT.floor], [0, BOAT.floor]], PAINT.boat, 20)
+  const bowl = lathe([[0, 0], [0.28, 0.02], [0.44, 0.16], [0.5, BOAT.brim], [0.44, BOAT.brim + 0.02], [0.4, BOAT.brim - 0.04], [0.38, BOAT.floor + 0.03], [0.3, BOAT.floor], [0, BOAT.floor]], PAINT.boat, 20)
   bowl.scale(BOAT.length, 1, 1)
   const gunwale = ring(0.47, 0.045, PAINT.bench, 22)
   gunwale.scale(BOAT.length, 1, 1)

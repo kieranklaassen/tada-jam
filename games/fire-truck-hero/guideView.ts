@@ -15,8 +15,8 @@ const PRESS_TO = 0.75
 
 export type GuideView = {
   root: THREE.Group
-  /** `glow` is 0 to 1; `hand` is the pose of the demonstration that is playing, or null; `at` is where a touch could go. */
-  show: (glow: number, hand: HandPose | null, at: Place, now: number) => void
+  /** `glow` is 0 to 1; `hand` is the pose of the demonstration that is playing, or null; `at` is where a touch could go, and `reach` how wide the thing there is: the ring goes round it. */
+  show: (glow: number, hand: HandPose | null, at: Place, reach: number, now: number) => void
   dispose: () => void
 }
 
@@ -59,14 +59,14 @@ export function buildGuideView(): GuideView {
 
   return {
     root,
-    show: (glow, pose, at, now) => {
+    show: (glow, pose, at, reach, now) => {
       root.position.set(at.x, 0, at.z)
       ring.visible = glow > 0.01
       if (ring.visible) {
         // It breathes: a little wider and fainter, then back.
         const breath = 0.5 + 0.5 * Math.sin(now * 3.2)
         ringPaint.opacity = glow * (0.5 + 0.3 * breath)
-        ring.scale.setScalar(1 + 0.08 * breath)
+        ring.scale.setScalar((reach / 0.74) * (1 + 0.06 * breath))
       }
       hand.visible = pose !== null && pose.opacity > 0.01
       if (pose && hand.visible) {

@@ -43,6 +43,10 @@ export const GATE = { x: 2.6, z: -0.85, half: 1.6 } as const
  */
 export const BELL: Place = { x: 4.6, z: 0.6 }
 
+/** Where the one who waits in the next yard shows, along the far fence and beyond it; and how near the fence water must land to reach it. */
+export const PEEK_X = GATE.x + GATE.half + 3.4
+export const PEEK_REACH_Z = 1.3
+
 /** From one yard's far fence to the next yard's: a yard and the lane of grass between two yards. */
 export const YARD_PITCH = 15
 

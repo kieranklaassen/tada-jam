@@ -129,6 +129,8 @@ export class YardMotion {
   readonly ripples = new Ripples()
   /** The bell: how far it swings, and how far the gate's latch is lifted, 0 to 1. */
   readonly bell = { swing: 0, latch: 0 }
+  /** How high the one who waits beyond the fence has hopped. */
+  peek = 0
   /** The index of the thing of each kind in this yard, or -1. */
   readonly has: Record<Kind, number>
   /** Seconds of game time this yard has been on screen, for what idles by the clock alone. */
@@ -137,6 +139,7 @@ export class YardMotion {
   private bellSwing = spring(0)
   private latch = spring(0)
   private steamOwed = 0
+  private peekHop = spring(0)
   private fireOut = false
 
   constructor(yard: Yard, seed = 1) {
@@ -240,6 +243,11 @@ export class YardMotion {
     this.latch.target = Math.min(1, ring / 3)
   }
 
+  /** Water landed by the fence in front of the one who waits beyond it: it hops. */
+  peeked(): void {
+    kick(this.peekHop, 4.5)
+  }
+
   /** The latch dropped again. */
   latchDown(): void {
     this.latch.target = 0
@@ -296,6 +304,8 @@ export class YardMotion {
     this.ripples.step(seconds)
     stepSpring(this.bellSwing, { stiffness: 60, damping: 3.2 }, seconds)
     stepSpring(this.latch, { stiffness: 140, damping: 12 }, seconds)
+    stepSpring(this.peekHop, { stiffness: 110, damping: 7 }, seconds)
+    this.peek = Math.max(0, this.peekHop.value)
     this.bell.swing = this.bellSwing.value * 0.12
     this.bell.latch = Math.max(0, Math.min(1.1, this.latch.value))
   }

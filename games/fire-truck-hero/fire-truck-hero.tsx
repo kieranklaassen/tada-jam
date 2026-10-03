@@ -172,7 +172,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
         keep()
         // What to show an idle child: a glow on what wants water, then one move, a single tap of the ghost hand.
         const guidance = ladder.update(clock.seconds)
-        stage.guide(spike ? 0 : guidance.glow, spike || guidance.demo === null ? null : handPose(guidance.demo, false, hand), game.wants, clock.seconds)
+        stage.guide(spike ? 0 : guidance.glow, spike || guidance.demo === null ? null : handPose(guidance.demo, false, hand), game.wants, game.wantsReach, clock.seconds)
       }
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel
       // ratio in `resize`. The interval just measured belongs to the frame before, so it is judged with that

@@ -70,6 +70,9 @@ export default {
   allow: [
     // The truck's own joints.
     { a: 'truck-shell', b: 'truck-yoke', upTo: 0.4, reason: "the nozzle's yoke turns in its socket on top of the pedestal, which is part of the shell" },
+    { a: 'truck-shell', b: 'truck-barrel', upTo: 0.3, reason: "the barrel's fat back end turns in the cup on top of the pedestal, which is part of the shell" },
+    { a: 'truck-shell', b: 'cat-', upTo: 0.2, reason: 'the cat sits on the hose reel at the back of the truck, which is part of the shell' },
+    { a: 'pool-shell', b: 'duck-body', upTo: 0.2, reason: "the duck sits on the pool's floor until the water lifts it" },
     { a: 'truck-shell', b: 'truck-pupils', upTo: 0.7, reason: 'the pupils are set into the whites of the eyes, which are part of the shell' },
     // Things that float sit in the water, and the water line crosses them.
     { a: 'pool-water', b: 'duck-body', upTo: 0.6, reason: 'the duck floats: the water line crosses its body' },
@@ -77,11 +80,11 @@ export default {
     { a: 'boat-water', b: 'boat-hull', upTo: 0.7, reason: 'water gathers inside the boat and stands against its sides' },
     { a: 'ground', b: 'worm-body', upTo: 1, reason: 'the worm comes up out of the mud and goes back down into it' },
     // A thing's own parts where they join.
-    { a: 'seed-bud', b: 'seed-shoot', kind: 'pose', upTo: 0.3, reason: 'the bud grows on the end of its stem' },
-    { a: 'seed-bud', b: 'seed-petals', kind: 'pose', upTo: 0.3, reason: 'the bud opens into the flower: for a moment both are there' },
+    { a: 'seed-bud', b: 'seed-shoot', kind: 'pose', upTo: 1, reason: 'the bud is the end of its stem: the stem runs up into it' },
+    { a: 'seed-bud', b: 'seed-petals', kind: 'pose', upTo: 1, reason: 'the bud opens into the flower: for a moment the small bud is inside the opening petals' },
     { a: 'snail-shell', b: 'snail-body', kind: 'pose', upTo: 0.4, reason: "the snail's body comes out of its shell" },
-    { a: 'snail-shell', b: 'snail-feelers', kind: 'pose', upTo: 0.4, reason: "the snail's feelers come out of its shell with its body" },
-    { a: 'cat-body', b: 'cat-paw', kind: 'pose', upTo: 0.3, reason: 'her front paw rests against her body' },
+    { a: 'snail-shell', b: 'snail-feelers', kind: 'pose', upTo: 0.6, reason: "the snail's feelers come out of its shell with its body" },
+    { a: 'cat-body', b: 'cat-paw', kind: 'pose', upTo: 0.5, reason: 'her front paw rests against her body' },
     { a: 'cat-body', b: 'cat-tail', kind: 'pose', upTo: 0.3, reason: 'her tail is rooted in her body' },
     { a: 'cat-body', b: 'cat-skull', kind: 'pose', upTo: 0.3, reason: 'her head sits on her shoulders' },
     { a: 'cat-skull', b: 'cat-lids', kind: 'pose', upTo: 0.3, reason: 'her eyelids lie on her eyes' },

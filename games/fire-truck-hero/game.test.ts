@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import { Game, LATCH_DROPS_S, RINGS_TO_OPEN, SHOW_AFTER_S } from './game'
 import { decode, levelAt } from './ground'
-import { BELL, TRUCK, type Place } from './layout'
+import { BELL, PEEK_X, TRUCK, type Place } from './layout'
 import { placeOf } from './places'
 import { deserializeSave, type Save } from './save'
 import { CHANNELS, endedChannels } from './scenes'
@@ -388,6 +388,28 @@ describe('the bell and the way on', () => {
     expect(t.game.yard.place).toBe('one-thing')
     expect(t.game.yard.things[0].gulps).toBe(0)
     expect(t.game.leaving).toBeNull()
+  })
+})
+
+describe('the one who waits beyond the fence', () => {
+  it('is the kind that wants water in the next yard, and answers water that lands by the fence in front of it', () => {
+    const t = new Table(saved('one-thing', 0, { next: { place: 'one-thing', arrangement: 2 } }))
+    expect(t.game.waits).toBe('pool')
+    const heard = t.heard.length
+    t.gulp({ x: PEEK_X, z: 0.4 })
+    expect(t.game.motion.peek).toBeGreaterThanOrEqual(0)
+    // The landing on the sand, and the duck's quack.
+    expect(t.heard.length).toBeGreaterThanOrEqual(heard + 3)
+    // It is not counted, kept or saved: the yard is as it was but for the wet sand.
+    expect(t.game.yard.things[0].gulps).toBe(0)
+  })
+
+  it('shows round the thing that wants water with a ring wider than the thing, and round the bell once the want is met', () => {
+    const t = new Table(saved('one-thing', 2))
+    expect(t.game.wantsReach).toBeGreaterThan(1.5)
+    t.gulps(t.at(0), 4)
+    expect(t.game.wants).toEqual(BELL)
+    expect(t.game.wantsReach).toBeLessThan(1)
   })
 })
 

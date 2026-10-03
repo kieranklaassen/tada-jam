@@ -53,7 +53,7 @@ export type Stage = {
   /** Shows the game as it stands. */
   show: (game: Game) => void
   /** Shows an idle child where a touch could go: a glow, and the ghost hand when a demonstration plays. */
-  guide: (glow: number, hand: HandPose | null, at: Place, now: number) => void
+  guide: (glow: number, hand: HandPose | null, at: Place, reach: number, now: number) => void
   /** Draws the frame. With no game yet it draws the bare yard. */
   draw: () => void
   under: (x: number, y: number) => Under
@@ -168,8 +168,19 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
   const truckBall = new THREE.Sphere(new THREE.Vector3(TRUCK.x, 1.2, TRUCK.z), TRUCK_REACH)
   let driving = false
 
-  // The lowest tier's plastic is compiled now, so a tier change never stalls a frame.
+  // Every program the game will ever need is compiled now, with everything shown for the moment: the water in
+  // the pool, the steam, the ghost hand, and the lowest tier's plastic. So the first gulp, the first puff and a
+  // tier change never stall a frame.
+  const hidden: THREE.Object3D[] = []
+  scene.traverse((object) => {
+    if (!object.visible) {
+      hidden.push(object)
+      object.visible = true
+    }
+  })
+  renderer.compile(scene, camera)
   renderer.compile(new THREE.Mesh(shadowPlane, matte), camera, scene)
+  for (const object of hidden) object.visible = false
 
   const counts: StageCounts = { drawCalls: 0, triangles: 0 }
   const everything = [satin, matte, glow, water, shadowMaterial]
@@ -237,7 +248,7 @@ export function createStage(canvas: HTMLCanvasElement): Stage {
       hanging.scale.set(game.hangingDrop, game.hangingDrop * 1.35, game.hangingDrop)
       drops.show(game.drops)
     },
-    guide: (glow, hand, at, now) => guide.show(glow, hand, at, now),
+    guide: (glow, hand, at, reach, now) => guide.show(glow, hand, at, reach, now),
     draw: () => {
       if (paintOf) ground?.refresh(paintOf.paint)
       renderer.render(scene, camera)

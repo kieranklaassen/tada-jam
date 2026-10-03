@@ -7,7 +7,7 @@
 
 import * as THREE from 'three'
 import { FENCE_Z } from './gardenModel'
-import { BELL, GATE, SPOTS, type Place } from './layout'
+import { BELL, GATE, PEEK_X, SPOTS, type Place } from './layout'
 import { SAND, THINGS_PAINT, WATER } from './look'
 import { BOAT, PATCH, WHEEL, buildBee, buildBoat, buildPatch, buildSnail, buildWheel, buildWorm } from './moreModels'
 import { NEST, placeOf } from './places'
@@ -180,7 +180,7 @@ export class YardSet {
       const duck = motion.duck.pose
       const floor = POOL.floor * SCALE.pool
       // The duck's height is its own: on the floor, on the water, or over the rim and onto the sand.
-      this.duck.position.set(place.x + NEST.duckInPool.x + duck.x, floor + duck.y - (duck.y > 0.02 && duck.z < 0.9 ? 0.1 : 0), place.z + NEST.duckInPool.z + duck.z)
+      this.duck.position.set(place.x + NEST.duckInPool.x + duck.x, floor + 0.02 + duck.y - (duck.y > 0.03 && duck.z < 0.9 ? 0.1 : 0), place.z + NEST.duckInPool.z + duck.z)
       this.duck.rotation.set(duck.wiggle, -duck.turn, -duck.tilt)
       let count = 0
       for (const ring of motion.ripples.rings) {
@@ -207,7 +207,7 @@ export class YardSet {
       this.pot.leaves.scale.setScalar(Math.max(0.03, pose.leaves))
       this.pot.leaves.rotation.z = sway * 1.5
       const top = POT.soil + POT.stem * pose.shoot * grown
-      this.pot.bud.visible = pose.bud > 0.05
+      this.pot.bud.visible = pose.bud > 0.05 && pose.flower < 0.25
       this.pot.bud.scale.setScalar(Math.max(0.05, pose.bud))
       this.pot.bud.position.y = top - POT.stem * Math.max(0.05, pose.bud)
       // Where the seed holds the want, the flower opens petal by petal as the ending plays.
@@ -255,9 +255,12 @@ export class YardSet {
       const inPool = boat.in !== undefined
       // On the pool's floor until the water is deep enough; then on the water, lower the more it holds.
       // On sand it is lifted as it tips, so its ends never dig in.
-      boatY = inPool ? (floats ? waterY - 0.06 - pose.water * 0.1 + pose.bob * 0.02 - pose.sunk * 0.22 : POOL.floor * SCALE.pool + 0.012) : 0.02 + Math.abs(pose.rock * 0.09 + pose.brim * 0.1) * 0.5
+      // In the pool it rests on the floor until the water is deep enough to carry it, and then rides lower the more it holds.
+      const carried = waterY - 0.16 - pose.water * 0.08 + (floats ? pose.bob * 0.02 - pose.sunk * 0.2 : 0)
+      boatY = inPool ? Math.max(POOL.floor * SCALE.pool + 0.012, carried) : 0.02 + Math.abs(pose.rock * 0.09 + pose.brim * 0.1) * 0.5
       boatAt = { x: place.x + pose.pushX + pose.carryX, z: place.z + pose.pushZ + pose.carryZ }
-      this.boat.root.position.set(boatAt.x, boatY + pose.carryY, boatAt.z)
+      boatY += pose.carryY
+      this.boat.root.position.set(boatAt.x, boatY, boatAt.z)
       this.boat.root.rotation.set(pose.roll, -0.3, pose.rock * 0.09 + pose.brim * 0.1)
       this.boat.inside.visible = pose.water > 0.05
       this.boat.inside.position.y = BOAT.floor + 0.02 + pose.water * (BOAT.brim - BOAT.floor - 0.07)
@@ -318,30 +321,30 @@ export class YardSet {
     this.steam.count = puffs
     this.steam.instanceMatrix.needsUpdate = true
 
-    this.peek(peek, time)
+    this.peek(peek, time, motion.peek)
     this.shadows.count = this.shadowCount
     this.shadows.instanceMatrix.needsUpdate = true
   }
 
   /** What waits beyond the fence, to the right of the gate, alive and in no hurry. */
-  private peek(kind: Kind | null, time: number): void {
-    const x = GATE.x + GATE.half + 3.4, z = FENCE_Z - 1.5
+  private peek(kind: Kind | null, time: number, hop: number): void {
+    const x = PEEK_X, z = FENCE_Z - 1.5
     for (const [of, model] of Object.entries(this.peeks)) model.visible = of === kind
     if (kind === 'fire') {
       this.peeks.fire.children.forEach((puff, i) => {
         const rise = (time * 0.35 + i / 3) % 1
-        puff.position.set(x + Math.sin(rise * 5 + i) * 0.25, 0.5 + rise * 2.6, z - 0.4)
+        puff.position.set(x + Math.sin(rise * 5 + i) * 0.25, 0.5 + rise * 2.6 + hop, z - 0.4)
         puff.scale.setScalar(0.22 + rise * 0.38 * (1 - Math.max(0, rise - 0.7) / 0.3))
       })
     } else if (kind === 'pool') {
-      this.peeks.pool.position.set(x, Math.abs(Math.sin(time * 1.7)) * 0.1, z)
+      this.peeks.pool.position.set(x, Math.abs(Math.sin(time * 1.7)) * 0.1 + hop, z)
       this.peeks.pool.rotation.y = -Math.PI / 2 + Math.sin(time * 0.8) * 0.5
     } else if (kind === 'seed') {
-      this.peeks.seed.position.set(x + Math.cos(time * 2.3) * 0.7, 1.7 + Math.sin(time * 5.3) * 0.08, z + Math.sin(time * 2.3) * 0.5)
+      this.peeks.seed.position.set(x + Math.cos(time * 2.3) * 0.7, 1.7 + Math.sin(time * 5.3) * 0.08 + hop * 1.5, z + Math.sin(time * 2.3) * 0.5)
       this.peeks.seed.rotation.y = -(time * 2.3 + Math.PI / 2)
     } else if (kind === 'patch') {
       // A shell on the gate's left post.
-      this.peeks.patch.position.set(GATE.x - GATE.half, 2.33, GATE.z)
+      this.peeks.patch.position.set(GATE.x - GATE.half, 2.33 + hop * 0.5, GATE.z)
       this.peeks.patch.rotation.y = -Math.PI / 2
     }
   }

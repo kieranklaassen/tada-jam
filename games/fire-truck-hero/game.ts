@@ -17,7 +17,7 @@ import { cellOf } from './grid'
 import { cellAt, levelOf, PUDDLE_AT } from './ground'
 import type { Gulp } from './hose'
 import { arcTo, nozzleFor } from './jet'
-import { BELL, NOZZLE, type Place } from './layout'
+import { BELL, GATE, NOZZLE, PEEK_REACH_Z, PEEK_X, type Place } from './layout'
 import { placeOf, targetAt } from './places'
 import { deserializeSave, driveOn, serializeSave, withYard, yardOf, type Save } from './save'
 import { Scene } from './scene'
@@ -160,6 +160,13 @@ export class Game extends Toy {
     return this.yard.met ? BELL : placeOf(this.yard, this.yard.want)
   }
 
+  /** How wide the thing an idle child is shown is, so the glow goes round it and is not hidden under it. */
+  get wantsReach(): number {
+    if (this.yard.met) return 0.85
+    const kind = this.yard.things[this.yard.want]?.kind
+    return kind === 'pool' ? 1.66 : kind === 'seed' ? 1.2 : 1.32
+  }
+
   /** The kind of thing that wants water in the yard beyond the gate: what shows over the fence. */
   get waits(): Kind | null {
     const plan = arrangementsOf(this.save.next.place)[this.save.next.arrangement]
@@ -197,6 +204,10 @@ export class Game extends Toy {
       else this.say(onPlastic(this.variants.next(3)))
     } else {
       this.landOnSand(x, z, fast)
+      // The one who waits beyond the fence is touchable too: water by the fence in front of it makes it hop.
+      // The snail's shell waits on the gate's left post; the others wait further along the fence.
+      const peekX = this.waits === 'patch' ? GATE.x - GATE.half : PEEK_X
+      if (z < PEEK_REACH_Z && Math.abs(x - peekX) < 1.7 && this.waits) this.peekHop()
     }
   }
 
@@ -214,6 +225,14 @@ export class Game extends Toy {
     const now = levelOf(this.yard.ground[cell])
     if (before < PUDDLE_AT && now !== 'damp') this.paint.puddle(x, z)
     if (now === 'mud' && was !== 'mud') this.paint.mud(x, z)
+  }
+
+  private peekHop(): void {
+    this.motion.peeked()
+    const kind = this.waits
+    if (kind === 'pool') this.say(duckQuack(this.variants.next(3)))
+    else if (kind === 'seed') this.say(beeBuzz(true))
+    else this.say(drip(this.variants.next(3)))
   }
 
   /** A fast stream crosses a thing: it answers, and keeps no water. On open sand the sweep is a line and a whisper. */
