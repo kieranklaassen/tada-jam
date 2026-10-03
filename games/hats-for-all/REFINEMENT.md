@@ -3,12 +3,17 @@
 
 ## Status
 
-- Stage: toy, with the rules written as pure modules. The run that wrote this stopped here as its brief says: the game is not built on the toy yet.
-- Sheet: whole in `ART.md` as it stands at commit `1469dea` (sheet part sha256 `4036d60f259b42d407b943b8da5a98086111f802bd4314f16a176867cc105fd0`). Not checked yet. The sheet part has not been touched since that commit.
-- Look in use: foam play mats, the first reserved look. The Mount shows the game's real scene in the look at load, the same at every load (three creatures, four hats, the arch), so the lead can take the still at 1180 by 820. Stills were taken on the build machine in software, at pixel ratios 1 and 2; they are not committed. No frame rate was measured: that is the lead's, on a real graphics card.
-- Toy: in. A tap on a hat presses it out of its tile and onto the nearest bare head; a tap on a hat on a head presses it home; the hat with no head scuttles on the floor; a creature, the arch and the bare floor each answer a touch. The answer starts when the finger lands. It has no goal, no cycle and no ending.
-- Rules: `rules.ts` (the model of the world), `grid.ts` (the object-by-action grid), `tastes.ts` (the characters' tastes), `layout.ts` with `LADDER` in `config.ts` (the designed order), `save.ts` (the saved state and its `deserialize`, with the size test) and `cycle.ts` (how a cycle ends and the next begins), each with its tests. They were written against the sheet at commit `1469dea`, while its check runs, at the builder's own risk: a finding under the representation, the mechanic questions, the error, the designed order or the records reopens them.
-- Open: sheet ready for check, round 1
+- Stage: toy, with the rules written as pure modules. The game is not built on the toy yet: that waits for the sheet's pass and the owner's answer on the look and the toy.
+- Sheet, round 1: checked by checker B on the text at commit `1469dea` (sheet part sha256 `4036d60f259b42d407b943b8da5a98086111f802bd4314f16a176867cc105fd0`). Outcome: open, 14 findings. All 14 replacements are pasted as the checker wrote them, none disputed, at commit `06c946d` (sheet part sha256 `0db3c2a0d4d45341c6386f07f99d80b60d4fc49c26696366a34dfb5c6644638d`).
+- What was built on the old text is in line with the new, at commit `5ef05f2` and the one that holds this block: a change and the parade wait until the crew has been left alone for two seconds of attended game time (`cycle.ts`); a finished crew answers every touch, parades again when set right, and is judged once (`cycle.ts`, `save.ts`); a bare creature calls a hat from the tile only (`rules.ts`); a loose hat scuttles in a small circle beside its round spot (`toy.ts`); the changed cells of the grid and Wig's act (`grid.ts`, `tastes.ts`); the five round spots are drawn in the mat (`view/build.ts`).
+- Look in use: foam play mats, the first reserved look. The Mount shows the game's real scene in the look at load, the same at every load (three creatures, four hats, the arch, the five round spots), so the lead can take the still at 1180 by 820. Stills were taken on the build machine in software and are not committed. No frame rate was measured: that is the lead's, on a real graphics card.
+- Toy: in. A tap on a hat presses it out of its tile and onto the nearest bare head; a tap on a hat on a head presses it home; the hat with no head scuttles beside a round spot; a creature, the arch and the bare floor each answer a touch. The answer starts when the finger lands. It has no goal, no cycle and no ending.
+- Rules: `rules.ts`, `grid.ts`, `tastes.ts`, `layout.ts` with `LADDER` in `config.ts`, `save.ts` and `cycle.ts`, each with its tests, now written against the sheet at commit `06c946d`, while its second check runs, at the builder's own risk.
+- Open: sheet ready for check, round 2
+
+**For the next checker, from the builder**
+
+- The row for `crew` in the table of saved fields does not name the spot, and the save holds one: a creature keeps its round spot when another walks out, so the row order alone cannot rebuild where each stands. If the row should say so, the sentence would be: "The creatures on the mat in row order, at most five: each one's kind, the round spot it stands on, and the hats on its head from the bottom up, each hat named by its hole in `tile`." Nothing was pasted for this: it is not a finding of round 1.
 
 **Requests to the lead**
 
@@ -18,7 +23,6 @@
 
 **Findings not yet fixed**
 
-- Two places where the rules say a little more than the sheet does. They are left as they are until the check reports, so the text under check stays the text at `1469dea`: (1) a bare creature that is tapped calls a loose hat when the tile is empty, where the sheet's grid has it only pat its head; (2) `crew` in the save also holds each creature's spot, which the sheet's table of fields does not name.
 - The toy saves nothing of its own: it is the same scene at every load. `save.ts` is written and tested and is not wired into the Mount yet.
 - Of the idle ladder only the glow is drawn (the hats that can be taken stir). The ghost hand comes with the game.
 - No drag yet. A finger that slides before it lifts counts as a tap on what it landed on.
@@ -44,7 +48,7 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 
 - The look, foam play mats, and the toy, at the toy checkpoint.
 - Speech. The game speaks no number word, by the guide's default that no game depends on speech until he has tried it on his iPad. With a number word heard on each hat as it is given, the game could also be designed from the records on number words, and a two-year-old in California would then have a record under the game; as it stands that child has none. Whether this game should wait for the speech trial is his call.
-- Whether the cycle's change may come by itself. In the sheet one more creature walks in, or one walks out, as soon as the crew is as paired as it can be, as the consequence of the child's last move. If he wants it to wait for the child's touch, the scenes change.
+- Whether the cycle's change may come by itself. In the sheet one more creature walks in, or one walks out, once the crew is as paired as it can be and has been left alone for two seconds, as the consequence of the child's last move. If he wants it to wait for the child's touch, the scenes change.
 - Whether this band needs a harder option laid beside an easier one for the child to pick. The sheet offers none, because one next act is offered at a time at this age, and says what the child can choose in its place.
 - Whether three kinds of hat are plain enough for working pieces. Each is one flat colour and one simple outline; the kinds exist so that the creatures can have tastes.
 
@@ -54,6 +58,7 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 | --- | --- | --- | --- | --- | --- |
 | Spike 1 | The first still of the scene, software, 1180 by 820, pixel ratio 1 | Half the floor was missing and a stray triangle crossed it; the hats and the creatures already read. | The jigsaw tiles' bevel is cut outside the outline; the mat widened to fill the view. | Not measured (software) | The top third is empty wall; the shadows are faint. |
 | Spike 2 | Stills after four taps and a poke in the floor, pixel ratios 1 and 2; the lowest tier | A hat on a head, in its hole and loose on the floor cannot be confused. At ratio 2 the stipple and the bevels show. The lowest tier still looks like the game. Bare creatures did nothing to show they want a hat. | The camera moved in and down a little; a bare creature pats its head now and then; darker shadows; one step of bevel on the floor. | Not measured (software): 14 draw calls, about 31,000 triangles | The wall above the row is kept empty on purpose, as room for a tower of hats; the lime creature is the weakest against the teal floor; nothing here says how it moves on a real tablet. |
+| Round spots | A still after four taps, software, pixel ratio 1 | The sheet has the creatures stand on round spots and a loose hat rest beside one; the scene drew none. | Five lighter discs inlaid flush in the mat; the loose hat circles beside its spot. | Not measured (software): 14 draw calls, about 31,000 triangles | The two empty spots at the ends of the row may read as places to put something. |
 
 ## For the pull request
 
@@ -75,7 +80,7 @@ So far, at the toy stage. No frame rate has been measured on any machine, and no
 
 ### The learning claim
 
-As the sheet has it, unchecked: Hats for All is designed from three California preschool and transitional kindergarten learning foundations, which are foundations published by a state department and not standards, and from four records of guidance by the Dutch curriculum institute, which is guidance and not law. Every record named was `confirmed` when the lookup was read on 2026-10-03; the states are to be read again on the day of the pull request. For a two-year-old in California the game rests on no record. Nothing here says what a child has reached. The records are named by pack id in `ART.md`, "The records".
+As the sheet has it after its first check, not yet passed: Hats for All is designed from three California preschool and transitional kindergarten learning foundations, which are foundations published by a state department and not standards, and from four records of guidance by the Dutch curriculum institute, which is guidance and not law. The pairing of one with one is taken from the Dutch record alone, and of the California foundation on dealing the game takes only one for each. Every record named was `confirmed` when the lookup was read on 2026-10-03; the states are to be read again on the day of the pull request. For a two-year-old in California the game rests on no record. Nothing here says what a child has reached. The records are named by pack id in `ART.md`, "The records".
 
 ### Defaults taken for the owner
 
@@ -83,7 +88,7 @@ As the sheet has it, unchecked: Hats for All is designed from three California p
 - No speech: every creature's voice is invented and synthesized, and no number word is spoken.
 - No camera shake and no pause on impact: the answer to a touch is carried by chains of consequence, sound and squash.
 - The look is the first row reserved for the game; no other row was spiked.
-- From the sheet: sets of five or fewer; three kinds of hat; the cycle's change comes by itself; no harder option laid beside an easier one.
+- From the sheet: sets of five or fewer; three kinds of hat; the cycle's change and the parade come by themselves once the crew has been left alone for two seconds; no harder option laid beside an easier one.
 
 ### What the next builder should know
 

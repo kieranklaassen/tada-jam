@@ -1,6 +1,6 @@
 import * as THREE from 'three'
-import { CREATURE_KINDS, HAT_KINDS, type CreatureKind, type HatKind } from '../kinds'
-import { holeX } from '../stage'
+import { CREATURE_KINDS, HAT_KINDS, MOST, type CreatureKind, type HatKind } from '../kinds'
+import { ROW_Z, holeX, spotX } from '../stage'
 import { SLAB, TILE_DEPTH } from '../sizes'
 import { disc, laidFlat, merged, paint, roundedRect, slab } from './foam'
 import { archOutline, creatureCut, earOutline, hatOutline, holeBase, matTileOutline, tileWidth, type Cut } from './shapes'
@@ -14,6 +14,7 @@ export const PALETTE = {
   room: '#eadfcd',
   matA: '#27a99a',
   matB: '#2fb8a8',
+  spot: '#63d2c3',
   furniture: '#f6f1e4',
   white: '#fbfaf5',
   dot: '#22252e',
@@ -35,6 +36,9 @@ export const MAT_ROWS = 4
 export const MAT_LEFT = -14.9
 export const MAT_BACK = -6.4
 
+/** How wide a round spot of the row is, from its middle to its edge. */
+export const SPOT_RADIUS = 1.3
+
 export function buildMat(): THREE.BufferGeometry {
   const tiles: THREE.BufferGeometry[] = []
   for (let i = 0; i < MAT_COLUMNS; i++) for (let j = 0; j < MAT_ROWS; j++) {
@@ -43,7 +47,9 @@ export function buildMat(): THREE.BufferGeometry {
   // Drawn with y towards the back wall and the mat's front left corner at the origin, then laid down and moved into place.
   const mat = laidFlat(merged(tiles))
   mat.translate(MAT_LEFT, -SLAB / 2, MAT_BACK + MAT_ROWS * MAT_TILE)
-  return mat
+  // The five round spots of the row: discs of a lighter tone inlaid in the mat, flush with it, where a creature stands and a loose hat rests beside.
+  const spots = Array.from({ length: MOST }, (_, spot) => paint(new THREE.CircleGeometry(SPOT_RADIUS, 40).rotateX(-Math.PI / 2).translate(spotX(spot), 0.006, ROW_Z + 0.25), PALETTE.spot))
+  return merged([mat, ...spots])
 }
 
 /** The room the mat lies in: a pale floor and a pale wall, plain so the foam is all there is to look at. */
