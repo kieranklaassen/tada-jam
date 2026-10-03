@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ODD_KINDS } from './circuit'
-import { ACTIONS, answer, GRID, ODD_FLICK, THINGS, WRONG } from './grid'
+import { ACTIONS, answer, GRID, ODD_CLIP, ODD_FLICK, ODD_PASSES, THINGS, WRONG } from './grid'
 import { RANGE, VOICE_IDS, VOICES, type Note } from './voices'
 
 const cells = THINGS.flatMap((thing) => ACTIONS.map((action) => ({ thing, action, ...GRID[thing][action] })))
@@ -26,10 +26,20 @@ describe('the object-by-action grid', () => {
     expect(answer('odd', 'flick')).toBe(GRID.odd.flick)
   })
 
+  it('lets a clip bite every bench odd with the sound of its own material', () => {
+    expect(new Set(ODD_KINDS.map((what) => ODD_CLIP[what].voice)).size).toBe(ODD_KINDS.length)
+    for (const what of ODD_KINDS) {
+      expect(answer('odd', 'clip', what)).toBe(ODD_CLIP[what])
+      expect(VOICES[ODD_CLIP[what].voice]).toBeDefined()
+    }
+    // A second odd has two sounds: the hum cut off by one that blocks, and the hum back with one that passes.
+    expect(ODD_PASSES.voice).not.toBe(GRID.odd.second.voice)
+    expect(VOICES[ODD_PASSES.voice][0].length).toBeGreaterThan(VOICES[GRID.odd.second.voice][0].length)
+  })
+
   it('gives every object a wrong use that works, with a motion of its own', () => {
     const wrong = Object.values(WRONG)
-    // The sheet marks no wrong use in the buzzer's row yet: that is open in the status block, and the row is added here when the sheet has it.
-    for (const thing of THINGS.filter((t) => t !== 'buzzer')) expect(wrong.some((w) => w.thing === thing), `a wrong use of the ${thing}`).toBe(true)
+    for (const thing of THINGS) expect(wrong.some((w) => w.thing === thing), `a wrong use of the ${thing}`).toBe(true)
     const looks = [...cells.map((cell) => cell.look), ...Object.values(ODD_FLICK).map((a) => a.look)]
     for (const w of wrong) {
       expect(looks).not.toContain(w.look)
@@ -81,5 +91,8 @@ describe('the voices', () => {
     expect(VOICES['cell-second'][0].pitch).toBeGreaterThan(VOICES['cell-clip'][0].pitch)
     expect(VOICES['cell-flat-flick'][0].pitch).toBeGreaterThan(VOICES['cell-flick'][0].pitch)
     expect(VOICES['motor-wild'][0].pitch).toBeGreaterThan(VOICES['motor-clip'][0].pitch)
+    expect(VOICES['buzzer-shriek'][0].pitch).toBeGreaterThan(VOICES['buzzer-clip'][0].pitch)
+    // A braked blade stops sooner than one that freewheels.
+    expect(VOICES['motor-across'][0].length).toBeLessThan(0.4)
   })
 })

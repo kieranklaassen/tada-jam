@@ -30,13 +30,13 @@ export const GRID: Record<Thing, Record<Action, Answer>> = {
     clip: { look: 'jaws-bite-and-lead-swings', voice: 'lead-clip' },
     turn: { look: 'clips-swap-with-a-flourish', voice: 'lead-turn' },
     second: { look: 'longer-way-round', voice: 'lead-second' },
-    across: { look: 'two-leads-plait', voice: 'lead-across' },
+    across: { look: 'two-leads-plait-with-a-zip', voice: 'lead-across' },
     flick: { look: 'swing-like-a-slack-string', voice: 'lead-flick' },
   },
   switch: {
-    clip: { look: 'seat-with-lever-up', voice: 'switch-clip' },
+    clip: { look: 'seat-and-open-contact-ticks', voice: 'switch-clip' },
     turn: { look: 'spin-on-its-base', voice: 'switch-turn' },
-    second: { look: 'two-levers-in-step', voice: 'switch-second' },
+    second: { look: 'idle-lever-clacks-to-no-effect', voice: 'switch-second' },
     across: { look: 'lever-clicks-to-no-effect', voice: 'switch-across' },
     flick: { look: 'lever-throws', voice: 'switch-flick' },
   },
@@ -44,14 +44,14 @@ export const GRID: Record<Thing, Record<Action, Answer>> = {
     clip: { look: 'filament-comes-up', voice: 'lamp-clip' },
     turn: { look: 'unscrew-and-screw-back', voice: 'lamp-turn' },
     second: { look: 'glow-shared-or-doubled', voice: 'lamp-second' },
-    across: { look: 'filament-fades-out', voice: 'lamp-across' },
+    across: { look: 'filament-out-and-glass-tinks', voice: 'lamp-across' },
     flick: { look: 'filament-quivers', voice: 'lamp-flick' },
   },
   motor: {
     clip: { look: 'blade-spins-up', voice: 'motor-clip' },
-    turn: { look: 'blade-slows-and-turns-back', voice: 'motor-turn' },
+    turn: { look: 'blade-turns-back-and-draws-air-in', voice: 'motor-turn' },
     second: { look: 'two-blades-lazy-or-full', voice: 'motor-second' },
-    across: { look: 'blade-coasts-down', voice: 'motor-across' },
+    across: { look: 'blade-stops-short-braked', voice: 'motor-across' },
     flick: { look: 'blade-freewheels', voice: 'motor-flick' },
   },
   buzzer: {
@@ -62,10 +62,11 @@ export const GRID: Record<Thing, Record<Action, Answer>> = {
     flick: { look: 'tin-cap-dents-and-springs', voice: 'buzzer-flick' },
   },
   odd: {
+    // The voice of a clip on an odd is its material's own: see `ODD_CLIP`.
     clip: { look: 'laid-in-the-gap', voice: 'odd-clip' },
     turn: { look: 'end-for-end-clatter', voice: 'odd-turn' },
-    second: { look: 'two-odds-in-the-way', voice: 'odd-second' },
-    across: { look: 'lead-takes-over', voice: 'odd-across' },
+    second: { look: 'hum-cuts-off-or-comes-back', voice: 'odd-second' },
+    across: { look: 'lead-settles-over-it-with-a-slap', voice: 'odd-across' },
     // The look and the voice of a flicked odd are its material's own: see `oddFlick`.
     flick: { look: 'rings-as-its-material', voice: 'odd-flick-spoon' },
   },
@@ -82,6 +83,20 @@ export const ODD_FLICK: Record<OddKind, Answer> = {
   string: { look: 'string-flops', voice: 'odd-flick-string' },
 }
 
+/** A clip biting a bench odd sounds as what the odd is made of. The motion is the same for all. */
+export const ODD_CLIP: Record<OddKind, Answer> = {
+  spoon: { look: 'laid-in-the-gap', voice: 'odd-clip-spoon' },
+  key: { look: 'laid-in-the-gap', voice: 'odd-clip-key' },
+  foil: { look: 'laid-in-the-gap', voice: 'odd-clip-foil' },
+  pencil: { look: 'laid-in-the-gap', voice: 'odd-clip-pencil' },
+  rubber: { look: 'laid-in-the-gap', voice: 'odd-clip-rubber' },
+  stick: { look: 'laid-in-the-gap', voice: 'odd-clip-stick' },
+  string: { look: 'laid-in-the-gap', voice: 'odd-clip-string' },
+}
+
+/** Two odds side by side, one of which passes: the hum comes back. The other half of the grid's `odd` by `second`. */
+export const ODD_PASSES: Answer = { look: 'hum-cuts-off-or-comes-back', voice: 'odd-hum-back' }
+
 /**
  * The wrong uses the sheet marks: each works, and each has an answer of its
  * own, as large as the right use. `when` says, in the model's terms, what the
@@ -96,11 +111,13 @@ export const WRONG: Record<string, Answer & { thing: Thing; action: Action; when
   onlyLoadBridged: { thing: 'lamp', action: 'across', when: 'a pop consequence whose hot way holds no lamp, motor or buzzer', look: 'lead-glows-orange-over-the-lamp', voice: 'cell-across' },
   sucks: { thing: 'motor', action: 'turn', when: 'a motor whose current runs from b to a', look: 'scarves-and-whiskers-lean-in', voice: 'motor-turn' },
   wild: { thing: 'motor', action: 'second', when: 'a motor at level 3', look: 'fan-walks-across-the-mat', voice: 'motor-wild' },
+  shriek: { thing: 'buzzer', action: 'second', when: 'a buzzer at level 3', look: 'skitters-backwards-until-its-leads-pull-it-up', voice: 'buzzer-shriek' },
   rubberWorks: { thing: 'odd', action: 'across', when: 'an odd that lets nothing through, with a lead across it and the loop running', look: 'rubber-sits-there-doing-nothing', voice: 'odd-across' },
 }
 
-/** The answer to an action on a thing. A flicked odd answers as its material. */
+/** The answer to an action on a thing. A flicked odd, and a clip on an odd, answer as its material. */
 export function answer(thing: Thing, action: Action, odd?: OddKind): Answer {
   if (thing === 'odd' && action === 'flick' && odd) return ODD_FLICK[odd]
+  if (thing === 'odd' && action === 'clip' && odd) return ODD_CLIP[odd]
   return GRID[thing][action]
 }

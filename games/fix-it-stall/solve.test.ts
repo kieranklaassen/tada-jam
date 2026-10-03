@@ -3,7 +3,7 @@ import { boardOf, GADGET_KINDS, isSocket } from './board'
 import { benchOdd, clipLead, clipProbe, crackTrace, flickPart, placePart, removeLead, removePart, trayPart, turnPart, type Circuit } from './circuit'
 import { asBuilt } from './gadgets'
 import { settle } from './settle'
-import { level, read, RUNS_FROM } from './solve'
+import { braking, level, read, RUNS_FROM } from './solve'
 
 // The grid in the design sheet says what each object does under each action.
 // These tests hold the model to it: every line here is a cell of that grid,
@@ -98,6 +98,14 @@ describe('the cell', () => {
     const two = clipLead(clipLead(placePart(one, trayPart('cell', spare[1], spare[0])), spare[0], cap), spare[1], base)
     expect(placePart(one, trayPart('cell', spare[1], spare[0]))).not.toBe(one)
     expect(level(currentIn(two, 'lamp'))).toBe(2)
+    expect(currentIn(two, 'lamp') / currentIn(one, 'lamp')).toBeGreaterThan(0.99)
+    expect(currentIn(two, 'lamp') / currentIn(one, 'lamp')).toBeLessThan(1.05)
+    // Each cell sends out half the beads at half the speed, and the two streams join into the one the lamp had.
+    const reading = read(two)
+    const cells = two.parts.flatMap((p, i) => (p.kind === 'cell' ? [reading.parts[i]] : []))
+    expect(cells).toHaveLength(2)
+    for (const cell of cells) expect(cell / currentIn(two, 'lamp')).toBeCloseTo(0.5, 1)
+    expect(cells[0] + cells[1]).toBeCloseTo(currentIn(two, 'lamp'), 6)
   })
 
   it('a third in the row blows the lamp, which is then a gap', () => {
@@ -178,6 +186,28 @@ describe('lamps, motors and buzzers', () => {
     expect(settled.consequences.map((c) => c.type)).toEqual(['pop'])
   })
 
+  it('a lead straight across a motor in a row with a lamp stops it, and the lamp runs harder', () => {
+    const fan = asBuilt('fan-plain')
+    const row = placePart(removeLead(fan, 0), trayPart('lamp', linkA, linkB))
+    const before = read(row), bridged = clipLead(row, mainRung[0], mainRung[1]), after = read(bridged)
+    expect(level(after.parts[indexOf(bridged, 'motor')])).toBe(0)
+    expect(after.parts[indexOf(bridged, 'lamp')]).toBeGreaterThan(before.parts[indexOf(row, 'lamp')] * 1.8)
+  })
+
+  it('a blade spun by hand freewheels with its legs free, is held back a little by a lamp, and stops short with a lead across its legs', () => {
+    const car = asBuilt('car')
+    const noCell = removePart(car, indexOf(car, 'cell'))
+    const noLamp = removePart(noCell, indexOf(noCell, 'lamp'))
+    const motorOf = (c: Circuit) => indexOf(c, 'motor')
+    const free = braking(noLamp, motorOf(noLamp), 0.6)
+    const lit = braking(noCell, motorOf(noCell), 0.6)
+    const { a, b } = noLamp.parts[motorOf(noLamp)]
+    const shorted = braking(clipLead(noLamp, a, b), motorOf(noLamp), 0.6)
+    expect(free).toBeLessThan(1e-6)
+    expect(lit).toBeGreaterThan(0.2)
+    expect(shorted).toBeGreaterThan(lit * 1.8)
+  })
+
   it('a lamp glows the same either way round, and a motor turns the other way', () => {
     const lamp = asBuilt('lamp-plain'), fan = asBuilt('fan-plain')
     expect(Math.abs(currentIn(turnPart(lamp, indexOf(lamp, 'lamp')), 'lamp'))).toBeCloseTo(currentIn(lamp, 'lamp'), 9)
@@ -213,25 +243,38 @@ describe('bench odds', () => {
 })
 
 describe('the test lamp', () => {
-  it('glows a little across the break and stays dark across a sound piece of a dead loop', () => {
-    const cracked = crackTrace(asBuilt('lamp-plain'), 3)
-    const crack = board.traces[3], sound = board.traces[0]
-    const across = clipProbe(clipProbe(cracked, 0, crack.a), 1, crack.b)
-    expect(level(read(across).probe)).toBe(1)
-    const elsewhere = clipProbe(clipProbe(cracked, 0, sound.a), 1, sound.b)
-    expect(Math.abs(read(elsewhere).probe)).toBeLessThan(RUNS_FROM)
+  const probe = (circuit: Circuit, a: number, b: number) => read(clipProbe(clipProbe(circuit, 0, a), 1, b)).probe
+  const crackAt = 3, crack = board.traces[crackAt]
+  const cracked = crackTrace(asBuilt('lamp-plain'), crackAt)
+
+  it('glows dully across the break, where it closes the loop through the lamp it shares it with', () => {
+    expect(level(probe(cracked, crack.a, crack.b))).toBe(1)
   })
 
-  it('across a cell shows whether the cell is flat', () => {
-    const lamp = removeLead(asBuilt('lamp-plain'), 0)
-    const probed = clipProbe(clipProbe(lamp, 0, base), 1, cap)
-    expect(level(read(probed).probe)).toBe(2)
-    const flat: Circuit = { ...probed, parts: probed.parts.map((p) => (p.kind === 'cell' ? { ...p, flat: true } : p)) }
-    expect(level(read(flat).probe)).toBe(0)
+  it('stays dark across a sound trace, lead or part of a dead loop', () => {
+    const sound = board.traces.findIndex((_, i) => i !== crackAt)
+    expect(Math.abs(probe(cracked, board.traces[sound].a, board.traces[sound].b))).toBeLessThan(RUNS_FROM)
+    expect(Math.abs(probe(cracked, linkA, linkB))).toBeLessThan(RUNS_FROM)
+    expect(Math.abs(probe(cracked, mainRung[0], mainRung[1]))).toBeLessThan(RUNS_FROM)
+  })
+
+  it('across a cell glows if the cell is good, whether the loop is dead or not, and stays dark if it is flat', () => {
+    expect(level(probe(cracked, base, cap))).toBe(2)
+    expect(level(probe(asBuilt('lamp-plain'), base, cap))).toBe(2)
+    const flat: Circuit = { ...cracked, parts: cracked.parts.map((p) => (p.kind === 'cell' ? { ...p, flat: true } : p)) }
+    expect(level(probe(flat, base, cap))).toBe(0)
   })
 
   it('across a rubber in the gap glows: the rubber is the break', () => {
     const stuffed = placePart(removeLead(asBuilt('lamp-plain'), 0), benchOdd('rubber', linkA, linkB))
-    expect(level(read(clipProbe(clipProbe(stuffed, 0, linkA), 1, linkB)).probe)).toBe(1)
+    expect(level(probe(stuffed, linkA, linkB))).toBe(1)
+  })
+
+  it('with two breaks in one loop, neither comes alive until the other is closed', () => {
+    const twice = removeLead(cracked, 0)
+    expect(Math.abs(probe(twice, crack.a, crack.b))).toBeLessThan(RUNS_FROM)
+    expect(Math.abs(probe(twice, linkA, linkB))).toBeLessThan(RUNS_FROM)
+    expect(level(probe(clipLead(twice, linkA, linkB), crack.a, crack.b))).toBe(1)
+    expect(level(probe(clipLead(twice, crack.a, crack.b), linkA, linkB))).toBe(1)
   })
 })

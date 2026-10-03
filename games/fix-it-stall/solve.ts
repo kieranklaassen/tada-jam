@@ -3,10 +3,17 @@ import { boardFor, type Circuit, type OddKind, type Part } from './circuit'
 // The model of the world. A circuit is solved as it lies: every pad is a node,
 // every trace, lead and part is a resistance between two nodes, and a cell is
 // a push with a small resistance of its own. Steady direct current, ideal
-// parts. Nothing is scripted to light: what runs is what the equations give.
+// parts of fixed resistance. Nothing is scripted to light: what runs is what
+// the equations give.
+//
+// A motor is the one part that is also a source. While a cell turns it, it is
+// a fixed resistance. Spun by hand it is a small source for as long as it
+// turns (`Spin`), which lights a lamp with no cell and brakes the blade when a
+// lead lies across its legs (`braking`).
 //
 // It leaves out, and the game never claims: cells running down, a filament's
-// resistance changing as it heats, magnetism and static electricity.
+// resistance changing as it heats, why a turning motor is a source
+// (magnetism), and static electricity.
 //
 // The numbers are in the model's own units: one cell pushes 1, one lamp
 // resists 1, so one cell through one lamp is a current of a little under 1.
@@ -146,6 +153,16 @@ export function read(circuit: Circuit, spin: Spin = {}): Reading {
   const v = eliminate(m)
   const through = (el: Element | null) => (el ? (v[el.a] - v[el.b]) * el.g + el.push : 0)
   return { parts: parts.map(through), traces: traces.map(through), leads: leads.map(through), probe: through(probe) }
+}
+
+/**
+ * How hard a blade spun by hand is held back: the current its own push drives
+ * through it. With its legs joined to nothing it freewheels (none). With a
+ * lamp in its loop it is held back a little, and the lamp glints. With a lead
+ * straight across its legs it is held back most and stops short.
+ */
+export function braking(circuit: Circuit, motor: number, push: number): number {
+  return Math.abs(read(circuit, { [motor]: push }).parts[motor])
 }
 
 /** How much a lamp, a motor or a buzzer is doing: nothing, a little, as meant, or too much. Never shown as a number. */

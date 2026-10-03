@@ -55,7 +55,7 @@ export const VOICES = {
   'cell-flick': [tone('sine', 150, 0.2, 0.003, 0.13, 90)],
   /** A flat cell bounces twice, hollow. */
   'cell-flat-flick': [tone('triangle', 420, 0.14, 0.002, 0.07, 300), tone('triangle', 380, 0.09, 0.002, 0.06, 280, 0.16)],
-  /** Two cells nose to nose lean on each other. */
+  /** Two cells nose to nose lean on each other with a low strained creak. */
   'cell-nose-to-nose': [tone('sawtooth', 82, 0.08, 0.08, 0.5, 78), tone('sawtooth', 87, 0.08, 0.08, 0.5, 91)],
 
   // --- Lead ------------------------------------------------------------------
@@ -63,21 +63,21 @@ export const VOICES = {
   'lead-clip': [hiss(2400, 5, 0.2, 0.001, 0.045), tone('triangle', 1250, 0.07, 0.001, 0.05)],
   /** The clips swap ends: a double clack with a flourish. */
   'lead-turn': [hiss(2100, 5, 0.16, 0.001, 0.04), hiss(2700, 5, 0.16, 0.001, 0.04, undefined, 0.11), tone('sine', 700, 0.05, 0.02, 0.2, 1100, 0.14)],
-  /** End to end with another: the longer way round, a lower clack. */
+  /** End to end with another: the join bites with a lower clack. */
   'lead-second': [hiss(1700, 4, 0.18, 0.001, 0.055), tone('triangle', 880, 0.06, 0.001, 0.06)],
-  /** Two leads plait together. */
-  'lead-across': [tone('triangle', 520, 0.08, 0.004, 0.22, 660), tone('triangle', 660, 0.07, 0.004, 0.22, 520, 0.05)],
+  /** Two leads plait themselves together with a zip. */
+  'lead-across': [hiss(900, 3, 0.12, 0.004, 0.2, 3600), tone('triangle', 520, 0.05, 0.004, 0.2, 990)],
   /** A slack string: twang. Lower for a longer lead; this is a lead one unit long. */
   'lead-flick': [tone('triangle', 196, 0.16, 0.003, 0.5, 185)],
   /** Both clips on one pad: a loop of nothing sags. */
   'lead-loop-of-nothing': [tone('triangle', 147, 0.13, 0.004, 0.55, 110)],
 
   // --- Switch ----------------------------------------------------------------
-  /** It seats in the loop. */
-  'switch-clip': [hiss(1500, 3, 0.16, 0.001, 0.05), tone('square', 310, 0.05, 0.001, 0.04)],
+  /** It seats in the loop. With its lever up nothing starts, and the open contact gives one dry tick. */
+  'switch-clip': [hiss(3400, 10, 0.14, 0.001, 0.03), tone('square', 310, 0.04, 0.001, 0.03)],
   /** It spins on its base: a ratchet. */
   'switch-turn': [hiss(3200, 9, 0.11, 0.001, 0.03), hiss(3200, 9, 0.11, 0.001, 0.03, undefined, 0.06), hiss(3200, 9, 0.11, 0.001, 0.03, undefined, 0.12)],
-  /** A second switch. */
+  /** A second switch: the lever that falls with nothing to do clacks to no effect. */
   'switch-second': [hiss(1500, 3, 0.15, 0.001, 0.05), tone('square', 415, 0.05, 0.001, 0.04, undefined, 0.07)],
   /** A lead across it: the lever clicks to no effect. */
   'switch-across': [hiss(2600, 8, 0.1, 0.001, 0.03), tone('sine', 240, 0.06, 0.01, 0.18, 200, 0.04)],
@@ -91,8 +91,8 @@ export const VOICES = {
   'lamp-turn': [tone('sine', 1900, 0.06, 0.03, 0.12, 2500), tone('sine', 2500, 0.06, 0.03, 0.12, 1900, 0.17)],
   /** A second lamp: a second, lower ring. */
   'lamp-second': [tone('sine', 1175, 0.11, 0.002, 0.7), tone('sine', 2350, 0.03, 0.002, 0.4)],
-  /** A lead across it: it goes dark with a falling ring. */
-  'lamp-across': [tone('sine', 1568, 0.09, 0.002, 0.3, 780)],
+  /** A lead across it: it goes dark with a tink of cooling glass. */
+  'lamp-across': [tone('sine', 2960, 0.09, 0.001, 0.12), tone('sine', 1568, 0.05, 0.002, 0.25, 1100, 0.03)],
   /** It rings like a glass. A blown one is `lamp-blown-flick`. */
   'lamp-flick': [tone('sine', 2093, 0.14, 0.001, 0.5)],
   /** A blown lamp rattles. */
@@ -103,12 +103,12 @@ export const VOICES = {
   // --- Motor -----------------------------------------------------------------
   /** It spins up. */
   'motor-clip': [tone('sawtooth', 90, 0.09, 0.09, 0.8, 180), hiss(700, 1, 0.07, 0.09, 0.7, 1300)],
-  /** Turned round: it spins the other way, a whirr that falls and comes back. */
-  'motor-turn': [tone('sawtooth', 180, 0.09, 0.03, 0.4, 80), tone('sawtooth', 80, 0.09, 0.08, 0.5, 170, 0.3)],
+  /** Turned round: it spins the other way, and its whirr turns breathy, like air drawn in. */
+  'motor-turn': [tone('sawtooth', 180, 0.07, 0.03, 0.4, 80), hiss(520, 0.9, 0.11, 0.08, 0.7, 900, 0.25)],
   /** A second motor. */
   'motor-second': [tone('sawtooth', 120, 0.08, 0.09, 0.7, 150), hiss(600, 1, 0.06, 0.09, 0.6, 900)],
-  /** A lead across it: it coasts down. */
-  'motor-across': [tone('sawtooth', 170, 0.09, 0.01, 0.9, 60), hiss(1200, 1, 0.06, 0.01, 0.8, 400)],
+  /** A lead across its legs: it stops short with a falling whirr, braked. */
+  'motor-across': [tone('sawtooth', 170, 0.09, 0.005, 0.28, 55), hiss(1200, 1, 0.06, 0.005, 0.22, 300)],
   /** The blade freewheels and ticks to a stop. */
   'motor-flick': [hiss(2200, 6, 0.1, 0.001, 0.03), hiss(2000, 6, 0.09, 0.001, 0.03, undefined, 0.09), hiss(1800, 6, 0.07, 0.001, 0.03, undefined, 0.22)],
   /** Too many cells: it screams. */
@@ -126,15 +126,28 @@ export const VOICES = {
   /** One dull tink of its tin cap. */
   'buzzer-flick': [tone('triangle', 980, 0.1, 0.001, 0.09), hiss(4000, 12, 0.05, 0.001, 0.03)],
 
+  /** Too many cells: it shrieks and skitters backwards on its own rattle. */
+  'buzzer-shriek': [tone('square', 466, 0.13, 0.004, 0.9, 880), hiss(3400, 3, 0.09, 0.004, 0.8)],
+
   // --- Bench odds ------------------------------------------------------------
-  /** It is laid in the gap. */
+  /** It is laid in the gap. The clip bites each odd as its material sounds: see the `odd-clip-` voices. */
   'odd-clip': [hiss(1100, 2, 0.16, 0.002, 0.07), tone('triangle', 440, 0.05, 0.002, 0.08)],
   /** Turned end for end: a clatter. */
   'odd-turn': [hiss(1300, 2.5, 0.14, 0.002, 0.05), hiss(950, 2.5, 0.12, 0.002, 0.06, undefined, 0.09)],
-  /** A second odd beside or after the first. */
-  'odd-second': [hiss(800, 2, 0.15, 0.002, 0.08), tone('triangle', 330, 0.05, 0.002, 0.09)],
-  /** A lead across it: it stops mattering, with a shrug of a slide. */
-  'odd-across': [tone('sine', 392, 0.08, 0.01, 0.25, 294)],
+  /** In a row, one that blocks: the hum cuts off in that frame. */
+  'odd-second': [tone('sine', 110, 0.12, 0.002, 0.05, 70), hiss(800, 2, 0.1, 0.002, 0.05)],
+  /** A lead across it: it stops mattering, and the lead settles over it with a slap. */
+  'odd-across': [hiss(700, 1.2, 0.2, 0.002, 0.07), tone('sine', 200, 0.07, 0.002, 0.08, 140)],
+  /** Side by side, one that passes: the hum comes back at full pitch. */
+  'odd-hum-back': [tone('sine', 110, 0.12, 0.05, 0.6), tone('triangle', 220, 0.04, 0.06, 0.5)],
+  /** The clip bites each as its material sounds: a ring on the spoon, a scrape on the pencil, a squeak on the rubber. */
+  'odd-clip-spoon': [tone('sine', 2217, 0.11, 0.001, 0.35), hiss(2400, 5, 0.1, 0.001, 0.04)],
+  'odd-clip-key': [tone('triangle', 3100, 0.09, 0.001, 0.1), hiss(2600, 5, 0.1, 0.001, 0.04)],
+  'odd-clip-foil': [hiss(3600, 3, 0.11, 0.001, 0.06), hiss(2400, 5, 0.08, 0.001, 0.04)],
+  'odd-clip-pencil': [hiss(1400, 2, 0.13, 0.004, 0.12, 900), tone('triangle', 620, 0.04, 0.002, 0.06)],
+  'odd-clip-rubber': [tone('sine', 1500, 0.07, 0.02, 0.1, 2300), hiss(600, 1, 0.05, 0.004, 0.06)],
+  'odd-clip-stick': [tone('triangle', 480, 0.11, 0.001, 0.05), hiss(1200, 3, 0.08, 0.001, 0.04)],
+  'odd-clip-string': [hiss(420, 0.8, 0.06, 0.01, 0.1)],
   /** Each sounds as its material when flicked. */
   'odd-flick-spoon': [tone('sine', 2637, 0.13, 0.001, 0.9), tone('sine', 3951, 0.04, 0.001, 0.5)],
   'odd-flick-key': [tone('triangle', 3300, 0.09, 0.001, 0.12), tone('triangle', 3700, 0.08, 0.001, 0.12, undefined, 0.06), tone('triangle', 3000, 0.06, 0.001, 0.14, undefined, 0.13)],
