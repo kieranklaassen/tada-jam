@@ -1,0 +1,61 @@
+// The patch of tar: its own units, and the things that are part of it.
+// Everything in the rules is measured in these units; the view scales them to
+// the surface. No pixel of the screen is named here.
+
+export type Pt = { x: number; y: number }
+
+/** The tar is this many units wide and high, whatever the surface measures. */
+export const TAR = { w: 1200, h: 800 } as const
+
+/** The strip along the bottom where wrists rest. Nothing a child aims at lies in it. */
+export const WRIST_STRIP = 120
+
+/** How far across a thing a child aims at is, at least: about 100 logical pixels on a tablet. */
+export const TARGET = 100
+
+/** The puddle, part of the tar from the first visit. */
+export const PUDDLE = { x: 600, y: 590, rx: 150, ry: 52 } as const
+
+/** The dandelion in the crack. */
+export const DANDELION = { x: 390, y: 150, reach: 55 } as const
+
+/** Where the engine stands on a first visit, on its stub of rail. */
+export const ENGINE_START = { x: 150, y: 410 } as const
+
+/** The places a stop or a home can be laid. Ids are stored, so none is renamed. */
+export const PLACES = {
+  'north-west': { x: 170, y: 180 },
+  north: { x: 600, y: 150 },
+  'north-east': { x: 1030, y: 180 },
+  west: { x: 150, y: 410 },
+  middle: { x: 600, y: 370 },
+  east: { x: 1050, y: 410 },
+  'south-west': { x: 220, y: 625 },
+  'south-east': { x: 1000, y: 625 },
+} as const satisfies Record<string, Pt>
+
+export type PlaceId = keyof typeof PLACES
+export const PLACE_IDS = Object.keys(PLACES) as PlaceId[]
+
+export const isPlaceId = (value: unknown): value is PlaceId => typeof value === 'string' && value in PLACES
+
+export const distance = (a: Pt, b: Pt): number => Math.hypot(a.x - b.x, a.y - b.y)
+
+/** Whether a point is in the water. */
+export function inPuddle(p: Pt, grow = 0): boolean {
+  const dx = (p.x - PUDDLE.x) / (PUDDLE.rx + grow), dy = (p.y - PUDDLE.y) / (PUDDLE.ry + grow)
+  return dx * dx + dy * dy <= 1
+}
+
+/** Whether the straight way between two points crosses the water. */
+export function crossesPuddle(a: Pt, b: Pt): boolean {
+  const steps = Math.max(2, Math.ceil(distance(a, b) / 10))
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    if (inPuddle({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t })) return true
+  }
+  return false
+}
+
+/** Keeps a point on the tar. */
+export const onTar = (p: Pt): Pt => ({ x: Math.max(0, Math.min(TAR.w, p.x)), y: Math.max(0, Math.min(TAR.h, p.y)) })
