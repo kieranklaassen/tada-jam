@@ -19,6 +19,8 @@ export const HOLD_HEIGHT = 2.6
 export const TOSS = 1.25
 /** A throw slower than this is a bob, not a toss: the friend stays seated. */
 export const TOSS_FLOOR = 6
+/** How flat a head is pressed by a friend sitting on it. */
+export const PRESSED = 0.93
 /** How hard a landing turns the plank, per unit of weight. */
 export const LANDING_PUSH = 0.5
 
@@ -245,7 +247,8 @@ export class Playground {
     this.arrangement = arrangement
     for (const id of FRIEND_IDS) {
       const was = placeOf(before, id), now = placeOf(arrangement, id), body = this.bodies[id]
-      const same = !body.away && body.mode === 'rest' && was.at === now.at && (was.at !== 'end' || (now.at === 'end' && was.end === now.end && was.level === now.level)) && (was.at !== 'sand' || (now.at === 'sand' && was.spot.x === now.spot.x && was.spot.z === now.spot.z))
+      // A friend who stays on its end and only comes down a place, because the one below left, does not hop: it drops.
+      const same = !body.away && body.mode === 'rest' && was.at === now.at && (was.at !== 'end' || (now.at === 'end' && was.end === now.end)) && (was.at !== 'sand' || (now.at === 'sand' && was.spot.x === now.spot.x && was.spot.z === now.spot.z))
       body.away = null
       if (!same) this.hop(id, false)
     }
@@ -364,7 +367,8 @@ export class Playground {
     for (const other of FRIEND_IDS) {
       if (other === id) continue
       const there = this.bodies[other]
-      if (Math.hypot(there.x - x, there.z - z) < (radius + FRIENDS[other].radius) * 1.08) top = Math.max(top, there.y + FRIENDS[other].halfHeight * 2 * Math.max(1, there.squash))
+      // With a little over, for a head that is riding a squash a hair above where its body is.
+      if (Math.hypot(there.x - x, there.z - z) < (radius + FRIENDS[other].radius) * 1.08) top = Math.max(top, there.y + FRIENDS[other].halfHeight * 2 * Math.max(1, there.squash) + 0.25)
     }
     return top
   }
@@ -490,14 +494,26 @@ export class Playground {
     }
     // Landing on a friend who is in the air: it lands where that friend is, not where the seat would be.
     const place = body.away ? null : placeOf(this.arrangement, id)
+    let underway = false
     if (place && place.at === 'end' && place.level > 0) {
       const underId = this.arrangement[place.end][place.level - 1], under = this.bodies[underId]
-      if (under.mode !== 'hop' && under.mode !== 'held') target.y = Math.max(target.y, under.y + Math.cos(this.plank.tilt) * FRIENDS[underId].halfHeight * 2 * NESTLE * under.squash)
+      if (under.mode !== 'held') target.y = Math.max(target.y, under.y + Math.cos(this.plank.tilt) * FRIENDS[underId].halfHeight * 2 * NESTLE * Math.max(1, under.squash))
+      // The friend it will sit on is still on its own way there: it hangs over it and lands when that one has.
+      underway = under.mode === 'hop'
     }
-    const s = Math.min(1, (body.hopT - body.gather) / body.hopFor)
-    body.x = body.fromX + (target.x - body.fromX) * s
-    body.z = body.fromZ + (target.z - body.fromZ) * s
+    const s = Math.min(underway ? 0.9 : 1, (body.hopT - body.gather) / body.hopFor)
+    // It goes up before it goes across, and comes down from above: most of the way across is covered in the middle of the hop.
+    const across = body.slid ? s : s * s * (3 - 2 * s)
+    body.x = body.fromX + (target.x - body.fromX) * across
+    body.z = body.fromZ + (target.z - body.fromZ) * across
     body.y = body.fromY + (target.y - body.fromY) * s + 4 * body.hopHigh * s * (1 - s)
+    // Coming down onto a friend, it is never below that friend's head once it is over it, wherever that head has got to.
+    if (place && place.at === 'end' && place.level > 0) {
+      const underId = this.arrangement[place.end][place.level - 1], under = this.bodies[underId]
+      if (under.mode !== 'held' && Math.hypot(under.x - body.x, under.z - body.z) < (FRIENDS[id].radius + FRIENDS[underId].radius) * 1.1) {
+        body.y = Math.max(body.y, under.y + FRIENDS[underId].halfHeight * 2 * Math.max(1, under.squash))
+      }
+    }
     // Over the board it is never below the board's top: a plank that swings up under a hopping friend carries it.
     if (Math.abs(body.z - PLANK.z) < PLANK.halfWidth && Math.abs(body.x) < PLANK.halfLength) body.y = Math.max(body.y, plankTopAt(body.x, this.plank.tilt))
     body.squashTo = 1.12
@@ -656,7 +672,11 @@ export class Playground {
       // Only Pim and Mog pull a face: Dot goes pale and quiet, and Bo dozes.
       pose.frown = body.mood === 'put-out' && (id === 'pim' || id === 'mog') && body.mouth < 0.3 ? 1 : 0
       pose.follow = body.follow + (id === 'mog' && body.mood === 'put-out' ? -0.5 : 0)
-      pose.pressed = 0
+      // A head with a friend on it, or one on its way there, is pressed: it gives a little under the weight, and Pim's
+      // crown and Mog's ears are out of the way before the friend lands.
+      const place = body.away ? null : placeOf(this.arrangement, id)
+      pose.pressed = place && place.at === 'end' && place.level < this.arrangement[place.end].length - 1 ? 1 : 0
+      if (pose.pressed) pose.squash *= PRESSED
       if (body.act) this.perform(body, pose)
     }
     // Whoever sits on a friend rides that friend's squash: pressed flat, it lets them down; popping back, it lifts them.
@@ -665,8 +685,6 @@ export class Playground {
       for (let level = 1; level < stack.length; level++) {
         const body = this.bodies[stack[level]], below = this.bodies[stack[level - 1]]
         const under = this.poses[stack[level - 1]], pose = this.poses[stack[level]]
-        // Whoever has arrived on a head presses it, in the air as at rest.
-        if (body.mode !== 'hop' && body.mode !== 'held') under.pressed = 1
         if (body.mode === 'hop' || body.mode === 'held' || below.mode === 'hop' || below.mode === 'held') continue
         const rise = FRIENDS[stack[level - 1]].halfHeight * 2 * NESTLE * under.squash
         if (body.mode !== 'rest' || !body.landed || below.mode !== 'rest' || !below.landed) {

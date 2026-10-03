@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { WAITING_CLEAR, drop, emptyArrangement, freeSpot, inCompany, isSound, lean, lowEnd, placeOf, putInSand, putOnEnd, tap, weightOn, type Arrangement } from './arrangement'
-import { FRIEND_IDS, FRIENDS, PLANK, SAND, WAITING_PLACE, homeOn, type FriendId } from './world'
+import { FRIEND_IDS, FRIENDS, PLANK, SAND, WAITING_PLACE, homeOn, inTheWay, type FriendId } from './world'
 
 const on = (left: FriendId[], right: FriendId[]): Arrangement => {
   let a = emptyArrangement()
@@ -110,7 +110,7 @@ describe('a friend let go', () => {
   })
 
   it('anywhere else stands in the sand, clear of the plank, the rim, the waiting place and the others', () => {
-    const spots = [[0, 0], [9, 9], [-9, -9], [0, 2.3], [3, -1], [4.65, 2.3], [1.7, 2.45], [-5, 0]]
+    const spots = [[0, 0], [9, 9], [-9, -9], [0, 2.3], [3, -1], [4.65, 2.3], [1.8, 2.49], [-5, 0], [4.7, -0.5], [3, 0.4]]
     for (const [x, z] of spots) {
       for (const id of FRIEND_IDS) {
         const a = drop(on(['pim'], []), id, x, z).arrangement
@@ -120,8 +120,8 @@ describe('a friend let go', () => {
         const r = FRIENDS[id].radius
         expect(Math.abs(place.spot.x)).toBeLessThanOrEqual(SAND.maxX)
         expect(place.spot.z).toBeLessThanOrEqual(SAND.maxZ)
-        // Clear of the plank's strip, unless beyond the plank's ends.
-        if (Math.abs(place.spot.x) < SAND.plankReach) expect(Math.abs(place.spot.z - PLANK.z)).toBeGreaterThanOrEqual(SAND.plankStrip)
+        // Clear of the board, and out of reach of whoever may sit on a seat.
+        expect(inTheWay(place.spot.x, place.spot.z, r)).toBe(false)
         expect(Math.hypot(place.spot.x - WAITING_PLACE.x, place.spot.z - WAITING_PLACE.z)).toBeGreaterThanOrEqual(r + WAITING_CLEAR)
         for (const other of FRIEND_IDS) {
           const there = placeOf(a, other)
@@ -156,7 +156,8 @@ describe('Dot in company', () => {
   it('is in company in the sand beside a friend, whoever walked to whom', () => {
     const beside = putInSand(emptyArrangement(), 'dot', { x: 3.1, z: 2.7 })
     expect(inCompany(beside)).toBe(true)
-    const visited = putInSand(emptyArrangement(), 'pim', { x: 4.6, z: -1.2 })
+    // Pim is small enough to stand by the far rim within a body's width of Dot.
+    const visited = putInSand(emptyArrangement(), 'pim', { x: 4.87, z: 0.2 })
     expect(inCompany(visited)).toBe(true)
   })
 })

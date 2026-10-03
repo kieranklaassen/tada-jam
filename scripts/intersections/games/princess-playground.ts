@@ -125,9 +125,10 @@ export default {
     { a: '-body\\b', b: '-(whites|pupils)\\b', kind: 'pose', upTo: 0.6, reason: 'the eyes lie on the body and flatten into it as they shut' },
     { a: 'bo-body', b: 'bo-lids', kind: 'pose', upTo: 1.0, reason: 'Bo’s lids are caps lying on his body over his eyes; his squash, the deepest of the four, carries them with it' },
     { a: 'bo-(whites|pupils)\\b', b: 'bo-lids', kind: 'pose', upTo: 0.7, reason: 'Bo’s lids lie over the top of his eyes, which flatten under them in a blink and when he dozes' },
-    { a: 'pim-body', b: 'pim-crown', kind: 'pose', upTo: 0.8, reason: 'the shell crown sits on Pim’s head and swings on its base after she stops' },
+    { a: 'pim-body', b: 'pim-crown', kind: 'pose', upTo: 1.0, reason: 'the shell crown sits on Pim’s head, swings on its base after she stops, and slips down to the side of her head when a friend sits on her' },
+    { a: 'mog-body', b: 'mog-ears', kind: 'pose', upTo: 1.2, reason: 'Mog’s ears sit on his head and lie flat when he is put out or a friend is on him' },
     { a: 'dot-body', b: 'dot-speckles', kind: 'pose', upTo: 0.5, reason: 'the speckles lie on Dot’s back and shimmer by turning a little on it' },
-    { a: '^friend-', b: '^friend-', kind: 'penetration', upTo: 0.15, reason: 'a friend sitting on another nestles a twentieth of a body into the one below, which is pressed flat under it' },
+    { a: '^friend-', b: '^friend-', kind: 'penetration', upTo: 0.15, reason: 'a friend sits on the very top of the one below, touching it; when the two sway or spring a little out of step, the rim of one presses into the other for a moment' },
     { a: '^plank', b: '^friend-', kind: 'penetration', upTo: 0.1, reason: 'a friend sits on the plank on its rounded underside; when it sways or kicks, the rim of that underside presses a little into the board' },
   ],
 } satisfies GameAudit

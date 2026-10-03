@@ -6,8 +6,8 @@ import { FRIEND_IDS, FRIENDS, MAX_TILT, PLANK, WAITING_PLACE, plankTopAt, type E
 // stack standing on its seat, everyone else in the sand. Pure. A load draws
 // this, and every hop and toss ends in it.
 
-/** How much of a body's height a friend sitting on another sinks into the one below. */
-export const NESTLE = 0.95
+/** Where a friend sitting on another has its underside, as a share of the height of the one below: on its very top, touching and not sunk in. */
+export const NESTLE = 1
 
 export function restTilt(a: Arrangement, without: FriendId | null = null): number {
   return lean(a, without) * MAX_TILT

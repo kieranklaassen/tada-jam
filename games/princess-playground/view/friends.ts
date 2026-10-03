@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { belly, spread } from '../overlap'
 import type { FriendPose } from '../pose'
 import { FRIENDS, type FriendId } from '../world'
 
@@ -71,8 +72,8 @@ export function buildFriend(id: FriendId): FriendView {
   const n = new THREE.Vector3()
   for (let i = 0; i < position.count; i++) {
     const x = position.getX(i), y = position.getY(i), z = position.getZ(i)
-    const belly = 1 + 0.1 * (1 - y) * (1 - y * y)
-    position.setXYZ(i, x * spec.radius * belly, y * spec.halfHeight, z * spec.radius * 0.94 * belly)
+    const bulge = belly(y)
+    position.setXYZ(i, x * spec.radius * bulge, y * spec.halfHeight, z * spec.radius * 0.94 * bulge)
     // The normal of a stretched ball: the ball's own, divided by the stretch.
     n.set(x / spec.radius, y / spec.halfHeight, z / (spec.radius * 0.94)).normalize()
     normal.setXYZ(i, n.x, n.y, n.z)
@@ -186,7 +187,7 @@ function lids(eyeSize: number): THREE.Object3D {
 export function poseFriend(view: FriendView, pose: FriendPose): void {
   const spec = FRIENDS[view.id]
   // Pressed flat, a body spreads, but only so far: it never grows into its neighbour or the rim.
-  const wide = Math.min(1.2, 1 / Math.sqrt(Math.max(0.2, pose.squash)))
+  const wide = spread(pose.squash)
   view.group.position.set(pose.x, pose.y, pose.z)
   view.group.scale.set(wide, pose.squash, wide)
   view.group.rotation.set(-pose.nod, pose.turn, -pose.lean, 'YXZ')
@@ -219,5 +220,9 @@ export function poseFriend(view: FriendView, pose: FriendPose): void {
   }
   if (view.extra && view.id === 'dot') view.extra.rotation.y = pose.follow * 0.6
   // Mog's ears lie flat when he is put out, and flatter still under a friend.
-  if (view.extra && view.id === 'mog') view.extra.scale.y = pose.pressed > 0.5 ? 0.12 : pose.frown > 0.5 ? 0.45 : 1
+  if (view.extra && view.id === 'mog') {
+    // Under a friend they are laid right back out of the way.
+    view.extra.visible = pose.pressed < 0.5
+    view.extra.scale.y = pose.frown > 0.5 ? 0.45 : 1
+  }
 }

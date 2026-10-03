@@ -99,6 +99,19 @@ export function gridLine(cell: number, origin: number): number {
   return Math.round((cell * GRID + origin) * 1e6) / 1e6 + 0
 }
 
+/** The widest any friend reaches from its middle when it sits on a seat: Bo, spread by a landing and leaning with a sway. */
+const SEATED_REACH = 1.3
+
+/**
+ * A friend of this radius standing at (x, z) would be in the way of the
+ * plank: under the board, or within reach of whoever may sit on a seat.
+ */
+export function inTheWay(x: number, z: number, radius: number): boolean {
+  const reach = radius * 1.15
+  if (Math.abs(z - PLANK.z) < PLANK.halfWidth + reach && Math.abs(x) < PLANK.halfLength + reach) return true
+  return Math.hypot(Math.abs(x) - PLANK.seat * 0.98, z - PLANK.z) < SEATED_REACH + reach + 0.08
+}
+
 /** Moves a spot to the nearest place a friend of this radius may stand. */
 export function standable(spot: Spot, radius: number): Spot {
   // Clear of the rim by the body's widest reach: its radius, its belly, and the spread of a hard landing.
@@ -107,20 +120,25 @@ export function standable(spot: Spot, radius: number): Spot {
   const x = onGrid(spot.x, -sideRim, sideRim, -TRAY.halfWidth)
   const nearRim = Math.max(SAND.minZ + radius * 0.5, -TRAY.halfDepth + reach)
   const childRim = Math.min(SAND.maxZ, TRAY.halfDepth - reach)
-  let z = onGrid(spot.z, nearRim, childRim, -TRAY.halfDepth)
-  const half = SAND.plankStrip + radius * 0.4
-  if (Math.abs(x) < SAND.plankReach + radius && Math.abs(z - PLANK.z) < half) {
-    // Under the plank: step out in front of it, or behind it where there is room and it is nearer.
-    const behind = PLANK.z - half
-    z = spot.z < PLANK.z && behind >= nearRim ? onGrid(behind, nearRim, behind, -TRAY.halfDepth) : onGrid(PLANK.z + half, PLANK.z + half, childRim, -TRAY.halfDepth)
+  const z = onGrid(spot.z, nearRim, childRim, -TRAY.halfDepth)
+  if (!inTheWay(x, z, radius)) return { x, z }
+  // In the way of the plank: step out in front of it or behind it, to whichever free place is nearer.
+  let best: number | null = null
+  for (let step = 1; step <= 64; step++) {
+    for (const way of [1, -1]) {
+      const at = onGrid(z + way * step * GRID, nearRim, childRim, -TRAY.halfDepth)
+      if (inTheWay(x, at, radius)) continue
+      if (best === null || Math.abs(at - spot.z) < Math.abs(best - spot.z)) best = at
+    }
+    if (best !== null) break
   }
-  return { x, z }
+  return { x, z: best ?? childRim }
 }
 
 /** Where each friend stands by default on the right of the tray; mirrored for the left. Dot's is the rim. */
 export const HOME: Readonly<Record<FriendId, Spot>> = {
-  pim: standable({ x: 1.92, z: 2.49 }, FRIENDS.pim.radius),
-  mog: standable({ x: 2.88, z: 1.17 }, FRIENDS.mog.radius),
+  pim: standable({ x: 1.8, z: 2.49 }, FRIENDS.pim.radius),
+  mog: standable({ x: 2.76, z: 1.29 }, FRIENDS.mog.radius),
   bo: standable({ x: 4.56, z: 2.37 }, FRIENDS.bo.radius),
   dot: standable({ x: 4.68, z: -2.55 }, FRIENDS.dot.radius),
 }
