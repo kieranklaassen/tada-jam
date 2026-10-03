@@ -80,10 +80,21 @@ export function lineDrawing(pen: Pen, parts: readonly Part[], ends: readonly { a
 
 /** A sheet of tracing paper in its compartment, with the design traced on it drawn small. Empty when `parts` is null. */
 export function tracingSheet(pen: Pen, x: number, y: number, wide: number, tall: number, c: number, parts: readonly Part[] | null) {
-  pen.globalAlpha = parts ? 0.92 : 0.35
+  if (!parts) {
+    // An empty place for a tracing: a dashed outline, as a draughtsman marks where something will go.
+    pen.strokeStyle = INK.line
+    pen.globalAlpha = 0.55
+    pen.lineWidth = Math.max(1, c * 0.028)
+    pen.setLineDash([c * 0.12, c * 0.1])
+    pen.strokeRect(x, y, wide, tall)
+    pen.setLineDash([])
+    pen.globalAlpha = 1
+    return
+  }
+  pen.globalAlpha = 0.92
   cutOut(pen, c, '#e8eef6', () => pen.roundRect(x, y, wide, tall, c * 0.05))
   pen.globalAlpha = 1
-  if (!parts || parts.length === 0) return
+  if (parts.length === 0) return
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity
   for (const p of parts) for (const e of [p.a, p.b]) { x0 = Math.min(x0, e[0]); x1 = Math.max(x1, e[0]); y0 = Math.min(y0, e[1]); y1 = Math.max(y1, e[1]) }
   const scale = Math.min((wide - c * 0.2) / Math.max(x1 - x0, 1), (tall - c * 0.2) / Math.max(y1 - y0, 1))

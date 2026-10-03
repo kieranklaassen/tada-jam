@@ -369,9 +369,9 @@ export class View {
       pen.save()
       const [nx, ny] = at2(rx - 0.25, at.right[1])
       pen.beginPath(); pen.rect(nx - cell * 2, ny - cell * 3, cell * 2, cell * 3.2); pen.clip()
-      pen.translate(nx + cell * 0.55, ny)
+      pen.translate(nx + cell * 0.7, ny)
       // Its crates are not yet a load the child is asked for, so no numeral names them here.
-      vehicle(pen, next.job, cell * 0.7, waitPose(next.job, game.seconds, false), game.seconds, stream(22), false, 3, false)
+      vehicle(pen, next.job, cell * 0.85, waitPose(next.job, game.seconds, false), game.seconds, stream(22), false, 3, false)
       pen.restore()
       const [x, y] = at2(rx, at.right[1])
       roll(pen, x, y, cell * ROLL.tall, cell)
@@ -428,7 +428,7 @@ export class View {
     // The tracing paper: the pad at the bottom, and the two tracings kept above it. The one laid on the board is marked.
     const paper = boxes[1], half = (paper.x1 - paper.x0) / 2
     // The pad: three sheets of tracing paper, each a little askew on the one under it, and the pencil that lies on them.
-    for (let i = 0; i < 3; i++) { const [px0, py0] = at2(paper.x0 + 0.3 + 0.05 * i, low + 0.9 - 0.06 * i); tracingSheet(pen, px0, py0, (half * 2 - 0.65) * cell, cell * 0.62, cell, i === 2 ? [] : null) }
+    for (let i = 0; i < 3; i++) { const [px0, py0] = at2(paper.x0 + 0.3 + 0.05 * i, low + 0.9 - 0.06 * i); tracingSheet(pen, px0, py0, (half * 2 - 0.65) * cell, cell * 0.62, cell, []) }
     const [pcx, pcy] = at2(paper.x0 + 0.55, low + 0.42)
     pen.strokeStyle = INK.pencil
     pen.lineCap = 'round'

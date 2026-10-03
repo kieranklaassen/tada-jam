@@ -13,7 +13,7 @@ import { isFooting, site, type Idea, type VehicleId } from './sites'
 import { crossingBeats, giveBeats, idleShow, type Cue, type Show } from './stage'
 import { RING, Toy } from './toy'
 import { TASTE, VEHICLES, bargeReaction, reaction, trainOf, type Reaction } from './vehicles'
-import { bargeHorn, chiefTaps, chord, creak, give, honk, lay as layVoice, pendulum, pinTick, reactVoice, restore, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
+import { bargeHorn, chiefTaps, chord, creak, give, gurgle, honk, plop, lay as layVoice, pendulum, pinTick, reactVoice, restore, splash, trolleyBells, trolleyFlip, trolleyOff, trolleySet, trolleyWeight, unrollVoice } from './voices'
 
 // The game on the toy: the vehicles at the two banks, a run over the bridge,
 // the two scenes a run ends in, and the sheets (the roll and the rack). Pure,
@@ -407,6 +407,9 @@ export class Game extends Toy {
       show.kind = 'give'
       this.gave = what.ring
       this.voices.push(what.voice.filter((sound) => (sound.after ?? 0) < 0.35))
+      // The wrong road has its own sound: a tube rolls its load off with a plop, and wheels on a thread gurgle in the water.
+      if (drive.run.ending.kind === 'rolls-off') this.voices.push(plop)
+      if (drive.run.ending.kind === 'dunks') this.voices.push(gurgle)
       // A vehicle that fails on its way home paddles to the near bank like any other, and is home.
       this.save = drive.homeward ? sentHome(this.save, drive.vehicle) : failedRun(this.save, drive.vehicle, what.ring)
       this.scene = new Scene(giveBeats(show, cue))

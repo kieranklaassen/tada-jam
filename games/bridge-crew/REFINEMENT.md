@@ -3,33 +3,36 @@
 
 ## Status
 
-- Stage: toy. Run 3 built it on the rules and the look of run 1.
-- Look in use: first reserved choice, Blueprint and balsa.
-- **What the lead should try first:** open `?chrome=0&seed=7#/play/bridge-crew`. (1) Drag from the left lip across the gap: one plank, and it swings down and knocks on the bank. (2) Tap the tube pile, then drag from the top of the rock straight up to the plank's end: the plank comes back up and stands. (3) Tap any part; tap it again while it rings. (4) Rest a finger on a pin for half a second. (5) Close a triangle of sticks and watch the chief; then build a square. (6) Take your hands off for five seconds. `spike=1` in the address shows the still spike of run 1, and `tier=3` the lowest tier.
-- Sheet check, round 1 (checker: B): open, 14 findings; all pasted at `b7c2270`.
-- Sheet check, round 2 (checker: D): open, 5 findings, read against sha256 `1f16834c…40a9`. All five replacements are pasted as written, at commit `4f2a5d5`. No finding was refused. Finding 5 replaced the arch sentence that was my own.
-- Sheet now: commit `4f2a5d5`; sheet part sha256 `c6a42b6e2f236978d4e4395b156c55cde2f0318eba9cf664508fc14a766f3e5e`.
-- Rules after round 2: brought into line at `1340c60`. Finding 3 changed a rule (the chief's two models are filled from the two differences nearest the trolley), finding 4 changed the saved state (a sheet's entry remembers that its job vehicle was sent home). Finding 2's rule already matched and has a new test. Findings 1 and 5 are text only.
+- Stage: gates. Run 4 built the game on the toy.
+- Sheet the game stands on: round 3, as pasted. Commit `0a76b32`; sheet part sha256 `6a615151bd7154460516548adc0222ee00a6c886e70706020c484369c21522d1`.
+- Sheet check, round 3 (checker: E): open, 4 findings, read against sha256 `c6a42b6e…3e5e`. All four replacements are pasted as written at `0a76b32`. No finding was refused. All four are text only; the rules already held `shown` as the row now says.
+- **For the next checker: one row of the sheet is my own and no round has read it.** Under "Every field of the saved state" I added the row `across` (commit `bac5c46`, before round 3 was pasted): the vehicles parked on the far bank of the newest sheet. Without it a vehicle that had crossed had no stored place once the bridge was changed. The same commit made the other vehicle draw up at the job vehicle's first crossing however the cycle was judged; the sheet's wording ("after the job vehicle has crossed") already covers that.
+- Look in use: first reserved choice, Blueprint and balsa. Built on at the builder's own risk: the owner has seen the toy and has not answered.
 - Renderer: canvas 2D with the game's own solver (`frame.ts`). matter.js is not used.
-- The guide, the cloud page, the toy page and the pilot notes did not differ on anything this run met.
-- Open: sheet ready for check, round 3
+- The guide, the cloud page, the game page and the pilot notes did not differ on anything this run met.
+- Open: sheet ready for check, round 4
 
-**What the toy holds.** Of the grid's six objects and five gestures: the plank, the stick, the tube, the thread and the pin, each laid, plucked, turned and taken off, with the sound and the motion its cell names. It does not hold the Load column or the test trolley, and no vehicle stands at the bank: a load brings the give, which is a scene of the game. They are left out, not stubbed. A first visit opens on the free yard (`TOY_SHEET` in `config.ts`), the one sheet with the whole kit; the designed order, the judging and the scenes are in the rules and unwired.
+**What the lead should try first.** Open `?chrome=0&seed=7#/play/bridge-crew` with a fresh slot.
 
-**No one has listened.** Every sound is numbers held to a range by tests (`voices.ts`) and played through `audio.ts` (`sound.ts`). Nobody on this machine can hear, so loudness, pitch and whether a clack sounds like a clack are unchecked.
+1. Tap the van with nothing built: it drives off the bank, floats and comes back.
+2. Drag a plank from lip to lip and tap the van: the plank creaks and cracks under it, and a pencil ring marks the spot. Do it again and watch the top left margin afterwards.
+3. Tap the plank twice to turn it on edge and send the van: it crosses, the next sheet's roll slides in at the right, and the jelly truck draws up.
+4. Drag the trolley (the small cart, right of the tray) onto the plank; tap its compartment to add weights. Tap the pad with the pencil to keep a tracing; tap the kept tracing to lay it on the board.
+5. Tap the roll. On the second sheet, with the rock: build, and use the rack at the top right to go back.
+6. `seed=<n>` fixes the visit; `tier=3` is the lowest tier; `spike=1` is the still spike of run 1.
 
-What is open besides the check:
+**What is still weak.**
 
-- **Waiting for the lead:** the round 3 check; the owner's answer on the look and the toy; the commit that holds `symbols.ts`; frame rates on a real graphics card; a registry row for the look when it is accepted.
-- **Measured here, on the software renderer, for comparison between passes only:** the game's own work in a frame on the production build, top tier pinned, 1180 by 820 at pixel ratio 2, a bridge of eight parts being plucked: median 0.6 ms unthrottled, 2.8 ms at four times CPU throttle, 4.4 ms at six times (Chromium, SwiftShader). This is not a frame rate and says nothing about an iPad.
-- **Findings not fixed:**
-  - Only the first variant of each position has a bridge in the tests that crosses it.
-  - Taste thresholds (`TASTE`) and part strengths (`kit.ts`) are first values. With no load in the toy, a part gives only under its own weight, which the yard's kit rarely reaches, so a give has no picture yet.
-  - The hold that takes a pin out is shown by nothing: the ghost hand shows a lay and a pick only. A part hanging loose shows a small ring where its pin was, and a tap there puts the pin back.
-  - A swinging part is kept out of the ground (a test measures it) but not out of other parts or the tray: a long chain can swing across the tray's box.
-  - While a new part is dragged out, what is already built does not yet lean toward it, as the sheet's toy heading says it does.
-  - The thirds of the sheet above the cliffs are empty until a child builds up there.
-  - The model's limits from run 1 stand (first-order theory; a straight run of threads through a free pin counts as not held).
+- **Nobody has heard it.** Every sound is numbers held to a range by tests.
+- **Not built, of what the sheet names:** the secret of the barge's horn under an arch; copying one part from a tracing (a tracing can be laid, compared and swapped whole); the pin's tick when a part on it shifts; built parts leaning toward a part being dragged out.
+- **Built, and not as the sheet's words have it:** a tracing laid on the board is lifted again on load (it is not a saved field). A stick used as a road is carried by the model as the sheet says, but the vehicle is drawn level on it, not tilting with a wheel off.
+- **A side view lets things overlap that stand side by side:** a vehicle drives in front of posts and stays that rise from the deck, which is what the bus's hats are about. Two vehicles parked on the far bank of the widest gaps run off the right edge of the sheet, and the second stands under the roll.
+- **Not looked at in a browser:** the sheets after `rock-prop`, the vehicles other than the van and the jelly truck, the chief's models for the six ideas after the plank on edge, the one-change showing, and the barge. Tests draw every one of them with a recording pen and hold every number to a real number; no eye has judged them.
+- **The model is harsh on the first sheet:** one weight on the trolley at the middle of a flat four-cell plank cracks it (the model's numbers: a strength of 1.2 against a bending of 1.24). True to the model, and a child may read it as the trolley being broken.
+- Only the first variant of each position has a bridge in the tests that crosses it. Taste thresholds and strengths are first values.
+- The hold that takes a pin out is still shown by nothing.
+
+**Measured here, on the software renderer, for comparison between passes only** (not a frame rate): the toy's work in a frame was a median 0.6 ms on the production build. The game's has not been measured again.
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
@@ -42,26 +45,33 @@ The stages in order are sheet, toy, game, gates. Keep this block current: the st
 - `guidance.ts`, `audio.ts`, `overlay.ts`: as copied. `scene.ts`: as copied and not used yet.
 - `perf.ts`, `quality.ts`, `attention.ts`, `saveCadence.ts`: frozen, untouched.
 - The game's own modules. Rules: `kit`, `frame`, `sites`, `run`, `vehicles`, `order`, `save`, `grid`, `consequence`, `voices`. Toy: `pose`, `motion`, `layout`, `toy` (all pure), `sound`, `view`. Look: `look`, `sheet`, `figures`, `spike`. `bridges.fixture.ts` is for tests only.
+- `symbols.ts` and `symbols.test.ts`: the template's, copied as they stand at `d316d6cc` of the base branch, first lines kept, unchanged. Used through `drawWhole` only. Nothing was missing.
+- `scene.ts`: as copied, used for the give and the crossing (`stage.ts` holds their beats). **For the template:** a scene ended by a touch plays every remaining beat to its end in one call, so a beat that cues a sound must know it is being skipped, or every sound of the scene plays at once; the game keeps a flag for it. A `finishing` argument to `play` would save each game that flag.
+- `config.ts`: `TOY_SHEET` is null now: a first visit opens where the designed order starts.
 - **For the cloud page:** the Playwright in `node_modules` asks for a newer browser than the machine has; `chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })` works with no install.
 
 ### For the owner to decide
 
-- **The look**: Blueprint and balsa, as the toy shows it.
-- **The toy**: laying parts pin to pin, with no load and no vehicle yet. Is building, plucking and watching a shape hold or fold a pleasure by itself, or does it need the trolley's weight before it is one?
+- **The look**: Blueprint and balsa.
+- **The toy and the game on it**: seen as a toy; not yet answered.
 - **The drawn dip.** The model's dip is drawn six times larger, by one fixed factor. Acceptable in a game that is true where it claims to be science?
-- **The tracing's second line** (game stage): a picture of how a traced design would dip, or a reading on the object?
-- **More than one "better"**: the jelly truck likes a soft deck.
-- **The hold on a pin.** Taking a pin out needs a finger to rest on it for half a second. It is the only hold in the game.
+- **The tracing's second line**: a traced design laid on the board is drawn as it would lie under the same load. A picture of how a thing behaves, or a reading on the object?
+- **More than one "better"**: the jelly truck likes a soft deck and is bored by a stiff one.
+- **The hold on a pin**: the only hold in the game, half a second.
+- **One weight cracks a flat plank.** Should the first sheet's plank be a little stronger laid flat, so the trolley has something to show before it breaks it? It is a number in `kit.ts`; the frame model stays as true either way.
 
 ## Pass log
 
-One row per pass. Passes 1 and 2 were on the spike and pass 3 on the toy, all on the software renderer; no frame rate could be taken here.
+One row per pass. Passes 1 and 2 were on the spike, pass 3 on the toy, and passes 4 to 6 on the game, all on the software renderer; no frame rate could be taken here.
 
 | Pass | Looked at | Critique | Fix set | Frame rate | Still weak |
 | --- | --- | --- | --- | --- | --- |
 | 1 | The spike at 1180 by 820, pixel ratio 2, 1.5 s after load | "I can see it is a plan of a bridge and the sticks look real. The little truck is tiny and I cannot see its face. There is hardly any water. The box of parts sits on the edge of the paper." | Sizes: van and chief drawn larger with a face in pencil; water raised and firmer; tray moved inside the border | Not measured (software renderer) | Upper third of the sheet empty; piles in the tray do not show how many are left |
 | 2 | The same still after the fix set | "The truck looks worried about the gap, good. The bird is funny. I want to pull a stick out of the box." | None | Not measured | Nothing moves; no strain or dip to see at rest; other sheets not looked at |
 | 3 | The toy on the dev build at 1180 by 820, pixel ratio 2, seed 7: at open, a bridge folding, a bridge built, a part being laid, a pluck, ten seconds idle | "The planks fell down and swung, that was good, but one went right through the wall and another hung under the floor. I cannot tell a plank from a stick once it is on. The stick box is just a dark block. The bird pecking its little triangle when I made one is funny. Nothing told me I could hold a pin." | What a part looks like and where it may go: planks drawn thicker than sticks; a pile's shadow under the whole pile; a hanging part leans on the ground and a swinging one knocks on the bank and comes back; each link of a chain carried by the part above it. (Also fixed before this row: parts that had never been turned were drawn at the corner of the screen; a new part landed already hanging. And after it: the ghost hand's part lay against the chief's model, so it now lays on the far bank.) | Not measured (software renderer). Work in a frame: median 0.6 ms, 4.4 ms at six times throttle | No load, so plucking plays small forces; the hold on a pin is shown by nothing; a chain can swing over the tray; the built parts do not lean toward a part being dragged; nobody has heard it |
+| 4 | The game on the dev build, seed 7: two failed runs and the chief's showing, the trolley, a tracing, the crossing, the next sheet | "The truck falling in is the best bit. The bird did something with a tiny stick up in the corner and I could not see what. What are the three grey squares? The number by the boxes is good, I can see it carries two." | Reading the margin and the tools: the chief's models drawn at nearly twice the size, with a block that presses on them; the tracing pad drawn as paper with a pencil; the trolley larger in its compartment | Not measured (software renderer) | The showing happens far from where the eye is; nothing leads to it |
+| 5 | Cold playtest proxy on the production build, fresh slot, seed 11: ten seconds hands off, then a newcomer's minute (the truck first, a short plank, a stray drag, a plank across, a run, another, a turn, a crossing) | Invites at ten seconds: the van at the edge of the gap with its 2, rings on the two lips, marks round the tray and the tools, the ghost hand laying a part on the far bank. Unclear moments, six: a pale box painted over the bank beside the floating van; with all three planks laid in the wrong places nothing showed how to take one back; the chief's showing went unseen in the corner; three things glow at once at the start; one weight on the trolley broke the flat plank at once; the grey squares in the tools box | What to do next is shown: the water's veil kept between the banks; with the kit spent and no road the ghost hand carries a part to the tray; corner marks round the chief's models while it shows. And found by the overlap test written in this pass: a floating vehicle went through rocks and ledges and through the bank's corner on its way out, so it now clambers over and leaps out beside the bank | Not measured | Three things still glow at once; the trolley on the first sheet |
+| 6 | The same proxy again on a new production build | Of the six, four are gone (the pale box, the kit spent, the unseen showing, the grey squares after this pass's fix). Two remain: three things glow at once at the start, and one weight breaks the flat plank. One new: the nose of the next vehicle behind the roll was too small to read | Empty places read as places: an empty tracing slot is a dashed outline; the vehicle behind the roll is drawn larger; a tube rolling its load off and wheels on a thread have their own sounds | Not measured | The glow at the start marks pins, tray and tools together; the first sheet's flat plank against the trolley is the owner's to decide |
 
 ## For the pull request
 
@@ -69,21 +79,23 @@ Written as the game is built and kept at the end of this file: the pull request 
 
 ### How the game meets the quality bar
 
-As the toy stands. Each line says what exists.
+As the game stands at the end of run 4.
 
-- **Alive at idle:** the crew chief does one of five things every few seconds and breathes and blinks between them; the water's dashes drift; the loose end of the string sways; a hanging part swings a long while. All of it stops while unattended or hidden.
-- **Motion and sound on every touch:** a press is answered where it lands: a pin clicks in, a part lifts, a pile stirs, the chief starts. Every gesture the toy holds has its own voice. Nobody has heard them.
-- **Weight, squash, follow-through:** a part lands from above with its shadow a beat behind and overshoots once; a part with nothing to hold it swings and knocks on the bank; the chief draws back before it reaches.
-- **Kid-clear:** four kinds of part that read apart by depth, thinness, roundness and line, plain on one blue; the pile last picked stands proud in corner marks.
-- **Wordless clarity for the declared age:** no word, letter, numeral or sign is drawn; `npm run wordless:check` passes.
-- **Wordless guidance:** after three idle seconds the pins and the piles are ringed; after five a ghost hand lays a part on the far bank, away from the gap, and on its next turn picks another pile. Any touch clears it.
-- **60 fps:** not measured. One full-surface stamp a frame; the rest is small sprites; a test bounds the canvas calls for the fullest bridge. Adaptive quality and the grown-up overlay are the template's.
+- **Alive at idle:** the vehicle at the gap creeps to the edge, looks down and backs up, and every waiting or parked vehicle minds its own cargo in its own time; the crew chief does one of five things every few seconds; the barge noses forward and back at its mooring; the water drifts. All of it stops while unattended or hidden.
+- **Motion and sound on every touch:** a press is answered where it lands: a pin clicks in, a part lifts, a pile stirs, a vehicle starts and sounds its own horn, the trolley ticks, paper rustles. Each of the grid's thirty cells has a voice of its own. Nobody has heard them.
+- **Weight, squash, follow-through:** parts land from above and overshoot once; a part with nothing to hold it swings and knocks on the bank; a straining part draws thin or bulges and creaks before it gives; the bridge springs back and rings when the load leaves it.
+- **Kid-clear:** four kinds of part that read apart, plain on one blue; vehicles and chief as the only figures; a pencil ring on the spot where a part gave.
+- **Wordless clarity for the declared age:** no word or letter anywhere. Two numerals, each beside the quantity it names (a vehicle's crates, the trolley's weights), drawn through `symbols.ts`; `npm run wordless:check` passes. No symbol stands alone and nothing depends on reading one.
+- **Wordless guidance:** rings and corner marks after three idle seconds; then a ghost hand shows one move for the state the board is in: lay a part, pick a pile, send the vehicle when a road reaches across, unroll the next sheet, or carry a part back when the kit is spent. Never where a part belongs.
+- **60 fps:** not measured. One full-surface stamp a frame, sprites for parts, and a test that bounds the canvas calls for the fullest bridge. A run is computed once when the vehicle sets off (a few milliseconds) and read out after.
 - **Procedural or committed assets only:** everything is drawn and synthesized in code.
-- **Its own art direction:** Blueprint and balsa, in `ART.md` under "The look".
+- **Its own art direction:** Blueprint and balsa; the registry row's text is at the end of `ART.md`.
+- **Nothing passes through anything** (a canvas game's own tests): a folding bridge is played for twelve seconds and no part goes into the ground; the give is played on every sheet for every vehicle and no wheel goes into a bank, a rock or a ledge. What a side view cannot avoid is listed under "still weak".
+- **Found as left:** every scene's outcome is in the saved state the moment it starts and is saved at once; tests put the game away mid-run and mid-scene and open it again.
 
 ### The learning claim
 
-As the sheet has it at `4f2a5d5`, read through the lookup on 2026-10-03: designed from five California State Board-adopted science standards on engineering design (`us-ca 3-5-ETS1-2`, `us-ca 3-5-ETS1-3`, `us-ca MS-ETS1-2`, `us-ca MS-ETS1-3`, `us-ca MS-ETS1-4`; all confirmed), and from four goals of SLO's curriculum guidance for fase 2 and fase 3 (`nl ojw/nattech/3/01/fase2`, `nl ojw/nattech/3/02/fase2`, `nl ojw/nattech/3/01/fase3`, `nl ojw/nattech/3/08/fase3`; guidance, not law; all confirmed) and the Dutch legal core goal 45 of 2006 (`nl 45`; still in force; an end-of-primary goal; confirmed). From the California standards it takes the loop of fair test, failure, improvement and comparison, and it does not teach structures on their authority. The plank on edge standing for the profile is the game's own reading, beyond the Dutch records. The check states are to be read again on the day of the pull request. No attainment claim.
+As the sheet has it at `0a76b32`, read through the lookup on 2026-10-03: designed from five California State Board-adopted science standards on engineering design (`us-ca 3-5-ETS1-2`, `us-ca 3-5-ETS1-3`, `us-ca MS-ETS1-2`, `us-ca MS-ETS1-3`, `us-ca MS-ETS1-4`; all confirmed), and from four goals of SLO's curriculum guidance for fase 2 and fase 3 (`nl ojw/nattech/3/01/fase2`, `nl ojw/nattech/3/02/fase2`, `nl ojw/nattech/3/01/fase3`, `nl ojw/nattech/3/08/fase3`; guidance, not law; all confirmed) and the Dutch legal core goal 45 of 2006 (`nl 45`; still in force; an end-of-primary goal; confirmed). From the California standards it takes the loop of fair test, failure, improvement and comparison, and it does not teach structures on their authority. The plank on edge standing for the profile is the game's own reading, beyond the Dutch records. The check states are to be read again on the day of the pull request. No attainment claim.
 
 ### Defaults taken for the owner
 
@@ -103,3 +115,7 @@ As the sheet has it at `4f2a5d5`, read through the lookup on 2026-10-03: designe
 - The check asked for a stored thing behind every "stays" in the sheet (a hat, a loose end, a parked vehicle). Write the saved-state table last and walk every such word against it before asking for the check.
 - A test that every number handed to the canvas is a real number would have saved a pass: a part that had "never been turned" had been turning for an infinite time, and zero times the sine of infinity is not zero. The view test now feeds the view a recording pen in every state and checks.
 - Keep a part's rest (where it should be) apart from its springs (where it is), and let a part that loses its hold keep its place and swing on from there. Then folding costs no special case.
+- Compute a run once, when the vehicle sets off, as a list of answers half a cell apart, and read it out in time. The watching is then free, and the same list gives the creaks, the reaction and the consequence.
+- Ask of every vehicle "which bank is it on?" before writing the saved state. One list for the near bank was not enough: a change to the bridge forgot who had crossed it.
+- Write the overlap test for a scene before looking at it. The give looked fine in a still and went through a rock, a ledge and the bank's corner on other sheets.
+- A class field's initial value in a subclass is set after the parent's constructor has run. A parent that calls an overridden method while it builds itself has its result overwritten; the game runs its model once more at the end of its own constructor.

@@ -268,4 +268,16 @@ Not part of the sheet. First reserved look: **Blueprint and balsa**. Spiked on t
 
 **The tiers** (`config.ts`). Each tier sets the pixel ratio (2, 1.5, 1.25, 1), and the two lowest leave out the grain lines of the balsa and the seam of the tubes. The sheet, the white line, the shadows and every motion are the same on every tier.
 
-**What the spike showed** (software renderer; layout, silhouettes and colour only). The four kinds read apart at 1180 by 820: a plank by its depth, a stick by its thinness, a tube by its white roundness, a thread as a line. The pins read as the joints. The first still had the van and the chief too small to carry a face, the water too low to see, and the tray on the border; the second still fixed those. Still weak: the upper third of the sheet is empty when the deck sits at mid-height; the tray's piles do not yet show how many of each are left; nothing moves.
+**The characters, as built** (`fleet.ts`, `props.ts`, `figures.ts`; how each moves is in `acts.ts` and `motion.ts`). Five vehicles, the barge and the crew chief are small models of the kit's own stuff with faces in pencil. Each vehicle has its own way of waiting (the one at the gap also creeps to the edge, looks down and backs up), of driving, of starting at a touch, and of taking a ride it likes, dislikes or neither; tests fail if two share a move. The van's parcels sway and slide off; the jelly rolls or jumps onto the cab; the piano's keys ripple or the piano rolls back; the bus's necks stretch or duck; the caterpillar's feet keep step or lose it.
+
+**The numerals** (`symbols.ts`, the template's shared module, unchanged). Two places, as the sheet lists them: beside a vehicle's crates and beside the trolley's stack of weights, in the white of the drafting line with a dark blue edge. The vehicle whose nose shows behind the next roll has none: its crates are not yet a load the child is asked for.
+
+**What the spike showed** (software renderer; layout, silhouettes and colour only). The four kinds read apart at 1180 by 820: a plank by its depth, a stick by its thinness, a tube by its white roundness, a thread as a line. The pins read as the joints. The passes since are in `REFINEMENT.md`.
+
+## The registry row
+
+For the lead, when the look is accepted (section 3 of `docs/art-direction.md`); a builder does not edit that file.
+
+| Game | Style | Art guide |
+| --- | --- | --- |
+| Bridge Crew | Blueprint and balsa (canvas 2D): a cyanotype drawing sheet with white drafting lines, a faint grid and the ground in section hatching; unstained balsa planks and sticks, rolled paper tubes, steel pins and string lying on it, each with a small hard shadow; models of balsa and cut paper with faces in pencil | `games/bridge-crew/ART.md` |
