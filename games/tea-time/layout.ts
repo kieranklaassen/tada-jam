@@ -6,7 +6,7 @@
 export type Spot = { x: number; z: number }
 
 /** The cloth a thing can stand on and a puddle can lie on. */
-export const CLOTH = { minX: -6.6, maxX: 6.6, minZ: -3.0, maxZ: 3.6 } as const
+export const CLOTH = { minX: -6.6, maxX: 6.6, minZ: -3.0, maxZ: 4.2 } as const
 
 /** The table never seats more than four. */
 export const SEAT_COUNT = 4
@@ -16,7 +16,7 @@ const SEAT_XS: readonly (readonly number[])[] = [[], [0], [-2.1, 2.1], [-3.7, 0,
 
 /** How far back a guest sits, and how far in front of it its place is laid. */
 export const GUEST_Z = -2.2
-export const PLACE_Z = 0.05
+export const PLACE_Z = 0.3
 
 /** Where the guest in seat `seat` of a party of `party` sits. */
 export function seatSpot(party: number, seat: number): Spot {
@@ -31,17 +31,17 @@ export function placeSpot(party: number, seat: number): Spot {
 
 export function spoonSpot(party: number, seat: number): Spot {
   const place = placeSpot(party, seat)
-  return { x: place.x + 1.12, z: place.z + 0.12 }
+  return { x: place.x + 1.32, z: place.z + 0.12 }
 }
 
 /** The tray along the near edge: the pot's stand, the stack of saucers, the spoons, and where the sponge and the bowl come out. */
 export const TRAY = {
-  saucers: { x: -5.5, z: 2.4 },
-  spoons: { x: -4.25, z: 2.5 },
-  cups: { x: -2.6, z: 2.4 },
-  sponge: { x: 1.7, z: 2.55 },
-  pot: { x: 3.55, z: 2.35 },
-  bowl: { x: 5.6, z: 2.3 },
+  saucers: { x: -5.6, z: 3.0 },
+  spoons: { x: -4.25, z: 3.1 },
+  cups: { x: -2.3, z: 3.0 },
+  sponge: { x: 1.9, z: 3.15 },
+  pot: { x: 3.55, z: 2.95 },
+  bowl: { x: 5.6, z: 2.9 },
 } as const
 
 /** A thing set down outside the cloth is brought back to its edge. */

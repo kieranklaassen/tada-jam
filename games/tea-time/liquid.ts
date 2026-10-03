@@ -169,7 +169,7 @@ export class Puddles {
   constructor() {
     const geometry = new THREE.CircleGeometry(1, 18)
     geometry.rotateX(-Math.PI / 2)
-    this.mesh = new THREE.InstancedMesh(geometry, new THREE.MeshBasicMaterial({ color: '#a85e1c', transparent: true, opacity: 0.9, depthWrite: false }), PUDDLE_COLS * PUDDLE_ROWS)
+    this.mesh = new THREE.InstancedMesh(geometry, new THREE.MeshBasicMaterial({ color: '#b56a22', transparent: true, opacity: 0.86, depthWrite: false }), PUDDLE_COLS * PUDDLE_ROWS)
     this.mesh.count = 0
     this.mesh.frustumCulled = false
     this.mesh.renderOrder = 2

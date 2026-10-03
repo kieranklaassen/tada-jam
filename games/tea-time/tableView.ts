@@ -30,7 +30,7 @@ type Piece = {
   girth: number
 }
 
-const CAMERA = { fov: 27, pitch: 0.8, lookAt: new THREE.Vector3(0, 0.75, 0.62), halfWidth: 6.75, halfDepth: 4.6 } as const
+const CAMERA = { fov: 27, pitch: 0.8, lookAt: new THREE.Vector3(0, 0.75, 0.7), halfWidth: 6.75, halfDepth: 4.8 } as const
 
 export class TableView {
   readonly scene = new THREE.Scene()

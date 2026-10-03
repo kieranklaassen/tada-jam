@@ -86,6 +86,8 @@ export function footprint(thing: Thing): number {
   if (thing.kind === 'cup') return bowlOf(thing.size).rimR * 1.25
   if (thing.kind === 'bowl') return 0.92
   if (thing.kind === 'pot') return POT.bellyR
+  // A spoon is narrow; it lies with its handle toward the child.
+  if (thing.kind === 'spoon') return 0.3
   return 0.5
 }
 
