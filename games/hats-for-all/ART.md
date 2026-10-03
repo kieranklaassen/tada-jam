@@ -199,7 +199,7 @@ Hats for All is designed from three California preschool and transitional kinder
 
 ## The look
 
-**Foam play mats**, the first look reserved for this game in the ledger of `docs/art-direction.md`. Everything on screen is a thick slab of squashy foam cut from one outline: the floor of jigsaw tiles with five round spots inlaid in it, the white tile the hats press out of, the hats, the creatures and the arch they come and go through. A hat pressed out leaves its hole, and the mat shows through it.
+**Foam play mats**, the first look reserved for this game in the ledger of `docs/art-direction.md`. Everything on screen is a thick slab of squashy foam cut from one outline: the floor of jigsaw tiles with five round spots inlaid in it, the cream tile the hats press out of, the hats, the creatures and the arch they come and go through. A hat pressed out leaves its hole, and the mat shows through it.
 
 It must not be taken for Kite Tower (blocks on a playroom floor: wood with grain, lathe-turned dolls) or Shadow Lantern (flat extruded shapes: paper, lamp light). Here nothing has grain, nothing is paper and nothing is lit by a lamp: the foam is matte with a fine stipple, every edge is a small soft bevel, the floor locks together with dovetail teeth, and the colours are flat.
 
@@ -219,8 +219,8 @@ It must not be taken for Kite Tower (blocks on a playroom floor: wood with grain
 ### Materials
 
 - One matte foam material for everything (roughness 0.95, no metal), coloured by vertex, with one small stipple normal tile that repeats. The stipple is seeded, so every load shows the same foam.
-- Every piece is an outline extruded 0.5 to 0.9 mat units with a bevel of 0.055. Squash is a scale spring, never a soft body.
-- The hats are working pieces and stay plain: one flat colour, one simple outline, no face, no pattern and no idle motion in the tile (pack: game-design, working-objects-stay-plain.md). The creatures carry the faces and the comedy.
+- Every piece is an outline extruded 0.1 to 0.9 mat units (an ear the thinnest, the arch the thickest) with a bevel of 0.055. Squash is a scale spring, never a soft body.
+- The hats are working pieces and stay plain: one flat colour, one simple outline, no face, no pattern and no motion of its own in the tile, apart from stirring inside the idle ladder's ring (pack: game-design, working-objects-stay-plain.md). The creatures carry the faces and the comedy.
 - No shadow map. A soft round blob lies under each creature, each hat in the air or on the floor, and each leg of the arch; the same blob is the dimple where the floor is poked.
 - A body leans as foam does: its feet stay planted and its top slides across. Nothing rotates into the floor.
 - The ghost hand of the idle ladder is a white mitten with one finger out and a dark edge, drawn in code. It is a picture of a hand pressing the thing a child could press, and nothing to decode.
