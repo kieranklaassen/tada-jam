@@ -98,6 +98,8 @@ export class Playground {
   /** What happened since the Mount last took them. */
   events: PlayEvent[] = []
   held: FriendId | null = null
+  /** The friend who wants to go somewhere, and which way: it stretches and turns its face there for as long as it wants it. */
+  asking: { id: FriendId; side: number; up: number } | null = null
   time = 0
   private carry = 0
   private wasLevel = false
@@ -627,7 +629,8 @@ export class Playground {
       body.bright += Math.max(-dt * 0.9, Math.min(dt * 3, warm - body.bright))
     }
     if (id === 'bo') {
-      const alone = body.landed && body.mode === 'rest' && this.arrangement.left.length + this.arrangement.right.length === 1
+      // Alone on the plank he dozes, unless he is the one who asks: then he is wide awake, looking up along the plank.
+      const alone = body.landed && body.mode === 'rest' && this.arrangement.left.length + this.arrangement.right.length === 1 && this.asking?.id !== 'bo'
       body.doze += Math.max(-dt * 6, Math.min(dt * 0.8, (alone ? 1 : 0) - body.doze))
     }
   }
@@ -677,6 +680,12 @@ export class Playground {
       const place = body.away ? null : placeOf(this.arrangement, id)
       pose.pressed = place && place.at === 'end' && place.level < this.arrangement[place.end].length - 1 ? 1 : 0
       if (pose.pressed) pose.squash *= PRESSED
+      // The one who asks shows it with its whole body, not only its eyes: it stretches toward where it wants to be.
+      if (this.asking && this.asking.id === id && body.mode === 'rest') {
+        pose.nod += 0.34 * this.asking.up
+        pose.lean += 0.09 * this.asking.side
+        pose.squash *= 1 + 0.06 * this.asking.up
+      }
       if (body.act) this.perform(body, pose)
     }
     // Whoever sits on a friend rides that friend's squash: pressed flat, it lets them down; popping back, it lifts them.

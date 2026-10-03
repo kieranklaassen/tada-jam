@@ -171,7 +171,7 @@ export class Stage {
         const now = handPose(view.hand, false, this.handNow)
         hand.visible = now.opacity > 0.01
         hand.material.opacity = now.opacity * 0.92
-        hand.position.set(pose.x + spec.radius * 0.35, pose.y + spec.halfHeight * 2 + 0.5 - now.press * 0.45, pose.z - spec.radius * 0.2)
+        hand.position.set(pose.x + spec.radius * 0.3, pose.y + spec.halfHeight * 2 + 0.75 - now.press * 0.45, pose.z - spec.radius * 0.5)
       }
     }
     // The rake: out while the sand holds a mark, and across the tray when it is drawn.

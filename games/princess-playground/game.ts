@@ -450,9 +450,12 @@ export class Game implements Director {
   /** Where everyone looks. The asker looks along the plank to where it wants to go; it never looks at the child to plead. */
   private looks(): void {
     const play = this.play, a = play.arrangement
+    play.asking = null
     if (this.scene) return
     const asking = !this.world.state.finished
     const ride = this.ride
+    const asker = placeOf(a, ride.asker)
+    if (asking && asker.at === 'end') play.asking = { id: ride.asker, side: asker.end === 'left' ? 1 : -1, up: ride.asks === 'up' ? 1 : -0.7 }
     for (const id of FRIEND_IDS) {
       const at = standsAt(a, id)
       if (a.waiting === id) play.look(id, 0, 0.7)

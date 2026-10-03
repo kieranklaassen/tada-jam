@@ -170,25 +170,19 @@ export class SandMap {
   /** Where an end of the plank comes down: a short trench across the tray with sand pushed out along it. */
   bite(x: number, halfWidth: number, strength: number): void {
     const ctx = this.ctx, cx = this.px(x), cz = this.pz(PLANK.z)
-    const rx = (0.2 + 0.16 * strength) * this.scale, rz = (halfWidth + 0.1) * this.scale
+    const rx = (0.32 + 0.2 * strength) * this.scale, rz = (halfWidth + 0.1) * this.scale
     ctx.save()
     ctx.translate(cx, cz)
     ctx.scale(rx / rz, 1)
-    // A soft dark trench, deepest in the middle, with only a faint rise round it: a hollow, not a ring.
-    const lip = ctx.createRadialGradient(0, 0, rz * 0.9, 0, 0, rz * 1.7)
-    lip.addColorStop(0, grey(FLAT + 22, 0.5))
-    lip.addColorStop(1, grey(FLAT, 0))
-    ctx.fillStyle = lip
-    ctx.beginPath()
-    ctx.arc(0, 0, rz * 1.7, 0, Math.PI * 2)
-    ctx.fill()
-    const pit = ctx.createRadialGradient(0, 0, 0, 0, 0, rz * 1.05)
-    pit.addColorStop(0, grey(FLAT - 80, 1))
-    pit.addColorStop(0.55, grey(FLAT - 62, 0.95))
-    pit.addColorStop(1, grey(FLAT - 10, 0))
+    // A soft dent, deepest in the middle and fading out to nothing, with no lip: a lip catches the low light all the
+    // way round and reads as a ring lying on the sand.
+    const pit = ctx.createRadialGradient(0, 0, 0, 0, 0, rz * 1.25)
+    pit.addColorStop(0, grey(FLAT - 64, 0.95))
+    pit.addColorStop(0.5, grey(FLAT - 44, 0.8))
+    pit.addColorStop(1, grey(FLAT - 12, 0))
     ctx.fillStyle = pit
     ctx.beginPath()
-    ctx.arc(0, 0, rz * 1.05, 0, Math.PI * 2)
+    ctx.arc(0, 0, rz * 1.25, 0, Math.PI * 2)
     ctx.fill()
     ctx.restore()
     this.dirty = true

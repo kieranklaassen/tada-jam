@@ -446,6 +446,17 @@ describe('one obvious want, and the friends as they are', () => {
     expect(game.play.bodies.bo.doze).toBeLessThan(0.2)
   })
 
+  it('but the one who asks is wide awake: Bo, alone on the low end of his own ride, looks up along the plank and does not doze', () => {
+    const world = shown()
+    const game = new Game({ ...world, state: { ...world.state, position: 'big-asks' }, kind: 'big-asks', shown: ['big-asks'], arrangement: layout(rideOf('big-asks', 0)) }, 1)
+    const { cues } = run(game, 12)
+    expect(game.play.bodies.bo.doze).toBeLessThan(0.05)
+    expect(game.play.asking).toMatchObject({ id: 'bo', up: 1 })
+    expect(game.play.bodies.bo.gazeUpTo).toBeGreaterThan(0.5)
+    // Two small hops in twelve still seconds, and no snore.
+    expect(cues.filter((cue) => cue.type === 'voice').length).toBe(2)
+  })
+
   it('Dot, left alone in the sand by the friend who stood beside it, draws one ring, once', () => {
     const world = shown()
     const game = new Game(world, 1)
