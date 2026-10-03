@@ -39,12 +39,38 @@ Nothing yet. One entry for each line of the quality bar, saying how the game mee
 
 ### The learning claim
 
-Nothing yet. The claim as the sheet has it, with each record's standing and its check state read again on the day of the pull request, in the pack's Summary or the game's own words only. A game with no learning goal says so.
+The claim as the sheet has it. Standings and check states were read with the lookup on 2026-10-03 and are read again on the day of the pull request.
+
+Seed Lab is designed from two California standards adopted by the State Board for grade 6, `us-ca MS-LS3-2` and `us-ca MS-LS1-5`, both confirmed, and from five statements of Dutch curriculum-institute guidance, which say what a school can offer and not what a child must know: `nl ojw/pdm/3/10/fase2` and `nl ojw/pdm/3/08/fase2` for fase 2, and `nl ojw/pdm/3/14/fase3`, `nl ojw/pdm/3/12/fase3` and `nl ojw/pdm/3/07/fase3` for fase 3, all confirmed. From them it takes this and no more: young come from parents of their own kind, traits pass from parents to young, new plants come from seed or from a runner, and surroundings shape how a plant grows; and, from the California standard alone, that the young of two parents differ from one another while the young of one parent are copies.
+
+- Nothing is named for a Californian child of 9 or 10: the grade 4 and grade 5 lanes hold no record on traits passing on.
+- Choosing parents to get a wanted plant is the game's play and is in no record. Which factor hides which is in no record and is the game's own.
+- `us-ca MS-LS1-4`, which the wave's plan named, is not used: nothing the finger does in this game is that skill.
+- The representation (pairs of factors, one from each parent) is school practice without a trial behind it in the pack's tables.
+- Nothing in the game or about it says what a child has reached.
 
 ### Defaults taken for the owner
 
-Nothing yet. Each default the game took in the owner's place, from the guide or from its own sheet.
+From the guide's list, as they bind this game:
+
+- No symbol stands alone. The two numerals of the game lie beside a group of plants and beside the plants of a wish, and play never depends on reading either.
+- No letters and no written words, ages 9 to 12 included. So the journal has no handwriting, not even scribble that looks like it, and the cross table in its school form, which writes factors as letters, is not reached.
+- No reading on the object. A plant's height is seen in its joints and never measured against a rule. The count beside a sorted group is put to the owner (status block).
+- No camera shake and no impact pause. A pod's burst is carried by the chain, the sound and the squash.
+- No speech. The visitors and the beetle make invented, synthesized sounds.
+- The look is the lead's first pick for the game; the owner sees it at the toy checkpoint.
+- The demo's verb is replaced: plant, harvest and buy becomes carry dust between flowers. Kept from the demo: plants that come up in seconds, and seed that is stranger than it looks.
+
+From the sheet, the game's own choices, none set by a record:
+
+- Tall hides short, round hides jagged, plain hides spotted, and red with white shows as pink; one pair to a trait; four traits; six seeds to a pod; heights of four joints and two; half the height from dry soil.
+- A cycle that goes well is a wish met within a number of pods that differs by position (three to ten).
+- A first visit starts at the second position from age 11 and at the first otherwise.
 
 ### What the next builder should know
 
-Nothing yet. What this build taught that the guide and the template do not say.
+- **A learning game about chance needs a route that is certain.** Inheritance is chance by nature, and the pack rules out a wanted result left to luck. The two fit when every wish has a cross that gives it for certain once the child has bred the right parents, and a test says so for every position and visitor (`order.test.ts`). Smoothing the chance instead would teach the very mistake the idea is known for.
+- **Nothing wanted may sit in the starting material.** With true-breeding packets most first wishes were a packet plant as it stood, and the position moved with no cross made. Packets that hide each new factor in plants that all look alike fixed it, and a test holds that no wish is a packet plant.
+- **Lay the waiting visitor out whole, with the position it was laid out at.** The guide's rule that a new position shows on the visitor after next falls out of storing that id in the visit, and what a position brings can then be carried in by the first visitor laid out there.
+- **A long seeded walk of random steps, with a save and a load after every step, is a cheap test of found-as-left** for a state with many lists: four thousand steps run in about three seconds (`visit.test.ts`). It also stands in for random tapping: no step refuses and none leaves the page at a dead end.
+- **A wrapper around the template's `state.ts` has to repeat its version check** to know whether a record was read or a fresh state came back (template notes).
