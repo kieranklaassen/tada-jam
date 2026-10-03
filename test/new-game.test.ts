@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
@@ -6,14 +6,15 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { validateManifest, type CartridgeManifest } from '../harness/contract'
 import { scanTree } from '../scripts/egress-check.ts'
-import { newGame } from '../scripts/new-game.ts'
+import { frozenFiles, madeFromTemplate, newGame, refreshGame } from '../scripts/new-game.ts'
 import { scanGames } from '../scripts/wordless-check'
 
 // The template's gate. A fresh copy must pass what `npm run check` asks of a
 // game before any game code is written: a valid manifest, imports that stay in
 // the folder, the egress scan and the wordless scan. Its typecheck and its unit
 // tests are those of templates/cartridge/ in place, which the root typecheck
-// and test run include.
+// and test run include; what the band changes in a copy (its first-visit
+// defaults) is read back from copies at three bands.
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const templateDir = join(root, 'templates', 'cartridge')
@@ -49,6 +50,11 @@ function manifestOf(gameDir: string): CartridgeManifest {
   return exported.find((value) => typeof value === 'object' && value !== null && 'ageBand' in value) as CartridgeManifest
 }
 
+/** A copy's own config.ts and state.ts, loaded from where the generator wrote them. */
+async function rulesOf(gameDir: string): Promise<{ config: typeof import('../templates/cartridge/config'); state: typeof import('../templates/cartridge/state') }> {
+  return { config: await import(/* @vite-ignore */ join(gameDir, 'config.ts')), state: await import(/* @vite-ignore */ join(gameDir, 'state.ts')) }
+}
+
 describe('the cartridge template', () => {
   const files = tree(templateDir)
 
@@ -66,6 +72,7 @@ describe('the cartridge template', () => {
   it('marks as frozen the performance handle, the governor, attention and save cadence, and nothing else', () => {
     const frozen = files.filter((file) => FIRST_LINE.exec(firstLine(join(templateDir, file)))?.[3])
     expect(frozen).toEqual(FROZEN)
+    expect(frozenFiles()).toEqual(FROZEN)
   })
 
   it('declares window.__jamPerf exactly as games/bad-neighbours/perf.ts does', () => {
@@ -88,7 +95,7 @@ describe('new:game', () => {
     expect(tree(temp)).toEqual(expected.sort())
   })
 
-  it('fills the manifest, the jam registration and the config from the arguments', () => {
+  it('fills the manifest and the jam registration from the arguments, and the config reads the manifest', () => {
     const temp = tempRoot()
     newGame(ARGS, temp)
     const gameDir = join(temp, 'games', 'hedgehog-post')
@@ -147,13 +154,37 @@ describe('new:game', () => {
   })
 
   it.each([
+    ['2-2', 2, 2],
+    ['4-8', 4, 8],
+    ['9-12', 9, 12],
+  ])('makes a copy at band %s whose first visit starts every age of the band at a row it can reach', async (band, youngest, oldest) => {
+    const temp = tempRoot()
+    const { config, state } = await rulesOf(newGame([`band-${band}`, 'Band', band, '🫧'], temp))
+    const rows = config.FIRST_VISIT
+    // One row for each end of the band, and one row only when the band is a single age.
+    expect(rows.map((row) => row.fromAge)).toEqual(youngest === oldest ? [youngest] : [youngest, oldest])
+    for (const row of rows) expect(config.LADDER).toContain(row.position)
+    expect(state.deserialize(null, null).position).toBe(rows[0].position)
+    expect(state.deserialize(null, youngest - 1).position).toBe(rows[0].position)
+    expect(state.deserialize(null, youngest).position).toBe(rows[0].position)
+    expect(state.deserialize(null, oldest).position).toBe(rows[rows.length - 1].position)
+    expect(state.deserialize(null, oldest + 1).position).toBe(rows[rows.length - 1].position)
+  })
+
+  it.each([
     ['a key a game already uses', ['taken', 'Taken', '4-8', '🦔'], /already exists/],
     ['a key a showcase already uses', ['shown', 'Shown', '4-8', '🦔'], /already exists/],
     ['a key with an upper-case letter', ['Hedgehog', 'Hedgehog', '4-8', '🦔'], /kebab-case/],
-    ['a band wider than five years', ['hedgehog-post', 'Hedgehog', '4-10', '🦔'], /five years/],
-    ['a band that starts below 2', ['hedgehog-post', 'Hedgehog', '1-4', '🦔'], /2 to 12/],
+    ["a key that is the name of one of the template's own modules", ['state', 'State', '4-8', '🦔'], /state\.ts/],
+    ['the key index, which the jam registration would import itself under', ['index', 'Index', '4-8', '🦔'], /index\.ts/],
+    ['a band wider than five years', ['hedgehog-post', 'Hedgehog', '4-10', '🦔'], /wider than 5 years/],
+    ['a band that starts below 2', ['hedgehog-post', 'Hedgehog', '1-4', '🦔'], /within 2 to 12/],
+    ['a band that ends above 12', ['hedgehog-post', 'Hedgehog', '9-13', '🦔'], /within 2 to 12/],
+    ['a band with the oldest age first', ['hedgehog-post', 'Hedgehog', '8-4', '🦔'], /youngest age first/],
     ['a band that is not whole years', ['hedgehog-post', 'Hedgehog', '4.5-8', '🦔'], /whole years/],
-    ['a blank name', ['hedgehog-post', ' ', '4-8', '🦔'], /name/],
+    ['a band that is not <youngest>-<oldest>', ['hedgehog-post', 'Hedgehog', '4 to 8', '🦔'], /not <youngest>-<oldest>/],
+    ['a blank name', ['hedgehog-post', ' ', '4-8', '🦔'], /the name is blank/],
+    ['a blank emoji', ['hedgehog-post', 'Hedgehog', '4-8', ' '], /the emoji is blank/],
     ['a missing emoji', ['hedgehog-post', 'Hedgehog', '4-8'], /new:game/],
   ])('refuses %s and writes nothing', (_, args, reason) => {
     const temp = tempRoot()
@@ -163,5 +194,67 @@ describe('new:game', () => {
     expect(tree(temp)).toEqual([])
     expect(readdirSync(join(temp, 'games'))).toEqual(['taken'])
     expect(readdirSync(join(temp, 'showcases'))).toEqual(['shown'])
+  })
+})
+
+describe('new:game --refresh', () => {
+  /** A fresh game in a temporary root, with one character of its quality.ts changed. */
+  function drifted(): { temp: string; gameDir: string } {
+    const temp = tempRoot()
+    const gameDir = newGame(['hedgehog-post', 'Hedgehog Post', '4-8', '🦔'], temp)
+    const path = join(gameDir, 'quality.ts')
+    writeFileSync(path, readFileSync(path, 'utf8').replace('Adaptive quality.', 'Adaptive quality!'))
+    return { temp, gameDir }
+  }
+  const contents = (dir: string): Record<string, string> => Object.fromEntries(tree(dir).map((file) => [file, readFileSync(join(dir, file), 'utf8')]))
+
+  it("writes the template's frozen files over the game's, and reports the ones it changed", () => {
+    const { temp, gameDir } = drifted()
+    expect(readFileSync(join(gameDir, 'quality.ts'), 'utf8')).not.toBe(readFileSync(join(templateDir, 'quality.ts'), 'utf8'))
+    expect(refreshGame('hedgehog-post', temp)).toEqual(['quality.ts'])
+    for (const file of FROZEN) expect(readFileSync(join(gameDir, file), 'utf8'), file).toBe(readFileSync(join(templateDir, file), 'utf8'))
+    expect(refreshGame('hedgehog-post', temp)).toEqual([])
+  })
+
+  it('puts back a frozen file that was deleted', () => {
+    const { temp, gameDir } = drifted()
+    rmSync(join(gameDir, 'attention.ts'))
+    expect(refreshGame('hedgehog-post', temp)).toEqual(['attention.ts', 'quality.ts'])
+    expect(readFileSync(join(gameDir, 'attention.ts'), 'utf8')).toBe(readFileSync(join(templateDir, 'attention.ts'), 'utf8'))
+  })
+
+  it('writes nothing else: every other file of the game, edited or added, is left as it is', () => {
+    const { temp, gameDir } = drifted()
+    writeFileSync(join(gameDir, 'config.ts'), readFileSync(join(gameDir, 'config.ts'), 'utf8').replace("'#f4efe6'", "'#102030'"))
+    mkdirSync(join(gameDir, 'view'))
+    writeFileSync(join(gameDir, 'view', 'draw.ts'), 'export const drawn = true\n')
+    const before = contents(temp)
+    refreshGame('hedgehog-post', temp)
+    const after = contents(temp)
+    expect(Object.keys(after)).toEqual(Object.keys(before))
+    for (const file of Object.keys(before)) {
+      if (!FROZEN.some((frozen) => file === `games/hedgehog-post/${frozen}`)) expect(after[file], file).toBe(before[file])
+    }
+  })
+
+  it.each([
+    ['a key with no game folder', 'nobody-home', /no game folder/],
+    ['a game that was not made from the template', 'hand-made', /not made from the template/],
+    ['a key that is not a kebab-case slug', '../hedgehog-post', /kebab-case/],
+  ])('refuses %s and writes nothing', (_, key, reason) => {
+    const { temp } = drifted()
+    mkdirSync(join(temp, 'games', 'hand-made'))
+    writeFileSync(join(temp, 'games', 'hand-made', 'quality.ts'), '// a governor written by hand\nexport const tier = 0\n')
+    const before = contents(temp)
+    expect(() => refreshGame(key, temp)).toThrow(reason)
+    expect(contents(temp)).toEqual(before)
+  })
+
+  it('tells a game made from the template from one that was not', () => {
+    const { temp, gameDir } = drifted()
+    mkdirSync(join(temp, 'games', 'hand-made'))
+    writeFileSync(join(temp, 'games', 'hand-made', 'quality.ts'), '// a governor written by hand\nexport const tier = 0\n')
+    expect(madeFromTemplate(gameDir)).toBe(true)
+    expect(madeFromTemplate(join(temp, 'games', 'hand-made'))).toBe(false)
   })
 })

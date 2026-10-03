@@ -51,8 +51,8 @@ The rule is also stated in `AGENTS.md` (`CLAUDE.md` is a symlink to it) and in t
 From `docs/art-direction.md` (section 2) and the "A distinct look per game" rule in `AGENTS.md`:
 
 1. Take a look from the menu in `docs/art-direction.md` (section 4). The menu is a ledger: every look is open, reserved for a named game, or claimed, and only the lead changes a state. The lead reserves two or three rows for a game before its builder starts, and the builder works from those, first choice first.
-2. Spike it on the game's real scene, not a mood board. Take a screenshot at 1180×820 and measure the frame rate at DPR 2.
-3. Register it in the same PR: a row in the claimed-styles registry, with a link to the game's own art guide at `games/<key>/ART.md`. The builder leaves the menu alone. After the merge the lead marks its row claimed and sets the game's other rows back to open.
+2. Spike the first choice on the game's real scene, not a mood board. Take a screenshot at 1180×820 and measure the frame rate at DPR 2. Spike the next reserved row only if the first fails on clarity or frame rate, or the owner rejects it at the toy checkpoint.
+3. Register it in the same PR: a row in the claimed-styles registry, with a link to the game's own art guide at `games/<key>/ART.md`. In a wave of games built at the same time the registry row is a request to the lead, like any shared file; a builder working alone adds it. No builder edits the menu. After the merge the lead marks its row claimed and sets the game's other rows back to open.
 
 Techniques may be shared across games (merged meshes, blob shadows, the ghost-hand guidance). A look may not. The test is whether two games could be mistaken for each other in a screenshot (`docs/art-direction.md`).
 
@@ -62,11 +62,13 @@ When writing guidance, put style-specific details (palette, material, surface te
 
 Decide the look first, then build the game inside it. A first slice that is playable but plain is not a first slice: the owner judges the game by its first screenshot, and a plain renderer gets thrown away.
 
-1. Before writing any gameplay, build the game's real scene (its table, props, and one character) in the looks reserved for the game in the menu in `docs/art-direction.md`, first choice first. A game with no reserved rows asks the lead to reserve some.
-2. For each candidate, take a screenshot at 1180x820 and record a measured fps. Put the screenshots on one contact sheet with the numbers.
-3. Get a pick from the contact sheet, and register it as the existing rule describes. For a single game the owner picks. In a wave of games built in parallel the lead picks from the rows reserved for each game, and the owner sees every game's look and toy together at the toy-stage checkpoint; a look he rejects there is replaced by the game's next reserved row ([building a jam game](building-a-jam-game.md)). That is the default until he says he wants to pick each look himself.
+1. Before writing any gameplay, build the game's real scene (its table, props, and one character) in the first look reserved for the game in the menu in `docs/art-direction.md`. A game with no reserved rows asks the lead to reserve some.
+2. Take a screenshot at 1180x820 and record a measured fps. Spike the next reserved look only if the first fails on clarity or frame rate, or the owner rejects it at the toy checkpoint. A builder does not spike its other reserved looks to compare them.
+3. The pick is made before the spike: it is the order in which the lead reserves the rows, and the look is registered as the existing rule describes. The contact sheet is the lead's, across the games of a wave: at the toy-stage checkpoint the lead puts every game's look on one sheet beside the claimed looks, and the owner sees the looks and the toys together. A look he rejects there is replaced by the game's next reserved row ([building a jam game](building-a-jam-game.md)). That is the default until he says he wants to pick each look himself.
 4. Hold the slice to the full quality bar from its first screenshot, not after the mechanics work.
 5. Write game rules (state, scoring, fairness, timing, save cadence) as pure modules with no renderer or physics imports, each with its own tests, so a later look change costs only the view.
+
+**Where the side-by-side comparison went.** The lesson of Pebble Table stands: the owner chose claymation from ten looks seen side by side. That comparison now happens in two places, and neither is a builder's set of spikes. Before any builder starts, the lead compares the menu's rows by their scores and their nearest claimed look, and reserves each game's candidates in order. At the toy checkpoint the owner compares on the lead's contact sheet: one look per game, across the wave, beside the looks already claimed. Spiking every reserved look would be about eighteen spikes for a wave of seven games where seven are enough, so a second look is built only when the first fails or he rejects it.
 
 Evidence from Pebble Table: the first slice was 2D canvas, the owner called it "ugly", and after the 3D exploration the rebuild in PR #1 deleted `render.ts`, `scene.ts`, `physics.ts`, and `physics.test.ts` outright, while `state`, `scale`, `feeding`, `voice`, `input`, `layout`, and `saveCadence` and all their tests carried over with at most a few lines changed (plan "Revision 3" in `docs/plans/2026-09-22-001-feat-pebble-table-plan.md`; "History" in `games/pebble-table/ART.md`).
 
@@ -132,9 +134,9 @@ These lessons came from building the claymation style, but most of them are tech
 - Reviewing a game PR. Check that the style is registered and unclaimed by another game, that the PR says how each quality-bar line is met, and that it includes a measured frame rate.
 - Reworking an existing game's look. Update its registry row and its `ART.md` in the same PR.
 - Building any 3D kids' game in the jam. The clarity and performance techniques apply regardless of style.
-- Before the first gameplay commit of a new game. The style exploration and the pick come first; a gameplay-first slice on a placeholder renderer is the pattern to avoid.
+- Before the first gameplay commit of a new game. The spike of the game's first reserved look comes first; a gameplay-first slice on a placeholder renderer is the pattern to avoid.
 - Structuring a new game's modules. Keep rules pure and renderer-free (no three.js, canvas, or physics imports) so a look change never touches them.
-- When an owner reacts to a slice with "looks plain" or "looks ugly". Stop adding mechanics and run the multi-style exploration on the real scene before continuing.
+- When an owner reacts to a slice with "looks plain" or "looks ugly". Stop adding mechanics and spike the game's next reserved look on the real scene before continuing; when no reserved row is left, the lead reserves more.
 
 This does not stop games from sharing code-level techniques or the style-independent guidance logic. Only the look must differ.
 
@@ -148,7 +150,7 @@ This does not stop games from sharing code-level techniques or the style-indepen
 
 > Every Tada Jam game must meet the same **quality bar**, and every game must **look different**. Claymation is Pebble Table's style, not the jam's.
 
-**Registering a new game's style.** Say a game spikes its reserved first choice from the menu (`docs/art-direction.md`, section 4), glossy die-cut stickers. In its PR it would add `games/<new-key>/ART.md` and one row to the registry (in `docs/art-direction.md` the art-guide column holds links):
+**Registering a new game's style.** Say a game spikes its reserved first choice from the menu (`docs/art-direction.md`, section 4), glossy die-cut stickers. Its PR would add `games/<new-key>/ART.md` and one row to the registry, the row written by the lead on the builder's request in a wave and by the builder when it works alone (in `docs/art-direction.md` the art-guide column holds links):
 
 ```markdown
 | Game | Style | Art guide |

@@ -60,11 +60,26 @@ describe('the child age in the shell', () => {
     expect(seen.childAge).toBeNull()
   })
 
+  it.each([[2], [12], [null]])('reads a stored age of %s back and shows it', async (stored) => {
+    window.localStorage.setItem(PREFS_KEY, JSON.stringify({ childAge: stored, language: 'en', theme: 'meadow' }))
+    const seen = await openShell()
+    expect(seen.childAge).toBe(stored)
+    expect(ageControl().value).toBe(stored === null ? '' : String(stored))
+  })
+
   it.each([
     ['an age outside the list', 15],
+    ['a number between two ages of the list', 2.5],
     ['text', 'nine'],
   ])('falls back to the default age when the stored age is %s', async (_label, stored) => {
     window.localStorage.setItem(PREFS_KEY, JSON.stringify({ childAge: stored, language: 'en', theme: 'meadow' }))
+    const seen = await openShell()
+    expect(seen.childAge).toBe(4)
+    expect(ageControl().value).toBe('4')
+  })
+
+  it('falls back to the default age when the stored preferences hold no age at all', async () => {
+    window.localStorage.setItem(PREFS_KEY, JSON.stringify({ language: 'en', theme: 'meadow' }))
     const seen = await openShell()
     expect(seen.childAge).toBe(4)
     expect(ageControl().value).toBe('4')

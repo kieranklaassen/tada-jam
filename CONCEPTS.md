@@ -19,13 +19,13 @@ Styles are claimed per game, never per jam. Techniques (how something is rendere
 ### Style spike
 A quick build of a game's real scene in a candidate style, captured as a screenshot at iPad-landscape size with a measured frame rate, done before any full visual build.
 
-The spike is what turns a style choice into evidence: it shows the look reads clearly for a child and fits the frame-time budget before the style is claimed.
+The spike is what turns a style choice into evidence: it shows the look reads clearly for a child and fits the frame-time budget before the style is claimed. A builder spikes the first look reserved for its game, and the next reserved look only if the first fails on clarity or frame rate or the owner rejects it at the end of the Toy stage. The order of the reserved rows is the lead's pick, and the contact sheet that sets looks side by side is the lead's, across the games of a Wave.
 
 ### Look ledger
 The jam's menu of looks no game has claimed, kept as a ledger in which every look is open, reserved for one named game, or claimed.
 *Avoid:* style menu (the earlier list, which had no states)
 
-Only the lead changes a state: looks are reserved for a game before its builder starts, and after a merge one becomes a Claimed style and the game's others go back to open. A builder spikes the looks reserved for its game, first choice first, and never edits the ledger.
+Only the lead changes a state: looks are reserved for a game before its builder starts, and after a merge one becomes a Claimed style and the game's others go back to open. A builder spikes the first look reserved for its game, moves to the next reserved row only when that Style spike fails or the owner rejects the look, and never edits the ledger. A new row in the registry of Claimed styles is a request to the lead in a Wave, and a builder working alone adds it.
 
 ### Art guide
 The per-game document that describes a Claimed style: its palette, materials, lighting, motion rules, and how the game meets the Quality bar.
@@ -107,7 +107,7 @@ The toy is judged alone, because a goal, a story or a look does not make up for 
 A set of games built at the same time, one builder each, and merged together as one pull request.
 *Avoid:* batch, sprint
 
-A wave has a lead, who plans it, owns every file the games share, reserves looks in the Look ledger, and makes every commit. The owner plays one wave before the next is built on the same assumptions.
+A wave has a lead, who plans it, owns every file the games share, reserves looks in the Look ledger, starts the checkers of the Design sheets, and makes every commit on the wave's branch. A builder whose worktree the lead can read on disk runs no git that writes, and the lead commits for it; a builder on a remote machine commits and pushes only its own game branch, which the lead merges with a squash. The owner plays one wave before the next is built on the same assumptions.
 
 ### Held game
 A game that is stopped and left out of its Wave's merge, because its Design sheet names no supporting record, the owner rejected its toy, or it did not reach the Quality bar in time.

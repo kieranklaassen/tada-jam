@@ -1,6 +1,7 @@
 ---
 title: Every game's global declaration of window.__jamPerf must be the same type down to readonly, or main fails TS2717 after a merge that each branch passed alone
 date: 2026-09-23
+last_updated: 2026-10-02
 category: build-errors
 module: typescript
 problem_type: build_error
@@ -119,7 +120,9 @@ The handle's shape was specified only in prose. The game plans list `window.__ja
 - [ ] When TS2717 names the same alias on both sides, list every declaration with `rg -n -A4 "declare global" games` and compare their types field by field.
 - [ ] Any other property a game adds to the global `Window` (Critter Clay's `__critterClayProbe` is one) follows the same rule: another game that declares the same name must match it exactly. A name only one game uses is safe.
 
-**A shared type: recommended against, for now; no code was changed.** One shared `JamPerf` type would stop the copies drifting, but the jam's rules leave it no good home. Games may import only from their own folder, `../types`, and the allowed packages (`AGENTS.md`; the egress check enforces it), and `games/types.ts` re-exports the cartridge contract that mirrors Tada's `app/frontend/cartridges/types.ts`, so a jam-only probe type there would make the mirror differ from Tada's file. An ambient declaration file outside every game, declaring `Window.__jamPerf` once, would need no import, but it would not travel with a game ported into Tada, where the game's own `window.__jamPerf` assignment would then fail to typecheck unless Tada declared the handle too. The local intersection needs neither: the type lives in the game, the global `Window` stays untouched, and the game ports alone. The better fix is therefore for new games to use the local intersection. Whether to convert the seven games that augment `Window` today is a decision for the owner.
+**A shared type: recommended against, for now; no code was changed.** One shared `JamPerf` type would stop the copies drifting, but the jam's rules leave it no good home. Games may import only from their own folder, `../types`, and the allowed packages (`AGENTS.md`; the egress check enforces it), and `games/types.ts` re-exports the cartridge contract that mirrors Tada's `app/frontend/cartridges/types.ts`, so a jam-only probe type there would make the mirror differ from Tada's file. An ambient declaration file outside every game, declaring `Window.__jamPerf` once, would need no import, but it would not travel with a game ported into Tada, where the game's own `window.__jamPerf` assignment would then fail to typecheck unless Tada declared the handle too. The local intersection needs neither: the type lives in the game, the global `Window` stays untouched, and the game ports alone. Until the template existed, that made the local intersection the answer for every new game.
+
+**What changed with the template (2026-10-02).** A game made from the template gets the global declaration, in a frozen file (`perf.ts`) that a test holds byte-equal to the template. The two concerns above are met another way. The copies cannot drift apart, because the test fails a copy that differs. And the declaration travels in the game's folder, so the game still ports alone. The remaining cost is that the type changes in every declaring game at once or not at all: a change to the template's `JamPerf` has to reach every template game (`npm run new:game -- --refresh <key>` rewrites a game's frozen files) and the seven older games that augment `Window`, in one merged tree, and a branch that still carries the earlier `perf.ts` fails with TS2717 when it merges. A game not made from the template still prefers the local intersection. Whether to convert the seven games that augment `Window` today is a decision for the owner.
 
 ## Related Issues
 

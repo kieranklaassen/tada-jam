@@ -3,6 +3,8 @@
 
 Written before any game code, and checked by someone who did not write it before the game is built on the toy. The headings stay in this order. The look follows the sheet at the end of this file.
 
+What each heading asks for is in the section "The design sheet" of `docs/solutions/conventions/building-a-jam-game.md`.
+
 ## The band and its age rule
 
 The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.

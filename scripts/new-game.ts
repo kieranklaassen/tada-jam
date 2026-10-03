@@ -4,22 +4,31 @@
 //   npm run new:game -- hedgehog-post "Hedgehog Post" 4-8 🦔
 //
 // The key is the folder name, the manifest key and the storage namespace:
-// kebab-case, and not yet used by a game or a showcase. The band is the
-// manifest `ageBand` in whole years, 2 to 12 and at most five years wide. The
-// emoji is the launcher's.
+// kebab-case, not yet used by a game or a showcase, and not the name of one of
+// the template's own modules. The band is the manifest `ageBand`, held to the
+// jam's band rule in harness/contract.ts. The emoji is the launcher's.
 //
 // It copies templates/cartridge/ into games/<key>/, renames the Mount file to
-// <key>.tsx, and fills manifest.ts, index.ts and config.ts from the arguments.
-// It writes nothing outside games/<key>/, and when it refuses it writes
-// nothing at all. The untouched copy passes `npm run check`.
+// <key>.tsx, and fills manifest.ts and index.ts from the arguments; config.ts
+// reads the band from the manifest. It writes nothing outside games/<key>/,
+// and when it refuses it writes nothing at all. The untouched copy passes
+// `npm run check`.
+//
+//   npm run new:game -- --refresh <key>
+//
+// Writes the template's frozen files (the ones whose first line says so) over
+// those of a game that was made from the template, and writes nothing else.
+// It is how a fix to a frozen file reaches a game, and how a frozen file that
+// was changed by mistake is put back.
+//
 // test/new-game.test.ts is the gate for the template and for this script.
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { KEY_PATTERN } from '../harness/contract.ts'
+import { KEY_PATTERN, ageBandProblems } from '../harness/contract.ts'
 
-const USAGE = 'usage: npm run new:game -- <key> "<Name>" <youngest>-<oldest> <emoji>'
+const USAGE = 'usage: npm run new:game -- <key> "<Name>" <youngest>-<oldest> <emoji>\n       npm run new:game -- --refresh <key>'
 const REPOSITORY = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const TEMPLATE = join(REPOSITORY, 'templates', 'cartridge')
 /** The template's Mount file, which becomes <key>.tsx. */
@@ -35,15 +44,11 @@ function camelCase(key: string): string {
   return key.replace(/-([a-z0-9])/g, (_, first: string) => first.toUpperCase())
 }
 
-/** The same band rule test/games.test.ts holds every game to. */
+/** Splits `<youngest>-<oldest>`. Whether the two ages make a band a jam game may declare is `ageBandProblems`' to say. */
 function parseBand(text: string): readonly [number, number] {
   const parts = /^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/.exec(text)
   if (!parts) throw new Error(`the age band "${text}" is not <youngest>-<oldest>, for example 4-8\n${USAGE}`)
-  const youngest = Number(parts[1]), oldest = Number(parts[2])
-  if (!Number.isInteger(youngest) || !Number.isInteger(oldest)) throw new Error(`the age band "${text}" must be in whole years`)
-  if (youngest < 2 || oldest > 12 || oldest < youngest) throw new Error(`the age band "${text}" must lie within 2 to 12, youngest first`)
-  if (oldest - youngest > 5) throw new Error(`the age band "${text}" is wider than five years; a game is designed for one audience`)
-  return [youngest, oldest]
+  return [Number(parts[1]), Number(parts[2])]
 }
 
 function templateFiles(dir: string): string[] {
@@ -51,6 +56,27 @@ function templateFiles(dir: string): string[] {
     const path = join(dir, name)
     return statSync(path).isDirectory() ? templateFiles(path).map((inner) => join(name, inner)) : [name]
   })
+}
+
+/** The first line of a file, read from its first bytes: every source file of every game is asked for it. */
+function firstLine(path: string): string {
+  const start = Buffer.alloc(256)
+  const file = openSync(path, 'r')
+  try {
+    return start.toString('utf8', 0, readSync(file, start, 0, start.length, 0)).split('\n', 1)[0]
+  } finally {
+    closeSync(file)
+  }
+}
+
+/** The template's frozen files: the ones whose first line says `(frozen`. A game keeps them byte-equal to the template. */
+export function frozenFiles(): string[] {
+  return templateFiles(TEMPLATE).filter((file) => firstLine(join(TEMPLATE, file)).includes('(frozen')).sort()
+}
+
+/** Whether a game folder was made from the template: some source file in it still starts with the template's header. */
+export function madeFromTemplate(gameDir: string): boolean {
+  return templateFiles(gameDir).some((file) => /\.tsx?$/.test(file) && firstLine(join(gameDir, file)).startsWith('// template: cartridge/'))
 }
 
 /** Replaces the one placeholder `pattern` finds; a template that no longer holds it is an error, not a silent miss. */
@@ -70,7 +96,12 @@ export function newGame(args: readonly string[], root: string = REPOSITORY): str
   if (!KEY_PATTERN.test(key)) throw new Error(`the key "${key}" is not a kebab-case slug (lower-case letters and digits, joined by single hyphens)`)
   if (name.trim() === '') throw new Error('the name is blank')
   if (emoji.trim() === '') throw new Error('the emoji is blank')
+  // index.ts imports the Mount from './<key>', which one of the template's own modules would answer first.
+  const clash = templateFiles(TEMPLATE).find((file) => file !== MOUNT_FILE && file.replace(/\.[^.]+$/, '') === key)
+  if (clash) throw new Error(`the key "${key}" is the name of the template's ${clash}, which games/${key}/${key}.tsx would sit beside; pick another key`)
   const [youngest, oldest] = parseBand(bandText)
+  const [problem] = ageBandProblems([youngest, oldest])
+  if (problem) throw new Error(`the age band "${bandText}" cannot be used: ${problem}`)
   for (const shelf of ['games', 'showcases']) {
     if (existsSync(join(root, shelf, key))) throw new Error(`${shelf}/${key} already exists; pick a key no game or showcase uses`)
   }
@@ -101,11 +132,41 @@ export function newGame(args: readonly string[], root: string = REPOSITORY): str
   return gameDir
 }
 
+/**
+ * Writes the template's frozen files over those of games/<key>/ under `root`
+ * (the repository by default) and nothing else. Returns the files it changed
+ * or put back, which is none when the game already holds the template's.
+ * Throws with the reason, having written nothing, when the key is not a game
+ * folder made from the template.
+ */
+export function refreshGame(key: string, root: string = REPOSITORY): string[] {
+  if (!KEY_PATTERN.test(key)) throw new Error(`the key "${key}" is not a kebab-case slug (lower-case letters and digits, joined by single hyphens)`)
+  const gameDir = join(root, 'games', key)
+  if (!existsSync(gameDir) || !statSync(gameDir).isDirectory()) throw new Error(`games/${key} is no game folder`)
+  if (!madeFromTemplate(gameDir)) throw new Error(`games/${key} was not made from the template: no file in it starts with "// template: cartridge/"`)
+  const changed: string[] = []
+  for (const file of frozenFiles()) {
+    const text = readFileSync(join(TEMPLATE, file), 'utf8')
+    const path = join(gameDir, file)
+    if (existsSync(path) && readFileSync(path, 'utf8') === text) continue
+    writeFileSync(path, text)
+    changed.push(file)
+  }
+  return changed
+}
+
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (isMain) {
   try {
-    const gameDir = newGame(process.argv.slice(2))
-    console.log(`made ${gameDir}\nnext: write the design sheet in ART.md, then run npm run check`)
+    const args = process.argv.slice(2)
+    if (args[0] === '--refresh') {
+      if (args.length !== 2) throw new Error(USAGE)
+      const changed = refreshGame(args[1])
+      console.log(changed.length > 0 ? `games/${args[1]}: wrote the template's ${changed.join(', ')}` : `games/${args[1]}: its frozen files are already the template's`)
+    } else {
+      const gameDir = newGame(args)
+      console.log(`made ${gameDir}\nnext: write the design sheet in ART.md, then run npm run check`)
+    }
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error))
     process.exit(1)

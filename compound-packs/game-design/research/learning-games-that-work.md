@@ -31,6 +31,7 @@ The hard constraints (no scores, coins, streaks, timers, praise, ticks or crosse
 5. **No rewards for playing.** Expected tangible rewards reduce later free-choice interest (d −0.28 to −0.40), more so in children [V, Deci, Koestner and Ryan 1999]. In an algebra tutor, students rewarded with stars for redoing problems learned less than students who could redo them without rewards [V, Long and Aleven 2014].
 
 6. **Fade from object to picture to symbol inside the same game.** Start with things, turn them into drawings of things, then lay the symbol on top and finally let it stand alone. Support is mostly positive for early mathematics and mixed for science [S, Fyfe et al. 2014]. DragonBox is the worked example. For this studio the symbol stage starts at about six.
+   Dated note: as of 2026-10-02 the rule in `fade-to-school-symbols.md` withdraws the optional numeral below a band start of 6 and holds a symbol standing alone for the owner.
 
 7. **Order the challenges; keep success high; hide the machinery.** In a study of 23 evaluated maths apps, a scaffolded sequence of difficulty plus feedback was a necessary condition for the most effective ones [V, Outhwaite et al. 2023]. In a 70,000-player experiment children played longer when the game was easier, not at "moderate" difficulty [S, Lomas et al. 2013].
 
@@ -321,6 +322,7 @@ By age [I]:
 
 - **2 to 4.** Quantities to about 5. More and less by size. One-to-one matching as a kind act (a hat for each). Sorting by one attribute. No numerals. Spoken number words on each object.
 - **4 to 6.** Quantities to 10, then 20. Patterns for subitizing. A straight path. Rods and frames. Making ten. Numerals arrive late in the band, on top of the quantity.
+  - Dated note: as of 2026-10-02 the rule in `fade-to-school-symbols.md` withdraws the optional numeral below a band start of 6 and holds a symbol standing alone for the owner.
 - **9 to 12.** Bars, number lines, ratio tables, area rectangles, the balance or the cancelling board, coordinate grids, with full notation.
 
 ### Early reading and language

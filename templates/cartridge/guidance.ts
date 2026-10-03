@@ -90,6 +90,6 @@ export function handPose(progress: number, drag: boolean, out: HandPose): HandPo
   }
   const t = span(progress, 0.26, 0.72)
   out.travel = t * t * (3 - 2 * t)
-  out.press = progress < 0.14 ? 0 : progress < 0.22 ? span(progress, 0.14, 0.22) : progress < 0.76 ? 1 : 1 - span(progress, 0.76, 0.84)
+  out.press = Math.min(span(progress, 0.14, 0.22), 1 - span(progress, 0.76, 0.84))
   return out
 }

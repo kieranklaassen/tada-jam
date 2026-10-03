@@ -54,11 +54,22 @@ describe('saved state', () => {
 })
 
 describe('the position in the designed order', () => {
-  it('starts a first visit by age: the youngest default below the band or with no age, the oldest default above it', () => {
-    expect(deserialize(null, 2).position).toBe(FIRST_VISIT[0].position)
-    expect(deserialize(null, null).position).toBe(FIRST_VISIT[0].position)
-    expect(deserialize(null, 12).position).toBe(FIRST_VISIT[FIRST_VISIT.length - 1].position)
+  // The ages come from the rows, so this holds for whatever band and rows the game declares.
+  const firstRow = FIRST_VISIT[0], lastRow = FIRST_VISIT[FIRST_VISIT.length - 1]
+
+  it('starts a first visit by age: the first row below its age, at its age or with no age, the last row from its age up', () => {
+    expect(deserialize(null, firstRow.fromAge - 1).position).toBe(firstRow.position)
+    expect(deserialize(null, firstRow.fromAge).position).toBe(firstRow.position)
+    expect(deserialize(null, null).position).toBe(firstRow.position)
+    expect(deserialize(null, lastRow.fromAge).position).toBe(lastRow.position)
+    expect(deserialize(null, lastRow.fromAge + 1).position).toBe(lastRow.position)
     for (const row of FIRST_VISIT) expect(LADDER, 'every first-visit position is a step of the ladder').toContain(row.position)
+  })
+
+  it('has first-visit rows that ascend by age with no two at the same age, so a child of the band can reach each one', () => {
+    for (const row of FIRST_VISIT) expect(firstPosition(row.fromAge), `the row from age ${row.fromAge}`).toBe(row.position)
+    const ages = FIRST_VISIT.map((row) => row.fromAge)
+    expect(ages).toEqual([...new Set(ages)].sort((a, b) => a - b))
   })
 
   it('picks the last row whose age the child has reached', () => {
@@ -107,7 +118,7 @@ describe('the position in the designed order', () => {
   })
 
   it('falls back to the default for an id the ladder no longer has', () => {
-    expect(deserialize({ v: STATE_VERSION, position: 'retired-step', finished: false }, 12).position).toBe(FIRST_VISIT[FIRST_VISIT.length - 1].position)
-    expect(deserialize({ v: STATE_VERSION, position: 'retired-step', finished: false }, null).position).toBe(FIRST_VISIT[0].position)
+    expect(deserialize({ v: STATE_VERSION, position: 'retired-step', finished: false }, lastRow.fromAge).position).toBe(lastRow.position)
+    expect(deserialize({ v: STATE_VERSION, position: 'retired-step', finished: false }, null).position).toBe(firstRow.position)
   })
 })

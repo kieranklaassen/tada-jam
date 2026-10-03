@@ -71,6 +71,25 @@ describe('a scene', () => {
     expect(order).toEqual([0, 1, 2])
   })
 
+  it('started a second time plays every beat again from its beginning, and saves its outcome again', () => {
+    const seen: number[][] = [[], [], []]
+    let saved = 0
+    const scene = new Scene(beats(seen))
+    scene.start(0, () => saved++)
+    scene.update(3.5)
+    expect(seen).toEqual([[1], [1], [1]])
+    expect(scene.running).toBe(false)
+    scene.start(20, () => saved++)
+    expect(saved).toBe(2)
+    expect(scene.running).toBe(true)
+    scene.update(20.5)
+    expect(seen).toEqual([[1, 0.5], [1], [1]])
+    // A touch ends the second run as it would the first: every beat lands at its end state once more.
+    scene.finish()
+    expect(seen).toEqual([[1, 0.5, 1], [1, 1], [1, 1]])
+    expect(scene.running).toBe(false)
+  })
+
   it('is not running before it starts, and a touch then does nothing', () => {
     const seen: number[][] = [[], [], []]
     const scene = new Scene(beats(seen))

@@ -33,21 +33,29 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const work = new PerfRing()
     // A canvas 2D game reports the sprites and figures it drew as drawCalls; a three.js game reports the renderer's own counts.
     const uninstallPerf = installJamPerf(work, () => ({ tier: governor.tier, drawCalls: 0, triangles: 0 }))
-    let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0
+    let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
     const cadence = new SaveCadence(() => { if (state) ctxRef.current.storage.save(serialize(state)) })
 
+    // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame
+    // and `resize` calls it after sizing, which can be before the slot is read and while the game rests.
+    const draw = () => {}
+
     // The shell can resize the surface without a window resize event, so the surface watches itself.
-    const resize = () => {
+    // Returns whether it sized the surface, and so drew it.
+    const resize = (): boolean => {
       const w = root.clientWidth, h = root.clientHeight
       // A parked surface measures 0×0; keep the last good size.
-      if (w <= 0 || h <= 0) return
+      if (w <= 0 || h <= 0) return false
       const ratio = Math.min(window.devicePixelRatio || 1, governor.settings.dpr)
-      if (w === width && h === height && ratio === dpr) return
+      if (w === width && h === height && ratio === dpr) return false
       width = w; height = h; dpr = ratio
-      // Sizing the backing store clears it, which is all the blank surface draws. The game's renderer takes over here.
+      // Sizing the backing store wipes the surface, so it is redrawn at once: a resize lands after the frame's
+      // own draw, or while the game rests and no frame is coming, and either would leave the surface blank.
       canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
+      draw()
+      return true
     }
     const observer = new ResizeObserver(resize)
     observer.observe(root)
@@ -82,22 +90,27 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     const loop = (now: number) => {
       frame = 0
       if (!attention.awake || disposed) return
-      // The step to play, in seconds of attended time. The rules, a scene and every animation advance by it.
+      // Advances the attended clock. It returns the step to play, in seconds: the rules, a scene and every animation advance by it.
       clock.advance(now)
       const start = performance.now()
       act(touch.advance(now))
+      // A finger that is working is not idle: a hold or a slow drag keeps the ladder at the bottom.
+      if (touch.active) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
       ladder.update(clock.seconds)
-      // The game steps its rules and draws here.
-      const spent = performance.now() - start
-      work.push(spent)
-      // A tier change is applied here: the pixel ratio now, and whatever else the game's tiers set.
-      if (clock.intervalMs > 0 && governor.sample(clock.intervalMs, spent)) resize()
+      // The game steps its rules here.
+      // A tier change is applied ahead of the draw: the pixel ratio now, and whatever else the game's tiers set.
+      // The interval just measured belongs to the frame before, so it is judged with that frame's work.
+      const sized = clock.intervalMs > 0 && governor.sample(clock.intervalMs, lastWork) && resize()
+      if (!sized) draw()
+      lastWork = performance.now() - start
+      work.push(lastWork)
       frame = requestAnimationFrame(loop)
     }
 
     // Everything stops while unattended or hidden: the loop, the clock and sound. A touch in progress is
-    // forgotten, since its lift will never arrive, and the newest state is handed to storage.
+    // ended, since its lift will never arrive (a drag is put down, a press ends without a tap), and the
+    // newest state is handed to storage.
     const attention = new Attention(document, (awake) => {
       audio.setActive(awake)
       if (awake) {
@@ -112,7 +125,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     })
     attendRef.current = (attended) => attention.set(attended)
 
-    ctxRef.current.storage.load<unknown>().then((value) => value, () => null).then((value) => {
+    ctxRef.current.storage.load<unknown>().catch(() => null).then((value) => {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts.
       state = deserialize(value, ctxRef.current.childAge)
@@ -122,6 +135,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
 
     return () => {
       disposed = true
+      // As on going to rest: the touch ends first, so the thing in hand is put down before the last save.
+      act(touch.clear())
       cadence.settle(performance.now())
       cancelAnimationFrame(frame)
       observer.disconnect()

@@ -1,6 +1,6 @@
 # Art direction: one quality bar, a different look for every game
 
-Every Tada Jam game must meet the same **quality bar**, and every game must **look different**. Claymation is Pebble Table's style, not the jam's. A new game takes a look from the menu in section 4, spikes it, and registers it below before building. The menu is a ledger: each look is open, reserved for a named game, or claimed.
+Every Tada Jam game must meet the same **quality bar**, and every game must **look different**. Claymation is Pebble Table's style, not the jam's. A new game takes a look from the menu in section 4, spikes it, and has it registered below before building. The menu is a ledger: each look is open, reserved for a named game, or claimed.
 
 ## 1. The shared quality bar
 
@@ -28,8 +28,8 @@ Say in the PR how the game meets each line, with a measured frame rate.
 ## 2. Each game picks its own style
 
 1. Take a look from the menu in section 4. The lead reserves two or three rows for a game before its builder starts, and the builder works from those, first choice first. A row that is open or reserved for another game, or a look that is not on the menu, goes through the lead.
-2. Spike it: render the game's real scene in that style, screenshot it at 1180×820, and measure the frame rate at DPR 2. If the spike fails on clarity or frame rate, or the owner rejects the look, move to the game's next reserved row.
-3. Register it here in the same PR: a row in the registry in section 3, with a link to the game's own art guide (for example `games/<key>/ART.md`). The builder leaves the menu alone; the lead marks its row claimed after the merge.
+2. Spike the first choice: render the game's real scene in that style, screenshot it at 1180×820, and measure the frame rate at DPR 2. Only if the spike fails on clarity or frame rate, or the owner rejects the look, move to the game's next reserved row. The order of the reserved rows is the lead's pick, so a builder does not spike the others to compare them.
+3. Register it here in the same PR: a row in the registry in section 3, with a link to the game's own art guide (for example `games/<key>/ART.md`). In a wave of games built at the same time the registry row is a request to the lead, like any shared file; a builder working alone adds it. No builder edits the menu; the lead marks its row claimed after the merge.
 
 Styles may share techniques (merged meshes, blob shadows, the ghost-hand guidance) but not a look. Two games should never be mistakable for each other in a screenshot.
 

@@ -24,6 +24,20 @@ describe('a tap', () => {
   })
 })
 
+describe('a press the browser takes away', () => {
+  it('ends without a tap, and the next finger starts fresh', () => {
+    const touch = new ForgivingTouch()
+    const p = { x: 10, y: 10 }, q = { x: 200, y: 40 }
+    touch.down(1, p, 0)
+    expect(touch.cancel(1, 50)).toEqual([{ type: 'pressEnd', at: p }])
+    expect(touch.active).toBe(false)
+    expect(touch.down(2, q, 100)).toEqual([{ type: 'press', at: q }])
+    // The lift of the finger that was taken away arrives late and means nothing.
+    expect(touch.up(1, p, 200)).toEqual([])
+    expect(touch.up(2, q, 300)).toEqual([{ type: 'tap', at: q }])
+  })
+})
+
 describe('a drag', () => {
   it('starts once the finger leaves the tap slop, from where it went down', () => {
     const { seen } = dragging()
@@ -59,6 +73,17 @@ describe('a drag', () => {
     expect(touch.down(2, far, 200)).toEqual([{ type: 'dragEnd', from: { x: 0, y: 0 }, at: { x: 60, y: 0 } }, { type: 'press', at: far }])
   })
 
+  it('ends when the finger comes back to the same place too late, and that touch starts fresh', () => {
+    const near = { x: 62, y: 0 }
+    const { touch } = dragging()
+    touch.up(1, { x: 60, y: 0 }, 100)
+    expect(types(touch.down(2, near, 100 + LIFT_GRACE_MS))).toEqual(['dragMove'])
+    const late = dragging().touch
+    late.up(1, { x: 60, y: 0 }, 100)
+    // No frame ran in between, so the touch-down itself finds the grace run out.
+    expect(late.down(2, near, 100 + LIFT_GRACE_MS + 1)).toEqual([{ type: 'dragEnd', from: { x: 0, y: 0 }, at: { x: 60, y: 0 } }, { type: 'press', at: near }])
+  })
+
   it('is not ended by a second finger or a palm landing, moving or lifting', () => {
     const { touch } = dragging()
     expect(touch.down(2, { x: 300, y: 300 }, 110)).toEqual([])
@@ -89,11 +114,37 @@ describe('a parked surface', () => {
     expect(touch.advance(9000)).toEqual([])
   })
 
-  it('forgets a press without a tap', () => {
+  it('ends a press without a tap', () => {
     const touch = new ForgivingTouch()
     touch.down(1, { x: 0, y: 0 }, 0)
+    touch.move(1, { x: 3, y: 4 })
+    expect(touch.clear()).toEqual([{ type: 'pressEnd', at: { x: 3, y: 4 } }])
+    expect(touch.active).toBe(false)
+    expect(touch.up(1, { x: 3, y: 4 }, 100)).toEqual([])
+  })
+
+  it('has nothing to end when no finger is working', () => {
+    const touch = new ForgivingTouch()
     expect(touch.clear()).toEqual([])
-    expect(touch.up(1, { x: 0, y: 0 }, 100)).toEqual([])
+    touch.down(1, { x: 0, y: 0 }, 0)
+    touch.up(1, { x: 0, y: 0 }, 50)
+    expect(touch.clear()).toEqual([])
+  })
+})
+
+describe('every press', () => {
+  it('is followed by exactly one of tap, dragStart or pressEnd, however the touch ends', () => {
+    const p = { x: 0, y: 0 }, far = { x: 60, y: 0 }
+    const endings = (run: (touch: ForgivingTouch) => Gesture[][]): string[] => {
+      const touch = new ForgivingTouch()
+      return [touch.down(1, p, 0), ...run(touch)].flatMap(types).filter((type) => type === 'press' || type === 'tap' || type === 'dragStart' || type === 'pressEnd')
+    }
+    expect(endings((touch) => [touch.up(1, p, 50), touch.clear()])).toEqual(['press', 'tap'])
+    expect(endings((touch) => [touch.move(1, far), touch.up(1, far, 50), touch.advance(50 + LIFT_GRACE_MS + 1), touch.clear()])).toEqual(['press', 'dragStart'])
+    expect(endings((touch) => [touch.move(1, far), touch.cancel(1, 50), touch.clear()])).toEqual(['press', 'dragStart'])
+    expect(endings((touch) => [touch.move(1, far), touch.clear()])).toEqual(['press', 'dragStart'])
+    expect(endings((touch) => [touch.cancel(1, 50), touch.clear()])).toEqual(['press', 'pressEnd'])
+    expect(endings((touch) => [touch.clear(), touch.up(1, p, 50)])).toEqual(['press', 'pressEnd'])
   })
 })
 

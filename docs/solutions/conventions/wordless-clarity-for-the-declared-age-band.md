@@ -68,9 +68,20 @@ The rule follows the game's manifest band and never the child's age at run time.
 
 **What does not.** Unit abbreviations, a letter standing for a number, ordinals and currency names are words, so they stay off the kid side at every age. Emoji are not art: an emoji is text from the system font, no exception class exists for emoji, and one that pictures a numeral is that numeral.
 
-**Where symbols live.** In one module per game, `games/<key>/symbols.ts`, directly in the game folder. Its drawing functions take numbers or a small typed value (a fraction as two integers) and never a string from the caller, so the module cannot be handed a word. Each text call in it carries the comment `wordless-ok: numeral <reason>` on the same or the previous line. A reviewer sees every kid-side symbol of a game by reading that file and the game's grown-up overlay files.
+**Where symbols live.** In one module per game, `games/<key>/symbols.ts`, directly in the game folder. Its drawing functions take numbers or a small typed value (a fraction as two integers) and never a string from the caller, so the module cannot be handed a word. The check holds this: under the numeral exception a text call may draw only numbers it formats itself, number literals, and literals without a letter; inside a template or a sum it may also name a value the file types as a number, which is how a fraction is drawn from two integers. A bare variable, a string parameter, a member access or another call as the text is the finding `numeral-exception-value`. A manifest that exports two different bands is a finding as well, and the game then has no band. Each text call in the module carries the comment `wordless-ok: numeral <reason>` on the same or the previous line. A reviewer sees every kid-side symbol of a game by reading that file and the game's grown-up overlay files.
 
-**What the check cannot see**, and so stays on the reviewer's list: a numeral drawn as path data, geometry, a sprite or a committed image; CSS `content`; a bare `{count}` child; an emoji that pictures a numeral; a letter held in a constant or built at run time inside `symbols.ts`; and kid-side text placed behind the plain exception in a file named `overlay` or `perf`. Whether a symbol is laid on or beside its quantity is a reviewer's question too.
+**What the check cannot see**, and so stays on the reviewer's list:
+
+- a numeral drawn as path data, geometry, a sprite or a committed image;
+- CSS `content`;
+- a bare `{count}` child;
+- an emoji that pictures a numeral;
+- a sign outside the listed set that the check's pattern does not hold. The pattern holds letters, digits, the listed signs, and beyond them the plus-minus sign, the root sign, the comparison signs with a bar, the degree sign, the infinity sign and the currency signs. Any other sign written as text passes;
+- a sign the rule does not list, drawn in `symbols.ts` behind the numeral exception, where the check accepts any literal without a letter;
+- kid-side text placed behind the plain exception in a file named `overlay` or `perf`;
+- text in a game's `index.ts` or `manifest.ts` or in a test file, which the scan does not open.
+
+Whether a symbol is laid on or beside its quantity is a reviewer's question too.
 
 What the check does enforce is under "Enforced vs documented only" below.
 
@@ -113,9 +124,9 @@ Checklist:
 
 Work through this in order when building a game. Each item says whether a check enforces it.
 
-1. **Declare the band.** In `games/<key>/manifest.ts`, set `ageBand: [min, max]` with whole years, `min >= 2`, `max <= 12`, and `max - min <= 5` (enforced by `test/games.test.ts`). If the idea spans a wider range, split it into faces or a second game, as the test's failure message says.
+1. **Declare the band.** In `games/<key>/manifest.ts`, set `ageBand: [min, max]` with whole years, `min >= 2`, `max <= 12`, and `max - min <= 5`. The rule has one home, `ageBandProblems` in `harness/contract.ts`: `test/games.test.ts` holds every game to it, and `npm run new:game` refuses a band that breaks it. If the idea spans a wider range, split it into faces or a second game, as the rule's message says.
 2. **Find the row.** Look up the youngest age of the band in the age-band cue table below and treat that row's "Avoid" column as hard constraints.
-3. **No words on screen, and numerals only by the band.** Kid-side code renders no JSX text, string children, DOM or canvas text, or text components (enforced by `npm run wordless:check`). Values formatted as text, such as `{String(n)}` or `{n.toFixed(1)}`, are flagged too, and so is a mathematics sign written as text. A band that starts below 6 shows no numeral or symbol, optional or not. A band that starts at 6 or above draws its numerals and signs in `games/<key>/symbols.ts`, each laid on or beside the quantity it stands for, behind a `wordless-ok: numeral <reason>` comment (see "Symbols by the band's first age"). A bare `{count}` child is not flagged (without types the check cannot tell a number from an element), so never render one (see "Enforced vs documented" below).
+3. **No words on screen, and numerals only by the band.** Kid-side code renders no JSX text, string children, DOM or canvas text, or text components (enforced by `npm run wordless:check`). Values formatted as text, such as `{String(n)}` or `{n.toFixed(1)}`, are flagged too, and so is a mathematics sign written as text. A band that starts below 6 shows no numeral or symbol, optional or not. A band that starts at 6 or above draws its numerals and signs in `games/<key>/symbols.ts`, each laid on or beside the quantity it stands for, behind a `wordless-ok: numeral <reason>` comment, and the text of such a call is a number the call formats itself, a number literal or a literal without a letter (see "Symbols by the band's first age"). A bare `{count}` child is not flagged (without types the check cannot tell a number from an element), so never render one (see "Enforced vs documented" below).
 4. **No voice instructions.** Speech, if any, is for number words or sounds the child asked for, never "tap the bag" or "try again". Not machine-checked: the Δ3 allowance permits `speechSynthesis` and committed clips for spoken number words (`AGENTS.md`).
 5. **Touchable things look touchable.** Big silhouettes, targets around 48 px or larger, and a "touch here" cue that reads on every surface in the scene. Pebble Table's first glow disappeared on the cream rug and was replaced by a golden ring (`games/pebble-table/REFINEMENT.md`; `games/pebble-table/view/clay.ts`, "reads as 'touch here' on light and dark surfaces alike").
 6. **One next act at a time.** Offer one thing to do next, and let tools appear only when the state makes them meaningful. Pebble Table's knife is only there while a leftover sits in the bowl (`games/pebble-table/feeding.ts`; hit-testing gated at `games/pebble-table/controller.ts`; the knife returns to its rest when there is no leftover).
@@ -158,16 +169,18 @@ From `games/pebble-table/guidance.ts`:
 
 | Rule | How it is held |
 | --- | --- |
-| `ageBand` is whole years, 2 to 12, at most five years wide | Enforced: `test/games.test.ts` |
-| No JSX text, string or template children, DOM/canvas text APIs, or `<Text>`, `<Text3D>`, `<Html>` in kid-side code. A letter, a digit or a mathematics sign (keyboard or Unicode form) counts as text | Enforced: `scripts/wordless-check.ts`, run by `npm run check` (`package.json`) and in CI (`.github/workflows/ci.yml`); the test "every jam game is wordless on the kid side" in `test/wordless.test.ts` asserts every jam game passes |
+| `ageBand` is whole years, 2 to 12, at most five years wide | Enforced: the band rule in `harness/contract.ts`, which `test/games.test.ts` runs on every game and `npm run new:game` runs on the band it is given |
+| No JSX text, string or template children, DOM/canvas text APIs, or `<Text>`, `<Text3D>`, `<Html>` in kid-side code. A letter, a digit or a mathematics sign (keyboard or Unicode form) counts as text: the listed signs, and also the plus-minus sign, the root sign, the comparison signs with a bar, the degree sign, the infinity sign and the currency signs | Enforced: `scripts/wordless-check.ts`, run by `npm run check` (`package.json`) and in CI (`.github/workflows/ci.yml`); the test "every jam game is wordless on the kid side" in `test/wordless.test.ts` asserts every jam game passes |
 | Values formatted as text children (`{String(n)}`, `.toFixed()`, `.toLocaleString()`, `.format()`, `.join()`) | Enforced: the `kid-text-number` rule in `scripts/wordless-check.ts` |
 | The plain exception, `wordless-ok: <reason>`, only in a grown-up overlay file | Enforced: the finding `plain-exception-misplaced` |
-| The numeral exception, `wordless-ok: numeral <reason>`, only in `games/<key>/symbols.ts`, only when the manifest band starts at 6 or above, and never on a literal that holds a letter | Enforced: the findings `numeral-exception-misplaced`, `numeral-exception-band` (it names the band) and `numeral-exception-letter` |
+| The numeral exception, `wordless-ok: numeral <reason>`, only in `games/<key>/symbols.ts`, only when the manifest band starts at 6 or above, never on a literal that holds a letter, and only on text that is a number the call formats itself, a number literal or a literal without a letter | Enforced: the findings `numeral-exception-misplaced`, `numeral-exception-band` (it names the band), `numeral-exception-letter` and `numeral-exception-value` (a bare variable, a parameter, a member access or another call as the text) |
 | The band comes from the game's manifest, never from the child's age | Enforced: the check imports `games/<key>/manifest.ts`; a manifest that cannot be imported or exports no usable `ageBand` is the finding `manifest-age-band` |
 | A bare `{count}` child that renders a number | Documented only: without types the check cannot tell a number from an element |
 | No voice instructions | Documented only: speech is allowed for number words under Δ3 (`AGENTS.md`), so the check does not ban it |
 | A numeral drawn as path data, geometry, a sprite or a committed image; CSS `content`; an emoji that pictures a numeral; icons or letters baked into images or canvas textures | Documented only: the check cannot see pixels or style sheets |
-| A letter held in a constant or built at run time inside `symbols.ts` | Documented only: the check reads the literals in the text call, not the values that reach it |
+| A sign outside the listed set that the pattern does not hold (anything beyond the listed signs, plus-minus, root, the comparison signs with a bar, degree, infinity and the currency signs) | Documented only: the pattern is a closed list, kept closed so that arrows and other cues are not flagged |
+| A sign the rule does not list, drawn in `symbols.ts` behind the numeral exception | Documented only: there the check accepts any literal without a letter |
+| Text in a game's `index.ts` or `manifest.ts`, or in a test file | Documented only: the scan does not open those files |
 | Kid-side text placed behind the plain exception in a file named `overlay` or `perf` | Documented only: the check trusts the file name |
 | Each symbol laid on or beside the quantity it stands for; no symbol standing alone | Documented only |
 | One affordance at a time; state-revealed tools | Documented only |
@@ -186,6 +199,7 @@ There are two exceptions, each a comment on the same or the previous line. The p
 | `games/<key>/symbols.ts` | `wordless-ok: numeral <reason>` | 6 or above | accepted |
 | `games/<key>/symbols.ts` | `wordless-ok: numeral <reason>` | below 6 | finding, naming the band |
 | `games/<key>/symbols.ts` | `wordless-ok: numeral <reason>`, and the text is a literal that holds a letter | any | finding |
+| `games/<key>/symbols.ts` | `wordless-ok: numeral <reason>`, and the text is a bare variable, a parameter, a member access or another call | any | finding: `numeral-exception-value` |
 | `games/<key>/symbols.ts` | plain `wordless-ok: <reason>` | any | finding |
 | any other kid-side file | either comment | any | finding |
 | any kid-side file | no comment | any | finding |
@@ -258,12 +272,12 @@ games/number-meadow/hud.tsx:5  kid-text-number  {String(c)}
 games/number-meadow/hud.tsx:6  kid-text-literal  {`${a} new`}
 games/number-meadow/hud.tsx:11  kid-text-api  el.textContent = n > 0 ? `${n} new` : 'all seen'
 
-wordless check failed: 4 finding(s). Kid-side code shows no words, letters, numerals or mathematics signs; use cues (motion, glow, demonstration, sound). A game whose band starts at 6 or above may draw numerals and signs in games/<key>/symbols.ts behind a "wordless-ok: numeral <reason>" comment. Grown-up text belongs in a file named overlay or perf, behind a "wordless-ok: <reason>" comment.
+wordless check failed: 4 finding(s). Kid-side code shows no words, letters, numerals or mathematics signs; use cues (motion, glow, demonstration, sound). A game whose band starts at 6 or above may draw numerals and signs in games/<key>/symbols.ts behind a "wordless-ok: numeral <reason>" comment. Grown-up text belongs in a file named overlay (or perf, outside a template game's frozen perf.ts), behind a "wordless-ok: <reason>" comment.
 ```
 
 The digit buttons on line 5 are caught by `kid-text-number`. Written as a bare `{c}`, they would pass, which is why checklist item 3 still asks for a review of any `{...}` child that could render a number.
 
-The two legitimate exceptions look like this (fixtures in `test/wordless.test.ts`). Grown-up text, in a file named `overlay` or `perf` such as `games/<key>/view/overlay.tsx`:
+The two legitimate exceptions look like this (fixtures in `test/wordless.test.ts`). Grown-up text, in a file named `overlay` or `perf` such as `games/<key>/view/overlay.tsx` (in a game made from the template `perf.ts` is frozen, so there it is `overlay`):
 
 ```tsx
 // wordless-ok: grown-up corner behind a hold gesture
@@ -304,7 +318,7 @@ export const pebbleTableManifest: CartridgeManifest = {
 
 The youngest age is 3, so the 3–4 row governs: demonstration, one affordance at a time, state-revealed tools, no symbols. Age 3 also sets a default through `ctx.childAge`: a bag of 5 stones instead of 10 (`games/pebble-table/state.ts`).
 
-A band like `ageBand: [3, 10]` fails `test/games.test.ts` with "a game is designed for one audience; split wider ranges into faces or a second game". The harness's own validator only checks `min >= 0` and `max >= min` (`harness/contract.ts`), so the jam test is what enforces a specific audience. The grown-up game list shows the band as "ages 3–7" (`harness/GameList.tsx`), so the declaration is also visible to parents choosing a game.
+A band like `ageBand: [3, 10]` fails `test/games.test.ts`, and `npm run new:game` refuses it, for the same reason: a game is designed for one audience, and a wider range is split into faces or a second game. Both call the one band rule, `ageBandProblems` in `harness/contract.ts`. The manifest validator beside it (`validateManifest`) only checks `min >= 0` and `max >= min`, so the band rule is what enforces a specific audience. The grown-up game list shows the band as "ages 3–7" (`harness/GameList.tsx`), so the declaration is also visible to parents choosing a game.
 
 ## Related
 

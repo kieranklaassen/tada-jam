@@ -8,10 +8,12 @@ type Answer = 'refuse' | 'wait' | 'run'
  * A stubbed AudioContext. Each context answers `resume()` from its own script,
  * in order: 'refuse' rejects and stays suspended, 'wait' leaves the promise
  * open until the context starts, 'run' starts it. Past the end of the script
- * it runs.
+ * it runs. As in a browser, `suspend()` leaves the state at 'running' until
+ * its promise settles. `attempts` counts every context the game tried to
+ * build, including the ones that threw.
  */
 function fakeAudio(scripts: Answer[][] = [], options: { broken?: boolean } = {}) {
-  const made = { contexts: [] as { state: string }[], closed: 0, voices: 0 }
+  const made = { contexts: [] as { state: string }[], attempts: 0, closed: 0, voices: 0 }
   const param = () => ({ value: 1, setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} })
   const node = () => ({ gain: param(), frequency: param(), threshold: param(), type: '', onended: null as unknown, connect: (next: unknown) => next, disconnect: () => {}, start: () => made.voices++, stop: () => {} })
   class FakeContext {
@@ -21,6 +23,7 @@ function fakeAudio(scripts: Answer[][] = [], options: { broken?: boolean } = {})
     private readonly script: Answer[]
     private readonly waiting: (() => void)[] = []
     constructor() {
+      made.attempts += 1
       if (options.broken) throw new Error('no audio here')
       this.script = scripts[made.contexts.length] ?? []
       made.contexts.push(this)
@@ -37,8 +40,9 @@ function fakeAudio(scripts: Answer[][] = [], options: { broken?: boolean } = {})
       return Promise.resolve()
     }
     suspend() {
-      this.state = 'suspended'
-      return Promise.resolve()
+      return Promise.resolve().then(() => {
+        if (this.state === 'running') this.state = 'suspended'
+      })
     }
     close() {
       made.closed += 1
@@ -163,16 +167,24 @@ describe('the context', () => {
     expect(() => audio.touchDown()).not.toThrow()
     expect(() => audio.play(tick)).not.toThrow()
     expect(() => audio.touchUp()).not.toThrow()
+    audio.touchDown()
+    audio.touchUp()
+    expect(made.attempts).toBe(1)
     expect(made.contexts).toHaveLength(0)
   })
 
-  it('is silent while the game rests and sounds again when it wakes', async () => {
+  it('is silent from the moment the game rests, and sounds again when it wakes', async () => {
     const made = fakeAudio()
     const audio = new GameAudio()
     audio.touchDown()
     audio.touchUp()
     await answered()
     audio.setActive(false)
+    // The browser has not suspended the context yet; a sound the game plays as it goes to rest is still not heard.
+    expect(made.contexts[0].state).toBe('running')
+    audio.play(tick)
+    expect(made.voices).toBe(0)
+    await answered()
     expect(made.contexts[0].state).toBe('suspended')
     audio.play(tick)
     expect(made.voices).toBe(0)
@@ -180,6 +192,24 @@ describe('the context', () => {
     await answered()
     audio.play(tick)
     expect(made.voices).toBe(1)
+  })
+
+  it('forgets a sound held from a refused touch-down when the game rests, so a lift after the rest plays nothing', async () => {
+    fakeAudio([['refuse', 'refuse', 'run']])
+    const audio = new GameAudio()
+    let played = 0
+    audio.touchDown()
+    audio.play(() => played++)
+    await answered()
+    audio.setActive(false)
+    audio.setActive(true)
+    await answered()
+    audio.touchUp()
+    await answered()
+    expect(played).toBe(0)
+    // The context did start on that lift: a sound played now is heard.
+    audio.play(() => played++)
+    expect(played).toBe(1)
   })
 
   it('is closed on dispose', async () => {

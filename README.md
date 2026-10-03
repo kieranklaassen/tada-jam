@@ -48,19 +48,19 @@ The intersection audit (`scripts/jam-intersections.mjs`, needs `npx playwright i
 
 The egress scan (`scripts/egress-check.ts`) fails on any external URL, CDN font, network or browser-storage API, sample player that loads URLs, import from `harness/` or another game, or package outside the Tada tech menu.
 
-The wordless check (`scripts/wordless-check.ts`) parses kid-side game code and fails on words, letters, numerals or mathematics signs rendered on screen: JSX text, string children, DOM or canvas text APIs, and text components. Games for pre-readers explain themselves with cues, not text. A game whose age band starts at 6 or above may draw numerals and mathematics symbols in its `symbols.ts`, each laid on or beside the quantity it stands for; grown-up text lives in a file named `overlay` or `perf`.
+The wordless check (`scripts/wordless-check.ts`) parses kid-side game code and fails on words, letters, numerals or mathematics signs rendered on screen: JSX text, string children, DOM or canvas text APIs, and text components. Games for pre-readers explain themselves with cues, not text. A game whose age band starts at 6 or above may draw numerals and mathematics symbols in its `symbols.ts`, each laid on or beside the quantity it stands for; grown-up text lives in a file named `overlay` or `perf` (in a game made from the template `perf.ts` is frozen, so there it lives in `overlay`).
 
 ## Add a game
 
 [`docs/solutions/conventions/building-a-jam-game.md`](docs/solutions/conventions/building-a-jam-game.md) walks through these steps in order, with the lessons from building Pebble Table.
 
-1. Run `npm run new:game -- <key> "<Name>" <youngest>-<oldest> <emoji>`. It copies the template in `templates/cartridge/` into `games/<key>/`, where `<key>` is a kebab-case slug (it doubles as the Tada storage namespace). The steps below say what the copy holds.
+1. Run `npm run new:game -- <key> "<Name>" <youngest>-<oldest> <emoji>`. It copies the template in `templates/cartridge/` into `games/<key>/`, where `<key>` is a kebab-case slug (it doubles as the Tada storage namespace), and fills the manifest and the jam registration (`index.ts`) from what you gave it; `config.ts` is not filled: it reads the band from the manifest. The steps below say what the copy holds.
 2. `games/<key>/manifest.ts` — export the manifest const (`key`, `name`, `ageBand`, `permissions`, `iconIdentity`). Keep it free of JSX and React imports. `ageBand` names one audience: whole years, 2 to 12, at most five years wide.
 3. `games/<key>/<key>.tsx` — export a `Cartridge` (`{ manifest, Mount }`). The Mount receives `{ ctx: CartridgeContext }`. Import contract types from `../types`.
 4. `games/<key>/index.ts` — `export const game: JamGame = { cartridge, emoji: '🪨' }`.
 5. Put game logic in pure modules with tests next to them (`*.test.ts`). Read saved state through a defensive `deserialize`.
 6. Design for the youngest age in `ageBand`: every interaction must be understandable from wordless cues, and symbols follow the band's first age (see the age-band cue table and the symbol rule in [`docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md`](docs/solutions/conventions/wordless-clarity-for-the-declared-age-band.md)).
-7. Take the look reserved for the game in the menu in [`docs/art-direction.md`](docs/art-direction.md) (a ledger: the lead reserves rows before a builder starts and marks one claimed after the merge), spike it on the game's real scene (screenshot at 1180×820, measure fps at DPR 2), write `games/<key>/ART.md`, and add the game to the claimed-styles registry.
+7. Take the first look reserved for the game in the menu in [`docs/art-direction.md`](docs/art-direction.md) (a ledger: the lead reserves rows before a builder starts and marks one claimed after the merge), spike it on the game's real scene (screenshot at 1180×820, measure fps at DPR 2), and move to the next reserved look only if that spike fails on clarity or frame rate or the owner rejects the look. Write `games/<key>/ART.md`, and have the game added to the claimed-styles registry: in a wave of games built at the same time the row is a request to the lead, and a builder working alone adds it.
 8. `npm run check`, then open a PR. Say how the game meets each line of the quality bar, with the measured frame rate. See `AGENTS.md` for the full rule list.
 
 ## Port a game into Tada

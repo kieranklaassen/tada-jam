@@ -84,8 +84,10 @@ const [YOUNGEST, OLDEST] = templateManifest.ageBand
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
  * child has reached, and the first row for a younger child or no age. Age is a
  * hint: a saved position always wins, and every step stays reachable by play.
+ * Rows ascend by age and no two share one, or the earlier row is never reached:
+ * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
   { fromAge: YOUNGEST, position: 'first' },
-  { fromAge: OLDEST, position: 'second' },
+  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
 ]

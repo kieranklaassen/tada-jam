@@ -20,7 +20,7 @@ Ruled out, with the similar thing that is fine:
 - A character who pleads or sulks when the child stops. Fine: a character with feelings about what happens in the scene.
 - A countdown; something that burns or expires. Fine: a process the child started that takes its natural time and stays done.
 - Rare drops; a wanted result left to chance. Fine: secrets that work every time, and chance in ordinary detail (which of three yawns).
-- Harder or faster rounds that arrive unasked. Fine: a harder thing the child chose.
+- Harder or faster rounds that arrive unasked. Fine: a harder thing the child chose. A next cycle chosen from how the last one went, never the current one, is not a round that arrives unasked (`ordered-challenges-high-success.md`).
 - Content locked by amount of play. Fine: depth reached by understanding.
 
 A game is judged by whether a child asks for it again the next week, how varied the things they make are, and whether they stop without distress. It is not judged by session length or daily return, which lead design toward these techniques.

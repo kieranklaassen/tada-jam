@@ -10,6 +10,9 @@
 // - A drag counts when partly done: `countsAsDone` says whether it got far
 //   enough toward where it was going for the game to finish it.
 // - A parked surface clears every gesture, since the lifts never arrive.
+// - Every `press` is followed by exactly one of `tap`, `dragStart` or
+//   `pressEnd`, so whatever the game squashes or lights on a press always has
+//   a gesture on which to let it go.
 // Points are in whatever space the Mount passes in; times are in ms.
 
 export type Point = { x: number; y: number }
@@ -17,6 +20,8 @@ export type Point = { x: number; y: number }
 export type Gesture =
   | { type: 'press'; at: Point }
   | { type: 'tap'; at: Point }
+  /** The press is over and was not a tap: the browser took the finger away, or the surface was parked under it. */
+  | { type: 'pressEnd'; at: Point }
   | { type: 'dragStart'; from: Point }
   | { type: 'dragMove'; from: Point; at: Point }
   /** The finger let go mid-drag. The drag is not over: show the thing waiting. */
@@ -91,13 +96,13 @@ export class ForgivingTouch {
     return this.lift(working, t)
   }
 
-  /** The browser took the pointer away. A drag waits out the grace as after a lift; a press is forgotten. */
+  /** The browser took the pointer away. A drag waits out the grace as after a lift; a press ends without a tap. */
   cancel(id: number, t: number): Gesture[] {
     const working = this.working
     if (!working || working.id !== id) return []
     if (working.dragging) return this.lift(working, t)
     this.working = null
-    return []
+    return [{ type: 'pressEnd', at: working.at }]
   }
 
   /** Call every frame: a lift that has outlasted the grace ends its drag where it was let go. */
@@ -108,11 +113,12 @@ export class ForgivingTouch {
     return [{ type: 'dragEnd', from: working.from, at: working.at }]
   }
 
-  /** The surface was parked or hidden mid-touch. A drag ends where it is, so the thing in hand is put down; nothing else is left. */
+  /** The surface was parked or hidden mid-touch. A drag ends where it is, so the thing in hand is put down; a press ends without a tap; nothing else is left. */
   clear(): Gesture[] {
     const working = this.working
     this.working = null
-    return working?.dragging ? [{ type: 'dragEnd', from: working.from, at: working.at }] : []
+    if (!working) return []
+    return working.dragging ? [{ type: 'dragEnd', from: working.from, at: working.at }] : [{ type: 'pressEnd', at: working.at }]
   }
 
   private lift(working: Working, t: number): Gesture[] {
