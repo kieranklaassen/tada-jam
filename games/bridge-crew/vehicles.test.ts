@@ -42,7 +42,7 @@ describe('the characters and their fixed tastes', () => {
     expect(reaction('giraffe-bus', ride({ low: [[], [], [3, 5], [3, 5]] })).parts).toEqual([3, 5])
     expect(bargeReaction(ride({ blocked: [2] }))).toMatchObject({ mood: 'dislike', act: 'scrapes-past', parts: [2] })
     expect(bargeReaction(ride())).toMatchObject({ mood: 'like', act: 'toots' })
-    expect(chiefReaction({ closedTriangle: true, folded: false })).toMatchObject({ mood: 'like' })
+    expect(chiefReaction({ closedTriangle: true, folded: false })).toMatchObject({ mood: 'like', act: 'taps-and-listens' })
     expect(chiefReaction({ closedTriangle: true, folded: true })).toMatchObject({ mood: 'dislike' })
     expect(chiefReaction({ closedTriangle: false, folded: false })).toBeNull()
   })

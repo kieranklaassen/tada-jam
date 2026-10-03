@@ -252,3 +252,37 @@ export function park(at: Site, parts: readonly Part[], x: number, weight: number
   const answer = solve(frame, loads)
   return { frame, step: record(frame, x, answer), ending: wrong ?? failure(answer) }
 }
+
+/** A weight hung from a pin by its hook: the trolley as a pendulum. Its pull drags that one joint straight down. Null when no firm part has a pin there. */
+export function hang(at: Site, parts: readonly Part[], pin: readonly [number, number], weight: number): { frame: Frame; step: Step; ending: Ending | null } | null {
+  const frame = settle(parts, isFooting(at)), node = frame.at.get(`${pin[0]},${pin[1]}`)
+  if (node === undefined) return null
+  const answer = solve(frame, [{ node, weight }])
+  return { frame, step: record(frame, pin[0], answer), ending: failure(answer) }
+}
+
+/**
+ * Where the trolley comes to rest when it is set down at x: it trundles down
+ * the deck as the deck lies under it, plank by plank, to the lowest point it
+ * can reach, and the deck moves with it as it goes. It stops at a bank, at
+ * the end of the planks, and where the deck gives. Null when no plank passes x.
+ */
+export function lowPoint(at: Site, parts: readonly Part[], x: number, weight: number): number | null {
+  const frame = settle(parts, isFooting(at)), road = roadOf(at, frame)
+  const index = (where: number) => road.nodes.findIndex((n) => frame.nodes[n].x === where)
+  let r = index(x)
+  if (r < 0) return null
+  const onPlank = (from: number) => from >= 0 && from < road.parts.length && parts[road.parts[from]].kind === 'plank'
+  for (let moves = 0; moves < road.nodes.length; moves++) {
+    const here = frame.nodes[road.nodes[r]].x
+    if (here <= at.left[0] || here >= at.right[0]) break
+    const answer = solve(frame, [{ node: road.nodes[r], weight }])
+    if (failure(answer)) break
+    const height = (n: number) => frame.nodes[n].y + answer.moved(n)[1]
+    const left = onPlank(r - 1) ? height(road.nodes[r - 1]) : Infinity, right = onPlank(r) ? height(road.nodes[r + 1]) : Infinity
+    const lowest = Math.min(left, right)
+    if (lowest >= height(road.nodes[r]) - 1e-9) break
+    r += right < left ? 1 : -1
+  }
+  return frame.nodes[road.nodes[r]].x
+}

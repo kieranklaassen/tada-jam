@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CROSSINGS, part } from './bridges.fixture'
-import { park, roadOf, run } from './run'
+import { hang, lowPoint, park, roadOf, run } from './run'
 import { settle, solve } from './frame'
 import { isFooting, site } from './sites'
 import { VEHICLES, trainOf, trolleyTrain } from './vehicles'
@@ -108,6 +108,28 @@ describe('a run over the bridge as built', () => {
     expect(dip(4) / dip(1)).toBeCloseTo(4, 2)
     expect(park(gap, bridge, 9, 1)).toBeNull()
     expect(park(gap, [part('plank', 10, 6, 14, 6)], 12, 6)!.ending).toMatchObject({ kind: 'gives', strain: 'bend' })
+  })
+
+  it('the trolley trundles to the lowest point of the deck as it lies under it', () => {
+    // Set down near one end of a level plank, it rolls to the middle, where the dip under it is deepest.
+    expect(lowPoint(gap, CROSSINGS['plank-gap'], 10.5, 3)).toBe(12)
+    expect(lowPoint(gap, CROSSINGS['plank-gap'], 13.5, 3)).toBe(12)
+    expect(lowPoint(gap, CROSSINGS['plank-gap'], 12, 3)).toBe(12)
+    // Over a prop the deck is held up: it rolls into the span beside the prop and not across it.
+    const at = site('rock-prop', 0), rest = lowPoint(at, CROSSINGS['rock-prop'], 11.5, 3)!
+    expect(rest).toBeGreaterThan(8)
+    expect(rest).toBeLessThan(12)
+    expect(lowPoint(gap, CROSSINGS['plank-gap'], 9, 3)).toBeNull()
+  })
+
+  it('the trolley hung from a pin drags that one joint straight down', () => {
+    const at = site('first-triangle', 0), king = CROSSINGS['first-triangle']
+    const hung = hang(at, king, [12, 4], 3)!
+    const node = hung.frame.at.get('12,4')!
+    expect(hung.ending).toBeNull()
+    expect(hung.step.moved[2 * node + 1]).toBeLessThan(hang(at, king, [12, 4], 1)!.step.moved[2 * node + 1])
+    expect(Math.abs(hung.step.moved[2 * node])).toBeLessThan(1e-3)
+    expect(hang(at, king, [3, 3], 3)).toBeNull()
   })
 
   it('is the same every time, and quick enough to run between two frames of a drag', () => {

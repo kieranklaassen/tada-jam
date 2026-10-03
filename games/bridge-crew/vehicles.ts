@@ -85,6 +85,6 @@ export function reaction(id: VehicleId, ride: Ride): Reaction {
 export const bargeReaction = (ride: Ride): Reaction =>
   ride.blocked.length ? { mood: 'dislike', act: 'scrapes-past', amount: Math.min(1, ride.blocked.length / 3), parts: ride.blocked } : { mood: 'like', act: 'toots', amount: 1, parts: [] }
 
-/** The crew chief: it likes a triangle and dislikes a shape that folds, whoever built it. */
+/** The crew chief: it likes a triangle, which it taps and listens to, and dislikes a shape that folds, whoever built it. It never nods at the child's move. */
 export const chiefReaction = (change: { closedTriangle: boolean; folded: boolean }): Reaction | null =>
-  change.folded ? { mood: 'dislike', act: 'feathers-on-end', amount: 1, parts: [] } : change.closedTriangle ? { mood: 'like', act: 'taps-and-nods', amount: 1, parts: [] } : null
+  change.folded ? { mood: 'dislike', act: 'feathers-on-end', amount: 1, parts: [] } : change.closedTriangle ? { mood: 'like', act: 'taps-and-listens', amount: 1, parts: [] } : null
