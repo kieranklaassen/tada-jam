@@ -43,6 +43,8 @@ export type Scenery = {
   /** The customers' motion: the one at the window, and the two who wait. */
   window: Actor | null
   queue: [Actor, Actor]
+  /** The motion of a pelican gliding out of the queue, while it is still on screen. */
+  leavingActor: Actor | null
   time: number
   blade: Point | null
   /** The pieces in the hand, and how far they have been carried from where they lie in the world. */
@@ -53,8 +55,8 @@ export type Scenery = {
   show: Show | null
   /** The ending whose serve is playing: the taste lands on these pieces. Nothing once the scene is over. */
   ending: Ending | null
-  /** A customer who has left the game and is still on its way out: the pelican, gliding. */
-  leaving: Customer | null
+  /** A customer who has left the game and is still on its way out: the pelican, gliding, from the window or from its place in the queue. */
+  leaving: { customer: Customer; whom: Whom } | null
   /** The idle ladder: how strongly the next thing glows, what glows, and the ghost hand when it is showing a move. */
   glow: number
   guide: Guide | null
@@ -71,6 +73,8 @@ export class GameRun {
   /** The game changed since this was last cleared: it wants saving, and at once when `urgent` is set. */
   dirty = false
   urgent = false
+  /** What the last move did, in order: for whoever wants to follow the game without drawing it. */
+  happened: readonly GameEvent[] = []
   private stroke: Stroke | null = null
   private last: Point | null = null
   private held: { held: Held; at: Point; trail: { at: Point; t: number }[] } | null = null
@@ -81,8 +85,9 @@ export class GameRun {
   private scene: Scene | null = null
   private show: Show | null = null
   private ending: Ending | null = null
-  private leaving: Customer | null = null
+  private leaving: { customer: Customer; whom: Whom } | null = null
   private skipping = false
+  private leavingActor: Actor | null = null
   private clock = 0
   private seed: number
 
@@ -231,7 +236,7 @@ export class GameRun {
     const carried = this.held ? { ids: this.held.held.ids, dx: this.held.at.x - this.held.held.dx - this.held.held.boxes[0].x, dy: this.held.at.y - this.held.held.dy - this.held.held.boxes[0].y } : null
     // With no scene playing, a served customer is in the last pose of its serve: that is what a load finds.
     const show = this.show ?? (this.game.window && this.game.finished ? servedShow(eaten(this.game.world).length) : null)
-    return { game: this.game, fx: this.fx, dog: dogPose(this.dog, look), window: this.window, queue: this.queue, time, blade: this.blade, carried, roller: this.roller, show, ending: this.ending, leaving: this.leaving, glow: idle ? guidance.glow : 0, guide, hand }
+    return { game: this.game, fx: this.fx, dog: dogPose(this.dog, look), window: this.window, queue: this.queue, leavingActor: this.leavingActor, time, blade: this.blade, carried, roller: this.roller, show, ending: this.ending, leaving: this.leaving, glow: idle ? guidance.glow : 0, guide, hand }
   }
 
   /** A customer's pose, for the view: the one at the window or one who waits, and which of its bodies. */
@@ -268,6 +273,7 @@ export class GameRun {
     // The serve leaves its last pose, which is rebuilt from the game; the showing leaves the ruled rail; the glider leaves an empty window.
     this.show = null
     this.leaving = null
+    this.leavingActor = null
     if (!this.game.window) this.window = null
   }
 
@@ -288,6 +294,7 @@ export class GameRun {
     const before = this.game
     if (game.world !== before.world || game.seed !== before.seed || game.window !== before.window || game.queue !== before.queue || game.finished !== before.finished || game.position !== before.position || game.shown !== before.shown) this.dirty = true
     this.game = game
+    this.happened = events
     const cue = (id: VoiceId, length?: number, count?: number): void => {
       if (!this.skipping) this.sounds.push({ id, length, count, delay: 0 })
     }
@@ -341,11 +348,16 @@ export class GameRun {
           this.urgent = true
           break
         }
-        case 'gliderAway':
+        case 'gliderAway': {
+          // The glider all the same: the pelican that waited glides out from its place, and the one who joins steps in after it.
+          const show = restShow('glider')
+          const gone = this.queue[event.whom]
+          this.start(gliderBeats(show, cue), show, null)
+          this.leaving = { customer: before.queue[event.whom], whom: event.whom }
+          this.leavingActor = gone
           this.queue[event.whom] = reactTo(newActor(game.queue[event.whom].who, ++this.seed + 10), 'step')
-          this.sounds.push({ id: 'whistle', delay: 0.2 }, { id: 'step', delay: 0.5 })
-          this.urgent = true
           break
+        }
         case 'given':
           showing = event.firstShowing ?? showing
           break
@@ -355,7 +367,7 @@ export class GameRun {
           if (event.ending.glider) {
             // The pelican has already left the game; it is kept here only for as long as its leaving is shown.
             const show = restShow('glider')
-            this.leaving = customer
+            this.leaving = { customer, whom: 'window' }
             this.start(gliderBeats(show, cue), show, event.ending)
           } else {
             const show = restShow('serve')

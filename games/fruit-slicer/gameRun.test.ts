@@ -234,12 +234,34 @@ describe('the scenes', () => {
     expect(run.dirty && run.urgent).toBe(true)
     const frame = run.frame(0, BUSY)
     expect(frame.show).toMatchObject({ kind: 'glider' })
-    expect(frame.leaving).toMatchObject({ who: 'pelican' })
+    expect(frame.leaving).toMatchObject({ whom: 'window', customer: { who: 'pelican' } })
     const atStart = stored(run)
     play(run, 6)
     expect(stored(run)).toEqual(atStart)
     expect(run.frame(0, BUSY)).toMatchObject({ show: null, leaving: null, window: null })
     expect(new GameRun(deserialize(atStart), 5).frame(0, BUSY)).toMatchObject({ show: null, window: null })
+  })
+})
+
+describe('the glider from the queue', () => {
+  it('plays all the same for a pelican that waits: the queue and the stream are in the game before its first beat, and the window is as it was', () => {
+    const run = fresh()
+    run.tap(mid(QUEUE[0]))
+    expect(run.game.queue[1].who).toBe('pelican')
+    const window = run.game.window
+    const seed = run.game.seed
+    drag(run, { x: X0 + 100, y: NEAR }, mid(QUEUE[1]), 1.5)
+    expect(run.playing).toBe(true)
+    expect(run.frame(0, BUSY)).toMatchObject({ show: { kind: 'glider' }, leaving: { whom: 1, customer: { who: 'pelican' } } })
+    expect(run.game.window).toEqual(window)
+    expect(run.game.seed).not.toBe(seed)
+    expect(run.game.world.pieces).toEqual([])
+    expect(run.dirty && run.urgent).toBe(true)
+    const atStart = stored(run)
+    play(run, 6)
+    expect(stored(run)).toEqual(atStart)
+    expect(run.frame(0, BUSY)).toMatchObject({ show: null, leaving: null })
+    expect(run.window).not.toBeNull()
   })
 })
 

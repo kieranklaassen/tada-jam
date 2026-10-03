@@ -331,13 +331,14 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   const { game, fx } = scenery
   let drawn = effects(ctx, fx, true)
   // The customer at the window, with its ticket; or one still on its way out.
-  const atWindow = game.window ?? scenery.leaving
+  const gliding = scenery.leaving
+  const atWindow = game.window ?? (gliding?.whom === 'window' ? gliding.customer : null)
   if (atWindow) {
     const lengths = scenery.ending ? scenery.ending.result.parts.flatMap((part) => part.pieces.map((piece) => piece.length)) : eaten(game.world).map((piece) => piece.length)
     const feast = feastOf(atWindow, lengths, scenery.ending?.taste ?? null, scenery.show?.kind === 'showing' ? null : scenery.show, scenery.ending?.result.kind === 'over')
     const ants = atWindow.who === 'ants'
     drawn += customerAt(ctx, dots, atWindow, scenery.window, { feast, show: scenery.show }, WINDOW.x + (ants ? 40 : atWindow.who === 'boa' ? 120 : 92), WINDOW.y + WINDOW.h - 4, 0.92, 540)
-    if (!scenery.leaving) drawn += ticket(ctx, atWindow, WINDOW.x + 250, WINDOW.y + 34, atWindow.shares.length > 1 || atWindow.who === 'boa' ? 0.6 : atWindow.written ? 0.8 : 1)
+    if (game.window) drawn += ticket(ctx, atWindow, WINDOW.x + 250, WINDOW.y + 34, atWindow.shares.length > 1 || atWindow.who === 'boa' ? 0.6 : atWindow.written ? 0.8 : 1)
     // Served, and the serve over: it holds its tin, shut, by its feet.
     if (game.finished && !scenery.ending) {
       inked(ctx, rect(WINDOW.x + 168, WINDOW.y + WINDOW.h - 34, 64, 26), '#c9d6e6', 4, dots.of(ctx, BLUE, 0.3))
@@ -346,6 +347,11 @@ export function paintFrame(ctx: Ctx, dots: Dots, scenery: Scenery): number {
   }
   game.queue.forEach((customer, index) => {
     const box = QUEUE[index], ants = customer.who === 'ants'
+    // A pelican gliding out of the queue is drawn in its place until it has gone; the one who joins is seen after it.
+    if (gliding && gliding.whom === index && scenery.show && scenery.show.away < 1) {
+      drawn += customerAt(ctx, dots, gliding.customer, scenery.leavingActor, { show: scenery.show }, box.x + 56, box.y + box.h - 4, 0.62, 210)
+      return
+    }
     const wide = customer.shares.length > 1 || customer.who === 'boa'
     drawn += customerAt(ctx, dots, customer, scenery.queue[index], {}, box.x + (ants ? 16 : customer.who === 'boa' ? 80 : 56), box.y + box.h - 4, 0.62, 210)
     drawn += ticket(ctx, customer, box.x + (wide ? 10 : 118), box.y + 30, wide ? 0.34 : customer.written ? 0.44 : 0.52)
