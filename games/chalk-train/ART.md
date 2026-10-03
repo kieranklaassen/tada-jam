@@ -139,9 +139,10 @@ No clock is read. The position moves when the ending starts, never inside a cycl
 - `train`: where the train stands and which way it faces, with its stripes and its tint from the puddle, each a chalk colour or none. A ride in progress is not stored: the train is saved where that ride comes to rest.
 - `water`: the puddle's colour, a chalk colour or none.
 - `riders`: at most four, each with its kind, its stop, its home, where it is (at the stop, aboard, or home), how far its trip has gone on chalk and on bare tar, and what the ride has done to it so far (small capped tallies of fast runs, corners, loops, splashes, bumps and scribbles), from which the ending is built.
+- `chalk`: the colour the next mark takes, the next of five pastels in a fixed order.
 - `shown`: the first showing has played.
 
-Whether the dandelion is in flower is read from the marks and not stored. The chalk colour of the next mark follows from the number of marks made in the stream and is the next of five pastels in a fixed order. A largest legal state is held under half of the 64 KB cap by a test.
+Whether the dandelion is in flower is read from the marks and not stored. A largest legal state is held under half of the 64 KB cap by a test.
 
 ## The characters and their fixed tastes
 
@@ -181,23 +182,55 @@ Each scene is a list of timed beats on the template's `scene.ts`, filled in from
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+The skill is drawing and scribbling as the mark-making that comes before letters, done with a finger. Each record was read again with `npm run -s education:find -- --id <pack id>` on 2026-10-03; standings and check states are as the lookup printed them that day.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels, as the lookup prints for reading and language. Age mapping: official.
+
+- Age 2: `infant-toddler`, the indicator for 23 through 36 months. No record of this lane carries making marks, so the game is designed from no California record for a two-year-old and names nothing in its place.
+- Age 3: `preschool-tk`, sub-band Early (3 to 4 ½ Years).
+- Age 4: `preschool-tk`, sub-bands Early (3 to 4 ½ Years) and Later (4 to 5 ½ Years), which overlap for the whole of age 4.
+
+Gap: none printed. No lane label applies.
+
+- `edu.us-ca.preschool-tk.reading-language.objective.language-and-literacy-development-foundational-language-development-strand-4-0-writing-4-4` (us-ca code 4.4 under Strand 4.0, Writing, of Language and Literacy Development; the code alone matches four records): department-published-foundation, confirmed. The game is designed from its statement for the earlier age only, which the record's Summary gives as: "At the earlier age (3 to 4½ years) the child's writing is scribble that looks like letters or characters and can be told apart from their drawings."
+  Limits taken: the earlier statement asks for no real letters, so the game shows, asks for and reads none. The statement for the later age, a few recognisable letters used to mean something, is not used. Matching letters to sounds and the child's own name belong to neighbouring foundations and are not in the game.
+  Left open by Limits: no shape of stroke, no tool and no surface is named. The five kinds of mark, the finger and the glass are the game's own choices.
+  Short of the record: the game offers scribbling and does not look at whether a child's scribble resembles writing or differs from their drawing. It carries the making of the marks and nothing more.
+
+Read and not used: the foundation on holding drawing and writing tools in the same strand, since a finger on glass holds no tool; and the mathematics foundation on flat shapes, since the game asks for no shape and names none.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels, as the lookup prints for reading and language. Age mapping: convention.
+
+- Ages 2 and 3: `peuters`.
+- Age 4: `peuters`, up to the fourth birthday, and `fase-1`, sub-band groep 1. The answer for age 4 also returns the `einde-po` lane, labelled end-of-primary goals; no record of that lane is used.
+
+Gap: none printed. None of the records below is a core goal, so none has a regime.
+
+- `edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-7` (nl Oriëntatie op geschreven taal / 7): curriculum-institute-guidance, confirmed. In the game's words: exploring writing, mainly through drawing, scribbling, shapes that look like letters and strings of marks.
+  Limits taken: it describes what is offered to children of about 2 to 4, not what a child must be able to do; the word is exploring; right spelling and how a pencil is held are not mentioned. The game takes drawing and scribbling from it and leaves out the letter-like shapes and the strings of marks.
+  Left open by Limits: no shape of stroke is named. The five kinds of mark are the game's own choice.
+- `edu.nl.peuters.reading-language.objective.inhoudskaart-nederlandse-taal-peuters-aanvankelijk-schrijven-orientatie-op-geschreven-taal-3` (nl Oriëntatie op geschreven taal / 3): curriculum-institute-guidance, confirmed. In the game's words: experiencing that drawing and written marks can be used to tell someone something.
+  Limits taken: the word is experiencing; it names drawing and marks and asks for no letters.
+  Left open by Limits: it does not say with whom. That the mark tells the engine and the riders where and how to go is the game's own choice.
+- `edu.nl.fase-1.reading-language.objective.inhoudskaart-nederlandse-taal-fase-1-schrijven-voorbereidend-schrijven-4` (nl Voorbereidend schrijven / 4): curriculum-institute-guidance, confirmed. In the game's words: writing with the child's own graphic means, which the statement lists as drawings, pictograms, scribbles and symbols.
+  Limits taken: it describes what a school offers in fase 1 for the youngest children, groep 1 and 2, and nothing says in which year; no letters and no words are named; right spelling is not named. The game takes drawings and scribbles from it. Pictograms, symbols, strings of letters, invented spelling, copying, stamps and typing are not in the game.
+
+Read and not used: the peuter mathematics record on making things with and on paper, since the game claims no mathematics and its surface is not paper.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **Age.** The Dutch peuter guidance covers ages 2 and 3. The California lane for age 2 holds no record on making marks, and the foundation used is for ages 3 and 4. For a two-year-old the game follows the Dutch records alone.
+- **What kind of statement.** The California foundation describes what a child's writing looks like at an age. The Dutch records describe what is offered: exploring, experiencing. The game follows the Dutch form: it offers, and it looks at no child.
+- **Drawing.** The Dutch peuter record counts drawing among the ways of exploring writing. The California statement speaks of scribble that differs from drawing. The game's marks are drawing and scribbling together, not told apart; it follows the Dutch records there, and from the California foundation it takes only that marks come before letters.
+- **Standing.** One is a foundation published by a state department; the others are guidance from the curriculum institute. Neither is a standard or the law, and the sheet treats them as unrelated statements.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Chalk Train is designed from one California learning foundation for preschool and transitional kindergarten, a foundation published by the state department of education and not a standard (us-ca 4.4 under Strand 4.0, Writing, its statement for the earlier age only; confirmed), from which it takes scribbling as mark-making before any letter, for ages 3 and 4; and from three statements of the Dutch curriculum institute's content cards for peuters and for fase 1, which are guidance and not law (nl Oriëntatie op geschreven taal / 7 and / 3, and Voorbereidend schrijven / 4; all confirmed), from which it takes exploring writing through drawing and scribbling, and experiencing that a mark can tell someone something, for ages 2 to 4. For a two-year-old it is designed from the Dutch guidance alone. The marks are made with a finger and no tool, no kind of stroke is named by any of these records, and the game shows no letter. It says nothing about what any child can do.
 
 ## The look
 
