@@ -3,9 +3,10 @@
 
 ## Status
 
-- Stage: sheet, being written (first two headings done). This run covers the sheet, the look spike and the rules; the toy waits for the template version the canvas pilot proves.
-- Look in use: none yet. First reserved look: comic-book halftone.
-- Open: the rest of the design sheet in `ART.md`, then its check.
+- Stage: sheet. The sheet is whole at commit `c4a4b13443211be0a75c6bbdc08f4d3e8cf3be72`; the hash of its sheet part there is `063c1a193bde3958c52b782016a8258be98dff4888f98896a8ac02242fa6a211`. This run (the first) covers the sheet, the look spike and the rules; the toy waits for the template version the canvas pilot proves.
+- Look in use: none yet. First reserved look: comic-book halftone; the spike is next.
+- Records: two records of the brief were dropped because the game does not carry them (`us-ca 4.MD.4`, a data record, and `us-ca 6.NS.6.c`, a number line with negative numbers), and one Dutch record was added that the Limits of another point to (`nl rw/gb/5/01/fase2`). The sheet says why for the second under `us-ca`; the first is simply not named, since the game shows no set of measurements.
+- Open: sheet ready for check, round 1
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
 
@@ -15,7 +16,12 @@ No entry yet. One entry a file copied from the template, written for the lead an
 
 ### For the owner to decide
 
-Nothing yet. One line for each thing only the owner can settle: the look and the toy at the toy checkpoint, a default the game would like changed, and anything the guide does not rule on.
+The game works under every default of the guide as written and asks for none to be changed. These are for the owner all the same:
+
+- **The give of a tin**: a cut within one twenty-fourth of the fruit's length counts as a fit. No record sets it. It decides how often a first cut succeeds, so it is the first thing to judge with a child at the toy checkpoint.
+- **No fraction on a piece the child cut.** Under the default on readings, the written fraction is laid only on what was ordered (the ticket and the tin), never on a cut piece. A child therefore never sees a name for a piece of its own making. If the owner would like a piece that lies exactly on ruled parts to show its fraction, that is a change to the default.
+- **A piece rings by its length** (half the length, an octave higher). It is true of a string and is used as a toy, not taught. Whether it stays is a matter of taste.
+- **The look**: comic-book halftone, at the toy checkpoint.
 
 ## Pass log
 
