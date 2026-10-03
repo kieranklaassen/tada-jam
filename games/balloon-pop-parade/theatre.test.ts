@@ -249,6 +249,25 @@ describe('a friend that is poked', () => {
   })
 })
 
+describe('the director', () => {
+  it.each(KINDS)('never has a %s take a poke the same way twice running', (kind) => {
+    const theatre = solo(kind, [kind, kind === 'duck' ? 'frog' : 'duck']), { frame, painter } = recorder()
+    const taken: string[] = []
+    for (let poke = 0; poke < 4; poke++) {
+      theatre.press(0, GROUND + 1, VIEW)
+      theatre.release(VIEW)
+      play(theatre, 0.3)
+      theatre.paint(painter, VIEW)
+      const pose = frame.poses.get('friend-0')!
+      taken.push([pose.y - GROUND, pose.bow, pose.puff, pose.headTurn, pose.squash, pose.x].map((value) => value.toFixed(1)).join(' '))
+      play(theatre, 2)
+    }
+    expect(taken[0]).not.toBe(taken[1])
+    expect(taken[1]).not.toBe(taken[2])
+    expect(taken[2]).not.toBe(taken[3])
+  })
+})
+
 describe('a balloon a friend holds', () => {
   it('pops the moment the finger lands on it, and the friend reaches up again', () => {
     const theatre = solo('crab', ['crab', 'duck']), { frame, painter } = recorder()

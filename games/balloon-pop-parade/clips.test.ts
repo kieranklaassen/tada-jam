@@ -4,7 +4,7 @@ import { blinkAt, clip, PERSONALITIES, rest, stride, walk, type ClipId } from '.
 import { restPose, type Pose } from './pose'
 
 const KINDS: KindName[] = ['duck', 'frog', 'hippo', 'crab']
-const CLIPS: ClipId[] = ['catch', 'refuse', 'liftOff', 'popped', 'poke', 'wave', 'proud', 'march']
+const CLIPS: ClipId[] = ['catch', 'refuse', 'liftOff', 'popped', 'poke', 'pokeB', 'wave', 'proud', 'march']
 
 /** A friend standing at the origin at this moment of a clip, or of its resting life when `id` is null. */
 function sample(kind: KindName, id: ClipId | null, t: number, holds = false, time = 10): Pose {
@@ -38,7 +38,7 @@ describe('the clips', () => {
     }
   })
 
-  it('give every kind eight motions that differ from each other', () => {
+  it('give every kind nine motions that differ from each other', () => {
     for (const kind of KINDS) for (const a of CLIPS) for (const b of CLIPS) {
       if (a < b) expect(apart(track(kind, a), track(kind, b)), `${kind}: ${a} and ${b}`).toBeGreaterThan(0.3)
     }
@@ -126,7 +126,7 @@ describe('the cues', () => {
   })
 
   it('answer a tap at once: every motion a touch starts is under way within a tenth of a second', () => {
-    for (const kind of KINDS) for (const id of ['poke', 'liftOff', 'wave'] as const) {
+    for (const kind of KINDS) for (const id of ['poke', 'pokeB', 'liftOff', 'wave'] as const) {
       const still = track(kind, id).slice(0, 15)
       const early = sample(kind, id, 0.1), rested = sample(kind, null, 0)
       const moved = Math.abs(early.y - rested.y) + Math.abs(early.squash - rested.squash) + Math.abs(early.armL - rested.armL) + Math.abs(early.armR - rested.armR) + Math.abs(early.wag - rested.wag) + Math.abs(early.puff - rested.puff) + Math.abs(early.x - rested.x)

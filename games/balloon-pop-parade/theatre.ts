@@ -1,5 +1,5 @@
 import { BODIES, type KindName } from './bodies'
-import { clip, PERSONALITIES, rest, stride, walk, type ClipId } from './clips'
+import { clip, PERSONALITIES, ramp, rest, stride, walk, type ClipId } from './clips'
 import { handPose, type Guidance, type HandPose } from './guidance'
 import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
 import { KIND_COLOURS, PALETTE, shade } from './palette'
@@ -43,11 +43,11 @@ type Flight = { bunch: Bunch; slot: number; given: Given; t: number; fromX: numb
 type Held = { x: number; y: number; vx: number; vy: number; shown: boolean }
 type Loose = { x: number; y: number; vx: number; vy: number; colour: string; flat: boolean; t: number; popAt: number }
 type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; life: number }
-/** `tug` is the bunch that carries a friend off, `landAfter` puts its landing sound a little after its neighbour's when a whole troop comes down, and `mirrored` has it refuse towards its other side, where the bunch hangs. */
+/** `tug` is the bunch that carries a friend off, `landAfter` puts its landing sound a little after its neighbour's when a whole troop comes down, `mirrored` has it refuse towards its other side, where the bunch hangs, `speed` is how fast this playing of a motion runs, and `lastPoke` is which way it last took a poke. */
 /** A drop of water from a cloud, and a dimple in the hill where it was touched. */
 type Drop = { x: number; y: number; vx: number; vy: number; life: number }
 type Dimple = { x: number; t: number }
-type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null; landAfter: number; mirrored?: boolean }
+type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null; landAfter: number; mirrored?: boolean; speed?: number; lastPoke?: ClipId }
 
 /** A troop that is only passing: one that marches off, or one that crosses to show a new idea. Short-lived, and no part of the save. */
 type Passing = { kind: KindName; size: number; held: boolean[]; actors: Actor[] }
@@ -492,8 +492,14 @@ export class Theatre {
       if (id !== 'poke') actor.next = id
       return
     }
+    // The director: a poke is never taken the same way twice running, and no motion a touch starts runs at quite the same speed twice.
+    if (id === 'poke') {
+      id = actor.lastPoke === 'poke' || (actor.lastPoke === undefined && this.random() < 0.5) ? 'pokeB' : 'poke'
+      actor.lastPoke = id
+    }
     actor.clip = id
     actor.t = 0
+    actor.speed = id === 'proud' || id === 'march' ? 1 : 0.93 + this.random() * 0.14
   }
 
   /** Plays `dt` seconds. */
@@ -553,7 +559,7 @@ export class Theatre {
       const actor = this.actors[i]
       if (!actor.clip) continue
       const before = actor.t
-      actor.t += dt
+      actor.t += dt * (actor.clip === 'liftOff' ? 1 : actor.speed ?? 1)
       if (actor.clip === 'liftOff') {
         const { letGo, land } = personality.cue
         if (before < letGo && actor.t >= letGo && actor.tug) {
@@ -760,7 +766,7 @@ export class Theatre {
    * served it is the troop that waits. Nothing of it shows while a scene plays or a bunch is in the air.
    */
   paint(painter: Painter, view: View, guidance: Guidance | null = null): void {
-    const kind = this.troop.kind, plan = BODIES[kind], colour = KIND_COLOURS[kind], cord = shade(colour, -0.3)
+    const kind = this.troop.kind, plan = BODIES[kind], colour = KIND_COLOURS[kind], cord = shade(colour, -0.3), personality = PERSONALITIES[kind]
     const pose = this.pose, time = this.time
     this.lastView = view
     const idle = guidance && !this.playing && this.flights.length === 0 && this.pressedSlot < 0 ? guidance : null
@@ -876,11 +882,22 @@ export class Theatre {
       painter.place(name, kind, pose)
       const floor = groundAt(pose.x, pose.z), lifted = pose.y - floor
       // The shadow stays on the hill and shrinks as the friend leaves it.
-      const spread = (1 / (1 + lifted * 0.5)) * (pose.scale / FRIEND_SCALE)
-      painter.shadow(pose.x, floor + 0.02, pose.z + 0.1, plan.halfWidth * FRIEND_SCALE * 1.05 * spread, 0.55 * spread, shade(colour, -0.35))
+      const shrunk = (1 / (1 + lifted * 0.5)) * (pose.scale / FRIEND_SCALE)
+      painter.shadow(pose.x, floor + 0.02, pose.z + 0.1, plan.halfWidth * FRIEND_SCALE * 1.05 * shrunk, 0.55 * shrunk, shade(colour, -0.35))
       handOf(plan, pose, this.hand)
       const balloon = this.held[i]
       if (balloon.shown) {
+        if (actor.clip === 'catch' && (kind === 'duck' || kind === 'hippo')) {
+          // The duck catches the string in its beak and the hippo lets it drop into its yawn; the hand takes it as the catch ends.
+          const taken = ramp(actor.t, personality.lasts.catch * 0.55, personality.lasts.catch * 0.92)
+          const c = Math.cos(pose.nod), n = Math.sin(pose.nod), wide = spread(pose.squash)
+          const mx = pose.x + plan.mouth[0] * wide * pose.scale
+          const my = pose.y + (plan.neck[1] + plan.mouth[1] * c - plan.mouth[2] * n) * pose.squash * pose.scale
+          const mz = pose.z + (plan.neck[2] + plan.mouth[1] * n + plan.mouth[2] * c) * wide * pose.scale
+          this.hand.x = mx + (this.hand.x - mx) * taken
+          this.hand.y = my + (this.hand.y - my) * taken
+          this.hand.z = mz + (this.hand.z - mz) * taken
+        }
         const lean = (this.hand.x - balloon.x) * -0.2 + balloon.vx * 0.03
         painter.balloon(balloon.x, balloon.y, 0.3, 1, 1, lean, colour)
         painter.string(balloon.x + Math.sin(lean) * BALLOON * 1.32, balloon.y - Math.cos(lean) * BALLOON * 1.32, 0.3, this.hand.x, this.hand.y, this.hand.z, cord)
@@ -1027,7 +1044,7 @@ export class Theatre {
       if (k < 0) continue
       const at = this.along(flight), offset = bunchOffsets(flight.bunch.count)[k]
       const plan = BODIES.frog
-      const mouthX = pose.x, mouthY = pose.y + (plan.neck[1] + 0.16) * pose.scale * pose.squash, mouthZ = 0.7 * pose.scale
+      const mouthX = pose.x, mouthY = pose.y + (plan.neck[1] + plan.mouth[1]) * pose.scale * pose.squash, mouthZ = (plan.neck[2] + plan.mouth[2]) * pose.scale
       const tipX = at.x + offset.x, tipY = at.y + offset.y - BALLOON * 1.25
       painter.string(mouthX, mouthY, mouthZ, mouthX + (tipX - mouthX) * out, mouthY + (tipY - mouthY) * out, mouthZ + (0.35 - mouthZ) * out, colour, 0.07)
     }

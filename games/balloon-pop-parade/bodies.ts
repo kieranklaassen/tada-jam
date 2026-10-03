@@ -34,6 +34,8 @@ export type Body = {
   extraOnHead: boolean
   /** Where a string is held, in the arm's own space. */
   hand: Vec3
+  /** The mouth, in the head's own space: where a duck's beak or a hippo's yawn takes a string before the hand has it, and where a frog's tongue comes from. */
+  mouth: Vec3
   /** The valve, on the trunk. */
   valve: Vec3
   /** Top of the head at rest, and the half-width of the whole toy at its widest, which is with its arms up. */
@@ -83,6 +85,7 @@ function duck(): Body {
     extraPivot: [0, 0.76, -0.56],
     extraOnHead: false,
     hand: [-0.06, -0.72, 0],
+    mouth: [0, 0.36, 0.82],
     valve: [0.5, 0.46, -0.48],
     height: 2.3,
     halfWidth: 1.06,
@@ -115,6 +118,7 @@ function frog(): Body {
     extraPivot: [0, 0.94, 0.5],
     extraOnHead: false,
     hand: [-0.06, -0.72, 0.06],
+    mouth: [0, 0.14, 0.66],
     valve: [-0.6, 0.9, -0.5],
     height: 1.98,
     halfWidth: 1.2,
@@ -145,6 +149,7 @@ function hippo(): Body {
     extraPivot: [0, 0.74, 0.66],
     extraOnHead: false,
     hand: [-0.04, -0.72, 0.02],
+    mouth: [0, 0.24, 0.8],
     valve: [0.74, 0.5, -0.56],
     height: 2.5,
     halfWidth: 1.3,
@@ -175,6 +180,7 @@ function crab(): Body {
     extraPivot: [0, 0, 0],
     extraOnHead: true,
     hand: [-0.12, -0.98, 0.04],
+    mouth: [0, -0.18, 0.44],
     valve: [0.6, 0.94, -0.4],
     height: 1.68,
     halfWidth: 1.34,

@@ -12,7 +12,7 @@ import { copyPose, restPose, type Pose } from './pose'
 // random number: the caller passes the time into the clip and a seed for the
 // friend, so a test can sample any moment of any motion.
 
-export type ClipId = 'catch' | 'refuse' | 'liftOff' | 'popped' | 'poke' | 'wave' | 'proud' | 'march'
+export type ClipId = 'catch' | 'refuse' | 'liftOff' | 'popped' | 'poke' | 'pokeB' | 'wave' | 'proud' | 'march'
 
 export type Personality = {
   /** Breaths a second at rest, and how deep. */
@@ -36,10 +36,10 @@ export type Personality = {
 }
 
 export const PERSONALITIES: Record<KindName, Personality> = {
-  duck: { breath: 0.42, depth: 0.02, blinkEvery: 2.6, lasts: { catch: 0.7, refuse: 1.0, liftOff: 1.9, popped: 0.9, poke: 0.6, wave: 0.7, proud: 1.1, march: 1.3 }, cue: { hit: 0.56, grab: 0.1, letGo: 1.0, land: 1.3 }, carried: 0.75, walk: 1.3, steps: 6 },
-  frog: { breath: 0.22, depth: 0.012, blinkEvery: 4.2, lasts: { catch: 0.85, refuse: 1.05, liftOff: 2.0, popped: 0.95, poke: 0.7, wave: 0.8, proud: 1.3, march: 1.6 }, cue: { hit: 0.52, grab: 0.38, letGo: 1.05, land: 1.35 }, carried: 0.9, walk: 1.5, steps: 3 },
-  hippo: { breath: 0.16, depth: 0.03, blinkEvery: 5.1, lasts: { catch: 1.15, refuse: 1.3, liftOff: 2.1, popped: 1.35, poke: 0.95, wave: 1.1, proud: 1.6, march: 2.0 }, cue: { hit: 0.72, grab: 0.5, letGo: 1.05, land: 1.22 }, carried: 0.09, walk: 2.0, steps: 4 },
-  crab: { breath: 0.6, depth: 0.014, blinkEvery: 1.9, lasts: { catch: 0.6, refuse: 0.85, liftOff: 1.8, popped: 0.86, poke: 0.5, wave: 0.6, proud: 0.9, march: 1.1 }, cue: { hit: 0.32, grab: 0.08, letGo: 1.0, land: 1.3 }, carried: 0.95, walk: 1.0, steps: 2 },
+  duck: { breath: 0.42, depth: 0.02, blinkEvery: 2.6, lasts: { catch: 0.7, refuse: 1.0, liftOff: 1.9, popped: 0.9, poke: 0.6, pokeB: 0.75, wave: 0.7, proud: 1.1, march: 1.3 }, cue: { hit: 0.56, grab: 0.1, letGo: 1.0, land: 1.3 }, carried: 0.75, walk: 1.3, steps: 6 },
+  frog: { breath: 0.22, depth: 0.012, blinkEvery: 4.2, lasts: { catch: 0.85, refuse: 1.05, liftOff: 2.0, popped: 0.95, poke: 0.7, pokeB: 0.9, wave: 0.8, proud: 1.3, march: 1.6 }, cue: { hit: 0.52, grab: 0.38, letGo: 1.05, land: 1.35 }, carried: 0.9, walk: 1.5, steps: 3 },
+  hippo: { breath: 0.16, depth: 0.03, blinkEvery: 5.1, lasts: { catch: 1.15, refuse: 1.3, liftOff: 2.1, popped: 1.35, poke: 0.95, pokeB: 1.3, wave: 1.1, proud: 1.6, march: 2.0 }, cue: { hit: 0.72, grab: 0.5, letGo: 1.05, land: 1.22 }, carried: 0.09, walk: 2.0, steps: 4 },
+  crab: { breath: 0.6, depth: 0.014, blinkEvery: 1.9, lasts: { catch: 0.6, refuse: 0.85, liftOff: 1.8, popped: 0.86, poke: 0.5, pokeB: 0.65, wave: 0.6, proud: 0.9, march: 1.1 }, cue: { hit: 0.32, grab: 0.08, letGo: 1.0, land: 1.3 }, carried: 0.95, walk: 1.0, steps: 2 },
 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
@@ -170,6 +170,13 @@ function duck(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.y += hump(t, 0.1, 0.3) * 0.08
     pose.wag = wobble(t, 0.04, 44, 6) * 0.9
     pose.lean += wobble(t, 0.05, 20, 7) * 0.08
+  } else if (id === 'pokeB') {
+    // The other way a duck takes a poke: a bow, bottom up, and the tail shaken at the sky.
+    pose.bow = hold(t, 0, 0.14, 0.5, 0.72) * 0.42
+    pose.flick = hold(t, 0.05, 0.2, 0.5, 0.7) * 1.1
+    pose.wag = Math.sin(t * 40) * 0.55 * hold(t, 0.12, 0.2, 0.5, 0.66)
+    pose.nod += hold(t, 0, 0.14, 0.5, 0.72) * 0.35
+    pose.squash += wobble(t, 0.55, 28, 8) * 0.06
   } else if (id === 'proud') {
     // Chest out, the free wing flapped twice, the tail up.
     pose.bow = hold(t, 0, 0.2, 0.8, 1.05) * -0.22
@@ -220,6 +227,12 @@ function frog(id: ClipId, t: number, pose: Pose): void {
     pose.squash += -hump(t, 0, 0.16) * 0.22 + hump(t, 0.16, 0.36) * 0.14 + wobble(t, 0.5, 22, 7) * 0.09
     pose.armL = pose.armR = 1.3 + hump(t, 0.16, 0.5) * 0.5
     pose.puff = 1 + hump(t, 0, 0.6) * 0.7
+  } else if (id === 'pokeB') {
+    // The other way a frog takes a poke: it stays put, shuts its eyes and its throat goes out twice, the second time further.
+    pose.puff = 1 + hump(t, 0.04, 0.34) * 0.7 + hump(t, 0.36, 0.8) * 1.0
+    pose.blink = Math.max(pose.blink, hold(t, 0.02, 0.1, 0.62, 0.78))
+    pose.squash += -hump(t, 0, 0.3) * 0.08 - hump(t, 0.36, 0.7) * 0.1
+    pose.tilt += hump(t, 0.36, 0.85) * 0.14
   } else if (id === 'proud') {
     // It sits up tall and blows its throat right out, holds it, and lets it down with a wobble.
     pose.squash += hold(t, 0, 0.3, 0.85, 1.15) * 0.1
@@ -265,6 +278,12 @@ function hippo(id: ClipId, t: number, pose: Pose): void {
     pose.lean += wobble(t, 0.05, 7.5, 2.4) * 0.16
     pose.tilt += wobble(t, 0.12, 7.5, 2.4) * -0.22
     pose.squash += -hump(t, 0, 0.26) * 0.09
+  } else if (id === 'pokeB') {
+    // The other way a hippo takes a poke: a slow look round at whoever did it, a yawn, and back.
+    pose.headTurn = hold(t, 0.1, 0.45, 0.85, 1.2) * 0.5
+    pose.nod += -hold(t, 0.45, 0.7, 0.9, 1.15) * 0.45
+    pose.puff = 1 + wobble(t, 0, 13, 3) * 0.16
+    pose.tilt += hold(t, 0.1, 0.45, 0.85, 1.2) * 0.14
   } else if (id === 'proud') {
     // Belly out, leaning back, the head tipping slowly from side to side.
     pose.bow = hold(t, 0, 0.5, 1.1, 1.5) * -0.18
@@ -314,6 +333,12 @@ function crab(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.armL = reach - hump(t, 0.02, 0.1) * 0.5
     pose.armR = reach - hump(t, 0.1, 0.18) * 0.5
     pose.squash += wobble(t, 0, 36, 9) * 0.06
+  } else if (id === 'pokeB') {
+    // The other way a crab takes a poke: down flat, eyes right up, and up again with a clack of the free claw.
+    pose.squash += -hold(t, 0, 0.1, 0.3, 0.42) * 0.24 + wobble(t, 0.42, 34, 9) * 0.06
+    pose.puff = 1 + hold(t, 0.04, 0.14, 0.34, 0.5) * 0.8
+    pose.armL = reach - Math.abs(Math.sin(t * 24)) * 0.5 * hold(t, 0.36, 0.42, 0.55, 0.62)
+    pose.wag = wobble(t, 0.3, 30, 7) * 0.3
   } else if (id === 'proud') {
     // The free claw high and clacking, the eyes up on their stalks, a shimmy.
     pose.armL = reach - Math.abs(Math.sin(t * 22)) * 0.55 * hold(t, 0.05, 0.15, 0.7, 0.85)
