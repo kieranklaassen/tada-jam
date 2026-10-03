@@ -7,11 +7,23 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.
+The manifest band is 2 to 5. Its youngest age, 2, governs every choice below.
+
+- **Age rule.** The cue table of wordless clarity has no row below 3, so its 3 to 4 row is the ceiling and the game cuts further (pack: game-design, ages-2-to-4.md). From that row's "Avoid" column, as hard limits: nothing to decode, no spoken instruction, no verdict, one live activity, and no tool on screen before it means something.
+- **What follows for the hand.** Everything essential is one tap. A drag is an extra that survives a lifted finger and counts when partly done. No hold, pinch, tilt, shake or double tap. Each friend is a target of about 100 logical pixels or more, well apart, and none stands in the bottom strip where wrists rest. A second tap on the same thing never does harm: it undoes the first.
+- **How much.** Four friends, one seesaw, one tray of sand. A whole ride fits in one to three minutes.
+- **Symbol rule.** The band starts below 6, so the kid side shows no word, letter, numeral or symbol, optional or not, and the game has no `symbols.ts`. Friends speak in invented, synthesized chirps; no voice instructs.
+- **What `ctx.childAge` sets.** Only where a first visit starts in the designed order: age 4 or older starts at `middle-asks`; age 3 or younger, or no age (`null`), starts at `little-asks`. Both ends are open: a younger or older child than the band gets the nearest row. A saved position always wins, age gates nothing, and every friend and every arrangement is reachable by any child from the first minute.
 
 ## The toy
 
-The one action the finger performs most, what it does in an empty scene with its sound and motion, and why repeating it is a pleasure with no goal.
+**The action.** The finger puts a friend on the seesaw. A tap on a friend standing in the sand makes it hop onto the end of the seesaw on its own side of the tray. A tap on a friend sitting on the seesaw makes it hop off into the sand on that side. A drag carries a friend, dangling, to anywhere: let go over an end and it lands there, on top of whoever already sits there; let go over the sand and it stands where it fell.
+
+**What it does in an empty scene.** One plank on a stone in a tray of sand, and four painted pebbles of plainly different sizes. The answer starts when the finger lands: the touched friend squashes, chirps in its own voice and looks at the finger. Then the chain: it hops in an arc, lands on the plank with a thump whose pitch falls with its size, the plank swings to the heavier side, the end that goes down bites into the sand and throws a ring of grains, and whoever sits on the end that goes up is tossed into the air, higher the lighter they are against what landed, and comes down on the plank again with a squash and a squeak. The plank rocks and settles. A friend who lands on the high end without tipping it just dangles up there, legs kicking, and the plank creaks.
+
+**The sand answers too.** A tap on bare sand leaves a dimple and a soft hiss; a finger drawn through it leaves a groove that the low light picks out. A tap on the plank makes it rock once with whoever is on it.
+
+**Why repeating it is a pleasure with no goal.** It is dropping and flinging, which toddlers repeat unprompted: a small cause, a large and slightly different effect each time, and nothing that can go wrong. Any friend, tapped at any moment, does something, and the same tap takes it back. Who flies, how high, which end slams down and who ends up sitting on whom all change with who was already there, so the child is running small experiments without being asked anything.
 
 ## The object-by-action grid, and what is new on day 15
 
