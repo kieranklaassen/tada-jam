@@ -126,7 +126,8 @@ function holds(world: World, before: World, happened: Happening[]): void {
   if (world.cycle) {
     expect(isSound(world.cycle)).toBe(true)
     expect(isOver(world.cycle)).toBe(world.finished)
-    expect(world.cycle.kinds).not.toContain(world.extra)
+    // The egg in the basket is never of a kind in the row it could be tipped into.
+    if (!world.finished) expect(world.cycle.kinds).not.toContain(world.extra)
     expect(world.cycle.kinds.length).toBeLessThanOrEqual(ROW_MAX)
   }
   expect(world.hill.length).toBeLessThanOrEqual(HILL_MAX)

@@ -19,7 +19,7 @@ function playable(world: World): void {
   if (world.cycle) {
     expect(isSound(world.cycle)).toBe(true)
     expect(isOver(world.cycle)).toBe(world.finished)
-    expect(world.cycle.kinds).not.toContain(world.extra)
+    if (!world.finished) expect(world.cycle.kinds).not.toContain(world.extra)
   } else expect(world.finished).toBe(true)
   expect(world.hill.length).toBeLessThanOrEqual(HILL_MAX)
   expect(new Set(world.hill.map((resident) => resident.kind)).size).toBe(world.hill.length)

@@ -13,7 +13,7 @@ const frozen = <T>(value: T): T => {
 
 /** A world at a place, with a clutch of the test's own waiting at the edge and every way of asking already shown. */
 function worldWith(next: Clutch, position = next.place): World {
-  return { ...freshWorld(null), position, shown: [...FORMS], next }
+  return { ...freshWorld(null), position, shown: [...FORMS], next, extra: 'dooo' }
 }
 
 /** Plays taps in order and returns the world and everything that happened. `act` must never change what it is given. */
@@ -42,7 +42,9 @@ describe('a first visit', () => {
     expect(world.hill).toEqual([])
     expect(world.position).toBe('two-eggs')
     expect(world.next).toEqual(layClutch('two-eggs', FIRST_SEED).clutch)
-    expect(waitingOf(world)).toEqual({ what: 'grown', kind: world.next!.queue[0], withClutch: true })
+    expect(waitingOf(world)).toEqual({ what: 'grown', kind: world.next!.queue[0], withClutch: true, form: 'seek' })
+    // No basket before the second clutch: nothing is on screen before it means something.
+    expect(world.extra).toBeNull()
   })
 
   it('starts a child of four one place further on, and a saved place is not asked about here', () => {
@@ -61,8 +63,8 @@ describe('a first visit', () => {
     expect(first.world.cycle!.kinds).not.toContain(shown.kind)
     expect(first.world.hill).toEqual([{ kind: shown.kind, as: 'family' }])
     expect(first.world.shown).toEqual(['seek'])
-    expect(first.world.extra).not.toBeNull()
-    expect([...first.world.cycle!.kinds, shown.kind]).not.toContain(first.world.extra)
+    expect(first.world.extra).toBeNull()
+    expect(play(first.world, { type: 'basket' }).happened).toEqual([{ type: 'basket', kind: null }])
   })
 })
 
@@ -72,7 +74,7 @@ describe('seek: a grown one asks, and the child finds its own', () => {
     expect(types(happened)).toEqual(['arrives', 'asks'])
     expect(world.cycle!.asker).toBe('hoom')
     expect(world.finished).toBe(false)
-    expect(waitingOf(world)).toEqual({ what: 'grown', kind: 'pip', withClutch: false })
+    expect(waitingOf(world)).toEqual({ what: 'grown', kind: 'pip', withClutch: false, form: 'seek' })
 
     ;({ world, happened } = play(world, slot(1)))
     expect(happened).toEqual([{ type: 'hears', slot: 1, kind: 'hoom', asker: 'hoom' }])
@@ -164,7 +166,7 @@ describe('who: the hidden one asks, and the child sends the grown one whose voic
   it('opens the egg only for its own, and a wrong knock changes nothing but what is heard', () => {
     let { world, happened } = play(worldWith(who()), edge)
     expect(types(happened)).toEqual(['arrives', 'asks'])
-    expect(waitingOf(world)).toEqual({ what: 'egg', kind: 'hoom', withClutch: false })
+    expect(waitingOf(world)).toEqual({ what: 'egg', kind: 'hoom', withClutch: false, form: 'who' })
 
     ;({ world, happened } = play(world, slot(0), slot(0)))
     expect(types(happened)).toEqual(['hears', 'meets'])
@@ -200,7 +202,7 @@ describe('alike: nobody asks, and the first one let out asks for the other that 
 
   it('waits as a clutch, and a first opening is free', () => {
     const before = worldWith(alike())
-    expect(waitingOf(before)).toEqual({ what: 'clutch', kind: null, withClutch: true })
+    expect(waitingOf(before)).toEqual({ what: 'clutch', kind: null, withClutch: true, form: 'alike' })
     let { world, happened } = play(before, edge)
     expect(types(happened)).toEqual(['arrives'])
     expect(waitingOf(world)).toBeNull()
@@ -277,18 +279,42 @@ describe('the basket: one more egg, if the child wants it', () => {
     expect(world.extra).toBe(extra)
   })
 
-  it('is filled again when the next clutch comes, once its egg has been tipped in', () => {
-    let { world } = play(worldWith(seekTwo()), edge, { type: 'basket' })
-    expect(world.extra).toBeNull()
+  /** Plays the clutch on screen to its end without a wrong attempt. */
+  const finish = (world: World): World => {
     while (!world.finished) {
       const cycle = world.cycle!
       const at = cycle.asker === null ? -1 : cycle.kinds.indexOf(cycle.asker)
       ;({ world } = at < 0 ? play(world, edge) : play(world, slot(at), slot(at)))
     }
+    return world
+  }
+
+  it('gets its next egg when the next clutch is laid out, once its egg has been tipped in', () => {
+    let { world } = play(worldWith(seekTwo()), edge, { type: 'basket' })
     expect(world.extra).toBeNull()
-    ;({ world } = play(world, edge))
+    world = finish(world)
     expect(world.extra).not.toBeNull()
-    expect(world.cycle!.kinds).not.toContain(world.extra)
+    expect(world.next!.kinds).not.toContain(world.extra)
+    const laid = world.extra
+    ;({ world } = play(world, edge))
+    expect(world.extra).toBe(laid)
+  })
+
+  it('is not there in the first clutch of a first visit, and holds its first egg when the second is laid out', () => {
+    let { world } = play(freshWorld(null), edge)
+    expect(world.extra).toBeNull()
+    expect(canTip(world)).toBe(false)
+    world = finish(world)
+    expect(world.extra).not.toBeNull()
+    expect(world.next!.kinds).not.toContain(world.extra)
+  })
+
+  it('tips into a row of grown ones too: the egg joins those that will come to the stone', () => {
+    const who: Clutch = { form: 'who', place: 'who-is-inside', kinds: ['pip', 'tok', 'hoom'], slots: ['fresh', 'fresh', 'fresh'], queue: ['tok', 'hoom', 'pip'], asker: null, wrong: 0 }
+    const { world, happened } = play(worldWith(who), edge, { type: 'basket' })
+    expect(happened[happened.length - 1]).toEqual({ type: 'tips', slot: 3, kind: 'dooo' })
+    expect(world.cycle!.kinds).toEqual(['pip', 'tok', 'hoom', 'dooo'])
+    expect(world.cycle!.queue).toEqual(['hoom', 'pip', 'dooo'])
   })
 })
 

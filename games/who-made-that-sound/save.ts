@@ -58,11 +58,10 @@ export function deserializeWorld(raw: unknown, childAge: number | null = null): 
   const hill = readHill(raw.hill)
   const cycle = readClutch(raw.cycle)
   let extra = isKind(raw.extra) ? raw.extra : null
-  // The egg in the basket is never of a kind that is in the row.
-  if (extra !== null && cycle?.kinds.includes(extra)) extra = null
-
   // The clutch on screen says whether its cycle is over, whatever the flag beside it says.
   const playing = cycle !== null && !isOver(cycle)
+  // The egg in the basket is never of a kind that is in the row.
+  if (extra !== null && playing && cycle.kinds.includes(extra)) extra = null
   let next = playing ? null : readClutch(raw.next)
   if (next && (!isUntouched(next) || next.place !== base.position || (extra !== null && next.kinds.includes(extra)))) next = null
   if (!playing && !next) {

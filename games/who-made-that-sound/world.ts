@@ -27,7 +27,7 @@ export type World = GameState & {
   shown: Form[]
   /** Who stands on the hill, oldest first, never two of one kind. */
   hill: Resident[]
-  /** The kind inside the egg in the basket, or null when that egg has been tipped into the row. */
+  /** The kind inside the egg in the basket, or null: before the second clutch of a first visit, and after that egg has been tipped in. The basket is on screen only while an egg is in it. */
   extra: Kind | null
   /** The clutch that waits at the edge while `finished` is true. */
   next: Clutch | null
@@ -92,15 +92,19 @@ export function outcomeOf(wrong: number): CycleOutcome {
   return wrong <= 0 ? 'well' : wrong === 1 ? 'mixed' : 'badly'
 }
 
-/** What waits at the edge for the child's touch, if anything: a grown one, an egg (in `who`), or a whole clutch. */
-export type Waiting = { what: 'grown' | 'egg' | 'clutch'; kind: Kind | null; withClutch: boolean }
+/**
+ * What waits at the edge for the child's touch, if anything. Inside a cycle it is the next one to ask: a grown
+ * one, or in `who` an egg. Between cycles it is the next clutch in its nest (`withClutch`): with the grown one
+ * who will ask first, in `who` with the grown ones of the row standing around it, in `alike` by itself.
+ */
+export type Waiting = { what: 'grown' | 'egg' | 'clutch'; kind: Kind | null; withClutch: boolean; form: Form }
 
 export function waitingOf(world: World): Waiting | null {
   const clutch = world.finished ? world.next : world.cycle
   if (!clutch) return null
   if (!world.finished && (clutch.queue.length === 0 || clutch.form === 'alike')) return null
-  if (clutch.form === 'alike') return { what: 'clutch', kind: null, withClutch: true }
-  return { what: clutch.form === 'who' ? 'egg' : 'grown', kind: clutch.queue[0], withClutch: world.finished }
+  if (clutch.form === 'alike') return { what: 'clutch', kind: null, withClutch: true, form: 'alike' }
+  return { what: clutch.form === 'who' ? 'egg' : 'grown', kind: clutch.queue[0], withClutch: world.finished, form: clutch.form }
 }
 
 /** Two kinds of one family, tapped one straight after the other on the hill, sing a round. Every time. */
@@ -108,7 +112,7 @@ export function singsRound(first: Kind, second: Kind): boolean {
   return isNear(first, second)
 }
 
-/** Whether a tap on the basket would tip its egg into the row. */
+/** Whether a tap on the basket would tip its egg in. Where it would not, the one inside calls and the egg stays. */
 export function canTip(world: World): boolean {
   const cycle = world.cycle
   return world.extra !== null && cycle !== null && !world.finished && cycle.form !== 'alike' && cycle.kinds.length < ROW_MAX
@@ -149,6 +153,12 @@ function endIfOver(world: World, happened: Happening[]): void {
   const laid = layClutch(world.position, world.rng, world.extra)
   world.next = laid.clutch
   world.rng = laid.rng
+  // An empty basket gets its next egg now, when the next clutch is laid out: of a kind that clutch does not hold.
+  if (world.extra === null) {
+    const egg = layOther(laid.clutch.kinds, world.rng)
+    world.extra = egg.kind
+    world.rng = egg.rng
+  }
   happened.push({ type: 'ends', found: world.hill.filter((resident) => cycle.kinds.includes(resident.kind)).map((resident) => resident.kind) })
 }
 
@@ -181,19 +191,12 @@ function comeIn(world: World, happened: Happening[]): void {
   world.cycle = cycle
   world.next = null
   happened.push({ type: 'arrives', form: cycle.form, row: cycle.kinds.length })
-  let shower: Kind | null = null
   if (!world.shown.includes(cycle.form)) {
-    const other = layOther([...cycle.kinds, world.extra], world.rng)
-    world.rng = other.rng
-    shower = other.kind
+    const shower = layOther([...cycle.kinds, world.extra], world.rng)
+    world.rng = shower.rng
     world.shown = [...world.shown, cycle.form]
-    happened.push({ type: 'shows', form: cycle.form, kind: shower })
-    settle(world, { kind: shower, as: cycle.form === 'alike' ? 'twins' : 'family' }, happened)
-  }
-  if (world.extra === null) {
-    const egg = layOther([...cycle.kinds, shower], world.rng)
-    world.rng = egg.rng
-    world.extra = egg.kind
+    happened.push({ type: 'shows', form: cycle.form, kind: shower.kind })
+    settle(world, { kind: shower.kind, as: cycle.form === 'alike' ? 'twins' : 'family' }, happened)
   }
   stepIn(world, happened)
 }
