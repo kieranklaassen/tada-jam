@@ -31,13 +31,21 @@ export const LIKES: Record<'bear' | 'mouse' | 'hen', number> = { bear: 0.94, mou
 /** How a guest's lift of its cup went, as the guest finds it. Nothing here is shown to the child as a verdict: the view plays what this much tea does. */
 export type LiftTaste = 'right' | 'short' | 'over'
 
+/**
+ * A guest is noted once in a sitting. Not to taste: the first time it finds,
+ * after a pour, more tea than it likes or tea in a cup too small for it. To
+ * taste: it drinks without having been noted. Too little in a cup of the right
+ * size is never noted, so a pour made in several presses is never a miss.
+ */
+export type GuestNote = 'to-taste' | 'not-to-taste'
+
 /** What is noted about one guest during a sitting. */
 export type GuestState = {
   who: GuestId
   /** 0 at the left; a party of n uses seats 0 to n - 1. */
   seat: number
-  /** The first time this guest lifted its cup in this sitting, or null if it has not yet. */
-  firstLift: LiftTaste | null
+  /** What is noted about this guest for the sitting: once, and never changed after. Null while nothing is noted yet. */
+  note: GuestNote | null
   /** It has drunk a cup to its taste in this sitting. */
   content: boolean
 }

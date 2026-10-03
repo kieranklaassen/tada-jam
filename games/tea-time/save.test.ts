@@ -25,7 +25,7 @@ function played(finished: boolean): TeaState {
   pourInto(world, 'cup-hen', 0.43219)
   Object.assign(thingById(world, 'sponge')!, { x: -1.23456, z: 0.98765, tea: 0.07 })
   const state = withWorld(open, world)
-  const guests = state.guests.map((guest, index) => ({ ...guest, firstLift: (['over', 'right', null] as const)[index], content: index === 1 }))
+  const guests = state.guests.map((guest, index) => ({ ...guest, note: (['not-to-taste', 'to-taste', null] as const)[index], content: index === 1 }))
   return { ...state, finished, shown: ['pour', 'lay'], guests, tools: { sponge: true, bowl: true }, waiting: finished ? partyFor('whose-cup', 99).party : null }
 }
 
@@ -60,7 +60,7 @@ describe('a round trip through storage', () => {
     expect(thingById(worldOf(back), 'saucer-3')?.tea).toBe(dishOf('house').holds)
     expect(thingById(worldOf(back), 'cup-hen')).toMatchObject({ tea: 0.432, on: null, heldBy: 'hen' })
     expect(puddled(worldOf(back))).toBeCloseTo(0.3, 3)
-    expect(back.guests.map((guest) => [guest.seat, guest.firstLift, guest.content])).toEqual([[0, 'over', false], [1, 'right', true], [2, null, false]])
+    expect(back.guests.map((guest) => [guest.seat, guest.note, guest.content])).toEqual([[0, 'not-to-taste', false], [1, 'to-taste', true], [2, null, false]])
   })
 
   it('stores these keys and no others, and no tea for the pot', () => {
@@ -101,11 +101,11 @@ describe('a damaged record', () => {
     ['a cloth with a cell that is not a number', (r) => (r.puddles[5] = null), dry],
     ['a cloth that is not a list', (r) => (r.puddles = { 0: 1 }), dry],
     ['a cell below nothing and one over what a cell holds', (r) => r.puddles.splice(0, 2, -1, 9), (s) => ({ puddles: [0, CELL_HOLDS, ...s.puddles.slice(2)] })],
-    ['a first lift that is no taste', (r) => (r.guests[0].firstLift = 'yum'), (s) => guestIs(s, 0, { firstLift: null })],
+    ['a note that is no note', (r) => (r.guests[0].note = 'yum'), (s) => guestIs(s, 0, { note: null })],
     ['a mark of having drunk that is not true or false', (r) => (r.guests[1].content = 'yes'), (s) => guestIs(s, 1, { content: false })],
     ['seats that are not 0 to n - 1', (r) => r.guests.forEach((guest: Stored) => (guest.seat = 7)), same],
-    ['a guest nobody knows', (r) => r.guests.splice(1, 0, { who: 'fox', seat: 1, firstLift: null, content: true }), same],
-    ['a guest seated twice', (r) => r.guests.push({ ...r.guests[0], firstLift: 'short', content: true }), same],
+    ['a guest nobody knows', (r) => r.guests.splice(1, 0, { who: 'fox', seat: 1, note: null, content: true }), same],
+    ['a guest seated twice', (r) => r.guests.push({ ...r.guests[0], note: 'not-to-taste', content: true }), same],
     ['more tea than a cup holds', (r) => (find(r, 'cup-hen').tea = 7), (s) => thingIs(s, 'cup-hen', { tea: 1 })],
     ['less tea than none', (r) => (find(r, 'cup-hen').tea = -2), (s) => thingIs(s, 'cup-hen', { tea: 0 })],
     ['tea that is not a number', (r) => (find(r, 'cup-bear').tea = 'lots'), (s) => thingIs(s, 'cup-bear', { tea: 0 })],
@@ -129,8 +129,8 @@ describe('a damaged record', () => {
   const tables: [string, (record: Stored) => void][] = [
     ['guests that are not a list', (r) => (r.guests = 'bear')],
     ['no guests', (r) => (r.guests = [])],
-    ['only guests nobody knows', (r) => (r.guests = [{ who: 'fox', seat: 0, firstLift: null, content: false }])],
-    ['more guests than seats', (r) => (r.guests = ['bear', 'mouse', 'hen', 'duckling-a', 'duckling-b'].map((who, seat) => ({ who, seat, firstLift: null, content: false })))],
+    ['only guests nobody knows', (r) => (r.guests = [{ who: 'fox', seat: 0, note: null, content: false }])],
+    ['more guests than seats', (r) => (r.guests = ['bear', 'mouse', 'hen', 'duckling-a', 'duckling-b'].map((who, seat) => ({ who, seat, note: null, content: false })))],
     ['things that are not a list', (r) => (r.things = { pot: true })],
     ['no pot', (r) => (r.things = r.things.filter((thing: Thing) => thing.kind !== 'pot'))],
     ['more things than a table has', (r) => { while (r.things.length <= MOST_THINGS) r.things.push({ ...find(r, 'bowl'), id: `bowl-${r.things.length}` }) }],
@@ -141,7 +141,7 @@ describe('a damaged record', () => {
     damage(record)
     const laid = partyFor(good().position, good().seed)
     const back = deserializeTea(record, 6)
-    expect(back).toEqual({ ...good(), finished: false, waiting: null, seed: laid.seed, things: setTable(laid.party).things, guests: laid.party.guests.map((guest, seat) => ({ who: guest.who, seat, firstLift: null, content: false })) })
+    expect(back).toEqual({ ...good(), finished: false, waiting: null, seed: laid.seed, things: setTable(laid.party).things, guests: laid.party.guests.map((guest, seat) => ({ who: guest.who, seat, note: null, content: false })) })
     expect(reopen(back)).toEqual(back)
   })
 
@@ -192,7 +192,7 @@ describe('what is not this game\'s record', () => {
   it('opens a first visit on a guest already sitting, wanting tea, at a dry table', () => {
     const fresh = freshTeaState(null)
     expect(fresh).toMatchObject({ v: STATE_VERSION, position: LADDER[0], finished: false, shown: [], tools: { sponge: false, bowl: false }, waiting: null })
-    expect(fresh.guests).toEqual([{ who: 'bear', seat: 0, firstLift: null, content: false }])
+    expect(fresh.guests).toEqual([{ who: 'bear', seat: 0, note: null, content: false }])
     expect(thingById(fresh, 'cup-bear')).toMatchObject({ on: 'saucer-3', tea: 0 })
     expect(teaOut(fresh)).toBe(0)
     expect(Number.isInteger(fresh.seed) && fresh.seed !== 0).toBe(true)

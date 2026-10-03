@@ -2,7 +2,7 @@ import { LADDER } from './config'
 import { CUP_HOLDS, type CupSize } from './forms'
 import { SEAT_COUNT, onCloth } from './layout'
 import { FIRST_SEED, partyFor, setTable } from './order'
-import { GUEST_IDS, SHOWINGS, type GuestState, type LiftTaste, type Party, type PartyGuest, type Showing } from './party'
+import { GUEST_IDS, SHOWINGS, type GuestNote, type GuestState, type Party, type PartyGuest, type Showing } from './party'
 import { STATE_VERSION, deserialize, freshState, serialize, type GameState } from './state'
 import { CELL_HOLDS, PUDDLE_COLS, PUDDLE_ROWS, holds, type GuestId, type Thing, type ThingKind, type World } from './world'
 
@@ -38,7 +38,7 @@ export const MOST_THINGS = 40
 
 const KINDS: readonly ThingKind[] = ['pot', 'cup', 'saucer', 'spoon', 'sponge', 'bowl']
 const SIZES = Object.keys(CUP_HOLDS) as CupSize[]
-const TASTES: readonly LiftTaste[] = ['right', 'short', 'over']
+const NOTES: readonly GuestNote[] = ['to-taste', 'not-to-taste']
 const CUPS: readonly PartyGuest['cup'][] = ['own', 'none']
 const CELLS = PUDDLE_COLS * PUDDLE_ROWS
 
@@ -50,7 +50,7 @@ const between = (value: number, low: number, high: number): number => Math.max(l
 const rounded = (value: number, parts: 100 | 1000): number => Math.round(value * parts) / parts + 0
 
 /** A party seated: left to right in its order, nobody has lifted a cup or drunk. */
-const seated = (party: Party): GuestState[] => party.guests.map((guest, seat) => ({ who: guest.who, seat, firstLift: null, content: false }))
+const seated = (party: Party): GuestState[] => party.guests.map((guest, seat) => ({ who: guest.who, seat, note: null, content: false }))
 
 /** A first load opens on a guest who is already sitting and wanting tea: the party for the starting position, at a dry table. */
 export function freshTeaState(childAge: number | null): TeaState {
@@ -66,7 +66,7 @@ function readGuests(raw: unknown): GuestState[] | null {
   const guests: GuestState[] = []
   for (const item of raw) {
     if (!isRecord(item) || !oneOf(GUEST_IDS, item.who) || guests.some((guest) => guest.who === item.who)) continue
-    guests.push({ who: item.who, seat: isNumber(item.seat) ? item.seat : -1, firstLift: oneOf(TASTES, item.firstLift) ? item.firstLift : null, content: item.content === true })
+    guests.push({ who: item.who, seat: isNumber(item.seat) ? item.seat : -1, note: oneOf(NOTES, item.note) ? item.note : null, content: item.content === true })
   }
   if (guests.length === 0) return null
   // Seats that are 0 to n - 1, each taken once, are as the child left them. Anything else is numbered again in the order of the list.
@@ -184,7 +184,7 @@ function copyOf(state: TeaState, grain: boolean): TeaState {
     ...serialize(state),
     seed: state.seed,
     shown: [...state.shown],
-    guests: state.guests.map((guest) => ({ who: guest.who, seat: guest.seat, firstLift: guest.firstLift, content: guest.content })),
+    guests: state.guests.map((guest) => ({ who: guest.who, seat: guest.seat, note: guest.note, content: guest.content })),
     things: state.things.map((thing) => ({
       id: thing.id, kind: thing.kind, size: thing.size, ring: thing.ring, owner: thing.owner,
       x: along(thing.x), z: along(thing.z), on: thing.on, heldBy: thing.heldBy,
@@ -234,7 +234,7 @@ export function largestState(): TeaState {
     finished: true,
     seed: 0xffffffff,
     shown: [...SHOWINGS],
-    guests: who.map((guest, seat) => ({ who: guest, seat, firstLift: 'short', content: false })),
+    guests: who.map((guest, seat) => ({ who: guest, seat, note: 'not-to-taste', content: false })),
     things,
     tools: { sponge: false, bowl: false },
     puddles: new Array<number>(CELLS).fill(CELL_HOLDS),
