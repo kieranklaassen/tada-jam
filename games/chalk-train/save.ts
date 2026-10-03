@@ -1,7 +1,7 @@
 import { CHALK_COUNT, MAX_MARK_POINTS, addMark, type Mark } from './marks'
 import { deserialize as readBase, serialize as writeBase, STATE_VERSION } from './state'
 import { FEELS, FELT_CAP, isRiderKind, noFeels, type Felt } from './tastes'
-import { MAX_RIDERS, NONE, SEATS, WHERES, busyPlaces, ensureNext, freshWorld, type Rider, type Train, type Where, type World } from './world'
+import { MAX_RIDERS, NONE, SEATS, WHERES, busyPlaces, ensureNext, freshWorld, inPlay, stepIn, type Rider, type Train, type Where, type World } from './world'
 import { ENGINE_START, isPlaceId, onTar, type Pt } from './yard'
 
 // The saved world: small plain JSON, versioned, and read defensively. The
@@ -93,7 +93,7 @@ function readRiders(value: unknown): Rider[] {
     let at = r.a as Where
     if (at === 'train' && ++aboard > SEATS) at = 'stop'
     // No kind twice, and no place in use by two riders.
-    const waits = at === 'stop' || at === 'next' || at === 'coming'
+    const waits = at === 'stop' || at === 'next' || at === 'pair'
     const busy = busyPlaces(riders)
     if (riders.some((x) => x.kind === r.k) || busy.includes(r.h) || (waits && busy.includes(r.s))) continue
     riders.push({ kind: r.k, stop: r.s, home: r.h, at, chalk: amount(r.c), tar: amount(r.t), felt: readFelt(r.f) })
@@ -121,13 +121,10 @@ export function deserialize(raw: unknown, childAge: number | null, seed: number)
     riders: readRiders(r.riders),
     shown: r.shown === true,
   }
-  const inPlay = (w: World) => w.riders.some((x) => x.at === 'stop' || x.at === 'train')
-  if (!world.finished && !inPlay(world)) {
-    // Someone waiting steps in, or a rider is laid out for the position as it stands.
-    world = ensureNext(world)
-    world = { ...world, riders: world.riders.map((x): Rider => (x.at === 'next' || x.at === 'coming' ? { ...x, at: 'stop' } : x)) }
-  }
+  const someoneInPlay = (w: World) => w.riders.some(inPlay)
+  // Someone waiting steps in, or a rider is laid out for the position as it stands.
+  if (!world.finished && !someoneInPlay(world)) world = stepIn(ensureNext(world))
   // A finished cycle with nobody home and someone still in play has no ending to stand.
-  if (world.finished && inPlay(world) && !world.riders.some((x) => x.at === 'home')) world = { ...world, finished: false }
+  if (world.finished && someoneInPlay(world) && !world.riders.some((x) => x.at === 'home')) world = { ...world, finished: false }
   return world
 }

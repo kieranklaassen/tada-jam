@@ -1,10 +1,10 @@
 import { NEAR, layOut, layOutCompanion } from './layouts'
 import { readMark, tidy, type Mark } from './marks'
-import { inside } from './path'
+import { inside, middle } from './path'
 import { makeRng } from './rng'
 import { beginCycle, freshState, type GameState } from './state'
 import { noFeels, type Felt, type RiderKind } from './tastes'
-import { DANDELION, ENGINE_PLACE, ENGINE_START, PLACES, PLACE_IDS, RAIL_DROP, distance, type PlaceId, type Pt } from './yard'
+import { DANDELION, ENGINE_PLACE, ENGINE_START, PLACES, PLACE_IDS, RAIL_DROP, distance, inPuddle, type PlaceId, type Pt } from './yard'
 
 // The model of the world: the chalk on the tar, the train, the water, and the
 // riders. It is always at rest. A ride is worked out whole when a mark is
@@ -14,11 +14,12 @@ import { DANDELION, ENGINE_PLACE, ENGINE_START, PLACES, PLACE_IDS, RAIL_DROP, di
 /**
  * Where a rider is. The design sheet's three places, at the stop, aboard and
  * home, in a finer grain: `before` is home from the cycle before, `next` is
- * waiting at its stop for the cycle to come, and `coming` is the second rider
- * of a layout for two, laid out with the first and drawn in when its cycle begins.
+ * waiting at its stop for the cycle to come, and `pair` is waiting in the same
+ * way as the first rider of a layout for two, whose second rider is drawn in
+ * at its stop when that cycle begins.
  */
-export type Where = 'before' | 'stop' | 'train' | 'home' | 'next' | 'coming'
-export const WHERES: readonly Where[] = ['before', 'stop', 'train', 'home', 'next', 'coming']
+export type Where = 'before' | 'stop' | 'train' | 'home' | 'next' | 'pair'
+export const WHERES: readonly Where[] = ['before', 'stop', 'train', 'home', 'next', 'pair']
 
 export type Rider = {
   kind: RiderKind
@@ -51,6 +52,7 @@ export type World = GameState & {
   shown: boolean
 }
 
+/** Never more than four riders: two of the layout in play, one waiting, one at home. */
 export const MAX_RIDERS = 4
 /** The train has two wagons. */
 export const SEATS = 2
@@ -59,6 +61,11 @@ const UNDER_TRAIN = 150
 
 const rider = (l: { kind: RiderKind; stop: PlaceId; home: PlaceId }, at: Where): Rider => ({ ...l, at, chalk: 0, tar: 0, felt: noFeels() })
 
+/** Waiting at its stop for the cycle to come. */
+export const waitsAhead = (r: Rider): boolean => r.at === 'next' || r.at === 'pair'
+/** In play: waiting to be taken, or aboard. */
+export const inPlay = (r: Rider): boolean => r.at === 'stop' || r.at === 'train'
+
 /** The spot on a rail that runs past a place. */
 export const railAt = (place: PlaceId): Pt => ({ x: PLACES[place].x, y: PLACES[place].y + RAIL_DROP })
 
@@ -66,7 +73,7 @@ export const railAt = (place: PlaceId): Pt => ({ x: PLACES[place].x, y: PLACES[p
 export function busyPlaces(riders: readonly Rider[]): PlaceId[] {
   const busy: PlaceId[] = []
   for (const r of riders) {
-    if (r.at === 'stop' || r.at === 'next' || r.at === 'coming') busy.push(r.stop)
+    if (r.at === 'stop' || waitsAhead(r)) busy.push(r.stop)
     busy.push(r.home)
   }
   return busy
@@ -94,32 +101,44 @@ export function freshWorld(childAge: number | null, seed: number): World {
   }
 }
 
+/** The places whose rail spot the train stands at now: in use too. */
+const underTrain = (world: World): PlaceId[] => PLACE_IDS.filter((id) => distance(railAt(id), world.train) <= UNDER_TRAIN)
+
 /**
- * Makes sure someone is waiting for the cycle to come. A second rider already
- * laid out steps up; otherwise one is laid out from the position as it stands,
- * with a second behind it where the position is for two. The home from the
- * cycle before goes when the tar would hold more than four riders.
+ * Makes sure someone is waiting for the cycle to come: one rider, laid out
+ * from the position as it stands. Where the position is for two, the rider
+ * waits as the first of two. Where the tar already holds four, which only a
+ * rider fetched early can bring about, the oldest home is rubbed away to make
+ * room: the home from the cycle before, or else the first reached in this one.
  */
 export function ensureNext(world: World): World {
-  if (world.riders.some((r) => r.at === 'next')) return world
-  const coming = world.riders.findIndex((r) => r.at === 'coming')
-  if (coming >= 0) return { ...world, riders: world.riders.map((r, i) => (i === coming ? { ...r, at: 'next' } : r)) }
+  if (world.riders.some(waitsAhead)) return world
   let riders = world.riders
-  const pair = world.position === 'two-at-once'
-  const room = () => MAX_RIDERS - riders.length
-  if (room() < (pair ? 2 : 1)) riders = riders.filter((r) => r.at !== 'before')
-  if (room() < 1) return { ...world, riders }
+  if (riders.length >= MAX_RIDERS) {
+    const before = riders.findIndex((r) => r.at === 'before'), oldest = before >= 0 ? before : riders.findIndex((r) => r.at === 'home')
+    if (oldest < 0) return world
+    riders = riders.filter((_, i) => i !== oldest)
+  }
   const rng = makeRng(world.seed)
   // The train will stand at the home of the rider it takes home last.
-  const last = [...riders].reverse().find((r) => r.at === 'stop' || r.at === 'train')
+  const last = [...riders].reverse().find(inPlay)
   const trainThen = last ? railAt(last.home) : { x: world.train.x, y: world.train.y }
-  const kinds = riders.map((r) => r.kind)
-  // The place the train stands at now is in use too.
-  const under = PLACE_IDS.filter((id) => distance(railAt(id), world.train) <= UNDER_TRAIN)
-  const first = layOut(world.position, rng, trainThen, [...busyPlaces(riders), ...under], kinds)
-  riders = [...riders, rider(first, 'next')]
-  if (pair && room() >= 1) riders = [...riders, rider(layOutCompanion(rng, [...busyPlaces(riders), ...under], [...kinds, first.kind]), 'coming')]
-  return { ...world, seed: rng.state, riders }
+  const first = layOut(world.position, rng, trainThen, [...busyPlaces(riders), ...underTrain(world)], riders.map((r) => r.kind))
+  return { ...world, seed: rng.state, riders: [...riders, rider(first, world.position === 'two-at-once' ? 'pair' : 'next')] }
+}
+
+/**
+ * Whoever waited steps into play. The first of two is joined by its second
+ * rider, laid out now and drawn in at its stop, while the tar has room for it
+ * and for one more to wait.
+ */
+export function stepIn(world: World): World {
+  const two = world.riders.some((r) => r.at === 'pair')
+  const riders = world.riders.map((r): Rider => (waitsAhead(r) ? { ...r, at: 'stop' } : r))
+  if (!two || riders.length > MAX_RIDERS - 2) return { ...world, riders }
+  const rng = makeRng(world.seed)
+  const second = layOutCompanion(rng, [...busyPlaces(riders), ...underTrain(world)], riders.map((r) => r.kind))
+  return { ...world, seed: rng.state, riders: [...riders, rider(second, 'stop')] }
 }
 
 /** A rider near enough to the train climbs aboard, if a wagon is free. Returns who boarded, by index. */
@@ -136,29 +155,26 @@ export function walkOver(world: World): { world: World; boarded: number[] } {
 }
 
 /**
- * The child's touch begins a cycle. After an ending the tar turns over: the
- * rider who waited steps into play with any second rider laid out with it,
- * the last rider home stays as the home from before, and older homes go. Then
- * someone new is laid out to wait, and a rider beside the train climbs aboard.
- * On any other mark this does nothing.
+ * The child's touch begins a cycle. After an ending the tar turns over:
+ * earlier homes are rubbed away until only the home reached last is left, and
+ * whoever waited steps into play. Then someone new is laid out to wait, and a
+ * rider beside the train climbs aboard. On any other mark this does nothing.
  */
 export function settleIn(world: World): { world: World; began: boolean; boarded: number[] } {
-  const first = !world.finished && !world.riders.some((r) => r.at === 'next')
+  const first = !world.finished && !world.riders.some(waitsAhead)
   if (!world.finished && !first) return { world, began: false, boarded: [] }
   let next = world
   if (world.finished) {
     const lastHome = world.riders.map((r) => r.at).lastIndexOf('home')
     const riders = world.riders
       .filter((r, i) => r.at !== 'before' && (r.at !== 'home' || i === lastHome))
-      .map((r): Rider => (r.at === 'home' ? { ...r, at: 'before' } : r.at === 'next' || r.at === 'coming' ? { ...r, at: 'stop' } : r))
-    next = { ...world, ...beginCycle(world), riders }
+      .map((r): Rider => (r.at === 'home' ? { ...r, at: 'before' } : r))
+    next = stepIn({ ...world, ...beginCycle(world), riders })
   }
   next = ensureNext(next)
   // Where the rider who waited was fetched early and is home already, nobody is in play: the one just laid out
   // steps straight in, and another is laid out to wait.
-  if (!next.riders.some((r) => r.at === 'stop' || r.at === 'train')) {
-    next = ensureNext({ ...next, riders: next.riders.map((r): Rider => (r.at === 'next' || r.at === 'coming' ? { ...r, at: 'stop' } : r)) })
-  }
+  if (!next.riders.some(inPlay)) next = ensureNext(stepIn(next))
   const walked = walkOver(next)
   return { world: walked.world, began: true, boarded: walked.boarded }
 }
@@ -167,4 +183,23 @@ export function settleIn(world: World): { world: World; began: boolean; boarded:
 export function inFlower(marks: readonly Mark[]): boolean {
   const head = { x: DANDELION.x, y: DANDELION.y - 28 }
   return marks.some((m) => m.p.length > 8 && readMark(m.p).kind === 'loop' && inside(m.p, head))
+}
+
+/** Whether the dandelion wears a seed tuft: some scribble lies on it. Read from the marks, never stored. */
+export function wearsTuft(marks: readonly Mark[]): boolean {
+  const head = { x: DANDELION.x, y: DANDELION.y - 28 }
+  return marks.some((m) => m.p.length > 8 && readMark(m.p).kind === 'scribble' && distance(middle(m.p), head) <= DANDELION.reach)
+}
+
+/** The stretches of a mark that lie in the water, where its chalk is dark: pairs of first and last point index. Read from the mark, never stored. */
+export function wetStretches(mark: Mark): [number, number][] {
+  const out: [number, number][] = []
+  let from = -1
+  mark.p.forEach((q, i) => {
+    const wet = inPuddle(q)
+    if (wet && from < 0) from = i
+    if (!wet && from >= 0) { out.push([from, i - 1]); from = -1 }
+  })
+  if (from >= 0) out.push([from, mark.p.length - 1])
+  return out
 }

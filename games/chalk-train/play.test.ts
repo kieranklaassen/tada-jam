@@ -5,7 +5,7 @@ import { MAX_MARKS, MAX_POINTS } from './marks'
 import { STOP_SHORT, judge, makeMark, showFirst, type Told } from './play'
 import { between, makeRng, pick } from './rng'
 import { noFeels, type RiderKind } from './tastes'
-import { MAX_RIDERS, NONE, SEATS, busyPlaces, freshWorld, inFlower, railAt, type Rider, type World } from './world'
+import { MAX_RIDERS, NONE, SEATS, busyPlaces, freshWorld, inFlower, railAt, waitsAhead, wearsTuft, wetStretches, type Rider, type World } from './world'
 import { DANDELION, ENGINE_START, PLACES, PUDDLE, TAR, distance, type PlaceId, type Pt } from './yard'
 
 const line = (from: Pt, to: Pt, steps = 40): Pt[] => Array.from({ length: steps + 1 }, (_, i) => ({ x: from.x + ((to.x - from.x) * i) / steps, y: from.y + ((to.y - from.y) * i) / steps }))
@@ -31,7 +31,7 @@ const withRider = (kind: RiderKind, home: PlaceId = 'mid-4', position = 'long-wa
 const takeHome = (w: World): { world: World; told: Told[] } => {
   let world = w
   const all: Told[] = []
-  for (let guard = 0; guard < 6 && !world.finished; guard++) {
+  for (let guard = 0; guard < 16 && !world.finished; guard++) {
     const r = inPlay(world)
     const made = makeMark(world, line(trainAt(world), r.at === 'train' ? railAt(r.home) : railAt(r.stop)))
     world = made.world
@@ -217,6 +217,25 @@ describe('chalk laid on a thing chalks that thing', () => {
     expect(inFlower(ringed.world.marks)).toBe(true)
   })
 
+  it('gives the dandelion a seed tuft under a scribble, read from the marks', () => {
+    const w = withRider('frog')
+    expect(wearsTuft(w.marks)).toBe(false)
+    const tufted = makeMark(w, scribble({ x: DANDELION.x, y: DANDELION.y - 28 }))
+    expect(told(tufted.told, 'answer')[0]).toMatchObject({ thing: 'dandelion', kind: 'scribble' })
+    expect(wearsTuft(tufted.world.marks)).toBe(true)
+  })
+
+  it('reads where chalk lies dark in the water from the mark itself', () => {
+    const w = withRider('frog', 'low-4')
+    const through = makeMark(w, line({ x: 380, y: PUDDLE.y }, { x: 820, y: PUDDLE.y })).world
+    const wet = wetStretches(through.marks[through.marks.length - 1])
+    expect(wet.length).toBe(1)
+    const mark = through.marks[through.marks.length - 1].p
+    expect(mark[wet[0][0]].x).toBeGreaterThan(PUDDLE.x - PUDDLE.rx - 1)
+    expect(mark[wet[0][1]].x).toBeLessThan(PUDDLE.x + PUDDLE.rx + 1)
+    expect(wetStretches(w.marks[0])).toEqual([])
+  })
+
   it('answers a tap on a rider with its trick and nothing else: no chalk stays and no ride starts', () => {
     const w = makeMark(withRider('cat'), [{ x: 900, y: 200 }]).world
     const waiting = w.riders.find((r) => r.at === 'next')!
@@ -259,14 +278,31 @@ describe('how a cycle ends and the next one starts', () => {
     expect(fetched.world.riders.length).toBeLessThanOrEqual(MAX_RIDERS)
   })
 
-  it('lays a layout for two as two riders, the second drawn in when its cycle begins', () => {
+  it('lays a layout for two as two riders: only the first waits ahead, the second is drawn in when that cycle begins', () => {
     const top = makeMark({ ...withRider('frog'), position: 'two-at-once' }, [{ x: 300, y: 462 }]).world
-    expect(top.riders.filter((r) => r.at === 'next').length).toBe(1)
-    expect(top.riders.filter((r) => r.at === 'coming').length).toBe(1)
+    expect(top.riders.filter((r) => r.at === 'pair').length).toBe(1)
+    expect(top.riders.filter((r) => r.at === 'next').length).toBe(0)
     const done = takeHome(top).world
     const began = makeMark(done, [{ x: done.train.x + 5, y: done.train.y }]).world
     expect(began.riders.filter((r) => r.at === 'stop' || r.at === 'train').length).toBe(2)
     expect(began.riders.length).toBeLessThanOrEqual(MAX_RIDERS)
+  })
+
+  it('never holds more than two in play, one waiting and one at home, through a run of layouts for two', () => {
+    let w = makeMark({ ...withRider('frog'), position: 'two-at-once' }, [{ x: 300, y: 462 }]).world
+    for (let cycle = 0; cycle < 12; cycle++) {
+      w = takeHome(w).world
+      expect(w.finished).toBe(true)
+      // The ending stands with the riders just taken home, and one waiting.
+      expect(w.riders.filter(waitsAhead).length).toBe(1)
+      w = makeMark(w, [{ x: w.train.x + 5, y: w.train.y }]).world
+      expect(w.position).toBe('two-at-once')
+      expect(w.riders.filter((r) => r.at === 'stop' || r.at === 'train').length).toBe(2)
+      expect(w.riders.filter(waitsAhead).length).toBe(1)
+      expect(w.riders.filter((r) => r.at === 'before').length).toBe(1)
+      expect(w.riders.length).toBe(MAX_RIDERS)
+      expect(w.riders.filter((r) => r.at === 'stop' || waitsAhead(r)).length).toBeLessThanOrEqual(3)
+    }
   })
 })
 
@@ -306,12 +342,13 @@ describe('any play at all', () => {
         expect(w.riders.filter((r) => r.at === 'train').length).toBeLessThanOrEqual(SEATS)
         expect(new Set(w.riders.map((r) => r.kind)).size).toBe(w.riders.length)
         expect(new Set(busyPlaces(w.riders)).size).toBe(busyPlaces(w.riders).length)
-        expect(w.riders.filter((r) => r.at === 'stop' || r.at === 'next').length).toBeLessThanOrEqual(3)
+        expect(w.riders.filter((r) => r.at === 'stop' || waitsAhead(r)).length).toBeLessThanOrEqual(3)
         expect(LADDER).toContain(w.position)
         expect(w.marks.length).toBeLessThanOrEqual(MAX_MARKS)
         expect(w.marks.reduce((sum, m) => sum + m.p.length, 0)).toBeLessThanOrEqual(MAX_POINTS)
         expect(w.train.x >= 0 && w.train.x <= TAR.w && w.train.y >= 0 && w.train.y <= TAR.h).toBe(true)
-        expect(w.riders.some((r) => r.at === 'next') || w.riders.length === MAX_RIDERS).toBe(true)
+        // After the first mark someone always waits for the cycle to come.
+        expect(w.riders.filter(waitsAhead).length).toBe(1)
       }
       expect(cycles).toBeGreaterThan(20)
     }

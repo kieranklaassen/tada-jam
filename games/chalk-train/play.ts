@@ -4,7 +4,7 @@ import { nearestOn } from './path'
 import { along, routeAlong, routeCalled, routeTo, type Route } from './ride'
 import { finishCycle, type CycleOutcome } from './state'
 import { FEELS, feel, mostFelt, taste, type Feel, type RiderKind, type Taste } from './tastes'
-import { NONE, SEATS, ensureNext, railAt, settleIn, type Rider, type World } from './world'
+import { NONE, SEATS, ensureNext, inPlay, railAt, settleIn, waitsAhead, type Rider, type World } from './world'
 import { PLACES, distance, type Pt } from './yard'
 
 // The one act of the game: a chalk mark is made, and the world answers. The
@@ -62,13 +62,17 @@ function rideOut(start: World, route: Route, told: Told[]): World {
         return { ...r, felt: feel(r.felt, felt) }
       })
     }
-    // Anyone waiting within reach climbs aboard while a wagon is free, the rider for the cycle to come included.
+    // Anyone waiting within reach climbs aboard while a wagon is free. The rider for the cycle to come may be
+    // fetched early, but never into a wagon that a rider of the layout in play still needs.
     let fetchedEarly = false, seated = riders.filter((r) => r.at === 'train').length
+    let kept = riders.filter((r) => r.at === 'stop').length
     riders = riders.map((r) => {
-      if ((r.at !== 'stop' && r.at !== 'next') || seated >= SEATS || distance(here, PLACES[r.stop]) > STOP_SHORT) return r
+      if ((r.at !== 'stop' && !waitsAhead(r)) || distance(here, PLACES[r.stop]) > STOP_SHORT) return r
+      if (seated + (waitsAhead(r) ? kept : 0) >= SEATS) return r
+      if (r.at === 'stop') kept--
       seated++
       told.push({ what: 'boarded', at: s, rider: r.kind, walked: false })
-      if (r.at === 'next') fetchedEarly = true
+      if (waitsAhead(r)) fetchedEarly = true
       return { ...r, at: 'train' as const }
     })
     if (fetchedEarly) {
@@ -93,7 +97,7 @@ function rideOut(start: World, route: Route, told: Told[]): World {
   told.push({ what: 'stopped', at: stoppedAt, why, shortBy })
   world = { ...world, riders, train }
   // The cycle ends when nobody in play is left waiting or aboard. The position moves here, and nowhere else.
-  if (why === 'home' && !riders.some((r) => r.at === 'stop' || r.at === 'train')) {
+  if (why === 'home' && !riders.some(inPlay)) {
     const outcome = judge(riders)
     told.push({ what: 'cycle', outcome })
     world = { ...world, ...finishCycle(world, outcome) }
@@ -103,7 +107,7 @@ function rideOut(start: World, route: Route, told: Told[]): World {
 
 /** Where each rider that stands on the tar is, with its index among the riders. */
 function standing(riders: readonly Rider[]): { at: Pt; index: number }[] {
-  return riders.flatMap((r, index) => (r.at === 'coming' || r.at === 'train' ? [] : [{ at: r.at === 'home' || r.at === 'before' ? PLACES[r.home] : PLACES[r.stop], index }]))
+  return riders.flatMap((r, index) => (r.at === 'train' ? [] : [{ at: r.at === 'home' || r.at === 'before' ? PLACES[r.home] : PLACES[r.stop], index }]))
 }
 
 /**

@@ -104,7 +104,7 @@ describe('the saved world', () => {
       const left = MAX_POINTS - marks.reduce((sum, x) => sum + x.p.length, 0)
       marks.push({ c: 4, p: Array.from({ length: Math.min(MAX_MARK_POINTS, left) }, (_, i) => ({ x: TAR.w - (i % 9), y: TAR.h - 100 - (i % 7) })) })
     }
-    const riders: Rider[] = RIDERS.map((kind, i) => ({ kind, stop: PLACE_IDS[i * 2], home: PLACE_IDS[i * 2 + 1], at: i < 2 ? 'train' : i === 2 ? 'next' : 'coming', chalk: 99999, tar: 99999, felt: { fast: 9, corner: 9, loop: 9, splash: 9, bump: 9, scribble: 9 } }))
+    const riders: Rider[] = RIDERS.map((kind, i) => ({ kind, stop: PLACE_IDS[i * 2], home: PLACE_IDS[i * 2 + 1], at: i < 2 ? 'train' : i === 2 ? 'pair' : 'before', chalk: 99999, tar: 99999, felt: { fast: 9, corner: 9, loop: 9, splash: 9, bump: 9, scribble: 9 } }))
     const largest: World = { ...freshWorld(null, 0xffffffff), position: 'round-the-water', seed: 0xffffffff, marks, riders, chalk: 4, water: 4, shown: true, train: { x: TAR.w, y: TAR.h, face: -1, stripes: 4, tint: 4 } }
     const bytes = new TextEncoder().encode(JSON.stringify(serialize(largest))).length
     expect(marks.reduce((sum, x) => sum + x.p.length, 0)).toBe(MAX_POINTS)
