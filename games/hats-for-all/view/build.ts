@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { CREATURE_KINDS, HAT_KINDS, type CreatureKind, type HatKind } from '../kinds'
-import { ARCH_X, ARCH_Z, holeX } from '../stage'
+import { holeX } from '../stage'
 import { SLAB, TILE_DEPTH } from '../sizes'
 import { disc, laidFlat, merged, paint, roundedRect, slab } from './foam'
 import { archOutline, creatureCut, earOutline, hatOutline, holeBase, matTileOutline, tileWidth, type Cut } from './shapes'
@@ -29,16 +29,16 @@ export const ARCH_DEPTH = 0.9
 
 /** The mat: columns by rows of jigsaw tiles `MAT_TILE` across, in two tones, its top at y = 0. */
 export const MAT_TILE = 4.7
-export const MAT_COLUMNS = 5
+export const MAT_COLUMNS = 7
 export const MAT_ROWS = 4
 /** Where the mat's back left corner lies. */
-export const MAT_LEFT = -10.2
+export const MAT_LEFT = -14.9
 export const MAT_BACK = -6.4
 
 export function buildMat(): THREE.BufferGeometry {
   const tiles: THREE.BufferGeometry[] = []
   for (let i = 0; i < MAT_COLUMNS; i++) for (let j = 0; j < MAT_ROWS; j++) {
-    tiles.push(slab(matTileOutline(i, j, MAT_TILE), SLAB, (i + j) % 2 === 0 ? PALETTE.matA : PALETTE.matB, 4))
+    tiles.push(slab(matTileOutline(i, j, MAT_TILE), SLAB, (i + j) % 2 === 0 ? PALETTE.matA : PALETTE.matB, 4, false))
   }
   // Drawn with y towards the back wall and the mat's front left corner at the origin, then laid down and moved into place.
   const mat = laidFlat(merged(tiles))
@@ -53,8 +53,9 @@ export function buildRoom(): THREE.BufferGeometry {
   return merged([floor, wall])
 }
 
+/** The arch, standing on the origin: the view puts it at the mat's edge, and it squashes about its own feet. */
 export function buildArch(): THREE.BufferGeometry {
-  return slab(archOutline(), ARCH_DEPTH, PALETTE.furniture).translate(ARCH_X, 0, ARCH_Z)
+  return slab(archOutline(), ARCH_DEPTH, PALETTE.furniture)
 }
 
 /** The hat tile for this cycle: a slab with one hole for each hat, lying on the mat. The mat shows through an empty hole. */

@@ -199,4 +199,43 @@ Hats for All is designed from three California preschool and transitional kinder
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+**Foam play mats**, the first look reserved for this game in the ledger of `docs/art-direction.md`. Everything on screen is a thick slab of squashy foam cut from one outline: the floor of jigsaw tiles, the white tile the hats press out of, the hats, the creatures and the arch. A hat pressed out leaves its hole, and the mat shows through it.
+
+It must not be taken for Kite Tower (blocks on a playroom floor: wood with grain, lathe-turned dolls) or Shadow Lantern (flat extruded shapes: paper, lamp light). Here nothing has grain, nothing is paper and nothing is lit by a lamp: the foam is matte with a fine stipple, every edge is a small soft bevel, the floor locks together with dovetail teeth, and the colours are flat.
+
+### Palette
+
+| What | Colour | Why |
+| --- | --- | --- |
+| Mat floor, two tones | `#27a99a`, `#2fb8a8` | One calm hue that no piece uses, so every hat and creature stands off it. |
+| Hat tile and arch | `#f6f1e4` | The mat's furniture is cream: the hats lie on the plainest, lightest surface in the scene. |
+| Cone, dome, brim | `#e3382c`, `#2d6fe0`, `#f7c41d` | The working pieces are the three flat primaries and nothing else is. |
+| Bop, Lanky, Flop, Wig, Pip | `#f58a1f`, `#8b52d4`, `#f0609f`, `#a9d83c`, `#4b4f5c` | Secondaries and one charcoal, none shared with a hat. |
+| Wall and room floor | `#f6efe2`, `#eadfcd` | Pale and empty, so the foam is all there is to look at. |
+| Eye whites, pupils and mouths | `#fbfaf5`, `#22252e` | Pressed-on foam discs. |
+
+### Materials
+
+- One matte foam material for everything (roughness 0.95, no metal), coloured by vertex, with one small stipple normal tile that repeats. The stipple is seeded, so every load shows the same foam.
+- Every piece is an outline extruded 0.5 to 0.9 mat units with a bevel of 0.055. Squash is a scale spring, never a soft body.
+- The hats are working pieces and stay plain: one flat colour, one simple outline, no face, no pattern and no idle motion in the tile (pack: game-design, working-objects-stay-plain.md). The creatures carry the faces and the comedy.
+- No shadow map. A soft round blob lies under each creature, each hat in the air or on the floor, and each leg of the arch; the same blob is the dimple where the floor is poked.
+
+### Lighting
+
+Daylight, as through a window: one broad sky light and one soft sun from the upper left. No lamp, no rim light, no post pass, no tone mapping: the flat primaries stay flat.
+
+### Motion
+
+- A touch is answered when the finger lands: the foam gives under it at once, and springs back when it lifts.
+- A hat leaves with a pop, turns over once in the air and lands with a squash on what it lands on; what it lands on squashes too.
+- Each creature has its own spring, tempo and sway (`motion.ts`), so the same landing looks different on each: the ball bounces, the post sways, the jelly loaf wobbles for seconds.
+- Alive at idle: every creature breathes at its own tempo, looks at the hats while it is bare and up at its hat when it has one, blinks at moments of its own, and a bare one pats its head now and then. Nothing beckons or flashes.
+
+### The tiers
+
+`config.ts` has four tiers. Tier 0 draws at a pixel ratio of up to 2 with the stipple; tier 1 at 1.5 with it; tiers 2 and 3 at 1.25 and 1 without it. Without its stipple the foam is the same flat matte colour with the same bevels, so the lowest tier still looks like the game. A tier never changes what happens.
+
+### What the spike showed
+
+Stills at 1180 by 820 were taken on the build machine, which draws in software, at pixel ratios 1 and 2. They say the layout, the silhouettes and the colours read: three creatures, four hats and the arch are each told apart at a glance, and a hat on a head, a hat in its hole and a hat loose on the floor cannot be confused. They say nothing about frame rate, which the lead measures on a real graphics card.

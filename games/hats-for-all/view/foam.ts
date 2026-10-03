@@ -8,10 +8,14 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 
 const BEVEL = 0.055
 
-/** A slab cut from an outline drawn in x and y, `depth` thick, centred on z, in one flat colour. */
-export function slab(shape: THREE.Shape, depth: number, colour: THREE.ColorRepresentation, curveSegments = 10): THREE.BufferGeometry {
+/**
+ * A slab cut from an outline drawn in x and y, `depth` thick, centred on z, in one flat colour. Its rounded edge
+ * is cut inside the outline, so the slab is exactly as wide as drawn. An outline with sharp teeth cannot be cut
+ * that way (the inner edge crosses itself), so with `inset` false the edge is rounded outside the outline instead.
+ */
+export function slab(shape: THREE.Shape, depth: number, colour: THREE.ColorRepresentation, curveSegments = 10, inset = true): THREE.BufferGeometry {
   const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: depth - 2 * BEVEL, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL, bevelOffset: -BEVEL, bevelSegments: 2, curveSegments,
+    depth: depth - 2 * BEVEL, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL, bevelOffset: inset ? -BEVEL : 0, bevelSegments: 2, curveSegments,
   })
   geometry.translate(0, 0, -depth / 2 + BEVEL)
   return paint(geometry, colour)
@@ -100,7 +104,7 @@ export function stippleTile(size = 64): THREE.DataTexture {
 export function foamMaterials(): { stippled: THREE.MeshStandardMaterial; plain: THREE.MeshStandardMaterial; stipple: THREE.DataTexture } {
   const stipple = stippleTile()
   const base = { vertexColors: true, roughness: 0.95, metalness: 0 }
-  const stippled = new THREE.MeshStandardMaterial({ ...base, normalMap: stipple, normalScale: new THREE.Vector2(0.45, 0.45) })
+  const stippled = new THREE.MeshStandardMaterial({ ...base, normalMap: stipple, normalScale: new THREE.Vector2(0.8, 0.8) })
   return { stippled, plain: new THREE.MeshStandardMaterial(base), stipple }
 }
 

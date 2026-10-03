@@ -5,8 +5,8 @@ import { hatsForAllManifest } from './manifest'
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
 // template and a template fix can be copied over them.
 
-/** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+/** The colour of the room's wall, shown before the first frame is drawn. */
+export const BACKDROP = '#f6efe2'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 
@@ -19,10 +19,12 @@ export const BACKDROP = '#f4efe6'
 export type Tier = {
   /** Canvas pixel ratio cap; the jam's bar caps it at 2. */
   dpr: number
+  /** Whether the foam shows its fine stipple. Without it the foam is the same flat matte colour, so the lowest tier still looks like the game. */
+  stipple: boolean
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
-export const TIERS: readonly Tier[] = [{ dpr: 2 }, { dpr: 1.5 }, { dpr: 1.25 }, { dpr: 1 }]
+export const TIERS: readonly Tier[] = [{ dpr: 2, stipple: true }, { dpr: 1.5, stipple: true }, { dpr: 1.25, stipple: false }, { dpr: 1, stipple: false }]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */
 export const GOVERNOR = {
@@ -88,7 +90,20 @@ export const TAP_PRESSES: 1 | 2 = YOUNGEST < 4 ? 1 : 2
  * are what a save stores: add steps anywhere, and never rename one that has
  * shipped. Nothing on screen shows where the child is.
  */
-export const LADDER: readonly string[] = ['first', 'second', 'third']
+export const LADDER: readonly string[] = [
+  // As many hats as heads: it cannot come out uneven.
+  'two-heads', 'three-heads',
+  // One fewer: a creature walks out and its hat is left with no head.
+  'one-leaves',
+  // A hat too many in the tile: stopping when every head has one.
+  'spare-hat',
+  // One more: a creature walks in and the spare hat has a head.
+  'one-comes',
+  // A hat too few: one head waits bare until a hat comes free.
+  'one-short',
+  // Known things together.
+  'spares-and-one-leaves', 'comes-and-goes',
+]
 
 /**
  * Where a first visit starts, by `ctx.childAge`: the last row whose age the
@@ -98,6 +113,7 @@ export const LADDER: readonly string[] = ['first', 'second', 'third']
  * a band of a single age has a single row.
  */
 export const FIRST_VISIT: readonly { fromAge: number; position: string }[] = [
-  { fromAge: YOUNGEST, position: 'first' },
-  ...(OLDEST > YOUNGEST ? [{ fromAge: OLDEST, position: 'second' }] : []),
+  { fromAge: YOUNGEST, position: 'two-heads' },
+  { fromAge: YOUNGEST + 1, position: 'three-heads' },
+  { fromAge: OLDEST, position: 'spare-hat' },
 ]

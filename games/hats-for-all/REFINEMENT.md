@@ -3,8 +3,9 @@
 
 ## Status
 
-- Stage: sheet. The design sheet is whole in `ART.md` as it stands at commit `1469dea` (sheet part sha256 `4036d60f259b42d407b943b8da5a98086111f802bd4314f16a176867cc105fd0`).
-- Look in use: none yet. First reserved look: foam play mats.
+- Stage: toy. The design sheet is whole in `ART.md` as it stands at commit `1469dea` (sheet part sha256 `4036d60f259b42d407b943b8da5a98086111f802bd4314f16a176867cc105fd0`), and has not been checked yet.
+- Look in use: foam play mats, the first reserved look. Spike: the Mount shows the game's real scene in the look at load, the same at every load; stills taken on the build machine in software at pixel ratios 1 and 2; no frame rate measured (the lead measures it on a real graphics card).
+- The toy is in: a tap on a hat presses it out of its tile and onto the nearest bare head, a tap on a hat on a head presses it home, the hat with no head scuttles on the floor, a tap on a creature, the arch or the floor is answered too. It has no goal, no cycle and no ending, and it saves nothing yet.
 - Open: sheet ready for check, round 1
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.
