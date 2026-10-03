@@ -72,6 +72,23 @@ export const VOICES = {
   /** Both clips on one pad: a loop of nothing sags. */
   'lead-loop-of-nothing': [tone('triangle', 147, 0.13, 0.004, 0.55, 110)],
 
+  /** A clip is pulled off its pad. */
+  'lead-unclip': [hiss(1500, 4, 0.16, 0.001, 0.05), tone('triangle', 620, 0.05, 0.001, 0.05, 420)],
+  /** A loose clip is picked up off the mat. */
+  'lead-pick': [hiss(2800, 6, 0.09, 0.001, 0.03)],
+  /** A lead let go over nothing: it drops limp and its free clip snaps once. */
+  'lead-drop': [hiss(420, 0.9, 0.12, 0.004, 0.1), hiss(2600, 6, 0.13, 0.001, 0.035, undefined, 0.12)],
+  /** A lead is pulled out of the coil. */
+  'coil-pull': [hiss(700, 1.5, 0.1, 0.01, 0.16, 1500)],
+  /** A lead dropped on the coil winds itself up. */
+  'lead-wind': [hiss(1500, 1.5, 0.1, 0.01, 0.2, 600), tone('triangle', 300, 0.04, 0.01, 0.16, 190)],
+  /** The flag of a cutout is set back. */
+  'flag-reset': [tone('square', 330, 0.1, 0.002, 0.05, 520), hiss(1800, 5, 0.08, 0.001, 0.03)],
+  /** The hum of a live loop, struck again twice a second for as long as it runs: quiet, and gone as soon as the loop opens. */
+  hum: [tone('sine', 110, 0.05, 0.08, 0.6), tone('triangle', 220, 0.02, 0.08, 0.5)],
+  /** A finger on the bare mat. */
+  'mat-pat': [hiss(240, 0.8, 0.11, 0.003, 0.07)],
+
   // --- Switch ----------------------------------------------------------------
   /** It seats in the loop. With its lever up nothing starts, and the open contact gives one dry tick. */
   'switch-clip': [hiss(3400, 10, 0.14, 0.001, 0.03), tone('square', 310, 0.04, 0.001, 0.03)],
