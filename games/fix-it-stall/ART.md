@@ -213,11 +213,48 @@ A circuit is stored as the gadget's kind, which of its traces are cracked, its p
 
 ## The characters and their fixed tastes
 
-Each character's one visible want and the likes and dislikes that never change, or what gives the feedback in a game with no character.
+Every customer has the same visible want: the thing they brought, running. They hold it, try its switch and peer into it. What differs is what each likes it to do. The tastes below never change, so a child can learn them and test them on purpose. A reaction is to the exact gadget as handed back (how bright, how fast and which way, how loud, whether it can be switched off, how the lid sits, what was used in the mend), it starts within a few hundred milliseconds, and it is never about the child: no thanks, no praise, no disappointment turned outward. A dislike is as good to watch as a like.
+
+| Character | Likes | Dislikes |
+| --- | --- | --- |
+| **The owl**, a night watchman | A dim glow. A switch, so the thing can be put out at dawn. | Glare: pulls the cap down and turns the head right round. |
+| **The moth**, who cannot leave a lamp alone | The brightest lamp there is, and more lamps. | A fan's wind: pinned flat to the stall post. The dark: droops. |
+| **The yak**, always too hot under all that hair | A strong wind in the face, hair streaming. | A fan that sucks: the fringe goes in and she has to back out of it. A hot bright lamp: wilts. |
+| **The tortoise**, who has all the time there is | Slow and soft: a lazy blade, a muttering buzzer, a car that creeps. | Anything fast or sudden: head and legs go in. A popped flag keeps him in for a beat longer. |
+| **The cockatoo**, loud | The loudest rasp, which it joins and drowns out. Two buzzers throbbing. | Silence: taps the gadget and sulks at it. A lamp going out: asleep at once. |
+| **The magpie**, a collector who cannot bear a mess | A lid shut flat. Anything shiny used in the mend, which it tries to keep. | Trailing leads, which it picks at. The rubber band. |
+
+**The old hand** is not a customer. An old raccoon who has kept the stall for ever dozes on a stool beside the bench with a mug. Her want is her nap. Her whiskers stand out at a short, an ear turns to a new sound, a fan's wind lifts her fur, and a pop makes her spill a little. Once for each new idea she shows a neat way on a practice board of her own ("The scenes"). She never turns to the child, never explains, and never rates a mend.
+
+No two characters share a movement: each has its own tempo, weight and funniest part (the owl's head, the moth's flutter, the yak's fringe, the tortoise's neck, the cockatoo's crest, the magpie's hop, the raccoon's whiskers). The parts on the bench are working pieces and stay plain: no faces, and no motion beyond what the circuit gives them (pack: game-design, characters-with-opinions.md; pack: game-design, working-objects-stay-plain.md).
 
 ## The scenes
 
-Each short scene with what causes it, its beats, what from the state of play fills it in and how it gives way to a touch, then how a cycle ends and how the next one starts.
+Every scene is a list of timed beats over game time, filled in from the state of play, and any touch ends it at its last pose. A scene's outcome is saved when it starts, so a put-away in the middle loses nothing and nothing replays on load.
+
+**1. The hand-back** (the consequence; every cycle; 5 to 8 seconds).
+
+- **Cause.** The child drags the gadget to its owner, or taps the owner's open hands.
+- **Beats.** The owner takes it. The lid is shut as far as it will go: flat, bulging, or held by a rubber band. The owner finds the switch and throws it. The gadget does exactly what its solved circuit does. The owner reacts by taste. The owner settles, holding it as it runs.
+- **Filled in from.** The circuit as handed back (how bright each lamp, how fast and which way each blade, how loud each buzzer, whether a flag pops), how the lid sits, anything shiny in the mend, and the ticket.
+- **When it does not run.** The owner throws the switch twice, peers in, and lays the gadget back on the mat with the lid open. The cycle goes on.
+
+**2. The neat way** (a new idea shown after the child's own attempt; once for each idea; 4 to 6 seconds).
+
+- **Cause.** The first hand-back that ran at a position whose idea is not yet in `shown`. It follows the hand-back scene.
+- **Beats.** The old hand reaches to the practice board that hangs beside her, which carries the same kind of break. She makes the mend in one plain move: one short lead across a crack, or the test lamp across the cell and then a fresh cell. Her board runs. She goes back to her mug.
+- **Filled in from.** The idea, and the kind of gadget just mended.
+- **Why it is not a solution.** It comes after the child's own mend has been handed back, so it is never the answer to a problem in front of the child. The child's mend is still in its owner's hands beside her board, and the two can be compared. It is a move in the world, with no word and no look toward the child (pack: game-design, guided-discovery.md).
+
+**3. Secrets.** Particular combinations always give a particular hand-back, are never hinted at and are counted nowhere: two buzzers side by side for the cockatoo become a duet it conducts; a fan that sucks, handed to the moth, takes the moth for a ride round the blade; a mend made with the spoon sends the magpie off with the spoon and the gadget both, and a new spoon is on the bench (pack: game-design, hidden-never-counted.md).
+
+**How a cycle ends.** The hand-back's last pose is the ending: the owner stands at the lane side of the stall with the gadget running, for as long as the child likes. If the child does nothing, nothing new starts.
+
+**How the next one starts.** The next customer is already at the window, busy with something of their own (the owl dozing, the moth circling the stall lamp), and never hurries the child or looks put out. A touch on that customer starts the next cycle: the one who is finished walks off down the lane with the gadget still running, the one at the window comes to the bench, and a new one steps up to the window. On load no scene replays: the world is as the last scene left it, with the next customer waiting.
+
+**The sign has no ending.** It is open building. Tidying is calm: a part dropped on the tray goes back into it, and a lead dropped on the coil winds itself up.
+
+(pack: game-design, endings-and-short-scenes.md; "How a cycle restarts" in the guide)
 
 ## The records
 
