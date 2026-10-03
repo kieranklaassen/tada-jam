@@ -74,14 +74,14 @@ describe('one cycle', () => {
 describe('the position and the customers', () => {
   it('a new position first shows in the customer after next', () => {
     const first = freshStall(null)
-    expect([first.job.from, first.next.from]).toEqual(['gap', 'gap'])
+    expect([first.job.idea, first.next.idea]).toEqual(['gap', 'gap'])
     const judged = handOver(mended(first))!.stall
     expect(judged.position).toBe('switch')
     // The one who waits was laid out before the cycle was judged.
-    expect(judged.next.from).toBe('gap')
+    expect(judged.next.idea).toBe('gap')
     const second = callNext(judged).stall
-    expect(second.job.from).toBe('gap')
-    expect(second.next.from).toBe('switch')
+    expect(second.job.idea).toBe('gap')
+    expect(second.next.idea).toBe('switch')
   })
 
   it('moves one step at a time and never inside a cycle', () => {
@@ -107,11 +107,16 @@ describe('the neat way', () => {
     const over = handOver(mended(freshStall(null)))!
     expect(over.neatWay).toBe('gap')
     expect(over.stall.shown).toEqual(['gap'])
+    // Her board stands mended, is found so on load, and is cleared when the next cycle starts.
+    expect(over.stall.board).toBe('gap')
+    expect(deserializeStall(JSON.parse(JSON.stringify(serializeStall(over.stall)))).board).toBe('gap')
+    expect(callNext(over.stall).stall.board).toBeNull()
     // The next customer was also laid out from `gap`: its neat way has been shown and is not shown again.
     const again = handOver(mended(callNext(over.stall).stall))!
     expect(again.outcome).toBe('well')
     expect(again.neatWay).toBeNull()
     expect(again.stall.shown).toEqual(['gap'])
+    expect(again.stall.board).toBeNull()
   })
 
   it('is not shown for a hand-back that did not run', () => {

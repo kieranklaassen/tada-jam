@@ -33,8 +33,13 @@ export type Ticket = { part: 'lamp' | 'cell' | 'switch'; count: 1 | 2 | 3 }
 
 export type Job = {
   who: Who
-  /** The position this job was laid out from: the idea whose neat way may be shown after it. Never shown itself. */
-  from: string
+  /**
+   * The job's own idea: the id of the position its breaks were drawn for when it was laid out. That is the position's
+   * own id when the job holds the position's own kind, and the id of the earlier position that brought the kind in
+   * otherwise. The neat way shown after the job is this idea's. It is not read from the stored position, which may
+   * have moved since, and it is never shown.
+   */
+  idea: string
   circuit: Circuit
   ticket: Ticket | null
   /** The lid is open and the board is on the mat. */
@@ -200,7 +205,10 @@ export function layOut(position: string, state: number, avoid?: Who): { job: Job
     breaks.push(broken.broke)
   }
   const ticket = id === 'ticket' ? stream.pick(TICKETS) : null
-  return { job: { who, from: id, circuit, ticket, open: false, missed: false }, breaks, stream: stream.state }
+  // A position that brings in a kind of break and laid out an earlier one hands the job that earlier position's idea.
+  const first = breaks[0]?.kind
+  const idea = own && first && first !== own ? (LADDER.find((step) => BRINGS_IN[step] === first) ?? id) : id
+  return { job: { who, idea, circuit, ticket, open: false, missed: false }, breaks, stream: stream.state }
 }
 
 /** Whether the gadget, switched on, holds what the ticket asks for: at least that many of that part carrying current. */

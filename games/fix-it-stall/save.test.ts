@@ -12,9 +12,9 @@ const through = (stall: Stall) => deserializeStall(JSON.parse(JSON.stringify(ser
 describe('a fresh stall', () => {
   it('has a customer at the bench and another at the window, both laid out from the starting position', () => {
     const stall = freshStall(null)
-    expect(stall).toMatchObject({ v: STATE_VERSION, position: 'gap', finished: false, onMat: 'job', shown: [] })
-    expect(stall.job.from).toBe('gap')
-    expect(stall.next.from).toBe('gap')
+    expect(stall).toMatchObject({ v: STATE_VERSION, position: 'gap', finished: false, onMat: 'job', shown: [], board: null })
+    expect(stall.job.idea).toBe('gap')
+    expect(stall.next.idea).toBe('gap')
     expect(stall.next.who).not.toBe(stall.job.who)
     expect(handBack(stall.job.circuit).ran).toBe(false)
   })
@@ -24,7 +24,7 @@ describe('a fresh stall', () => {
     expect(freshStall(4).position).toBe('gap')
     expect(freshStall(11).position).toBe('switch')
     expect(freshStall(30).position).toBe('switch')
-    expect(freshStall(12).job.from).toBe('switch')
+    expect(freshStall(12).job.idea).toBe('switch')
   })
 
   it('hangs the sign broken, and bigger than any gadget', () => {
@@ -45,6 +45,7 @@ describe('saving and loading', () => {
       finished: true,
       onMat: 'sign',
       shown: ['gap', 'switch'],
+      board: 'switch',
       job: { ...stall.job, open: true, missed: true, ticket: { part: 'lamp', count: 2 }, circuit: { ...stall.job.circuit, leads: [...stall.job.circuit.leads, { a: 3, b: null }], probe: [2, null] } },
     }
     expect(through(worked)).toEqual(worked)
@@ -58,8 +59,8 @@ describe('saving and loading', () => {
 
   it('writes these fields and no others', () => {
     const saved = serializeStall({ ...freshStall(null), extra: 1 } as Stall)
-    expect(Object.keys(saved).sort()).toEqual(['finished', 'job', 'next', 'onMat', 'position', 'shown', 'sign', 'stream', 'v'])
-    expect(Object.keys(saved.job).sort()).toEqual(['circuit', 'from', 'missed', 'open', 'ticket', 'who'])
+    expect(Object.keys(saved).sort()).toEqual(['board', 'finished', 'job', 'next', 'onMat', 'position', 'shown', 'sign', 'stream', 'v'])
+    expect(Object.keys(saved.job).sort()).toEqual(['circuit', 'idea', 'missed', 'open', 'ticket', 'who'])
     expect(Object.keys(saved.sign).sort()).toEqual(['cracks', 'gadget', 'leads', 'loose', 'parts', 'probe'])
   })
 
@@ -98,8 +99,16 @@ describe('a damaged or foreign record', () => {
 
   it('lays out a new customer from where the child is when the one at the bench is lost', () => {
     const read = deserializeStall({ ...serializeStall({ ...fresh, position: 'short' }), job: null })
-    expect(read.job.from).toBe('short')
+    expect(read.job.idea).toBe('short')
     expect(read.stream).not.toBe(fresh.stream)
+  })
+
+  it('keeps her practice board mended only for an idea that was shown, and only while that cycle is on screen', () => {
+    const done = { ...serializeStall(fresh), finished: true, shown: ['gap'] }
+    expect(deserializeStall({ ...done, board: 'gap' }).board).toBe('gap')
+    expect(deserializeStall({ ...done, board: 'switch' }).board).toBeNull()
+    expect(deserializeStall({ ...done, board: 7 }).board).toBeNull()
+    expect(deserializeStall({ ...done, finished: false, board: 'gap' }).board).toBeNull()
   })
 
   it('keeps only the ideas it knows in `shown`, each once', () => {
@@ -169,8 +178,8 @@ describe('the size of a save', () => {
 
   it('the largest legal state is under half of the 64 KB cap', () => {
     const widest = [...GADGET_KINDS].filter((k) => k !== 'sign').sort((x, y) => JSON.stringify(fullest(y)).length - JSON.stringify(fullest(x)).length)[0]
-    const job = { who: 'cockatoo' as const, from: 'backwards', circuit: fullest(widest), ticket: { part: 'switch' as const, count: 3 as const }, open: false, missed: false }
-    const largest: Stall = { v: STATE_VERSION, position: 'backwards', finished: false, stream: 0xffffffff, job, next: job, sign: fullest('sign'), onMat: 'sign', shown: [...LADDER] }
+    const job = { who: 'cockatoo' as const, idea: 'backwards', circuit: fullest(widest), ticket: { part: 'switch' as const, count: 3 as const }, open: false, missed: false }
+    const largest: Stall = { v: STATE_VERSION, position: 'backwards', finished: false, stream: 0xffffffff, job, next: job, sign: fullest('sign'), onMat: 'sign', shown: [...LADDER], board: 'backwards' }
     // It is a state the reader accepts as it stands, so it is a legal one.
     const read = deserializeStall(JSON.parse(JSON.stringify({ ...largest, next: { ...job, who: 'tortoise' } })))
     expect(read.sign.parts).toHaveLength(MAX_PARTS)

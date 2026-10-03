@@ -28,6 +28,8 @@ export type Stall = GameState & {
   onMat: 'job' | 'sign'
   /** The ids of the ideas whose neat way has been shown: each is shown once. */
   shown: string[]
+  /** The id of the idea whose neat way stands mended on the old hand's practice board, or null: set when that scene starts, cleared when the next cycle starts. */
+  board: string | null
 }
 
 /** Where every child's stream starts. The first two customers are the same for everyone; what follows depends on the play. */
@@ -37,7 +39,7 @@ export function freshStall(childAge: number | null): Stall {
   const base = freshState(childAge)
   const first = layOut(base.position, FIRST_STREAM)
   const second = layOut(base.position, first.stream, first.job.who)
-  return { ...base, stream: second.stream, job: first.job, next: second.job, sign: firstDaySign(), onMat: 'job', shown: [] }
+  return { ...base, stream: second.stream, job: first.job, next: second.job, sign: firstDaySign(), onMat: 'job', shown: [], board: null }
 }
 
 // --- Reading a raw record, strictly ----------------------------------------------
@@ -112,12 +114,12 @@ function readTicket(raw: unknown): Ticket | null | undefined {
 
 /** A job as this game could have left it, or null. */
 export function readJob(raw: unknown): Job | null {
-  if (!isRecord(raw) || !isWho(raw.who) || typeof raw.from !== 'string' || !LADDER.includes(raw.from)) return null
+  if (!isRecord(raw) || !isWho(raw.who) || typeof raw.idea !== 'string' || !LADDER.includes(raw.idea)) return null
   // A customer never brings the stall's own sign.
   const circuit = readCircuit(raw.circuit, (kind) => kind !== 'sign')
   const ticket = readTicket(raw.ticket)
   if (!circuit || ticket === undefined) return null
-  return { who: raw.who, from: raw.from, circuit, ticket, open: raw.open === true, missed: raw.missed === true }
+  return { who: raw.who, idea: raw.idea, circuit, ticket, open: raw.open === true, missed: raw.missed === true }
 }
 
 /**
@@ -145,7 +147,9 @@ export function deserializeStall(raw: unknown, childAge: number | null = null): 
   }
   const sign = readCircuit(raw.sign, (kind) => kind === 'sign') ?? firstDaySign()
   const shown = Array.isArray(raw.shown) ? LADDER.filter((id) => (raw.shown as unknown[]).includes(id)) : []
-  return { ...base, stream, job, next, sign, onMat: raw.onMat === 'sign' ? 'sign' : 'job', shown }
+  // Her board stands mended only while the cycle it followed is still the one on screen.
+  const board = base.finished && typeof raw.board === 'string' && shown.includes(raw.board) ? raw.board : null
+  return { ...base, stream, job, next, sign, onMat: raw.onMat === 'sign' ? 'sign' : 'job', shown, board }
 }
 
 const plainCircuit = (c: Circuit): Circuit => ({
@@ -156,9 +160,9 @@ const plainCircuit = (c: Circuit): Circuit => ({
   loose: c.loose.map((part) => ({ ...part })),
   probe: [c.probe[0], c.probe[1]],
 })
-const plainJob = (job: Job): Job => ({ who: job.who, from: job.from, circuit: plainCircuit(job.circuit), ticket: job.ticket ? { part: job.ticket.part, count: job.ticket.count } : null, open: job.open, missed: job.missed })
+const plainJob = (job: Job): Job => ({ who: job.who, idea: job.idea, circuit: plainCircuit(job.circuit), ticket: job.ticket ? { part: job.ticket.part, count: job.ticket.count } : null, open: job.open, missed: job.missed })
 
 /** The stall as plain JSON: these fields and no others. */
 export function serializeStall(stall: Stall): Stall {
-  return { ...serialize(stall), stream: stall.stream, job: plainJob(stall.job), next: plainJob(stall.next), sign: plainCircuit(stall.sign), onMat: stall.onMat, shown: [...stall.shown] }
+  return { ...serialize(stall), stream: stall.stream, job: plainJob(stall.job), next: plainJob(stall.next), sign: plainCircuit(stall.sign), onMat: stall.onMat, shown: [...stall.shown], board: stall.board }
 }

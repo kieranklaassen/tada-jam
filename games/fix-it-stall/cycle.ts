@@ -71,11 +71,12 @@ export function handOver(stall: Stall): HandOver | null {
   const taken = reaction(stall.job.who, handed)
   if (!handed.ran) return { stall: { ...stall, job: { ...stall.job, missed: true } }, handed, reaction: taken, outcome: null, neatWay: null }
   const outcome: CycleOutcome = stall.job.missed ? 'mixed' : 'well'
-  const idea = stall.job.from
+  const idea = stall.job.idea
   const neatWay = stall.shown.includes(idea) ? null : idea
   const judged = finishCycle(stall, outcome)
   return {
-    stall: { ...stall, ...judged, job: { ...stall.job, open: false }, shown: neatWay ? [...stall.shown, neatWay] : stall.shown },
+    // Her practice board stands mended from the moment the scene starts until the next cycle does.
+    stall: { ...stall, ...judged, job: { ...stall.job, open: false }, shown: neatWay ? [...stall.shown, neatWay] : stall.shown, board: neatWay },
     handed, reaction: taken, outcome, neatWay,
   }
 }
@@ -93,5 +94,5 @@ export function callNext(stall: Stall): { stall: Stall; sentAway: boolean } {
   const judged = sentAway ? finishCycle(stall, 'badly') : stall
   const laid = layOut(judged.position, stall.stream, stall.next.who)
   const begun = beginCycle(judged)
-  return { stall: { ...stall, ...begun, stream: laid.stream, job: stall.next, next: laid.job, onMat: 'job' }, sentAway }
+  return { stall: { ...stall, ...begun, stream: laid.stream, job: stall.next, next: laid.job, onMat: 'job', board: null }, sentAway }
 }

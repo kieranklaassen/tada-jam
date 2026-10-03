@@ -73,7 +73,7 @@ describe('the designed order', () => {
     for (const { position, seed, job, breaks } of laid) {
       expect(breaks.length, `${position} ${seed}`).toBeGreaterThanOrEqual(1)
       expect(handBack(job.circuit).ran, `${position} ${seed}`).toBe(false)
-      expect(job).toMatchObject({ from: position, open: false, missed: false })
+      expect(job).toMatchObject({ open: false, missed: false })
     }
   })
 
@@ -123,8 +123,22 @@ describe('the designed order', () => {
     for (const seed of SEEDS.slice(0, 40)) for (const who of CUSTOMERS) expect(layOut('double', seed, who).job.who).not.toBe(who)
   })
 
+  it('a job keeps its own idea: the position its breaks were drawn for', () => {
+    const bringsIn: Record<string, string> = { gap: 'gap', flat: 'flat', dead: 'dead', stuff: 'stuff', backwards: 'backwards', short: 'short', branch: 'branch' }
+    for (const { position, job, breaks } of laid) {
+      const own = ['flat', 'dead', 'stuff', 'backwards', 'short', 'branch'].includes(position)
+      // Its own kind, or a position that combines: the position's id. An earlier kind: the id of the position that brought it in.
+      const expected = own && breaks[0].kind !== position ? bringsIn[breaks[0].kind] : position
+      expect(job.idea, `${position} ${breaks[0].kind}`).toBe(expected)
+      expect(LADDER).toContain(job.idea)
+    }
+    // So about one job in three at such a position carries an earlier idea.
+    const dead = laid.filter((j) => j.position === 'dead')
+    expect(dead.some((j) => j.job.idea !== 'dead')).toBe(true)
+  })
+
   it('an unknown position lays out the first', () => {
-    expect(layOut('nowhere', 5).job.from).toBe('gap')
+    expect(layOut('nowhere', 5).job.idea).toBe('gap')
   })
 })
 
