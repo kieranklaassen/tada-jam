@@ -7,11 +7,25 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.
+- **Band.** The manifest band is 4 to 6. Its youngest age, 4, governs every cue.
+- **Cue-table row.** The row for 3 to 4 in the age-band cue table of wordless clarity. Its "Avoid" column binds the game: no text, numeral or pictorial icon that has to be decoded, no spoken instruction, no verdict, no second activity live beside the first, and no tool on screen before it means anything. One next act is offered at a time.
+- **Pack rule for the range.** (pack: game-design, ages-4-to-6.md): a place, props and characters who react; tap and drag are the reliable gestures; sorting is within reach from about four; no reading and no double tap. Everything works with a single tap, and a drag survives a lifted finger.
+- **Symbol rule.** The band starts below 6, so the kid side shows no word, letter, numeral or symbol, optional or not, and the game has no `symbols.ts`. A category is shown by a creature's own body, never by a sign on it.
+- **What `ctx.childAge` sets.** Only where a first visit starts in the designed order: under 5, or no age, at `two-colours`; 5 at `colours-among-kinds`; 6 and over at `colours-then-kinds`. A saved position wins over the age, every position is reached by play from any start, and nothing is locked or hidden by age.
+- **`null`.** Starts at `two-colours`, the youngest default. The top and bottom defaults are open-ended: a younger child gets the first row and an older one the last.
 
 ## The toy
 
-The one action the finger performs most, what it does in an empty scene with its sound and motion, and why repeating it is a pleasure with no goal.
+**The action the finger performs most: put the claw somewhere and let it drop.** The claw hangs on a cable from a trolley that runs on a brick gantry over the whole pit. A finger on the glass pulls the trolley to the point under it; lifting the finger lets the claw fall. A single tap does both: the trolley runs to the tap and drops when it gets there. The claw always closes on what it lands on, and what it holds goes wherever the next drop is made.
+
+In an empty scene (a stud tray, a few plain brick toys, no creature and no goal):
+
+- **When the finger lands**, in the same frame: the jaws snap open with a clack, the trolley lurches toward the finger with a motor chirp whose pitch follows how far it has to go, and the cable swings back against the pull.
+- **While the finger slides**: the trolley follows, the cable swings against every change of speed, a soft tick sounds per stud of travel, and a round shadow under the claw shows where it will land. Hard against either end of the rail the trolley hits a buffer brick and a bell rings.
+- **When the finger lifts**: the claw drops, lands with a clack that squashes it, and closes. A toy under it is lifted with a pop while its neighbours hop in a ring that fades with distance; with nothing under it the jaws bite air, the claw bonks the studs and the whole tray rings. The hoist comes up through a rising ratchet roll, quicker and higher as it climbs.
+- **With a toy in the jaws**: the toy swings wider and slower than the bare claw, heavier for a big toy. Let go, it falls, clicks onto the nearest free studs with a squash, and its neighbours hop. Let go over another toy, it clicks on top and the two stand as a stack.
+
+Why it is a pleasure with nothing to achieve: the swing is the child's own doing and is different every time, the drop is a held breath with a certain catch at the end (the demo's lucky grab is gone, so the simplest use always works), and one lift sets off a chain of clack, pop, hops and roll that is bigger than the touch. Random tapping moves the toys about and rings the tray; nothing a tap can do is refused or silent. Someone watching sees within three seconds that the child is working a crane (pack: game-design, toy-first.md; pack: game-design, touch-answers-bigger-than-the-touch.md).
 
 ## The object-by-action grid, and what is new on day 15
 

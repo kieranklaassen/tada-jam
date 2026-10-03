@@ -3,7 +3,7 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
+- Stage: sheet, being written. The first two headings of `ART.md` are in.
 - Look in use: none yet.
 - Open: the design sheet in `ART.md` and its check.
 
