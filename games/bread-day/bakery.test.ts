@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
 import {
-  LANE_PLACES, RACK_PLACES, callIn, candidates, carry, draw, feedBadger, freshBakery, fromRack, handOver, outcomeOf, thingAt, tick, tipOnto, toRack, work,
+  LANE_MOST, LANE_PLACES, RACK_PLACES, callIn, candidates, carry, draw, feedBadger, freshBakery, fromRack, handOver, outcomeOf, sendBack, thingAt, tick, tipOnto, toRack, work,
   type Bakery, type Happening, type Step,
 } from './bakery'
 import { BAKE_SECONDS, RISE_SECONDS, WORK_FULL, type Bread, type Ingredient } from './stuff'
@@ -199,6 +199,36 @@ describe('a cycle', () => {
     expect(callIn(refused, 5)).toEqual({ bakery: refused, happened: [] })
   })
 
+  it('lets the child send the one at the hatch back by touching it: the hatch stands empty, the lane holds one more, and no pick is made', () => {
+    const refused = handOver(then(at('shapes'), tipAll('flour')), 'peel').bakery
+    expect(refused.lane.length).toBe(LANE_PLACES)
+    const sent = sendBack(refused)
+    expect(kinds(sent)).toEqual(['sent-back'])
+    expect(sent.bakery).toMatchObject({ hatch: null, finished: true, position: 'shapes', seed: refused.seed, peel: refused.peel })
+    expect(sent.bakery.lane).toEqual([...refused.lane, { group: ['dachshund'], from: 'shapes', handedBack: 1 }])
+    expect(sent.bakery.lane.length).toBe(LANE_MOST)
+    expect(sendBack(sent.bakery)).toEqual({ bakery: sent.bakery, happened: [] })
+    // Called in again it is the same customer, count and all, and still no pick is made while two wait.
+    const again = callIn(sent.bakery, LANE_MOST - 1).bakery
+    expect(again.hatch).toEqual({ group: ['dachshund'], from: 'shapes', handedBack: 1 })
+    expect(again.lane).toEqual(refused.lane)
+    expect(again.seed).toBe(refused.seed)
+    expect(again.finished).toBe(false)
+  })
+
+  it('never holds more than three in the lane, and three only while the hatch stands empty', () => {
+    let bakery = at('pairs', 5)
+    for (let turn = 0; turn < 120; turn++) {
+      const roll = draw(turn + 11, 3).value
+      bakery = roll === 0 ? sendBack(bakery).bakery : roll === 1 ? callIn(bakery, draw(turn, Math.max(1, bakery.lane.length)).value).bakery : bakery.hatch ? give(bakery, wantedBy(bakery.hatch.group)).bakery : bakery
+      expect(bakery.lane.length).toBeLessThanOrEqual(bakery.hatch ? LANE_PLACES : LANE_MOST)
+      expect(bakery.lane.length, 'someone can always be called in').toBeGreaterThan(0)
+      expect(bakery.finished).toBe(bakery.hatch === null)
+      const here = animalsHere(bakery)
+      expect(new Set(here).size).toBe(here.length)
+    }
+  })
+
   it('takes a bread from the rack as well as from the peel', () => {
     const racked = toRack(brick(start()), 1).bakery
     const step = handOver(racked, 1)
@@ -211,6 +241,11 @@ describe('a cycle', () => {
     const step = handOver(then(hen, tipAll('seeds')), 'peel')
     expect(step.happened[0]).toMatchObject({ type: 'ending', secret: true, outcome: 'mixed' })
     expect(step.bakery.position).toBe('seeds')
+    expect(step.bakery).toMatchObject({ hatch: null, finished: true, peel: { at: 'board', load: null } })
+    const duck = at('batter')
+    const paddled = handOver(then(duck, tipAll('water'), (b) => carry(b, 'sill')), 'peel')
+    expect(paddled.happened[0]).toMatchObject({ type: 'ending', secret: true })
+    expect(paddled.bakery.peel, 'the peel is back on the board, empty').toEqual({ at: 'board', load: null })
   })
 })
 

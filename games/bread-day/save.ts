@@ -10,7 +10,7 @@
 // baking are two numbers that only attended time moves.
 
 import { LADDER } from './config'
-import { LANE_PLACES, RACK_PLACES, fillLane, freshBakery, type Bakery, type Step, type Visitor } from './bakery'
+import { LANE_MOST, RACK_PLACES, fillLane, freshBakery, type Bakery, type Step, type Visitor } from './bakery'
 import { STATE_VERSION, deserialize, type GameState } from './state'
 import { CRUMBS, CRUSTS, MOST, PLACES, RISE_FULL, WORK_FULL, WORK_SMOOTH, kindOf, type Bread, type Load, type Place, type Stuff } from './stuff'
 import { ANIMALS, IDEAS, canShare, ideasOf, type Animal, type Idea } from './tastes'
@@ -84,7 +84,7 @@ export function restore(raw: unknown, childAge: number | null): Bakery | null {
   const base = deserialize(raw, childAge)
   const taken = new Set<Animal>()
   const hatch = visitor(from.hatch, base.position, taken)
-  const lane = list(from.lane).slice(0, LANE_PLACES).map((waiting) => visitor(waiting, base.position, taken)).filter((waiting): waiting is Visitor => waiting !== null)
+  const lane = list(from.lane).slice(0, LANE_MOST).map((waiting) => visitor(waiting, base.position, taken)).filter((waiting): waiting is Visitor => waiting !== null)
   const peelFrom = record(from.peel), tools = record(from.tools)
   const at: Place = among(peelFrom?.at, PLACES) ?? 'board'
   const rack = Array.from({ length: RACK_PLACES }, (_, place) => bread(list(from.rack)[place]))
@@ -93,7 +93,7 @@ export function restore(raw: unknown, childAge: number | null): Bakery | null {
   const shown = IDEAS.filter((idea) => list(from.shown).includes(idea) || needed.has(idea))
   const bakery: Bakery = {
     position: base.position,
-    // The hatch is empty exactly when a cycle has ended.
+    // Nobody is at the hatch exactly when a cycle has ended or the child sent someone back.
     finished: hatch === null,
     shown,
     tools: { jar: tools?.jar === true || needed.has('rising') || shown.includes('rising'), seeds: tools?.seeds === true || needed.has('seeds') || shown.includes('seeds') },

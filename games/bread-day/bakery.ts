@@ -10,8 +10,8 @@ import { STATE_VERSION, beginCycle, finishCycle, firstPosition, type CycleOutcom
 import { darker, gather, kindOf, pull, push, rest, tip, type Bread, type Effect, type Ingredient, type Load, type Place } from './stuff'
 import { IDEAS, POOLS, ideasOf, judge, type Animal, type Group, type Idea, type Verdict } from './tastes'
 
-/** Places on the rack, and customers or groups that wait in the lane. */
-export const RACK_PLACES = 4, LANE_PLACES = 2
+/** Places on the rack; customers or groups laid out to wait in the lane; and the most the lane holds, once one has been sent back from the hatch. */
+export const RACK_PLACES = 4, LANE_PLACES = 2, LANE_MOST = 3
 
 /** A customer or a group, with the position that laid them out and the breads they have handed back so far. */
 export type Visitor = { group: Group; from: string; handedBack: number }
@@ -19,7 +19,7 @@ export type Visitor = { group: Group; from: string; handedBack: number }
 export type Bakery = {
   /** The place in the designed order where the next cycle is judged: an id from the ladder. */
   position: string
-  /** The hatch is empty after an ending and stays so until the child calls someone in. */
+  /** Nobody is at the hatch, after an ending or after the child sent someone back, and it stays so until the child calls someone in. */
   finished: boolean
   /** Ideas the badger has shown, so none is shown twice. */
   shown: readonly Idea[]
@@ -118,16 +118,26 @@ export function freshBakery(childAge: number | null, seed = 1): Step {
 }
 
 /**
+ * The child touched the one at the hatch. They go back to the lane as they
+ * are, with the position they were laid out from and their count of breads
+ * handed back. Nothing is judged, the hatch stands empty, and no pick is made.
+ */
+export function sendBack(bakery: Bakery): Step {
+  const back = bakery.hatch
+  if (!back) return same(bakery)
+  return { bakery: { ...bakery, hatch: null, finished: true, lane: [...bakery.lane, back] }, happened: [{ type: 'sent-back', visitor: back }] }
+}
+
+/**
  * The child touched someone in the lane. They step up; whoever was at the
- * hatch goes back to the lane without a word and nothing is judged.
+ * hatch first goes back to the lane without a word and nothing is judged.
  */
 export function callIn(bakery: Bakery, place: number): Step {
   const visitor = bakery.lane[place]
   if (!visitor) return same(bakery)
-  const back = bakery.hatch
-  const lane = back ? bakery.lane.map((waiting, at) => (at === place ? back : waiting)) : bakery.lane.filter((_, at) => at !== place)
-  const step = stepUp({ ...bakery, hatch: null, lane }, visitor)
-  return back ? { bakery: step.bakery, happened: [{ type: 'sent-back', visitor: back }, ...step.happened] } : step
+  const sent = sendBack(bakery)
+  const step = stepUp({ ...sent.bakery, lane: sent.bakery.lane.filter((_, at) => at !== place) }, visitor)
+  return { bakery: step.bakery, happened: [...sent.happened, ...step.happened] }
 }
 
 // --- The peel ----------------------------------------------------------------
@@ -226,6 +236,8 @@ export function handOver(bakery: Bakery, from: From): Step {
     return { bakery: { ...bakery, hatch: by }, happened: [{ type: 'handed-back', verdict, by }] }
   }
   const judged = visitor.from === bakery.position, outcome = judged ? outcomeOf(visitor.handedBack, verdict.secret) : null
-  const gone = { ...without(bakery, from), hatch: null }
+  // A secret ends as an ending does, with the peel back on the board, empty.
+  const cleared = without(bakery, from)
+  const gone = { ...cleared, hatch: null, peel: verdict.secret ? { at: 'board' as const, load: null } : cleared.peel }
   return { bakery: withCycle(gone, finishCycle(cycleOf(gone), outcome ?? 'mixed')), happened: [{ type: 'ending', visitor, taken: thing, secret: verdict.secret, outcome }] }
 }

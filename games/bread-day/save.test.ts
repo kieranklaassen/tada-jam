@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
-import { LANE_PLACES, RACK_PLACES, callIn, carry, freshBakery, handOver, tick, tipOnto, toRack, work, type Bakery } from './bakery'
+import { LANE_MOST, RACK_PLACES, callIn, carry, freshBakery, handOver, sendBack, tick, tipOnto, toRack, work, type Bakery } from './bakery'
 import { open, restore, serialize } from './save'
 import { STATE_VERSION } from './state'
 import { BAKE_SECONDS, MOST, RISE_SECONDS, WORK_FULL, type Bread, type Stuff } from './stuff'
@@ -48,6 +48,16 @@ describe('found as left', () => {
       expect(throughStorage(bakery)).toEqual(bakery)
     }
     expect(bakery.position).toBe(LADDER[LADDER.length - 1])
+  })
+
+  it('keeps a customer who was sent back, in the lane with its count, and the hatch empty', () => {
+    const refused = handOver(tipOnto(start(), 'flour').bakery, 'peel').bakery
+    const sent = sendBack(refused).bakery
+    const back = throughStorage(sent)
+    expect(back).toEqual(sent)
+    expect(back.hatch).toBeNull()
+    expect(back.lane).toContainEqual({ group: ['goat'], from: 'dough', handedBack: 1 })
+    expect(throughStorage(callIn(back, 0).bakery).lane).toContainEqual({ group: ['goat'], from: 'dough', handedBack: 1 })
   })
 
   it('keeps rising and baking as two numbers that only attended time moves', () => {
@@ -104,7 +114,7 @@ describe('a damaged save', () => {
     expect(wild.rack).toEqual([{ raw: false, crumb: 'pancake', shape: 'flat', crust: 'gold', seeds: false }, null, null, null])
     expect(wild.hatch, 'the goat and the bear cannot share a bread').toBeNull()
     expect(wild.finished).toBe(true)
-    expect(wild.lane.length).toBeLessThanOrEqual(LANE_PLACES)
+    expect(wild.lane.length).toBeLessThanOrEqual(LANE_MOST)
     expect(wild.lane[0]).toEqual({ group: ['hen'], from: 'dough', handedBack: 0 })
     const animals = wild.lane.flatMap((visitor) => visitor.group)
     expect(new Set(animals).size).toBe(animals.length)
@@ -138,7 +148,7 @@ describe('size', () => {
       peel: { at: 'board', load: { raw: true, flour: MOST, water: MOST, bubbly: true, seeds: true, work: WORK_FULL, long: true, rise: 99.99, bake: 99.99 } },
       rack: Array<Bread>(RACK_PLACES).fill(biggestBread),
       hatch: { group: trio[0], from: longest, handedBack: 99 },
-      lane: Array.from({ length: LANE_PLACES }, (_, at) => ({ group: trio[at + 1], from: longest, handedBack: 99 })),
+      lane: Array.from({ length: LANE_MOST }, (_, at) => ({ group: trio[at + 1], from: longest, handedBack: 99 })),
       seed: 0xffffffff,
     }
     const bytes = new TextEncoder().encode(JSON.stringify(serialize(largest))).length
