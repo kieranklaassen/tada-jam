@@ -48,17 +48,19 @@ export type Showing = {
   worn: { chair: number; friend: number }
 }
 
-/** Everything the scene is filled in from: the exact haircut the child gave, and who it was given to. */
-export function showingOf(salon: Salon): Showing {
+/** Everything the scene is filled in from: the exact haircut the child gave, and who it was given to. Nothing, with nobody in the chair. */
+export function showingOf(salon: Salon): Showing | null {
+  if (salon.chair === null) return null
   const taste = TASTES[salon.chair], comparison = compare(salon.lock, salon.model), mane = maneFeeling(salon.chair, salon.mane)
-  const at = salon.ribbon?.at
+  const ribbon = salon.ribbon
+  const worn = (who: 'chair' | 'friend'): number => salon.clippings.filter((c) => c.on === 'face' && c.who === who).length
   return {
     comparison,
     lock: comparison.kind === 'as-long' ? taste.reactions.lockAsLong : comparison.kind === 'too-long' ? taste.reactions.lockTooLong : taste.reactions.lockTooShort,
     mane,
     maneReaction: mane === 'liked' ? taste.reactions.maneLiked : mane === 'hated' ? taste.reactions.maneHated : null,
-    bow: at === 'mane' ? taste.reactions.bow : null,
-    blindfold: at === 'face-chair' ? 'chair' : at === 'face-friend' ? 'friend' : null,
-    worn: { chair: salon.clippings.filter((c) => c.on === 'chair').length, friend: salon.clippings.filter((c) => c.on === 'friend').length },
+    bow: ribbon?.at === 'mane' ? taste.reactions.bow : null,
+    blindfold: ribbon?.at === 'face' ? ribbon.who : null,
+    worn: { chair: worn('chair'), friend: worn('friend') },
   }
 }

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { MAX_LEN, MIN_LEN } from './rules'
 import { CUSTOMERS, TASTES } from './tastes'
-import { CELL_VOICES, OTHER_VOICES, VOICE_RANGE, alike, inVoice, pitchForLength, type VoiceSpec } from './voices'
+import { CELL_VOICES, OTHER_VOICES, RUB_VOICES, VOICE_RANGE, alike, inVoice, pitchForLength, type VoiceSpec } from './voices'
 
 const within = (value: number, range: { min: number; max: number }): boolean => value >= range.min && value <= range.max
-const all: [string, VoiceSpec][] = [...Object.entries(CELL_VOICES), ...Object.entries(OTHER_VOICES)]
+const all: [string, VoiceSpec][] = [...Object.entries(CELL_VOICES), ...Object.entries(OTHER_VOICES), ...Object.entries(RUB_VOICES).map(([who, v]): [string, VoiceSpec] => [`rub/${who}`, v])]
 
 describe('the voices', () => {
   it.each(all)('%s stays inside the stated ranges', (_name, v) => {
@@ -32,6 +32,12 @@ describe('the voices', () => {
     for (let i = 0; i < others.length; i++) for (let j = i + 1; j < others.length; j++) {
       expect(alike(others[i][1], others[j][1]), `${others[i][0]} and ${others[j][0]}`).toBe(false)
     }
+  })
+
+  it('gives each customer a sound of its own for a head rub', () => {
+    const rubs = Object.entries(RUB_VOICES) as [string, VoiceSpec][]
+    expect(rubs.map(([who]) => who).sort()).toEqual([...CUSTOMERS].sort())
+    for (let i = 0; i < rubs.length; i++) for (let j = i + 1; j < rubs.length; j++) expect(alike(rubs[i][1], rubs[j][1]), `${rubs[i][0]} and ${rubs[j][0]}`).toBe(false)
   })
 
   it('is no louder at its loudest than a quarter of full scale, and a snip is the loudest touch', () => {

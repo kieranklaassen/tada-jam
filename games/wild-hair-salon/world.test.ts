@@ -14,7 +14,7 @@ const salon = (over: Partial<Salon> = {}): Salon => ({
 const target = (object: ObjectId): Target =>
   object === 'tuft' ? { object, index: 3 } : object === 'clipping' ? { object, index: 0 } : object === 'face' ? { object, who: 'chair' } : { object }
 const deed = (action: ActionId): Deed =>
-  action === 'pull' ? { action, to: 90, drop: { on: 'chair' } } : action === 'snip' ? { action, at: 12 } : { action }
+  action === 'pull' ? { action, to: 90, drop: { on: 'face', who: 'chair', spot: 'lip' } } : action === 'snip' ? { action, at: 12 } : { action }
 
 describe('a touch on the salon', () => {
   it('answers every cell of the grid with that cell, and leaves the salon it was given as it was', () => {
@@ -106,9 +106,21 @@ describe('a touch on the salon', () => {
     expect(cut.clippings).toEqual([{ len: 16, hue: 'ribbon', on: 'floor', x: expect.any(Number) }])
   })
 
-  it('hangs the ribbon beside whatever it is brought to, and keeps its length as it goes', () => {
-    const places: [Target, string][] = [[{ object: 'lock' }, 'lock'], [{ object: 'model' }, 'model'], [{ object: 'tuft', index: 1 }, 'mane'], [{ object: 'clipping', index: 0 }, 'floor'], [{ object: 'face', who: 'chair' }, 'face-chair'], [{ object: 'face', who: 'friend' }, 'face-friend'], [{ object: 'ribbon' }, 'peg']]
-    for (const [t, at] of places) expect(act(salon({ ribbon: { len: 37, at: 'lock' } }), t, { action: 'ribbon' }).salon.ribbon).toEqual({ len: 37, at })
+  it('hangs the ribbon beside whatever it is brought to, keeps its length, and knows exactly where it is', () => {
+    const places: [Target, object][] = [
+      [{ object: 'lock' }, { at: 'lock' }], [{ object: 'model' }, { at: 'model' }], [{ object: 'tuft', index: 1 }, { at: 'mane', tuft: 1 }], [{ object: 'tuft', index: 7 }, { at: 'mane', tuft: 7 }],
+      [{ object: 'clipping', index: 0 }, { at: 'floor', x: 40 }], [{ object: 'face', who: 'chair' }, { at: 'face', who: 'chair' }], [{ object: 'face', who: 'friend' }, { at: 'face', who: 'friend' }], [{ object: 'ribbon' }, { at: 'peg' }],
+    ]
+    for (const [t, place] of places) expect(act(salon({ ribbon: { len: 37, at: 'mane', tuft: 3 } }), t, { action: 'ribbon' }).salon.ribbon).toEqual({ len: 37, ...place })
+    // Brought to a piece that is stuck on a face, it goes round that face.
+    const worn = salon({ clippings: [{ len: 9, hue: 'lion', on: 'face', who: 'friend', spot: 'brow' }] })
+    expect(act(worn, { object: 'clipping', index: 0 }, { action: 'ribbon' }).salon.ribbon).toEqual({ len: 60, at: 'face', who: 'friend' })
+  })
+
+  it('drops a ribbon offcut under the ribbon: where it lies on the floor, or under its peg', () => {
+    const lying = act(salon({ clippings: [], ribbon: { len: 60, at: 'floor', x: 22 } }), { object: 'ribbon' }, { action: 'snip', at: 30 }).salon
+    expect(lying.ribbon).toEqual({ len: 30, at: 'floor', x: 22 })
+    expect(lying.clippings).toEqual([{ len: 30, hue: 'ribbon', on: 'floor', x: 22 }])
   })
 
   it('carries a length from the model to the lock on the ribbon', () => {
@@ -130,30 +142,46 @@ describe('a touch on the salon', () => {
     }
   })
 
-  it('moves, splits, hops and tidies a clipping', () => {
-    const face = act(salon(), { object: 'clipping', index: 0 }, { action: 'pull', drop: { on: 'friend' } }).salon
-    expect(face.clippings[0].on).toBe('friend')
+  it('moves, splits, hops and tidies a clipping, and knows whose face it is on and where', () => {
+    const face = act(salon(), { object: 'clipping', index: 0 }, { action: 'pull', drop: { on: 'face', who: 'friend', spot: 'brow' } }).salon
+    expect(face.clippings[0]).toEqual({ len: 20, hue: 'lion', on: 'face', who: 'friend', spot: 'brow' })
     const floor = act(face, { object: 'clipping', index: 0 }, { action: 'pull', drop: { on: 'floor', x: 250 } }).salon
-    expect(floor.clippings[0]).toMatchObject({ on: 'floor', x: 100 })
+    expect(floor.clippings[0]).toEqual({ len: 20, hue: 'lion', on: 'floor', x: 100 })
     const halves = act(salon(), { object: 'clipping', index: 0 }, { action: 'snip', at: 0 }).salon.clippings
     expect(halves.map((c) => c.len)).toEqual([10, 10])
-    expect(halves[0].x).toBeLessThan(halves[1].x)
+    expect(halves).toMatchObject([{ on: 'floor', x: 36 }, { on: 'floor', x: 44 }])
     const tiny = salon({ clippings: [{ len: 5, hue: 'lion', on: 'floor', x: 40 }] })
     expect(act(tiny, { object: 'clipping', index: 0 }, { action: 'snip', at: 0 }).salon.clippings).toEqual([])
-    expect(act(face, { object: 'clipping', index: 0 }, { action: 'poke' }).salon.clippings[0]).toMatchObject({ on: 'floor', x: 46 })
+    // Poked on a face, it hops off to the floor under that face.
+    const hopped = act(face, { object: 'clipping', index: 0 }, { action: 'poke' }).salon.clippings[0]
+    expect(hopped).toEqual({ len: 20, hue: 'lion', on: 'floor', x: 62 })
     expect(act(salon(), { object: 'clipping', index: 0 }, { action: 'ruffle' }).salon.clippings).toEqual([])
     expect(act(salon(), { object: 'clipping', index: 9 }, { action: 'poke' }).cell).toBeNull()
   })
 
   it('keeps at most twelve clippings, lets the oldest on the floor go first and never takes one off a face', () => {
-    let s = salon({ clippings: [{ len: 9, hue: 'lion', on: 'chair', x: 0 }] })
+    let s = salon({ clippings: [{ len: 9, hue: 'lion', on: 'face', who: 'chair', spot: 'lip' }] })
     for (let i = 0; i < 30; i++) s = withClipping(s, { len: 10 + i, hue: 'poodle', on: 'floor', x: 50 })
     expect(s.clippings).toHaveLength(MAX_CLIPPINGS)
-    expect(s.clippings[0]).toMatchObject({ on: 'chair', len: 9 })
+    expect(s.clippings[0]).toMatchObject({ on: 'face', len: 9 })
     expect(s.clippings[MAX_CLIPPINGS - 1].len).toBe(39)
     let faces = salon({ clippings: [] })
-    for (let i = 0; i < 20; i++) faces = withClipping(faces, { len: 5 + i, hue: 'lion', on: 'chair', x: 0 })
+    for (let i = 0; i < 20; i++) faces = withClipping(faces, { len: 5 + i, hue: 'lion', on: 'face', who: 'chair', spot: 'chin' })
     expect(faces.clippings).toHaveLength(MAX_CLIPPINGS)
+  })
+
+  it('has no lock, model, mane or face to touch with nobody in the chair, and still answers on the floor', () => {
+    const empty = salon({ chair: null, friend: null, cape: 'off' })
+    for (const object of ['lock', 'model', 'tuft', 'face'] as const) for (const action of ACTIONS) {
+      const done = act(empty, target(object), deed(action))
+      expect(done.cell, `${object}/${action}`).toBeNull()
+      expect(done.salon).toBe(empty)
+    }
+    expect(act(empty, { object: 'clipping', index: 0 }, { action: 'poke' }).cell).toBe(GRID.clipping.poke)
+    expect(act(empty, { object: 'ribbon' }, { action: 'pull', to: 90 }).salon.ribbon).toEqual({ len: 90, at: 'peg' })
+    // There is no face to stick a piece on: it stays where it was.
+    const kept = act(empty, { object: 'clipping', index: 0 }, { action: 'pull', drop: { on: 'face', who: 'chair', spot: 'lip' } })
+    expect(kept.salon.clippings).toEqual(empty.clippings)
   })
 
   it('tells which length rings, for the voices that follow a length', () => {
@@ -170,7 +198,7 @@ describe('a touch on the salon', () => {
     expect(seatFriend(across, 'beside').seat).toBe('beside')
     const first = withRibbon(salon({ ribbon: null }))
     expect(first.ribbon).toEqual({ len: TAIL_LEN, at: 'peg' })
-    const kept = salon({ ribbon: { len: 12, at: 'mane' } })
+    const kept = salon({ ribbon: { len: 12, at: 'mane', tuft: 0 } })
     expect(withRibbon(kept)).toBe(kept)
   })
 })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { MAX_LEN, MEET, MIN_LEN, NEAR, TUFTS } from './rules'
-import { compare, outcomeOf, showingOf } from './showing'
+import { compare, outcomeOf, showingOf as maybeShowing } from './showing'
 import { CUSTOMERS, TASTES } from './tastes'
 import type { Salon } from './world'
 
@@ -8,6 +8,8 @@ const salon = (over: Partial<Salon> = {}): Salon => ({
   chair: 'lion', friend: 'poodle', waiting: ['yak', 'rabbit'], seed: 1, lock: 70, model: 44, seat: 'beside', cape: 'on',
   mane: Array(TUFTS).fill(50), ribbon: null, clippings: [], shown: { snip: true, pull: true, ribbon: false }, ...over,
 })
+
+const showingOf = (s: Salon) => maybeShowing(s)!
 
 describe('what shows when the cape comes off', () => {
   it('says where the difference is: the piece below the model, or the gap above its end', () => {
@@ -65,17 +67,18 @@ describe('what shows when the cape comes off', () => {
   })
 
   it('stars the exact haircut: the mane, the bow, the blindfold and what is worn on faces', () => {
-    const long = showingOf(salon({ mane: Array(TUFTS).fill(90), ribbon: { len: 40, at: 'mane' } }))
+    const long = showingOf(salon({ mane: Array(TUFTS).fill(90), ribbon: { len: 40, at: 'mane', tuft: 4 } }))
     expect(long.mane).toBe('liked')
     expect(long.maneReaction).toBe(TASTES.lion.reactions.maneLiked)
     expect(long.bow).toBe(TASTES.lion.reactions.bow)
-    const short = showingOf(salon({ mane: Array(TUFTS).fill(8), ribbon: { len: 40, at: 'face-friend' } }))
+    const short = showingOf(salon({ mane: Array(TUFTS).fill(8), ribbon: { len: 40, at: 'face', who: 'friend' } }))
     expect(short.maneReaction).toBe(TASTES.lion.reactions.maneHated)
     expect(short.bow).toBeNull()
     expect(short.blindfold).toBe('friend')
-    const plain = showingOf(salon({ clippings: [{ len: 9, hue: 'lion', on: 'chair', x: 0 }, { len: 9, hue: 'lion', on: 'chair', x: 0 }, { len: 9, hue: 'lion', on: 'friend', x: 0 }, { len: 9, hue: 'lion', on: 'floor', x: 5 }] }))
+    const plain = showingOf(salon({ clippings: [{ len: 9, hue: 'lion', on: 'face', who: 'chair', spot: 'lip' }, { len: 9, hue: 'lion', on: 'face', who: 'chair', spot: 'brow' }, { len: 9, hue: 'lion', on: 'face', who: 'friend', spot: 'chin' }, { len: 9, hue: 'lion', on: 'floor', x: 5 }] }))
     expect(plain.maneReaction).toBeNull()
     expect(plain.blindfold).toBeNull()
     expect(plain.worn).toEqual({ chair: 2, friend: 1 })
+    expect(maybeShowing(salon({ chair: null, friend: null, cape: 'off' }))).toBeNull()
   })
 })

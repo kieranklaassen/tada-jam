@@ -40,12 +40,12 @@ export const CELL_VOICES = {
   'lock/snip': { kind: 'noise', q: 6, pitch: 3200, peak: 0.2, attack: 0.001, length: 0.07 },
   'lock/poke': { kind: 'tone', wave: 'triangle', pitch: 440, peak: 0.16, attack: 0.003, length: 0.5 },
   'lock/ruffle': { kind: 'noise', q: 0.8, pitch: 1800, peak: 0.08, attack: 0.02, length: 0.3 },
-  'lock/ribbon': { kind: 'tone', wave: 'square', pitch: 1200, peak: 0.06, attack: 0.001, length: 0.05 },
+  'lock/ribbon': { kind: 'noise', q: 5, pitch: 1100, peak: 0.1, attack: 0.001, length: 0.05 },
   'model/pull': { kind: 'tone', wave: 'sine', pitch: 180, glideTo: 520, peak: 0.18, attack: 0.004, length: 0.35 },
   'model/snip': { kind: 'tone', wave: 'sine', pitch: 420, glideTo: 140, peak: 0.2, attack: 0.001, length: 0.12 },
   'model/poke': { kind: 'tone', wave: 'sine', pitch: 330, peak: 0.13, attack: 0.03, length: 0.45 },
   'model/ruffle': { kind: 'tone', wave: 'triangle', pitch: 660, glideTo: 880, peak: 0.1, attack: 0.01, length: 0.3 },
-  'model/ribbon': { kind: 'tone', wave: 'sine', pitch: 247, peak: 0.06, attack: 0.08, length: 0.7 },
+  'model/ribbon': { kind: 'tone', wave: 'sine', pitch: 300, glideTo: 170, peak: 0.08, attack: 0.01, length: 0.14 },
   'tuft/pull': { kind: 'tone', wave: 'sine', pitch: 400, glideTo: 1200, peak: 0.1, attack: 0.02, length: 0.4 },
   'tuft/snip': { kind: 'noise', q: 0.7, pitch: 500, peak: 0.14, attack: 0.005, length: 0.18 },
   'tuft/poke': { kind: 'tone', wave: 'triangle', pitch: 140, glideTo: 320, peak: 0.18, attack: 0.002, length: 0.4 },
@@ -53,13 +53,13 @@ export const CELL_VOICES = {
   'tuft/ribbon': { kind: 'tone', wave: 'sine', pitch: 2093, peak: 0.09, attack: 0.001, length: 0.6 },
   'ribbon/pull': { kind: 'tone', wave: 'square', pitch: 90, peak: 0.06, attack: 0.001, length: 0.04 },
   'ribbon/snip': { kind: 'noise', q: 1.2, pitch: 2400, peak: 0.07, attack: 0.01, length: 0.6 },
-  'ribbon/poke': { kind: 'tone', wave: 'sawtooth', pitch: 240, glideTo: 200, peak: 0.12, attack: 0.002, length: 0.3 },
+  'ribbon/poke': { kind: 'noise', q: 1.5, pitch: 420, peak: 0.14, attack: 0.002, length: 0.09 },
   'ribbon/ruffle': { kind: 'noise', q: 5, pitch: 700, glideTo: 1800, peak: 0.08, attack: 0.03, length: 0.5 },
   'ribbon/ribbon': { kind: 'noise', q: 4, pitch: 1200, glideTo: 3000, peak: 0.09, attack: 0.005, length: 0.22 },
-  'clipping/pull': { kind: 'tone', wave: 'sine', pitch: 700, glideTo: 760, peak: 0.06, attack: 0.01, length: 0.15 },
+  'clipping/pull': { kind: 'noise', q: 3, pitch: 2100, peak: 0.05, attack: 0.01, length: 0.15 },
   'clipping/snip': { kind: 'noise', q: 8, pitch: 3800, peak: 0.12, attack: 0.001, length: 0.045 },
   'clipping/poke': { kind: 'tone', wave: 'square', pitch: 1800, peak: 0.05, attack: 0.001, length: 0.04 },
-  'clipping/ruffle': { kind: 'noise', q: 0.6, pitch: 1000, peak: 0.05, attack: 0.04, length: 0.45 },
+  'clipping/ruffle': { kind: 'noise', q: 1, pitch: 160, peak: 0.07, attack: 0.04, length: 0.45 },
   'clipping/ribbon': { kind: 'noise', q: 1, pitch: 300, peak: 0.08, attack: 0.003, length: 0.1 },
   'face/pull': { kind: 'tone', wave: 'sine', pitch: 520, glideTo: 160, peak: 0.16, attack: 0.004, length: 0.28 },
   'face/snip': { kind: 'noise', q: 9, pitch: 2600, peak: 0.1, attack: 0.001, length: 0.1 },
@@ -70,7 +70,7 @@ export const CELL_VOICES = {
 
 export type CellVoiceId = keyof typeof CELL_VOICES
 
-/** The sounds that belong to no cell: the scissors arriving in the hand, a lock caught, the cape, the door. */
+/** The sounds that belong to no cell, or come second in one: the scissors arriving in the hand, a lock caught, the cape, the door, a piece that sticks on a face, fluff that blows away, the voice behind a blindfold. */
 export const OTHER_VOICES = {
   scissors: { kind: 'tone', wave: 'triangle', pitch: 2600, glideTo: 3400, peak: 0.06, attack: 0.001, length: 0.12 },
   caught: { kind: 'tone', wave: 'sine', pitch: 900, glideTo: 1100, peak: 0.08, attack: 0.002, length: 0.06 },
@@ -79,6 +79,17 @@ export const OTHER_VOICES = {
   capeOn: { kind: 'noise', q: 0.7, pitch: 1400, glideTo: 450, peak: 0.12, attack: 0.02, length: 0.4 },
   door: { kind: 'tone', wave: 'sine', pitch: 784, glideTo: 1047, peak: 0.1, attack: 0.004, length: 0.5 },
   hop: { kind: 'tone', wave: 'sine', pitch: 200, glideTo: 380, peak: 0.1, attack: 0.004, length: 0.14 },
+  smack: { kind: 'noise', q: 1, pitch: 600, peak: 0.1, attack: 0.002, length: 0.06 },
+  sigh: { kind: 'noise', q: 0.6, pitch: 900, glideTo: 500, peak: 0.05, attack: 0.06, length: 0.5 },
+  ooh: { kind: 'tone', wave: 'sine', pitch: 330, glideTo: 440, peak: 0.1, attack: 0.04, length: 0.3 },
+} as const satisfies Record<string, VoiceSpec>
+
+/** A head rub is answered by each customer in its own way, and each answer has its sound: a purr, a huff, a groan, a drumming foot. */
+export const RUB_VOICES = {
+  lion: { kind: 'tone', wave: 'sine', pitch: 100, peak: 0.1, attack: 0.05, length: 0.7 },
+  poodle: { kind: 'noise', q: 1, pitch: 750, peak: 0.08, attack: 0.02, length: 0.2 },
+  yak: { kind: 'tone', wave: 'sawtooth', pitch: 90, glideTo: 68, peak: 0.09, attack: 0.08, length: 0.8 },
+  rabbit: { kind: 'tone', wave: 'square', pitch: 150, peak: 0.08, attack: 0.001, length: 0.05 },
 } as const satisfies Record<string, VoiceSpec>
 
 /** A string is lower the longer it is: two octaves from a stub to a lock that reaches the floor. */
