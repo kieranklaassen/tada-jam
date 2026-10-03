@@ -45,6 +45,28 @@ export type GameEvent =
   | { kind: 'called'; index: 0 | 1; did: 'stepped' | 'swapped' }
   /** The cycle at the window ended: the serve starts. `how` is what ended it. */
   | { kind: 'ending'; ending: Ending; how: 'shut' | 'sentOff' | 'fed' }
+  /** Pieces were set down on the board or the shelf, each from `from`: alongside a fruit, butted end to end against a piece, or just put there. */
+  | { kind: 'setDown'; ids: number[]; from: Box[]; how: 'put' | 'beside' | 'butted'; voice: VoiceId }
+  /** A piece was laid in the tin. `opened` says the tin sprang open for it, and `firstShowing` names the idea shown now, once. */
+  | { kind: 'given'; id: number; from: Box; opened: boolean; firstShowing: string | null; length: number; voice: VoiceId }
+  /** What lies in the tin does not fit: it sticks out past the jaw, or leaves a gap, by so many points. */
+  | { kind: 'misfit'; how: 'over' | 'under'; by: number; length: number; voice: VoiceId }
+  /** A customer ate a piece from the hand with nothing judged: one who waits, or one already served. */
+  | { kind: 'ate'; whom: Whom; piece: Piece; from: Box; voice: VoiceId }
+  /** A waiting pelican left as the glider, and another customer joined the queue in its place. */
+  | { kind: 'gliderAway'; whom: 0 | 1 }
+  /** The crate chewed a piece and burped it across to the dog. */
+  | { kind: 'burp'; piece: Piece; from: Box; voice: VoiceId }
+  /** A flung piece hit a customer and is licked off. */
+  | { kind: 'splat'; whom: Whom; piece: Piece; from: Box; voice: VoiceId }
+  /** A flung piece bounced off something and came back to the counter. */
+  | { kind: 'bounce'; id: number; off: 'tin' | 'fruit' | 'crate' | 'shelf'; x: number; y: number; length: number; voice: VoiceId }
+  /** A piece was knocked along its lane by a flung one, from `from`. */
+  | { kind: 'knocked'; id: number; from: Box; length: number; voice: VoiceId }
+  /** The roller pressed so many equal parts into a fruit or a piece. */
+  | { kind: 'pressed'; id: number; parts: number; length: number; voice: VoiceId }
+  /** The roller ran over something it leaves no mark on. `parts` is how many ruled parts answered, on an open tin. */
+  | { kind: 'rolled'; on: 'tin' | 'customer' | 'crate' | 'dog' | 'bare'; whom: Whom | null; parts: number; x: number; y: number; voice: VoiceId }
 
 /** What one stroke has done so far, so that it cuts each piece once and bothers each other thing once. */
 export type Stroke = { made: number[]; crate: boolean; dog: boolean; tin: boolean; snipped: Whom[]; cuts: number; travelled: number }
