@@ -174,9 +174,17 @@ describe('sending a vehicle off', () => {
     expect(seen.size).toBe(ROSTER.length)
   })
 
-  it('picks who waits from the seeded stream, never one that is excluded', () => {
-    expect(whoNext(5, ['tipper'])).toEqual(whoNext(5, ['tipper']))
+  it('takes the roster in turn, so every vehicle is back within four washes', () => {
+    let state = freshWash(null)
+    const order = [state.bay.who]
+    for (let i = 0; i < 8; i++) {
+      state = sendOff(state).state
+      order.push(state.bay.who)
+    }
+    const ids = ROSTER.map((def) => def.id)
+    expect(order).toEqual([...ids, ...ids, ids[0]])
     for (let seed = 1; seed < 40; seed++) expect(['tipper', 'mixer']).not.toContain(whoNext(seed, ['tipper', 'mixer'])[0])
+    expect(whoNext(5, ['tipper'])[1]).not.toBe(5)
   })
 })
 

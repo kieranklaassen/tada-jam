@@ -54,8 +54,8 @@ export const fireEngine: VehicleDef = {
     // The ladder: two cream rails and their rungs, hinged behind the cab.
     const part = new Shape()
     for (const side of [-1, 1]) part.box([3.2, 0.12, 0.1], PAINT.cream, { at: [0.85, 2.18, side * 0.36] }, { bevel: 0.03 })
-    for (let i = 0; i < 8; i++) part.box([0.09, 0.09, 0.66], PAINT.zinc, { at: [-0.55 + i * 0.4, 2.18, 0] }, { bevel: 0.02, mat: MAT.metal })
-    part.box([0.3, 0.3, 0.9], PAINT.red, { at: [2.3, 2.1, 0] }, { bevel: 0.05 })
+    for (let i = 0; i < 8; i++) part.round(0.03, 0.66, PAINT.zinc, { at: [-0.55 + i * 0.4, 2.18, 0] }, { axis: 'z', mat: MAT.metal, segs: 8, bevel: 0.008 })
+    part.box([0.3, 0.24, 0.94], PAINT.red, { at: [2.3, 2.03, 0] }, { bevel: 0.05 })
     return { body, part, pivot: [2.3, 2.05, 0] }
   },
 }

@@ -6,7 +6,7 @@ import { react } from './reactions'
 import type { VehicleDef, VehicleId } from './roster'
 import { Scene } from './scene'
 import { dripScene, openDriedPatch, puddleScene, sendOffScene, shineScene } from './scenes'
-import { silhouette } from './silhouette'
+import { reliefAt, silhouette } from './silhouette'
 import { drumJammed, foamHat, launchFoam, tasteFor, type Taste } from './tastes'
 import { GRID_W, allShiny, dab, decode, type Hand, type Surface, type Tool } from './surface'
 import * as voices from './voices'
@@ -185,7 +185,8 @@ export class Play {
     const motion = this.bay.motion
     this.tool.x = motion.homeX + target.x
     this.tool.y = target.y
-    this.tool.z = motion.homeZ + 0.98
+    // The tool works on the surface that is really there: a wheel stands prouder than a door.
+    this.tool.z = motion.homeZ + reliefAt(this.bay.def, target.col, target.row)
     this.tool.working = true
     motion.lookAt = { side: 0.95 + Math.max(-1, Math.min(1, target.x / 2)) * 0.25, up: Math.max(-0.3, Math.min(0.5, (target.y - 1.5) * 0.3)) }
   }
@@ -209,7 +210,7 @@ export class Play {
     if (this.hand === 'cloth') this.rise = Math.min(1, this.rise + 0.12)
     const reaction = react(this.hand, result.met[0], { speed: Math.min(1, this.slide / 6), variant: this.variant, rise: this.rise })
     for (const spec of reaction.voices) this.say(spec)
-    const wx = bay.motion.homeX + target.x, wz = bay.motion.homeZ + 1.0
+    const wx = bay.motion.homeX + target.x, wz = bay.motion.homeZ + reliefAt(bay.def, target.col, target.row) + 0.04
     for (const b of reaction.bursts) {
       // A glint sits on the paint; everything else is thrown from it.
       if (b.kind === KIND.glint) for (let i = 0; i < b.count; i++) this.particles.emit(b.kind, wx + (this.particles.random() - 0.5) * 0.7, target.y + (this.particles.random() - 0.5) * 0.6, wz + 0.05, 0, 0, 0, b.size, b.life)
@@ -396,7 +397,7 @@ export class Play {
     this.tapIn -= dt
     if (this.tapIn <= 0) {
       this.tapIn = DRIP_EVERY * (0.7 + this.particles.random() * 0.6)
-      if (this.hand !== 'hose') this.particles.emit(KIND.drop, TOOL_HOME.hose[0], TOOL_HOME.hose[1] - 0.72, TOOL_HOME.hose[2], 0, 0, 0, 0.09, 3)
+      if (this.hand !== 'hose') this.particles.emit(KIND.drop, TOOL_HOME.hose[0], TOOL_HOME.hose[1] - 0.56, TOOL_HOME.hose[2], 0, 0, 0, 0.09, 3)
     }
     for (const who of this.onStage) who.motion.step(dt)
     this.particles.step(dt, (landing) => {

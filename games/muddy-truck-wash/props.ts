@@ -29,8 +29,9 @@ export const LAYOUT = {
 /** Where each tool hangs: its own origin in the world. */
 export const TOOL_HOME: Readonly<Record<Tool, readonly [number, number, number]>> = {
   cloth: [LAYOUT.rack.x + 0.62, 3.62, LAYOUT.rack.z],
-  hose: [LAYOUT.rack.x + 0.63, 2.28, LAYOUT.rack.z + 0.01],
-  sponge: [LAYOUT.rack.x + 0.66, 0.98, LAYOUT.rack.z],
+  // The nozzle hangs wholly inside the coil's ring, touching neither turn of it.
+  hose: [LAYOUT.rack.x + 0.63, 2.42, LAYOUT.rack.z + 0.01],
+  sponge: [LAYOUT.rack.x + 0.66, 1.06, LAYOUT.rack.z],
 }
 
 const SPONGE = rgb(0xffd21f), HOSE = rgb(0x1fae54), CLOTH = rgb(0xf6f1e6), STRIPE = rgb(0xd61f2c), SUDS = rgb(0xf4fbff)
@@ -74,9 +75,9 @@ export function toolShape(tool: Tool): Shape {
     s.box([0.82, 0.4, 0.56], SPONGE, { turn: { axis: 'z', by: 0.12 } }, { bevel: 0.11, mat: MAT.soft })
   } else if (tool === 'hose') {
     // The nozzle, pointing down -y from its origin: a stub of hose, a red grip, a zinc tip. The coil stays on the rack.
-    s.round(0.085, 0.3, HOSE, { at: [0, 0.0, 0] }, { axis: 'y', mat: MAT.rubber, segs: 10 })
-    s.round(0.1, 0.42, PAINT.red, { at: [0, -0.32, 0] }, { axis: 'y', r2: 0.17, segs: 14, bevel: 0.03 })
-    s.round(0.085, 0.2, PAINT.zinc, { at: [0, -0.6, 0] }, { axis: 'y', mat: MAT.metal, segs: 12, bevel: 0.02 })
+    s.round(0.08, 0.2, HOSE, { at: [0, 0.0, 0] }, { axis: 'y', mat: MAT.rubber, segs: 10 })
+    s.round(0.1, 0.3, PAINT.red, { at: [0, -0.24, 0] }, { axis: 'y', r2: 0.16, segs: 14, bevel: 0.03 })
+    s.round(0.08, 0.14, PAINT.zinc, { at: [0, -0.45, 0] }, { axis: 'y', mat: MAT.metal, segs: 12, bevel: 0.02 })
   } else {
     // A folded cloth over the arm: cream with two red stripes.
     s.round(0.11, 0.84, CLOTH, { at: [0, 0.02, 0] }, { axis: 'x', mat: MAT.soft, segs: 12, bevel: 0.05 })
@@ -95,13 +96,13 @@ export function bayShape(): Shape {
   const wall = LAYOUT.wall.z
   // A red water pipe along the wall, on zinc brackets, down to the rack.
   s.round(0.11, 9.6, PAINT.red, { at: [-1.2, 3.55, wall + 0.2] }, { axis: 'x', segs: 12 })
-  for (const x of [-5.4, -2.4, 0.6, 3.2]) s.box([0.16, 0.3, 0.3], PAINT.zinc, { at: [x, 3.55, wall + 0.14] }, { bevel: 0.04, mat: MAT.metal })
+  for (const x of [-5.4, -2.4, 0.6]) s.box([0.16, 0.3, 0.3], PAINT.zinc, { at: [x, 3.55, wall + 0.14] }, { bevel: 0.04, mat: MAT.metal })
   // The door post: yellow with dark bands, and a lintel.
   const post = LAYOUT.yardFrom - 0.1
   s.box([0.36, 5.2, 0.36], PAINT.yellow, { at: [post, 2.6, wall + 0.2] }, { bevel: 0.05 })
   for (const y of [0.5, 1.5, 2.5, 3.5, 4.5]) s.box([0.46, 0.4, 0.46], PAINT.charcoal, { at: [post, y, wall + 0.2] }, { bevel: 0.05 })
   // A drain grate at the front of the pad.
   s.box([1.1, 0.04, 0.5], PAINT.charcoal, { at: [0.2, 0.02, 1.62] }, { bevel: 0.015 })
-  for (let i = -3; i <= 3; i++) s.box([0.07, 0.05, 0.42], PAINT.zinc, { at: [0.2 + i * 0.15, 0.03, 1.62] }, { bevel: 0.01, mat: MAT.metal })
+  for (let i = -3; i <= 3; i++) s.box([0.07, 0.1, 0.42], PAINT.zinc, { at: [0.2 + i * 0.15, 0.05, 1.62] }, { bevel: 0.01, mat: MAT.metal })
   return s
 }

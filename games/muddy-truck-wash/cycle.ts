@@ -34,10 +34,18 @@ export function judge(surface: Surface, came: number): CycleOutcome {
   return 'mixed'
 }
 
-/** Who waits next: one of the roster that is neither in the bay nor just gone, picked from the seeded stream. */
+/**
+ * Who waits next: the roster in its own order, round and round, from the one
+ * after `not[0]` (the vehicle rolling in), skipping any in `not`. So a child
+ * meets every vehicle in turn and none stays away long. The seed only moves
+ * on: it lays out the mud, not the order.
+ */
 export function whoNext(seed: number, not: readonly VehicleId[]): [VehicleId, number] {
-  const free = ROSTER.filter((def) => !not.includes(def.id))
-  const [roll, s] = draw(seed)
-  const from = free.length ? free : ROSTER
-  return [from[Math.floor(roll * from.length)].id, s]
+  const from = Math.max(0, ROSTER.findIndex((def) => def.id === not[0]))
+  const [, s] = draw(seed)
+  for (let step = 1; step <= ROSTER.length; step++) {
+    const def = ROSTER[(from + step) % ROSTER.length]
+    if (!not.includes(def.id)) return [def.id, s]
+  }
+  return [ROSTER[(from + 1) % ROSTER.length].id, s]
 }

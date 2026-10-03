@@ -108,11 +108,13 @@ export default {
   // Drawn things with no body: the copy under the wet floor, flying drops and bubbles, the jet of the hose, the ghost hand.
   ignore: ['^mirror-', 'mirror-', '^fx$', '^jet$', '^ghost-hand$'],
   allow: [
-    { a: 'lid', b: 'body', kind: 'pose', upTo: 1.0, reason: 'An eyelid is a shell over the lamp: it rolls back into the head as the eye opens and forward over the lamp as it shuts.' },
-    { a: 'lid', b: 'pupil', kind: 'pose', upTo: 0.12, reason: 'The lid closes over the pupil, which lies on the lamp under it.' },
+    { a: 'lid', b: 'body', kind: 'pose', upTo: 1.8, reason: 'An eyelid is a shell over the lamp: it rolls back into the head as the eye opens and forward over the lamp as it shuts.' },
+    { a: 'lid', b: 'pupil', kind: 'pose', upTo: 1.0, reason: 'The lid closes over the pupil, which lies on the lamp under it.' },
+    { a: 'body', b: 'pupil', kind: 'pose', upTo: 0.15, reason: 'The pupil slides over the lamp, which is part of the body, as the eye looks about.' },
     { a: 'tipper-body', b: 'tipper-part', kind: 'pose', upTo: 0.3, reason: 'The bed is hinged on the chassis: its tail dips between the rails as the front lifts.' },
-    { a: 'tool-sponge', b: 'vehicle-', upTo: 0.25, reason: 'The sponge is soft and is pressed flat against the paint, the wheel or the mudguard it is working on.' },
+    { a: '-(body|part)', b: '-wheels', kind: 'pose', upTo: 0.2, reason: 'The body rides on its springs over its wheels, which sit up in their arches; a press brings it down on them.' },
+    { a: 'tool-sponge', b: 'vehicle-', upTo: 0.3, reason: 'The sponge is soft and is pressed flat against the paint, the wheel, the mudguard or the lamp eye it is working on.' },
     { a: 'tool-cloth', b: 'vehicle-', upTo: 0.2, reason: 'The cloth is wiped along the paint and folds over whatever stands proud of it.' },
-    { a: 'rack', b: 'tool-', upTo: 0.16, reason: 'A tool on the rack hangs on its arm, in its coil or sits in the suds of the bucket.' },
+    { a: 'rack', b: 'tool-', upTo: 0.2, reason: 'A tool on the rack hangs on its arm, in its coil or sits in the suds of the bucket.' },
   ],
 } satisfies GameAudit

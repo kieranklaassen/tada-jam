@@ -176,7 +176,7 @@ void main() {
   vec3 paint = vPaint * (0.36 + 0.74 * diffuse);
   // Dull paint wears a film of dust: paler, greyer, faintly speckled.
   float dust = (1.0 - smoothstep(0.5, 0.8, gloss)) * uMasked;
-  paint = mix(paint, vec3(dot(paint, vec3(0.33)) * 0.8 + 0.2) * (0.94 + 0.12 * fine.g), dust * 0.3);
+  paint = mix(paint, vec3(dot(paint, vec3(0.33)) * 0.8 + 0.2) * (0.94 + 0.12 * fine.g), dust * 0.17);
   paint = mix(paint, vec3(dot(paint, vec3(0.33)) * 0.9 + 0.06), (1.0 - gloss) * 0.15);
   // Polished paint is deeper.
   paint *= 1.0 + 0.1 * smoothstep(0.85, 1.0, gloss) * uMasked;

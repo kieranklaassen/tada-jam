@@ -95,7 +95,7 @@ export class TruckView {
 
       if (!reflected) {
         const pupilGeometry = toGeometry(new Shape().round(1, 0.16, PAINT.black, {}, { axis: 'z', mat: MAT.eye, segs: 16, bevel: 0.06 }))
-        const lidGeometry = toGeometry(new Shape().ball(1.09, def.paint, {}, { from: 0, segs: 16 }))
+        const lidGeometry = toGeometry(new Shape().ball(1.09, def.paint, {}, { from: 0.3, segs: 16 }))
         this.owned.push(pupilGeometry, lidGeometry)
         const plain = enamelMaterial(kit, {})
         this.owned.push(plain)
@@ -213,7 +213,7 @@ export class TruckView {
       pupil.position.set(eye.at[0] + dx * eye.r * 0.97, eye.at[1] + dy * eye.r * 0.97, eye.at[2] + dz * eye.r * 0.97)
       pupil.quaternion.setFromUnitVectors(AHEAD, this.aim.set(dx, dy, dz))
       // The lid is a dome over the back of the lamp that rolls forward to shut.
-      this.lids[i].rotation.set(0, side * 0.6, -0.95 + pose.lid * 2.35, 'YXZ')
+      this.lids[i].rotation.set(0, side * 0.6, -0.7 + pose.lid * 2.2, 'YXZ')
     })
   }
 

@@ -10,7 +10,7 @@ import { toGeometry } from './geometry'
 // has no life of its own.
 
 /** Where a tool sits from the point it works on, and how fast it gets there. */
-const IN_HAND: Readonly<Record<Tool, readonly [number, number, number]>> = { sponge: [0, 0, 0.24], cloth: [0, 0.44, 0.19], hose: [0.7, 0.62, 0.95] }
+const IN_HAND: Readonly<Record<Tool, readonly [number, number, number]>> = { sponge: [0, 0, 0.21], cloth: [0, 0.44, 0.06], hose: [0.7, 0.62, 0.95] }
 /** The lowest a tool's own origin goes, so none of it dips into the floor when a wheel is washed. */
 const FLOOR: Readonly<Record<Tool, number>> = { sponge: 0.34, cloth: 1.08, hose: 0.9 }
 const DOWN = new THREE.Vector3(0, -1, 0)
@@ -46,6 +46,12 @@ export class ToolsView {
       const home = TOOL_HOME[tool], off = IN_HAND[tool]
       if (held) this.want.set(spot.x + off[0], Math.max(FLOOR[tool], spot.y + off[1]), spot.z + off[2])
       else this.want.set(home[0], home[1], home[2])
+      if (tool === 'hose') {
+        // The nozzle hangs inside its coil: it leaves and comes home along the coil's axis, toward the child, never across the hose.
+        const off = Math.hypot(mesh.position.x - home[0], mesh.position.y - home[1])
+        if (held && off < 0.6 && mesh.position.z < home[2] + 0.6) this.want.set(mesh.position.x, mesh.position.y, home[2] + 0.9)
+        else if (!held && off > 0.1) this.want.z = home[2] + 0.9
+      }
       // Quick to the finger, slower back to the rack.
       mesh.position.lerp(this.want, 1 - Math.exp(-dt * (held && spot.working ? 26 : 9)))
       const work = held && spot.working ? 1 : 0
@@ -57,7 +63,7 @@ export class ToolsView {
         } else this.turn.setFromAxisAngle(this.aim.set(0, 0, 1), TOOL_HANG.hose)
         mesh.quaternion.slerp(this.turn, 1 - Math.exp(-dt * 16))
         if (work) {
-          const tip = this.aim.set(0, -0.7, 0).applyQuaternion(mesh.quaternion).add(mesh.position)
+          const tip = this.aim.set(0, -0.52, 0).applyQuaternion(mesh.quaternion).add(mesh.position)
           const length = Math.hypot(spot.x - tip.x, spot.y - tip.y, spot.z - tip.z)
           this.jet.visible = true
           this.jet.position.copy(tip)
