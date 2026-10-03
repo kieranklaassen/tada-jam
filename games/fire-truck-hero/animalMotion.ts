@@ -77,6 +77,9 @@ class Going {
 
 const CAT_BODY: Feel = { stiffness: 120, damping: 11 }
 
+/** How high she jumps when there is no way round what stands between: higher than the tallest thing in a yard. */
+export const JUMP_OVER = 3.1
+
 /** How big she is in the boat and on the truck, as a share of her size on the sand: she is a small cat in a small place. */
 export const SIZE_IN_BOAT = 0.45
 export const SIZE_ON_ROOF = 0.75
@@ -139,7 +142,7 @@ export class CatMotion {
   move(to: Place, faces: number, toRoof: boolean, via: readonly Place[] | null = []): void {
     const jump = toRoof || this.onRoof || via === null
     // Onto the roof and off it she goes in one high arc, well clear of the truck's light and nozzle.
-    this.going.start([this.home, ...(jump ? [] : (via ?? [])), to], jump ? 5.2 : 2.3, toRoof || this.onRoof ? 2.6 : jump ? 2.4 : 0, !jump, this.onRoof ? ROOF_HEIGHT : 0, toRoof ? ROOF_HEIGHT : 0)
+    this.going.start([this.home, ...(jump ? [] : (via ?? [])), to], jump ? 5.2 : 2.3, toRoof || this.onRoof ? 2.6 : jump ? JUMP_OVER : 0, !jump, this.onRoof ? ROOF_HEIGHT : 0, toRoof ? ROOF_HEIGHT : 0)
     this.size.target = toRoof ? SIZE_ON_ROOF : 1
     this.home = { ...to }
     this.facing = faces

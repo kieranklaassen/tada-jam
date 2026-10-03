@@ -77,8 +77,8 @@ export function targetAt(yard: Yard, x: number, z: number): Target {
   return { on: 'ground' }
 }
 
-/** How near the middle of another thing a walker may pass. */
-export const WALK_CLEAR = 1.75
+/** How near the middle of another thing a walker may pass: the widest thing's half width, and the cat's own with her tail out. */
+export const WALK_CLEAR = 2.4
 
 function nearestOnWay(from: Place, to: Place, point: Place): number {
   const dx = to.x - from.x, dz = to.z - from.z
