@@ -1,5 +1,5 @@
 import { boardOf } from './board'
-import { clipLead, crackTrace, startLead, type Circuit, type Part } from './circuit'
+import { clipLead, crackTrace, startLead, type Circuit } from './circuit'
 import { asBuilt } from './gadgets'
 import { type Ctx } from './paint'
 import { paintCase, paintLane, paintMat, paintOdds, paintTestLamp, paintTray, SCENE } from './paintBench'
@@ -7,6 +7,7 @@ import { paintBoard, paintParts, type Lay } from './paintBoard'
 import { paintMothBehind, paintMothOnCounter, paintMug, paintOwlBehind, paintOwlEyes, paintOwlOnCounter, paintRaccoon } from './paintFolk'
 import { makeGlow, paintBeads, paintBlades, paintGlows, paintLeads } from './paintLive'
 import { settle } from './settle'
+import { firstDaySign } from './sign'
 import { type Reading } from './solve'
 
 // The look spike: the game's real scene in the Electronics bench look, before
@@ -33,18 +34,9 @@ function lantern(): Circuit {
   return startLead(bridged, board.rungs[0][1]).circuit
 }
 
-function sign(): Circuit {
-  const board = boardOf('sign')
-  // Broken from the first day: the top rail is cracked half way along, and the second lamp is blown.
-  const crack = board.traces.findIndex((t) => board.pads[t.a].y === 0 && board.pads[t.b].y === 0 && Math.min(board.pads[t.a].x, board.pads[t.b].x) === 6)
-  const whole = crackTrace(asBuilt('sign'), crack)
-  let lamps = 0
-  return { ...whole, parts: whole.parts.map((part): Part => (part.kind === 'lamp' && lamps++ === 1 ? { ...part, blown: true } : part)) }
-}
-
 export class Spike {
   private readonly job = settle(lantern())
-  private readonly sign = settle(sign())
+  private readonly sign = settle(firstDaySign())
   private still: HTMLCanvasElement | null = null
   private glow: HTMLCanvasElement | null = null
   private key = ''
