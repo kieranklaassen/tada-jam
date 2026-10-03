@@ -15,6 +15,8 @@ export type ToyLook = {
   z: number
   /** 1 at rest; below 1 squashed flat, above 1 stretched tall. */
   squash: number
+  /** How much wider than at rest it is drawn: a toy bulges a little as it squashes, and one in a belly is as wide as the belly makes it. */
+  wide: number
   /** Swing, in radians, toward +x and toward +z: a toy in the jaws hangs the way the cable does. */
   leanX: number
   leanZ: number
@@ -71,6 +73,8 @@ export type CrateLook = {
   key: string
   which: number
   toys: readonly Toy[]
+  /** The place on the tray each toy of the load is going to: the load stands on the deck in that arrangement. */
+  places: readonly number[]
   crews: readonly (readonly GobblerId[])[]
   /** The middle of its foot, and how far it is tipped forward, 0 to 1. */
   x: number

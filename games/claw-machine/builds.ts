@@ -18,7 +18,7 @@ function duck(c: Rgb, big: boolean): Brick[] {
     box(c, 0, 0, 0, 2, 2, 3), // body
     box(c, 0, 3, 0.5, 1, 1, 1), // tail
     round(c, 1, 3, 0.2, 1.6, 1.6, 3), // a round head, leaning out over the chest
-    box(c, 2.5, 4, 0.6, 0.9, 0.8, 1, false), // bill
+    box(c, 2.5, 3.6, 0.6, 0.9, 0.8, 1, false), // bill, low on the head: the teeth of the claw close above it
   ]
   return [
     box(c, 0, 0, 0, 4, 3, 4),

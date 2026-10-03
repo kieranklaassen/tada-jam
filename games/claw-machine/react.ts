@@ -1,7 +1,8 @@
 import { MINI } from './belly'
-import { toySpan } from './builds'
+import { holdOf, toySpan } from './builds'
 import { airTime, toss, type Body, type Leg } from './bodies'
 import { STEP } from './claw'
+import { KNOB_HALF, gripFor } from './clawBuild'
 import type { Deed } from './deeds'
 import type { Actor, Game, Plan } from './game'
 import { rimHeight } from './gobblerBuild'
@@ -70,10 +71,8 @@ export function react(game: Game, deed: Deed): void {
       const body = game.bodies[deed.toy]
       game.held = deed.toy
       body.hang = 0; body.squash = 1; body.squashV = 0
-      claw.load = body.heavy; claw.grip = body.heavy === 2 ? 0.52 : 0.3
+      claw.load = body.heavy; claw.grip = gripFor(holdOf(body.toy).half)
       game.shake(body.x, body.z, 13, 6, deed.toy)
-      // What it stood on wobbles as its top goes.
-      for (const below of game.tray()[deed.place]) { game.bodies[below].squash = 0.86; game.bodies[below].squashV = 0 }
       break
     }
     case 'bonk':
@@ -86,7 +85,7 @@ export function react(game: Game, deed: Deed): void {
       if (!actor) break
       game.lifted = actor.slot
       actor.liftedT = 0; actor.act = null; actor.wrongT = -1
-      claw.load = 2; claw.grip = 0.22
+      claw.load = 2; claw.grip = gripFor(KNOB_HALF)
       game.say({ type: 'groan' }); game.say({ type: 'lifted', way: deed.way })
       break
     }

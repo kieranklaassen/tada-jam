@@ -1,9 +1,8 @@
-import { MINI } from './belly'
 import { PLATE, buildMesh, mergeMeshes, type Brick, type BrickMesh } from './bricks'
 import { toyBricks } from './builds'
 import { EYE, eyeCentres, gobblerParts } from './gobblerBuild'
 import { shapeOf, type GobblerId } from './gobblers'
-import { ARCH, HANDLE, RIDER, RIDER_STEP, RIDER_Z, RISER, RISER_BASE, deckSpots, deckTop, handleSpot, riderSpots } from './layout'
+import { ARCH, HANDLE, ON_DECK, RIDER, RIDER_STEP, RIDER_Z, RISER, RISER_BASE, deckSpots, deckTop, handleSpot, riderSpots } from './layout'
 import { STEEL } from './palette'
 import { CRATE as CRATE_COLOUR, CRATE_DARK } from './palette'
 import { CRATE } from './places'
@@ -41,10 +40,10 @@ function box(which: number, rows: number): Brick[] {
   return out
 }
 
-export function crateMesh(which: number, toys: readonly Toy[], crews: readonly (readonly GobblerId[])[]): BrickMesh {
+export function crateMesh(which: number, toys: readonly Toy[], places: readonly number[], crews: readonly (readonly GobblerId[])[]): BrickMesh {
   const top = deckTop(which)
   const parts: { mesh: BrickMesh; scale?: number; at?: readonly [number, number, number] }[] = [{ mesh: buildMesh(box(which, crews.length), true) }]
-  deckSpots(toys).forEach((spot, i) => parts.push({ mesh: buildMesh(toyBricks(toys[i]), true), scale: MINI, at: [spot.x, top + spot.y, spot.z] }))
+  deckSpots(toys, places).forEach((spot, i) => parts.push({ mesh: buildMesh(toyBricks(toys[i]), true), scale: ON_DECK, at: [spot.x, top + spot.y, spot.z] }))
   riderSpots(crews).forEach((row, r) => row.forEach((spot, i) => {
     const shape = shapeOf(crews[r][i]), built = gobblerParts(shape), eye = eyeCentres(shape)[0], reach = EYE / 2 - 0.12
     const at = [spot.x, top + spot.y, spot.z] as const

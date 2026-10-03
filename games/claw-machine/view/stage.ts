@@ -41,6 +41,7 @@ export class Stage {
   private readonly crates = new Map<number, { key: string; pivot: Group }>()
   private readonly clawGroup = new Group()
   private readonly jaws: Mesh[] = []
+  private readonly hub: Mesh
   private readonly matrix = new Matrix4()
   private readonly quaternion = new Quaternion()
   private readonly position = new Vector3()
@@ -114,9 +115,9 @@ export class Stage {
     this.cable.name = 'cable'
     this.scene.add(this.cable)
 
-    const hub = new Mesh(brickGeometry(hubBricks()), this.plastic)
-    hub.name = 'claw-hub'
-    this.clawGroup.add(hub)
+    this.hub = new Mesh(brickGeometry(hubBricks()), this.plastic)
+    this.hub.name = 'claw-hub'
+    this.clawGroup.add(this.hub)
     for (const side of [-1, 1] as const) {
       const jaw = new Mesh(brickGeometry(jawBricks(side)), this.plastic)
       jaw.name = side < 0 ? 'claw-jaw-left' : 'claw-jaw-right'
@@ -170,7 +171,7 @@ export class Stage {
     for (const look of picture.toys) {
       seen.add(look.key)
       const mesh = this.toyMesh(look)
-      const wide = 1 / Math.sqrt(Math.max(0.2, look.squash))
+      const wide = look.wide
       mesh.position.set(look.x, look.y, look.z)
       // A toy in the jaws hangs the way the cable does.
       this.position.set(Math.sin(look.leanX), -Math.cos(look.leanX) * Math.cos(look.leanZ), Math.sin(look.leanZ)).normalize().negate()
@@ -197,7 +198,7 @@ export class Stage {
       let crate = this.crates.get(look.which)
       if (crate && crate.key !== look.key) { this.scene.remove(crate.pivot); (crate.pivot.children[0] as Mesh).geometry.dispose(); crate = undefined }
       if (!crate) {
-        const mesh = new Mesh(meshGeometry(crateMesh(look.which, look.toys, look.crews)), this.shaded)
+        const mesh = new Mesh(meshGeometry(crateMesh(look.which, look.toys, look.places, look.crews)), this.shaded)
         mesh.name = `crate-${look.which}`
         // It tips about the front edge of its foot.
         mesh.position.set(0, 0, -CRATE.depth / 2)
@@ -212,9 +213,9 @@ export class Stage {
     }
     for (const [which, crate] of this.crates) if (!standing.has(which)) { this.scene.remove(crate.pivot); (crate.pivot.children[0] as Mesh).geometry.dispose(); this.crates.delete(which) }
 
-    // The gate shakes on its posts.
+    // The gate jumps on its posts and rocks as it comes down: it is always higher than its rocking dips an end.
     this.gate.rotation.z = picture.gate * 0.12 * Math.sin(picture.gate * 40)
-    this.gate.position.y = GATE.top + picture.gate * 0.25 * Math.abs(Math.sin(picture.gate * 31))
+    this.gate.position.y = GATE.top + picture.gate * (0.5 + 0.1 * Math.abs(Math.sin(picture.gate * 31)))
 
     const rings = Math.min(MAX_GLOWS, picture.glows.length)
     for (let i = 0; i < rings; i++) {
@@ -253,7 +254,11 @@ export class Stage {
     this.cable.scale.set(1, claw.length, 1)
     this.clawGroup.position.set(claw.x, RAIL.top, claw.z).addScaledVector(this.position, claw.length)
     this.clawGroup.quaternion.copy(this.quaternion)
-    this.clawGroup.scale.set(1 / Math.sqrt(claw.squash), claw.squash, 1 / Math.sqrt(claw.squash))
+    // Only the hub squashes, onto its hinges: the jaws keep their length, so the teeth stay beside what they hold,
+    // and the cable is as much longer as the hub is shorter.
+    this.hub.scale.y = claw.squash
+    this.hub.position.y = -HINGE_DROP * (1 - claw.squash)
+    this.cable.scale.y = claw.length + HINGE_DROP * (1 - claw.squash)
     this.jaws[0].rotation.z = -claw.open * JAW_SWING
     this.jaws[1].rotation.z = claw.open * JAW_SWING
 

@@ -70,10 +70,14 @@ export function cycleNumber(cycle: Cycle): number {
   return h
 }
 
+/** The place each toy of a load stands on when it comes in: each alone on a place of its own, drawn from the load's seed. */
+export function placesFor(seed: number): number[] {
+  return shuffled(rng(seed ^ 0x5bd1e995), Array.from({ length: PLACES }, (_, place) => place))
+}
+
 export function startCycle(from: PositionId, seed: number, harder: boolean): Cycle {
   const { toys, crews } = layCycle(from, seed)
-  // Each toy stands alone on a place of its own, drawn from the same seed.
-  const places = shuffled(rng(seed ^ 0x5bd1e995), Array.from({ length: PLACES }, (_, place) => place))
+  const places = placesFor(seed)
   return {
     from, harder, crews, sort: 0, toys,
     where: toys.map((_, i) => ({ at: 'tray', place: places[i], level: 0 })),

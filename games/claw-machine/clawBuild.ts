@@ -16,6 +16,8 @@ export const JAW_REACH = 2.8
 /** How far a tooth turns in from its arm, and how far below the hinge the middle of a tooth is. */
 export const TOOTH = 0.9
 export const TOOTH_DROP = 2.6
+/** Half the width of a knob the claw lifts by: the one on a gobbler's head and the one on a crate's arch. */
+export const KNOB_HALF = 0.8
 
 /**
  * How far open the jaws stand to hold something `half` wide between their teeth, as the claw counts it (0 shut,
@@ -35,9 +37,14 @@ export function hubBricks(): Brick[] {
   ]
 }
 
-/** One jaw, for the side `side` (-1 left, 1 right): an arm down from the hinge and a tooth turned inward. */
+/**
+ * One jaw, for the side `side` (-1 left, 1 right): an arm down from the hinge and a tooth turned inward. The arm
+ * starts a plate under its hinge, so that it swings out beside the skirt of the hub and never into it, and a jaw
+ * is a hair thinner than two studs, so that its faces never lie in the faces of what it holds.
+ */
 export function jawBricks(side: -1 | 1): Brick[] {
-  const arm = box(STEEL, side > 0 ? 0 : -1, -6, -1, 1, 2, 6)
-  const tooth = box(TRIM, side > 0 ? -TOOTH : -1, -7, -1, 1 + TOOTH, 2, 1)
+  const arm = box(STEEL, side > 0 ? 0 : -1, -6, -JAW_DEPTH / 2, 1, JAW_DEPTH, 5)
+  const tooth = box(TRIM, side > 0 ? -TOOTH : -1, -7, -JAW_DEPTH / 2, 1 + TOOTH, JAW_DEPTH, 1)
   return [arm, tooth]
 }
+const JAW_DEPTH = 1.9

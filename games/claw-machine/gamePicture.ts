@@ -33,7 +33,7 @@ export function poseOf(game: Game, actor: Actor, out: Pose): Pose {
   else restPose(scratch)
   out.dx = scratch.dx + idle.dx; out.dy = scratch.dy + idle.dy; out.dz = scratch.dz
   out.squash = scratch.squash * idle.squash
-  out.leanX = scratch.leanX; out.leanZ = scratch.leanZ + idle.leanZ; out.turn = scratch.turn
+  out.leanX = scratch.leanX + actor.tilt; out.leanZ = scratch.leanZ + idle.leanZ; out.turn = scratch.turn
   out.looks = scratch.looks; out.gazeX = scratch.gazeX; out.gazeY = scratch.gazeY
   out.blink = Math.max(scratch.blink, idle.blink)
   if (actor.role === 'crew' && actor.liftedT < 0 && actor.scale > 0.95) {
@@ -79,10 +79,13 @@ export function barePicture(): Picture {
   return { toys: [], gobblers: [], crates: [], shadows: [], glows: [], hand: null, gate: 0, claw: { x: 0, z: 6, length: RAIL.top - 9.2 - 1.6, swingX: 0, swingZ: 0, open: 0.55, squash: 1 } }
 }
 
+/** A toy bulges a little as it squashes: little enough that two big toys side by side on the tray never meet. */
+const bulge = (squash: number) => 1 + (1 - Math.min(1.3, Math.max(0.5, squash))) * 0.25
+
 export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   const claw = game.claw, hub = hubAt(claw)
   const toys: ToyLook[] = [], gobblers: GobblerLook[] = [], shadows: Shadow[] = [], glows: GlowLook[] = []
-  const look = (key: number, body: Body, x = body.x, y = body.y, z = body.z, turn = 0): ToyLook => ({ key, toy: body.toy, x, y, z, squash: body.squash, leanX: body.leanX, leanZ: body.leanZ, scale: body.scale, turn })
+  const look = (key: number, body: Body, x = body.x, y = body.y, z = body.z, turn = 0): ToyLook => ({ key, toy: body.toy, x, y, z, squash: body.squash, wide: bulge(body.squash), leanX: body.leanX, leanZ: body.leanZ, scale: body.scale, turn })
   /** A thing in or on a gobbler rides its pose as if fixed to it: it shifts, leans and turns with it and rises as it stretches. */
   const riding = (actor: Actor, body: Body, key: number) => {
     // The body draws wider as it squashes and narrower as it stretches, and what is in it keeps its place in it.
@@ -90,6 +93,8 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
     const at = turned((body.x - actor.x) * wide, (body.y - actor.y) * pose.squash, (body.z - actor.z) * wide, pose)
     const one = look(key, body, actor.x + pose.dx * actor.scale + at.x, actor.y + pose.dy + at.y, actor.z + pose.dz * actor.scale + at.z, pose.turn)
     one.leanX += pose.leanZ; one.leanZ -= pose.leanX
+    // It squashes and stretches with what it rides in, so two toys side by side in a belly never meet.
+    one.squash *= pose.squash; one.wide *= wide
     toys.push(one)
   }
 
@@ -160,7 +165,7 @@ export function gamePicture(game: Game, guidance: Guidance | null): Picture {
   return {
     toys, gobblers, shadows, glows, hand: ghost, gate: game.gateShake,
     crates: game.crates.map((crate) => ({
-      key: `${crate.from}-${crate.seed}-${crate.toys.length}-${crate.crews.length}`, which: crate.which, toys: crate.toys, crews: crate.crews,
+      key: `${crate.from}-${crate.seed}-${crate.toys.length}-${crate.crews.length}`, which: crate.which, toys: crate.toys, places: crate.places, crews: crate.crews,
       // A crate that waits rocks a little on its foot: its riders cannot sit still.
       x: crate.x + crate.away * AWAY * (crate.x < 0 ? -1 : 1), y: crate.y + (crate.carried || game.scene ? 0 : 0.07 * Math.abs(Math.sin(game.time * 2.6 + crate.which))), z: crate.z, tip: crate.tip,
     })),

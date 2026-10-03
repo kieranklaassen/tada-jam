@@ -63,10 +63,10 @@ export function cabinetBricks(): Brick[] {
 
 /** The bar of the gate: the one part of the cabinet that moves. It is built about the middle of its own top. */
 export function gateBricks(): Brick[] {
-  // The bar lies a hair above its posts, and its latch hangs a hair above the parapet: two things that touch are
-  // drawn with a sliver of air between them.
+  // The bar lies a hair above its posts, and its latch hangs a hair above the studs of the parapet: two things
+  // that touch are drawn with a sliver of air between them.
   return [
     { x: -GATE.half - 0.5, y: -0.9, z: -0.4, w: GATE.half * 2 + 1, d: 0.8, h: 0.9, colour: STEEL, studs: false },
-    { x: -0.8, y: -2.9, z: -0.45, w: 1.6, d: 0.9, h: 2, colour: TRIM, studs: false },
+    { x: -0.8, y: -2.4, z: -0.45, w: 1.6, d: 0.9, h: 1.5, colour: TRIM, studs: false },
   ]
 }

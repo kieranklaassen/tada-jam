@@ -16,7 +16,7 @@ import { BELL, GATE, RAIL, SHELF, SLOT_Z, TRAY, WAIT_Z, placeAt } from './places
 import type { Scene } from './scene'
 import type { Toy } from './toys'
 import { nearestToy, type Tray } from './tray'
-import { bellyOf, crewNow, someoneWaits, trayOf, type World } from './world'
+import { bellyOf, crewNow, placesFor, someoneWaits, trayOf, type World } from './world'
 
 // The game: the rules (world.ts, deeds.ts) played with a claw. It answers
 // every touch at once, carries out each deed the rules allow, and moves the
@@ -54,6 +54,8 @@ export type Actor = {
   cargo: Body[]
   /** Where each thing it carries off lies, measured from its feet. */
   cargoAt: Spot[]
+  /** How far forward it is tipped, in radians, by what it rides on: a rider leans with its crate. */
+  tilt: number
 }
 
 export type CrateBody = {
@@ -61,6 +63,8 @@ export type CrateBody = {
   seed: number
   which: number
   toys: Toy[]
+  /** The place on the tray each toy of its load is going to. */
+  places: number[]
   crews: GobblerId[][]
   /** The middle of its foot. */
   x: number
@@ -94,7 +98,7 @@ const WAIT_SECONDS = 0.7
 export function newActor(key: number, id: GobblerId, slot: number, role: Actor['role'], at: Spot, first: Toy | undefined): Actor {
   const snack = newBody(snackOf(id, first ?? { colour: 'yellow', kind: 'duck', size: 'small' }))
   snack.scale = MINI
-  return { key, cargoAt: [], id, slot, role, x: at.x, y: at.y, z: at.z, scale: 1, act: null, actT: 0, actFor: 1, actN: 1, wrongT: -1, liftedT: -1, openT: -1, walk: null, snack, cargo: [] }
+  return { key, cargoAt: [], id, slot, role, x: at.x, y: at.y, z: at.z, scale: 1, act: null, actT: 0, actFor: 1, actN: 1, wrongT: -1, liftedT: -1, openT: -1, walk: null, snack, cargo: [], tilt: 0 }
 }
 
 export class Game {
@@ -171,7 +175,7 @@ export class Game {
   arrangeCrates(): void {
     this.crates = this.world.crates.map((crate, which) => {
       const laid = layCycle(crate.from, crate.seed), at = crateSpot(which, this.world.crates.length)
-      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, crews: laid.crews, x: at.x, y: SHELF.top + AIR, z: at.z, away: 0, tip: 0, carried: false }
+      return { from: crate.from, seed: crate.seed, which, toys: laid.toys, places: placesFor(crate.seed).slice(0, laid.toys.length), crews: laid.crews, x: at.x, y: SHELF.top + AIR, z: at.z, away: 0, tip: 0, carried: false }
     })
   }
 
@@ -356,12 +360,18 @@ export class Game {
       const at = placeAt(place)
       if (Math.hypot(at.x - claw.x, at.z - claw.z) < 7.5) near = Math.max(near, this.stackTop(place))
     }
-    if (claw.z < 1.5) for (const actor of this.crew) if (Math.abs(actor.x - claw.x) < shapeOf(actor.id).width / 2 + 5 && actor.slot !== this.lifted) near = Math.max(near, actor.y + headTop(actor.id))
+    // Over the crew it rides clear of their heads, and it starts to rise as soon as it is sent across them.
+    if (claw.z < 1.5 || claw.targetZ < 1.5) for (const actor of this.crew) {
+      const beside = Math.abs(actor.x - claw.x) < shapeOf(actor.id).width / 2 + 5, onTheWay = (actor.x - claw.x) * (actor.x - claw.targetX) < 0
+      if ((beside || onTheWay) && actor.slot !== this.lifted) near = Math.max(near, actor.y + headTop(actor.id))
+    }
     if (claw.z < -5.5) {
       near = Math.max(near, GATE.top + 0.6)
       for (const actor of this.waiting) near = Math.max(near, actor.y + headTop(actor.id))
       for (const crate of this.crates) near = Math.max(near, SHELF.top + crateTop(crate.which, crate.crews.length))
     }
+    // And clear of the bell on its post at either end of the rail.
+    if (Math.hypot(Math.abs(claw.x) - BELL.x, claw.z - BELL.z) < 5.5) near = Math.max(near, BELL.top + 0.4)
     const below = this.held >= 0 ? this.hang(this.held) : JAW_REACH + 0.1
     if (this.lifted >= 0) {
       // A gobbler in the jaws comes up a little way and no further. Big barely leaves the step; Little, who
@@ -456,7 +466,11 @@ export class Game {
         const where = this.world.cycle.where[this.held]
         const left = where.at === 'tray' ? this.tray()[where.place].length : 0
         this.say({ type: 'pop', heavy: this.bodies[this.held].heavy, level: left })
-        if (left > 0) this.say({ type: 'settle' })
+        if (left > 0 && where.at === 'tray') {
+          this.say({ type: 'settle' })
+          // What it stood on wobbles as its top goes up.
+          for (const below of this.tray()[where.place]) { this.bodies[below].squash = 0.86; this.bodies[below].squashV = 0 }
+        }
       } else if (this.lifted < 0 && this.hoist === null) this.say({ type: 'bite' })
     } else if (event.type === 'let-go') {
       if (this.lifted >= 0) { this.dropGobbler(); return }
@@ -537,7 +551,12 @@ export class Game {
     // A toy on a stack rides the hop of whatever it stands on; a toy in a belly rides its gobbler.
     const where = this.world.cycle.where[toy]
     let lift = body.hop
-    if (where.at === 'tray') { const stack = this.tray()[where.place]; if (stack[0] !== toy && stack.length > 0) lift += this.bodies[stack[0]].hop }
+    if (where.at === 'tray') {
+      const stack = this.tray()[where.place]
+      if (stack[0] !== toy && stack.length > 0) lift += this.bodies[stack[0]].hop
+      // And it rides the squash of everything under it, so a stack squashes as one and nothing sinks into what is below.
+      for (const below of stack) { if (below === toy) break; lift += this.bodies[below].height * (this.bodies[below].squash - 1) }
+    }
     body.x = at.x; body.y = at.y + lift; body.z = at.z; body.scale = at.scale
   }
 

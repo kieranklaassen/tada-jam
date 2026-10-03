@@ -58,16 +58,16 @@ export default {
   ],
   allow: [
     {
-      a: '^cabinet$', b: '^toy-', kind: 'penetration', upTo: 0.12,
-      reason: 'a toy stands on the studs of the tray, as a brick does: the studs under it reach a fifth of a stud into its base and its wheels.',
+      a: '^cabinet$', b: '^toy-', kind: 'penetration', upTo: 0.2,
+      reason: 'a toy stands on the studs of the tray, as a brick does: a stud is 0.18 high and reaches that far into its base and its wheels.',
     },
     {
-      a: '^toy-', b: '^toy-', kind: 'penetration', upTo: 0.12,
-      reason: 'a toy stood on another seats on its studs, which reach a fifth of a stud into its base.',
+      a: '^toy-', b: '^toy-', kind: 'penetration', upTo: 0.2,
+      reason: 'a toy stood on another seats on its studs: a stud is 0.18 high and reaches that far into its base.',
     },
     {
-      a: '^crate-', b: '^toy-', kind: 'penetration', upTo: 0.12,
-      reason: 'the load of a crate stands on the studs of its deck.',
+      a: '^crate-', b: '^toy-', kind: 'penetration', upTo: 0.2,
+      reason: 'the load of a crate stands on the studs of its deck, which are 0.18 high.',
     },
     {
       a: '^cabinet$', b: 'gobbler-.*-body$', kind: 'penetration', upTo: 0.06,
@@ -87,7 +87,7 @@ export default {
         await d.wait(9000)
         await d.tap(await ledge(d))
         // The delivery and the first showing of colour.
-        await d.wait(10500)
+        await d.wait(12500)
       },
     },
     {
@@ -174,7 +174,7 @@ export default {
         await d.wait(600)
         await give(d, 8, await gobbler(d, 0, 2), 9500) // the last gulp, the tune, the burps and the crates
         await d.wait(6000) // the ending stands, and the ladder shows the crates
-        await d.tap(await ledge(d, 8.6)); await d.wait(11000) // the taller crate
+        await d.tap(await ledge(d, 8.6)); await d.wait(13000) // the taller crate
       },
     },
     {

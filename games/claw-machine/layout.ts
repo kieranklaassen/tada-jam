@@ -1,9 +1,9 @@
-import { MINI, bellyLayout } from './belly'
+import { bellyLayout } from './belly'
 import { PLATE } from './bricks'
 import { toySpan } from './builds'
 import { rimHeight } from './gobblerBuild'
 import { shapeOf, snackOf, type GobblerId } from './gobblers'
-import { CRATE, SHELF, SLOT_Z, STEP, WAIT_Z, crateX, slotX } from './places'
+import { CRATE, SHELF, SLOT_Z, STEP, TRAY, WAIT_Z, crateX, slotX } from './places'
 import type { Toy } from './toys'
 
 // Where things stand that the rules do not place: a crew at the tray, the
@@ -44,32 +44,36 @@ export function deckTop(which: number): number {
   return CRATE.deck + (which > 0 ? TALLER : 0)
 }
 
+/** How small a toy is on the deck of a crate: smaller than in a belly, so that two rows of any load fit the deck. */
+export const ON_DECK = 0.4
+
 /**
- * Where each toy of a load stands on the deck of its crate, small, in rows
- * from the front, measured from the middle of the crate at the height of its
- * deck. A load always fits: the deck holds two rows of the widest load.
+ * Where each toy of a load stands on the deck of its crate, small, measured
+ * from the middle of the crate at the height of its deck. The deck is a small
+ * picture of the tray the load is going to, turned front to back: the toys
+ * for the tray's back row stand along the front of the deck, where they pour
+ * off first and fall furthest, and each row stands in the order of its
+ * places across the tray. So no toy crosses another on its way down.
+ * `places` is the place on the tray of each toy.
  */
-export function deckSpots(toys: readonly Toy[]): Spot[] {
-  const out: Spot[] = [], usable = CRATE.width - 1.2, gap = 0.3
-  // Two rows at the front of the deck, each clear of the other and of the lip in front and the riders behind.
-  const rowZ = [2.25, 0.82]
-  const rows: Toy[][] = [[]]
-  let used = 0
-  for (const toy of toys) {
-    const length = toySpan(toy).length * MINI
-    if (used > 0 && used + gap + length > usable) { rows.push([]); used = 0 }
-    rows[rows.length - 1].push(toy)
-    used += (used > 0 ? gap : 0) + length
-  }
-  rows.forEach((row, r) => {
-    const total = row.reduce((sum, toy) => sum + toySpan(toy).length * MINI, 0) + gap * (row.length - 1)
-    let x = -total / 2
-    for (const toy of row) {
-      const length = toySpan(toy).length * MINI
-      out.push({ x: x + length / 2, y: 0, z: rowZ[Math.min(r, rowZ.length - 1)] })
-      x += length + gap
+export function deckSpots(toys: readonly Toy[], places: readonly number[]): Spot[] {
+  const usable = CRATE.width - 1.2
+  // Two rows at the front of the deck, each clear of the other and of the lip in front and the riders behind,
+  // whichever toys stand in them: the deepest toy is a big car with its wheels out at either side.
+  const rowZ = [2.2, 0.62]
+  const lengths = toys.map((toy) => toySpan(toy).length * ON_DECK)
+  const out: Spot[] = toys.map(() => ({ x: 0, y: 0, z: 0 }))
+  for (const row of [0, 1]) {
+    const mine = toys.map((_, i) => i).filter((i) => Math.floor((places[i] ?? i) / TRAY.columns) === row).sort((a, b) => (places[a] ?? a) - (places[b] ?? b))
+    const long = mine.reduce((sum, i) => sum + lengths[i], 0)
+    // Five big toys in one row stand a little closer than fewer do.
+    const gap = mine.length > 1 ? Math.min(0.3, (usable - long) / (mine.length - 1)) : 0
+    let x = -(long + gap * (mine.length - 1)) / 2
+    for (const i of mine) {
+      out[i] = { x: x + lengths[i] / 2, y: 0, z: rowZ[row] }
+      x += lengths[i] + gap
     }
-  })
+  }
   return out
 }
 
@@ -94,7 +98,7 @@ export function riderSpots(crews: readonly (readonly GobblerId[])[]): Spot[][] {
 /** The first row of riders stands this far above the deck and this far behind its middle; each further row a riser higher and a step further back. */
 export const RISER_BASE = 0.4
 export const RISER = 2
-export const RIDER_Z = -0.75
+export const RIDER_Z = -1
 export const RIDER_STEP = 1.6
 
 /** The top of everything on a crate, above the shelf: what the claw has to clear. */

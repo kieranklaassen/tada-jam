@@ -83,6 +83,9 @@ export function knobAt(shape: GobblerShape): { x: number; y: number; z: number }
   return { x: shape.width / 2 - 1.6, y: rimHeight(shape) + KNOB * PLATE, z: -DEPTH / 2 + 0.2 }
 }
 
+/** How far to the side of the middle of the head, away from the knob, the model stands. */
+const MODEL_ASIDE = 1.6
+
 export function gobblerParts(shape: GobblerShape): GobblerParts {
   const c = shape.colour, half = shape.width / 2, at = LEGS, tongue = tonguePlates(shape), rim = tongue + DISH, walls = rim - at - 1
   const foot = Math.max(1.5, half - 2.5)
@@ -108,22 +111,25 @@ export function gobblerParts(shape: GobblerShape): GobblerParts {
   body.push(box(TONGUE, -t, tongue - 1, -2, THROAT, 2 - t, 1), box(TONGUE, -t, tongue - 1, t, THROAT, 2 - t, 1))
   // The front of the mouth, above the window: a wall, or wide bars with the widest gap in the middle.
   if (shape.bars) {
-    for (const side of [-1, 1]) body.push(box(c, side > 0 ? BAR_AT + 0.25 + 3.2 : -half + 1, tongue - 1, 2, half - 1 - BAR_AT - 0.25 - 3.2, 1, 1 + DISH, true))
+    // A wall outside the bars, where the mouth is wide enough to have one.
+    const wall = half - 1 - BAR_AT - 0.25 - 3.2
+    if (wall > 0.05) for (const side of [-1, 1]) body.push(box(c, side > 0 ? BAR_AT + 0.25 + 3.2 : -half + 1, tongue - 1, 2, wall, 1, 1 + DISH, true))
     for (const side of [-1, 1]) body.push(box(c, side * BAR_AT - 0.25, tongue - 1, 2.2, 0.5, 0.6, 1 + DISH + 3))
     body.push(box(c, -half + 1, tongue - 1, 2, shape.width - 2, 1, 1))
   } else body.push(box(c, -half + 1, tongue - 1, 2, shape.width - 2, 1, 1 + DISH, true))
   // A narrow mouth: a shoulder inside the dish on either side.
   if (shape.throat) for (const side of [-1, 1]) body.push(box(c, side > 0 ? shape.throat : -inner, tongue, -2, inner - shape.throat, 4, DISH, true))
   // Peg teeth along the front and the back of the rim. The back row stops short of the knob, so the jaws have
-  // room beside it, and the front row leaves the gaps between bars open.
-  for (let x = -half + 1.6; x < half - 3; x += 2) { if (!shape.bars) body.push(peg(x, rim, 2.1)); if (x + 1 < half - 4.6) body.push(peg(x + 1, rim, -2.9)) }
+  // room beside it; the front row leaves the gaps between bars open; and a gobbler with a model on the back of
+  // its rim has no back row, the bracket of the model standing where it would be.
+  for (let x = -half + 1.6; x < half - 3; x += 2) { if (!shape.bars) body.push(peg(x, rim, 2.1)); if (x + 1 < half - 4.6 && !shape.model) body.push(peg(x + 1, rim, -2.9)) }
   // Eyes like a frog's, on the front corners, clear of the mouth.
   for (const eye of eyeCentres(shape)) body.push({ x: eye.x - EYE / 2, y: (eye.y - EYE / 2) / PLATE, z: eye.z - EYE / 2, w: EYE, d: EYE, h: 0, colour: WHITE, ball: true, studs: false })
   if (shape.model) {
     // A bracket on the back of the rim, and the white model of its kind standing on it. It stands out behind
-    // the mouth and to one side of the knob, so neither a toy coming down nor the jaws ever meet it.
-    body.push(box(c, -2, rim, -3, 2, 1, 1), box(c, -3.6, rim + 1, -5.4, 4.8, 3.2, 1, true))
-    for (const brick of modelBricks(shape.model)) body.push({ ...brick, x: brick.x - 1.2, y: brick.y + rim + 2, z: brick.z - 3.8 })
+    // the mouth and well to one side of the knob, so neither a toy coming down nor the jaws, wide open, ever meet it.
+    body.push(box(c, -2 - MODEL_ASIDE, rim, -3, 2, 1, 1), box(c, -3.6 - MODEL_ASIDE, rim + 1, -5.4, 4.8, 3.2, 1, true))
+    for (const brick of modelBricks(shape.model)) body.push({ ...brick, x: brick.x - 1.2 - MODEL_ASIDE, y: brick.y + rim + 2, z: brick.z - 3.8 })
   }
   const window: Brick[] = [box(WHITE, -half + 1, at + 2, 2.25, shape.width - 2, 0.5, shape.belly - 2)]
   const [left, right] = eyeCentres(shape)
