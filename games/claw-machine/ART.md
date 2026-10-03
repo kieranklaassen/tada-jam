@@ -142,23 +142,40 @@ Each is a list of timed beats filled in from the state of play, and each gives w
 
 ## The records
 
-One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
+Read through the lookup on 2026-10-03. Every standing, check state, level and basis below is as it printed that day. No record is taken from a labelled lane, and no gap was printed for either jurisdiction at ages 4, 5 or 6.
 
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Levels: `preschool-tk` at ages 4 and 5 (at 4 both printed age ranges apply, at 5 the later one), `kindergarten` at ages 5 and 6, `grade-1` at age 6. Age mapping: official. The `cross-grade` lane is returned beside the levels at ages 5 and 6, labelled cross-grade; the game uses no record from it. Gap: none printed.
+
+- `edu.us-ca.preschool-tk.mathematics.objective.mathematics-strand-2-0-operations-and-algebraic-thinking-2-5` (`us-ca 2.5`, Mathematics, Strand 2.0): department-published-foundation, confirmed. The pack's Summary: "At the earlier age (3 to 4½ years), a child notices how objects are alike and how they differ in their attributes, and sorts them into at least two groups using a single attribute. At the later age (4 to 5½ years), the child sorts into at least two groups using one attribute or more than one, accurately and flexibly; the statement adds that with two attributes a child may sort on the first and afterwards on the second."
+  Limits taken: one attribute and two or more groups at the earlier age; at the later age a second attribute may be taken as a second step, so no sort asks a child to hold two attributes at once. Left open by Limits: which attributes. Colour, kind and size are the game's own choice.
+- `edu.us-ca.kindergarten.mathematics.objective.k-md-3` (`us-ca K.MD.3`): state-board-adopted-standard, confirmed. The pack's Summary: "Given a set of categories, the child sorts objects into them, counts how many are in each, and then puts the categories in order by those counts."
+  Limits taken: no category holds more than ten objects (the fullest belly in the game holds six, snack included); the categories are given, which is why each gobbler shows what it takes and the child is never asked to invent a rule. Not taken: the game has no counting and no ordering by count, so it is designed from the sorting part of this record only.
+- `edu.us-ca.grade-1.mathematics.objective.1-md-4` (`us-ca 1.MD.4`): state-board-adopted-standard, confirmed. The pack's Summary: "The child sorts data into at most three categories, shows it, and reads what it shows. The child asks questions and answers them about how many data points there are altogether, the size of each category, and by how many one category is larger or smaller than another."
+  Limits taken: at most three categories in any sort. Left open by Limits: the number range and the kind of display. Not taken: the game asks and answers no how-many question, so it is designed from the sorting part of this record only. The bellies standing side by side show the groups, and the game makes nothing of that beyond showing them.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Levels: `peuters` for a child who has only just turned four, and `fase-1` at ages 4, 5 and 6 (groep 1; groep 1 or 2; groep 2 or 3). Age mapping: convention. The `einde-po` lane is returned beside them, labelled end-of-primary goals; the game uses no record from it. Gap: none printed.
+
+- `edu.nl.fase-1.mathematics.objective.a9ab9439-c201-44d5-8734-0def1bcfd1b7` (`nl rw/mk/3/01/fase1`): curriculum-institute-guidance, confirmed. In the game's words: sorting objects by one or more characteristics.
+  Limits taken: it says what a school can offer in fase 1, not what a child must be able to do. Left open by Limits: which characteristics, and how many objects and groups. Colour, kind and size, loads of four to nine toys and two or three groups are the game's own choice. The example printed with the goal is an example and is not used as a limit.
+- `edu.nl.fase-1.mathematics.objective.inhoudskaart-rekenen-wiskunde-fase-1-meten-meetkunde-meetkunde-opereren-met-vormen-en-figuren-1` (cited by pack id: its printed code is shared with the record below): curriculum-institute-guidance, confirmed. In the game's words: sorting objects by one or more attributes, on the content card for groep 1 and 2.
+  Limits taken: it says what is offered, not what a child must be able to do; it stands under a sub-heading about shapes but is not limited to shape. Left open by Limits: the attributes, the objects, and the highest number of either, which are the game's own choice as above.
+- `edu.nl.peuters.mathematics.objective.inhoudskaart-rekenen-wiskunde-peuters-meten-meetkunde-meetkunde-opereren-met-vormen-en-figuren-1` (cited by pack id): curriculum-institute-guidance, confirmed. In the game's words: looking into the properties of objects and sorting by one property, on the content card for children before school.
+  Limits taken: one property at a time; it says what is offered before school, not what a child must be able to do. The properties it lists are examples. Left open by Limits: the number of objects and groups. The game rests on it only for a child who has just turned four, and only for the positions with a single sort.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **The same toys a second way.** In us-ca this is carried by foundation 2.5 alone, in its later age range; K.MD.3 and 1.MD.4 do not carry it. The nl records speak of one or more characteristics and do not speak of sorting one set again. The game follows us-ca 2.5 here: the second sort is a second step, by one attribute. Under the nl records each sort is simply a sort by one characteristic.
+- **Counting the groups.** us-ca K.MD.3 and 1.MD.4 go on to counting, ordering by count and how-many questions. The nl records named here do not. The game follows neither that far: it has no counting.
+- **Numbers.** us-ca K.MD.3 bounds a category at ten objects and 1.MD.4 bounds a sort at three categories. The nl records name no number. The game keeps inside the us-ca bounds everywhere, as its own choice where a nl record is the one in view.
+- **What kind of statement.** The us-ca records are one foundation and two adopted standards. The nl records are guidance on what a school or childcare can offer.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Claw Machine is designed from one California learning foundation for preschool and transitional kindergarten published by the state department (`us-ca 2.5`, Mathematics, Strand 2.0) and from the sorting part only of two California content standards adopted by the State Board of Education (`us-ca K.MD.3` and `us-ca 1.MD.4`); and from three statements of guidance by the Dutch curriculum institute, which are not law and say what can be offered: the fase 1 goal `nl rw/mk/3/01/fase1` and the two content-card statements cited above by pack id. All six records are confirmed. Sorting the same toys a second way rests on `us-ca 2.5` alone. The game counts nothing and says nothing about what any child can do.
 
 ## The look
 
