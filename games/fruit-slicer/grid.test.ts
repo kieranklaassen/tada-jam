@@ -36,6 +36,6 @@ describe('the object-by-action grid', () => {
     expect(cells.filter(({ cell }) => cell.does === 'cut').map(({ thing }) => thing)).toEqual(['fruit', 'piece'])
     expect(cells.filter(({ cell }) => cell.does === 'serve').map(({ thing, act }) => `${thing} ${act}`)).toEqual(['tin give'])
     expect(cells.filter(({ cell }) => cell.does === 'feed').map(({ thing, act }) => `${thing} ${act}`)).toEqual(['customer give'])
-    for (const { thing, cell } of cells.filter(({ cell }) => cell.does === 'toDog')) expect(['customer', 'crate', 'dog']).toContain(thing)
+    for (const { thing } of cells.filter(({ cell }) => cell.does === 'toDog')) expect(['customer', 'crate', 'dog']).toContain(thing)
   })
 })
