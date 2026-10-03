@@ -82,8 +82,10 @@ export class Game extends Toy {
   private tapsHeard = 0
   private fingerRangOpen = false
 
-  constructor(play: (voice: VoiceSpec) => void, raw: unknown, childAge: number | null, private readonly seed = 1) {
+  /** `startedAt` is the attended clock's seconds when the game is made, so that what it times (the first showing, the truck coming to rest) counts from then. */
+  constructor(play: (voice: VoiceSpec) => void, raw: unknown, childAge: number | null, private readonly seed = 1, startedAt = 0) {
     super(play)
+    this.clock = startedAt
     this.save = deserializeSave(raw, childAge)
     this.yard = yardOf(this.save)
     this.motion = new YardMotion(this.yard, seed)

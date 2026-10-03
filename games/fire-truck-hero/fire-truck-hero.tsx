@@ -211,7 +211,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (disposed) return
       // A saved position wins; `childAge` only chooses where a first visit starts. The game sets itself up from
       // the state as it was left: nothing eases in and no scene replays.
-      game = new Game((voice) => sound(audio, voice), spike ? SPIKE : value, ctxRef.current.childAge, seed)
+      game = new Game((voice) => sound(audio, voice), spike ? SPIKE : value, ctxRef.current.childAge, seed, clock.seconds)
       game.dropsShare = TIERS[governor.tier].drops
       // The load draws the first frame itself: a game that is resting or parked has no frame coming.
       draw()

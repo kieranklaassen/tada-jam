@@ -192,6 +192,15 @@ describe('the first showing of a new thing', () => {
     expect(again.heard).toHaveLength(0)
   })
 
+  it('counts its moment from when the game is made, whatever the clock read then', () => {
+    const heard: VoiceSpec[] = []
+    const late = new Game((voice) => heard.push(voice), null, null, 7, 40)
+    for (let frame = 1; frame <= 60; frame++) late.step(FRAME, 40 + frame * FRAME)
+    expect(late.save.seen).toEqual([])
+    for (let frame = 61; frame <= 120; frame++) late.step(FRAME, 40 + frame * FRAME)
+    expect(late.save.seen).toEqual(['fire'])
+  })
+
   it('never comes after a touch, and what stands in the yard then counts as met', () => {
     const t = new Table(null, null)
     t.gulp({ x: 13, z: 8 })
