@@ -17,7 +17,8 @@ export type Tableau = { world: World; pot: Pot; guests: { who: GuestId; x: numbe
 /** One cup on its saucer in the middle of the cloth, the pot beside it with its spout over the cup, and the sponge waiting in the tray until the first spill. */
 export function toyTable(): Tableau {
   const world = emptyWorld()
-  const place = placeSpot(1, 0)
+  // Nearer the child than a guest's place would be, and a little left of the middle, so cup and pot sit in the middle of the surface.
+  const place = { x: -0.9, z: placeSpot(1, 0).z + 0.9 }
   world.things.push(thing('saucer-0', 'saucer', place), thing('cup', 'cup', place, { on: 'saucer-0' }))
   const station = stationFor(place)
   const pot = restingPot(station, station.heading)

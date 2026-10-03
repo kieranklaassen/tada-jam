@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { dishOf } from './forms'
+import { bowlOf, dishOf } from './forms'
 import { CLOTH, TRAY, placeSpot } from './layout'
-import { POUR, callTo, carryTo, flowAfter, liftOf, press, release, restingPot, spoutSpot, stationFor, step, thingUnder, type Pot } from './pour'
+import { CARRY_LIFT, HOP_LIFT, POUR, callTo, carryTo, clearOf, flowAfter, liftOf, press, release, restingPot, roomFor, setDown, spoutSpot, stationFor, step, thingUnder, type Pot } from './pour'
 import { emptyWorld, puddled, teaOut, thingById, type Thing, type World } from './world'
 
 const thing = (id: string, kind: Thing['kind'], over: Partial<Thing> = {}): Thing => ({ id, kind, size: 'house', ring: null, owner: null, x: 0, z: 0, on: null, heldBy: null, tea: 0, ...over })
@@ -190,5 +190,49 @@ describe('the pot anywhere else', () => {
     expect(thingUnder(world, placeSpot(1, 0))).toBe('cup')
     expect(thingUnder(world, { x: placeSpot(1, 0).x + 0.85, z: placeSpot(1, 0).z })).toBe('saucer-0')
     expect(thingUnder(world, { x: 4, z: 2 })).toBe(null)
+  })
+})
+
+describe('the pot among other things', () => {
+  it('never takes a station in another thing, and still pours on the spot it was called to', () => {
+    const { world } = toyTable()
+    const cup = thingById(world, 'cup')!
+    // Every spot round the cup, as a child tapping the cloth near it would call the pot to.
+    for (let a = 0; a < 24; a++) {
+      for (const far of [1.2, 2.1, 3.0]) {
+        const target = { x: cup.x + Math.cos((a / 24) * Math.PI * 2) * far, z: cup.z + Math.sin((a / 24) * Math.PI * 2) * far }
+        const station = stationFor(target, world)
+        expect(clearOf(world, station, 1.0), `called to ${target.x.toFixed(2)}, ${target.z.toFixed(2)}`).toBe(true)
+        expect(station.x + Math.cos(station.heading) * POUR.reach).toBeCloseTo(target.x, 9)
+        expect(station.z + Math.sin(station.heading) * POUR.reach).toBeCloseTo(target.z, 9)
+      }
+    }
+  })
+
+  it('comes down beside whatever it was let go over, never in it', () => {
+    const { world, pot } = toyTable()
+    const cup = thingById(world, 'cup')!
+    for (let a = 0; a < 16; a++) {
+      for (const far of [0, 0.4, 0.9, 1.5, 2.2]) {
+        carryTo(pot, world, { x: cup.x + Math.cos((a / 16) * Math.PI * 2) * far, z: cup.z + Math.sin((a / 16) * Math.PI * 2) * far })
+        expect(liftOf(pot)).toBe(CARRY_LIFT)
+        setDown(pot, world)
+        for (let i = 0; i < 60; i++) step(pot, world, 1 / 60)
+        expect(pot.hop).toBe(null)
+        expect(liftOf(pot)).toBe(0)
+        expect(clearOf(world, pot, 1.0), `let go ${far} from the cup at angle ${a}`).toBe(true)
+      }
+    }
+  })
+
+  it('clears every cup by a hand while it is carried or at the top of a hop', () => {
+    expect(CARRY_LIFT).toBeGreaterThan(bowlOf('house').rimY + 0.035 + 0.3)
+    expect(HOP_LIFT).toBeGreaterThan(CARRY_LIFT)
+  })
+
+  it('finds room for itself next to a crowd', () => {
+    const { world } = toyTable()
+    world.things.push(thing('bowl', 'bowl', { x: 2, z: 1 }), thing('saucer-1', 'saucer', { x: 0.6, z: 2.4 }))
+    for (let x = -3; x <= 4; x += 0.5) for (let z = -1; z <= 3; z += 0.5) expect(clearOf(world, roomFor(world, { x, z }), 1.0), `${x}, ${z}`).toBe(true)
   })
 })

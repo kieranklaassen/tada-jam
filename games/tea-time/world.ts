@@ -1,4 +1,4 @@
-import { CUP_HOLDS, dishOf, type CupSize } from './forms'
+import { CUP_HOLDS, bowlOf, dishOf, type CupSize } from './forms'
 import { CLOTH, type Spot } from './layout'
 
 // The model of the world: the things on the table and the tea in and under
@@ -146,7 +146,13 @@ export function pourInto(world: World, id: string, amount: number, flow: Flow = 
   if (left <= 1e-12) return flow
   const under = thingById(world, thing.on)
   if (thing.kind === 'cup' && under && under.kind === 'saucer') return pourInto(world, under.id, left, flow)
-  return spill(world, thing, left, flow)
+  return spill(world, runOff(thing), left, flow)
+}
+
+/** Where tea that runs over a thing reaches the cloth: just past its edge on the child's side, where the puddle can be seen and is not under the thing itself. */
+export function runOff(thing: Thing): Spot {
+  const edge = thing.kind === 'saucer' ? dishOf(thing.size).rimR : thing.kind === 'cup' ? bowlOf(thing.size).rimR : thing.kind === 'bowl' ? 0.92 : 0.45
+  return { x: thing.x, z: thing.z + edge + 0.3 }
 }
 
 /** One thing is tipped into another: all its tea goes over, and what the other cannot hold runs on as in `pourInto`. */

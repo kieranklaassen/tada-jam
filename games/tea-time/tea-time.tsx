@@ -4,7 +4,7 @@ import type { Cartridge, CartridgeContext } from '../types'
 import { AttendedClock, Attention } from './attention'
 import { GameAudio } from './audio'
 import { BACKDROP } from './config'
-import { IdleLadder } from './guidance'
+import { IdleLadder, type Guidance } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { teaTimeManifest } from './manifest'
 import { Overlay } from './overlay'
@@ -46,6 +46,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     let state: GameState | null = null, disposed = false, frame = 0, width = 0, height = 0, dpr = 0, lastWork = 0
     // The table and the toy on it. The pieces are built once, here; a tier changes only how finely they are drawn.
     const view = new TableView(canvas, document, governor.tier)
+    // What the idle ladder says to show: a glow on the pot, then a ghost hand that holds it.
+    let shown: Guidance = ladder.update(0)
     const toy = new Toy(view, (voice) => audio.play(voice), new URLSearchParams(window.location.search).get('look') === '1' ? lookTable() : toyTable())
 
     // Nothing is saved until the slot has been read, so an early put-away cannot overwrite it.
@@ -68,7 +70,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read; those two draw the table as it stands and play no time.
     const draw = (seconds = 0) => {
-      const counts = toy.draw(seconds)
+      const counts = toy.draw(seconds, shown)
       drawn.drawCalls = counts.drawCalls
       drawn.triangles = counts.triangles
     }
@@ -136,7 +138,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       // as one runs (`if (scene.running) ladder.touch(clock.seconds)`), or the ghost hand comes up over the scene.
       if (touch.active || toy.busy) ladder.touch(clock.seconds)
       // What to show an idle child: a glow on what can be touched, then one move.
-      ladder.update(clock.seconds)
+      shown = ladder.update(clock.seconds)
       // The toy plays the frame's seconds: the pot, the tea and their sounds.
       toy.step(seconds)
       // A tier change is applied ahead of the draw: whatever the game's tiers set in `applyTier`, then the pixel

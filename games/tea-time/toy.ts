@@ -1,9 +1,10 @@
 import type { Voice } from './audio'
 import { bowlOf, fillLevel, surfaceOf } from './forms'
+import type { Guidance } from './guidance'
 import type { Gesture, Point } from './input'
 import { TRAY, onCloth, type Spot } from './layout'
 import { pick, type Target } from './pick'
-import { POUR, callTo, carryTo, liftOf, press, release, spoutSpot, step, thingUnder, type Pot, type PourEvent } from './pour'
+import { POUR, callTo, carryTo, liftOf, press, release, setDown, spoutSpot, step, thingUnder, type Pot, type PourEvent } from './pour'
 import { voiceOf } from './sound'
 import type { TableView } from './tableView'
 import type { Tableau } from './tableau'
@@ -98,7 +99,7 @@ export class Toy {
     for (const event of events) {
       const landing = this.landing()
       if (event.type === 'drop') {
-        this.view.drop(landing.y)
+        this.view.drop(landing)
         this.play(voiceOf(landing.wet ? plip(landing.level) : pat))
         if (this.pot.over) this.view.nudge(this.pot.over, 0.035)
         this.afterFlow(event.flow)
@@ -191,18 +192,12 @@ export class Toy {
     const target: Spot = thing ? { x: under ? under.x : thing.x, z: under ? under.z : thing.z } : onCloth(this.view.clothAt(point.x, point.y), 0.4)
     const id = thingUnder(this.world, target)
     if (this.pot.hop || (id !== null && id === this.pot.over && Math.hypot(spoutSpot(this.pot).x - target.x, spoutSpot(this.pot).z - target.z) < 0.05)) return
-    this.heard(callTo(this.pot, target, id))
+    this.heard(callTo(this.pot, target, id, this.world))
   }
 
   /** The pot is set down: beside a cup it takes its place with the spout over the cup, and anywhere else it stays where it was put. */
   private settle(): void {
-    const id = this.pot.over
-    const thing = thingById(this.world, id)
-    if (thing) this.heard(callTo(this.pot, thing, id))
-    else {
-      this.play(voiceOf(land))
-      this.view.nudge('pot', 0.08)
-    }
+    this.heard(setDown(this.pot, this.world))
   }
 
   private rub(at: Spot): boolean {
@@ -257,9 +252,9 @@ export class Toy {
   }
 
   /** Draws one frame and returns what it cost to draw. `dt` of 0 draws the table as it stands. */
-  draw(dt: number): { drawCalls: number; triangles: number } {
+  draw(dt: number, guidance: Guidance): { drawCalls: number; triangles: number } {
     const landing = this.pot.flow > 0 ? this.landing() : null
-    return this.view.frame(dt, this.world, this.pot, landing)
+    return this.view.frame(dt, this.world, this.pot, landing, guidance)
   }
 
   /** There is tea on the cloth: for the guidance, which shows the sponge only when there is something to wipe. */

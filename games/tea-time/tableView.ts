@@ -1,6 +1,8 @@
 import * as THREE from 'three'
 import { makeFigure, type Figure } from './figurines'
 import { POT, bowlOf, dishOf, surfaceOf } from './forms'
+import { Guide } from './guide'
+import type { Guidance } from './guidance'
 import { Drops, Puddles, Ripples, Stream } from './liquid'
 import { TURN_SEGMENTS, cupGeometry, makeKit, poolGeometry, saucerGeometry, teaDiscGeometry, turn, type Kit } from './pieces'
 import { liftOf, type Pot } from './pour'
@@ -43,6 +45,7 @@ export class TableView {
   private readonly drops: Drops
   private readonly ripples = new Ripples()
   private readonly puddles = new Puddles()
+  private readonly guide: Guide
   private readonly potRoot = new THREE.Group()
   private readonly potTilt = new THREE.Group()
   private readonly lid: THREE.Mesh
@@ -66,7 +69,8 @@ export class TableView {
     this.shadows = shadowBlobs(doc, 28)
     this.stream = new Stream(this.kit.tea)
     this.drops = new Drops(this.kit.tea)
-    this.scene.add(this.shadows, this.puddles.mesh, this.ripples.mesh, this.stream.mesh, this.drops.mesh)
+    this.guide = new Guide(doc)
+    this.scene.add(this.shadows, this.puddles.mesh, this.ripples.mesh, this.stream.mesh, this.drops.mesh, this.guide.group)
     const pot = potGeometry(this.segments)
     const body = new THREE.Mesh(pot.body, this.kit.glaze)
     body.name = 'pot-body'
@@ -210,9 +214,9 @@ export class TableView {
     if (piece) piece.speed -= strength * 5
   }
 
-  /** A drop leaves the spout for a surface at height `floor`. */
-  drop(floor: number): void {
-    this.drops.fall(this.spoutTip(this.vector), floor)
+  /** A drop leaves the spout for the place the tea lands. */
+  drop(to: { x: number; y: number; z: number }): void {
+    this.drops.fall(this.spoutTip(this.vector), to)
   }
 
   /** Where the tea leaves the spout, in the world. */
@@ -222,7 +226,7 @@ export class TableView {
   private readonly vector2 = new THREE.Vector3()
 
   /** One frame: springs, the pot's pose, the liquid, the guests' idle life, and the draw. `stream` is where the tea lands, or null. */
-  frame(dt: number, world: World, pot: Pot, stream: { x: number; y: number; z: number } | null): { drawCalls: number; triangles: number } {
+  frame(dt: number, world: World, pot: Pot, stream: { x: number; y: number; z: number } | null, guidance: Guidance): { drawCalls: number; triangles: number } {
     this.time += dt
     const spring = (x: number, v: number, stiffness: number, damping: number): [number, number] => {
       const speed = v + (-stiffness * x - damping * v) * dt
@@ -243,8 +247,8 @@ export class TableView {
     let blobs = 0
     const blob = (x: number, z: number, size: number, lift: number) => {
       // A thing lifted off the cloth throws a wider, fainter shadow: drawn here as a smaller, softer one.
-      const s = size * (1 + lift * 0.25)
-      this.matrix.makeScale(s, 1, s * 0.82).setPosition(x + lift * 0.12, 0.004, z + lift * 0.1)
+      const s = size * (1 - lift * 0.18)
+      this.matrix.makeScale(s, 1, s * 0.82).setPosition(x, 0.004, z)
       if (blobs < this.shadows.instanceMatrix.count) this.shadows.setMatrixAt(blobs++, this.matrix)
     }
     blob(pot.x, pot.z, POT.bellyR * 1.25, liftOf(pot))
@@ -271,6 +275,9 @@ export class TableView {
     if (stream && pot.flow > 0 && Math.floor(this.time * 7) !== Math.floor((this.time - dt) * 7)) this.ripples.ring(stream.x, stream.y, stream.z, 0.22 + 0.2 * (pot.flow / 0.27))
     this.ripples.update(dt)
     this.puddles.update(world, dt)
+    // Steam only from a pot at rest; the ghost hand's press squashes the pot as a finger will.
+    const resting = pot.tilt === 0 && pot.hop === null
+    if (this.guide.update(dt, guidance, { x: pot.x, z: pot.z, girth: POT.bellyR, top: POT.height + 0.5 }, resting ? this.spoutTip(this.vector) : null)) this.nudge('pot', 0.07)
 
     this.renderer.info.reset()
     this.renderer.render(this.scene, this.camera)
@@ -319,6 +326,7 @@ export class TableView {
   }
 
   dispose(): void {
+    this.guide.dispose()
     this.scene.traverse((node) => {
       if (node instanceof THREE.Mesh) {
         node.geometry.dispose()

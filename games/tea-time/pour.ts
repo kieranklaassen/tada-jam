@@ -1,4 +1,4 @@
-import { bowlOf, dishOf } from './forms'
+import { POT, bowlOf, dishOf } from './forms'
 import { CLOTH, onCloth, type Spot } from './layout'
 import { pourInto, spill, type Flow, type Thing, type World } from './world'
 
@@ -49,6 +49,8 @@ export type Pot = {
   /** The thing under its spout, or null when it pours on the bare cloth. */
   over: string | null
   held: boolean
+  /** It is in the child's hand, lifted clear of everything on the table. */
+  carried: boolean
   /** Seconds the stream has been running in this hold. */
   running: number
   /** 0 upright, 1 tipped to pour. */
@@ -70,7 +72,7 @@ export type PourEvent =
   | { type: 'land' }
 
 export function restingPot(at: Spot, heading = Math.PI): Pot {
-  return { x: at.x, z: at.z, heading, over: null, held: false, running: 0, tilt: 0, flow: 0, dripIn: null, hop: null }
+  return { x: at.x, z: at.z, heading, over: null, held: false, carried: false, running: 0, tilt: 0, flow: 0, dripIn: null, hop: null }
 }
 
 /** The spot on the cloth under the spout when the pot is tipped. */
@@ -78,12 +80,54 @@ export function spoutSpot(pot: Pot): Spot {
   return { x: pot.x + Math.cos(pot.heading) * POUR.reach, z: pot.z + Math.sin(pot.heading) * POUR.reach }
 }
 
-/** Where the pot stands, and which way it faces, to pour on a spot. Near the right edge of the cloth it stands on the other side. */
-export function stationFor(target: Spot): { x: number; z: number; heading: number } {
-  const side = target.x + STATION.x > CLOTH.maxX - 1.1 ? -1 : 1
-  const near = target.z + STATION.z > CLOTH.maxZ - 0.9 ? -1 : 1
-  const heading = Math.atan2(-near * STATION.z, -side * STATION.x)
-  return { x: target.x - Math.cos(heading) * POUR.reach, z: target.z - Math.sin(heading) * POUR.reach, heading }
+/** How far from its middle a thing reaches over the cloth: what the pot must stand clear of. */
+export function footprint(thing: Thing): number {
+  if (thing.kind === 'saucer') return dishOf(thing.size).rimR
+  if (thing.kind === 'cup') return bowlOf(thing.size).rimR * 1.25
+  if (thing.kind === 'bowl') return 0.92
+  if (thing.kind === 'pot') return POT.bellyR
+  return 0.5
+}
+
+/** Nothing on the table stands within `radius` of the spot. A thing that stands on another is covered by the one under it. */
+export function clearOf(world: World, spot: Spot, radius: number): boolean {
+  return world.things.every((thing) => thing.kind === 'pot' || thing.on !== null || Math.hypot(thing.x - spot.x, thing.z - spot.z) >= radius + footprint(thing))
+}
+
+/** The room the pot's belly needs round its middle, with a finger's width to spare. */
+const POT_ROOM = POT.bellyR + 0.06
+
+/**
+ * Where the pot stands, and which way it faces, to pour on a spot. It stands
+ * to the right and nearer the child when it can; near an edge of the cloth,
+ * or where something else already stands, it takes the next side round. With
+ * a world given it never stands in another thing.
+ */
+export function stationFor(target: Spot, world?: World): { x: number; z: number; heading: number } {
+  const sides: [number, number][] = [[1, 1], [-1, 1], [1, -1], [-1, -1]]
+  const at = ([side, near]: [number, number]) => {
+    const heading = Math.atan2(-near * STATION.z, -side * STATION.x)
+    return { x: target.x - Math.cos(heading) * POUR.reach, z: target.z - Math.sin(heading) * POUR.reach, heading }
+  }
+  const onTable = (station: Spot) => station.x <= CLOTH.maxX - 1.1 + 1e-9 && station.x >= CLOTH.minX + 1.1 - 1e-9 && station.z <= CLOTH.maxZ - 0.9 + 1e-9 && station.z >= CLOTH.minZ + 0.9 - 1e-9
+  const free = sides.map(at).filter(onTable)
+  return free.find((station) => !world || clearOf(world, station, POT_ROOM)) ?? free[0] ?? at(sides[0])
+}
+
+/** The nearest spot to `spot` where the pot stands in nothing: it is pushed out of whatever it overlaps, a few times over. */
+export function roomFor(world: World, spot: Spot): Spot {
+  let at = onCloth(spot, 1.0)
+  for (let pass = 0; pass < 8 && !clearOf(world, at, POT_ROOM); pass++) {
+    for (const thing of world.things) {
+      if (thing.kind === 'pot' || thing.on !== null) continue
+      const far = Math.hypot(at.x - thing.x, at.z - thing.z), need = POT_ROOM + footprint(thing) + 0.02
+      if (far >= need) continue
+      // Straight away from the thing; from dead centre, toward the child.
+      const ux = far > 1e-6 ? (at.x - thing.x) / far : 0, uz = far > 1e-6 ? (at.z - thing.z) / far : 1
+      at = onCloth({ x: thing.x + ux * need, z: thing.z + uz * need }, 1.0)
+    }
+  }
+  return at
 }
 
 /** How near the spout must be to a thing's middle to pour into it. */
@@ -114,11 +158,29 @@ export function thingUnder(world: World, spot: Spot): string | null {
 }
 
 /** A tap on a cup, or the pot let go near one: it hops to stand beside that spot with its spout over it. */
-export function callTo(pot: Pot, target: Spot, id: string | null): PourEvent[] {
-  const station = stationFor(target)
+export function callTo(pot: Pot, target: Spot, id: string | null, world?: World): PourEvent[] {
+  const station = stationFor(target, world)
   pot.hop = { fromX: pot.x, fromZ: pot.z, toX: station.x, toZ: station.z, fromHeading: pot.heading, toHeading: station.heading, t: 0 }
   pot.over = id
   pot.held = false
+  pot.carried = false
+  return [{ type: 'hop' }]
+}
+
+/**
+ * The pot is let go. Over a cup, a saucer or the bowl it takes its place
+ * beside it with its spout over it. Anywhere else it comes down where it is,
+ * or beside whatever is under it: it never comes down in another thing.
+ */
+export function setDown(pot: Pot, world: World): PourEvent[] {
+  pot.carried = false
+  const under = world.things.find((thing) => thing.id === pot.over)
+  if (under) return callTo(pot, under, under.id, world)
+  const room = roomFor(world, pot)
+  if (Math.hypot(room.x - pot.x, room.z - pot.z) < 1e-6) return [{ type: 'land' }]
+  pot.hop = { fromX: pot.x, fromZ: pot.z, toX: room.x, toZ: room.z, fromHeading: pot.heading, toHeading: pot.heading, t: 0 }
+  // What its spout is over is known again when it lands.
+  pot.over = null
   return [{ type: 'hop' }]
 }
 
@@ -129,6 +191,7 @@ export function carryTo(pot: Pot, world: World, at: Spot): void {
   pot.z = spot.z
   pot.hop = null
   pot.held = false
+  pot.carried = true
   pot.over = thingUnder(world, spoutSpot(pot))
 }
 
@@ -178,6 +241,7 @@ export function step(pot: Pot, world: World, dt: number): PourEvent[] {
     pot.heading = hop.fromHeading + turn * k
     if (hop.t >= 1) {
       pot.hop = null
+      if (pot.over === null) pot.over = thingUnder(world, spoutSpot(pot))
       events.push({ type: 'land' })
     }
   }
@@ -204,8 +268,13 @@ export function step(pot: Pot, world: World, dt: number): PourEvent[] {
   return events
 }
 
-/** How high the pot's foot is lifted off the cloth: it rises as it tips, and arcs over the table in a hop. */
+/** A carried pot, and a hopping one at the top of its hop, clears the tallest thing that can stand on the table (a house cup on its saucer, 0.56 high) by a hand. */
+export const CARRY_LIFT = 1.0
+export const HOP_LIFT = 1.3
+
+/** How high the pot's foot is lifted off the cloth: it rises as it tips, arcs over the table in a hop, and rides in the hand. */
 export function liftOf(pot: Pot): number {
-  const hop = pot.hop ? Math.sin(pot.hop.t * Math.PI) * 0.9 : 0
-  return hop + pot.tilt * 0.62
+  if (pot.carried) return CARRY_LIFT
+  const hop = pot.hop ? Math.sin(pot.hop.t * Math.PI) * HOP_LIFT : 0
+  return hop + pot.tilt * 0.42
 }

@@ -63,7 +63,7 @@ export class Stream {
   }
 }
 
-type Drop = { x: number; y: number; z: number; vy: number; floor: number; live: boolean }
+type Drop = { x: number; y: number; z: number; vx: number; vz: number; vy: number; floor: number; live: boolean }
 
 /** Single drops: the one that answers a press, the last one of a pour, the dribble off a rim. One draw for all of them. */
 export class Drops {
@@ -79,21 +79,27 @@ export class Drops {
     this.mesh.count = 0
     this.mesh.frustumCulled = false
     this.mesh.name = 'drops'
-    for (let i = 0; i < capacity; i++) this.drops.push({ x: 0, y: 0, z: 0, vy: 0, floor: 0, live: false })
+    for (let i = 0; i < capacity; i++) this.drops.push({ x: 0, y: 0, z: 0, vx: 0, vz: 0, vy: 0, floor: 0, live: false })
   }
 
-  /** A drop leaves `from` and falls to the height `floor`. */
-  fall(from: THREE.Vector3, floor: number): void {
+  /** A drop leaves `from` and lands at `to`: it flies out as far as the stream does, so it lands in the cup and not short of it. */
+  fall(from: THREE.Vector3, to: { x: number; y: number; z: number }): void {
     const drop = this.drops.find((candidate) => !candidate.live) ?? this.drops[0]
-    drop.x = from.x; drop.y = from.y; drop.z = from.z; drop.vy = 0; drop.floor = floor; drop.live = true
+    const seconds = Math.sqrt((2 * Math.max(0.02, from.y - to.y)) / Drops.GRAVITY)
+    drop.x = from.x; drop.y = from.y; drop.z = from.z
+    drop.vx = (to.x - from.x) / seconds; drop.vz = (to.z - from.z) / seconds
+    drop.vy = 0; drop.floor = to.y; drop.live = true
   }
+  private static readonly GRAVITY = 26
 
   update(dt: number): void {
     let count = 0
     for (const drop of this.drops) {
       if (!drop.live) continue
-      drop.vy -= 26 * dt
+      drop.vy -= Drops.GRAVITY * dt
       drop.y += drop.vy * dt
+      drop.x += drop.vx * dt
+      drop.z += drop.vz * dt
       if (drop.y <= drop.floor) {
         drop.live = false
         this.landed.push({ x: drop.x, y: drop.floor, z: drop.z })

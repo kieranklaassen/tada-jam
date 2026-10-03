@@ -151,8 +151,10 @@ export function cupGeometry(bowl: Bowl, ring: number | null, segments: number): 
   })
   const k = bowl.rimR / 0.6
   const ear = plain(new THREE.TorusGeometry(0.19 * k, 0.045 * k, 8, 14, Math.PI * 1.25))
+  // The ear is on the left, away from where the pot stands to pour.
   ear.rotateZ(-Math.PI * 0.62)
-  ear.translate(bowl.rimR * 0.93, bowl.rimY * 0.56, 0)
+  ear.rotateY(Math.PI)
+  ear.translate(-bowl.rimR * 0.93, bowl.rimY * 0.56, 0)
   return merged([body, ear])
 }
 
