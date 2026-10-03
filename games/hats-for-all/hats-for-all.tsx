@@ -9,7 +9,7 @@ import { hint } from './guide'
 import { IdleLadder, handPose, type Guidance, type HandPose } from './guidance'
 import { ForgivingTouch, type Gesture, type Point } from './input'
 import { hatsForAllManifest } from './manifest'
-import { Overlay } from './overlay'
+import { CORNER, Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { deserialize, serialize, type Saved } from './save'
@@ -129,6 +129,8 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       if (!game) return
       for (const gesture of gestures) {
         if (gesture.type === 'press') {
+          // The top right corner is the grown-up's (overlay.ts): nothing of the game answers a touch there.
+          if (gesture.at.x > width - CORNER && gesture.at.y < CORNER) { held = null; continue }
           held = view.pick(gesture.at.x, gesture.at.y, game.play)
           from = gesture.at
           dragging = false

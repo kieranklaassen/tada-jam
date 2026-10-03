@@ -6,7 +6,7 @@ import { DIMPLE_SECONDS, type ActorPose, type Play } from '../play'
 import { CREATURE_DEPTH, HAND, HAT_HALF, HAT_HEIGHT, SLAB, TILE_DEPTH } from '../sizes'
 import { ARCH_X, ARCH_Z, LANE_Z, TILE_Z } from '../stage'
 import { tileWidth } from '../tile'
-import { CREATURE_COLOUR, EAR_DEPTH, PALETTE, buildArch, buildMat, buildPieces, buildRoom, buildTile, type Pieces } from './build'
+import { CREATURE_COLOUR, EAR_DEPTH, MAT_BACK, PALETTE, buildArch, buildMat, buildPieces, buildRoom, buildTile, type Pieces } from './build'
 import { RING_CLEAR, blobTexture, foamMaterials, handTexture, ringTexture } from './foam'
 
 // The foam scene as three.js objects, with no renderer: it is built once,
@@ -214,7 +214,7 @@ export class FoamStage {
         mesh.scale.set(1 + pose.up * (1 / Math.sqrt(pose.squash) - 1), 1 - pose.up * give, thin)
         if (pose.up > 0.02) shade(pose.x, pose.z, 2 / (1 + pose.y * 0.25), 1.1 / (1 + pose.y * 0.25))
         // A hat in its hole is ringed on the tile, close round its own outline; a hat standing on the floor or a head is ringed on the floor under it.
-        if (glowing && flat > 0.5) halo(pose.x, SLAB + 0.02, pose.z - HAT_HEIGHT[play.hatKind(hat)] / 2, HAT_HALF[play.hatKind(hat)], HAT_HEIGHT[play.hatKind(hat)] / 2)
+        if (glowing && flat > 0.5) halo(pose.x, SLAB + 0.02, pose.z - HAT_HEIGHT[play.hatKind(hat)] / 2, HAT_HALF[play.hatKind(hat)] + 0.06, HAT_HEIGHT[play.hatKind(hat)] / 2 + 0.1)
         else if (glowing) halo(pose.x, 0.02, pose.z, HAT_HALF[play.hatKind(hat)] + 0.25, 0.75)
       })
       this.arch.scale.set(1 / Math.sqrt(play.arch.x), play.arch.x, 1)
@@ -290,8 +290,11 @@ export class FoamStage {
   }
 
   private floorUnder(x: number, y: number): { x: number; z: number } {
-    const ray = this.aim(x, y), t = -ray.origin.y / ray.direction.y
-    return { x: ray.origin.x + ray.direction.x * t, z: ray.origin.z + ray.direction.z * t }
+    const ray = this.aim(x, y)
+    // A finger on the wall, above the mat's far edge, presses the mat at that edge.
+    if (ray.direction.y > -0.02) return { x: ray.origin.x + ray.direction.x * 40, z: MAT_BACK + 0.5 }
+    const t = -ray.origin.y / ray.direction.y
+    return { x: ray.origin.x + ray.direction.x * t, z: Math.max(MAT_BACK + 0.5, ray.origin.z + ray.direction.z * t) }
   }
 
   /** What is under a finger. A small hand is given room: the nearest thing within its reach wins, and `but` (a hat in the hand) is passed over. */

@@ -150,7 +150,7 @@ export function handTexture(size = 64): THREE.DataTexture {
 }
 
 /** How much of a glow ring's width, from its middle out, is clear: the thing it marks fits inside that. */
-export const RING_CLEAR = 0.86
+export const RING_CLEAR = 0.83
 
 /** A thin soft ring, clear in the middle: the glow that lies round a thing and never over it, so a hat keeps its own colour while it is lit. */
 export function ringTexture(size = 128): THREE.DataTexture {
