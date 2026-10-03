@@ -291,8 +291,10 @@ export function solve(frame: Frame, loads: readonly Load[] = []): Answer {
   }
   frame.threads.forEach((bar, t) => {
     const state = states[bar.part]
-    if (!active[t]) { state.strain = 'slack'; return }
-    state.force = along(bar, 'thread')
+    const force = active[t] ? along(bar, 'thread') : 0
+    // A thread nothing pulls on hangs in its loose curve, whether or not its ends have moved apart.
+    if (force < 1e-6) { state.strain = 'slack'; return }
+    state.force = force
     state.use = state.force / SPEC.thread.pull
     state.strain = 'pull'
   })
