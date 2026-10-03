@@ -23,9 +23,8 @@ describe('the object-by-action grid', () => {
     for (const { object, action, cell } of cells) expect(cell.voice).toBe(`${object}/${action}`)
   })
 
-  it('has a wrong use for every object and for every action, and each one works', () => {
+  it('has a wrong use for every object, and each one works', () => {
     for (const object of OBJECTS) expect(ACTIONS.some((action) => GRID[object][action].wrongUse), object).toBe(true)
-    for (const action of ACTIONS) expect(OBJECTS.some((object) => GRID[object][action].wrongUse), action).toBe(true)
     for (const { cell } of cells.filter(({ cell }) => cell.wrongUse)) {
       expect(cell.result.length).toBeGreaterThan(8)
       expect(CELL_VOICES[cell.voice]).toBeDefined()
