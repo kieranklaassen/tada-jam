@@ -3,7 +3,7 @@
 
 ## Status
 
-- Stage: toy. The sheet, the look spike, the toy and the rules are pushed. The game is not built on the toy: the first run stopped there, as its brief says.
+- Stage: game, in progress (the run that `docs/build/runs/game.md` on the base branch describes). The owner has seen the toy and has not answered; the lead has the lanes build on meanwhile, at their own risk. Everything that is not drawing is kept out of the view (`stage.ts`, `scenery.ts`, `friends.ts`, `vinyl.ts`, `shapes.ts`), so a rejected look means a new view and the same rules, theatre and motion.
 - Sheet check, round 1 (checker: B): **open, 9 findings**, judged on the sheet with hash `2bdd3321af364369a6dec9009cc63700c8c293dd8712678156a7a37973bdd404` (commit `c5edd65`). All nine replacements are pasted as given; none was disputed.
 - Sheet now: as it stands at commit `da72b2c`. Hash of the sheet part (everything above `## The look`): `21be665f52a86c79fbca9099d9d71440bfddf2e557124ac726c98356ce04f1a7`.
 - Rules and toy: brought into line with the new text in the two commits after `da72b2c` (`6de4b5a`, `10f359a`). What changed: the ending is announced each time the last friend takes its balloon, also after a pop, and the cycle is still judged once (`play.ts`); the grid's column for a troop that already has its balloons has its own result in every row (`grid.ts`); and the toy plays those results that need no new scenery (see "Not yet fixed" for the two that do). The rules are still written ahead of a pass, at the builder's own risk.
