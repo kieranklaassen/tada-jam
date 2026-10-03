@@ -41,6 +41,8 @@ export type Body = {
   halfWidth: number
   /** How far the arms swing out and up when the friend reaches, in radians from hanging. */
   reach: number
+  /** The least an arm may swing out from hanging: the crab's claws are long enough to go through the hill if they hung straight down. */
+  lowest: number
 }
 
 const SMALL: readonly [number, number] = [16, 10]
@@ -83,8 +85,9 @@ function duck(): Body {
     hand: [-0.06, -0.72, 0],
     valve: [0.5, 0.46, -0.48],
     height: 2.3,
-    halfWidth: 1.0,
+    halfWidth: 1.06,
     reach: 2.75,
+    lowest: 0,
   }
 }
 
@@ -116,6 +119,7 @@ function frog(): Body {
     height: 1.98,
     halfWidth: 1.2,
     reach: 2.8,
+    lowest: 0,
   }
 }
 
@@ -137,14 +141,15 @@ function hippo(): Body {
     arm: [{ at: [-0.04, -0.34, 0.02], size: [0.21, 0.42, 0.21], colour: c, panels: 2, detail: SMALL }],
     extra: [{ at: [0, 0, 0], size: [0.72, 0.56, 0.3], colour: light, detail: SMALL }],
     neck: [0, 1.52, 0.2],
-    shoulder: [-0.98, 1.2, 0.1],
+    shoulder: [-0.94, 1.2, 0.1],
     extraPivot: [0, 0.74, 0.66],
     extraOnHead: false,
     hand: [-0.04, -0.72, 0.02],
     valve: [0.74, 0.5, -0.56],
     height: 2.5,
-    halfWidth: 1.26,
-    reach: 2.8,
+    halfWidth: 1.3,
+    reach: 2.95,
+    lowest: 0,
   }
 }
 
@@ -174,7 +179,19 @@ function crab(): Body {
     height: 1.68,
     halfWidth: 1.34,
     reach: 2.95,
+    lowest: 1.0,
   }
+}
+
+/**
+ * How far to one side a friend reaches with its arms up, from its own pillows: the trunk, or the far end of a
+ * raised arm, whichever is further out. A test holds each plan's `halfWidth` to it.
+ */
+export function reachOut(body: Body): number {
+  const trunk = Math.max(...body.body.map((p) => Math.abs(p.at[0]) + Math.max(p.size[0], p.size[1] * Math.abs(Math.sin(p.turn?.[2] ?? 0)))))
+  const c = Math.cos(-body.reach), s = Math.sin(-body.reach)
+  const arm = Math.max(...body.arm.map((p) => Math.abs(body.shoulder[0] + p.at[0] * c - p.at[1] * s) + Math.max(p.size[0], p.size[2])))
+  return Math.max(trunk, arm)
 }
 
 export const BODIES: Record<KindName, Body> = { duck: duck(), frog: frog(), hippo: hippo(), crab: crab() }

@@ -55,3 +55,35 @@ export function copyPose(into: Pose, from: Readonly<Pose>): Pose {
   into.wag = from.wag; into.flick = from.flick; into.puff = from.puff; into.blink = from.blink; into.glow = from.glow
   return into
 }
+
+/**
+ * How much wider a friend is when it is squashed to `squash` of its height. Air under vinyl spreads, but a toy
+ * that spread by its whole volume would push its arms into the friend beside it, so it spreads by half of that.
+ */
+export function spread(squash: number): number {
+  return 1 + (1 / Math.sqrt(Math.max(0.2, squash)) - 1) * 0.5
+}
+
+/** The same pose done to the other side: what a friend does towards its left, done towards its right. */
+export function mirror(pose: Pose): void {
+  const arm = pose.armL, forward = pose.armLForward
+  pose.armL = pose.armR
+  pose.armR = arm
+  pose.armLForward = pose.armRForward
+  pose.armRForward = forward
+  pose.turn = -pose.turn
+  pose.lean = -pose.lean
+  pose.headTurn = -pose.headTurn
+  pose.tilt = -pose.tilt
+  pose.wag = -pose.wag
+}
+
+/**
+ * How far an arm comes round to the front as it swings, in radians, for an arm `arm` radians out from hanging. An
+ * arm that swung straight out sideways would reach into the friend beside it every time it was raised or let
+ * down, so half way up it points mostly forwards, at the child, and it is out to the side only a little.
+ */
+export function forwardOf(arm: number): number {
+  const s = Math.sin(arm)
+  return 1.3 * s * s
+}

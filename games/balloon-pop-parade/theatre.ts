@@ -1,9 +1,9 @@
 import { BODIES, type KindName } from './bodies'
 import { clip, PERSONALITIES, rest, stride, walk, type ClipId } from './clips'
 import { handPose, type Guidance, type HandPose } from './guidance'
-import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
+import { BALLOON, bunchOffsets, bunchReach, CLOUDS, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, paradeSpot, seenAt, skySlots, viewFor, WAITING_SCALE, waitingSpot, type View } from './layout'
 import { KIND_COLOURS, PALETTE, shade } from './palette'
-import { copyPose, REST, restPose, type Pose } from './pose'
+import { copyPose, forwardOf, mirror, REST, restPose, spread, type Pose } from './pose'
 import type { VoiceId } from './voices'
 import { callNext, popHeld, sendBunch } from './play'
 import type { Marched, Save } from './save'
@@ -43,11 +43,11 @@ type Flight = { bunch: Bunch; slot: number; given: Given; t: number; fromX: numb
 type Held = { x: number; y: number; vx: number; vy: number; shown: boolean }
 type Loose = { x: number; y: number; vx: number; vy: number; colour: string; flat: boolean; t: number; popAt: number }
 type Scrap = { x: number; y: number; vx: number; vy: number; colour: string; life: number }
-/** `tug` is the bunch that carries a friend off, and `landAfter` puts its landing sound a little after its neighbour's when a whole troop comes down. */
+/** `tug` is the bunch that carries a friend off, `landAfter` puts its landing sound a little after its neighbour's when a whole troop comes down, and `mirrored` has it refuse towards its other side, where the bunch hangs. */
 /** A drop of water from a cloud, and a dimple in the hill where it was touched. */
 type Drop = { x: number; y: number; vx: number; vy: number; life: number }
 type Dimple = { x: number; t: number }
-type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null; landAfter: number }
+type Actor = { clip: ClipId | null; t: number; next: ClipId | null; tug: Bunch | null; landAfter: number; mirrored?: boolean }
 
 /** A troop that is only passing: one that marches off, or one that crosses to show a new idea. Short-lived, and no part of the save. */
 type Passing = { kind: KindName; size: number; held: boolean[]; actors: Actor[] }
@@ -671,6 +671,9 @@ export class Theatre {
       if (kind === 'frog' && given.takers.length > 1) this.sound('frogSlurp', 1, 1, 0.3)
     } else if (given.result === 'refused') {
       this.act(flight.friend, 'refuse')
+      // The motions are written for a bunch that hangs to the right of the friend as the child sees it; one that
+      // hangs to its left is refused the other way round, never across the friend beside it.
+      this.actors[flight.friend].mirrored = this.beside(flight.friend, flight.bunch.count).side < 0
       this.sound(`${kind}Refuse`)
     } else {
       const everyoneHolds = given.spare === flight.bunch.count
@@ -793,11 +796,12 @@ export class Theatre {
       for (let m = 0; m < troop.size; m++) {
         const at = paradeSpot(t, m, time, this.far), step = time * rate + m * 0.4
         const hop = Math.abs(Math.sin(step * Math.PI)) * (troop.kind === 'frog' ? 0.35 : 0.1)
-        painter.marcher(troop.kind, at.x, at.y + hop, at.z, FRIEND_SCALE, at.turn, Math.sin(step * Math.PI) * 0.1)
+        // The far hill slopes under them: they stand a little proud of it, so the uphill foot is not sunk in.
+        painter.marcher(troop.kind, at.x, at.y + hop + 0.14, at.z, FRIEND_SCALE * PARADE_SCALE, at.turn, Math.sin(step * Math.PI) * 0.1)
         if (m >= troop.balloons) continue
-        const by = at.y + hop + HELD_HEIGHT + Math.sin(time * 1.4 + t + m) * 0.08
-        painter.balloon(at.x + 0.3, by, at.z, 1, 1, 0.06, hue)
-        painter.string(at.x + 0.3, by - BALLOON * 1.32, at.z, at.x, at.y + hop + BODIES[troop.kind].height * FRIEND_SCALE * 0.95, at.z, hue, 0.03)
+        const by = at.y + hop + HELD_HEIGHT * PARADE_SCALE + Math.sin(time * 1.4 + t + m) * 0.08
+        painter.balloon(at.x + 0.3, by, at.z, PARADE_SCALE, PARADE_SCALE, 0.06, hue)
+        painter.string(at.x + 0.3, by - BALLOON * 1.32 * PARADE_SCALE, at.z, at.x, at.y + hop + BODIES[troop.kind].height * FRIEND_SCALE * PARADE_SCALE * 0.95, at.z, hue, 0.03)
       }
     }
 
@@ -840,9 +844,11 @@ export class Theatre {
       rest(kind, this.held[i].shown, plan.reach, time, i, pose)
       if (this.walkIn < 1) {
         // On its way in from the edge, where it waited: nearer, larger, and in its kind's own gait.
-        const from = waitingSpot(i, view), gone = stride(kind, this.walkIn)
+        // The friend at the head of the waiting troop, nearest the middle, goes furthest: nobody has to pass anybody.
+        const from = waitingSpot(this.troop.size - 1 - i, view), gone = stride(kind, this.walkIn)
         pose.x = from.x + (spot.x - from.x) * gone
-        pose.z = from.z * (1 - gone)
+        // They spread out sideways before they come forward, so no friend walks through another.
+        pose.z = from.z * (1 - gone * gone * gone)
         pose.y = groundAt(pose.x, pose.z) + (pose.y - spot.y)
         pose.scale = FRIEND_SCALE * (WAITING_SCALE + (1 - WAITING_SCALE) * gone)
         if (this.walkIn <= 0) {
@@ -851,7 +857,15 @@ export class Theatre {
           pose.nod = -0.25
         } else walk(kind, this.walkIn, 1, pose)
       }
-      if (actor.clip) clip(kind, actor.clip, actor.t, plan.height * FRIEND_SCALE, plan.reach, pose)
+      if (actor.clip) {
+        const flip = actor.clip === 'refuse' && actor.mirrored === true
+        // A mirrored motion is played on the mirrored resting pose and mirrored back, so only the motion changes sides.
+        if (flip) mirror(pose)
+        clip(kind, actor.clip, actor.t, plan.height * FRIEND_SCALE, plan.reach, pose)
+        if (flip) mirror(pose)
+        // Whatever it does, the hand that holds a string stays up: the balloon is on the end of it.
+        if (this.held[i].shown && actor.clip !== 'liftOff') pose.armR = Math.max(pose.armR, plan.reach - 0.45)
+      }
       this.watch(i, pose)
       this.ride(pose, i)
       if (!actor.clip) {
@@ -955,7 +969,8 @@ export class Theatre {
         painter.drop(`passer-${i}`)
         continue
       }
-      const stop = friendX(i, passer.size), from = -view.width / 2 - 2.2 - (passer.size - 1 - i) * 0.4, to = view.width / 2 + 2.6 + i * 0.4
+      // The troop keeps its places as it crosses, each friend as far from the next as when it stands.
+      const stop = friendX(i, passer.size), way = view.width / 2 + 2.4 + friendX(passer.size - 1, passer.size), from = stop - way, to = stop + way
       const x = this.passOut > 0 ? stop + (to - stop) * stride(passer.kind, this.passOut) : from + (stop - from) * stride(passer.kind, this.passIn)
       this.passing(painter, `passer-${i}`, passer, i, x, this.passOut > 0 ? this.passOut : this.passIn, i + 13)
     }
@@ -1057,14 +1072,18 @@ export class Theatre {
  * shoulder, the squash, then the whole toy's turn, lean and bow about its feet), done in numbers so the theatre
  * needs no renderer. A test holds it against the meshes.
  */
-export function handOf(plan: { hand: readonly [number, number, number]; shoulder: readonly [number, number, number] }, pose: Pose, out: { x: number; y: number; z: number }, left = false): { x: number; y: number; z: number } {
+export function handOf(plan: { hand: readonly [number, number, number]; shoulder: readonly [number, number, number]; lowest: number }, pose: Pose, out: { x: number; y: number; z: number }, left = false): { x: number; y: number; z: number } {
   // The right arm is the left one mirrored: each swings out to its own side, then forwards.
-  const side = left ? -1 : 1, swing = left ? -pose.armL : pose.armR, forward = left ? pose.armLForward : pose.armRForward
+  const side = left ? -1 : 1, swing = left ? -Math.max(plan.lowest, pose.armL) : Math.max(plan.lowest, pose.armR), forward = left ? pose.armLForward : pose.armRForward
   let x = -side * plan.hand[0], y = plan.hand[1], z = plan.hand[2], c = Math.cos(swing), s = Math.sin(swing), t = 0
   t = x * c - y * s; y = x * s + y * c; x = t
+  // Round to the front on its way, the left arm one way about and the right the other.
+  const round = -side * forwardOf(Math.abs(swing))
+  c = Math.cos(round); s = Math.sin(round)
+  t = x * c + z * s; z = -x * s + z * c; x = t
   c = Math.cos(-forward); s = Math.sin(-forward)
   t = y * c - z * s; z = y * s + z * c; y = t
-  const wide = 1 / Math.sqrt(Math.max(0.2, pose.squash))
+  const wide = spread(pose.squash)
   x = (x - side * plan.shoulder[0]) * wide
   y = (y + plan.shoulder[1]) * pose.squash
   z = (z + plan.shoulder[2]) * wide

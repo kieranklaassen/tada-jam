@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { BODIES } from './bodies'
-import { BALLOON, bunchOffsets, bunchReach, FRIEND_GAP, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, SKY_ROW, skySlots, toWorld, viewFor, WAITING_SCALE, waitingSpot } from './layout'
+import { BODIES, reachOut } from './bodies'
+import { BALLOON, bunchOffsets, bunchReach, CLOUDS, farGroundAt, FAR_HILL, FRIEND_GAP, FRIEND_SCALE, friendX, GROUND, groundAt, HELD_HEIGHT, PARADE_SCALE, PARADE_TROOPS, paradeSpot, seenAt, SKY_ROW, skySlots, toWorld, viewFor, WAITING_SCALE, waitingSpot } from './layout'
 
 // The sizes a two-year-old needs (pack: game-design, ages-2-to-4.md), held at the size of the iPad the game is
 // measured on, and the jam's floor held at a narrow surface.
@@ -67,6 +67,11 @@ describe('the friends', () => {
     }
   })
 
+  it('are as wide as their plans say, arms up: no kind reaches further out than its half-width', () => {
+    const over = Object.entries(BODIES).filter(([, body]) => reachOut(body) > body.halfWidth + 1e-9).map(([kind, body]) => `${kind} reaches ${reachOut(body).toFixed(3)} past ${body.halfWidth}`)
+    expect(over).toEqual([])
+  })
+
   it('stand side by side without touching, the widest kind in a troop of three', () => {
     const widest = Math.max(...Object.values(BODIES).map((body) => body.halfWidth)) * FRIEND_SCALE
     expect(FRIEND_GAP).toBeGreaterThan(2 * widest)
@@ -86,5 +91,49 @@ describe('the friends', () => {
     const widest = Math.max(...Object.values(BODIES).map((body) => body.halfWidth)) * FRIEND_SCALE
     const spot = waitingSpot(0, IPAD), far = IPAD.distance / (IPAD.distance - spot.z)
     expect((spot.x + widest * WAITING_SCALE) * far).toBeLessThan(friendX(0, 3) - widest)
+  })
+})
+
+describe('the far hill', () => {
+  it('keeps every friend of the parade on its skin, each following the one in front at more than a body\'s depth, all the way round', () => {
+    // They walk in single file, each turned along the ring, so what must clear is the deepest body, front to back.
+    const deepest = Math.max(...Object.values(BODIES).map((body) => Math.max(...body.body.map((p) => p.size[2])))) * 2 * FRIEND_SCALE * PARADE_SCALE
+    const a = { x: 0, y: 0, z: 0, turn: 0 }, b = { x: 0, y: 0, z: 0, turn: 0 }
+    for (let time = 0; time < 70; time += 0.37) {
+      for (let troop = 0; troop < PARADE_TROOPS; troop++) for (let member = 0; member < 3; member++) {
+        const at = paradeSpot(troop, member, time, a)
+        expect(at.y).toBeCloseTo(farGroundAt(at.x, at.z), 6)
+        expect(at.y, 'well up on the hill').toBeGreaterThan(FAR_HILL.y + FAR_HILL.ry * 0.6)
+        // The one behind it: the next member of its troop, or the first of the troop behind.
+        const behind = member < 2 ? paradeSpot(troop, member + 1, time, b) : paradeSpot((troop + PARADE_TROOPS - 1) % PARADE_TROOPS, 0, time, b)
+        expect(Math.hypot(at.x - behind.x, at.z - behind.z), `troop ${troop}, friend ${member}, at ${time.toFixed(1)}`).toBeGreaterThan(deepest)
+      }
+    }
+  })
+
+  it('is seen to the right of a troop of three, behind it and smaller', () => {
+    const at = seenAt(FAR_HILL.x, FAR_HILL.y + FAR_HILL.ry, FAR_HILL.z, IPAD, { x: 0, y: 0, scale: 1 })
+    expect(at.scale).toBeLessThan(0.6)
+    expect(at.x).toBeGreaterThan(friendX(2, 3))
+    expect(at.x).toBeLessThan(IPAD.width / 2)
+  })
+})
+
+describe('the clouds', () => {
+  it('stay below the row of balloons, so nothing stands behind a balloon but sky', () => {
+    for (const cloud of CLOUDS) {
+      const at = seenAt(cloud.x, cloud.y, cloud.z, IPAD, { x: 0, y: 0, scale: 1 })
+      expect(at.y + 0.95 * cloud.scale * at.scale).toBeLessThan(SKY_ROW - BALLOON * 1.3)
+    }
+  })
+
+  it('are each big enough to touch, and the last hangs over the troop', () => {
+    for (const cloud of CLOUDS) {
+      const at = seenAt(cloud.x, cloud.y, cloud.z, IPAD, { x: 0, y: 0, scale: 1 })
+      expect(5 * cloud.scale * at.scale * IPAD.pixelsPerUnit).toBeGreaterThanOrEqual(100)
+    }
+    const over = CLOUDS[CLOUDS.length - 1], at = seenAt(over.x, over.y, over.z, IPAD, { x: 0, y: 0, scale: 1 })
+    expect(Math.abs(at.x)).toBeLessThan(FRIEND_GAP)
+    expect(at.y).toBeGreaterThan(GROUND + 2.5)
   })
 })

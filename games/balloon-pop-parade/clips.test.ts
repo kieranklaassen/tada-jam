@@ -195,8 +195,8 @@ describe('the walk', () => {
       const right = restPose(), left = restPose()
       walk(kind, 0.5, 1, right)
       walk(kind, 0.5, -1, left)
-      expect(right.turn, kind).toBeGreaterThan(0.5)
-      expect(left.turn, kind).toBeLessThan(-0.5)
+      expect(right.turn, kind).toBeGreaterThan(0.2)
+      expect(left.turn, kind).toBeLessThan(-0.2)
     }
   })
 

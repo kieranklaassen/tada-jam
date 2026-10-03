@@ -2,7 +2,7 @@ import { type BufferGeometry, Group, Mesh, type ShaderMaterial, Vector3 } from '
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { BODIES, type Body, type KindName } from './bodies'
 import { PALETTE } from './palette'
-import type { Pose } from './pose'
+import { forwardOf, spread, type Pose } from './pose'
 import { peg, pillows, type Pillow } from './shapes'
 import { vinylMaterial, type VinylUniforms } from './vinyl'
 
@@ -123,8 +123,10 @@ export function marcherGeometry(kind: KindName): BufferGeometry {
     extra.translate(...plan.neck)
     eyes.translate(plan.neck[0] + plan.extraPivot[0], plan.neck[1] + plan.extraPivot[1], plan.neck[2] + plan.extraPivot[2])
   } else eyes.translate(...plan.neck)
-  const armL = pillows(plan.arm).rotateZ(-0.25).translate(...plan.shoulder)
-  const armR = pillows(mirrored(plan.arm)).rotateZ(plan.reach).translate(-plan.shoulder[0], plan.shoulder[1], plan.shoulder[2])
+  // The crab cannot let a claw hang: on the far hill it marches with both up.
+  const down = plan.lowest > 0 ? plan.reach : 0.25
+  const armL = pillows(plan.arm).rotateZ(-down).rotateY(forwardOf(down)).translate(...plan.shoulder)
+  const armR = pillows(mirrored(plan.arm)).rotateZ(plan.reach).rotateY(-forwardOf(plan.reach)).translate(-plan.shoulder[0], plan.shoulder[1], plan.shoulder[2])
   const parts = [pillows(plan.body), head, eyes, extra, armL, armR]
   const whole = mergeGeometries(parts, false)
   for (const part of parts) part.dispose()
@@ -136,12 +138,13 @@ export function applyPose(rig: FriendRig, pose: Pose): void {
   rig.root.position.set(pose.x, pose.y, pose.z)
   rig.root.rotation.set(pose.bow, pose.turn, pose.lean)
   rig.root.scale.setScalar(pose.scale)
-  const wide = 1 / Math.sqrt(Math.max(0.2, pose.squash))
+  const wide = spread(pose.squash)
   rig.squash.scale.set(wide, pose.squash, wide)
   rig.head.rotation.set(pose.nod, pose.headTurn, pose.tilt)
-  // An arm hangs from its shoulder; the left swings out to the left and the right to the right.
-  rig.armL.rotation.set(-pose.armLForward, 0, -pose.armL)
-  rig.armR.rotation.set(-pose.armRForward, 0, pose.armR)
+  // An arm hangs from its shoulder; the left swings out to the left and the right to the right, each coming round to the front on its way.
+  const left = Math.max(rig.plan.lowest, pose.armL), right = Math.max(rig.plan.lowest, pose.armR)
+  rig.armL.rotation.set(-pose.armLForward, forwardOf(left), -left)
+  rig.armR.rotation.set(-pose.armRForward, -forwardOf(right), right)
   rig.extra.rotation.set(-pose.flick, pose.wag, 0)
   if (rig.plan.extraOnHead) rig.extra.scale.set(1, pose.puff, 1)
   else rig.extra.scale.setScalar(pose.puff)

@@ -36,7 +36,7 @@ export const FAR_HILL = { x: 9, y: GROUND - 4.4, z: -19, rx: 11, ry: 5.6, rz: 5 
 /** The clouds: pillows far behind, kept below the row of balloons so nothing stands behind a balloon but sky. The last hangs over the troop. */
 export const CLOUDS = [
   { x: -9.5, y: 1.6, z: -15, scale: 1.25 },
-  { x: 9.6, y: 3.0, z: -15, scale: 0.95 },
+  { x: 9.6, y: 2.6, z: -15, scale: 0.95 },
   { x: 0.8, y: 0.9, z: -15, scale: 0.75 },
 ] as const
 
@@ -69,7 +69,7 @@ export function friendX(index: number, size: number): number {
 
 /** Where friend `index` of the waiting troop stands: the first in view at the left edge, the others behind it and further out. */
 export function waitingSpot(index: number, view: View): { x: number; z: number } {
-  return { x: -view.width / 2 + 1.1 - index * 0.8, z: WAITING_DEPTH - index * 1.5 }
+  return { x: -view.width / 2 + 1.1 - index * 1.0, z: WAITING_DEPTH - index * 1.6 }
 }
 
 /** The middle of each place in the sky, for `slots` bunches. */
@@ -115,18 +115,23 @@ export function farGroundAt(x: number, z: number): number {
 /** How many troops go round the far hill at most, and the friends in them. */
 export const PARADE_TROOPS = 4
 export const PARADE_FRIENDS = PARADE_TROOPS * 3
+/** The ring they walk, as half-widths across and in depth and how far forward of the hill's middle it lies; and the angle from one friend to the next, which shares the ring out evenly among twelve, so each follows the one in front at more than a body's depth all the way round. */
+export const PARADE_RING = { x: 5, z: 2.9, forward: 0.7 } as const
+export const PARADE_STEP = (Math.PI * 2) / PARADE_FRIENDS
+/** They are drawn a little smaller than the friends in front, on top of what the distance does. */
+export const PARADE_SCALE = 0.8
 
 /**
  * Where friend `member` of troop `troop` of the parade is at `time`: the troops go slowly round the top of the
  * far hill, evenly spaced, each friend a step behind the one in front. `turn` is which way it faces.
  */
 export function paradeSpot(troop: number, member: number, time: number, out: { x: number; y: number; z: number; turn: number }): { x: number; y: number; z: number; turn: number } {
-  const angle = time * 0.1 + (troop / PARADE_TROOPS) * Math.PI * 2 - member * 0.21
-  out.x = FAR_HILL.x + Math.cos(angle) * 4.6
-  out.z = FAR_HILL.z + Math.sin(angle) * 1.5 + 1.2
+  const angle = time * 0.1 + (troop / PARADE_TROOPS) * Math.PI * 2 - member * PARADE_STEP
+  out.x = FAR_HILL.x + Math.cos(angle) * PARADE_RING.x
+  out.z = FAR_HILL.z + Math.sin(angle) * PARADE_RING.z + PARADE_RING.forward
   out.y = farGroundAt(out.x, out.z)
   // It walks along the ring: at the front of it to the left, at the back to the right.
-  out.turn = Math.atan2(-Math.sin(angle) * 4.6, Math.cos(angle) * 1.5)
+  out.turn = Math.atan2(-Math.sin(angle) * PARADE_RING.x, Math.cos(angle) * PARADE_RING.z)
   return out
 }
 

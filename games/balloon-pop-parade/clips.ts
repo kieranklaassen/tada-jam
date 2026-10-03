@@ -356,18 +356,20 @@ export function stride(kind: KindName, u: number): number {
 export function walk(kind: KindName, u: number, direction: number, pose: Pose): void {
   if (u <= 0 || u >= 1) return
   const steps = PERSONALITIES[kind].steps, at = u * steps, within = at % 1, ease = hold(u, 0, 0.08, 0.92, 1)
+  // Each turns the way it goes only as far as it can between its neighbours: the narrow duck a long way, the wide
+  // frog and hippo a little, the crab not at all.
   if (kind === 'duck') {
     pose.turn = direction * 1.0 * ease
     pose.lean += Math.sin(at * Math.PI) * 0.17 * ease
     pose.y += Math.abs(Math.sin(at * Math.PI)) * 0.08 * ease
     pose.wag = Math.sin(at * Math.PI * 2) * 0.45
   } else if (kind === 'frog') {
-    pose.turn = direction * 0.8 * ease
+    pose.turn = direction * 0.35 * ease
     pose.y += hump(within, 0.2, 0.85) * 0.75
     pose.squash += -hump(within, 0, 0.22) * 0.16 + hump(within, 0.25, 0.6) * 0.14 - hump(within, 0.85, 1) * 0.12
     pose.puff = 1 + hump(within, 0.2, 0.85) * 0.4
   } else if (kind === 'hippo') {
-    pose.turn = direction * 0.7 * ease
+    pose.turn = direction * 0.25 * ease
     pose.lean += Math.sin(at * Math.PI) * 0.08 * ease
     pose.y += hump(within, 0.2, 0.8) * 0.05
     pose.squash += -hump(within, 0.8, 1) * 0.05 - hump(within, 0, 0.2) * 0.05
@@ -378,8 +380,7 @@ export function walk(kind: KindName, u: number, direction: number, pose: Pose): 
     pose.wag = direction * -0.35 * hold(within, 0, 0.15, 0.5, 0.65)
   }
   // The arms come down from reaching while it walks; a hand that holds a string stays up.
-  if (pose.armL > 1) pose.armL = 0.35 + Math.sin(at * Math.PI) * 0.25
-  if (pose.armR > 1 && pose.armL !== pose.armR && pose.armL > 0.9) pose.armR = 0.35 - Math.sin(at * Math.PI) * 0.25
+  if (pose.armL > 1) pose.armL = 0.16 + Math.sin(at * Math.PI) * 0.1
 }
 
 /** Carried off its feet by more balloons than it should have, each kind in its own way, then let go and down again. */
@@ -407,7 +408,7 @@ function liftOff(kind: KindName, t: number, height: number, reach: number, pose:
     pose.nod = -0.6
   } else if (kind === 'hippo') {
     // Only its toes leave the ground, trembling; then it sits down, hard.
-    pose.squash += up * 0.14 - hump(t, land, land + 0.3) * 0.3 + wobble(t, land + 0.1, 11, 3.2) * 0.1
+    pose.squash += up * 0.14 - hump(t, land, land + 0.3) * 0.24 + wobble(t, land + 0.1, 11, 3.2) * 0.08
     pose.lean += Math.sin(t * 46) * 0.012 * hold(t, 0.3, 0.5, letGo, land)
     pose.bow = hold(t, land, land + 0.1, land + 0.5, land + 0.85) * -0.26
     pose.puff = 1 + wobble(t, land, 12, 2.6) * 0.3
@@ -416,7 +417,7 @@ function liftOff(kind: KindName, t: number, height: number, reach: number, pose:
     // Round and round like a propeller, and down on its side.
     // Three whole turns, so it lands facing the child again.
     pose.turn = t < land ? ramp(t, 0, land) * Math.PI * 6 : 0
-    pose.lean += hold(t, letGo, land, land + 0.15, land + 0.45) * 0.5
+    pose.lean += hold(t, letGo, land, land + 0.15, land + 0.45) * 0.22
     pose.x += wobble(t, land, 20, 5) * 0.12
     pose.squash += -hump(t, land, land + 0.2) * 0.2
     pose.puff = 1 + up * 0.5
