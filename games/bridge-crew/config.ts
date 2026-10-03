@@ -5,8 +5,8 @@ import { bridgeCrewManifest } from './manifest'
 // saveCadence.ts) read their numbers from here, so they stay byte-equal to the
 // template and a template fix can be copied over them.
 
-/** The blank surface's colour, until the game draws its own backdrop. */
-export const BACKDROP = '#f4efe6'
+/** The surface's colour before the first paint: the blue of the drawing sheet (look.ts). */
+export const BACKDROP = '#1f4f8f'
 
 // --- Adaptive quality (quality.ts) -----------------------------------------
 

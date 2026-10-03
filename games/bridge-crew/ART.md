@@ -224,4 +224,36 @@ Bridge Crew is designed from five California State Board-adopted science standar
 
 ## The look
 
-Written after the style spike, not part of the sheet: the claimed look, the palette, materials, lighting and motion rules, and how each tier in `config.ts` keeps the look.
+Not part of the sheet. First reserved look: **Blueprint and balsa**. Spiked on the game's real scene (`spike.ts`: the free yard, a bridge that uses all four kinds of part, the post van at the near bank, the crew chief, the tray, the next roll). The frame rate of the spike is the lead's to take; nothing here has been measured on a graphics card.
+
+**What it is.** A cyanotype drawing sheet with white drafting lines and a faint grid, and real parts lying on it, each with a small hard shadow. One blue, one white line, and unstained balsa, drawing paper, steel pins and string on top. No stains, no toys, no playroom, no brass, no lamplight, and no lettering: the dimension line over the gap carries no figure.
+
+**Palette** (`INK` in `look.ts`).
+
+| Thing | Colour |
+| --- | --- |
+| The sheet, its darker pooling and paler wash | `#1f4f8f`, `#1a437c`, `#2a5c9d` |
+| The shadow a part throws | `#123463` |
+| The drafting line | `#f2f6fb`, from 13% (grid) to full strength (the ground's outline) |
+| Balsa: face, grain, cut edge | `#ecdcb6`, `#d8c391`, `#b9a16d` |
+| Drawing paper and its shade | `#f6f2e8`, `#d9d3c4` |
+| Steel pins | `#dfe5ec`, rim `#6d7a8a` |
+| String and its twist | `#efe7d2`, `#b8ab8a` |
+| The pencil behind the chief's ear, the only warm accent | `#e3b23c` |
+
+**Materials.**
+
+- *The sheet* is painted once for each size: the blue, broad uneven washes, the grid with every fourth line firmer, a border ruled twice. Every ruled line is drawn in a few lengths whose width wavers.
+- *The ground* is shown cut through, as a draughtsman would: a firm outline and slanted section hatching. Cliffs stand behind the road, fainter. Water is a broken line with shorter dashes under it.
+- *A working part stays plain* (pack: game-design, working-objects-stay-plain.md): a balsa rectangle with a few grain lines and a darker cut edge, or a paper tube with its seam, and nothing else. What a child reads is its length, its depth and its pins. A plank on edge is three times as deep on the sheet as a plank flat.
+- *A pin* is a steel head seen from above with one hard highlight. A footing pin sits in a small drafting triangle.
+- *The characters* are models made of the same stuff: balsa blocks, cut paper, pins for axles, string round the parcels, and faces in pencil. The look and the comedy live in them and in the setting, not in the parts.
+- *Shadows* are the same shape moved down and right by a fixed part of a cell, in the darker blue, with no blur.
+
+**Lighting.** None is simulated: flat daylight on a desk. Depth comes only from the hard shadows and from what lies on what (string under wood, wood under pins).
+
+**Motion rules** (for the toy, not yet built). Parts move as stiff light wood: they clack down, overshoot a little and settle fast; nothing is rubbery. The dip the model computes is drawn six times larger, the same for every part and every bridge. The sheet itself never moves. Each character moves like itself and none shares a move with another.
+
+**The tiers.** `config.ts` has only the pixel ratio so far. The look has no post pass and no blur, so a lower tier sheds pixels and, later, the grain lines on the parts; the sheet, the white line and the shadows stay on every tier.
+
+**What the spike showed** (software renderer; layout, silhouettes and colour only). The four kinds read apart at 1180 by 820: a plank by its depth, a stick by its thinness, a tube by its white roundness, a thread as a line. The pins read as the joints. The first still had the van and the chief too small to carry a face, the water too low to see, and the tray on the border; the second still fixed those. Still weak: the upper third of the sheet is empty when the deck sits at mid-height; the tray's piles do not yet show how many of each are left; nothing moves.

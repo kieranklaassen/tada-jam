@@ -3,9 +3,11 @@
 
 ## Status
 
-- Stage: sheet. Written in full; not yet checked. Sheet commit: `0a96fd5` (sheet part sha256 `362aa271…ce9d4`).
-- Run 1 covers the sheet, the look spike and the rules, and builds no toy (brief). Renderer: canvas 2D with the game's own solver, as the brief suggests.
-- Look in use: none yet. First reserved look, Blueprint and balsa, to be spiked next.
+- Stage: sheet, with the look spike and the rules of run 1 on top of it (brief). No toy and no game yet.
+- Sheet: written in full, not yet checked. Sheet commit `0a96fd5`; sheet part sha256 `362aa27135abddcbcd1d3db96bc87c82906a4b48b5816fd657496fbbe99ce9d4`. The sheet part has not changed since.
+- Rules: written against the sheet at `0a96fd5`, before its check, at this builder's own risk (guide, step 3). A finding under the representation, the mechanic questions, the error, the designed order or the records reopens them.
+- Look in use: first reserved choice, Blueprint and balsa. Spike: the Mount shows it at load from a fixed seed, with nothing playable behind it (`spike.ts`). Stills taken here on the software renderer only; the frame rate is the lead's to take.
+- Renderer: canvas 2D with the game's own solver (`frame.ts`), as the brief suggests. matter.js is not used.
 - Open: sheet ready for check, round 1
 
 The stages in order are sheet, toy, game, gates. Keep this block current: the stage reached, the look in use, and what is open (the sheet's check, requests to the lead, findings not yet fixed). Ask for the sheet's check by writing `Open: sheet ready for check, round N` here; when it passes, record the round and the commit it judged. Someone with no session to read resumes from this block and the files. The two parts below belong to the block.

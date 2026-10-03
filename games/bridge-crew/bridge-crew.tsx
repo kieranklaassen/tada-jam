@@ -11,6 +11,7 @@ import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
+import { drawSpike } from './spike'
 import { deserialize, serialize, type GameState } from './state'
 
 // The Mount, showing a blank surface. Everything a game needs around its
@@ -59,7 +60,15 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => {}
+    // This run's look spike: the real scene in the first reserved look, from a fixed seed, with nothing playable
+    // behind it (spike.ts). It is still, so it is painted once for each size of the backing store.
+    let painted = ''
+    const draw = () => {
+      const pen = canvas.getContext('2d'), stamp = `${canvas.width}x${canvas.height}`
+      if (!pen || width <= 0 || stamp === painted) return
+      painted = stamp
+      drawn.drawCalls = drawSpike(pen, width, height, dpr)
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
