@@ -40,19 +40,35 @@ Six objects and five actions. The actions are told apart by what the finger does
 
 Every cell is the right use of something and the wrong use of something else, and all thirty work. The ones a grown-up would call wrong are the loudest: snipping the model, pulling a cheek, a clipping worn as a moustache.
 
-**Day 15.** The child gives haircuts on purpose to four customers whose tastes they know, to get the reaction they want to see; carries a length across the room on the ribbon without being shown; dresses faces with moustaches and eyebrows cut to size from clippings; and matches two locks at once where on day 1 they matched one that hung right beside its model.
+**Day 15.** The child gives haircuts on purpose to four customers whose tastes they know, to get the reaction they want to see; carries a length across the room on the ribbon without being shown; dresses faces with moustaches and eyebrows cut to size from clippings; and matches by eye, from across the room, a model that differs only a little, where on day 1 the model hung right beside the lock and differed plainly.
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+A length is a **plain straight strip that hangs from a level line**. Two strips hang side by side with their top ends level, so the whole difference between them is at the bottom: the piece of one that reaches below the other, or the gap.
+
+- **It was chosen before the game.** A length is the stretch from one end of a thing to the other, and it is compared by putting one end level and looking at the other end. Hair that hangs from a head already has its top end fixed, and a second strip hung from the same line beside it is the comparison a child makes with two sticks on a table. The salon was built around that.
+- **The three strips.** The customer's lock, the friend's lock (the model), and the ribbon. All three are flat, of one colour each, of the same width, and straight when they hang at rest, so that length is the only thing in which they differ. They have no face, no pattern and no idle motion: a strip moves when it is touched and then settles. They hang over the customer's cape, which is one flat colour of a contrasting hue (pack: game-design, working-objects-stay-plain.md). The mane, the faces and the room carry the look.
+- **Top ends level is the material's work.** The cape's collar is the level line. When the friend stands beside the chair it holds the top of its lock at that line, and the ribbon's clip goes to that line wherever the ribbon is hung beside a lock. The child is not asked to line anything up; that is the game's own choice.
+- **Its evidence.** Comparing two lengths side by side with one end level is school practice in both jurisdictions. The pack's research holds no trial of it for this age, so it is school practice without a trial behind it. What the research does support is the general form: the idea is visible in the object, and the child can see in the objects why something worked (pack: game-design, representation-before-game.md).
+- **Where object, picture and symbol stop.** The band starts below 6, so there is no symbol stage. The child handles drawn objects, and the order ends there: no numeral, no scale, no mark on a strip, and no unit (pack: game-design, fade-to-school-symbols.md).
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No: what the finger changes is a length and what the salon answers to is whether two lengths are alike, so with another subject in its place there would be nothing to pull or snip.
+- **Attention.** At the moment of decision the child looks at the two free ends that hang side by side from one line, and thinks about which reaches further and by how much.
+- **Fun.** The skill is used in the pull and the snip themselves, which are the two most enjoyable touches in the game, and play never stops for it.
+- **Guess.** No: a random snip or pull gives a random length, nothing sounds or snaps when the ends meet, a lock cut to the root or pulled to the floor is as far off as a lock can be, and trying length after length works only by looking at the two ends after each try, which is the skill.
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+- **While the child works** nothing judges. The lock is as long as the child made it, and beside its model the difference is in plain view: a piece that sticks out below, or a gap.
+- **When the child pulls the cape off**, the customer hops down and stands cheek to cheek with the friend, the lock beside the model with top ends level, and both look down at the two free ends. The scene acts out the comparison the child made.
+- **Too long.** The piece that reaches below the model is the piece things happen to: it trails on the floor and the customer treads on it, or it gets in a mouth or round a leg, each customer in its own way. The bigger the piece, the bigger the muddle.
+- **Too short.** The gap is where things happen: the customer feels for hair where the model's end hangs and finds air, and the friend's longer end tickles its chin.
+- **As long as the model.** The two ends meet, the pair turn their heads together, and the two locks swing as one. That is a consequence too, and no more is made of it than of the other two.
+- **Where and why.** Where is the two free ends, side by side. Why is the piece or the gap, which stays in view for as long as the pair stand there.
+- **The state stays.** The hair is as the child cut it. A touch on the chair brings the customer back under the cape, the child pulls or snips, and the cape comes off again. Nothing resets and nothing is lost: hair cut too short is pulled long again.
+- **Nothing gives a verdict.** No sound, mark or face says right or wrong, and every reaction is about the hair and never about the child. A customer who trips over a lock is surprised and never hurt.
 
 ## The designed order, and what is stored
 
