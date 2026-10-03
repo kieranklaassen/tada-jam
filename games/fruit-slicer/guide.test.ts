@@ -3,7 +3,7 @@ import { freshGame } from './cycle'
 import { STROKE_AT, guideOf } from './guide'
 import { GIVE_PARTS } from './measure'
 import { CRATE, COUNTER, boxOf } from './stage'
-import { newStroke, poke, slice } from './toy'
+import { newStroke, poke, slice } from './moves'
 import { emptyWorld, onLane } from './world'
 
 const game = freshGame(null)

@@ -1,7 +1,7 @@
 import type { Fruit } from './measure'
 import { COUNTER, CRATE, DOG, WALL, type Box } from './stage'
 import { draw } from './stream'
-import type { ToyEvent } from './toy'
+import type { GameEvent } from './moves'
 
 // What a touch sets off beyond itself: the burst of juice along a cut, the
 // drops that fly on and spatter the wall, the hop of the two pieces, the curl
@@ -52,7 +52,7 @@ const GRAVITY = 1500
 export const MOUTH = { x: DOG.x + DOG.w / 2, y: DOG.y + 78 } as const
 
 /** Adds what one thing that happened sets off. */
-export function spawn(state: FxState, event: ToyEvent): FxState {
+export function spawn(state: FxState, event: GameEvent): FxState {
   const next: FxState = { ...state, fx: [...state.fx], shakes: [...state.shakes] }
   const random = (): number => {
     const drawn = draw(next.seed)
@@ -109,7 +109,8 @@ export function spawn(state: FxState, event: ToyEvent): FxState {
     case 'knock':
       next.fx.push({ kind: 'knock', x: event.x, y: event.y, age: 0, life: 0.25 })
       break
-    case 'bark':
+    default:
+      // What happens to a customer, the tin or the roller is acted out by the figures, not by an effect here.
       break
   }
   return trimmed(next)

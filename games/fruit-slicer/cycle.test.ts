@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LADDER } from './config'
-import { call, crate, feed, freshGame, give, judge, sendOff, splat, treat, type Game } from './cycle'
+import { call, crate, feed, freshGame, give, judge, sendOff, settle, splat, treat, type Game } from './cycle'
 import { WHOLE, giveOf, shareLength } from './measure'
 import { inRange, tinParts, type Customer } from './orders'
 import { serveOf } from './serve'
@@ -182,6 +182,34 @@ describe('a cycle', () => {
     const first = serve(start.game)
     const again = call(first.game, 1)
     expect(serve(again.game).given).toMatchObject({ opened: true, firstShowing: null })
+  })
+
+  it('shuts the lid when a piece that stuck out is trimmed where it lies, and that is mixed', () => {
+    const over = serve(start.game, 500).game
+    const inside = inTin(over.world, 0)[0]
+    expect(settle(over)).toEqual({ game: over, ending: null })
+    const trimmed = cut(over.world, inside.id, inside.length - 500)
+    if (trimmed.kind !== 'cut') throw new Error('no cut')
+    const done = settle({ ...over, world: trimmed.world })
+    expect(done.ending).toMatchObject({ outcome: 'mixed', result: { kind: 'fit' } })
+    expect(done.game.finished).toBe(true)
+    expect(settle(done.game).ending).toBeNull()
+    expect(settle(freshGame(null)).ending).toBeNull()
+  })
+
+  it('gives a fresh fruit of the ordered kind, and of all three kinds over time when nobody has ordered', () => {
+    expect(start.game.world.pieces.at(-1)).toBeDefined()
+    const ordered = crate(start.game)
+    expect(ordered.game.world.pieces.at(-1)!.fruit).toBe(start.game.window!.fruit)
+    expect(ordered.game.seed).toBe(start.game.seed)
+    let game = freshGame(null)
+    const seen = new Set<string>()
+    for (let i = 0; i < 30; i++) {
+      const landed = crate(game)
+      seen.add(landed.game.world.pieces.find((piece) => piece.id === landed.id)!.fruit)
+      game = landed.game
+    }
+    expect(seen.size).toBe(3)
   })
 
   it('picks a piece of another fruit out of the tin', () => {

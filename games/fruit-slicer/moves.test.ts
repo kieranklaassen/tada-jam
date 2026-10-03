@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { freshGame, type Game } from './cycle'
+import { call, freshGame, give, type Game } from './cycle'
 import { FRUITS, WHOLE, giveOf } from './measure'
-import { BOARD, COUNTER, CRATE, DOG, LANE_H, PX, SHELF_BOX, WALL, X0, laneTop, rowTop, type Box, type Point } from './stage'
-import { newStroke, poke, slice, touches, type ToyEvent } from './toy'
-import { SHELF, onLane, onShelf, setOnShelf } from './world'
+import { tinParts } from './orders'
+import { BOARD, COUNTER, CRATE, DOG, LANE_H, PX, QUEUE, RAIL_BOX, ROLLER, SHELF_BOX, TIN, WALL, WINDOW, X0, laneTop, rowTop, type Box, type Point } from './stage'
+import { holdsMisfit, newStroke, poke, slice, tinAt, touches, type GameEvent } from './moves'
+import { SHELF, cut, inTin, onLane, onShelf, setOnShelf } from './world'
 
 const game = freshGame(null)
 const NEAR = laneTop(0) + LANE_H / 2
 const mid = (box: Box): Point => ({ x: box.x + box.w / 2, y: box.y + box.h / 2 })
 /** A stroke straight down through the near lane at `points` along the board. */
 const down = (points: number): [Point, Point] => [{ x: X0 + points * PX, y: NEAR - 60 }, { x: X0 + points * PX, y: NEAR + 60 }]
-const kinds = (events: ToyEvent[]) => events.map((event) => event.kind)
+const kinds = (events: GameEvent[]) => events.map((event) => event.kind)
 const total = (g: Game) => g.world.pieces.reduce((sum, piece) => sum + piece.length, 0)
 
 describe('a stroke', () => {
@@ -55,7 +56,7 @@ describe('a stroke', () => {
   })
 
   it('cuts each piece once however the finger wanders back and forth', () => {
-    let state = { game, stroke: newStroke(), events: [] as ToyEvent[] }
+    let state = { game, stroke: newStroke(), events: [] as GameEvent[] }
     const [a, b] = down(600)
     for (let i = 0; i < 6; i++) state = slice(state.game, i % 2 ? b : a, i % 2 ? a : b, state.stroke)
     expect(state.game.world.pieces).toHaveLength(2)
@@ -136,7 +137,7 @@ describe('a tap', () => {
 
   it('shoves the far lane onto the shelf, and what drops off the shelf goes to the dog with where it was', () => {
     let state = game
-    const fell: ToyEvent[] = []
+    const fell: GameEvent[] = []
     for (let i = 0; i < 12; i++) {
       const result = poke(state, mid(CRATE))
       fell.push(...result.events.filter((event) => event.kind === 'fell'))
@@ -155,7 +156,9 @@ describe('a tap', () => {
     expect(poke(game, mid(DOG)).events).toEqual([{ kind: 'bark', voice: 'bark' }])
     expect(poke(game, { x: X0 + 2700 * PX, y: NEAR }).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'board' })])
     expect(poke(game, mid(SHELF_BOX)).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'shelf' })])
-    expect(poke(game, mid(WALL)).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'wall' })])
+    expect(poke(game, mid(WINDOW)).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'wall' })])
+    expect(poke(game, mid(ROLLER)).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'roller' })])
+    expect(WALL.h).toBeGreaterThan(0)
     expect(poke(game, { x: COUNTER.x + 20, y: COUNTER.y + 20 }).events).toEqual([expect.objectContaining({ kind: 'knock', on: 'counter' })])
     expect(poke(game, { x: -50, y: -50 })).toEqual({ game, events: [] })
   })
@@ -178,5 +181,89 @@ describe('the toy as a whole', () => {
     expect(state.position).toBe(game.position)
     expect(state.window).toBeNull()
     expect(state.finished).toBe(false)
+  })
+})
+
+describe('with a customer at the window', () => {
+  const start = call(game, 0).game
+  const ordered = tinParts(start.window!)[0]
+  /** The fruit on the board cut `off` points longer than the order, and the left part laid in the tin. */
+  function served(off: number): Game {
+    const fruit = onLane(start.world, 0)[0]
+    const made = cut(start.world, fruit.id, ordered + off)
+    if (made.kind !== 'cut') throw new Error('no cut')
+    return give({ ...start, world: made.world }, made.left, 0).game
+  }
+  const tinMid = { x: X0 + 40, y: TIN.bodyY + TIN.bodyH / 2 }
+
+  it('has a tin on the rail, exactly as long as the order', () => {
+    const tin = tinAt(start)!
+    expect(tin.parts).toEqual([{ x: X0, w: ordered * PX }])
+    expect(tin.body.y).toBeGreaterThanOrEqual(RAIL_BOX.y)
+    expect(tin.ruler.y + tin.ruler.h).toBeLessThanOrEqual(RAIL_BOX.y + RAIL_BOX.h)
+    expect(tinAt(game)).toBeNull()
+  })
+
+  it('trims a piece where it lies in the tin, and the lid shuts by itself when it then fits', () => {
+    const over = served(400)
+    expect(holdsMisfit(over)).toBe(true)
+    const x = X0 + ordered * PX
+    const result = slice(over, { x, y: TIN.bodyY - 10 }, { x, y: TIN.bodyY + TIN.bodyH + 10 }, newStroke())
+    expect(kinds(result.events)).toEqual(['cut', 'ending'])
+    const ending = result.events[1]
+    expect(ending).toMatchObject({ kind: 'ending', how: 'shut', ending: { outcome: 'mixed' } })
+    expect(result.game.finished).toBe(true)
+    expect(inTin(result.game.world, 0)).toEqual([])
+    expect(onShelf(result.game.world).map((piece) => piece.length)).toContain(400)
+    expect(holdsMisfit(result.game)).toBe(false)
+  })
+
+  it('skids off the tin with sparks, once, where no piece lies under the blade', () => {
+    const result = slice(start, { x: X0 + 40, y: TIN.bodyY - 10 }, { x: X0 + 40, y: TIN.bodyY + TIN.bodyH + 10 }, newStroke())
+    expect(result.events).toEqual([expect.objectContaining({ kind: 'skid', voice: 'skid', length: ordered })])
+    expect(result.game).toEqual(start)
+    expect(slice(start, { x: X0 + 60, y: TIN.bodyY + 70 }, { x: X0 + 60, y: TIN.bodyY - 10 }, result.stroke).events).toEqual([])
+  })
+
+  it('snips a tuft off each customer it passes, once each, and changes nothing', () => {
+    const across = slice(start, { x: WINDOW.x + 5, y: WINDOW.y + 60 }, { x: QUEUE[1].x + 100, y: WINDOW.y + 80 }, newStroke())
+    expect(across.events.map((event) => (event.kind === 'snip' ? event.whom : event.kind))).toEqual(['window', 0, 1])
+    expect(across.game).toEqual(start)
+    // With nobody at the window there is nobody there to snip.
+    expect(kinds(slice(game, { x: WINDOW.x + 5, y: WINDOW.y + 60 }, { x: WINDOW.x + 200, y: WINDOW.y + 80 }, newStroke()).events)).toEqual([])
+  })
+
+  it('rattles the shut tin and snaps the jaw of the open one', () => {
+    expect(poke(start, tinMid).events).toEqual([{ kind: 'tinPoke', open: false, voice: 'rattle' }])
+    const open = served(-400)
+    const gap = { x: X0 + ordered * PX - 20, y: tinMid.y }
+    expect(poke(open, gap).events).toEqual([{ kind: 'tinPoke', open: true, voice: 'castanet' }])
+    expect(poke(open, tinMid).events).toEqual([expect.objectContaining({ kind: 'poke', voice: 'pluck' })])
+  })
+
+  it('makes the customer at the window flinch, and take its order as it is when its tin holds a misfit', () => {
+    expect(poke(start, mid(WINDOW))).toEqual({ game: start, events: [{ kind: 'flinch', whom: 'window', voice: 'babble' }] })
+    const result = poke(served(-400), mid(WINDOW))
+    expect(kinds(result.events)).toEqual(['flinch', 'ending'])
+    expect(result.events[1]).toMatchObject({ how: 'sentOff', ending: { outcome: 'badly' } })
+    expect(result.game.finished).toBe(true)
+    expect(kinds(poke(result.game, mid(WINDOW)).events)).toEqual(['flinch'])
+  })
+
+  it('makes one who waits flinch and step up, or change places, or send the one at the window off first', () => {
+    const first = poke(game, mid(QUEUE[0]))
+    expect(first.events).toEqual([{ kind: 'flinch', whom: 0, voice: 'babble' }, { kind: 'called', index: 0, did: 'stepped' }])
+    expect(first.game.window).toEqual(game.queue[0])
+    expect(poke(start, mid(QUEUE[1])).events[1]).toEqual({ kind: 'called', index: 1, did: 'swapped' })
+    const sent = poke(served(-400), mid(QUEUE[1]))
+    expect(sent.events[1]).toMatchObject({ kind: 'ending', how: 'sentOff' })
+    expect(poke(sent.game, mid(QUEUE[1])).events[1]).toEqual({ kind: 'called', index: 1, did: 'stepped' })
+  })
+
+  it('drops the ordered kind of fruit from the crate', () => {
+    for (let i = 0; i < 5; i++) {
+      const landed = poke(start, mid(CRATE)).events.find((event) => event.kind === 'land')!
+      expect(landed).toMatchObject({ fruit: start.window!.fruit })
+    }
   })
 })

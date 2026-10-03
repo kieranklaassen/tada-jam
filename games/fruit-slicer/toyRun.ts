@@ -6,7 +6,7 @@ import type { Guidance, HandPose } from './guidance'
 import { handPose } from './guidance'
 import { shown, type Point } from './stage'
 import { dogTaste } from './tastes'
-import { newStroke, poke, slice, type Stroke, type ToyEvent } from './toy'
+import { newStroke, poke, slice, type Stroke, type GameEvent } from './moves'
 import type { Frame } from './toyView'
 import type { VoiceId } from './voices'
 
@@ -130,13 +130,13 @@ export class ToyRun {
   }
 
   /** Takes in what a move did: the new game, an effect and a sound for each thing that happened, and the dog's part in it. */
-  private take(game: Game, events: readonly ToyEvent[]): void {
+  private take(game: Game, events: readonly GameEvent[]): void {
     if (game.world !== this.game.world || game.seed !== this.game.seed) this.dirty = true
     this.game = game
     let cuts = 0
     for (const event of events) {
       this.fx = spawn(this.fx, event)
-      if (event.kind === 'swept') continue
+      if (!('voice' in event)) continue
       const delay = event.kind === 'cut' || event.kind === 'curl' ? cuts++ * RUN_GAP : 0
       const length = 'length' in event ? event.length : event.kind === 'fell' ? event.piece.length : undefined
       this.sounds.push({ id: event.voice, length, delay })

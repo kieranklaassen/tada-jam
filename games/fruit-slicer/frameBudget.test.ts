@@ -4,7 +4,7 @@ import { newDog, poseOf, react } from './dogMotion'
 import { newFx, spawn, step, type FxState } from './fx'
 import { guideOf } from './guide'
 import { CRATE, SHELF_BOX, BOARD, X0, PX } from './stage'
-import { newStroke, poke, slice } from './toy'
+import { newStroke, poke, slice } from './moves'
 import { paintFrame, paintPlate, type Frame } from './toyView'
 
 // The frame budget, in the counted form: the painters run on a stand-in that counts every call made on the

@@ -1,7 +1,8 @@
-import { RAIL } from './measure'
+import { FRUITS, RAIL } from './measure'
 import { ideaOf, layOut, tinParts, type Customer } from './orders'
 import { serveOf, served, type Served } from './serve'
 import { beginCycle, finishCycle, freshState, type CycleOutcome, type GameState } from './state'
+import { pick } from './stream'
 import { isGlider, tasteOf, type Taste } from './tastes'
 import { clearTin, eat, eaten, emptyWorld, giveToTin, inTin, landFruit, pieceOf, remove, setOnShelf, tinTotal, type World } from './world'
 
@@ -184,8 +185,29 @@ export function call(game: Game, index: 0 | 1): { game: Game; did: 'stepped' | '
   return { game: { ...game, finished: state.finished, seed: arrival.seed, window: called, queue, world: clearTin(game.world) }, did: 'stepped', ending: null }
 }
 
-/** A tap on the crate: a fresh fruit of the ordered kind lands on the board, as often as the child likes. */
+/**
+ * A tap on the crate: a fresh fruit of the ordered kind lands on the board, as often as the child likes. With
+ * nobody at the window there is no order, and the kind is drawn from the seeded stream, so all three lengths
+ * come up over time.
+ */
 export function crate(game: Game): { game: Game; id: number; swept: number[]; fell: number[] } {
-  const landed = landFruit(game.world, game.window?.fruit ?? 'long')
-  return { game: { ...game, world: landed.world }, id: landed.id, swept: landed.swept, fell: landed.fell }
+  let seed = game.seed, fruit = game.window?.fruit
+  if (!fruit) {
+    const drawn = pick(seed, FRUITS)
+    fruit = drawn.value
+    seed = drawn.state
+  }
+  const landed = landFruit(game.world, fruit)
+  return { game: { ...game, seed, world: landed.world }, id: landed.id, swept: landed.swept, fell: landed.fell }
+}
+
+/**
+ * What lies in the tin changed without a piece being laid in it: one was trimmed where it lay, or taken out.
+ * If every compartment is now within the give the lid shuts, and that is the end of the cycle; otherwise
+ * nothing happens.
+ */
+export function settle(game: Game): { game: Game; ending: Ending | null } {
+  if (!game.window || game.finished || !game.world.tinOpen) return { game, ending: null }
+  const result = served(game.world, game.window)
+  return result.kind === 'fit' ? end(game, result, judge(result), tinIds(game)) : { game, ending: null }
 }

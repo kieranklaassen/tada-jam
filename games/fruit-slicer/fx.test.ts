@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { MOST_FX, MOST_SPATTERS, MOUTH, flight, newFx, offsetOf, settled, spawn, step, whoosh, type FxState } from './fx'
 import { COUNTER, WALL } from './stage'
-import type { ToyEvent } from './toy'
+import type { GameEvent } from './moves'
 
-const CUT: ToyEvent = { kind: 'cut', left: 1, right: 2, fruit: 'long', length: 2400, x: 400, y: 412, h: 48, voice: 'thwack' }
+const CUT: GameEvent = { kind: 'cut', left: 1, right: 2, fruit: 'long', length: 2400, x: 400, y: 412, h: 48, voice: 'thwack' }
 /** Plays a state forward at 60 frames a second. */
 function play(state: FxState, seconds: number, each?: (state: FxState) => void): FxState {
   for (let i = 0; i < Math.round(seconds * 60); i++) {
