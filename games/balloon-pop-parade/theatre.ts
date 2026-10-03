@@ -571,7 +571,13 @@ export class Theatre {
         if (this.settle(flight, personality.cue)) this.flights.splice(i, 1)
       } else if (flight.given.result === 'taken' && flight.t >= FLIGHT - personality.cue.grab) {
         // The friends who will take one start to meet it before it is there.
-        for (const taker of flight.given.takers) if (this.actors[taker].clip !== 'catch') this.act(taker, 'catch')
+        // The ducks jump at once and the frogs' tongues go out together; the hippos yawn in a row, one after another, and the crabs snip in a row like scissors.
+        const gap = kind === 'hippo' ? 0.17 : kind === 'crab' ? 0.06 : 0
+        flight.given.takers.forEach((taker, k) => {
+          if (this.actors[taker].clip === 'catch') return
+          this.act(taker, 'catch')
+          this.actors[taker].t = -k * gap
+        })
       } else if (flight.given.result === 'refused' && !flight.met && flight.t >= FLIGHT - REFUSAL_LEAD) {
         // The friend that will refuse it turns to look as it arrives: its answer begins well inside half a second of the touch.
         flight.met = true
@@ -898,7 +904,7 @@ export class Theatre {
         const flip = actor.clip === 'refuse' && actor.mirrored === true
         // A mirrored motion is played on the mirrored resting pose and mirrored back, so only the motion changes sides.
         if (flip) mirror(pose)
-        clip(kind, actor.clip, actor.t, plan.height * FRIEND_SCALE, plan.reach, pose)
+        if (actor.t >= 0) clip(kind, actor.clip, actor.t, plan.height * FRIEND_SCALE, plan.reach, pose)
         if (flip) mirror(pose)
         // Whatever it does, the hand that holds a string stays up: the balloon is on the end of it.
         if (this.held[i].shown && (actor.clip !== 'liftOff' || kind === 'frog')) pose.armR = Math.max(pose.armR, plan.reach - 0.45)

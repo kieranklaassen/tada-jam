@@ -202,6 +202,27 @@ describe('a bunch the child sends', () => {
     expect(honks[0].pitch).toBeGreaterThan(honks[2].pitch * 1.1)
   })
 
+  it('has the hippos yawn in a row, one after another, where the ducks jump at once', () => {
+    /** When each friend of a troop of three is first seen to move for its catch, in seconds after the bunch is sent. */
+    const starts = (kind: KindName) => {
+      const theatre = staged({ troop: { kind, size: 3, held: [false, false, false] }, sky: [{ colour: kind, count: 1 }, { colour: kind, count: 3 }], waiting: { kind: kind === 'duck' ? 'frog' : 'duck', size: 1 } }), { frame, painter } = recorder()
+      theatre.paint(painter, VIEW)
+      tapSlot(theatre, 1)
+      const first = [-1, -1, -1]
+      for (let t = 0; t < 1.6; t += 1 / 60) {
+        theatre.step(1 / 60)
+        theatre.paint(painter, VIEW)
+        // A catch brings the free arm down from reaching.
+        for (let i = 0; i < 3; i++) if (first[i] < 0 && frame.poses.get(`friend-${i}`)!.armL < 2) first[i] = t
+      }
+      return first
+    }
+    const hippos = starts('hippo'), ducks = starts('duck')
+    expect(hippos[1]).toBeGreaterThan(hippos[0] + 0.1)
+    expect(hippos[2]).toBeGreaterThan(hippos[1] + 0.1)
+    expect(Math.abs(ducks[2] - ducks[0])).toBeLessThan(0.05)
+  })
+
   it('carries a whole troop off at the same moment when each of them is given one more, and brings them down one after another', () => {
     const moment = MOMENTS.bunches, theatre = new Theatre(saveOf(moment)), { frame, painter, clear } = recorder()
     tapSlot(theatre, 2)
