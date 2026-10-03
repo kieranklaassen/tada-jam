@@ -89,7 +89,7 @@ const alongFloor = (x: number): number => (Number.isFinite(x) ? Math.max(0, Math
 
 /** Where along the floor the things of the salon stand, for what falls from them. */
 export function floorUnder(salon: Salon, thing: 'lock' | 'model' | 'ribbon' | Who): number {
-  if (thing === 'lock' || thing === 'chair') return 46
+  if (thing === 'lock' || thing === 'chair') return 50
   if (thing === 'ribbon') return 70
   return salon.seat === 'beside' ? 56 : 84
 }

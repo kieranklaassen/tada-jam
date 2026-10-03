@@ -20,9 +20,9 @@ export const STRIP_W = 26
 export const CHAIR = { x: 520 } as const
 export const HEAD = { x: 520, y: 285, rx: 105, ry: 92 } as const
 
-/** Where the customer's lock hangs, and where a strip held beside it hangs. */
-export const LOCK_X = 556
-export const BESIDE_X = 592
+/** Where the customer's lock hangs, under the edge of its mane at the cheek, and where a strip held beside it hangs. */
+export const LOCK_X = 588
+export const BESIDE_X = 624
 
 export const STOOL = { x: 712, seatY: 520 } as const
 export const FRIEND_HEAD = { x: 708, y: 302, rx: 68, ry: 62 } as const
@@ -32,7 +32,7 @@ export const DOOR = { x: 62, y: 190, w: 168, h: FLOOR_Y - 190, window: { x: 146,
 export const MIRROR = { x: 520, top: 64, bottom: 470, w: 340 } as const
 
 /** The cape: narrow at the collar, wide at the hem. */
-export const CAPE = { collarHalf: 92, hemHalf: 226, hemY: FLOOR_Y - 6 } as const
+export const CAPE = { collarHalf: 124, hemHalf: 232, hemY: FLOOR_Y - 6 } as const
 
 /** Half the width of the cape at a height, for anything that has to lie over it. */
 export function capeHalfWidthAt(y: number): number {

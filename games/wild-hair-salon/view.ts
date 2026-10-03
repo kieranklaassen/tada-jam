@@ -18,7 +18,7 @@ import type { Salon } from './world'
 
 const INK = '#3b3136'
 /** How far above the collar the lock comes out of the mane. */
-const ROOT = 30
+const ROOT = 44
 const STEEL = '#cfd2dc', STEEL_EDGE = '#8a8fa0', HANDLE = '#ee7c62'
 const HUE: Record<string, { fill: string; edge: string }> = {
   lion: { fill: LION.lock, edge: LION.lockEdge },
@@ -111,8 +111,10 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   stamp(sprites.cape)
   g.restore()
 
-  drawn += guide(g, sprites, frame, salon)
-  drawn += lock(g, salon, hair, frame.time)
+  // While the ghost hand shows a pull, the lock goes with it a little way and comes back: it is shown, not done.
+  const shown = ghostPull(frame, salon)
+  drawn += glow(g, sprites, frame, salon)
+  drawn += lock(g, salon, hair, frame.time, shown)
 
   // The pieces that lie still on the floor are drawn together, one path for each colour; a piece in the air is drawn by itself.
   const lying = new Map<string, { x: number; y: number; half: number; turn: number }[]>()
@@ -141,6 +143,8 @@ export function drawFrame(g: Ctx, width: number, height: number, sprites: Sprite
   g.globalAlpha = 1
 
   if (hair.scissors.shown > 0) drawn += scissors(g, hair.scissors.at, hair.scissors.open.x, hair.scissors.shown)
+  // The ghost hand is drawn last, over what it shows.
+  drawn += ghost(g, frame, salon)
   g.setTransform(1, 0, 0, 1, 0, 0)
   return drawn
 }
@@ -200,18 +204,19 @@ function strips(g: Ctx, group: readonly { x: number; y: number; half: number; tu
 }
 
 /** The lock: a flat strip from the collar, as long as the model says, swinging from its root. Fanned out while it is ruffled. */
-function lock(g: Ctx, salon: Salon, hair: Hair, time: number): number {
+function lock(g: Ctx, salon: Salon, hair: Hair, time: number, shownPull = 0): number {
   const colour = HUE[salon.chair ?? 'lion'] ?? HUE.lion
-  const length = Math.max(6, salon.lock * STEP * Math.max(0.3, hair.lockStretch.x)), half = STRIP_W / 2
+  const length = Math.max(6, salon.lock * STEP * Math.max(0.3, hair.lockStretch.x)) + shownPull, half = STRIP_W / 2
   const strands = hair.lockFlutter > 0 ? 3 : 1
   let drawn = 0
-  // Where the lock comes out of the mane, above the collar: this part does not swing, and is no part of its length.
+  // Where the lock comes down out of the mane, above the collar. This part does not swing, and is no part of the
+  // lock's length: the collar is the line its length is taken from.
   g.fillStyle = colour.fill
   g.strokeStyle = colour.edge
   g.lineWidth = 2
   g.beginPath()
-  g.moveTo(LOCK_X - half * 0.7, COLLAR_Y - ROOT)
-  g.lineTo(LOCK_X + half * 0.7, COLLAR_Y - ROOT)
+  g.moveTo(LOCK_X - half * 0.55, COLLAR_Y - ROOT)
+  g.lineTo(LOCK_X + half * 0.55, COLLAR_Y - ROOT)
   g.lineTo(LOCK_X + half, COLLAR_Y + 1)
   g.lineTo(LOCK_X - half, COLLAR_Y + 1)
   g.closePath()
@@ -331,35 +336,47 @@ function scissors(g: Ctx, at: Point, open: number, shown: number): number {
   return 5
 }
 
-/** The idle ladder's first form: a breathing glow on the lock, then a ghost hand that shows one move on it. */
-function guide(g: Ctx, sprites: Sprites, frame: Frame, salon: Salon): number {
+/** How far the lock is drawn out by the ghost hand's pull, in scene units: with the hand while it presses, and back. */
+function ghostPull(frame: Frame, salon: Salon): number {
   const guidance = frame.guidance
-  if (!guidance || (guidance.glow <= 0 && guidance.demo === null)) return 0
+  if (!guidance || guidance.demo === null || guidance.demoIndex % 2 === 1 || salon.lock > 90) return 0
+  handPose(guidance.demo, true, pose)
+  return pose.travel * pose.press * 60
+}
+
+/** The idle ladder's first form, its first step: a breathing glow behind the lock, tight on it, so it marks one thing and does not haze the scene. */
+function glow(g: Ctx, sprites: Sprites, frame: Frame, salon: Salon): number {
+  const strength = frame.guidance?.glow ?? 0
+  if (strength <= 0) return 0
+  const length = Math.max(60, salon.lock * STEP)
+  g.save()
+  g.globalAlpha = strength * (0.8 + 0.2 * Math.sin(frame.time * 2.4))
+  g.translate(LOCK_X, COLLAR_Y + length / 2)
+  g.scale(0.95, (length + 70) / 120)
+  g.drawImage(sprites.glow.sheet.canvas, sprites.glow.box.x, sprites.glow.box.y, sprites.glow.box.w, sprites.glow.box.h)
+  g.restore()
+  return 1
+}
+
+/**
+ * Its second step: a ghost hand that shows one move. The toy has no answer
+ * to give away, so the hand shows the verb on the lock itself: it pulls it
+ * longer, and every other time it comes in from the side with the scissors
+ * and crosses it. A lock that is already down to the floor is only ever
+ * snipped.
+ */
+function ghost(g: Ctx, frame: Frame, salon: Salon): number {
+  const guidance = frame.guidance
+  if (!guidance || guidance.demo === null) return 0
+  const length = salon.lock * STEP, snip = guidance.demoIndex % 2 === 1 || salon.lock > 90
+  handPose(guidance.demo, true, pose)
+  const from = snip ? { x: LOCK_X + 120, y: COLLAR_Y + length * 0.55 } : { x: LOCK_X, y: COLLAR_Y + Math.max(24, length * 0.7) }
+  // The pulling hand keeps hold of the lock a little above its end, and goes down as far as the lock is drawn out.
+  const to = snip ? { x: LOCK_X - 110, y: COLLAR_Y + length * 0.55 } : { x: LOCK_X, y: COLLAR_Y + Math.max(24, length * 0.7) + 60 }
+  const x = from.x + (to.x - from.x) * pose.travel, y = from.y + (to.y - from.y) * pose.travel
   let drawn = 0
-  if (guidance.glow > 0) {
-    // Tight on the lock, so it marks one thing and does not haze the scene.
-    const length = Math.max(60, salon.lock * STEP)
-    g.save()
-    g.globalAlpha = guidance.glow * (0.8 + 0.2 * Math.sin(frame.time * 2.4))
-    g.translate(LOCK_X, COLLAR_Y + length / 2)
-    g.scale(0.95, (length + 70) / 120)
-    g.drawImage(sprites.glow.sheet.canvas, sprites.glow.box.x, sprites.glow.box.y, sprites.glow.box.w, sprites.glow.box.h)
-    g.restore()
-    drawn++
-  }
-  if (guidance.demo !== null) {
-    // The toy has no answer to give away, so the hand shows the verb on the lock itself: it pulls it longer, and
-    // every other time it comes in from the side with the scissors and crosses it. A lock that is already down
-    // to the floor is only ever snipped.
-    const length = salon.lock * STEP, snip = guidance.demoIndex % 2 === 1 || salon.lock > 90
-    handPose(guidance.demo, true, pose)
-    const from = snip ? { x: LOCK_X + 120, y: COLLAR_Y + length * 0.55 } : { x: LOCK_X, y: COLLAR_Y + Math.max(24, length * 0.7) }
-    const to = snip ? { x: LOCK_X - 110, y: COLLAR_Y + length * 0.55 } : { x: LOCK_X + 14, y: Math.min(FLOOR_Y + 40, COLLAR_Y + length + 90) }
-    const x = from.x + (to.x - from.x) * pose.travel, y = from.y + (to.y - from.y) * pose.travel
-    if (snip) drawn += scissors(g, { x, y: y - BLADES.y }, Math.abs(pose.travel - 0.52) < 0.08 ? 0 : 1, pose.opacity * 0.8)
-    drawn += ghostHand(g, x, snip ? y - BLADES.y : y, pose.press, pose.opacity)
-  }
-  return drawn
+  if (snip) drawn += scissors(g, { x, y: y - BLADES.y }, Math.abs(pose.travel - 0.52) < 0.08 ? 0 : 1, pose.opacity * 0.8)
+  return drawn + ghostHand(g, x, snip ? y - BLADES.y : y, pose.press, pose.opacity)
 }
 
 /** A pale hand with one finger out, pressed down a little while it works. */

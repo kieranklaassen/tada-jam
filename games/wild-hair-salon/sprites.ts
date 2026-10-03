@@ -1,4 +1,4 @@
-import { HEAD, fit } from './layout'
+import { CAPE, HEAD, fit } from './layout'
 import { LION, plume } from './paintAnimals'
 import { paintBench, paintChair, paintMirror, paintWalls } from './paintRoom'
 import { PLAIN, capeOutline } from './paintStrips'
@@ -73,7 +73,7 @@ export class Sprites {
     this.cape = this.piece(5, () => capeOutline(), (g, paint, outline) => {
       paint.wash(g, outline, { color: PLAIN.cape, edge: PLAIN.capeEdge, flat: true })
       paint.pencil(g, outline, true)
-      const top = outline[0].y, half = 96
+      const top = outline[0].y, half = CAPE.collarHalf + 4
       const collar: Point[] = [{ x: HEAD.x - half, y: top - 9 }, { x: HEAD.x, y: top - 5 }, { x: HEAD.x + half, y: top - 9 }, { x: HEAD.x + half + 4, y: top + 7 }, { x: HEAD.x, y: top + 10 }, { x: HEAD.x - half - 4, y: top + 7 }]
       paint.wash(g, collar, { color: PLAIN.collar, edge: PLAIN.capeEdge, flat: true })
       paint.pencil(g, collar, true, 0.8)
