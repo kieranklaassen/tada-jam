@@ -4,13 +4,14 @@
 ## Status
 
 - Stage: gates, as far as this machine can take them. The game is built on the toy.
-- Sheet: not yet passed. The game stands on the sheet as it is after round 3: commit `0cf0982598da3467ecf0d30d7f25b495a15ed852`, hash of the sheet part (everything above `## The look`) `a44b954d9753f104864b5870d1235c4e9106f0d7f15830769ecc566beb4cc9ab`, unchanged since that commit. It was all built at the builder's own risk while the checks ran.
+- Sheet: not yet passed. The game stands on the sheet as it is after round 4: commit `ca35987449145ce51946ee101bd628bef1541344`, hash of the sheet part (everything above `## The look`) `eea422194ff33af1fe6c6d4d795dd7ccda40ff8d28e347e1e9d36bd9c14ab03b`, unchanged since that commit. It was all built at the builder's own risk while the checks ran.
   - Round 1 (checker B): open, 16 findings, on commit `132bc32` (hash `05fd9b42…d82fd6`). All 16 pasted as written in `19240ad`.
   - Round 2 (checker D): open, 2 findings, on commit `19240ad` (hash `c2e26354…1661`). Both pasted as written in `67f6589`.
   - Round 3 (checker E): open, 3 findings, on commit `67f6589` (hash `10298789…5295`). All three pasted as written in `0cf0982`. They change no rule: three sentences under the records now speak only for the records the sheet names.
+  - Round 4 (checker F): open, 1 finding, on commit `0cf0982` (hash `a44b954d…c9ab`). Pasted as written in `ca35987`. It changes no rule: the line on helping, under where the two differ, now speaks only for the records and statements the sheet names. Nothing in the game, its rules or its tests rested on it, so nothing else changed.
   - Nothing was disputed in any round.
-- Open: sheet ready for check, round 4
-- Answers handled: `docs/build/answers/princess-playground-1.md`, `-2.md` and `-3.md` on the base branch. Before any run ends, look there for a higher number.
+- Open: sheet ready for check, round 5
+- Answers handled: `docs/build/answers/princess-playground-1.md`, `-2.md`, `-3.md` and `-4.md` on the base branch. Before any run ends, look there for a higher number.
 - Look in use: sand tray, the first reserved choice. Not refined beyond what the proxy asked for: the owner has the toy and has not yet answered on the look.
 
 **What the lead should try first.** Open the production build with a fresh slot and touch nothing for ten seconds: the first showing plays, then the glow, then the hand. Tap the friend the hand shows; watch the fling and the ending; tap the friend who then waits in front of the stone. After that: carry Dot onto the plank (it warms and the others bounce), stack three on one end, let a friend go over the middle of the plank, draw in the sand and tap the rake on the far rim. `?seed=1` fixes the detail for stills.
@@ -23,7 +24,7 @@
 - `npm run build`, `npm run egress:built`, `npm run education:built`: passed.
 - `npm run check:intersections -- princess-playground --ci` with `enforce: true`: clean five times, two of them under full CPU load, each time 0 open, 17 allowed, 1 hidden, 353 samples, 25 pieces. It ran on the machine's own Chromium (build 1194) reached through a scratch browsers path, because the repository's Playwright asks for a newer build that is not installed here. CI's run with the repository's browser is the lead's to read.
 - Not run, and why: no frame rate (no graphics card: Chromium draws on SwiftShader); no WebKit; no physical iPad; nobody has listened to the game.
-- CI, as far as it can be read from here (run results and annotations through the API; the job logs' host is not reachable). At `02155df`, the commit before this note, the push run was green; its pull-request run, which holds the audit, was still going. Two earlier push runs (`c02970f`, `8dab21c`) were red on a test of another game, `games/pebble-table/controller.test.ts:443`, which passed on the same commits in their pull-request runs; this lane does not touch it. One pull-request run was red on this game's audit, at `4eb398d`, when it was enforced with findings still open; they were fixed in `c9d838f`, and the audit has been green in CI on every pull-request run since. The same is said once in a comment on draft pull request 37.
+- CI, as far as it can be read from here (run results and annotations through the API; the job logs' host is not reachable). At `02155df`, the commit before this note, the push run was green; its pull-request run was cancelled by the next push. At `2b671e8`, the last commit that changed anything but the sheet's records and this block, both runs were green, the audit's four shards with the repository's own browser included. Two earlier push runs (`c02970f`, `8dab21c`) were red on a test of another game, `games/pebble-table/controller.test.ts:443`, which passed on the same commits in their pull-request runs; this lane does not touch it. One pull-request run was red on this game's audit, at `4eb398d`, when it was enforced with findings still open; they were fixed in `c9d838f`, and the audit has been green in CI on every pull-request run since. The same is said once in a comment on draft pull request 37.
 - One reading that carries over, taken once and so only a first reading: the game's own work per frame in Chromium on SwiftShader, top tier pinned, production build, 1180 by 820 at pixel ratio 2, through eight taps: 1.8 ms at the 95th percentile unthrottled and 7.3 ms at six times CPU throttle, 25 draw calls. On this renderer the timed span includes the render submit.
 
 **Where the game still differs from the sheet.** For the lead and the next checker; none was put into the sheet, since that would be a new round.
@@ -47,7 +48,7 @@
 
 **Open, for the lead.**
 
-- The sheet's check, round 4.
+- The sheet's check, round 5.
 - The registry row: its text is at the end of `ART.md`.
 - Frame rates on a graphics card, WebKit, and the audit in CI.
 - Draft pull request 37 is open from this branch so that it can be read; the lead merges by squash and may close it.
@@ -152,7 +153,7 @@ As the sheet has it (`ART.md`, "The claim"), with every check state read on 2026
 
 Princess Playground is designed from five California learning foundations published by state departments, which are foundations and not standards (`us-ca 1.1` Exploration and `us-ca 2.2` Social Interactions for infants and toddlers; `us-ca 3.1` Measurement and Data, `us-ca 2.1` Physical Science and `us-ca 1.8` Self for preschool and transitional kindergarten), each confirmed; for a five-year-old, in its one-against-one rides only, from one California content standard adopted by the State Board, `us-ca K.MD.2`, confirmed; and from seven statements of SLO's Dutch content cards for peuters and for fase 1, which are curriculum-institute guidance and not law (`nl Gewicht / 1`, `2` and `3` and `Open staan voor de emoties van een ander / 4` for peuters; `nl Gewicht / 4` and `5` and `Herkennen, begrijpen van en aanpassen aan emoties van anderen / 4` for fase 1), each confirmed.
 
-What it takes from them, and from which: causing an effect and guessing what comes next from `us-ca 1.1` alone; exploring and comparing how heavy things are from `us-ca 2.1`, `us-ca 3.1` and `us-ca K.MD.2` and from `nl Gewicht / 1`, `2` and `4`; doing that on a seesaw from `nl Gewicht / 3` and `5` alone, the seesaw being the game's own choice under the California records; noticing how a friend in the game is doing and answering with one simple act that is never required from `us-ca 2.2` and `us-ca 1.8` and the two Dutch social-emotional statements, which speak of other people where the game offers a character. A friend who stands apart and is brought in is the game's own situation, named by none of these records. It says nothing about what any child has reached. The sheet has been checked three times (16, 2 and 3 findings, all pasted as written); it has not yet passed, and the game was built at the builder's own risk meanwhile.
+What it takes from them, and from which: causing an effect and guessing what comes next from `us-ca 1.1` alone; exploring and comparing how heavy things are from `us-ca 2.1`, `us-ca 3.1` and `us-ca K.MD.2` and from `nl Gewicht / 1`, `2` and `4`; doing that on a seesaw from `nl Gewicht / 3` and `5` alone, the seesaw being the game's own choice under the California records; noticing how a friend in the game is doing and answering with one simple act that is never required from `us-ca 2.2` and `us-ca 1.8` and the two Dutch social-emotional statements, which speak of other people where the game offers a character. A friend who stands apart and is brought in is the game's own situation, named by none of these records. It says nothing about what any child has reached. The sheet has been checked four times (16, 2, 3 and 1 findings, all pasted as written); it has not yet passed, and the game was built at the builder's own risk meanwhile.
 
 ### Defaults taken for the owner
 
