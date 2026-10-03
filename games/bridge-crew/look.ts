@@ -93,15 +93,27 @@ function bar(pen: Pen, long: number, thick: number, round: number) {
   pen.roundRect(-round, -thick / 2, long + 2 * round, thick, round)
 }
 
-/** A balsa or paper part from one pin to another, with its shadow. `cell` is the size of a grid cell in pixels. */
-export function wood(pen: Pen, kind: Wood, x0: number, y0: number, x1: number, y1: number, cell: number, random: () => number) {
-  const long = Math.hypot(x1 - x0, y1 - y0), thick = THICK[kind] * cell, round = kind === 'tube' ? thick / 2 : thick * 0.12
-  const overhang = kind === 'tube' ? 0 : thick * 0.5
+/** How far a part of this kind runs on past its pins at each end, in pixels. */
+const overhangOf = (kind: Wood, cell: number) => (kind === 'tube' ? 0 : THICK[kind] * cell * 0.5)
+
+/**
+ * The shadow of a part alone. `lift` is how far above the sheet the part is,
+ * in shadow lengths: 1 lying on it, more while it is carried or still landing.
+ */
+export function woodShadow(pen: Pen, kind: Wood, x0: number, y0: number, x1: number, y1: number, cell: number, lift = 1, thicken = 1) {
+  const long = Math.hypot(x1 - x0, y1 - y0), thick = THICK[kind] * cell * thicken, round = kind === 'tube' ? thick / 2 : thick * 0.12, overhang = overhangOf(kind, cell)
   pen.save()
-  pen.translate(x0 + SHADOW.x * cell, y0 + SHADOW.y * cell); pen.rotate(Math.atan2(y1 - y0, x1 - x0)); pen.translate(-overhang, 0)
+  pen.translate(x0 + SHADOW.x * cell * lift, y0 + SHADOW.y * cell * lift); pen.rotate(Math.atan2(y1 - y0, x1 - x0)); pen.translate(-overhang, 0)
   pen.fillStyle = INK.shadow
   bar(pen, long + 2 * overhang, thick, round); pen.fill()
   pen.restore()
+}
+
+/** A balsa or paper part from one pin to another, with its shadow unless `shadow` is false. `cell` is the size of a grid cell in pixels; `grain` draws the fine lines a lower tier leaves out. */
+export function wood(pen: Pen, kind: Wood, x0: number, y0: number, x1: number, y1: number, cell: number, random: () => number, shadow = true, grain = true) {
+  const long = Math.hypot(x1 - x0, y1 - y0), thick = THICK[kind] * cell, round = kind === 'tube' ? thick / 2 : thick * 0.12
+  const overhang = overhangOf(kind, cell)
+  if (shadow) woodShadow(pen, kind, x0, y0, x1, y1, cell)
 
   pen.save()
   pen.translate(x0, y0); pen.rotate(Math.atan2(y1 - y0, x1 - x0)); pen.translate(-overhang, 0)
@@ -119,13 +131,13 @@ export function wood(pen: Pen, kind: Wood, x0: number, y0: number, x1: number, y
     pen.strokeStyle = INK.paperShade
     pen.lineWidth = Math.max(1, cell * 0.02)
     pen.beginPath()
-    for (let x = -thick; x < whole; x += thick * 1.6) { pen.moveTo(x, thick / 2); pen.lineTo(x + thick * 0.9, -thick / 2) }
+    if (grain) for (let x = -thick; x < whole; x += thick * 1.6) { pen.moveTo(x, thick / 2); pen.lineTo(x + thick * 0.9, -thick / 2) }
     pen.stroke()
   } else {
     // Balsa grain runs along the part: a few long pale-brown lines, never quite straight.
     pen.strokeStyle = INK.balsaGrain
     pen.lineWidth = Math.max(0.75, cell * 0.014)
-    const lines = kind === 'plank-edge' ? 6 : 2
+    const lines = grain ? (kind === 'plank-edge' ? 6 : 2) : 0
     for (let i = 0; i < lines; i++) {
       const y = -thick / 2 + (thick * (i + 0.5 + 0.3 * (random() - 0.5))) / lines
       pen.globalAlpha = 0.5 + 0.5 * random()

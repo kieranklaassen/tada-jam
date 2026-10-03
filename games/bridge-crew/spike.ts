@@ -1,6 +1,7 @@
-import { chief, postVan, roll, tray } from './figures'
+import { chief, chiefModel, postVan, roll, tray } from './figures'
 import { settle, solve } from './frame'
 import { pin, stream, string, wood, type Pen } from './look'
+import { STILL } from './motion'
 import { key, pinsOf, type Part } from './kit'
 import { paintSheet, plotFor, px } from './sheet'
 import { COLS, isFooting, site } from './sites'
@@ -55,7 +56,9 @@ export function drawSpike(pen: Pen, width: number, height: number, ratio: number
 
   // The want of the scene: the van at the near bank, facing the gap.
   postVan(pen, ...px(plot, at.left[0] - 0.8, at.left[1]), cell, random)
-  chief(pen, ...px(plot, 0.9, at.left[1]), cell * 1.35, random)
+  const [chiefX, chiefY] = px(plot, 0.9, at.left[1])
+  chief(pen, chiefX, chiefY, cell * 1.35, STILL, random)
+  chiefModel(pen, chiefX + cell * 1.35, chiefY, cell * 1.35, random)
   tray(pen, ...px(plot, at.left[0] - 1, -1.25), (at.right[0] - at.left[0] + 2) * cell, cell, at.kit, random)
   roll(pen, ...px(plot, COLS - 0.1, at.right[1]), cell * 3.1, cell)
   return drawn + 4

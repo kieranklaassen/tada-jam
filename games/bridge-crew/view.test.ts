@@ -1,0 +1,87 @@
+import { describe, expect, it } from 'vitest'
+import { TOY_SHEET } from './config'
+import { IdleLadder } from './guidance'
+import { stream, type Pen } from './look'
+import { freshSave } from './save'
+import { Toy } from './toy'
+import { View, demoMove } from './view'
+import { canPin, isFooting } from './sites'
+
+/** A pen that draws nothing and keeps every call with its numbers, and a canvas that hands out such pens. */
+function recording() {
+  const calls: { name: string; args: unknown[] }[] = []
+  const pen = new Proxy({} as Record<string, unknown>, {
+    get: (store, name: string) => {
+      if (name === 'createRadialGradient') return () => ({ addColorStop: () => {} })
+      if (name in store) return store[name]
+      return (...args: unknown[]) => { calls.push({ name, args }) }
+    },
+    set: (store, name: string, value) => { store[name] = value; return true },
+  }) as unknown as Pen
+  const canvas = () => ({ width: 0, height: 0, getContext: () => pen }) as unknown as HTMLCanvasElement
+  return { pen, calls, canvas }
+}
+
+const built = () => {
+  const toy = new Toy(freshSave(null, TOY_SHEET), stream(5))
+  const drag = (kind: number, a: [number, number], b: [number, number]) => { toy.press(5 + (14 * (kind + 0.5)) / 4, -2.3); toy.tap(); toy.press(...a); toy.dragStart(); toy.dragMove(...b); toy.dragEnd() }
+  drag(0, [6, 6], [10, 6]); drag(2, [10, 3], [10, 6]); drag(3, [19, 11], [14, 6]); drag(1, [14, 6], [14, 4]); drag(1, [20, 6], [22, 8])
+  return toy
+}
+const numbers = (calls: { args: unknown[] }[]) => calls.flatMap((call) => call.args.filter((arg): arg is number => typeof arg === 'number'))
+
+describe('the toy drawn', () => {
+  it('every number it hands the canvas is a real number, at rest, in motion, mid-pluck, mid-turn and in the hand', () => {
+    const toy = built(), { pen, calls, canvas } = recording()
+    const view = new View(1, canvas)
+    view.size(1180, 820, 2, true)
+    const ladder = new IdleLadder(0)
+    const frame = (seconds: number) => { calls.length = 0; const drawn = view.draw(pen, toy, ladder.update(seconds)); for (const n of numbers(calls)) expect(Number.isFinite(n)).toBe(true); return drawn }
+    expect(frame(0)).toBeGreaterThan(20)
+    for (let i = 0; i < 30; i++) { toy.step(1 / 60); frame(i / 60) }
+    toy.press(8.5, 6.1); toy.tap(); toy.step(0.05); frame(1)
+    toy.press(8.5, 6.1); toy.tap(); toy.step(0.05); frame(1.1)
+    toy.press(8.5, 6.1); toy.dragStart(); toy.dragMove(9, 9); frame(1.2); toy.dragEnd(); toy.step(0.1); frame(1.3)
+    toy.press(21, 9); toy.dragStart(); toy.dragMove(22.3, 10.2); frame(1.4); toy.dragEnd()
+    // Idle long enough for the glow and both kinds of demonstration.
+    for (const seconds of [4, 6, 7, 19, 21]) { toy.step(0.1); frame(seconds) }
+    expect(calls.some((call) => /Text/.test(call.name))).toBe(false)
+  })
+
+  it('stamps the still sheet once a frame and paints it once for a size', () => {
+    const toy = built(), { pen, calls, canvas } = recording()
+    const view = new View(1, canvas)
+    view.size(1180, 820, 2, true)
+    view.draw(pen, toy, null)
+    const first = calls.length
+    calls.length = 0
+    view.draw(pen, toy, null)
+    // The second frame is far cheaper than the first, which painted the sheet and made every sprite.
+    expect(calls.length).toBeLessThan(first / 3)
+    view.size(1180, 820, 2, true)
+    calls.length = 0
+    view.draw(pen, toy, null)
+    expect(calls.length).toBeLessThan(first / 3)
+    view.size(1180, 820, 1.5, false)
+    calls.length = 0
+    view.draw(pen, toy, null)
+    expect(calls.length).toBeGreaterThan(first / 3)
+  })
+
+  it('maps a touch back to the grid it draws on, at any size', () => {
+    const view = new View(1, recording().canvas)
+    for (const [w, h] of [[1180, 820], [820, 1180], [1366, 1024]]) {
+      view.size(w, h, 2, true)
+      const { cell, ox, oy } = view.plot
+      const [x, y] = view.toGrid(ox + 7 * cell, oy - 3 * cell)
+      expect(x).toBeCloseTo(7); expect(y).toBeCloseTo(3)
+    }
+  })
+
+  it('the ghost hand shows a part laid on the near bank, away from the gap', () => {
+    const toy = built(), move = demoMove(toy.at)
+    expect(move.to[0]).toBeLessThan(toy.at.left[0])
+    expect(canPin(toy.at, move.from) && canPin(toy.at, move.to)).toBe(true)
+    expect(isFooting(toy.at)(move.from)).toBe(true)
+  })
+})

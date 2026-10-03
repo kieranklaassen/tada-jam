@@ -19,10 +19,12 @@ export const BACKDROP = '#1f4f8f'
 export type Tier = {
   /** Canvas pixel ratio cap; the jam's bar caps it at 2. */
   dpr: number
+  /** The fine lines on the parts: the grain of the balsa and the seam of the paper tubes. The sheet, the white line and the shadows stay on every tier. */
+  grain: boolean
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
-export const TIERS: readonly Tier[] = [{ dpr: 2 }, { dpr: 1.5 }, { dpr: 1.25 }, { dpr: 1 }]
+export const TIERS: readonly Tier[] = [{ dpr: 2, grain: true }, { dpr: 1.5, grain: true }, { dpr: 1.25, grain: false }, { dpr: 1, grain: false }]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */
 export const GOVERNOR = {

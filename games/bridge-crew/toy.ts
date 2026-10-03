@@ -287,7 +287,8 @@ export class Toy {
     this.changed = true
     this.model()
     if (added >= 0) {
-      const landing = atRest(this.rest[added])
+      // It lands where it was laid, from a little above, and only then goes where the model sends it: it may hold, sag or fold.
+      const landing = atRest({ a: bridge[added].a, b: bridge[added].b, how: 'firm', pivot: 0, slack: false })
       landing.y.at += 0.22
       landing.y.speed = -1.5
       this.moving[added] = landing; this.rung[added] = Infinity; this.turned[added] = Infinity; this.laid[added] = 0

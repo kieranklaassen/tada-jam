@@ -1,4 +1,5 @@
 import { INK, SHADOW, pin, rule, string, wood, type Pen } from './look'
+import type { ChiefPose } from './motion'
 
 // The characters and the furniture of the sheet, drawn as small models made
 // of the same stuff as the kit: balsa blocks, cut paper, pins and string, with
@@ -89,43 +90,72 @@ export function postVan(pen: Pen, x: number, y: number, cell: number, random: ()
 
 /**
  * The crew chief: a heron cut from drawing paper, on two balsa legs, with a
- * pencil behind its ear. It stands with its feet at (x, y) and looks down at
- * the small model in front of it.
+ * pencil behind its ear. It stands with its feet at (x, y), facing the gap,
+ * and is drawn from a pose (motion.ts): the view never decides how it moves.
  */
-export function chief(pen: Pen, x: number, y: number, cell: number, random: () => number) {
+export function chief(pen: Pen, x: number, y: number, cell: number, pose: ChiefPose, random: () => number) {
   const tall = cell * 2.5
-  wood(pen, 'stick', x - cell * 0.1, y, x - cell * 0.06, y - tall * 0.42, cell * 0.55, random)
-  wood(pen, 'stick', x + cell * 0.14, y, x + cell * 0.06, y - tall * 0.42, cell * 0.55, random)
-  const bodyY = y - tall * 0.52
-  cutOut(pen, cell, INK.paper, () => pen.ellipse(x - cell * 0.05, bodyY, cell * 0.52, cell * 0.3, -0.35, 0, Math.PI * 2))
-  // A wing, as one pencil curve, and three tail feathers.
+  x -= pose.hopX * cell; y -= pose.hopY * cell
+  const sway = pose.lean * cell * 0.09, bodyX = x - cell * 0.05 + sway, bodyY = y - tall * 0.52 - pose.bob * cell
+  // The legs: the back one draws up under the body when it stands on one.
+  const backFoot = y - pose.tuck * tall * 0.3, knee = pose.tuck * cell * 0.22
+  wood(pen, 'stick', x - cell * 0.1, backFoot, x - cell * 0.06 + knee, backFoot - tall * 0.2, cell * 0.55, random)
+  wood(pen, 'stick', x - cell * 0.06 + knee, backFoot - tall * 0.2, bodyX - cell * 0.02, bodyY + cell * 0.2, cell * 0.55, random)
+  wood(pen, 'stick', x + cell * 0.14, y, bodyX + cell * 0.1, bodyY + cell * 0.2, cell * 0.55, random)
+  cutOut(pen, cell, INK.paper, () => pen.ellipse(bodyX, bodyY, cell * 0.52, cell * 0.3, -0.35, 0, Math.PI * 2))
+  // A wing, as one pencil curve.
   pencil(pen, cell)
-  pen.beginPath(); pen.moveTo(x - cell * 0.42, bodyY + cell * 0.04); pen.quadraticCurveTo(x - cell * 0.05, bodyY + cell * 0.22, x + cell * 0.26, bodyY - cell * 0.1); pen.stroke()
-  // The neck, an S of paper, and the head bent to the model.
-  const headX = x + cell * 0.62, headY = y - tall * 0.9
-  const neck = () => { pen.moveTo(x + cell * 0.28, bodyY - cell * 0.12); pen.bezierCurveTo(x + cell * 0.7, bodyY - cell * 0.5, x + cell * 0.05, headY + cell * 0.2, headX - cell * 0.08, headY) }
+  pen.beginPath(); pen.moveTo(bodyX - cell * 0.37, bodyY + cell * 0.04); pen.quadraticCurveTo(bodyX, bodyY + cell * 0.22, bodyX + cell * 0.31, bodyY - cell * 0.1); pen.stroke()
+  // Feathers on end: short strokes standing off its back.
+  if (pose.crest > 0.05) {
+    pen.beginPath()
+    for (let i = 0; i < 5; i++) {
+      const fx = bodyX - cell * (0.42 - i * 0.16), fy = bodyY - cell * (0.2 + 0.06 * Math.sin(i * 1.7))
+      pen.moveTo(fx, fy); pen.lineTo(fx - cell * 0.1 * pose.crest, fy - cell * 0.26 * pose.crest)
+    }
+    pen.stroke()
+  }
+  // The head: where the neck's reach, the preening and the peck put it.
+  const reach = 0.3 + pose.neck
+  let headX = x + cell * (0.46 + 0.5 * reach) + sway * 0.5, headY = y - tall * (0.98 - 0.52 * Math.max(reach, 0)) - pose.bob * cell
+  let look = 0.5 + 0.35 * Math.max(reach, 0) + pose.tilt
+  if (pose.preen > 0) {
+    headX += (bodyX - cell * 0.22 - headX) * pose.preen; headY += (bodyY - cell * 0.3 - headY) * pose.preen
+    look += (2.6 - look) * pose.preen
+  }
+  headX += Math.cos(look) * pose.peck * cell * 0.16; headY += Math.sin(look) * pose.peck * cell * 0.16
+  const neck = () => { pen.moveTo(bodyX + cell * 0.33, bodyY - cell * 0.12); pen.bezierCurveTo(bodyX + cell * 0.75, bodyY - cell * 0.5, bodyX + cell * 0.1, headY + cell * 0.2, headX - cell * 0.08, headY) }
   pen.lineCap = 'round'
   pen.lineWidth = cell * 0.15
   pen.strokeStyle = INK.shadow
   pen.save(); pen.translate(SHADOW.x * cell, SHADOW.y * cell); pen.beginPath(); neck(); pen.stroke(); pen.restore()
   pen.strokeStyle = INK.paper
   pen.beginPath(); neck(); pen.stroke()
-  cutOut(pen, cell, INK.paper, () => pen.ellipse(headX, headY, cell * 0.17, cell * 0.13, 0.5, 0, Math.PI * 2))
-  // The beak: a long sliver of balsa, pointing down at the model.
-  cutOut(pen, cell, INK.balsa, () => { pen.moveTo(headX + cell * 0.1, headY - cell * 0.02); pen.lineTo(headX + cell * 0.62, headY + cell * 0.36); pen.lineTo(headX + cell * 0.04, headY + cell * 0.12); pen.closePath() })
+  pen.save()
+  pen.translate(headX, headY); pen.rotate(look - 0.5)
+  cutOut(pen, cell, INK.paper, () => pen.ellipse(0, 0, cell * 0.17, cell * 0.13, 0.5, 0, Math.PI * 2))
+  // The beak: a long sliver of balsa.
+  cutOut(pen, cell, INK.balsa, () => { pen.moveTo(cell * 0.1, -cell * 0.02); pen.lineTo(cell * 0.62, cell * 0.36); pen.lineTo(cell * 0.04, cell * 0.12); pen.closePath() })
+  // The eye: a pencil dot, or a short line while it blinks.
   pen.fillStyle = INK.steelDark
-  pen.beginPath(); pen.arc(headX + cell * 0.04, headY - cell * 0.02, cell * 0.03, 0, Math.PI * 2); pen.fill()
-  // A drooping crest feather, and the pencil behind the ear: the one warm colour on the sheet.
   pencil(pen, cell)
-  pen.beginPath(); pen.moveTo(headX - cell * 0.1, headY - cell * 0.08); pen.quadraticCurveTo(headX - cell * 0.4, headY - cell * 0.1, headX - cell * 0.5, headY + cell * 0.12); pen.stroke()
+  if (pose.blink > 0.5) { pen.beginPath(); pen.moveTo(cell * 0.0, -cell * 0.02); pen.lineTo(cell * 0.08, -cell * 0.02); pen.stroke() }
+  else { pen.beginPath(); pen.arc(cell * 0.04, -cell * 0.02, cell * 0.03, 0, Math.PI * 2); pen.fill() }
+  // The crest feather droops at rest and stands when its feathers do; and the pencil behind the ear, the one warm colour on the sheet.
+  const up = pose.crest
+  pen.beginPath(); pen.moveTo(-cell * 0.1, -cell * 0.08); pen.quadraticCurveTo(-cell * 0.4, -cell * (0.1 + 0.3 * up), -cell * (0.5 - 0.15 * up), cell * (0.12 - 0.6 * up)); pen.stroke()
   pen.lineWidth = cell * 0.07
   pen.strokeStyle = INK.pencil
-  pen.beginPath(); pen.moveTo(headX - cell * 0.3, headY - cell * 0.22); pen.lineTo(headX + cell * 0.12, headY - cell * 0.12); pen.stroke()
+  pen.beginPath(); pen.moveTo(-cell * 0.3, -cell * 0.22); pen.lineTo(cell * 0.12, -cell * 0.12); pen.stroke()
   pen.strokeStyle = INK.steelDark
-  pen.beginPath(); pen.moveTo(headX + cell * 0.12, headY - cell * 0.12); pen.lineTo(headX + cell * 0.17, headY - cell * 0.108); pen.stroke()
-  // The model it is fiddling with: three offcuts pinned in a triangle.
-  const mx = x + cell * 1.0, s = cell * 0.5
-  const corners: [number, number][] = [[mx, y - cell * 0.08], [mx + s, y - cell * 0.08], [mx + s / 2, y - cell * 0.08 - s * 0.8]]
+  pen.beginPath(); pen.moveTo(cell * 0.12, -cell * 0.12); pen.lineTo(cell * 0.17, -cell * 0.108); pen.stroke()
+  pen.restore()
+}
+
+/** The model the chief is fiddling with: three offcuts pinned in a triangle, standing at (x, y). */
+export function chiefModel(pen: Pen, x: number, y: number, cell: number, random: () => number) {
+  const s = cell * 0.5
+  const corners: [number, number][] = [[x, y - cell * 0.08], [x + s, y - cell * 0.08], [x + s / 2, y - cell * 0.08 - s * 0.8]]
   corners.forEach((from, i) => { const to = corners[(i + 1) % 3]; wood(pen, 'stick', from[0], from[1], to[0], to[1], cell * 0.5, random) })
   corners.forEach(([cx, cy]) => pin(pen, cx, cy, cell * 0.55, false))
 }

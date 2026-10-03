@@ -140,7 +140,8 @@ export class ChiefDirector {
   private last: Idle | null = null
   private blinkIn = 2
   private blinking = 1
-  private readonly pose: ChiefPose = { ...STILL }
+  /** The pose of this instant: the view draws from it. */
+  readonly pose: ChiefPose = { ...STILL }
 
   constructor(private readonly random: () => number) {}
 

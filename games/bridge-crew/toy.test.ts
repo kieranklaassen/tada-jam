@@ -71,10 +71,14 @@ describe('the toy', () => {
     expect(toy.takeVoices().length).toBeGreaterThan(0)
     expect(toy.takeChange()).toBe(true)
     expect(toy.left('plank')).toBe(toy.at.kit.plank - 1)
-    // It lands from a little above and settles where the model puts it: hanging from the bank, since nothing holds its far end.
+    // It lands where it was laid, from a little above, and then goes where the model sends it: with nothing under its
+    // far end it swings down and hangs from the bank.
     expect(toy.laid[0]).toBe(0)
+    expect(toy.drawn()[0].b[0]).toBeCloseTo(10)
+    expect(toy.drawn()[0].b[1]).toBeGreaterThan(6)
     expect(toy.busy).toBe(true)
-    settle(toy)
+    // A long plank swings a good while before it hangs still.
+    settle(toy, 14)
     expect(toy.busy).toBe(false)
     expect(toy.rest[0].how).toBe('hangs')
   })

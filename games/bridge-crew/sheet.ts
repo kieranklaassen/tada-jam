@@ -1,4 +1,7 @@
+import { TRAY, bays } from './layout'
 import { INK, hatch, pin, rule, stream, type Pen } from './look'
+import { waterDrift } from './motion'
+import { WATER } from './pose'
 import { COLS, ROWS, type Site } from './sites'
 
 // The drawing sheet under the parts: the blue, the faint grid, the ground in
@@ -44,7 +47,11 @@ export function groundOutline(at: Site): [number, number][] {
   return points
 }
 
-export function paintSheet(pen: Pen, width: number, height: number, plot: Plot, at: Site, seed: number) {
+/**
+ * Paints the whole still sheet. For the toy (`live`), the water is left out,
+ * since it drifts and is drawn each frame, and the tray's box is drawn in.
+ */
+export function paintSheet(pen: Pen, width: number, height: number, plot: Plot, at: Site, seed: number, live = false) {
   const random = stream(seed), { cell } = plot
   pen.fillStyle = INK.sheet
   pen.fillRect(0, 0, width, height)
@@ -84,18 +91,11 @@ export function paintSheet(pen: Pen, width: number, height: number, plot: Plot, 
   hatch(pen, ground, cell * 0.2, cell * 0.016, 0.42)
   for (let i = 2; i < ground.length - 1; i++) rule(pen, ...ground[i - 1], ...ground[i], cell * 0.055, 1, random)
 
-  // The water: its surface as a long broken line, and shorter dashes under it.
-  const lip = at.left[0], far = at.right[0], level = 2.05
-  /** No water is drawn through a rock or a ledge. */
-  const wet = (x: number) => at.ground[Math.round(x)] < level - 0.9
-  for (const [depth, dash, alpha] of [[0, 1.1, 0.9], [0.32, 0.5, 0.6], [0.62, 0.3, 0.42], [0.9, 0.18, 0.3]] as const) {
-    for (let x = lip + 0.2 + depth; x < far - 0.2 - dash; x += dash * 1.6) {
-      if (!wet(x + dash / 2)) continue
-      rule(pen, ...px(plot, x, level - depth), ...px(plot, x + dash, level - depth), cell * 0.03, alpha, random)
-    }
-  }
+  if (live) trayBox(pen, plot, at, random)
+  else water(pen, plot, at, 0)
 
   // The draughtsman's marks, with no figures on them: the gap's centre line and its dimension line.
+  const lip = at.left[0], far = at.right[0]
   const mid = (lip + far) / 2, deck = at.left[1]
   for (let y = deck - 0.6; y < deck + 3.2; y += 0.55) rule(pen, ...px(plot, mid, y), ...px(plot, mid, y + (Math.round((y - deck) / 0.55) % 2 ? 0.08 : 0.34)), cell * 0.018, 0.45, random)
   const dim = deck + 2.6
@@ -105,4 +105,43 @@ export function paintSheet(pen: Pen, width: number, height: number, plot: Plot, 
     rule(pen, ...px(plot, x - 0.14, dim - 0.14), ...px(plot, x + 0.14, dim + 0.14), cell * 0.04, 0.7, random)
   }
   for (const [ax, ay] of at.anchors) pin(pen, ...px(plot, ax, ay), cell, true)
+}
+
+/** The rows of the water: how far under the surface, how long a dash, how strong. */
+const WAVES = [[0, 1.1, 0.9], [0.32, 0.5, 0.6], [0.62, 0.3, 0.42], [0.9, 0.18, 0.3]] as const
+
+/** The water between the banks: its surface as a long broken line and shorter dashes under it, each row drifting at its own pace. */
+export function water(pen: Pen, plot: Plot, at: Site, seconds: number) {
+  const lip = at.left[0], far = at.right[0], { cell } = plot
+  /** No water is drawn through a rock or a ledge. */
+  const wet = (x: number) => x > lip + 0.15 && x < far - 0.15 && at.ground[Math.round(x)] < WATER - 0.9
+  pen.strokeStyle = INK.line
+  pen.lineCap = 'round'
+  pen.lineWidth = cell * 0.03
+  WAVES.forEach(([depth, dash, alpha], row) => {
+    pen.globalAlpha = alpha
+    pen.beginPath()
+    const period = dash * 1.6, shift = ((waterDrift(seconds, row) % period) + period) % period
+    for (let x = lip - period + shift + depth; x < far; x += period) {
+      if (!wet(x) || !wet(x + dash)) continue
+      const [x0, y0] = px(plot, x, WATER - depth), [x1] = px(plot, x + dash, WATER - depth)
+      pen.moveTo(x0, y0); pen.lineTo(x1, y0)
+    }
+    pen.stroke()
+  })
+  pen.globalAlpha = 1
+}
+
+/** The tray under the gap: a ruled box, a shade darker inside, with a line between the piles. */
+export function trayBox(pen: Pen, plot: Plot, at: Site, random: () => number) {
+  const { cell } = plot, piles = bays(at)
+  if (piles.length === 0) return
+  const [x0, y0] = px(plot, piles[0].x0, TRAY.top), [x1, y1] = px(plot, piles[piles.length - 1].x1, TRAY.top - TRAY.tall)
+  pen.fillStyle = INK.sheetDeep
+  pen.globalAlpha = 0.55
+  pen.beginPath(); pen.roundRect(x0, y0, x1 - x0, y1 - y0, cell * 0.12); pen.fill()
+  pen.globalAlpha = 1
+  const corners: [number, number][] = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
+  corners.forEach((from, i) => rule(pen, ...from, ...corners[(i + 1) % 4], cell * 0.04, 0.9, random))
+  for (const pile of piles.slice(1)) { const [x] = px(plot, pile.x0, 0); rule(pen, x, y0 + cell * 0.2, x, y1 - cell * 0.2, cell * 0.02, 0.5, random) }
 }
