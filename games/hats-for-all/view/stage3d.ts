@@ -220,7 +220,11 @@ export class FoamStage {
     this.hands.count = hand
     this.blobs.count = blob
     this.glows.count = glow
-    for (const mesh of [this.dots, this.hands, this.blobs, this.glows]) mesh.instanceMatrix.needsUpdate = true
+    for (const mesh of [this.dots, this.hands, this.blobs, this.glows]) {
+      mesh.instanceMatrix.needsUpdate = true
+      // An instanced mesh with nothing in it is not submitted at all.
+      mesh.visible = mesh.count > 0
+    }
     if (this.hands.instanceColor) this.hands.instanceColor.needsUpdate = true
     // The ghost hand comes down on one thing, once, and goes: it is a hand, and it shows a tap.
     const at = play && guide && guide.opacity > 0 && guide.hint.hand ? this.whereIs(guide.hint.hand, play) : null
