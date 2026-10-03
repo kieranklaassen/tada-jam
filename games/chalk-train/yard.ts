@@ -14,24 +14,32 @@ export const WRIST_STRIP = 120
 export const TARGET = 100
 
 /** The puddle, part of the tar from the first visit. */
-export const PUDDLE = { x: 600, y: 590, rx: 150, ry: 52 } as const
+export const PUDDLE = { x: 600, y: 600, rx: 150, ry: 52 } as const
 
-/** The dandelion in the crack. */
-export const DANDELION = { x: 390, y: 150, reach: 55 } as const
+/** The dandelion in the crack. `reach` is how far its leaves and head spread. */
+export const DANDELION = { x: 600, y: 96, reach: 55 } as const
 
 /** Where the engine stands on a first visit, on its stub of rail. */
-export const ENGINE_START = { x: 150, y: 410 } as const
+export const ENGINE_START = { x: 150, y: 400 } as const
 
-/** The places a stop or a home can be laid. Ids are stored, so none is renamed. */
+/**
+ * The places a stop or a home can be laid: three rows of four, with the
+ * puddle between the two halves of the low row. Ids are stored, so none is
+ * renamed; they name a spot on the tar and nothing else.
+ */
 export const PLACES = {
-  'north-west': { x: 170, y: 180 },
-  north: { x: 600, y: 150 },
-  'north-east': { x: 1030, y: 180 },
-  west: { x: 150, y: 410 },
-  middle: { x: 600, y: 370 },
-  east: { x: 1050, y: 410 },
-  'south-west': { x: 220, y: 625 },
-  'south-east': { x: 1000, y: 625 },
+  'top-1': { x: 150, y: 170 },
+  'top-2': { x: 450, y: 170 },
+  'top-3': { x: 750, y: 170 },
+  'top-4': { x: 1050, y: 170 },
+  'mid-1': { x: 150, y: 400 },
+  'mid-2': { x: 450, y: 400 },
+  'mid-3': { x: 750, y: 400 },
+  'mid-4': { x: 1050, y: 400 },
+  'low-1': { x: 150, y: 625 },
+  'low-2': { x: 370, y: 625 },
+  'low-3': { x: 830, y: 625 },
+  'low-4': { x: 1050, y: 625 },
 } as const satisfies Record<string, Pt>
 
 export type PlaceId = keyof typeof PLACES

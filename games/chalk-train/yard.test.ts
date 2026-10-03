@@ -25,10 +25,12 @@ describe('the patch of tar', () => {
     }
   })
 
-  it('puts the puddle between the two southern places and nowhere else on a straight way', () => {
-    expect(crossesPuddle(PLACES['south-west'], PLACES['south-east'])).toBe(true)
-    expect(crossesPuddle(PLACES.west, PLACES.east)).toBe(false)
-    expect(crossesPuddle(PLACES['north-west'], PLACES['north-east'])).toBe(false)
+  it('puts the puddle between the two halves of the low row and on no other straight way along a row', () => {
+    expect(crossesPuddle(PLACES['low-1'], PLACES['low-4'])).toBe(true)
+    expect(crossesPuddle(PLACES['low-2'], PLACES['low-3'])).toBe(true)
+    expect(crossesPuddle(PLACES['low-1'], PLACES['low-2'])).toBe(false)
+    expect(crossesPuddle(PLACES['mid-1'], PLACES['mid-4'])).toBe(false)
+    expect(crossesPuddle(PLACES['top-1'], PLACES['top-4'])).toBe(false)
   })
 
   it('tells water from tar', () => {
@@ -37,7 +39,7 @@ describe('the patch of tar', () => {
   })
 
   it('knows its place ids and keeps points on the tar', () => {
-    expect(isPlaceId('west')).toBe(true)
+    expect(isPlaceId('mid-1')).toBe(true)
     expect(isPlaceId('level-2')).toBe(false)
     expect(isPlaceId(3)).toBe(false)
     expect(onTar({ x: -40, y: 9000 })).toEqual({ x: 0, y: TAR.h })

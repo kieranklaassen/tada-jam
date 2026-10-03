@@ -19,9 +19,9 @@ const FOOT = 58
 
 /** The line a child might have drawn: off from the stop, round a loop, and not quite to the pond. */
 const CHILD_LINE: Pt[] = [
-  { x: 226, y: 472 }, { x: 300, y: 464 }, { x: 372, y: 470 }, { x: 446, y: 458 }, { x: 520, y: 464 }, { x: 600, y: 456 },
-  { x: 690, y: 436 }, { x: 772, y: 386 }, { x: 800, y: 306 }, { x: 760, y: 232 }, { x: 684, y: 208 }, { x: 612, y: 240 },
-  { x: 580, y: 312 }, { x: 606, y: 384 }, { x: 672, y: 440 }, { x: 756, y: 462 }, { x: 836, y: 452 }, { x: 900, y: 458 },
+  { x: 226, y: 462 }, { x: 300, y: 454 }, { x: 372, y: 460 }, { x: 446, y: 448 }, { x: 520, y: 454 }, { x: 600, y: 446 },
+  { x: 690, y: 426 }, { x: 772, y: 376 }, { x: 800, y: 296 }, { x: 760, y: 222 }, { x: 684, y: 198 }, { x: 612, y: 230 },
+  { x: 580, y: 302 }, { x: 606, y: 374 }, { x: 672, y: 430 }, { x: 756, y: 452 }, { x: 836, y: 442 }, { x: 900, y: 448 },
 ]
 const OLD_ZIGZAG: Pt[] = [{ x: 60, y: 736 }, { x: 118, y: 682 }, { x: 166, y: 742 }, { x: 226, y: 688 }, { x: 276, y: 746 }, { x: 336, y: 694 }, { x: 380, y: 738 }]
 
@@ -53,20 +53,20 @@ function paintChalk(g: G, rng: Rng) {
   dust(g, rng, 880, 690, 30, YELLOW)
 
   // The stop the frog left, with the engine's stub of rail, and the frog's pond ahead.
-  const west = PLACES.west, east = PLACES.east
+  const west = PLACES['mid-1'], east = PLACES['mid-4']
   placed(g, west.x - 10, west.y + FOOT, 0, STOP, false, () => drawStop(g, rng))
-  rail(g, rng, [{ x: 86, y: 480 }, { x: 156, y: 476 }, { x: 226, y: 472 }], WHITE)
+  rail(g, rng, [{ x: 86, y: 470 }, { x: 156, y: 466 }, { x: 226, y: 462 }], WHITE)
   placed(g, east.x - 6, east.y + FOOT + 8, 0, HOME, false, () => HOME_FIGURES.frog(g, rng))
 
   // The next rider, waiting at its stop and looking at its nest across the tar.
-  const stop = PLACES['north-east'], nest = PLACES['north-west']
+  const stop = PLACES['top-4'], nest = PLACES['top-1']
   placed(g, stop.x + 30, stop.y + FOOT, 0, STOP, true, () => drawStop(g, rng))
   placed(g, stop.x - 6, stop.y + FOOT - 12, 0, RIDER, true, () => RIDER_FIGURES.chick(g, rng, { x: 0.7, y: 0.1 }))
   placed(g, nest.x, nest.y + FOOT, 0, HOME, false, () => HOME_FIGURES.chick(g, rng))
 
   // The child's line, and the train on it just past the loop.
   rail(g, rng, CHILD_LINE, WHITE)
-  dust(g, rng, 900, 458, 22, WHITE, 10)
+  dust(g, rng, 900, 448, 22, WHITE, 10)
   const even = resample(CHILD_LINE, 12)
   const engineAt = spotAt(even, 262), wagonAt = spotAt(even, 262 - 150 * TRAIN)
   const lift = 9
