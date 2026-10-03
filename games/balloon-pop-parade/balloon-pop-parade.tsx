@@ -11,6 +11,8 @@ import { Overlay } from './overlay'
 import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
+import { drawSpike } from './spike'
+import { Stage } from './stage'
 import { deserialize, serialize, type GameState } from './state'
 
 // The Mount, showing a blank surface. Everything a game needs around its
@@ -29,6 +31,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
   useEffect(() => {
     const root = rootRef.current!, canvas = canvasRef.current!
     const audio = new GameAudio(), touch = new ForgivingTouch(), clock = new AttendedClock(), ladder = new IdleLadder(0)
+    const stage = new Stage(canvas)
     const pinned = tierOverride(window.location.search)
     const governor = new TierGovernor(pinned ?? startingTier(window.matchMedia('(pointer: coarse)').matches), pinned !== null)
     const work = new PerfRing()
@@ -54,12 +57,21 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // of `resize`, since `resize` does nothing when the size and the pixel ratio stay as they were (on a display
     // of ratio 1 they always do). The blank surface has nothing to switch: it marks the tier it was given on its
     // canvas, where a still or a probe can read which tier is applied.
-    const applyTier = () => { canvas.dataset.tier = String(governor.tier) }
+    const applyTier = () => {
+      canvas.dataset.tier = String(governor.tier)
+      stage.setLook(governor.settings)
+    }
 
     // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
     // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
     // load calls it once the slot has been read.
-    const draw = () => {}
+    const draw = () => {
+      if (!width) return
+      stage.begin(clock.seconds)
+      drawSpike(stage, clock.seconds, window.location.search)
+      stage.render()
+      Object.assign(drawn, stage.drawn)
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
@@ -72,7 +84,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       width = w; height = h; dpr = ratio
       // Sizing the backing store wipes the surface, so it is redrawn at once: a resize lands after the frame's
       // own draw, or while the game rests and no frame is coming, and either would leave the surface blank.
-      canvas.width = Math.round(w * ratio); canvas.height = Math.round(h * ratio)
+      stage.resize(w, h, ratio)
       draw()
       return true
     }
@@ -185,6 +197,7 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
       uninstallPerf()
       overlay.dispose()
       audio.dispose()
+      stage.dispose()
     }
   }, [])
 

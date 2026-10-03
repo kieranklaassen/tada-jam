@@ -19,10 +19,21 @@ export const BACKDROP = '#f4efe6'
 export type Tier = {
   /** Canvas pixel ratio cap; the jam's bar caps it at 2. */
   dpr: number
+  /** The small bright core of the vinyl sheen. Without it the broad sheen and the pale rim still say vinyl. */
+  gloss: boolean
+  /** The skin breathing in the vertex shader. */
+  wobble: boolean
+  /** The clouds: three draws of scenery nothing depends on. */
+  clouds: boolean
 }
 
 /** Tier 0 is full quality; each later tier is cheaper to draw. Whatever a tier change needs is compiled before it happens. */
-export const TIERS: readonly Tier[] = [{ dpr: 2 }, { dpr: 1.5 }, { dpr: 1.25 }, { dpr: 1 }]
+export const TIERS: readonly Tier[] = [
+  { dpr: 2, gloss: true, wobble: true, clouds: true },
+  { dpr: 1.5, gloss: true, wobble: true, clouds: true },
+  { dpr: 1.25, gloss: false, wobble: true, clouds: true },
+  { dpr: 1, gloss: false, wobble: false, clouds: false },
+]
 
 /** The governor's thresholds. The rules they feed are at the top of quality.ts. */
 export const GOVERNOR = {
