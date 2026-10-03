@@ -7,11 +7,28 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.
+The manifest band is 4 to 7, and its youngest age, four, governs the design.
+
+- **The cue-table row.** The row for a youngest age of 3 to 4 in the wordless-clarity convention. Its "Avoid" column binds the game: no text, numeral or pictorial icon that has to be decoded, no spoken instruction, no verdict, never several activities live at once, and no tool on the table before it means something. One next act is offered at a time, and at most three fingers act.
+- **The pack's rule for the range** (pack: game-design, ages-4-to-6.md). Pretend play with characters who react; tap and drag; quantities to ten; funny through tricks, wrong things on a pizza and a customer who overreacts and is never hurt. No reading, no double tap.
+- **The symbol rule.** The band starts below 6, so the kid side shows no word, letter, numeral or symbol, and the game has no `symbols.ts`. An order is a picture of the pieces themselves, one drawn piece for every piece wanted, and never a sign that stands for an amount. The rule follows the manifest band: a seven-year-old sees no numeral either.
+- **What `ctx.childAge` sets.** Only where a first visit starts in the designed order (see "The designed order, and what is stored"): four or younger at the first place, five at the second, six at the fourth, seven or older at the fifth. A saved position wins over the age. Age locks and hides nothing: every place is reached by play, and the bigger order is always there to pick.
+- **What no age gives.** `null` starts a first visit at the first place, as for the youngest child.
 
 ## The toy
 
-The one action the finger performs most, what it does in an empty scene with its sound and motion, and why repeating it is a pleasure with no goal.
+**The action.** Tap a tub of toppings and one piece hops onto the pizza. That is the touch the finger performs most, and one touch is always one piece.
+
+**In an empty scene.** A pizza base lies on the board with one tub beside it, and nothing asks for anything.
+
+- When the finger lands, in that frame, the tub squashes under it and one piece pops up out of the tub with a pop.
+- When the finger lifts, the piece flies in an arc to a free spot on the pizza and lands with a plop. It squashes and settles, the whole pizza jiggles, the pieces already lying there bob, and a puff of flour comes off the board.
+- Each piece that lands sounds one step higher than the one before it, so a run of taps climbs like a small tune. Taking pieces off steps the tune back down. The pitch follows how many lie on the pizza, never how fast the child taps.
+- A finger that moves before it lifts carries the piece, which can be set down anywhere on the pizza. Let go anywhere else and it bounces once and rolls back into its tub, at no cost.
+- Tapping a piece that lies on the pizza sends it hopping back to its tub with a pip, one step down. Tapping the pizza makes every piece on it wobble.
+- A full pizza turns nothing away in silence: the extra piece bounces off the heap with a boing and rolls home.
+
+**Why repeating it is a pleasure with no goal.** Every tap is answered at touch-down and the answer is bigger than the touch: a squash, a flight, a plop, a jiggle and a rising note from one finger (pack: game-design, touch-answers-bigger-than-the-touch.md). Random tapping fills a pizza and plays a climbing scale, and nothing a finger can do is punished. The simplest use, a tap, always works, so no child is stuck on a drag (pack: game-design, toy-first.md). The same pieces also make things: carried pieces can be laid out as a face or a ring, and the pizza keeps them where they were put. In the game this same touch is the school skill, since one tap puts out exactly one piece.
 
 ## The object-by-action grid, and what is new on day 15
 
