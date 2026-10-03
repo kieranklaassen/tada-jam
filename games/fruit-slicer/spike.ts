@@ -22,6 +22,9 @@ const SHELF_Y = 648
 
 type Ctx = CanvasRenderingContext2D
 
+/** The dog as the still shows it: looking up at the board, tongue out. */
+const STILL_DOG = { lift: 0, tilt: 0, earLeft: 0, earRight: 0, eyeX: 0, eyeY: -0.7, lids: 0, jaw: 0.2, tongue: 0.6, cheeks: 0, spin: 0, sniff: 0 }
+
 /** A fruit or a piece of one: a flat colour, square ends and a thin darker line. Nothing else is ever drawn on it. */
 function bar(ctx: Ctx, fruit: Fruit, x: number, y: number, length: number, height: number): void {
   ctx.fillStyle = FLESH[fruit]
@@ -169,7 +172,7 @@ function counter(ctx: Ctx, screens: Screens, scene: SpikeScene): void {
   })
   ctx.strokeStyle = INK
   for (const y of [502, 542, 582]) inked(ctx, rect(1000, y, 140, 40), null, 4)
-  dog(ctx, screens, 1070, 664, 0.95)
+  dog(ctx, screens, 1070, 664, 0.95, STILL_DOG)
 }
 
 /** The window, where the customer being served stands with its ticket. */

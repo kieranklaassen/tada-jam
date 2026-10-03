@@ -1,3 +1,4 @@
+import type { DogPose } from './dogMotion'
 import { BLUE, INK, RED, WHITE, YELLOW, eye, inked, oval, poly, shade, rect, type Screens } from './look'
 
 // The characters, drawn in the look: flat colour, a dot screen on the shaded
@@ -111,22 +112,45 @@ export function ant(ctx: Ctx, x: number, y: number, s: number, lift = 0): void {
   ctx.restore()
 }
 
-/** The dog under the counter, looking up over its edge. Origin at the top of its head. `tongue` is 0 to 1. */
-export function dog(ctx: Ctx, screens: Screens, x: number, y: number, s: number, tongue = 0.6): void {
+/** What `Screens` gives a figure: a dot screen of a colour and a tone. A test hands in a plain stand-in. */
+type Dots = Pick<Screens, 'of'>
+
+/**
+ * The dog under the counter, looking up over its edge. Origin at the top of its head, at rest. The pose is the
+ * numbers dogMotion.ts gives: nothing about how the dog moves is decided here.
+ */
+export function dog(ctx: Ctx, screens: Dots, x: number, y: number, s: number, pose: DogPose): void {
   ctx.save()
-  ctx.translate(x, y)
+  ctx.translate(x, y - pose.lift * s)
   ctx.scale(s, s)
+  // The whole head turns about its middle: a tilt, or the full circle it turns for the smallest things.
+  ctx.translate(0, 44)
+  ctx.rotate(pose.tilt + pose.spin)
+  ctx.translate(0, -44)
   const head = oval(0, 44, 56, 46)
-  // Ears flop either side; one carries the patch.
-  inked(ctx, oval(-56, 44, 20, 40, 0.35), INK, 5)
-  inked(ctx, oval(56, 44, 20, 40, -0.35), WHITE, 5, screens.of(ctx, INK, 0.5))
+  // Ears flop either side, each on its own swing; one carries the patch.
+  for (const [side, swing, fill] of [[-1, pose.earLeft, INK], [1, pose.earRight, WHITE]] as const) {
+    ctx.save()
+    ctx.translate(side * 46, 16)
+    ctx.rotate(side * (-0.35 - swing))
+    inked(ctx, oval(side * 4, 34, 20, 40), fill, 5, side > 0 ? screens.of(ctx as CanvasRenderingContext2D, INK, 0.5) : undefined)
+    ctx.restore()
+  }
+  // Cheeks, behind the head, bulging by what is in them.
+  if (pose.cheeks > 0.02) for (const side of [-1, 1]) inked(ctx, oval(side * (44 + 16 * pose.cheeks), 62, 14 + 16 * pose.cheeks, 14 + 12 * pose.cheeks), WHITE, 5)
   inked(ctx, head, WHITE, 6)
-  shade(ctx, head, screens.of(ctx, BLUE, 0.3), oval(26, 70, 50, 38))
-  inked(ctx, oval(-22, 26, 22, 20), WHITE, 0, screens.of(ctx, INK, 0.5))
-  eye(ctx, -20, 26, 10, 0.1, -0.7)
-  eye(ctx, 20, 26, 10, -0.1, -0.7)
-  inked(ctx, oval(0, 56, 30, 22), WHITE, 5)
-  inked(ctx, oval(0, 46, 12, 8), INK, 0)
-  if (tongue > 0) inked(ctx, rect(-9, 66, 18, 10 + tongue * 22), RED, 4)
+  shade(ctx, head, screens.of(ctx as CanvasRenderingContext2D, BLUE, 0.3), oval(26, 70, 50, 38))
+  inked(ctx, oval(-22, 26, 22, 20), WHITE, 0, screens.of(ctx as CanvasRenderingContext2D, INK, 0.5))
+  for (const side of [-1, 1]) {
+    eye(ctx, side * 20, 26, 10, pose.eyeX, pose.eyeY)
+    // A lid comes down over the eye: a blink, a yawn, the effort of a long piece.
+    if (pose.lids > 0.05) inked(ctx, (c) => c.ellipse(side * 20, 26 - 11.5 * (1 - pose.lids), 11, 11.5 * pose.lids + 1, 0, 0, Math.PI * 2), WHITE, 3)
+  }
+  // The lower jaw drops under the muzzle, and the tongue with it.
+  const drop = 16 * pose.jaw
+  if (pose.jaw > 0.04) inked(ctx, oval(0, 62 + drop * 0.6, 22, 10 + drop * 0.5), INK, 4)
+  if (pose.tongue > 0.04) inked(ctx, rect(-9, 64 + drop * 0.5, 18, 6 + pose.tongue * 24), RED, 4)
+  inked(ctx, oval(0, 56, 30, 20), WHITE, 5)
+  inked(ctx, oval(0, 46 - 2 * pose.sniff, 12 + 2 * pose.sniff, 8 + 1.5 * pose.sniff), INK, 0)
   ctx.restore()
 }
