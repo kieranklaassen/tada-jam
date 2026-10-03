@@ -43,11 +43,18 @@ export function tuftPose(index: number, steps: number, count = TUFTS_OWN.length)
   const fan = (-108 + t * 216) * (Math.PI / 180)
   return {
     base: { x: Math.sin(fan) * HEAD.rx * 0.82, y: -Math.cos(fan) * HEAD.ry * 0.82 },
-    angle: fan + own.lean * (Math.PI / 180),
+    angle: fan + own.lean * (Math.PI / 180) + droop(fan, own.curl, steps),
     reach: TUFT_BASE + steps * TUFT_STEP,
     width: own.width,
     curl: own.curl,
   }
+}
+
+/** A long tuft is top-heavy and flops over, to the side it already leans or hooks to. In radians. */
+export function droop(fan: number, curl: number, steps: number): number {
+  const heavy = Math.max(0, (steps - 55) / 45)
+  const side = Math.abs(Math.sin(fan)) > 0.2 ? Math.sign(Math.sin(fan)) : Math.sign(curl || 1)
+  return side * 0.55 * heavy * heavy
 }
 
 /** The free end of a tuft at rest, relative to the head's centre. */
