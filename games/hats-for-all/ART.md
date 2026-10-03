@@ -28,19 +28,53 @@ A tap anywhere else is answered too: the foam floor dimples under the finger wit
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+Six objects by five actions. A tap is the essential action; every drag is an extra that a tap can also reach. Each cell looks and sounds different, and nothing is refused.
+
+| | Tap | Drag to a bare head | Drag to a hatted head | Drag to the hat tile | Let go anywhere else |
+| --- | --- | --- | --- | --- | --- |
+| **Hat in the tile** | Pops out ("pok"), flips, lands on the nearest bare head. With no bare head it lands on the floor as a loose hat. | Stretches after the finger and lands where it is let go; the creature reacts to that kind of hat. | Lands on top of the hat already there: a tower of two that wobbles and slips over the eyes. | Dips back into its own hole with a short "fwump": nothing changed. | Becomes a loose hat where it lands and starts to scuttle. |
+| **Hat on a head** | Pops off, flies home and presses into its hole; the creature pats its bare head. | Hops from one head to the other; the first creature watches it go, the second reacts to it. | Makes a tower on the second head and leaves the first bare. | Goes home, as a tap does, by the path the finger drew. | Slides off as a loose hat; its creature turns to follow it with its eyes. |
+| **Loose hat on the floor** | Hops home into its hole with a double bounce. | Is picked up and worn: the bare creature ducks under it. | Joins the tower, sideways, and the tower leans. | Is pressed home with a long creak. | Skids, spins like a coin and scuttles on from there. |
+| **Top hat of a tower** | Leaves the tower and goes home; the tower shrinks with a "bip". | Moves over to the bare head: the tower and the bare head are both mended in one move. | Builds a tower of three, which sways, salutes and topples: every hat bounces home (a secret that works every time). | Goes home while the hat under it spins once. | Tips the whole tower: the top hat rolls off loose and the rest settles. |
+| **Bare creature** | Calls the nearest hat out of the tile: the hat pops and lands on it. With no hat in the tile it pats its head and looks into the empty holes. | The two bump bellies, boing apart and both pat their heads. | It peeks up under the other one's hat; that one lifts it like a lid. | It leans over a hole and babbles into it; the hole echoes. | Stretches like pulled foam and twangs back to its spot. |
+| **Hatted creature** | Does its own trick with exactly this hat (a like, a grump or a plain pat, by its fixed taste). | Bows and tips its hat at the bare one, who claps. | The two knock hats together with a hollow "tok" and both wobble. | Tips its hat over the tile and shakes it: nothing falls out, it shrugs. | Stretches and twangs back, holding its hat on with both hands. |
+
+**The wrong use always works and is funny**: the tower over the eyes, the hat that walks off alone, the creature shouting into a hole. None gets a buzzer or a refusal (pack: game-design, liveliness-from-causing-and-comedy.md).
+
+**On day 15** the child knows which creature loves which hat and deals them on purpose, builds the tower of three to watch it fall, and sees at a glance that a hat is spare or a head is bare, so the hat goes back or over without a wrong pull. For this age day 15 may look almost like day 1, with the child faster, surer and trying one new thing (pack: game-design, depth-from-combinations.md).
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+**One hat on one head, in two rows.** The school idea is pairing one with one, and it is in the objects themselves: a hat sits on a head, and nothing else stands for it.
+
+- The creatures stand in a row on round spots. The hats lie in a row of holes in one foam tile in front of them. The two rows are never lined up one under the other, so the pairs are made by the child and not given by the layout.
+- What is left over shows by itself. A head with no hat is bare in plain view. A hat with no head lies in the tile, or is loose on the floor with nobody under it. Two hats on one head are a tower anyone can see.
+- A hat taken out leaves its hole, so the empty holes show how many hats are out as plainly as the hatted heads do.
+- One more and one fewer are a creature who walks in through the foam arch or walks out through it, one at a time, which leaves one head bare or one hat spare.
+- The hats are the working pieces and stay plain: one flat colour and one simple outline each, no face, no pattern, no motion of their own in the tile. The look and the comedy are in the creatures, the arch and the parade (pack: game-design, working-objects-stay-plain.md). A loose hat does move, because a hat with nobody under it is the idea at that moment.
+
+**Evidence.** This is school practice without a trial behind it. The pack's table by age lists one-to-one matching as a kind act, a hat for each, for ages 2 to 4, and marks that line as inference; the row for one-to-one counting cites a trial for a board game with counting on, which is not this game (pack: game-design, representation-before-game.md).
+
+**Where the order stops.** At the object. The game shows no picture that stands for a hat or a head and has no symbol stage: its band starts below 6 (pack: game-design, fade-to-school-symbols.md).
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No: take away "one for each" and nothing is left to play, because the finished state, the bare head and the spare hat are all defined by the pairing; another subject could not be put in its place without a new game.
+- **Attention.** The child looks at the heads and the hats and thinks about who still has none and whether any hat is one too many: which head is bare, whether to take another hat out, and, after one creature has come or gone, which single thing to change.
+- **Fun.** Yes: the skill is used in the most enjoyable moment, the hat popping out and landing on a head, and the parade starts only from the state the pairing makes; play never stops for a question.
+- **Guess.** At `two-heads` and `three-heads`, yes, on purpose: there are as many hats as heads and a tapped hat goes to a bare head, so a two-year-old cannot go wrong. From `spare-hat` on, no: tapping every hat leaves a hat loose, tapping at random takes hats off heads again, and the crew is ready only when the child has seen who has one and stopped there.
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+There are three ways to be off, and each shows where and why in the world, costs nothing, and leaves everything where it is (pack: game-design, errors-show-as-consequences.md).
+
+- **One hat too many taken out.** The hat has nobody under it: it lands on the floor and scuttles about alone, bumping into feet, and every creature turns to watch it. It shows by itself that every head already has one. One tap sends it home.
+- **Two hats on one head.** The tower slips over that creature's eyes and it totters about, bewildered and never hurt, while the one left bare looks from the tower to its own head and pats it. One tap on the top hat sends it home, and one drag moves it to the bare head.
+- **A hat taken off again, or a head missed.** That creature stands bare in plain view, pats its head and looks at the hole its hat is in. It waits for as long as the child likes and never hurries or sulks.
+
+The crew sets off only when every head has exactly one hat and no hat is loose. Until then nothing is judged aloud: no buzzer, no cross, no sad face turned to the child, no reset and no lost piece. Being ready is a consequence too: the creatures look at one another's hats and the parade begins.
+
+For a two-year-old the first two positions cannot go wrong by a tap at all, which is the pack's exception for the youngest: a material that does not go together wrongly.
 
 ## The designed order, and what is stored
 
