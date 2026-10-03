@@ -16,6 +16,7 @@ const LONG = 550
 const LEVEL = 60
 const RISE = 200
 const APART = 300
+const CLEAR = 260
 
 /**
  * Whether a stop and a home lie as a position sets them out, with the train
@@ -23,6 +24,8 @@ const APART = 300
  */
 export function fits(position: string, stop: Pt, home: Pt, train: Pt): boolean {
   const way = distance(stop, home), rise = Math.abs(stop.y - home.y), near = distance(stop, train) <= NEAR, wet = crossesPuddle(stop, home)
+  // A home right beside the train would be no ride at all.
+  if (distance(home, train) < CLEAR) return false
   switch (position) {
     case 'short-hop': return near && way <= SHORT && rise <= LEVEL && !wet
     case 'long-way': return near && way >= LONG && rise <= LEVEL && !wet

@@ -19,8 +19,12 @@ export const PUDDLE = { x: 600, y: 600, rx: 150, ry: 52 } as const
 /** The dandelion in the crack. `reach` is how far its leaves and head spread. */
 export const DANDELION = { x: 600, y: 96, reach: 55 } as const
 
-/** Where the engine stands on a first visit, on its stub of rail. */
-export const ENGINE_START = { x: 150, y: 400 } as const
+/** A rail that runs past a place lies this far below the place's middle, under the feet of whoever stands there. */
+export const RAIL_DROP = 60
+
+/** The place the engine stands at on a first visit, and the spot on its stub of rail there. */
+export const ENGINE_PLACE = 'mid-1'
+export const ENGINE_START = { x: 150, y: 400 + RAIL_DROP } as const
 
 /**
  * The places a stop or a home can be laid: three rows of four, with the
