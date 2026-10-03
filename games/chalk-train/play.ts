@@ -49,7 +49,7 @@ function rideOut(start: World, route: Route, told: Told[]): World {
   for (let s = 0; ; s = Math.min(route.length, s + STEP)) {
     const here = along(route, s), step = s - before
     // The stretch just ridden counts for everyone aboard, as chalk or as bare tar.
-    if (step > 0) riders = riders.map((r) => (r.at === 'train' ? { ...r, [here.on]: Math.round((r[here.on] + step) * 10) / 10 } : r))
+    if (step > 0) riders = riders.map((r) => (r.at === 'train' ? { ...r, [here.on]: Math.round(r[here.on] + step) } : r))
     for (; h < route.happenings.length && route.happenings[h].at <= s; h++) {
       const { at, what } = route.happenings[h]
       told.push({ what: 'happening', at, name: what })
