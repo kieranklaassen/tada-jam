@@ -33,8 +33,8 @@ describe('the voices', () => {
     }
   })
 
-  it('give every kind its own catch, refusal, poke, startle, carrying-off and landing', () => {
-    for (const kindOf of ['Catch', 'Refuse', 'Poke', 'Startle', 'LiftOff', 'Land'] as const) {
+  it('give every kind its own catch, refusal, poke, startle, carrying-off, landing and step', () => {
+    for (const kindOf of ['Catch', 'Refuse', 'Poke', 'Startle', 'LiftOff', 'Land', 'Step'] as const) {
       const seen = new Set<string>()
       for (const kind of ['duck', 'frog', 'hippo', 'crab'] as const) seen.add(JSON.stringify(VOICES[`${kind}${kindOf}`]))
       expect(seen.size, kindOf).toBe(4)

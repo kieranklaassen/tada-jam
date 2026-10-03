@@ -26,7 +26,8 @@ export type Partial = {
 
 export type VoiceId =
   | 'squeak' | 'letGo' | 'whistle' | 'pop' | 'raspberry' | 'bloop' | 'boop' | 'squeal' | 'bonk' | 'stringHum' | 'frogSlurp'
-  | `${KindName}Catch` | `${KindName}Refuse` | `${KindName}Poke` | `${KindName}Startle` | `${KindName}LiftOff` | `${KindName}Land`
+  | 'heels' | 'cloudSqueak' | 'patter' | 'hillBoing'
+  | `${KindName}Catch` | `${KindName}Refuse` | `${KindName}Poke` | `${KindName}Startle` | `${KindName}LiftOff` | `${KindName}Land` | `${KindName}Step`
 
 /** The ranges every partial stays inside, and the longest a voice may last. */
 export const LIMITS = { lowest: 55, highest: 5200, loudest: 0.5, shortestAttack: 0.002, longest: 1.3 } as const
@@ -55,6 +56,13 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
   bonk: [tone('sine', 0, 320, 240, 0.3, 0.003, 0.12), tone('triangle', 0, 640, 480, 0.06, 0.003, 0.05)],
   // A string plucked like a rubber band.
   stringHum: [tone('triangle', 0, 190, 150, 0.2, 0.003, 0.36)],
+  // A troop stops its sway all at once: a squeak of heels.
+  heels: [tone('sine', 0, 1500, 1050, 0.12, 0.004, 0.09)],
+  // A cloud is a pillow too: a soft breathy squeak, and its drops pattering down.
+  cloudSqueak: [tone('sine', 0, 620, 880, 0.12, 0.02, 0.16), hiss(0, 1400, 1900, 3, 0.05, 0.02, 0.14)],
+  patter: [0, 0.07, 0.13, 0.21, 0.27, 0.36, 0.44].map((at, i) => tone('sine', at, 1900 + ((i * 370) % 800), 1500 + ((i * 370) % 800), 0.07, 0.003, 0.035)),
+  // The hill is an air bed: a touch on it sends a slow wobble through.
+  hillBoing: [tone('sine', 0, 140, 95, 0.25, 0.01, 0.3), tone('triangle', 0, 280, 190, 0.06, 0.01, 0.2)],
   // The tongues go home.
   frogSlurp: [hiss(0, 700, 1900, 4, 0.14, 0.03, 0.16)],
 
@@ -65,6 +73,7 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
   duckStartle: [tone('square', 0, 1500, 900, 0.12, 0.004, 0.16)],
   // Carried off: a flurry of wing-flaps. Down again: a soft bump.
   duckLiftOff: [0, 0.1, 0.2, 0.31, 0.43, 0.56, 0.7, 0.85].map((at) => hiss(at, 620, 900, 1.6, 0.15, 0.008, 0.05)),
+  duckStep: [tone('sine', 0, 1400, 1750, 0.08, 0.004, 0.04)],
   duckLand: [tone('sine', 0, 190, 110, 0.26, 0.004, 0.13), hiss(0, 500, 300, 1.5, 0.08, 0.003, 0.06)],
 
   // The frog: a wet twang and a low double note.
@@ -74,6 +83,7 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
   frogStartle: [tone('sawtooth', 0, 300, 140, 0.13, 0.006, 0.26)],
   // Carried off: a rising slide-whistle. Down again: two boings.
   frogLiftOff: [tone('sine', 0, 420, 1500, 0.15, 0.05, 0.85)],
+  frogStep: [tone('sine', 0, 300, 520, 0.12, 0.005, 0.07)],
   frogLand: [tone('sine', 0, 200, 430, 0.24, 0.006, 0.14), tone('sine', 0.3, 230, 400, 0.16, 0.006, 0.12)],
 
   // The hippo: low, slow and honking.
@@ -84,6 +94,7 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
   hippoStartle: [tone('sine', 0.42, 150, 160, 0.18, 0.08, 0.3), tone('sine', 0.72, 160, 250, 0.18, 0.05, 0.28)],
   // The string strains with a rising creak; then it sits down, hard: a deep thud.
   hippoLiftOff: [tone('sawtooth', 0, 85, 170, 0.09, 0.2, 0.75), hiss(0.1, 420, 980, 12, 0.1, 0.2, 0.6)],
+  hippoStep: [tone('sine', 0, 110, 70, 0.3, 0.004, 0.12), hiss(0, 260, 160, 1.4, 0.08, 0.003, 0.06)],
   hippoLand: [tone('sine', 0, 105, 58, 0.45, 0.004, 0.3), hiss(0, 300, 160, 1.2, 0.18, 0.003, 0.12)],
 
   // The crab: clicks and snips.
@@ -95,6 +106,7 @@ export const VOICES: Record<VoiceId, readonly Partial[]> = {
   crabStartle: [...[0, 0.05, 0.1, 0.16, 0.22].map((at) => hiss(at, 3000, 2600, 8, 0.14, 0.002, 0.02)), tone('sine', 0.52, 1500, 1900, 0.1, 0.004, 0.08)],
   // Carried off: a whirr that climbs. Down again: a clatter of legs.
   crabLiftOff: [tone('sawtooth', 0, 120, 520, 0.08, 0.06, 0.85), hiss(0, 900, 2700, 4, 0.07, 0.06, 0.85)],
+  crabStep: [hiss(0, 3200, 2900, 7, 0.14, 0.002, 0.02), hiss(0.045, 3500, 3100, 7, 0.12, 0.002, 0.02)],
   crabLand: [0, 0.05, 0.11, 0.18, 0.27].map((at, i) => hiss(at, 2600 - i * 200, 2200 - i * 200, 6, 0.2 - i * 0.02, 0.002, 0.03)),
 }
 

@@ -12,7 +12,7 @@ import { copyPose, restPose, type Pose } from './pose'
 // random number: the caller passes the time into the clip and a seed for the
 // friend, so a test can sample any moment of any motion.
 
-export type ClipId = 'catch' | 'refuse' | 'liftOff' | 'popped' | 'poke' | 'wave'
+export type ClipId = 'catch' | 'refuse' | 'liftOff' | 'popped' | 'poke' | 'wave' | 'proud' | 'march'
 
 export type Personality = {
   /** Breaths a second at rest, and how deep. */
@@ -30,13 +30,16 @@ export type Personality = {
   cue: { hit: number; grab: number; letGo: number; land: number }
   /** How high a lift-off carries it, in its own heights: the hippo barely leaves the ground. */
   carried: number
+  /** How long it takes to walk from the edge to the middle, in seconds, and how many steps (or hops) that is. */
+  walk: number
+  steps: number
 }
 
 export const PERSONALITIES: Record<KindName, Personality> = {
-  duck: { breath: 0.42, depth: 0.02, blinkEvery: 2.6, lasts: { catch: 0.7, refuse: 1.0, liftOff: 1.9, popped: 0.9, poke: 0.6, wave: 0.7 }, cue: { hit: 0.56, grab: 0.1, letGo: 1.0, land: 1.3 }, carried: 0.75 },
-  frog: { breath: 0.22, depth: 0.012, blinkEvery: 4.2, lasts: { catch: 0.85, refuse: 1.05, liftOff: 2.0, popped: 0.95, poke: 0.7, wave: 0.8 }, cue: { hit: 0.52, grab: 0.38, letGo: 1.05, land: 1.35 }, carried: 0.9 },
-  hippo: { breath: 0.16, depth: 0.03, blinkEvery: 5.1, lasts: { catch: 1.15, refuse: 1.3, liftOff: 2.1, popped: 1.35, poke: 0.95, wave: 1.1 }, cue: { hit: 0.72, grab: 0.5, letGo: 1.05, land: 1.22 }, carried: 0.09 },
-  crab: { breath: 0.6, depth: 0.014, blinkEvery: 1.9, lasts: { catch: 0.6, refuse: 0.85, liftOff: 1.8, popped: 0.86, poke: 0.5, wave: 0.6 }, cue: { hit: 0.32, grab: 0.08, letGo: 1.0, land: 1.3 }, carried: 0.95 },
+  duck: { breath: 0.42, depth: 0.02, blinkEvery: 2.6, lasts: { catch: 0.7, refuse: 1.0, liftOff: 1.9, popped: 0.9, poke: 0.6, wave: 0.7, proud: 1.1, march: 1.3 }, cue: { hit: 0.56, grab: 0.1, letGo: 1.0, land: 1.3 }, carried: 0.75, walk: 1.3, steps: 6 },
+  frog: { breath: 0.22, depth: 0.012, blinkEvery: 4.2, lasts: { catch: 0.85, refuse: 1.05, liftOff: 2.0, popped: 0.95, poke: 0.7, wave: 0.8, proud: 1.3, march: 1.6 }, cue: { hit: 0.52, grab: 0.38, letGo: 1.05, land: 1.35 }, carried: 0.9, walk: 1.5, steps: 3 },
+  hippo: { breath: 0.16, depth: 0.03, blinkEvery: 5.1, lasts: { catch: 1.15, refuse: 1.3, liftOff: 2.1, popped: 1.35, poke: 0.95, wave: 1.1, proud: 1.6, march: 2.0 }, cue: { hit: 0.72, grab: 0.5, letGo: 1.05, land: 1.22 }, carried: 0.09, walk: 2.0, steps: 4 },
+  crab: { breath: 0.6, depth: 0.014, blinkEvery: 1.9, lasts: { catch: 0.6, refuse: 0.85, liftOff: 1.8, popped: 0.86, poke: 0.5, wave: 0.6, proud: 0.9, march: 1.1 }, cue: { hit: 0.32, grab: 0.08, letGo: 1.0, land: 1.3 }, carried: 0.95, walk: 1.0, steps: 2 },
 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
@@ -167,6 +170,20 @@ function duck(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.y += hump(t, 0.1, 0.3) * 0.08
     pose.wag = wobble(t, 0.04, 44, 6) * 0.9
     pose.lean += wobble(t, 0.05, 20, 7) * 0.08
+  } else if (id === 'proud') {
+    // Chest out, the free wing flapped twice, the tail up.
+    pose.bow = hold(t, 0, 0.2, 0.8, 1.05) * -0.22
+    pose.armL = 0.2 + hump(t, 0.15, 0.4) * 1.5 + hump(t, 0.45, 0.7) * 1.5
+    pose.flick = hold(t, 0.1, 0.25, 0.8, 1.0) * 0.8
+    pose.wag = wobble(t, 0.2, 36, 3.5) * 0.5
+    pose.y += hump(t, 0.72, 0.98) * 0.2
+    pose.nod = -0.5
+  } else if (id === 'march') {
+    // Three quick steps on the spot, rolling from foot to foot.
+    const step = marchStep(t, 1.3)
+    pose.lean += Math.sin(step * Math.PI) * 0.16 * hold(t, 0, 0.1, 1.15, 1.3)
+    pose.y += Math.abs(Math.sin(step * Math.PI)) * 0.12 * hold(t, 0, 0.1, 1.15, 1.3)
+    pose.wag = Math.sin(step * Math.PI * 2) * 0.4
   } else {
     // A wave: one wing, quick.
     pose.armL = reach * 0.9 + Math.sin(t * 26) * 0.35 * hold(t, 0, 0.1, 0.5, 0.7)
@@ -203,6 +220,18 @@ function frog(id: ClipId, t: number, pose: Pose): void {
     pose.squash += -hump(t, 0, 0.16) * 0.22 + hump(t, 0.16, 0.36) * 0.14 + wobble(t, 0.5, 22, 7) * 0.09
     pose.armL = pose.armR = 1.3 + hump(t, 0.16, 0.5) * 0.5
     pose.puff = 1 + hump(t, 0, 0.6) * 0.7
+  } else if (id === 'proud') {
+    // It sits up tall and blows its throat right out, holds it, and lets it down with a wobble.
+    pose.squash += hold(t, 0, 0.3, 0.85, 1.15) * 0.1
+    pose.puff = 1 + hold(t, 0.1, 0.45, 0.85, 1.0) * 1.0 + wobble(t, 0.95, 22, 6) * 0.25
+    pose.nod = -0.55
+    pose.armL = 0.3 + hold(t, 0.1, 0.4, 0.85, 1.1) * 0.9
+  } else if (id === 'march') {
+    // Three small hops on the spot.
+    const step = marchStep(t, 1.6), within = step % 1
+    pose.y += hump(within, 0.2, 0.9) * 0.3 * hold(t, 0, 0.05, 1.5, 1.6)
+    pose.squash += (-hump(within, 0, 0.25) * 0.12 + hump(within, 0.3, 0.7) * 0.08) * hold(t, 0, 0.05, 1.5, 1.6)
+    pose.puff = 1 + hump(within, 0.2, 0.9) * 0.3
   } else {
     pose.armR = 1.2 + hold(t, 0, 0.15, 0.6, 0.8) * (1.3 + Math.sin(t * 12) * 0.25)
     pose.puff = 1 + hump(t, 0, 0.8) * 0.3
@@ -236,6 +265,22 @@ function hippo(id: ClipId, t: number, pose: Pose): void {
     pose.lean += wobble(t, 0.05, 7.5, 2.4) * 0.16
     pose.tilt += wobble(t, 0.12, 7.5, 2.4) * -0.22
     pose.squash += -hump(t, 0, 0.26) * 0.09
+  } else if (id === 'proud') {
+    // Belly out, leaning back, the head tipping slowly from side to side.
+    pose.bow = hold(t, 0, 0.5, 1.1, 1.5) * -0.18
+    pose.puff = 1 + hold(t, 0.1, 0.6, 1.1, 1.45) * 0.26
+    pose.tilt += Math.sin(t * 5.2) * 0.2 * hold(t, 0.2, 0.5, 1.2, 1.5)
+    pose.armL = 0.25 + hold(t, 0.2, 0.6, 1.1, 1.4) * 0.5
+  } else if (id === 'march') {
+    // Three heavy stomps, and the belly goes on wobbling after each.
+    const step = marchStep(t, 2.0), within = step % 1
+    const on = hold(t, 0, 0.1, 1.85, 2.0)
+    pose.lean += Math.sin(step * Math.PI) * 0.17 * on
+    pose.squash += (-hump(within, 0.75, 1.0) * 0.13 - hump(within, 0, 0.2) * 0.13) * on
+    pose.puff = 1 + Math.sin(within * Math.PI * 3) * 0.22 * (1 - within) * on
+    pose.y += hump(within, 0.3, 0.8) * 0.11 * on
+    pose.armL = 0.3 + Math.abs(Math.sin(step * Math.PI)) * 0.7 * on
+    pose.tilt += Math.sin(step * Math.PI) * -0.12 * on
   } else {
     pose.armR = 0.3 + hold(t, 0, 0.35, 0.8, 1.05) * 2.2
     pose.lean += hump(t, 0, 1.1) * -0.06
@@ -269,10 +314,72 @@ function crab(id: ClipId, t: number, pose: Pose, reach: number): void {
     pose.armL = reach - hump(t, 0.02, 0.1) * 0.5
     pose.armR = reach - hump(t, 0.1, 0.18) * 0.5
     pose.squash += wobble(t, 0, 36, 9) * 0.06
+  } else if (id === 'proud') {
+    // The free claw high and clacking, the eyes up on their stalks, a shimmy.
+    pose.armL = reach - Math.abs(Math.sin(t * 22)) * 0.55 * hold(t, 0.05, 0.15, 0.7, 0.85)
+    pose.puff = 1 + hold(t, 0.05, 0.2, 0.65, 0.85) * 0.55
+    pose.x += Math.sin(t * 24) * 0.07 * hold(t, 0.1, 0.2, 0.7, 0.85)
+    pose.squash += hump(t, 0.05, 0.4) * 0.07
+  } else if (id === 'march') {
+    // Three quick shuffles from side to side.
+    const step = marchStep(t, 1.1)
+    pose.x += Math.sin(step * Math.PI) * 0.16 * hold(t, 0, 0.08, 1.0, 1.1)
+    pose.lean += Math.cos(step * Math.PI) * 0.07 * hold(t, 0, 0.08, 1.0, 1.1)
+    pose.wag = Math.sin(step * Math.PI) * -0.3
   } else {
     pose.armL = reach - Math.abs(Math.sin(t * 20)) * 0.5 * hold(t, 0, 0.08, 0.45, 0.6)
     pose.armR = 0.5
   }
+}
+
+/** How many steps of a three-step march have been taken `t` seconds into one that lasts `lasts`: 0 to 3. */
+export function marchStep(t: number, lasts: number): number {
+  return clamp01(t / lasts) * 3
+}
+
+/**
+ * How far along a walk a friend is when `u` of its time has gone: the duck and the hippo go steadily, the frog
+ * moves only while it is in the air, and the crab goes in bursts with a stop between.
+ */
+export function stride(kind: KindName, u: number): number {
+  const steps = PERSONALITIES[kind].steps, at = clamp01(u) * steps, step = Math.min(steps - 1, Math.floor(at)), within = at - step
+  if (kind === 'frog') return (step + ramp(within, 0.2, 0.85)) / steps
+  if (kind === 'crab') return (step + ramp(within, 0, 0.6)) / steps
+  return clamp01(u)
+}
+
+/**
+ * A friend on its way somewhere, `u` of the way through its walk, going right (`direction` 1) or left (-1),
+ * written onto a pose that holds its resting life. Each kind has its own gait: the duck waddles, the frog hops,
+ * the hippo plods, and the crab scuttles sideways without ever turning away from the child.
+ */
+export function walk(kind: KindName, u: number, direction: number, pose: Pose): void {
+  if (u <= 0 || u >= 1) return
+  const steps = PERSONALITIES[kind].steps, at = u * steps, within = at % 1, ease = hold(u, 0, 0.08, 0.92, 1)
+  if (kind === 'duck') {
+    pose.turn = direction * 1.0 * ease
+    pose.lean += Math.sin(at * Math.PI) * 0.17 * ease
+    pose.y += Math.abs(Math.sin(at * Math.PI)) * 0.08 * ease
+    pose.wag = Math.sin(at * Math.PI * 2) * 0.45
+  } else if (kind === 'frog') {
+    pose.turn = direction * 0.8 * ease
+    pose.y += hump(within, 0.2, 0.85) * 0.75
+    pose.squash += -hump(within, 0, 0.22) * 0.16 + hump(within, 0.25, 0.6) * 0.14 - hump(within, 0.85, 1) * 0.12
+    pose.puff = 1 + hump(within, 0.2, 0.85) * 0.4
+  } else if (kind === 'hippo') {
+    pose.turn = direction * 0.7 * ease
+    pose.lean += Math.sin(at * Math.PI) * 0.08 * ease
+    pose.y += hump(within, 0.2, 0.8) * 0.05
+    pose.squash += -hump(within, 0.8, 1) * 0.05 - hump(within, 0, 0.2) * 0.05
+    pose.puff = 1 + Math.sin(within * Math.PI * 2) * 0.09
+  } else {
+    pose.lean += direction * -0.12 * hold(within, 0, 0.15, 0.5, 0.65) * ease
+    pose.y += Math.abs(Math.sin(within * Math.PI * 5)) * 0.04 * (within < 0.6 ? 1 : 0)
+    pose.wag = direction * -0.35 * hold(within, 0, 0.15, 0.5, 0.65)
+  }
+  // The arms come down from reaching while it walks; a hand that holds a string stays up.
+  if (pose.armL > 1) pose.armL = 0.35 + Math.sin(at * Math.PI) * 0.25
+  if (pose.armR > 1 && pose.armL !== pose.armR && pose.armL > 0.9) pose.armR = 0.35 - Math.sin(at * Math.PI) * 0.25
 }
 
 /** Carried off its feet by more balloons than it should have, each kind in its own way, then let go and down again. */

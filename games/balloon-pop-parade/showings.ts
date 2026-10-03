@@ -36,7 +36,8 @@ function showingDue(save: Save): Showing | null {
   if (idea === null) return null
   const kind = passingKind(save)
   // The bunch is shown for a troop as large as the child's own, so the bunch that hangs low for it is one the child's sky can hold.
-  if (idea === 'bunch') return { idea, kind, size: save.troop.size, marks: ['bunch', 'each', 'give'] }
+  // A bunch for a whole troop: the troop that passes is as large as the one on screen, and never one alone, since one balloon is no bunch.
+  if (idea === 'bunch') return { idea, kind, size: save.troop.size > 1 ? save.troop.size : 2, marks: ['bunch', 'each', 'give'] }
   if (idea === 'each') return { idea, kind, size: 2, marks: ['each', 'give'] }
   return { idea, kind, size: 1, marks: ['give'] }
 }

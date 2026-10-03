@@ -36,11 +36,13 @@ describe('the first showing of an idea', () => {
     }
   })
 
-  it('shows the bunch with the first sky that holds two or more in one knot: a troop as large as the one on screen, and both earlier ideas are marked', () => {
+  it('shows the bunch with the first sky that holds two or more in one knot: a troop as large as the one on screen and never one alone, and both earlier ideas are marked', () => {
     for (const size of [1, 2, 3] as const) {
-      expect(showingAtStepIn(world(size, BUNCHES, { give: true, each: true }))).toEqual({ idea: 'bunch', kind: 'duck', size, marks: ['bunch', 'each', 'give'] })
-      expect(showingAtStepIn(world(size, BUNCHES, { give: true }))).toEqual({ idea: 'bunch', kind: 'duck', size, marks: ['bunch', 'each', 'give'] })
-      expect(showingAtStart(world(size, BUNCHES))).toEqual({ idea: 'bunch', kind: 'duck', size, marks: ['bunch', 'each', 'give'] })
+      // One balloon is no bunch, so beside a friend alone the troop that passes is a pair.
+      const passing = size === 1 ? 2 : size
+      expect(showingAtStepIn(world(size, BUNCHES, { give: true, each: true }))).toEqual({ idea: 'bunch', kind: 'duck', size: passing, marks: ['bunch', 'each', 'give'] })
+      expect(showingAtStepIn(world(size, BUNCHES, { give: true }))).toEqual({ idea: 'bunch', kind: 'duck', size: passing, marks: ['bunch', 'each', 'give'] })
+      expect(showingAtStart(world(size, BUNCHES))).toEqual({ idea: 'bunch', kind: 'duck', size: passing, marks: ['bunch', 'each', 'give'] })
     }
     // One bunch of two among singles is enough.
     expect(showingAtStepIn(world(1, [...SINGLES, { colour: 'crab', count: 2 }], { give: true }))?.idea).toBe('bunch')

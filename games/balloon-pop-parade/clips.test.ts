@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { BODIES, type KindName } from './bodies'
-import { blinkAt, clip, PERSONALITIES, rest, type ClipId } from './clips'
+import { blinkAt, clip, PERSONALITIES, rest, stride, walk, type ClipId } from './clips'
 import { restPose, type Pose } from './pose'
 
 const KINDS: KindName[] = ['duck', 'frog', 'hippo', 'crab']
-const CLIPS: ClipId[] = ['catch', 'refuse', 'liftOff', 'popped', 'poke', 'wave']
+const CLIPS: ClipId[] = ['catch', 'refuse', 'liftOff', 'popped', 'poke', 'wave', 'proud', 'march']
 
 /** A friend standing at the origin at this moment of a clip, or of its resting life when `id` is null. */
 function sample(kind: KindName, id: ClipId | null, t: number, holds = false, time = 10): Pose {
@@ -38,7 +38,7 @@ describe('the clips', () => {
     }
   })
 
-  it('give every kind six motions that differ from each other', () => {
+  it('give every kind eight motions that differ from each other', () => {
     for (const kind of KINDS) for (const a of CLIPS) for (const b of CLIPS) {
       if (a < b) expect(apart(track(kind, a), track(kind, b)), `${kind}: ${a} and ${b}`).toBeGreaterThan(0.3)
     }
@@ -163,5 +163,65 @@ describe('the resting life', () => {
       expect(shut / 6000, kind).toBeGreaterThan(0.005)
       expect(shut / 6000, kind).toBeLessThan(0.08)
     }
+  })
+})
+
+describe('the walk', () => {
+  /** A walk as a row of numbers, sampled along its whole length. */
+  const gait = (kind: KindName, direction: number) => {
+    const row: number[] = []
+    for (let i = 1; i < 40; i++) {
+      const pose = restPose()
+      rest(kind, false, BODIES[kind].reach, 5, 0, pose)
+      const still = { ...pose }
+      walk(kind, i / 40, direction, pose)
+      row.push(pose.y - still.y, pose.lean - still.lean, pose.turn, pose.squash - still.squash, pose.wag - still.wag, pose.puff - still.puff, stride(kind, i / 40) - i / 40)
+    }
+    return row
+  }
+  const far = (a: number[], b: number[]) => a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0) / 39
+
+  it('is a different gait for every kind', () => {
+    for (const a of KINDS) for (const b of KINDS) if (a < b) expect(far(gait(a, 1), gait(b, 1)), `${a} and ${b}`).toBeGreaterThan(0.15)
+  })
+
+  it('never turns the crab away from the child, and turns the others the way they go', () => {
+    for (let i = 1; i < 20; i++) {
+      const pose = restPose()
+      walk('crab', i / 20, 1, pose)
+      expect(pose.turn).toBe(0)
+    }
+    for (const kind of ['duck', 'frog', 'hippo'] as const) {
+      const right = restPose(), left = restPose()
+      walk(kind, 0.5, 1, right)
+      walk(kind, 0.5, -1, left)
+      expect(right.turn, kind).toBeGreaterThan(0.5)
+      expect(left.turn, kind).toBeLessThan(-0.5)
+    }
+  })
+
+  it('starts where it stood, ends where it is going, and never goes backwards', () => {
+    for (const kind of KINDS) {
+      expect(stride(kind, 0)).toBe(0)
+      expect(stride(kind, 1)).toBeCloseTo(1, 6)
+      let before = 0
+      for (let i = 1; i <= 200; i++) {
+        const now = stride(kind, i / 200)
+        expect(now, kind).toBeGreaterThanOrEqual(before - 1e-9)
+        before = now
+      }
+      const rested = restPose(), ended = restPose()
+      walk(kind, 0, 1, rested)
+      walk(kind, 1, 1, ended)
+      expect(rested).toEqual(restPose())
+      expect(ended).toEqual(restPose())
+    }
+  })
+
+  it('makes the hippo the slowest to arrive and the crab the quickest', () => {
+    const walks = KINDS.map((kind) => PERSONALITIES[kind].walk)
+    expect(PERSONALITIES.hippo.walk).toBe(Math.max(...walks))
+    expect(PERSONALITIES.crab.walk).toBe(Math.min(...walks))
+    expect(new Set(walks).size).toBe(4)
   })
 })
