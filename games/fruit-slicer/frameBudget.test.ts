@@ -69,7 +69,7 @@ describe('the work of a frame', () => {
     const run = new GameRun(freshGame(null), 1)
     const c = counter()
     const figures = paintFrame(c.ctx, dots, run.frame(1, BUSY))
-    // Measured when the game was built: 81 figures and 444 calls.
+    // Measured when the game was built: 81 figures and 457 calls.
     expect(figures).toBeLessThan(110)
     expect(c.total()).toBeLessThan(600)
     expect(c.calls.get('drawImage') ?? 0).toBe(0)
@@ -84,7 +84,7 @@ describe('the work of a frame', () => {
     expect(run.fx.fx.length).toBeGreaterThan(40)
     const c = counter()
     const figures = paintFrame(c.ctx, dots, run.frame(3, IDLE))
-    // Measured when the game was built: 301 figures and 2753 calls, with twelve ants at the window, a cat and its
+    // Measured when the game was built: 301 figures and 2763 calls, with twelve ants at the window, a cat and its
     // two tickets waiting, 32 pieces and 90 effects alive, the open tin ruled into twelfths, the glow and the hand.
     expect(figures).toBeLessThan(380)
     expect(c.total()).toBeLessThan(3600)
