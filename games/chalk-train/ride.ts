@@ -148,16 +148,16 @@ export function restOf(route: Route, train: Pt & { face: 1 | -1 }): Pt & { face:
   return { x: end.x, y: end.y, face: end.x === before.x ? train.face : end.x > before.x ? 1 : -1 }
 }
 
-/** The point a distance along a whole route, and whether it is on chalk there. */
-export function along(route: Route, s: number): Pt & { on: 'chalk' | 'tar' } {
+/** The point a distance along a whole route, the unit direction of travel there, and whether it is on chalk. */
+export function along(route: Route, s: number): Pt & { tx: number; ty: number; on: 'chalk' | 'tar' } {
   let left = Math.max(0, s)
   for (let i = 0; i < route.legs.length; i++) {
     const leg = route.legs[i], own = legLength(leg)
     if (left <= own || i === route.legs.length - 1) {
       const spot = spotAt(leg.pts, Math.min(left, own))
-      return { x: spot.x, y: spot.y, on: leg.on }
+      return { x: spot.x, y: spot.y, tx: spot.tx, ty: spot.ty, on: leg.on }
     }
     left -= own
   }
-  return { x: 0, y: 0, on: 'tar' }
+  return { x: 0, y: 0, tx: 1, ty: 0, on: 'tar' }
 }
