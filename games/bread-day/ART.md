@@ -200,21 +200,56 @@ What the oven makes, and a bread handed back, are reactions and not scenes: they
 
 One heading per jurisdiction, never one list or table that pairs them; a game with no learning goal has no records part.
 
+Standings and check states are as the lookup printed them on 2026-10-03. The descriptions are the game's own words.
+
 ### us-ca
 
-The records the game is designed from, by pack id or official code, each with its standing and check state as the lookup prints them; the level with the basis the lookup prints; any lane label and any gap as printed; and the limits taken from each record's Limits. The pack's own Summary or the game's own words only, never the official wording.
+Level: `preschool-tk`. Age mapping: official, as the lookup prints. Sub-bands as printed: at age 4 the earlier range (3 to 4½ years) and the later range (4 to 5½ years) both apply; at age 5 the later range, which runs to five and a half.
+Gap: none printed. At ages 5 and 6 the lookup also returns `kindergarten`, at age 6 `grade-1`, and beside them the `cross-grade` lane, labelled cross-grade. The game is designed from no record of those three lanes.
+
+No record in this jurisdiction at kindergarten, grade 1 or cross-grade carries the game's idea, so for a child past five and a half the game names no California record and nothing in its place.
+
+A foundation's code restarts in every domain, so each record is cited by pack id.
+
+- `edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-3` (code 2.3, Science, Strand 2.0): department-published-foundation, confirmed. What the game takes: a child explores with the senses how materials change. In the game the child does something to the stuff and sees and hears that it has changed.
+  Limits taken: the kinds of change in the record are examples: colour, shape, texture and temperature at both ages, with form added at the later age. The game shows colour (cream to gold to black), shape (round, long, risen), texture (dusty, shaggy, smooth, crumbly) and form (dust and water become dough). Temperature cannot be felt on a screen and shows only as steam. The record does not ask for a scientific explanation, and the game gives none. Left open by Limits: which materials and which acts; flour, water, the bubbly and seeds, and pushing, warming and baking, are the game's own choice. Describing and explaining are in the record and not in the game, which is wordless and cannot hear: they are left to the child and whoever sits beside them.
+- `edu.us-ca.preschool-tk.science.objective.science-strand-2-0-physical-science-2-1` (code 2.1, Science, Strand 2.0): department-published-foundation, confirmed. What the game takes: a child explores materials and what they are like. In the game dust, water, dough and bread each look, sound and answer the finger in their own way.
+  Limits taken: the properties in the record are examples and not a checklist; it asks for describing, not for explaining why materials differ; it sets no number of materials. The record groups materials as solid or not solid at the earlier age and as solid, liquid or gas at the later age: the game shows a powder, a liquid and solids, names none of them and asks for no sorting. Left open by Limits: the number of materials; four is the game's own choice. Describing is again left to the child.
+- `edu.us-ca.preschool-tk.science.objective.science-strand-1-0-science-and-engineering-practices-1-5` (code 1.5, Science, Strand 1.0): department-published-foundation, confirmed. What the game takes: finding out what will happen by trying it. In the game every act can be tried, and its true result shows at once.
+  Limits taken: adult support is stated for the checking at the earlier age and for planning the check at the later age; talking about why a prediction held is only beginning at the later age; no topic is named. The game gives the trying and the result. It does not ask for a prediction or a reason and cannot hear one: saying what will happen is left to the child and whoever sits beside them. Left open by Limits: the topic; bread is the game's own choice.
+- `edu.us-ca.preschool-tk.practical-life-feelings.objective.approaches-to-learning-strand-2-0-executive-functioning-2-1` (code 2.1, Approaches to Learning, Strand 2.0): department-published-foundation, confirmed. What the game takes: keeping a few pieces of information in mind and acting on them through a task of several steps. In the game those pieces are what the customer wants, held from the first pour to the hatch.
+  Limits taken: about one or two pieces at the earlier age and about two or three at the later age, as ranges and not examples; adult support is part of both statements. So a single customer has one want, a pair two, a trio or the mole three, and no group has more. The customer stays at the hatch showing its want the whole time, which stands where the record has an adult's support. Left open by Limits: the number of steps and the length of time; up to four acts in one bread, at the child's own pace, is the game's own choice.
 
 ### nl
 
-The same four things for the Dutch records, with the regime of a core goal.
+Level: `fase-1`. Age mapping: convention, as the lookup prints. Sub-bands as printed: groep 1 at age 4, groep 1 or groep 2 at age 5, groep 2 or groep 3 at age 6.
+Gap: none printed. At age 4 the lookup also returns `peuters`, for a child who has only just turned four, and at every age the `einde-po` lane, labelled end-of-primary goals. The game is designed from no record of either.
+
+None of these four is a core goal, so none has a regime. Each describes what a school can offer in fase 1, not what a child must be able to do.
+
+- `edu.nl.fase-1.science.objective.13f0a068-94bf-4ccf-9e14-a72369056a80` (`nl ojw/pdm/3/02/fase1`): curriculum-institute-guidance, confirmed. What the game takes: realising that food usually has to be processed and prepared before it is eaten. In the game bread is made from flour and water in front of the child, by the child.
+  Limits taken: the statement says "usually", so it leaves room for food eaten as it is, and the game does not say all food is made. Left open by Limits: the food, the kind of preparing and the place; bread, baking and a bakery are the game's own choice.
+- `edu.nl.fase-1.science.objective.ecc1e9b1-b39e-4920-96a2-a877bd5caeed` (`nl ojw/nattech/1/01/fase1`): curriculum-institute-guidance, confirmed. What the game takes: exploring and discovering properties of materials and substances. In the game the child finds by touch that flour is dusty, water runs, dough stretches and bread is hard.
+  Limits taken: measuring is not mentioned, and the game measures nothing. Left open by Limits: which properties, materials and substances; those above are the game's own choice. Limits says the statement does not say whether changes are meant. That a material changes is therefore beyond this record, and in the game it is the game's own choice.
+- `edu.nl.fase-1.science.objective.9b4f69ee-01e3-47fe-aca0-f042ce526bc5` (`nl ojw/nattech/2/02/fase1`): curriculum-institute-guidance, confirmed. What the game takes: discovering and wondering about heat. In the game the same dough does one thing in the warm nook, another on the cold sill and a third in the oven.
+  Limits taken: the verbs are discovering and wondering, with no explaining, measuring or rule, and the game states none. Of the five subjects the statement names, the game takes temperature only, for which the brackets name heat. The statement gives no safety condition for heat, and the game makes no safety claim: only the peel goes into the oven. Left open by Limits: the apparatus; a nook, a sill and an oven are the game's own choice.
+- `edu.nl.fase-1.mathematics.objective.3a5d0830-68ef-4f22-a3be-46239d1168cf` (`nl rw/m/6/04/fase1`): curriculum-institute-guidance, confirmed. What the game takes: putting events in order of time. In the game the child decides which act comes before which by doing them, and a different order gives a different bread.
+  Limits taken: none stated. Left open by Limits: the number of events, the span of time and the means; up to four acts in one bread, in game time, with no pictures to arrange, is the game's own choice.
+
+Not used: `edu.nl.fase-1.science.objective.f68683c7-1b22-45af-a553-8b704ef5a296` (`nl ojw/nattech/3/04/fase1`), on working with a simple drawing or manual. The game gives the child no drawing and no manual, because a picture of steps would have to be decoded at four, so that record does not carry what the child does here.
 
 ### Where the two differ
 
-Each difference written as a difference, and which jurisdiction the game follows at that point.
+- **Standing.** The California records are foundations published by a state department. The Dutch records are guidance from the curriculum institute. Neither is a standard or the law, and each is named in its own words.
+- **Age.** The California foundations named here reach to five and a half, and nothing is named for an older child. The Dutch guidance covers the whole band. For a six-year-old the game rests on the Dutch records alone.
+- **Change.** The California foundation coded 2.3 is about materials changing. The Dutch statement on materials does not say whether changes are meant. The game follows the California foundation in showing changes, and for the Netherlands that part is the game's own choice.
+- **Order.** California has a foundation on holding information in mind through several steps, with stated amounts. The Netherlands has a mathematics goal on ordering events in time, with no amounts. They are different things. The cap of three wants comes from the California record's Limits; the child deciding the order of acts is what the Dutch goal carries.
+- **Food and heat.** The Netherlands has a statement that food is prepared and one that names heat as something to wonder about. The California records named here say nothing of food, and name temperature only as an example of a change. The bakery and its three temperatures follow the Dutch records.
+- **Talk.** The California foundations ask a child to describe, predict or explain. The game is wordless on the kid side and follows them only as far as exploring, trying and seeing.
 
 ### The claim
 
-One sentence in the words of each record's standing saying what the game is designed from, with the state and reason for any record that is not confirmed, and no word about what a child has reached.
+Bread Day is designed from four of California's preschool and transitional kindergarten learning foundations (foundations published by a state department, not standards; each confirmed), which reach to age five and a half, and from four fase 1 goals of the Dutch curriculum institute (guidance, not law; each confirmed). What it takes from them is this and no more: a child does something to a material and sees that it then looks and answers the hand differently; tries an act and finds out what it does; keeps up to three wants in mind through a task of several steps; and decides the order of those steps by doing them. That dough rises, and why, is in no record of either jurisdiction, and neither are mixing and baking as such: the game shows them as changes a child can see. For a child older than five and a half the game is designed from the Dutch guidance alone.
 
 ## The look
 
