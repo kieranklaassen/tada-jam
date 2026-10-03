@@ -47,15 +47,44 @@ Five gestures: **lay** (drag from pin to pin), **pluck** (tap), **turn** (tap ag
 
 ## The representation
 
-How the school idea appears in the objects, chosen before the game, and where the order of object, picture and symbol stops for this band.
+**The idea:** which building principles make a crossing stable and sturdy, found by testing to failure and improving.
+
+**The representation:** a side view of a gap on a drafting grid, and a kit of four kinds of part that join only at pins. It was chosen before the game, and its physical shape is the idea:
+
+- A pin is a hinge, so a shape holds only if its parts hold it. Four parts pinned in a square can lean over into a diamond without any part changing length; three parts pinned in a triangle cannot. The child sees the triangle's sturdiness in the object and is never told it.
+- A plank is one stiff piece. Flat, it is shallow in the side view and bends easily; on edge, the same plank is deep and bends far less. That is the profile principle in the form a side view can show.
+- A tube and a stick of one length hold the same pull, and the tube holds much more squeeze before it bows.
+- A mast on one footing falls over; two legs on a wide base stand.
+- Sticks pinned in a curve between two footings push outward on the banks and carry a load by squeeze alone: the arch.
+- The load is a vehicle with a visible number of crates, or a trolley with a visible stack of weights, standing on the deck at a place the child can see.
+
+**Where the model is true.** The game computes the build as an engineer's plane frame at rest: each part stretches, squeezes or bends in proportion to the force in it, pins pass no turning force, a thread carries pull only, a squeezed part bows when it is long and thin, and a build whose shape is not held is found as such and folds the way its geometry lets it. The vehicle is a set of weights that stand at each place along the deck in turn. Which part carries what, where the deck dips, which part gives first and where, and whether the build folds are all results of that calculation, and nothing overrides them.
+
+**Where it is not science, and says nothing.** The dip is drawn larger than computed, by one fixed factor for every part and every bridge, so that it can be seen. The fall after a break is a cartoon. The bounce of a moving wheel, wind and water are left out. The strengths of balsa, paper and thread are the game's own numbers, in no unit, chosen so the four parts differ the way the real materials do.
+
+**Evidence.** Building stick and paper bridges and loading them to failure is school practice without a trial behind it. For the fair-test half there is a trial: children shown one clean comparison learned to change one thing at a time far more often than children left to find it (pack: game-design, guided-discovery.md).
+
+**Object, picture, symbol.** The object is the kit part on the sheet. The picture is the tracing: a white line drawing of a whole bridge on tracing paper, which can be laid over another bridge. The symbol stage stops at the two numerals named under the first heading. There is no formula, no unit and no number for a force.
 
 ## The four mechanic questions
 
-One sentence each for swap, attention, fun and guess.
+- **Swap.** No: the play is the frame itself, and with other content there would be nothing left to build, test or watch fail.
+- **Attention.** At the moment of decision, which is where to lay or remove one part before the next test, the child must look at where the last test broke, bent or folded and think about what would hold that place.
+- **Fun.** The test run is the most enjoyable moment of play and it is the skill: the crossing, the creaks, the break and the splash are the fair test and its result.
+- **Guess.** Random parts make something that stands or folds but rarely a crossing; the kit on a sheet is too small to lay every part everywhere, and from the fourth sheet on a vehicle's tastes rule out simply piling parts on.
 
 ## The error as a consequence
 
-What a wrong attempt does in the world, where it shows, and that the state stays so the child changes one thing and tries again.
+A wrong design is run exactly as built, and the world shows where and why.
+
+- **A part too weak** gives at the instant the wheels reach the place that overloads it, and at the spot the model names: a plank cracks where its bend is sharpest, a squeezed stick bows and snaps in the middle, a thread parts with a ping, a tube end pops from its pin. Before it gives, it shows its strain: a pulled part draws thin and its sound rises, a squeezed part bulges and creaks.
+- **A shape not held** folds: the square leans into a diamond and lies down, slowly, with no part broken.
+- **A gap in the roadway** lets the vehicle roll off the end of the plank.
+- **A thread where a push is** hangs slack and carries nothing, so the load goes elsewhere and that part gives.
+- **Then:** the vehicle drops into the river, floats on its crates, paddles to the near bank and drives back up. Nothing is lost.
+- **The state stays.** One touch puts the bridge back exactly as built. The part that gave first lies back in place with a pale pencil ring round the spot where it gave, and the ring stays until that part or one of its neighbours is changed. The child changes one thing and sends the vehicle again.
+- **Success is a consequence too:** the vehicle reaches the far bank, and how it rode shows on its cargo and its driver.
+- No buzzer, cross, sad face or reset, and no part is used up by a failure. Feedback thins with practice: the strain shows on every part during a sheet's first tests and, after that sheet's vehicle has crossed, only on a part within a fifth of its limit.
 
 ## The designed order, and what is stored
 
