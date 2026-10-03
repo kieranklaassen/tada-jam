@@ -43,7 +43,8 @@ export type ToyEvent =
   | { type: 'tick' }
   | { type: 'buffer'; speed: number }
   | { type: 'clack' }
-  | { type: 'pop'; heavy: number }
+  | { type: 'pop'; heavy: number; level: number }
+  | { type: 'settle' }
   | { type: 'bite' }
   | { type: 'bonk'; column: number }
   | { type: 'ratchet'; progress: number; heavy: number }
@@ -146,14 +147,22 @@ export class Toybox {
     else if (event.type === 'tick') this.events.push({ type: 'tick' })
     else if (event.type === 'buffer') this.events.push({ type: 'buffer', speed: event.speed })
     else if (event.type === 'ratchet') this.events.push({ type: 'ratchet', progress: event.progress, heavy: claw.load })
-    else if (event.type === 'closed') this.events.push(this.held ? { type: 'pop', heavy: this.held.heavy } : { type: 'bite' })
+    else if (event.type === 'closed') {
+      // A toy off the top of a stack pops higher the taller the stack, and what is left settles with a double click.
+      if (!this.held) this.events.push({ type: 'bite' })
+      else {
+        const left = this.tray[this.held.place].length
+        this.events.push({ type: 'pop', heavy: this.held.heavy, level: left })
+        if (left > 0) this.events.push({ type: 'settle' })
+      }
+    }
     else if (event.type === 'landed') {
       this.events.push({ type: 'clack' })
       const place = nearestToy(this.tray, claw.x, claw.z, REACH)
       const key = place >= 0 ? take(this.tray, place) : null
       if (key === null) {
         // Nothing under the jaws: the claw bonks the studs, and the tray rings a note set by how far along it is.
-        this.events.push({ type: 'bonk', column: nearestPlace(event.x, event.z) % TRAY.columns })
+        this.events.push({ type: 'bonk', column: nearestPlace(claw.x, claw.z) % TRAY.columns })
         this.shake(event.x, event.z, 12, 24)
         return
       }
@@ -168,8 +177,10 @@ export class Toybox {
       const piece = this.held
       this.held = null
       piece.state = 'flying'
-      piece.vx = event.vx * 0.3; piece.vz = event.vz * 0.3; piece.vy = 0
-      const aim = nearestPlace(piece.x + piece.vx * 0.25, piece.z + piece.vz * 0.25)
+      // It comes down on the place under the trolley, wherever its swing has carried it: where a toy lands never
+      // depends on the moment the finger lifts.
+      piece.vx = 0; piece.vz = 0; piece.vy = 0
+      const aim = nearestPlace(event.x, event.z)
       // A stack of three takes no more: the toy bounces off its top and lands on the nearest place with room.
       piece.bounceOff = this.tray[aim].length >= STACK_MOST ? aim : -1
       const home = piece.bounceOff < 0 ? aim : nearestWithRoom(this.tray, piece.x, piece.z, aim)

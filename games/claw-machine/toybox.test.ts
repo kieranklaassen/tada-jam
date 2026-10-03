@@ -34,6 +34,34 @@ describe('the toy', () => {
     expect(box.held?.key).toBe(0)
   })
 
+  it('lands on the same thing whatever the swing is when the finger lifts', () => {
+    const outcome = (swing: number) => {
+      const box = new Toybox([{ toy: small, place: 2 }, { toy: big, place: 7 }])
+      const grab = placeAt(2), drop = placeAt(6)
+      box.point(grab.x, grab.z)
+      box.claw.swingX = swing; box.claw.swingVZ = swing * 8
+      box.lift(); box.advance(2.5)
+      const held = box.held?.key
+      box.point(drop.x, drop.z)
+      box.advance(0.4)
+      box.claw.swingX = -swing; box.claw.swingZ = swing; box.claw.swingVX = swing * 12
+      box.lift(); box.advance(2.5)
+      return { held, tray: box.tray.map((stack) => stack.slice()), place: box.pieces[0].place }
+    }
+    const still = outcome(0)
+    expect(still.held).toBe(0)
+    expect(still.place).toBe(6)
+    for (const swing of [0.2, -0.45, 0.69]) expect(outcome(swing)).toEqual(still)
+  })
+
+  it('pops a toy off a stack a step higher, and what is left settles', () => {
+    const box = new Toybox([{ toy: small, place: 2 }, { toy: big, place: 3 }])
+    tap(box, 2); tap(box, 3)
+    const events = tap(box, 3)
+    expect(events.find((event) => event.type === 'pop')).toEqual({ type: 'pop', heavy: 1, level: 1 })
+    expect(kinds(events)).toEqual(['chirp', 'clack', 'pop', 'settle'])
+  })
+
   it('rings the tray when there is nothing under it, with a note for the column, and hops the toys', () => {
     const box = new Toybox([{ toy: small, place: 0 }])
     const at = placeAt(4)

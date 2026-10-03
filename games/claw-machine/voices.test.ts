@@ -5,7 +5,7 @@ import { RANGE, TRAY_NOTES, voiceOf } from './voices'
 const EVERY: ToyEvent[] = [
   { type: 'chirp', distance: 0 }, { type: 'chirp', distance: 60 }, { type: 'tick' },
   { type: 'buffer', speed: 6 }, { type: 'buffer', speed: 70 }, { type: 'clack' },
-  { type: 'pop', heavy: 1 }, { type: 'pop', heavy: 2 }, { type: 'bite' },
+  { type: 'pop', heavy: 1, level: 0 }, { type: 'pop', heavy: 2, level: 2 }, { type: 'settle' }, { type: 'bite' },
   ...TRAY_NOTES.map((_, column): ToyEvent => ({ type: 'bonk', column })),
   { type: 'ratchet', progress: 0, heavy: 0 }, { type: 'ratchet', progress: 1, heavy: 2 }, { type: 'let-go' },
   { type: 'click', heavy: 1, level: 0 }, { type: 'click', heavy: 2, level: 2 }, { type: 'boing' },
@@ -35,7 +35,10 @@ describe('the voices', () => {
   })
 
   it('pitches by weight and by height: a big toy lower, the hoist higher as it climbs', () => {
-    expect(voiceOf({ type: 'pop', heavy: 2 })[0].freq).toBeLessThan(voiceOf({ type: 'pop', heavy: 1 })[0].freq)
+    expect(voiceOf({ type: 'pop', heavy: 2, level: 0 })[0].freq).toBeLessThan(voiceOf({ type: 'pop', heavy: 1, level: 0 })[0].freq)
+    // Off a stack: a step higher for each toy it stood on.
+    expect(voiceOf({ type: 'pop', heavy: 1, level: 1 })[0].freq).toBeGreaterThan(voiceOf({ type: 'pop', heavy: 1, level: 0 })[0].freq)
+    expect(voiceOf({ type: 'pop', heavy: 1, level: 2 })[0].freq).toBeGreaterThan(voiceOf({ type: 'pop', heavy: 1, level: 1 })[0].freq)
     expect(voiceOf({ type: 'click', heavy: 2, level: 0 })[1].freq).toBeLessThan(voiceOf({ type: 'click', heavy: 1, level: 0 })[1].freq)
     expect(voiceOf({ type: 'ratchet', progress: 1, heavy: 1 })[0].freq).toBeGreaterThan(voiceOf({ type: 'ratchet', progress: 0, heavy: 1 })[0].freq)
     expect(voiceOf({ type: 'click', heavy: 1, level: 2 })[0].freq).toBeGreaterThan(voiceOf({ type: 'click', heavy: 1, level: 0 })[0].freq)

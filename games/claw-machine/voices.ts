@@ -54,9 +54,17 @@ export function voiceOf(event: ToyEvent): Part[] {
         { kind: 'noise', freq: 1800, q: 2, peak: 0.2, attack: 0.002, decay: 0.05 },
         { kind: 'tone', wave: 'triangle', freq: 220, to: 140, peak: 0.16, attack: 0.002, decay: 0.08 },
       ]
-    case 'pop':
-      // A toy coming off its studs: lower for a big one.
-      return [{ kind: 'tone', wave: 'sine', freq: event.heavy > 1 ? 300 : 440, to: event.heavy > 1 ? 720 : 1040, peak: 0.24, attack: 0.004, decay: 0.11 }]
+    case 'pop': {
+      // A toy coming off its studs: lower for a big one, and a step higher for each toy it stood on.
+      const up = 1 + 0.19 * clamp(event.level, 0, 2)
+      return [{ kind: 'tone', wave: 'sine', freq: (event.heavy > 1 ? 300 : 440) * up, to: (event.heavy > 1 ? 720 : 1040) * up, peak: 0.24, attack: 0.004, decay: 0.11 }]
+    }
+    case 'settle':
+      // What is left of a stack settling: a soft double click.
+      return [
+        { kind: 'noise', freq: 1500, q: 4, peak: 0.07, attack: 0.002, decay: 0.03, delay: 0.12 },
+        { kind: 'noise', freq: 1250, q: 4, peak: 0.055, attack: 0.002, decay: 0.03, delay: 0.21 },
+      ]
     case 'bite':
       return [
         { kind: 'noise', freq: 2400, q: 3, peak: 0.16, attack: 0.002, decay: 0.03 },

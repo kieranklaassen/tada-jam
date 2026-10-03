@@ -51,11 +51,11 @@ export type ClawEvent =
   | { type: 'chirp'; distance: number } // the finger landed and the trolley set off
   | { type: 'tick' } // a stud of travel
   | { type: 'buffer'; side: -1 | 1; speed: number } // the trolley hit the end of the rail
-  | { type: 'landed'; x: number; z: number; swing: number } // the jaws reached what was under them
+  | { type: 'landed'; x: number; z: number; swing: number } // the jaws reached what was straight under the trolley
   | { type: 'closed' } // the jaws shut on what the scene gave them when they landed
   | { type: 'ratchet'; progress: number } // one click of the hoist
   | { type: 'up' } // the hoist is home
-  | { type: 'let-go'; x: number; z: number; vx: number; vz: number } // the jaws opened under a load
+  | { type: 'let-go'; x: number; z: number } // the jaws opened under a load, over this point under the trolley
 
 export const STEP = 1 / 120
 const TROLLEY_PULL = 150
@@ -165,6 +165,13 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
   claw.swingVZ += (-stiffness * claw.swingZ - damping * claw.swingVZ - az * push) * dt
   claw.swingX = clamp(claw.swingX + claw.swingVX * dt, -0.7, 0.7)
   claw.swingZ = clamp(claw.swingZ + claw.swingVZ * dt, -0.7, 0.7)
+  // A drop comes down straight under the trolley however far the cable had swung: the swing is for the eye and
+  // the ear, and where the claw lands never depends on the moment the finger lifts. The cable is pulled plumb
+  // as it runs out.
+  if (claw.phase === 'dropping') {
+    const plumb = Math.max(0, 1 - 16 * dt)
+    claw.swingX *= plumb; claw.swingZ *= plumb; claw.swingVX *= plumb; claw.swingVZ *= plumb
+  }
 
   // The jaws and the squash are springs toward where the phase wants them.
   const wantOpen = claw.phase === 'dropping' || claw.phase === 'letting-go' ? 1 : claw.phase === 'closing' || claw.phase === 'rising' || claw.load > 0 ? claw.grip : claw.following ? 1 : REST_OPEN
@@ -188,8 +195,7 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
     if (claw.length >= bottom) {
       claw.length = bottom
       claw.squash = 0.72; claw.squashV = 0
-      const hub = hubAt(claw)
-      events.push({ type: 'landed', x: hub.x, z: hub.z, swing: Math.hypot(claw.swingX, claw.swingZ) })
+      events.push({ type: 'landed', x: claw.x, z: claw.z, swing: Math.hypot(claw.swingX, claw.swingZ) })
       claw.phase = 'closing'; claw.t = 0; claw.lengthV = 0
     }
   } else if (claw.phase === 'closing') {
@@ -208,9 +214,8 @@ export function stepClaw(claw: Claw, rideY: number, landY: number, events: ClawE
     if (progress >= 1) { claw.phase = 'ready'; claw.t = 0; claw.lengthV = 0; events.push({ type: 'up' }) }
   } else if (claw.phase === 'letting-go') {
     if (claw.t >= LET_GO_SECONDS) {
-      const hub = hubAt(claw)
-      // What falls keeps the speed the swing gave it.
-      events.push({ type: 'let-go', x: hub.x, z: hub.z, vx: claw.vx + claw.swingVX * claw.length, vz: claw.vz + claw.swingVZ * claw.length })
+      // What falls comes down under the trolley, wherever its swing has carried it.
+      events.push({ type: 'let-go', x: claw.x, z: claw.z })
       claw.load = 0; claw.grip = 0
       claw.phase = 'ready'; claw.t = 0
     }

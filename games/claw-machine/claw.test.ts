@@ -69,6 +69,24 @@ describe('the claw', () => {
     expect(lowest).toBeLessThan(0.4)
   })
 
+  it('lands straight under the trolley however far the cable has swung', () => {
+    const landing = (swing: number) => {
+      const claw = newClaw(3, 5, RIDE), events: ClawEvent[] = []
+      claw.swingX = swing; claw.swingZ = -swing / 2; claw.swingVX = swing * 9
+      release(claw, false)
+      run(claw, 1, events)
+      const landed = events.find((event) => event.type === 'landed')!
+      return landed.type === 'landed' ? { x: landed.x, z: landed.z } : null
+    }
+    for (const swing of [0, 0.15, -0.4, 0.69]) expect(landing(swing)).toEqual({ x: 3, z: 5 })
+    // And the cable is pulled plumb on the way down, so the claw is seen to land on its shadow.
+    const claw = newClaw(3, 5, RIDE)
+    claw.swingX = 0.6
+    release(claw, false)
+    while (claw.phase === 'dropping') stepClaw(claw, RIDE, 0.4, [])
+    expect(Math.abs(hubAt(claw).x - 3)).toBeLessThan(0.6)
+  })
+
   it('keeps the trolley still while the claw is down', () => {
     const claw = newClaw(0, 6, RIDE)
     release(claw, false)

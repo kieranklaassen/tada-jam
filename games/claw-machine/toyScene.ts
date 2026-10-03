@@ -40,13 +40,18 @@ export function toyPicture(box: Toybox, time: number, jolt: number): Picture {
   const toys: ToyLook[] = [], shadows: Shadow[] = []
   for (const piece of box.pieces) {
     toys.push({ key: piece.key, toy: piece.toy, x: piece.x, y: piece.y, z: piece.z, squash: piece.squash, leanX: piece.leanX, leanZ: piece.leanZ, scale: 1 })
+    // A toy in the jaws has no shadow of its own: the one under the trolley says where it will come down.
+    if (piece.state === 'held') continue
     // Its shadow lies on whatever is under it and thins as the toy rises.
     const under = nearestPlace(piece.x, piece.z)
     const ground = piece.state === 'standing' ? box.stackTop(piece.place, piece.key) : box.stackTop(under, piece.key)
     const lift = Math.max(0, piece.y - ground)
     shadows.push({ x: piece.x, y: ground, z: piece.z, r: piece.heavy > 1 ? 3.3 : 2.1, a: Math.max(0.25, 1 - lift / 16) })
   }
-  if (!box.held) shadows.push({ x: hub.x, y: Math.max(TRAY.top, claw.landY), z: hub.z, r: 1.7, a: 0.75 })
+  // The shadow of the claw lies straight under the trolley and the swing never moves it: it is where the claw,
+  // or the toy in its jaws, will land.
+  const below = nearestPlace(claw.x, claw.z)
+  shadows.push({ x: claw.x, y: box.held ? box.stackTop(below) : Math.max(TRAY.top, claw.landY), z: claw.z, r: box.held ? (box.held.heavy > 1 ? 3.1 : 2) : 1.7, a: 0.75 })
   // A start is a quick squash that springs back: down first, then up past rest.
   const start = jolt > 0 ? Math.sin((1 - jolt) * Math.PI * 2) * jolt : 0
   const scenery = sceneryLooks(time, hub, -start)
