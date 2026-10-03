@@ -32,7 +32,18 @@ The feel comes from the demo `draw-a-bridge`: a line the finger makes becomes a 
 
 ## The object-by-action grid, and what is new on day 15
 
-A grid of objects by actions in which every cell gives a result that looks and sounds different, and one line on what the child can do, find or make on day 15 that they could not on day 1.
+Five gestures: **lay** (drag from pin to pin), **pluck** (tap), **turn** (tap again while it still rings), **load** (put the trolley or a vehicle on it) and **take off** (drag its middle to the tray). Every cell looks and sounds different, and the wrong use of each object works.
+
+| Object | Lay | Pluck | Turn | Load | Take off |
+| --- | --- | --- | --- | --- | --- |
+| **Plank** (the only roadway) | Lands flat with a broad clack; wheels can roll on it. | Groans low and whips like a ruler on a desk edge. | Rolls onto its edge with a clop: now tall and thin in the side view, it bends far less. A vehicle crosses it wobbling, as on a kerb. | Bends in a smooth curve, deepest under the wheels; past its limit it cracks where the bend is sharpest. | Slides out; whatever stood on it drops and bobs. |
+| **Stick** (thin, square) | Lands with a light click; holds a push and a pull. | Pings when stretched, knocks when squeezed. | Spins on its pins like a propeller and stops as it was: a square is the same both ways. | Squeezed and long, it bows in the middle and snaps there. As a road a vehicle rides it like a rail, one wheel off, tilting. | Flicks into the tray like a spillikin. |
+| **Tube** (rolled paper) | Lands with a hollow tok; fat and light. | Hoots like a blown bottle, lower when longer. | Rolls: anything parked on it log-rolls off into the water. | Takes far more squeeze than a stick of its length before it bows; pulled hard, an end pops out of its pin. | Rolls away down the sheet into the tray. |
+| **Thread** | Hangs in a loose curve until something pulls it straight. | Twangs, higher the harder it is pulled; slack, it only flops. | Whirls like a skipping rope; whatever hangs on it swings. | Pulled, it holds a lot. Pushed, it goes slack and carries nothing. As a road it makes a tightrope: the vehicle dips into a V with its wheels in the water. | Whips back onto its spool with a zip. |
+| **Pin** | In rock or bank it is a footing that cannot move; in the air it is a hinge. | Every part on it rattles at once, each in its own voice. | A lone part on one pin swings round like a clock hand and hangs straight down. | The trolley can hang from it on its hook, under the deck. | Every part on it drops loose at that end and the build sags or folds from there. |
+| **Test trolley** (with weights) | Sits on a plank; the deck dips under it and it rolls to the lowest point. | Rings one bell note for each weight on it. | Flips to hang under the deck like a cable car. | Each weight added dips the deck by the same step again. | The deck springs back up and the weights jingle. |
+
+**On day 15** the child can build a hybrid nobody showed them (stays over a truss, an arch tied by a thread), carry the heaviest vehicle on a bridge with half the kit still in the tray and almost no dip, make one bridge that suits two vehicles with opposite tastes, lay a tracing of last week's bridge over today's and run both under the same trolley, and play a tune on the threads of a bridge of their own.
 
 ## The representation
 
