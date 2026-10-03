@@ -226,7 +226,7 @@ Bridge Crew is designed from five California State Board-adopted science standar
 
 ## The look
 
-Not part of the sheet. First reserved look: **Blueprint and balsa**. Spiked on the game's real scene (`spike.ts`, still reachable with `spike=1` in the address), and now the look of the toy. Every frame rate is the lead's to take; nothing here has been measured on a graphics card.
+Not part of the sheet. First reserved look: **Blueprint and balsa**. Spiked on the game's real scene (`spike.ts`, still reachable with `spike=1` in the address), and now the look of the game. Every frame rate is the lead's to take; nothing here has been measured on a graphics card.
 
 **What it is.** A cyanotype drawing sheet with white drafting lines and a faint grid, and real parts lying on it, each with a small hard shadow. One blue, one white line, and unstained balsa, drawing paper, steel pins and string on top. No stains, no toys, no playroom, no brass, no lamplight, and no lettering: the dimension line over the gap carries no figure.
 
@@ -241,11 +241,12 @@ Not part of the sheet. First reserved look: **Blueprint and balsa**. Spiked on t
 | Drawing paper and its shade | `#f6f2e8`, `#d9d3c4` |
 | Steel pins | `#dfe5ec`, rim `#6d7a8a` |
 | String and its twist | `#efe7d2`, `#b8ab8a` |
-| The pencil behind the chief's ear, the only warm accent | `#e3b23c` |
+| The pencil behind the chief's ear and the one on the tracing pad, the only warm accent | `#e3b23c` |
+| Tracing paper and the jelly, each a pale blue-white | `#e8eef6`, `#dfeaf6` |
 
 **Materials.**
 
-- *The sheet* is painted once for each size: the blue, broad uneven washes, the grid with every fourth line firmer, a border ruled twice. Every ruled line is drawn in a few lengths whose width wavers.
+- *The sheet* is painted once for each size and each sheet on the board: the blue, broad uneven washes, the grid with every fourth line firmer, a border ruled twice. Every ruled line is drawn in a few lengths whose width wavers.
 - *The ground* is shown cut through, as a draughtsman would: a firm outline and slanted section hatching. Cliffs stand behind the road, fainter. Water is a broken line with shorter dashes under it.
 - *A working part stays plain* (pack: game-design, working-objects-stay-plain.md): a balsa rectangle with a few grain lines and a darker cut edge, or a paper tube with its seam, and nothing else. What a child reads is its length, its depth and its pins. A plank flat is a little deeper on the sheet than a stick, and a plank on edge two and a half times as deep as a plank flat.
 - *A pin* is a steel head seen from above with one hard highlight. A footing pin sits in a small drafting triangle.
@@ -254,17 +255,17 @@ Not part of the sheet. First reserved look: **Blueprint and balsa**. Spiked on t
 
 **Lighting.** None is simulated: flat daylight on a desk. Depth comes only from the hard shadows and from what lies on what (string under wood, wood under pins).
 
-**Motion rules** (`pose.ts`, `motion.ts`, `view.ts`).
+**Motion rules** (`pose.ts`, `motion.ts`, `acts.ts`, `stage.ts`, `view.ts`).
 
 - *A firm part* is stiff light wood: it lands from a little above with its shadow a beat behind it, overshoots once and is still. Nothing is rubbery.
 - *A part the model leaves out* swings from whatever still holds it, like a pendulum, and knocks against the bank where it meets it. What hangs from it hangs from its end in turn. What nothing holds lies on the ground or on the water.
 - *A plucked part* shakes across its own length and dies away in under a second, each kind at its own rate: the plank slow and wide, the stick fast and fine, the thread widest.
 - *A turned part*: the plank swells or shrinks to its new depth with a hop; the stick flickers thin and thick as it spins; the tube jiggles; the thread whirls.
 - *The dip* the model computes is drawn six times larger, the same for every part and every bridge.
-- *The crew chief* is slow, light and all neck. It has five things it does when nothing happens (it peers at its model, preens, shifts its weight, stands on one leg, nudges the model), two tastes (it taps a triangle and listens; a shape that folds stands its feathers on end) and one answer to a poke. No two are the same move, and a test fails if two share a leading part of the body or the same shape in time.
+- *The crew chief* is slow, light and all neck. It has five things it does when nothing happens (it peers at its model, preens, shifts its weight, stands on one leg, nudges the model), two tastes (it taps a triangle and listens; a shape that folds stands its feathers on end), one answer to a poke, and its two showings (the neat way of an idea, and the one change). No two are the same move, and a test fails if two share a leading part of the body or the same shape in time.
 - *The sheet* never moves. The water's dashes drift, each row at its own pace, and the loose end of the string on the spool sways.
 
-**How it is drawn cheaply.** The whole still sheet (the blue, the grid, the ground, the cliffs, the tray's box) is painted once for a size into an offscreen canvas and stamped once a frame: the one full-surface composite. Each part is a small sprite made once for its kind and length at the pixel ratio in use. Shadows are plain fills. No blur and no post pass.
+**How it is drawn cheaply.** The whole still sheet (the blue, the grid, the ground, the cliffs, the tray's box) is painted once for a size into an offscreen canvas and stamped once a frame: the one full-surface composite. Each part is a small sprite made once for its kind and length at the pixel ratio in use. The vehicles, the chief, the trolley, the barge and the tools' box are drawn afresh each frame from a few shapes. Shadows are plain fills. No blur and no post pass. A run is computed once when the vehicle sets off and read out after.
 
 **The tiers** (`config.ts`). Each tier sets the pixel ratio (2, 1.5, 1.25, 1), and the two lowest leave out the grain lines of the balsa and the seam of the tubes. The sheet, the white line, the shadows and every motion are the same on every tier.
 
