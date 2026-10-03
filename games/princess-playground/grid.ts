@@ -13,52 +13,52 @@ export type Deed = (typeof DEEDS)[number]
 export type Cell = {
   /** What is seen: a name for one distinct motion. */
   seen: string
-  /** What is heard: a voice of voices.ts, with what sets it apart in this cell. */
+  /** What is heard, in the sheet's own words: every cell has a sound of its own. */
   heard: string
 }
 
 export const CELLS: Readonly<Record<Thing, Readonly<Record<Deed, Cell>>>> = {
   pim: {
-    tap: { seen: 'quick hop on or off, crown lagging', heard: 'chirp pim: a squeak up' },
-    'low-end': { seen: 'end sinks a hair, she stamps', heard: 'thump weight 2 on plank, soft' },
-    'high-end': { seen: 'tips it with a small toss, or dangles kicking', heard: 'thump weight 2, then knock or creak' },
-    'on-a-friend': { seen: 'boing on top, she crows', heard: 'thump weight 2 on friend' },
-    'in-the-sand': { seen: 'small dimple, crown over one eye', heard: 'thump weight 2 on sand' },
+    tap: { seen: 'quick hop on or off, crown lagging', heard: 'a squeak up' },
+    'low-end': { seen: 'end sinks a hair, she stamps', heard: 'a tiny tick' },
+    'high-end': { seen: 'tips it with a small toss, or dangles kicking', heard: 'a light clack, or a trill' },
+    'on-a-friend': { seen: 'lands on top and crows', heard: 'a boing and a crow' },
+    'in-the-sand': { seen: 'small dimple, crown over one eye, shaken straight', heard: 'a soft pat and a tiny rattle' },
   },
   mog: {
-    tap: { seen: 'stretches long, pads on or off', heard: 'chirp mog: a chirrup in two' },
-    'low-end': { seen: 'circles once and sits side on', heard: 'thump weight 3 on plank, soft' },
-    'high-end': { seen: 'tips it with a toss, or sits tall on the perch', heard: 'thump weight 3, then knock, or creak and a purr' },
-    'on-a-friend': { seen: 'kneads twice, then sits', heard: 'thump weight 3 on friend, two pats' },
-    'in-the-sand': { seen: 'neat round hollow, a turn in it', heard: 'thump weight 3 on sand, short' },
+    tap: { seen: 'stretches long, pads on or off', heard: 'a chirrup in two' },
+    'low-end': { seen: 'circles once and sits tail side on', heard: 'a soft thud' },
+    'high-end': { seen: 'tips it with a toss, or sits tall on the perch', heard: 'a firm knock, or a purr' },
+    'on-a-friend': { seen: 'kneads the head below twice, then sits', heard: 'two muffled pats and a short chirr' },
+    'in-the-sand': { seen: 'neat round hollow, one turn in it', heard: 'a dry scrunch' },
   },
   dot: {
-    tap: { seen: 'warms to full colour, twirls, hops on or off', heard: 'chirp dot: two level notes' },
-    'low-end': { seen: 'sits, brighter beside someone', heard: 'thump weight 3 on plank, then a two-note hum' },
-    'high-end': { seen: 'tips it with a toss, or peeks down alone and quiet', heard: 'thump weight 3, then knock, or creak and silence' },
-    'on-a-friend': { seen: 'both sway together', heard: 'thump weight 3 on friend, then a low duet' },
-    'in-the-sand': { seen: 'stays warm beside a friend, or pales and draws a ring', heard: 'thump weight 3 on sand, soft' },
+    tap: { seen: 'warms to full colour, twirls, hops on or off; the others turn and bounce', heard: 'a rising two-note peep' },
+    'low-end': { seen: 'sits, brighter beside someone; alone on the plank it peeks over at the others', heard: 'a thud and a two-note hum, which dies away if alone' },
+    'high-end': { seen: 'tips it with a toss, or sways up high toward the friend opposite', heard: 'a knock with a clear ring over it, or one long high note' },
+    'on-a-friend': { seen: 'sways together with the one below', heard: 'a low duet' },
+    'in-the-sand': { seen: 'stays warm beside a friend, or pales and draws one ring with its foot', heard: 'a light tap, then one soft note or a faint slow scratch' },
   },
   bo: {
-    tap: { seen: 'rocks twice, thuds on or off', heard: 'chirp bo: a rumble' },
-    'low-end': { seen: 'end digs a crater, ring of sand; alone he dozes', heard: 'thump weight 4 on plank, deepest; alone, a snore' },
-    'high-end': { seen: 'the slam: plank whips over, everyone opposite is flung', heard: 'thump weight 4, hardest knock, whoops' },
-    'on-a-friend': { seen: 'the one below is squashed flat, the stack sways', heard: 'thump weight 4 on friend, a wheeze' },
-    'in-the-sand': { seen: 'wide crater, slow puff, he sinks in a little', heard: 'thump weight 4 on sand, long' },
+    tap: { seen: 'rocks twice, thuds on or off', heard: 'a rumble' },
+    'low-end': { seen: 'end digs a crater, a ring of sand flies; alone on the plank he dozes', heard: 'the deepest thump; alone, a snore' },
+    'high-end': { seen: 'the slam: plank whips over, everyone opposite is flung, Pim highest', heard: 'a crack with a low boom under it' },
+    'on-a-friend': { seen: 'the one below is squashed flat and pops back; the stack sways', heard: 'a wheeze' },
+    'in-the-sand': { seen: 'wide crater, slow puff, he sinks in a little', heard: 'a sigh' },
   },
   plank: {
-    tap: { seen: 'rocks once, riders bob', heard: 'creak, short' },
-    'low-end': { seen: 'low end knocks on the sand, a few grains', heard: 'knock, dull and small' },
-    'high-end': { seen: 'high end dips and springs back, riders bob', heard: 'creak, then a light knock' },
-    'on-a-friend': { seen: 'a friend let go over the middle slides down the slope', heard: 'slide: a falling whistle' },
-    'in-the-sand': { seen: 'sand thrown on it runs off the low end', heard: 'a thin hiss' },
+    tap: { seen: 'rocks once, riders tossed a finger’s width', heard: 'a wooden creak' },
+    'low-end': { seen: 'low end knocks on the sand, a few grains', heard: 'a dull clonk' },
+    'high-end': { seen: 'high end dips and springs back, riders bob', heard: 'a twang' },
+    'on-a-friend': { seen: 'a friend let go over the middle slides down the slope', heard: 'a rising whistle' },
+    'in-the-sand': { seen: 'sand thrown on it runs off the low end in a thin stream', heard: 'a dry trickle' },
   },
   sand: {
-    tap: { seen: 'a dimple with a raised lip', heard: 'poke: a hiss and a soft tap' },
-    'low-end': { seen: 'a bite mark where the end came down', heard: 'knock: the spray of grains' },
-    'high-end': { seen: 'the last bite stays under the raised end', heard: 'nothing new: a mark that was already made' },
-    'on-a-friend': { seen: 'thrown grains settle on heads and are shaken off', heard: 'a patter of grains' },
-    'in-the-sand': { seen: 'a groove drawn by the finger, lit from the side', heard: 'drag: a dry hiss, higher when faster' },
+    tap: { seen: 'a dimple with a raised lip', heard: 'a hiss' },
+    'low-end': { seen: 'a bite where the end came down, deeper the heavier the end, which stays', heard: 'a crunch' },
+    'high-end': { seen: 'as an end lifts, grains slide back into the bite it leaves', heard: 'a short whisper' },
+    'on-a-friend': { seen: 'thrown grains settle on heads and are shaken off', heard: 'a light patter' },
+    'in-the-sand': { seen: 'a groove drawn by the finger, lit from the side', heard: 'a scrape that follows the finger’s speed' },
   },
 }
 

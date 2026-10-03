@@ -46,7 +46,7 @@ const PLANS: Readonly<Record<Kind, Plan>> = {
   'big-asks': { asker: 'bo', asks: 'up', opposite: [], nearSide: [], fewest: 2 },
   // Sides matter: Bo stands on Pim's own side, and a tap puts him on her head.
   'near-side': { asker: 'pim', asks: 'up', opposite: [], nearSide: ['bo'], fewest: 1 },
-  // Turned round: Pim is up, Bo dozes on the low end, and she wants down.
+  // Turned round: Pim is stuck on the high end with Bo sitting on the low one, and she wants to come down so that she can fly again.
   'high-asks': { asker: 'pim', asks: 'down', opposite: ['bo'], nearSide: ['mog', 'dot'], fewest: 1 },
 }
 
@@ -126,10 +126,10 @@ export function judge(kind: Kind, moves: number): CycleOutcome {
  * - `level`: both ends weigh the same and the plank floats.
  * - `wrong-side`: the newcomer landed on the asker's own end, which is now heavier (or, for an asker who wants down, lighter on the far one).
  * - `too-light`: the newcomer sits on the far end and the plank did not turn.
- * - `too-much`: the plank turned, past where the asker wanted.
- * - `none`: the move left the plank as it was.
+ * - `none`: nothing to show for the asker: a friend left the plank, or the asker is not on it.
+ * No ride asks for level, so there is no "too much": a plank that turns the asker's way is `there`.
  */
-export type Consequence = 'there' | 'level' | 'wrong-side' | 'too-light' | 'too-much' | 'none'
+export type Consequence = 'there' | 'level' | 'wrong-side' | 'too-light' | 'none'
 
 export function consequence(ride: Ride, before: Arrangement, after: Arrangement): { what: Consequence; where: End | null } {
   if (wantMet(ride, after)) return { what: 'there', where: placeOf(after, ride.asker).at === 'end' ? (placeOf(after, ride.asker) as { end: End }).end : null }
@@ -140,8 +140,7 @@ export function consequence(ride: Ride, before: Arrangement, after: Arrangement)
   })
   const moved = mover ? (placeOf(after, mover) as { end: End }).end : null
   if (lean(after) === 0 && after.left.length > 0 && after.right.length > 0) return { what: 'level', where: null }
-  if (asker.at !== 'end' || !moved) return { what: lean(before) === lean(after) ? 'none' : 'too-much', where: moved }
-  if (lean(before) !== lean(after)) return { what: 'too-much', where: moved }
+  if (asker.at !== 'end' || !moved) return { what: 'none', where: moved }
   if (ride.asks === 'up') return { what: moved === asker.end ? 'wrong-side' : 'too-light', where: moved }
   return { what: moved === asker.end ? 'too-light' : 'wrong-side', where: moved }
 }

@@ -11,6 +11,15 @@ describe('the object-by-action grid', () => {
     for (const cell of cells) {
       expect(cell.seen.length, `${cell.thing} ${cell.deed}`).toBeGreaterThan(8)
       expect(cell.heard.length, `${cell.thing} ${cell.deed}`).toBeGreaterThan(4)
+      expect(cell.heard, `${cell.thing} ${cell.deed}`).not.toMatch(/nothing|silen|no sound/i)
+    }
+  })
+
+  it('the column for a friend dropped in the sand is heard in every row, and Dot has cells of its own, borrowed from nobody', () => {
+    for (const thing of THINGS) expect(CELLS[thing]['in-the-sand'].heard.length).toBeGreaterThan(4)
+    for (const deed of DEEDS) {
+      expect(CELLS.dot[deed].heard).not.toBe(CELLS.mog[deed].heard)
+      expect(CELLS.dot[deed].seen).not.toBe(CELLS.mog[deed].seen)
     }
   })
 

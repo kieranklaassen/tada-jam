@@ -110,33 +110,73 @@ describe('each ride as it opens', () => {
     }
   })
 
-  it('at the first position nothing can go wrong: any friend tapped sends Pim up', () => {
-    for (const turn of [0, 1]) {
-      const ride = rideOf('little-asks', turn)
-      for (const id of FRIEND_IDS) if (id !== ride.asker) expect(wantMet(ride, tap(layout(ride), id)), id).toBe(true)
+  // The Guess answer of the sheet, position by position.
+  it('at little-asks and high-asks any one tap on a friend other than the asker resolves the ride', () => {
+    for (const kind of ['little-asks', 'high-asks'] as Kind[]) for (const turn of [0, 1]) {
+      const ride = rideOf(kind, turn)
+      for (const id of FRIEND_IDS) if (id !== ride.asker) expect(wantMet(ride, tap(layout(ride), id)), `${kind} ${id}`).toBe(true)
     }
   })
 
-  it('after the first position, tapping everyone does not do it', () => {
-    for (const kind of ['middle-asks', 'near-side'] as Kind[]) {
-      const ride = rideOf(kind, 0)
-      const some = FRIEND_IDS.filter((id) => id !== ride.asker).some((id) => !wantMet(ride, tap(layout(ride), id)))
-      expect(some, kind).toBe(true)
+  it('at middle-asks and big-asks nobody stands on the asker’s side, and tapping every far-side friend resolves the ride inside the margin of a ride that went well', () => {
+    for (const kind of ['middle-asks', 'big-asks'] as Kind[]) for (const turn of [0, 1]) {
+      const ride = rideOf(kind, turn), others = FRIEND_IDS.filter((id) => id !== ride.asker)
+      const start = layout(ride)
+      for (const id of others) {
+        const place = placeOf(start, id)
+        expect(place.at === 'sand' && Math.sign(place.spot.x) === (askerEnd(ride) === 'left' ? 1 : -1), `${kind} ${id}`).toBe(true)
+      }
+      // In every order of the three taps the asker is up by the last one at the latest.
+      for (const order of [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]]) {
+        let a = start, taps = 0
+        for (const index of order) {
+          a = tap(a, others[index])
+          taps += 1
+          if (wantMet(ride, a)) break
+        }
+        expect(wantMet(ride, a), `${kind} ${order}`).toBe(true)
+        expect(judge(kind, taps)).toBe('well')
+      }
+      const all = others.reduce((a, id) => tap(a, id), start)
+      expect(lean(all)).toBe(askerEnd(ride) === 'left' ? 1 : -1)
     }
-    // Nobody lifts Bo alone.
+  })
+
+  it('at middle-asks and big-asks the plank first shows too light or level: no first tap on the smallest lifts', () => {
+    const middle = rideOf('middle-asks', 0)
+    expect(wantMet(middle, tap(layout(middle), 'pim'))).toBe(false)
+    expect(lean(tap(layout(middle), 'dot'))).toBe(0)
     const big = rideOf('big-asks', 0)
     for (const id of ['pim', 'mog', 'dot'] as const) expect(wantMet(big, tap(layout(big), id))).toBe(false)
-    // Bo tapped at near-side lands on Pim, and then one friend opposite is not enough.
+  })
+
+  it('only at near-side does a tap make things worse: Bo lands on the asker and that end stays down until he is tapped off again', () => {
     const near = rideOf('near-side', 0)
     const squashed = tap(layout(near), 'bo')
     expect(squashed.left).toEqual(['pim', 'bo'])
+    // With Bo on her head no friend opposite, and not both of them, takes her up.
     expect(wantMet(near, tap(squashed, 'mog'))).toBe(false)
+    expect(wantMet(near, tap(squashed, 'dot'))).toBe(false)
+    expect(wantMet(near, tap(tap(squashed, 'mog'), 'dot'))).toBe(false)
+    // Tapped off again, one friend opposite is enough.
+    expect(wantMet(near, tap(tap(tap(squashed, 'mog'), 'bo'), 'bo'))).toBe(false)
+    expect(wantMet(near, tap(tap(squashed, 'mog'), 'bo'))).toBe(true)
+    // And in the other kinds no first tap leaves the asker's end heavier than it was.
+    for (const kind of KINDS) {
+      if (kind === 'near-side') continue
+      const ride = rideOf(kind, 0), start = layout(ride)
+      if (ride.asks === 'down') continue
+      for (const id of FRIEND_IDS) if (id !== ride.asker) expect(tap(start, id)[askerEnd(ride)], `${kind} ${id}`).toEqual(start[askerEnd(ride)])
+    }
   })
 
-  it('at high-asks taking Bo off works, and so does adding to her end', () => {
-    const ride = rideOf('high-asks', 0)
-    expect(wantMet(ride, tap(layout(ride), 'bo'))).toBe(true)
-    expect(wantMet(ride, tap(layout(ride), 'mog'))).toBe(true)
+  it('at high-asks Bo sits opposite Pim and does not doze: he is not alone on the plank', () => {
+    const ride = rideOf('high-asks', 0), start = layout(ride)
+    expect(start.left).toEqual(['pim'])
+    expect(start.right).toEqual(['bo'])
+    expect(start.left.length + start.right.length).toBe(2)
+    expect(wantMet(ride, tap(start, 'bo'))).toBe(true)
+    expect(wantMet(ride, tap(start, 'mog'))).toBe(true)
   })
 })
 
@@ -176,6 +216,13 @@ describe('what a move does, as the world shows it', () => {
     const near = rideOf('near-side', 0)
     const before = layout(near), after = tap(before, 'bo')
     expect(consequence(near, before, after)).toEqual({ what: 'wrong-side', where: 'left' })
+  })
+
+  it('no move is ever "too much": no ride asks for level, so a plank that turns the asker’s way is there', () => {
+    for (const ride of everyRide()) for (const first of FRIEND_IDS) for (const second of FRIEND_IDS) {
+      const start = layout(ride), mid = tap(start, first), end = tap(mid, second)
+      for (const [before, after] of [[start, mid], [mid, end]] as const) expect(['there', 'level', 'wrong-side', 'too-light', 'none']).toContain(consequence(ride, before, after).what)
+    }
   })
 
   it('there: the asker is carried up, and the state is exactly the taps the child made', () => {
