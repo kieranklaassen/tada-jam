@@ -12,12 +12,14 @@ import { installJamPerf } from './perf'
 import { PerfRing, TierGovernor, startingTier, tierOverride } from './quality'
 import { SaveCadence } from './saveCadence'
 import { deserialize, serialize, type GameState } from './state'
+import { drawSpike } from './view/spike'
 
-// The Mount, showing a blank surface. Everything a game needs around its
-// renderer is wired and running: the saved state, attention, the attended
-// clock, touch, sound from the first touch, the idle ladder, adaptive quality,
-// the grown-up performance handle and the grown-up overlay. The renderer, the
-// rules and the sounds go in where the comments say.
+// The Mount, showing the look spike: the game's room in its sticker look, in
+// one fixed state, with nothing playable behind it (view/spike.ts). Everything
+// a game needs around its renderer is wired and running: the saved state,
+// attention, the attended clock, touch, sound from the first touch, the idle
+// ladder, adaptive quality, the grown-up performance handle and the grown-up
+// overlay. The rules and the sounds go in where the comments say.
 
 function Mount({ ctx }: { ctx: CartridgeContext }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -56,10 +58,16 @@ function Mount({ ctx }: { ctx: CartridgeContext }) {
     // canvas, where a still or a probe can read which tier is applied.
     const applyTier = () => { canvas.dataset.tier = String(governor.tier) }
 
-    // The one place the game draws its frame; the blank surface draws nothing. The loop calls it on every frame,
-    // `resize` calls it after sizing, which can be before the slot is read and while the game rests, and the
-    // load calls it once the slot has been read.
-    const draw = () => {}
+    // The one place the game draws its frame: the look spike, at the attended clock's time. The loop calls it on
+    // every frame, `resize` calls it after sizing, which can be before the slot is read and while the game rests,
+    // and the load calls it once the slot has been read.
+    const g = canvas.getContext('2d')!
+    const draw = () => {
+      if (width <= 0 || height <= 0) return
+      g.setTransform(1, 0, 0, 1, 0, 0)
+      g.clearRect(0, 0, canvas.width, canvas.height)
+      drawn.drawCalls = drawSpike(g, width, height, dpr, clock.seconds)
+    }
 
     // The shell can resize the surface without a window resize event, so the surface watches itself.
     // Returns whether it sized the surface, and so drew it.
