@@ -7,11 +7,24 @@ What each heading asks for is in the section "The design sheet" of `docs/solutio
 
 ## The band and its age rule
 
-The manifest band, the rule that governs its youngest age, what `ctx.childAge` sets as a default, and what no age gives.
+- **Band.** The manifest says 9 to 12. The design is held to a nine-year-old.
+- **The cue-table row.** The row for 7 and up governs. Its "Avoid" column is taken as a hard limit: no written word or letter, no symbol that stands alone so that play depends on reading it, no timer, points or verdict chrome, and no long chain of hints. Several things may be open at once as long as each reads at a glance.
+- **The pack's rule for the age** (pack: game-design, ages-9-to-12.md). The hotel is a real system that behaves the same way every time: noise goes through walls, warmth rises, cold sinks, a smell drifts along a corridor. Any arrangement that leaves every guest content stands, and there are always several. A wrong arrangement is large, funny and free. The humour is dry and is not explained. Nothing is stored as a best, and nothing is compared.
+- **Symbols.** The band starts at 9, so numerals and mathematics signs are allowed, each laid on or beside the quantity it stands for and drawn only in `symbols.ts`. This game lays numerals in one place: beside the flames on the dial of the stove and beside the icicles on the dial of the ice box, where the numeral names the step the child has just set. The flames and the icicles say the same thing without it, so play never depends on reading a numeral. No letter and no word is drawn anywhere. None is drawn in this run: the module comes with the next one.
+- **Guided discovery** (pack: game-design, guided-discovery.md). The band lies across the rule's line at ten. The game takes the older form for every child: the child tries first, and the first time a new thing has been in play, the porter shows one neat way with it after the child's own arrangement has settled the hotel.
+- **What `ctx.childAge` sets.** Only where a first visit starts in the designed order: the first place, `two-guests`, for a child of 9 or 10, and the second, `heat-and-snow`, for a child of 11 or older. No age (`null`), or an age below 9, starts at the first place. A saved place always wins over the age. Every guest, room and thing can be reached by play at every age, and nothing is hidden or locked by age.
 
 ## The toy
 
-The one action the finger performs most, what it does in an empty scene with its sound and motion, and why repeating it is a pleasure with no goal.
+**Touch a guest, and the whole page is drawn again from where that guest stands.**
+
+- **What the finger does.** It lands on a monster. In the same frame the monster squashes and gives its own grunt, and the redrawing starts at its feet and sweeps outward across the hotel in about a third of a second. The finger does not have to lift for any of this.
+- **What the page becomes.** The same hotel, as that guest takes it. Its own room is drawn large and everyone else's small. Whatever reaches its room is inked by how this guest takes it: a thing it loves in the one spot colour with curls and flourishes, a thing it minds in heavy black scribble that shows the wall or floor it came through, and everything it does not care about in faint pencil. Each guest has its own hand: the bat hangs from its ceiling, so its page is upside down; the yeti's lines drip wherever it is warm; the blob with many eyes sees the page several times over, slightly apart.
+- **What the ear gets.** While the page is one guest's, the hotel is heard as that guest hears it. The tuba next door is a round tune from the troll's own place and a flat blare from the place of the blob trying to sleep. Each guest's grunt is its own, with several variants that follow where and how fast the finger landed.
+- **Back and across.** Touching another guest sweeps the page straight to that one's view. Touching the same guest again, or the paper margin, sweeps it back to the plain page.
+- **Carrying is looking.** A finger that lands on a guest and moves picks the guest up, and for as long as it is carried the page stays that guest's, so the child sees what would reach it in each room it is held over. Setting it down returns the plain page. A carried guest dangles, stiff and unbothered, with its luggage swinging behind.
+- **Why it is a pleasure with no goal.** In a scene with one hotel, two guests and nothing to settle, flipping the page between two creatures who take the same building in opposite ways is funny on every touch: the building turns over, swells, drips and changes its tune. Nothing can go wrong, random touches always redraw something, and a person watching can tell in three seconds that the child is looking through the monsters' eyes. Everything else in the scene answers a touch too: a wall knocks and every guest looks toward the knock, a room's lamp swings, the lift bell rings.
+- **In the first build of the toy** there is the hotel, two guests and the day-and-night wheel on the roof, and no arrangement is asked for.
 
 ## The object-by-action grid, and what is new on day 15
 

@@ -3,7 +3,7 @@
 
 ## Status
 
-- Stage: template copied. No sheet yet.
+- Stage: sheet, being written. First run, cut from base commit 2a133cc on branch `lane/monster-hotel`.
 - Look in use: none yet.
 - Open: the design sheet in `ART.md` and its check.
 
