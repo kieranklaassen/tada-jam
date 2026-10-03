@@ -41,11 +41,11 @@ const held = (hz: number): number => Math.max(RANGE.hz[0], Math.min(RANGE.hz[1],
 const tone = (hz: number, peak: number, attack: number, length: number, wave: Note['wave'] = 'triangle', to?: number, after = 0): Note => ({ kind: 'tone', hz: held(hz), to: to === undefined ? undefined : held(to), wave, peak, attack, length, after })
 const hiss = (hz: number, peak: number, attack: number, length: number, to?: number, after = 0): Note => ({ kind: 'noise', hz: held(hz), to: to === undefined ? undefined : held(to), peak, attack, length, after })
 /** A run of the same short note, `count` times, each a step higher: one tick a part. */
-const run = (count: number, hz: number, step: number, gap: number, peak: number): Note[] => {
+const run = (count: number, hz: number, step: number, gap: number, peak: number, wave: Note['wave'] = 'square', length = 0.05): Note[] => {
   const ticks = Math.max(1, Math.min(12, Math.round(count)))
   // Many parts tick faster, so the whole run still ends inside the time a touch's answer may take.
   const apart = ticks > 1 ? Math.min(gap, 0.55 / (ticks - 1)) : 0
-  return Array.from({ length: ticks }, (_, i) => tone(hz * step ** i, peak, 0.002, 0.05, 'square', undefined, i * apart))
+  return Array.from({ length: ticks }, (_, i) => tone(hz * step ** i, peak, 0.002, length, wave, undefined, i * apart))
 }
 
 /**
@@ -64,23 +64,28 @@ export const VOICES = {
   quiver: (length: number) => [tone(ringHz(length), 0.2, 0.006, 0.5, 'sine', ringHz(length) * 0.94), tone(ringHz(length) * 2, 0.05, 0.006, 0.3, 'sine')],
   pluck: (length: number) => [tone(ringHz(length), 0.22, 0.002, 0.42, 'triangle'), tone(ringHz(length) * 2, 0.06, 0.002, 0.2, 'sine')],
   lay: (length: number) => [tone(ringHz(length) * 0.5, 0.16, 0.004, 0.12, 'sine', ringHz(length) * 0.4), hiss(400, 0.05, 0.004, 0.08)],
-  butt: (length: number) => [tone(ringHz(length), 0.14, 0.001, 0.06, 'square'), tone(ringHz(length) * 1.5, 0.1, 0.001, 0.08, 'triangle', undefined, 0.03)],
+  // A wet smack as two cut ends meet.
+  butt: (length: number) => [hiss(700, 0.2, 0.001, 0.07, 300), tone(ringHz(length) * 0.75, 0.12, 0.002, 0.09, 'sine', ringHz(length) * 0.5)],
   boing: (length: number) => [tone(ringHz(length) * 0.6, 0.2, 0.004, 0.45, 'sine', ringHz(length) * 1.3)],
   clack: (length: number) => [tone(ringHz(length) * 2, 0.16, 0.001, 0.05, 'square'), hiss(2200, 0.08, 0.001, 0.04)],
   ticks: (_: number, count = 4) => run(count, 700, 1.06, 0.07, 0.08),
-  press: (_: number, count = 4) => run(count, 1100, 1.08, 0.05, 0.07),
+  // One tick a part, higher the shorter the piece the parts are pressed into.
+  press: (length: number, count = 4) => run(count, Math.max(900, Math.min(2400, ringHz(length) * 4)), 1.05, 0.05, 0.07),
   // The tin.
   skid: (length: number) => [hiss(4200, 0.14, 0.001, 0.1, 3000), tone(ringHz(length) * 2, 0.14, 0.001, 0.6, 'square', ringHz(length) * 1.98)],
   castanet: () => [tone(1300, 0.14, 0.001, 0.04, 'square'), tone(1300, 0.12, 0.001, 0.04, 'square', undefined, 0.09)],
   rattle: () => [hiss(1800, 0.1, 0.002, 0.05), hiss(1700, 0.08, 0.002, 0.05, undefined, 0.07), hiss(1900, 0.06, 0.002, 0.05, undefined, 0.15)],
   spring: (length: number) => [tone(ringHz(length), 0.16, 0.004, 0.3, 'sawtooth', ringHz(length) * 2), tone(ringHz(length) * 2, 0.1, 0.001, 0.05, 'square', undefined, 0.26)],
   bong: (length: number) => [tone(ringHz(length) * 1.5, 0.2, 0.002, 0.7, 'sine'), tone(ringHz(length) * 4.1, 0.06, 0.002, 0.3, 'sine')],
-  rule: (_: number, count = 4) => run(count, 520, 1.12, 0.11, 0.09),
+  // The ruled parts answer one by one, a hollow knock each; on a shut tin the roller only drums along the lid.
+  rule: (_: number, count = 4) => run(count, 300, 1.09, 0.11, 0.14, 'sine', 0.09),
+  drum: () => Array.from({ length: 5 }, (_, i) => hiss(260, 0.1, 0.002, 0.05, 200, i * 0.06)),
   clang: (length: number) => [tone(ringHz(length) * 3, 0.2, 0.001, 0.4, 'square', ringHz(length) * 2.9), tone(ringHz(length) * 3, 0.12, 0.001, 0.2, 'square', undefined, 0.16)],
   slide: () => [hiss(700, 0.08, 0.03, 0.22, 1100), tone(900, 0.08, 0.001, 0.04, 'square', undefined, 0.22)],
   click: () => [tone(1900, 0.12, 0.001, 0.03, 'square'), tone(950, 0.14, 0.002, 0.09, 'triangle', undefined, 0.02)],
   // A customer.
-  pop: () => [tone(500, 0.16, 0.002, 0.07, 'sine', 1400), hiss(2600, 0.05, 0.001, 0.04)],
+  // A snip, and the tuft pops back.
+  pop: () => [hiss(3400, 0.1, 0.001, 0.03), tone(500, 0.16, 0.002, 0.07, 'sine', 1400, 0.12)],
   babble: () => [tone(320, 0.14, 0.01, 0.1, 'sawtooth', 420), tone(380, 0.12, 0.01, 0.12, 'sawtooth', 300, 0.12)],
   gulp: (length: number) => [tone(260, 0.2, 0.01, 0.16, 'sine', 120), tone(ringHz(length) * 0.5, 0.1, 0.01, 0.12, 'sine', undefined, 0.16)],
   splat: () => [hiss(900, 0.24, 0.001, 0.12, 300), hiss(400, 0.1, 0.02, 0.3, 200, 0.06)],
@@ -89,14 +94,18 @@ export const VOICES = {
   split: () => [hiss(1400, 0.22, 0.001, 0.09, 600), tone(180, 0.18, 0.002, 0.2, 'triangle', 90), tone(140, 0.14, 0.002, 0.14, 'triangle', undefined, 0.2), tone(120, 0.12, 0.002, 0.14, 'triangle', undefined, 0.34)],
   thump: (length: number) => [tone(ringHz(length) * 0.5, 0.26, 0.003, 0.24, 'sine', ringHz(length) * 0.3), hiss(300, 0.1, 0.002, 0.1)],
   burp: () => [tone(110, 0.22, 0.02, 0.3, 'sawtooth', 70), hiss(260, 0.06, 0.02, 0.2)],
-  rock: () => [tone(160, 0.14, 0.01, 0.16, 'triangle', 190), tone(170, 0.12, 0.01, 0.16, 'triangle', 140, 0.18), tone(200, 0.16, 0.003, 0.12, 'sine', undefined, 0.4)],
+  // A creak one way and back, then the fruit that jumped out.
+  rock: () => [tone(150, 0.12, 0.04, 0.2, 'sawtooth', 210), tone(200, 0.1, 0.04, 0.2, 'sawtooth', 140, 0.22), tone(200, 0.16, 0.003, 0.12, 'sine', undefined, 0.48)],
   washboard: () => Array.from({ length: 6 }, (_, i) => hiss(2400 + (i % 2) * 500, 0.08, 0.002, 0.04, undefined, i * 0.05)),
   // The dog.
   chomp: () => [tone(700, 0.16, 0.001, 0.04, 'square', 300), hiss(1500, 0.1, 0.001, 0.05)],
   bark: () => [tone(480, 0.24, 0.006, 0.12, 'sawtooth', 340), hiss(1200, 0.06, 0.004, 0.08)],
-  munch: (length: number) => [hiss(800, 0.14, 0.004, 0.08), hiss(700, 0.12, 0.004, 0.08, undefined, 0.13), tone(ringHz(length) * 0.5, 0.08, 0.01, 0.1, 'sine', undefined, 0.26)],
-  catch: (length: number) => [hiss(500, 0.08, 0.04, 0.24, 1600), tone(ringHz(length), 0.16, 0.001, 0.05, 'square', undefined, 0.26)],
-  sproing: () => [tone(300, 0.16, 0.003, 0.2, 'sine', 900), tone(380, 0.14, 0.003, 0.2, 'sine', 1100, 0.18)],
+  // A long slurp, longer for a longer piece.
+  munch: (length: number) => [hiss(500, 0.14, 0.06, 0.2 + 0.3 * Math.min(1, length / LONGEST), 1700), tone(ringHz(length) * 0.5, 0.08, 0.01, 0.1, 'sine', undefined, 0.5)],
+  // The piece through the air, and a yip as it is caught.
+  catch: (length: number) => [hiss(500, 0.08, 0.04, 0.24, 1600), tone(ringHz(length) + 500, 0.18, 0.004, 0.09, 'sawtooth', ringHz(length) + 1100, 0.26)],
+  // Ears ironed flat with a squeak, springing up one at a time, a pop each.
+  sproing: () => [tone(1900, 0.08, 0.01, 0.14, 'sine', 2500), tone(300, 0.16, 0.003, 0.08, 'sine', 900, 0.26), tone(380, 0.14, 0.003, 0.08, 'sine', 1100, 0.42)],
 } as const satisfies Record<string, (length: number, count?: number) => Note[]>
 
 export type VoiceId = keyof typeof VOICES

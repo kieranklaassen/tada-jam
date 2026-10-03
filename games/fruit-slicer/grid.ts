@@ -21,6 +21,7 @@ export type Does =
   | 'bounce' // world.setOnBoard: the flung piece comes back to the counter
   | 'feed' // cycle.feed
   | 'spill' // world.landFruit, once for each kind of fruit
+  | 'call' // cycle.call for one who waits; cycle.sendOff for one at the window whose tin holds a misfit
   | 'land' // cycle.crate
   | 'toDog' // world.remove
   | 'nothing'
@@ -30,6 +31,8 @@ export type Cell = {
   show: string
   voice: VoiceId
   does: Does
+  /** What is seen and heard instead while the tin is shut, where that differs. A shut tin changes nothing. */
+  shut?: { show: string; voice: VoiceId }
 }
 
 export const GRID: Readonly<Record<Thing, Readonly<Record<Act, Cell>>>> = {
@@ -49,14 +52,14 @@ export const GRID: Readonly<Record<Thing, Readonly<Record<Act, Cell>>>> = {
   },
   tin: {
     slice: { show: 'skid-and-sparks', voice: 'skid', does: 'nothing' },
-    poke: { show: 'jaw-snaps', voice: 'castanet', does: 'nothing' },
+    poke: { show: 'jaw-snaps', voice: 'castanet', does: 'nothing', shut: { show: 'rattles-shut', voice: 'rattle' } },
     give: { show: 'spring-open', voice: 'spring', does: 'serve' },
     fling: { show: 'bong-off-lid', voice: 'bong', does: 'bounce' },
-    roll: { show: 'rule-the-rail', voice: 'rule', does: 'nothing' },
+    roll: { show: 'parts-answer-one-by-one', voice: 'rule', does: 'nothing', shut: { show: 'drum-along-lid', voice: 'drum' } },
   },
   customer: {
     slice: { show: 'tuft-pops-back', voice: 'pop', does: 'nothing' },
-    poke: { show: 'flinch', voice: 'babble', does: 'nothing' },
+    poke: { show: 'flinch', voice: 'babble', does: 'call' },
     give: { show: 'eat-from-hand', voice: 'gulp', does: 'feed' },
     fling: { show: 'splat-and-lick', voice: 'splat', does: 'toDog' },
     roll: { show: 'rolled-flat', voice: 'honk', does: 'nothing' },
@@ -77,7 +80,8 @@ export const GRID: Readonly<Record<Thing, Readonly<Record<Act, Cell>>>> = {
   },
 }
 
-/** What happens when this act is done to this thing. There is always an answer. */
-export function answer(thing: Thing, act: Act): Cell {
-  return GRID[thing][act]
+/** What happens when this act is done to this thing. There is always an answer. With the tin shut, a cell that says so answers as shut and changes nothing. */
+export function answer(thing: Thing, act: Act, tinShut = false): Cell {
+  const cell = GRID[thing][act]
+  return tinShut && cell.shut ? { ...cell.shut, does: 'nothing' } : cell
 }

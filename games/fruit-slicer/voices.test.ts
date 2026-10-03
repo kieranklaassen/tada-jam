@@ -65,5 +65,7 @@ describe('a length rings as a string does', () => {
     expect(notesOf('ticks', 2400, 3)).toHaveLength(3)
     expect(notesOf('rule', 2400, 12)).toHaveLength(12)
     expect(notesOf('press', 2400, 0)).toHaveLength(1)
+    // Pressed into a shorter piece, the ticks are higher.
+    expect(notesOf('press', 300, 4)[0].hz).toBeGreaterThan(notesOf('press', 1200, 4)[0].hz)
   })
 })

@@ -16,13 +16,27 @@ describe('the object-by-action grid', () => {
     }
   })
 
-  it('looks different in every cell', () => {
-    expect(new Set(cells.map(({ cell }) => cell.show)).size).toBe(30)
+  /** Every cell, and the two a shut tin answers differently. */
+  const all = [...cells.map(({ cell }) => cell), answer('tin', 'poke', true), answer('tin', 'roll', true)]
+
+  it('looks different in every cell, a shut tin included', () => {
+    expect(new Set(all.map((cell) => cell.show)).size).toBe(32)
   })
 
-  it('sounds different in every cell', () => {
-    expect(new Set(cells.map(({ cell }) => cell.voice)).size).toBe(30)
-    expect(new Set(cells.map(({ cell }) => JSON.stringify(notesOf(cell.voice, 1200, 4)))).size).toBe(30)
+  it('sounds different in every cell, a shut tin included', () => {
+    expect(new Set(all.map((cell) => cell.voice)).size).toBe(32)
+    expect(new Set(all.map((cell) => JSON.stringify(notesOf(cell.voice, 1200, 4)))).size).toBe(32)
+  })
+
+  it('answers a shut tin without opening it or marking anything, and a shut tin changes no other cell', () => {
+    expect(answer('tin', 'poke', true)).toEqual({ show: 'rattles-shut', voice: 'rattle', does: 'nothing' })
+    expect(answer('tin', 'roll', true)).toEqual({ show: 'drum-along-lid', voice: 'drum', does: 'nothing' })
+    expect(answer('tin', 'give', true)).toEqual(answer('tin', 'give'))
+    expect(answer('fruit', 'roll', true)).toEqual(answer('fruit', 'roll'))
+  })
+
+  it('makes a poke on a customer the call and the send-off as well as a flinch', () => {
+    expect(answer('customer', 'poke')).toMatchObject({ show: 'flinch', does: 'call' })
   })
 
   it('never refuses: a cell that changes nothing is still seen and heard', () => {
